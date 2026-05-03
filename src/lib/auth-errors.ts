@@ -1,9 +1,28 @@
+/** Collect nested error text (postgres.js wraps real PG errors). */
+function fullErrorText(error: unknown): string {
+  const parts: string[] = [];
+  let e: unknown = error;
+  let depth = 0;
+  while (e && depth < 8) {
+    if (e instanceof Error) {
+      parts.push(e.message);
+      e = e.cause;
+    } else {
+      parts.push(String(e));
+      break;
+    }
+    depth += 1;
+  }
+  return parts.join(" ");
+}
+
 /** Map server exceptions to a safe user-visible message */
 export function friendlyAuthError(error: unknown): string {
   if (!(error instanceof Error)) {
     return "Something went wrong. Please try again.";
   }
-  const msg = error.message;
+
+  const msg = fullErrorText(error);
   const code = (error as NodeJS.ErrnoException).code;
 
   if (code === "ECONNREFUSED" || msg.includes("ECONNREFUSED")) {
@@ -15,8 +34,16 @@ export function friendlyAuthError(error: unknown): string {
   ) {
     return "Database login failed: wrong user or password in DATABASE_URL. Update .env.";
   }
-  if (msg.includes("does not exist") && msg.includes("database")) {
+  if (msg.includes("does not exist") && msg.toLowerCase().includes("database")) {
     return "Database does not exist. Create it (e.g. createdb mcbuleli) or fix DATABASE_URL.";
+  }
+  /** Postgres undefined_table — tables never migrated */
+  if (
+    msg.includes("42P01") ||
+    (msg.includes("relation") && msg.includes("does not exist")) ||
+    (msg.includes("Failed query") && msg.includes("users"))
+  ) {
+    return 'Tables are missing. In the project folder run: npm run db:push   (This creates the "users" table and the rest.)';
   }
   if (msg.includes("JWT_SECRET")) {
     return "JWT_SECRET is missing or shorter than 16 characters. Set it in .env.";
@@ -26,6 +53,6 @@ export function friendlyAuthError(error: unknown): string {
   }
 
   return process.env.NODE_ENV === "development"
-    ? msg
+    ? error.message
     : "Server error. Please try again.";
 }
