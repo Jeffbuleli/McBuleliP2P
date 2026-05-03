@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CexId } from "@/lib/networks";
 import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
+import { formatAuthClientError } from "@/lib/format-auth-client-error";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -35,9 +36,8 @@ export default function DepositWizardPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(
-          typeof data.error === "string"
-            ? data.error
-            : "Could not create deposit. Check server API keys.",
+          formatAuthClientError(data) ||
+            "Could not create deposit. Check server configuration.",
         );
         return;
       }
@@ -76,9 +76,10 @@ export default function DepositWizardPage() {
 
       {step === 2 && (
         <section className="mt-8 space-y-4">
-          <p className="font-medium text-stone-800">2. Select exchange source</p>
+          <p className="font-medium text-stone-800">2. Deposit route</p>
           <p className="text-sm text-stone-600">
-            Address and validation use your server-side Binance or OKX API keys.
+            Two independent liquidity channels for address generation and TXID
+            checks. Pick one; both support the same networks on the next step.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -90,7 +91,7 @@ export default function DepositWizardPage() {
                   : "border-stone-200 bg-white text-stone-700"
               }`}
             >
-              Binance
+              Route A
             </button>
             <button
               type="button"
@@ -101,7 +102,7 @@ export default function DepositWizardPage() {
                   : "border-stone-200 bg-white text-stone-700"
               }`}
             >
-              OKX
+              Route B
             </button>
           </div>
           <button

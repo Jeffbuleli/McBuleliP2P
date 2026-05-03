@@ -132,7 +132,11 @@ export default function DepositDetailPage() {
           {deposit.networkCanonical}
         </span>
         <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
-          {deposit.provider.toUpperCase()}
+          {deposit.provider === "binance"
+            ? "Route A"
+            : deposit.provider === "okx"
+              ? "Route B"
+              : deposit.provider}
         </span>
       </div>
 

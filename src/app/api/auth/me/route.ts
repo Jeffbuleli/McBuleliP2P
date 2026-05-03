@@ -13,6 +13,7 @@ export async function GET() {
     .select({
       id: users.id,
       email: users.email,
+      role: users.role,
       balance: users.balance,
     })
     .from(users)

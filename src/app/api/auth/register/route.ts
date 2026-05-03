@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { registerSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 
@@ -35,10 +36,17 @@ export async function POST(req: Request) {
       );
     }
     const passwordHash = await bcrypt.hash(password, 12);
+    const role = isSuperAdminEmail(email)
+      ? UserRole.SUPER_ADMIN
+      : UserRole.USER;
     const [created] = await db
       .insert(users)
-      .values({ email, passwordHash })
-      .returning({ id: users.id, email: users.email });
+      .values({ email, passwordHash, role })
+      .returning({
+        id: users.id,
+        email: users.email,
+        role: users.role,
+      });
 
     const token = await signSessionToken(created.id);
     const res = NextResponse.json({ user: created });

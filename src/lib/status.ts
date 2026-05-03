@@ -7,10 +7,12 @@ export const DepositStatus = {
   FAILED: "FAILED",
 } as const;
 
-/** Withdrawal lifecycle */
+/** Withdrawal lifecycle — outbound transfers are operator-validated (manual execution). */
 export const WithdrawalStatus = {
-  REQUESTED: "REQUESTED",
-  PROCESSING: "PROCESSING",
+  /** Queued for McBuleli ops team */
+  PENDING_AGENT: "PENDING_AGENT",
+  /** Terminal states */
   COMPLETED: "COMPLETED",
+  REJECTED: "REJECTED",
   FAILED: "FAILED",
 } as const;

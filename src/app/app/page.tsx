@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
-import { getSessionUserId } from "@/lib/session";
+import { getSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const userId = await getSessionUserId();
+  const sessionUser = await getSessionUser();
+  const userId = sessionUser?.id;
   if (!userId) {
     return null;
   }
@@ -19,6 +20,9 @@ export default async function DashboardPage() {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+
+  const staff =
+    sessionUser?.role === "agent" || sessionUser?.role === "super_admin";
 
   return (
     <div>
@@ -46,6 +50,14 @@ export default async function DashboardPage() {
         >
           Withdraw
         </Link>
+        {staff ? (
+          <Link
+            href="/admin"
+            className="rounded-xl border-2 border-stone-800 bg-stone-900 px-4 py-3 text-center text-lg font-semibold text-amber-100"
+          >
+            Operations (team)
+          </Link>
+        ) : null}
       </div>
     </div>
   );

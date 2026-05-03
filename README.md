@@ -1,6 +1,10 @@
 # McBuleli P2P
 
-Next.js app for **guided USDT deposits and withdrawals** with **strict on-exchange validation** (Binance and OKX APIs hold the source of truth for TXIDs, networks, and addresses). Primary UI colors: **green** and **maroon**. Installable as a **PWA** (manifest + standalone display).
+Next.js app for **USDT deposits** (TXID checked against **server-side** liquidity APIs — Binance / OKX internally) and **operator-managed withdrawals** (no automated exchange payout): funds are **reserved** from the user balance until an **agent** marks the withdrawal **completed** with an on-chain **TXID**, or **rejects** it with an automatic **refund**.
+
+**End-user UI is neutral** (no Binance/OKX branding): deposits use **Route A / Route B**; withdrawals describe **team processing**.
+
+Primary colours: **green** + **maroon**. **PWA**-ready (manifest).
 
 ## Prerequisites
 
@@ -9,37 +13,49 @@ Next.js app for **guided USDT deposits and withdrawals** with **strict on-exchan
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill values. **Do not put real API keys in `.env.example`** (it may be committed to git). Optional: `npm run verify:binance` checks Binance keys using `.env`.
+1. Copy `.env.example` → `.env`. Set **`JWT_SECRET`** (≥ 16 chars). Add **`SUPER_ADMIN_EMAILS`** (comma-separated) so those accounts become **super_admin** on register/login — they can open **`/admin/users`** and assign **`agent`** roles.
 
-2. Create the database schema:
+2. Apply schema:
 
    ```bash
    npm install
    npm run db:push
    ```
 
-   Or apply the SQL in `drizzle/` manually.
-
-3. Run locally:
+3. Run:
 
    ```bash
    npm run dev
    ```
 
-**Registration / login fail?** The API needs a running PostgreSQL and an applied schema (`npm run db:push`). If the DB is down or `DATABASE_URL` is wrong, the UI now shows a clear error instead of “Could not register.”
+4. Optional: `npm run verify:binance` — validates Binance keys only (used for deposit routes / TXID lookup where configured).
 
-## Environment
+## Roles
 
-- **DATABASE_URL** — PostgreSQL connection string (Vercel: use Neon or other compatible host; long-lived connections work with `postgres` + pooling on Render).
-- **JWT_SECRET** — at least 16 characters.
-- **BINANCE_*** / **OKX_*** — API keys stay on the server only; the browser never sees them.
+| Role            | Access                                              |
+|-----------------|-----------------------------------------------------|
+| `user`          | `/app` deposit & withdraw                         |
+| `agent`         | `/admin` withdrawal queue, complete/reject        |
+| `super_admin`   | Above + **`/admin/users`** (assign roles)          |
+
+## Operator workflow (withdrawals)
+
+1. User submits withdrawal → balance locked, status **`PENDING_AGENT`**.
+2. Agent opens **`/admin/withdrawals`**, copies destination / amount / network, executes transfer **outside this app** (custody / exchange UI).
+3. Agent pastes **TXID** → **Mark as sent**, or **Reject** (refunds balance + reason shown to user).
+
+## Product scenarios (ideas)
+
+- **SLA / ageing**: sort queue by `createdAt`; highlight items older than N minutes.
+- **Claim**: optional “assign to me” to avoid two agents processing the same ticket.
+- **Notifications**: webhook/email when `PENDING_AGENT` count &gt; 0.
+- **Limits**: cap daily outflow per user in `POST /api/withdrawals`.
+- **Dual custody**: `networkCex` in DB already hints the chain code for ops; you can add an internal “wallet selector” field later without exposing brands to users.
 
 ## Deploy
 
-- **Vercel**: connect the GitHub repo, set environment variables, use a serverless-friendly Postgres (e.g. Neon) and set `DATABASE_URL`.
-- **Render**: deploy as a **Web Service** (build `npm run build`, start `npm start`), add a **PostgreSQL** instance and paste its URL into `DATABASE_URL`.
-
-Withdrawals call the exchange immediately after locking balance in Postgres; if the exchange rejects the request, funds are refunded in the same failure path.
+- Set **`DATABASE_URL`**, **`JWT_SECRET`**, **`SUPER_ADMIN_EMAILS`**, and liquidity API vars as needed on **Vercel** / **Render**.
+- Run **`npm run db:push`** against production DB once after deploy.
 
 ## License
 

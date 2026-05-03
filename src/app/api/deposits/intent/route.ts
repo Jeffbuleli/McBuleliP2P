@@ -15,8 +15,11 @@ export async function POST(req: Request) {
   }
   const parsed = depositIntentSchema.safeParse(await req.json());
   if (!parsed.success) {
+    const flat = parsed.error.flatten();
+    const first =
+      Object.values(flat.fieldErrors).flat()[0] ?? "Invalid deposit request.";
     return NextResponse.json(
-      { error: parsed.error.flatten().fieldErrors },
+      { message: first, fieldErrors: flat.fieldErrors },
       { status: 400 },
     );
   }
@@ -24,13 +27,19 @@ export async function POST(req: Request) {
 
   if (body.provider === "binance" && !hasBinanceKeys()) {
     return NextResponse.json(
-      { error: "Binance API keys are not configured on the server." },
+      {
+        message:
+          "Deposit route A is not available (server configuration missing).",
+      },
       { status: 503 },
     );
   }
   if (body.provider === "okx" && !hasOkxKeys()) {
     return NextResponse.json(
-      { error: "OKX API keys are not configured on the server." },
+      {
+        message:
+          "Deposit route B is not available (server configuration missing).",
+      },
       { status: 503 },
     );
   }

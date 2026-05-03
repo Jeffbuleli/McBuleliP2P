@@ -6,8 +6,6 @@ import { withdrawalSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
 import { isValidAddressForNetwork } from "@/lib/address-format";
 import { getMinWithdraw } from "@/lib/env";
-import { binanceWithdraw } from "@/lib/binance";
-import { okxWithdraw } from "@/lib/okx";
 import { WithdrawalStatus } from "@/lib/status";
 
 export async function GET() {
@@ -32,8 +30,11 @@ export async function POST(req: Request) {
   }
   const parsed = withdrawalSchema.safeParse(await req.json());
   if (!parsed.success) {
+    const flat = parsed.error.flatten();
+    const first =
+      Object.values(flat.fieldErrors).flat()[0] ?? "Invalid withdrawal request.";
     return NextResponse.json(
-      { error: parsed.error.flatten().fieldErrors },
+      { message: first, fieldErrors: flat.fieldErrors },
       { status: 400 },
     );
   }
@@ -42,7 +43,10 @@ export async function POST(req: Request) {
 
   if (!isValidAddressForNetwork(body.address, body.network)) {
     return NextResponse.json(
-      { error: "Destination address format is invalid for the selected network." },
+      {
+        message:
+          "Destination address format is invalid for the selected network.",
+      },
       { status: 400 },
     );
   }
@@ -50,7 +54,7 @@ export async function POST(req: Request) {
   const min = getMinWithdraw(body.asset);
   if (Number(amt) < min) {
     return NextResponse.json(
-      { error: `Minimum withdrawal is ${min} ${body.asset}` },
+      { message: `Minimum withdrawal is ${min} ${body.asset}` },
       { status: 400 },
     );
   }
@@ -75,80 +79,26 @@ export async function POST(req: Request) {
       .insert(withdrawals)
       .values({
         userId,
-        provider: body.provider,
+        provider: "manual",
         asset: body.asset,
         networkCanonical: body.network,
-        networkCex:
-          body.provider === "binance" ? netSpec.binanceNetwork : netSpec.okxChain,
+        networkCex: netSpec.binanceNetwork,
         toAddress: body.address.trim(),
         memoTo: body.memo?.trim() || null,
         amount: amt,
-        status: WithdrawalStatus.PROCESSING,
+        status: WithdrawalStatus.PENDING_AGENT,
       })
       .returning();
     return row;
   });
 
   if (!w) {
-    return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+    return NextResponse.json({ message: "Insufficient balance" }, { status: 400 });
   }
 
-  try {
-    if (body.provider === "binance") {
-      const res = await binanceWithdraw({
-        coin: body.asset,
-        network: body.network,
-        address: body.address.trim(),
-        amount: amt,
-        tag: body.memo?.trim() || undefined,
-      });
-      const extId = typeof res === "object" && res && "id" in res ? String(res.id) : JSON.stringify(res);
-      const [updated] = await db
-        .update(withdrawals)
-        .set({
-          externalId: extId,
-          status: WithdrawalStatus.COMPLETED,
-          completedAt: new Date(),
-        })
-        .where(eq(withdrawals.id, w.id))
-        .returning();
-      return NextResponse.json({ withdrawal: updated });
-    }
-
-    const ext = await okxWithdraw({
-      ccy: body.asset,
-      amt: amt,
-      chain: netSpec.okxChain,
-      toAddr: body.address.trim(),
-      tag: body.memo?.trim() || undefined,
-    });
-    const [updated] = await db
-      .update(withdrawals)
-      .set({
-        externalId: ext.wdId,
-        status: WithdrawalStatus.COMPLETED,
-        completedAt: new Date(),
-      })
-      .where(eq(withdrawals.id, w.id))
-      .returning();
-    return NextResponse.json({ withdrawal: updated });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Withdrawal failed";
-    await db.transaction(async (tx) => {
-      await tx
-        .update(users)
-        .set({
-          balance: sql`${users.balance} + ${amt}::numeric`,
-        })
-        .where(eq(users.id, userId));
-      await tx
-        .update(withdrawals)
-        .set({
-          status: WithdrawalStatus.FAILED,
-          failureReason: msg,
-        })
-        .where(eq(withdrawals.id, w.id));
-    });
-    return NextResponse.json({ error: msg }, { status: 502 });
-  }
+  return NextResponse.json({
+    withdrawal: w,
+    message:
+      "Withdrawal submitted. Our team will process it and you will see the on-chain TXID once sent.",
+  });
 }

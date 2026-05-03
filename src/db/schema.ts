@@ -15,6 +15,8 @@ export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  /** user | agent | super_admin */
+  role: varchar("role", { length: 32 }).notNull().default("user"),
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
@@ -77,6 +79,7 @@ export const withdrawals = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    /** Internal only: manual queue vs legacy automation tag */
     provider: varchar("provider", { length: 16 }).notNull(),
     asset: varchar("asset", { length: 32 }).notNull(),
     networkCanonical: varchar("network_canonical", { length: 32 }).notNull(),
@@ -89,10 +92,15 @@ export const withdrawals = pgTable(
     failureReason: text("failure_reason"),
     externalId: varchar("external_id", { length: 128 }),
     txid: varchar("txid", { length: 512 }),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id),
+    agentNote: text("agent_note"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (t) => [index("withdrawals_user_idx").on(t.userId)],
+  (t) => [
+    index("withdrawals_user_idx").on(t.userId),
+    index("withdrawals_status_idx").on(t.status),
+  ],
 );

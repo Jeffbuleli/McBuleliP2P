@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { loginSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 
@@ -34,9 +35,24 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
-    const token = await signSessionToken(user.id);
+
+    let sessionUser = user;
+    if (isSuperAdminEmail(email) && user.role !== UserRole.SUPER_ADMIN) {
+      const [up] = await db
+        .update(users)
+        .set({ role: UserRole.SUPER_ADMIN })
+        .where(eq(users.id, user.id))
+        .returning();
+      if (up) sessionUser = up;
+    }
+
+    const token = await signSessionToken(sessionUser.id);
     const res = NextResponse.json({
-      user: { id: user.id, email: user.email },
+      user: {
+        id: sessionUser.id,
+        email: sessionUser.email,
+        role: sessionUser.role,
+      },
     });
     res.cookies.set(sessionCookieName(), token, {
       httpOnly: true,

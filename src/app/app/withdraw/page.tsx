@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { CexId } from "@/lib/networks";
 import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
+import { formatAuthClientError } from "@/lib/format-auth-client-error";
 
 export default function WithdrawPage() {
   const router = useRouter();
-  const [provider, setProvider] = useState<CexId>("binance");
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [address, setAddress] = useState("");
   const [memo, setMemo] = useState("");
@@ -25,7 +24,6 @@ export default function WithdrawPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provider,
           asset: "USDT",
           network,
           address,
@@ -35,9 +33,12 @@ export default function WithdrawPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Withdrawal failed");
+        setError(formatAuthClientError(data));
         setShowConfirm(false);
         return;
+      }
+      if (typeof data.message === "string") {
+        window.alert(data.message);
       }
       router.push("/app");
       router.refresh();
@@ -52,7 +53,8 @@ export default function WithdrawPage() {
       <div>
         <h1 className="text-2xl font-bold text-stone-900">Withdraw</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Funds leave via your configured Binance or OKX API keys (server-side).
+          Requests are queued for our operations team. Funds stay reserved from
+          your balance until the transfer is confirmed on-chain.
         </p>
       </div>
 
@@ -60,18 +62,6 @@ export default function WithdrawPage() {
         You are responsible for the destination address and network. Incorrect
         network may result in <strong>permanent loss</strong>.
       </div>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-stone-800">
-        Exchange
-        <select
-          value={provider}
-          onChange={(e) => setProvider(e.target.value as CexId)}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base"
-        >
-          <option value="binance">Binance</option>
-          <option value="okx">OKX</option>
-        </select>
-      </label>
 
       <div>
         <p className="text-sm font-medium text-stone-800">Network</p>
@@ -161,9 +151,6 @@ export default function WithdrawPage() {
               </li>
               <li>
                 <strong>Amount:</strong> {amount} USDT
-              </li>
-              <li>
-                <strong>Via:</strong> {provider}
               </li>
             </ul>
             <p className="mt-4 text-sm text-rose-900">

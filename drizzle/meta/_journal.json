@@ -8,6 +8,13 @@
       "when": 1777809121854,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777813898501,
+      "tag": "0001_roles_manual_withdrawals",
+      "breakpoints": true
     }
   ]
 }

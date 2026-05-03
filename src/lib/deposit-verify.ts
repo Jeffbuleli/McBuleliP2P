@@ -60,14 +60,14 @@ export async function verifyDepositTx(
         ok: false,
         failed: false,
         reason:
-          "TXID not found on Binance yet. If you just sent funds, wait for confirmations and try again.",
+          "TXID not found in our records yet. If you just sent funds, wait for confirmations and try again.",
       };
     }
     if (!binanceDepositIsSuccessful(row)) {
       return {
         ok: false,
         failed: false,
-        reason: "Deposit exists on Binance but is not credited yet (pending).",
+        reason: "Deposit is still being credited (pending on our side).",
       };
     }
     if (row.coin.toUpperCase() !== deposit.asset.toUpperCase()) {
@@ -122,14 +122,14 @@ export async function verifyDepositTx(
         ok: false,
         failed: false,
         reason:
-          "TXID not found on OKX yet. If you just sent funds, wait for confirmations and try again.",
+          "TXID not found in our records yet. If you just sent funds, wait for confirmations and try again.",
       };
     }
     if (!okxDepositIsSuccessful(row)) {
       return {
         ok: false,
         failed: false,
-        reason: "Deposit exists on OKX but is not completed yet (pending).",
+        reason: "Deposit is still being credited (pending on our side).",
       };
     }
     if (row.ccy.toUpperCase() !== deposit.asset.toUpperCase()) {
