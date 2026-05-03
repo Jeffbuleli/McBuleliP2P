@@ -8,16 +8,36 @@ function sign(query: string, secret: string) {
   return crypto.createHmac("sha256", secret).update(query).digest("hex");
 }
 
-export async function signedPost(path: string, params: Record<string, string>) {
-  const key = process.env.BINANCE_API_KEY;
-  const secret = process.env.BINANCE_API_SECRET;
+/** Binance requires HMAC over alphabetically sorted query parameters (excluding signature). */
+function sortedQueryString(params: Record<string, string>): string {
+  return Object.keys(params)
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join("&");
+}
+
+function getCredentials() {
+  const key = process.env.BINANCE_API_KEY?.trim();
+  const secret = process.env.BINANCE_API_SECRET?.trim();
   if (!key || !secret) {
     throw new Error("Binance API credentials are not configured");
   }
-  const timestamp = Date.now().toString();
-  const recvWindow = "5000";
-  const merged = { ...params, timestamp, recvWindow };
-  const qs = new URLSearchParams(merged).toString();
+  return { key, secret };
+}
+
+function withTimestamp(params: Record<string, string>) {
+  const recvWindow = process.env.BINANCE_RECV_WINDOW ?? "5000";
+  return {
+    ...params,
+    recvWindow,
+    timestamp: Date.now().toString(),
+  };
+}
+
+export async function signedPost(path: string, params: Record<string, string>) {
+  const { key, secret } = getCredentials();
+  const merged = withTimestamp(params);
+  const qs = sortedQueryString(merged);
   const signature = sign(qs, secret);
   const body = `${qs}&signature=${signature}`;
   const url = `${BASE}${path}`;
@@ -38,15 +58,9 @@ export async function signedPost(path: string, params: Record<string, string>) {
 }
 
 async function signedGet(path: string, params: Record<string, string>) {
-  const key = process.env.BINANCE_API_KEY;
-  const secret = process.env.BINANCE_API_SECRET;
-  if (!key || !secret) {
-    throw new Error("Binance API credentials are not configured");
-  }
-  const timestamp = Date.now().toString();
-  const recvWindow = "5000";
-  const merged = { ...params, timestamp, recvWindow };
-  const qs = new URLSearchParams(merged).toString();
+  const { key, secret } = getCredentials();
+  const merged = withTimestamp(params);
+  const qs = sortedQueryString(merged);
   const signature = sign(qs, secret);
   const url = `${BASE}${path}?${qs}&signature=${signature}`;
   const res = await fetch(url, {
