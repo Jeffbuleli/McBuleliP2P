@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
-import { StaffAuthError, getSessionUser, requireSuperAdmin } from "@/lib/session-user";
+import {
+  StaffAuthError,
+  getSessionUser,
+  requireSuperAdmin,
+} from "@/lib/session-user";
 import { adminSetRoleSchema } from "@/lib/validation";
 import { UserRole } from "@/lib/roles";
 

@@ -10,27 +10,45 @@ export const registerSchema = z.object({
 
 export const loginSchema = registerSchema;
 
-const cex: z.ZodType<CexId> = z.union([z.literal("binance"), z.literal("okx")]);
-
 const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
 
-export const depositIntentSchema = z.object({
-  provider: cex,
-  asset: z.literal("USDT"),
-  network: networkEnum,
-});
+const cexBinance: z.ZodType<Extract<CexId, "binance">> = z.literal("binance");
+const cexOkx: z.ZodType<Extract<CexId, "okx">> = z.literal("okx");
+
+export const depositIntentSchema = z.discriminatedUnion("asset", [
+  z.object({
+    provider: cexBinance,
+    asset: z.literal("USDT"),
+    network: networkEnum,
+  }),
+  z.object({
+    provider: cexOkx,
+    asset: z.literal("PI"),
+    network: z.literal("PI_MAIN"),
+  }),
+]);
 
 export const depositConfirmSchema = z.object({
   txid: z.string().trim().min(8).max(512),
 });
 
-export const withdrawalSchema = z.object({
-  asset: z.literal("USDT"),
-  network: networkEnum,
-  address: z.string().trim().min(10).max(256),
-  memo: z.string().trim().max(256).optional(),
-  amount: z.string().regex(/^\d+(\.\d+)?$/),
-});
+export const withdrawalSchema = z.discriminatedUnion("asset", [
+  z.object({
+    asset: z.literal("USDT"),
+    network: networkEnum,
+    address: z.string().trim().min(10).max(256),
+    memo: z.string().trim().max(256).optional(),
+    /** Net USDT to destination; platform fee is added on top (see `/api/config/withdraw-fees`). */
+    amount: z.string().regex(/^\d+(\.\d+)?$/),
+  }),
+  z.object({
+    asset: z.literal("PI"),
+    network: z.literal("PI_MAIN"),
+    address: z.string().trim().min(20).max(128),
+    memo: z.string().trim().max(256).optional(),
+    amount: z.string().regex(/^\d+(\.\d+)?$/),
+  }),
+]);
 
 export const adminCompleteWithdrawalSchema = z.object({
   txid: z.string().trim().min(8).max(512),

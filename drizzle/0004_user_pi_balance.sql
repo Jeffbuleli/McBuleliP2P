@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "pi_balance" numeric(36, 18) DEFAULT '0' NOT NULL;

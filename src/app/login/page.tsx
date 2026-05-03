@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
+import { useI18n } from "@/components/i18n-provider";
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,49 +38,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col px-4 py-10">
-      <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
-      <p className="mt-1 text-sm text-stone-600">Sign in to continue.</p>
+    <div className="mx-auto flex min-h-full max-w-md flex-col px-4 pb-10 pt-14">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-emerald-900/10 dark:bg-stone-900 dark:ring-white/10">
+          <Image src="/brand/logo.png" alt="" width={30} height={30} priority />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800 dark:text-emerald-300">
+            {t("brand")}
+          </p>
+          <h1 className="truncate text-2xl font-bold text-stone-900 dark:text-stone-50">
+            {t("login_title")}
+          </h1>
+        </div>
+      </div>
+      <p className="text-sm text-stone-600 dark:text-stone-400">{t("login_sub")}</p>
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm font-medium text-stone-800">
-          Email
+          {t("email")}
           <input
             type="email"
             autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2"
+            className="rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-stone-800">
-          Password
+          {t("password")}
           <input
             type="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2"
+            className="rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
           />
         </label>
         {error ? (
-          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900">
+          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/30 dark:text-rose-100">
             {error}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-60"
+          className="mt-2 min-h-[52px] rounded-2xl bg-emerald-700 py-3 font-semibold text-white shadow-lg shadow-emerald-900/20 disabled:opacity-60 active:scale-[0.99]"
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? t("signing") : t("signin")}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-stone-600">
-        No account?{" "}
+      <p className="mt-6 text-center text-sm text-stone-600 dark:text-stone-400">
+        {t("no_account")}{" "}
         <Link href="/register" className="font-semibold text-emerald-800 underline">
-          Register
+          {t("home_register")}
         </Link>
       </p>
     </div>

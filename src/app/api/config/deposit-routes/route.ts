@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { hasBinanceKeys, hasOkxKeys } from "@/lib/env";
 
-/**
- * Tells the UI which deposit paths are configured (no secrets exposed).
- * Route A = internal Binance integration, Route B = internal OKX integration.
- */
+/** Which on-ramp flows are configured server-side. */
 export async function GET() {
   return NextResponse.json({
-    routeA: hasBinanceKeys(),
-    routeB: hasOkxKeys(),
+    usdtBinance: hasBinanceKeys(),
+    piOkx: hasOkxKeys(),
+    /** @deprecated use usdtBinance */
+    enabled: hasBinanceKeys(),
   });
 }

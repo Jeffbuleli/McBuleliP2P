@@ -5,17 +5,14 @@ import {
   binanceDepositHistoryByTxid,
   binanceDepositIsSuccessful,
 } from "./binance";
-import {
-  canonicalFromBinanceNetwork,
-  canonicalFromOkxChain,
-} from "./networks";
-import {
-  okxDepositHistoryByTxid,
-  okxDepositIsSuccessful,
-  okxDepositDestination,
-} from "./okx";
+import { canonicalFromBinanceNetwork } from "./networks";
 import { getAmountTolerance, getMinDeposit } from "./env";
 import { DepositStatus } from "./status";
+import {
+  okxDepositHistoryByTxid,
+  okxDepositStateIsFinal,
+} from "@/lib/okx";
+import { getPiOkxChain } from "@/lib/pi-constants";
 
 type DepositRow = InferSelectModel<typeof deposits>;
 
@@ -42,6 +39,145 @@ export type VerifyResult =
   | { ok: false; failed: true; reason: string }
   | { ok: false; failed: false; reason: string };
 
+async function verifyBinanceDeposit(
+  deposit: DepositRow,
+  txidNorm: string,
+  min: number,
+  tol: number,
+): Promise<VerifyResult> {
+  const rows = await binanceDepositHistoryByTxid({
+    coin: deposit.asset,
+    txId: txidNorm,
+  });
+  const row = rows[0];
+  if (!row) {
+    return {
+      ok: false,
+      failed: false,
+      reason:
+        "TXID not found in our records yet. If you just sent funds, wait for confirmations and try again.",
+    };
+  }
+  if (!binanceDepositIsSuccessful(row)) {
+    return {
+      ok: false,
+      failed: false,
+      reason: "Deposit is still being credited (pending on our side).",
+    };
+  }
+  if (row.coin.toUpperCase() !== deposit.asset.toUpperCase()) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Wrong asset: exchange record does not match selected crypto.",
+    };
+  }
+  const netCanon = canonicalFromBinanceNetwork(row.coin, row.network);
+  if (netCanon !== deposit.networkCanonical) {
+    return {
+      ok: false,
+      failed: true,
+      reason:
+        "Wrong network: this transaction does not match the selected network (irreversible mismatch).",
+    };
+  }
+  if (!cmpAddr(row.address, deposit.addressShown)) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Destination address does not match the deposit address shown.",
+    };
+  }
+  if (!cmpMemo(row.addressTag, deposit.memoShown)) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Memo/tag does not match the required value for this deposit.",
+    };
+  }
+  const amt = Number(row.amount);
+  if (!Number.isFinite(amt) || amt + tol < min) {
+    return {
+      ok: false,
+      failed: true,
+      reason: `Amount below minimum (${min} ${deposit.asset}).`,
+    };
+  }
+  return { ok: true, amount: row.amount };
+}
+
+async function verifyOkxPiDeposit(
+  deposit: DepositRow,
+  txidNorm: string,
+  min: number,
+  tol: number,
+): Promise<VerifyResult> {
+  const rows = await okxDepositHistoryByTxid({
+    ccy: "PI",
+    txId: txidNorm,
+  });
+  const row =
+    rows.find((r) => (r.txId ?? "").trim().toLowerCase() === txidNorm.toLowerCase()) ??
+    rows[0];
+  if (!row) {
+    return {
+      ok: false,
+      failed: false,
+      reason:
+        "TXID not found on OKX yet. Wait for on-chain confirmations, then try again.",
+    };
+  }
+  if (!okxDepositStateIsFinal(row.state)) {
+    return {
+      ok: false,
+      failed: false,
+      reason: "Deposit is still being processed on OKX.",
+    };
+  }
+  if ((row.ccy ?? "").toUpperCase() !== "PI") {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Wrong asset: OKX record is not PI.",
+    };
+  }
+  const chainExpect = getPiOkxChain().toUpperCase();
+  const chainGot = (row.chain ?? "").toUpperCase();
+  if (chainGot && chainExpect && chainGot !== chainExpect) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Wrong network: OKX chain does not match the expected Pi chain.",
+    };
+  }
+  const dest = (row.to ?? "").trim();
+  if (dest && !cmpAddr(dest, deposit.addressShown)) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Destination address does not match the deposit address shown.",
+    };
+  }
+  const tag = (row as { tag?: string }).tag;
+  if (!cmpMemo(tag, deposit.memoShown)) {
+    return {
+      ok: false,
+      failed: true,
+      reason: "Memo/tag does not match the required value for this deposit.",
+    };
+  }
+  const rawAmt = row.actualDepAmt ?? row.amt ?? "0";
+  const amt = Number(rawAmt);
+  if (!Number.isFinite(amt) || amt + tol < min) {
+    return {
+      ok: false,
+      failed: true,
+      reason: `Amount below minimum (${min} ${deposit.asset}).`,
+    };
+  }
+  return { ok: true, amount: String(rawAmt) };
+}
+
 export async function verifyDepositTx(
   deposit: DepositRow,
   txidNorm: string,
@@ -50,131 +186,13 @@ export async function verifyDepositTx(
   const tol = getAmountTolerance();
 
   if (deposit.provider === "binance") {
-    const rows = await binanceDepositHistoryByTxid({
-      coin: deposit.asset,
-      txId: txidNorm,
-    });
-    const row = rows[0];
-    if (!row) {
-      return {
-        ok: false,
-        failed: false,
-        reason:
-          "TXID not found in our records yet. If you just sent funds, wait for confirmations and try again.",
-      };
-    }
-    if (!binanceDepositIsSuccessful(row)) {
-      return {
-        ok: false,
-        failed: false,
-        reason: "Deposit is still being credited (pending on our side).",
-      };
-    }
-    if (row.coin.toUpperCase() !== deposit.asset.toUpperCase()) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Wrong asset: exchange record does not match selected crypto.",
-      };
-    }
-    const netCanon = canonicalFromBinanceNetwork(row.coin, row.network);
-    if (netCanon !== deposit.networkCanonical) {
-      return {
-        ok: false,
-        failed: true,
-        reason:
-          "Wrong network: this transaction does not match the selected network (irreversible mismatch).",
-      };
-    }
-    if (!cmpAddr(row.address, deposit.addressShown)) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Destination address does not match the deposit address shown.",
-      };
-    }
-    if (!cmpMemo(row.addressTag, deposit.memoShown)) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Memo/tag does not match the required value for this deposit.",
-      };
-    }
-    const amt = Number(row.amount);
-    if (!Number.isFinite(amt) || amt + tol < min) {
-      return {
-        ok: false,
-        failed: true,
-        reason: `Amount below minimum (${min} ${deposit.asset}).`,
-      };
-    }
-    return { ok: true, amount: row.amount };
+    return verifyBinanceDeposit(deposit, txidNorm, min, tol);
+  }
+  if (deposit.provider === "okx" && deposit.asset.toUpperCase() === "PI") {
+    return verifyOkxPiDeposit(deposit, txidNorm, min, tol);
   }
 
-  if (deposit.provider === "okx") {
-    const rows = await okxDepositHistoryByTxid({
-      ccy: deposit.asset,
-      txId: txidNorm,
-    });
-    const row = rows[0];
-    if (!row) {
-      return {
-        ok: false,
-        failed: false,
-        reason:
-          "TXID not found in our records yet. If you just sent funds, wait for confirmations and try again.",
-      };
-    }
-    if (!okxDepositIsSuccessful(row)) {
-      return {
-        ok: false,
-        failed: false,
-        reason: "Deposit is still being credited (pending on our side).",
-      };
-    }
-    if (row.ccy.toUpperCase() !== deposit.asset.toUpperCase()) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Wrong asset: exchange record does not match selected crypto.",
-      };
-    }
-    const netCanon = canonicalFromOkxChain(row.chain);
-    if (netCanon !== deposit.networkCanonical) {
-      return {
-        ok: false,
-        failed: true,
-        reason:
-          "Wrong network: this transaction does not match the selected network (irreversible mismatch).",
-      };
-    }
-    const dest = okxDepositDestination(row);
-    if (!cmpAddr(dest, deposit.addressShown)) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Destination address does not match the deposit address shown.",
-      };
-    }
-    if (!cmpMemo(row.tag, deposit.memoShown)) {
-      return {
-        ok: false,
-        failed: true,
-        reason: "Memo/tag does not match the required value for this deposit.",
-      };
-    }
-    const amt = Number(row.amt);
-    if (!Number.isFinite(amt) || amt + tol < min) {
-      return {
-        ok: false,
-        failed: true,
-        reason: `Amount below minimum (${min} ${deposit.asset}).`,
-      };
-    }
-    return { ok: true, amount: row.amt };
-  }
-
-  return { ok: false, failed: true, reason: "Unknown provider." };
+  return { ok: false, failed: true, reason: "Unsupported deposit source." };
 }
 
 export async function applyConfirmedDeposit(args: {
@@ -187,6 +205,7 @@ export async function applyConfirmedDeposit(args: {
     throw new Error("Forbidden");
   }
   const db = getDb();
+  const isPi = args.deposit.asset.toUpperCase() === "PI";
   await db.transaction(async (tx) => {
     const [dup] = await tx
       .select()
@@ -216,16 +235,29 @@ export async function applyConfirmedDeposit(args: {
         and(eq(deposits.id, args.deposit.id), eq(deposits.userId, args.userId)),
       );
 
-    await tx
-      .update(users)
-      .set({
-        balance: sql`${users.balance} + ${args.amountStr}::numeric`,
-      })
-      .where(eq(users.id, args.userId));
+    if (isPi) {
+      await tx
+        .update(users)
+        .set({
+          piBalance: sql`${users.piBalance} + ${args.amountStr}::numeric`,
+        })
+        .where(eq(users.id, args.userId));
+    } else {
+      await tx
+        .update(users)
+        .set({
+          balance: sql`${users.balance} + ${args.amountStr}::numeric`,
+        })
+        .where(eq(users.id, args.userId));
+    }
   });
 }
 
-export async function markDepositFailed(depositId: string, userId: string, reason: string) {
+export async function markDepositFailed(
+  depositId: string,
+  userId: string,
+  reason: string,
+) {
   const db = getDb();
   await db
     .update(deposits)

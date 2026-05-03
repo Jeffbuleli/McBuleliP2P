@@ -3,68 +3,85 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
+import { useI18n } from "@/components/i18n-provider";
 
 type Row = {
   id: string;
-  userId: string;
   userEmail: string;
-  asset: string;
   networkCanonical: string;
   amount: string;
+  fee: string;
   status: string;
   createdAt: string;
+  assigneeEmail: string | null;
 };
 
 export default function AdminWithdrawalsPage() {
+  const { t } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>(WithdrawalStatus.PENDING_AGENT);
+  const [status, setStatus] = useState<string>("active");
+  const [assignFilter, setAssignFilter] = useState<string>("all");
 
   useEffect(() => {
     setErr(null);
     void (async () => {
-      const res = await fetch(
-        `/api/admin/withdrawals?status=${encodeURIComponent(status)}`,
-      );
+      const q = new URLSearchParams();
+      q.set("status", status);
+      if (assignFilter !== "all") q.set("assignFilter", assignFilter);
+      const res = await fetch(`/api/admin/withdrawals?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "Could not load");
+        setErr(data.message ?? "…");
         setRows([]);
         return;
       }
       setRows(data.withdrawals as Row[]);
     })();
-  }, [status]);
+  }, [status, assignFilter]);
 
   if (rows === null) {
-    return <p className="text-stone-500">Loading…</p>;
+    return <p className="text-stone-500">…</p>;
+  }
+
+  function statusLabel(s: string) {
+    if (s === WithdrawalStatus.PENDING_AGENT) return t("status_pending");
+    if (s === WithdrawalStatus.PROCESSING) return t("status_busy");
+    if (s === WithdrawalStatus.COMPLETED) return t("status_done");
+    return s;
   }
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Withdrawals</h2>
+        <h2 className="text-xl font-bold text-white">{t("admin_queue")}</h2>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
         >
-          <option value={WithdrawalStatus.PENDING_AGENT}>Pending</option>
-          <option value={WithdrawalStatus.COMPLETED}>Completed</option>
-          <option value={WithdrawalStatus.REJECTED}>Rejected</option>
+          <option value="active">{t("admin_pending")} + {t("admin_processing")}</option>
+          <option value={WithdrawalStatus.PENDING_AGENT}>{t("admin_pending")}</option>
+          <option value={WithdrawalStatus.PROCESSING}>{t("admin_processing")}</option>
+          <option value={WithdrawalStatus.COMPLETED}>{t("admin_done")}</option>
+          <option value={WithdrawalStatus.REJECTED}>{t("admin_rejected")}</option>
         </select>
-        <Link
-          href="/admin"
-          className="ml-auto text-sm text-amber-200 underline"
+        <select
+          value={assignFilter}
+          onChange={(e) => setAssignFilter(e.target.value)}
+          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
         >
-          Back
+          <option value="all">{t("admin_all")}</option>
+          <option value="unassigned">{t("admin_unassigned")}</option>
+          <option value="mine">{t("admin_mine")}</option>
+        </select>
+        <Link href="/admin" className="ml-auto text-sm text-amber-200 underline">
+          {t("admin_back")}
         </Link>
       </div>
-      {err ? (
-        <p className="mb-2 text-rose-400">{err}</p>
-      ) : null}
+      {err ? <p className="mb-2 text-rose-400">{err}</p> : null}
       {rows.length === 0 ? (
-        <p className="text-stone-500">No items.</p>
+        <p className="text-stone-500">—</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((r) => (
@@ -75,14 +92,17 @@ export default function AdminWithdrawalsPage() {
               >
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-mono text-sm text-amber-100/90">
-                    {r.amount} {r.asset} · {r.networkCanonical}
+                    {r.amount}+{r.fee} · {r.networkCanonical}
                   </span>
                   <span className="text-xs text-stone-500">
                     {new Date(r.createdAt).toLocaleString()}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-stone-300">{r.userEmail}</p>
-                <p className="text-xs text-stone-500">{r.status}</p>
+                <p className="mt-1 text-xs text-amber-100/80">
+                  {statusLabel(r.status)}
+                  {r.assigneeEmail ? ` · ${r.assigneeEmail}` : ""}
+                </p>
               </Link>
             </li>
           ))}

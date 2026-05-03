@@ -20,6 +20,10 @@ export const users = pgTable("users", {
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
+  /** Pi Network balance (manual OKX-backed deposit/withdraw). */
+  piBalance: numeric("pi_balance", { precision: 36, scale: 18 })
+    .notNull()
+    .default("0"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -79,7 +83,7 @@ export const withdrawals = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** Internal only: manual queue vs legacy automation tag */
+    /** Internal tag (e.g. manual) */
     provider: varchar("provider", { length: 16 }).notNull(),
     asset: varchar("asset", { length: 32 }).notNull(),
     networkCanonical: varchar("network_canonical", { length: 32 }).notNull(),
@@ -93,6 +97,8 @@ export const withdrawals = pgTable(
     externalId: varchar("external_id", { length: 128 }),
     txid: varchar("txid", { length: 512 }),
     processedByUserId: uuid("processed_by_user_id").references(() => users.id),
+    /** Agent responsible for this ticket (optional). */
+    assignedToUserId: uuid("assigned_to_user_id").references(() => users.id),
     agentNote: text("agent_note"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -102,5 +108,32 @@ export const withdrawals = pgTable(
   (t) => [
     index("withdrawals_user_idx").on(t.userId),
     index("withdrawals_status_idx").on(t.status),
+    index("withdrawals_assigned_idx").on(t.assignedToUserId),
+  ],
+);
+
+/** Idempotent handling of PawaPay webhook deliveries (v2). */
+export const pawapayWebhookEvents = pgTable(
+  "pawapay_webhook_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    dedupKey: varchar("dedup_key", { length: 512 }).notNull().unique(),
+    kind: varchar("kind", { length: 16 }).notNull(),
+    pawapayId: varchar("pawapay_id", { length: 64 }).notNull(),
+    status: varchar("status", { length: 32 }).notNull(),
+    currency: varchar("currency", { length: 8 }).notNull(),
+    amount: varchar("amount", { length: 64 }).notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    /** credited_usdt | refund_usdt | none | skipped_currency | no_user */
+    effect: varchar("effect", { length: 32 }).notNull(),
+    /** Raw JSON body for audit */
+    rawBody: text("raw_body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("pawapay_webhook_user_idx").on(t.userId),
+    index("pawapay_webhook_pawapay_idx").on(t.pawapayId),
   ],
 );

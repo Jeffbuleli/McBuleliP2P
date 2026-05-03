@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 
 type U = {
   id: string;
@@ -11,6 +12,7 @@ type U = {
 };
 
 export default function AdminUsersPage() {
+  const { t } = useI18n();
   const [users, setUsers] = useState<U[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -19,7 +21,7 @@ export default function AdminUsersPage() {
       const res = await fetch("/api/admin/users");
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "Forbidden — super admin only.");
+        setErr(data.message ?? "—");
         setUsers([]);
         return;
       }
@@ -35,7 +37,7 @@ export default function AdminUsersPage() {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      alert(data.message ?? "Failed");
+      alert(data.message ?? "—");
       return;
     }
     const data = await res.json();
@@ -47,15 +49,15 @@ export default function AdminUsersPage() {
   }
 
   if (users === null) {
-    return <p className="text-stone-500">Loading…</p>;
+    return <p className="text-stone-500">…</p>;
   }
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Users &amp; roles</h2>
+        <h2 className="text-xl font-bold text-white">{t("admin_users")}</h2>
         <Link href="/admin" className="text-sm text-amber-200 underline">
-          Back
+          {t("admin_back")}
         </Link>
       </div>
       {err ? <p className="mb-4 text-rose-400">{err}</p> : null}
@@ -73,6 +75,7 @@ export default function AdminUsersPage() {
               value={u.role}
               onChange={(e) => void setRole(u.id, e.target.value)}
               className="rounded-lg border border-stone-600 bg-stone-950 px-2 py-1 text-sm text-stone-200"
+              aria-label={t("admin_role")}
             >
               <option value="user">user</option>
               <option value="agent">agent</option>

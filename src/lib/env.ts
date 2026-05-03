@@ -11,15 +11,11 @@ export function getMinDeposit(asset: string): number {
     const v = Number(process.env.MIN_DEPOSIT_USDT ?? "1");
     return Number.isFinite(v) ? v : 1;
   }
-  return 1;
-}
-
-export function getMinWithdraw(asset: string): number {
-  if (asset === "USDT") {
-    const v = Number(process.env.MIN_WITHDRAW_USDT ?? "5");
-    return Number.isFinite(v) ? v : 5;
+  if (asset === "PI") {
+    const v = Number(process.env.MIN_DEPOSIT_PI ?? "1");
+    return Number.isFinite(v) ? v : 1;
   }
-  return 5;
+  return 1;
 }
 
 /** Relative tolerance for floating compare (e.g. 1e-8) */
@@ -34,8 +30,8 @@ export function hasBinanceKeys(): boolean {
 
 export function hasOkxKeys(): boolean {
   return Boolean(
-    process.env.OKX_API_KEY &&
-      process.env.OKX_API_SECRET &&
-      process.env.OKX_PASSPHRASE,
+    process.env.OKX_API_KEY?.trim() &&
+      process.env.OKX_API_SECRET?.trim() &&
+      process.env.OKX_API_PASSPHRASE?.trim(),
   );
 }

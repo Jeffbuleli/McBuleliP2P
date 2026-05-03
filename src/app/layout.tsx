@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { getLocale } from "@/lib/get-locale";
+import { I18nProvider } from "@/components/i18n-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ConditionalLangSwitch } from "@/components/conditional-lang-switch";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -10,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "McBuleli P2P",
   description:
-    "Deposit & withdraw crypto with strict Binance / OKX validation and guided UX.",
+    "USDT deposits & withdrawals — guided flows and TXID validation.",
   applicationName: "McBuleli P2P",
   appleWebApp: {
     capable: true,
@@ -24,16 +28,25 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans">{children}</body>
+    <html lang={locale} className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-full font-sans">
+        <ThemeProvider>
+          <I18nProvider initialLocale={locale}>
+            <ConditionalLangSwitch />
+            {children}
+          </I18nProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

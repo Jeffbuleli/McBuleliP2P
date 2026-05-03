@@ -1,14 +1,13 @@
 export type NetworkId = "TRC20" | "ERC20" | "BEP20";
 
+/** Deposit provider — Binance (USDT) or OKX (Pi Network). */
 export type CexId = "binance" | "okx";
 
 export type NetworkSpec = {
   id: NetworkId;
   label: string;
-  /** Binance `network` parameter for USDT deposits */
+  /** Binance `network` parameter for USDT deposits / withdrawals */
   binanceNetwork: string;
-  /** OKX `chain` parameter for USDT */
-  okxChain: string;
   /** UI accent */
   badgeClass: string;
   /** Approximate confirmations shown to user */
@@ -20,7 +19,6 @@ export const USDT_NETWORKS: Record<NetworkId, NetworkSpec> = {
     id: "TRC20",
     label: "TRC20 (Tron)",
     binanceNetwork: "TRX",
-    okxChain: "USDT-TRC20",
     badgeClass: "bg-emerald-600 text-white",
     defaultConfirmations: 19,
   },
@@ -28,7 +26,6 @@ export const USDT_NETWORKS: Record<NetworkId, NetworkSpec> = {
     id: "ERC20",
     label: "ERC20 (Ethereum)",
     binanceNetwork: "ETH",
-    okxChain: "USDT-ERC20",
     badgeClass: "bg-sky-600 text-white",
     defaultConfirmations: 12,
   },
@@ -36,13 +33,12 @@ export const USDT_NETWORKS: Record<NetworkId, NetworkSpec> = {
     id: "BEP20",
     label: "BEP20 (BSC)",
     binanceNetwork: "BSC",
-    okxChain: "USDT-BEP20",
     badgeClass: "bg-amber-400 text-stone-900",
     defaultConfirmations: 15,
   },
 };
 
-export const ASSETS = ["USDT"] as const;
+export const ASSETS = ["USDT", "PI"] as const;
 export type AssetId = (typeof ASSETS)[number];
 
 export function parseNetwork(id: string): NetworkId | null {
@@ -64,13 +60,5 @@ export function canonicalFromBinanceNetwork(
   if (n === "TRX" || n === "TRC20") return "TRC20";
   if (n === "ETH" || n === "ERC20") return "ERC20";
   if (n === "BSC" || n === "BEP20" || n === "BNB") return "BEP20";
-  return null;
-}
-
-export function canonicalFromOkxChain(chain: string | undefined): NetworkId | null {
-  const c = (chain ?? "").toUpperCase();
-  if (c.includes("TRC20") || c.includes("TRON")) return "TRC20";
-  if (c.includes("ERC20") || c === "USDT-ETH") return "ERC20";
-  if (c.includes("BEP20") || c.includes("BSC")) return "BEP20";
   return null;
 }

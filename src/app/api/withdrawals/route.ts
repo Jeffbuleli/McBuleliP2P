@@ -5,8 +5,12 @@ import { getSessionUserId } from "@/lib/session";
 import { withdrawalSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
 import { isValidAddressForNetwork } from "@/lib/address-format";
-import { getMinWithdraw } from "@/lib/env";
 import { WithdrawalStatus } from "@/lib/status";
+import {
+  parseNetWithdrawal,
+  parseNetWithdrawalPi,
+} from "@/lib/withdraw-fees";
+import { getPiOkxChain } from "@/lib/pi-constants";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -39,7 +43,6 @@ export async function POST(req: Request) {
     );
   }
   const body = parsed.data;
-  const amt = body.amount;
 
   if (!isValidAddressForNetwork(body.address, body.network)) {
     return NextResponse.json(
@@ -51,29 +54,72 @@ export async function POST(req: Request) {
     );
   }
 
-  const min = getMinWithdraw(body.asset);
-  if (Number(amt) < min) {
-    return NextResponse.json(
-      { message: `Minimum withdrawal is ${min} ${body.asset}` },
-      { status: 400 },
-    );
+  const amounts =
+    body.asset === "PI"
+      ? parseNetWithdrawalPi({ netAmountStr: body.amount })
+      : parseNetWithdrawal({ netAmountStr: body.amount });
+
+  if (!amounts.ok) {
+    return NextResponse.json({ message: amounts.message }, { status: 400 });
   }
 
-  const netSpec = USDT_NETWORKS[body.network];
+  const { net, fee, totalDebit } = amounts;
   const db = getDb();
 
+  const networkCex =
+    body.asset === "USDT"
+      ? USDT_NETWORKS[body.network].binanceNetwork
+      : getPiOkxChain();
+
   const w = await db.transaction(async (tx) => {
+    if (body.asset === "PI") {
+      const [deducted] = await tx
+        .update(users)
+        .set({
+          piBalance: sql`${users.piBalance} - ${totalDebit}::numeric`,
+        })
+        .where(
+          and(
+            eq(users.id, userId),
+            sql`${users.piBalance} >= ${totalDebit}::numeric`,
+          ),
+        )
+        .returning({ piBalance: users.piBalance });
+
+      if (!deducted) return null;
+
+      const [row] = await tx
+        .insert(withdrawals)
+        .values({
+          userId,
+          provider: "manual",
+          asset: body.asset,
+          networkCanonical: body.network,
+          networkCex,
+          toAddress: body.address.trim(),
+          memoTo: body.memo?.trim() || null,
+          amount: net,
+          fee,
+          status: WithdrawalStatus.PENDING_AGENT,
+        })
+        .returning();
+      return row;
+    }
+
     const [deducted] = await tx
       .update(users)
       .set({
-        balance: sql`${users.balance} - ${amt}::numeric`,
+        balance: sql`${users.balance} - ${totalDebit}::numeric`,
       })
-      .where(and(eq(users.id, userId), sql`${users.balance} >= ${amt}::numeric`))
+      .where(
+        and(
+          eq(users.id, userId),
+          sql`${users.balance} >= ${totalDebit}::numeric`,
+        ),
+      )
       .returning({ balance: users.balance });
 
-    if (!deducted) {
-      return null;
-    }
+    if (!deducted) return null;
 
     const [row] = await tx
       .insert(withdrawals)
@@ -82,10 +128,11 @@ export async function POST(req: Request) {
         provider: "manual",
         asset: body.asset,
         networkCanonical: body.network,
-        networkCex: netSpec.binanceNetwork,
+        networkCex,
         toAddress: body.address.trim(),
         memoTo: body.memo?.trim() || null,
-        amount: amt,
+        amount: net,
+        fee,
         status: WithdrawalStatus.PENDING_AGENT,
       })
       .returning();
@@ -93,12 +140,18 @@ export async function POST(req: Request) {
   });
 
   if (!w) {
-    return NextResponse.json({ message: "Insufficient balance" }, { status: 400 });
+    return NextResponse.json(
+      {
+        message:
+          "Insufficient balance (remember the fixed fee is added to the net amount).",
+      },
+      { status: 400 },
+    );
   }
 
   return NextResponse.json({
     withdrawal: w,
     message:
-      "Withdrawal submitted. Our team will process it and you will see the on-chain TXID once sent.",
+      "Withdrawal queued. Our team will process it and you will see the on-chain TXID once sent.",
   });
 }

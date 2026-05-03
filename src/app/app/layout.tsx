@@ -1,6 +1,7 @@
-import Link from "next/link";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { LogoutButton } from "@/components/LogoutButton";
+import { AppShell } from "@/components/mobile/app-shell";
+import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
 export default async function AppLayout({
@@ -13,15 +14,12 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  return (
-    <div className="mx-auto flex min-h-full max-w-lg flex-col px-4 pb-10 pt-4">
-      <header className="mb-6 flex items-center justify-between gap-3">
-        <Link href="/app" className="text-lg font-bold text-emerald-900">
-          McBuleli
-        </Link>
-        <LogoutButton />
-      </header>
-      {children}
-    </div>
-  );
+  const db = getDb();
+  const [u] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return <AppShell email={u?.email ?? ""}>{children}</AppShell>;
 }

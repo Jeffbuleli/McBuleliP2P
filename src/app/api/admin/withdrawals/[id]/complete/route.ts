@@ -38,10 +38,19 @@ export async function POST(
   if (!w) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
-  if (w.status !== WithdrawalStatus.PENDING_AGENT) {
+  if (w.status !== WithdrawalStatus.PROCESSING) {
     return NextResponse.json(
-      { message: "This withdrawal is not pending operator action." },
+      { message: "Complete only withdrawals in progress (claimed)." },
       { status: 409 },
+    );
+  }
+  if (
+    staff.role !== "super_admin" &&
+    w.assignedToUserId !== staff.id
+  ) {
+    return NextResponse.json(
+      { message: "Only the assigned agent or a super admin can complete." },
+      { status: 403 },
     );
   }
 

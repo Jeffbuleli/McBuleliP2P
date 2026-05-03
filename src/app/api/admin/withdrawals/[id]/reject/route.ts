@@ -4,6 +4,7 @@ import { getDb, users, withdrawals } from "@/db";
 import { StaffAuthError, requireStaff } from "@/lib/session-user";
 import { adminRejectWithdrawalSchema } from "@/lib/validation";
 import { WithdrawalStatus } from "@/lib/status";
+import { totalDebitedFromRow } from "@/lib/withdraw-fees";
 
 export async function POST(
   req: Request,
@@ -38,22 +39,41 @@ export async function POST(
   if (!w) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
-  if (w.status !== WithdrawalStatus.PENDING_AGENT) {
+  if (w.status !== WithdrawalStatus.PROCESSING) {
     return NextResponse.json(
-      { message: "This withdrawal is not pending operator action." },
+      { message: "Reject only withdrawals in progress (claimed)." },
       { status: 409 },
     );
   }
+  if (
+    staff.role !== "super_admin" &&
+    w.assignedToUserId !== staff.id
+  ) {
+    return NextResponse.json(
+      { message: "Only the assigned agent or a super admin can reject." },
+      { status: 403 },
+    );
+  }
 
-  const amt = w.amount;
+  const refund = totalDebitedFromRow(w);
+  const isPi = w.asset.toUpperCase() === "PI";
 
   await db.transaction(async (tx) => {
-    await tx
-      .update(users)
-      .set({
-        balance: sql`${users.balance} + ${amt}::numeric`,
-      })
-      .where(eq(users.id, w.userId));
+    if (isPi) {
+      await tx
+        .update(users)
+        .set({
+          piBalance: sql`${users.piBalance} + ${refund}::numeric`,
+        })
+        .where(eq(users.id, w.userId));
+    } else {
+      await tx
+        .update(users)
+        .set({
+          balance: sql`${users.balance} + ${refund}::numeric`,
+        })
+        .where(eq(users.id, w.userId));
+    }
     await tx
       .update(withdrawals)
       .set({

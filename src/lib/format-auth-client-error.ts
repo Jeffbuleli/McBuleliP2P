@@ -5,6 +5,10 @@ export function formatAuthClientError(data: unknown): string {
   }
   const d = data as Record<string, unknown>;
   if (typeof d.message === "string") {
+    const detail = typeof d.detail === "string" ? d.detail.trim() : "";
+    if (detail && detail.length <= 240) {
+      return `${d.message} (${detail})`;
+    }
     return d.message;
   }
   if (typeof d.error === "string") {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
+import { useI18n } from "@/components/i18n-provider";
 
 type W = {
   id: string;
@@ -14,18 +15,22 @@ type W = {
   toAddress: string;
   memoTo: string | null;
   amount: string;
+  fee: string;
   status: string;
   txid: string | null;
-  provider: string;
+  assignedToUserId: string | null;
   createdAt: string;
 };
 
 export default function AdminWithdrawalDetailPage() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
   const [userEmail, setUserEmail] = useState("");
+  const [assigneeEmail, setAssigneeEmail] = useState<string | null>(null);
   const [w, setW] = useState<W | null>(null);
+  const [viewer, setViewer] = useState<{ id: string; role: string } | null>(null);
   const [txid, setTxid] = useState("");
   const [agentNote, setAgentNote] = useState("");
   const [rejectReason, setRejectReason] = useState("");
@@ -36,17 +41,33 @@ export default function AdminWithdrawalDetailPage() {
     const res = await fetch(`/api/admin/withdrawals/${id}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "Not found");
+      setMsg(data.message ?? "—");
       setW(null);
       return;
     }
     setW(data.withdrawal);
     setUserEmail(data.userEmail ?? "");
+    setAssigneeEmail(data.assigneeEmail ?? null);
+    setViewer(data.viewer ?? null);
   }, [id]);
 
   useEffect(() => {
     void load().finally(() => setLoading(false));
   }, [load]);
+
+  async function claim() {
+    setMsg(null);
+    const res = await fetch(`/api/admin/withdrawals/${id}/claim`, {
+      method: "POST",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(data.message ?? "—");
+      return;
+    }
+    setW(data.withdrawal);
+    void load();
+  }
 
   async function complete() {
     setMsg(null);
@@ -60,7 +81,7 @@ export default function AdminWithdrawalDetailPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "Failed");
+      setMsg(data.message ?? "—");
       return;
     }
     router.push("/admin/withdrawals");
@@ -75,79 +96,103 @@ export default function AdminWithdrawalDetailPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "Failed");
+      setMsg(data.message ?? "—");
       return;
     }
     router.push("/admin/withdrawals");
   }
 
   if (loading) {
-    return <p className="text-stone-500">Loading…</p>;
+    return <p className="text-stone-500">…</p>;
   }
   if (!w) {
     return (
       <p className="text-rose-400">
-        {msg ?? "Not found"}{" "}
+        {msg ?? "—"}{" "}
         <Link href="/admin/withdrawals" className="underline">
-          Back
+          {t("admin_back")}
         </Link>
       </p>
     );
   }
 
   const pending = w.status === WithdrawalStatus.PENDING_AGENT;
+  const processing = w.status === WithdrawalStatus.PROCESSING;
+  const totalDebit = (Number(w.amount) + Number(w.fee)).toFixed(8);
+  const canAct =
+    viewer &&
+    (viewer.role === "super_admin" || w.assignedToUserId === viewer.id);
+  const showActions = processing && canAct;
 
   return (
     <div className="space-y-6 pb-12">
       <Link href="/admin/withdrawals" className="text-sm text-amber-200 underline">
-        ← Queue
+        {t("admin_back")}
       </Link>
 
       <div className="rounded-xl border border-stone-700 bg-stone-900/60 p-4">
         <p className="text-xs uppercase text-stone-500">User</p>
         <p className="font-medium text-white">{userEmail}</p>
-        <p className="mt-3 text-xs uppercase text-stone-500">Amount</p>
+        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_net_fee")}</p>
         <p className="text-lg font-semibold text-amber-100">
-          {w.amount} {w.asset}
+          {w.amount} + {w.fee} → {totalDebit}
         </p>
-        <p className="mt-3 text-xs uppercase text-stone-500">Network (user)</p>
+        <p className="mt-3 text-xs uppercase text-stone-500">Net</p>
         <p className="text-white">{w.networkCanonical}</p>
-        <p className="mt-1 text-xs text-stone-500">
-          Internal chain code: {w.networkCex}
-        </p>
-        <p className="mt-3 text-xs uppercase text-stone-500">Destination</p>
+        <p className="mt-1 text-xs text-stone-500">{w.networkCex}</p>
+        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_dest")}</p>
         <p className="break-all font-mono text-sm text-emerald-200/90">
           {w.toAddress}
         </p>
         {w.memoTo ? (
-          <>
-            <p className="mt-3 text-xs uppercase text-stone-500">Memo / tag</p>
-            <p className="font-mono text-sm text-rose-200">{w.memoTo}</p>
-          </>
+          <p className="mt-2 font-mono text-sm text-rose-200">Memo: {w.memoTo}</p>
         ) : null}
-        <p className="mt-3 text-xs text-stone-500">Status: {w.status}</p>
+        <p className="mt-3 text-xs text-stone-500">
+          {w.status === WithdrawalStatus.PENDING_AGENT && t("status_pending")}
+          {w.status === WithdrawalStatus.PROCESSING && (
+            <>
+              {t("admin_processing_label")}
+              {assigneeEmail ? ` · ${assigneeEmail}` : ""}
+            </>
+          )}
+        </p>
         {w.txid ? (
           <p className="mt-2 font-mono text-sm text-stone-400">TXID: {w.txid}</p>
         ) : null}
       </div>
 
       {pending ? (
+        <button
+          type="button"
+          onClick={() => void claim()}
+          className="w-full rounded-xl bg-amber-600 py-3 font-semibold text-white"
+        >
+          {t("admin_claim")}
+        </button>
+      ) : null}
+
+      {processing && !canAct ? (
+        <div className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-sm text-amber-100">
+          {t("admin_release_hint")}
+          {assigneeEmail ? ` (${assigneeEmail})` : ""}
+        </div>
+      ) : null}
+
+      {showActions ? (
         <>
-          <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-sm text-amber-100/90">
-            After you send funds from custody, paste the on-chain TXID below.
-            This updates the customer-facing status to completed.
+          <div className="rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-3 text-sm text-emerald-100/90">
+            {t("admin_txid")} → {t("admin_mark_sent")}
           </div>
           <label className="block text-sm text-stone-300">
-            On-chain TXID
+            {t("admin_txid")}
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
               className="mt-1 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 font-mono text-sm text-white"
-              placeholder="0x… or Tron txid"
             />
           </label>
           <label className="block text-sm text-stone-300">
-            Internal note (optional)
+            {t("admin_note")}
             <textarea
               value={agentNote}
               onChange={(e) => setAgentNote(e.target.value)}
@@ -161,18 +206,14 @@ export default function AdminWithdrawalDetailPage() {
             onClick={() => void complete()}
             className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
           >
-            Mark as sent (save TXID)
+            {t("admin_mark_sent")}
           </button>
 
           <div className="border-t border-stone-700 pt-6">
-            <p className="mb-2 text-sm text-stone-400">
-              Reject &amp; refund (funds return to user balance)
-            </p>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               className="mb-2 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 text-sm text-white"
-              placeholder="Reason shown to user"
               rows={2}
             />
             <button
@@ -181,7 +222,7 @@ export default function AdminWithdrawalDetailPage() {
               onClick={() => void reject()}
               className="w-full rounded-xl border border-rose-700 bg-rose-950/40 py-3 font-semibold text-rose-100 disabled:opacity-40"
             >
-              Reject withdrawal
+              {t("admin_reject")}
             </button>
           </div>
         </>
