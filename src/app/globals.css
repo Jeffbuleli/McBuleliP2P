@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --brand-green: #15803d;
+  --brand-green-dark: #14532d;
+  --brand-maroon: #7f1d1d;
+  --brand-maroon-light: #991b1b;
+  --surface: #f8faf9;
+  --surface-card: #ffffff;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-brand-green: var(--brand-green);
+  --color-brand-maroon: var(--brand-maroon);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: linear-gradient(
+    180deg,
+    var(--surface) 0%,
+    #ecfdf5 45%,
+    #fff7ed 100%
+  );
+  color: var(--foreground);
+  min-height: 100dvh;
+}
