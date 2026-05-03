@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         message:
-          "Deposit route A is not available (server configuration missing).",
+          "Route A is not enabled: add BINANCE_API_KEY and BINANCE_API_SECRET to the server .env file.",
       },
       { status: 503 },
     );
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         message:
-          "Deposit route B is not available (server configuration missing).",
+          "Route B is not enabled: add OKX_API_KEY, OKX_API_SECRET, and OKX_PASSPHRASE to the server .env file.",
       },
       { status: 503 },
     );
