@@ -26,6 +26,8 @@ Next.js app for **guided USDT deposits and withdrawals** with **strict on-exchan
    npm run dev
    ```
 
+**Registration / login fail?** The API needs a running PostgreSQL and an applied schema (`npm run db:push`). If the DB is down or `DATABASE_URL` is wrong, the UI now shows a clear error instead of “Could not register.”
+
 ## Environment
 
 - **DATABASE_URL** — PostgreSQL connection string (Vercel: use Neon or other compatible host; long-lived connections work with `postgres` + pooling on Render).
