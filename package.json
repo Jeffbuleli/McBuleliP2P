@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "verify:binance": "node --env-file=.env.local scripts/verify-binance.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
