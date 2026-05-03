@@ -30,6 +30,11 @@ Primary colours: **green** + **maroon**. **PWA**-ready (manifest).
 
 4. Optional: `npm run verify:binance` — validates Binance keys only (used for deposit routes / TXID lookup where configured).
 
+### Exchange API permissions
+
+- **Deposits (Route A / B)** only need what’s required to fetch a **deposit address** and **deposit history** (TXID validation). On OKX, **read-style permissions are sufficient** for Route B — you do **not** need OKX “withdraw” rights for this codebase, because **outbound transfers are operator-driven** (`/admin`), not API-driven.
+- If you later create OKX keys **with withdrawal**, that only matters for **manual** operations in the OKX UI or a future automation — not required today.
+
 ## Roles
 
 | Role            | Access                                              |
