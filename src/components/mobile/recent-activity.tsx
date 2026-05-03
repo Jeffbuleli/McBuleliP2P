@@ -5,6 +5,10 @@ import type { Locale } from "@/i18n/locale";
 export type ActivityRow = {
   id: string;
   kind: "deposit" | "withdrawal";
+  /** e.g. USDT, PI */
+  asset: string;
+  /** Localized network description */
+  networkLabel: string;
   amount: string | null;
   status: string;
   tone: "success" | "pending" | "failed";
@@ -48,6 +52,9 @@ export function RecentActivity({
                 <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-50">
                   {row.kind === "deposit" ? d.deposit : d.withdraw}
                 </p>
+                <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">
+                  {row.networkLabel}
+                </p>
                 <p className="text-xs text-stone-500 dark:text-stone-400">
                   <StatusBadge locale={locale} tone={row.tone} raw={row.status} />
                 </p>
@@ -55,7 +62,9 @@ export function RecentActivity({
               <div className="text-right">
                 <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-50">
                   {row.amount != null ? `${row.amount}` : "—"}{" "}
-                  <span className="text-xs font-medium text-stone-500">USDT</span>
+                  <span className="text-xs font-medium text-stone-500">
+                    {activityAssetUnit(row.asset)}
+                  </span>
                 </p>
               </div>
             </li>
@@ -70,6 +79,12 @@ export function RecentActivity({
       </Link>
     </section>
   );
+}
+
+function activityAssetUnit(asset: string): string {
+  const u = asset.trim().toUpperCase();
+  if (u === "PI") return "PI";
+  return "USDT";
 }
 
 function StatusBadge({

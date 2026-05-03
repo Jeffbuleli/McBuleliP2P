@@ -238,11 +238,14 @@ export default function WithdrawPage() {
             <ul className="mt-4 space-y-2 text-sm text-stone-700 dark:text-stone-300">
               <li>
                 <strong>{wAsset}</strong> ·{" "}
-                {wAsset === "USDT" ? network : PI_MAIN_NETWORK_ID}
+                {wAsset === "USDT"
+                  ? network
+                  : t("deposit_network_pi_main")}
               </li>
               <li className="break-all font-mono text-xs">{address.trim()}</li>
               <li>
-                {t("withdraw_amt")}: {amount} · +{fee} {unit} →{" "}
+                {wAsset === "PI" ? t("withdraw_amt_pi") : t("withdraw_amt")}:{" "}
+                {amount} · +{fee} {unit} →{" "}
                 {totalDebit?.toLocaleString(undefined, { maximumFractionDigits: 8 })}{" "}
                 {unit}
               </li>

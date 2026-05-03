@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const snapshot = await getPortfolioSnapshotForUser(userId, locale);
 
   const tickers = await fetchMarketTickers();
-  const activity = await loadRecentActivity(userId, 8);
+  const activity = await loadRecentActivity(userId, locale, 8);
 
   const empty = {
     totalEquivDisplay: "≈ 0 USDT",

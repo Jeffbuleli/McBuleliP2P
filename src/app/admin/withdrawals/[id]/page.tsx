@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
 import { useI18n } from "@/components/i18n-provider";
 
 type W = {
@@ -23,7 +24,7 @@ type W = {
 };
 
 export default function AdminWithdrawalDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
@@ -119,6 +120,7 @@ export default function AdminWithdrawalDetailPage() {
   const pending = w.status === WithdrawalStatus.PENDING_AGENT;
   const processing = w.status === WithdrawalStatus.PROCESSING;
   const totalDebit = (Number(w.amount) + Number(w.fee)).toFixed(8);
+  const networkLine = activityNetworkLabel(locale, w.networkCanonical);
   const canAct =
     viewer &&
     (viewer.role === "super_admin" || w.assignedToUserId === viewer.id);
@@ -133,12 +135,14 @@ export default function AdminWithdrawalDetailPage() {
       <div className="rounded-xl border border-stone-700 bg-stone-900/60 p-4">
         <p className="text-xs uppercase text-stone-500">User</p>
         <p className="font-medium text-white">{userEmail}</p>
+        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_asset")}</p>
+        <p className="text-lg font-semibold text-white">{w.asset}</p>
         <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_net_fee")}</p>
         <p className="text-lg font-semibold text-amber-100">
-          {w.amount} + {w.fee} → {totalDebit}
+          {w.amount} + {w.fee} {w.asset} → {totalDebit} {w.asset}
         </p>
-        <p className="mt-3 text-xs uppercase text-stone-500">Net</p>
-        <p className="text-white">{w.networkCanonical}</p>
+        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_network")}</p>
+        <p className="text-white">{networkLine}</p>
         <p className="mt-1 text-xs text-stone-500">{w.networkCex}</p>
         <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_dest")}</p>
         <p className="break-all font-mono text-sm text-emerald-200/90">

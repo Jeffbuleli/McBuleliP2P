@@ -1,5 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb, deposits, withdrawals } from "@/db";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
+import type { Locale } from "@/i18n/locale";
 import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { ActivityRow } from "@/components/mobile/recent-activity";
 
@@ -23,6 +25,7 @@ function withdrawalTone(
 
 export async function loadRecentActivity(
   userId: string,
+  locale: Locale,
   limit = 8,
 ): Promise<ActivityRow[]> {
   const db = getDb();
@@ -31,6 +34,8 @@ export async function loadRecentActivity(
     db
       .select({
         id: deposits.id,
+        asset: deposits.asset,
+        networkCanonical: deposits.networkCanonical,
         amount: deposits.amount,
         status: deposits.status,
         createdAt: deposits.createdAt,
@@ -42,6 +47,8 @@ export async function loadRecentActivity(
     db
       .select({
         id: withdrawals.id,
+        asset: withdrawals.asset,
+        networkCanonical: withdrawals.networkCanonical,
         amount: withdrawals.amount,
         status: withdrawals.status,
         createdAt: withdrawals.createdAt,
@@ -56,6 +63,8 @@ export async function loadRecentActivity(
     ...depRows.map((r) => ({
       id: r.id,
       kind: "deposit" as const,
+      asset: r.asset,
+      networkLabel: activityNetworkLabel(locale, r.networkCanonical),
       amount: r.amount?.toString() ?? null,
       status: r.status,
       tone: depositTone(r.status),
@@ -64,6 +73,8 @@ export async function loadRecentActivity(
     ...wdRows.map((r) => ({
       id: r.id,
       kind: "withdrawal" as const,
+      asset: r.asset,
+      networkLabel: activityNetworkLabel(locale, r.networkCanonical),
       amount: r.amount?.toString() ?? null,
       status: r.status,
       tone: withdrawalTone(r.status),

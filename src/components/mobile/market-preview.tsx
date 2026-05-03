@@ -102,7 +102,7 @@ export function MarketPreview({
             <li key={t.symbol}>
               <Link
                 href="/app/market"
-                className="flex min-h-[48px] items-center justify-between gap-3 py-2.5 active:bg-stone-50 dark:active:bg-stone-800/50"
+                className="flex min-h-[44px] items-center justify-between gap-2.5 py-2 active:bg-stone-50 dark:active:bg-stone-800/50"
               >
                 <span className="flex min-w-0 items-center gap-2.5 font-semibold text-stone-900 dark:text-stone-100">
                   <MarketCoinIcon symbol={t.symbol} />

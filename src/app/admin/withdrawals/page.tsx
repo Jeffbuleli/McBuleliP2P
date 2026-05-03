@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
 import { useI18n } from "@/components/i18n-provider";
 
 type Row = {
   id: string;
   userEmail: string;
+  asset: string;
   networkCanonical: string;
   amount: string;
   fee: string;
@@ -17,7 +19,7 @@ type Row = {
 };
 
 export default function AdminWithdrawalsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("active");
@@ -91,8 +93,14 @@ export default function AdminWithdrawalsPage() {
                 className="block rounded-xl border border-stone-700 bg-stone-900/80 px-4 py-3 transition hover:border-amber-600/50"
               >
                 <div className="flex flex-wrap justify-between gap-2">
-                  <span className="font-mono text-sm text-amber-100/90">
-                    {r.amount}+{r.fee} · {r.networkCanonical}
+                  <span className="min-w-0 font-mono text-sm text-amber-100/90">
+                    <span className="mr-1 inline-block rounded bg-amber-950/60 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                      {r.asset}
+                    </span>
+                    <span className="break-all">
+                      {r.amount}+{r.fee} {r.asset} ·{" "}
+                      {activityNetworkLabel(locale, r.networkCanonical)}
+                    </span>
                   </span>
                   <span className="text-xs text-stone-500">
                     {new Date(r.createdAt).toLocaleString()}
