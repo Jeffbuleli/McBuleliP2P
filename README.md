@@ -9,7 +9,7 @@ Next.js app for **guided USDT deposits and withdrawals** with **strict on-exchan
 
 ## Setup
 
-1. Copy `.env.example` to `.env.local` and fill values. **Do not put real API keys in `.env.example`** (it may be committed to git). Optional: `npm run verify:binance` checks Binance keys from `.env.local`.
+1. Copy `.env.example` to `.env` and fill values. **Do not put real API keys in `.env.example`** (it may be committed to git). Optional: `npm run verify:binance` checks Binance keys using `.env`.
 
 2. Create the database schema:
 

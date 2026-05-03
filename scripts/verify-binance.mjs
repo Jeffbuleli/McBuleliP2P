@@ -1,6 +1,6 @@
 /**
  * Quick check that BINANCE_API_KEY / BINANCE_API_SECRET work (signed GET /api/v3/account).
- * Run: node --env-file=.env.local scripts/verify-binance.mjs
+ * Run: node --env-file=.env scripts/verify-binance.mjs
  */
 import crypto from "node:crypto";
 
@@ -9,7 +9,7 @@ const key = process.env.BINANCE_API_KEY;
 const secret = process.env.BINANCE_API_SECRET;
 
 if (!key || !secret) {
-  console.error("Set BINANCE_API_KEY and BINANCE_API_SECRET (e.g. in .env.local).");
+  console.error("Set BINANCE_API_KEY and BINANCE_API_SECRET (e.g. in .env).");
   process.exit(1);
 }
 
