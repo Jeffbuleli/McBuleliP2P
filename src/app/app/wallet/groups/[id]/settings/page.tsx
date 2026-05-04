@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
+import { countryLabel } from "@/lib/country-label";
 
 type MemberRow = {
   userId: string;
@@ -19,6 +20,7 @@ type Dashboard = {
     id: string;
     type: string;
     name: string;
+    countryCode?: string | null;
     status: string;
     subscriptionStatus: string;
     nextBillingAt: string | null;
@@ -28,7 +30,7 @@ type Dashboard = {
 };
 
 export default function GroupSettingsPage({ params }: { params: { id: string } }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const id = params.id;
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -144,6 +146,7 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             {g.type}
+            {g.countryCode ? ` · ${countryLabel(locale, g.countryCode)}` : ""}
           </p>
           <h1 className="mt-1 truncate text-lg font-bold text-stone-900 dark:text-stone-50">
             {g.name}

@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { createGroup } from "@/lib/group-savings-service";
+import { APP_COUNTRY_CODES } from "@/lib/country-codes";
 
 const bodyZ = z.object({
   type: z.enum(["likelimba", "avec"]),
   name: z.string().min(2).max(96),
-  countryCode: z.string().max(8).optional().nullable(),
+  countryCode: z.enum(APP_COUNTRY_CODES).optional().nullable(),
   minMembers: z.number().int().min(2).max(100),
   maxMembers: z.number().int().min(2).max(100),
   contributionAmountUsdt: z.number().positive(),

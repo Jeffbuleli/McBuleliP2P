@@ -12,6 +12,10 @@ function flagEmoji(countryCode: string): string {
 export function countryLabel(locale: Locale, countryCode: string): string {
   const cc = (countryCode ?? "").trim().toUpperCase();
   if (!cc) return "—";
+  if (cc === "OTHER") {
+    const name = locale === "fr" ? "Autre" : "Other";
+    return `🏳️ ${name} (OTHER)`;
+  }
 
   // Prefer full name via Intl.DisplayNames when available.
   let name: string | null = null;

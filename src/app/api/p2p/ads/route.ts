@@ -18,7 +18,7 @@ const createZ = z.object({
   maxFiat: z.string().min(1),
   paymentMethods: z.string().min(3),
   terms: z.string().optional(),
-  countryCode: z.string().min(2).max(8).optional(),
+  countryCode: z.enum(P2P_COUNTRY_CODES).optional(),
 });
 
 export async function GET() {

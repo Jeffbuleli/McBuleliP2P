@@ -19,6 +19,11 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   /** user | agent | super_admin */
   role: varchar("role", { length: 32 }).notNull().default("user"),
+  /** ISO 3166-1 alpha-2 (e.g. CD) or OTHER. */
+  countryCode: varchar("country_code", { length: 8 }),
+  /** none | pending | approved | rejected | manual_review */
+  kycStatus: varchar("kyc_status", { length: 16 }).notNull().default("none"),
+  kycUpdatedAt: timestamp("kyc_updated_at", { withTimezone: true }),
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),

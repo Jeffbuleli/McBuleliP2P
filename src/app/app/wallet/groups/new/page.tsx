@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { APP_COUNTRY_CODES } from "@/lib/country-codes";
+import { countryLabel } from "@/lib/country-label";
 
 export default function GroupCreatePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [type, setType] = useState<"likelimba" | "avec">("likelimba");
   const [name, setName] = useState("");
-  const [countryCode, setCountryCode] = useState("");
+  const [countryCode, setCountryCode] = useState("CD");
   const [minMembers, setMinMembers] = useState("5");
   const [maxMembers, setMaxMembers] = useState("15");
   const [amount, setAmount] = useState("10");
@@ -88,12 +90,17 @@ export default function GroupCreatePage() {
           </label>
           <label className="flex flex-col gap-1 text-xs font-semibold text-stone-600 dark:text-stone-400">
             {t("group_field_country")}
-            <input
+            <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              placeholder="CD"
               className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-50"
-            />
+            >
+              {APP_COUNTRY_CODES.map((c) => (
+                <option key={c} value={c}>
+                  {countryLabel(locale, c)}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="col-span-2 flex flex-col gap-1 text-xs font-semibold text-stone-600 dark:text-stone-400">
             {t("group_field_name")}
