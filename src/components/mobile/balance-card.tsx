@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useI18n } from "@/components/i18n-provider";
+import type { Locale } from "@/i18n/locale";
+import { getDictionary } from "@/i18n/messages";
 
 function formatHidden() {
   return "••••";
 }
 
 export function BalanceCard({
+  locale,
   totalEquivDisplay,
   usdtDisplay,
   piDisplay,
   fiatUsdDisplay,
   fiatCdfDisplay,
 }: {
+  locale: Locale;
   /** Estimated portfolio in USDT (USDT + Pi valued via OKX PI-USDT when available). */
   totalEquivDisplay: string;
   usdtDisplay: string;
@@ -21,24 +24,24 @@ export function BalanceCard({
   fiatUsdDisplay: string;
   fiatCdfDisplay: string;
 }) {
-  const { t } = useI18n();
+  const d = getDictionary(locale);
   const [hidden, setHidden] = useState(false);
 
   return (
     <section
       className="rounded-2xl border border-emerald-800/10 bg-gradient-to-b from-white to-emerald-50/80 p-3.5 shadow-md shadow-emerald-900/5 dark:border-white/10 dark:from-stone-900 dark:to-stone-900/90"
-      aria-label={t("balance_estimated_total")}
+      aria-label={d.balance_estimated_total}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-          {t("balance_estimated_total")}
+          {d.balance_estimated_total}
         </p>
         <button
           type="button"
           onClick={() => setHidden((h) => !h)}
           className="min-h-[40px] min-w-[40px] rounded-lg px-2 text-stone-500 transition active:scale-95 dark:text-stone-400"
           aria-pressed={hidden}
-          aria-label={hidden ? t("show_balance") : t("hide_balance")}
+          aria-label={hidden ? d.show_balance : d.hide_balance}
         >
           {hidden ? <EyeIcon /> : <EyeOffIcon />}
         </button>
@@ -47,7 +50,7 @@ export function BalanceCard({
         {hidden ? formatHidden() : totalEquivDisplay}
       </p>
       <p className="mt-0.5 text-center text-[10px] text-stone-500 dark:text-stone-400">
-        {t("balance_equiv_usdt_note")}
+        {d.balance_equiv_usdt_note}
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-2 border-t border-emerald-900/10 pt-3 dark:border-white/10">

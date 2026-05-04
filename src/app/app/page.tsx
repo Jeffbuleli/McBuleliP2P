@@ -39,6 +39,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-4 pb-2">
       <BalanceCard
+        locale={locale}
         totalEquivDisplay={s.totalEquivDisplay}
         usdtDisplay={s.usdtDisplay}
         piDisplay={s.piDisplay}
