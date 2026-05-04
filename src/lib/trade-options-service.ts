@@ -1,4 +1,5 @@
 import { and, desc, eq, lte } from "drizzle-orm";
+import { creditTradeDemoUsdt, debitTradeDemoUsdt } from "@/lib/trade-demo-balance";
 import { randomUUID } from "node:crypto";
 import { getDb, tradeSimpleOptions, users } from "@/db";
 import {
@@ -56,6 +57,7 @@ export async function settleExpiredOptions(userId: string): Promise<void> {
     }
 
     const batchId = randomUUID();
+    const isDemo = Boolean(o.isDemo);
     try {
       await db.transaction(async (tx) => {
         await tx
@@ -70,22 +72,28 @@ export async function settleExpiredOptions(userId: string): Promise<void> {
           .where(eq(tradeSimpleOptions.id, o.id));
 
         if (pay > 1e-18) {
-          await creditUserAsset(tx, userId, "USDT", fmtTradeAmount(pay));
+          if (isDemo) {
+            await creditTradeDemoUsdt(tx, userId, fmtTradeAmount(pay));
+          } else {
+            await creditUserAsset(tx, userId, "USDT", fmtTradeAmount(pay));
+          }
         }
-        await insertWalletLedgerLines(tx, [
-          {
-            batchId,
-            userId,
-            entryType: "trade_options_settle",
-            asset: "USDT",
-            amount: pay > 1e-18 ? fmtTradeAmount(pay) : "0",
-            meta: {
-              optionId: o.id,
-              outcome: out,
-              settlement,
+        if (!isDemo) {
+          await insertWalletLedgerLines(tx, [
+            {
+              batchId,
+              userId,
+              entryType: "trade_options_settle",
+              asset: "USDT",
+              amount: pay > 1e-18 ? fmtTradeAmount(pay) : "0",
+              meta: {
+                optionId: o.id,
+                outcome: out,
+                settlement,
+              },
             },
-          },
-        ]);
+          ]);
+        }
       });
     } catch {
       // ignore single-row failure; next poll retries
@@ -93,13 +101,22 @@ export async function settleExpiredOptions(userId: string): Promise<void> {
   }
 }
 
-export async function listSimpleOptions(userId: string) {
+export async function listSimpleOptions(
+  userId: string,
+  mode: "demo" | "live",
+) {
+  const isDemo = mode === "demo";
   await settleExpiredOptions(userId);
   const db = getDb();
   const rows = await db
     .select()
     .from(tradeSimpleOptions)
-    .where(eq(tradeSimpleOptions.userId, userId))
+    .where(
+      and(
+        eq(tradeSimpleOptions.userId, userId),
+        eq(tradeSimpleOptions.isDemo, isDemo),
+      ),
+    )
     .orderBy(desc(tradeSimpleOptions.createdAt))
     .limit(40);
   return rows.map((o) => ({
@@ -120,12 +137,26 @@ export async function listSimpleOptions(userId: string) {
 
 export async function openSimpleOption(args: {
   userId: string;
+  mode: "demo" | "live";
   symbol: string;
   direction: "call" | "put";
   stakeUsdt: number;
   durationSec: number;
 }): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
-  const { userId, symbol, direction, stakeUsdt, durationSec } = args;
+  const { userId, mode, symbol, direction, stakeUsdt, durationSec } = args;
+  const isDemo = mode === "demo";
+
+  if (!isDemo) {
+    const dbCheck = getDb();
+    const [row] = await dbCheck
+      .select({ tradeLiveEnabled: users.tradeLiveEnabled })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!row?.tradeLiveEnabled) {
+      return { ok: false, message: "trade_live_not_enabled" };
+    }
+  }
 
   if (!isTradeSymbol(symbol)) {
     return { ok: false, message: "trade_invalid_symbol" };
@@ -164,15 +195,25 @@ export async function openSimpleOption(args: {
   try {
     const id = await db.transaction(async (tx) => {
       const [u] = await tx
-        .select({ balance: users.balance })
+        .select({
+          balance: users.balance,
+          tradeDemoUsdtBalance: users.tradeDemoUsdtBalance,
+          tradeLiveEnabled: users.tradeLiveEnabled,
+        })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
       if (!u) throw new Error("user");
-      const bal = numFromNumeric(u.balance?.toString());
-      if (bal + 1e-18 < total) throw new Error("insufficient");
-
-      await debitUserAsset(tx, userId, "USDT", fmtTradeAmount(total));
+      if (isDemo) {
+        const bal = numFromNumeric(u.tradeDemoUsdtBalance?.toString());
+        if (bal + 1e-18 < total) throw new Error("insufficient");
+        await debitTradeDemoUsdt(tx, userId, fmtTradeAmount(total));
+      } else {
+        if (!u.tradeLiveEnabled) throw new Error("live_disabled");
+        const bal = numFromNumeric(u.balance?.toString());
+        if (bal + 1e-18 < total) throw new Error("insufficient");
+        await debitUserAsset(tx, userId, "USDT", fmtTradeAmount(total));
+      }
 
       const inserted = await tx
         .insert(tradeSimpleOptions)
@@ -187,27 +228,30 @@ export async function openSimpleOption(args: {
           entryPrice: fmtTradeAmount(ticker.lastPrice),
           feeUsdt: fmtTradeAmount(fee),
           status: "pending",
+          isDemo,
           meta: { batchOpen: batchId },
         })
         .returning({ id: tradeSimpleOptions.id });
 
       const row = inserted[0];
-      await insertWalletLedgerLines(tx, [
-        {
-          batchId,
-          userId,
-          entryType: "trade_options_open",
-          asset: "USDT",
-          amount: `-${fmtTradeAmount(total)}`,
-          meta: {
-            symbol,
-            direction,
-            stake: stakeUsdt,
-            fee,
-            durationSec,
+      if (!isDemo) {
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId,
+            userId,
+            entryType: "trade_options_open",
+            asset: "USDT",
+            amount: `-${fmtTradeAmount(total)}`,
+            meta: {
+              symbol,
+              direction,
+              stake: stakeUsdt,
+              fee,
+              durationSec,
+            },
           },
-        },
-      ]);
+        ]);
+      }
       return row?.id ?? "";
     });
 
@@ -217,6 +261,9 @@ export async function openSimpleOption(args: {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "insufficient") {
       return { ok: false, message: "trade_insufficient_usdt" };
+    }
+    if (msg === "live_disabled") {
+      return { ok: false, message: "trade_live_not_enabled" };
     }
     return { ok: false, message: "trade_options_open_failed" };
   }

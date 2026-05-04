@@ -8,7 +8,7 @@ export function ConditionalLangSwitch() {
   const pathname = usePathname();
   if (pathname.startsWith("/app")) return null;
   return (
-    <div className="fixed right-3 top-3 z-50">
+    <div className="fixed right-3 top-3 z-50 hidden sm:block">
       <LangSwitch />
     </div>
   );

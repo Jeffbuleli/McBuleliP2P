@@ -16,7 +16,7 @@ export function AppShell({
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]">
       <div className="sticky top-0 z-40 px-3 pt-2">
-        <div className="rounded-2xl border border-emerald-900/12 bg-white/90 shadow-lg shadow-black/10 ring-1 ring-black/[0.04] backdrop-blur-md dark:border-white/10 dark:bg-stone-950/90 dark:ring-white/[0.06]">
+        <div className="rounded-2xl border border-stone-700/50 bg-stone-900/90 shadow-lg shadow-black/20 ring-1 ring-stone-800/80 backdrop-blur-md">
           <div className="px-2 py-1.5">
             <AppTopBar email={email} />
           </div>

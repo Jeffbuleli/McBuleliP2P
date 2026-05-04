@@ -4,11 +4,13 @@ import { listSimpleOptions } from "@/lib/trade-options-service";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const orders = await listSimpleOptions(userId);
+  const { searchParams } = new URL(req.url);
+  const mode = searchParams.get("mode") === "live" ? "live" : "demo";
+  const orders = await listSimpleOptions(userId, mode);
   return NextResponse.json({ orders });
 }

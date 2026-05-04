@@ -41,7 +41,12 @@ export async function POST(req: Request) {
       : UserRole.USER;
     const [created] = await db
       .insert(users)
-      .values({ email, passwordHash, role })
+      .values({
+        email,
+        passwordHash,
+        role,
+        tradeLiveEnabled: false,
+      })
       .returning({
         id: users.id,
         email: users.email,

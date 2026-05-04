@@ -22,7 +22,7 @@ export function AppBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-emerald-900/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md dark:border-white/10 dark:bg-stone-950/95"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-800 bg-stone-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1">

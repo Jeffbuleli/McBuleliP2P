@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { openSimpleOption } from "@/lib/trade-options-service";
 
 const bodyZ = z.object({
+  mode: z.enum(["demo", "live"]),
   symbol: z.string().min(4),
   direction: z.enum(["call", "put"]),
   stakeUsdt: z.number().positive(),
@@ -28,7 +29,11 @@ export async function POST(req: Request) {
   }
   const r = await openSimpleOption({
     userId,
-    ...parsed.data,
+    mode: parsed.data.mode,
+    symbol: parsed.data.symbol,
+    direction: parsed.data.direction,
+    stakeUsdt: parsed.data.stakeUsdt,
+    durationSec: parsed.data.durationSec,
   });
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });

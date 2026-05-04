@@ -14,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "McBuleli P2P",
   description:
-    "USDT deposits & withdrawals — guided flows and TXID validation.",
+    "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.",
   applicationName: "McBuleli P2P",
   appleWebApp: {
     capable: true,
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#15803d",
+  themeColor: "#0c0a09",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -38,8 +38,12 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   return (
-    <html lang={locale} className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans">
+    <html
+      lang={locale}
+      className={`dark ${inter.variable} h-full scroll-smooth antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full font-sans text-stone-100">
         <ThemeProvider>
           <I18nProvider initialLocale={locale}>
             <ConditionalLangSwitch />

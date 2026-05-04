@@ -18,32 +18,29 @@ type Ctx = { theme: Theme; setTheme: (t: Theme) => void; toggle: () => void };
 const ThemeCtx = createContext<Ctx | null>(null);
 
 function getInitial(): Theme {
-  if (typeof window === "undefined") return "light";
-  const s = localStorage.getItem(STORAGE);
-  if (s === "dark" || s === "light") return s;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return "dark";
 }
 
+/** Product is dark-mode only; keeps session storage aligned for any legacy readers. */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    const t = getInitial();
-    setThemeState(t);
-    document.documentElement.classList.toggle("dark", t === "dark");
+    setThemeState("dark");
+    document.documentElement.classList.add("dark");
+    localStorage.setItem(STORAGE, "dark");
   }, []);
 
   const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
-    localStorage.setItem(STORAGE, t);
-    document.documentElement.classList.toggle("dark", t === "dark");
+    if (t !== "dark") return;
+    setThemeState("dark");
+    localStorage.setItem(STORAGE, "dark");
+    document.documentElement.classList.add("dark");
   }, []);
 
   const toggle = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+    /* intentionally no-op: dark-only experience */
+  }, []);
 
   return (
     <ThemeCtx.Provider value={{ theme, setTheme, toggle }}>

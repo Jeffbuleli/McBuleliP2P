@@ -12,6 +12,10 @@ import {
   tradeMaxOptionsStakeUsdt,
 } from "@/lib/trade-config";
 import type { TradeTf } from "@/components/trade/trade-mini-chart";
+import {
+  TradeModeBar,
+  type TradeAppMode,
+} from "@/components/trade/trade-mode-bar";
 import type { Messages } from "@/i18n/messages";
 
 function expiryLabelKey(sec: number): keyof Messages {
@@ -62,6 +66,11 @@ export function OptionsTradingClient() {
   const [durationSec, setDurationSec] = useState<number>(300);
   const [stakeStr, setStakeStr] = useState("25");
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [tradeMode, setTradeMode] = useState<TradeAppMode>("demo");
+  const [tradeLiveEnabled, setTradeLiveEnabled] = useState(false);
+  const [demoUsdt, setDemoUsdt] = useState(10000);
+  const [walletUsdt, setWalletUsdt] = useState<number | null>(null);
+  const [enableBusy, setEnableBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -85,15 +94,49 @@ export function OptionsTradingClient() {
     }
   }, [symbol]);
 
+  const loadTradeMode = useCallback(async () => {
+    try {
+      const res = await fetch("/api/trade/mode", { cache: "no-store" });
+      const j = (await res.json()) as {
+        demoUsdt?: string;
+        tradeLiveEnabled?: boolean;
+      };
+      if (res.ok) {
+        const d = Number(j.demoUsdt ?? "0");
+        if (Number.isFinite(d)) setDemoUsdt(d);
+        setTradeLiveEnabled(Boolean(j.tradeLiveEnabled));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const pollWallet = useCallback(async () => {
+    try {
+      const res = await fetch("/api/wallet/summary", { cache: "no-store" });
+      const j = (await res.json()) as {
+        lines?: { asset: string; balanceNum: number }[];
+      };
+      if (!res.ok) return;
+      const usdt = j.lines?.find((l) => l.asset === "USDT")?.balanceNum;
+      if (typeof usdt === "number") setWalletUsdt(usdt);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const pollOrders = useCallback(async () => {
     try {
-      const res = await fetch("/api/trade/options/list", { cache: "no-store" });
+      const res = await fetch(
+        `/api/trade/options/list?mode=${encodeURIComponent(tradeMode)}`,
+        { cache: "no-store" },
+      );
       const j = (await res.json()) as { orders?: OrderRow[] };
       if (res.ok) setOrders(j.orders ?? []);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [tradeMode]);
 
   useEffect(() => {
     void pollTicker();
@@ -107,6 +150,14 @@ export function OptionsTradingClient() {
     return () => window.clearInterval(id);
   }, [pollOrders]);
 
+  useEffect(() => {
+    void pollWallet();
+  }, [pollWallet]);
+
+  useEffect(() => {
+    void loadTradeMode();
+  }, [tradeMode, loadTradeMode]);
+
   const mark = ticker?.lastPrice ?? 0;
 
   async function submitOpen() {
@@ -117,6 +168,7 @@ export function OptionsTradingClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          mode: tradeMode,
           symbol,
           direction,
           stakeUsdt: stake,
@@ -125,11 +177,16 @@ export function OptionsTradingClient() {
       });
       const j = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setMsg(j.error ?? "error");
+        setMsg(
+          j.error === "trade_live_not_enabled"
+            ? t("trade_error_live_not_enabled")
+            : (j.error ?? "error"),
+        );
         return;
       }
       setConfirmOpen(false);
       await pollOrders();
+      await loadTradeMode();
     } finally {
       setBusy(false);
     }
@@ -140,8 +197,34 @@ export function OptionsTradingClient() {
     [orders],
   );
 
+  async function enableLive() {
+    setEnableBusy(true);
+    try {
+      const res = await fetch("/api/trade/live-enable", { method: "POST" });
+      if (res.ok) await loadTradeMode();
+    } finally {
+      setEnableBusy(false);
+    }
+  }
+
+  const availStake =
+    tradeMode === "demo"
+      ? demoUsdt
+      : walletUsdt != null
+        ? walletUsdt
+        : null;
+
   return (
     <div className="space-y-4 pb-8">
+      <TradeModeBar
+        mode={tradeMode}
+        onModeChange={setTradeMode}
+        tradeLiveEnabled={tradeLiveEnabled}
+        demoUsdt={demoUsdt}
+        onEnableLive={enableLive}
+        enableBusy={enableBusy}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="flex flex-col gap-1 text-xs font-semibold text-stone-600 dark:text-stone-400">
           {t("trade_ui_pair")}
@@ -169,6 +252,17 @@ export function OptionsTradingClient() {
       <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
 
       <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+        <p className="mb-2 text-xs font-semibold text-stone-500 dark:text-stone-400">
+          {tradeMode === "demo"
+            ? t("trade_ui_demo_balance")
+            : t("trade_ui_usdt_balance")}
+          :{" "}
+          <span className="font-mono text-stone-900 dark:text-stone-100">
+            {availStake != null
+              ? availStake.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              : "—"}
+          </span>
+        </p>
         <p className="mb-3 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
           {t("trade_ui_options_simple")}
         </p>
@@ -261,6 +355,7 @@ export function OptionsTradingClient() {
           type="button"
           disabled={
             busy ||
+            (tradeMode === "live" && !tradeLiveEnabled) ||
             !Number.isFinite(stake) ||
             stake <= 0 ||
             stake > tradeMaxOptionsStakeUsdt()

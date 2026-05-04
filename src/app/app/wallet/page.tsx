@@ -9,10 +9,13 @@ import { EXTERNAL_WITHDRAW_FEE_USDT } from "@/lib/withdraw-fees";
 import type { Locale } from "@/i18n/locale";
 import {
   WalletOverview,
+  type ServicePromoDTO,
   type StakingPromoDTO,
   type WalletOverviewLabels,
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
+import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
+import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +114,67 @@ export default async function WalletPage() {
     riskShort: d.staking_risk_short,
   };
 
+  const groupPromos: ServicePromoDTO[] = [];
+  try {
+    const db = getDb();
+    const memberships = await db
+      .select({
+        groupId: groupSavingsMemberships.groupId,
+        role: groupSavingsMemberships.role,
+        status: groupSavingsMemberships.status,
+        type: groupSavingsGroups.type,
+        gStatus: groupSavingsGroups.status,
+        subStatus: groupSavingsGroups.subscriptionStatus,
+      })
+      .from(groupSavingsMemberships)
+      .innerJoin(
+        groupSavingsGroups,
+        eq(groupSavingsMemberships.groupId, groupSavingsGroups.id),
+      )
+      .where(eq(groupSavingsMemberships.userId, userId))
+      .limit(200);
+
+    const mine = memberships.filter((m) => m.status === "approved");
+    const counts = (type: string) => {
+      const xs = mine.filter((m) => m.type === type);
+      const active = xs.filter((m) => m.gStatus === "active").length;
+      const pending = xs.filter((m) => m.gStatus === "pending").length;
+      const suspended = xs.filter((m) => m.gStatus === "suspended").length;
+      const overdue = xs.filter((m) => m.subStatus !== "active").length;
+      return { total: xs.length, active, pending, suspended, overdue };
+    };
+
+    const cLike = counts("likelimba");
+    const cAvec = counts("avec");
+
+    groupPromos.push({
+      href: "/app/wallet/groups?type=likelimba",
+      title: d.group_like_title,
+      tagline: d.group_like_tagline,
+      cta: d.group_like_cta,
+      metaLine: interpolate(d.group_like_meta, {
+        total: cLike.total,
+        active: cLike.active,
+        overdue: cLike.overdue,
+      }),
+      tone: "emerald",
+    });
+    groupPromos.push({
+      href: "/app/wallet/groups?type=avec",
+      title: d.group_avec_title,
+      tagline: d.group_avec_tagline,
+      cta: d.group_avec_cta,
+      metaLine: interpolate(d.group_avec_meta, {
+        total: cAvec.total,
+        active: cAvec.active,
+        overdue: cAvec.overdue,
+      }),
+      tone: "amber",
+    });
+  } catch {
+    // If DB is unavailable in a build context, keep wallet usable.
+  }
+
   const pct = Math.round(FIAT_FEE_RATE * 100);
   const feeSwap = interpolate(d.wallet_fee_swap, { feeUsd: SWAP_FEE_USD });
   const feeFiat = interpolate(d.wallet_fee_fiat, { pct });
@@ -167,6 +231,7 @@ export default async function WalletPage() {
       cryptoRows={cryptoRows}
       fiatRows={fiatRows}
       stakingPromo={stakingPromo}
+      servicePromos={groupPromos}
     />
   );
 }

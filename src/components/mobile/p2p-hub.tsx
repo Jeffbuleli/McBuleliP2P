@@ -5,6 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import {
+  P2pStatusIcon,
+  p2pStatusBadgeClasses,
+  p2pStatusLabelKey,
+} from "@/components/p2p/p2p-status-badge";
+import {
   P2P_COUNTRY_CODES,
   P2P_FIAT_CURRENCIES,
   type P2pCryptoAsset,
@@ -56,19 +61,6 @@ type OrderRow = {
   role: "maker" | "taker";
 };
 
-function orderStatusLabelKey(status: string): keyof Messages {
-  const m: Record<string, keyof Messages> = {
-    awaiting_payment: "p2p_order_status_awaiting_payment",
-    paid: "p2p_order_status_paid",
-    disputed: "p2p_order_status_disputed",
-    released: "p2p_order_status_released",
-    cancelled: "p2p_order_status_cancelled",
-    expired: "p2p_order_status_expired",
-    refunded: "p2p_order_status_refunded",
-  };
-  return m[status] ?? "p2p_order_status_awaiting_payment";
-}
-
 export function P2PHub() {
   const { t, locale } = useI18n();
   const [tab, setTab] = useState<"market" | "ads" | "orders">("market");
@@ -76,6 +68,7 @@ export function P2PHub() {
   const [fiat, setFiat] = useState("");
   const [side, setSide] = useState<P2pSide | "">("");
   const [country, setCountry] = useState("");
+  const [paymentContains, setPaymentContains] = useState("");
   const [marketAds, setMarketAds] = useState<MarketAd[] | null>(null);
   const [myAds, setMyAds] = useState<MyAd[] | null>(null);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
@@ -143,6 +136,13 @@ export function P2PHub() {
     },
     [locNum],
   );
+
+  const filteredMarketAds = useMemo(() => {
+    if (!marketAds) return null;
+    const q = paymentContains.trim().toLowerCase();
+    if (!q) return marketAds;
+    return marketAds.filter((a) => a.paymentMethods.toLowerCase().includes(q));
+  }, [marketAds, paymentContains]);
 
   async function patchAd(id: string, status: "active" | "paused" | "closed") {
     const res = await fetch(`/api/p2p/ads/${id}`, {
@@ -245,6 +245,16 @@ export function P2PHub() {
                 ))}
               </select>
             </label>
+            <label className="col-span-2 block text-xs font-medium text-stone-700 dark:text-stone-300">
+              {t("p2p_filter_payment")}
+              <input
+                type="search"
+                value={paymentContains}
+                onChange={(e) => setPaymentContains(e.target.value)}
+                placeholder={t("p2p_filter_payment_hint")}
+                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+              />
+            </label>
           </div>
 
           <button
@@ -256,47 +266,77 @@ export function P2PHub() {
             {loading ? "…" : t("continue")}
           </button>
 
-          {!marketAds?.length ? (
+          {!filteredMarketAds?.length ? (
             <p className="text-center text-sm text-stone-500">{t("p2p_no_ads")}</p>
           ) : (
             <ul className="space-y-3">
-              {marketAds.map((a) => (
+              {filteredMarketAds.map((a) => (
                 <li
                   key={a.id}
-                  className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900"
+                  className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-semibold uppercase text-emerald-800 dark:text-emerald-300">
-                        {a.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {a.asset}{" "}
-                        / {a.fiatCurrency}
-                      </p>
-                      <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                        {t("p2p_maker")}: {a.makerMasked}
-                        {a.countryCode ? ` · ${a.countryCode}` : ""}
-                        {a.makerRating && a.makerRating.count > 0 ? (
-                          <span className="ml-1 font-medium text-amber-800 dark:text-amber-300">
-                            · {t("p2p_maker_rating")}{" "}
-                            {a.makerRating.avg.toFixed(1)} ★ ({a.makerRating.count})
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-between gap-2 border-b border-emerald-900/10 bg-emerald-50/80 px-4 py-2 dark:border-emerald-800/30 dark:bg-emerald-950/40">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white dark:bg-emerald-600">
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                        <path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm-3 8V7a3 3 0 016 0v3H9z" />
+                      </svg>
+                      {t("p2p_market_escrow_badge")}
+                    </span>
+                    {a.countryCode ? (
+                      <span className="text-[10px] font-semibold text-stone-600 dark:text-stone-400">
+                        {a.countryCode}
+                      </span>
+                    ) : null}
                   </div>
-                  <p className="mt-2 text-sm text-stone-800 dark:text-stone-200">
-                    <span className="font-medium">{t("p2p_price_label")}:</span>{" "}
-                    {fmt(a.price, a.fiatCurrency)} / {a.asset}
-                  </p>
-                  <p className="text-xs text-stone-600 dark:text-stone-400">
-                    {t("p2p_limits_label")}: {fmt(a.minFiat, a.fiatCurrency)} —{" "}
-                    {fmt(a.maxFiat, a.fiatCurrency)}
-                  </p>
-                  <Link
-                    href={`/app/p2p/ad/${a.id}/trade`}
-                    className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-700 py-2.5 text-sm font-bold text-white dark:bg-emerald-600"
-                  >
-                    {t("p2p_take_trade")}
-                  </Link>
+                  <div className="p-4">
+                    <p className="text-xs font-semibold uppercase text-emerald-800 dark:text-emerald-300">
+                      {a.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {a.asset} /{" "}
+                      {a.fiatCurrency}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-medium text-stone-800 dark:text-stone-200">
+                      {t("p2p_maker")}: {a.makerMasked}
+                    </p>
+                    {a.makerRating && a.makerRating.count > 0 ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-amber-500" aria-hidden>
+                          ★★★★★
+                        </span>
+                        <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                          {a.makerRating.avg.toFixed(1)}
+                        </span>
+                        <span className="text-[11px] text-stone-500">
+                          ({a.makerRating.count} {t("p2p_maker_rating")})
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-stone-500">{t("p2p_maker_no_reviews")}</p>
+                    )}
+                    <p className="mt-3 text-sm text-stone-800 dark:text-stone-200">
+                      <span className="font-medium">{t("p2p_price_label")}:</span>{" "}
+                      {fmt(a.price, a.fiatCurrency)} / {a.asset}
+                    </p>
+                    <p className="text-xs text-stone-600 dark:text-stone-400">
+                      {t("p2p_limits_label")}: {fmt(a.minFiat, a.fiatCurrency)} —{" "}
+                      {fmt(a.maxFiat, a.fiatCurrency)}
+                    </p>
+                    <p className="mt-2 line-clamp-2 text-[11px] text-stone-600 dark:text-stone-400">
+                      <span className="font-semibold text-stone-700 dark:text-stone-300">
+                        {t("p2p_market_pays_via")}:{" "}
+                      </span>
+                      {a.paymentMethods}
+                    </p>
+                    {a.terms ? (
+                      <p className="mt-1 line-clamp-2 text-[11px] text-stone-500">
+                        <span className="font-medium">{t("p2p_market_terms_preview")}:</span> {a.terms}
+                      </p>
+                    ) : null}
+                    <Link
+                      href={`/app/p2p/ad/${a.id}/trade`}
+                      className="mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white shadow-md active:scale-[0.99] dark:bg-emerald-600"
+                    >
+                      {t("p2p_market_sticky_cta")}
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -389,8 +429,11 @@ export function P2PHub() {
                       <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
                         {fmt(o.fiatAmount, o.fiatCurrency)} → {o.cryptoAmount} {o.asset}
                       </span>
-                      <span className="text-[10px] font-bold uppercase text-emerald-800 dark:text-emerald-300">
-                        {t(orderStatusLabelKey(o.status))}
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${p2pStatusBadgeClasses(o.status)}`}
+                      >
+                        <P2pStatusIcon status={o.status} />
+                        {t(p2pStatusLabelKey(o.status))}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-stone-500">

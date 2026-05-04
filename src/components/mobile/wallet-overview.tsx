@@ -64,6 +64,15 @@ export type StakingPromoDTO = {
   riskShort: string;
 };
 
+export type ServicePromoDTO = {
+  href: string;
+  title: string;
+  tagline: string;
+  cta: string;
+  metaLine: string;
+  tone: "emerald" | "amber";
+};
+
 function mask() {
   return "••••••";
 }
@@ -74,12 +83,14 @@ export function WalletOverview({
   cryptoRows,
   fiatRows,
   stakingPromo,
+  servicePromos,
 }: {
   labels: WalletOverviewLabels;
   totalUsdDisplay: string;
   cryptoRows: WalletRowDTO[];
   fiatRows: WalletRowDTO[];
   stakingPromo: StakingPromoDTO | null;
+  servicePromos?: ServicePromoDTO[] | null;
 }) {
   const [tab, setTab] = useState<"crypto" | "account">("crypto");
   const [q, setQ] = useState("");
@@ -166,6 +177,51 @@ export function WalletOverview({
             {stakingPromo.activeLine}
           </p>
         </Link>
+      ) : null}
+
+      {servicePromos && servicePromos.length > 0 ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {servicePromos.map((p) => (
+            <Link
+              key={p.href}
+              href={p.href}
+              className={`block rounded-2xl border p-4 shadow-sm ring-1 transition active:scale-[0.99] ${
+                p.tone === "emerald"
+                  ? "border-emerald-800/20 bg-gradient-to-br from-emerald-50/95 to-white ring-emerald-900/10 dark:border-emerald-700/30 dark:from-emerald-950/40 dark:to-stone-900/80 dark:ring-emerald-500/10"
+                  : "border-amber-800/20 bg-gradient-to-br from-amber-50/95 to-white ring-amber-900/10 dark:border-amber-700/30 dark:from-amber-950/25 dark:to-stone-900/80 dark:ring-amber-500/10"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p
+                    className={`text-[10px] font-bold uppercase tracking-wide ${
+                      p.tone === "emerald"
+                        ? "text-emerald-800 dark:text-emerald-300"
+                        : "text-amber-800 dark:text-amber-200"
+                    }`}
+                  >
+                    {p.title}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-[color:var(--mb-text)] dark:text-stone-100">
+                    {p.tagline}
+                  </p>
+                  <p className="mt-2 text-xs text-[color:var(--mb-muted)] dark:text-stone-400">
+                    {p.metaLine}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold text-white ${
+                    p.tone === "emerald"
+                      ? "bg-emerald-700 dark:bg-emerald-600"
+                      : "bg-amber-700 dark:bg-amber-600"
+                  }`}
+                >
+                  {p.cta}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       ) : null}
 
       <section className="mt-3 rounded-3xl border border-[color:var(--mb-border)] bg-[color:var(--mb-surface)]/95 p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:border-stone-700 dark:bg-stone-900/95 dark:ring-white/[0.06]">

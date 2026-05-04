@@ -10,6 +10,7 @@ import {
   jsonb,
   uniqueIndex,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -33,6 +34,15 @@ export const users = pgTable("users", {
   cdfBalance: numeric("cdf_balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
+  /** Virtual USDT for futures/options practice — not withdrawable. */
+  tradeDemoUsdtBalance: numeric("trade_demo_usdt_balance", {
+    precision: 36,
+    scale: 18,
+  })
+    .notNull()
+    .default("10000"),
+  /** When false, API rejects live (real wallet) futures/options orders until user opts in. */
+  tradeLiveEnabled: boolean("trade_live_enabled").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -334,6 +344,7 @@ export const tradeFuturesPositions = pgTable(
       scale: 18,
     }).notNull(),
     stopLossPrice: numeric("stop_loss_price", { precision: 36, scale: 18 }),
+    takeProfitPrice: numeric("take_profit_price", { precision: 36, scale: 18 }),
     qtyBase: numeric("qty_base", { precision: 36, scale: 18 }).notNull(),
     feeOpenUsdt: numeric("fee_open_usdt", { precision: 36, scale: 18 }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("open"),
@@ -346,6 +357,7 @@ export const tradeFuturesPositions = pgTable(
     feeCloseUsdt: numeric("fee_close_usdt", { precision: 36, scale: 18 }),
     closeReason: varchar("close_reason", { length: 16 }),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    isDemo: boolean("is_demo").notNull().default(false),
   },
   (t) => [
     index("trade_futures_positions_user_idx").on(t.userId),
@@ -380,10 +392,164 @@ export const tradeSimpleOptions = pgTable(
       .defaultNow()
       .notNull(),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    isDemo: boolean("is_demo").notNull().default(false),
   },
   (t) => [
     index("trade_simple_options_user_idx").on(t.userId),
     index("trade_simple_options_status_expiry_idx").on(t.status, t.expiryAt),
+  ],
+);
+
+/** LIKELEMBA / AVEC — governed group savings with subscription billing (USDT). */
+export const groupSavingsGroups = pgTable(
+  "group_savings_groups",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: varchar("type", { length: 16 }).notNull(),
+    name: varchar("name", { length: 96 }).notNull(),
+    countryCode: varchar("country_code", { length: 8 }),
+    minMembers: integer("min_members").notNull().default(2),
+    maxMembers: integer("max_members").notNull().default(30),
+    contributionAmountUsdt: numeric("contribution_amount_usdt", {
+      precision: 36,
+      scale: 18,
+    }).notNull(),
+    cycleDurationDays: integer("cycle_duration_days").notNull(),
+    paymentRules: text("payment_rules"),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    subscriptionStatus: varchar("subscription_status", { length: 16 })
+      .notNull()
+      .default("overdue"),
+    nextBillingAt: timestamp("next_billing_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_savings_groups_creator_idx").on(t.createdByUserId),
+    index("group_savings_groups_status_idx").on(t.status),
+    index("group_savings_groups_next_billing_idx").on(t.nextBillingAt),
+  ],
+);
+
+export const groupSavingsMemberships = pgTable(
+  "group_savings_memberships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 16 }).notNull().default("member"),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_savings_memberships_group_idx").on(t.groupId),
+    index("group_savings_memberships_user_idx").on(t.userId),
+    uniqueIndex("group_savings_memberships_group_user_uidx").on(
+      t.groupId,
+      t.userId,
+    ),
+  ],
+);
+
+export const groupWalletLedgerEntries = pgTable(
+  "group_wallet_ledger_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    batchId: uuid("batch_id").notNull(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    entryType: varchar("entry_type", { length: 32 }).notNull(),
+    asset: varchar("asset", { length: 16 }).notNull().default("USDT"),
+    amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_wallet_ledger_group_idx").on(t.groupId),
+    index("group_wallet_ledger_batch_idx").on(t.batchId),
+    index("group_wallet_ledger_created_idx").on(t.createdAt),
+  ],
+);
+
+export const groupSubscriptionInvoices = pgTable(
+  "group_subscription_invoices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    period: varchar("period", { length: 7 }).notNull(), // YYYY-MM
+    amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("5"),
+    status: varchar("status", { length: 16 }).notNull(),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    failureReason: text("failure_reason"),
+    ledgerEntryId: uuid("ledger_entry_id").references(
+      () => groupWalletLedgerEntries.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_subscription_invoices_group_period_uidx").on(
+      t.groupId,
+      t.period,
+    ),
+    index("group_subscription_invoices_status_idx").on(t.status),
+  ],
+);
+
+export const groupAuditLog = pgTable(
+  "group_audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    action: varchar("action", { length: 64 }).notNull(),
+    before: jsonb("before").$type<Record<string, unknown> | null>(),
+    after: jsonb("after").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_audit_log_group_idx").on(t.groupId),
+    index("group_audit_log_created_idx").on(t.createdAt),
   ],
 );
 

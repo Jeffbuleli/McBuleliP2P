@@ -17,6 +17,12 @@ export default function AdminHomePage() {
           {t("admin_queue")}
         </Link>
         <Link
+          href="/admin/groups"
+          className="inline-block rounded-xl border border-amber-600/40 bg-stone-900/70 px-5 py-3 font-semibold text-amber-100"
+        >
+          {t("admin_groups")}
+        </Link>
+        <Link
           href="/admin/p2p"
           className="inline-block rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-5 py-3 font-semibold text-emerald-100"
         >
