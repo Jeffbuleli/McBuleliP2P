@@ -311,7 +311,7 @@ export const en = {
   market_title: "Market",
   market_disclaimer: "Prices shown are indicative (USDT reference pairs).",
   trade_preview_intro:
-    "Learn how Futures and Options work — your live reference prices stay in the chart above.",
+    "Futures (margin & leverage) and simple UP/DOWN options — tap Trade for execution.",
   trade_view_hub: "How it works",
   trade_card_futures_hint: "Directional exposure with leverage & margin rules",
   trade_card_options_hint: "Calls, puts, strike, expiry — defined risk",
@@ -323,7 +323,7 @@ export const en = {
   trade_hub_risk:
     "This section is educational. Product availability, leverage limits and onboarding checks will follow regional compliance requirements.",
   trade_execution_note:
-    "Execution interfaces are staged — you build understanding here before placing standardized trades on-platform.",
+    "Orders debit USDT from your wallet; prices reference major exchange APIs. Availability and limits may change with compliance.",
   trade_open_detail: "Learn more",
   trade_futures_p1:
     "A crypto futures contract lets participants agree to exchange exposure based on a reference price at a future moment (or on a rolling perpetual schedule with funding). Profit or loss depends on how price moves versus your entry.",
@@ -391,6 +391,62 @@ export const en = {
   trade_futures_deeper_title: "Core concepts (perpetual futures)",
   trade_futures_link_options: "Options",
   trade_futures_link_options_caption: "Separate explanations for strike, premium, and pay-offs",
+  trade_ui_tabs_aria: "Trading products",
+  trade_ui_tab_futures: "Futures",
+  trade_ui_tab_options: "Options",
+  trade_ui_back_home: "Trade",
+  trade_hub_disclaimer:
+    "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
+  trade_ui_pair: "Pair",
+  trade_ui_live: "Live",
+  trade_ui_usdt_balance: "Wallet USDT",
+  trade_ui_beginner_cap:
+    "Risk controls: leverage is capped at {max}× until you build more closed futures history.",
+  trade_ui_long: "Long",
+  trade_ui_short: "Short",
+  trade_ui_leverage: "Leverage",
+  trade_ui_margin: "Margin (USDT)",
+  trade_ui_stop_loss: "Stop loss price (optional)",
+  trade_ui_notional: "Notional",
+  trade_ui_est_liq: "Est. liquidation",
+  trade_ui_est_open_fee: "Opening fee (est.)",
+  trade_ui_min_max_margin: "Order margin: min {min} · max {max} USDT.",
+  trade_ui_fee_notional: "of notional per side",
+  trade_ui_place_order: "Review & place order",
+  trade_ui_confirm_title: "Confirm futures order",
+  trade_ui_confirm_body:
+    "Positions can be liquidated automatically when price crosses the liquidation level. You may lose your entire margin.",
+  trade_ui_cancel: "Cancel",
+  trade_ui_submit: "Confirm",
+  trade_ui_positions: "Open positions",
+  trade_ui_close: "Close",
+  trade_ui_no_positions: "No open positions.",
+  trade_ui_learn_futures: "Futures guide",
+  trade_ui_call: "Call · UP",
+  trade_ui_put: "Put · DOWN",
+  trade_ui_expiry: "Expiry",
+  trade_ui_expiry_1m: "1 min",
+  trade_ui_expiry_5m: "5 min",
+  trade_ui_expiry_15m: "15 min",
+  trade_ui_expiry_1h: "1 hour",
+  trade_ui_stake: "Stake (USDT)",
+  trade_ui_payout_info:
+    "If your prediction is correct at expiry: you receive stake plus {pct}% profit on the stake.",
+  trade_ui_max_loss: "If incorrect: you lose the stake.",
+  trade_ui_fee_line: "Opening fee ≈ {pct}% of stake.",
+  trade_ui_if_win: "Approx. payout if you win",
+  trade_ui_stake_cap: "Maximum stake per contract: {max} USDT.",
+  trade_ui_place_binary: "Buy contract",
+  trade_ui_options_simple:
+    "Choose UP or DOWN for the selected expiry. One decision — stake is fixed.",
+  trade_ui_active_contracts: "Pending contracts",
+  trade_ui_no_pending_options: "No pending contracts.",
+  trade_ui_learn_options: "Options guide",
+  trade_ui_options_confirm_body:
+    "Stake plus fee is debited immediately. Settlement uses the reference spot price at expiry.",
+  trade_ui_options_vs_futures_title: "Simple options vs futures",
+  trade_ui_options_vs_futures_body:
+    "These UP/DOWN contracts limit risk to stake plus fees. Futures use leverage and margin with liquidation — manage risk accordingly.",
   trade_options_p1:
     "An option gives the buyer the right — not the obligation — to buy (call) or sell (put) an underlying at a strike price before or at expiry, against the premium paid.",
   trade_options_p2:
@@ -796,7 +852,7 @@ export const fr: Messages = {
   market_title: "Marché",
   market_disclaimer: "Prix indicatifs (paires de référence USDT).",
   trade_preview_intro:
-    "Comprenez les Futures et les Options — les cours en direct restent sur le graphique ci-dessus.",
+    "Futures (marge & levier) et options UP/DOWN — ouvrez Trade pour passer ordre.",
   trade_view_hub: "Comment ça marche",
   trade_card_futures_hint: "Exposition directionnelle, effet de levier & marge",
   trade_card_options_hint: "Calls, puts, strike, échéance — risque défini (acheteur)",
@@ -808,7 +864,7 @@ export const fr: Messages = {
   trade_hub_risk:
     "Section pédagogique. Disponibilité des produits, plafonds de levier et contrôles dépendront des exigences locales.",
   trade_execution_note:
-    "Les interfaces d’exécution arrivent par étapes — vous sécurisez d’abord la compréhension avant de trader normé sur la plateforme.",
+    "Les ordres débitent l’USDT du portefeuille ; les prix sont indexés sur les API des grandes places. Disponibilité et plafonds peuvent évoluer.",
   trade_open_detail: "En savoir plus",
   trade_futures_p1:
     "Un contrat future crypto fixe une exposition sur la base d’un prix de référence à une date future (ou un roulement « perpétuel » avec funding). Le gain ou la perte dépend du mouvement par rapport au prix d’entrée.",
@@ -876,6 +932,62 @@ export const fr: Messages = {
   trade_futures_deeper_title: "Concepts clés (futures perpétuels)",
   trade_futures_link_options: "Options",
   trade_futures_link_options_caption: "Autre chapitre : strike, prime, pay-offs",
+  trade_ui_tabs_aria: "Produits de trading",
+  trade_ui_tab_futures: "Futures",
+  trade_ui_tab_options: "Options",
+  trade_ui_back_home: "Trade",
+  trade_hub_disclaimer:
+    "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",
+  trade_ui_pair: "Paire",
+  trade_ui_live: "Direct",
+  trade_ui_usdt_balance: "USDT portefeuille",
+  trade_ui_beginner_cap:
+    "Contrôle des risques : levier plafonné à {max}× tant que l’historique de clôtures Futures est limité.",
+  trade_ui_long: "Long",
+  trade_ui_short: "Short",
+  trade_ui_leverage: "Levier",
+  trade_ui_margin: "Marge (USDT)",
+  trade_ui_stop_loss: "Stop loss (prix, optionnel)",
+  trade_ui_notional: "Exposition",
+  trade_ui_est_liq: "Liq. estimée",
+  trade_ui_est_open_fee: "Frais d’ouverture (est.)",
+  trade_ui_min_max_margin: "Marge : min {min} · max {max} USDT par ordre.",
+  trade_ui_fee_notional: "du notionnel par côté",
+  trade_ui_place_order: "Vérifier et placer",
+  trade_ui_confirm_title: "Confirmer l’ordre Futures",
+  trade_ui_confirm_body:
+    "Les positions peuvent être liquidées si le prix atteint le niveau de liquidation. Vous pouvez perdre toute la marge.",
+  trade_ui_cancel: "Annuler",
+  trade_ui_submit: "Confirmer",
+  trade_ui_positions: "Positions ouvertes",
+  trade_ui_close: "Fermer",
+  trade_ui_no_positions: "Aucune position ouverte.",
+  trade_ui_learn_futures: "Guide Futures",
+  trade_ui_call: "Call · HAUT",
+  trade_ui_put: "Put · BAS",
+  trade_ui_expiry: "Échéance",
+  trade_ui_expiry_1m: "1 min",
+  trade_ui_expiry_5m: "5 min",
+  trade_ui_expiry_15m: "15 min",
+  trade_ui_expiry_1h: "1 h",
+  trade_ui_stake: "Mise (USDT)",
+  trade_ui_payout_info:
+    "Si la prévision est correcte à l’échéance : vous récupérez la mise + {pct}% de profit sur la mise.",
+  trade_ui_max_loss: "Si incorrect : vous perdez la mise.",
+  trade_ui_fee_line: "Frais d’ouverture ≈ {pct}% de la mise.",
+  trade_ui_if_win: "Paiement approx. si gain",
+  trade_ui_stake_cap: "Mise max par contrat : {max} USDT.",
+  trade_ui_place_binary: "Acheter le contrat",
+  trade_ui_options_simple:
+    "Choisissez HAUT ou BAS pour l’échéance. Une seule décision — mise fixe.",
+  trade_ui_active_contracts: "Contrats en attente",
+  trade_ui_no_pending_options: "Aucun contrat en attente.",
+  trade_ui_learn_options: "Guide Options",
+  trade_ui_options_confirm_body:
+    "La mise + frais est débitée immédiatement. Le règlement utilise le prix spot de référence à l’échéance.",
+  trade_ui_options_vs_futures_title: "Options simples vs Futures",
+  trade_ui_options_vs_futures_body:
+    "Ces contrats UP/DOWN plafonnent le risque (mise + frais). Les Futures utilisent marge et levier avec liquidation — profils de risque différents.",
   trade_options_p1:
     "Une option donne à l’acheteur le droit — pas l’obligation — d’acheter (call) ou de vendre (put) au prix d’exercice avant ou à l’échéance, contre la prime payée.",
   trade_options_p2:
