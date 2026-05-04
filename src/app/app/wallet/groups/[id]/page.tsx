@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 
 type MemberRow = {
   userId: string;
@@ -155,6 +156,11 @@ export default function GroupDashboardPage({
   }
 
   const g = data.group;
+  const days = g.nextBillingAt ? daysUntil(g.nextBillingAt) : null;
+  const showDueSoon =
+    g.subscriptionStatus === "active" && days != null && isReminderDay(days);
+  const showOverdue = g.subscriptionStatus === "overdue" && g.status !== "suspended";
+  const showSuspended = g.status === "suspended";
 
   return (
     <div className="space-y-4 pb-10">
@@ -188,6 +194,29 @@ export default function GroupDashboardPage({
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
           {err}
         </p>
+      ) : null}
+
+      {showSuspended ? (
+        <div className="rounded-2xl border border-rose-900/30 bg-rose-950/40 p-4">
+          <p className="text-sm font-bold text-rose-200">{t("group_reminder_suspended")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-rose-200/80">
+            {t("group_reminder_suspended_body")}
+          </p>
+        </div>
+      ) : showOverdue ? (
+        <div className="rounded-2xl border border-amber-900/30 bg-amber-950/30 p-4">
+          <p className="text-sm font-bold text-amber-100">{t("group_reminder_overdue")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+            {t("group_reminder_overdue_body")}
+          </p>
+        </div>
+      ) : showDueSoon ? (
+        <div className="rounded-2xl border border-emerald-900/30 bg-emerald-950/25 p-4">
+          <p className="text-sm font-bold text-emerald-100">{t("group_reminder_due_soon")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
+            {t("group_reminder_due_soon_body")}
+          </p>
+        </div>
       ) : null}
 
       <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">

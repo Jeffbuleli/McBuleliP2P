@@ -29,6 +29,8 @@ export default function AdminGroupDetailPage({
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [invoices, setInvoices] = useState<any[] | null>(null);
+  const [audit, setAudit] = useState<any[] | null>(null);
 
   const canReview = useMemo(
     () => row?.status === "pending" || row?.status === "approved",
@@ -46,6 +48,14 @@ export default function AdminGroupDetailPage({
     }
     const found = (data.groups as Group[]).find((g) => g.id === id) ?? null;
     setRow(found);
+    const [rInv, rAud] = await Promise.all([
+      fetch(`/api/admin/groups/${id}/subscription?limit=24`, { cache: "no-store" }),
+      fetch(`/api/admin/groups/${id}/audit?limit=80`, { cache: "no-store" }),
+    ]);
+    const inv = await rInv.json().catch(() => ({}));
+    setInvoices((inv as any).invoices ?? []);
+    const aud = await rAud.json().catch(() => ({}));
+    setAudit((aud as any).audit ?? []);
   }
 
   useEffect(() => {
@@ -180,6 +190,55 @@ export default function AdminGroupDetailPage({
             </div>
           </>
         ) : null}
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-stone-700 bg-stone-900/80 p-4">
+          <h3 className="text-sm font-bold text-white">{t("group_settings_payment_history")}</h3>
+          {invoices === null ? (
+            <p className="mt-2 text-stone-500">…</p>
+          ) : invoices.length === 0 ? (
+            <p className="mt-2 text-stone-500">—</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {invoices.map((x: any) => (
+                <li key={x.id} className="rounded-xl border border-stone-700 bg-stone-950/50 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs text-stone-200">{x.period}</span>
+                    <span className="text-xs text-stone-400">{x.status}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-stone-400">
+                    {Number(x.amountUsdt).toFixed(2)} USDT ·{" "}
+                    {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
+                  </p>
+                  {x.failureReason ? (
+                    <p className="mt-1 text-[11px] text-rose-300">{x.failureReason}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-stone-700 bg-stone-900/80 p-4">
+          <h3 className="text-sm font-bold text-white">{t("group_settings_audit_log")}</h3>
+          {audit === null ? (
+            <p className="mt-2 text-stone-500">…</p>
+          ) : audit.length === 0 ? (
+            <p className="mt-2 text-stone-500">—</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {audit.map((x: any) => (
+                <li key={x.id} className="rounded-xl border border-stone-700 bg-stone-950/50 px-3 py-2">
+                  <p className="text-xs font-semibold text-stone-200">{x.action}</p>
+                  <p className="mt-1 text-[11px] text-stone-500">
+                    {new Date(x.createdAt).toLocaleString()}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

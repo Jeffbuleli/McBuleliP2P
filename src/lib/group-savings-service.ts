@@ -4,6 +4,8 @@ import {
   getDb,
   groupSavingsGroups,
   groupSavingsMemberships,
+  groupSubscriptionInvoices,
+  groupAuditLog,
   groupWalletLedgerEntries,
   users,
 } from "@/db";
@@ -489,6 +491,75 @@ export async function listGroupLedger(args: { groupId: string; userId: string; l
   return {
     ok: true as const,
     entries: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+  };
+}
+
+export async function listGroupSubscriptionInvoices(args: {
+  groupId: string;
+  userId: string;
+  limit?: number;
+}) {
+  const db = getDb();
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!m || m.status !== "approved") return { ok: false as const, message: "group_forbidden" };
+  await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
+
+  const limit = Math.min(Math.max(1, args.limit ?? 24), 60);
+  const rows = await db
+    .select({
+      id: groupSubscriptionInvoices.id,
+      period: groupSubscriptionInvoices.period,
+      amountUsdt: groupSubscriptionInvoices.amountUsdt,
+      status: groupSubscriptionInvoices.status,
+      attemptedAt: groupSubscriptionInvoices.attemptedAt,
+      paidAt: groupSubscriptionInvoices.paidAt,
+      failureReason: groupSubscriptionInvoices.failureReason,
+      createdAt: groupSubscriptionInvoices.createdAt,
+    })
+    .from(groupSubscriptionInvoices)
+    .where(eq(groupSubscriptionInvoices.groupId, args.groupId))
+    .orderBy(desc(groupSubscriptionInvoices.createdAt))
+    .limit(limit);
+
+  return {
+    ok: true as const,
+    invoices: rows.map((r) => ({
+      ...r,
+      attemptedAt: r.attemptedAt ? r.attemptedAt.toISOString() : null,
+      paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  };
+}
+
+export async function listGroupAuditLog(args: {
+  groupId: string;
+  userId: string;
+  limit?: number;
+}) {
+  const db = getDb();
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!m || m.status !== "approved") return { ok: false as const, message: "group_forbidden" };
+  await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
+
+  const limit = Math.min(Math.max(1, args.limit ?? 50), 100);
+  const rows = await db
+    .select({
+      id: groupAuditLog.id,
+      action: groupAuditLog.action,
+      actorUserId: groupAuditLog.actorUserId,
+      before: groupAuditLog.before,
+      after: groupAuditLog.after,
+      createdAt: groupAuditLog.createdAt,
+    })
+    .from(groupAuditLog)
+    .where(eq(groupAuditLog.groupId, args.groupId))
+    .orderBy(desc(groupAuditLog.createdAt))
+    .limit(limit);
+
+  return {
+    ok: true as const,
+    audit: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
   };
 }
 

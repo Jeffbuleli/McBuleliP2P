@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 
 type MemberRow = {
   userId: string;
@@ -33,6 +34,8 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [invoices, setInvoices] = useState<any[] | null>(null);
+  const [audit, setAudit] = useState<any[] | null>(null);
 
   const me = data?.group.me;
   const canAdmin = me?.status === "approved" && me.role === "admin";
@@ -44,15 +47,26 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
 
   async function load() {
     setErr(null);
-    const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setErr(j.error ?? "…");
+    const [rDash, rInv, rAudit] = await Promise.all([
+      fetch(`/api/groups/${id}`, { cache: "no-store" }),
+      fetch(`/api/groups/${id}/subscription?limit=24`, { cache: "no-store" }),
+      fetch(`/api/groups/${id}/audit?limit=60`, { cache: "no-store" }),
+    ]);
+    const j = await rDash.json().catch(() => ({}));
+    if (!rDash.ok) {
+      setErr((j as any).error ?? "…");
       setData(null);
+      setInvoices([]);
+      setAudit([]);
       return;
     }
     const d = j as Dashboard;
     setData(d);
+    const inv = await rInv.json().catch(() => ({}));
+    setInvoices((inv as any).invoices ?? []);
+    const aud = await rAudit.json().catch(() => ({}));
+    setAudit((aud as any).audit ?? []);
+
     const init: Record<string, boolean> = {};
     for (const m of d.members) {
       if (m.role === "co_admin") init[m.userId] = true;
@@ -118,6 +132,11 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
   }
 
   const g = data.group;
+  const days = g.nextBillingAt ? daysUntil(g.nextBillingAt) : null;
+  const showDueSoon =
+    g.subscriptionStatus === "active" && days != null && isReminderDay(days);
+  const showOverdue = g.subscriptionStatus === "overdue" && g.status !== "suspended";
+  const showSuspended = g.status === "suspended";
 
   return (
     <div className="space-y-4 pb-10">
@@ -151,6 +170,29 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
         </p>
       ) : null}
 
+      {showSuspended ? (
+        <div className="rounded-2xl border border-rose-900/30 bg-rose-950/40 p-4">
+          <p className="text-sm font-bold text-rose-200">{t("group_reminder_suspended")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-rose-200/80">
+            {t("group_reminder_suspended_body")}
+          </p>
+        </div>
+      ) : showOverdue ? (
+        <div className="rounded-2xl border border-amber-900/30 bg-amber-950/30 p-4">
+          <p className="text-sm font-bold text-amber-100">{t("group_reminder_overdue")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+            {t("group_reminder_overdue_body")}
+          </p>
+        </div>
+      ) : showDueSoon ? (
+        <div className="rounded-2xl border border-emerald-900/30 bg-emerald-950/25 p-4">
+          <p className="text-sm font-bold text-emerald-100">{t("group_reminder_due_soon")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
+            {t("group_reminder_due_soon_body")}
+          </p>
+        </div>
+      ) : null}
+
       <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
         <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
           {t("group_settings_subscription")}
@@ -158,6 +200,83 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
         <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
           {t("group_settings_subscription_note")}
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+          {t("group_settings_payment_history")}
+        </h2>
+        {invoices === null ? (
+          <p className="text-stone-500">…</p>
+        ) : invoices.length === 0 ? (
+          <p className="mt-2 text-sm text-stone-500">—</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {invoices.map((x: any) => (
+              <li
+                key={x.id}
+                className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                    {t("group_invoice_period")}:{" "}
+                    <span className="font-mono">{x.period}</span>
+                  </p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      x.status === "paid"
+                        ? "bg-emerald-600/15 text-emerald-300 ring-1 ring-emerald-500/20"
+                        : "bg-rose-600/15 text-rose-200 ring-1 ring-rose-500/20"
+                    }`}
+                  >
+                    {x.status === "paid" ? t("group_invoice_paid") : t("group_invoice_failed")}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-stone-500">
+                  {t("group_invoice_amount")}:{" "}
+                  <span className="font-mono">{Number(x.amountUsdt).toFixed(2)}</span> USDT
+                </p>
+                <p className="mt-1 text-[11px] text-stone-500">
+                  {t("group_invoice_attempted")}:{" "}
+                  {x.attemptedAt ? new Date(x.attemptedAt).toLocaleString() : "—"}
+                  {" · "}
+                  {t("group_invoice_paid_at")}:{" "}
+                  {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
+                </p>
+                {x.failureReason ? (
+                  <p className="mt-1 text-[11px] text-rose-400">{x.failureReason}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+          {t("group_settings_audit_log")}
+        </h2>
+        {audit === null ? (
+          <p className="text-stone-500">…</p>
+        ) : audit.length === 0 ? (
+          <p className="mt-2 text-sm text-stone-500">—</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {audit.map((x: any) => (
+              <li
+                key={x.id}
+                className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
+              >
+                <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                  {x.action}
+                </p>
+                <p className="mt-1 text-[11px] text-stone-500">
+                  {new Date(x.createdAt).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">

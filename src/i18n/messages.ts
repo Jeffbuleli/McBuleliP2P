@@ -336,6 +336,26 @@ export const en = {
   group_settings_admin_only: "Only the admin can change governance settings.",
   group_settings_coadmins_note: "Select up to 3 co-admins (approved members).",
   group_settings_save: "Save settings",
+  group_settings_payment_history: "Payment history",
+  group_settings_audit_log: "Audit log",
+  group_invoice_paid: "Paid",
+  group_invoice_failed: "Failed",
+  group_invoice_period: "Period",
+  group_invoice_amount: "Amount",
+  group_invoice_status: "Status",
+  group_invoice_attempted: "Attempted",
+  group_invoice_paid_at: "Paid at",
+  group_audit_action: "Action",
+  group_audit_when: "When",
+  group_reminder_due_soon: "Subscription due soon",
+  group_reminder_due_soon_body:
+    "Your group will be charged $5 USDT on the next billing date. Keep enough USDT in the group treasury to remain active.",
+  group_reminder_overdue: "Subscription overdue",
+  group_reminder_overdue_body:
+    "This group is overdue. Contributions and payouts may be paused until the subscription is paid from the group treasury.",
+  group_reminder_suspended: "Group suspended",
+  group_reminder_suspended_body:
+    "This group is suspended due to unpaid subscription. Fund the group treasury and run billing to reactivate.",
   p2p_title: "P2P trading",
   p2p_body: "Peer trading will be available soon.",
   p2p_intro:
@@ -1103,6 +1123,26 @@ export const fr: Messages = {
   group_settings_coadmins_note:
     "Sélectionnez jusqu’à 3 co-admins (membres approuvés).",
   group_settings_save: "Enregistrer",
+  group_settings_payment_history: "Historique de paiement",
+  group_settings_audit_log: "Journal d’actions",
+  group_invoice_paid: "Payé",
+  group_invoice_failed: "Échec",
+  group_invoice_period: "Période",
+  group_invoice_amount: "Montant",
+  group_invoice_status: "Statut",
+  group_invoice_attempted: "Tentative",
+  group_invoice_paid_at: "Payé le",
+  group_audit_action: "Action",
+  group_audit_when: "Date",
+  group_reminder_due_soon: "Abonnement bientôt dû",
+  group_reminder_due_soon_body:
+    "Votre groupe sera débité de 5 USDT à la prochaine date de facturation. Gardez assez d’USDT dans la trésorerie pour rester actif.",
+  group_reminder_overdue: "Abonnement en retard",
+  group_reminder_overdue_body:
+    "Ce groupe est en retard. Les contributions et paiements peuvent être suspendus jusqu’au paiement via la trésorerie du groupe.",
+  group_reminder_suspended: "Groupe suspendu",
+  group_reminder_suspended_body:
+    "Ce groupe est suspendu pour abonnement impayé. Alimentez la trésorerie puis relancez la facturation pour réactiver.",
   p2p_title: "Trading P2P",
   p2p_body: "Le trading P2P arrive bientôt.",
   p2p_intro:
