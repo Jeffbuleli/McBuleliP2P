@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
+import { countryLabel } from "@/lib/country-label";
 
 type MemberRow = {
   userId: string;

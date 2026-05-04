@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
 import {
   P2pStatusIcon,
@@ -240,7 +241,7 @@ export function P2PHub() {
                 <option value="">{t("p2p_filter_all")}</option>
                 {P2P_COUNTRY_CODES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {countryLabel(locale, c)}
                   </option>
                 ))}
               </select>
@@ -284,7 +285,7 @@ export function P2PHub() {
                     </span>
                     {a.countryCode ? (
                       <span className="text-[10px] font-semibold text-stone-600 dark:text-stone-400">
-                        {a.countryCode}
+                        {countryLabel(locale, a.countryCode)}
                       </span>
                     ) : null}
                   </div>

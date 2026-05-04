@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { countryLabel } from "@/lib/country-label";
 
 type Group = {
   id: string;
@@ -23,7 +24,7 @@ export default function AdminGroupDetailPage({
 }: {
   params: { id: string };
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const id = params.id;
   const [row, setRow] = useState<Group | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -145,7 +146,7 @@ export default function AdminGroupDetailPage({
         </p>
         <p className="mt-1 text-sm text-stone-400">
           {row.contributionAmountUsdt} USDT · {row.cycleDurationDays}d ·{" "}
-          {row.countryCode ?? "—"}
+          {row.countryCode ? countryLabel(locale, row.countryCode) : "—"}
         </p>
         <p className="mt-1 text-xs text-stone-500">
           Next billing:{" "}

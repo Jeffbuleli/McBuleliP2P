@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
 import {
   P2P_COUNTRY_CODES,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/p2p-config";
 
 export default function P2pNewAdPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [side, setSide] = useState<P2pSide>("sell");
   const [asset, setAsset] = useState<P2pCryptoAsset>("USDT");
@@ -174,7 +175,7 @@ export default function P2pNewAdPage() {
         >
           {P2P_COUNTRY_CODES.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {countryLabel(locale, c)}
             </option>
           ))}
         </select>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { countryLabel } from "@/lib/country-label";
 
 type Row = {
   id: string;
@@ -18,7 +19,7 @@ type Row = {
 };
 
 export default function AdminGroupsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("pending");
@@ -87,6 +88,7 @@ export default function AdminGroupsPage() {
                 <p className="mt-1 text-xs text-amber-100/80">
                   {r.status} · {r.subscriptionStatus} · {r.contributionAmountUsdt} USDT ·{" "}
                   {r.cycleDurationDays}d
+                  {r.countryCode ? ` · ${countryLabel(locale, r.countryCode)}` : ""}
                 </p>
               </Link>
             </li>
