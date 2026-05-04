@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { LangSwitch } from "@/components/lang-switch";
-import {
-  ProfileIdCopy,
-  profileKycBadgeText,
-} from "@/components/profile/profile-id-copy";
+import { ProfileIdCopy } from "@/components/profile/profile-id-copy";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { countryLabel } from "@/lib/country-label";
+import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import { getProfileDashboard } from "@/lib/profile-stats";
 import { getSessionUser } from "@/lib/session-user";
 
