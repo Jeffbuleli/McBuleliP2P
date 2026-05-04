@@ -9,7 +9,10 @@ export const dynamic = "force-dynamic";
 const TF_MAP = {
   "1m": { interval: "1m", limit: 180 },
   "5m": { interval: "5m", limit: 288 },
+  "15m": { interval: "15m", limit: 192 },
+  "30m": { interval: "30m", limit: 168 },
   "1h": { interval: "1h", limit: 168 },
+  "4h": { interval: "4h", limit: 120 },
   "1d": { interval: "1d", limit: 120 },
 } as const;
 

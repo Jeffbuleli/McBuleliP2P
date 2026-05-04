@@ -400,6 +400,33 @@ export async function createAd(args: {
   const pm = args.paymentMethods.trim();
   if (pm.length < 3) return { ok: false, message: "p2p_payment_methods_required" };
 
+  if (args.side === "sell") {
+    const db = getDb();
+    const [urow] = await db
+      .select({
+        balance: users.balance,
+        piBalance: users.piBalance,
+      })
+      .from(users)
+      .where(eq(users.id, args.userId))
+      .limit(1);
+    if (!urow) return { ok: false, message: "wallet_not_found" };
+    const wa = asWalletCrypto(args.asset);
+    const bal =
+      wa === "USDT"
+        ? numFromNumeric(String(urow.balance))
+        : numFromNumeric(String(urow.piBalance));
+    const maxCryptoNeeded = maxF / price;
+    const needStr = fmtWalletAmount(maxCryptoNeeded);
+    const need = Number(needStr);
+    if (!Number.isFinite(need) || need <= 0) {
+      return { ok: false, message: "p2p_invalid_limits" };
+    }
+    if (bal + 1e-18 < need) {
+      return { ok: false, message: "p2p_sell_insufficient_balance" };
+    }
+  }
+
   const db = getDb();
   const now = new Date();
   const [row] = await db

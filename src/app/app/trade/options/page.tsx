@@ -9,12 +9,12 @@ export default async function TradeOptionsPage() {
 
   return (
     <div className="space-y-4 pt-1">
-      <Link
-        href="/app/trade"
-        className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
-      >
-        ← {d.trade_ui_back_home}
-      </Link>
+        <Link
+          href="/app"
+          className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
+        >
+          ← {d.nav_home}
+        </Link>
       <h1 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
         {d.trade_ui_tab_options}
       </h1>

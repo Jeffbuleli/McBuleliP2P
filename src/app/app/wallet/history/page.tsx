@@ -18,6 +18,13 @@ type Entry = {
 
 const TYPES = ["", "swap_", "transfer_", "fiat_"] as const;
 
+function typeFilterLabel(t: (k: keyof Messages) => string, prefix: string): string {
+  if (prefix === "swap_") return t("wallet_history_cat_swap");
+  if (prefix === "transfer_") return t("wallet_history_cat_transfer");
+  if (prefix === "fiat_") return t("wallet_history_cat_fiat");
+  return t("wallet_history_all");
+}
+
 function entryLabel(t: (k: keyof Messages) => string, entryType: string): string {
   const map: Record<string, keyof Messages> = {
     swap_in: "wallet_entry_swap_in",
@@ -80,7 +87,7 @@ export default function WalletHistoryPage() {
           <option value="">{t("wallet_history_type")}: {t("wallet_history_all")}</option>
           {TYPES.filter(Boolean).map((p) => (
             <option key={p} value={p}>
-              {p.replace(/_$/, "")}
+              {typeFilterLabel(t, p)}
             </option>
           ))}
         </select>
@@ -118,7 +125,7 @@ export default function WalletHistoryPage() {
                 {r.amount} {r.asset}
                 {Number(r.feeUsdEquivalent) > 0 ? (
                   <span className="ml-2 text-xs text-stone-500">
-                    · fee USD eq. {r.feeUsdEquivalent}
+                    · {t("wallet_history_fee_equiv")} {r.feeUsdEquivalent}
                   </span>
                 ) : null}
               </p>

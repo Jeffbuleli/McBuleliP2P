@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { getDictionary } from "@/i18n/messages";
 import { KLINES_POLL_MS } from "@/lib/market-live";
@@ -12,7 +12,7 @@ import {
 const WIDTH = 340;
 const HEIGHT = 132;
 
-export type TradeTf = "1m" | "5m" | "1h" | "1d";
+export type TradeTf = "1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d";
 
 type KlineResponse = {
   symbol: string;
@@ -31,8 +31,9 @@ export function TradeMiniChart({
   tf: TradeTf;
   onTfChange: (tf: TradeTf) => void;
 }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const d = getDictionary(locale);
+  const gradId = useId().replace(/:/g, "");
   const [data, setData] = useState<KlineResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,7 @@ export function TradeMiniChart({
     return pointsToSmoothPath(points, WIDTH, HEIGHT);
   }, [points]);
 
-  const tfs: TradeTf[] = ["1m", "5m", "1h", "1d"];
+  const tfs: TradeTf[] = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"];
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-stone-700 dark:bg-stone-900">
@@ -129,6 +130,9 @@ export function TradeMiniChart({
           </button>
         ))}
       </div>
+      <p className="mb-2 text-[10px] leading-snug text-stone-500 dark:text-stone-400">
+        {t("trade_ui_chart_caption")}
+      </p>
       <div className="relative flex justify-center overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-950">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center text-xs text-stone-500">
@@ -147,7 +151,7 @@ export function TradeMiniChart({
             aria-hidden
           >
             <defs>
-              <linearGradient id="tradeMiniGrad" x1="0" x2="0" y1="0" y2="1">
+              <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
                 <stop
                   offset="0%"
                   stopColor="rgb(16 185 129)"
@@ -162,7 +166,7 @@ export function TradeMiniChart({
             </defs>
             <path
               d={`${pathD} L ${WIDTH} ${HEIGHT} L 0 ${HEIGHT} Z`}
-              fill="url(#tradeMiniGrad)"
+              fill={`url(#${gradId})`}
             />
             <path
               d={pathD}

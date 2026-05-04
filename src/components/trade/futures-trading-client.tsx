@@ -68,7 +68,8 @@ type HistoryRow = {
 };
 
 export function FuturesTradingClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const locTag = locale === "fr" ? "fr-FR" : "en-US";
   const [symbol, setSymbol] = useState<(typeof TRADE_SYMBOLS)[number]>("BTCUSDT");
   const [tf, setTf] = useState<TradeTf>("1h");
   const [ticker, setTicker] = useState<{
@@ -404,7 +405,7 @@ export function FuturesTradingClient() {
     if (r === "take_profit") return t("trade_ui_reason_take_profit");
     if (r === "liquidated") return t("trade_ui_reason_liquidated");
     if (r === "manual") return t("trade_ui_reason_manual");
-    return "—";
+    return r && r.length ? r : "—";
   }
 
   async function enableLive() {
@@ -462,7 +463,7 @@ export function FuturesTradingClient() {
             {t("trade_ui_live")}
           </p>
           <p className="font-mono text-lg font-bold tabular-nums text-stone-900 dark:text-stone-50">
-            {mark > 0 ? mark.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+            {mark > 0 ? mark.toLocaleString(locTag, { maximumFractionDigits: 2 }) : "—"}
           </p>
           <p
             className={`text-xs font-semibold tabular-nums ${
@@ -471,7 +472,7 @@ export function FuturesTradingClient() {
                 : "text-rose-600"
             }`}
           >
-            24h {changeStr}
+            {t("trade_ui_24h")} {changeStr}
           </p>
         </div>
       </div>
@@ -486,7 +487,7 @@ export function FuturesTradingClient() {
           :{" "}
           <span className="text-stone-900 dark:text-stone-100">
             {displayBal != null
-              ? displayBal.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              ? displayBal.toLocaleString(locTag, { maximumFractionDigits: 2 })
               : "—"}
           </span>
         </p>
@@ -829,6 +830,14 @@ export function FuturesTradingClient() {
                 0,
                 Math.round((closed.getTime() - opened.getTime()) / 60000),
               );
+              const openedStr = opened.toLocaleString(locTag, {
+                dateStyle: "short",
+                timeStyle: "short",
+              });
+              const closedStr = closed.toLocaleString(locTag, {
+                dateStyle: "short",
+                timeStyle: "short",
+              });
               return (
                 <li
                   key={x.id}
@@ -849,26 +858,46 @@ export function FuturesTradingClient() {
                         </span>{" "}
                         {x.leverage}×
                       </p>
+                      <p className="mt-1 text-[11px] text-stone-600 dark:text-stone-400">
+                        <span className="font-semibold text-stone-700 dark:text-stone-300">
+                          {t("trade_ui_hist_opened")}:
+                        </span>{" "}
+                        {openedStr}{" "}
+                        <span className="mx-1 text-stone-400">·</span>
+                        <span className="font-semibold text-stone-700 dark:text-stone-300">
+                          {t("trade_ui_hist_closed")}:
+                        </span>{" "}
+                        {closedStr}{" "}
+                        <span className="mx-1 text-stone-400">·</span>
+                        <span className="font-semibold text-stone-700 dark:text-stone-300">
+                          {t("trade_ui_hist_cause")}:
+                        </span>{" "}
+                        {reasonLabel(x.closeReason)}{" "}
+                        <span className="mx-1 text-stone-400">·</span>
+                        {t("trade_ui_hist_duration").replace("{m}", String(durationMin))}
+                      </p>
                       <p className="mt-1 font-mono text-[11px] text-stone-600 dark:text-stone-400">
-                        Entry {Number(x.entryPrice).toFixed(2)} · Close{" "}
-                        {Number(x.closePrice).toFixed(2)} · {reasonLabel(x.closeReason)} ·{" "}
-                        {durationMin}m
+                        {t("trade_ui_hist_entry")} {Number(x.entryPrice).toFixed(2)} ·{" "}
+                        {t("trade_ui_hist_exit")} {Number(x.closePrice).toFixed(2)}
                         {x.stopLossPrice ? ` · SL ${Number(x.stopLossPrice).toFixed(2)}` : ""}
                         {x.takeProfitPrice
                           ? ` · TP ${Number(x.takeProfitPrice).toFixed(2)}`
                           : ""}
                       </p>
                       <p className="mt-1 text-[11px] text-stone-500">
-                        Fees: −{Number(x.feeOpenUsdt).toFixed(2)} / −
+                        {t("trade_ui_hist_fees")}: −{Number(x.feeOpenUsdt).toFixed(2)} / −
                         {Number(x.feeCloseUsdt).toFixed(2)} USDT
                       </p>
                     </div>
                     <div
-                      className={`shrink-0 text-sm font-bold tabular-nums ${
+                      className={`shrink-0 text-right text-sm font-bold tabular-nums ${
                         pnl >= 0 ? "text-emerald-600" : "text-rose-600"
                       }`}
-                      title="Realized PnL"
+                      title={t("trade_ui_hist_pnl")}
                     >
+                      <span className="block text-[9px] font-semibold uppercase text-stone-500">
+                        {t("trade_ui_hist_pnl")}
+                      </span>
                       {pnl >= 0 ? "+" : ""}
                       {pnl.toFixed(2)} USDT
                     </div>

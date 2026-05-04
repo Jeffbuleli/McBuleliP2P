@@ -6,7 +6,10 @@ import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
 const ST_RELEASED = "released";
 
 export type ProfileDashboard = {
+  id: string;
   email: string;
+  countryCode: string | null;
+  kycStatus: string;
   createdAt: Date;
   totalCompletedTrades: number;
   /** Average stars received on P2P (0 if none). */
@@ -23,7 +26,10 @@ export async function getProfileDashboard(
   const db = getDb();
   const [u] = await db
     .select({
+      id: users.id,
       email: users.email,
+      countryCode: users.countryCode,
+      kycStatus: users.kycStatus,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -61,7 +67,10 @@ export async function getProfileDashboard(
   const portfolio = await getPortfolioSnapshotForUser(userId, locale);
 
   return {
+    id: u.id,
     email: u.email,
+    countryCode: u.countryCode ?? null,
+    kycStatus: u.kycStatus ?? "none",
     createdAt: u.createdAt,
     totalCompletedTrades: completed,
     reputationScore: Number(ratingRow?.avg ?? 0),

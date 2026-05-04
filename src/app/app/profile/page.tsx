@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { LangSwitch } from "@/components/lang-switch";
+import {
+  ProfileIdCopy,
+  profileKycBadgeText,
+} from "@/components/profile/profile-id-copy";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
+import { countryLabel } from "@/lib/country-label";
 import { getProfileDashboard } from "@/lib/profile-stats";
 import { getSessionUser } from "@/lib/session-user";
 
@@ -50,11 +55,28 @@ export default async function ProfilePage() {
               {dash?.email ?? "—"}
             </h1>
             <p className="mt-1 text-sm text-stone-400">
-              {d.profile_header_country}: {d.profile_header_country_val}
+              {d.profile_header_country}:{" "}
+              {dash?.countryCode
+                ? countryLabel(locale, dash.countryCode)
+                : d.profile_header_country_val}
             </p>
-            <span className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-200/90">
-              {d.profile_kyc_pending}
-            </span>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-200/90">
+                {dash ? profileKycBadgeText((k) => d[k], dash.kycStatus) : d.profile_kyc_badge_off}
+              </span>
+              {dash ? (
+                <div className="flex min-w-0 max-w-full items-center gap-2 rounded-lg border border-stone-600/80 bg-stone-950/50 px-2 py-1 font-mono text-[10px] text-stone-300">
+                  <span className="truncate" title={dash.id}>
+                    {d.profile_id_label}: {dash.id}
+                  </span>
+                  <ProfileIdCopy
+                    id={dash.id}
+                    copyLabel={d.profile_id_copy}
+                    copiedLabel={d.profile_id_copied}
+                  />
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
@@ -149,8 +171,13 @@ export default async function ProfilePage() {
             <span className="text-stone-500">{d.profile_sec_phone_na}</span>
           </li>
           <li className="flex justify-between gap-2 text-stone-300">
-            <span>{d.profile_sec_2fa}</span>
-            <span className="text-stone-500">{d.profile_sec_2fa_na}</span>
+            <span className="flex items-center gap-1.5">
+              <span aria-hidden>🔐</span>
+              {d.profile_mfa_google}
+            </span>
+            <span className="max-w-[10rem] text-right text-[11px] text-stone-500">
+              {d.profile_mfa_google_sub}
+            </span>
           </li>
         </ul>
         <p className="mt-3 rounded-xl bg-stone-950/60 px-3 py-2 text-xs text-stone-400">
@@ -160,10 +187,23 @@ export default async function ProfilePage() {
 
       {/* Payment methods (placeholder) */}
       <section className="rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4">
-        <h2 className="text-sm font-bold text-stone-200">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-stone-200">
+          <span aria-hidden>💳</span>
           {d.profile_payments_heading}
         </h2>
-        <p className="mt-2 text-sm text-stone-500">{d.profile_payments_sub}</p>
+        <p className="mt-2 text-xs leading-relaxed text-stone-400">{d.profile_payments_sub}</p>
+        <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-amber-200/80">
+          <span aria-hidden>🌍</span>
+          {d.profile_payments_cross_border_hint}
+        </p>
+        <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-stone-500">
+          <span aria-hidden>📎</span>
+          {d.profile_payment_proof_note}
+        </p>
+        <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-stone-500">
+          <span aria-hidden>👥</span>
+          {d.profile_duplicate_note}
+        </p>
       </section>
 
       {/* Settings */}

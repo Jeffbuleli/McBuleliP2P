@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
@@ -27,6 +27,40 @@ export default function P2pNewAdPage() {
   const [country, setCountry] = useState("CD");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [balUsdt, setBalUsdt] = useState<number | null>(null);
+  const [balPi, setBalPi] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/wallet/summary", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || cancelled) return;
+      const lines = (data as { lines?: { asset: string; balanceNum: number }[] }).lines;
+      if (!Array.isArray(lines)) return;
+      const u = lines.find((x) => x.asset === "USDT")?.balanceNum;
+      const p = lines.find((x) => x.asset === "PI")?.balanceNum;
+      setBalUsdt(typeof u === "number" ? u : 0);
+      setBalPi(typeof p === "number" ? p : 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sellNeedHint = useMemo(() => {
+    if (side !== "sell") return null;
+    const p = Number(price.replace(",", "."));
+    const maxF = Number(maxFiat.replace(",", "."));
+    if (!Number.isFinite(p) || p <= 0 || !Number.isFinite(maxF) || maxF <= 0) return null;
+    const need = maxF / p;
+    if (!Number.isFinite(need) || need <= 0) return null;
+    const bal = asset === "USDT" ? balUsdt : balPi;
+    if (bal == null) return null;
+    const needR = Math.ceil(need * 1e8) / 1e8;
+    const balR = Math.floor(bal * 1e8) / 1e8;
+    return { need: needR, bal: balR, ok: bal + 1e-12 >= need };
+  }, [side, price, maxFiat, asset, balUsdt, balPi]);
 
   const errMsg = useMemo(() => {
     if (!err) return null;
@@ -77,17 +111,33 @@ export default function P2pNewAdPage() {
       </Link>
       <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">{t("p2p_post_title")}</h1>
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_side_label")}
-        <select
-          value={side}
-          onChange={(e) => setSide(e.target.value as P2pSide)}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        >
-          <option value="sell">{t("p2p_side_sell")}</option>
-          <option value="buy">{t("p2p_side_buy")}</option>
-        </select>
-      </label>
+      <div>
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("p2p_side_label")}</p>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setSide("buy")}
+            className={`rounded-xl py-3 text-sm font-bold transition ${
+              side === "buy"
+                ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400/40"
+                : "border border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"
+            }`}
+          >
+            {t("p2p_side_buy")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSide("sell")}
+            className={`rounded-xl py-3 text-sm font-bold transition ${
+              side === "sell"
+                ? "bg-rose-600 text-white shadow-md ring-2 ring-rose-400/40"
+                : "border border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"
+            }`}
+          >
+            {t("p2p_side_sell")}
+          </button>
+        </div>
+      </div>
 
       <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
         {t("p2p_asset_label")}
@@ -187,9 +237,18 @@ export default function P2pNewAdPage() {
         </p>
       ) : null}
 
+      {sellNeedHint && !sellNeedHint.ok ? (
+        <p className="rounded-lg border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-100">
+          {t("p2p_sell_need_hint")
+            .replace("{need}", String(sellNeedHint.need))
+            .replace("{asset}", asset)
+            .replace("{bal}", String(sellNeedHint.bal))}
+        </p>
+      ) : null}
+
       <button
         type="button"
-        disabled={loading}
+        disabled={loading || (sellNeedHint != null && !sellNeedHint.ok)}
         onClick={() => void submit()}
         className="w-full rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white disabled:opacity-40"
       >

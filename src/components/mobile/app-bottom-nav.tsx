@@ -5,14 +5,11 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 
-const paths: (
-  | { href: string; key: keyof Messages; icon: typeof HomeIcon }
-  | { href: string; literalLabel: string; icon: typeof HomeIcon }
-)[] = [
+const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
   { href: "/app", key: "nav_home", icon: HomeIcon },
   { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
   { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
-  { href: "/app/trade", literalLabel: "Trade", icon: MarketIcon },
+  { href: "/app/trade/futures", key: "nav_trade", icon: MarketIcon },
   { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
 
@@ -32,8 +29,10 @@ export function AppBottomNav() {
           const active =
             href === "/app"
               ? pathname === "/app"
-              : pathname.startsWith(href);
-          const label = "literalLabel" in p ? p.literalLabel : t(p.key);
+              : href === "/app/trade/futures"
+                ? pathname.startsWith("/app/trade")
+                : pathname.startsWith(href);
+          const label = t(p.key);
           return (
             <Link
               key={href}
@@ -116,10 +115,11 @@ function P2PIcon({ active }: { active: boolean }) {
       aria-hidden
     >
       <path
-        d="M8 7h13M8 12h13M8 17h13M3 7h.01M3 12h.01M3 17h.01"
+        d="M7 16V4L3 8m4-4 4 4M17 8v12l4-4m-4 4-4-4"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

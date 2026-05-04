@@ -276,8 +276,20 @@ export function P2PHub() {
                   key={a.id}
                   className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900"
                 >
-                  <div className="flex items-center justify-between gap-2 border-b border-emerald-900/10 bg-emerald-50/80 px-4 py-2 dark:border-emerald-800/30 dark:bg-emerald-950/40">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white dark:bg-emerald-600">
+                  <div
+                    className={`flex items-center justify-between gap-2 border-b px-4 py-2 ${
+                      a.side === "sell"
+                        ? "border-rose-900/15 bg-rose-50/90 dark:border-rose-800/30 dark:bg-rose-950/35"
+                        : "border-emerald-900/10 bg-emerald-50/80 dark:border-emerald-800/30 dark:bg-emerald-950/40"
+                    }`}
+                  >
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white ${
+                        a.side === "sell"
+                          ? "bg-rose-600 dark:bg-rose-500"
+                          : "bg-emerald-700 dark:bg-emerald-600"
+                      }`}
+                    >
                       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                         <path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm-3 8V7a3 3 0 016 0v3H9z" />
                       </svg>
@@ -290,7 +302,13 @@ export function P2PHub() {
                     ) : null}
                   </div>
                   <div className="p-4">
-                    <p className="text-xs font-semibold uppercase text-emerald-800 dark:text-emerald-300">
+                    <p
+                      className={`text-xs font-semibold uppercase ${
+                        a.side === "sell"
+                          ? "text-rose-800 dark:text-rose-300"
+                          : "text-emerald-800 dark:text-emerald-300"
+                      }`}
+                    >
                       {a.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {a.asset} /{" "}
                       {a.fiatCurrency}
                     </p>
@@ -333,7 +351,11 @@ export function P2PHub() {
                     ) : null}
                     <Link
                       href={`/app/p2p/ad/${a.id}/trade`}
-                      className="mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white shadow-md active:scale-[0.99] dark:bg-emerald-600"
+                      className={`mt-4 flex min-h-[48px] items-center justify-center rounded-xl py-3 text-sm font-bold text-white shadow-md active:scale-[0.99] ${
+                        a.side === "sell"
+                          ? "bg-rose-600 dark:bg-rose-500"
+                          : "bg-emerald-700 dark:bg-emerald-600"
+                      }`}
                     >
                       {t("p2p_market_sticky_cta")}
                     </Link>
@@ -362,7 +384,13 @@ export function P2PHub() {
                   key={a.id}
                   className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900"
                 >
-                  <p className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+                  <p
+                    className={`text-sm font-semibold ${
+                      a.side === "sell"
+                        ? "text-rose-800 dark:text-rose-200"
+                        : "text-emerald-800 dark:text-emerald-200"
+                    }`}
+                  >
                     {a.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {a.asset} /{" "}
                     {a.fiatCurrency}
                   </p>
