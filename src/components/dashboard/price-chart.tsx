@@ -305,10 +305,10 @@ function PriceChart() {
           </div>
 
           <Link
-            href="/app/market"
+            href="/app/trade"
             className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl bg-stone-100 py-3 text-sm font-semibold text-emerald-800 dark:bg-stone-800 dark:text-emerald-300"
           >
-            {t("view_market")}
+            {t("view_trade")}
           </Link>
         </>
       )}

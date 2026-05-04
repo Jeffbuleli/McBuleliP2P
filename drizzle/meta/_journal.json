@@ -15,6 +15,34 @@
       "when": 1777813898501,
       "tag": "0001_roles_manual_withdrawals",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778000000000,
+      "tag": "0005_wallet_fiat_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778100000000,
+      "tag": "0006_user_stakes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778200000000,
+      "tag": "0007_p2p_market",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778300000000,
+      "tag": "0008_p2p_chat_disputes_fees",
+      "breakpoints": true
     }
   ]
 }

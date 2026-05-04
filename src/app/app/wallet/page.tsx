@@ -1,97 +1,172 @@
-import Link from "next/link";
-import { getDictionary } from "@/i18n/messages";
+import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
-import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
 import { getSessionUserId } from "@/lib/session";
+import { getStakingValuationUsd } from "@/lib/staking-service";
+import { getWalletUserState } from "@/lib/wallet-user-state";
+import { FIAT_FEE_RATE, SWAP_FEE_USD } from "@/lib/wallet-fees";
+import type { WalletAsset } from "@/lib/wallet-types";
+import { EXTERNAL_WITHDRAW_FEE_USDT } from "@/lib/withdraw-fees";
+import type { Locale } from "@/i18n/locale";
+import {
+  WalletOverview,
+  type StakingPromoDTO,
+  type WalletOverviewLabels,
+  type WalletRowDTO,
+} from "@/components/mobile/wallet-overview";
 
 export const dynamic = "force-dynamic";
+
+const NAME: Record<WalletAsset, Record<"en" | "fr", string>> = {
+  USDT: { en: "Tether · USDT", fr: "Tether · USDT" },
+  PI: { en: "Pi Network", fr: "Pi Network" },
+  USD: { en: "US Dollar", fr: "Dollar US" },
+  CDF: { en: "Congolese franc", fr: "Franc congolais" },
+};
+
+function formatBalanceDisplay(n: number, asset: WalletAsset, locale: Locale): string {
+  if (!Number.isFinite(n) || n === 0) return "0";
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  if (asset === "CDF") {
+    return n.toLocaleString(loc, {
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    });
+  }
+  return n.toLocaleString(loc, {
+    maximumFractionDigits: 8,
+    minimumFractionDigits: 0,
+  });
+}
+
+function toRow(
+  row: NonNullable<Awaited<ReturnType<typeof getWalletUserState>>>["lines"][0],
+  locale: Locale,
+  lang: "en" | "fr",
+): WalletRowDTO {
+  const depositHref =
+    row.asset === "USDT" || row.asset === "PI"
+      ? "/app/deposit"
+      : "/app/wallet/fiat/deposit";
+  const withdrawHref =
+    row.asset === "USDT" || row.asset === "PI"
+      ? "/app/withdraw"
+      : "/app/wallet/fiat/withdraw";
+
+  return {
+    asset: row.asset,
+    title: row.asset,
+    subtitle: NAME[row.asset][lang],
+    balanceDisplay: formatBalanceDisplay(row.balanceNum, row.asset, locale),
+    valueUsdApprox: row.valueUsdDisplay,
+    depositHref,
+    withdrawHref,
+  };
+}
 
 export default async function WalletPage() {
   const userId = await getSessionUserId();
   const locale = await getLocale();
   const d = getDictionary(locale);
+  const lang = locale === "fr" ? "fr" : "en";
 
   if (!userId) {
     return null;
   }
 
-  const snapshot = await getPortfolioSnapshotForUser(userId, locale);
-  const s = snapshot ?? {
-    totalEquivDisplay: "≈ 0 USDT",
-    usdtDisplay: "0 USDT",
-    piDisplay: "0 Pi",
-    fiatUsdDisplay: "≈ 0 USD",
-    fiatCdfDisplay: "≈ 0 CDF",
+  const stakeVal = await getStakingValuationUsd(userId);
+  const state = await getWalletUserState(userId, locale);
+  if (!state) {
+    return null;
+  }
+
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  const mergedUsd =
+    state.totalUsd +
+    stakeVal.principalUsd +
+    stakeVal.accruedInterestUsd;
+  const totalUsdDisplay = mergedUsd.toLocaleString(loc, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  });
+  const fmtUsd = (n: number) =>
+    n.toLocaleString(loc, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    });
+
+  const stakingPromo: StakingPromoDTO = {
+    href: "/app/wallet/staking",
+    title: d.staking_title,
+    tagline: d.staking_wallet_teaser,
+    cta: d.staking_cta,
+    activeLine: interpolate(d.staking_active_count, {
+      count: stakeVal.activeCount,
+    }),
+    lockedLabel: d.staking_locked_value,
+    lockedDisplay: fmtUsd(stakeVal.principalUsd),
+    accruedLabel: d.staking_accrued_value,
+    accruedDisplay: fmtUsd(stakeVal.accruedInterestUsd),
+    riskShort: d.staking_risk_short,
+  };
+
+  const pct = Math.round(FIAT_FEE_RATE * 100);
+  const feeSwap = interpolate(d.wallet_fee_swap, { feeUsd: SWAP_FEE_USD });
+  const feeFiat = interpolate(d.wallet_fee_fiat, { pct });
+  const feeCrypto = interpolate(d.wallet_fee_crypto_out, {
+    feeUsd: EXTERNAL_WITHDRAW_FEE_USDT,
+  });
+
+  const cryptoRows = state.lines
+    .filter((l) => l.asset === "USDT" || l.asset === "PI")
+    .map((l) => toRow(l, locale, lang));
+  const fiatRows = state.lines
+    .filter((l) => l.asset === "USD" || l.asset === "CDF")
+    .map((l) => toRow(l, locale, lang));
+
+  const labels: WalletOverviewLabels = {
+    wallet_title: d.wallet_title,
+    wallet_asset_list: d.wallet_asset_list,
+    wallet_asset_balance: d.wallet_asset_balance,
+    wallet_col_usd: d.wallet_col_usd,
+    wallet_no_match: d.wallet_no_match,
+    wallet_balance_hint: d.wallet_balance_hint,
+    wallet_est_total: d.wallet_est_total,
+    wallet_tab_crypto: d.wallet_tab_crypto,
+    wallet_tab_account: d.wallet_tab_account,
+    wallet_tab_crypto_sub: d.wallet_tab_crypto_sub,
+    wallet_tab_account_sub: d.wallet_tab_account_sub,
+    wallet_search_placeholder: d.wallet_search_placeholder,
+    wallet_add_funds: d.wallet_add_funds,
+    wallet_quick_withdraw: d.wallet_quick_withdraw,
+    wallet_quick_send: d.wallet_quick_send,
+    wallet_quick_swap: d.wallet_quick_swap,
+    wallet_row_swap: d.wallet_row_swap,
+    wallet_row_send: d.wallet_row_send,
+    wallet_link_history: d.wallet_link_history,
+    wallet_fees_expand: d.wallet_fees_expand,
+    wallet_fees_collapse: d.wallet_fees_collapse,
+    wallet_fees_title: d.wallet_fees_title,
+    wallet_hub_actions: d.wallet_hub_actions,
+    hide_balance: d.hide_balance,
+    show_balance: d.show_balance,
+    feeBulletLines: [
+      feeSwap,
+      feeFiat,
+      feeCrypto,
+      d.wallet_fee_internal,
+      d.wallet_crypto_deposit_free,
+    ],
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-2">
-      <div>
-        <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
-          {d.wallet_title}
-        </h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          {d.wallet_balance_hint}
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-emerald-900/10 bg-gradient-to-b from-white to-emerald-50/80 p-5 shadow-md dark:border-white/10 dark:from-stone-900 dark:to-stone-900">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-          {d.balance_estimated_total}
-        </p>
-        <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-950 dark:text-emerald-100">
-          {s.totalEquivDisplay}
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-emerald-900/10 pt-3 text-sm dark:border-white/10">
-          <div>
-            <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-              USDT
-            </p>
-            <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-100">
-              {s.usdtDisplay}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-              Pi
-            </p>
-            <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-100">
-              {s.piDisplay}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-              USD
-            </p>
-            <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-100">
-              {s.fiatUsdDisplay}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-              CDF
-            </p>
-            <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-100">
-              {s.fiatCdfDisplay}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <Link
-          href="/app/deposit"
-          className="flex min-h-[52px] items-center justify-center rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white shadow-lg shadow-emerald-900/20 active:scale-[0.99]"
-        >
-          {d.deposit}
-        </Link>
-        <Link
-          href="/app/withdraw"
-          className="flex min-h-[52px] items-center justify-center rounded-2xl border-2 border-rose-900/35 bg-white py-3.5 text-lg font-semibold text-rose-950 active:scale-[0.99] dark:bg-stone-900 dark:text-rose-100"
-        >
-          {d.withdraw}
-        </Link>
-      </div>
-    </div>
+    <WalletOverview
+      labels={labels}
+      totalUsdDisplay={totalUsdDisplay}
+      cryptoRows={cryptoRows}
+      fiatRows={fiatRows}
+      stakingPromo={stakingPromo}
+    />
   );
 }

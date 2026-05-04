@@ -1,11 +1,12 @@
 import { loadRecentActivity } from "@/lib/dashboard-activity";
-import { fetchMarketTickers } from "@/lib/market-tickers";
 import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
 import { getSessionUserId } from "@/lib/session";
 import { getLocale } from "@/lib/get-locale";
+import { fetchMarketTickers } from "@/lib/market-tickers";
 import { BalanceCard } from "@/components/mobile/balance-card";
 import { QuickActions } from "@/components/mobile/quick-actions";
 import { AssetStrip } from "@/components/mobile/asset-strip";
+import { TradeHubPreview } from "@/components/mobile/trade-hub-preview";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { RecentActivity } from "@/components/mobile/recent-activity";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
@@ -22,8 +23,8 @@ export default async function DashboardPage() {
 
   const snapshot = await getPortfolioSnapshotForUser(userId, locale);
 
-  const tickers = await fetchMarketTickers();
   const activity = await loadRecentActivity(userId, locale, 8);
+  const tickers = await fetchMarketTickers();
 
   const empty = {
     totalEquivDisplay: "≈ 0 USDT",
@@ -56,6 +57,8 @@ export default async function DashboardPage() {
         fiatUsdApprox={s.fiatUsdDisplay}
         fiatCdfApprox={s.fiatCdfDisplay}
       />
+
+      <TradeHubPreview locale={locale} />
 
       <MarketPreview locale={locale} initialTickers={tickers} />
 

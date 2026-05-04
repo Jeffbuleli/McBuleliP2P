@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/locale";
 const actions = [
   { href: "/app/deposit", key: "quick_deposit" as const, icon: PlusIn },
   { href: "/app/withdraw", key: "quick_withdraw" as const, icon: MinusOut },
-  { href: "/app/withdraw", key: "quick_send" as const, icon: SendIcon },
+  { href: "/app/wallet/transfer", key: "quick_send" as const, icon: SendIcon },
   { href: "/app/p2p", key: "quick_p2p" as const, icon: P2PGrid },
 ] as const;
 

@@ -1,26 +1,28 @@
-import { fetchMarketTickers } from "@/lib/market-tickers";
-import { getDictionary } from "@/i18n/messages";
+import Link from "next/link";
 import { getLocale } from "@/lib/get-locale";
+import { fetchMarketTickers } from "@/lib/market-tickers";
 import { MarketPreview } from "@/components/mobile/market-preview";
+import { getDictionary } from "@/i18n/messages";
 
+export const dynamic = "force-dynamic";
+
+/** Full live quotes list (same data as dashboard preview). */
 export default async function MarketPage() {
   const locale = await getLocale();
   const d = getDictionary(locale);
   const tickers = await fetchMarketTickers();
 
   return (
-    <div className="flex flex-col gap-4 pb-2">
-      <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
-        {d.market_title}
-      </h1>
-      <MarketPreview
-        locale={locale}
-        initialTickers={tickers}
-        showViewLink={false}
-      />
-      <p className="text-center text-xs text-stone-500 dark:text-stone-400">
-        {d.market_disclaimer}
-      </p>
+    <div className="flex flex-col gap-3 pb-4">
+      <div className="flex items-center gap-2 px-0.5">
+        <Link
+          href="/app"
+          className="text-sm font-semibold text-emerald-700 dark:text-emerald-400"
+        >
+          ← {d.nav_home}
+        </Link>
+      </div>
+      <MarketPreview locale={locale} initialTickers={tickers} showViewLink={false} />
     </div>
   );
 }

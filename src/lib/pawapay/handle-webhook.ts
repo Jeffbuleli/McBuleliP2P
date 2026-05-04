@@ -1,11 +1,16 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getDb, pawapayWebhookEvents, users } from "@/db";
 import type {
   PawapayDepositCallback,
   PawapayPayoutCallback,
 } from "@/lib/pawapay/callback-types";
-import { fiatAmountToUsdt } from "@/lib/pawapay/fiat-to-usdt";
+import { cdfPerOneUsd } from "@/lib/fx";
+import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
+import { creditUserAsset } from "@/lib/wallet-move-assets";
+import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
+import { fmtWalletAmount } from "@/lib/wallet-types";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -36,20 +41,6 @@ const payoutCallbackZ = z.object({
   created: z.string(),
   metadata: z.record(z.string(), z.string()).optional(),
 });
-
-function resolveUsdtFromDeposit(cb: PawapayDepositCallback): string | null {
-  const meta = cb.metadata;
-  if (meta?.usdtAmount) {
-    const v = Number(meta.usdtAmount);
-    if (Number.isFinite(v) && v > 0) return v.toFixed(18);
-  }
-  const conv = fiatAmountToUsdt({
-    amountStr: cb.amount,
-    currency: cb.currency,
-  });
-  if (conv === null) return null;
-  return conv.toFixed(18);
-}
 
 export async function handlePawapayWebhookJson(
   raw: unknown,
@@ -161,8 +152,8 @@ async function handleDeposit(
     return { ok: true };
   }
 
-  const usdt = resolveUsdtFromDeposit(cb);
-  if (!usdt || Number(usdt) <= 0) {
+  const gross = Number(cb.amount);
+  if (!Number.isFinite(gross) || gross <= 0) {
     await insertLedger({
       dedupKey,
       kind: "deposit",
@@ -171,11 +162,20 @@ async function handleDeposit(
       currency,
       amount: cb.amount,
       userId: userIdRaw,
-      effect: "invalid_usdt_amount",
+      effect: "invalid_amount",
       rawBody,
     });
     return { ok: true };
   }
+
+  const net = gross * (1 - FIAT_FEE_RATE);
+  const fee = gross - net;
+  const pocket = currency === "USD" ? "USD" : "CDF";
+  const netStr = fmtWalletAmount(net);
+  const feeUsdEq =
+    pocket === "USD"
+      ? fmtWalletAmount(fee)
+      : fmtWalletAmount(fee / cdfPerOneUsd());
 
   const db = getDb();
   try {
@@ -190,7 +190,7 @@ async function handleDeposit(
           currency,
           amount: cb.amount,
           userId: userIdRaw,
-          effect: "credited_usdt",
+          effect: "credited_fiat",
           rawBody,
         })
         .onConflictDoNothing()
@@ -200,12 +200,24 @@ async function handleDeposit(
         return;
       }
 
-      await tx
-        .update(users)
-        .set({
-          balance: sql`${users.balance} + ${usdt}::numeric`,
-        })
-        .where(eq(users.id, userIdRaw));
+      await creditUserAsset(tx, userIdRaw, pocket, netStr);
+
+      await insertWalletLedgerLines(tx, [
+        {
+          batchId: randomUUID(),
+          userId: userIdRaw,
+          entryType: "fiat_deposit",
+          asset: pocket,
+          amount: netStr,
+          feeUsdEquivalent: feeUsdEq,
+          meta: {
+            gross: cb.amount,
+            feeRate: FIAT_FEE_RATE,
+            fee: fmtWalletAmount(fee),
+            pawapayDepositId: cb.depositId,
+          },
+        },
+      ]);
     });
   } catch {
     return { ok: false, message: "Persistence error." };

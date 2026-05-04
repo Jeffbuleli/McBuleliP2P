@@ -3,13 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import type { Messages } from "@/i18n/messages";
 
-const paths = [
-  { href: "/app", key: "nav_home" as const, icon: HomeIcon },
-  { href: "/app/wallet", key: "nav_wallet" as const, icon: WalletIcon },
-  { href: "/app/p2p", key: "nav_p2p" as const, icon: P2PIcon },
-  { href: "/app/market", key: "nav_market" as const, icon: MarketIcon },
-  { href: "/app/profile", key: "nav_profile" as const, icon: ProfileIcon },
+const paths: (
+  | { href: string; key: keyof Messages; icon: typeof HomeIcon }
+  | { href: string; literalLabel: string; icon: typeof HomeIcon }
+)[] = [
+  { href: "/app", key: "nav_home", icon: HomeIcon },
+  { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
+  { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
+  { href: "/app/trade", literalLabel: "Trade", icon: MarketIcon },
+  { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
 
 export function AppBottomNav() {
@@ -22,11 +26,14 @@ export function AppBottomNav() {
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1">
-        {paths.map(({ href, key, icon: Icon }) => {
+        {paths.map((p) => {
+          const href = p.href;
+          const Icon = p.icon;
           const active =
             href === "/app"
               ? pathname === "/app"
               : pathname.startsWith(href);
+          const label = "literalLabel" in p ? p.literalLabel : t(p.key);
           return (
             <Link
               key={href}
@@ -39,7 +46,7 @@ export function AppBottomNav() {
             >
               <Icon active={active} />
               <span className="max-w-[4.5rem] truncate text-[10px] font-semibold leading-tight">
-                {t(key)}
+                {label}
               </span>
             </Link>
           );
