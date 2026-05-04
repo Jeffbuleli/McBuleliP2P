@@ -316,6 +316,77 @@ export const withdrawals = pgTable(
 );
 
 /** Idempotent handling of PawaPay webhook deliveries (v2). */
+/** Custodial USDⓈ-M-style futures (isolated margin in USDT). */
+export const tradeFuturesPositions = pgTable(
+  "trade_futures_positions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: varchar("symbol", { length: 16 }).notNull(),
+    side: varchar("side", { length: 8 }).notNull(),
+    leverage: integer("leverage").notNull(),
+    marginUsdt: numeric("margin_usdt", { precision: 36, scale: 18 }).notNull(),
+    entryPrice: numeric("entry_price", { precision: 36, scale: 18 }).notNull(),
+    liquidationPrice: numeric("liquidation_price", {
+      precision: 36,
+      scale: 18,
+    }).notNull(),
+    stopLossPrice: numeric("stop_loss_price", { precision: 36, scale: 18 }),
+    qtyBase: numeric("qty_base", { precision: 36, scale: 18 }).notNull(),
+    feeOpenUsdt: numeric("fee_open_usdt", { precision: 36, scale: 18 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    openedAt: timestamp("opened_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    closePrice: numeric("close_price", { precision: 36, scale: 18 }),
+    realizedPnlUsdt: numeric("realized_pnl_usdt", { precision: 36, scale: 18 }),
+    feeCloseUsdt: numeric("fee_close_usdt", { precision: 36, scale: 18 }),
+    closeReason: varchar("close_reason", { length: 16 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+  },
+  (t) => [
+    index("trade_futures_positions_user_idx").on(t.userId),
+    index("trade_futures_positions_status_idx").on(t.status),
+  ],
+);
+
+/** High/low binary-style options (fixed stake, expiry from open). */
+export const tradeSimpleOptions = pgTable(
+  "trade_simple_options",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: varchar("symbol", { length: 16 }).notNull(),
+    direction: varchar("direction", { length: 8 }).notNull(),
+    stakeUsdt: numeric("stake_usdt", { precision: 36, scale: 18 }).notNull(),
+    payoutPct: numeric("payout_pct", { precision: 12, scale: 6 }).notNull(),
+    durationSec: integer("duration_sec").notNull(),
+    expiryAt: timestamp("expiry_at", { withTimezone: true }).notNull(),
+    entryPrice: numeric("entry_price", { precision: 36, scale: 18 }).notNull(),
+    feeUsdt: numeric("fee_usdt", { precision: 36, scale: 18 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    settledAt: timestamp("settled_at", { withTimezone: true }),
+    settlementPrice: numeric("settlement_price", {
+      precision: 36,
+      scale: 18,
+    }),
+    outcome: varchar("outcome", { length: 8 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+  },
+  (t) => [
+    index("trade_simple_options_user_idx").on(t.userId),
+    index("trade_simple_options_status_expiry_idx").on(t.status, t.expiryAt),
+  ],
+);
+
 export const pawapayWebhookEvents = pgTable(
   "pawapay_webhook_events",
   {

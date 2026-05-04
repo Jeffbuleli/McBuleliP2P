@@ -43,6 +43,13 @@
       "when": 1778300000000,
       "tag": "0008_p2p_chat_disputes_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778400000000,
+      "tag": "0009_trade_module",
+      "breakpoints": true
     }
   ]
 }
