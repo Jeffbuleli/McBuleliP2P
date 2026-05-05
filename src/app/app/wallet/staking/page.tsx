@@ -7,6 +7,7 @@ import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import type { StakingChainAsset } from "@/lib/staking-config";
 import { maturityRewardAmount } from "@/lib/staking-math";
+import { clientErrorText } from "@/lib/client-error-text";
 
 type TermRow = { days: number; aprPercent: number };
 
@@ -143,10 +144,7 @@ export default function WalletStakingPage() {
     !loading;
 
   function errText(key: string): string {
-    if (key.startsWith("wallet_") || key.startsWith("staking_")) {
-      return t(key as keyof Messages);
-    }
-    return key;
+    return clientErrorText(t, key);
   }
 
   if (loadErr) {

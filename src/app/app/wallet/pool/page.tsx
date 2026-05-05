@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import type { Messages } from "@/i18n/messages";
 
 type PositionRow = {
   id: string;
@@ -110,6 +111,13 @@ export default function WalletPoolPage() {
   }, [amountUsdt]);
 
   const presets = [50, 100, 500, 1000, 2000] as const;
+
+  function errText(key: string): string {
+    if (key.startsWith("wallet_") || key.startsWith("lp_pool_") || key.startsWith("pool_")) {
+      return t(key as keyof Messages);
+    }
+    return key;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -219,7 +227,7 @@ export default function WalletPoolPage() {
 
       {err ? (
         <p className="mt-3 rounded-2xl border border-rose-900/20 bg-rose-50/80 px-3 py-2 text-sm text-rose-900 dark:border-rose-700/30 dark:bg-rose-950/30 dark:text-rose-100">
-          {err}
+          {errText(err)}
         </p>
       ) : null}
 

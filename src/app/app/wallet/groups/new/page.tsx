@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { APP_COUNTRY_CODES } from "@/lib/country-codes";
 import { countryLabel } from "@/lib/country-label";
+import { clientErrorText } from "@/lib/client-error-text";
 
 export default function GroupCreatePage() {
   const { t, locale } = useI18n();
@@ -71,7 +72,7 @@ export default function GroupCreatePage() {
 
       {err ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
-          {err}
+          {clientErrorText(t, err)}
         </p>
       ) : null}
 

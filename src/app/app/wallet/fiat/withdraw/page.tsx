@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import type { Messages } from "@/i18n/messages";
+import { clientErrorText } from "@/lib/client-error-text";
 
 export default function WalletFiatWithdrawPage() {
   const { t, locale } = useI18n();
@@ -102,7 +103,7 @@ export default function WalletFiatWithdrawPage() {
 
       {err ? (
         <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {err.startsWith("wallet_") ? t(err as keyof Messages) : err}
+          {clientErrorText(t, err)}
         </p>
       ) : null}
 

@@ -6,6 +6,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { countryLabel } from "@/lib/country-label";
+import { clientErrorText } from "@/lib/client-error-text";
 
 type MemberRow = {
   userId: string;
@@ -148,7 +149,7 @@ export default function GroupDashboardPage({
         </div>
         {err ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
-            {err}
+            {clientErrorText(t, err)}
           </p>
         ) : (
           <p className="text-stone-500">…</p>
@@ -195,7 +196,7 @@ export default function GroupDashboardPage({
 
       {err ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
-          {err}
+          {clientErrorText(t, err)}
         </p>
       ) : null}
 

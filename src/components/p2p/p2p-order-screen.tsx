@@ -13,6 +13,7 @@ import {
 } from "@/components/p2p/p2p-status-badge";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
+import { clientErrorText } from "@/lib/client-error-text";
 
 type OrderDetail = {
   id: string;
@@ -227,10 +228,7 @@ export function P2pOrderScreen() {
 
   const actionErrMsg = useMemo(() => {
     if (!actionErr) return null;
-    if (actionErr.startsWith("p2p_") || actionErr.startsWith("wallet_")) {
-      return t(actionErr as keyof Messages);
-    }
-    return actionErr;
+    return clientErrorText(t, actionErr);
   }, [actionErr, t]);
 
   if (err) {

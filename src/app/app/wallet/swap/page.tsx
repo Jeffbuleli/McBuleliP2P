@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import type { Messages } from "@/i18n/messages";
 import { SWAP_FEE_USD } from "@/lib/wallet-fees";
 import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
+import { clientErrorText } from "@/lib/client-error-text";
 
 export default function WalletSwapPage() {
   const { t, locale } = useI18n();
@@ -159,7 +159,7 @@ export default function WalletSwapPage() {
 
       {err ? (
         <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {err.startsWith("wallet_") ? t(err as keyof Messages) : err}
+          {clientErrorText(t, err)}
         </p>
       ) : null}
 

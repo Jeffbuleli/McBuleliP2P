@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
+import { clientErrorText } from "@/lib/client-error-text";
 import {
   P2P_COUNTRY_CODES,
   P2P_FIAT_CURRENCIES,
@@ -64,10 +65,7 @@ export default function P2pNewAdPage() {
 
   const errMsg = useMemo(() => {
     if (!err) return null;
-    if (err.startsWith("p2p_") || err.startsWith("wallet_")) {
-      return t(err as keyof Messages);
-    }
-    return err;
+    return clientErrorText(t, err);
   }, [err, t]);
 
   async function submit() {
