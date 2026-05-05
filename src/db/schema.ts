@@ -321,6 +321,105 @@ export const userStakes = pgTable(
   ],
 );
 
+/** LP Pool — funds locked to back internal liquidity (USDT). */
+export const lpPoolPositions = pgTable(
+  "lp_pool_positions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    asset: varchar("asset", { length: 8 }).notNull().default("USDT"),
+    amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
+    lockMonths: integer("lock_months").notNull(),
+    sizeTier: varchar("size_tier", { length: 8 }).notNull(),
+    lockTier: varchar("lock_tier", { length: 8 }).notNull(),
+    sizeMultiplier: numeric("size_multiplier", { precision: 12, scale: 6 }).notNull(),
+    lockMultiplier: numeric("lock_multiplier", { precision: 12, scale: 6 }).notNull(),
+    shares: numeric("shares", { precision: 36, scale: 18 }).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("lp_pool_positions_user_idx").on(t.userId),
+    index("lp_pool_positions_status_ends_idx").on(t.status, t.endsAt),
+  ],
+);
+
+/** One row per 24h window distribution (01:00 GMT → 01:00 GMT). */
+export const lpPoolDailyDistributions = pgTable(
+  "lp_pool_daily_distributions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    dayStartAt: timestamp("day_start_at", { withTimezone: true }).notNull().unique(),
+    dayEndAt: timestamp("day_end_at", { withTimezone: true }).notNull(),
+    distributionRate: numeric("distribution_rate", { precision: 12, scale: 6 }).notNull(),
+    revenueNetUsdt: numeric("revenue_net_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    rewardPoolUsdt: numeric("reward_pool_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    totalShares: numeric("total_shares", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("lp_pool_daily_distributions_day_idx").on(t.dayStartAt)],
+);
+
+/** Append-only rewards ledger: daily accruals + payouts (windowed). */
+export const lpPoolRewardEntries = pgTable(
+  "lp_pool_reward_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    positionId: uuid("position_id").references(() => lpPoolPositions.id, {
+      onDelete: "set null",
+    }),
+    /** accrual | payout */
+    kind: varchar("kind", { length: 16 }).notNull(),
+    dayStartAt: timestamp("day_start_at", { withTimezone: true }),
+    amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("lp_pool_reward_entries_user_idx").on(t.userId, t.createdAt),
+    uniqueIndex("lp_pool_reward_entries_accrual_uidx")
+      .on(t.dayStartAt, t.positionId)
+      .where(sql`${t.kind} = 'accrual' AND ${t.dayStartAt} IS NOT NULL AND ${t.positionId} IS NOT NULL`),
+  ],
+);
+
+/** Cached balances for UI (updated by jobs and payouts). */
+export const lpPoolRewardBalances = pgTable("lp_pool_reward_balances", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  availableUsdt: numeric("available_usdt", { precision: 36, scale: 18 })
+    .notNull()
+    .default("0"),
+  totalEarnedUsdt: numeric("total_earned_usdt", { precision: 36, scale: 18 })
+    .notNull()
+    .default("0"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const txidLedger = pgTable(
   "txid_ledger",
   {

@@ -116,6 +116,14 @@ export default async function WalletPage() {
 
   const groupPromos: ServicePromoDTO[] = [
     {
+      href: "/app/wallet/pool",
+      title: d.pool_title,
+      tagline: d.pool_tagline,
+      cta: d.pool_cta,
+      metaLine: d.pool_meta_line,
+      tone: "emerald",
+    },
+    {
       href: "/app/wallet/groups?type=likelimba",
       title: d.group_like_title,
       tagline: d.group_like_tagline,
