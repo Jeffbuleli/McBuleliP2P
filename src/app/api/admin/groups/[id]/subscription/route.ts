@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getDb, groupSubscriptionInvoices } from "@/db";
-import { requireStaff, StaffAuthError } from "@/lib/session-user";
+import { requireStaffScope, StaffAuthError } from "@/lib/session-user";
 
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireStaff();
+    await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });

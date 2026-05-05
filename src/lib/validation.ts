@@ -6,6 +6,7 @@ const email = z.string().trim().min(3).max(255).email();
 export const registerSchema = z.object({
   email: email,
   password: z.string().min(8).max(128),
+  referralCode: z.string().trim().min(4).max(16).optional(),
 });
 
 export const loginSchema = registerSchema;
@@ -59,6 +60,12 @@ export const adminRejectWithdrawalSchema = z.object({
   reason: z.string().trim().min(3).max(1000),
 });
 
-export const adminSetRoleSchema = z.object({
-  role: z.enum(["user", "agent", "super_admin"]),
-});
+const staffScopeZ = z.enum(["withdrawals", "groups", "p2p_disputes"]);
+
+export const adminSetRoleSchema = z
+  .object({
+    role: z.enum(["user", "agent", "super_admin"]),
+    /** When `role` is `agent`, optional explicit module list. Omit to leave unchanged. */
+    staffScopes: z.array(staffScopeZ).nullable().optional(),
+  })
+  .strict();

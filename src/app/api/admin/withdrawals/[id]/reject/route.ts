@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { getDb, users, withdrawals } from "@/db";
-import { StaffAuthError, requireStaff } from "@/lib/session-user";
+import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
 import { adminRejectWithdrawalSchema } from "@/lib/validation";
 import { WithdrawalStatus } from "@/lib/status";
 import { totalDebitedFromRow } from "@/lib/withdraw-fees";
+import {
+  PlatformAdminAuditAction,
+  writePlatformAdminAudit,
+} from "@/lib/admin-audit";
 
 export async function POST(
   req: Request,
@@ -12,7 +16,7 @@ export async function POST(
 ) {
   let staff;
   try {
-    staff = await requireStaff();
+    staff = await requireStaffScope("withdrawals");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });
@@ -90,6 +94,18 @@ export async function POST(
     .from(withdrawals)
     .where(eq(withdrawals.id, id))
     .limit(1);
+
+  await writePlatformAdminAudit({
+    actorUserId: staff.id,
+    action: PlatformAdminAuditAction.WITHDRAWAL_REJECT,
+    resourceType: "withdrawal",
+    resourceId: id,
+    meta: {
+      reason: parsed.data.reason.trim(),
+      asset: w.asset,
+      refundApprox: refund,
+    },
+  });
 
   return NextResponse.json({ withdrawal: updated });
 }

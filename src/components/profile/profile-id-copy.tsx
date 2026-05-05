@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-export function ProfileIdCopy({
-  id,
+export function CopyValueButton({
+  value,
   copyLabel,
   copiedLabel,
 }: {
-  id: string;
+  value: string;
   copyLabel: string;
   copiedLabel: string;
 }) {
@@ -15,7 +15,7 @@ export function ProfileIdCopy({
 
   async function onCopy() {
     try {
-      await navigator.clipboard.writeText(id);
+      await navigator.clipboard.writeText(value);
       setDone(true);
       window.setTimeout(() => setDone(false), 1600);
     } catch {
@@ -31,5 +31,19 @@ export function ProfileIdCopy({
     >
       {done ? copiedLabel : copyLabel}
     </button>
+  );
+}
+
+export function ProfileIdCopy({
+  id,
+  copyLabel,
+  copiedLabel,
+}: {
+  id: string;
+  copyLabel: string;
+  copiedLabel: string;
+}) {
+  return (
+    <CopyValueButton value={id} copyLabel={copyLabel} copiedLabel={copiedLabel} />
   );
 }

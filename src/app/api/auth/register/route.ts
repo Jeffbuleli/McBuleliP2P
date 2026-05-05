@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
+import { findReferrerByCode } from "@/lib/referral-service";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { registerSchema } from "@/lib/validation";
@@ -22,8 +23,14 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const { email, password } = parsed.data;
+    const { email, password, referralCode } = parsed.data;
     const db = getDb();
+
+    let referredByUserId: string | null = null;
+    if (referralCode) {
+      const ref = await findReferrerByCode(referralCode);
+      if (ref) referredByUserId = ref.id;
+    }
     const existing = await db
       .select()
       .from(users)
@@ -46,6 +53,7 @@ export async function POST(req: Request) {
         passwordHash,
         role,
         tradeLiveEnabled: false,
+        referredByUserId,
       })
       .returning({
         id: users.id,

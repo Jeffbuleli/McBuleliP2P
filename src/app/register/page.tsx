@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refParam = searchParams.get("ref")?.trim() ?? "";
+  const referralCode = refParam ? refParam.toUpperCase() : undefined;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +26,11 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          ...(referralCode ? { referralCode } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -53,6 +60,11 @@ export default function RegisterPage() {
         </div>
       </div>
       <p className="text-sm text-stone-600 dark:text-stone-400">{t("register_sub")}</p>
+      {referralCode ? (
+        <p className="mt-3 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs font-medium text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-100">
+          {t("register_ref_active", { code: referralCode })}
+        </p>
+      ) : null}
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm font-medium text-stone-800">
           {t("email")}
@@ -97,5 +109,22 @@ export default function RegisterPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto min-h-full max-w-md animate-pulse space-y-4 px-4 pb-10 pt-14">
+          <div className="h-11 w-11 rounded-2xl bg-stone-200 dark:bg-stone-800" />
+          <div className="h-8 w-48 rounded-lg bg-stone-200 dark:bg-stone-800" />
+          <div className="h-4 w-full rounded bg-stone-200 dark:bg-stone-800" />
+          <div className="mt-8 h-11 w-full rounded-xl bg-stone-200 dark:bg-stone-800" />
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

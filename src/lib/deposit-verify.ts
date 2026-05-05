@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { getDb, deposits, txidLedger, users } from "@/db";
 import type { InferSelectModel } from "drizzle-orm";
 import {
@@ -7,14 +7,35 @@ import {
 } from "./binance";
 import { canonicalFromBinanceNetwork } from "./networks";
 import { getAmountTolerance, getMinDeposit } from "./env";
+import {
+  MIN_DEPOSIT_USDT_FIRST,
+  MIN_DEPOSIT_USDT_SUBSEQUENT,
+} from "@/lib/usdt-deposit-constants";
 import { DepositStatus } from "./status";
 import {
   okxDepositHistoryByTxid,
   okxDepositStateIsFinal,
 } from "@/lib/okx";
 import { getPiOkxChain } from "@/lib/pi-constants";
+import { tryAwardReferralFromCryptoDeposit } from "@/lib/referral-service";
 
 type DepositRow = InferSelectModel<typeof deposits>;
+
+async function getEffectiveMinDepositUsdt(userId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ c: count() })
+    .from(deposits)
+    .where(
+      and(
+        eq(deposits.userId, userId),
+        eq(deposits.asset, "USDT"),
+        eq(deposits.status, DepositStatus.CONFIRMED),
+      ),
+    );
+  const n = Number(row?.c ?? 0);
+  return n === 0 ? MIN_DEPOSIT_USDT_FIRST : MIN_DEPOSIT_USDT_SUBSEQUENT;
+}
 
 function normAddr(a: string) {
   return a.trim();
@@ -182,14 +203,18 @@ export async function verifyDepositTx(
   deposit: DepositRow,
   txidNorm: string,
 ): Promise<VerifyResult> {
-  const min = getMinDeposit(deposit.asset);
   const tol = getAmountTolerance();
 
   if (deposit.provider === "binance") {
+    const min =
+      deposit.asset.toUpperCase() === "USDT"
+        ? await getEffectiveMinDepositUsdt(deposit.userId)
+        : getMinDeposit(deposit.asset);
     return verifyBinanceDeposit(deposit, txidNorm, min, tol);
   }
   if (deposit.provider === "okx" && deposit.asset.toUpperCase() === "PI") {
-    return verifyOkxPiDeposit(deposit, txidNorm, min, tol);
+    const minPi = getMinDeposit(deposit.asset);
+    return verifyOkxPiDeposit(deposit, txidNorm, minPi, tol);
   }
 
   return { ok: false, failed: true, reason: "Unsupported deposit source." };
@@ -250,6 +275,13 @@ export async function applyConfirmedDeposit(args: {
         })
         .where(eq(users.id, args.userId));
     }
+  });
+
+  await tryAwardReferralFromCryptoDeposit({
+    userId: args.userId,
+    depositId: args.deposit.id,
+    asset: args.deposit.asset,
+    amountStr: args.amountStr,
   });
 }
 

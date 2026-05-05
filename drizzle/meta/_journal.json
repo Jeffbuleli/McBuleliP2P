@@ -78,6 +78,27 @@
       "when": 1778800000000,
       "tag": "0013_user_country_kyc",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778900000000,
+      "tag": "0014_referral",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0015_staff_scopes",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1779100000000,
+      "tag": "0016_platform_admin_audit",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 
@@ -18,17 +19,24 @@ type Row = {
   createdByEmail: string;
 };
 
-export default function AdminGroupsPage() {
+function AdminGroupsContent() {
   const { t, locale } = useI18n();
+  const sp = useSearchParams();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("pending");
+  const [status, setStatus] = useState(() => sp.get("status") ?? "pending");
+  const [subscriptionStatus, setSubscriptionStatus] = useState(
+    () => sp.get("subscriptionStatus") ?? "",
+  );
 
   useEffect(() => {
     setErr(null);
     void (async () => {
       const q = new URLSearchParams();
       q.set("status", status);
+      if (subscriptionStatus) {
+        q.set("subscriptionStatus", subscriptionStatus);
+      }
       const res = await fetch(`/api/admin/groups?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -38,7 +46,7 @@ export default function AdminGroupsPage() {
       }
       setRows((data.groups ?? []) as Row[]);
     })();
-  }, [status]);
+  }, [status, subscriptionStatus]);
 
   if (rows === null) return <p className="text-stone-500">…</p>;
 
@@ -50,13 +58,26 @@ export default function AdminGroupsPage() {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
+          aria-label={t("admin_status")}
         >
           <option value="pending">{t("admin_pending")}</option>
           <option value="approved">{t("admin_approved")}</option>
           <option value="active">{t("admin_active")}</option>
+          <option value="approved,active">{t("admin_groups_lifecycle_approved_active")}</option>
           <option value="suspended">{t("admin_suspended")}</option>
           <option value="rejected">{t("admin_rejected")}</option>
           <option value="all">{t("admin_all")}</option>
+        </select>
+        <select
+          value={subscriptionStatus}
+          onChange={(e) => setSubscriptionStatus(e.target.value)}
+          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
+          aria-label={t("admin_subscription")}
+        >
+          <option value="">{t("admin_groups_sub_any")}</option>
+          <option value="active">{t("admin_subscription_state_active")}</option>
+          <option value="overdue">{t("admin_subscription_state_overdue")}</option>
+          <option value="suspended">{t("admin_subscription_state_suspended")}</option>
         </select>
         <Link href="/admin" className="ml-auto text-sm text-amber-200 underline">
           {t("admin_back")}
@@ -99,3 +120,10 @@ export default function AdminGroupsPage() {
   );
 }
 
+export default function AdminGroupsPage() {
+  return (
+    <Suspense fallback={<p className="text-stone-500">…</p>}>
+      <AdminGroupsContent />
+    </Suspense>
+  );
+}

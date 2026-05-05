@@ -15,6 +15,7 @@ export async function GET() {
       email: users.email,
       role: users.role,
       balance: users.balance,
+      staffScopes: users.staffScopes,
     })
     .from(users)
     .where(eq(users.id, userId))

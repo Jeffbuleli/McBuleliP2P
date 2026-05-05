@@ -8,8 +8,9 @@ export function getJwtSecret(): string {
 
 export function getMinDeposit(asset: string): number {
   if (asset === "USDT") {
-    const v = Number(process.env.MIN_DEPOSIT_USDT ?? "1");
-    return Number.isFinite(v) ? v : 1;
+    /** Default when no user context; TXID confirm uses `getEffectiveMinDepositUsdt`. */
+    const v = Number(process.env.MIN_DEPOSIT_USDT ?? "0.1");
+    return Number.isFinite(v) ? v : 0.1;
   }
   if (asset === "PI") {
     const v = Number(process.env.MIN_DEPOSIT_PI ?? "1");

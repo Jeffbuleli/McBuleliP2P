@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireStaff, StaffAuthError } from "@/lib/session-user";
+import { requireStaffScope, StaffAuthError } from "@/lib/session-user";
+import {
+  PlatformAdminAuditAction,
+  writePlatformAdminAudit,
+} from "@/lib/admin-audit";
 import { processGroupSubscriptionBilling } from "@/lib/group-savings-billing";
 
 const bodyZ = z.object({
@@ -8,8 +12,9 @@ const bodyZ = z.object({
 });
 
 export async function POST(req: Request) {
+  let staff;
   try {
-    await requireStaff();
+    staff = await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });
@@ -24,6 +29,15 @@ export async function POST(req: Request) {
   }
   const r = await processGroupSubscriptionBilling({ groupId: parsed.data.groupId });
   if (!r.ok) return NextResponse.json({ message: r.message }, { status: 400 });
+
+  await writePlatformAdminAudit({
+    actorUserId: staff.id,
+    action: PlatformAdminAuditAction.GROUP_SUBSCRIPTION_BILLING_RUN,
+    resourceType: "group",
+    resourceId: parsed.data.groupId,
+    meta: { status: r.status },
+  });
+
   return NextResponse.json(r);
 }
 

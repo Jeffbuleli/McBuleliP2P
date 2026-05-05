@@ -11,6 +11,7 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { fmtWalletAmount } from "@/lib/wallet-types";
+import { tryAwardReferralFromFiatPawapayDeposit } from "@/lib/referral-service";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -222,6 +223,14 @@ async function handleDeposit(
   } catch {
     return { ok: false, message: "Persistence error." };
   }
+
+  await tryAwardReferralFromFiatPawapayDeposit({
+    userId: userIdRaw,
+    grossAmount: gross,
+    currency,
+    feeUsdEquivalentStr: feeUsdEq,
+    pawapayDepositId: cb.depositId,
+  });
 
   return { ok: true };
 }

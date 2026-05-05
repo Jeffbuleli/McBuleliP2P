@@ -2,9 +2,13 @@
 export const EXTERNAL_WITHDRAW_FEE_USDT = 2;
 
 /**
- * Minimum **net** USDT that must arrive at the destination address.
+ * Net USDT sent on-chain must be **strictly greater than** this value (Binance minimum withdrawal is 10 USDT;
+ * we align so payouts remain executable). Wallet debit = net + {@link EXTERNAL_WITHDRAW_FEE_USDT}.
  */
-export const MIN_WITHDRAW_NET_USDT = 10;
+export const MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR = 10;
+
+/** @deprecated alias — use `MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR`; validation is `net > floor`. */
+export const MIN_WITHDRAW_NET_USDT = MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR;
 
 export const EXTERNAL_WITHDRAW_FEE_PI = 2;
 export const MIN_WITHDRAW_NET_PI = 10;
@@ -24,10 +28,10 @@ export function parseNetWithdrawal(args: {
   if (!Number.isFinite(net) || net <= 0) {
     return { ok: false, message: "Invalid amount." };
   }
-  if (net + 1e-12 < MIN_WITHDRAW_NET_USDT) {
+  if (!(net > MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR + 1e-12)) {
     return {
       ok: false,
-      message: `Minimum withdrawal is ${MIN_WITHDRAW_NET_USDT} USDT (net).`,
+      message: `Net amount must be strictly greater than ${MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR} USDT.`,
     };
   }
   const feeN = EXTERNAL_WITHDRAW_FEE_USDT;

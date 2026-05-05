@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, withdrawals } from "@/db";
-import { StaffAuthError, requireStaff } from "@/lib/session-user";
+import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
 import { WithdrawalStatus } from "@/lib/status";
+import {
+  PlatformAdminAuditAction,
+  writePlatformAdminAudit,
+} from "@/lib/admin-audit";
 
 /**
  * Agent takes ownership of a pending withdrawal → PROCESSING.
@@ -14,7 +18,7 @@ export async function POST(
 ) {
   let staff;
   try {
-    staff = await requireStaff();
+    staff = await requireStaffScope("withdrawals");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });
@@ -54,6 +58,18 @@ export async function POST(
     })
     .where(eq(withdrawals.id, id))
     .returning();
+
+  await writePlatformAdminAudit({
+    actorUserId: staff.id,
+    action: PlatformAdminAuditAction.WITHDRAWAL_CLAIM,
+    resourceType: "withdrawal",
+    resourceId: id,
+    meta: {
+      asset: w.asset,
+      amount: w.amount?.toString?.() ?? String(w.amount),
+      status: updated?.status,
+    },
+  });
 
   return NextResponse.json({ withdrawal: updated });
 }

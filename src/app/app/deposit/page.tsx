@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
+import {
+  MIN_DEPOSIT_USDT_FIRST,
+  MIN_DEPOSIT_USDT_SUBSEQUENT,
+} from "@/lib/usdt-deposit-constants";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -209,6 +213,14 @@ export default function DepositWizardPage() {
             <p className="mt-3 text-pretty text-sm leading-relaxed">
               {t("deposit_warn_body")}
             </p>
+            {asset === "USDT" ? (
+              <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
+                {t("deposit_usdt_min_rules", {
+                  first: String(MIN_DEPOSIT_USDT_FIRST),
+                  next: String(MIN_DEPOSIT_USDT_SUBSEQUENT),
+                })}
+              </p>
+            ) : null}
           </div>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-300 bg-white p-4 dark:border-stone-600 dark:bg-stone-900">
             <input

@@ -100,6 +100,14 @@ export default function WithdrawPage() {
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           {t("withdraw_sub", { fee })}
         </p>
+        {wAsset === "USDT" ? (
+          <p className="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+            {t("withdraw_usdt_rail_note", {
+              min: String(minNetUsdt),
+              fee: String(feeUsdt),
+            })}
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">

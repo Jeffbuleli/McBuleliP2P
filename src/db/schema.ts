@@ -1,3 +1,4 @@
+import type { StaffScope } from "@/lib/staff-scopes";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -48,10 +49,51 @@ export const users = pgTable("users", {
     .default("10000"),
   /** When false, API rejects live (real wallet) futures/options orders until user opts in. */
   tradeLiveEnabled: boolean("trade_live_enabled").notNull().default(true),
+  /** Unique share code for referral links (nullable until backfilled). */
+  referralCode: varchar("referral_code", { length: 16 }),
+  referredByUserId: uuid("referred_by_user_id"),
+  /** USDT earned via referral program (transfer to main wallet — future). */
+  referralUsdtBalance: numeric("referral_usdt_balance", {
+    precision: 36,
+    scale: 18,
+  })
+    .notNull()
+    .default("0"),
+  /**
+   * Agent-only allowlist of admin modules. `null` = all modules (legacy).
+   * Cleared when role is not `agent`.
+   */
+  staffScopes: jsonb("staff_scopes").$type<StaffScope[] | null>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
+
+/** One row per referee when the first qualifying deposit triggers a referrer reward. */
+export const referralFirstRewards = pgTable(
+  "referral_first_rewards",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    refereeUserId: uuid("referee_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(),
+    referrerUserId: uuid("referrer_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    platformFeeUsd: numeric("platform_fee_usd", { precision: 18, scale: 8 })
+      .notNull(),
+    rewardUsdt: numeric("reward_usdt", { precision: 18, scale: 8 }).notNull(),
+    source: varchar("source", { length: 32 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("referral_first_rewards_referrer_idx").on(t.referrerUserId),
+  ],
+);
 
 export const deposits = pgTable(
   "deposits",
@@ -555,6 +597,28 @@ export const groupAuditLog = pgTable(
   (t) => [
     index("group_audit_log_group_idx").on(t.groupId),
     index("group_audit_log_created_idx").on(t.createdAt),
+  ],
+);
+
+/** Cross-cutting audit trail for platform staff actions (super-admin global view). */
+export const platformAdminAuditLog = pgTable(
+  "platform_admin_audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    action: varchar("action", { length: 80 }).notNull(),
+    resourceType: varchar("resource_type", { length: 32 }),
+    resourceId: varchar("resource_id", { length: 64 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("platform_admin_audit_created_idx").on(t.createdAt),
+    index("platform_admin_audit_actor_idx").on(t.actorUserId),
   ],
 );
 

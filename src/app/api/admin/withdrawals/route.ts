@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb, users, withdrawals } from "@/db";
-import { StaffAuthError, requireStaff } from "@/lib/session-user";
+import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
 import { WithdrawalStatus } from "@/lib/status";
 
 export async function GET(req: Request) {
   let staff;
   try {
-    staff = await requireStaff();
+    staff = await requireStaffScope("withdrawals");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });

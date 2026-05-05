@@ -4,7 +4,15 @@ import { eq } from "drizzle-orm";
 import { getDb, groupSavingsGroups } from "@/db";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { nextBillingAtFixedDay } from "@/lib/group-savings-billing";
-import { requireStaff, StaffAuthError, getSessionUser } from "@/lib/session-user";
+import {
+  requireStaffScope,
+  StaffAuthError,
+  getSessionUser,
+} from "@/lib/session-user";
+import {
+  PlatformAdminAuditAction,
+  writePlatformAdminAudit,
+} from "@/lib/admin-audit";
 
 const bodyZ = z.object({
   decision: z.enum(["approve", "reject"]),
@@ -16,7 +24,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireStaff();
+    await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
       return NextResponse.json({ message: e.message }, { status: 403 });
@@ -59,6 +67,13 @@ export async function PATCH(
       before: { status: g.status },
       after: { status: "approved" },
     });
+    await writePlatformAdminAudit({
+      actorUserId: me?.id ?? null,
+      action: PlatformAdminAuditAction.GROUP_REVIEW,
+      resourceType: "group",
+      resourceId: id,
+      meta: { decision: "approve", groupName: g.name },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -79,6 +94,13 @@ export async function PATCH(
     action: "ops_rejected_group",
     before: { status: g.status },
     after: { status: "rejected", rejectionReason: reason },
+  });
+  await writePlatformAdminAudit({
+    actorUserId: me?.id ?? null,
+    action: PlatformAdminAuditAction.GROUP_REVIEW,
+    resourceType: "group",
+    resourceId: id,
+    meta: { decision: "reject", rejectionReason: reason, groupName: g.name },
   });
   return NextResponse.json({ ok: true });
 }
