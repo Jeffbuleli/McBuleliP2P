@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { getDb, users, withdrawals } from "@/db";
+import { getDb, loans, users, withdrawals } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { withdrawalSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
@@ -69,6 +69,19 @@ export async function POST(req: Request) {
 
   const { net, fee, totalDebit } = amounts;
   const db = getDb();
+
+  // Loans v1: block external withdrawals while a loan is open.
+  const [openLoan] = await db
+    .select({ id: loans.id })
+    .from(loans)
+    .where(and(eq(loans.userId, userId), eq(loans.status, "open")))
+    .limit(1);
+  if (openLoan) {
+    return NextResponse.json(
+      { ok: false, message: "loan_withdraw_blocked" },
+      { status: 403 },
+    );
+  }
 
   // KYC is currently "paused" (feature-flagged off). If enabled later, we only
   // require KYC for large withdrawals in selected partner corridors.

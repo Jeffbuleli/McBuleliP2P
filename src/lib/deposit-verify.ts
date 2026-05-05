@@ -18,6 +18,7 @@ import {
 } from "@/lib/okx";
 import { getPiOkxChain } from "@/lib/pi-constants";
 import { tryAwardReferralFromCryptoDeposit } from "@/lib/referral-service";
+import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 
 type DepositRow = InferSelectModel<typeof deposits>;
 
@@ -231,6 +232,7 @@ export async function applyConfirmedDeposit(args: {
   }
   const db = getDb();
   const isPi = args.deposit.asset.toUpperCase() === "PI";
+  const isUsdt = args.deposit.asset.toUpperCase() === "USDT";
   await db.transaction(async (tx) => {
     const [dup] = await tx
       .select()
@@ -267,6 +269,25 @@ export async function applyConfirmedDeposit(args: {
           piBalance: sql`${users.piBalance} + ${args.amountStr}::numeric`,
         })
         .where(eq(users.id, args.userId));
+    } else if (isUsdt) {
+      const applied = await applyUsdtCreditWithAutoRepay(tx, {
+        userId: args.userId,
+        creditUsdtStr: args.amountStr,
+        source: "deposit_crypto",
+        meta: {
+          depositId: args.deposit.id,
+          txid: args.txidNorm,
+          provider: args.deposit.provider,
+        },
+      });
+      if (Number(applied.walletCreditUsdtStr) > 0) {
+        await tx
+          .update(users)
+          .set({
+            balance: sql`${users.balance} + ${applied.walletCreditUsdtStr}::numeric`,
+          })
+          .where(eq(users.id, args.userId));
+      }
     } else {
       await tx
         .update(users)

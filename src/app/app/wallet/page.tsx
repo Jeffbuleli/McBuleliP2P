@@ -139,6 +139,14 @@ export default async function WalletPage() {
       metaLine: interpolate(d.group_avec_meta, { total: 0, active: 0, overdue: 0 }),
       tone: "amber",
     },
+    {
+      href: "/app/wallet/loans",
+      title: d.loans_title,
+      tagline: d.loans_tagline,
+      cta: d.loans_cta,
+      metaLine: d.loans_meta_line,
+      tone: "amber",
+    },
   ];
   try {
     const db = getDb();

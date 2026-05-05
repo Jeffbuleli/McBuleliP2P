@@ -4,6 +4,7 @@ import { getDb, users } from "@/db";
 import { fetchReferenceRates } from "@/lib/reference-rates";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
+import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 import { quoteSwap } from "@/lib/wallet-convert";
 import { SWAP_FEE_USD } from "@/lib/wallet-fees";
 import {
@@ -94,7 +95,19 @@ export async function executeWalletSwap(args: {
       }
 
       await debitUserAsset(tx, args.userId, from as WalletAsset, fromAmtStr);
-      await creditUserAsset(tx, args.userId, to as WalletAsset, toAmtStr);
+      let toCredit = toAmtStr;
+      if (to === "USDT") {
+        const applied = await applyUsdtCreditWithAutoRepay(tx, {
+          userId: args.userId,
+          creditUsdtStr: toAmtStr,
+          source: "swap_in",
+          meta: { fromAsset: from },
+        });
+        toCredit = applied.walletCreditUsdtStr;
+      }
+      if (Number(toCredit) > 0) {
+        await creditUserAsset(tx, args.userId, to as WalletAsset, toCredit);
+      }
 
       const feeAsset = usdtForFee ? "USDT" : "USD";
       await insertWalletLedgerLines(tx, [
@@ -121,7 +134,7 @@ export async function executeWalletSwap(args: {
           userId: args.userId,
           entryType: "swap_in",
           asset: to,
-          amount: toAmtStr,
+          amount: toCredit,
           feeUsdEquivalent: "0",
           meta: { fromAsset: from },
         },

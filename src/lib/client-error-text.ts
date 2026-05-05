@@ -9,7 +9,9 @@ export function clientErrorText(
     key.startsWith("staking_") ||
     key.startsWith("p2p_") ||
     key.startsWith("lp_pool_") ||
-    key.startsWith("pool_")
+    key.startsWith("pool_") ||
+    key.startsWith("loan_") ||
+    key.startsWith("loans_")
   ) {
     return t(key as keyof Messages);
   }

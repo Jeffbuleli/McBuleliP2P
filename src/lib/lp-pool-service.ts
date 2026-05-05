@@ -27,6 +27,7 @@ import {
   nextBiweeklyPayoutAfterAnchor,
   poolDayWindowEndingAtLatestCutoff,
 } from "@/lib/lp-pool-time";
+import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 
 const POS_ACTIVE = "active";
 
@@ -524,7 +525,15 @@ export async function withdrawLpPoolRewardsForPosition(args: {
         meta: { window: "biweekly" },
       });
 
-      await creditUserAsset(tx, args.userId, "USDT", amtStr);
+      const applied = await applyUsdtCreditWithAutoRepay(tx, {
+        userId: args.userId,
+        creditUsdtStr: amtStr,
+        source: "lp_pool_reward_payout",
+        meta: { positionId: args.positionId },
+      });
+      if (Number(applied.walletCreditUsdtStr) > 0) {
+        await creditUserAsset(tx, args.userId, "USDT", applied.walletCreditUsdtStr);
+      }
 
       const batchId = randomUUID();
       await insertWalletLedgerLines(tx, [
@@ -533,7 +542,7 @@ export async function withdrawLpPoolRewardsForPosition(args: {
           userId: args.userId,
           entryType: "lp_pool_reward_payout",
           asset: "USDT",
-          amount: amtStr,
+          amount: applied.walletCreditUsdtStr,
           feeUsdEquivalent: "0",
           meta: { amountUsdt: available, positionId: args.positionId },
         },

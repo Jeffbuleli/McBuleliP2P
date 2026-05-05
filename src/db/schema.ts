@@ -443,6 +443,80 @@ export const lpPoolPositionRewardBalances = pgTable(
   },
 );
 
+/** Loans (USDT) — secured by LP pool principal (v1). */
+export const loans = pgTable(
+  "loans",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    asset: varchar("asset", { length: 8 }).notNull().default("USDT"),
+    principalUsdt: numeric("principal_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    outstandingUsdt: numeric("outstanding_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    /** open | repaid | defaulted */
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    aprAnnual: numeric("apr_annual", { precision: 12, scale: 6 })
+      .notNull()
+      .default("0"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("loans_user_status_idx").on(t.userId, t.status)],
+);
+
+export const loanCollaterals = pgTable(
+  "loan_collaterals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    loanId: uuid("loan_id")
+      .notNull()
+      .references(() => loans.id, { onDelete: "cascade" }),
+    collateralType: varchar("collateral_type", { length: 24 }).notNull(),
+    collateralId: uuid("collateral_id").notNull(),
+    collateralUsdt: numeric("collateral_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    ltv: numeric("ltv", { precision: 12, scale: 6 }).notNull().default("0.5"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("loan_collaterals_loan_idx").on(t.loanId),
+    uniqueIndex("loan_collaterals_loan_collateral_uidx").on(
+      t.loanId,
+      t.collateralType,
+      t.collateralId,
+    ),
+  ],
+);
+
+export const loanEvents = pgTable(
+  "loan_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    loanId: uuid("loan_id")
+      .notNull()
+      .references(() => loans.id, { onDelete: "cascade" }),
+    eventType: varchar("event_type", { length: 24 }).notNull(),
+    amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("loan_events_loan_idx").on(t.loanId, t.createdAt)],
+);
+
 export const txidLedger = pgTable(
   "txid_ledger",
   {

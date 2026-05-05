@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { getDb, users } from "@/db";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
+import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 import {
   fmtWalletAmount,
   isWalletAsset,
@@ -72,7 +73,19 @@ export async function executeInternalTransfer(args: {
       }
 
       await debitUserAsset(tx, args.fromUserId, asset as WalletAsset, amtStr);
-      await creditUserAsset(tx, recv.id, asset as WalletAsset, amtStr);
+      let recvCredit = amtStr;
+      if (asset === "USDT") {
+        const applied = await applyUsdtCreditWithAutoRepay(tx, {
+          userId: recv.id,
+          creditUsdtStr: amtStr,
+          source: "transfer_in",
+          meta: { fromUserId: args.fromUserId },
+        });
+        recvCredit = applied.walletCreditUsdtStr;
+      }
+      if (Number(recvCredit) > 0) {
+        await creditUserAsset(tx, recv.id, asset as WalletAsset, recvCredit);
+      }
 
       await insertWalletLedgerLines(tx, [
         {
@@ -90,7 +103,7 @@ export async function executeInternalTransfer(args: {
           userId: recv.id,
           entryType: "transfer_in",
           asset,
-          amount: amtStr,
+          amount: recvCredit,
           feeUsdEquivalent: "0",
           counterpartyUserId: args.fromUserId,
           meta: {},
