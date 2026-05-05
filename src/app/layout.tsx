@@ -11,14 +11,25 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
 export const metadata: Metadata = {
-  title: "McBuleli P2P",
+  ...(appUrl ? { metadataBase: new URL(appUrl) } : {}),
+  title: {
+    default: "McBuleli",
+    template: "%s · McBuleli",
+  },
   description:
     "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.",
-  applicationName: "McBuleli P2P",
+  applicationName: "McBuleli",
+  icons: {
+    icon: [{ url: "/brand/logo.png", type: "image/png", sizes: "any" }],
+    shortcut: "/brand/logo.png",
+    apple: "/brand/logo.png",
+  },
   appleWebApp: {
     capable: true,
-    title: "McBuleli P2P",
+    title: "McBuleli",
     statusBarStyle: "black-translucent",
   },
 };
