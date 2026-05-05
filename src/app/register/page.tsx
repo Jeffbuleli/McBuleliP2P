@@ -12,9 +12,10 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const refParam = searchParams.get("ref")?.trim() ?? "";
-  const referralCode = refParam ? refParam.toUpperCase() : undefined;
+  const initialReferralCode = refParam ? refParam.toUpperCase() : "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState(initialReferralCode);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +30,9 @@ function RegisterForm() {
         body: JSON.stringify({
           email,
           password,
-          ...(referralCode ? { referralCode } : {}),
+          ...(referralCode.trim()
+            ? { referralCode: referralCode.trim().toUpperCase() }
+            : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -60,9 +63,9 @@ function RegisterForm() {
         </div>
       </div>
       <p className="text-sm text-stone-600 dark:text-stone-400">{t("register_sub")}</p>
-      {referralCode ? (
+      {referralCode.trim() ? (
         <p className="mt-3 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs font-medium text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-100">
-          {t("register_ref_active", { code: referralCode })}
+          {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
@@ -88,6 +91,21 @@ function RegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
           />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-stone-800">
+          {t("register_ref_label")}
+          <input
+            type="text"
+            inputMode="text"
+            autoComplete="off"
+            value={referralCode}
+            onChange={(e) => setReferralCode(e.target.value)}
+            placeholder={t("register_ref_ph")}
+            className="rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base outline-none ring-emerald-700 focus:ring-2 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
+          />
+          <span className="text-xs font-normal text-stone-500 dark:text-stone-500">
+            {t("register_ref_help")}
+          </span>
         </label>
         {error ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/30 dark:text-rose-100">
