@@ -340,6 +340,9 @@ export const lpPoolPositions = pgTable(
     startedAt: timestamp("started_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    payoutAnchorAt: timestamp("payout_anchor_at", { withTimezone: true }),
+    nextPayoutAt: timestamp("next_payout_at", { withTimezone: true }),
+    lastPayoutAt: timestamp("last_payout_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -349,6 +352,7 @@ export const lpPoolPositions = pgTable(
   (t) => [
     index("lp_pool_positions_user_idx").on(t.userId),
     index("lp_pool_positions_status_ends_idx").on(t.status, t.endsAt),
+    index("lp_pool_positions_next_payout_idx").on(t.nextPayoutAt),
   ],
 );
 
@@ -419,6 +423,25 @@ export const lpPoolRewardBalances = pgTable("lp_pool_reward_balances", {
     .defaultNow()
     .notNull(),
 });
+
+/** Cached balances for each pool position (available for payout windows). */
+export const lpPoolPositionRewardBalances = pgTable(
+  "lp_pool_position_reward_balances",
+  {
+    positionId: uuid("position_id")
+      .primaryKey()
+      .references(() => lpPoolPositions.id, { onDelete: "cascade" }),
+    availableUsdt: numeric("available_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    totalEarnedUsdt: numeric("total_earned_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
 
 export const txidLedger = pgTable(
   "txid_ledger",

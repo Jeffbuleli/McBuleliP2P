@@ -4,6 +4,7 @@ import {
   getDb,
   lpPoolDailyDistributions,
   lpPoolPositions,
+  lpPoolPositionRewardBalances,
   lpPoolRewardBalances,
   lpPoolRewardEntries,
   tradeFuturesPositions,
@@ -22,9 +23,36 @@ import {
   sizeMultiplier,
   sizeTier,
 } from "@/lib/lp-pool-config";
-import { isPoolPayoutWindow, poolDayWindowEndingAtLatestCutoff } from "@/lib/lp-pool-time";
+import {
+  nextBiweeklyPayoutAfterAnchor,
+  poolDayWindowEndingAtLatestCutoff,
+} from "@/lib/lp-pool-time";
 
 const POS_ACTIVE = "active";
+
+export function computeLpPoolShares(amountUsdt: number, lockMonths: number): {
+  ok: true;
+  shares: number;
+  sizeTier: string;
+  lockTier: string;
+  sizeMultiplier: number;
+  lockMultiplier: number;
+} | { ok: false } {
+  if (!Number.isFinite(amountUsdt) || amountUsdt <= 0) return { ok: false };
+  if (!isAllowedLpLockMonths(lockMonths)) return { ok: false };
+  const sTier = sizeTier(amountUsdt);
+  const lTier = lockTier(lockMonths);
+  const sMul = sizeMultiplier(sTier);
+  const lMul = lockMultiplier(lockMonths);
+  return {
+    ok: true,
+    shares: amountUsdt * sMul * lMul,
+    sizeTier: sTier,
+    lockTier: lTier,
+    sizeMultiplier: sMul,
+    lockMultiplier: lMul,
+  };
+}
 
 export type CreateLpPoolPositionArgs = {
   userId: string;
@@ -81,6 +109,9 @@ export async function createLpPoolPosition(
 
       await debitUserAsset(tx, args.userId, "USDT", amtStr);
 
+      const payoutAnchorAt = startedAt;
+      const nextPayoutAt = nextBiweeklyPayoutAfterAnchor(payoutAnchorAt, payoutAnchorAt);
+
       const [row] = await tx
         .insert(lpPoolPositions)
         .values({
@@ -94,6 +125,8 @@ export async function createLpPoolPosition(
           lockMultiplier: lMul.toFixed(6),
           shares: sharesStr,
           startedAt,
+          payoutAnchorAt,
+          nextPayoutAt,
           endsAt,
           status: POS_ACTIVE,
         })
@@ -104,6 +137,11 @@ export async function createLpPoolPosition(
       await tx
         .insert(lpPoolRewardBalances)
         .values({ userId: args.userId })
+        .onConflictDoNothing();
+
+      await tx
+        .insert(lpPoolPositionRewardBalances)
+        .values({ positionId: id })
         .onConflictDoNothing();
 
       const batchId = randomUUID();
@@ -142,8 +180,25 @@ export async function createLpPoolPosition(
 export async function listLpPoolPositions(userId: string) {
   const db = getDb();
   const rows = await db
-    .select()
+    .select({
+      id: lpPoolPositions.id,
+      amount: lpPoolPositions.amount,
+      lockMonths: lpPoolPositions.lockMonths,
+      sizeTier: lpPoolPositions.sizeTier,
+      lockTier: lpPoolPositions.lockTier,
+      shares: lpPoolPositions.shares,
+      startedAt: lpPoolPositions.startedAt,
+      endsAt: lpPoolPositions.endsAt,
+      status: lpPoolPositions.status,
+      nextPayoutAt: lpPoolPositions.nextPayoutAt,
+      rewardsAvailableUsdt: lpPoolPositionRewardBalances.availableUsdt,
+      rewardsEarnedUsdt: lpPoolPositionRewardBalances.totalEarnedUsdt,
+    })
     .from(lpPoolPositions)
+    .leftJoin(
+      lpPoolPositionRewardBalances,
+      eq(lpPoolPositions.id, lpPoolPositionRewardBalances.positionId),
+    )
     .where(eq(lpPoolPositions.userId, userId))
     .orderBy(sql`${lpPoolPositions.createdAt} DESC`);
 
@@ -157,6 +212,9 @@ export async function listLpPoolPositions(userId: string) {
     startedAt: r.startedAt.toISOString(),
     endsAt: r.endsAt.toISOString(),
     status: r.status,
+    rewardsAvailableUsdt: (r.rewardsAvailableUsdt ?? "0").toString(),
+    rewardsEarnedUsdt: (r.rewardsEarnedUsdt ?? "0").toString(),
+    nextPayoutAt: r.nextPayoutAt?.toISOString() ?? null,
   }));
 }
 
@@ -329,11 +387,13 @@ export async function runLpPoolDailyDistribution(args?: { now?: Date }): Promise
 
   // Credit accrual entries and update balances.
   const perUserAccrual = new Map<string, number>();
+  const perPositionAccrual = new Map<string, number>();
   const accrualRows = positions.map((p) => {
     const sh = numFromNumeric(p.shares);
     const reward = (rewardPool * sh) / totalShares;
     if (reward > 0) {
       perUserAccrual.set(p.userId, (perUserAccrual.get(p.userId) ?? 0) + reward);
+      perPositionAccrual.set(p.id, (perPositionAccrual.get(p.id) ?? 0) + reward);
     }
     return {
       userId: p.userId,
@@ -363,6 +423,22 @@ export async function runLpPoolDailyDistribution(args?: { now?: Date }): Promise
         })
         .where(eq(lpPoolRewardBalances.userId, userId));
     }
+
+    for (const [positionId, sum] of perPositionAccrual.entries()) {
+      const sumStr = fmtWalletAmount(sum);
+      await tx
+        .insert(lpPoolPositionRewardBalances)
+        .values({ positionId })
+        .onConflictDoNothing();
+      await tx
+        .update(lpPoolPositionRewardBalances)
+        .set({
+          availableUsdt: sql`${lpPoolPositionRewardBalances.availableUsdt} + ${sumStr}::numeric`,
+          totalEarnedUsdt: sql`${lpPoolPositionRewardBalances.totalEarnedUsdt} + ${sumStr}::numeric`,
+          updatedAt: new Date(),
+        })
+        .where(eq(lpPoolPositionRewardBalances.positionId, positionId));
+    }
   });
 
   return {
@@ -375,45 +451,77 @@ export async function runLpPoolDailyDistribution(args?: { now?: Date }): Promise
   };
 }
 
-export async function withdrawLpPoolRewards(args: {
+export async function withdrawLpPoolRewardsForPosition(args: {
   userId: string;
+  positionId: string;
 }): Promise<{ ok: true; withdrawnUsdt: number } | { ok: false; message: string }> {
   const db = getDb();
   const now = new Date();
-
-  // Enforce windowed payouts (15th + end of month, after 01:00 UTC).
-  if (!isPoolPayoutWindow(now)) {
-    return { ok: false, message: "lp_pool_withdraw_not_in_window" };
+  if (now.getUTCHours() < 1) {
+    return { ok: false, message: "lp_pool_withdraw_before_cutoff" };
   }
 
   try {
     const out = await db.transaction(async (tx) => {
+      const [pos] = await tx
+        .select({
+          userId: lpPoolPositions.userId,
+          payoutAnchorAt: lpPoolPositions.payoutAnchorAt,
+          nextPayoutAt: lpPoolPositions.nextPayoutAt,
+        })
+        .from(lpPoolPositions)
+        .where(eq(lpPoolPositions.id, args.positionId))
+        .limit(1);
+      if (!pos || pos.userId !== args.userId) {
+        return { ok: false as const, message: "lp_pool_position_not_found" };
+      }
+
+      const anchor = pos.payoutAnchorAt ?? new Date();
+      const next = pos.nextPayoutAt ?? nextBiweeklyPayoutAfterAnchor(anchor, anchor);
+      if (now.getTime() + 1000 < next.getTime()) {
+        return { ok: false as const, message: "lp_pool_withdraw_not_in_window" };
+      }
+
       const [bal] = await tx
-        .select({ available: lpPoolRewardBalances.availableUsdt })
-        .from(lpPoolRewardBalances)
-        .where(eq(lpPoolRewardBalances.userId, args.userId))
+        .select({ available: lpPoolPositionRewardBalances.availableUsdt })
+        .from(lpPoolPositionRewardBalances)
+        .where(eq(lpPoolPositionRewardBalances.positionId, args.positionId))
         .limit(1);
       const available = numFromNumeric(bal?.available ?? "0");
       if (available <= 0) {
         return { ok: false as const, message: "lp_pool_no_rewards" };
       }
+
       const amtStr = fmtWalletAmount(available);
+
+      await tx
+        .update(lpPoolPositionRewardBalances)
+        .set({ availableUsdt: "0", updatedAt: now })
+        .where(eq(lpPoolPositionRewardBalances.positionId, args.positionId));
 
       await tx
         .update(lpPoolRewardBalances)
         .set({
-          availableUsdt: "0",
+          availableUsdt: sql`${lpPoolRewardBalances.availableUsdt} - ${amtStr}::numeric`,
           updatedAt: now,
         })
         .where(eq(lpPoolRewardBalances.userId, args.userId));
 
+      await tx
+        .update(lpPoolPositions)
+        .set({
+          lastPayoutAt: now,
+          nextPayoutAt: new Date(next.getTime() + 14 * 86_400_000),
+        })
+        .where(eq(lpPoolPositions.id, args.positionId));
+
       await tx.insert(lpPoolRewardEntries).values({
         userId: args.userId,
-        positionId: null,
+        positionId: args.positionId,
         kind: "payout",
         dayStartAt: null,
         amountUsdt: `-${amtStr}`,
-        meta: { window: "15_or_month_end" },
+        meta: { window: "biweekly" },
       });
 
       await creditUserAsset(tx, args.userId, "USDT", amtStr);
@@ -427,7 +535,7 @@ export async function withdrawLpPoolRewards(args: {
           asset: "USDT",
           amount: amtStr,
           feeUsdEquivalent: "0",
-          meta: { amountUsdt: available },
+          meta: { amountUsdt: available, positionId: args.positionId },
         },
       ]);
 

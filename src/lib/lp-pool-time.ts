@@ -36,3 +36,19 @@ export function isPoolPayoutWindow(now: Date): boolean {
   return is15 || isLast;
 }
 
+export function nextBiweeklyPayoutAfterAnchor(anchorAt: Date, now: Date): Date {
+  // Payouts happen every 14 days, and must be after 01:00 UTC.
+  const anchor = anchorAt.getTime();
+  const ms14d = 14 * 86_400_000;
+  const t = now.getTime();
+  const k = Math.max(1, Math.ceil((t - anchor) / ms14d));
+  const candidate = new Date(anchor + k * ms14d);
+
+  // Ensure it's aligned after 01:00 UTC of that day.
+  const y = candidate.getUTCFullYear();
+  const m = candidate.getUTCMonth();
+  const d = candidate.getUTCDate();
+  const cutoff = new Date(Date.UTC(y, m, d, 1, 0, 0, 0));
+  return candidate.getTime() < cutoff.getTime() ? cutoff : candidate;
+}
+

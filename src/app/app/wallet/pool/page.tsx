@@ -14,12 +14,20 @@ type PositionRow = {
   startedAt: string;
   endsAt: string;
   status: string;
+  rewardsAvailableUsdt: string;
+  rewardsEarnedUsdt: string;
+  nextPayoutAt: string | null;
 };
 
 type Snapshot = {
   positions: PositionRow[];
   balance: { availableUsdt: number; totalEarnedUsdt: number };
   today: { dayStartAt: string; dayEndAt: string; accruedUsdt: number };
+};
+
+type Estimate = {
+  dailyEstimateUsdt: { avg7d: number; avg30d: number };
+  totalAtMaturityUsdt: { avg7d: number; avg30d: number };
 };
 
 function fmt(n: number, locale: string) {
@@ -68,6 +76,7 @@ export default function WalletPoolPage() {
   const [data, setData] = useState<Snapshot | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
 
   const [amountUsdt, setAmountUsdt] = useState("");
   const [lockMonths, setLockMonths] = useState<1 | 3 | 6>(1);
@@ -102,6 +111,32 @@ export default function WalletPoolPage() {
 
   const presets = [50, 100, 500, 1000, 2000] as const;
 
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!parsedAmount.ok) {
+        setEstimate(null);
+        return;
+      }
+      const sp = new URLSearchParams();
+      sp.set("amountUsdt", String(parsedAmount.value));
+      sp.set("lockMonths", String(lockMonths));
+      const res = await fetch(`/api/pool/estimate?${sp.toString()}`, { cache: "no-store" });
+      const j = await res.json().catch(() => ({}));
+      if (cancelled) return;
+      if (!res.ok) {
+        setEstimate(null);
+        return;
+      }
+      setEstimate(j as Estimate);
+    };
+    const id = window.setTimeout(() => void run(), 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
+  }, [parsedAmount.ok, parsedAmount.value, lockMonths]);
+
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAmount.ok) {
@@ -132,15 +167,15 @@ export default function WalletPoolPage() {
     }
   };
 
-  const onWithdraw = async () => {
-    if (!payoutOpenNow) {
-      setErr(t("pool_withdraw_blocked"));
-      return;
-    }
+  const onWithdraw = async (positionId: string) => {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/pool/rewards/withdraw", { method: "POST" });
+      const res = await fetch("/api/pool/rewards/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ positionId }),
+      });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErr(j.message ?? t("pool_withdraw_blocked"));
@@ -196,14 +231,6 @@ export default function WalletPoolPage() {
           <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-950 dark:text-emerald-100">
             {data ? fmt(data.balance.availableUsdt, locale) : "…"} USDT
           </p>
-          <button
-            type="button"
-            onClick={onWithdraw}
-            disabled={busy || !data || data.balance.availableUsdt <= 0 || !payoutOpenNow}
-            className="mt-3 w-full rounded-2xl bg-emerald-700 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 disabled:opacity-60 active:scale-[0.99] dark:bg-emerald-600"
-          >
-            {t("pool_withdraw_rewards")}
-          </button>
           <p className="mt-2 text-[11px] text-stone-600 dark:text-stone-400">
             {t("pool_withdraw_blocked")}
           </p>
@@ -291,6 +318,45 @@ export default function WalletPoolPage() {
             </select>
           </label>
 
+          {estimate ? (
+            <div className="rounded-2xl border border-stone-200 bg-stone-50/80 p-3 text-xs text-stone-700 dark:border-stone-700 dark:bg-stone-800/40 dark:text-stone-200">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                    {t("pool_estimate_title")}
+                  </p>
+                  <p className="mt-1 text-[11px] text-stone-600 dark:text-stone-400">
+                    {t("pool_estimate_hint")}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-stone-200 bg-white/80 p-2 dark:border-stone-700 dark:bg-stone-900/60">
+                  <p className="text-[10px] font-bold uppercase text-stone-500 dark:text-stone-400">
+                    {t("pool_estimate_daily")}
+                  </p>
+                  <p className="mt-1 font-mono text-[12px] font-semibold tabular-nums">
+                    {t("pool_estimate_avg7")}: {fmt(estimate.dailyEstimateUsdt.avg7d, locale)} USDT
+                  </p>
+                  <p className="mt-1 font-mono text-[12px] font-semibold tabular-nums">
+                    {t("pool_estimate_avg30")}: {fmt(estimate.dailyEstimateUsdt.avg30d, locale)} USDT
+                  </p>
+                </div>
+                <div className="rounded-xl border border-stone-200 bg-white/80 p-2 dark:border-stone-700 dark:bg-stone-900/60">
+                  <p className="text-[10px] font-bold uppercase text-stone-500 dark:text-stone-400">
+                    {t("pool_estimate_maturity")}
+                  </p>
+                  <p className="mt-1 font-mono text-[12px] font-semibold tabular-nums">
+                    {t("pool_estimate_avg7")}: {fmt(estimate.totalAtMaturityUsdt.avg7d, locale)} USDT
+                  </p>
+                  <p className="mt-1 font-mono text-[12px] font-semibold tabular-nums">
+                    {t("pool_estimate_avg30")}: {fmt(estimate.totalAtMaturityUsdt.avg30d, locale)} USDT
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <button
             type="submit"
             disabled={busy || !parsedAmount.ok}
@@ -313,6 +379,12 @@ export default function WalletPoolPage() {
             {data.positions.map((p) => {
               const active = p.status === "active";
               const ends = new Date(p.endsAt);
+              const nextPayout = p.nextPayoutAt ? new Date(p.nextPayoutAt) : null;
+              const canWithdraw =
+                nextPayout != null &&
+                new Date().getUTCHours() >= 1 &&
+                Date.now() >= nextPayout.getTime() &&
+                Number(p.rewardsAvailableUsdt) > 0;
               return (
                 <li key={p.id} className="rounded-2xl border border-stone-200 bg-stone-50/70 p-3 dark:border-stone-700 dark:bg-stone-800/40">
                   <div className="flex items-start justify-between gap-2">
@@ -325,12 +397,30 @@ export default function WalletPoolPage() {
                         {t("pool_unlocks_at")}:{" "}
                         <span className="font-mono">{ends.toISOString().slice(0, 10)}</span>
                       </p>
+                      <p className="mt-2 text-[11px] text-stone-600 dark:text-stone-300">
+                        {t("pool_rewards_available")}:{" "}
+                        <span className="font-mono font-semibold">{p.rewardsAvailableUsdt}</span> USDT ·{" "}
+                        {t("pool_next_payout")}:{" "}
+                        <span className="font-mono">
+                          {nextPayout ? nextPayout.toISOString().slice(0, 10) : "—"}
+                        </span>
+                      </p>
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${
                       active ? "bg-emerald-700 text-white dark:bg-emerald-600" : "bg-stone-300 text-stone-900 dark:bg-stone-700 dark:text-stone-100"
                     }`}>
                       {p.sizeTier.toUpperCase()} · {p.lockTier.toUpperCase()}
                     </span>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => onWithdraw(p.id)}
+                      disabled={busy || !canWithdraw}
+                      className="rounded-xl bg-emerald-700 px-3 py-2 text-[12px] font-bold text-white shadow-sm disabled:opacity-60 active:scale-95 dark:bg-emerald-600"
+                    >
+                      {t("pool_withdraw_rewards")}
+                    </button>
                   </div>
                 </li>
               );
