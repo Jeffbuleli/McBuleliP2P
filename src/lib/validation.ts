@@ -6,6 +6,13 @@ const email = z.string().trim().min(3).max(255).email();
 export const registerSchema = z.object({
   email: email,
   password: z.string().min(8).max(128),
+  /** ISO 3166-1 alpha-2, or OTHER if the user is outside the quick list. */
+  countryCode: z
+    .string()
+    .trim()
+    .length(2)
+    .regex(/^[A-Z]{2}$/)
+    .optional(),
   referralCode: z.string().trim().min(4).max(16).optional(),
 });
 

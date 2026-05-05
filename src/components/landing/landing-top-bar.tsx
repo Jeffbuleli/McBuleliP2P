@@ -39,29 +39,19 @@ function MenuIcon({ className }: { className?: string }) {
 }
 
 export function LandingTopBar() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
-  const deskNav =
-    locale === "fr"
-      ? [
-          { href: "/#features", label: "Services" },
-          { href: "/#how", label: "Offres" },
-          { href: "/#market", label: "Marché" },
-          { href: "/terms", label: "Tarifs" },
-          { href: "/#trust-h", label: "Sécurité" },
-          { href: "/about", label: "À propos" },
-          { href: "/contact", label: "Contact" },
-        ]
-      : [
-          { href: "/#features", label: "Services" },
-          { href: "/#how", label: "Offers" },
-          { href: "/#market", label: "Market" },
-          { href: "/terms", label: "Pricing" },
-          { href: "/#trust-h", label: "Security" },
-          { href: "/about", label: "About" },
-          { href: "/contact", label: "Contact" },
-        ];
+  const deskNav = [
+    { href: "/#preview", label: t("landing_nav_preview") },
+    { href: "/#features", label: t("landing_nav_services") },
+    { href: "/#how", label: t("landing_nav_offers") },
+    { href: "/#market", label: t("landing_nav_market") },
+    { href: "/terms", label: t("landing_nav_pricing") },
+    { href: "/#trust-h", label: t("landing_nav_security") },
+    { href: "/about", label: t("landing_nav_about") },
+    { href: "/contact", label: t("landing_nav_contact") },
+  ];
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">

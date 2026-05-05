@@ -6,11 +6,15 @@ import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import {
   IconArrow,
+  IconChartLine,
   IconCheck,
+  IconCoins,
   IconLock,
   IconP2P,
   IconShield,
   IconSmartphone,
+  IconUsers,
+  IconWallet,
   IconZap,
 } from "@/components/landing/landing-icons";
 
@@ -49,6 +53,42 @@ function StatTile({
   );
 }
 
+function PreviewTile({
+  icon: Icon,
+  title,
+  body,
+  href,
+  cta,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-stone-700/45 bg-stone-950/35 p-4 shadow-lg shadow-black/25 backdrop-blur-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
+            <Icon className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold leading-snug text-stone-50">{title}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-stone-400">{body}</p>
+          </div>
+        </div>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-stone-700/70 bg-stone-950/40 px-4 text-sm font-semibold text-stone-100 transition hover:border-emerald-700/45 hover:bg-stone-900/60 active:scale-[0.99]"
+      >
+        {cta}
+      </Link>
+    </div>
+  );
+}
+
 export async function HomeLanding() {
   const locale = await getLocale();
   const d = getDictionary(locale);
@@ -69,7 +109,7 @@ export async function HomeLanding() {
 
       <LandingTopBar />
 
-      <div className="relative mx-auto max-w-lg px-3 pb-10 pt-1">
+      <div className="relative mx-auto max-w-lg px-3 pb-10 pt-1 sm:max-w-2xl lg:max-w-5xl">
         <div className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-5 shadow-2xl shadow-black/50 backdrop-blur-xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/95">
             {d.landing_presentation_eyebrow}
@@ -110,6 +150,57 @@ export async function HomeLanding() {
       </div>
 
       <main className="relative mx-auto max-w-4xl space-y-16 px-4 pb-20">
+        <section id="preview" className="scroll-mt-28" aria-labelledby="preview-h">
+          <h2 id="preview-h" className="text-center text-xl font-bold text-stone-50 sm:text-2xl">
+            {d.landing_preview_heading}
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-stone-400">
+            {d.landing_preview_sub}
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <PreviewTile
+              icon={IconWallet}
+              title={d.landing_preview_wallet_t}
+              body={d.landing_preview_wallet_d}
+              href="/register"
+              cta={d.landing_preview_cta}
+            />
+            <PreviewTile
+              icon={IconP2P}
+              title={d.landing_preview_p2p_t}
+              body={d.landing_preview_p2p_d}
+              href="/register"
+              cta={d.landing_preview_cta}
+            />
+            <PreviewTile
+              icon={IconChartLine}
+              title={d.landing_preview_trade_t}
+              body={d.landing_preview_trade_d}
+              href="/register"
+              cta={d.landing_preview_cta}
+            />
+            <PreviewTile
+              icon={IconUsers}
+              title={d.landing_preview_groups_t}
+              body={d.landing_preview_groups_d}
+              href="/register"
+              cta={d.landing_preview_cta}
+            />
+            <PreviewTile
+              icon={IconCoins}
+              title={d.landing_preview_pool_t}
+              body={d.landing_preview_pool_d}
+              href="/register"
+              cta={d.landing_preview_cta}
+            />
+          </div>
+
+          <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-stone-500">
+            {d.landing_preview_hint}
+          </p>
+        </section>
+
         <section id="features" aria-labelledby="features-h">
           <h2
             id="features-h"
