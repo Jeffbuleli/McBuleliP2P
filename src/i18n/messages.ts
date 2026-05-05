@@ -6,6 +6,15 @@ export const en = {
   lang_en: "EN",
   lang_fr: "FR",
   brand: "McBuleli",
+  pwa_install_title: "Install McBuleli",
+  pwa_install_body:
+    "Add this app to your home screen for quicker access and a full-screen experience.",
+  pwa_install_ios_body:
+    'Tap Share, then “Add to Home Screen” to install McBuleli like an app.',
+  pwa_install_fallback_body:
+    'Use your browser menu (⋮) and choose “Install app” or “Add to Home screen”.',
+  pwa_install_cta: "Install",
+  pwa_install_later: "Later",
   home_title: "Buy & Sell Crypto with Mobile Money in Africa",
   home_sub:
     "Peer-to-peer trading with escrow, mobile-money-friendly flows, and a secure custodial wallet.",
@@ -999,6 +1008,15 @@ export const fr: Messages = {
   lang_en: "EN",
   lang_fr: "FR",
   brand: "McBuleli",
+  pwa_install_title: "Installer McBuleli",
+  pwa_install_body:
+    "Ajoutez cette application à l’écran d’accueil pour un accès plus rapide et en plein écran.",
+  pwa_install_ios_body:
+    'Appuyez sur Partager, puis « Sur l’écran d’accueil » pour installer McBuleli comme une application.',
+  pwa_install_fallback_body:
+    'Ouvrez le menu du navigateur (⋮) et choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
+  pwa_install_cta: "Installer",
+  pwa_install_later: "Plus tard",
   home_title: "Achetez et vendez des cryptos avec mobile money en Afrique",
   home_sub:
     "P2P avec séquestre, parcours adaptés au mobile money et portefeuille custodial sécurisé.",

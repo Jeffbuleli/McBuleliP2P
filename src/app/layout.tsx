@@ -5,6 +5,8 @@ import { getLocale } from "@/lib/get-locale";
 import { I18nProvider } from "@/components/i18n-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalLangSwitch } from "@/components/conditional-lang-switch";
+import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
+import { PwaInstallBanner } from "@/components/pwa/install-banner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,7 +59,9 @@ export default async function RootLayout({
       <body className="min-h-full font-sans text-stone-100">
         <ThemeProvider>
           <I18nProvider initialLocale={locale}>
+            <RegisterServiceWorker />
             <ConditionalLangSwitch />
+            <PwaInstallBanner />
             {children}
           </I18nProvider>
         </ThemeProvider>

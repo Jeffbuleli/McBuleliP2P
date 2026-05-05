@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { AppBottomNav } from "@/components/mobile/app-bottom-nav";
 import { AppTopBar } from "@/components/mobile/app-top-bar";
-import { InstallAppBanner } from "@/components/mobile/install-app-banner";
 import { OfflineOverlay } from "@/components/mobile/offline-overlay";
 
 export function AppShell({
@@ -25,7 +24,6 @@ export function AppShell({
       <main className="flex-1 px-4 pt-3">{children}</main>
       <AppBottomNav />
       <OfflineOverlay />
-      <InstallAppBanner />
     </div>
   );
 }
