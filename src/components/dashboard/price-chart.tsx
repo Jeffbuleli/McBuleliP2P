@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   useCallback,
@@ -16,8 +17,28 @@ import {
   normalizeSeries,
   pointsToSmoothPath,
 } from "@/lib/chart-smooth-path";
+import { marketIconUrl } from "@/lib/market-icons";
 
 type Range = "1h" | "24h" | "7d";
+
+const CHART_SYMBOLS = ["BTCUSDT", "ETHUSDT", "PIUSDT"] as const;
+
+function ChartSymbolIcon({
+  symbol,
+}: {
+  symbol: (typeof CHART_SYMBOLS)[number];
+}) {
+  const url = marketIconUrl(symbol);
+  return (
+    <span className="relative flex h-[28px] w-[28px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-800">
+      {url ? (
+        <Image src={url} alt="" width={28} height={28} className="object-cover" />
+      ) : (
+        <span className="text-[10px] font-bold text-stone-400">?</span>
+      )}
+    </span>
+  );
+}
 
 type KlineResponse = {
   symbol: string;
@@ -164,18 +185,19 @@ function PriceChart() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap gap-1.5">
-            {(["BTCUSDT", "ETHUSDT"] as const).map((s) => (
+            {CHART_SYMBOLS.map((s) => (
               <button
                 key={s}
                 type="button"
+                aria-label={s.replace("USDT", "")}
                 onClick={() => setSymbol(s)}
-                className={`min-h-[36px] rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
+                className={`flex min-h-[42px] min-w-[42px] items-center justify-center rounded-full p-1.5 transition active:scale-95 ${
                   symbol === s
-                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-900/30"
-                    : "border border-stone-600/60 bg-stone-900/50 text-stone-300 hover:border-stone-500 hover:bg-stone-900/80"
+                    ? "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
+                    : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
                 }`}
               >
-                {s.replace("USDT", "")}
+                <ChartSymbolIcon symbol={s} />
               </button>
             ))}
           </div>
@@ -228,9 +250,6 @@ function PriceChart() {
         <>
           <div className="mb-2 flex items-end justify-between gap-2">
             <div>
-              <p className="text-xs font-medium text-stone-500">
-                {symbol.replace("USDT", "")}/USDT
-              </p>
               <p className="text-2xl font-bold tabular-nums text-stone-50">
                 {displayPrice != null
                   ? formatUsd(displayPrice)
