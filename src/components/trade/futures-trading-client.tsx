@@ -96,6 +96,7 @@ export function FuturesTradingClient() {
   const [editSl, setEditSl] = useState("");
   const [editTp, setEditTp] = useState("");
   const [editBusy, setEditBusy] = useState(false);
+  const [guided, setGuided] = useState(true);
 
   const margin = Number(marginStr.replace(",", "."));
   const stopLoss =
@@ -104,6 +105,26 @@ export function FuturesTradingClient() {
     tpStr.trim() === "" ? null : Number(tpStr.replace(",", "."));
 
   const mark = ticker?.lastPrice ?? 0;
+  const availableUsdt =
+    tradeMode === "demo"
+      ? demoUsdt
+      : usdtBal != null
+        ? usdtBal
+        : null;
+
+  const warnings = useMemo(() => {
+    const out: string[] = [];
+    if (guided) {
+      if (availableUsdt != null && Number.isFinite(margin) && margin > 0) {
+        const pct = margin / Math.max(1, availableUsdt);
+        if (pct > 0.05) out.push(t("trade_ui_warn_size_high"));
+        else if (pct > 0.02) out.push(t("trade_ui_warn_size_medium"));
+      }
+      if (leverage >= 10) out.push(t("trade_ui_warn_lev_high"));
+      else if (leverage >= 5) out.push(t("trade_ui_warn_lev_medium"));
+    }
+    return out;
+  }, [guided, availableUsdt, margin, leverage, t]);
 
   const preview = useMemo(() => {
     if (!Number.isFinite(margin) || margin <= 0 || !Number.isFinite(mark) || mark <= 0) {
@@ -439,7 +460,32 @@ export function FuturesTradingClient() {
         demoUsdt={demoUsdt}
         onEnableLive={enableLive}
         enableBusy={enableBusy}
+        onDemoRefilled={(n) => setDemoUsdt(n)}
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+          {t("trade_ui_mode")}
+        </p>
+        <button
+          type="button"
+          onClick={() => setGuided((v) => !v)}
+          className="rounded-lg border border-stone-700/50 bg-stone-950/65 px-3 py-1.5 text-[11px] font-bold text-stone-100 shadow-lg shadow-black/40 backdrop-blur-xl"
+        >
+          {guided ? t("trade_ui_guided_on") : t("trade_ui_guided_off")}
+        </button>
+      </div>
+
+      {warnings.length > 0 ? (
+        <div className="rounded-xl border border-amber-700/30 bg-amber-950/40 p-3 text-[11px] text-amber-100">
+          <p className="font-bold">{t("trade_ui_risk_checks")}</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            {warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="flex flex-col gap-1 text-xs font-semibold text-stone-600 dark:text-stone-400">
@@ -620,9 +666,9 @@ export function FuturesTradingClient() {
         )}
 
         {preview && (
-          <div className="mb-3 space-y-1 rounded-xl bg-stone-50 p-3 text-xs dark:bg-stone-950">
+          <div className="mb-3 space-y-1 rounded-xl border border-stone-700/50 bg-stone-950/65 p-3 text-xs text-stone-100 shadow-lg shadow-black/40 backdrop-blur-xl">
             <div className="flex justify-between gap-2">
-              <span className="text-stone-500">{t("trade_ui_notional")}</span>
+              <span className="text-stone-300">{t("trade_ui_notional")}</span>
               <span className="font-mono tabular-nums">
                 {preview.notional.toLocaleString(undefined, {
                   maximumFractionDigits: 2,
@@ -631,17 +677,24 @@ export function FuturesTradingClient() {
               </span>
             </div>
             <div className="flex justify-between gap-2">
-              <span className="text-stone-500">{t("trade_ui_est_liq")}</span>
-              <span className="font-mono tabular-nums text-rose-600">
+              <span className="text-stone-300">{t("trade_ui_est_liq")}</span>
+              <span className="font-mono tabular-nums text-rose-200">
                 {preview.liq.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex justify-between gap-2">
-              <span className="text-stone-500">{t("trade_ui_est_open_fee")}</span>
+              <span className="text-stone-300">{t("trade_ui_est_open_fee")}</span>
               <span className="font-mono tabular-nums">
                 {preview.feeOpen.toLocaleString(undefined, {
                   maximumFractionDigits: 4,
                 })}{" "}
+                USDT
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-stone-300">{t("trade_ui_est_max_loss")}</span>
+              <span className="font-mono tabular-nums text-rose-200">
+                -{Math.max(0, margin).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
                 USDT
               </span>
             </div>
@@ -697,9 +750,22 @@ export function FuturesTradingClient() {
         ) : (
           <ul className="space-y-2">
             {positions.map((p) => (
+              (() => {
+                const marginNum = Number(p.marginUsdt);
+                const roe =
+                  Number.isFinite(marginNum) && marginNum > 0
+                    ? (p.unrealizedPnlUsdt / marginNum) * 100
+                    : 0;
+                const liq = Number(p.liquidationPrice);
+                const markNow = p.markPrice;
+                const dist =
+                  Number.isFinite(liq) && Number.isFinite(markNow) && markNow > 0
+                    ? ((markNow - liq) / markNow) * (p.side === "long" ? 1 : -1) * 100
+                    : 0;
+                return (
               <li
                 key={p.id}
-                className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
+                className="rounded-xl border border-stone-700/50 bg-stone-950/65 p-3 shadow-lg shadow-black/40 backdrop-blur-xl"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -716,7 +782,7 @@ export function FuturesTradingClient() {
                       </span>{" "}
                       {p.leverage}×
                     </p>
-                    <p className="mt-1 font-mono text-[11px] text-stone-600 dark:text-stone-400">
+                    <p className="mt-1 font-mono text-[11px] text-stone-300/80">
                       Entry {Number(p.entryPrice).toFixed(2)} · Liq{" "}
                       {Number(p.liquidationPrice).toFixed(2)} · Mark{" "}
                       {p.markPrice.toFixed(2)}
@@ -737,6 +803,33 @@ export function FuturesTradingClient() {
                       uPnL {p.unrealizedPnlUsdt >= 0 ? "+" : ""}
                       {p.unrealizedPnlUsdt.toFixed(2)} USDT
                     </p>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-stone-300/80">
+                      <span>
+                        ROE{" "}
+                        <span
+                          className={
+                            roe >= 0 ? "text-emerald-200" : "text-rose-200"
+                          }
+                        >
+                          {roe >= 0 ? "+" : ""}
+                          {roe.toFixed(1)}%
+                        </span>
+                      </span>
+                      <span>
+                        {t("trade_ui_liq_distance")}{" "}
+                        <span
+                          className={
+                            dist >= 5
+                              ? "text-emerald-200"
+                              : dist >= 2
+                                ? "text-amber-200"
+                                : "text-rose-200"
+                          }
+                        >
+                          {dist.toFixed(2)}%
+                        </span>
+                      </span>
+                    </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     <button
@@ -759,7 +852,7 @@ export function FuturesTradingClient() {
                             : "",
                         );
                       }}
-                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-semibold dark:border-stone-600"
+                      className="rounded-lg border border-stone-700/50 bg-stone-900/40 px-3 py-1.5 text-xs font-semibold text-stone-100"
                     >
                       {t("trade_ui_edit_sl_tp")}
                     </button>
@@ -767,7 +860,7 @@ export function FuturesTradingClient() {
                       type="button"
                       disabled={busy || editBusy}
                       onClick={() => void submitClose(p.id)}
-                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-semibold dark:border-stone-600"
+                      className="rounded-lg border border-stone-700/50 bg-stone-900/40 px-3 py-1.5 text-xs font-semibold text-stone-100"
                     >
                       {t("trade_ui_close")}
                     </button>
@@ -809,6 +902,8 @@ export function FuturesTradingClient() {
                   </div>
                 ) : null}
               </li>
+                );
+              })()
             ))}
           </ul>
         )}

@@ -135,6 +135,7 @@ async function closeFuturesPositionInternal(
       const proceeds = margin + unreal - feeClose;
       const credit = Math.max(0, proceeds);
       const isDemo = Boolean(p.isDemo);
+      const priceSource = (await fetchSymbolTicker(p.symbol))?.source ?? "unknown";
 
       await tx
         .update(tradeFuturesPositions)
@@ -181,6 +182,7 @@ async function closeFuturesPositionInternal(
               unrealized: unreal,
               feeClose,
               reason,
+              priceSource,
             },
           },
         ]);
@@ -389,23 +391,8 @@ export async function openFuturesPosition(args: {
     return { ok: false, message: "trade_invalid_margin" };
   }
 
-  const db = getDb();
-  const openCount = await db
-    .select({ c: sql<number>`count(*)::int` })
-    .from(tradeFuturesPositions)
-    .where(
-      and(
-        eq(tradeFuturesPositions.userId, userId),
-        eq(tradeFuturesPositions.status, "open"),
-        eq(tradeFuturesPositions.isDemo, isDemo),
-      ),
-    );
-  if ((openCount[0]?.c ?? 0) >= TRADE_MAX_OPEN_FUTURES) {
-    return { ok: false, message: "trade_max_positions" };
-  }
-
   const ticker = await fetchSymbolTicker(symbol);
-  if (!ticker) {
+  if (!ticker || ticker.stale) {
     return { ok: false, message: "trade_price_unavailable" };
   }
   const entry = ticker.lastPrice;
@@ -451,9 +438,15 @@ export async function openFuturesPosition(args: {
 
   const totalDebit = marginUsdt + feeOpen;
   const batchId = randomUUID();
+  const db = getDb();
 
   try {
     const positionId = await db.transaction(async (tx) => {
+      // Serialize opens per user to avoid race conditions (open count + debit + insert).
+      await tx.execute(
+        sql`select pg_advisory_xact_lock((('x' || substr(md5(${userId}), 1, 16))::bit(64))::bigint))`,
+      );
+
       const [u] = await tx
         .select({
           balance: users.balance,
@@ -464,6 +457,21 @@ export async function openFuturesPosition(args: {
         .where(eq(users.id, userId))
         .limit(1);
       if (!u) throw new Error("user");
+
+      const openCountTx = await tx
+        .select({ c: sql<number>`count(*)::int` })
+        .from(tradeFuturesPositions)
+        .where(
+          and(
+            eq(tradeFuturesPositions.userId, userId),
+            eq(tradeFuturesPositions.status, "open"),
+            eq(tradeFuturesPositions.isDemo, isDemo),
+          ),
+        );
+      if ((openCountTx[0]?.c ?? 0) >= TRADE_MAX_OPEN_FUTURES) {
+        throw new Error("max_positions");
+      }
+
       if (isDemo) {
         const bal = numFromNumeric(u.tradeDemoUsdtBalance?.toString());
         if (bal + 1e-18 < totalDebit) {
@@ -520,6 +528,11 @@ export async function openFuturesPosition(args: {
               leverage: levRaw,
               margin: marginUsdt,
               feeOpen,
+              entryPrice: entry,
+              liquidationPrice: liq,
+              qtyBase: qty,
+              notional,
+              priceSource: ticker.source,
             },
           },
         ]);
@@ -535,6 +548,7 @@ export async function openFuturesPosition(args: {
     if (msg === "insufficient") return { ok: false, message: "trade_insufficient_usdt" };
     if (msg === "live_disabled")
       return { ok: false, message: "trade_live_not_enabled" };
+    if (msg === "max_positions") return { ok: false, message: "trade_max_positions" };
     return { ok: false, message: "trade_open_failed" };
   }
 }

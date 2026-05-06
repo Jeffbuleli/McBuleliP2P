@@ -777,6 +777,14 @@ export const en = {
     "Enable real trading (above) or switch to Practice mode.",
   trade_ui_pair: "Pair",
   trade_ui_live: "Live",
+  trade_ui_mode: "Mode",
+  trade_ui_guided_on: "Guided",
+  trade_ui_guided_off: "Pro",
+  trade_ui_risk_checks: "Risk checks",
+  trade_ui_warn_size_medium: "Position size is on the high side. Consider reducing margin.",
+  trade_ui_warn_size_high: "Position size is very large vs your balance. Beginners should reduce margin.",
+  trade_ui_warn_lev_medium: "Leverage is high. Small price moves can liquidate you quickly.",
+  trade_ui_warn_lev_high: "10× leverage is aggressive. Expect fast liquidations without strict SL/TP.",
   trade_ui_usdt_balance: "Wallet USDT",
   trade_ui_demo_balance: "Practice balance (USDT)",
   trade_ui_beginner_cap:
@@ -797,6 +805,8 @@ export const en = {
   trade_ui_notional: "Notional",
   trade_ui_est_liq: "Est. liquidation",
   trade_ui_est_open_fee: "Opening fee (est.)",
+  trade_ui_est_max_loss: "Max loss (margin)",
+  trade_ui_liq_distance: "Distance to liq",
   trade_ui_min_max_margin: "Order margin: min {min} · max {max} USDT.",
   trade_ui_fee_notional: "of notional per side",
   trade_ui_place_order: "Review & place order",
@@ -1812,6 +1822,18 @@ export const fr: Messages = {
     "Activez le trading réel (ci-dessus) ou repassez en mode Entraînement.",
   trade_ui_pair: "Paire",
   trade_ui_live: "Direct",
+  trade_ui_mode: "Mode",
+  trade_ui_guided_on: "Guidé",
+  trade_ui_guided_off: "Pro",
+  trade_ui_risk_checks: "Contrôles de risque",
+  trade_ui_warn_size_medium:
+    "La taille de position est un peu élevée. Réduis la marge si possible.",
+  trade_ui_warn_size_high:
+    "La taille de position est très grande par rapport au solde. Débutants : réduisez la marge.",
+  trade_ui_warn_lev_medium:
+    "Le levier est élevé. De petits mouvements peuvent te liquider rapidement.",
+  trade_ui_warn_lev_high:
+    "Levier 10× = agressif. Sans SL/TP strict, la liquidation peut arriver vite.",
   trade_ui_usdt_balance: "USDT portefeuille",
   trade_ui_demo_balance: "Solde d’entraînement (USDT)",
   trade_ui_beginner_cap:
@@ -1833,6 +1855,8 @@ export const fr: Messages = {
   trade_ui_notional: "Exposition",
   trade_ui_est_liq: "Liq. estimée",
   trade_ui_est_open_fee: "Frais d’ouverture (est.)",
+  trade_ui_est_max_loss: "Perte max (marge)",
+  trade_ui_liq_distance: "Distance à la liq",
   trade_ui_min_max_margin: "Marge : min {min} · max {max} USDT par ordre.",
   trade_ui_fee_notional: "du notionnel par côté",
   trade_ui_place_order: "Vérifier et placer",

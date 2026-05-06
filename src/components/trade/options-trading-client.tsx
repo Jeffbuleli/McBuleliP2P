@@ -230,6 +230,7 @@ export function OptionsTradingClient() {
         demoUsdt={demoUsdt}
         onEnableLive={enableLive}
         enableBusy={enableBusy}
+        onDemoRefilled={(n) => setDemoUsdt(n)}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
