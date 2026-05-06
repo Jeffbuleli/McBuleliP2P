@@ -29,12 +29,21 @@ function ChartSymbolIcon({
   symbol: (typeof CHART_SYMBOLS)[number];
 }) {
   const url = marketIconUrl(symbol);
+  const dim = 24;
   return (
-    <span className="relative flex h-[28px] w-[28px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-800">
+    <span className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-800">
       {url ? (
-        <Image src={url} alt="" width={28} height={28} className="object-cover" />
+        <Image
+          src={url}
+          alt=""
+          width={dim}
+          height={dim}
+          className="h-6 w-6 object-cover"
+        />
       ) : (
-        <span className="text-[10px] font-bold text-stone-400">?</span>
+        <span className="flex h-6 w-6 items-center justify-center text-[10px] font-bold text-stone-400">
+          ?
+        </span>
       )}
     </span>
   );
@@ -182,27 +191,30 @@ function PriceChart() {
 
   return (
     <section className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-1.5">
-            {CHART_SYMBOLS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                aria-label={s.replace("USDT", "")}
-                onClick={() => setSymbol(s)}
-                className={`flex min-h-[42px] min-w-[42px] items-center justify-center rounded-full p-1.5 transition active:scale-95 ${
-                  symbol === s
-                    ? "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
-                    : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
-                }`}
-              >
-                <ChartSymbolIcon symbol={s} />
-              </button>
-            ))}
-          </div>
+      <div className="mb-4 flex flex-col gap-3">
+        {/* Row 1: asset icons only — centered so Pi doesn’t squeeze timeframes */}
+        <div className="flex items-center justify-center gap-2 sm:justify-start">
+          {CHART_SYMBOLS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-label={s.replace("USDT", "")}
+              onClick={() => setSymbol(s)}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-1 transition active:scale-95 ${
+                symbol === s
+                  ? "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
+                  : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
+              }`}
+            >
+              <ChartSymbolIcon symbol={s} />
+            </button>
+          ))}
+        </div>
+
+        {/* Row 2: live badge + timeframes — dedicated band */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-stone-800/70 pt-3">
           <span
-            className="inline-flex items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
             title={t("market_live_hint")}
           >
             <span className="relative flex h-1.5 w-1.5">
@@ -221,22 +233,26 @@ function PriceChart() {
             </span>
             {t("market_live")}
           </span>
-        </div>
-        <div className="flex gap-1">
-          {(["1h", "24h", "7d"] as const).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRange(r)}
-              className={`min-h-[36px] min-w-[40px] rounded-full px-2.5 py-1.5 text-xs font-semibold transition active:scale-95 ${
-                range === r
-                  ? "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
-                  : "text-stone-500 hover:text-stone-300"
-              }`}
-            >
-              {r === "1h" ? t("chart_1h") : r === "24h" ? t("chart_24h") : t("chart_7d")}
-            </button>
-          ))}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1 sm:flex-none sm:gap-1.5">
+            {(["1h", "24h", "7d"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                className={`min-h-[34px] min-w-[2.5rem] shrink-0 rounded-full px-2 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                  range === r
+                    ? "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
+                    : "text-stone-500 hover:text-stone-300"
+                }`}
+              >
+                {r === "1h"
+                  ? t("chart_1h")
+                  : r === "24h"
+                    ? t("chart_24h")
+                    : t("chart_7d")}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -248,16 +264,16 @@ function PriceChart() {
         </p>
       ) : (
         <>
-          <div className="mb-2 flex items-end justify-between gap-2">
-            <div>
-              <p className="text-2xl font-bold tabular-nums text-stone-50">
+          <div className="mb-3 mt-1 flex items-end justify-between gap-3 border-t border-stone-800/50 pt-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xl font-bold tabular-nums leading-tight text-stone-50 sm:text-2xl">
                 {displayPrice != null
                   ? formatUsd(displayPrice)
                   : "—"}
               </p>
             </div>
             <p
-              className={`text-sm font-bold tabular-nums ${
+              className={`shrink-0 text-sm font-bold tabular-nums ${
                 up ? "text-emerald-400" : "text-rose-400"
               }`}
             >
