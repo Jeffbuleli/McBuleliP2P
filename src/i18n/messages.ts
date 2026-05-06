@@ -165,6 +165,16 @@ export const en = {
   auth_pi_continue: "Continue with Pi",
   auth_pi_signing: "Signing in with Pi…",
   auth_pi_failed: "Pi sign-in failed. Please try again.",
+  pi_pay_section_title: "Pi payments",
+  pi_pay_section_hint:
+    "Test U2A payment (Pi Browser). Server uses PI_NETWORK_API_KEY for approve/complete.",
+  pi_pay_cta: "Pay with Pi (test)",
+  pi_pay_busy: "Processing…",
+  pi_pay_success: "Payment completed.",
+  pi_pay_failed: "Payment failed.",
+  pi_pay_cancelled: "Cancelled.",
+  pi_pay_memo_wallet: "McBuleli wallet test",
+  pi_pay_no_sdk: "Pi SDK payment API not available in this browser.",
   forgot_title: "Password reset",
   forgot_body:
     "Password reset links are not enabled yet. Contact support and we’ll verify your account securely.",
@@ -1201,6 +1211,16 @@ export const fr: Messages = {
   auth_pi_continue: "Continuer avec Pi",
   auth_pi_signing: "Connexion Pi…",
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
+  pi_pay_section_title: "Paiements Pi",
+  pi_pay_section_hint:
+    "Test de paiement U2A (navigateur Pi). Le serveur utilise PI_NETWORK_API_KEY pour approuver/clôturer.",
+  pi_pay_cta: "Payer avec Pi (test)",
+  pi_pay_busy: "Traitement…",
+  pi_pay_success: "Paiement terminé.",
+  pi_pay_failed: "Paiement échoué.",
+  pi_pay_cancelled: "Annulé.",
+  pi_pay_memo_wallet: "Test portefeuille McBuleli",
+  pi_pay_no_sdk: "API de paiement Pi indisponible dans ce navigateur.",
   forgot_title: "Réinitialisation",
   forgot_body:
     "Les liens de réinitialisation ne sont pas encore activés. Contactez le support pour une vérification sécurisée.",

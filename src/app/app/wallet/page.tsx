@@ -14,6 +14,7 @@ import {
   type WalletOverviewLabels,
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
+import { PiWalletPaymentSection } from "@/components/pi/pi-wallet-payment";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 
@@ -250,13 +251,16 @@ export default async function WalletPage() {
   };
 
   return (
-    <WalletOverview
-      labels={labels}
-      totalUsdDisplay={totalUsdDisplay}
-      cryptoRows={cryptoRows}
-      fiatRows={fiatRows}
-      stakingPromo={stakingPromo}
-      servicePromos={groupPromos}
-    />
+    <>
+      <PiWalletPaymentSection />
+      <WalletOverview
+        labels={labels}
+        totalUsdDisplay={totalUsdDisplay}
+        cryptoRows={cryptoRows}
+        fiatRows={fiatRows}
+        stakingPromo={stakingPromo}
+        servicePromos={groupPromos}
+      />
+    </>
   );
 }

@@ -6,64 +6,7 @@ import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
-
-function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("no_window"));
-  }
-  if (window.Pi) return Promise.resolve(window.Pi);
-
-  const existing = document.querySelector<HTMLScriptElement>(
-    'script[data-pi-sdk="1"]',
-  );
-  if (existing) {
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        if (window.Pi) resolve(window.Pi);
-        else setTimeout(check, 25);
-      };
-      const t = window.setTimeout(() => reject(new Error("pi_sdk_timeout")), 8000);
-      check();
-      existing.addEventListener(
-        "load",
-        () => {
-          window.clearTimeout(t);
-          if (window.Pi) resolve(window.Pi);
-          else reject(new Error("pi_sdk_load_failed"));
-        },
-        { once: true },
-      );
-      existing.addEventListener("error", () => reject(new Error("pi_sdk_error")), {
-        once: true,
-      });
-    });
-  }
-
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.dataset.piSdk = "1";
-    s.src = "https://sdk.minepi.com/pi-sdk.js";
-    s.async = true;
-    s.onload = () => {
-      if (window.Pi) resolve(window.Pi);
-      else reject(new Error("pi_sdk_load_failed"));
-    };
-    s.onerror = () => reject(new Error("pi_sdk_error"));
-    document.head.appendChild(s);
-  });
-}
-
-async function piInit(): Promise<NonNullable<Window["Pi"]>> {
-  const Pi = await loadPiSdk();
-  // Requirement: treat Pi.init(...) as a Promise and await it fully.
-  await Promise.resolve(
-    Pi.init({
-      version: "2.0",
-      sandbox: process.env.NEXT_PUBLIC_PI_SANDBOX === "1",
-    }),
-  );
-  return Pi;
-}
+import { piInit } from "@/lib/pi-browser";
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -113,8 +56,28 @@ export default function LoginPage() {
     try {
       const Pi = await piInit();
       const authRes = (await Promise.resolve(
-        Pi.authenticate(["username"], () => {
-          // no-op: payments not used in auth
+        Pi.authenticate(["username", "payments"], async (payment: unknown) => {
+          const res = await fetchWithDeadline(
+            "/api/payments/pi/incomplete",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ payment }),
+              credentials: "same-origin",
+            },
+            45_000,
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(
+              typeof data === "object" &&
+                data !== null &&
+                "message" in data &&
+                typeof (data as { message: unknown }).message === "string"
+                ? (data as { message: string }).message
+                : "pi_incomplete_payment_failed",
+            );
+          }
         }),
       )) as unknown as {
         accessToken?: string;
