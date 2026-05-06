@@ -8,9 +8,16 @@ import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
 import { piInit } from "@/lib/pi-browser";
 
-/** Survives React Strict Mode remounts — prevents duplicate Pi.authenticate / piBusy flicker. */
+const PI_AUTO_SESSION_KEY = "mcbuleli_pi_login_auto_fired_v1";
+
+/** One in-flight Pi.authenticate at a time (avoids piBusy / SDK fighting). */
 let piAuthInFlightGlobal = false;
-let piAutoLoginScheduledGlobal = false;
+
+function paymentIdFromPiSdk(payment: unknown): string | null {
+  if (!payment || typeof payment !== "object") return null;
+  const id = (payment as { identifier?: unknown }).identifier;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -20,7 +27,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
 
-  const canAutoPi = useMemo(() => true, []);
+  const canAutoPi = useMemo(
+    () => process.env.NEXT_PUBLIC_PI_AUTO_LOGIN === "1",
+    [],
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,29 +72,34 @@ export default function LoginPage() {
     try {
       const Pi = await piInit();
       const authRes = (await Promise.resolve(
-        Pi.authenticate(["username", "payments"], async (payment: unknown) => {
-          const res = await fetchWithDeadline(
-            "/api/payments/pi/incomplete",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ payment }),
-              credentials: "same-origin",
-            },
-            45_000,
-          );
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            throw new Error(
-              typeof data === "object" &&
-                data !== null &&
-                "message" in data &&
-                typeof (data as { message: unknown }).message === "string"
-                ? (data as { message: string }).message
-                : "pi_incomplete_payment_failed",
+        Pi.authenticate(
+          ["username", "payments"],
+          async (payment: unknown) => {
+            const pid = paymentIdFromPiSdk(payment);
+            if (!pid) return;
+            const res = await fetchWithDeadline(
+              "/api/payments/pi/incomplete",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ payment }),
+                credentials: "same-origin",
+              },
+              45_000,
             );
-          }
-        }),
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(
+                typeof data === "object" &&
+                  data !== null &&
+                  "message" in data &&
+                  typeof (data as { message: unknown }).message === "string"
+                  ? (data as { message: string }).message
+                  : "pi_incomplete_payment_failed",
+              );
+            }
+          },
+        ),
       )) as unknown as {
         accessToken?: string;
         user?: { username?: string };
@@ -136,12 +151,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!canAutoPi) return;
-    if (piAutoLoginScheduledGlobal) return;
-    piAutoLoginScheduledGlobal = true;
-    const id = window.setTimeout(() => {
+    try {
+      if (sessionStorage.getItem(PI_AUTO_SESSION_KEY) === "1") return;
+      sessionStorage.setItem(PI_AUTO_SESSION_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    queueMicrotask(() => {
       void startPiAuth();
-    }, 0);
-    return () => window.clearTimeout(id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -211,6 +229,11 @@ export default function LoginPage() {
         >
           {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
         </button>
+        {!canAutoPi ? (
+          <p className="mt-2 text-center text-[11px] text-stone-500">
+            {t("auth_pi_manual_hint")}
+          </p>
+        ) : null}
 
         <button
           type="button"

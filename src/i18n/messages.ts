@@ -165,6 +165,8 @@ export const en = {
   auth_pi_continue: "Continue with Pi",
   auth_pi_signing: "Signing in with Pi…",
   auth_pi_failed: "Pi sign-in failed. Please try again.",
+  auth_pi_manual_hint:
+    "Tap “Continue with Pi” once and approve in Pi Browser. Auto sign-in is off unless NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
   pi_pay_section_title: "Pi payments",
   pi_pay_section_hint:
     "Test U2A payment (Pi Browser). Server uses PI_NETWORK_API_KEY for approve/complete.",
@@ -1211,6 +1213,8 @@ export const fr: Messages = {
   auth_pi_continue: "Continuer avec Pi",
   auth_pi_signing: "Connexion Pi…",
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
+  auth_pi_manual_hint:
+    "Appuie une fois sur « Continuer avec Pi » et valide dans Pi Browser. La connexion auto est désactivée sauf si NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
   pi_pay_section_title: "Paiements Pi",
   pi_pay_section_hint:
     "Test de paiement U2A (navigateur Pi). Le serveur utilise PI_NETWORK_API_KEY pour approuver/clôturer.",
