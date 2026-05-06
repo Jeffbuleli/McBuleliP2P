@@ -762,6 +762,9 @@ export const en = {
   trade_mode_demo: "Practice",
   trade_mode_live: "Real funds",
   trade_mode_demo_hint: "Virtual USDT for learning — no real money at risk. Balance:",
+  trade_demo_refill: "Refill demo (10,000)",
+  trade_demo_refill_hint: "If you spent your demo balance, you can refill it to 10,000 USDT.",
+  trade_demo_refill_blocked: "Refill is available when your demo balance is low.",
   trade_mode_live_hint: "Orders use your real on-platform USDT wallet balance.",
   trade_live_disabled_hint:
     "Practice first with virtual funds. When you are ready, enable real trading below.",
@@ -1794,6 +1797,9 @@ export const fr: Messages = {
   trade_mode_demo: "Entraînement",
   trade_mode_live: "Réel",
   trade_mode_demo_hint: "USDT virtuels pour apprendre — aucun argent réel. Solde :",
+  trade_demo_refill: "Recharger démo (10 000)",
+  trade_demo_refill_hint: "Si tu as dépensé le solde démo, tu peux le remettre à 10 000 USDT.",
+  trade_demo_refill_blocked: "Recharge disponible quand le solde démo est bas.",
   trade_mode_live_hint: "Les ordres utilisent votre solde USDT réel sur la plateforme.",
   trade_live_disabled_hint:
     "Entraînez-vous d’abord avec les fonds virtuels. Ensuite, activez le trading réel ci-dessous.",
