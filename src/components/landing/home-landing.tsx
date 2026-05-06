@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { getDictionary } from "@/i18n/messages";
@@ -150,9 +151,12 @@ export async function HomeLanding() {
           <StatTile title={d.landing_stat_3_t} subtitle={d.landing_stat_3_d} />
         </div>
 
-        <section id="market" className="mt-6 scroll-mt-28">
-          <MarketPreview locale={locale} initialTickers={tickers} />
-        </section>
+        <div className="mt-6 space-y-6">
+          <PriceChartLazy />
+          <section id="market" className="scroll-mt-28">
+            <MarketPreview locale={locale} initialTickers={tickers} />
+          </section>
+        </div>
       </div>
 
       <main className="relative mx-auto max-w-4xl space-y-16 px-4 pb-20">

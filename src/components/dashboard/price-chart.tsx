@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { getDictionary } from "@/i18n/messages";
 import { KLINES_POLL_MS } from "@/lib/market-live";
@@ -25,6 +32,11 @@ const HEIGHT = 140;
 
 function PriceChart() {
   const { t, locale } = useI18n();
+  const uid = useId();
+  const chartFillId = useMemo(
+    () => `mc-fill-${uid.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+    [uid],
+  );
   const [symbol, setSymbol] = useState("BTCUSDT");
   const [range, setRange] = useState<Range>("24h");
   const [data, setData] = useState<KlineResponse | null>(null);
@@ -127,7 +139,8 @@ function PriceChart() {
   }, [pathD, points]);
 
   const up = (data?.changePct ?? 0) >= 0;
-  const stroke = up ? "#16a34a" : "#e11d48";
+  /** Align with McBuleli emerald / rose accents (not flat Material greens). */
+  const stroke = up ? "#10b981" : "#f43f5e";
 
   const handlePointer = useCallback(
     (clientX: number) => {
@@ -147,7 +160,7 @@ function PriceChart() {
       : (data?.lastPrice ?? null);
 
   return (
-    <section className="rounded-2xl border border-emerald-900/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-stone-900">
+    <section className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap gap-1.5">
@@ -158,8 +171,8 @@ function PriceChart() {
                 onClick={() => setSymbol(s)}
                 className={`min-h-[36px] rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
                   symbol === s
-                    ? "bg-emerald-700 text-white dark:bg-emerald-600"
-                    : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-900/30"
+                    : "border border-stone-600/60 bg-stone-900/50 text-stone-300 hover:border-stone-500 hover:bg-stone-900/80"
                 }`}
               >
                 {s.replace("USDT", "")}
@@ -167,7 +180,7 @@ function PriceChart() {
             ))}
           </div>
           <span
-            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
             title={t("market_live_hint")}
           >
             <span className="relative flex h-1.5 w-1.5">
@@ -195,8 +208,8 @@ function PriceChart() {
               onClick={() => setRange(r)}
               className={`min-h-[36px] min-w-[40px] rounded-full px-2.5 py-1.5 text-xs font-semibold transition active:scale-95 ${
                 range === r
-                  ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100"
-                  : "text-stone-600 dark:text-stone-400"
+                  ? "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
+                  : "text-stone-500 hover:text-stone-300"
               }`}
             >
               {r === "1h" ? t("chart_1h") : r === "24h" ? t("chart_24h") : t("chart_7d")}
@@ -208,17 +221,17 @@ function PriceChart() {
       {loading ? (
         <ChartSkeleton />
       ) : error || !data ? (
-        <p className="py-10 text-center text-sm text-stone-500 dark:text-stone-400">
+        <p className="py-10 text-center text-sm text-stone-400">
           {error ?? t("chart_unavailable")}
         </p>
       ) : (
         <>
           <div className="mb-2 flex items-end justify-between gap-2">
             <div>
-              <p className="text-xs font-medium text-stone-500 dark:text-stone-400">
+              <p className="text-xs font-medium text-stone-500">
                 {symbol.replace("USDT", "")}/USDT
               </p>
-              <p className="text-2xl font-bold tabular-nums text-stone-900 dark:text-stone-50">
+              <p className="text-2xl font-bold tabular-nums text-stone-50">
                 {displayPrice != null
                   ? formatUsd(displayPrice)
                   : "—"}
@@ -226,9 +239,7 @@ function PriceChart() {
             </div>
             <p
               className={`text-sm font-bold tabular-nums ${
-                up
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
+                up ? "text-emerald-400" : "text-rose-400"
               }`}
             >
               {up ? "+" : ""}
@@ -236,7 +247,7 @@ function PriceChart() {
             </p>
           </div>
 
-          <div className="relative touch-pan-x">
+          <div className="relative touch-pan-x rounded-xl bg-stone-900/60 ring-1 ring-stone-700/40">
             <svg
               ref={svgRef}
               viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -250,11 +261,11 @@ function PriceChart() {
               onPointerLeave={() => setCursorIdx(null)}
             >
               <defs>
-                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={chartFillId} x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="0%"
                     stopColor={stroke}
-                    stopOpacity="0.25"
+                    stopOpacity="0.35"
                   />
                   <stop
                     offset="100%"
@@ -270,13 +281,12 @@ function PriceChart() {
                   x2={WIDTH - 8}
                   y1={8 + gy * (HEIGHT - 16)}
                   y2={8 + gy * (HEIGHT - 16)}
-                  stroke="currentColor"
-                  strokeOpacity="0.06"
-                  className="text-stone-900 dark:text-stone-100"
+                  stroke="#10b981"
+                  strokeOpacity="0.07"
                 />
               ))}
               {fillPathD ? (
-                <path d={fillPathD} fill="url(#chartFill)" />
+                <path d={fillPathD} fill={`url(#${chartFillId})`} />
               ) : null}
               {pathD ? (
                 <path
@@ -306,7 +316,7 @@ function PriceChart() {
 
           <Link
             href="/app/trade"
-            className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl bg-stone-100 py-3 text-sm font-semibold text-emerald-800 dark:bg-stone-800 dark:text-emerald-300"
+            className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-stone-600/70 bg-stone-900/60 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-700/40 hover:bg-stone-900/90"
           >
             {t("view_trade")}
           </Link>
@@ -327,10 +337,10 @@ function ChartSkeleton() {
   return (
     <div className="animate-pulse space-y-3" aria-hidden>
       <div className="flex justify-between">
-        <div className="h-8 w-28 rounded-lg bg-stone-200 dark:bg-stone-700" />
-        <div className="h-6 w-16 rounded-lg bg-stone-200 dark:bg-stone-700" />
+        <div className="h-8 w-28 rounded-lg bg-stone-800" />
+        <div className="h-6 w-16 rounded-lg bg-stone-800" />
       </div>
-      <div className="h-[160px] rounded-xl bg-gradient-to-t from-stone-200 to-stone-100 dark:from-stone-800 dark:to-stone-900" />
+      <div className="h-[160px] rounded-xl bg-gradient-to-t from-stone-900 via-stone-900/90 to-emerald-950/20 ring-1 ring-stone-700/40" />
     </div>
   );
 }

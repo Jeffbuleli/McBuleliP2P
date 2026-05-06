@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -28,7 +28,6 @@ const COUNTRY_OPTIONS = [
 
 function RegisterForm() {
   const { t, locale } = useI18n();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const refParam = searchParams.get("ref")?.trim() ?? "";
   const initialReferralCode = refParam ? refParam.toUpperCase() : "";
@@ -63,14 +62,18 @@ function RegisterForm() {
             ? { referralCode: referralCode.trim().toUpperCase() }
             : {}),
         }),
+        signal: AbortSignal.timeout(45_000),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(formatAuthClientError(data));
         return;
       }
-      router.push("/app");
-      router.refresh();
+      window.location.assign("/app");
+    } catch (err) {
+      const aborted =
+        err instanceof DOMException && err.name === "AbortError";
+      setError(aborted ? t("auth_timeout") : t("auth_network_error"));
     } finally {
       setLoading(false);
     }

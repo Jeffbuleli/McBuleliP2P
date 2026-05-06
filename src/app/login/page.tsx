@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -9,7 +8,6 @@ import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
 
 export default function LoginPage() {
   const { t } = useI18n();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +22,19 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(45_000),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(formatAuthClientError(data));
         return;
       }
-      router.push("/app");
-      router.refresh();
+      // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
+      window.location.assign("/app");
+    } catch (err) {
+      const aborted =
+        err instanceof DOMException && err.name === "AbortError";
+      setError(aborted ? t("auth_timeout") : t("auth_network_error"));
     } finally {
       setLoading(false);
     }

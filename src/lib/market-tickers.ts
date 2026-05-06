@@ -30,7 +30,10 @@ export async function fetchMarketTickers(): Promise<MarketTicker[] | null> {
   try {
     const res = await fetch(
       `${BINANCE_API_PUBLIC}/api/v3/ticker/24hr?symbols=${encoded}`,
-      binancePublicFetchInit,
+      {
+        ...binancePublicFetchInit,
+        signal: AbortSignal.timeout(12_000),
+      },
     );
     if (!res.ok) return null;
     const data = (await res.json()) as Array<{

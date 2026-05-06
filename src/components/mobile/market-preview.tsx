@@ -56,14 +56,12 @@ export function MarketPreview({
   }, [pull]);
 
   return (
-    <section className="rounded-2xl border border-emerald-900/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-stone-900">
+    <section className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-            {d.market_preview}
-          </h2>
+          <h2 className="text-sm font-bold text-stone-50">{d.market_preview}</h2>
           <span
-            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
             title={d.market_live_hint}
           >
             <span className="relative flex h-1.5 w-1.5">
@@ -86,33 +84,31 @@ export function MarketPreview({
         {showViewLink ? (
           <Link
             href="/app/market"
-            className="shrink-0 text-xs font-semibold text-emerald-700 dark:text-emerald-400"
+            className="shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
           >
             {d.view_market} →
           </Link>
         ) : null}
       </div>
       {!tickers?.length ? (
-        <p className="py-4 text-center text-sm text-stone-500 dark:text-stone-400">
-          {d.market_loading}
-        </p>
+        <p className="py-4 text-center text-sm text-stone-400">{d.market_loading}</p>
       ) : (
-        <ul className="flex max-h-[min(55vh,420px)] flex-col gap-0 divide-y divide-stone-100 overflow-y-auto overscroll-contain dark:divide-stone-800">
+        <ul className="flex max-h-[min(55vh,420px)] flex-col gap-0 divide-y divide-stone-800/80 overflow-y-auto overscroll-contain">
           {tickers.map((t) => (
             <li key={t.symbol}>
               <Link
                 href="/app/market"
-                className="flex min-h-[44px] items-center justify-between gap-2.5 py-2 active:bg-stone-50 dark:active:bg-stone-800/50"
+                className="flex min-h-[44px] items-center justify-between gap-2.5 rounded-lg py-2 transition active:bg-stone-900/80 hover:bg-stone-900/50"
               >
-                <span className="flex min-w-0 items-center gap-2.5 font-semibold text-stone-900 dark:text-stone-100">
+                <span className="flex min-w-0 items-center gap-2.5 font-semibold text-stone-100">
                   <MarketCoinIcon symbol={t.symbol} />
                   <span className="min-w-0 truncate">
                     {t.symbol.replace("USDT", "")}
-                    <span className="text-stone-500 dark:text-stone-400">/USDT</span>
+                    <span className="text-stone-500">/USDT</span>
                   </span>
                 </span>
                 <span className="text-right">
-                  <span className="block font-medium tabular-nums text-stone-900 dark:text-stone-50">
+                  <span className="block font-medium tabular-nums text-stone-50">
                     {formatPrice(t.lastPrice)}
                   </span>
                   <span
@@ -148,13 +144,13 @@ function MarketCoinIcon({ symbol }: { symbol: string }) {
   const letter = symbol.replace(/USDT$/i, "").slice(0, 1) || "?";
   if (!url) {
     return (
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-200 text-xs font-bold text-stone-700 dark:bg-stone-700 dark:text-stone-200">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-800 text-xs font-bold text-stone-200">
         {letter}
       </span>
     );
   }
   return (
-    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-200 dark:ring-stone-600">
+    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-600">
       <Image src={url} alt="" width={32} height={32} className="object-cover" />
     </span>
   );
