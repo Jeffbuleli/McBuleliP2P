@@ -29,9 +29,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+drizzle-push*.log
+migrate-*.log
+migrate_*.log
 
 # env files — use `.env` locally (never commit)
 .env
+.env.*
 !.env.example
 
 # vercel

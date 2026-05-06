@@ -44,7 +44,7 @@ export function AppTopBar({
           href="/app"
           className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-emerald-900/10 dark:bg-stone-900 dark:ring-white/10">
+          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-stone-700/60 bg-stone-950/70 shadow-lg shadow-black/30 backdrop-blur-md">
             <Image
               src="/brand/logo.png"
               alt=""
@@ -54,14 +54,14 @@ export function AppTopBar({
               priority
             />
           </span>
-          <span className="font-bold tracking-tight text-emerald-950 dark:text-emerald-100">
+          <span className="font-bold tracking-tight text-emerald-100">
             {t("brand")}
           </span>
         </Link>
 
         <div className="flex items-center gap-0.5">
           <span
-            className="inline-flex items-center gap-1 rounded-full border border-emerald-700/20 bg-emerald-50 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/50 dark:text-emerald-300"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-700/30 bg-emerald-950/40 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-200"
             title={t("security_trusted")}
           >
             <ShieldIcon />
@@ -70,7 +70,7 @@ export function AppTopBar({
 
           <button
             type="button"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-stone-600 transition active:scale-95 dark:text-stone-300"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-stone-200 transition hover:bg-stone-900/50 active:scale-95"
             aria-label={t("notifications_title")}
             onClick={() => setNotifOpen(true)}
           >

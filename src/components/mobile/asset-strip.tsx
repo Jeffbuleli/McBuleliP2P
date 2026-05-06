@@ -59,18 +59,16 @@ export function AssetStrip({
   return (
     <section aria-label={d.assets_title}>
       <div className="mb-2 flex items-center justify-between px-0.5">
-        <h2 className="text-sm font-bold text-stone-800 dark:text-stone-100">
-          {d.assets_title}
-        </h2>
+        <h2 className="text-sm font-bold text-stone-100">{d.assets_title}</h2>
       </div>
       <div className="grid grid-cols-2 justify-items-stretch gap-2 sm:grid-cols-4">
         {assets.map((a) => (
           <div
             key={a.code}
-            className="flex min-w-0 flex-col rounded-2xl border border-emerald-900/10 bg-white p-2.5 shadow-sm dark:border-white/10 dark:bg-stone-900"
+            className="flex min-w-0 flex-col rounded-2xl border border-stone-700/50 bg-stone-950/60 p-3 shadow-lg shadow-black/30 backdrop-blur-md"
           >
             <div className="flex items-center gap-2">
-              <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-200/80 dark:ring-stone-600">
+              <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-700/70">
                 <Image
                   src={a.icon}
                   alt=""
@@ -80,18 +78,18 @@ export function AssetStrip({
                 />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold leading-tight text-stone-900 dark:text-stone-50">
+                <p className="truncate text-xs font-bold leading-tight text-stone-50">
                   {a.code}
                 </p>
-                <p className="truncate text-[9px] leading-tight text-stone-500 dark:text-stone-400">
+                <p className="truncate text-[9px] leading-tight text-stone-400">
                   {a.name}
                 </p>
               </div>
             </div>
-            <p className="mt-2 truncate text-center text-[11px] font-semibold tabular-nums leading-tight text-stone-900 dark:text-stone-100">
+            <p className="mt-2 truncate text-center text-[11px] font-semibold tabular-nums leading-tight text-stone-100">
               {a.balance}
             </p>
-            <p className="mt-0.5 truncate text-center text-[8px] text-stone-400 dark:text-stone-500">
+            <p className="mt-0.5 truncate text-center text-[8px] text-stone-400">
               {a.sub}
             </p>
           </div>

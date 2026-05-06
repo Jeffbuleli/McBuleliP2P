@@ -24,12 +24,10 @@ export function RecentActivity({
   const d = getDictionary(locale);
 
   return (
-    <section className="rounded-2xl border border-emerald-900/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-stone-900">
-      <h2 className="mb-3 text-sm font-bold text-stone-900 dark:text-stone-50">
-        {d.recent_activity}
-      </h2>
+    <section className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <h2 className="mb-3 text-sm font-bold text-stone-50">{d.recent_activity}</h2>
       {items.length === 0 ? (
-        <p className="py-6 text-center text-sm text-stone-500 dark:text-stone-400">
+        <p className="py-6 text-center text-sm text-stone-400">
           {d.recent_empty}
         </p>
       ) : (
@@ -37,32 +35,32 @@ export function RecentActivity({
           {items.map((row) => (
             <li
               key={`${row.kind}-${row.id}`}
-              className="flex min-h-[52px] items-center gap-3 border-b border-stone-100 py-3 last:border-0 dark:border-stone-800"
+              className="flex min-h-[52px] items-center gap-3 border-b border-stone-800/80 py-3 last:border-0"
             >
               <span
                 className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
                   row.kind === "deposit"
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                    : "bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-100"
+                    ? "bg-emerald-950/50 text-emerald-200 ring-1 ring-emerald-700/30"
+                    : "bg-rose-950/40 text-rose-100 ring-1 ring-rose-700/30"
                 }`}
               >
                 {row.kind === "deposit" ? <InIcon /> : <OutIcon />}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-50">
+                <p className="truncate text-sm font-semibold text-stone-50">
                   {row.kind === "deposit" ? d.deposit : d.withdraw}
                 </p>
-                <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">
+                <p className="truncate text-[11px] text-stone-400">
                   {row.networkLabel}
                 </p>
-                <p className="text-xs text-stone-500 dark:text-stone-400">
+                <p className="text-xs text-stone-400">
                   <StatusBadge locale={locale} tone={row.tone} raw={row.status} />
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold tabular-nums text-stone-900 dark:text-stone-50">
+                <p className="font-semibold tabular-nums text-stone-50">
                   {row.amount != null ? `${row.amount}` : "—"}{" "}
-                  <span className="text-xs font-medium text-stone-500">
+                  <span className="text-xs font-medium text-stone-400">
                     {activityAssetUnit(row.asset)}
                   </span>
                 </p>
@@ -73,7 +71,7 @@ export function RecentActivity({
       )}
       <Link
         href="/app/wallet"
-        className="mt-3 block min-h-[44px] rounded-xl border border-emerald-700/20 py-3 text-center text-sm font-semibold text-emerald-800 dark:border-emerald-500/30 dark:text-emerald-300"
+        className="mt-3 block min-h-[44px] rounded-xl border border-emerald-700/30 bg-emerald-950/30 py-3 text-center text-sm font-semibold text-emerald-200 transition hover:bg-emerald-950/45 active:scale-[0.99]"
       >
         {d.wallet_see_all}
       </Link>

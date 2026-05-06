@@ -43,7 +43,12 @@ export function friendlyAuthError(error: unknown): string {
     (msg.includes("relation") && msg.includes("does not exist")) ||
     (msg.includes("Failed query") && msg.includes("users"))
   ) {
-    return 'Tables are missing. In the project folder run: npm run db:push   (This creates the "users" table and the rest.)';
+    return [
+      "Database tables are missing for the DATABASE_URL your server uses.",
+      "Local: from the project folder run npm run db:push (loads .env).",
+      "Deployed (e.g. Vercel): copy DATABASE_URL from the host dashboard and run once:",
+      'DATABASE_URL="…" npx drizzle-kit push — that URL must match production.',
+    ].join(" ");
   }
   if (msg.includes("JWT_SECRET")) {
     return "JWT_SECRET is missing or shorter than 16 characters. Set it in .env.";

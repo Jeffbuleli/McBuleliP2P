@@ -127,7 +127,7 @@ export function WalletOverview({
         </div>
         <Link
           href="/app/wallet/history"
-          className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-emerald-800/15 bg-white text-emerald-800 shadow-sm active:scale-95 dark:border-emerald-600/25 dark:bg-stone-800 dark:text-emerald-300"
+          className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-stone-700/50 bg-stone-950/60 text-emerald-200 shadow-lg shadow-black/25 backdrop-blur-md transition active:scale-95 hover:bg-stone-900/60"
           aria-label={labels.wallet_link_history}
         >
           <HistoryIcon />
@@ -297,7 +297,7 @@ export function WalletOverview({
           onClick={() => setTab("account")}
           className={`relative flex-1 rounded-xl py-2.5 text-center text-sm font-bold transition ${
             tab === "account"
-              ? "bg-white text-emerald-900 shadow-sm dark:bg-stone-900 dark:text-emerald-100"
+              ? "bg-stone-950/70 text-emerald-100 shadow-lg shadow-black/20"
               : "text-stone-600 dark:text-stone-400"
           }`}
         >
@@ -321,20 +321,20 @@ export function WalletOverview({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={labels.wallet_search_placeholder}
-            className="w-full rounded-2xl border border-stone-200 bg-white py-3 pl-10 pr-3 text-sm outline-none ring-emerald-700/30 placeholder:text-stone-400 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
+            className="w-full rounded-2xl border border-stone-700 bg-stone-900/70 py-3 pl-10 pr-3 text-sm text-stone-100 outline-none ring-emerald-500/40 placeholder:text-stone-500 focus:ring-2"
           />
         </label>
       </div>
 
-      <div className="mt-2 overflow-hidden rounded-2xl border border-stone-200/90 bg-white/90 dark:border-stone-700 dark:bg-stone-900/90">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-2 border-b border-stone-100 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:border-stone-800 dark:text-stone-400">
+      <div className="mt-2 overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-2 border-b border-stone-800/80 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-stone-400">
           <span>{labels.wallet_asset_list}</span>
           <span className="text-right tabular-nums">{labels.wallet_asset_balance}</span>
           <span className="min-w-[3.5rem] text-right tabular-nums">{labels.wallet_col_usd}</span>
         </div>
-        <ul className="divide-y divide-stone-100 dark:divide-stone-800">
+        <ul className="divide-y divide-stone-800/80">
           {rows.length === 0 ? (
-            <li className="px-3 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
+            <li className="px-3 py-8 text-center text-sm text-stone-400">
               {labels.wallet_no_match}
             </li>
           ) : (
@@ -342,7 +342,7 @@ export function WalletOverview({
               <li key={row.asset} className="px-3 py-3">
                 <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-200/80 dark:ring-stone-600">
+                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-700/70">
                       <Image
                         src={ICON[row.asset]}
                         alt=""
@@ -352,21 +352,21 @@ export function WalletOverview({
                       />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-bold text-stone-900 dark:text-stone-50">
+                      <p className="truncate font-bold text-stone-50">
                         {row.title}
                       </p>
-                      <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">
+                      <p className="truncate text-[11px] text-stone-400">
                         {row.subtitle}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-sm font-semibold tabular-nums text-stone-900 dark:text-stone-100">
+                    <p className="font-mono text-sm font-semibold tabular-nums text-stone-100">
                       {hidden ? mask() : row.balanceDisplay}
                     </p>
                   </div>
                   <div className="min-w-[3.5rem] text-right">
-                    <p className="text-xs font-semibold tabular-nums text-stone-600 dark:text-stone-300">
+                    <p className="text-xs font-semibold tabular-nums text-stone-300">
                       {hidden ? mask() : row.valueUsdApprox}
                     </p>
                   </div>
@@ -406,7 +406,7 @@ export function WalletOverview({
       <button
         type="button"
         onClick={() => setFeesOpen((o) => !o)}
-        className="mt-4 flex min-h-[48px] w-full items-center justify-between rounded-2xl border border-stone-200 bg-white/90 px-4 text-left text-sm font-semibold text-stone-800 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-100"
+        className="mt-4 flex min-h-[48px] w-full items-center justify-between rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 px-4 text-left text-sm font-semibold text-stone-100 shadow-2xl shadow-black/40 backdrop-blur-xl transition hover:bg-stone-900/50 active:scale-[0.99]"
       >
         <span>{labels.wallet_fees_title}</span>
         <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
@@ -414,7 +414,7 @@ export function WalletOverview({
         </span>
       </button>
       {feesOpen ? (
-        <ul className="mt-2 space-y-1.5 rounded-2xl border border-stone-200 bg-stone-50/95 p-4 text-sm text-stone-700 dark:border-stone-700 dark:bg-stone-900/70 dark:text-stone-300">
+        <ul className="mt-2 space-y-1.5 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 text-sm text-stone-300 shadow-2xl shadow-black/40 backdrop-blur-xl">
           {labels.feeBulletLines.map((line, i) => (
             <li key={i} className="flex gap-2">
               <span className="text-emerald-600 dark:text-emerald-400">·</span>

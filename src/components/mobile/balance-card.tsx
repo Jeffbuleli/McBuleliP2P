@@ -29,60 +29,60 @@ export function BalanceCard({
 
   return (
     <section
-      className="rounded-2xl border border-emerald-800/10 bg-gradient-to-b from-white to-emerald-50/80 p-3.5 shadow-md shadow-emerald-900/5 dark:border-white/10 dark:from-stone-900 dark:to-stone-900/90"
+      className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
       aria-label={d.balance_estimated_total}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
           {d.balance_estimated_total}
         </p>
         <button
           type="button"
           onClick={() => setHidden((h) => !h)}
-          className="min-h-[40px] min-w-[40px] rounded-lg px-2 text-stone-500 transition active:scale-95 dark:text-stone-400"
+          className="min-h-[40px] min-w-[40px] rounded-lg px-2 text-stone-400 transition active:scale-95 hover:bg-stone-900/50"
           aria-pressed={hidden}
           aria-label={hidden ? d.show_balance : d.hide_balance}
         >
           {hidden ? <EyeIcon /> : <EyeOffIcon />}
         </button>
       </div>
-      <p className="mt-1 text-center text-2xl font-bold tabular-nums leading-tight tracking-tight text-emerald-950 dark:text-emerald-100">
+      <p className="mt-1 text-center text-3xl font-bold tabular-nums leading-tight tracking-tight text-stone-50">
         {hidden ? formatHidden() : totalEquivDisplay}
       </p>
-      <p className="mt-0.5 text-center text-[10px] text-stone-500 dark:text-stone-400">
+      <p className="mt-0.5 text-center text-[10px] text-stone-400">
         {d.balance_equiv_usdt_note}
       </p>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-emerald-900/10 pt-3 dark:border-white/10">
-        <div className="rounded-lg bg-white/80 px-2 py-1.5 dark:bg-stone-800/80">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-stone-800/80 pt-3">
+        <div className="rounded-xl border border-stone-800/80 bg-stone-900/60 px-2.5 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-400">
             USDT
           </p>
-          <p className="truncate text-xs font-semibold tabular-nums text-stone-900 dark:text-stone-100">
+          <p className="truncate text-xs font-semibold tabular-nums text-stone-100">
             {hidden ? formatHidden() : usdtDisplay}
           </p>
         </div>
-        <div className="rounded-lg bg-white/80 px-2 py-1.5 dark:bg-stone-800/80">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+        <div className="rounded-xl border border-stone-800/80 bg-stone-900/60 px-2.5 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-400">
             Pi
           </p>
-          <p className="truncate text-xs font-semibold tabular-nums text-stone-900 dark:text-stone-100">
+          <p className="truncate text-xs font-semibold tabular-nums text-stone-100">
             {hidden ? formatHidden() : piDisplay}
           </p>
         </div>
-        <div className="rounded-lg bg-white/80 px-2 py-1.5 dark:bg-stone-800/80">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+        <div className="rounded-xl border border-stone-800/80 bg-stone-900/60 px-2.5 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-400">
             USD
           </p>
-          <p className="truncate text-xs font-semibold tabular-nums text-stone-900 dark:text-stone-100">
+          <p className="truncate text-xs font-semibold tabular-nums text-stone-100">
             {hidden ? formatHidden() : fiatUsdDisplay}
           </p>
         </div>
-        <div className="rounded-lg bg-white/80 px-2 py-1.5 dark:bg-stone-800/80">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+        <div className="rounded-xl border border-stone-800/80 bg-stone-900/60 px-2.5 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-stone-400">
             CDF
           </p>
-          <p className="truncate text-xs font-semibold tabular-nums text-stone-900 dark:text-stone-100">
+          <p className="truncate text-xs font-semibold tabular-nums text-stone-100">
             {hidden ? formatHidden() : fiatCdfDisplay}
           </p>
         </div>

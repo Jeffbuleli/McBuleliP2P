@@ -8,8 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
+    "db:push": "node --env-file=.env ./node_modules/.bin/drizzle-kit push --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
+    "db:push:remote": "./node_modules/.bin/drizzle-kit push --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
+    "db:push:render": "node scripts/drizzle-push-render.cjs",
+    "db:migrate:render": "node scripts/drizzle-migrate-batched.cjs",
+    "db:migrate:render:kit": "node scripts/drizzle-migrate-render.cjs",
+    "db:studio": "node --env-file=.env ./node_modules/.bin/drizzle-kit studio --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
     "verify:binance": "node --env-file=.env scripts/verify-binance.mjs"
   },
   "dependencies": {

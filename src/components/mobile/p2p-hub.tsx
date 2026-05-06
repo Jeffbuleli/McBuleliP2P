@@ -157,16 +157,16 @@ export function P2PHub() {
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
       <div>
-        <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">{t("p2p_title")}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+        <h1 className="text-xl font-bold text-stone-50">{t("p2p_title")}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-stone-400">
           {t("p2p_intro")}
         </p>
-        <p className="mt-2 rounded-xl border border-amber-800/20 bg-amber-50/80 p-3 text-xs text-amber-950 dark:border-amber-700/30 dark:bg-amber-950/30 dark:text-amber-100">
+        <p className="mt-2 rounded-xl border border-amber-700/30 bg-amber-950/30 p-3 text-xs text-amber-100">
           {t("p2p_disclaimer")}
         </p>
       </div>
 
-      <div className="flex gap-1 rounded-2xl border border-stone-200 bg-stone-50 p-1 dark:border-stone-700 dark:bg-stone-900">
+      <div className="flex gap-1 rounded-2xl border border-stone-700/50 bg-stone-950/60 p-1 shadow-lg shadow-black/30 backdrop-blur-md">
         {(
           [
             ["market", "p2p_tab_market"],
@@ -181,7 +181,7 @@ export function P2PHub() {
             className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
               tab === k
                 ? "bg-emerald-700 text-white shadow dark:bg-emerald-600"
-                : "text-stone-700 dark:text-stone-300"
+                : "text-stone-300 hover:bg-stone-900/50"
             }`}
           >
             {t(labelKey)}
@@ -197,7 +197,7 @@ export function P2PHub() {
               <select
                 value={asset}
                 onChange={(e) => setAsset(e.target.value as P2pCryptoAsset | "")}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-2 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-2 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
               >
                 <option value="">{t("p2p_filter_all")}</option>
                 <option value="USDT">USDT</option>
@@ -209,7 +209,7 @@ export function P2PHub() {
               <select
                 value={fiat}
                 onChange={(e) => setFiat(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-2 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-2 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
               >
                 <option value="">{t("p2p_filter_all")}</option>
                 {P2P_FIAT_CURRENCIES.map((f) => (
@@ -224,7 +224,7 @@ export function P2PHub() {
               <select
                 value={side}
                 onChange={(e) => setSide(e.target.value as P2pSide | "")}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-2 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-2 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
               >
                 <option value="">{t("p2p_filter_all")}</option>
                 <option value="sell">{t("p2p_side_sell")}</option>
@@ -236,7 +236,7 @@ export function P2PHub() {
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-2 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-2 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
               >
                 <option value="">{t("p2p_filter_all")}</option>
                 {P2P_COUNTRY_CODES.map((c) => (
@@ -253,7 +253,7 @@ export function P2PHub() {
                 value={paymentContains}
                 onChange={(e) => setPaymentContains(e.target.value)}
                 placeholder={t("p2p_filter_payment_hint")}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-3 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 placeholder:text-stone-500 focus:ring-2"
               />
             </label>
           </div>

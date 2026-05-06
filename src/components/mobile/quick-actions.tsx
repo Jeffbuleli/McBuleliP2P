@@ -18,12 +18,12 @@ export function QuickActions({ locale }: { locale: Locale }) {
         <Link
           key={key}
           href={href}
-          className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-900/10 bg-white py-3 shadow-sm transition active:scale-[0.97] dark:border-white/10 dark:bg-stone-900"
+          className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-2xl border border-stone-700/50 bg-stone-950/60 py-3 shadow-lg shadow-black/30 backdrop-blur-md transition active:scale-[0.97] hover:bg-stone-900/60"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-900/20">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-700/30 bg-emerald-950/40 text-emerald-200 shadow-md shadow-black/20">
             <Icon />
           </span>
-          <span className="max-w-full truncate px-1 text-center text-[11px] font-bold leading-tight text-stone-800 dark:text-stone-100">
+          <span className="max-w-full truncate px-1 text-center text-[11px] font-bold leading-tight text-stone-100">
             {d[key]}
           </span>
         </Link>

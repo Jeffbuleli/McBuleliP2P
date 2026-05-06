@@ -33,14 +33,12 @@ export function NotificationDrawer({
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="relative mx-auto max-h-[70vh] w-full max-w-lg rounded-t-3xl bg-white shadow-2xl dark:bg-stone-900">
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-stone-200 dark:bg-stone-700" />
-        <div className="border-b border-stone-100 px-4 pb-3 pt-4 dark:border-stone-800">
-          <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
-            {t("notifications_title")}
-          </h2>
+      <div className="relative mx-auto max-h-[70vh] w-full max-w-lg rounded-t-3xl border border-stone-700/60 bg-stone-950/85 shadow-2xl shadow-black/60 backdrop-blur-xl">
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-stone-700" />
+        <div className="border-b border-stone-800 px-4 pb-3 pt-4">
+          <h2 className="text-lg font-bold text-stone-50">{t("notifications_title")}</h2>
         </div>
-        <div className="px-4 py-10 text-center text-sm text-stone-500 dark:text-stone-400">
+        <div className="px-4 py-10 text-center text-sm text-stone-400">
           {t("notifications_empty")}
         </div>
         <div className="h-[env(safe-area-inset-bottom)]" />

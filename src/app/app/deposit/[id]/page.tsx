@@ -86,13 +86,13 @@ export default function DepositDetailPage() {
   }
 
   if (loading) {
-    return <p className="text-stone-600">…</p>;
+    return <p className="text-stone-400">…</p>;
   }
   if (!deposit) {
     return (
-      <p className="text-rose-800">
+      <p className="text-rose-200">
         {msg ?? "—"}{" "}
-        <Link href="/app" className="underline">
+        <Link href="/app" className="underline text-emerald-300">
           {t("dashboard")}
         </Link>
       </p>
@@ -122,15 +122,15 @@ export default function DepositDetailPage() {
   return (
     <div className="space-y-6 pb-10 pt-8">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">
+        <h1 className="text-2xl font-bold text-stone-50">
           {t("deposit_detail_title")}
         </h1>
-        <p className="mt-1 text-sm text-stone-600">
+        <p className="mt-1 text-sm text-stone-400">
           {deposit.status}
         </p>
       </div>
 
-      <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-950">
+      <div className="rounded-xl border border-amber-700/40 bg-amber-950/30 p-3 text-sm text-amber-100">
         {t("deposit_warn_body")}
       </div>
 
@@ -145,17 +145,17 @@ export default function DepositDetailPage() {
         </span>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-stone-200">
-        <p className="text-xs font-semibold uppercase text-stone-500">
+      <div className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <p className="text-xs font-semibold uppercase text-stone-400">
           {deposit.asset} · {networkLabel}
         </p>
-        <p className="mt-2 break-all font-mono text-sm text-stone-900">
+        <p className="mt-2 break-all font-mono text-sm text-stone-50">
           {deposit.addressShown}
         </p>
         <button
           type="button"
           onClick={() => void copy(deposit.addressShown)}
-          className="mt-3 w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white"
+          className="mt-3 w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white shadow-sm shadow-black/20 active:scale-[0.99]"
         >
           📋 {t("deposit_copy")}
         </button>
@@ -177,12 +177,12 @@ export default function DepositDetailPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-6 shadow ring-1 ring-stone-200">
+      <div className="flex flex-col items-center gap-2 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
         <QRCode value={deposit.addressShown} size={200} />
-        <p className="text-xs text-stone-500">{t("deposit_detail_scan")}</p>
+        <p className="text-xs text-stone-400">{t("deposit_detail_scan")}</p>
       </div>
 
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-stone-400">
         {t("deposit_expected_conf")}{" "}
         <strong>{deposit.minConfirmations}</strong>
       </p>
@@ -198,20 +198,20 @@ export default function DepositDetailPage() {
       ) : null}
 
       {showTxid ? (
-        <div className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4">
-          <label className="block text-sm font-medium text-stone-800">
+        <div className="space-y-3 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+          <label className="block text-sm font-medium text-stone-200">
             {t("deposit_txid")}
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2.5 font-mono text-sm outline-none ring-emerald-700 focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-3 py-2.5 font-mono text-sm text-stone-100 outline-none ring-emerald-500/40 placeholder:text-stone-500 focus:ring-2"
             />
           </label>
           <button
             type="button"
             disabled={txid.trim().length < 8}
             onClick={() => void submitTxid()}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
+            className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-sm shadow-black/20 disabled:opacity-40 active:scale-[0.99]"
           >
             {t("deposit_submit")}
           </button>

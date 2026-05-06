@@ -1,4 +1,3 @@
-import type { StaffScope } from "@/lib/staff-scopes";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -63,7 +62,7 @@ export const users = pgTable("users", {
    * Agent-only allowlist of admin modules. `null` = all modules (legacy).
    * Cleared when role is not `agent`.
    */
-  staffScopes: jsonb("staff_scopes").$type<StaffScope[] | null>(),
+  staffScopes: jsonb("staff_scopes").$type<string[] | null>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
