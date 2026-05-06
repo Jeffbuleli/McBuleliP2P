@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+
+export const maxDuration = 60;
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { findReferrerByCode } from "@/lib/referral-service";

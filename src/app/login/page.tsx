@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
@@ -18,22 +19,27 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        signal: AbortSignal.timeout(45_000),
-      });
+      const res = await fetchWithDeadline(
+        "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "same-origin",
+        },
+        28_000,
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(formatAuthClientError(data));
         return;
       }
       // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
-      window.location.assign("/app");
+      window.location.replace("/app");
     } catch (err) {
       const aborted =
-        err instanceof DOMException && err.name === "AbortError";
+        (err instanceof DOMException || err instanceof Error) &&
+        err.name === "AbortError";
       setError(aborted ? t("auth_timeout") : t("auth_network_error"));
     } finally {
       setLoading(false);

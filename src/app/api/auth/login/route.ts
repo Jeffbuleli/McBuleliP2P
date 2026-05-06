@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+
+/** Cold DB / bcrypt — avoid Vercel default 10s cutting login before Neon wakes. */
+export const maxDuration = 60;
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { friendlyAuthError } from "@/lib/auth-errors";

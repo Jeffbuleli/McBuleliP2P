@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 
 export function LogoutButton({ className }: { className?: string }) {
   const { t } = useI18n();
@@ -13,11 +14,12 @@ export function LogoutButton({ className }: { className?: string }) {
       onClick={async () => {
         setLoading(true);
         try {
-          await fetch("/api/auth/logout", {
-            method: "POST",
-            signal: AbortSignal.timeout(20_000),
-          });
-          window.location.assign("/");
+          await fetchWithDeadline(
+            "/api/auth/logout",
+            { method: "POST", credentials: "same-origin" },
+            20_000,
+          );
+          window.location.replace("/");
         } catch {
           setLoading(false);
         }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
@@ -51,28 +52,33 @@ function RegisterForm() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          ...(countryCode.trim() ? { countryCode: countryCode.trim().toUpperCase() } : {}),
-          ...(referralCode.trim()
-            ? { referralCode: referralCode.trim().toUpperCase() }
-            : {}),
-        }),
-        signal: AbortSignal.timeout(45_000),
-      });
+      const res = await fetchWithDeadline(
+        "/api/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            ...(countryCode.trim() ? { countryCode: countryCode.trim().toUpperCase() } : {}),
+            ...(referralCode.trim()
+              ? { referralCode: referralCode.trim().toUpperCase() }
+              : {}),
+          }),
+          credentials: "same-origin",
+        },
+        28_000,
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(formatAuthClientError(data));
         return;
       }
-      window.location.assign("/app");
+      window.location.replace("/app");
     } catch (err) {
       const aborted =
-        err instanceof DOMException && err.name === "AbortError";
+        (err instanceof DOMException || err instanceof Error) &&
+        err.name === "AbortError";
       setError(aborted ? t("auth_timeout") : t("auth_network_error"));
     } finally {
       setLoading(false);
