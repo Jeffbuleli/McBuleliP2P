@@ -8,6 +8,10 @@ import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
 import { piInit } from "@/lib/pi-browser";
 
+/** Survives React Strict Mode remounts — prevents duplicate Pi.authenticate / piBusy flicker. */
+let piAuthInFlightGlobal = false;
+let piAutoLoginScheduledGlobal = false;
+
 export default function LoginPage() {
   const { t } = useI18n();
   const [email, setEmail] = useState("");
@@ -50,7 +54,9 @@ export default function LoginPage() {
     }
   }
 
-  async function startPiAuth() {
+  async function startPiAuth(opts?: { manual?: boolean }) {
+    if (piAuthInFlightGlobal) return;
+    piAuthInFlightGlobal = true;
     setError(null);
     setPiBusy(true);
     try {
@@ -123,13 +129,19 @@ export default function LoginPage() {
             : null;
       setError(msg ? `Pi: ${msg}` : t("auth_pi_failed"));
     } finally {
+      piAuthInFlightGlobal = false;
       setPiBusy(false);
     }
   }
 
   useEffect(() => {
     if (!canAutoPi) return;
-    void startPiAuth();
+    if (piAutoLoginScheduledGlobal) return;
+    piAutoLoginScheduledGlobal = true;
+    const id = window.setTimeout(() => {
+      void startPiAuth();
+    }, 0);
+    return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -194,7 +206,7 @@ export default function LoginPage() {
         <button
           type="button"
           disabled={piBusy}
-          onClick={() => void startPiAuth()}
+          onClick={() => void startPiAuth({ manual: true })}
           className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-stone-950/40 px-4 text-sm font-semibold text-stone-50 disabled:opacity-60"
         >
           {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
