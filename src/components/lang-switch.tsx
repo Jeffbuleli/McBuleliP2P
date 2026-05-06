@@ -21,7 +21,7 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
               : "bg-emerald-800 text-white ring-2 ring-emerald-600"
             : dark
               ? "bg-stone-800/90 text-stone-200 hover:bg-stone-700"
-              : "bg-white/90 text-stone-700 hover:bg-emerald-50"
+              : "bg-stone-950/70 text-stone-200 hover:bg-stone-900/70 border border-stone-700/60"
         }`}
         aria-pressed={active}
       >
@@ -36,7 +36,7 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
       className={`flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
         dark
           ? "border border-stone-600/80 bg-stone-900/90"
-          : "border border-stone-200 bg-stone-50/95"
+          : "border border-stone-700/60 bg-stone-950/70"
       }`}
       role="group"
       aria-label={locale === "fr" ? "Langue" : "Language"}

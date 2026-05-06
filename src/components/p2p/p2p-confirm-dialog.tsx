@@ -31,15 +31,15 @@ export function P2pConfirmDialog({
       <div
         role="dialog"
         aria-modal="true"
-        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl dark:bg-stone-900"
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-[1.75rem] border border-stone-700/60 bg-stone-950/85 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl"
       >
-        <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50">{title}</h3>
-        <div className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">{body}</div>
+        <h3 className="text-lg font-bold text-stone-50">{title}</h3>
+        <div className="mt-3 text-sm leading-relaxed text-stone-300">{body}</div>
         {extra ? <div className="mt-4">{extra}</div> : null}
         <div className="mt-6 flex gap-2">
           <button
             type="button"
-            className="flex-1 rounded-xl border border-stone-300 py-3 text-sm font-semibold dark:border-stone-600"
+            className="flex-1 rounded-xl border border-stone-700/60 bg-stone-900/40 py-3 text-sm font-semibold text-stone-100 hover:bg-stone-900/55"
             onClick={onClose}
           >
             {cancelLabel}

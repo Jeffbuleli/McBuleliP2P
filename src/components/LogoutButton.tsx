@@ -26,7 +26,7 @@ export function LogoutButton({ className }: { className?: string }) {
       }}
       className={
         className ??
-        "rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 disabled:opacity-60"
+        "rounded-lg border border-stone-700/60 bg-stone-950/70 px-3 py-1.5 text-sm font-medium text-stone-100 shadow-lg shadow-black/25 backdrop-blur-md disabled:opacity-60 hover:bg-stone-900/60"
       }
     >
       {loading ? t("signing_out") : t("log_out")}
