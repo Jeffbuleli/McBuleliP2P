@@ -162,6 +162,9 @@ export const en = {
   auth_or: "Or",
   auth_google: "Continue with Google",
   auth_google_soon: "Google sign-in is coming soon — use email for now.",
+  auth_pi_continue: "Continue with Pi",
+  auth_pi_signing: "Signing in with Pi…",
+  auth_pi_failed: "Pi sign-in failed. Please try again.",
   forgot_title: "Password reset",
   forgot_body:
     "Password reset links are not enabled yet. Contact support and we’ll verify your account securely.",
@@ -1195,6 +1198,9 @@ export const fr: Messages = {
   auth_google: "Continuer avec Google",
   auth_google_soon:
     "Connexion Google bientôt — utilisez l’e-mail pour l’instant.",
+  auth_pi_continue: "Continuer avec Pi",
+  auth_pi_signing: "Connexion Pi…",
+  auth_pi_failed: "Connexion Pi impossible. Réessayez.",
   forgot_title: "Réinitialisation",
   forgot_body:
     "Les liens de réinitialisation ne sont pas encore activés. Contactez le support pour une vérification sécurisée.",

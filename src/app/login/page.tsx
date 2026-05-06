@@ -1,11 +1,69 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
+
+function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("no_window"));
+  }
+  if (window.Pi) return Promise.resolve(window.Pi);
+
+  const existing = document.querySelector<HTMLScriptElement>(
+    'script[data-pi-sdk="1"]',
+  );
+  if (existing) {
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        if (window.Pi) resolve(window.Pi);
+        else setTimeout(check, 25);
+      };
+      const t = window.setTimeout(() => reject(new Error("pi_sdk_timeout")), 8000);
+      check();
+      existing.addEventListener(
+        "load",
+        () => {
+          window.clearTimeout(t);
+          if (window.Pi) resolve(window.Pi);
+          else reject(new Error("pi_sdk_load_failed"));
+        },
+        { once: true },
+      );
+      existing.addEventListener("error", () => reject(new Error("pi_sdk_error")), {
+        once: true,
+      });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.dataset.piSdk = "1";
+    s.src = "https://sdk.minepi.com/pi-sdk.js";
+    s.async = true;
+    s.onload = () => {
+      if (window.Pi) resolve(window.Pi);
+      else reject(new Error("pi_sdk_load_failed"));
+    };
+    s.onerror = () => reject(new Error("pi_sdk_error"));
+    document.head.appendChild(s);
+  });
+}
+
+async function piInit(): Promise<NonNullable<Window["Pi"]>> {
+  const Pi = await loadPiSdk();
+  // Requirement: treat Pi.init(...) as a Promise and await it fully.
+  await Promise.resolve(
+    Pi.init({
+      version: "2.0",
+      sandbox: process.env.NEXT_PUBLIC_PI_SANDBOX === "1",
+    }),
+  );
+  return Pi;
+}
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -13,6 +71,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [piBusy, setPiBusy] = useState(false);
+
+  const canAutoPi = useMemo(() => true, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +106,60 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  async function startPiAuth() {
+    setError(null);
+    setPiBusy(true);
+    try {
+      const Pi = await piInit();
+      const authRes = (await Promise.resolve(
+        Pi.authenticate(["username"], () => {
+          // no-op: payments not used in auth
+        }),
+      )) as unknown as {
+        accessToken?: string;
+        user?: { username?: string };
+        authResult?: { accessToken?: string };
+      };
+
+      const accessToken =
+        authRes?.accessToken ??
+        authRes?.authResult?.accessToken ??
+        "";
+
+      if (!accessToken) {
+        setError(t("auth_pi_failed"));
+        return;
+      }
+
+      const res = await fetchWithDeadline(
+        "/api/auth/pi",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken }),
+          credentials: "same-origin",
+        },
+        28_000,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(formatAuthClientError(data));
+        return;
+      }
+      window.location.replace("/app");
+    } catch {
+      setError(t("auth_pi_failed"));
+    } finally {
+      setPiBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!canAutoPi) return;
+    void startPiAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AuthMarketingShell title={t("brand")} eyebrow={t("login_title")} backLabel={t("auth_back_home")}>
@@ -103,6 +218,15 @@ export default function LoginPage() {
             <span className="bg-stone-950/40 px-3">{t("auth_or")}</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          disabled={piBusy}
+          onClick={() => void startPiAuth()}
+          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-stone-950/40 px-4 text-sm font-semibold text-stone-50 disabled:opacity-60"
+        >
+          {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
+        </button>
 
         <button
           type="button"
