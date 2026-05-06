@@ -14,16 +14,33 @@ const inter = Inter({
 });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+/** Canonical URL for OG/Twitter links (WhatsApp requires absolute image URLs). */
+const metadataBaseUrl =
+  appUrl ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
+const desc =
+  "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.";
 
 export const metadata: Metadata = {
-  ...(appUrl ? { metadataBase: new URL(appUrl) } : {}),
+  ...(metadataBaseUrl ? { metadataBase: new URL(metadataBaseUrl) } : {}),
   title: {
     default: "McBuleli",
     template: "%s · McBuleli",
   },
-  description:
-    "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.",
+  description: desc,
   applicationName: "McBuleli",
+  openGraph: {
+    type: "website",
+    siteName: "McBuleli",
+    title: "McBuleli",
+    description: desc,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "McBuleli",
+    description: desc,
+  },
   icons: {
     icon: [{ url: "/brand/logo.png", type: "image/png", sizes: "any" }],
     shortcut: "/brand/logo.png",

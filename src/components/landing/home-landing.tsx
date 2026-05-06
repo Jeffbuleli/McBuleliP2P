@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { LandingMarketLazy } from "@/components/landing/landing-market-lazy";
+import { MarketPreview } from "@/components/mobile/market-preview";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
+import { fetchMarketTickers } from "@/lib/market-tickers";
 import {
   IconArrow,
   IconChartLine,
@@ -92,6 +93,7 @@ function PreviewTile({
 export async function HomeLanding() {
   const locale = await getLocale();
   const d = getDictionary(locale);
+  const tickers = await fetchMarketTickers();
 
   const steps: { label: string; n: number }[] = [
     { n: 1, label: d.landing_step_1 },
@@ -147,6 +149,10 @@ export async function HomeLanding() {
           <StatTile title={d.landing_stat_2_t} subtitle={d.landing_stat_2_d} />
           <StatTile title={d.landing_stat_3_t} subtitle={d.landing_stat_3_d} />
         </div>
+
+        <section id="market" className="mt-6 scroll-mt-28">
+          <MarketPreview locale={locale} initialTickers={tickers} />
+        </section>
       </div>
 
       <main className="relative mx-auto max-w-4xl space-y-16 px-4 pb-20">
@@ -282,13 +288,6 @@ export async function HomeLanding() {
               {d.landing_trust_3}
             </li>
           </ul>
-        </section>
-
-        <section id="market" className="scroll-mt-28">
-          <LandingMarketLazy
-            heading={d.landing_market_heading}
-            sub={d.landing_market_sub}
-          />
         </section>
       </main>
 
