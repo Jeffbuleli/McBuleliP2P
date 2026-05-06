@@ -846,6 +846,8 @@ export const en = {
     "Choose UP or DOWN for the selected expiry. One decision — stake is fixed.",
   trade_ui_active_contracts: "Pending contracts",
   trade_ui_no_pending_options: "No pending contracts.",
+  trade_ui_options_history: "Options history",
+  trade_ui_no_options_history: "No history yet.",
   trade_ui_learn_options: "Options guide",
   trade_ui_options_confirm_body:
     "Stake plus fee is debited immediately. Settlement uses the reference spot price at expiry.",
@@ -1877,6 +1879,8 @@ export const fr: Messages = {
     "Choisissez HAUT ou BAS pour l’échéance. Une seule décision — mise fixe.",
   trade_ui_active_contracts: "Contrats en attente",
   trade_ui_no_pending_options: "Aucun contrat en attente.",
+  trade_ui_options_history: "Historique Options",
+  trade_ui_no_options_history: "Pas encore d’historique.",
   trade_ui_learn_options: "Guide Options",
   trade_ui_options_confirm_body:
     "La mise + frais est débitée immédiatement. Le règlement utilise le prix spot de référence à l’échéance.",

@@ -55,6 +55,8 @@ type OrderRow = {
   entryPrice: string;
   status: string;
   outcome: string | null;
+  settlementPrice?: string | null;
+  createdAt?: string;
 };
 
 export function OptionsTradingClient() {
@@ -196,6 +198,11 @@ export function OptionsTradingClient() {
     () => orders.filter((o) => o.status === "pending"),
     [orders],
   );
+
+  const history = useMemo(() => {
+    const settled = orders.filter((o) => o.status !== "pending");
+    return settled.slice(0, 25);
+  }, [orders]);
 
   async function enableLive() {
     setEnableBusy(true);
@@ -376,18 +383,74 @@ export function OptionsTradingClient() {
             {pending.map((o) => (
               <li
                 key={o.id}
-                className="rounded-xl border border-stone-200 bg-white p-3 text-xs dark:border-stone-700 dark:bg-stone-900"
+                className="rounded-xl border border-stone-700/50 bg-stone-950/65 p-3 text-xs shadow-lg shadow-black/30 backdrop-blur-md"
               >
                 <p className="font-bold">
                   {o.symbol} · {o.direction.toUpperCase()} ·{" "}
                   {t(expiryLabelKey(o.durationSec))}
                 </p>
-                <p className="mt-1 font-mono text-stone-600 dark:text-stone-400">
+                <p className="mt-1 font-mono text-stone-400">
                   Entry {Number(o.entryPrice).toFixed(2)} · ends{" "}
                   {new Date(o.expiryAt).toLocaleTimeString()}
                 </p>
               </li>
             ))}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-bold">{t("trade_ui_options_history")}</h3>
+        {history.length === 0 ? (
+          <p className="text-sm text-stone-400">{t("trade_ui_no_options_history")}</p>
+        ) : (
+          <ul className="space-y-2">
+            {history.map((o) => {
+              const out = (o.outcome ?? "").toLowerCase();
+              const won = out === "won";
+              const lost = out === "lost";
+              return (
+                <li
+                  key={o.id}
+                  className="rounded-xl border border-stone-700/50 bg-stone-950/65 p-3 text-xs shadow-lg shadow-black/30 backdrop-blur-md"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-bold text-stone-50">
+                      {o.symbol} · {String(o.direction).toUpperCase()}
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        won
+                          ? "border border-emerald-700/35 bg-emerald-950/40 text-emerald-200"
+                          : lost
+                            ? "border border-rose-700/35 bg-rose-950/35 text-rose-100"
+                            : "border border-stone-700/50 bg-stone-900/50 text-stone-200"
+                      }`}
+                    >
+                      {o.status === "settled"
+                        ? won
+                          ? "WON"
+                          : lost
+                            ? "LOST"
+                            : "SETTLED"
+                        : o.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 font-mono text-stone-400">
+                    Stake {Number(o.stakeUsdt).toFixed(2)} · Entry{" "}
+                    {Number(o.entryPrice).toFixed(2)}
+                    {o.settlementPrice
+                      ? ` · Close ${Number(o.settlementPrice).toFixed(2)}`
+                      : ""}
+                  </p>
+                  <p className="mt-0.5 text-stone-500">
+                    {o.createdAt
+                      ? new Date(o.createdAt).toLocaleString()
+                      : new Date(o.expiryAt).toLocaleString()}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -403,18 +466,18 @@ export function OptionsTradingClient() {
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 dark:bg-stone-900">
-            <h4 className="text-lg font-bold">{t("trade_ui_confirm_title")}</h4>
-            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
+          <div className="w-full max-w-md rounded-[1.75rem] border border-stone-700/60 bg-stone-950/85 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl">
+            <h4 className="text-lg font-bold text-stone-50">{t("trade_ui_confirm_title")}</h4>
+            <p className="mt-2 text-sm text-stone-300">
               {t("trade_ui_options_confirm_body")}
             </p>
-            <p className="mt-3 rounded-xl bg-stone-50 p-3 text-xs dark:bg-stone-950">
+            <p className="mt-3 rounded-xl border border-stone-700/60 bg-stone-900/40 p-3 text-xs text-stone-200">
               {symbol} · {direction.toUpperCase()} · {stake} USDT + ~{fee.toFixed(4)} fee
             </p>
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                className="flex-1 rounded-xl border py-3 text-sm font-semibold"
+                className="flex-1 rounded-xl border border-stone-700/60 bg-stone-900/40 py-3 text-sm font-semibold text-stone-100 hover:bg-stone-900/55"
                 onClick={() => setConfirmOpen(false)}
               >
                 {t("trade_ui_cancel")}
