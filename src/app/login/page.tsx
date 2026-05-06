@@ -88,10 +88,13 @@ export default function LoginPage() {
       const accessToken =
         authRes?.accessToken ??
         authRes?.authResult?.accessToken ??
+        ((authRes as unknown as { access_token?: unknown })?.access_token as
+          | string
+          | undefined) ??
         "";
 
       if (!accessToken) {
-        setError(t("auth_pi_failed"));
+        setError("Pi: missing access token");
         return;
       }
 
@@ -111,8 +114,14 @@ export default function LoginPage() {
         return;
       }
       window.location.replace("/app");
-    } catch {
-      setError(t("auth_pi_failed"));
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "string"
+            ? e
+            : null;
+      setError(msg ? `Pi: ${msg}` : t("auth_pi_failed"));
     } finally {
       setPiBusy(false);
     }

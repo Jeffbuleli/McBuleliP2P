@@ -33,6 +33,17 @@ export async function POST(req: Request) {
   }).catch(() => null);
 
   if (!meRes || !meRes.ok) {
+    const status = meRes?.status ?? 0;
+    let detail: string | null = null;
+    try {
+      detail = meRes ? await meRes.text() : null;
+    } catch {
+      detail = null;
+    }
+    console.error("[auth/pi] /v2/me failed", {
+      status,
+      detail: detail?.slice(0, 300) ?? null,
+    });
     return NextResponse.json({ message: "Invalid Pi access token." }, { status: 401 });
   }
 
