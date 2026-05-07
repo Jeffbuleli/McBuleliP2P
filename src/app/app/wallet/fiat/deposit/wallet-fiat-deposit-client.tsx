@@ -22,6 +22,8 @@ export default function WalletFiatDepositClient() {
   const [provider, setProvider] = useState("");
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [providersLoading, setProvidersLoading] = useState(false);
+  const [providersErr, setProvidersErr] = useState<string | null>(null);
+  const [providerManual, setProviderManual] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [okId, setOkId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,19 +41,22 @@ export default function WalletFiatDepositClient() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setProvidersErr(null);
       setProvidersLoading(true);
       try {
         const url = `/api/config/pawapay/active-conf?country=COD&operationType=DEPOSIT&currency=${asset}`;
         const res = await fetch(url);
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
-          if (!cancelled) setProviders([]);
+          if (!cancelled) {
+            setProviders([]);
+            setProvidersErr(typeof data?.error === "string" ? data.error : "Provider list unavailable");
+          }
           return;
         }
         const cod = (data.countries as Array<any> | undefined)?.find((c) => c?.country === "COD");
         const list = (cod?.providers as Array<any> | undefined) ?? [];
         const opts: ProviderOption[] = list
-          .filter((p) => Array.isArray(p?.currencies) && p.currencies.length > 0)
           .map((p) => ({
             provider: String(p.provider),
             label: String(p.displayName ?? p.provider),
@@ -79,10 +84,17 @@ export default function WalletFiatDepositClient() {
     setOkId(null);
     setLoading(true);
     try {
+      const providerFinal =
+        providers.length > 0 ? provider : providerManual.trim();
       const res = await fetch("/api/wallet/fiat/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asset, grossAmount: gross, phoneNumber, provider }),
+        body: JSON.stringify({
+          asset,
+          grossAmount: gross,
+          phoneNumber,
+          provider: providerFinal,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
@@ -119,20 +131,29 @@ export default function WalletFiatDepositClient() {
       </FieldLabel>
 
       <FieldLabel label={t("wallet_mobile_money_provider")}>
-        <select
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-          disabled={providersLoading || providers.length === 0}
-          className={`${inputClass} disabled:opacity-60`}
-        >
-          {providers.length === 0 ? <option value="">{providersLoading ? "…" : "—"}</option> : null}
-          {providers.map((p) => (
-            <option key={p.provider} value={p.provider}>
-              {p.label}
-            </option>
-          ))}
-        </select>
+        {providers.length > 0 ? (
+          <select
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+            disabled={providersLoading}
+            className={`${inputClass} disabled:opacity-60`}
+          >
+            {providers.map((p) => (
+              <option key={p.provider} value={p.provider}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            value={providerManual}
+            onChange={(e) => setProviderManual(e.target.value)}
+            className={inputClass}
+            placeholder="MTN_MOMO_COD, AIRTEL_MONEY_COD, ..."
+          />
+        )}
       </FieldLabel>
+      {providersErr ? <ErrorBanner>{providersErr}</ErrorBanner> : null}
 
         {summary ? (
           <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/70 p-4 text-sm dark:border-emerald-800/30 dark:bg-emerald-950/30">
@@ -163,7 +184,12 @@ export default function WalletFiatDepositClient() {
 
         <button
           type="button"
-          disabled={loading || !summary || !phoneNumber.trim() || !provider.trim()}
+          disabled={
+            loading ||
+            !summary ||
+            !phoneNumber.trim() ||
+            (providers.length > 0 ? !provider.trim() : !providerManual.trim())
+          }
           onClick={() => void submit()}
           className={primaryBtnClass}
         >

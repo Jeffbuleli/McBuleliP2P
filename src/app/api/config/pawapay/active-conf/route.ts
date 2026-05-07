@@ -42,8 +42,12 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ ok: true, companyName: conf.companyName ?? null, countries });
-  } catch {
-    return NextResponse.json({ ok: false, error: "pawapay_active_conf_failed" }, { status: 502 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : null;
+    return NextResponse.json(
+      { ok: false, error: "pawapay_active_conf_failed", detail: msg },
+      { status: 502 },
+    );
   }
 }
 

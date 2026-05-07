@@ -50,8 +50,23 @@ export function getPawapayApiToken(): string {
 }
 
 export function getPawapayBaseUrl(): string {
+  const override = process.env.PAWAPAY_API_BASE_URL?.trim();
+  if (override) {
+    return override.replace(/\/+$/, "");
+  }
   const env = (process.env.PAWAPAY_ENV ?? "sandbox").trim().toLowerCase();
   return env === "prod" || env === "production"
     ? "https://api.pawapay.io"
     : "https://api.sandbox.pawapay.io";
+}
+
+/**
+ * Optional: some teams store a shared secret for callbacks.
+ *
+ * Note: PawaPay v2 signed callbacks are verified using pawaPay public keys (RFC-9421),
+ * not a shared secret. This value is currently not used unless you build custom validation.
+ */
+export function getPawapayCallbackSecret(): string | null {
+  const s = process.env.PAWAPAY_CALLBACK_SECRET?.trim();
+  return s ? s : null;
 }
