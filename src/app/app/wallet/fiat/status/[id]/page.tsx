@@ -25,6 +25,7 @@ type Tx = {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
+  meta?: Record<string, unknown> | null;
 };
 
 export default function WalletFiatTxStatusPage() {
@@ -94,11 +95,11 @@ export default function WalletFiatTxStatusPage() {
 
       <HelperText>
         {tx?.status === "PROCESSING" || tx?.status === "INITIATED"
-          ? "En attente de confirmation. Si tu as déjà confirmé sur ton téléphone, ceci se mettra à jour automatiquement."
+          ? `${t("wallet_fiat_status_pending_title")}. ${t("wallet_fiat_status_pending_body")}`
           : tx?.status === "COMPLETED"
-            ? "Terminé."
+            ? `${t("wallet_fiat_status_completed")}.`
             : tx?.status === "FAILED"
-              ? "Échoué."
+              ? `${t("wallet_fiat_status_failed")}.`
               : "…"}
       </HelperText>
 
@@ -112,22 +113,26 @@ export default function WalletFiatTxStatusPage() {
       {tx ? (
         <div className="rounded-2xl border border-stone-900/10 bg-white/60 p-4 text-sm text-stone-800 dark:border-stone-50/10 dark:bg-stone-950/20 dark:text-stone-200">
           <p>
-            <strong>Status:</strong> {tx.status}
+            <strong>{t("wallet_fiat_status_status")}:</strong> {tx.status}
           </p>
           <p className="mt-1">
-            <strong>Type:</strong> {tx.kind}
+            <strong>{t("wallet_fiat_status_type")}:</strong> {tx.kind}
           </p>
           <p className="mt-1">
-            <strong>Amount:</strong> {tx.amount} {tx.currency}
+            <strong>{t("wallet_fiat_status_amount")}:</strong> {tx.amount} {tx.currency}
           </p>
           {tx.provider ? (
             <p className="mt-1">
-              <strong>Provider:</strong> {tx.provider}
+              <strong>{t("wallet_fiat_status_provider")}:</strong>{" "}
+              {typeof tx.meta?.providerLabel === "string" && tx.meta.providerLabel.trim()
+                ? tx.meta.providerLabel
+                : tx.provider}
             </p>
           ) : null}
           {tx.failureMessage || tx.failureCode ? (
             <p className="mt-2">
-              <strong>Reason:</strong> {[tx.failureCode, tx.failureMessage].filter(Boolean).join(": ")}
+              <strong>{t("wallet_fiat_status_reason")}:</strong>{" "}
+              {[tx.failureCode, tx.failureMessage].filter(Boolean).join(": ")}
             </p>
           ) : null}
         </div>
@@ -142,10 +147,10 @@ export default function WalletFiatTxStatusPage() {
           }}
           disabled={!id}
         >
-          {polling ? "Refreshing…" : "Refresh"}
+          {polling ? t("wallet_fiat_status_refreshing") : t("wallet_fiat_status_refresh")}
         </button>
         <Link className={primaryBtnClass} href="/app/wallet/history">
-          History
+          {t("wallet_fiat_status_history")}
         </Link>
       </div>
     </FormPageShell>

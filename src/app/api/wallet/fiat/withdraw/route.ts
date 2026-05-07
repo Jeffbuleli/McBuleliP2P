@@ -19,6 +19,7 @@ const bodyZ = z.object({
   grossAmount: z.string().min(1),
   phoneNumber: z.string().min(6),
   provider: z.string().min(2),
+  providerLabel: z.string().min(1).optional(),
 });
 
 async function refundIfNotYet(args: {
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
+  const providerLabel = parsed.data.providerLabel?.trim() || null;
   const r = await executeFiatWithdraw({
     userId,
     asset: parsed.data.asset,
@@ -105,7 +107,7 @@ export async function POST(req: Request) {
           phoneNumber: phone,
           provider: parsed.data.provider.trim(),
           batchId: r.batchId,
-          meta: { grossAmount: parsed.data.grossAmount },
+          meta: { grossAmount: parsed.data.grossAmount, providerLabel },
         })
         .onConflictDoNothing();
     } catch {

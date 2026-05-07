@@ -31,6 +31,13 @@ export default function WalletFiatDepositClient() {
   const [okId, setOkId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const providerLabel = useMemo(() => {
+    if (providers.length > 0) {
+      return providers.find((p) => p.provider === provider)?.label ?? null;
+    }
+    return providerManual.trim() ? providerManual.trim() : null;
+  }, [providers, provider, providerManual]);
+
   const pct = Math.round(FIAT_FEE_RATE * 100);
   const summary = useMemo(() => {
     const g = Number(gross);
@@ -98,6 +105,7 @@ export default function WalletFiatDepositClient() {
           grossAmount: gross,
           phoneNumber,
           provider: providerFinal,
+          providerLabel,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -192,7 +200,7 @@ export default function WalletFiatDepositClient() {
 
       {okId ? (
         <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">
-          Payment request sent. Please confirm on your phone. We will credit your wallet once the payment is completed.
+          {t("wallet_fiat_deposit_request_sent")}
         </p>
       ) : null}
 

@@ -29,6 +29,12 @@ export default function WalletFiatWithdrawPage() {
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providersErr, setProvidersErr] = useState<string | null>(null);
   const [providerManual, setProviderManual] = useState("");
+  const providerLabel = useMemo(() => {
+    if (providers.length > 0) {
+      return providers.find((p) => p.provider === provider)?.label ?? null;
+    }
+    return providerManual.trim() ? providerManual.trim() : null;
+  }, [providers, provider, providerManual]);
   const [err, setErr] = useState<string | null>(null);
   const [errDetail, setErrDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -98,6 +104,7 @@ export default function WalletFiatWithdrawPage() {
           grossAmount: gross,
           phoneNumber,
           provider: providerFinal,
+          providerLabel,
         }),
       });
       const data = await res.json().catch(() => ({}));

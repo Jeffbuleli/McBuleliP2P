@@ -12,6 +12,7 @@ const bodyZ = z.object({
   grossAmount: z.string().min(1),
   phoneNumber: z.string().min(6),
   provider: z.string().min(2),
+  providerLabel: z.string().min(1).optional(),
 });
 
 export async function POST(req: Request) {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const { asset, grossAmount, phoneNumber, provider } = parsed.data;
+  const { asset, grossAmount, phoneNumber, provider, providerLabel } = parsed.data;
   const gross = Number(grossAmount);
   if (!Number.isFinite(gross) || gross <= 0) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
             provider: provider.trim(),
             failureCode: code,
             failureMessage: msg,
-            meta: { initiationStatus: r.status },
+            meta: { initiationStatus: r.status, providerLabel: providerLabel ?? null },
           })
           .onConflictDoNothing();
       } catch {
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
         amount: grossAmount,
         phoneNumber: phone,
         provider: provider.trim(),
-        meta: { initiationStatus: r.status },
+        meta: { initiationStatus: r.status, providerLabel: providerLabel ?? null },
       })
       .onConflictDoNothing();
 
