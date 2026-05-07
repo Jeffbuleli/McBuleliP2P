@@ -544,6 +544,15 @@ export async function openFuturesPosition(args: {
     if (!positionId) return { ok: false, message: "trade_open_failed" };
     return { ok: true, positionId };
   } catch (e) {
+    console.error("[trade/futures/open]", {
+      userId: args.userId,
+      mode: args.mode,
+      symbol: args.symbol,
+      side: args.side,
+      leverage: args.leverage,
+      marginUsdt: args.marginUsdt,
+      error: e instanceof Error ? e.message : String(e),
+    });
     const msg = e instanceof Error ? e.message : "";
     if (msg === "insufficient") return { ok: false, message: "trade_insufficient_usdt" };
     if (msg === "live_disabled")

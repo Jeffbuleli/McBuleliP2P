@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
 import { activityNetworkLabel } from "@/lib/activity-network-label";
 import { useI18n } from "@/components/i18n-provider";
+import { parsePiTxidOrUrl, piExplorerUrlFromTxid } from "@/lib/pi-explorer";
 
 type W = {
   id: string;
@@ -72,11 +73,15 @@ export default function AdminWithdrawalDetailPage() {
 
   async function complete() {
     setMsg(null);
+    const parsedPi =
+      w?.asset === "PI" && txid.trim()
+        ? parsePiTxidOrUrl(txid.trim())
+        : null;
     const res = await fetch(`/api/admin/withdrawals/${id}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        txid,
+        txid: parsedPi?.txid ?? txid,
         agentNote: agentNote || undefined,
       }),
     });
@@ -125,6 +130,10 @@ export default function AdminWithdrawalDetailPage() {
     viewer &&
     (viewer.role === "super_admin" || w.assignedToUserId === viewer.id);
   const showActions = processing && canAct;
+  const explorerUrl =
+    w.asset === "PI" && (w.txid || txid.trim())
+      ? piExplorerUrlFromTxid((parsePiTxidOrUrl(w.txid ?? txid)?.txid ?? w.txid ?? txid).trim())
+      : null;
 
   return (
     <div className="space-y-6 pb-12">
@@ -161,7 +170,19 @@ export default function AdminWithdrawalDetailPage() {
           )}
         </p>
         {w.txid ? (
-          <p className="mt-2 font-mono text-sm text-stone-400">TXID: {w.txid}</p>
+          <div className="mt-2">
+            <p className="font-mono text-sm text-stone-400">TXID: {w.txid}</p>
+            {explorerUrl ? (
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-sm font-semibold text-emerald-300 underline"
+              >
+                Open Explorer
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
@@ -195,6 +216,24 @@ export default function AdminWithdrawalDetailPage() {
               className="mt-1 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 font-mono text-sm text-white"
             />
           </label>
+          {w.asset === "PI" && txid.trim() ? (
+            (() => {
+              const p = parsePiTxidOrUrl(txid.trim());
+              const url = p?.url ?? null;
+              return url ? (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-sm font-semibold text-emerald-300 underline"
+                >
+                  Open Explorer
+                </a>
+              ) : (
+                <p className="text-xs text-rose-200">Invalid Pi TXID/URL.</p>
+              );
+            })()
+          ) : null}
           <label className="block text-sm text-stone-300">
             {t("admin_note")}
             <textarea
