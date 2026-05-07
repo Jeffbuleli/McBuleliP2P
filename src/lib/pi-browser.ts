@@ -97,12 +97,36 @@ export function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
   });
 }
 
+/**
+ * Pi SDK `sandbox` flag must match the environment where the page runs.
+ * Pi Developer / Pi Browser opens many apps at `sandbox.minepi.com/...` — if
+ * we init with `sandbox: false` there, `Pi.authenticate` often hangs or fails.
+ *
+ * Explicit env wins: `NEXT_PUBLIC_PI_SANDBOX=0` forces production init even on
+ * sandbox host (rare); `1` forces sandbox everywhere (e.g. prod domain + testnet).
+ */
+export function resolvePiSdkSandbox(): boolean {
+  if (process.env.NEXT_PUBLIC_PI_SANDBOX === "0") {
+    return false;
+  }
+  if (process.env.NEXT_PUBLIC_PI_SANDBOX === "1") {
+    return true;
+  }
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (h === "sandbox.minepi.com") {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function piInit(): Promise<NonNullable<Window["Pi"]>> {
   const Pi = await loadPiSdk();
   await Promise.resolve(
     Pi.init({
       version: "2.0",
-      sandbox: process.env.NEXT_PUBLIC_PI_SANDBOX === "1",
+      sandbox: resolvePiSdkSandbox(),
     }),
   );
   return Pi;
