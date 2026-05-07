@@ -213,6 +213,14 @@ export async function verifyDepositTx(
         : getMinDeposit(deposit.asset);
     return verifyBinanceDeposit(deposit, txidNorm, min, tol);
   }
+  if (deposit.provider === "manual" && deposit.asset.toUpperCase() === "PI") {
+    return {
+      ok: false,
+      failed: false,
+      reason:
+        "TXID received. Pending manual review by our team on the public Pi explorer.",
+    };
+  }
   if (deposit.provider === "okx" && deposit.asset.toUpperCase() === "PI") {
     const minPi = getMinDeposit(deposit.asset);
     return verifyOkxPiDeposit(deposit, txidNorm, minPi, tol);

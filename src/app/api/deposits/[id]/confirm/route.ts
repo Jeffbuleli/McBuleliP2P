@@ -114,6 +114,24 @@ export async function POST(
     });
   }
 
+  // For manual PI deposits we accept TXID and keep it pending for staff review.
+  if (d.provider === "manual" && d.asset.toUpperCase() === "PI") {
+    await db
+      .update(deposits)
+      .set({
+        status: DepositStatus.PENDING_VALIDATION,
+        txid: txidNorm,
+        failureReason: result.reason,
+      })
+      .where(eq(deposits.id, id));
+    const [pending] = await db
+      .select()
+      .from(deposits)
+      .where(eq(deposits.id, id))
+      .limit(1);
+    return NextResponse.json({ status: "pending", message: result.reason, deposit: pending });
+  }
+
   await db
     .update(deposits)
     .set({

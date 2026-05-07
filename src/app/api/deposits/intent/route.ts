@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { getDb, deposits } from "@/db";
-import { hasBinanceKeys, hasOkxKeys } from "@/lib/env";
+import { hasBinanceKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { depositIntentSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
 import { binanceDepositAddress } from "@/lib/binance";
-import { okxDepositAddress } from "@/lib/okx";
 import { DepositStatus } from "@/lib/status";
-import { getPiOkxChain, PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
+import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { getPlatformSetting, PlatformSettingKey } from "@/lib/platform-settings";
 
 export async function POST(req: Request) {
@@ -66,16 +65,6 @@ export async function POST(req: Request) {
 
   if (body.asset === "PI") {
     const manual = await getPlatformSetting(PlatformSettingKey.PI_RECEIVE_ADDRESS_REAL);
-    const chain = getPiOkxChain();
-    const address = manual?.trim()
-      ? manual.trim()
-      : (() => {
-          if (!hasOkxKeys()) {
-            return null;
-          }
-          return null;
-        })();
-
     let addressShown: string | null = null;
     let memoShown: string | null = null;
     let networkCex: string | null = null;
@@ -85,26 +74,20 @@ export async function POST(req: Request) {
       memoShown = null;
       networkCex = "manual";
     } else {
-      if (!hasOkxKeys()) {
-        return NextResponse.json(
-          {
-            message:
-              "Pi deposits require either a manual Pi receiving address (super-admin) or OKX_API_KEY/SECRET/PASSPHRASE in .env.",
-          },
-          { status: 503 },
-        );
-      }
-      const r = await okxDepositAddress({ ccy: "PI", chain });
-      addressShown = r.address;
-      memoShown = r.tag;
-      networkCex = chain;
+      return NextResponse.json(
+        {
+          message:
+            "Pi deposits require a manual Pi receiving address (super-admin).",
+        },
+        { status: 503 },
+      );
     }
     const db = getDb();
     const [row] = await db
       .insert(deposits)
       .values({
         userId,
-        provider: manual?.trim() ? "manual" : "okx",
+        provider: "manual",
         asset: "PI",
         networkCanonical: PI_MAIN_NETWORK_ID,
         networkCex: networkCex!,
