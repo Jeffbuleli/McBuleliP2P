@@ -30,7 +30,14 @@ const depositCallbackZ = z.object({
   country: z.string(),
   payer: z.unknown(),
   created: z.string(),
-  metadata: z.record(z.string(), z.string()).optional(),
+  metadata: z
+    .union([
+      z.record(z.string(), z.string()),
+      // PawaPay v2 TransactionMetadataRequest is an array of objects,
+      // e.g. [{ userId: "..." }, { batchId: "..." }]
+      z.array(z.record(z.string(), z.union([z.string(), z.boolean()]))),
+    ])
+    .optional(),
 });
 
 const payoutCallbackZ = z.object({
@@ -41,7 +48,12 @@ const payoutCallbackZ = z.object({
   country: z.string(),
   recipient: z.unknown(),
   created: z.string(),
-  metadata: z.record(z.string(), z.string()).optional(),
+  metadata: z
+    .union([
+      z.record(z.string(), z.string()),
+      z.array(z.record(z.string(), z.union([z.string(), z.boolean()]))),
+    ])
+    .optional(),
 });
 
 const refundCallbackZ = z.object({
@@ -52,8 +64,39 @@ const refundCallbackZ = z.object({
   country: z.string(),
   recipient: z.unknown(),
   created: z.string(),
-  metadata: z.record(z.string(), z.string()).optional(),
+  metadata: z
+    .union([
+      z.record(z.string(), z.string()),
+      z.array(z.record(z.string(), z.union([z.string(), z.boolean()]))),
+    ])
+    .optional(),
 });
+
+function metadataToRecord(
+  metadata: unknown,
+): Record<string, string> | undefined {
+  if (!metadata) return undefined;
+  if (typeof metadata === "object" && !Array.isArray(metadata)) {
+    const rec = metadata as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(rec)) {
+      if (typeof v === "string") out[k] = v;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+  if (Array.isArray(metadata)) {
+    const out: Record<string, string> = {};
+    for (const item of metadata) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      for (const [k, v] of Object.entries(item as Record<string, unknown>)) {
+        if (k === "isPII") continue;
+        if (typeof v === "string") out[k] = v;
+      }
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+  return undefined;
+}
 
 export async function handlePawapayWebhookJson(
   raw: unknown,
@@ -126,6 +169,7 @@ async function handleDeposit(
   const dedupKey = `deposit:${cb.depositId}:${cb.status}`;
   const currency = cb.currency.toUpperCase();
   const rawBody = JSON.stringify(cb);
+  const meta = metadataToRecord((cb as unknown as { metadata?: unknown }).metadata);
 
   if (!allowedFiat(cb.currency)) {
     await insertLedger({
@@ -157,7 +201,7 @@ async function handleDeposit(
     return { ok: true };
   }
 
-  const userIdRaw = cb.metadata?.userId?.trim();
+  const userIdRaw = meta?.userId?.trim();
   if (!userIdRaw || !UUID_RE.test(userIdRaw)) {
     await insertLedger({
       dedupKey,
@@ -261,6 +305,7 @@ async function handlePayout(
   const dedupKey = `payout:${cb.payoutId}:${cb.status}`;
   const currency = cb.currency.toUpperCase();
   const rawBody = JSON.stringify(cb);
+  const meta = metadataToRecord((cb as unknown as { metadata?: unknown }).metadata);
 
   if (!allowedFiat(cb.currency)) {
     await insertLedger({
@@ -291,16 +336,14 @@ async function handlePayout(
     status: cb.status,
     currency,
     amount: cb.amount,
-    userId: cb.metadata?.userId && UUID_RE.test(cb.metadata.userId)
-      ? cb.metadata.userId
-      : null,
+    userId: meta?.userId && UUID_RE.test(meta.userId) ? meta.userId : null,
     effect,
     rawBody,
   });
 
   if (cb.status === "FAILED") {
-    const userIdRaw = cb.metadata?.userId?.trim();
-    const batchId = cb.metadata?.batchId?.trim();
+    const userIdRaw = meta?.userId?.trim();
+    const batchId = meta?.batchId?.trim();
     if (userIdRaw && UUID_RE.test(userIdRaw) && batchId && UUID_RE.test(batchId)) {
       const pocket = currency === "USD" ? "USD" : "CDF";
       const net = Number(cb.amount);
@@ -363,6 +406,7 @@ async function handleRefund(
   const dedupKey = `refund:${cb.refundId}:${cb.status}`;
   const currency = cb.currency.toUpperCase();
   const rawBody = JSON.stringify(cb);
+  const meta = metadataToRecord((cb as unknown as { metadata?: unknown }).metadata);
 
   if (!allowedFiat(cb.currency)) {
     await insertLedger({
@@ -379,8 +423,7 @@ async function handleRefund(
     return { ok: true };
   }
 
-  const userId =
-    cb.metadata?.userId && UUID_RE.test(cb.metadata.userId) ? cb.metadata.userId : null;
+  const userId = meta?.userId && UUID_RE.test(meta.userId) ? meta.userId : null;
 
   await insertLedger({
     dedupKey,
