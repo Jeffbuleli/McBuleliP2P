@@ -32,7 +32,7 @@ export default function DepositWizardPage() {
         const res = await fetch("/api/config/deposit-routes");
         const data = await res.json();
         setEnabledUsdt(Boolean(data.usdtBinance ?? data.enabled));
-        setEnabledPi(Boolean(data.piManual || data.piOkx));
+        setEnabledPi(Boolean(data.piManual));
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);

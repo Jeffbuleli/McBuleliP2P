@@ -21,7 +21,6 @@ export const loginSchema = registerSchema;
 const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
 
 const cexBinance: z.ZodType<Extract<CexId, "binance">> = z.literal("binance");
-const cexOkx: z.ZodType<Extract<CexId, "okx">> = z.literal("okx");
 const cexPiManual = z.literal("manual");
 
 export const depositIntentSchema = z.discriminatedUnion("asset", [
@@ -31,7 +30,7 @@ export const depositIntentSchema = z.discriminatedUnion("asset", [
     network: networkEnum,
   }),
   z.object({
-    provider: z.union([cexOkx, cexPiManual]),
+    provider: cexPiManual,
     asset: z.literal("PI"),
     network: z.literal("PI_MAIN"),
   }),
