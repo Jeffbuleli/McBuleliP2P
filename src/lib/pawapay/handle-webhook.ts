@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getDb, pawapayWebhookEvents, users } from "@/db";
+import { walletLedgerEntries } from "@/db/schema";
 import type {
   PawapayDepositCallback,
   PawapayPayoutCallback,
@@ -348,11 +349,26 @@ async function handlePayout(
       const pocket = currency === "USD" ? "USD" : "CDF";
       const net = Number(cb.amount);
       if (Number.isFinite(net) && net > 0) {
-        const netStr = fmtWalletAmount(net);
-        const feeUsdEq =
-          pocket === "USD"
-            ? "0"
-            : fmtWalletAmount(0);
+        // Refund the original gross (not just net) if possible, since the payout failed.
+        // We can recover gross from the user's ledger line created at initiation.
+        const grossFromLedger = await (async () => {
+          const db = getDb();
+          const [row] = await db
+            .select({ amount: walletLedgerEntries.amount })
+            .from(walletLedgerEntries)
+            .where(
+              sql`${walletLedgerEntries.batchId} = ${batchId}::uuid and ${walletLedgerEntries.userId} = ${userIdRaw}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw'`,
+            )
+            .limit(1);
+          if (!row) return null;
+          const a = Number(row.amount);
+          if (!Number.isFinite(a) || a === 0) return null;
+          return Math.abs(a);
+        })();
+
+        const refundAmount = grossFromLedger ?? net;
+        const refundStr = fmtWalletAmount(refundAmount);
+        const feeUsdEq = "0";
         const refundDedup = `payout_refund:${cb.payoutId}:${cb.status}`;
         const db = getDb();
         try {
@@ -374,18 +390,29 @@ async function handlePayout(
               .returning({ id: pawapayWebhookEvents.id });
             if (!inserted) return;
 
-            await creditUserAsset(tx, userIdRaw, pocket, netStr);
+            // Avoid double-refunds if initiation already refunded.
+            const existing = await tx
+              .select({ id: walletLedgerEntries.id })
+              .from(walletLedgerEntries)
+              .where(
+                sql`${walletLedgerEntries.batchId} = ${batchId}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw_refund' and (${walletLedgerEntries.meta} ->> 'pawapayPayoutId') = ${cb.payoutId}`,
+              )
+              .limit(1);
+            if (existing.length > 0) return;
+
+            await creditUserAsset(tx, userIdRaw, pocket, refundStr);
             await insertWalletLedgerLines(tx, [
               {
                 batchId,
                 userId: userIdRaw,
                 entryType: "fiat_withdraw_refund",
                 asset: pocket,
-                amount: netStr,
+                amount: refundStr,
                 feeUsdEquivalent: feeUsdEq,
                 meta: {
                   pawapayPayoutId: cb.payoutId,
                   reason: "payout_failed",
+                  refunded: grossFromLedger ? "gross" : "net_fallback",
                 },
               },
             ]);
