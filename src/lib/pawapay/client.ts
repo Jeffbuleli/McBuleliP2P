@@ -70,6 +70,17 @@ export type PawapayActiveConfResponse = {
   countries?: PawapayActiveConfCountry[];
 };
 
+type PawapayMetadataItem = Record<string, string> & { isPII?: boolean };
+
+function toPawapayMetadata(metadata?: Record<string, string>): PawapayMetadataItem[] | undefined {
+  if (!metadata) return undefined;
+  const entries = Object.entries(metadata).filter(([k, v]) => k.trim() && v.trim());
+  if (entries.length === 0) return undefined;
+  // PawaPay v2 expects metadata as an array of objects (see TransactionMetadataRequest).
+  // Example: [{ orderId: "ORD-123" }, { customerId: "x", isPII: true }]
+  return entries.map(([k, v]) => ({ [k]: v } as PawapayMetadataItem));
+}
+
 export async function pawapayActiveConfiguration(args?: {
   country?: string;
   operationType?: "DEPOSIT" | "PAYOUT" | "REFUND";
@@ -108,7 +119,7 @@ export async function pawapayInitiateDeposit(args: {
     amount: args.amount,
     currency: args.currency,
     payer: args.payer,
-    metadata: args.metadata,
+    metadata: toPawapayMetadata(args.metadata),
     customerMessage: args.customerMessage,
     clientReferenceId: args.clientReferenceId,
   });
@@ -128,7 +139,7 @@ export async function pawapayInitiatePayout(args: {
     amount: args.amount,
     currency: args.currency,
     recipient: args.recipient,
-    metadata: args.metadata,
+    metadata: toPawapayMetadata(args.metadata),
     customerMessage: args.customerMessage,
     clientReferenceId: args.clientReferenceId,
   });
