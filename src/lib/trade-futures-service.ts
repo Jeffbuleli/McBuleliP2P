@@ -444,7 +444,8 @@ export async function openFuturesPosition(args: {
     const positionId = await db.transaction(async (tx) => {
       // Serialize opens per user to avoid race conditions (open count + debit + insert).
       await tx.execute(
-        sql`select pg_advisory_xact_lock((('x' || substr(md5(${userId}), 1, 16))::bit(64))::bigint))`,
+        // md5() doesn't accept uuid directly; use hashtext on userId::text.
+        sql`select pg_advisory_xact_lock(hashtext(${userId}::text))`,
       );
 
       const [u] = await tx
