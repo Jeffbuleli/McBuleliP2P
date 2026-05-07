@@ -178,8 +178,19 @@ export default function DepositDetailPage() {
       ) : null}
 
       <div className="flex flex-col items-center gap-2 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
-        <QRCode value={deposit.addressShown} size={200} />
-        <p className="text-xs text-stone-400">{t("deposit_detail_scan")}</p>
+        <div className="relative">
+          <QRCode value={deposit.addressShown} size={220} />
+          {isPiMain ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="rounded-2xl bg-white p-2 shadow">
+                <img src="/assets/crypto/pi.png" alt="Pi" className="h-10 w-10" />
+              </div>
+            </div>
+          ) : null}
+        </div>
+        <p className="text-xs text-stone-400">
+          {isPiMain ? t("asset_pi_network") : t("deposit_detail_scan")}
+        </p>
       </div>
 
       <p className="text-sm text-stone-400">
