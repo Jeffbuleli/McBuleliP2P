@@ -1,5 +1,54 @@
 /** Browser-only Pi SDK helpers (load script + init). Import only from client components. */
 
+import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+
+/** Pi payment object shape from the SDK (identifier is the platform payment id). */
+export function paymentIdFromPiSdk(payment: unknown): string | null {
+  if (!payment || typeof payment !== "object") return null;
+  const id = (payment as { identifier?: unknown }).identifier;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
+/**
+ * `Pi.createPayment` requires the `payments` scope. That scope is granted by
+ * `Pi.authenticate(["username", "payments"], ...)`. Email/password sessions do
+ * not grant it — call this before `createPayment` (e.g. on the wallet page).
+ */
+export async function piAuthenticateForPayments(
+  Pi: NonNullable<Window["Pi"]>,
+): Promise<void> {
+  await Promise.resolve(
+    Pi.authenticate(
+      ["username", "payments"],
+      async (payment: unknown) => {
+        const pid = paymentIdFromPiSdk(payment);
+        if (!pid) return;
+        const res = await fetchWithDeadline(
+          "/api/payments/pi/incomplete",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ payment }),
+            credentials: "same-origin",
+          },
+          45_000,
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(
+            typeof data === "object" &&
+              data !== null &&
+              "message" in data &&
+              typeof (data as { message: unknown }).message === "string"
+              ? (data as { message: string }).message
+              : "pi_incomplete_payment_failed",
+          );
+        }
+      },
+    ),
+  );
+}
+
 export function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("no_window"));

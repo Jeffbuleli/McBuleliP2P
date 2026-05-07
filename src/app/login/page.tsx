@@ -6,18 +6,12 @@ import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
-import { piInit } from "@/lib/pi-browser";
+import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
 
 const PI_AUTO_SESSION_KEY = "mcbuleli_pi_login_auto_fired_v1";
 
 /** One in-flight Pi.authenticate at a time (avoids piBusy / SDK fighting). */
 let piAuthInFlightGlobal = false;
-
-function paymentIdFromPiSdk(payment: unknown): string | null {
-  if (!payment || typeof payment !== "object") return null;
-  const id = (payment as { identifier?: unknown }).identifier;
-  return typeof id === "string" && id.length > 0 ? id : null;
-}
 
 export default function LoginPage() {
   const { t } = useI18n();

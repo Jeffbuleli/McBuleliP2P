@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
-import { piInit } from "@/lib/pi-browser";
+import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
 import { useI18n } from "@/components/i18n-provider";
 
 type PiPaymentArgs = {
@@ -26,6 +26,7 @@ export function PiWalletPaymentSection() {
         setMsg(t("pi_pay_no_sdk"));
         return;
       }
+      await piAuthenticateForPayments(Pi);
       const payment: PiPaymentArgs = {
         amount: Number(process.env.NEXT_PUBLIC_PI_TEST_PAYMENT_AMOUNT ?? "0.1"),
         memo: t("pi_pay_memo_wallet"),
