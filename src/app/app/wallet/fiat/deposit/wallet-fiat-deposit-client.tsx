@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ErrorBanner,
@@ -16,6 +17,7 @@ type ProviderOption = { provider: string; label: string };
 
 export default function WalletFiatDepositClient() {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -105,6 +107,9 @@ export default function WalletFiatDepositClient() {
         return;
       }
       if (typeof data.depositId === "string") setOkId(data.depositId);
+      // Deposit is asynchronous: user confirms on phone, wallet credits on webhook COMPLETED.
+      router.push("/app/wallet/history");
+      router.refresh();
     } finally {
       setLoading(false);
     }
@@ -184,11 +189,11 @@ export default function WalletFiatDepositClient() {
         </ErrorBanner>
       ) : null}
 
-        {okId ? (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">
-            Deposit initiated. ID: <span className="font-mono">{okId}</span>
-          </p>
-        ) : null}
+      {okId ? (
+        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">
+          Payment request sent. Please confirm on your phone. We will credit your wallet once the payment is completed.
+        </p>
+      ) : null}
 
         <button
           type="button"
