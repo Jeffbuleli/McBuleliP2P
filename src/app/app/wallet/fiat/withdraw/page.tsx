@@ -29,6 +29,7 @@ export default function WalletFiatWithdrawPage() {
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providersErr, setProvidersErr] = useState<string | null>(null);
   const [providerManual, setProviderManual] = useState("");
+  const [useManualProvider, setUseManualProvider] = useState(false);
   const providerLabel = useMemo(() => {
     if (providers.length > 0) {
       return providers.find((p) => p.provider === provider)?.label ?? null;
@@ -159,7 +160,7 @@ export default function WalletFiatWithdrawPage() {
       </FieldLabel>
 
       <FieldLabel label={t("wallet_mobile_money_provider")}>
-        {providers.length > 0 ? (
+        {providers.length > 0 && !useManualProvider ? (
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
@@ -181,6 +182,15 @@ export default function WalletFiatWithdrawPage() {
           />
         )}
       </FieldLabel>
+      {providers.length > 0 ? (
+        <button
+          type="button"
+          className="text-left text-xs font-semibold text-emerald-800 underline dark:text-emerald-400"
+          onClick={() => setUseManualProvider((v) => !v)}
+        >
+          {useManualProvider ? "Use network list" : "Enter provider code manually"}
+        </button>
+      ) : null}
       {providersErr ? <ErrorBanner>{providersErr}</ErrorBanner> : null}
 
       {summary ? (

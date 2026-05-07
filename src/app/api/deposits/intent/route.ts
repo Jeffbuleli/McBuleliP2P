@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       .insert(deposits)
       .values({
         userId,
-        provider: "okx",
+        provider: manual?.trim() ? "manual" : "okx",
         asset: "PI",
         networkCanonical: PI_MAIN_NETWORK_ID,
         networkCex: networkCex!,

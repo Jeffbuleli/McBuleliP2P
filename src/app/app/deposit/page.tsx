@@ -32,7 +32,7 @@ export default function DepositWizardPage() {
         const res = await fetch("/api/config/deposit-routes");
         const data = await res.json();
         setEnabledUsdt(Boolean(data.usdtBinance ?? data.enabled));
-        setEnabledPi(Boolean(data.piOkx));
+        setEnabledPi(Boolean(data.piManual || data.piOkx));
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
@@ -55,7 +55,7 @@ export default function DepositWizardPage() {
               network,
             }
           : {
-              provider: "okx" as const,
+              provider: "manual" as const,
               asset: "PI" as const,
               network: "PI_MAIN" as const,
             };

@@ -953,7 +953,7 @@ export const en = {
   asset_usdt_full: "Tether · USDT",
   asset_pi_network: "Pi Network",
   deposit_pi_okx_note:
-    "You’ll receive a Pi Network deposit address from our liquidity partner. After you send, paste the on-chain TXID so we can verify it against the partner deposit history.",
+    "Pi deposits are manual. We will show you our receiving address. After you send Pi from your wallet, paste the on-chain TXID so our team can verify it on the public explorer.",
   withdraw_amt_pi: "Net (PI)",
   withdraw_addr_pi_ph: "Pi Network address",
   withdraw_pi_network_only:
@@ -1286,10 +1286,11 @@ export const fr: Messages = {
   deposit: "Dépôt",
   withdraw: "Retrait",
   ops: "Équipe",
-  nav_home: "Accueil",
-  nav_wallet: "Portefeuille",
+  // Keep these in English per UX request
+  nav_home: "Home",
+  nav_wallet: "Wallet",
   nav_p2p: "P2P",
-  nav_trade: "Trade",
+  nav_trade: "Marché",
   nav_market: "Marché",
   nav_profile: "Profil",
   total_balance: "Solde total",
@@ -2043,7 +2044,7 @@ export const fr: Messages = {
   asset_usdt_full: "Tether · USDT",
   asset_pi_network: "Pi Network",
   deposit_pi_okx_note:
-    "Vous recevrez une adresse Pi Network via notre partenaire de liquidité. Après l’envoi, collez le TXID on-chain pour vérification auprès du partenaire.",
+    "Les dépôts Pi sont manuels. Nous affichons l’adresse de réception. Après l’envoi depuis votre wallet Pi, collez le TXID on-chain pour vérification sur l’explorer public.",
   withdraw_amt_pi: "Net (PI)",
   withdraw_addr_pi_ph: "Adresse Pi Network",
   withdraw_pi_network_only:

@@ -26,6 +26,7 @@ export default function WalletFiatDepositClient() {
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providersErr, setProvidersErr] = useState<string | null>(null);
   const [providerManual, setProviderManual] = useState("");
+  const [useManualProvider, setUseManualProvider] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [errDetail, setErrDetail] = useState<string | null>(null);
   const [okId, setOkId] = useState<string | null>(null);
@@ -148,7 +149,7 @@ export default function WalletFiatDepositClient() {
       </FieldLabel>
 
       <FieldLabel label={t("wallet_mobile_money_provider")}>
-        {providers.length > 0 ? (
+        {providers.length > 0 && !useManualProvider ? (
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
@@ -170,6 +171,15 @@ export default function WalletFiatDepositClient() {
           />
         )}
       </FieldLabel>
+      {providers.length > 0 ? (
+        <button
+          type="button"
+          className="text-left text-xs font-semibold text-emerald-800 underline dark:text-emerald-400"
+          onClick={() => setUseManualProvider((v) => !v)}
+        >
+          {useManualProvider ? "Use network list" : "Enter provider code manually"}
+        </button>
+      ) : null}
       {providersErr ? <ErrorBanner>{providersErr}</ErrorBanner> : null}
 
         {summary ? (
