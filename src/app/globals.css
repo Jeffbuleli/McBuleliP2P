@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Tie `dark:*` utilities to `.dark` on the root — default Tailwind v4 uses
+ * prefers-color-scheme only, so OS light mode showed bg-white + light body text. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* McBuleli fintech — dark-first (green growth + brown stability) */
 :root {
   --brand-green: #22c55e;
