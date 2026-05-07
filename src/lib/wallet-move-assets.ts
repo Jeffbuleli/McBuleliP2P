@@ -25,6 +25,8 @@ export async function debitUserAsset(
         .set({ piBalance: sql`${users.piBalance} - ${amtStr}::numeric` })
         .where(eq(users.id, userId));
       break;
+    case "PI_TEST":
+      throw new Error("pi_test_asset_not_debitable");
     case "USD":
       await tx
         .update(users)
@@ -61,6 +63,8 @@ export async function creditUserAsset(
         .set({ piBalance: sql`${users.piBalance} + ${amtStr}::numeric` })
         .where(eq(users.id, userId));
       break;
+    case "PI_TEST":
+      throw new Error("pi_test_asset_not_creditable");
     case "USD":
       await tx
         .update(users)

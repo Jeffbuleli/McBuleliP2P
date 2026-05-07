@@ -36,3 +36,22 @@ export function hasOkxKeys(): boolean {
       process.env.OKX_API_PASSPHRASE?.trim(),
   );
 }
+
+export function hasPawapayKeys(): boolean {
+  return Boolean(process.env.PAWAPAY_API_TOKEN?.trim());
+}
+
+export function getPawapayApiToken(): string {
+  const t = process.env.PAWAPAY_API_TOKEN?.trim();
+  if (!t) {
+    throw new Error("PAWAPAY_API_TOKEN must be set");
+  }
+  return t;
+}
+
+export function getPawapayBaseUrl(): string {
+  const env = (process.env.PAWAPAY_ENV ?? "sandbox").trim().toLowerCase();
+  return env === "prod" || env === "production"
+    ? "https://api.pawapay.io"
+    : "https://api.sandbox.pawapay.io";
+}

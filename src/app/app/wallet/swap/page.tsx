@@ -104,7 +104,7 @@ export default function WalletSwapPage() {
           onChange={(e) => setFrom(e.target.value as WalletAsset)}
           className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
         >
-          {WALLET_ASSETS.map((a) => (
+          {WALLET_ASSETS.filter((a) => a !== "PI_TEST").map((a) => (
             <option key={a} value={a}>
               {a}
             </option>
@@ -119,7 +119,7 @@ export default function WalletSwapPage() {
           onChange={(e) => setTo(e.target.value as WalletAsset)}
           className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
         >
-          {WALLET_ASSETS.map((a) => (
+          {WALLET_ASSETS.filter((a) => a !== "PI_TEST").map((a) => (
             <option key={a} value={a}>
               {a}
             </option>

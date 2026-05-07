@@ -5,6 +5,7 @@ import { getDb, pawapayWebhookEvents, users } from "@/db";
 import type {
   PawapayDepositCallback,
   PawapayPayoutCallback,
+  PawapayRefundCallback,
 } from "@/lib/pawapay/callback-types";
 import { cdfPerOneUsd } from "@/lib/fx";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
@@ -43,6 +44,17 @@ const payoutCallbackZ = z.object({
   metadata: z.record(z.string(), z.string()).optional(),
 });
 
+const refundCallbackZ = z.object({
+  refundId: z.string().min(1),
+  status: z.enum(["COMPLETED", "PROCESSING", "FAILED"]),
+  amount: z.string(),
+  currency: z.string(),
+  country: z.string(),
+  recipient: z.unknown(),
+  created: z.string(),
+  metadata: z.record(z.string(), z.string()).optional(),
+});
+
 export async function handlePawapayWebhookJson(
   raw: unknown,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -64,9 +76,17 @@ export async function handlePawapayWebhookJson(
     return handlePayout(parsed.data as PawapayPayoutCallback);
   }
 
+  if (typeof obj.refundId === "string") {
+    const parsed = refundCallbackZ.safeParse(raw);
+    if (!parsed.success) {
+      return { ok: false, message: "Invalid refund callback shape." };
+    }
+    return handleRefund(parsed.data as PawapayRefundCallback);
+  }
+
   return {
     ok: false,
-    message: "Expected depositId or payoutId in JSON body.",
+    message: "Expected depositId, payoutId, or refundId in JSON body.",
   };
 }
 
@@ -275,6 +295,102 @@ async function handlePayout(
       ? cb.metadata.userId
       : null,
     effect,
+    rawBody,
+  });
+
+  if (cb.status === "FAILED") {
+    const userIdRaw = cb.metadata?.userId?.trim();
+    const batchId = cb.metadata?.batchId?.trim();
+    if (userIdRaw && UUID_RE.test(userIdRaw) && batchId && UUID_RE.test(batchId)) {
+      const pocket = currency === "USD" ? "USD" : "CDF";
+      const net = Number(cb.amount);
+      if (Number.isFinite(net) && net > 0) {
+        const netStr = fmtWalletAmount(net);
+        const feeUsdEq =
+          pocket === "USD"
+            ? "0"
+            : fmtWalletAmount(0);
+        const refundDedup = `payout_refund:${cb.payoutId}:${cb.status}`;
+        const db = getDb();
+        try {
+          await db.transaction(async (tx) => {
+            const [inserted] = await tx
+              .insert(pawapayWebhookEvents)
+              .values({
+                dedupKey: refundDedup,
+                kind: "payout_refund",
+                pawapayId: cb.payoutId,
+                status: cb.status,
+                currency,
+                amount: cb.amount,
+                userId: userIdRaw,
+                effect: "refunded_net",
+                rawBody,
+              })
+              .onConflictDoNothing()
+              .returning({ id: pawapayWebhookEvents.id });
+            if (!inserted) return;
+
+            await creditUserAsset(tx, userIdRaw, pocket, netStr);
+            await insertWalletLedgerLines(tx, [
+              {
+                batchId,
+                userId: userIdRaw,
+                entryType: "fiat_withdraw_refund",
+                asset: pocket,
+                amount: netStr,
+                feeUsdEquivalent: feeUsdEq,
+                meta: {
+                  pawapayPayoutId: cb.payoutId,
+                  reason: "payout_failed",
+                },
+              },
+            ]);
+          });
+        } catch {
+          // Best-effort refund; webhook ledger already recorded.
+        }
+      }
+    }
+  }
+
+  return { ok: true };
+}
+
+async function handleRefund(
+  cb: PawapayRefundCallback,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const dedupKey = `refund:${cb.refundId}:${cb.status}`;
+  const currency = cb.currency.toUpperCase();
+  const rawBody = JSON.stringify(cb);
+
+  if (!allowedFiat(cb.currency)) {
+    await insertLedger({
+      dedupKey,
+      kind: "refund",
+      pawapayId: cb.refundId,
+      status: cb.status,
+      currency,
+      amount: cb.amount,
+      userId: null,
+      effect: "skipped_currency",
+      rawBody,
+    });
+    return { ok: true };
+  }
+
+  const userId =
+    cb.metadata?.userId && UUID_RE.test(cb.metadata.userId) ? cb.metadata.userId : null;
+
+  await insertLedger({
+    dedupKey,
+    kind: "refund",
+    pawapayId: cb.refundId,
+    status: cb.status,
+    currency,
+    amount: cb.amount,
+    userId,
+    effect: cb.status === "COMPLETED" ? "refund_completed_logged" : "refund_non_final",
     rawBody,
   });
 

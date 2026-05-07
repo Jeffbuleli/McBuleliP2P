@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
 const NAME: Record<WalletAsset, Record<"en" | "fr", string>> = {
   USDT: { en: "Tether · USDT", fr: "Tether · USDT" },
   PI: { en: "Pi Network", fr: "Pi Network" },
+  PI_TEST: { en: "Pi Test (training)", fr: "Pi Test (entraînement)" },
   USD: { en: "US Dollar", fr: "Dollar US" },
   CDF: { en: "Congolese franc", fr: "Franc congolais" },
 };
@@ -50,15 +51,19 @@ function toRow(
   const depositHref =
     row.asset === "USDT" || row.asset === "PI"
       ? "/app/deposit"
+      : row.asset === "PI_TEST"
+        ? "/admin/settings/pi"
       : "/app/wallet/fiat/deposit";
   const withdrawHref =
     row.asset === "USDT" || row.asset === "PI"
       ? "/app/withdraw"
+      : row.asset === "PI_TEST"
+        ? "/admin/settings/pi"
       : "/app/wallet/fiat/withdraw";
 
   return {
     asset: row.asset,
-    title: row.asset,
+    title: row.asset === "PI_TEST" ? "Pi Test" : row.asset,
     subtitle: NAME[row.asset][lang],
     balanceDisplay: formatBalanceDisplay(row.balanceNum, row.asset, locale),
     valueUsdApprox: row.valueUsdDisplay,
@@ -209,7 +214,7 @@ export default async function WalletPage() {
   });
 
   const cryptoRows = state.lines
-    .filter((l) => l.asset === "USDT" || l.asset === "PI")
+    .filter((l) => l.asset === "USDT" || l.asset === "PI" || l.asset === "PI_TEST")
     .map((l) => toRow(l, locale, lang));
   const fiatRows = state.lines
     .filter((l) => l.asset === "USD" || l.asset === "CDF")

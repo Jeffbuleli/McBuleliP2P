@@ -1022,6 +1022,11 @@ export function FuturesTradingClient() {
             <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {t("trade_ui_confirm_body")}
             </p>
+            {msg ? (
+              <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
+                {msg}
+              </p>
+            ) : null}
             <div className="mt-4 space-y-2 rounded-xl bg-stone-50 p-3 text-xs dark:bg-stone-950">
               <p>
                 {symbol} · {side.toUpperCase()} · {leverage}× · {margin} USDT
@@ -1074,7 +1079,7 @@ export function FuturesTradingClient() {
                 className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white disabled:opacity-50"
                 onClick={() => void submitOpen()}
               >
-                {t("trade_ui_submit")}
+                {busy ? "…" : t("trade_ui_submit")}
               </button>
             </div>
           </div>

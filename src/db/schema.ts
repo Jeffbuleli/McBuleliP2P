@@ -160,6 +160,38 @@ export const walletLedgerEntries = pgTable(
   ],
 );
 
+/** Small key/value store for platform-wide settings (super-admin managed). */
+export const platformSettings = pgTable(
+  "platform_settings",
+  {
+    key: varchar("key", { length: 64 }).primaryKey(),
+    value: text("value").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
+/** Training-only ledger for Pi Test balance adjustments (super-admin). */
+export const piTestLedgerEntries = pgTable(
+  "pi_test_ledger_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** deposit | withdraw */
+    kind: varchar("kind", { length: 16 }).notNull(),
+    /** Positive number as string */
+    amount: varchar("amount", { length: 64 }).notNull(),
+    memo: text("memo"),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("pi_test_ledger_created_idx").on(t.createdAt)],
+);
+
 /** Fixed-term custodial staking — APR fixed at subscription; principal locked until maturity. */
 /** P2P marketplace — fiat ↔ crypto via escrowed crypto on-platform. */
 export const p2pAds = pgTable(

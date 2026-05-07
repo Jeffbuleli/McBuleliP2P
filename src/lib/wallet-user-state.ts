@@ -5,6 +5,7 @@ import type { Locale } from "@/i18n/locale";
 import { assetAmountToUsd } from "@/lib/wallet-convert";
 import { fetchReferenceRates } from "@/lib/reference-rates";
 import { numFromNumeric, type WalletAsset } from "@/lib/wallet-types";
+import { getPlatformSetting, PlatformSettingKey } from "@/lib/platform-settings";
 
 export type WalletAssetLine = {
   asset: WalletAsset;
@@ -39,9 +40,13 @@ export async function getWalletUserState(
   const rates = await fetchReferenceRates();
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
+  const piTestBalStr =
+    (await getPlatformSetting(PlatformSettingKey.PI_TEST_BALANCE)) ?? "0";
+
   const raw: { asset: WalletAsset; bal: string }[] = [
     { asset: "USDT", bal: u.balance?.toString() ?? "0" },
     { asset: "PI", bal: u.piBalance?.toString() ?? "0" },
+    { asset: "PI_TEST", bal: piTestBalStr },
     { asset: "USD", bal: u.usdBalance?.toString() ?? "0" },
     { asset: "CDF", bal: u.cdfBalance?.toString() ?? "0" },
   ];

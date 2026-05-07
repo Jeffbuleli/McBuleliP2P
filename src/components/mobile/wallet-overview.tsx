@@ -8,6 +8,7 @@ import type { WalletAsset } from "@/lib/wallet-types";
 const ICON: Record<WalletAsset, string> = {
   USDT: "/assets/crypto/usdt.png",
   PI: "/assets/crypto/pi.png",
+  PI_TEST: "/assets/crypto/pi.png",
   USD: "/assets/crypto/usd.png",
   CDF: "/assets/crypto/cdf.png",
 };

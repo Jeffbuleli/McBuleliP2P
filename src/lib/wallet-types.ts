@@ -1,4 +1,4 @@
-export const WALLET_ASSETS = ["USDT", "PI", "USD", "CDF"] as const;
+export const WALLET_ASSETS = ["USDT", "PI", "PI_TEST", "USD", "CDF"] as const;
 export type WalletAsset = (typeof WALLET_ASSETS)[number];
 
 export function isWalletAsset(s: string): s is WalletAsset {

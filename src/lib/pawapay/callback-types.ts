@@ -37,6 +37,20 @@ export type PawapayPayoutCallback = {
   metadata?: PawapayMetadata;
 };
 
+export type PawapayRefundCallback = {
+  refundId: string;
+  status: PawapayCallbackStatus;
+  amount: string;
+  currency: string;
+  country: string;
+  recipient: unknown;
+  created: string;
+  customerMessage?: string;
+  providerTransactionId?: string;
+  failureReason?: unknown;
+  metadata?: PawapayMetadata;
+};
+
 export function isDepositCallback(
   v: Record<string, unknown>,
 ): v is Record<string, unknown> & { depositId: string } {

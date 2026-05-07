@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { hasPawapayKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
-import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
-import { pawapayInitiatePayout } from "@/lib/pawapay/client";
+import { hasPawapayKeys } from "@/lib/env";
+import { pawapayInitiateDeposit } from "@/lib/pawapay/client";
 import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
 
 const bodyZ = z.object({
@@ -22,58 +21,53 @@ export async function POST(req: Request) {
   if (!hasPawapayKeys()) {
     return NextResponse.json({ error: "wallet_pawapay_unconfigured" }, { status: 503 });
   }
+
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
-  const r = await executeFiatWithdraw({
-    userId,
-    asset: parsed.data.asset,
-    grossAmountStr: parsed.data.grossAmount,
-  });
-  if (!r.ok) {
-    return NextResponse.json({ error: r.message }, { status: 400 });
+
+  const { asset, grossAmount, phoneNumber, provider } = parsed.data;
+  const gross = Number(grossAmount);
+  if (!Number.isFinite(gross) || gross <= 0) {
+    return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const payoutId = randomUUID();
+  const depositId = randomUUID();
+
   try {
-    const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
-    const pr = await pawapayInitiatePayout({
-      payoutId,
-      amount: r.net,
-      currency: parsed.data.asset,
-      recipient: {
+    const phone = normalizeCodPhoneNumber(phoneNumber);
+    const r = await pawapayInitiateDeposit({
+      depositId,
+      amount: grossAmount,
+      currency: asset,
+      payer: {
         type: "MMO",
         accountDetails: {
           phoneNumber: phone,
-          provider: parsed.data.provider.trim(),
+          provider: provider.trim(),
         },
       },
       metadata: {
         userId,
-        batchId: r.batchId,
       },
     });
 
-    if (pr.status !== "ACCEPTED" && pr.status !== "DUPLICATE_IGNORED") {
+    if (r.status !== "ACCEPTED" && r.status !== "DUPLICATE_IGNORED") {
       return NextResponse.json(
         {
           ok: false,
-          error: "wallet_pawapay_payout_rejected",
-          failureReason: pr.failureReason ?? null,
+          error: "wallet_pawapay_deposit_rejected",
+          failureReason: r.failureReason ?? null,
         },
         { status: 400 },
       );
     }
-  } catch {
-    return NextResponse.json({ ok: false, error: "wallet_pawapay_payout_failed" }, { status: 502 });
-  }
 
-  return NextResponse.json({
-    ok: true,
-    batchId: r.batchId,
-    net: r.net,
-    fee: r.fee,
-  });
+    return NextResponse.json({ ok: true, depositId, status: r.status });
+  } catch {
+    return NextResponse.json({ ok: false, error: "wallet_pawapay_deposit_failed" }, { status: 502 });
+  }
 }
+

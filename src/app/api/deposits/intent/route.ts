@@ -8,6 +8,7 @@ import { binanceDepositAddress } from "@/lib/binance";
 import { okxDepositAddress } from "@/lib/okx";
 import { DepositStatus } from "@/lib/status";
 import { getPiOkxChain, PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
+import { getPlatformSetting, PlatformSettingKey } from "@/lib/platform-settings";
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -64,17 +65,40 @@ export async function POST(req: Request) {
   }
 
   if (body.asset === "PI") {
-    if (!hasOkxKeys()) {
-      return NextResponse.json(
-        {
-          message:
-            "Pi deposits require OKX_API_KEY, OKX_API_SECRET, and OKX_API_PASSPHRASE in .env.",
-        },
-        { status: 503 },
-      );
-    }
+    const manual = await getPlatformSetting(PlatformSettingKey.PI_RECEIVE_ADDRESS_REAL);
     const chain = getPiOkxChain();
-    const r = await okxDepositAddress({ ccy: "PI", chain });
+    const address = manual?.trim()
+      ? manual.trim()
+      : (() => {
+          if (!hasOkxKeys()) {
+            return null;
+          }
+          return null;
+        })();
+
+    let addressShown: string | null = null;
+    let memoShown: string | null = null;
+    let networkCex: string | null = null;
+
+    if (manual?.trim()) {
+      addressShown = manual.trim();
+      memoShown = null;
+      networkCex = "manual";
+    } else {
+      if (!hasOkxKeys()) {
+        return NextResponse.json(
+          {
+            message:
+              "Pi deposits require either a manual Pi receiving address (super-admin) or OKX_API_KEY/SECRET/PASSPHRASE in .env.",
+          },
+          { status: 503 },
+        );
+      }
+      const r = await okxDepositAddress({ ccy: "PI", chain });
+      addressShown = r.address;
+      memoShown = r.tag;
+      networkCex = chain;
+    }
     const db = getDb();
     const [row] = await db
       .insert(deposits)
@@ -83,9 +107,9 @@ export async function POST(req: Request) {
         provider: "okx",
         asset: "PI",
         networkCanonical: PI_MAIN_NETWORK_ID,
-        networkCex: chain,
-        addressShown: r.address,
-        memoShown: r.tag,
+        networkCex: networkCex!,
+        addressShown: addressShown!,
+        memoShown,
         minConfirmations: 30,
         status: DepositStatus.AWAITING_TRANSFER,
       })

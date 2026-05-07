@@ -14,6 +14,9 @@ export function assetAmountToUsd(amount: number, asset: WalletAsset, r: Referenc
       return amount / r.cdfPerUsd;
     case "PI":
       return r.piUsd > 0 ? amount * r.piUsd : 0;
+    case "PI_TEST":
+      // Training-only; use same reference rate as PI for display.
+      return r.piUsd > 0 ? amount * r.piUsd : 0;
     default:
       return 0;
   }
@@ -30,6 +33,8 @@ export function usdToAssetAmount(usd: number, asset: WalletAsset, r: ReferenceRa
     case "CDF":
       return usd * r.cdfPerUsd;
     case "PI":
+      return r.piUsd > 0 ? usd / r.piUsd : 0;
+    case "PI_TEST":
       return r.piUsd > 0 ? usd / r.piUsd : 0;
     default:
       return 0;
