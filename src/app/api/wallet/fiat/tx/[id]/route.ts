@@ -41,11 +41,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (refresh && hasPawapayKeys() && (tx.status === "PROCESSING" || tx.status === "INITIATED")) {
+  // On refresh, we do two things:
+  // 1) Update tx status from PawaPay when still pending.
+  // 2) Reconcile wallet credit if PawaPay is COMPLETED but our webhook/credit was missed.
+  const shouldUpdateRemoteStatus =
+    refresh && hasPawapayKeys() && (tx.status === "PROCESSING" || tx.status === "INITIATED");
+  const shouldReconcileDepositCredit = refresh && tx.kind === "deposit";
+
+  if (shouldUpdateRemoteStatus || shouldReconcileDepositCredit) {
     try {
       if (tx.kind === "deposit") {
-        const s = await pawapayFetchDepositStatus(tx.pawapayId);
-        if (s) {
+        const s = hasPawapayKeys() ? await pawapayFetchDepositStatus(tx.pawapayId) : null;
+        const status = s?.status ?? (tx.status === "COMPLETED" ? "COMPLETED" : null);
+
+        if (shouldUpdateRemoteStatus && s) {
           await db
             .update(fiatPawapayTransactions)
             .set({
@@ -56,73 +65,72 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
               completedAt: s.status === "COMPLETED" || s.status === "FAILED" ? new Date() : null,
             })
             .where(eq(fiatPawapayTransactions.pawapayId, tx.pawapayId));
+        }
 
-          // Reconcile credit if webhook was missed/delayed.
-          if (s.status === "COMPLETED") {
-            const currency = (tx.currency ?? "").toUpperCase();
-            const pocket = currency === "USD" ? "USD" : "CDF";
-            const gross = Number(s.amount ?? tx.amount);
-            if (Number.isFinite(gross) && gross > 0) {
-              const net = gross * (1 - FIAT_FEE_RATE);
-              const fee = gross - net;
-              const netStr = fmtWalletAmount(net);
-              const feeUsdEq =
-                pocket === "USD" ? fmtWalletAmount(fee) : fmtWalletAmount(fee / cdfPerOneUsd());
+        // Reconcile credit if webhook was missed/delayed (even if tx already marked COMPLETED).
+        if (status === "COMPLETED") {
+          const currency = (tx.currency ?? "").toUpperCase();
+          const pocket = currency === "USD" ? "USD" : "CDF";
+          const gross = Number(s?.amount ?? tx.amount);
+          if (Number.isFinite(gross) && gross > 0) {
+            const net = gross * (1 - FIAT_FEE_RATE);
+            const fee = gross - net;
+            const netStr = fmtWalletAmount(net);
+            const feeUsdEq =
+              pocket === "USD" ? fmtWalletAmount(fee) : fmtWalletAmount(fee / cdfPerOneUsd());
 
-              await db.transaction(async (t) => {
-                // If already credited (ledger line exists), skip.
-                const existing = await t
-                  .select({ id: walletLedgerEntries.id })
-                  .from(walletLedgerEntries)
-                  .where(
-                    and(
-                      eq(walletLedgerEntries.userId, userId),
-                      eq(walletLedgerEntries.entryType, "fiat_deposit"),
-                      sql`${walletLedgerEntries.meta} ->> 'pawapayDepositId' = ${tx.pawapayId}`,
-                    ),
-                  )
-                  .limit(1);
-                if (existing.length > 0) return;
+            await db.transaction(async (t) => {
+              const existing = await t
+                .select({ id: walletLedgerEntries.id })
+                .from(walletLedgerEntries)
+                .where(
+                  and(
+                    eq(walletLedgerEntries.userId, userId),
+                    eq(walletLedgerEntries.entryType, "fiat_deposit"),
+                    sql`${walletLedgerEntries.meta} ->> 'pawapayDepositId' = ${tx.pawapayId}`,
+                  ),
+                )
+                .limit(1);
+              if (existing.length > 0) return;
 
-                const dedupKey = `deposit:${tx.pawapayId}:COMPLETED:reconcile`;
-                await t
-                  .insert(pawapayWebhookEvents)
-                  .values({
-                    dedupKey,
-                    kind: "deposit",
-                    pawapayId: tx.pawapayId,
-                    status: "COMPLETED",
-                    currency,
-                    amount: String(s.amount ?? tx.amount),
-                    userId,
-                    effect: "credited_fiat",
-                    rawBody: JSON.stringify({ source: "status_refresh", status: s }),
-                  })
-                  .onConflictDoNothing();
+              const dedupKey = `deposit:${tx.pawapayId}:COMPLETED:reconcile`;
+              await t
+                .insert(pawapayWebhookEvents)
+                .values({
+                  dedupKey,
+                  kind: "deposit",
+                  pawapayId: tx.pawapayId,
+                  status: "COMPLETED",
+                  currency,
+                  amount: String(s?.amount ?? tx.amount),
+                  userId,
+                  effect: "credited_fiat",
+                  rawBody: JSON.stringify({ source: "status_refresh", status: s ?? null }),
+                })
+                .onConflictDoNothing();
 
-                await creditUserAsset(t, userId, pocket, netStr);
-                await insertWalletLedgerLines(t, [
-                  {
-                    batchId: randomUUID(),
-                    userId,
-                    entryType: "fiat_deposit",
-                    asset: pocket,
-                    amount: netStr,
-                    feeUsdEquivalent: feeUsdEq,
-                    meta: {
-                      gross: String(s.amount ?? tx.amount),
-                      feeRate: FIAT_FEE_RATE,
-                      fee: fmtWalletAmount(fee),
-                      pawapayDepositId: tx.pawapayId,
-                      source: "status_refresh",
-                    },
+              await creditUserAsset(t, userId, pocket, netStr);
+              await insertWalletLedgerLines(t, [
+                {
+                  batchId: randomUUID(),
+                  userId,
+                  entryType: "fiat_deposit",
+                  asset: pocket,
+                  amount: netStr,
+                  feeUsdEquivalent: feeUsdEq,
+                  meta: {
+                    gross: String(s?.amount ?? tx.amount),
+                    feeRate: FIAT_FEE_RATE,
+                    fee: fmtWalletAmount(fee),
+                    pawapayDepositId: tx.pawapayId,
+                    source: "status_refresh",
                   },
-                ]);
-              });
-            }
+                },
+              ]);
+            });
           }
         }
-      } else if (tx.kind === "payout") {
+      } else if (shouldUpdateRemoteStatus && tx.kind === "payout") {
         const s = await pawapayFetchPayoutStatus(tx.pawapayId);
         if (s) {
           await db
