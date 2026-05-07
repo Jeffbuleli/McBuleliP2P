@@ -25,6 +25,7 @@ export default function WalletFiatDepositClient() {
   const [providersErr, setProvidersErr] = useState<string | null>(null);
   const [providerManual, setProviderManual] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [errDetail, setErrDetail] = useState<string | null>(null);
   const [okId, setOkId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -81,6 +82,7 @@ export default function WalletFiatDepositClient() {
 
   async function submit() {
     setErr(null);
+    setErrDetail(null);
     setOkId(null);
     setLoading(true);
     try {
@@ -99,6 +101,7 @@ export default function WalletFiatDepositClient() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
         setErr(typeof data.error === "string" ? data.error : "wallet_pawapay_deposit_failed");
+        setErrDetail(typeof data.detail === "string" ? data.detail : null);
         return;
       }
       if (typeof data.depositId === "string") setOkId(data.depositId);
@@ -174,7 +177,12 @@ export default function WalletFiatDepositClient() {
           </div>
         ) : null}
 
-      {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+      {err ? (
+        <ErrorBanner>
+          <div>{clientErrorText(t, err)}</div>
+          {errDetail ? <div className="mt-2 font-mono text-[11px] opacity-90">{errDetail}</div> : null}
+        </ErrorBanner>
+      ) : null}
 
         {okId ? (
           <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">

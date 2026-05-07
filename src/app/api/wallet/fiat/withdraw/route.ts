@@ -57,17 +57,24 @@ export async function POST(req: Request) {
     });
 
     if (pr.status !== "ACCEPTED" && pr.status !== "DUPLICATE_IGNORED") {
+      const code = pr.failureReason?.failureCode?.trim() || null;
+      const msg = pr.failureReason?.failureMessage?.trim() || null;
       return NextResponse.json(
         {
           ok: false,
           error: "wallet_pawapay_payout_rejected",
           failureReason: pr.failureReason ?? null,
+          detail: code && msg ? `${code}: ${msg}` : msg ?? code,
         },
         { status: 400 },
       );
     }
-  } catch {
-    return NextResponse.json({ ok: false, error: "wallet_pawapay_payout_failed" }, { status: 502 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : null;
+    return NextResponse.json(
+      { ok: false, error: "wallet_pawapay_payout_failed", detail: msg },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({

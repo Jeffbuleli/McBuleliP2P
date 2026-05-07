@@ -30,6 +30,7 @@ export default function WalletFiatWithdrawPage() {
   const [providersErr, setProvidersErr] = useState<string | null>(null);
   const [providerManual, setProviderManual] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [errDetail, setErrDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const pct = Math.round(FIAT_FEE_RATE * 100);
 
@@ -84,6 +85,7 @@ export default function WalletFiatWithdrawPage() {
 
   async function submit() {
     setErr(null);
+    setErrDetail(null);
     setLoading(true);
     try {
       const providerFinal =
@@ -101,6 +103,7 @@ export default function WalletFiatWithdrawPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErr(typeof data.error === "string" ? data.error : "wallet_fiat_withdraw_failed");
+        setErrDetail(typeof data.detail === "string" ? data.detail : null);
         return;
       }
       router.push("/app/wallet/history");
@@ -189,7 +192,12 @@ export default function WalletFiatWithdrawPage() {
 
       <HelperText>{t("wallet_fiat_ops_note")}</HelperText>
 
-      {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+      {err ? (
+        <ErrorBanner>
+          <div>{clientErrorText(t, err)}</div>
+          {errDetail ? <div className="mt-2 font-mono text-[11px] opacity-90">{errDetail}</div> : null}
+        </ErrorBanner>
+      ) : null}
 
       <button
         type="button"
