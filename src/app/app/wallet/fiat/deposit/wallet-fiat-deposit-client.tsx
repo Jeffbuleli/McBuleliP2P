@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  ErrorBanner,
+  FieldLabel,
+  FormCard,
+  inputClass,
+  primaryBtnClass,
+} from "@/components/forms/standard-form";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -89,59 +96,43 @@ export default function WalletFiatDepositClient() {
   }
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900/60">
-      <div className="grid gap-3">
-        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          {t("wallet_transfer_asset")}
-          <select
-            value={asset}
-            onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
-            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-          >
-            <option value="USD">USD</option>
-            <option value="CDF">CDF</option>
-          </select>
-        </label>
+    <FormCard>
+      <FieldLabel label={t("wallet_transfer_asset")}>
+        <select value={asset} onChange={(e) => setAsset(e.target.value as "USD" | "CDF")} className={inputClass}>
+          <option value="USD">USD</option>
+          <option value="CDF">CDF</option>
+        </select>
+      </FieldLabel>
 
-        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          {t("wallet_fiat_gross")}
-          <input
-            value={gross}
-            onChange={(e) => setGross(e.target.value)}
-            inputMode="decimal"
-            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-lg tabular-nums dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-          />
-        </label>
+      <FieldLabel label={t("wallet_fiat_gross")}>
+        <input value={gross} onChange={(e) => setGross(e.target.value)} inputMode="decimal" className={inputClass} />
+      </FieldLabel>
 
-        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          {t("wallet_phone_number")}
-          <input
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            inputMode="tel"
-            placeholder="99xxxxxxx ou 24399xxxxxxx"
-            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-          />
-        </label>
+      <FieldLabel label={t("wallet_phone_number")}>
+        <input
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          inputMode="tel"
+          placeholder="99xxxxxxx ou 24399xxxxxxx"
+          className={inputClass}
+        />
+      </FieldLabel>
 
-        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          {t("wallet_mobile_money_provider")}
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value)}
-            disabled={providersLoading || providers.length === 0}
-            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 disabled:opacity-60"
-          >
-            {providers.length === 0 ? (
-              <option value="">{providersLoading ? "…" : "—"}</option>
-            ) : null}
-            {providers.map((p) => (
-              <option key={p.provider} value={p.provider}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
+      <FieldLabel label={t("wallet_mobile_money_provider")}>
+        <select
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          disabled={providersLoading || providers.length === 0}
+          className={`${inputClass} disabled:opacity-60`}
+        >
+          {providers.length === 0 ? <option value="">{providersLoading ? "…" : "—"}</option> : null}
+          {providers.map((p) => (
+            <option key={p.provider} value={p.provider}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </FieldLabel>
 
         {summary ? (
           <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/70 p-4 text-sm dark:border-emerald-800/30 dark:bg-emerald-950/30">
@@ -162,11 +153,7 @@ export default function WalletFiatDepositClient() {
           </div>
         ) : null}
 
-        {err ? (
-          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-            {clientErrorText(t, err)}
-          </p>
-        ) : null}
+      {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
 
         {okId ? (
           <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">
@@ -178,12 +165,11 @@ export default function WalletFiatDepositClient() {
           type="button"
           disabled={loading || !summary || !phoneNumber.trim() || !provider.trim()}
           onClick={() => void submit()}
-          className="w-full rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white disabled:opacity-40"
+          className={primaryBtnClass}
         >
           {loading ? "…" : t("wallet_fiat_deposit_submit")}
         </button>
-      </div>
-    </div>
+    </FormCard>
   );
 }
 

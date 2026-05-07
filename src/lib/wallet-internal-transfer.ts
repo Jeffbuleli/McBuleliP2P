@@ -16,6 +16,7 @@ export async function executeInternalTransfer(args: {
   recipientEmail: string;
   asset: string;
   amountStr: string;
+  memo?: string;
 }): Promise<{ ok: true; batchId: string } | { ok: false; message: string }> {
   if (!isWalletAsset(args.asset)) {
     return { ok: false, message: "wallet_transfer_invalid_asset" };
@@ -27,6 +28,7 @@ export async function executeInternalTransfer(args: {
   }
   const amtStr = fmtWalletAmount(amt);
   const email = args.recipientEmail.trim().toLowerCase();
+  const memo = args.memo?.trim() ? args.memo.trim().slice(0, 180) : null;
   if (!email.includes("@")) {
     return { ok: false, message: "wallet_transfer_invalid_email" };
   }
@@ -96,7 +98,7 @@ export async function executeInternalTransfer(args: {
           amount: `-${amtStr}`,
           feeUsdEquivalent: "0",
           counterpartyUserId: recv.id,
-          meta: { toEmail: email },
+          meta: { toEmail: email, memo },
         },
         {
           batchId,
@@ -106,7 +108,7 @@ export async function executeInternalTransfer(args: {
           amount: recvCredit,
           feeUsdEquivalent: "0",
           counterpartyUserId: args.fromUserId,
-          meta: {},
+          meta: memo ? { memo } : {},
         },
       ]);
 

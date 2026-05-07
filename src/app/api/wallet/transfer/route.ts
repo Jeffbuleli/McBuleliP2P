@@ -7,6 +7,7 @@ const bodyZ = z.object({
   recipientEmail: z.string().email(),
   asset: z.enum(["USDT", "PI", "USD", "CDF"]),
   amount: z.string().min(1),
+  memo: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
     recipientEmail: parsed.data.recipientEmail,
     asset: parsed.data.asset,
     amountStr: parsed.data.amount,
+    memo: parsed.data.memo,
   });
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
