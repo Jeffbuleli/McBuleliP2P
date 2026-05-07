@@ -106,6 +106,11 @@ export default function WalletFiatWithdrawPage() {
         setErrDetail(typeof data.detail === "string" ? data.detail : null);
         return;
       }
+      if (typeof data.payoutId === "string") {
+        router.push(`/app/wallet/fiat/status/${encodeURIComponent(data.payoutId)}`);
+        router.refresh();
+        return;
+      }
       router.push("/app/wallet/history");
       router.refresh();
     } finally {

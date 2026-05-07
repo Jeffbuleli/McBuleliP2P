@@ -12,6 +12,7 @@ import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { sql } from "drizzle-orm";
+import { fiatPawapayTransactions } from "@/db";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -88,6 +89,29 @@ export async function POST(req: Request) {
   const payoutId = randomUUID();
   try {
     const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
+
+    // Record pending payout tx for UI/reconciliation.
+    try {
+      const db = getDb();
+      await db
+        .insert(fiatPawapayTransactions)
+        .values({
+          userId,
+          kind: "payout",
+          status: "PROCESSING",
+          pawapayId: payoutId,
+          currency: parsed.data.asset,
+          amount: r.net,
+          phoneNumber: phone,
+          provider: parsed.data.provider.trim(),
+          batchId: r.batchId,
+          meta: { grossAmount: parsed.data.grossAmount },
+        })
+        .onConflictDoNothing();
+    } catch {
+      // best-effort
+    }
+
     const pr = await pawapayInitiatePayout({
       payoutId,
       amount: r.net,
@@ -117,6 +141,20 @@ export async function POST(req: Request) {
         pawapayPayoutId: payoutId,
         reason: "initiation_rejected",
       });
+      try {
+        const db = getDb();
+        await db
+          .update(fiatPawapayTransactions)
+          .set({
+            status: "FAILED",
+            failureCode: code,
+            failureMessage: msg,
+            updatedAt: new Date(),
+          })
+          .where(sql`${fiatPawapayTransactions.pawapayId} = ${payoutId}`);
+      } catch {
+        // best-effort
+      }
       return NextResponse.json(
         {
           ok: false,
@@ -138,6 +176,19 @@ export async function POST(req: Request) {
       pawapayPayoutId: payoutId,
       reason: "initiation_failed",
     });
+    try {
+      const db = getDb();
+      await db
+        .update(fiatPawapayTransactions)
+        .set({
+          status: "FAILED",
+          failureMessage: msg,
+          updatedAt: new Date(),
+        })
+        .where(sql`${fiatPawapayTransactions.pawapayId} = ${payoutId}`);
+    } catch {
+      // best-effort
+    }
     return NextResponse.json(
       { ok: false, error: "wallet_pawapay_payout_failed", detail: msg },
       { status: 502 },
@@ -146,6 +197,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
+    payoutId,
     batchId: r.batchId,
     net: r.net,
     fee: r.fee,

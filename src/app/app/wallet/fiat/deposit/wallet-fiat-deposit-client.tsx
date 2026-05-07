@@ -106,10 +106,11 @@ export default function WalletFiatDepositClient() {
         setErrDetail(typeof data.detail === "string" ? data.detail : null);
         return;
       }
-      if (typeof data.depositId === "string") setOkId(data.depositId);
-      // Deposit is asynchronous: user confirms on phone, wallet credits on webhook COMPLETED.
-      router.push("/app/wallet/history");
-      router.refresh();
+      if (typeof data.depositId === "string") {
+        setOkId(data.depositId);
+        router.push(`/app/wallet/fiat/status/${encodeURIComponent(data.depositId)}`);
+        router.refresh();
+      }
     } finally {
       setLoading(false);
     }

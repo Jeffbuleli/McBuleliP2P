@@ -1,0 +1,154 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  ErrorBanner,
+  FormPageShell,
+  HelperText,
+  primaryBtnClass,
+} from "@/components/forms/standard-form";
+import { useI18n } from "@/components/i18n-provider";
+import { clientErrorText } from "@/lib/client-error-text";
+
+type Tx = {
+  pawapayId: string;
+  kind: "deposit" | "payout";
+  status: "INITIATED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  currency: string;
+  amount: string;
+  provider: string | null;
+  phoneNumber: string | null;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+};
+
+export default function WalletFiatTxStatusPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+
+  const [tx, setTx] = useState<Tx | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
+  const [polling, setPolling] = useState(true);
+
+  const title = useMemo(() => {
+    if (!tx) return t("wallet_title");
+    return tx.kind === "deposit" ? t("wallet_fiat_deposit_title") : t("wallet_fiat_withdraw_title");
+  }, [t, tx]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    let timer: any = null;
+
+    async function fetchOnce(refresh: boolean) {
+      const url = `/api/wallet/fiat/tx/${encodeURIComponent(id)}${refresh ? "?refresh=1" : ""}`;
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        if (!cancelled) {
+          setErr(typeof data?.error === "string" ? data.error : "wallet_fiat_withdraw_failed");
+          setDetail(typeof data?.detail === "string" ? data.detail : null);
+          setPolling(false);
+        }
+        return;
+      }
+      if (!cancelled) {
+        setTx(data.tx as Tx);
+        setErr(null);
+        setDetail(null);
+        const st = (data.tx as Tx).status;
+        if (st === "COMPLETED" || st === "FAILED") {
+          setPolling(false);
+        }
+      }
+    }
+
+    async function loop() {
+      await fetchOnce(true);
+      if (cancelled) return;
+      timer = setTimeout(loop, 3000);
+    }
+
+    void loop();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [id]);
+
+  return (
+    <FormPageShell>
+      <Link href="/app/wallet" className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400">
+        ← {t("wallet_title")}
+      </Link>
+
+      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">{title}</h1>
+
+      <HelperText>
+        {tx?.status === "PROCESSING" || tx?.status === "INITIATED"
+          ? "En attente de confirmation. Si tu as déjà confirmé sur ton téléphone, ceci se mettra à jour automatiquement."
+          : tx?.status === "COMPLETED"
+            ? "Terminé."
+            : tx?.status === "FAILED"
+              ? "Échoué."
+              : "…"}
+      </HelperText>
+
+      {err ? (
+        <ErrorBanner>
+          <div>{clientErrorText(t, err)}</div>
+          {detail ? <div className="mt-2 font-mono text-[11px] opacity-90">{detail}</div> : null}
+        </ErrorBanner>
+      ) : null}
+
+      {tx ? (
+        <div className="rounded-2xl border border-stone-900/10 bg-white/60 p-4 text-sm text-stone-800 dark:border-stone-50/10 dark:bg-stone-950/20 dark:text-stone-200">
+          <p>
+            <strong>Status:</strong> {tx.status}
+          </p>
+          <p className="mt-1">
+            <strong>Type:</strong> {tx.kind}
+          </p>
+          <p className="mt-1">
+            <strong>Amount:</strong> {tx.amount} {tx.currency}
+          </p>
+          {tx.provider ? (
+            <p className="mt-1">
+              <strong>Provider:</strong> {tx.provider}
+            </p>
+          ) : null}
+          {tx.failureMessage || tx.failureCode ? (
+            <p className="mt-2">
+              <strong>Reason:</strong> {[tx.failureCode, tx.failureMessage].filter(Boolean).join(": ")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="flex gap-3">
+        <button
+          type="button"
+          className={primaryBtnClass}
+          onClick={() => {
+            router.refresh();
+          }}
+          disabled={!id}
+        >
+          {polling ? "Refreshing…" : "Refresh"}
+        </button>
+        <Link className={primaryBtnClass} href="/app/wallet/history">
+          History
+        </Link>
+      </div>
+    </FormPageShell>
+  );
+}
+

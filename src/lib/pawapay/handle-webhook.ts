@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { getDb, pawapayWebhookEvents, users } from "@/db";
+import { fiatPawapayTransactions, getDb, pawapayWebhookEvents, users } from "@/db";
 import { walletLedgerEntries } from "@/db/schema";
 import type {
   PawapayDepositCallback,
@@ -188,6 +188,29 @@ async function handleDeposit(
   }
 
   if (cb.status !== "COMPLETED") {
+    // Keep local tx status in sync for UX (best-effort).
+    try {
+      const db = getDb();
+      await db
+        .update(fiatPawapayTransactions)
+        .set({
+          status: cb.status === "FAILED" ? "FAILED" : "PROCESSING",
+          failureCode:
+            cb.status === "FAILED" && typeof (cb as any)?.failureReason?.failureCode === "string"
+              ? String((cb as any).failureReason.failureCode)
+              : null,
+          failureMessage:
+            cb.status === "FAILED" && typeof (cb as any)?.failureReason?.failureMessage === "string"
+              ? String((cb as any).failureReason.failureMessage)
+              : null,
+          updatedAt: new Date(),
+          completedAt: cb.status === "FAILED" ? new Date() : null,
+        })
+        .where(eq(fiatPawapayTransactions.pawapayId, cb.depositId));
+    } catch {
+      // best-effort
+    }
+
     await insertLedger({
       dedupKey,
       kind: "deposit",
@@ -200,6 +223,21 @@ async function handleDeposit(
       rawBody,
     });
     return { ok: true };
+  }
+
+  // Update local tx status (best-effort).
+  try {
+    const db = getDb();
+    await db
+      .update(fiatPawapayTransactions)
+      .set({
+        status: "COMPLETED",
+        updatedAt: new Date(),
+        completedAt: new Date(),
+      })
+      .where(eq(fiatPawapayTransactions.pawapayId, cb.depositId));
+  } catch {
+    // best-effort
   }
 
   const userIdRaw = meta?.userId?.trim();
@@ -341,6 +379,29 @@ async function handlePayout(
     effect,
     rawBody,
   });
+
+  // Update local tx status (best-effort).
+  try {
+    const db = getDb();
+    await db
+      .update(fiatPawapayTransactions)
+      .set({
+        status: cb.status === "COMPLETED" ? "COMPLETED" : cb.status === "FAILED" ? "FAILED" : "PROCESSING",
+        failureCode:
+          cb.status === "FAILED" && typeof (cb as any)?.failureReason?.failureCode === "string"
+            ? String((cb as any).failureReason.failureCode)
+            : null,
+        failureMessage:
+          cb.status === "FAILED" && typeof (cb as any)?.failureReason?.failureMessage === "string"
+            ? String((cb as any).failureReason.failureMessage)
+            : null,
+        updatedAt: new Date(),
+        completedAt: cb.status === "COMPLETED" || cb.status === "FAILED" ? new Date() : null,
+      })
+      .where(eq(fiatPawapayTransactions.pawapayId, cb.payoutId));
+  } catch {
+    // best-effort
+  }
 
   if (cb.status === "FAILED") {
     const userIdRaw = meta?.userId?.trim();

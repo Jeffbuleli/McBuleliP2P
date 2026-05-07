@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { hasPawapayKeys } from "@/lib/env";
 import { pawapayInitiateDeposit } from "@/lib/pawapay/client";
 import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
+import { getDb, fiatPawapayTransactions } from "@/db";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -57,6 +58,28 @@ export async function POST(req: Request) {
     if (r.status !== "ACCEPTED" && r.status !== "DUPLICATE_IGNORED") {
       const code = r.failureReason?.failureCode?.trim() || null;
       const msg = r.failureReason?.failureMessage?.trim() || null;
+      // Record rejected attempt for UX / debugging.
+      try {
+        const db = getDb();
+        await db
+          .insert(fiatPawapayTransactions)
+          .values({
+            userId,
+            kind: "deposit",
+            status: "FAILED",
+            pawapayId: depositId,
+            currency: asset,
+            amount: grossAmount,
+            phoneNumber: phone,
+            provider: provider.trim(),
+            failureCode: code,
+            failureMessage: msg,
+            meta: { initiationStatus: r.status },
+          })
+          .onConflictDoNothing();
+      } catch {
+        // best-effort
+      }
       return NextResponse.json(
         {
           ok: false,
@@ -67,6 +90,23 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    // Record pending tx for UI.
+    const db = getDb();
+    await db
+      .insert(fiatPawapayTransactions)
+      .values({
+        userId,
+        kind: "deposit",
+        status: "PROCESSING",
+        pawapayId: depositId,
+        currency: asset,
+        amount: grossAmount,
+        phoneNumber: phone,
+        provider: provider.trim(),
+        meta: { initiationStatus: r.status },
+      })
+      .onConflictDoNothing();
 
     return NextResponse.json({ ok: true, depositId, status: r.status });
   } catch (e) {

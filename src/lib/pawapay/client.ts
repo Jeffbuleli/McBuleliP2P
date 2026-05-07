@@ -51,6 +51,24 @@ async function pawapayPost<T>(path: string, body: unknown): Promise<T> {
   return json;
 }
 
+async function pawapayGet<T>(path: string): Promise<T> {
+  const baseUrl = getPawapayBaseUrl();
+  const token = getPawapayApiToken();
+  const res = await fetch(`${baseUrl}${path}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+
+  const json = (await res.json().catch(() => null)) as T | null;
+  if (!json) {
+    throw new Error(`PawaPay responded with HTTP ${res.status}`);
+  }
+  return json;
+}
+
 export type PawapayActiveConfCountry = {
   country: string;
   prefix?: string;
@@ -103,6 +121,56 @@ export async function pawapayActiveConfiguration(args?: {
     throw new Error(`PawaPay responded with HTTP ${res.status}`);
   }
   return json;
+}
+
+export type PawapaySearchStatus = "FOUND" | "NOT_FOUND";
+
+export type PawapayDepositDetails = {
+  depositId: string;
+  status: "COMPLETED" | "PROCESSING" | "FAILED";
+  amount: string;
+  currency: string;
+  country?: string;
+  created?: string;
+  failureReason?: PawapayFailureReason;
+  metadata?: unknown;
+};
+
+export type PawapayDepositStatusResponse =
+  | { status: PawapaySearchStatus; data?: PawapayDepositDetails }
+  | PawapayDepositDetails;
+
+export async function pawapayFetchDepositStatus(depositId: string): Promise<PawapayDepositDetails | null> {
+  const r = await pawapayGet<PawapayDepositStatusResponse>(`/v2/deposits/${encodeURIComponent(depositId)}`);
+  if ((r as any)?.status === "FOUND" && (r as any)?.data && typeof (r as any).data === "object") {
+    return (r as any).data as PawapayDepositDetails;
+  }
+  if ((r as any)?.depositId) return r as PawapayDepositDetails;
+  return null;
+}
+
+export type PawapayPayoutDetails = {
+  payoutId: string;
+  status: "COMPLETED" | "PROCESSING" | "FAILED";
+  amount: string;
+  currency: string;
+  country?: string;
+  created?: string;
+  failureReason?: PawapayFailureReason;
+  metadata?: unknown;
+};
+
+export type PawapayPayoutStatusResponse =
+  | { status: PawapaySearchStatus; data?: PawapayPayoutDetails }
+  | PawapayPayoutDetails;
+
+export async function pawapayFetchPayoutStatus(payoutId: string): Promise<PawapayPayoutDetails | null> {
+  const r = await pawapayGet<PawapayPayoutStatusResponse>(`/v2/payouts/${encodeURIComponent(payoutId)}`);
+  if ((r as any)?.status === "FOUND" && (r as any)?.data && typeof (r as any).data === "object") {
+    return (r as any).data as PawapayPayoutDetails;
+  }
+  if ((r as any)?.payoutId) return r as PawapayPayoutDetails;
+  return null;
 }
 
 export async function pawapayInitiateDeposit(args: {
