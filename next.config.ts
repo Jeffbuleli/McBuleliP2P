@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         source: "/validation-key.txt",
         destination: "/api/domain-validation-key",
       },
+      {
+        source: "/validation-key-test.txt",
+        destination: "/api/domain-validation-key/test",
+      },
     ];
   },
   images: {
