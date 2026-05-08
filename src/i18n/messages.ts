@@ -181,6 +181,22 @@ export const en = {
   pi_pay_memo_label: "Memo",
   pi_pay_u2a_recipient:
     "Recipient is your Pi app registration (user-to-app). Pi sets the address — you only set amount and memo below.",
+  pi_ads_title: "Pi ads",
+  pi_ads_hint: "Ads run inside Pi Browser if supported by your Pi Browser version.",
+  pi_ads_rewarded_hint:
+    "Rewarded ads must be verified by our server before we grant any reward.",
+  pi_ads_not_supported: "Ads are not supported on this Pi Browser version.",
+  pi_ads_interstitial: "Show interstitial",
+  pi_ads_rewarded: "Show rewarded",
+  pi_ads_busy: "Loading…",
+  pi_ads_unavailable: "Ad is not available right now.",
+  pi_ads_done: "Ad finished",
+  pi_ads_failed: "Ad failed.",
+  pi_ads_auth_required: "Sign in with Pi to watch rewarded ads.",
+  pi_ads_rewarded_no_adid: "Rewarded ad returned no adId.",
+  pi_ads_rewarded_verify_failed: "Reward verification failed",
+  pi_ads_rewarded_granted: "Reward verified (granted).",
+  pi_ads_rewarded_not_granted: "Reward not granted",
   forgot_title: "Password reset",
   forgot_body:
     "Password reset links are not enabled yet. Contact support and we’ll verify your account securely.",
@@ -1258,6 +1274,23 @@ export const fr: Messages = {
   pi_pay_memo_label: "Mémo",
   pi_pay_u2a_recipient:
     "Bénéficiaire : votre appli enregistrée sur Pi (paiement utilisateur→appli). Pi gère l'adresse — vous définissez montant et mémo ci-dessous.",
+  pi_ads_title: "Publicités Pi",
+  pi_ads_hint:
+    "Les pubs s'affichent dans Pi Browser si ta version supporte le réseau publicitaire.",
+  pi_ads_rewarded_hint:
+    "Les pubs récompensées doivent être vérifiées par notre serveur avant d'accorder une récompense.",
+  pi_ads_not_supported: "Publicités non supportées sur cette version de Pi Browser.",
+  pi_ads_interstitial: "Afficher interstitielle",
+  pi_ads_rewarded: "Afficher récompensée",
+  pi_ads_busy: "Chargement…",
+  pi_ads_unavailable: "Pub indisponible pour le moment.",
+  pi_ads_done: "Pub terminée",
+  pi_ads_failed: "Pub échouée.",
+  pi_ads_auth_required: "Connecte-toi avec Pi pour une pub récompensée.",
+  pi_ads_rewarded_no_adid: "La pub récompensée n'a pas renvoyé de adId.",
+  pi_ads_rewarded_verify_failed: "Vérification de récompense échouée",
+  pi_ads_rewarded_granted: "Récompense vérifiée (accordée).",
+  pi_ads_rewarded_not_granted: "Récompense non accordée",
   forgot_title: "Réinitialisation",
   forgot_body:
     "Les liens de réinitialisation ne sont pas encore activés. Contactez le support pour une vérification sécurisée.",

@@ -9,6 +9,7 @@ import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import { getReferralSnapshot } from "@/lib/referral-service";
 import { getProfileDashboard } from "@/lib/profile-stats";
 import { getSessionUser } from "@/lib/session-user";
+import { PiAdsSection } from "@/components/pi/pi-ads";
 
 export const dynamic = "force-dynamic";
 
@@ -294,6 +295,8 @@ export default async function ProfilePage() {
           {d.profile_duplicate_note}
         </p>
       </section>
+
+      <PiAdsSection />
 
       {/* Settings */}
       <section className="rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4">
