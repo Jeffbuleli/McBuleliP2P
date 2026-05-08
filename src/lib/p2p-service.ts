@@ -38,6 +38,68 @@ const ST_EXPIRED = "expired";
 const ST_DISPUTED = "disputed";
 const ST_REFUNDED = "refunded";
 
+function numericAdd(a: string, b: string): string {
+  const x = Number(a);
+  const y = Number(b);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return a;
+  return fmtWalletAmount(x + y);
+}
+
+async function buildPaymentSnapshot(args: {
+  tx: any;
+  sellerUserId: string;
+  countryCode: string | null;
+  paymentMethodCodes: string[] | null;
+  legacyPaymentMethods: string;
+}): Promise<string> {
+  const codes = args.paymentMethodCodes?.map((c) => c.trim().toUpperCase()).filter(Boolean) ?? [];
+  if (!codes.length) return args.legacyPaymentMethods;
+
+  const cc = (args.countryCode ?? "CD").toUpperCase();
+  const defs = await args.tx
+    .select({
+      code: p2pPaymentMethodDefs.code,
+      label: p2pPaymentMethodDefs.label,
+    })
+    .from(p2pPaymentMethodDefs)
+    .where(
+      and(
+        eq(p2pPaymentMethodDefs.countryCode, cc),
+        inArray(p2pPaymentMethodDefs.code, codes),
+      ),
+    );
+  const labelByCode = new Map(defs.map((d: any) => [String(d.code), String(d.label)]));
+
+  const mine = await args.tx
+    .select({
+      methodCode: userP2pPaymentMethods.methodCode,
+      accountName: userP2pPaymentMethods.accountName,
+      accountNumberOrPhone: userP2pPaymentMethods.accountNumberOrPhone,
+      active: userP2pPaymentMethods.active,
+    })
+    .from(userP2pPaymentMethods)
+    .where(
+      and(
+        eq(userP2pPaymentMethods.userId, args.sellerUserId),
+        eq(userP2pPaymentMethods.countryCode, cc),
+        inArray(userP2pPaymentMethods.methodCode, codes),
+        eq(userP2pPaymentMethods.active, true),
+      ),
+    );
+
+  const lines: string[] = [];
+  for (const c of codes) {
+    const label = labelByCode.get(c) ?? c;
+    const hits = mine.filter((m: any) => m.methodCode === c);
+    if (!hits.length) continue;
+    for (const h of hits) {
+      lines.push(`${label}: ${h.accountName} · ${h.accountNumberOrPhone}`);
+    }
+  }
+
+  return lines.length ? lines.join("\n") : args.legacyPaymentMethods;
+}
+
 /** Escrow → buyer (minus optional platform fee to treasury). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function finalizeReleaseToBuyer(tx: any, o: typeof p2pOrders.$inferSelect, now: Date, previousStatus: string) {
@@ -715,6 +777,31 @@ export async function createAd(args: {
         ]);
       }
 
+      // If new codes provided, ensure user has at least one active method configured per selected code.
+      const codes =
+        args.paymentMethodCodes && args.paymentMethodCodes.length
+          ? args.paymentMethodCodes.map((s) => s.trim().toUpperCase()).filter(Boolean)
+          : [];
+      if (codes.length) {
+        const cc = (args.countryCode?.trim() || "CD").toUpperCase();
+        const mine = await tx
+          .select({ code: userP2pPaymentMethods.methodCode })
+          .from(userP2pPaymentMethods)
+          .where(
+            and(
+              eq(userP2pPaymentMethods.userId, args.userId),
+              eq(userP2pPaymentMethods.countryCode, cc),
+              inArray(userP2pPaymentMethods.methodCode, codes),
+              eq(userP2pPaymentMethods.active, true),
+            ),
+          );
+        const have = new Set(mine.map((m: any) => String(m.code)));
+        const anyMissing = codes.some((c) => !have.has(c));
+        if (anyMissing) {
+          throw new Error("p2p_payment_methods_required");
+        }
+      }
+
       const [ins] = await tx
         .insert(p2pAds)
         .values({
@@ -727,8 +814,7 @@ export async function createAd(args: {
           maxFiat: fmtWalletAmount(maxF),
           paymentMethods: pm,
           paymentMethodCodes:
-            args.paymentMethodCodes && args.paymentMethodCodes.length
-              ? args.paymentMethodCodes.map((s) => s.toUpperCase())
+            codes.length ? codes
               : null,
           reserveTotalCrypto: reserveTotal,
           reserveRemainingCrypto: reserveRemaining,
