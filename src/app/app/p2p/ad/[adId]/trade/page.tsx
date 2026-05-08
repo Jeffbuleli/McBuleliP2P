@@ -18,7 +18,8 @@ type AdDetail = {
   paymentMethods: string;
   terms: string | null;
   countryCode: string | null;
-  makerMasked: string;
+  makerName: string;
+  makerAvatarUrl: string | null;
   makerRating: { avg: number; count: number } | null;
 };
 
@@ -130,7 +131,7 @@ export default function P2pTradePage() {
           {ad.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {ad.asset} / {ad.fiatCurrency}
         </p>
         <p className="mt-2 text-stone-600 dark:text-stone-400">
-          {t("p2p_maker")}: {ad.makerMasked}
+          {t("p2p_maker")}: {ad.makerName}
           {ad.countryCode ? ` · ${ad.countryCode}` : ""}
           {ad.makerRating && ad.makerRating.count > 0 ? (
             <span className="ml-1 font-medium text-amber-800 dark:text-amber-300">

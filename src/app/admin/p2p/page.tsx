@@ -66,6 +66,13 @@ export default function AdminP2pDisputesPage() {
       <h2 className="text-lg font-bold text-white">{t("admin_p2p_disputes")}</h2>
       <p className="text-sm text-stone-400">{t("admin_p2p_intro")}</p>
 
+      <Link
+        href="/admin/p2p/inbox"
+        className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-2 text-xs font-bold text-emerald-100"
+      >
+        {t("admin_p2p_support_inbox")}
+      </Link>
+
       {err ? (
         <p className="rounded-lg bg-rose-950/50 px-3 py-2 text-sm text-rose-100">{err}</p>
       ) : null}

@@ -68,11 +68,12 @@ export async function POST(req: Request) {
     if (row && !row.fulfilledAt && row.action === "p2p_ad_boost" && row.actionRefId) {
       const boostDays = Number(process.env.PI_P2P_BOOST_DAYS ?? "7");
       const until = new Date(Date.now() + Math.max(1, boostDays) * 24 * 60 * 60 * 1000);
+      const boostAmountPi = row.amount ? row.amount.toString() : "0";
 
       // Only allow boosting own ad.
       await db
         .update(p2pAds)
-        .set({ boostedUntil: until, updatedAt: new Date() })
+        .set({ boostedUntil: until, boostAmountPi, updatedAt: new Date() })
         .where(and(eq(p2pAds.id, row.actionRefId), eq(p2pAds.userId, userId)));
 
       await db

@@ -6,13 +6,17 @@ import { getSessionUserId } from "@/lib/session";
 import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
 import { pawapayInitiatePayout } from "@/lib/pawapay/client";
 import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
-import { getDb } from "@/db";
+import { getDb, users } from "@/db";
 import { walletLedgerEntries } from "@/db/schema";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount } from "@/lib/wallet-types";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { fiatPawapayTransactions } from "@/db";
+import {
+  isPawapaySupportedCurrency,
+  isPawapaySupportedForCountry,
+} from "@/lib/pawapay/availability";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -77,6 +81,18 @@ export async function POST(req: Request) {
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
+  }
+  if (!isPawapaySupportedCurrency(parsed.data.asset)) {
+    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+  }
+  const db = getDb();
+  const [u] = await db
+    .select({ countryCode: users.countryCode })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!isPawapaySupportedForCountry(u?.countryCode ?? null)) {
+    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
   }
   const providerLabel = parsed.data.providerLabel?.trim() || null;
   const r = await executeFiatWithdraw({

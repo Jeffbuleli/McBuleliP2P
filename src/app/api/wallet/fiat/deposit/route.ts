@@ -5,7 +5,12 @@ import { getSessionUserId } from "@/lib/session";
 import { hasPawapayKeys } from "@/lib/env";
 import { pawapayInitiateDeposit } from "@/lib/pawapay/client";
 import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
-import { getDb, fiatPawapayTransactions } from "@/db";
+import { getDb, fiatPawapayTransactions, users } from "@/db";
+import { eq } from "drizzle-orm";
+import {
+  isPawapaySupportedCurrency,
+  isPawapaySupportedForCountry,
+} from "@/lib/pawapay/availability";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -31,6 +36,18 @@ export async function POST(req: Request) {
   }
 
   const { asset, grossAmount, phoneNumber, provider, providerLabel } = parsed.data;
+  if (!isPawapaySupportedCurrency(asset)) {
+    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+  }
+  const db = getDb();
+  const [u] = await db
+    .select({ countryCode: users.countryCode })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!isPawapaySupportedForCountry(u?.countryCode ?? null)) {
+    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+  }
   const gross = Number(grossAmount);
   if (!Number.isFinite(gross) || gross <= 0) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
@@ -61,7 +78,6 @@ export async function POST(req: Request) {
       const msg = r.failureReason?.failureMessage?.trim() || null;
       // Record rejected attempt for UX / debugging.
       try {
-        const db = getDb();
         await db
           .insert(fiatPawapayTransactions)
           .values({
@@ -93,7 +109,6 @@ export async function POST(req: Request) {
     }
 
     // Record pending tx for UI.
-    const db = getDb();
     await db
       .insert(fiatPawapayTransactions)
       .values({

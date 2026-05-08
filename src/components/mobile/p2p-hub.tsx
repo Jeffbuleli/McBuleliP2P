@@ -31,8 +31,11 @@ type MarketAd = {
   terms: string | null;
   countryCode: string | null;
   createdAt: string;
-  makerMasked: string;
+  makerName: string;
+  makerAvatarUrl: string | null;
   makerRating: { avg: number; count: number } | null;
+  boostedUntil: string | null;
+  boostAmountPi: string;
 };
 
 type MyAd = {
@@ -48,6 +51,7 @@ type MyAd = {
   countryCode: string | null;
   status: string;
   boostedUntil: string | null;
+  boostAmountPi: string;
   createdAt: string;
 };
 
@@ -73,6 +77,8 @@ export function P2PHub() {
   const [side, setSide] = useState<P2pSide | "">("");
   const [country, setCountry] = useState("");
   const [paymentContains, setPaymentContains] = useState("");
+  const [boostedOnly, setBoostedOnly] = useState(false);
+  const [trustedOnly, setTrustedOnly] = useState(false);
   const [marketAds, setMarketAds] = useState<MarketAd[] | null>(null);
   const [myAds, setMyAds] = useState<MyAd[] | null>(null);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
@@ -88,6 +94,9 @@ export function P2PHub() {
       if (fiat) q.set("fiat", fiat);
       if (side) q.set("side", side);
       if (country) q.set("country", country);
+      if (paymentContains.trim()) q.set("payment", paymentContains.trim());
+      if (boostedOnly) q.set("boosted", "1");
+      if (trustedOnly) q.set("trusted", "1");
       const res = await fetch(`/api/p2p/market?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -98,7 +107,7 @@ export function P2PHub() {
     } finally {
       setLoading(false);
     }
-  }, [asset, fiat, side, country]);
+  }, [asset, fiat, side, country, paymentContains, boostedOnly, trustedOnly]);
 
   const loadAds = useCallback(async () => {
     const res = await fetch("/api/p2p/ads");
@@ -264,12 +273,7 @@ export function P2PHub() {
     [locNum],
   );
 
-  const filteredMarketAds = useMemo(() => {
-    if (!marketAds) return null;
-    const q = paymentContains.trim().toLowerCase();
-    if (!q) return marketAds;
-    return marketAds.filter((a) => a.paymentMethods.toLowerCase().includes(q));
-  }, [marketAds, paymentContains]);
+  const filteredMarketAds = useMemo(() => marketAds, [marketAds]);
 
   async function patchAd(id: string, status: "active" | "paused" | "closed") {
     const res = await fetch(`/api/p2p/ads/${id}`, {
@@ -393,6 +397,31 @@ export function P2PHub() {
             {loading ? "…" : t("continue")}
           </button>
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setBoostedOnly((v) => !v)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                boostedOnly
+                  ? "bg-amber-500/15 text-amber-200 ring-amber-500/35"
+                  : "bg-stone-950/40 text-stone-300 ring-stone-700"
+              }`}
+            >
+              {t("p2p_filter_boosted")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTrustedOnly((v) => !v)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                trustedOnly
+                  ? "bg-emerald-500/15 text-emerald-200 ring-emerald-500/35"
+                  : "bg-stone-950/40 text-stone-300 ring-stone-700"
+              }`}
+            >
+              {t("p2p_filter_trusted")}
+            </button>
+          </div>
+
           {!filteredMarketAds?.length ? (
             <p className="text-center text-sm text-stone-500">{t("p2p_no_ads")}</p>
           ) : (
@@ -439,7 +468,7 @@ export function P2PHub() {
                       {a.fiatCurrency}
                     </p>
                     <p className="mt-1 truncate text-sm font-medium text-stone-800 dark:text-stone-200">
-                      {t("p2p_maker")}: {a.makerMasked}
+                      {t("p2p_maker")}: {a.makerName}
                     </p>
                     {a.makerRating && a.makerRating.count > 0 ? (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">

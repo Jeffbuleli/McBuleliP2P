@@ -15,6 +15,10 @@ export async function GET() {
       email: users.email,
       role: users.role,
       balance: users.balance,
+      countryCode: users.countryCode,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+      piUsername: users.piUsername,
       staffScopes: users.staffScopes,
     })
     .from(users)

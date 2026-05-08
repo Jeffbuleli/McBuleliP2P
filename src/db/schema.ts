@@ -19,6 +19,10 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   /** user | agent | super_admin */
   role: varchar("role", { length: 32 }).notNull().default("user"),
+  /** Public display name for P2P (optional). */
+  displayName: varchar("display_name", { length: 64 }),
+  /** Public avatar URL (optional). */
+  avatarUrl: text("avatar_url"),
   /** ISO 3166-1 alpha-2 (e.g. CD) or OTHER. */
   countryCode: varchar("country_code", { length: 8 }),
   /** none | pending | approved | rejected | manual_review */
@@ -212,12 +216,21 @@ export const p2pAds = pgTable(
     price: numeric("price", { precision: 36, scale: 18 }).notNull(),
     minFiat: numeric("min_fiat", { precision: 36, scale: 18 }).notNull(),
     maxFiat: numeric("max_fiat", { precision: 36, scale: 18 }).notNull(),
+    /** Legacy free-text (kept for existing rows). */
     paymentMethods: text("payment_methods").notNull(),
+    /** New: stable method codes for filtering + snapshotting. */
+    paymentMethodCodes: jsonb("payment_method_codes").$type<string[] | null>(),
     terms: text("terms"),
     countryCode: varchar("country_code", { length: 8 }),
     status: varchar("status", { length: 16 }).notNull().default("active"),
     /** Optional paid boost: ad ranks higher while boostedUntil > now(). */
     boostedUntil: timestamp("boosted_until", { withTimezone: true }),
+    /** Optional paid boost amount (Pi). Used for within-boost ranking tiers. */
+    boostAmountPi: numeric("boost_amount_pi", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    reserveTotalCrypto: numeric("reserve_total_crypto", { precision: 36, scale: 18 }),
+    reserveRemainingCrypto: numeric("reserve_remaining_crypto", { precision: 36, scale: 18 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -228,6 +241,51 @@ export const p2pAds = pgTable(
   (t) => [
     index("p2p_ads_market_idx").on(t.status, t.asset, t.fiatCurrency),
     index("p2p_ads_user_idx").on(t.userId),
+  ],
+);
+
+export const p2pPaymentMethodDefs = pgTable(
+  "p2p_payment_method_defs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    countryCode: varchar("country_code", { length: 8 }).notNull(),
+    code: varchar("code", { length: 32 }).notNull(),
+    label: varchar("label", { length: 64 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("p2p_payment_method_defs_cc_code_uq").on(t.countryCode, t.code),
+    index("p2p_payment_method_defs_cc_idx").on(t.countryCode, t.active, t.sortOrder),
+  ],
+);
+
+export const userP2pPaymentMethods = pgTable(
+  "user_p2p_payment_methods",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    countryCode: varchar("country_code", { length: 8 }).notNull(),
+    methodCode: varchar("method_code", { length: 32 }).notNull(),
+    accountName: varchar("account_name", { length: 96 }).notNull(),
+    accountNumberOrPhone: varchar("account_number_or_phone", { length: 64 }).notNull(),
+    extra: jsonb("extra").$type<Record<string, unknown> | null>(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("user_p2p_payment_methods_user_idx").on(t.userId),
+    index("user_p2p_payment_methods_cc_idx").on(t.countryCode, t.methodCode, t.active),
   ],
 );
 
@@ -343,6 +401,35 @@ export const p2pOrderMessages = pgTable(
       .notNull(),
   },
   (t) => [index("p2p_order_messages_order_idx").on(t.orderId)],
+);
+
+export const p2pOrderPaymentProofs = pgTable(
+  "p2p_order_payment_proofs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => p2pOrders.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /**
+     * Small image only (data URL). Keep size small to avoid storage costs.
+     * Expected: data:image/jpeg;base64,... or data:image/webp;base64,...
+     */
+    dataUrl: text("data_url").notNull(),
+    mime: varchar("mime", { length: 64 }).notNull(),
+    sizeBytes: integer("size_bytes").notNull().default(0),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("p2p_order_proofs_order_uq").on(t.orderId),
+    index("p2p_order_proofs_order_idx").on(t.orderId),
+    index("p2p_order_proofs_created_idx").on(t.createdAt),
+  ],
 );
 
 export const p2pOrderRatings = pgTable(

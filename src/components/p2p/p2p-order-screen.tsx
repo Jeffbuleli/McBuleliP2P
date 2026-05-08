@@ -39,6 +39,7 @@ type OrderDetail = {
   createdAt: string;
   paymentReference: string | null;
   paymentProofNote: string | null;
+  paymentProofImage: { id: string; mime: string; sizeBytes: number; dataUrl: string | null } | null;
   disputeReason: string | null;
   disputedAt: string | null;
   refundedAt: string | null;
@@ -55,6 +56,7 @@ type ChatMsg = {
   body: string;
   createdAt: string;
   senderMasked: string;
+  senderRole: string;
   own: boolean;
 };
 
@@ -71,10 +73,18 @@ export function P2pOrderScreen() {
   const [busy, setBusy] = useState(false);
   const [paymentRef, setPaymentRef] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
+  const [proofBusy, setProofBusy] = useState(false);
+  const [proofErr, setProofErr] = useState<string | null>(null);
+  const [proofOk, setProofOk] = useState(false);
   const [disputeText, setDisputeText] = useState("");
   const [nowTick, setNowTick] = useState(0);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [chatDraft, setChatDraft] = useState("");
+  const chatListRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, []);
+
   const [ratingStars, setRatingStars] = useState(5);
   const [ratingComment, setRatingComment] = useState("");
 
@@ -90,6 +100,20 @@ export function P2pOrderScreen() {
     }
     setErr(null);
     setOrder(data as OrderDetail);
+  }, [orderId]);
+
+  const loadProof = useCallback(async () => {
+    const res = await fetch(`/api/p2p/orders/${orderId}/proof`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    setOrder((cur) =>
+      cur
+        ? {
+            ...cur,
+            paymentProofImage: data.proof ?? null,
+          }
+        : cur,
+    );
   }, [orderId]);
 
   const loadMessages = useCallback(async () => {
@@ -117,10 +141,21 @@ export function P2pOrderScreen() {
   }, [orderId, order?.status, loadMessages]);
 
   useEffect(() => {
+    if (!orderId || !order) return;
+    void loadProof();
+  }, [orderId, order?.status, loadProof]);
+
+  useEffect(() => {
     if (!orderId) return;
     const id = window.setInterval(() => void loadMessages(), 10000);
     return () => window.clearInterval(id);
   }, [orderId, loadMessages]);
+
+  useEffect(() => {
+    // keep latest message visible
+    const el = document.getElementById("p2p-chat-scroll");
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
 
   useEffect(() => {
     if (!order || order.status !== "awaiting_payment") return;
@@ -174,10 +209,50 @@ export function P2pOrderScreen() {
       setModal(null);
       setDisputeText("");
       await load();
+      await loadProof();
       await loadMessages();
       router.refresh();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function uploadProof(file: File) {
+    setProofErr(null);
+    setProofOk(false);
+    setProofBusy(true);
+    try {
+      const mime = file.type || "application/octet-stream";
+      if (!mime.startsWith("image/")) {
+        setProofErr("p2p_proof_invalid");
+        return;
+      }
+      const maxBytes = Number(process.env.NEXT_PUBLIC_P2P_PROOF_MAX_BYTES ?? "250000");
+      const limit = Number.isFinite(maxBytes) && maxBytes > 50_000 ? Math.floor(maxBytes) : 250_000;
+      if (file.size > limit) {
+        setProofErr("p2p_proof_too_large");
+        return;
+      }
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error("read_failed"));
+        r.onload = () => resolve(String(r.result || ""));
+        r.readAsDataURL(file);
+      });
+      const res = await fetch(`/api/p2p/orders/${orderId}/proof`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl, mime, sizeBytes: file.size }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setProofErr(typeof data.error === "string" ? data.error : "p2p_proof_invalid");
+        return;
+      }
+      setProofOk(true);
+      await loadProof();
+    } finally {
+      setProofBusy(false);
     }
   }
 
@@ -186,6 +261,15 @@ export function P2pOrderScreen() {
     if (!text) return;
     setBusy(true);
     try {
+      const optimistic: ChatMsg = {
+        id: `tmp_${Date.now()}`,
+        body: text,
+        createdAt: new Date().toISOString(),
+        senderMasked: "You",
+        senderRole: "user",
+        own: true,
+      };
+      setMessages((cur) => [...cur, optimistic]);
       const res = await fetch(`/api/p2p/orders/${orderId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,6 +278,7 @@ export function P2pOrderScreen() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setActionErr(typeof data.error === "string" ? data.error : "p2p_action_not_allowed");
+        setMessages((cur) => cur.filter((m) => m.id !== optimistic.id));
         return;
       }
       setChatDraft("");
@@ -230,6 +315,11 @@ export function P2pOrderScreen() {
     if (!actionErr) return null;
     return clientErrorText(t, actionErr);
   }, [actionErr, t]);
+
+  const proofErrMsg = useMemo(() => {
+    if (!proofErr) return null;
+    return clientErrorText(t, proofErr);
+  }, [proofErr, t]);
 
   if (err) {
     return (
@@ -453,6 +543,55 @@ export function P2pOrderScreen() {
                 className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
               />
             </label>
+
+            <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3 dark:border-stone-700 dark:bg-stone-950/40">
+              <p className="text-xs font-semibold text-stone-800 dark:text-stone-200">
+                {t("p2p_proof_title")}
+              </p>
+              <p className="mt-1 text-[11px] text-stone-600 dark:text-stone-400">
+                {t("p2p_proof_hint")}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={proofBusy}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadProof(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  {proofBusy ? "…" : t("p2p_proof_upload")}
+                </label>
+                {order.paymentProofImage?.dataUrl ? (
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    {t("p2p_proof_uploaded")}
+                  </span>
+                ) : null}
+                {proofOk ? (
+                  <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                    {t("p2p_proof_uploaded")}
+                  </span>
+                ) : null}
+              </div>
+              {proofErrMsg ? (
+                <p className="mt-2 text-xs text-rose-700 dark:text-rose-200">{proofErrMsg}</p>
+              ) : null}
+              {order.paymentProofImage?.dataUrl ? (
+                <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={order.paymentProofImage.dataUrl}
+                    alt={t("p2p_proof_title")}
+                    className="max-h-64 w-full object-contain bg-white dark:bg-stone-950"
+                  />
+                </div>
+              ) : null}
+            </div>
+
             <button
               type="button"
               disabled={busy}
@@ -560,7 +699,19 @@ export function P2pOrderScreen() {
                   m.own ? "bg-emerald-50 text-right dark:bg-emerald-950/40" : "bg-stone-100 dark:bg-stone-800"
                 }`}
               >
-                <span className="font-medium text-stone-600 dark:text-stone-400">{m.senderMasked}</span>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-stone-600 dark:text-stone-400">
+                    {m.senderMasked}
+                    {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
+                      <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                        Support
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-[10px] text-stone-400">
+                    {new Date(m.createdAt).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
                 <p className="whitespace-pre-wrap text-stone-900 dark:text-stone-100">{m.body}</p>
               </li>
             ))}
@@ -577,7 +728,7 @@ export function P2pOrderScreen() {
           aria-label={t("p2p_chat_title")}
         >
           <div className="rounded-t-2xl border border-stone-200 bg-white/98 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-950/98">
-            <div className="max-h-36 space-y-2 overflow-y-auto px-3 pt-3">
+            <div id="p2p-chat-scroll" ref={chatListRef} className="max-h-36 space-y-2 overflow-y-auto px-3 pt-3">
               {messages.map((m) => (
                 <div
                   key={m.id}
@@ -585,7 +736,19 @@ export function P2pOrderScreen() {
                     m.own ? "ml-6 bg-emerald-50 text-right dark:bg-emerald-950/40" : "mr-6 bg-stone-100 dark:bg-stone-800"
                   }`}
                 >
-                  <span className="font-medium text-stone-600 dark:text-stone-400">{m.senderMasked}</span>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium text-stone-600 dark:text-stone-400">
+                      {m.senderMasked}
+                      {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
+                        <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                          Support
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-[10px] text-stone-400">
+                      {new Date(m.createdAt).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
                   <p className="whitespace-pre-wrap text-stone-900 dark:text-stone-100">{m.body}</p>
                 </div>
               ))}
@@ -599,7 +762,7 @@ export function P2pOrderScreen() {
               />
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || !chatDraft.trim()}
                 onClick={() => void sendChat()}
                 className="shrink-0 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"
               >

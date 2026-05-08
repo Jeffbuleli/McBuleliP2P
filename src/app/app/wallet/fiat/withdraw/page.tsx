@@ -15,12 +15,14 @@ import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
+import { isPawapaySupportedForCountry } from "@/lib/pawapay/availability";
 
 type ProviderOption = { provider: string; label: string };
 
 export default function WalletFiatWithdrawPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const [pawapayOk, setPawapayOk] = useState<boolean | null>(null);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -48,6 +50,23 @@ export default function WalletFiatWithdrawPage() {
     const net = g - fee;
     return { fee, net, g };
   }, [gross]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMe() {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json().catch(() => ({}));
+      const cc =
+        typeof data?.user?.countryCode === "string" ? (data.user.countryCode as string) : null;
+      if (!cancelled) {
+        setPawapayOk(isPawapaySupportedForCountry(cc));
+      }
+    }
+    void loadMe();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +108,22 @@ export default function WalletFiatWithdrawPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset]);
+
+  if (pawapayOk === false) {
+    return (
+      <div className="mx-auto max-w-lg space-y-5 pb-10 pt-2">
+        <Link href="/app/wallet" className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400">
+          ← {t("wallet_title")}
+        </Link>
+        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
+          {t("wallet_fiat_withdraw_title")}
+        </h1>
+        <div className="rounded-2xl border border-amber-600/40 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
+          {t("wallet_pawapay_unavailable")}
+        </div>
+      </div>
+    );
+  }
 
   async function submit() {
     setErr(null);

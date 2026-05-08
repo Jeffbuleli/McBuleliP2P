@@ -13,12 +13,18 @@ export async function GET(req: Request) {
   const fiat = searchParams.get("fiat") ?? undefined;
   const side = searchParams.get("side") as P2pSide | null;
   const country = searchParams.get("country") ?? undefined;
+  const paymentContains = searchParams.get("payment") ?? undefined;
+  const boostedOnly = searchParams.get("boosted") === "1";
+  const trustedOnly = searchParams.get("trusted") === "1";
 
   const ads = await listMarketAds({
     asset: asset === "USDT" || asset === "PI" ? asset : undefined,
     fiat: fiat || undefined,
     side: side === "sell" || side === "buy" ? side : undefined,
     country: country || undefined,
+    paymentContains,
+    boostedOnly,
+    trustedOnly,
   });
   return NextResponse.json({ ads });
 }
