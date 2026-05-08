@@ -72,6 +72,21 @@ type OrderRow = {
 export function P2PHub() {
   const { t, locale } = useI18n();
   const [tab, setTab] = useState<"market" | "ads" | "orders">("market");
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("tab");
+    if (q === "market" || q === "ads" || q === "orders") {
+      setTab(q);
+    }
+  }, []);
+
+  const selectTab = useCallback((k: "market" | "ads" | "orders") => {
+    setTab(k);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", k);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }, []);
+
   const [asset, setAsset] = useState<P2pCryptoAsset | "">("");
   const [fiat, setFiat] = useState("");
   const [side, setSide] = useState<P2pSide | "">("");
@@ -307,7 +322,7 @@ export function P2PHub() {
           <button
             key={k}
             type="button"
-            onClick={() => setTab(k)}
+            onClick={() => selectTab(k)}
             className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
               tab === k
                 ? "bg-emerald-700 text-white shadow dark:bg-emerald-600"

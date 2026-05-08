@@ -1,15 +1,17 @@
-import { loadRecentActivity } from "@/lib/dashboard-activity";
+import Link from "next/link";
+import { loadP2pHomeActivity } from "@/lib/p2p-activity";
 import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
 import { getSessionUserId } from "@/lib/session";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
 import { BalanceCard } from "@/components/mobile/balance-card";
-import { QuickActions } from "@/components/mobile/quick-actions";
 import { AssetStrip } from "@/components/mobile/asset-strip";
 import { TradeHubPreview } from "@/components/mobile/trade-hub-preview";
 import { MarketPreview } from "@/components/mobile/market-preview";
-import { RecentActivity } from "@/components/mobile/recent-activity";
+import { P2PHomeCard } from "@/components/mobile/p2p-home-card";
+import { P2PRecentActivity } from "@/components/mobile/p2p-recent-activity";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
+import { getDictionary } from "@/i18n/messages";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +24,9 @@ export default async function DashboardPage() {
   }
 
   const snapshot = await getPortfolioSnapshotForUser(userId, locale);
+  const d = getDictionary(locale);
 
-  const activity = await loadRecentActivity(userId, locale, 8);
+  const p2pHome = await loadP2pHomeActivity({ userId, limit: 8 });
   const tickers = await fetchMarketTickers();
 
   const empty = {
@@ -38,6 +41,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-2">
+      <P2PHomeCard
+        inProgressCount={p2pHome.inProgressCount}
+        disputedCount={p2pHome.disputedCount}
+        previewOrders={p2pHome.items}
+      />
+
       <BalanceCard
         locale={locale}
         totalEquivDisplay={s.totalEquivDisplay}
@@ -47,9 +56,13 @@ export default async function DashboardPage() {
         fiatCdfDisplay={s.fiatCdfDisplay}
       />
 
-      <PriceChartLazy />
-
-      <QuickActions locale={locale} />
+      <Link
+        href="/app/wallet"
+        prefetch
+        className="-mt-1 block min-h-[44px] rounded-xl border border-stone-700/50 bg-stone-950/50 py-3 text-center text-sm font-semibold text-emerald-200 transition hover:bg-stone-900/60 active:scale-[0.99]"
+      >
+        {d.wallet_see_all}
+      </Link>
 
       <AssetStrip
         locale={locale}
@@ -59,11 +72,13 @@ export default async function DashboardPage() {
         fiatCdfApprox={s.fiatCdfDisplay}
       />
 
-      <TradeHubPreview locale={locale} />
+      <PriceChartLazy />
 
       <MarketPreview locale={locale} initialTickers={tickers} />
 
-      <RecentActivity locale={locale} items={activity} />
+      <TradeHubPreview locale={locale} />
+
+      <P2PRecentActivity items={p2pHome.items} />
     </div>
   );
 }
