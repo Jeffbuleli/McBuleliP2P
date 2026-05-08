@@ -177,6 +177,10 @@ export const en = {
   pi_pay_cancelled: "Cancelled.",
   pi_pay_memo_wallet: "McBuleli wallet test",
   pi_pay_no_sdk: "Pi SDK payment API not available in this browser.",
+  pi_pay_amount: "Amount",
+  pi_pay_memo_label: "Memo",
+  pi_pay_u2a_recipient:
+    "Recipient is your Pi app registration (user-to-app). Pi sets the address — you only set amount and memo below.",
   forgot_title: "Password reset",
   forgot_body:
     "Password reset links are not enabled yet. Contact support and we’ll verify your account securely.",
@@ -1250,6 +1254,10 @@ export const fr: Messages = {
   pi_pay_cancelled: "Annulé.",
   pi_pay_memo_wallet: "Test portefeuille McBuleli",
   pi_pay_no_sdk: "API de paiement Pi indisponible dans ce navigateur.",
+  pi_pay_amount: "Montant",
+  pi_pay_memo_label: "Mémo",
+  pi_pay_u2a_recipient:
+    "Bénéficiaire : votre appli enregistrée sur Pi (paiement utilisateur→appli). Pi gère l'adresse — vous définissez montant et mémo ci-dessous.",
   forgot_title: "Réinitialisation",
   forgot_body:
     "Les liens de réinitialisation ne sont pas encore activés. Contactez le support pour une vérification sécurisée.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
 import { useI18n } from "@/components/i18n-provider";
@@ -8,19 +8,22 @@ import { useI18n } from "@/components/i18n-provider";
 type PiPaymentArgs = {
   amount: number;
   memo: string;
-  metadata?: Record<string, unknown>;
+  metadata: Record<string, unknown>;
 };
 
 export function PiWalletPaymentSection() {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const testAmount = useMemo(
+    () => Number(process.env.NEXT_PUBLIC_PI_TEST_PAYMENT_AMOUNT ?? "0.1"),
+    [],
+  );
 
   async function pay() {
     setMsg(null);
     setBusy(true);
     try {
-      let cancelled = false;
       const Pi = await piInit();
       if (typeof Pi.createPayment !== "function") {
         setMsg(t("pi_pay_no_sdk"));
@@ -28,14 +31,17 @@ export function PiWalletPaymentSection() {
       }
       await piAuthenticateForPayments(Pi);
       const payment: PiPaymentArgs = {
-        amount: Number(process.env.NEXT_PUBLIC_PI_TEST_PAYMENT_AMOUNT ?? "0.1"),
+        amount: testAmount,
         memo: t("pi_pay_memo_wallet"),
-        metadata: { purpose: "wallet_test" },
+        metadata: {
+          purpose: "wallet_test",
+          app: "mcbuleli",
+        },
       };
 
-      await Promise.resolve(
-        Pi.createPayment!(payment, {
-          onReadyForServerApproval: async (paymentId: string) => {
+      // Pi SDK requires all four callbacks (see pi-platform-docs SDK_reference.md).
+      Pi.createPayment!(payment, {
+        onReadyForServerApproval: async (paymentId: string) => {
             const res = await fetchWithDeadline(
               "/api/payments/pi/approve",
               {
@@ -83,14 +89,17 @@ export function PiWalletPaymentSection() {
                   : "complete_failed",
               );
             }
+            setMsg(t("pi_pay_success"));
           },
-          onCancel: () => {
-            cancelled = true;
-            setMsg(t("pi_pay_cancelled"));
+          onCancel: (paymentId: string) => {
+            setMsg(`${t("pi_pay_cancelled")}${paymentId ? ` (${paymentId.slice(0, 8)}…)` : ""}`);
           },
-        }),
-      );
-      if (!cancelled) setMsg(t("pi_pay_success"));
+          onError: (error: Error, _payment?: unknown) => {
+            const detail = error?.message ?? String(error);
+            setMsg(detail ? `${t("pi_pay_failed")}: ${detail}` : t("pi_pay_failed"));
+          },
+        });
+      // Success is set in onReadyForServerCompletion (createPayment returns immediately).
     } catch (e) {
       const m =
         e instanceof Error ? e.message : t("pi_pay_failed");
@@ -106,6 +115,19 @@ export function PiWalletPaymentSection() {
       <p className="mt-1 text-[11px] leading-snug text-stone-400">
         {t("pi_pay_section_hint")}
       </p>
+      <p className="mt-2 text-[11px] leading-snug text-stone-500">
+        {t("pi_pay_u2a_recipient")}
+      </p>
+      <ul className="mt-2 space-y-0.5 text-[11px] text-stone-400">
+        <li>
+          {t("pi_pay_amount")}: <span className="font-medium text-stone-200">{testAmount}</span>{" "}
+          Pi
+        </li>
+        <li>
+          {t("pi_pay_memo_label")}:{" "}
+          <span className="font-medium text-stone-200">{t("pi_pay_memo_wallet")}</span>
+        </li>
+      </ul>
       <button
         type="button"
         disabled={busy}

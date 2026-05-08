@@ -14,7 +14,7 @@ declare global {
         payment: {
           amount: number;
           memo: string;
-          metadata?: Record<string, unknown>;
+          metadata: Record<string, unknown>;
         },
         callbacks: {
           onReadyForServerApproval: (paymentId: string) => void | Promise<void>;
@@ -22,9 +22,10 @@ declare global {
             paymentId: string,
             txid: string,
           ) => void | Promise<void>;
-          onCancel?: (error: unknown) => void;
+          onCancel: (paymentId: string) => void;
+          onError: (error: Error, payment?: unknown) => void;
         },
-      ) => unknown;
+      ) => void;
     };
   }
 }
