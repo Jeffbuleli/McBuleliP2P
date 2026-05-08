@@ -5,11 +5,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/**
- * Pi Developer Portal — mainnet / production domain verification.
- * Prefer public URL /validation-key.txt (App Router). This API path is kept
- * for backwards compatibility.
- */
 export async function GET() {
   return piDomainValidationResponse(
     process.env.PI_DOMAIN_VALIDATION_KEY,

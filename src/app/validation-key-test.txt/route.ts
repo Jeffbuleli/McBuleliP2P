@@ -5,7 +5,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** Backwards-compatible API path; public URL is `/validation-key-test.txt`. */
+/** Pi test / sandbox checklist — same host, separate path from production. */
 export async function GET() {
   return piDomainValidationResponse(
     process.env.PI_DOMAIN_VALIDATION_KEY_TEST,
