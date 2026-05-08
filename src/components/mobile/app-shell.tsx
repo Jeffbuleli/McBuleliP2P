@@ -7,9 +7,11 @@ import { OfflineOverlay } from "@/components/mobile/offline-overlay";
 
 export function AppShell({
   email,
+  avatarUrl,
   children,
 }: {
   email: string;
+  avatarUrl: string | null;
   children: ReactNode;
 }) {
   return (
@@ -17,7 +19,7 @@ export function AppShell({
       <div className="sticky top-0 z-40 px-3 pt-2">
         <div className="rounded-2xl border border-stone-700/50 bg-stone-900/90 shadow-lg shadow-black/20 ring-1 ring-stone-800/80 backdrop-blur-md">
           <div className="px-2 py-1.5">
-            <AppTopBar email={email} />
+            <AppTopBar email={email} avatarUrl={avatarUrl} />
           </div>
         </div>
       </div>

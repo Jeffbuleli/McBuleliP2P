@@ -39,8 +39,6 @@ export type WalletOverviewLabels = {
   wallet_add_funds: string;
   wallet_quick_withdraw: string;
   wallet_quick_send: string;
-  wallet_quick_swap: string;
-  wallet_row_swap: string;
   wallet_row_send: string;
   wallet_link_history: string;
   wallet_fees_expand: string;
@@ -83,15 +81,11 @@ export function WalletOverview({
   totalUsdDisplay,
   cryptoRows,
   fiatRows,
-  stakingPromo,
-  servicePromos,
 }: {
   labels: WalletOverviewLabels;
   totalUsdDisplay: string;
   cryptoRows: WalletRowDTO[];
   fiatRows: WalletRowDTO[];
-  stakingPromo: StakingPromoDTO | null;
-  servicePromos?: ServicePromoDTO[] | null;
 }) {
   const [tab, setTab] = useState<"crypto" | "account">("crypto");
   const [q, setQ] = useState("");
@@ -135,96 +129,6 @@ export function WalletOverview({
         </Link>
       </header>
 
-      {stakingPromo ? (
-        <Link
-          href={stakingPromo.href}
-          className="mt-3 block rounded-2xl border border-emerald-800/20 bg-gradient-to-br from-emerald-50/95 to-amber-50/40 p-4 shadow-sm ring-1 ring-emerald-900/10 transition active:scale-[0.99] dark:border-emerald-700/30 dark:from-emerald-950/50 dark:to-stone-900/80 dark:ring-emerald-500/10"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
-                {stakingPromo.title}
-              </p>
-              <p className="mt-1 text-sm font-semibold leading-snug text-[color:var(--mb-text)] dark:text-stone-100">
-                {stakingPromo.tagline}
-              </p>
-              <p className="mt-2 text-xs text-[color:var(--mb-muted)] dark:text-stone-400">
-                {stakingPromo.riskShort}
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white dark:bg-emerald-600">
-              {stakingPromo.cta}
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-emerald-900/10 pt-3 dark:border-emerald-800/30">
-            <div>
-              <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-                {stakingPromo.lockedLabel}
-              </p>
-              <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-950 dark:text-emerald-100">
-                {stakingPromo.lockedDisplay}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
-                {stakingPromo.accruedLabel}
-              </p>
-              <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-950 dark:text-emerald-100">
-                {stakingPromo.accruedDisplay}
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-[11px] font-medium text-stone-600 dark:text-stone-400">
-            {stakingPromo.activeLine}
-          </p>
-        </Link>
-      ) : null}
-
-      {servicePromos && servicePromos.length > 0 ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {servicePromos.map((p) => (
-            <Link
-              key={p.href}
-              href={p.href}
-              className={`block rounded-2xl border p-4 shadow-sm ring-1 transition active:scale-[0.99] ${
-                p.tone === "emerald"
-                  ? "border-emerald-800/20 bg-gradient-to-br from-emerald-50/95 to-white ring-emerald-900/10 dark:border-emerald-700/30 dark:from-emerald-950/40 dark:to-stone-900/80 dark:ring-emerald-500/10"
-                  : "border-amber-800/20 bg-gradient-to-br from-amber-50/95 to-white ring-amber-900/10 dark:border-amber-700/30 dark:from-amber-950/25 dark:to-stone-900/80 dark:ring-amber-500/10"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p
-                    className={`text-[10px] font-bold uppercase tracking-wide ${
-                      p.tone === "emerald"
-                        ? "text-emerald-800 dark:text-emerald-300"
-                        : "text-amber-800 dark:text-amber-200"
-                    }`}
-                  >
-                    {p.title}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-snug text-[color:var(--mb-text)] dark:text-stone-100">
-                    {p.tagline}
-                  </p>
-                  <p className="mt-2 text-xs text-[color:var(--mb-muted)] dark:text-stone-400">
-                    {p.metaLine}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold text-white ${
-                    p.tone === "emerald"
-                      ? "bg-emerald-700 dark:bg-emerald-600"
-                      : "bg-amber-700 dark:bg-amber-600"
-                  }`}
-                >
-                  {p.cta}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
       <section className="mt-3 rounded-3xl border border-[color:var(--mb-border)] bg-[color:var(--mb-surface)]/95 p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:border-stone-700 dark:bg-stone-900/95 dark:ring-white/[0.06]">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
@@ -247,30 +151,24 @@ export function WalletOverview({
           {labels.wallet_hub_actions}
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <Link
             href={addFundsHref}
-            className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-3 text-center text-sm font-bold text-white shadow-md shadow-emerald-900/15 active:scale-[0.98] dark:bg-emerald-600"
+            className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-2 text-center text-sm font-bold text-white shadow-md shadow-emerald-900/15 active:scale-[0.98] dark:bg-emerald-600"
           >
             {labels.wallet_add_funds}
           </Link>
           <Link
             href={withdrawHrefTop}
-            className="flex min-h-[48px] items-center justify-center rounded-2xl border-2 border-[color:var(--mb-primary)]/35 bg-white px-3 text-center text-sm font-bold text-[color:var(--mb-primary)] active:scale-[0.98] dark:border-amber-900/40 dark:bg-stone-800 dark:text-amber-100"
+            className="flex min-h-[48px] items-center justify-center rounded-2xl border-2 border-[color:var(--mb-primary)]/35 bg-white px-2 text-center text-sm font-bold text-[color:var(--mb-primary)] active:scale-[0.98] dark:border-amber-900/40 dark:bg-stone-800 dark:text-amber-100"
           >
             {labels.wallet_quick_withdraw}
           </Link>
           <Link
             href="/app/wallet/transfer"
-            className="flex min-h-[48px] items-center justify-center rounded-2xl border border-stone-200 bg-stone-50/90 px-3 text-center text-sm font-semibold text-stone-800 active:scale-[0.98] dark:border-stone-600 dark:bg-stone-800/80 dark:text-stone-100"
+            className="flex min-h-[48px] items-center justify-center rounded-2xl border border-stone-200 bg-stone-50/90 px-2 text-center text-sm font-semibold text-stone-800 active:scale-[0.98] dark:border-stone-600 dark:bg-stone-800/80 dark:text-stone-100"
           >
             {labels.wallet_quick_send}
-          </Link>
-          <Link
-            href="/app/wallet/swap"
-            className="flex min-h-[48px] items-center justify-center rounded-2xl border border-emerald-800/20 bg-emerald-50/90 px-3 text-center text-sm font-semibold text-emerald-950 active:scale-[0.98] dark:border-emerald-600/30 dark:bg-emerald-950/40 dark:text-emerald-100"
-          >
-            {labels.wallet_quick_swap}
           </Link>
         </div>
       </section>
@@ -384,12 +282,6 @@ export function WalletOverview({
                     className="rounded-lg border border-[color:var(--mb-primary)]/30 px-2.5 py-1.5 text-[11px] font-bold text-[color:var(--mb-primary)] dark:border-amber-800/40 dark:text-amber-100"
                   >
                     {labels.wallet_quick_withdraw}
-                  </Link>
-                  <Link
-                    href={`/app/wallet/swap?from=${row.asset}`}
-                    className="rounded-lg border border-emerald-800/25 bg-emerald-50/80 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-900 dark:border-emerald-600/30 dark:bg-emerald-950/50 dark:text-emerald-200"
-                  >
-                    {labels.wallet_row_swap}
                   </Link>
                   <Link
                     href={`/app/wallet/transfer?asset=${row.asset}`}

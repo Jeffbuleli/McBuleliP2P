@@ -14,6 +14,7 @@ import {
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
+import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
 
 type OrderDetail = {
   id: string;
@@ -49,6 +50,7 @@ type OrderDetail = {
   hasRated: boolean;
   canRate: boolean;
   chatAllowsNewMessages: boolean;
+  viewerAvatarUrl?: string | null;
 };
 
 type ChatMsg = {
@@ -57,6 +59,7 @@ type ChatMsg = {
   createdAt: string;
   senderMasked: string;
   senderRole: string;
+  senderAvatarUrl?: string | null;
   own: boolean;
 };
 
@@ -267,6 +270,7 @@ export function P2pOrderScreen() {
         createdAt: new Date().toISOString(),
         senderMasked: "You",
         senderRole: "user",
+        senderAvatarUrl: order?.viewerAvatarUrl ?? null,
         own: true,
       };
       setMessages((cur) => [...cur, optimistic]);
@@ -699,20 +703,36 @@ export function P2pOrderScreen() {
                   m.own ? "bg-emerald-50 text-right dark:bg-emerald-950/40" : "bg-stone-100 dark:bg-stone-800"
                 }`}
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium text-stone-600 dark:text-stone-400">
-                    {m.senderMasked}
-                    {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                      <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
-                        Support
+                <div
+                  className={`flex items-start gap-2 ${m.own ? "flex-row-reverse" : ""}`}
+                >
+                  <ChatAvatarBubble
+                    label={m.senderMasked}
+                    avatarUrl={m.senderAvatarUrl}
+                    own={m.own}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-medium text-stone-600 dark:text-stone-400">
+                        {m.senderMasked}
+                        {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
+                          <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                            Support
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </span>
-                  <span className="text-[10px] text-stone-400">
-                    {new Date(m.createdAt).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}
-                  </span>
+                      <span className="text-[10px] text-stone-400">
+                        {new Date(m.createdAt).toLocaleTimeString(loc, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 whitespace-pre-wrap text-stone-900 dark:text-stone-100">
+                      {m.body}
+                    </p>
+                  </div>
                 </div>
-                <p className="whitespace-pre-wrap text-stone-900 dark:text-stone-100">{m.body}</p>
               </li>
             ))}
           </ul>
@@ -736,20 +756,36 @@ export function P2pOrderScreen() {
                     m.own ? "ml-6 bg-emerald-50 text-right dark:bg-emerald-950/40" : "mr-6 bg-stone-100 dark:bg-stone-800"
                   }`}
                 >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium text-stone-600 dark:text-stone-400">
-                      {m.senderMasked}
-                      {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                        <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
-                          Support
+                  <div
+                    className={`flex items-start gap-2 ${m.own ? "flex-row-reverse" : ""}`}
+                  >
+                    <ChatAvatarBubble
+                      label={m.senderMasked}
+                      avatarUrl={m.senderAvatarUrl}
+                      own={m.own}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-medium text-stone-600 dark:text-stone-400">
+                          {m.senderMasked}
+                          {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
+                            <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                              Support
+                            </span>
+                          ) : null}
                         </span>
-                      ) : null}
-                    </span>
-                    <span className="text-[10px] text-stone-400">
-                      {new Date(m.createdAt).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}
-                    </span>
+                        <span className="text-[10px] text-stone-400">
+                          {new Date(m.createdAt).toLocaleTimeString(loc, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 whitespace-pre-wrap text-stone-900 dark:text-stone-100">
+                        {m.body}
+                      </p>
+                    </div>
                   </div>
-                  <p className="whitespace-pre-wrap text-stone-900 dark:text-stone-100">{m.body}</p>
                 </div>
               ))}
             </div>

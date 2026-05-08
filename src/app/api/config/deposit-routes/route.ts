@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 import { hasBinanceKeys } from "@/lib/env";
-import { getPlatformSetting, PlatformSettingKey } from "@/lib/platform-settings";
 
-/** Which on-ramp flows are configured server-side. */
+/** Which on-ramp flows are configured server-side (USDT via Binance only). */
 export async function GET() {
-  const manualPi = await getPlatformSetting(PlatformSettingKey.PI_RECEIVE_ADDRESS_REAL);
-  const piManual = Boolean(manualPi?.trim());
   return NextResponse.json({
     usdtBinance: hasBinanceKeys(),
-    piManual,
     /** @deprecated use usdtBinance */
     enabled: hasBinanceKeys(),
   });

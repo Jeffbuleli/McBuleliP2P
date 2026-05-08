@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
+import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -76,6 +77,7 @@ export async function POST(req: Request) {
           role: "user",
           tradeLiveEnabled: false,
           staffScopes: null,
+          countryCode: "CD",
           piUid,
           piUsername: username,
         })
@@ -88,6 +90,20 @@ export async function POST(req: Request) {
       .update(users)
       .set({ piUid, piUsername: username })
       .where(eq(users.id, userId));
+  }
+
+  // Fix invalid/empty country codes (e.g. "—", "-") so P2P payment methods match.
+  const [crow] = await db
+    .select({ countryCode: users.countryCode })
+    .from(users)
+    .where(eq(users.id, resolvedUserId))
+    .limit(1);
+  const norm = effectiveP2pCountryCode(crow?.countryCode ?? null);
+  if ((crow?.countryCode ?? "").trim().toUpperCase() !== norm) {
+    await db
+      .update(users)
+      .set({ countryCode: norm })
+      .where(eq(users.id, resolvedUserId));
   }
 
   const token = await signSessionToken(resolvedUserId);

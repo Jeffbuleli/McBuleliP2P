@@ -1,13 +1,18 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDb, p2pOrderRatings, p2pOrders, users } from "@/db";
 import type { Locale } from "@/i18n/locale";
-import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
+import {
+  formatPortfolioTotalWithStaking,
+  getPortfolioSnapshotForUser,
+} from "@/lib/portfolio-display";
+import { getStakingValuationUsd } from "@/lib/staking-service";
 
 const ST_RELEASED = "released";
 
 export type ProfileDashboard = {
   id: string;
   email: string;
+  avatarUrl: string | null;
   countryCode: string | null;
   kycStatus: string;
   createdAt: Date;
@@ -28,6 +33,7 @@ export async function getProfileDashboard(
     .select({
       id: users.id,
       email: users.email,
+      avatarUrl: users.avatarUrl,
       countryCode: users.countryCode,
       kycStatus: users.kycStatus,
       createdAt: users.createdAt,
@@ -64,11 +70,23 @@ export async function getProfileDashboard(
   const completionPct =
     terminal > 0 ? Math.round((completed / terminal) * 1000) / 10 : null;
 
-  const portfolio = await getPortfolioSnapshotForUser(userId, locale);
+  let portfolio = await getPortfolioSnapshotForUser(userId, locale);
+  if (portfolio) {
+    const stakeVal = await getStakingValuationUsd(userId);
+    portfolio = {
+      ...portfolio,
+      totalEquivDisplay: formatPortfolioTotalWithStaking(
+        portfolio,
+        stakeVal,
+        locale,
+      ),
+    };
+  }
 
   return {
     id: u.id,
     email: u.email,
+    avatarUrl: u.avatarUrl ?? null,
     countryCode: u.countryCode ?? null,
     kycStatus: u.kycStatus ?? "none",
     createdAt: u.createdAt,

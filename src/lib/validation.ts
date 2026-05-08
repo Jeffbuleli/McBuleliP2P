@@ -21,20 +21,13 @@ export const loginSchema = registerSchema;
 const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
 
 const cexBinance: z.ZodType<Extract<CexId, "binance">> = z.literal("binance");
-const cexPiManual = z.literal("manual");
 
-export const depositIntentSchema = z.discriminatedUnion("asset", [
-  z.object({
-    provider: cexBinance,
-    asset: z.literal("USDT"),
-    network: networkEnum,
-  }),
-  z.object({
-    provider: cexPiManual,
-    asset: z.literal("PI"),
-    network: z.literal("PI_MAIN"),
-  }),
-]);
+/** USDT on-ramp via Binance deposit address only (no manual Pi on-chain deposit). */
+export const depositIntentSchema = z.object({
+  provider: cexBinance,
+  asset: z.literal("USDT"),
+  network: networkEnum,
+});
 
 export const depositConfirmSchema = z.object({
   txid: z.string().trim().min(8).max(512),

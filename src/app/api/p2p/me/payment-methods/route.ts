@@ -3,6 +3,7 @@ import { z } from "zod";
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, p2pPaymentMethodDefs, userP2pPaymentMethods, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 
 const postZ = z.object({
   methodCode: z.string().min(2).max(32),
@@ -19,7 +20,7 @@ export async function GET() {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  const cc = (u?.countryCode ?? "CD").toUpperCase();
+  const cc = effectiveP2pCountryCode(u?.countryCode ?? null);
 
   const rows = await db
     .select({
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  const cc = (u?.countryCode ?? "CD").toUpperCase();
+  const cc = effectiveP2pCountryCode(u?.countryCode ?? null);
 
   // Validate method code exists for this country (active).
   const [def] = await db

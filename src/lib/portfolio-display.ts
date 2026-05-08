@@ -1,11 +1,17 @@
-import { eq } from "drizzle-orm";
-import { getDb, users } from "@/db";
-import { cdfPerOneUsd, formatMoneyLocale } from "@/lib/fx";
 import type { Locale } from "@/i18n/locale";
-import { okxPublicTickerLast } from "@/lib/okx";
+import { formatMoneyLocale } from "@/lib/fx";
+import { getStakingValuationUsd } from "@/lib/staking-service";
+import { getWalletUserState } from "@/lib/wallet-user-state";
+import { formatWalletAssetBalance } from "@/lib/wallet-balance-format";
+import type { WalletAsset } from "@/lib/wallet-types";
 
 export type PortfolioSnapshot = {
+  /**
+   * Sum of all wallet lines in USD (matches Wallet estimated total, excluding staking).
+   * @deprecated Field name kept for compatibility; value is USD, not “USDT equiv” only.
+   */
   totalEquivUsdt: number;
+  /** Same formatting as Wallet overview header (`totalUsdDisplay`). */
   totalEquivDisplay: string;
   usdtDisplay: string;
   piDisplay: string;
@@ -13,12 +19,38 @@ export type PortfolioSnapshot = {
   fiatCdfDisplay: string;
 };
 
-function fmtLocale(n: number, locale: Locale, maxFrac: number): string {
-  if (!Number.isFinite(n)) return "—";
+/** Fallback when snapshot cannot be loaded (should be rare if session user exists). */
+export function emptyPortfolioSnapshot(locale: Locale): PortfolioSnapshot {
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  return n.toLocaleString(loc, {
-    maximumFractionDigits: maxFrac,
-    minimumFractionDigits: 0,
+  return {
+    totalEquivUsdt: 0,
+    totalEquivDisplay: (0).toLocaleString(loc, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }),
+    usdtDisplay: "0 USDT",
+    piDisplay: "0 Pi",
+    fiatUsdDisplay: `≈ ${formatMoneyLocale(0, locale, 2)} USD`,
+    fiatCdfDisplay: "≈ 0 CDF",
+  };
+}
+
+/** Same headline math as Wallet overview (liquid balances + locked staking). */
+export function formatPortfolioTotalWithStaking(
+  snapshot: PortfolioSnapshot,
+  stakeVal: Awaited<ReturnType<typeof getStakingValuationUsd>>,
+  locale: Locale,
+): string {
+  const mergedUsd =
+    snapshot.totalEquivUsdt +
+    stakeVal.principalUsd +
+    stakeVal.accruedInterestUsd;
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  return mergedUsd.toLocaleString(loc, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
   });
 }
 
@@ -26,45 +58,29 @@ export async function getPortfolioSnapshotForUser(
   userId: string,
   locale: Locale,
 ): Promise<PortfolioSnapshot | null> {
-  const db = getDb();
-  const [u] = await db
-    .select({
-      balance: users.balance,
-      piBalance: users.piBalance,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const state = await getWalletUserState(userId, locale);
+  if (!state) return null;
 
-  if (!u) return null;
+  const line = (a: WalletAsset) =>
+    state.lines.find((x) => x.asset === a)!;
 
-  const usdtNum = Number(u.balance ?? 0);
-  const piNum = Number(u.piBalance ?? 0);
+  const usdt = line("USDT");
+  const pi = line("PI");
+  const usd = line("USD");
+  const cdf = line("CDF");
 
-  let piLast: string | null = null;
-  try {
-    piLast = await okxPublicTickerLast("PI-USDT");
-  } catch {
-    piLast = null;
-  }
-  const piUsd = piLast != null ? Number(piLast) : NaN;
-  const piInUsdt =
-    Number.isFinite(piUsd) && piUsd > 0 ? piNum * piUsd : 0;
-  const totalEquivUsdt = usdtNum + piInUsdt;
-  const cdf = cdfPerOneUsd();
-
-  const totalEquivDisplay = `≈ ${fmtLocale(totalEquivUsdt, locale, 4)} USDT`;
-  const usdtDisplay = `${fmtLocale(usdtNum, locale, 4)} USDT`;
+  const usdtDisplay = `${formatWalletAssetBalance(usdt.balanceNum, "USDT", locale)} USDT`;
   const piDisplay =
-    Number.isFinite(piUsd) && piUsd > 0
-      ? `${fmtLocale(piNum, locale, 4)} Pi · ≈ ${fmtLocale(piInUsdt, locale, 2)} USDT`
-      : `${fmtLocale(piNum, locale, 4)} Pi`;
-  const fiatUsdDisplay = `≈ ${formatMoneyLocale(totalEquivUsdt, locale, 2)} USD`;
-  const fiatCdfDisplay = `≈ ${formatMoneyLocale(totalEquivUsdt * cdf, locale, 0)} CDF`;
+    pi.balanceNum > 0 && pi.valueUsd > 0
+      ? `${formatWalletAssetBalance(pi.balanceNum, "PI", locale)} Pi · ≈ ${formatMoneyLocale(pi.valueUsd, locale, 2)} USDT`
+      : `${formatWalletAssetBalance(pi.balanceNum, "PI", locale)} Pi`;
+
+  const fiatUsdDisplay = `≈ ${formatMoneyLocale(usd.balanceNum, locale, 2)} USD`;
+  const fiatCdfDisplay = `≈ ${formatWalletAssetBalance(cdf.balanceNum, "CDF", locale)} CDF`;
 
   return {
-    totalEquivUsdt,
-    totalEquivDisplay,
+    totalEquivUsdt: state.totalUsd,
+    totalEquivDisplay: state.totalUsdDisplay,
     usdtDisplay,
     piDisplay,
     fiatUsdDisplay,

@@ -8,6 +8,8 @@ import { agentHasScope, normalizeStaffScopesJson, type StaffScope } from "@/lib/
 export type SessionUser = {
   id: string;
   email: string;
+  /** Public profile image (relative path, https URL, or null). */
+  avatarUrl: string | null;
   role: UserRoleType;
   /** Set for agents; `null` = all modules (legacy). */
   staffScopes: StaffScope[] | null;
@@ -21,6 +23,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     .select({
       id: users.id,
       email: users.email,
+      avatarUrl: users.avatarUrl,
       role: users.role,
       staffScopes: users.staffScopes,
     })
@@ -38,6 +41,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   return {
     id: row.id,
     email: row.email,
+    avatarUrl: row.avatarUrl ?? null,
     role: row.role as UserRoleType,
     staffScopes,
   };

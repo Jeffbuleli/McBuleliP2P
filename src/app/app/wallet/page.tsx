@@ -3,7 +3,8 @@ import { getLocale } from "@/lib/get-locale";
 import { getSessionUserId } from "@/lib/session";
 import { getStakingValuationUsd } from "@/lib/staking-service";
 import { getWalletUserState } from "@/lib/wallet-user-state";
-import { FIAT_FEE_RATE, SWAP_FEE_USD } from "@/lib/wallet-fees";
+import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
+import { formatWalletAssetBalance } from "@/lib/wallet-balance-format";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { EXTERNAL_WITHDRAW_FEE_USDT } from "@/lib/withdraw-fees";
 import type { Locale } from "@/i18n/locale";
@@ -14,6 +15,7 @@ import {
   type WalletOverviewLabels,
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
+import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
 import { PiWalletPaymentSection } from "@/components/pi/pi-wallet-payment";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
@@ -31,32 +33,19 @@ const NAME: Record<WalletAsset, Record<"en" | "fr", string>> = {
   CDF: { en: "Congolese franc", fr: "Franc congolais" },
 };
 
-function formatBalanceDisplay(n: number, asset: WalletAsset, locale: Locale): string {
-  if (!Number.isFinite(n) || n === 0) return "0";
-  const loc = locale === "fr" ? "fr-FR" : "en-US";
-  if (asset === "CDF") {
-    return n.toLocaleString(loc, {
-      maximumFractionDigits: 0,
-      minimumFractionDigits: 0,
-    });
-  }
-  return n.toLocaleString(loc, {
-    maximumFractionDigits: 8,
-    minimumFractionDigits: 0,
-  });
-}
-
 function toRow(
   row: NonNullable<Awaited<ReturnType<typeof getWalletUserState>>>["lines"][0],
   locale: Locale,
   lang: "en" | "fr",
 ): WalletRowDTO {
   const depositHref =
-    row.asset === "USDT" || row.asset === "PI"
+    row.asset === "USDT"
       ? "/app/deposit"
-      : row.asset === "PI_TEST"
-        ? "/admin/settings/pi"
-      : "/app/wallet/fiat/deposit";
+      : row.asset === "PI"
+        ? "/app/wallet#pi-topup"
+        : row.asset === "PI_TEST"
+          ? "/admin/settings/pi"
+          : "/app/wallet/fiat/deposit";
   const withdrawHref =
     row.asset === "USDT" || row.asset === "PI"
       ? "/app/withdraw"
@@ -68,7 +57,7 @@ function toRow(
     asset: row.asset,
     title: row.asset === "PI_TEST" ? "Pi Test" : row.asset,
     subtitle: NAME[row.asset][lang],
-    balanceDisplay: formatBalanceDisplay(row.balanceNum, row.asset, locale),
+    balanceDisplay: formatWalletAssetBalance(row.balanceNum, row.asset, locale),
     valueUsdApprox: row.valueUsdDisplay,
     depositHref,
     withdrawHref,
@@ -92,8 +81,12 @@ export default async function WalletPage() {
   }
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
+  const piTestUsd =
+    state.lines.find((l) => l.asset === "PI_TEST")?.valueUsd ?? 0;
+  const walletUsd =
+    state.totalUsd - piTestUsd;
   const mergedUsd =
-    state.totalUsd +
+    walletUsd +
     stakeVal.principalUsd +
     stakeVal.accruedInterestUsd;
   const totalUsdDisplay = mergedUsd.toLocaleString(loc, {
@@ -189,16 +182,16 @@ export default async function WalletPage() {
     const cLike = counts("likelimba");
     const cAvec = counts("avec");
 
-    groupPromos[0] = {
-      ...groupPromos[0]!,
+    groupPromos[1] = {
+      ...groupPromos[1]!,
       metaLine: interpolate(d.group_like_meta, {
         total: cLike.total,
         active: cLike.active,
         overdue: cLike.overdue,
       }),
     };
-    groupPromos[1] = {
-      ...groupPromos[1]!,
+    groupPromos[2] = {
+      ...groupPromos[2]!,
       metaLine: interpolate(d.group_avec_meta, {
         total: cAvec.total,
         active: cAvec.active,
@@ -210,14 +203,13 @@ export default async function WalletPage() {
   }
 
   const pct = Math.round(FIAT_FEE_RATE * 100);
-  const feeSwap = interpolate(d.wallet_fee_swap, { feeUsd: SWAP_FEE_USD });
   const feeFiat = interpolate(d.wallet_fee_fiat, { pct });
   const feeCrypto = interpolate(d.wallet_fee_crypto_out, {
     feeUsd: EXTERNAL_WITHDRAW_FEE_USDT,
   });
 
   const cryptoRows = state.lines
-    .filter((l) => l.asset === "USDT" || l.asset === "PI" || l.asset === "PI_TEST")
+    .filter((l) => l.asset === "USDT" || l.asset === "PI")
     .map((l) => toRow(l, locale, lang));
   const fiatRows = state.lines
     .filter((l) => l.asset === "USD" || l.asset === "CDF")
@@ -239,8 +231,6 @@ export default async function WalletPage() {
     wallet_add_funds: d.wallet_add_funds,
     wallet_quick_withdraw: d.wallet_quick_withdraw,
     wallet_quick_send: d.wallet_quick_send,
-    wallet_quick_swap: d.wallet_quick_swap,
-    wallet_row_swap: d.wallet_row_swap,
     wallet_row_send: d.wallet_row_send,
     wallet_link_history: d.wallet_link_history,
     wallet_fees_expand: d.wallet_fees_expand,
@@ -250,7 +240,6 @@ export default async function WalletPage() {
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
     feeBulletLines: [
-      feeSwap,
       feeFiat,
       feeCrypto,
       d.wallet_fee_internal,
@@ -260,12 +249,16 @@ export default async function WalletPage() {
 
   return (
     <>
-      <PiWalletPaymentSection />
       <WalletOverview
         labels={labels}
         totalUsdDisplay={totalUsdDisplay}
         cryptoRows={cryptoRows}
         fiatRows={fiatRows}
+      />
+      <div id="pi-topup" className="scroll-mt-4">
+        <PiWalletPaymentSection />
+      </div>
+      <WalletServicePromos
         stakingPromo={stakingPromo}
         servicePromos={groupPromos}
       />

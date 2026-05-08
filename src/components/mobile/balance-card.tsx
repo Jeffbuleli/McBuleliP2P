@@ -17,7 +17,7 @@ export function BalanceCard({
   fiatCdfDisplay,
 }: {
   locale: Locale;
-  /** Estimated portfolio in USDT (USDT + Pi valued via OKX PI-USDT when available). */
+  /** Estimated portfolio total in USD (same basis as Wallet overview, excluding staking). */
   totalEquivDisplay: string;
   usdtDisplay: string;
   piDisplay: string;

@@ -114,7 +114,7 @@ export default function PiReceiveAddressSettingsClient() {
         <p className="mt-1 text-[11px] text-stone-400">
           Balance is stored per user (<span className="font-mono">users.pi_test_balance</span>),
           separate from real Pi (<span className="font-mono">users.pi_balance</span>). Operations
-          (swap, send, withdraw) use each asset&apos;s own balance — the wallet total is the sum of
+          (send, withdraw, transfers) use each asset&apos;s own balance — the wallet total is the sum of
           the rows below it.
         </p>
 

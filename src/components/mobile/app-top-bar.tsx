@@ -5,17 +5,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
-
-function initials(email: string) {
-  const c = email.trim()[0]?.toUpperCase() ?? "?";
-  return c;
-}
+import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 
 export function AppTopBar({
   email,
+  avatarUrl,
   scrolled: scrolledProp,
 }: {
   email: string;
+  avatarUrl: string | null;
   scrolled?: boolean;
 }) {
   const { t } = useI18n();
@@ -82,9 +80,7 @@ export function AppTopBar({
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl active:scale-95"
             aria-label={t("nav_profile")}
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 text-sm font-bold text-white shadow-md ring-2 ring-white/30 dark:ring-stone-700">
-              {initials(email)}
-            </span>
+            <UserAvatarMark email={email} avatarUrl={avatarUrl} />
           </Link>
         </div>
       </header>

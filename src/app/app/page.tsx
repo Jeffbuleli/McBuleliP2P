@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { loadP2pHomeActivity } from "@/lib/p2p-activity";
-import { getPortfolioSnapshotForUser } from "@/lib/portfolio-display";
+import {
+  emptyPortfolioSnapshot,
+  formatPortfolioTotalWithStaking,
+  getPortfolioSnapshotForUser,
+} from "@/lib/portfolio-display";
 import { getSessionUserId } from "@/lib/session";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
@@ -12,6 +16,7 @@ import { P2PHomeCard } from "@/components/mobile/p2p-home-card";
 import { P2PRecentActivity } from "@/components/mobile/p2p-recent-activity";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { getDictionary } from "@/i18n/messages";
+import { getStakingValuationUsd } from "@/lib/staking-service";
 
 export const dynamic = "force-dynamic";
 
@@ -24,20 +29,23 @@ export default async function DashboardPage() {
   }
 
   const snapshot = await getPortfolioSnapshotForUser(userId, locale);
+  const stakeVal = await getStakingValuationUsd(userId);
   const d = getDictionary(locale);
 
   const p2pHome = await loadP2pHomeActivity({ userId, limit: 8 });
   const tickers = await fetchMarketTickers();
 
-  const empty = {
-    totalEquivDisplay: "≈ 0 USDT",
-    usdtDisplay: "0 USDT",
-    piDisplay: "0 Pi",
-    fiatUsdDisplay: "≈ 0 USD",
-    fiatCdfDisplay: "≈ 0 CDF",
-  };
-
-  const s = snapshot ?? empty;
+  let s = snapshot ?? emptyPortfolioSnapshot(locale);
+  if (snapshot) {
+    s = {
+      ...snapshot,
+      totalEquivDisplay: formatPortfolioTotalWithStaking(
+        snapshot,
+        stakeVal,
+        locale,
+      ),
+    };
+  }
 
   return (
     <div className="flex flex-col gap-4 pb-2">

@@ -25,6 +25,7 @@ import {
 } from "@/lib/p2p-config";
 import { fmtWalletAmount, numFromNumeric, type WalletAsset } from "@/lib/wallet-types";
 import { maskTraderEmail, p2pDisplayName } from "@/lib/p2p-display";
+import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 
 const AD_ACTIVE = "active";
 const AD_PAUSED = "paused";
@@ -55,7 +56,7 @@ async function buildPaymentSnapshot(args: {
   const codes = args.paymentMethodCodes?.map((c) => c.trim().toUpperCase()).filter(Boolean) ?? [];
   if (!codes.length) return args.legacyPaymentMethods;
 
-  const cc = (args.countryCode ?? "CD").toUpperCase();
+  const cc = effectiveP2pCountryCode(args.countryCode);
   const defs = await args.tx
     .select({
       code: p2pPaymentMethodDefs.code,
@@ -509,7 +510,9 @@ export async function listMarketAds(filters: {
   if (filters.asset) cond.push(eq(p2pAds.asset, filters.asset));
   if (filters.fiat) cond.push(eq(p2pAds.fiatCurrency, filters.fiat));
   if (filters.side) cond.push(eq(p2pAds.side, filters.side));
-  if (filters.country) cond.push(eq(p2pAds.countryCode, filters.country));
+  if (filters.country) {
+    cond.push(eq(p2pAds.countryCode, effectiveP2pCountryCode(filters.country)));
+  }
   if (filters.boostedOnly) cond.push(sql`${p2pAds.boostedUntil} > now()`);
   if (filters.paymentContains?.trim()) {
     const q = `%${filters.paymentContains.trim().toLowerCase()}%`;
@@ -754,6 +757,15 @@ export async function createAd(args: {
   }
 
   const db = getDb();
+  const [prof] = await db
+    .select({ countryCode: users.countryCode })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  const adCountryCode = args.countryCode?.trim()
+    ? effectiveP2pCountryCode(args.countryCode)
+    : effectiveP2pCountryCode(prof?.countryCode ?? null);
+
   const now = new Date();
   try {
     const [row] = await db.transaction(async (tx) => {
@@ -796,7 +808,7 @@ export async function createAd(args: {
           ? args.paymentMethodCodes.map((s) => s.trim().toUpperCase()).filter(Boolean)
           : [];
       if (codes.length) {
-        const cc = (args.countryCode?.trim() || "CD").toUpperCase();
+        const cc = adCountryCode;
         const mine = await tx
           .select({ code: userP2pPaymentMethods.methodCode })
           .from(userP2pPaymentMethods)
@@ -832,7 +844,7 @@ export async function createAd(args: {
           reserveTotalCrypto: reserveTotal,
           reserveRemainingCrypto: reserveRemaining,
           terms: args.terms?.trim() || null,
-          countryCode: args.countryCode?.trim() || null,
+          countryCode: adCountryCode,
           status: AD_ACTIVE,
           updatedAt: now,
         })
@@ -1113,6 +1125,7 @@ export async function getOrderDetailForUser(args: {
         hasRated: boolean;
         canRate: boolean;
         chatAllowsNewMessages: boolean;
+        viewerAvatarUrl: string | null;
       };
     }
   | { ok: false; message: string }
@@ -1153,6 +1166,12 @@ export async function getOrderDetailForUser(args: {
     .where(
       and(eq(p2pOrderRatings.orderId, o.id), eq(p2pOrderRatings.fromUserId, uid)),
     )
+    .limit(1);
+
+  const [viewerRow] = await db
+    .select({ avatarUrl: users.avatarUrl })
+    .from(users)
+    .where(eq(users.id, uid))
     .limit(1);
 
   const role = o.makerId === uid ? ("maker" as const) : ("taker" as const);
@@ -1203,6 +1222,7 @@ export async function getOrderDetailForUser(args: {
       hasRated: !!existingRating,
       canRate: st === ST_RELEASED && !existingRating,
       chatAllowsNewMessages,
+      viewerAvatarUrl: viewerRow?.avatarUrl ?? null,
     },
   };
 }
@@ -1550,6 +1570,8 @@ export async function listP2pOrderMessages(args: {
         createdAt: string;
         senderMasked: string;
         senderRole: string;
+        /** Public profile image URL when set (same as app header / profile). */
+        senderAvatarUrl: string | null;
         own: boolean;
       }[];
     }
@@ -1574,6 +1596,7 @@ export async function listP2pOrderMessages(args: {
       uid: p2pOrderMessages.userId,
       email: users.email,
       role: users.role,
+      avatarUrl: users.avatarUrl,
     })
     .from(p2pOrderMessages)
     .innerJoin(users, eq(p2pOrderMessages.userId, users.id))
@@ -1591,6 +1614,7 @@ export async function listP2pOrderMessages(args: {
           ? "Support"
           : maskTraderEmail(r.email),
       senderRole: r.role,
+      senderAvatarUrl: r.avatarUrl ?? null,
       own: r.uid === args.userId,
     })),
   };
@@ -1608,6 +1632,7 @@ export async function listP2pOrderMessagesForStaff(args: {
         createdAt: string;
         senderMasked: string;
         senderRole: string;
+        senderAvatarUrl: string | null;
       }[];
     }
   | { ok: false; message: string }
@@ -1632,6 +1657,7 @@ export async function listP2pOrderMessagesForStaff(args: {
       createdAt: p2pOrderMessages.createdAt,
       email: users.email,
       role: users.role,
+      avatarUrl: users.avatarUrl,
     })
     .from(p2pOrderMessages)
     .innerJoin(users, eq(p2pOrderMessages.userId, users.id))
@@ -1650,6 +1676,7 @@ export async function listP2pOrderMessagesForStaff(args: {
           ? "Support"
           : maskTraderEmail(r.email),
       senderRole: r.role,
+      senderAvatarUrl: r.avatarUrl ?? null,
     })),
   };
 }

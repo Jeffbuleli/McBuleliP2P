@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type Msg = {
@@ -12,6 +13,7 @@ type Msg = {
   createdAt: string;
   senderMasked: string;
   senderRole: string;
+  senderAvatarUrl: string | null;
 };
 
 type OrderMeta = { id: string; status: string; makerId: string; takerId: string };
@@ -98,20 +100,32 @@ export default function AdminP2pOrderSupportPage() {
         <div className="max-h-[55vh] space-y-2 overflow-y-auto p-3">
           {messages.map((m) => (
             <div key={m.id} className="rounded-xl bg-stone-900/70 p-3 text-sm text-stone-100">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-xs font-semibold text-stone-300">
-                  {m.senderMasked}
-                  {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                    <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-200">
-                      Support
+              <div className="flex items-start gap-2">
+                <ChatAvatarBubble
+                  label={m.senderMasked}
+                  avatarUrl={m.senderAvatarUrl}
+                  own={false}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs font-semibold text-stone-300">
+                      {m.senderMasked}
+                      {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
+                        <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-200">
+                          Support
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                </span>
-                <span className="text-[10px] text-stone-500">
-                  {new Date(m.createdAt).toLocaleString(loc, { dateStyle: "short", timeStyle: "short" })}
-                </span>
+                    <span className="text-[10px] text-stone-500">
+                      {new Date(m.createdAt).toLocaleString(loc, {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-stone-100">{m.body}</p>
+                </div>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-stone-100">{m.body}</p>
             </div>
           ))}
           {messages.length === 0 ? (

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, p2pPaymentMethodDefs } from "@/db";
+import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const cc = (url.searchParams.get("country") ?? "CD").trim().toUpperCase();
+  const cc = effectiveP2pCountryCode(url.searchParams.get("country"));
   const db = getDb();
   const defs = await db
     .select({

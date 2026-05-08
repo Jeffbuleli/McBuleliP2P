@@ -138,10 +138,7 @@ export function PiAdsSection() {
 
   return (
     <section className="rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4">
-      <h2 className="flex items-center gap-2 text-sm font-bold text-stone-200">
-        <span aria-hidden>📣</span>
-        {t("pi_ads_title")}
-      </h2>
+      <h2 className="text-sm font-bold text-stone-200">{t("pi_ads_title")}</h2>
       <p className="mt-2 text-xs leading-relaxed text-stone-400">
         {t("pi_ads_hint")}
       </p>

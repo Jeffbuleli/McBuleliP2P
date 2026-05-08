@@ -29,8 +29,8 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-full bg-stone-950 text-stone-100">
-      <div className="mx-auto max-w-4xl px-4 py-4">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-stone-700 pb-4">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-800/90 pb-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/80">
               {d.admin_header_ops}
@@ -56,7 +56,7 @@ export default async function AdminLayout({
           </p>
         ) : null}
         <nav
-          className="mb-6 flex flex-wrap gap-2 border-b border-stone-800 pb-4 text-sm"
+          className="mb-8 flex flex-wrap gap-2 border-b border-stone-800/90 pb-5 text-sm"
           aria-label="Admin"
         >
           <Link
@@ -112,7 +112,7 @@ export default async function AdminLayout({
             </>
           ) : null}
         </nav>
-        {children}
+        <main className="pb-10">{children}</main>
       </div>
     </div>
   );

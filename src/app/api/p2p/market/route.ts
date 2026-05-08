@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { listMarketAds } from "@/lib/p2p-service";
 import type { P2pCryptoAsset, P2pSide } from "@/lib/p2p-config";
+import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -12,7 +13,11 @@ export async function GET(req: Request) {
   const asset = searchParams.get("asset") as P2pCryptoAsset | null;
   const fiat = searchParams.get("fiat") ?? undefined;
   const side = searchParams.get("side") as P2pSide | null;
-  const country = searchParams.get("country") ?? undefined;
+  const countryRaw = searchParams.get("country");
+  const country =
+    countryRaw && countryRaw.trim()
+      ? effectiveP2pCountryCode(countryRaw)
+      : undefined;
   const paymentContains = searchParams.get("payment") ?? undefined;
   const boostedOnly = searchParams.get("boosted") === "1";
   const trustedOnly = searchParams.get("trusted") === "1";
