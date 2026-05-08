@@ -11,6 +11,7 @@ import { getProfileDashboard } from "@/lib/profile-stats";
 import { getSessionUser } from "@/lib/session-user";
 import { PiAdsSection } from "@/components/pi/pi-ads";
 import { P2pPaymentMethodsSection } from "@/components/p2p/p2p-payment-methods-section";
+import { PiLinkSection } from "@/components/pi/pi-link-section";
 
 export const dynamic = "force-dynamic";
 
@@ -300,6 +301,8 @@ export default async function ProfilePage() {
       <PiAdsSection />
 
       <P2pPaymentMethodsSection />
+
+      <PiLinkSection />
 
       {/* Settings */}
       <section className="rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4">

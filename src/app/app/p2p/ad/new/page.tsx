@@ -14,6 +14,8 @@ import {
   type P2pSide,
 } from "@/lib/p2p-config";
 
+type PaymentDef = { code: string; label: string };
+
 export default function P2pNewAdPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -24,8 +26,11 @@ export default function P2pNewAdPage() {
   const [minFiat, setMinFiat] = useState("");
   const [maxFiat, setMaxFiat] = useState("");
   const [paymentMethods, setPaymentMethods] = useState("");
+  const [paymentDefs, setPaymentDefs] = useState<PaymentDef[]>([]);
+  const [paymentCodes, setPaymentCodes] = useState<string[]>([]);
   const [terms, setTerms] = useState("");
   const [country, setCountry] = useState("CD");
+  const [reserveAmountCrypto, setReserveAmountCrypto] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [balUsdt, setBalUsdt] = useState<number | null>(null);
@@ -48,6 +53,39 @@ export default function P2pNewAdPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDefs() {
+      const cc = country === "OTHER" ? "CD" : country;
+      const res = await fetch(`/api/p2p/payment-methods?country=${encodeURIComponent(cc)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        if (!cancelled) setPaymentDefs([]);
+        return;
+      }
+      const list = (data.methods as PaymentDef[]) ?? [];
+      if (!cancelled) {
+        setPaymentDefs(list);
+        // Keep existing selections, but drop unknown codes.
+        setPaymentCodes((cur) => cur.filter((c) => list.some((d) => d.code === c)));
+      }
+    }
+    void loadDefs();
+    return () => {
+      cancelled = true;
+    };
+  }, [country]);
+
+  useEffect(() => {
+    // Keep legacy string in sync for now (public display).
+    if (!paymentCodes.length) return;
+    const labels = paymentDefs
+      .filter((d) => paymentCodes.includes(d.code))
+      .map((d) => d.label);
+    if (labels.length) setPaymentMethods(labels.join(", "));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentCodes, paymentDefs]);
 
   const sellNeedHint = useMemo(() => {
     if (side !== "sell") return null;
@@ -72,6 +110,11 @@ export default function P2pNewAdPage() {
     setErr(null);
     setLoading(true);
     try {
+      const codes = paymentCodes.length ? paymentCodes : undefined;
+      const pm =
+        codes && paymentDefs.length
+          ? paymentDefs.filter((d) => codes.includes(d.code)).map((d) => d.label).join(", ")
+          : paymentMethods;
       const res = await fetch("/api/p2p/ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -82,7 +125,9 @@ export default function P2pNewAdPage() {
           price,
           minFiat,
           maxFiat,
-          paymentMethods,
+          paymentMethods: pm,
+          paymentMethodCodes: codes,
+          reserveAmountCrypto: side === "sell" ? reserveAmountCrypto.trim() || undefined : undefined,
           terms: terms.trim() || undefined,
           countryCode: country === "OTHER" ? undefined : country,
         }),
@@ -194,15 +239,65 @@ export default function P2pNewAdPage() {
         />
       </label>
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_payment_detail")}
-        <textarea
-          value={paymentMethods}
-          onChange={(e) => setPaymentMethods(e.target.value)}
-          rows={4}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-      </label>
+      <div className="space-y-2 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+        <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+          {t("p2p_payment_detail")}
+        </p>
+        {!paymentDefs.length ? (
+          <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+            {t("p2p_payment_detail")}
+            <textarea
+              value={paymentMethods}
+              onChange={(e) => setPaymentMethods(e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+            />
+          </label>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {paymentDefs.map((d) => {
+              const on = paymentCodes.includes(d.code);
+              return (
+                <button
+                  key={d.code}
+                  type="button"
+                  onClick={() =>
+                    setPaymentCodes((cur) =>
+                      on ? cur.filter((x) => x !== d.code) : [...cur, d.code],
+                    )
+                  }
+                  className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                    on
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                      : "border-stone-300 bg-stone-50 text-stone-800 dark:border-stone-600 dark:bg-stone-950/40 dark:text-stone-200"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {paymentDefs.length ? (
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            Les détails (nom/numéro) sont gérés dans Profil → “Mes moyens de paiement”.\n          </p>
+        ) : null}
+      </div>
+
+      {side === "sell" ? (
+        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+          Réserve (crypto) pour cette annonce
+          <input
+            value={reserveAmountCrypto}
+            onChange={(e) => setReserveAmountCrypto(e.target.value)}
+            inputMode="decimal"
+            placeholder={asset === "USDT" ? "100" : "20"}
+            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+          />
+          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            Ce montant sera bloqué (escrow) et diminuera à chaque ordre.\n          </p>
+        </label>
+      ) : null}
 
       <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
         {t("p2p_terms_optional")}

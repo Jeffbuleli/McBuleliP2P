@@ -230,18 +230,31 @@ export async function processExpiredP2pOrders(): Promise<void> {
   for (const o of expired) {
     await db.transaction(async (tx) => {
       const [cur] = await tx
-        .select()
+        .select({ o: p2pOrders, ad: p2pAds })
         .from(p2pOrders)
+        .innerJoin(p2pAds, eq(p2pOrders.adId, p2pAds.id))
         .where(and(eq(p2pOrders.id, o.id), eq(p2pOrders.status, ST_AWAIT)))
         .limit(1);
       if (!cur) return;
 
-      const sellerId = cur.sellerUserId;
-      const cryptoStr = cur.cryptoAmount.toString();
-      const asset = asWalletCrypto(cur.asset);
+      const sellerId = cur.o.sellerUserId;
+      const cryptoStr = cur.o.cryptoAmount.toString();
+      const asset = asWalletCrypto(cur.o.asset);
       const batchId = randomUUID();
 
-      await creditUserAsset(tx, sellerId, asset, cryptoStr);
+      const usesReserve =
+        (cur.ad.side as P2pSide) === "sell" &&
+        cur.ad.reserveRemainingCrypto != null &&
+        cur.ad.reserveTotalCrypto != null;
+      if (usesReserve) {
+        const next = numericAdd(String(cur.ad.reserveRemainingCrypto), cryptoStr);
+        await tx
+          .update(p2pAds)
+          .set({ reserveRemainingCrypto: next, updatedAt: now })
+          .where(eq(p2pAds.id, cur.ad.id));
+      } else {
+        await creditUserAsset(tx, sellerId, asset, cryptoStr);
+      }
 
       await tx
         .update(p2pOrders)
@@ -257,11 +270,11 @@ export async function processExpiredP2pOrders(): Promise<void> {
           batchId,
           userId: sellerId,
           entryType: "p2p_escrow_refund",
-          asset: cur.asset,
+          asset: cur.o.asset,
           amount: cryptoStr,
           feeUsdEquivalent: "0",
-          counterpartyUserId: cur.buyerUserId,
-          meta: { orderId: o.id, reason: "expired" },
+          counterpartyUserId: cur.o.buyerUserId,
+          meta: { orderId: o.id, reason: usesReserve ? "expired_replenish_reserve" : "expired" },
         },
       ]);
     });
@@ -849,13 +862,56 @@ export async function updateAdStatus(args: {
   }
   const db = getDb();
   const now = new Date();
-  const res = await db
-    .update(p2pAds)
-    .set({ status: args.status, updatedAt: now })
-    .where(and(eq(p2pAds.id, args.adId), eq(p2pAds.userId, args.userId)))
-    .returning({ id: p2pAds.id });
-  if (!res.length) return { ok: false, message: "p2p_ad_not_found" };
-  return { ok: true };
+
+  try {
+    await db.transaction(async (tx) => {
+      const [cur] = await tx
+        .select()
+        .from(p2pAds)
+        .where(and(eq(p2pAds.id, args.adId), eq(p2pAds.userId, args.userId)))
+        .limit(1);
+      if (!cur) throw new Error("p2p_ad_not_found");
+
+      if (args.status === AD_CLOSED && cur.side === "sell" && cur.reserveRemainingCrypto != null) {
+        const remaining = Number(cur.reserveRemainingCrypto);
+        if (Number.isFinite(remaining) && remaining > 1e-18) {
+          const wa = asWalletCrypto(cur.asset);
+          const amt = fmtWalletAmount(remaining);
+          await creditUserAsset(tx, args.userId, wa, amt);
+          await insertWalletLedgerLines(tx, [
+            {
+              batchId: randomUUID(),
+              userId: args.userId,
+              entryType: "p2p_ad_reserve_unlock",
+              asset: cur.asset,
+              amount: amt,
+              feeUsdEquivalent: "0",
+              meta: { adId: cur.id },
+            },
+          ]);
+        }
+        await tx
+          .update(p2pAds)
+          .set({
+            status: AD_CLOSED,
+            reserveRemainingCrypto: "0",
+            updatedAt: now,
+          })
+          .where(eq(p2pAds.id, cur.id));
+        return;
+      }
+
+      await tx
+        .update(p2pAds)
+        .set({ status: args.status, updatedAt: now })
+        .where(eq(p2pAds.id, cur.id));
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "p2p_ad_not_found") return { ok: false, message: msg };
+    return { ok: false, message: "p2p_action_not_allowed" };
+  }
 }
 
 export async function createOrder(args: {
@@ -909,44 +965,75 @@ export async function createOrder(args: {
       });
 
       const wa = asWalletCrypto(asset);
-      const [sellerRow] = await tx
-        .select({
-          balance: users.balance,
-          piBalance: users.piBalance,
-        })
-        .from(users)
-        .where(eq(users.id, sellerUserId));
+      // For SELL ads with reserve, use ad reserveRemaining; otherwise, lock from seller wallet.
+      const usesReserve =
+        (ad.ad.side as P2pSide) === "sell" &&
+        ad.ad.reserveRemainingCrypto != null &&
+        ad.ad.reserveTotalCrypto != null;
 
-      if (!sellerRow) throw new Error("wallet_not_found");
-      const bal =
-        wa === "USDT"
-          ? numFromNumeric(sellerRow.balance)
-          : numFromNumeric(sellerRow.piBalance);
-      if (bal + 1e-18 < cryptoNum) throw new Error("wallet_insufficient_balance");
+      if (usesReserve) {
+        const rem = Number(ad.ad.reserveRemainingCrypto);
+        if (!Number.isFinite(rem) || rem + 1e-18 < cryptoNum) {
+          throw new Error("wallet_insufficient_balance");
+        }
+      } else {
+        const [sellerRow] = await tx
+          .select({
+            balance: users.balance,
+            piBalance: users.piBalance,
+          })
+          .from(users)
+          .where(eq(users.id, sellerUserId));
+
+        if (!sellerRow) throw new Error("wallet_not_found");
+        const bal =
+          wa === "USDT"
+            ? numFromNumeric(sellerRow.balance)
+            : numFromNumeric(sellerRow.piBalance);
+        if (bal + 1e-18 < cryptoNum) throw new Error("wallet_insufficient_balance");
+      }
 
       const windowMin = paymentWindowMinutes();
       const now = new Date();
       const expiresAt = new Date(now.getTime() + windowMin * 60_000);
       const batchId = randomUUID();
-
-      await debitUserAsset(tx, sellerUserId, wa, cryptoStr);
-
-      await insertWalletLedgerLines(tx, [
-        {
-          batchId,
-          userId: sellerUserId,
-          entryType: "p2p_escrow_lock",
-          asset,
-          amount: `-${cryptoStr}`,
-          feeUsdEquivalent: "0",
-          counterpartyUserId: buyerUserId,
-          meta: {
-            adId: args.adId,
-            fiatAmount: fmtWalletAmount(fiatAmount),
-            price: ad.ad.price.toString(),
+      if (usesReserve) {
+        // Decrement reserve remaining.
+        const remStr = fmtWalletAmount(Number(ad.ad.reserveRemainingCrypto));
+        const next = fmtWalletAmount(Number(remStr) - cryptoNum);
+        const [upd] = await tx
+          .update(p2pAds)
+          .set({ reserveRemainingCrypto: next, updatedAt: now })
+          .where(eq(p2pAds.id, args.adId))
+          .returning({ id: p2pAds.id });
+        if (!upd) throw new Error("p2p_order_create_failed");
+      } else {
+        await debitUserAsset(tx, sellerUserId, wa, cryptoStr);
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId,
+            userId: sellerUserId,
+            entryType: "p2p_escrow_lock",
+            asset,
+            amount: `-${cryptoStr}`,
+            feeUsdEquivalent: "0",
+            counterpartyUserId: buyerUserId,
+            meta: {
+              adId: args.adId,
+              fiatAmount: fmtWalletAmount(fiatAmount),
+              price: ad.ad.price.toString(),
+            },
           },
-        },
-      ]);
+        ]);
+      }
+
+      const paymentSnapshot = await buildPaymentSnapshot({
+        tx,
+        sellerUserId,
+        countryCode: ad.ad.countryCode ?? null,
+        paymentMethodCodes: (ad.ad.paymentMethodCodes as string[] | null) ?? null,
+        legacyPaymentMethods: ad.ad.paymentMethods,
+      });
 
       const [ins] = await tx
         .insert(p2pOrders)
@@ -963,7 +1050,7 @@ export async function createOrder(args: {
           sellerUserId,
           buyerUserId,
           payerUserId,
-          paymentSnapshot: ad.ad.paymentMethods,
+          paymentSnapshot,
           expiresAt,
           updatedAt: now,
         })
@@ -1224,8 +1311,9 @@ export async function cancelOrder(args: {
   try {
     await db.transaction(async (tx) => {
       const [o] = await tx
-        .select()
+        .select({ o: p2pOrders, ad: p2pAds })
         .from(p2pOrders)
+        .innerJoin(p2pAds, eq(p2pOrders.adId, p2pAds.id))
         .where(
           and(
             eq(p2pOrders.id, args.orderId),
@@ -1239,11 +1327,23 @@ export async function cancelOrder(args: {
         throw new Error("p2p_action_not_allowed");
       }
 
-      const cryptoStr = o.cryptoAmount.toString();
-      const asset = asWalletCrypto(o.asset);
+      const cryptoStr = o.o.cryptoAmount.toString();
+      const asset = asWalletCrypto(o.o.asset);
       const batchId = randomUUID();
 
-      await creditUserAsset(tx, o.sellerUserId, asset, cryptoStr);
+      const usesReserve =
+        (o.ad.side as P2pSide) === "sell" &&
+        o.ad.reserveRemainingCrypto != null &&
+        o.ad.reserveTotalCrypto != null;
+      if (usesReserve) {
+        const next = numericAdd(String(o.ad.reserveRemainingCrypto), cryptoStr);
+        await tx
+          .update(p2pAds)
+          .set({ reserveRemainingCrypto: next, updatedAt: now })
+          .where(eq(p2pAds.id, o.ad.id));
+      } else {
+        await creditUserAsset(tx, o.o.sellerUserId, asset, cryptoStr);
+      }
 
       await tx
         .update(p2pOrders)
@@ -1252,18 +1352,18 @@ export async function cancelOrder(args: {
           cancelledAt: now,
           updatedAt: now,
         })
-        .where(and(eq(p2pOrders.id, o.id), eq(p2pOrders.status, ST_AWAIT)));
+        .where(and(eq(p2pOrders.id, o.o.id), eq(p2pOrders.status, ST_AWAIT)));
 
       await insertWalletLedgerLines(tx, [
         {
           batchId,
-          userId: o.sellerUserId,
+          userId: o.o.sellerUserId,
           entryType: "p2p_escrow_refund",
-          asset: o.asset,
+          asset: o.o.asset,
           amount: cryptoStr,
           feeUsdEquivalent: "0",
-          counterpartyUserId: o.buyerUserId,
-          meta: { orderId: o.id, reason: "cancelled" },
+          counterpartyUserId: o.o.buyerUserId,
+          meta: { orderId: o.o.id, reason: usesReserve ? "cancelled_replenish_reserve" : "cancelled" },
         },
       ]);
     });
@@ -1378,18 +1478,32 @@ export async function adminResolveP2pOrder(args: {
 
   try {
     await db.transaction(async (tx) => {
-      const [o] = await tx
-        .select()
+      const [hit] = await tx
+        .select({ o: p2pOrders, ad: p2pAds })
         .from(p2pOrders)
+        .innerJoin(p2pAds, eq(p2pOrders.adId, p2pAds.id))
         .where(and(eq(p2pOrders.id, args.orderId), eq(p2pOrders.status, ST_DISPUTED)))
         .limit(1);
-      if (!o) throw new Error("p2p_order_not_found");
+      if (!hit) throw new Error("p2p_order_not_found");
+      const o = hit.o;
 
       const cryptoStr = o.cryptoAmount.toString();
       const asset = asWalletCrypto(o.asset);
       const batchId = randomUUID();
 
-      await creditUserAsset(tx, o.sellerUserId, asset, cryptoStr);
+      const usesReserve =
+        (hit.ad.side as P2pSide) === "sell" &&
+        hit.ad.reserveRemainingCrypto != null &&
+        hit.ad.reserveTotalCrypto != null;
+      if (usesReserve) {
+        const next = numericAdd(String(hit.ad.reserveRemainingCrypto), cryptoStr);
+        await tx
+          .update(p2pAds)
+          .set({ reserveRemainingCrypto: next, updatedAt: now })
+          .where(eq(p2pAds.id, hit.ad.id));
+      } else {
+        await creditUserAsset(tx, o.sellerUserId, asset, cryptoStr);
+      }
 
       const [upd] = await tx
         .update(p2pOrders)
@@ -1412,7 +1526,7 @@ export async function adminResolveP2pOrder(args: {
           amount: cryptoStr,
           feeUsdEquivalent: "0",
           counterpartyUserId: o.buyerUserId,
-          meta: { orderId: o.id, reason: "dispute_refund_seller" },
+          meta: { orderId: o.id, reason: usesReserve ? "dispute_replenish_reserve" : "dispute_refund_seller" },
         },
       ]);
     });

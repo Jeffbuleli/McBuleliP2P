@@ -164,6 +164,9 @@ export const en = {
   auth_google_soon: "Google sign-in is coming soon — use email for now.",
   auth_pi_continue: "Continue with Pi",
   auth_pi_signing: "Signing in with Pi…",
+  profile_link_pi: "Link my Pi",
+  profile_link_pi_done: "Pi linked.",
+  pi_uid_already_linked: "This Pi account is already linked to another user.",
   auth_pi_failed: "Pi sign-in failed. Please try again.",
   auth_pi_manual_hint:
     "Tap “Continue with Pi” once and approve in Pi Browser. Auto sign-in is off unless NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
@@ -1291,6 +1294,9 @@ export const fr: Messages = {
     "Connexion Google bientôt — utilisez l’e-mail pour l’instant.",
   auth_pi_continue: "Continuer avec Pi",
   auth_pi_signing: "Connexion Pi…",
+  profile_link_pi: "Lier mon Pi",
+  profile_link_pi_done: "Pi lié.",
+  pi_uid_already_linked: "Ce compte Pi est déjà lié à un autre utilisateur.",
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
   auth_pi_manual_hint:
     "Appuie une fois sur « Continuer avec Pi » et valide dans Pi Browser. La connexion auto est désactivée sauf si NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
