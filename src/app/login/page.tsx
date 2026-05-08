@@ -41,9 +41,18 @@ export default function LoginPage() {
         },
         28_000,
       );
-      const data = await res.json().catch(() => ({}));
+      const text = await res.text().catch(() => "");
+      const data = (() => {
+        if (!text) return {};
+        try {
+          return JSON.parse(text) as unknown;
+        } catch {
+          return { detail: text.slice(0, 240) };
+        }
+      })();
       if (!res.ok) {
-        setError(formatAuthClientError(data));
+        const msg = formatAuthClientError(data);
+        setError(msg === "Could not complete request." ? `HTTP ${res.status}` : msg);
         return;
       }
       // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
