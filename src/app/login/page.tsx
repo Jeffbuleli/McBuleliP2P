@@ -160,20 +160,6 @@ export default function LoginPage() {
   return (
     <AuthMarketingShell title={t("brand")} eyebrow={t("login_title")} backLabel={t("auth_back_home")}>
       <div className="rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
-        <button
-          type="button"
-          disabled={piBusy}
-          onClick={() => void startPiAuth({ manual: true })}
-          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-emerald-700/40 bg-emerald-950/40 px-4 text-sm font-semibold text-emerald-50 shadow-lg shadow-emerald-900/15 disabled:opacity-60"
-        >
-          {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
-        </button>
-        {!canAutoPi ? (
-          <p className="mt-2 text-center text-[11px] text-stone-500">
-            {t("auth_pi_manual_hint")}
-          </p>
-        ) : null}
-
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
             {t("email")}
@@ -219,6 +205,24 @@ export default function LoginPage() {
             {loading ? t("signing") : t("signin")}
           </button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden>
+            <div className="w-full border-t border-stone-800" />
+          </div>
+          <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+            <span className="bg-stone-950/40 px-3">{t("auth_or")}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          disabled={piBusy}
+          onClick={() => void startPiAuth({ manual: true })}
+          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-stone-950/40 px-4 text-sm font-semibold text-stone-50 disabled:opacity-60"
+        >
+          {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
+        </button>
       </div>
 
       <p className="mt-6 text-center text-sm text-stone-400">
