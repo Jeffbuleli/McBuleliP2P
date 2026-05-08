@@ -35,6 +35,13 @@ export const users = pgTable("users", {
   piBalance: numeric("pi_balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
+  /**
+   * Pi Test sandbox (super-admin training only). Per-user — not on-chain Pi.
+   * Legacy global `platform_settings.pi_test_balance` is no longer used for wallet UI.
+   */
+  piTestBalance: numeric("pi_test_balance", { precision: 36, scale: 18 })
+    .notNull()
+    .default("0"),
   /** Pi Platform app-scoped uid (set on Pi login; required for A2U payouts). */
   piUid: varchar("pi_uid", { length: 128 }),
   /** Pi username (best-effort display; set on Pi login). */
@@ -193,11 +200,18 @@ export const piTestLedgerEntries = pgTable(
     actorUserId: uuid("actor_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    /** User whose Pi Test balance changed (null on legacy rows). */
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
-  (t) => [index("pi_test_ledger_created_idx").on(t.createdAt)],
+  (t) => [
+    index("pi_test_ledger_created_idx").on(t.createdAt),
+    index("pi_test_ledger_user_idx").on(t.userId),
+  ],
 );
 
 /** Fixed-term custodial staking — APR fixed at subscription; principal locked until maturity. */

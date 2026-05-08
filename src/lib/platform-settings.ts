@@ -4,7 +4,6 @@ import { getDb, platformSettings } from "@/db";
 export const PlatformSettingKey = {
   PI_RECEIVE_ADDRESS_REAL: "pi_receive_address_real",
   PI_RECEIVE_ADDRESS_TEST: "pi_receive_address_test",
-  PI_TEST_BALANCE: "pi_test_balance",
 } as const;
 
 export type PlatformSettingKeyType =

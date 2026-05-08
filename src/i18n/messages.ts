@@ -299,7 +299,7 @@ export const en = {
   wallet_title: "Wallet",
   wallet_see_all: "Wallet overview",
   wallet_balance_hint:
-    "Hold USDT, Pi, USD and CDF. Totals use a live market reference.",
+    "Each row is its own balance: USDT, Pi, Pi Test (sandbox), USD and CDF are separate pools. The estimated total is their sum (Pi Test is training-only, not your on-chain Pi deposit).",
   wallet_total_usd: "Total (USD)",
   wallet_asset_list: "Assets",
   wallet_asset_balance: "Balance",
@@ -1448,7 +1448,7 @@ export const fr: Messages = {
   wallet_title: "Portefeuille",
   wallet_see_all: "Vue portefeuille",
   wallet_balance_hint:
-    "Détention USDT, Pi, USD et CDF. Totaux avec référence marché en direct.",
+    "Chaque ligne est un solde distinct : USDT, Pi, Pi Test (bac à sable), USD et CDF sont des poches séparées. Le total estimé est leur somme (Pi Test = entraînement, pas votre Pi déposé sur la chaîne).",
   wallet_total_usd: "Total (USD)",
   wallet_asset_list: "Actifs",
   wallet_asset_balance: "Solde",

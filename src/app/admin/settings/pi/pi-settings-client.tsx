@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function PiReceiveAddressSettingsClient() {
   const [realAddress, setRealAddress] = useState("");
   const [testAddress, setTestAddress] = useState("");
+  const [targetUserId, setTargetUserId] = useState("");
   const [piTestBalance, setPiTestBalance] = useState("0");
   const [piTestAmount, setPiTestAmount] = useState("");
   const [piTestMemo, setPiTestMemo] = useState("");
@@ -15,6 +19,24 @@ export default function PiReceiveAddressSettingsClient() {
   const [loading, setLoading] = useState(false);
   const [piTestBusy, setPiTestBusy] = useState(false);
 
+  const piTestUrl = useCallback(() => {
+    const base = "/api/admin/settings/pi-test?limit=30";
+    const id = targetUserId.trim();
+    if (UUID_RE.test(id)) {
+      return `${base}&userId=${encodeURIComponent(id)}`;
+    }
+    return base;
+  }, [targetUserId]);
+
+  const loadPiTest = useCallback(async () => {
+    const res = await fetch(piTestUrl(), { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data?.ok) {
+      if (typeof data.balance === "string") setPiTestBalance(data.balance);
+      if (Array.isArray(data.ledger)) setPiTestLedger(data.ledger);
+    }
+  }, [piTestUrl]);
+
   useEffect(() => {
     void (async () => {
       setMsg(null);
@@ -23,7 +45,6 @@ export default function PiReceiveAddressSettingsClient() {
       if (res.ok && data?.ok) {
         if (typeof data.realAddress === "string") setRealAddress(data.realAddress);
         if (typeof data.testAddress === "string") setTestAddress(data.testAddress);
-        if (typeof data.piTestBalance === "string") setPiTestBalance(data.piTestBalance);
       } else {
         setMsg(typeof data.error === "string" ? data.error : "Failed to load");
       }
@@ -31,15 +52,8 @@ export default function PiReceiveAddressSettingsClient() {
   }, []);
 
   useEffect(() => {
-    void (async () => {
-      const res = await fetch("/api/admin/settings/pi-test?limit=30", { cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.ok) {
-        if (typeof data.balance === "string") setPiTestBalance(data.balance);
-        if (Array.isArray(data.ledger)) setPiTestLedger(data.ledger);
-      }
-    })();
-  }, []);
+    void loadPiTest();
+  }, [loadPiTest]);
 
   async function save() {
     setLoading(true);
@@ -51,7 +65,6 @@ export default function PiReceiveAddressSettingsClient() {
         body: JSON.stringify({
           realAddress: realAddress.trim(),
           testAddress: testAddress.trim(),
-          piTestBalance: piTestBalance.trim(),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -69,6 +82,7 @@ export default function PiReceiveAddressSettingsClient() {
     setPiTestBusy(true);
     setMsg(null);
     try {
+      const id = targetUserId.trim();
       const res = await fetch("/api/admin/settings/pi-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +90,7 @@ export default function PiReceiveAddressSettingsClient() {
           kind,
           amount: piTestAmount,
           memo: piTestMemo,
+          ...(UUID_RE.test(id) ? { targetUserId: id } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -83,12 +98,7 @@ export default function PiReceiveAddressSettingsClient() {
         setMsg(typeof data.error === "string" ? data.error : "Operation failed");
         return;
       }
-      const res2 = await fetch("/api/admin/settings/pi-test?limit=30", { cache: "no-store" });
-      const data2 = await res2.json().catch(() => ({}));
-      if (res2.ok && data2?.ok) {
-        if (typeof data2.balance === "string") setPiTestBalance(data2.balance);
-        if (Array.isArray(data2.ledger)) setPiTestLedger(data2.ledger);
-      }
+      await loadPiTest();
       setPiTestAmount("");
       setPiTestMemo("");
       setMsg("Updated Pi Test balance");
@@ -99,25 +109,33 @@ export default function PiReceiveAddressSettingsClient() {
 
   return (
     <div className="space-y-4 rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-      <label className="block text-sm font-medium text-stone-200">
-        Pi Test balance (training)
-        <input
-          value={piTestBalance}
-          onChange={(e) => setPiTestBalance(e.target.value)}
-          inputMode="decimal"
-          className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-3 font-mono text-xs text-stone-100"
-          placeholder="0"
-        />
-        <span className="mt-1 block text-[11px] font-normal text-stone-400">
-          Stored in platform settings. Displayed in the wallet as “Pi Test”.
-        </span>
-      </label>
-
       <div className="rounded-2xl border border-stone-700 bg-stone-950/40 p-3">
-        <p className="text-sm font-semibold text-stone-100">Pi Test procedure</p>
+        <p className="text-sm font-semibold text-stone-100">Pi Test (sandbox)</p>
         <p className="mt-1 text-[11px] text-stone-400">
-          Simulate deposits/withdrawals for training without touching users.piBalance.
+          Balance is stored per user (<span className="font-mono">users.pi_test_balance</span>),
+          separate from real Pi (<span className="font-mono">users.pi_balance</span>). Operations
+          (swap, send, withdraw) use each asset&apos;s own balance — the wallet total is the sum of
+          the rows below it.
         </p>
+
+        <label className="mt-3 block text-xs font-medium text-stone-300">
+          Target user ID (optional — empty = your admin account)
+          <input
+            value={targetUserId}
+            onChange={(e) => setTargetUserId(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2.5 font-mono text-xs text-stone-100"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          />
+        </label>
+
+        <div className="mt-3 rounded-xl border border-stone-800 bg-stone-950/60 px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+            Current Pi Test balance (read-only)
+          </p>
+          <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-emerald-200">
+            {piTestBalance}
+          </p>
+        </div>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <label className="block text-xs font-medium text-stone-300 sm:col-span-2">
@@ -160,7 +178,7 @@ export default function PiReceiveAddressSettingsClient() {
         {piTestLedger.length ? (
           <div className="mt-4 overflow-hidden rounded-xl border border-stone-800">
             <div className="border-b border-stone-800 bg-stone-950/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-              Recent Pi Test activity
+              Recent Pi Test activity (this user)
             </div>
             <ul className="divide-y divide-stone-800">
               {piTestLedger.slice(0, 20).map((x) => (
@@ -220,9 +238,8 @@ export default function PiReceiveAddressSettingsClient() {
         onClick={() => void save()}
         className="w-full rounded-xl bg-amber-600 py-3 text-sm font-bold text-stone-950 disabled:opacity-60"
       >
-        {loading ? "…" : "Save"}
+        {loading ? "…" : "Save addresses"}
       </button>
     </div>
   );
 }
-

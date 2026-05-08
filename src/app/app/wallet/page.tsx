@@ -23,7 +23,10 @@ export const dynamic = "force-dynamic";
 const NAME: Record<WalletAsset, Record<"en" | "fr", string>> = {
   USDT: { en: "Tether · USDT", fr: "Tether · USDT" },
   PI: { en: "Pi Network", fr: "Pi Network" },
-  PI_TEST: { en: "Pi Test (training)", fr: "Pi Test (entraînement)" },
+  PI_TEST: {
+    en: "Pi Test · sandbox (not on-chain Pi)",
+    fr: "Pi Test · bac à sable (pas du Pi déposé)",
+  },
   USD: { en: "US Dollar", fr: "Dollar US" },
   CDF: { en: "Congolese franc", fr: "Franc congolais" },
 };

@@ -1,27 +1,21 @@
-import { desc, eq, sql } from "drizzle-orm";
-import { getDb, piTestLedgerEntries, platformSettings } from "@/db";
-import { PlatformSettingKey } from "@/lib/platform-settings";
+import { desc, eq } from "drizzle-orm";
+import { getDb, piTestLedgerEntries, users } from "@/db";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 
-export async function getPiTestBalance(): Promise<string> {
+export async function getPiTestBalance(userId: string): Promise<string> {
   const db = getDb();
   const [row] = await db
-    .select({ value: platformSettings.value })
-    .from(platformSettings)
-    .where(eq(platformSettings.key, PlatformSettingKey.PI_TEST_BALANCE))
+    .select({ piTestBalance: users.piTestBalance })
+    .from(users)
+    .where(eq(users.id, userId))
     .limit(1);
-  return row?.value ?? "0";
+  return row?.piTestBalance != null ? row.piTestBalance.toString() : "0";
 }
 
-export async function setPiTestBalance(value: string): Promise<void> {
+/** Super-admin manual override (settings screen). */
+export async function setPiTestBalanceUser(userId: string, value: string): Promise<void> {
   const db = getDb();
-  await db
-    .insert(platformSettings)
-    .values({ key: PlatformSettingKey.PI_TEST_BALANCE, value })
-    .onConflictDoUpdate({
-      target: platformSettings.key,
-      set: { value, updatedAt: new Date() },
-    });
+  await db.update(users).set({ piTestBalance: value }).where(eq(users.id, userId));
 }
 
 export async function adjustPiTestBalance(args: {
@@ -29,6 +23,7 @@ export async function adjustPiTestBalance(args: {
   amount: number;
   memo?: string | null;
   actorUserId: string;
+  targetUserId: string;
 }): Promise<{ ok: true; balance: string } | { ok: false; message: string }> {
   if (!Number.isFinite(args.amount) || args.amount <= 0) {
     return { ok: false, message: "Invalid amount" };
@@ -37,46 +32,51 @@ export async function adjustPiTestBalance(args: {
 
   const db = getDb();
   try {
-    const out = await db.transaction(async (tx) => {
-      const [curRow] = await tx
-        .select({ value: platformSettings.value })
-        .from(platformSettings)
-        .where(eq(platformSettings.key, PlatformSettingKey.PI_TEST_BALANCE))
+    const result = await db.transaction(async (tx) => {
+      const [u] = await tx
+        .select({ piTestBalance: users.piTestBalance })
+        .from(users)
+        .where(eq(users.id, args.targetUserId))
         .limit(1);
-      const cur = Number(curRow?.value ?? "0");
+      if (!u) {
+        return { ok: false as const, message: "User not found" };
+      }
+
+      const cur = Number(u.piTestBalance ?? 0);
       const next =
         args.kind === "deposit" ? cur + args.amount : cur - args.amount;
       if (!Number.isFinite(next) || next < -1e-12) {
         return { ok: false as const, message: "Insufficient Pi Test balance" };
       }
+      const nextStr = fmtWalletAmount(Math.max(0, next));
 
       await tx
-        .insert(platformSettings)
-        .values({
-          key: PlatformSettingKey.PI_TEST_BALANCE,
-          value: fmtWalletAmount(Math.max(0, next)),
-        })
-        .onConflictDoUpdate({
-          target: platformSettings.key,
-          set: { value: fmtWalletAmount(Math.max(0, next)), updatedAt: new Date() },
-        });
+        .update(users)
+        .set({ piTestBalance: nextStr })
+        .where(eq(users.id, args.targetUserId));
 
       await tx.insert(piTestLedgerEntries).values({
         kind: args.kind,
         amount: amtStr,
         memo: args.memo?.trim() ? args.memo.trim() : null,
         actorUserId: args.actorUserId,
+        userId: args.targetUserId,
       });
 
-      return { ok: true as const, balance: fmtWalletAmount(Math.max(0, next)) };
+      return { ok: true as const, balance: nextStr };
     });
-    return out;
+
+    if (!result.ok) return result;
+    return { ok: true, balance: result.balance };
   } catch {
     return { ok: false, message: "Failed to update Pi Test balance" };
   }
 }
 
-export async function listPiTestLedger(limit = 30): Promise<
+export async function listPiTestLedger(
+  userId: string,
+  limit = 30,
+): Promise<
   Array<{
     id: string;
     kind: string;
@@ -95,7 +95,7 @@ export async function listPiTestLedger(limit = 30): Promise<
       createdAt: piTestLedgerEntries.createdAt,
     })
     .from(piTestLedgerEntries)
+    .where(eq(piTestLedgerEntries.userId, userId))
     .orderBy(desc(piTestLedgerEntries.createdAt))
     .limit(Math.max(1, Math.min(100, limit)));
 }
-

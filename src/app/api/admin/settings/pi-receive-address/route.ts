@@ -12,18 +12,16 @@ export const dynamic = "force-dynamic";
 const bodyZ = z.object({
   realAddress: z.string().trim().min(10).optional(),
   testAddress: z.string().trim().min(10).optional(),
-  piTestBalance: z.string().trim().min(1).optional(),
 });
 
 export async function GET() {
   try {
     await requireSuperAdmin();
-    const [realAddress, testAddress, piTestBalance] = await Promise.all([
+    const [realAddress, testAddress] = await Promise.all([
       getPlatformSetting(PlatformSettingKey.PI_RECEIVE_ADDRESS_REAL),
       getPlatformSetting(PlatformSettingKey.PI_RECEIVE_ADDRESS_TEST),
-      getPlatformSetting(PlatformSettingKey.PI_TEST_BALANCE),
     ]);
-    return NextResponse.json({ ok: true, realAddress, testAddress, piTestBalance });
+    return NextResponse.json({ ok: true, realAddress, testAddress });
   } catch (e) {
     const msg = e instanceof StaffAuthError ? e.message : "Forbidden";
     return NextResponse.json({ ok: false, error: msg }, { status: 403 });
@@ -53,14 +51,6 @@ export async function POST(req: Request) {
         setPlatformSetting(
           PlatformSettingKey.PI_RECEIVE_ADDRESS_TEST,
           parsed.data.testAddress,
-        ),
-      );
-    }
-    if (typeof parsed.data.piTestBalance === "string") {
-      ops.push(
-        setPlatformSetting(
-          PlatformSettingKey.PI_TEST_BALANCE,
-          parsed.data.piTestBalance,
         ),
       );
     }
