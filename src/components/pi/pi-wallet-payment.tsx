@@ -19,6 +19,10 @@ export function PiWalletPaymentSection() {
     () => Number(process.env.NEXT_PUBLIC_PI_TEST_PAYMENT_AMOUNT ?? "0.1"),
     [],
   );
+  const showDetails = useMemo(
+    () => process.env.NEXT_PUBLIC_PI_DEBUG === "1",
+    [],
+  );
 
   async function pay() {
     setMsg(null);
@@ -115,19 +119,23 @@ export function PiWalletPaymentSection() {
       <p className="mt-1 text-[11px] leading-snug text-stone-400">
         {t("pi_pay_section_hint")}
       </p>
-      <p className="mt-2 text-[11px] leading-snug text-stone-500">
-        {t("pi_pay_u2a_recipient")}
-      </p>
-      <ul className="mt-2 space-y-0.5 text-[11px] text-stone-400">
-        <li>
-          {t("pi_pay_amount")}: <span className="font-medium text-stone-200">{testAmount}</span>{" "}
-          Pi
-        </li>
-        <li>
-          {t("pi_pay_memo_label")}:{" "}
-          <span className="font-medium text-stone-200">{t("pi_pay_memo_wallet")}</span>
-        </li>
-      </ul>
+      {showDetails ? (
+        <>
+          <p className="mt-2 text-[11px] leading-snug text-stone-500">
+            {t("pi_pay_u2a_recipient")}
+          </p>
+          <ul className="mt-2 space-y-0.5 text-[11px] text-stone-400">
+            <li>
+              {t("pi_pay_amount")}:{" "}
+              <span className="font-medium text-stone-200">{testAmount}</span> Pi
+            </li>
+            <li>
+              {t("pi_pay_memo_label")}:{" "}
+              <span className="font-medium text-stone-200">{t("pi_pay_memo_wallet")}</span>
+            </li>
+          </ul>
+        </>
+      ) : null}
       <button
         type="button"
         disabled={busy}

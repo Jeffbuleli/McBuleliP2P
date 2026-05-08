@@ -169,7 +169,7 @@ export const en = {
     "Tap “Continue with Pi” once and approve in Pi Browser. Auto sign-in is off unless NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
   pi_pay_section_title: "Pi payments",
   pi_pay_section_hint:
-    "Test U2A payment (Pi Browser). Server uses PI_NETWORK_API_KEY for approve/complete.",
+    "Test U2A payment (Pi Browser). Complete the approval steps in Pi Wallet.",
   pi_pay_cta: "Pay with Pi (test)",
   pi_pay_busy: "Processing…",
   pi_pay_success: "Payment completed.",
@@ -1262,7 +1262,7 @@ export const fr: Messages = {
     "Appuie une fois sur « Continuer avec Pi » et valide dans Pi Browser. La connexion auto est désactivée sauf si NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
   pi_pay_section_title: "Paiements Pi",
   pi_pay_section_hint:
-    "Test de paiement U2A (navigateur Pi). Le serveur utilise PI_NETWORK_API_KEY pour approuver/clôturer.",
+    "Test de paiement U2A (navigateur Pi). Valide les étapes dans le Wallet Pi.",
   pi_pay_cta: "Payer avec Pi (test)",
   pi_pay_busy: "Traitement…",
   pi_pay_success: "Paiement terminé.",
