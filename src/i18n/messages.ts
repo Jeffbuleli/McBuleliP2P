@@ -174,6 +174,7 @@ export const en = {
   pi_pay_section_hint:
     "Test U2A payment (Pi Browser). Complete the approval steps in Pi Wallet.",
   pi_pay_cta: "Pay with Pi (test)",
+  pi_pay_cta_amount: "Pay {amount} Pi",
   pi_pay_busy: "Processing…",
   pi_pay_success: "Payment completed.",
   pi_pay_failed: "Payment failed.",
@@ -1304,6 +1305,7 @@ export const fr: Messages = {
   pi_pay_section_hint:
     "Test de paiement U2A (navigateur Pi). Valide les étapes dans le Wallet Pi.",
   pi_pay_cta: "Payer avec Pi (test)",
+  pi_pay_cta_amount: "Payer {amount} Pi",
   pi_pay_busy: "Traitement…",
   pi_pay_success: "Paiement terminé.",
   pi_pay_failed: "Paiement échoué.",

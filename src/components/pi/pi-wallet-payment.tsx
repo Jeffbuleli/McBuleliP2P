@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { getConfiguredPiTopupAmounts } from "@/lib/pi-topup-amounts";
 import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -11,20 +12,22 @@ type PiPaymentArgs = {
   metadata: Record<string, unknown>;
 };
 
+function amountLabel(n: number): string {
+  if (Number.isInteger(n)) return String(n);
+  return String(n);
+}
+
 export function PiWalletPaymentSection() {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const testAmount = useMemo(
-    () => Number(process.env.NEXT_PUBLIC_PI_TEST_PAYMENT_AMOUNT ?? "0.1"),
-    [],
-  );
+  const topupAmounts = useMemo(() => getConfiguredPiTopupAmounts(), []);
   const showDetails = useMemo(
     () => process.env.NEXT_PUBLIC_PI_DEBUG === "1",
     [],
   );
 
-  async function pay() {
+  async function pay(amountPi: number) {
     setMsg(null);
     setBusy(true);
     try {
@@ -35,11 +38,12 @@ export function PiWalletPaymentSection() {
       }
       await piAuthenticateForPayments(Pi);
       const payment: PiPaymentArgs = {
-        amount: testAmount,
+        amount: amountPi,
         memo: t("pi_pay_memo_wallet"),
         metadata: {
           purpose: "wallet_test",
           app: "mcbuleli",
+          amountPi,
         },
       };
 
@@ -54,7 +58,7 @@ export function PiWalletPaymentSection() {
               body: JSON.stringify({
                 paymentId,
                 action: "wallet_test",
-                amount: String(testAmount),
+                amount: String(amountPi),
                 memo: payment.memo,
                 meta: payment.metadata,
               }),
@@ -73,28 +77,28 @@ export function PiWalletPaymentSection() {
                 : "init_failed",
             );
           }
-            const res = await fetchWithDeadline(
-              "/api/payments/pi/approve",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentId }),
-                credentials: "same-origin",
-              },
-              45_000,
+          const res = await fetchWithDeadline(
+            "/api/payments/pi/approve",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paymentId }),
+              credentials: "same-origin",
+            },
+            45_000,
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(
+              typeof data === "object" &&
+                data !== null &&
+                "message" in data &&
+                typeof (data as { message: unknown }).message === "string"
+                ? (data as { message: string }).message
+                : "approve_failed",
             );
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              throw new Error(
-                typeof data === "object" &&
-                  data !== null &&
-                  "message" in data &&
-                  typeof (data as { message: unknown }).message === "string"
-                  ? (data as { message: string }).message
-                  : "approve_failed",
-              );
-            }
-          },
+          }
+        },
           onReadyForServerCompletion: async (
             paymentId: string,
             txid: string,
@@ -153,8 +157,11 @@ export function PiWalletPaymentSection() {
           </p>
           <ul className="mt-2 space-y-0.5 text-[11px] text-stone-400">
             <li>
-              {t("pi_pay_amount")}:{" "}
-              <span className="font-medium text-stone-200">{testAmount}</span> Pi
+              {t("pi_pay_amount")} ({topupAmounts.length}):{" "}
+              <span className="font-medium text-stone-200">
+                {topupAmounts.map(amountLabel).join(", ")}
+              </span>{" "}
+              Pi
             </li>
             <li>
               {t("pi_pay_memo_label")}:{" "}
@@ -163,14 +170,19 @@ export function PiWalletPaymentSection() {
           </ul>
         </>
       ) : null}
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => void pay()}
-        className="mt-3 w-full rounded-2xl border border-emerald-700/40 bg-emerald-950/40 py-3 text-sm font-semibold text-emerald-100 disabled:opacity-50"
-      >
-        {busy ? t("pi_pay_busy") : t("pi_pay_cta")}
-      </button>
+      <div className="mt-3 flex flex-col gap-2">
+        {topupAmounts.map((amt, i) => (
+          <button
+            key={`${amt}-${i}`}
+            type="button"
+            disabled={busy}
+            onClick={() => void pay(amt)}
+            className="w-full rounded-2xl border border-emerald-700/40 bg-emerald-950/40 py-3 text-sm font-semibold text-emerald-100 disabled:opacity-50"
+          >
+            {busy ? t("pi_pay_busy") : t("pi_pay_cta_amount", { amount: amountLabel(amt) })}
+          </button>
+        ))}
+      </div>
       {msg ? (
         <p className="mt-2 text-xs text-stone-300">{msg}</p>
       ) : null}

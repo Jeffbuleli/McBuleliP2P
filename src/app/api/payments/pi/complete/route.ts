@@ -8,6 +8,7 @@ import {
   getPiNetworkApiKey,
 } from "@/lib/pi-network-env";
 import { piCompletePaymentPlatform } from "@/lib/pi-platform-payments";
+import { creditUserAsset } from "@/lib/wallet-move-assets";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -65,7 +66,24 @@ export async function POST(req: Request) {
       .returning();
 
     // Fulfillment for known actions.
-    if (row && !row.fulfilledAt && row.action === "p2p_ad_boost" && row.actionRefId) {
+    if (row && !row.fulfilledAt && row.action === "wallet_test") {
+      const amtStr = row.amount != null ? row.amount.toString() : "0";
+      const credited = Number(amtStr);
+      if (Number.isFinite(credited) && credited > 0) {
+        await db.transaction(async (tx) => {
+          await creditUserAsset(tx, userId, "PI", amtStr);
+          await tx
+            .update(piPlatformPayments)
+            .set({ fulfilledAt: new Date(), updatedAt: new Date() })
+            .where(eq(piPlatformPayments.paymentId, parsed.data.paymentId));
+        });
+      }
+    } else if (
+      row &&
+      !row.fulfilledAt &&
+      row.action === "p2p_ad_boost" &&
+      row.actionRefId
+    ) {
       const boostDays = Number(process.env.PI_P2P_BOOST_DAYS ?? "7");
       const until = new Date(Date.now() + Math.max(1, boostDays) * 24 * 60 * 60 * 1000);
       const boostAmountPi = row.amount ? row.amount.toString() : "0";
