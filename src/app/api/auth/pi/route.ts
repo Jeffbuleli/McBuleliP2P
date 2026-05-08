@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
+import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -82,13 +83,11 @@ export async function POST(req: Request) {
     user: { id: userId, email },
     pi: { username, uid: me.uid ?? null },
   });
-  res.cookies.set(sessionCookieName(), token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  res.cookies.set(
+    sessionCookieName(),
+    token,
+    getSessionCookieWriteOptions(60 * 60 * 24 * 30),
+  );
   return res;
 }
 

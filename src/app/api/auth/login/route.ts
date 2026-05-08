@@ -9,6 +9,7 @@ import { friendlyAuthError } from "@/lib/auth-errors";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { loginSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
+import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
 
 export async function POST(req: Request) {
   try {
@@ -57,13 +58,11 @@ export async function POST(req: Request) {
         role: sessionUser.role,
       },
     });
-    res.cookies.set(sessionCookieName(), token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    res.cookies.set(
+      sessionCookieName(),
+      token,
+      getSessionCookieWriteOptions(60 * 60 * 24 * 30),
+    );
     return res;
   } catch (e) {
     console.error("[auth/login]", e);
