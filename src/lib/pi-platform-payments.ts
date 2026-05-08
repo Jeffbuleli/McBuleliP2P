@@ -68,6 +68,69 @@ export async function piCompletePaymentPlatform(
   return json;
 }
 
+export async function piCreateA2UPaymentPlatform(args: {
+  uid: string;
+  amount: number;
+  memo: string;
+  metadata?: Record<string, unknown>;
+  apiKey: string;
+}): Promise<unknown> {
+  const res = await fetch(`${PI_PLATFORM_V2}/payments`, {
+    method: "POST",
+    headers: authKeyHeader(args.apiKey),
+    body: JSON.stringify({
+      payment: {
+        amount: args.amount,
+        memo: args.memo,
+        metadata: args.metadata ?? {},
+        uid: args.uid,
+      },
+    }),
+    cache: "no-store",
+  });
+  const text = await res.text();
+  let json: unknown = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = text;
+  }
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json !== null && "message" in json
+        ? String((json as { message: unknown }).message)
+        : `Pi create payment failed: HTTP ${res.status}`,
+    );
+  }
+  return json;
+}
+
+export async function piFetchPaymentPlatform(
+  paymentId: string,
+  apiKey: string,
+): Promise<unknown> {
+  const res = await fetch(`${PI_PLATFORM_V2}/payments/${encodeURIComponent(paymentId)}`, {
+    method: "GET",
+    headers: authKeyHeader(apiKey),
+    cache: "no-store",
+  });
+  const text = await res.text();
+  let json: unknown = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = text;
+  }
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json !== null && "message" in json
+        ? String((json as { message: unknown }).message)
+        : `Pi fetch payment failed: HTTP ${res.status}`,
+    );
+  }
+  return json;
+}
+
 export type PiPaymentDtoLike = {
   identifier?: string;
   status?: {

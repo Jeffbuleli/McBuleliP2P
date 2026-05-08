@@ -62,8 +62,11 @@ export async function POST(req: Request) {
     .where(eq(users.email, email))
     .limit(1);
 
-  const userId =
-    existing?.id ??
+  const userId = existing?.id;
+  const piUid = me.uid?.trim() ?? null;
+
+  const resolvedUserId =
+    userId ??
     (
       await db
         .insert(users)
@@ -73,14 +76,24 @@ export async function POST(req: Request) {
           role: "user",
           tradeLiveEnabled: false,
           staffScopes: null,
+          piUid,
+          piUsername: username,
         })
         .returning({ id: users.id })
     )[0]!.id;
 
-  const token = await signSessionToken(userId);
+  // Keep Pi identifiers up to date for A2U payouts.
+  if (userId && (piUid || username)) {
+    await db
+      .update(users)
+      .set({ piUid, piUsername: username })
+      .where(eq(users.id, userId));
+  }
+
+  const token = await signSessionToken(resolvedUserId);
   const res = NextResponse.json({
     ok: true,
-    user: { id: userId, email },
+    user: { id: resolvedUserId, email },
     pi: { username, uid: me.uid ?? null },
   });
   res.cookies.set(

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { and, eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/session";
+import { getDb, p2pAds, piPlatformPayments } from "@/db";
 import {
   PiNetworkApiKeyMissingError,
   getPiNetworkApiKey,
@@ -34,6 +36,51 @@ export async function POST(req: Request) {
       parsed.data.txid,
       apiKey,
     );
+
+    const db = getDb();
+    // Update local record (idempotent).
+    const [row] = await db
+      .insert(piPlatformPayments)
+      .values({
+        userId,
+        kind: "U2A",
+        paymentId: parsed.data.paymentId,
+        amount: "0",
+        memo: "",
+        action: "wallet_test",
+        actionRefId: null,
+        status: "COMPLETED",
+        txid: parsed.data.txid,
+        meta: null,
+        fulfilledAt: null,
+      })
+      .onConflictDoUpdate({
+        target: piPlatformPayments.paymentId,
+        set: {
+          status: "COMPLETED",
+          txid: parsed.data.txid,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    // Fulfillment for known actions.
+    if (row && !row.fulfilledAt && row.action === "p2p_ad_boost" && row.actionRefId) {
+      const boostDays = Number(process.env.PI_P2P_BOOST_DAYS ?? "7");
+      const until = new Date(Date.now() + Math.max(1, boostDays) * 24 * 60 * 60 * 1000);
+
+      // Only allow boosting own ad.
+      await db
+        .update(p2pAds)
+        .set({ boostedUntil: until, updatedAt: new Date() })
+        .where(and(eq(p2pAds.id, row.actionRefId), eq(p2pAds.userId, userId)));
+
+      await db
+        .update(piPlatformPayments)
+        .set({ fulfilledAt: new Date(), updatedAt: new Date() })
+        .where(eq(piPlatformPayments.paymentId, parsed.data.paymentId));
+    }
+
     return NextResponse.json({ ok: true, payment: data });
   } catch (e) {
     if (e instanceof PiNetworkApiKeyMissingError) {

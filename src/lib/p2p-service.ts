@@ -274,7 +274,11 @@ export async function listMarketAds(filters: {
     .from(p2pAds)
     .innerJoin(users, eq(p2pAds.userId, users.id))
     .where(and(...cond))
-    .orderBy(desc(p2pAds.createdAt));
+    .orderBy(
+      desc(sql`(${p2pAds.boostedUntil} > now())`),
+      desc(p2pAds.boostedUntil),
+      desc(p2pAds.createdAt),
+    );
 
   const rep = await loadReputationMap(rows.map((r) => r.ad.userId));
 
@@ -374,6 +378,7 @@ export async function listUserAds(userId: string) {
     terms: ad.terms,
     countryCode: ad.countryCode,
     status: ad.status as P2pAdStatus,
+    boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
     createdAt: ad.createdAt.toISOString(),
   }));
 }

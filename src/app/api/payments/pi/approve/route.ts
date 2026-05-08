@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
+import { getDb, piPlatformPayments } from "@/db";
 import {
   PiNetworkApiKeyMissingError,
   getPiNetworkApiKey,
@@ -29,6 +30,25 @@ export async function POST(req: Request) {
   try {
     const apiKey = getPiNetworkApiKey();
     const data = await piApprovePaymentPlatform(parsed.data.paymentId, apiKey);
+    const db = getDb();
+    // Best-effort: record status even if init wasn't called (SDK retries).
+    await db
+      .insert(piPlatformPayments)
+      .values({
+        userId,
+        kind: "U2A",
+        paymentId: parsed.data.paymentId,
+        amount: "0",
+        memo: "",
+        action: "wallet_test",
+        actionRefId: null,
+        status: "APPROVED",
+        meta: null,
+      })
+      .onConflictDoUpdate({
+        target: piPlatformPayments.paymentId,
+        set: { status: "APPROVED", updatedAt: new Date() },
+      });
     return NextResponse.json({ ok: true, payment: data });
   } catch (e) {
     if (e instanceof PiNetworkApiKeyMissingError) {

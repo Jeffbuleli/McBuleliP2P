@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
+import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
 import {
   P2pStatusIcon,
   p2pStatusBadgeClasses,
@@ -45,6 +47,7 @@ type MyAd = {
   terms: string | null;
   countryCode: string | null;
   status: string;
+  boostedUntil: string | null;
   createdAt: string;
 };
 
@@ -74,6 +77,8 @@ export function P2PHub() {
   const [myAds, setMyAds] = useState<MyAd[] | null>(null);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [boostBusyId, setBoostBusyId] = useState<string | null>(null);
+  const [boostMsg, setBoostMsg] = useState<string | null>(null);
 
   const loadMarket = useCallback(async () => {
     setLoading(true);
@@ -104,6 +109,127 @@ export function P2PHub() {
     }
     setMyAds(data.ads as MyAd[]);
   }, []);
+
+  const boostAmount = useMemo(
+    () => Number(process.env.NEXT_PUBLIC_PI_P2P_BOOST_AMOUNT ?? "0.1"),
+    [],
+  );
+
+  async function boostAd(adId: string) {
+    setBoostMsg(null);
+    setBoostBusyId(adId);
+    try {
+      const Pi = await piInit();
+      if (typeof Pi.createPayment !== "function") {
+        setBoostMsg(t("pi_pay_no_sdk"));
+        return;
+      }
+      await piAuthenticateForPayments(Pi);
+
+      const memo = t("p2p_boost_memo");
+      const amountStr = String(boostAmount);
+      Pi.createPayment!(
+        {
+          amount: boostAmount,
+          memo,
+          metadata: { action: "p2p_ad_boost", adId },
+        },
+        {
+          onReadyForServerApproval: async (paymentId: string) => {
+            // Persist linkage before calling approve.
+            const initRes = await fetchWithDeadline(
+              "/api/payments/pi/u2a/init",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentId,
+                  action: "p2p_ad_boost",
+                  actionRefId: adId,
+                  amount: amountStr,
+                  memo,
+                  meta: { source: "p2p_hub" },
+                }),
+                credentials: "same-origin",
+              },
+              28_000,
+            );
+            if (!initRes.ok) {
+              const d = await initRes.json().catch(() => ({}));
+              throw new Error(
+                typeof d === "object" &&
+                  d !== null &&
+                  "message" in d &&
+                  typeof (d as { message: unknown }).message === "string"
+                  ? (d as { message: string }).message
+                  : "init_failed",
+              );
+            }
+
+            const res = await fetchWithDeadline(
+              "/api/payments/pi/approve",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentId }),
+                credentials: "same-origin",
+              },
+              45_000,
+            );
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(
+                typeof data === "object" &&
+                  data !== null &&
+                  "message" in data &&
+                  typeof (data as { message: unknown }).message === "string"
+                  ? (data as { message: string }).message
+                  : "approve_failed",
+              );
+            }
+          },
+          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+            const res = await fetchWithDeadline(
+              "/api/payments/pi/complete",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentId, txid }),
+                credentials: "same-origin",
+              },
+              45_000,
+            );
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(
+                typeof data === "object" &&
+                  data !== null &&
+                  "message" in data &&
+                  typeof (data as { message: unknown }).message === "string"
+                  ? (data as { message: string }).message
+                  : "complete_failed",
+              );
+            }
+            setBoostMsg(t("p2p_boost_success"));
+            void loadAds();
+            void loadMarket();
+          },
+          onCancel: () => {
+            setBoostMsg(t("pi_pay_cancelled"));
+          },
+          onError: (err: Error) => {
+            setBoostMsg(`${t("pi_pay_failed")}: ${err?.message ?? String(err)}`);
+          },
+        },
+      );
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : typeof e === "string" ? e : null;
+      setBoostMsg(msg ? `Pi: ${msg}` : t("pi_pay_failed"));
+    } finally {
+      setBoostBusyId(null);
+    }
+  }
 
   const loadOrders = useCallback(async () => {
     const res = await fetch("/api/p2p/orders");
@@ -406,6 +532,15 @@ export function P2PHub() {
                         ? t("p2p_ad_paused")
                         : t("p2p_ad_closed")}
                   </p>
+                  {a.boostedUntil && new Date(a.boostedUntil).getTime() > Date.now() ? (
+                    <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                      {t("p2p_boosted_until")}:{" "}
+                      {new Date(a.boostedUntil).toLocaleString(
+                        locale === "fr" ? "fr-FR" : "en-US",
+                        { year: "numeric", month: "short", day: "2-digit" },
+                      )}
+                    </p>
+                  ) : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {a.status === "active" ? (
                       <button
@@ -414,6 +549,16 @@ export function P2PHub() {
                         className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-semibold dark:border-stone-600"
                       >
                         {t("p2p_ad_pause")}
+                      </button>
+                    ) : null}
+                    {a.status === "active" ? (
+                      <button
+                        type="button"
+                        disabled={boostBusyId === a.id}
+                        onClick={() => void boostAd(a.id)}
+                        className="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-900 disabled:opacity-60 dark:border-amber-700 dark:text-amber-200"
+                      >
+                        {boostBusyId === a.id ? t("p2p_boost_busy") : t("p2p_boost")}
                       </button>
                     ) : null}
                     {a.status === "paused" ? (
@@ -439,6 +584,9 @@ export function P2PHub() {
               ))}
             </ul>
           )}
+          {boostMsg ? (
+            <p className="text-center text-xs text-stone-500">{boostMsg}</p>
+          ) : null}
         </div>
       ) : null}
 

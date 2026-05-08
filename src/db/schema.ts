@@ -31,6 +31,10 @@ export const users = pgTable("users", {
   piBalance: numeric("pi_balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
+  /** Pi Platform app-scoped uid (set on Pi login; required for A2U payouts). */
+  piUid: varchar("pi_uid", { length: 128 }),
+  /** Pi username (best-effort display; set on Pi login). */
+  piUsername: varchar("pi_username", { length: 64 }),
   /** Fiat pocket — USD (mobile money, internal). */
   usdBalance: numeric("usd_balance", { precision: 36, scale: 18 })
     .notNull()
@@ -212,6 +216,8 @@ export const p2pAds = pgTable(
     terms: text("terms"),
     countryCode: varchar("country_code", { length: 8 }),
     status: varchar("status", { length: 16 }).notNull().default("active"),
+    /** Optional paid boost: ad ranks higher while boostedUntil > now(). */
+    boostedUntil: timestamp("boosted_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -222,6 +228,45 @@ export const p2pAds = pgTable(
   (t) => [
     index("p2p_ads_market_idx").on(t.status, t.asset, t.fiatCurrency),
     index("p2p_ads_user_idx").on(t.userId),
+  ],
+);
+
+/** Pi Platform payments (U2A via SDK + A2U via Platform API). */
+export const piPlatformPayments = pgTable(
+  "pi_platform_payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** U2A = user-to-app (SDK). A2U = app-to-user (Platform API). */
+    kind: varchar("kind", { length: 8 }).notNull(),
+    /** Platform payment identifier (paymentId from SDK / API). */
+    paymentId: varchar("payment_id", { length: 128 }).notNull(),
+    /** Pi amount (string decimal) for display/audit. */
+    amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
+    memo: text("memo").notNull(),
+    /** App-specific linking for fulfillment (e.g. p2p_ad_boost). */
+    action: varchar("action", { length: 32 }).notNull(),
+    /** Optional reference id for the action (e.g. adId). */
+    actionRefId: uuid("action_ref_id"),
+    /** Lifecycle: INITIATED -> APPROVED -> COMPLETED | FAILED | CANCELLED. */
+    status: varchar("status", { length: 16 }).notNull().default("INITIATED"),
+    txid: varchar("txid", { length: 255 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    fulfilledAt: timestamp("fulfilled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("pi_platform_payments_payment_id_uq").on(t.paymentId),
+    index("pi_platform_payments_user_idx").on(t.userId),
+    index("pi_platform_payments_action_idx").on(t.action, t.actionRefId),
+    index("pi_platform_payments_status_idx").on(t.status),
   ],
 );
 

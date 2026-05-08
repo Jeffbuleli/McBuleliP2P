@@ -46,6 +46,33 @@ export function PiWalletPaymentSection() {
       // Pi SDK requires all four callbacks (see pi-platform-docs SDK_reference.md).
       Pi.createPayment!(payment, {
         onReadyForServerApproval: async (paymentId: string) => {
+          const initRes = await fetchWithDeadline(
+            "/api/payments/pi/u2a/init",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentId,
+                action: "wallet_test",
+                amount: String(testAmount),
+                memo: payment.memo,
+                meta: payment.metadata,
+              }),
+              credentials: "same-origin",
+            },
+            28_000,
+          );
+          if (!initRes.ok) {
+            const d = await initRes.json().catch(() => ({}));
+            throw new Error(
+              typeof d === "object" &&
+                d !== null &&
+                "message" in d &&
+                typeof (d as { message: unknown }).message === "string"
+                ? (d as { message: string }).message
+                : "init_failed",
+            );
+          }
             const res = await fetchWithDeadline(
               "/api/payments/pi/approve",
               {
