@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
   const assignee = alias(users, "withdrawal_assignee");
 
-  let statusCond =
+  const statusCond =
     statusParam === "active"
       ? inArray(withdrawals.status, [
           WithdrawalStatus.PENDING_AGENT,
