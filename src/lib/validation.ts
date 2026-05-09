@@ -27,6 +27,10 @@ export const depositIntentSchema = z.object({
   provider: cexBinance,
   asset: z.literal("USDT"),
   network: networkEnum,
+  /** Planned gross USDT deposit (validated against corridor minimums server-side). */
+  declaredAmountUsdt: z.string().regex(/^\d+(\.\d+)?$/),
+  /** Optional reference / memo for the user’s own records (not the exchange destination tag). */
+  userNote: z.string().trim().max(512).optional(),
 });
 
 export const depositConfirmSchema = z.object({

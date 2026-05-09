@@ -8,6 +8,7 @@ import { USDT_NETWORKS, parseNetwork } from "@/lib/networks";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { DepositStatus } from "@/lib/status";
 import { useI18n } from "@/components/i18n-provider";
+import type { Messages } from "@/i18n/messages";
 
 type Deposit = {
   id: string;
@@ -20,8 +21,19 @@ type Deposit = {
   failureReason: string | null;
   txid: string | null;
   amount: string | null;
+  declaredAmountUsdt: string | null;
+  userNote: string | null;
   provider: string;
 };
+
+function depositStatusLine(t: (k: keyof Messages) => string, status: string): string {
+  if (status === DepositStatus.AWAITING_TRANSFER) return t("deposit_status_awaiting_transfer");
+  if (status === DepositStatus.AWAITING_TXID) return t("deposit_status_awaiting_txid");
+  if (status === DepositStatus.PENDING_VALIDATION) return t("deposit_status_pending_validation");
+  if (status === DepositStatus.CONFIRMED) return t("deposit_status_confirmed");
+  if (status === DepositStatus.FAILED) return t("deposit_status_failed");
+  return status;
+}
 
 export default function DepositDetailPage() {
   const { t } = useI18n();
@@ -126,9 +138,29 @@ export default function DepositDetailPage() {
           {t("deposit_detail_title")}
         </h1>
         <p className="mt-1 text-sm text-stone-400">
-          {deposit.status}
+          {depositStatusLine(t, deposit.status)}
         </p>
       </div>
+
+      {deposit.asset === "USDT" &&
+      (deposit.declaredAmountUsdt != null || (deposit.userNote && deposit.userNote.length > 0)) ? (
+        <div className="rounded-xl border border-stone-600/50 bg-stone-900/50 p-4 text-sm text-stone-200">
+          {deposit.declaredAmountUsdt != null ? (
+            <p>
+              <span className="text-stone-500">{t("deposit_summary_declared")}: </span>
+              <strong className="tabular-nums text-stone-100">
+                {deposit.declaredAmountUsdt} USDT
+              </strong>
+            </p>
+          ) : null}
+          {deposit.userNote ? (
+            <p className={deposit.declaredAmountUsdt != null ? "mt-2" : ""}>
+              <span className="text-stone-500">{t("deposit_summary_note")}: </span>
+              {deposit.userNote}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-amber-700/40 bg-amber-950/30 p-3 text-sm text-amber-100">
         {t("deposit_warn_body")}
@@ -162,8 +194,8 @@ export default function DepositDetailPage() {
       </div>
 
       {deposit.memoShown ? (
-        <div className="rounded-2xl border-2 border-rose-900/30 bg-rose-50 p-4">
-          <p className="text-xs font-bold uppercase text-rose-900">
+        <div className="rounded-2xl border-2 border-rose-900/30 bg-rose-50 p-4 dark:border-rose-800/50 dark:bg-rose-950/30">
+          <p className="text-xs font-bold uppercase text-rose-900 dark:text-rose-100">
             {t("deposit_memo_title")}
           </p>
           <p className="mt-2 font-mono text-sm">{deposit.memoShown}</p>

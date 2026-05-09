@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { and, eq, sql } from "drizzle-orm";
 import { getDb, deposits } from "@/db";
 import { hasBinanceKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
@@ -6,6 +7,11 @@ import { depositIntentSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
 import { binanceDepositAddress } from "@/lib/binance";
 import { DepositStatus } from "@/lib/status";
+import {
+  MIN_DEPOSIT_USDT_FIRST,
+  MIN_DEPOSIT_USDT_SUBSEQUENT,
+} from "@/lib/usdt-deposit-constants";
+import { fmtWalletAmount } from "@/lib/wallet-types";
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -33,6 +39,35 @@ export async function POST(req: Request) {
       { status: 503 },
     );
   }
+  const declaredNum = Number(body.declaredAmountUsdt);
+  if (!Number.isFinite(declaredNum) || declaredNum <= 0) {
+    return NextResponse.json({ message: "deposit_invalid_declared_amount" }, { status: 400 });
+  }
+
+  const db = getDb();
+  const [{ c }] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(deposits)
+    .where(
+      and(
+        eq(deposits.userId, userId),
+        eq(deposits.asset, "USDT"),
+        eq(deposits.status, DepositStatus.CONFIRMED),
+      ),
+    );
+  const prevConfirmed = Number(c ?? 0);
+  const minGross =
+    prevConfirmed > 0 ? MIN_DEPOSIT_USDT_SUBSEQUENT : MIN_DEPOSIT_USDT_FIRST;
+  if (declaredNum + 1e-12 < minGross) {
+    return NextResponse.json(
+      {
+        message: "deposit_declared_below_min",
+        min: String(minGross),
+      },
+      { status: 400 },
+    );
+  }
+
   const spec = USDT_NETWORKS[body.network];
   const r = await binanceDepositAddress({
     coin: body.asset,
@@ -41,7 +76,9 @@ export async function POST(req: Request) {
   const address = r.address;
   const memo = r.tag?.trim() ? r.tag.trim() : null;
 
-  const db = getDb();
+  const declaredStr = fmtWalletAmount(declaredNum);
+  const noteTrim = body.userNote?.trim();
+
   const [row] = await db
     .insert(deposits)
     .values({
@@ -54,6 +91,8 @@ export async function POST(req: Request) {
       memoShown: memo,
       minConfirmations: spec.defaultConfirmations,
       status: DepositStatus.AWAITING_TRANSFER,
+      declaredAmountUsdt: declaredStr,
+      userNote: noteTrim ? noteTrim : null,
     })
     .returning();
 

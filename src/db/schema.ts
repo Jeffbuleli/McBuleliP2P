@@ -127,6 +127,10 @@ export const deposits = pgTable(
     failureReason: text("failure_reason"),
     txid: varchar("txid", { length: 512 }),
     amount: numeric("amount", { precision: 36, scale: 18 }),
+    /** Gross USDT the user plans to send (wizard). Distinct from `amount` (confirmed on-chain). */
+    declaredAmountUsdt: numeric("declared_amount_usdt", { precision: 36, scale: 18 }),
+    /** Optional user note; on-chain destination tag from the exchange remains `memoShown`. */
+    userNote: text("user_note"),
     userMarkedSentAt: timestamp("user_marked_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

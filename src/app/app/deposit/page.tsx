@@ -8,6 +8,7 @@ import {
   MIN_DEPOSIT_USDT_FIRST,
   MIN_DEPOSIT_USDT_SUBSEQUENT,
 } from "@/lib/usdt-deposit-constants";
+import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -22,6 +23,8 @@ export default function DepositWizardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enabledUsdt, setEnabledUsdt] = useState<boolean | null>(null);
+  const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
+  const [userNote, setUserNote] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -48,10 +51,22 @@ export default function DepositWizardPage() {
           provider: "binance" as const,
           asset: "USDT" as const,
           network,
+          declaredAmountUsdt: declaredAmountUsdt.trim().replace(",", "."),
+          userNote: userNote.trim() || undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const rec = data as Record<string, unknown>;
+        const msg = typeof rec.message === "string" ? rec.message : "";
+        if (msg === "deposit_declared_below_min" && typeof rec.min === "string") {
+          setError(t("deposit_declared_below_min", { min: rec.min }));
+          return;
+        }
+        if (msg.startsWith("deposit_")) {
+          setError(clientErrorText(t, msg));
+          return;
+        }
         setError(
           formatAuthClientError(data) ||
             "Could not create deposit. Check server configuration.",
@@ -129,6 +144,35 @@ export default function DepositWizardPage() {
 
       {step === 2 && (
         <section className="mt-8 space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+              {t("deposit_declared_amount_label")}
+            </span>
+            <input
+              value={declaredAmountUsdt}
+              onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
+              inputMode="decimal"
+              placeholder="20"
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+            />
+            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
+              {t("deposit_declared_amount_hint")}
+            </span>
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+              {t("deposit_user_note_label")}
+            </span>
+            <input
+              value={userNote}
+              onChange={(e) => setUserNote(e.target.value)}
+              placeholder=""
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+            />
+            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
+              {t("deposit_user_note_hint")}
+            </span>
+          </label>
           <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-stone-900 shadow-inner dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-50">
             <p className="text-sm font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
               {t("deposit_warn_title")}
@@ -161,7 +205,13 @@ export default function DepositWizardPage() {
           ) : null}
           <button
             type="button"
-            disabled={!acceptedRisk || loading || enabledUsdt !== true}
+            disabled={
+              !acceptedRisk ||
+              loading ||
+              enabledUsdt !== true ||
+              !declaredAmountUsdt.trim() ||
+              Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0
+            }
             onClick={() => void createIntent()}
             className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >

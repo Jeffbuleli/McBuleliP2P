@@ -1057,6 +1057,22 @@ export const en = {
   deposit_warn_body: "Wrong network = loss.",
   deposit_usdt_min_rules:
     "USDT: first on-chain deposit must be at least {first} USDT (gross). Later USDT deposits: from {next} USDT.",
+  deposit_declared_amount_label: "Amount to deposit (USDT)",
+  deposit_declared_amount_hint:
+    "Gross amount you plan to send from your exchange or wallet. Must meet the minimum for your account.",
+  deposit_user_note_label: "Memo / note (optional)",
+  deposit_user_note_hint:
+    "Your own reference only. If the exchange shows a separate “memo” or “tag” for this deposit, it will appear on the next screen after we generate your address.",
+  deposit_declared_below_min:
+    "Declared amount is below the minimum for this deposit ({min} USDT gross).",
+  deposit_invalid_declared_amount: "Enter a valid USDT amount.",
+  deposit_status_awaiting_transfer: "Awaiting your transfer",
+  deposit_status_awaiting_txid: "Awaiting transaction ID",
+  deposit_status_pending_validation: "Under review",
+  deposit_status_confirmed: "Confirmed",
+  deposit_status_failed: "Failed",
+  deposit_summary_declared: "You declared",
+  deposit_summary_note: "Your note",
   deposit_confirm_chk: "I send USDT on",
   deposit_show_addr: "Show address",
   deposit_loading: "…",
@@ -2378,6 +2394,22 @@ export const fr: Messages = {
   deposit_warn_body: "Mauvais réseau = perte.",
   deposit_usdt_min_rules:
     "USDT : le 1er dépôt on-chain doit être d’au moins {first} USDT (brut). Dépôts USDT suivants : à partir de {next} USDT.",
+  deposit_declared_amount_label: "Montant à déposer (USDT)",
+  deposit_declared_amount_hint:
+    "Montant brut que vous comptez envoyer depuis votre plateforme ou wallet. Doit respecter le minimum pour votre compte.",
+  deposit_user_note_label: "Mémo / note (optionnel)",
+  deposit_user_note_hint:
+    "Référence personnelle uniquement. Si l’échange affiche un « mémo » ou « tag » pour ce dépôt, il apparaîtra à l’écran suivant après génération de l’adresse.",
+  deposit_declared_below_min:
+    "Le montant indiqué est sous le minimum pour ce dépôt ({min} USDT brut).",
+  deposit_invalid_declared_amount: "Indiquez un montant USDT valide.",
+  deposit_status_awaiting_transfer: "En attente de votre envoi",
+  deposit_status_awaiting_txid: "En attente du TXID",
+  deposit_status_pending_validation: "En vérification",
+  deposit_status_confirmed: "Confirmé",
+  deposit_status_failed: "Échoué",
+  deposit_summary_declared: "Montant déclaré",
+  deposit_summary_note: "Votre note",
   deposit_confirm_chk: "J’envoie l’USDT sur",
   deposit_show_addr: "Voir l’adresse",
   deposit_loading: "…",
