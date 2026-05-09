@@ -100,7 +100,7 @@ export const en = {
     "Some transfers need manual review or queued payouts; we surface status instead of silent delays.",
   landing_preview_heading: "Inside the app",
   landing_preview_sub:
-    "These modules are available after sign-in — same stack as app.mcbuleli.live.",
+    "These modules are available after sign-in — https://www.mcbuleli.online.",
   landing_preview_wallet_t: "Wallet",
   landing_preview_wallet_d:
     "USDT & Pi balances, internal transfers, deposits with declared amounts, and withdrawal queues with fee transparency.",
@@ -1468,7 +1468,7 @@ export const fr: Messages = {
     "Certains transferts nécessitent une revue manuelle ou une file de paiements ; nous affichons le statut plutôt que des silences.",
   landing_preview_heading: "Dans l’application",
   landing_preview_sub:
-    "Ces modules sont disponibles après connexion — même stack que app.mcbuleli.live.",
+    "Ces modules sont disponibles après connexion — https://www.mcbuleli.online.",
   landing_preview_wallet_t: "Portefeuille",
   landing_preview_wallet_d:
     "Soldes USDT et Pi, transferts internes, dépôts avec montants déclarés et files de retrait avec frais visibles.",

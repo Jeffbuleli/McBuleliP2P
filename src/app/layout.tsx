@@ -17,6 +17,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 /** Canonical URL for OG/Twitter links (WhatsApp requires absolute image URLs). */
 const metadataBaseUrl =
   appUrl ??
+  process.env.RENDER_EXTERNAL_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
 
 const desc =
