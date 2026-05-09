@@ -1057,6 +1057,8 @@ export const en = {
   trade_ui_hist_cause: "Close",
   trade_ui_hist_fees: "Fees",
   trade_ui_hist_pnl: "PnL",
+  trade_ui_chart_caption_okx_pi:
+    "OKX PI-USDT candles: each point is the candle close (interval above). Reference chart only.",
   trade_ui_chart_caption:
     "Binance spot klines: each point is the candle close (interval above).",
   trade_ui_24h: "24h",
@@ -2464,6 +2466,8 @@ export const fr: Messages = {
   trade_ui_hist_cause: "Motif",
   trade_ui_hist_fees: "Frais",
   trade_ui_hist_pnl: "PnL",
+  trade_ui_chart_caption_okx_pi:
+    "Bougies OKX PI-USDT : chaque point = clôture (intervalle ci-dessus). Graphique de référence uniquement.",
   trade_ui_chart_caption:
     "Klines spot Binance : chaque point = clôture de bougie (intervalle ci-dessus).",
   trade_ui_24h: "24h",

@@ -131,7 +131,9 @@ export function TradeMiniChart({
         ))}
       </div>
       <p className="mb-2 text-[10px] leading-snug text-stone-500 dark:text-stone-400">
-        {t("trade_ui_chart_caption")}
+        {symbol.toUpperCase() === "PIUSDT"
+          ? t("trade_ui_chart_caption_okx_pi")
+          : t("trade_ui_chart_caption")}
       </p>
       <div className="relative flex justify-center overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-950">
         {loading && (

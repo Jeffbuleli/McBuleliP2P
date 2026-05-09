@@ -3,8 +3,12 @@ import {
   BINANCE_API_PUBLIC,
   binancePublicFetchInit,
 } from "@/lib/binance-public";
+import { getOkxPiUsdtCandleSeries } from "@/lib/okx-pi-candles";
 
 export const dynamic = "force-dynamic";
+
+/** Mini-chart for PI/USDT uses OKX candles (reference); other pairs use Binance spot klines. */
+const PI_TRADE_CHART = "PIUSDT";
 
 const TF_MAP = {
   "1m": { interval: "1m", limit: 180 },
@@ -16,6 +20,17 @@ const TF_MAP = {
   "1d": { interval: "1d", limit: 120 },
 } as const;
 
+/** OKX `bar` values for PI-USDT (same spans as Binance limits above). */
+const TF_MAP_OKX_PI = {
+  "1m": { bar: "1m", limit: 180 },
+  "5m": { bar: "5m", limit: 288 },
+  "15m": { bar: "15m", limit: 192 },
+  "30m": { bar: "30m", limit: 168 },
+  "1h": { bar: "1H", limit: 168 },
+  "4h": { bar: "4H", limit: 120 },
+  "1d": { bar: "1D", limit: 120 },
+} as const satisfies Record<keyof typeof TF_MAP, { bar: string; limit: number }>;
+
 export type TradeTf = keyof typeof TF_MAP;
 
 export async function GET(req: Request) {
@@ -23,6 +38,29 @@ export async function GET(req: Request) {
   const symbol = (url.searchParams.get("symbol") ?? "BTCUSDT").toUpperCase();
   const tfRaw = url.searchParams.get("tf") ?? "1h";
   const tf = tfRaw in TF_MAP ? (tfRaw as TradeTf) : ("1h" as TradeTf);
+
+  if (symbol === PI_TRADE_CHART) {
+    const { bar, limit } = TF_MAP_OKX_PI[tf];
+    const series = await getOkxPiUsdtCandleSeries({ bar, limit });
+    if (!series) {
+      return NextResponse.json(
+        { message: "Market data unavailable." },
+        { status: 502 },
+      );
+    }
+    return NextResponse.json(
+      {
+        symbol: PI_TRADE_CHART,
+        tf,
+        points: series.points,
+        lastPrice: series.lastPrice,
+        changePct: series.changePct,
+        priceSource: "okx_pi_usdt",
+      },
+      { headers: { "Cache-Control": "no-store, max-age=0" } },
+    );
+  }
+
   const { interval, limit } = TF_MAP[tf];
 
   const qs = new URLSearchParams({
