@@ -482,6 +482,11 @@ export function P2PHub() {
                       {a.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {a.asset} /{" "}
                       {a.fiatCurrency}
                     </p>
+                    <p className="mt-2 text-[11px] text-stone-600 dark:text-stone-400">
+                      {a.side === "sell"
+                        ? `You are the buyer → pay off-platform, receive ${a.asset}.`
+                        : `You are the seller → you must have ${a.asset} on McBuleli (escrow).`}
+                    </p>
                     <p className="mt-1 truncate text-sm font-medium text-stone-800 dark:text-stone-200">
                       {t("p2p_maker")}: {a.makerName}
                     </p>
@@ -527,7 +532,7 @@ export function P2PHub() {
                           : "bg-emerald-700 dark:bg-emerald-600"
                       }`}
                     >
-                      {t("p2p_market_sticky_cta")}
+                      {a.side === "sell" ? "Buy" : "Sell"}
                     </Link>
                   </div>
                 </li>
