@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createUserNotification } from "@/lib/notifications-service";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb, loans, users, withdrawals } from "@/db";
 import { getSessionUserId } from "@/lib/session";
@@ -193,6 +194,17 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  await createUserNotification({
+    userId,
+    kind: "withdrawal_queued",
+    payload: {
+      withdrawalId: w.id,
+      asset: body.asset,
+      amount: net,
+      fee,
+    },
+  });
 
   return NextResponse.json({
     withdrawal: w,

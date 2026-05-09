@@ -2,9 +2,12 @@ import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getDb, userNotifications } from "@/db";
 
 export type NotificationKind =
+  | "withdrawal_queued"
+  | "withdrawal_claimed"
   | "withdrawal_completed"
   | "withdrawal_rejected"
-  | "deposit_confirmed";
+  | "deposit_confirmed"
+  | "deposit_validation_pending";
 
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;

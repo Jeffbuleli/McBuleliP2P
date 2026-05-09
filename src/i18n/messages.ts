@@ -309,6 +309,17 @@ export const en = {
   notif_deposit_confirmed_title: "Deposit credited",
   notif_deposit_confirmed_body:
     "Your {asset} deposit was credited ({amount}).",
+  notif_withdrawal_queued_title: "Withdrawal queued",
+  notif_withdrawal_queued_body:
+    "Your {asset} withdrawal is waiting for our team. No payout happens until someone processes the ticket — check History for status.",
+  notif_withdrawal_claimed_title: "Withdrawal in progress",
+  notif_withdrawal_claimed_body:
+    "An agent is processing your {asset} payout. You will get another notice when it completes.",
+  notif_deposit_validation_pending_title: "Deposit under review",
+  notif_deposit_validation_pending_body:
+    "Your {asset} deposit TXID was received and is pending manual verification.",
+  withdraw_manual_queue_hint:
+    "Manual queue: requests stay open until an agent sends funds — typical target within {hours}h (not instant). You will get in-app notices when the ticket moves.",
   security_trusted: "Protected session",
   security_badge: "Secure",
   status_ui_success: "Done",
@@ -1052,6 +1063,9 @@ export const en = {
     "Withdrawal is on Pi Network (manual queue, same as USDT).",
   admin_back: "← Back",
   admin_queue: "Queue",
+  admin_withdrawal_sla_hours_note: "SLA target (env WITHDRAWAL_SLA_HOURS)",
+  admin_withdrawal_over_sla_badge: "Over SLA",
+  admin_withdrawal_sla_filter: "Over SLA only",
   admin_pending: "Open",
   admin_processing: "In progress",
   admin_done: "Done",
@@ -1576,6 +1590,17 @@ export const fr: Messages = {
   notif_deposit_confirmed_title: "Dépôt crédité",
   notif_deposit_confirmed_body:
     "Votre dépôt {asset} a été crédité ({amount}).",
+  notif_withdrawal_queued_title: "Retrait en file",
+  notif_withdrawal_queued_body:
+    "Votre retrait {asset} attend notre équipe. Aucun envoi tant que le ticket n’est pas traité — voir l’historique pour le statut.",
+  notif_withdrawal_claimed_title: "Retrait en cours",
+  notif_withdrawal_claimed_body:
+    "Un agent traite votre envoi {asset}. Vous recevrez un autre avis à la clôture.",
+  notif_deposit_validation_pending_title: "Dépôt en vérification",
+  notif_deposit_validation_pending_body:
+    "Votre TXID {asset} a été reçu et attend une vérification manuelle.",
+  withdraw_manual_queue_hint:
+    "File manuelle : la demande reste ouverte jusqu’à l’envoi par un agent — objectif typique sous {hours}h (pas instantané). Vous recevrez des avis in-app quand le ticket avance.",
   security_trusted: "Session protégée",
   security_badge: "Sécurisé",
   status_ui_success: "OK",
@@ -2332,6 +2357,9 @@ export const fr: Messages = {
     "Retrait sur Pi Network (file manuelle, comme l’USDT).",
   admin_back: "← Retour",
   admin_queue: "File",
+  admin_withdrawal_sla_hours_note: "Objectif SLA (env WITHDRAWAL_SLA_HOURS)",
+  admin_withdrawal_over_sla_badge: "Hors délai",
+  admin_withdrawal_sla_filter: "Hors délai seulement",
   admin_pending: "Ouverts",
   admin_processing: "En cours",
   admin_done: "OK",

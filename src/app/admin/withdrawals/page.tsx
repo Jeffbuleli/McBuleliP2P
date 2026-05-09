@@ -21,15 +21,21 @@ type Row = {
 export default function AdminWithdrawalsPage() {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [slaHoursWithdrawal, setSlaHoursWithdrawal] = useState(24);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("active");
   const [assignFilter, setAssignFilter] = useState<string>("all");
+  const [slaBreachedOnly, setSlaBreachedOnly] = useState(false);
 
   useEffect(() => {
     setErr(null);
     void (async () => {
       const q = new URLSearchParams();
-      q.set("status", status);
+      if (slaBreachedOnly) {
+        q.set("slaBreached", "1");
+      } else {
+        q.set("status", status);
+      }
       if (assignFilter !== "all") q.set("assignFilter", assignFilter);
       const res = await fetch(`/api/admin/withdrawals?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
@@ -39,8 +45,11 @@ export default function AdminWithdrawalsPage() {
         return;
       }
       setRows(data.withdrawals as Row[]);
+      if (typeof data.slaHoursWithdrawal === "number") {
+        setSlaHoursWithdrawal(data.slaHoursWithdrawal);
+      }
     })();
-  }, [status, assignFilter]);
+  }, [status, assignFilter, slaBreachedOnly]);
 
   if (rows === null) {
     return <p className="text-stone-500">…</p>;
@@ -53,14 +62,44 @@ export default function AdminWithdrawalsPage() {
     return s;
   }
 
+  function rowOverSla(r: Row): boolean {
+    if (
+      r.status !== WithdrawalStatus.PENDING_AGENT &&
+      r.status !== WithdrawalStatus.PROCESSING
+    ) {
+      return false;
+    }
+    const ageMs = Date.now() - new Date(r.createdAt).getTime();
+    return ageMs > slaHoursWithdrawal * 3600 * 1000;
+  }
+
+  function waitHours(r: Row): string {
+    const h = (Date.now() - new Date(r.createdAt).getTime()) / 3600000;
+    if (!Number.isFinite(h) || h < 0) return "0";
+    return h < 100 ? h.toFixed(1) : String(Math.round(h));
+  }
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="text-xl font-bold text-white">{t("admin_queue")}</h2>
+        <span className="text-xs text-stone-500">
+          {t("admin_withdrawal_sla_hours_note")}: {slaHoursWithdrawal}h
+        </span>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-300">
+          <input
+            type="checkbox"
+            checked={slaBreachedOnly}
+            onChange={(e) => setSlaBreachedOnly(e.target.checked)}
+            className="rounded border-stone-600"
+          />
+          {t("admin_withdrawal_sla_filter")}
+        </label>
         <select
           value={status}
+          disabled={slaBreachedOnly}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
+          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200 disabled:opacity-40"
         >
           <option value="active">{t("admin_pending")} + {t("admin_processing")}</option>
           <option value={WithdrawalStatus.PENDING_AGENT}>{t("admin_pending")}</option>
@@ -94,6 +133,11 @@ export default function AdminWithdrawalsPage() {
               >
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="min-w-0 font-mono text-sm text-amber-100/90">
+                    {rowOverSla(r) ? (
+                      <span className="mr-1 inline-block rounded bg-rose-950/70 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-100">
+                        {t("admin_withdrawal_over_sla_badge")} · {waitHours(r)}h
+                      </span>
+                    ) : null}
                     <span className="mr-1 inline-block rounded bg-amber-950/60 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
                       {r.asset}
                     </span>

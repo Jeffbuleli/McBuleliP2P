@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb, users, withdrawals } from "@/db";
 import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
+import { withdrawalSlaHours } from "@/lib/manual-ops-sla";
 import { WithdrawalStatus } from "@/lib/status";
 
 export async function GET(req: Request) {
@@ -21,11 +22,18 @@ export async function GET(req: Request) {
     searchParams.get("status") ?? WithdrawalStatus.PENDING_AGENT;
 
   const assignFilter = searchParams.get("assignFilter") ?? "all";
+  const slaBreachedOnly = searchParams.get("slaBreached") === "1";
+  const slaH = withdrawalSlaHours();
+  const slaCutoff = new Date(Date.now() - slaH * 60 * 60 * 1000);
 
   const assignee = alias(users, "withdrawal_assignee");
 
-  const statusCond =
-    statusParam === "active"
+  const statusCond = slaBreachedOnly
+    ? inArray(withdrawals.status, [
+        WithdrawalStatus.PENDING_AGENT,
+        WithdrawalStatus.PROCESSING,
+      ])
+    : statusParam === "active"
       ? inArray(withdrawals.status, [
           WithdrawalStatus.PENDING_AGENT,
           WithdrawalStatus.PROCESSING,
@@ -38,6 +46,10 @@ export async function GET(req: Request) {
     conditions.push(isNull(withdrawals.assignedToUserId));
   } else if (assignFilter === "mine") {
     conditions.push(eq(withdrawals.assignedToUserId, staff.id));
+  }
+
+  if (slaBreachedOnly) {
+    conditions.push(lte(withdrawals.createdAt, slaCutoff));
   }
 
   const db = getDb();
@@ -67,5 +79,8 @@ export async function GET(req: Request) {
     .orderBy(desc(withdrawals.createdAt))
     .limit(100);
 
-  return NextResponse.json({ withdrawals: rows });
+  return NextResponse.json({
+    withdrawals: rows,
+    slaHoursWithdrawal: slaH,
+  });
 }

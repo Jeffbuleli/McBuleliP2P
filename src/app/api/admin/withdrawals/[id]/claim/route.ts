@@ -7,6 +7,7 @@ import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
+import { createUserNotification } from "@/lib/notifications-service";
 
 /**
  * Agent takes ownership of a pending withdrawal → PROCESSING.
@@ -68,6 +69,15 @@ export async function POST(
       asset: w.asset,
       amount: w.amount?.toString?.() ?? String(w.amount),
       status: updated?.status,
+    },
+  });
+
+  await createUserNotification({
+    userId: w.userId,
+    kind: "withdrawal_claimed",
+    payload: {
+      withdrawalId: id,
+      asset: w.asset,
     },
   });
 

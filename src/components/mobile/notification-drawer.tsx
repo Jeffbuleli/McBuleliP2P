@@ -21,6 +21,22 @@ function titleBodyForRow(
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
 
   switch (row.kind) {
+    case "withdrawal_queued":
+      return {
+        title: t("notif_withdrawal_queued_title"),
+        body: t("notif_withdrawal_queued_body", {
+          asset: str("asset") || "—",
+        }),
+        href: "/app/wallet/history",
+      };
+    case "withdrawal_claimed":
+      return {
+        title: t("notif_withdrawal_claimed_title"),
+        body: t("notif_withdrawal_claimed_body", {
+          asset: str("asset") || "—",
+        }),
+        href: "/app/wallet/history",
+      };
     case "withdrawal_completed":
       return {
         title: t("notif_withdrawal_completed_title"),
@@ -43,6 +59,14 @@ function titleBodyForRow(
         body: t("notif_deposit_confirmed_body", {
           asset: str("asset") || "—",
           amount: str("amount") || "—",
+        }),
+        href: "/app/wallet/history",
+      };
+    case "deposit_validation_pending":
+      return {
+        title: t("notif_deposit_validation_pending_title"),
+        body: t("notif_deposit_validation_pending_body", {
+          asset: str("asset") || "—",
         }),
         href: "/app/wallet/history",
       };

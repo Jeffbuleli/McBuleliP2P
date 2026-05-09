@@ -31,6 +31,7 @@ export default function WithdrawPage() {
   const [minNetPi, setMinNetPi] = useState(MIN_WITHDRAW_NET_PI);
   const [feeUsdt, setFeeUsdt] = useState(EXTERNAL_WITHDRAW_FEE_USDT);
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
+  const [withdrawalSlaHours, setWithdrawalSlaHours] = useState<number | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -41,6 +42,7 @@ export default function WithdrawPage() {
         if (typeof data.minNetPi === "number") setMinNetPi(data.minNetPi);
         if (typeof data.feeUsdt === "number") setFeeUsdt(data.feeUsdt);
         if (typeof data.feePi === "number") setFeePi(data.feePi);
+        if (typeof data.withdrawalSlaHours === "number") setWithdrawalSlaHours(data.withdrawalSlaHours);
       } catch {
         /* defaults */
       }
@@ -74,9 +76,6 @@ export default function WithdrawPage() {
         setError(formatAuthClientError(data));
         setShowConfirm(false);
         return;
-      }
-      if (typeof data.message === "string") {
-        window.alert(data.message);
       }
       router.push("/app");
       router.refresh();
@@ -112,6 +111,12 @@ export default function WithdrawPage() {
 
       <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
         {t("withdraw_warn")}
+      </div>
+
+      <div className="rounded-xl border border-stone-300 bg-stone-50 p-3 text-xs leading-relaxed text-stone-700 dark:border-stone-600 dark:bg-stone-900/60 dark:text-stone-300">
+        {t("withdraw_manual_queue_hint", {
+          hours: withdrawalSlaHours != null ? String(withdrawalSlaHours) : "—",
+        })}
       </div>
 
       <div>

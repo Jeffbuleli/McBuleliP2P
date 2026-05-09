@@ -9,6 +9,7 @@ import {
   markDepositFailed,
   verifyDepositTx,
 } from "@/lib/deposit-verify";
+import { createUserNotification } from "@/lib/notifications-service";
 import { DepositStatus } from "@/lib/status";
 
 export async function POST(
@@ -129,6 +130,11 @@ export async function POST(
       .from(deposits)
       .where(eq(deposits.id, id))
       .limit(1);
+    await createUserNotification({
+      userId,
+      kind: "deposit_validation_pending",
+      payload: { depositId: id, asset: d.asset },
+    });
     return NextResponse.json({ status: "pending", message: result.reason, deposit: pending });
   }
 
@@ -139,5 +145,10 @@ export async function POST(
       failureReason: result.reason,
     })
     .where(eq(deposits.id, id));
+  await createUserNotification({
+    userId,
+    kind: "deposit_validation_pending",
+    payload: { depositId: id, asset: d.asset },
+  });
   return NextResponse.json({ status: "pending", message: result.reason });
 }
