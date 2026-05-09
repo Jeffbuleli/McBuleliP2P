@@ -4,6 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { getDb, p2pPaymentMethodDefs, userP2pPaymentMethods, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
+import { isCdP2pFallbackMethodCode } from "@/lib/p2p-cd-payment-fallback";
 
 const postZ = z.object({
   methodCode: z.string().min(2).max(32),
@@ -54,18 +55,22 @@ export async function POST(req: Request) {
   const cc = effectiveP2pCountryCode(u?.countryCode ?? null);
 
   // Validate method code exists for this country (active).
+  const codeUp = parsed.data.methodCode.toUpperCase();
   const [def] = await db
     .select({ code: p2pPaymentMethodDefs.code })
     .from(p2pPaymentMethodDefs)
     .where(
       and(
         eq(p2pPaymentMethodDefs.countryCode, cc),
-        eq(p2pPaymentMethodDefs.code, parsed.data.methodCode.toUpperCase()),
+        eq(p2pPaymentMethodDefs.code, codeUp),
         eq(p2pPaymentMethodDefs.active, true),
       ),
     )
     .limit(1);
-  if (!def) return NextResponse.json({ error: "p2p_payment_methods_required" }, { status: 400 });
+  const allowedFallback = cc === "CD" && isCdP2pFallbackMethodCode(codeUp);
+  if (!def && !allowedFallback) {
+    return NextResponse.json({ error: "p2p_payment_methods_required" }, { status: 400 });
+  }
 
   const now = new Date();
   const [row] = await db
@@ -73,7 +78,7 @@ export async function POST(req: Request) {
     .values({
       userId,
       countryCode: cc,
-      methodCode: parsed.data.methodCode.toUpperCase(),
+      methodCode: codeUp,
       accountName: parsed.data.accountName.trim(),
       accountNumberOrPhone: parsed.data.accountNumberOrPhone.trim(),
       extra: null,

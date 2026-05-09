@@ -16,13 +16,12 @@ import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
 import { isPawapaySupportedForCountry } from "@/lib/pawapay/availability";
+import {
+  PAWAPAY_COD_FALLBACK,
+  filterCodPawapayProviders,
+} from "@/lib/cod-pawapay-providers";
 
 type ProviderOption = { provider: string; label: string };
-
-const FALLBACK_PROVIDERS_COD: ProviderOption[] = [
-  { provider: "AIRTEL_MONEY_COD", label: "Airtel Money (RDC)" },
-  { provider: "MTN_MOMO_COD", label: "MTN MoMo (RDC)" },
-].sort((a, b) => a.label.localeCompare(b.label));
 
 export default function WalletFiatWithdrawPage() {
   const { t, locale } = useI18n();
@@ -84,7 +83,7 @@ export default function WalletFiatWithdrawPage() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
           if (!cancelled) {
-            setProviders(FALLBACK_PROVIDERS_COD);
+            setProviders([...PAWAPAY_COD_FALLBACK]);
             setProvidersErr(
               typeof data?.error === "string"
                 ? data.error
@@ -95,18 +94,20 @@ export default function WalletFiatWithdrawPage() {
         }
         const cod = (data.countries as Array<any> | undefined)?.find((c) => c?.country === "COD");
         const list = (cod?.providers as Array<any> | undefined) ?? [];
-        const opts: ProviderOption[] = list
+        const raw: ProviderOption[] = list
           .map((p) => ({
             provider: String(p.provider),
             label: String(p.displayName ?? p.provider),
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
+        const opts = filterCodPawapayProviders(raw);
+        const use = opts.length > 0 ? opts : [...PAWAPAY_COD_FALLBACK];
         if (!cancelled) {
-          setProviders(opts.length ? opts : FALLBACK_PROVIDERS_COD);
-          if (opts.length && !opts.some((x) => x.provider === provider)) {
-            setProvider(opts[0]!.provider);
-          } else if (!opts.length && FALLBACK_PROVIDERS_COD.length && !provider) {
-            setProvider(FALLBACK_PROVIDERS_COD[0]!.provider);
+          setProviders(use);
+          if (use.length && !use.some((x) => x.provider === provider)) {
+            setProvider(use[0]!.provider);
+          } else if (!provider && use[0]) {
+            setProvider(use[0].provider);
           }
         }
       } finally {
@@ -224,7 +225,7 @@ export default function WalletFiatWithdrawPage() {
             value={providerManual}
             onChange={(e) => setProviderManual(e.target.value)}
             className={inputClass}
-            placeholder="MTN_MOMO_COD, AIRTEL_MONEY_COD, ..."
+            placeholder="AIRTEL_COD, ORANGE_COD, VODACOM_MPESA_COD"
           />
         )}
       </FieldLabel>

@@ -51,11 +51,16 @@ export function P2pPaymentMethodsSection() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
       setDefs([]);
+      setMethodCode("");
       return;
     }
     const list = (data.methods as Def[]) ?? [];
     setDefs(list);
-    if (!methodCode && list.length) setMethodCode(list[0]!.code);
+    setMethodCode((prev) => {
+      if (!list.length) return "";
+      if (!prev || !list.some((d) => d.code === prev)) return list[0]!.code;
+      return prev;
+    });
   }
 
   useEffect(() => {
@@ -130,12 +135,18 @@ export function P2pPaymentMethodsSection() {
       ) : null}
 
       <div className="mt-4 grid gap-2">
+        {!defs.length ? (
+          <p className="rounded-lg border border-amber-900/30 bg-amber-950/25 px-3 py-2 text-xs text-amber-100">
+            {t("p2p_payment_methods_no_networks")}
+          </p>
+        ) : null}
         <label className="text-xs font-semibold text-stone-300">
           {t("p2p_payment_method_code")}
           <select
             value={methodCode}
             onChange={(e) => setMethodCode(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none"
+            disabled={!defs.length}
+            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
           >
             {defs.map((d) => (
               <option key={d.code} value={d.code}>
@@ -149,7 +160,8 @@ export function P2pPaymentMethodsSection() {
           <input
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none"
+            disabled={!defs.length || !methodCode}
+            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
           />
         </label>
         <label className="text-xs font-semibold text-stone-300">
@@ -157,12 +169,19 @@ export function P2pPaymentMethodsSection() {
           <input
             value={accountNumberOrPhone}
             onChange={(e) => setAccountNumberOrPhone(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none"
+            disabled={!defs.length || !methodCode}
+            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
           />
         </label>
         <button
           type="button"
-          disabled={busy || !methodCode || accountName.trim().length < 2 || accountNumberOrPhone.trim().length < 3}
+          disabled={
+            busy ||
+            !defs.length ||
+            !methodCode ||
+            accountName.trim().length < 2 ||
+            accountNumberOrPhone.trim().length < 3
+          }
           onClick={() => void add()}
           className="mt-1 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-40"
         >

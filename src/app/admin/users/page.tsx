@@ -161,9 +161,9 @@ export default function AdminUsersPage() {
                 className="rounded-lg border border-stone-600 bg-stone-950 px-2 py-1 text-sm text-stone-200"
                 aria-label={t("admin_role")}
               >
-                <option value="user">user</option>
-                <option value="agent">agent</option>
-                <option value="super_admin">super_admin</option>
+                <option value="user">{t("admin_role_option_user")}</option>
+                <option value="agent">{t("admin_role_option_agent")}</option>
+                <option value="super_admin">{t("admin_role_option_super_admin")}</option>
               </select>
             </div>
             {u.role === "agent" ? (
