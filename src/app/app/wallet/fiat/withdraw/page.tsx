@@ -19,6 +19,11 @@ import { isPawapaySupportedForCountry } from "@/lib/pawapay/availability";
 
 type ProviderOption = { provider: string; label: string };
 
+const FALLBACK_PROVIDERS_COD: ProviderOption[] = [
+  { provider: "AIRTEL_MONEY_COD", label: "Airtel Money (RDC)" },
+  { provider: "MTN_MOMO_COD", label: "MTN MoMo (RDC)" },
+].sort((a, b) => a.label.localeCompare(b.label));
+
 export default function WalletFiatWithdrawPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -79,8 +84,12 @@ export default function WalletFiatWithdrawPage() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
           if (!cancelled) {
-            setProviders([]);
-            setProvidersErr(typeof data?.error === "string" ? data.error : "Provider list unavailable");
+            setProviders(FALLBACK_PROVIDERS_COD);
+            setProvidersErr(
+              typeof data?.error === "string"
+                ? data.error
+                : "Provider list unavailable",
+            );
           }
           return;
         }
@@ -93,9 +102,11 @@ export default function WalletFiatWithdrawPage() {
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
         if (!cancelled) {
-          setProviders(opts);
+          setProviders(opts.length ? opts : FALLBACK_PROVIDERS_COD);
           if (opts.length && !opts.some((x) => x.provider === provider)) {
             setProvider(opts[0]!.provider);
+          } else if (!opts.length && FALLBACK_PROVIDERS_COD.length && !provider) {
+            setProvider(FALLBACK_PROVIDERS_COD[0]!.provider);
           }
         }
       } finally {

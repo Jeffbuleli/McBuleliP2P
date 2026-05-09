@@ -115,6 +115,10 @@ export default function P2pNewAdPage() {
         codes && paymentDefs.length
           ? paymentDefs.filter((d) => codes.includes(d.code)).map((d) => d.label).join(", ")
           : paymentMethods;
+      if (!pm || pm.trim().length < 3) {
+        setErr("p2p_payment_methods_required");
+        return;
+      }
       const res = await fetch("/api/p2p/ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -341,7 +345,11 @@ export default function P2pNewAdPage() {
 
       <button
         type="button"
-        disabled={loading || (sellNeedHint != null && !sellNeedHint.ok)}
+        disabled={
+          loading ||
+          (sellNeedHint != null && !sellNeedHint.ok) ||
+          (paymentDefs.length > 0 ? paymentCodes.length === 0 : paymentMethods.trim().length < 3)
+        }
         onClick={() => void submit()}
         className="w-full rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white disabled:opacity-40"
       >

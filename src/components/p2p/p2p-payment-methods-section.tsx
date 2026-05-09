@@ -28,6 +28,11 @@ export function P2pPaymentMethodsSection() {
   const [accountNumberOrPhone, setAccountNumberOrPhone] = useState("");
 
   const errMsg = useMemo(() => (err ? clientErrorText(t, err) : null), [err, t]);
+  const defLabel = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const d of defs) m.set(d.code, d.label);
+    return (code: string) => m.get(code) ?? code;
+  }, [defs]);
 
   async function loadMe() {
     const res = await fetch("/api/p2p/me/payment-methods");
@@ -177,7 +182,7 @@ export function P2pPaymentMethodsSection() {
               >
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-stone-200">
-                    {m.methodCode} · {m.accountName}
+                    {defLabel(m.methodCode)} · {m.accountName}
                   </p>
                   <p className="mt-1 font-mono text-xs text-stone-400">{m.accountNumberOrPhone}</p>
                 </div>

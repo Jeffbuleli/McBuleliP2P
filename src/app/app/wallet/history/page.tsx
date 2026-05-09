@@ -16,6 +16,18 @@ type Entry = {
   createdAt: string;
 };
 
+type PiPayment = {
+  id: string;
+  kind: string;
+  amount: string;
+  memo: string;
+  action: string;
+  status: string;
+  txid: string | null;
+  createdAt: string;
+  fulfilledAt: string | null;
+};
+
 const TYPES = ["", "swap_", "transfer_", "fiat_"] as const;
 
 function typeFilterLabel(t: (k: keyof Messages) => string, prefix: string): string {
@@ -51,6 +63,7 @@ export default function WalletHistoryPage() {
   const [typePrefix, setTypePrefix] = useState("");
   const [asset, setAsset] = useState("");
   const [rows, setRows] = useState<Entry[] | null>(null);
+  const [piRows, setPiRows] = useState<PiPayment[] | null>(null);
 
   const load = useCallback(async () => {
     const q = new URLSearchParams();
@@ -65,9 +78,28 @@ export default function WalletHistoryPage() {
     setRows(Array.isArray(data.entries) ? data.entries : []);
   }, [typePrefix, asset]);
 
+  const loadPi = useCallback(async () => {
+    // Only show Pi platform payments when user filters by PI or when no asset filter.
+    if (asset && asset !== "PI") {
+      setPiRows([]);
+      return;
+    }
+    const res = await fetch("/api/payments/pi/history?limit=50", { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) {
+      setPiRows([]);
+      return;
+    }
+    setPiRows(Array.isArray(data.payments) ? data.payments : []);
+  }, [asset]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void loadPi();
+  }, [loadPi]);
 
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-10 pt-2">
@@ -132,6 +164,37 @@ export default function WalletHistoryPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {piRows === null ? null : piRows.length === 0 ? null : (
+        <div className="pt-2">
+          <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+            Pi (Platform) payments
+          </h2>
+          <ul className="mt-2 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-900">
+            {piRows.map((p) => (
+              <li key={p.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
+                <div className="flex justify-between gap-2">
+                  <span className="font-semibold text-stone-900 dark:text-stone-50">
+                    {p.action} · {p.status}
+                  </span>
+                  <span className="text-xs text-stone-500">
+                    {new Date(p.createdAt).toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
+                  </span>
+                </div>
+                <p className="tabular-nums text-stone-800 dark:text-stone-200">
+                  {p.amount} PI
+                </p>
+                <p className="text-xs text-stone-500">{p.memo}</p>
+                {p.txid ? (
+                  <p className="break-all font-mono text-[11px] text-stone-500">
+                    txid: {p.txid}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
