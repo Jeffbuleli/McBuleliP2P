@@ -64,6 +64,11 @@ export default function P2pTradePage() {
 
   const errMsg = useMemo(() => {
     if (!submitErr) return null;
+    if (submitErr === "wallet_insufficient_balance" && ad?.side === "sell") {
+      // When taking a SELL ad, the seller is the ad owner. If they lack escrow/reserve,
+      // show the P2P-specific message (avoid blaming the buyer).
+      return t("p2p_sell_insufficient_balance");
+    }
     if (submitErr.startsWith("p2p_") || submitErr.startsWith("wallet_")) {
       return t(submitErr as keyof Messages);
     }
@@ -130,6 +135,15 @@ export default function P2pTradePage() {
         <p className="font-semibold text-emerald-900 dark:text-emerald-200">
           {ad.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {ad.asset} / {ad.fiatCurrency}
         </p>
+        {ad.side === "buy" ? (
+          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
+            You are taking a BUY ad. That means you are the seller: you must have {ad.asset} available on McBuleli to lock escrow.
+          </p>
+        ) : (
+          <p className="mt-2 rounded-lg border border-emerald-900/15 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-950 dark:border-emerald-800/30 dark:bg-emerald-950/25 dark:text-emerald-100">
+            You are taking a SELL ad. You are the buyer: you pay off-platform (mobile money/bank) and receive {ad.asset} after release.
+          </p>
+        )}
         <p className="mt-2 text-stone-600 dark:text-stone-400">
           {t("p2p_maker")}: {ad.makerName}
           {ad.countryCode ? ` · ${ad.countryCode}` : ""}

@@ -1,7 +1,5 @@
 import { eq } from "drizzle-orm";
-import { mkdir, unlink, writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
 import { z } from "zod";
 import { getDb, users } from "@/db";
 import { assertAvatarImageBuffer } from "@/lib/avatar-image";
@@ -11,20 +9,8 @@ const urlBody = z.object({
   avatarUrl: z.string().url().max(2000),
 });
 
-function extForMime(m: "image/jpeg" | "image/png" | "image/webp") {
-  if (m === "image/png") return "png";
-  if (m === "image/webp") return "webp";
-  return "jpg";
-}
-
-async function removeOldLocalFile(avatarUrl: string | null) {
-  if (!avatarUrl?.startsWith("/uploads/avatars/")) return;
-  const full = path.join(process.cwd(), "public", avatarUrl);
-  try {
-    await unlink(full);
-  } catch {
-    // ignore
-  }
+function dataUrlForMime(m: "image/jpeg" | "image/png" | "image/webp", buf: Buffer) {
+  return `data:${m};base64,${buf.toString("base64")}`;
 }
 
 export async function POST(req: Request) {
@@ -34,11 +20,8 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  const [prev] = await db
-    .select({ avatarUrl: users.avatarUrl })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  // Note: Render/serverless often has no persistent disk. We store uploads as data URLs in DB.
+  // Existing /uploads/... avatarUrl values will still render if the file exists.
 
   const ct = req.headers.get("content-type") ?? "";
   if (ct.includes("multipart/form-data")) {
@@ -53,18 +36,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: v.error }, { status: 400 });
     }
 
-    await mkdir(path.join(process.cwd(), "public", "uploads", "avatars"), {
-      recursive: true,
-    });
-    await removeOldLocalFile(prev?.avatarUrl ?? null);
-
-    const ext = extForMime(v.mime);
-    const rel = `/uploads/avatars/${userId}.${ext}`;
-    const full = path.join(process.cwd(), "public", rel);
-    await writeFile(full, buf);
-
-    await db.update(users).set({ avatarUrl: rel }).where(eq(users.id, userId));
-    return NextResponse.json({ ok: true, avatarUrl: rel });
+    const dataUrl = dataUrlForMime(v.mime, buf);
+    await db.update(users).set({ avatarUrl: dataUrl }).where(eq(users.id, userId));
+    return NextResponse.json({ ok: true, avatarUrl: dataUrl });
   }
 
   const json = await req.json().catch(() => null);
@@ -73,7 +47,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "avatar_invalid_url" }, { status: 400 });
   }
 
-  await removeOldLocalFile(prev?.avatarUrl ?? null);
   await db
     .update(users)
     .set({ avatarUrl: parsed.data.avatarUrl.trim() })
@@ -89,13 +62,6 @@ export async function DELETE() {
   }
 
   const db = getDb();
-  const [prev] = await db
-    .select({ avatarUrl: users.avatarUrl })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  await removeOldLocalFile(prev?.avatarUrl ?? null);
   await db.update(users).set({ avatarUrl: null }).where(eq(users.id, userId));
 
   return NextResponse.json({ ok: true });
