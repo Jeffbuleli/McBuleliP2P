@@ -714,6 +714,10 @@ export const en = {
   p2p_side_label: "Your side",
   p2p_asset_label: "Crypto asset",
   p2p_fiat_label: "Fiat currency",
+  p2p_fiat_quote_escrow_note:
+    "Quote currency (e.g. USD/CDF) is for pricing and off-platform payment only. P2P escrow is USDT or Pi only — your McBuleli USD/CDF wallet balance is never used to settle P2P trades.",
+  p2p_quote_fiat_not_allowed:
+    "This fiat quote is not enabled for P2P. Use USD/CDF off-platform or adjust server quote settings.",
   p2p_price_per_unit: "Price (fiat per 1 unit of crypto)",
   p2p_min_fiat: "Minimum fiat amount",
   p2p_max_fiat: "Maximum fiat amount",
@@ -2084,6 +2088,10 @@ export const fr: Messages = {
   p2p_side_label: "Votre côté",
   p2p_asset_label: "Actif crypto",
   p2p_fiat_label: "Monnaie fiat",
+  p2p_fiat_quote_escrow_note:
+    "La devise affichée (ex. USD/CDF) sert au prix et au paiement hors application. Le séquestre P2P est en USDT ou Pi uniquement — le solde USD/CDF McBuleli n’est jamais utilisé pour régler un P2P.",
+  p2p_quote_fiat_not_allowed:
+    "Cette devise de cotation n’est pas activée pour le P2P. Utilisez USD/CDF hors plateforme ou modifiez la configuration des devises.",
   p2p_price_per_unit: "Prix (fiat pour 1 unité de crypto)",
   p2p_min_fiat: "Montant fiat minimum",
   p2p_max_fiat: "Montant fiat maximum",

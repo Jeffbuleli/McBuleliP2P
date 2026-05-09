@@ -9,8 +9,9 @@ import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
   P2P_COUNTRY_CODES,
-  P2P_FIAT_CURRENCIES,
+  p2pAllowedQuoteFiats,
   type P2pCryptoAsset,
+  type P2pFiatCurrency,
   type P2pSide,
 } from "@/lib/p2p-config";
 
@@ -21,7 +22,17 @@ export default function P2pNewAdPage() {
   const router = useRouter();
   const [side, setSide] = useState<P2pSide>("sell");
   const [asset, setAsset] = useState<P2pCryptoAsset>("USDT");
-  const [fiat, setFiat] = useState("CDF");
+  const quoteFiats = p2pAllowedQuoteFiats();
+  const [fiat, setFiat] = useState<P2pFiatCurrency>(() => quoteFiats[0] ?? "CDF");
+
+  useEffect(() => {
+    if (
+      quoteFiats.length > 0 &&
+      !quoteFiats.includes(fiat as (typeof quoteFiats)[number])
+    ) {
+      setFiat(quoteFiats[0] ?? "CDF");
+    }
+  }, [quoteFiats, fiat]);
   const [price, setPrice] = useState("");
   const [minFiat, setMinFiat] = useState("");
   const [maxFiat, setMaxFiat] = useState("");
@@ -202,15 +213,18 @@ export default function P2pNewAdPage() {
         {t("p2p_fiat_label")}
         <select
           value={fiat}
-          onChange={(e) => setFiat(e.target.value)}
+          onChange={(e) => setFiat(e.target.value as P2pFiatCurrency)}
           className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
         >
-          {P2P_FIAT_CURRENCIES.map((f) => (
+          {quoteFiats.map((f) => (
             <option key={f} value={f}>
               {f}
             </option>
           ))}
         </select>
+        <p className="mt-1.5 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+          {t("p2p_fiat_quote_escrow_note")}
+        </p>
       </label>
 
       <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">

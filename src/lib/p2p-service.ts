@@ -15,9 +15,12 @@ import {
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import {
+  isAllowedP2pQuoteFiat,
   minCryptoForAsset,
   paymentWindowMinutes,
+  p2pAllowedQuoteFiats,
   p2pFeeBpsConfigured,
+  p2pQuoteFiatRestrictionEnabled,
   type P2pAdStatus,
   type P2pCryptoAsset,
   type P2pOrderStatus,
@@ -507,6 +510,9 @@ export async function listMarketAds(filters: {
   await processExpiredP2pOrders();
   const db = getDb();
   const cond = [eq(p2pAds.status, AD_ACTIVE)];
+  if (p2pQuoteFiatRestrictionEnabled()) {
+    cond.push(inArray(p2pAds.fiatCurrency, p2pAllowedQuoteFiats()));
+  }
   if (filters.asset) cond.push(eq(p2pAds.asset, filters.asset));
   if (filters.fiat) cond.push(eq(p2pAds.fiatCurrency, filters.fiat));
   if (filters.side) cond.push(eq(p2pAds.side, filters.side));
@@ -653,6 +659,9 @@ export async function getAdForTaker(args: {
 
   if (!row) return { ok: false, message: "p2p_ad_not_found" };
   if (row.ad.status !== AD_ACTIVE) return { ok: false, message: "p2p_ad_inactive" };
+  if (!isAllowedP2pQuoteFiat(String(row.ad.fiatCurrency))) {
+    return { ok: false, message: "p2p_ad_inactive" };
+  }
   if (row.ad.userId === args.takerId) {
     return { ok: false, message: "p2p_cannot_trade_own_ad" };
   }
@@ -728,6 +737,9 @@ export async function createAd(args: {
   }
   const pm = args.paymentMethods.trim();
   if (pm.length < 3) return { ok: false, message: "p2p_payment_methods_required" };
+  if (!isAllowedP2pQuoteFiat(args.fiatCurrency)) {
+    return { ok: false, message: "p2p_quote_fiat_not_allowed" };
+  }
 
   if (args.side === "sell") {
     const db = getDb();
@@ -952,6 +964,9 @@ export async function createOrder(args: {
 
       if (!ad) throw new Error("p2p_ad_not_found");
       if (ad.ad.status !== AD_ACTIVE) throw new Error("p2p_ad_inactive");
+      if (!isAllowedP2pQuoteFiat(String(ad.ad.fiatCurrency))) {
+        throw new Error("p2p_ad_inactive");
+      }
       if (ad.ad.userId === args.takerId) throw new Error("p2p_cannot_trade_own_ad");
 
       const minF = Number(ad.ad.minFiat);

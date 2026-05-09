@@ -14,7 +14,7 @@ import {
 } from "@/components/p2p/p2p-status-badge";
 import {
   P2P_COUNTRY_CODES,
-  P2P_FIAT_CURRENCIES,
+  p2pAllowedQuoteFiats,
   type P2pCryptoAsset,
   type P2pSide,
 } from "@/lib/p2p-config";
@@ -357,7 +357,7 @@ export function P2PHub() {
                 className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-2 py-2 text-sm text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
               >
                 <option value="">{t("p2p_filter_all")}</option>
-                {P2P_FIAT_CURRENCIES.map((f) => (
+                {p2pAllowedQuoteFiats().map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>

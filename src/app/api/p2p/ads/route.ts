@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import {
-  isP2pFiat,
+  isAllowedP2pQuoteFiat,
   P2P_COUNTRY_CODES,
   type P2pCryptoAsset,
   type P2pSide,
@@ -43,8 +43,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "p2p_invalid_limits" }, { status: 400 });
   }
   const d = parsed.data;
-  if (!isP2pFiat(d.fiatCurrency)) {
-    return NextResponse.json({ error: "p2p_invalid_limits" }, { status: 400 });
+  if (!isAllowedP2pQuoteFiat(d.fiatCurrency)) {
+    return NextResponse.json({ error: "p2p_quote_fiat_not_allowed" }, { status: 400 });
   }
   const cc = d.countryCode?.toUpperCase();
   if (cc && !(P2P_COUNTRY_CODES as readonly string[]).includes(cc)) {

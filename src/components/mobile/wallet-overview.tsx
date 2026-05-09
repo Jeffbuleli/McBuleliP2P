@@ -81,6 +81,11 @@ function isFiatAccountAsset(a: WalletAsset) {
   return a === "USD" || a === "CDF";
 }
 
+// Safety: never open fiat deposit from UI (USD/CDF) even if routes exist.
+function isFiatDepositDisabled(asset: WalletAsset): boolean {
+  return isFiatAccountAsset(asset);
+}
+
 export function WalletOverview({
   labels,
   totalUsdDisplay,
@@ -116,6 +121,7 @@ export function WalletOverview({
   const withdrawHrefTop =
     tab === "crypto" ? "/app/withdraw" : "/app/wallet/fiat/withdraw";
   const fiatTopLocked = tab === "account" && fiatDepositWithdrawPaused;
+  const fiatTopDepositDisabled = tab === "account";
 
   return (
     <div className="flex flex-col gap-0 pb-6">
@@ -160,7 +166,7 @@ export function WalletOverview({
         </p>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
-          {fiatTopLocked ? (
+          {fiatTopLocked || fiatTopDepositDisabled ? (
             <span
               title={labels.wallet_fiat_paused_hint}
               className="flex min-h-[48px] cursor-not-allowed items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-2 text-center text-sm font-bold text-white opacity-50 shadow-md shadow-emerald-900/15 dark:bg-emerald-600"
@@ -299,7 +305,7 @@ export function WalletOverview({
                   </div>
                 </div>
                 <div className="mt-2.5 flex flex-wrap justify-end gap-1.5">
-                  {fiatDepositWithdrawPaused && isFiatAccountAsset(row.asset) ? (
+                  {isFiatDepositDisabled(row.asset) ? (
                     <span
                       title={labels.wallet_fiat_paused_hint}
                       className="rounded-lg bg-emerald-700/90 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-50"

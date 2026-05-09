@@ -134,6 +134,9 @@ export default function P2pTradePage() {
       </Link>
 
       <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">{t("p2p_take_trade")}</h1>
+      <p className="text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+        {t("p2p_fiat_quote_escrow_note")}
+      </p>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-4 text-sm dark:border-stone-700 dark:bg-stone-900">
         <p className="font-semibold text-emerald-900 dark:text-emerald-200">
