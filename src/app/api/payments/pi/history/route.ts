@@ -23,6 +23,7 @@ export async function GET(req: Request) {
       action: piPlatformPayments.action,
       status: piPlatformPayments.status,
       txid: piPlatformPayments.txid,
+      meta: piPlatformPayments.meta,
       createdAt: piPlatformPayments.createdAt,
       fulfilledAt: piPlatformPayments.fulfilledAt,
     })

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getSessionUserId } from "@/lib/session";
@@ -27,8 +28,8 @@ const NAME: Record<WalletAsset, Record<"en" | "fr", string>> = {
   USDT: { en: "Tether · USDT", fr: "Tether · USDT" },
   PI: { en: "Pi Network", fr: "Pi Network" },
   PI_TEST: {
-    en: "Pi Test · sandbox (not on-chain Pi)",
-    fr: "Pi Test · bac à sable (pas du Pi déposé)",
+    en: "Pi Test · training (Pi Network sandbox)",
+    fr: "Pi Test · entraînement (bac à sable Pi)",
   },
   USD: { en: "US Dollar", fr: "Dollar US" },
   CDF: { en: "Congolese franc", fr: "Franc congolais" },
@@ -210,7 +211,10 @@ export default async function WalletPage() {
   });
 
   const cryptoRows = state.lines
-    .filter((l) => l.asset === "USDT" || l.asset === "PI")
+    .filter(
+      (l) =>
+        l.asset === "USDT" || l.asset === "PI" || l.asset === "PI_TEST",
+    )
     .map((l) => toRow(l, locale, lang));
   const fiatRows = state.lines
     .filter((l) => l.asset === "USD" || l.asset === "CDF")
@@ -260,6 +264,14 @@ export default async function WalletPage() {
         fiatRows={fiatRows}
         fiatDepositWithdrawPaused={fiatDepositWithdrawPaused}
       />
+      <p className="mt-2 text-center text-[11px] text-stone-500 dark:text-stone-400">
+        <Link
+          href="/app/wallet/pi-test"
+          className="font-semibold text-emerald-700 underline dark:text-emerald-400"
+        >
+          {d.wallet_pi_test_title}
+        </Link>
+      </p>
       <div id="pi-topup" className="scroll-mt-4">
         <PiWalletPaymentSection />
       </div>

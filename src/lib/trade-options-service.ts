@@ -1,5 +1,9 @@
 import { and, desc, eq, lte } from "drizzle-orm";
-import { creditTradeDemoUsdt, debitTradeDemoUsdt } from "@/lib/trade-demo-balance";
+import { creditTradeDemoUsdt } from "@/lib/trade-demo-balance";
+import {
+  debitDemoTradingCollateral,
+  fetchPiUsdMark,
+} from "@/lib/trade-demo-collateral";
 import { randomUUID } from "node:crypto";
 import { getDb, tradeSimpleOptions, users } from "@/db";
 import {
@@ -192,6 +196,8 @@ export async function openSimpleOption(args: {
   const payoutPct = TRADE_OPTIONS_PAYOUT_PCT;
 
   const db = getDb();
+  const piUsdMark = isDemo ? await fetchPiUsdMark() : 0;
+
   try {
     const id = await db.transaction(async (tx) => {
       const [u] = await tx
@@ -205,9 +211,7 @@ export async function openSimpleOption(args: {
         .limit(1);
       if (!u) throw new Error("user");
       if (isDemo) {
-        const bal = numFromNumeric(u.tradeDemoUsdtBalance?.toString());
-        if (bal + 1e-18 < total) throw new Error("insufficient");
-        await debitTradeDemoUsdt(tx, userId, fmtTradeAmount(total));
+        await debitDemoTradingCollateral(tx, userId, total, piUsdMark);
       } else {
         if (!u.tradeLiveEnabled) throw new Error("live_disabled");
         const bal = numFromNumeric(u.balance?.toString());
@@ -261,6 +265,9 @@ export async function openSimpleOption(args: {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "insufficient") {
       return { ok: false, message: "trade_insufficient_usdt" };
+    }
+    if (msg === "pi_price_unavailable") {
+      return { ok: false, message: "trade_pi_price_unavailable" };
     }
     if (msg === "live_disabled") {
       return { ok: false, message: "trade_live_not_enabled" };

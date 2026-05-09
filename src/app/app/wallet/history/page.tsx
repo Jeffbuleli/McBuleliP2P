@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import { WALLET_ASSETS, formatWalletHistoryAmount } from "@/lib/wallet-types";
+import { piSandboxFromMeta } from "@/lib/pi-network-env";
 
 type Entry = {
   id: string;
@@ -24,6 +25,7 @@ type PiPayment = {
   action: string;
   status: string;
   txid: string | null;
+  meta: Record<string, unknown> | null;
   createdAt: string;
   fulfilledAt: string | null;
 };
@@ -113,8 +115,7 @@ export default function WalletHistoryPage() {
   }, [typePrefix, asset]);
 
   const loadPi = useCallback(async () => {
-    // Only show Pi platform payments when user filters by PI or when no asset filter.
-    if (asset && asset !== "PI") {
+    if (asset && asset !== "PI" && asset !== "PI_TEST") {
       setPiRows([]);
       return;
     }
@@ -207,7 +208,11 @@ export default function WalletHistoryPage() {
             {t("wallet_history_pi_platform")}
           </h2>
           <ul className="mt-2 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-900">
-            {piRows.map((p) => (
+            {piRows.map((p) => {
+              const isTest = piSandboxFromMeta(p.meta);
+              const assetLabel = isTest ? "PI_TEST" : "PI";
+              const assetName = isTest ? "Pi Test" : "PI";
+              return (
               <li key={p.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
                 <div className="flex justify-between gap-2">
                   <span className="font-semibold text-stone-900 dark:text-stone-50">
@@ -218,7 +223,7 @@ export default function WalletHistoryPage() {
                   </span>
                 </div>
                 <p className="tabular-nums text-stone-800 dark:text-stone-200">
-                  {formatWalletHistoryAmount("PI", p.amount)} PI
+                  {formatWalletHistoryAmount(assetLabel, p.amount)} {assetName}
                 </p>
                 <p className="text-xs text-stone-500">{p.memo}</p>
                 {p.txid ? (
@@ -227,7 +232,8 @@ export default function WalletHistoryPage() {
                   </p>
                 ) : null}
               </li>
-            ))}
+            );
+            })}
           </ul>
         </div>
       )}

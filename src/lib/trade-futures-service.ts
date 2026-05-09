@@ -20,7 +20,11 @@ import {
   unrealizedPnlUsdt,
 } from "@/lib/trade-math";
 import { fetchSymbolTicker } from "@/lib/trade-price";
-import { creditTradeDemoUsdt, debitTradeDemoUsdt } from "@/lib/trade-demo-balance";
+import {
+  debitDemoTradingCollateral,
+  fetchPiUsdMark,
+} from "@/lib/trade-demo-collateral";
+import { creditTradeDemoUsdt } from "@/lib/trade-demo-balance";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import { numFromNumeric } from "@/lib/wallet-types";
@@ -439,6 +443,7 @@ export async function openFuturesPosition(args: {
   const totalDebit = marginUsdt + feeOpen;
   const batchId = randomUUID();
   const db = getDb();
+  const piUsdMark = isDemo ? await fetchPiUsdMark() : 0;
 
   try {
     const positionId = await db.transaction(async (tx) => {
@@ -474,11 +479,7 @@ export async function openFuturesPosition(args: {
       }
 
       if (isDemo) {
-        const bal = numFromNumeric(u.tradeDemoUsdtBalance?.toString());
-        if (bal + 1e-18 < totalDebit) {
-          throw new Error("insufficient");
-        }
-        await debitTradeDemoUsdt(tx, userId, fmtTradeAmount(totalDebit));
+        await debitDemoTradingCollateral(tx, userId, totalDebit, piUsdMark);
       } else {
         if (!u.tradeLiveEnabled) throw new Error("live_disabled");
         const bal = numFromNumeric(u.balance?.toString());
@@ -556,6 +557,8 @@ export async function openFuturesPosition(args: {
     });
     const msg = e instanceof Error ? e.message : "";
     if (msg === "insufficient") return { ok: false, message: "trade_insufficient_usdt" };
+    if (msg === "pi_price_unavailable")
+      return { ok: false, message: "trade_pi_price_unavailable" };
     if (msg === "live_disabled")
       return { ok: false, message: "trade_live_not_enabled" };
     if (msg === "max_positions") return { ok: false, message: "trade_max_positions" };

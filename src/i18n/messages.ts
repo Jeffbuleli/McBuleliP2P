@@ -558,6 +558,16 @@ export const en = {
   wallet_entry_group_payout_in: "Group — payout received",
   wallet_entry_group_subscription_fee: "Group — subscription fee",
   wallet_history_pi_platform: "Pi Network payments",
+  wallet_pi_test_title: "Pi Test · practice deposit",
+  wallet_pi_test_intro:
+    "Train with Pi Network Testnet inside McBuleli. Top-ups credit your Pi Test balance (training only). You can use them together with virtual USDT for Practice trading — same BTC/ETH/SOL pairs as live-style simulation.",
+  wallet_pi_test_step_a:
+    "Open McBuleli in Pi Browser using Pi Network Testnet (sandbox / Develop checklist URL).",
+  wallet_pi_test_step_b:
+    "Tap a Pi amount below and approve the Pi Test payment — your Pi Test balance in McBuleli updates when the payment completes.",
+  wallet_pi_test_step_c:
+    "See balance under Wallet → Pi Test and movements in History. Then Trade → Practice: margin uses virtual USDT first, then Pi Test (valued at PI/USDT) when needed.",
+  wallet_pi_test_cta_trade: "Open Practice trading",
   pi_payment_action_wallet_test: "Pi wallet transfer",
   pi_payment_action_p2p_ad_boost: "P2P ad boost",
   pi_payment_status_completed: "Completed",
@@ -972,7 +982,13 @@ export const en = {
     "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
   trade_mode_demo: "Practice",
   trade_mode_live: "Real funds",
-  trade_mode_demo_hint: "Virtual USDT for learning — no real money at risk. Balance:",
+  trade_mode_demo_hint: "Virtual USDT for learning — no real money at risk. Practice spending power (USDT + Pi Test):",
+  trade_mode_demo_pi_test_line:
+    "Pi Test training: {pi} π · ~{usd} USDT equivalent at PI/USDT.",
+  trade_pi_price_unavailable:
+    "PI/USDT price feed unavailable — wait a moment or use virtual USDT only.",
+  trade_error_insufficient_practice:
+    "Not enough practice funds — refill demo USDT or add Pi Test from Wallet.",
   trade_demo_refill: "Refill demo (10,000)",
   trade_demo_refill_hint: "If you spent your demo balance, you can refill it to 10,000 USDT.",
   trade_demo_refill_blocked: "Refill is available when your demo balance is low.",
@@ -1936,6 +1952,16 @@ export const fr: Messages = {
   wallet_entry_group_payout_in: "Groupe — paiement reçu",
   wallet_entry_group_subscription_fee: "Groupe — frais d’adhésion",
   wallet_history_pi_platform: "Paiements Pi Network",
+  wallet_pi_test_title: "Pi Test · dépôt d’entraînement",
+  wallet_pi_test_intro:
+    "Exerce-toi avec Pi Network Testnet dans McBuleli. Les paiements créditent le solde Pi Test (formation uniquement). Tu peux les combiner avec l’USDT virtuel pour le mode Entraînement — mêmes paires BTC/ETH/SOL qu’en simulation.",
+  wallet_pi_test_step_a:
+    "Ouvre McBuleli dans Pi Browser avec Pi Network Testnet (bac à sable / URL checklist Develop).",
+  wallet_pi_test_step_b:
+    "Choisis un montant Pi ci-dessous et valide le paiement Pi Test — le solde Pi Test McBuleli se met à jour à la fin du flux.",
+  wallet_pi_test_step_c:
+    "Voir le solde dans Portefeuille → Pi Test et les mouvements dans Historique. Puis Trade → Entraînement : la marge utilise d’abord l’USDT virtuel, puis le Pi Test (cotation PI/USDT) si besoin.",
+  wallet_pi_test_cta_trade: "Ouvrir le trading Entraînement",
   pi_payment_action_wallet_test: "Transfert Pi (portefeuille)",
   pi_payment_action_p2p_ad_boost: "Boost annonce P2P",
   pi_payment_status_completed: "Terminé",
@@ -2357,7 +2383,14 @@ export const fr: Messages = {
     "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",
   trade_mode_demo: "Entraînement",
   trade_mode_live: "Réel",
-  trade_mode_demo_hint: "USDT virtuels pour apprendre — aucun argent réel. Solde :",
+  trade_mode_demo_hint:
+    "USDT virtuels pour apprendre — aucun argent réel. Pouvoir d’entraînement (USDT + Pi Test) :",
+  trade_mode_demo_pi_test_line:
+    "Pi Test formation : {pi} π · ~{usd} USDT équivalent (PI/USDT).",
+  trade_pi_price_unavailable:
+    "Cotation PI/USDT indisponible — réessaie ou utilise seulement l’USDT virtuel.",
+  trade_error_insufficient_practice:
+    "Solde d’entraînement insuffisant — recharge l’USDT démo ou ajoute du Pi Test depuis le portefeuille.",
   trade_demo_refill: "Recharger démo (10 000)",
   trade_demo_refill_hint: "Si tu as dépensé le solde démo, tu peux le remettre à 10 000 USDT.",
   trade_demo_refill_blocked: "Recharge disponible quand le solde démo est bas.",

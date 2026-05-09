@@ -9,10 +9,17 @@ type Props = {
   mode: TradeAppMode;
   onModeChange: (m: TradeAppMode) => void;
   tradeLiveEnabled: boolean;
+  /** Virtual USDT only (refill + low-balance check). */
   demoUsdt: number;
+  /** Virtual USDT + Pi Test (USDT notional) — available for practice margin. */
+  demoEffectiveUsdt?: number;
+  /** Pi Test balance in π (display). */
+  piTest?: number;
+  /** Pi Test × PI/USDT (USDT notional, display). */
+  demoPiTestUsd?: number;
   onEnableLive: () => Promise<void>;
   enableBusy: boolean;
-  onDemoRefilled?: (demoUsdt: number) => void;
+  onDemoRefilled?: (demoUsdt: number) => void | Promise<void>;
 };
 
 export function TradeModeBar({
@@ -20,6 +27,9 @@ export function TradeModeBar({
   onModeChange,
   tradeLiveEnabled,
   demoUsdt,
+  demoEffectiveUsdt,
+  piTest = 0,
+  demoPiTestUsd = 0,
   onEnableLive,
   enableBusy,
   onDemoRefilled,
@@ -30,6 +40,10 @@ export function TradeModeBar({
   const [refillMsg, setRefillMsg] = useState<string | null>(null);
 
   const canRefill = demoUsdt <= 100;
+  const eff =
+    typeof demoEffectiveUsdt === "number" && Number.isFinite(demoEffectiveUsdt)
+      ? demoEffectiveUsdt
+      : demoUsdt;
 
   async function refillDemo() {
     setRefillBusy(true);
@@ -49,7 +63,9 @@ export function TradeModeBar({
         return;
       }
       const n = Number(j.demoUsdt ?? "10000");
-      onDemoRefilled?.(Number.isFinite(n) ? n : 10000);
+      await Promise.resolve(
+        onDemoRefilled?.(Number.isFinite(n) ? n : 10000),
+      );
       setRefillMsg("✓");
       setTimeout(() => setRefillMsg(null), 1200);
     } finally {
@@ -90,11 +106,19 @@ export function TradeModeBar({
               <p className="min-w-0">
                 {t("trade_mode_demo_hint")}{" "}
                 <span className="font-mono font-semibold">
-                  {demoUsdt.toLocaleString(undefined, {
+                  {eff.toLocaleString(undefined, {
                     maximumFractionDigits: 2,
                   })}{" "}
                   USDT
                 </span>
+                {demoPiTestUsd > 1e-8 || piTest > 1e-12 ? (
+                  <span className="mt-0.5 block text-[10px] font-normal text-emerald-900/90 dark:text-emerald-200/90">
+                    {t("trade_mode_demo_pi_test_line", {
+                      pi: piTest.toLocaleString(undefined, { maximumFractionDigits: 4 }),
+                      usd: demoPiTestUsd.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+                    })}
+                  </span>
+                ) : null}
               </p>
               <button
                 type="button"

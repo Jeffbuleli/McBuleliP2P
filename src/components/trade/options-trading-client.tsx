@@ -71,6 +71,9 @@ export function OptionsTradingClient() {
   const [tradeMode, setTradeMode] = useState<TradeAppMode>("demo");
   const [tradeLiveEnabled, setTradeLiveEnabled] = useState(false);
   const [demoUsdt, setDemoUsdt] = useState(10000);
+  const [demoEffectiveUsdt, setDemoEffectiveUsdt] = useState(10000);
+  const [demoPiTestUsd, setDemoPiTestUsd] = useState(0);
+  const [piTestAmt, setPiTestAmt] = useState(0);
   const [walletUsdt, setWalletUsdt] = useState<number | null>(null);
   const [enableBusy, setEnableBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -101,11 +104,18 @@ export function OptionsTradingClient() {
       const res = await fetch("/api/trade/mode", { cache: "no-store" });
       const j = (await res.json()) as {
         demoUsdt?: string;
+        demoEffectiveUsdt?: string;
+        demoPiTestUsd?: string;
+        piTest?: string;
         tradeLiveEnabled?: boolean;
       };
       if (res.ok) {
-        const d = Number(j.demoUsdt ?? "0");
-        if (Number.isFinite(d)) setDemoUsdt(d);
+        const pure = Number(j.demoUsdt ?? "0");
+        const eff = Number(j.demoEffectiveUsdt ?? j.demoUsdt ?? "0");
+        if (Number.isFinite(pure)) setDemoUsdt(pure);
+        setDemoEffectiveUsdt(Number.isFinite(eff) ? eff : pure);
+        setDemoPiTestUsd(Number(j.demoPiTestUsd ?? "0"));
+        setPiTestAmt(Number(j.piTest ?? "0"));
         setTradeLiveEnabled(Boolean(j.tradeLiveEnabled));
       }
     } catch {
@@ -177,12 +187,16 @@ export function OptionsTradingClient() {
           durationSec,
         }),
       });
-      const j = (await res.json()) as { error?: string };
+      const j = (await res.json()) as { error?: string; message?: string };
       if (!res.ok) {
         setMsg(
           j.error === "trade_live_not_enabled"
             ? t("trade_error_live_not_enabled")
-            : (j.error ?? "error"),
+            : j.error === "trade_pi_price_unavailable"
+              ? t("trade_pi_price_unavailable")
+            : j.error === "trade_insufficient_usdt"
+              ? t("trade_error_insufficient_practice")
+              : (j.message ?? j.error ?? "error"),
         );
         return;
       }
@@ -216,7 +230,7 @@ export function OptionsTradingClient() {
 
   const availStake =
     tradeMode === "demo"
-      ? demoUsdt
+      ? demoEffectiveUsdt
       : walletUsdt != null
         ? walletUsdt
         : null;
@@ -228,9 +242,14 @@ export function OptionsTradingClient() {
         onModeChange={setTradeMode}
         tradeLiveEnabled={tradeLiveEnabled}
         demoUsdt={demoUsdt}
+        demoEffectiveUsdt={demoEffectiveUsdt}
+        demoPiTestUsd={demoPiTestUsd}
+        piTest={piTestAmt}
         onEnableLive={enableLive}
         enableBusy={enableBusy}
-        onDemoRefilled={(n) => setDemoUsdt(n)}
+        onDemoRefilled={async () => {
+          await loadTradeMode();
+        }}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
