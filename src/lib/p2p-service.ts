@@ -986,7 +986,8 @@ export async function createOrder(args: {
       if (usesReserve) {
         const rem = Number(ad.ad.reserveRemainingCrypto);
         if (!Number.isFinite(rem) || rem + 1e-18 < cryptoNum) {
-          throw new Error("wallet_insufficient_balance");
+          // SELL ad: insufficient seller reserve; do not blame buyer.
+          throw new Error("p2p_sell_insufficient_balance");
         }
       } else {
         const [sellerRow] = await tx
@@ -1002,7 +1003,13 @@ export async function createOrder(args: {
           wa === "USDT"
             ? numFromNumeric(sellerRow.balance)
             : numFromNumeric(sellerRow.piBalance);
-        if (bal + 1e-18 < cryptoNum) throw new Error("wallet_insufficient_balance");
+        if (bal + 1e-18 < cryptoNum) {
+          throw new Error(
+            (ad.ad.side as P2pSide) === "sell"
+              ? "p2p_sell_insufficient_balance"
+              : "wallet_insufficient_balance",
+          );
+        }
       }
 
       const windowMin = paymentWindowMinutes();
