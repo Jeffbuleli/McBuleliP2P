@@ -9,6 +9,7 @@ import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export async function POST(
   req: Request,
@@ -104,6 +105,16 @@ export async function POST(
       reason: parsed.data.reason.trim(),
       asset: w.asset,
       refundApprox: refund,
+    },
+  });
+
+  await createUserNotification({
+    userId: w.userId,
+    kind: "withdrawal_rejected",
+    payload: {
+      withdrawalId: id,
+      asset: w.asset,
+      reason: parsed.data.reason.trim(),
     },
   });
 

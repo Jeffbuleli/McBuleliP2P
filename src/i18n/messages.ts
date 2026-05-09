@@ -300,6 +300,15 @@ export const en = {
   install_later: "Later",
   notifications_title: "Notifications",
   notifications_empty: "No notifications yet.",
+  notif_withdrawal_completed_title: "Withdrawal completed",
+  notif_withdrawal_completed_body:
+    "Your {asset} withdrawal was sent on-chain. Reference TXID in History.",
+  notif_withdrawal_rejected_title: "Withdrawal refunded",
+  notif_withdrawal_rejected_body:
+    "Your withdrawal was cancelled and funds returned. Reason: {reason}",
+  notif_deposit_confirmed_title: "Deposit credited",
+  notif_deposit_confirmed_body:
+    "Your {asset} deposit was credited ({amount}).",
   security_trusted: "Protected session",
   security_badge: "Secure",
   status_ui_success: "Done",
@@ -1088,6 +1097,7 @@ export const en = {
   status_pending: "Waiting",
   status_busy: "Busy",
   status_done: "Done",
+  admin_finance_blurb: "Ledgers, group treasuries, withdrawal queue",
   admin_intro:
     "Claim → send on-chain → paste TXID. Others see busy.",
   admin_header_ops: "McBuleli · ops",
@@ -1146,6 +1156,42 @@ export const en = {
   admin_loans_col_outstanding: "Outstanding",
   admin_loans_col_status: "Status",
   admin_loans_col_created: "Created",
+  admin_nav_finance: "Finance",
+  admin_finance_title: "Cash flow (Phase 1)",
+  admin_finance_sub:
+    "Read-only: user-wallet ledger and group treasury ledger by UTC day. Withdrawals queue snapshot for USDT tickets. Signed USD uses reference rates (USDT≈1). External crypto deposits may not appear on the user ledger.",
+  admin_finance_kpi_liability: "Custodial liability (USD est.)",
+  admin_finance_kpi_lines: "Ledger lines in range",
+  admin_finance_kpi_period: "Period",
+  admin_finance_rates_note: "Rates note",
+  admin_finance_col_day: "Day (UTC)",
+  admin_finance_bucket_fiat_psp: "Fiat PSP",
+  admin_finance_bucket_p2p: "P2P",
+  admin_finance_bucket_platform_fees: "Platform fees",
+  admin_finance_bucket_internal_transfer: "Internal transfers",
+  admin_finance_bucket_staking_pool_loan_trade: "Staking / pool / loans / trade",
+  admin_finance_bucket_group_user_wallet: "Group ↔ user",
+  admin_finance_bucket_other: "Other",
+  admin_finance_col_fees_recorded: "Fees (USD eq.)",
+  admin_finance_period_row: "Period total",
+  admin_finance_export_csv: "Download CSV",
+  admin_finance_hint_signed:
+    "Positive signed USD ≈ net increase in that bucket’s user-wallet exposure for the day; internal transfers should largely net out across users.",
+  admin_finance_empty: "No ledger lines in this period.",
+  admin_finance_days: "{days} days",
+  admin_finance_section_user_ledger: "User wallet ledger",
+  admin_finance_section_group_ledger: "Group treasury ledger",
+  admin_finance_group_bucket_contribution_in: "Contributions in",
+  admin_finance_group_bucket_payout_out: "Payouts out",
+  admin_finance_group_bucket_subscription_fee: "Subscription fee",
+  admin_finance_group_bucket_other: "Other",
+  admin_finance_kpi_group_usdt: "Group treasuries (USDT)",
+  admin_finance_kpi_withdrawals: "USDT withdrawals queue",
+  admin_finance_kpi_withdrawals_detail:
+    "{pending} pending · {processing} in progress · {gross} gross reserved",
+  admin_finance_empty_group: "No group treasury lines in this period.",
+  admin_finance_kpi_total_passive:
+    "Combined passive (USD est. + group USDT)",
 };
 
 export const fr: Messages = {
@@ -1457,6 +1503,15 @@ export const fr: Messages = {
   install_later: "Plus tard",
   notifications_title: "Notifications",
   notifications_empty: "Aucune notification.",
+  notif_withdrawal_completed_title: "Retrait effectué",
+  notif_withdrawal_completed_body:
+    "Votre retrait {asset} a été envoyé sur la chaîne. Voir le TXID dans l’historique.",
+  notif_withdrawal_rejected_title: "Retrait annulé",
+  notif_withdrawal_rejected_body:
+    "Le retrait a été annulé et les fonds rendus. Motif : {reason}",
+  notif_deposit_confirmed_title: "Dépôt crédité",
+  notif_deposit_confirmed_body:
+    "Votre dépôt {asset} a été crédité ({amount}).",
   security_trusted: "Session protégée",
   security_badge: "Sécurisé",
   status_ui_success: "OK",
@@ -2258,6 +2313,7 @@ export const fr: Messages = {
   status_pending: "Attente",
   status_busy: "En cours",
   status_done: "OK",
+  admin_finance_blurb: "Livres, trésoreries groupe, file retraits",
   admin_intro:
     "Prendre le ticket → envoyer → coller le TXID. Les autres voient « occupé ».",
   admin_header_ops: "McBuleli · équipe",
@@ -2317,6 +2373,42 @@ export const fr: Messages = {
   admin_loans_col_outstanding: "Dû",
   admin_loans_col_status: "Statut",
   admin_loans_col_created: "Créé",
+  admin_nav_finance: "Finance",
+  admin_finance_title: "Flux de trésorerie (phase 1)",
+  admin_finance_sub:
+    "Vue lecture seule : grand livre utilisateurs et livre des trésoreries de groupe par jour UTC. File des retraits USDT. USD signés selon les taux de référence (USDT≈1). Les dépôts crypto externes peuvent être absents du livre utilisateur.",
+  admin_finance_kpi_liability: "Passif custodial (USD est.)",
+  admin_finance_kpi_lines: "Lignes du livre sur la période",
+  admin_finance_kpi_period: "Période",
+  admin_finance_rates_note: "Note sur les taux",
+  admin_finance_col_day: "Jour (UTC)",
+  admin_finance_bucket_fiat_psp: "Mobile money",
+  admin_finance_bucket_p2p: "P2P",
+  admin_finance_bucket_platform_fees: "Frais plateforme",
+  admin_finance_bucket_internal_transfer: "Transferts internes",
+  admin_finance_bucket_staking_pool_loan_trade: "Staking / pool / prêts / trade",
+  admin_finance_bucket_group_user_wallet: "Groupe ↔ utilisateur",
+  admin_finance_bucket_other: "Autre",
+  admin_finance_col_fees_recorded: "Frais (USD eq.)",
+  admin_finance_period_row: "Total période",
+  admin_finance_export_csv: "Télécharger CSV",
+  admin_finance_hint_signed:
+    "Une valeur USD signée positive ≈ augmentation nette d’exposition pour ce compartiment ce jour-là ; les transferts internes se compensent en grande partie entre utilisateurs.",
+  admin_finance_empty: "Aucune ligne du livre sur cette période.",
+  admin_finance_days: "{days} jours",
+  admin_finance_section_user_ledger: "Grand livre utilisateurs",
+  admin_finance_section_group_ledger: "Trésoreries de groupe",
+  admin_finance_group_bucket_contribution_in: "Contributions",
+  admin_finance_group_bucket_payout_out: "Paiements sortants",
+  admin_finance_group_bucket_subscription_fee: "Abonnement groupe",
+  admin_finance_group_bucket_other: "Autre",
+  admin_finance_kpi_group_usdt: "Trésoreries groupe (USDT)",
+  admin_finance_kpi_withdrawals: "File retraits USDT",
+  admin_finance_kpi_withdrawals_detail:
+    "{pending} en attente · {processing} en cours · {gross} brut réservé",
+  admin_finance_empty_group: "Aucune ligne trésorerie groupe sur cette période.",
+  admin_finance_kpi_total_passive:
+    "Passif combiné (USD est. + USDT groupe)",
 };
 
 export function getDictionary(locale: Locale): Messages {

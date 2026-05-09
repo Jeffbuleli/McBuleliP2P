@@ -19,6 +19,21 @@ export function AppTopBar({
   const { t } = useI18n();
   const [innerScroll, setInnerScroll] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [unreadNotif, setUnreadNotif] = useState(0);
+
+  function refreshUnread() {
+    void fetch("/api/notifications", { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { unreadCount?: number }) => {
+        const n = Number(j.unreadCount ?? 0);
+        setUnreadNotif(Number.isFinite(n) ? n : 0);
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    refreshUnread();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setInnerScroll(window.scrollY > 6);
@@ -42,13 +57,13 @@ export function AppTopBar({
           href="/app"
           className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-stone-700/60 bg-stone-950/70 shadow-lg shadow-black/30 backdrop-blur-md">
+          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-500/75 bg-emerald-950/55 shadow-[0_0_0_1px_rgba(16,185,129,0.35)] shadow-lg shadow-black/40 ring-2 ring-emerald-400/20 backdrop-blur-md">
             <Image
               src="/brand/logo.png"
               alt=""
-              width={28}
-              height={28}
-              className="h-7 w-7"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
               priority
             />
           </span>
@@ -68,11 +83,16 @@ export function AppTopBar({
 
           <button
             type="button"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-stone-200 transition hover:bg-stone-900/50 active:scale-95"
+            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-stone-200 transition hover:bg-stone-900/50 active:scale-95"
             aria-label={t("notifications_title")}
             onClick={() => setNotifOpen(true)}
           >
             <BellIcon />
+            {unreadNotif > 0 ? (
+              <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-stone-950">
+                {unreadNotif > 99 ? "99+" : unreadNotif}
+              </span>
+            ) : null}
           </button>
 
           <Link
@@ -85,7 +105,14 @@ export function AppTopBar({
         </div>
       </header>
 
-      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <NotificationDrawer
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        onDidClose={() => {
+          setUnreadNotif(0);
+          refreshUnread();
+        }}
+      />
     </>
   );
 }

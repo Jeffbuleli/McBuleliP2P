@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { resolvePublicAssetUrl } from "@/lib/public-asset-url";
+
 type Props = {
   email: string;
   avatarUrl: string | null | undefined;
@@ -10,7 +13,7 @@ type Props = {
 
 /**
  * Profile image or first letter (app bar, profile header, P2P chat).
- * Accepts a relative app path or https URL.
+ * Relative `/uploads/...` paths resolve with NEXT_PUBLIC_APP_URL when set (Android / installed PWA).
  */
 export function UserAvatarMark({
   email,
@@ -19,19 +22,27 @@ export function UserAvatarMark({
   textClass = "text-sm",
 }: Props) {
   const initial = email.trim().charAt(0).toUpperCase() || "?";
-  const show =
+  const rawOk =
     typeof avatarUrl === "string" &&
     avatarUrl.length > 0 &&
     (avatarUrl.startsWith("/") ||
       avatarUrl.startsWith("https://") ||
       avatarUrl.startsWith("http://"));
+  const [imgBroken, setImgBroken] = useState(false);
+  const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
+  const showImg = rawOk && resolved && !imgBroken;
 
-  if (show) {
+  useEffect(() => {
+    setImgBroken(false);
+  }, [avatarUrl]);
+
+  if (showImg) {
     return (
       <img
-        src={avatarUrl}
+        src={resolved}
         alt=""
         className={`${sizeClass} rounded-full object-cover ring-2 ring-white/30 dark:ring-stone-600`}
+        onError={() => setImgBroken(true)}
       />
     );
   }
@@ -57,19 +68,31 @@ export function ChatAvatarBubble({
   own: boolean;
 }) {
   const ring = own ? "ring-emerald-500/35" : "ring-stone-500/25";
-  const show =
+  const rawOk =
     typeof avatarUrl === "string" &&
     avatarUrl.length > 0 &&
     (avatarUrl.startsWith("/") ||
       avatarUrl.startsWith("https://") ||
       avatarUrl.startsWith("http://"));
+  const [imgBroken, setImgBroken] = useState(false);
+  const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
+  const showImg = rawOk && resolved && !imgBroken;
 
-  if (show) {
+  useEffect(() => {
+    setImgBroken(false);
+  }, [avatarUrl]);
+
+  if (showImg) {
     return (
       <span
         className={`relative flex h-7 w-7 shrink-0 overflow-hidden rounded-full ring-2 ${ring}`}
       >
-        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+        <img
+          src={resolved}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setImgBroken(true)}
+        />
       </span>
     );
   }

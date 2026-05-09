@@ -1058,3 +1058,23 @@ export const fiatPawapayTransactions = pgTable(
     index("fiat_pawapay_tx_kind_idx").on(t.kind),
   ],
 );
+
+/** In-app notifications (bell drawer). */
+export const userNotifications = pgTable(
+  "user_notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: varchar("kind", { length: 48 }).notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown> | null>(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("user_notifications_user_created_idx").on(t.userId, t.createdAt),
+  ],
+);

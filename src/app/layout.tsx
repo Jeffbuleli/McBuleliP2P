@@ -42,9 +42,12 @@ export const metadata: Metadata = {
     description: desc,
   },
   icons: {
-    icon: [{ url: "/brand/logo.png", type: "image/png", sizes: "any" }],
+    icon: [
+      { url: "/brand/logo.png", type: "image/png", sizes: "192x192" },
+      { url: "/brand/logo.png", type: "image/png", sizes: "512x512" },
+    ],
     shortcut: "/brand/logo.png",
-    apple: "/brand/logo.png",
+    apple: [{ url: "/brand/logo.png", sizes: "180x180", type: "image/png" }],
   },
   appleWebApp: {
     capable: true,
@@ -54,7 +57,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0a09",
+  /** Align with PWA manifest — green chrome / status tint on Android */
+  themeColor: "#166534",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

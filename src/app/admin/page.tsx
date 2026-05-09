@@ -21,6 +21,7 @@ export default async function AdminHomePage() {
     (u && agentHasScope(u, "p2p_disputes"));
   const showGrowth = u?.role === UserRole.SUPER_ADMIN;
   const showLoans = u?.role === UserRole.SUPER_ADMIN;
+  const showFinance = u?.role === UserRole.SUPER_ADMIN;
 
   return (
     <div className="space-y-8">
@@ -117,6 +118,18 @@ export default async function AdminHomePage() {
                 {d.admin_loans_title}
               </p>
               <p className="mt-2 text-sm text-stone-400">{d.admin_loans_sub}</p>
+            </Link>
+          ) : null}
+
+          {showFinance ? (
+            <Link
+              href="/admin/finance"
+              className="block rounded-2xl border border-emerald-900/40 bg-emerald-950/25 p-4 transition hover:border-emerald-600/45"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
+                {d.admin_nav_finance}
+              </p>
+              <p className="mt-2 text-sm text-stone-400">{d.admin_finance_blurb}</p>
             </Link>
           ) : null}
 

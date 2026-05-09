@@ -8,6 +8,7 @@ import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export async function POST(
   req: Request,
@@ -79,6 +80,17 @@ export async function POST(
       txid: parsed.data.txid.trim(),
       asset: w.asset,
       amount: w.amount?.toString?.() ?? String(w.amount),
+    },
+  });
+
+  await createUserNotification({
+    userId: w.userId,
+    kind: "withdrawal_completed",
+    payload: {
+      withdrawalId: id,
+      asset: w.asset,
+      amount: w.amount?.toString?.() ?? String(w.amount),
+      txid: parsed.data.txid.trim(),
     },
   });
 
