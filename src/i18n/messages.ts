@@ -1103,6 +1103,8 @@ export const en = {
   deposit_declared_below_min:
     "Declared amount is below the minimum for this deposit ({min} USDT gross).",
   deposit_invalid_declared_amount: "Enter a valid USDT amount.",
+  deposit_provider_unavailable:
+    "Could not generate a deposit address right now. Please try again later or contact support.",
   deposit_status_awaiting_transfer: "Awaiting your transfer",
   deposit_status_awaiting_txid: "Awaiting transaction ID",
   deposit_status_pending_validation: "Under review",
@@ -2484,6 +2486,8 @@ export const fr: Messages = {
   deposit_declared_below_min:
     "Le montant indiqué est sous le minimum pour ce dépôt ({min} USDT brut).",
   deposit_invalid_declared_amount: "Indiquez un montant USDT valide.",
+  deposit_provider_unavailable:
+    "Impossible de générer l’adresse de dépôt pour le moment. Réessayez plus tard ou contactez le support.",
   deposit_status_awaiting_transfer: "En attente de votre envoi",
   deposit_status_awaiting_txid: "En attente du TXID",
   deposit_status_pending_validation: "En vérification",

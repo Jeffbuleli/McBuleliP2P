@@ -69,12 +69,26 @@ export async function POST(req: Request) {
   }
 
   const spec = USDT_NETWORKS[body.network];
-  const r = await binanceDepositAddress({
-    coin: body.asset,
-    network: body.network,
-  });
-  const address = r.address;
-  const memo = r.tag?.trim() ? r.tag.trim() : null;
+  let address: string;
+  let memo: string | null;
+  try {
+    const r = await binanceDepositAddress({
+      coin: body.asset,
+      network: body.network,
+    });
+    address = r.address;
+    memo = r.tag?.trim() ? r.tag.trim() : null;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Binance request failed";
+    const detail = msg.length > 240 ? `${msg.slice(0, 240)}…` : msg;
+    return NextResponse.json(
+      {
+        message: "deposit_provider_unavailable",
+        detail,
+      },
+      { status: 503 },
+    );
+  }
 
   const declaredStr = fmtWalletAmount(declaredNum);
   const noteTrim = body.userNote?.trim();
