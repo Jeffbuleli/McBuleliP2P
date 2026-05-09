@@ -6,7 +6,11 @@ import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import type { Messages } from "@/i18n/messages";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
-import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
+import {
+  piAuthenticateForPayments,
+  piInit,
+  resolvePiSdkSandbox,
+} from "@/lib/pi-browser";
 import {
   P2pStatusIcon,
   p2pStatusBadgeClasses,
@@ -173,6 +177,7 @@ export function P2PHub() {
                   amount: amountStr,
                   memo,
                   meta: { source: "p2p_hub" },
+                  sandbox: resolvePiSdkSandbox(),
                 }),
                 credentials: "same-origin",
               },

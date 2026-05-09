@@ -6,7 +6,8 @@ import { getSessionUserId } from "@/lib/session";
 import { UserRole } from "@/lib/roles";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
+  getPiNetworkApiKeyForSandbox,
 } from "@/lib/pi-network-env";
 import {
   extractPaymentId,
@@ -21,6 +22,8 @@ const bodyZ = z.object({
   amount: z.number().positive(),
   memo: z.string().min(1).max(140),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /** Use Pi Testnet server key + Testnet payouts (super-admin tooling). */
+  sandbox: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const apiKey = getPiNetworkApiKeyForSandbox(parsed.data.sandbox === true);
     const r = await piCreateA2UPaymentPlatform({
       uid: u.piUid,
       amount: parsed.data.amount,
@@ -88,7 +91,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, paymentId });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "A2U create failed.";

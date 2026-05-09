@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
+  getPiNetworkApiKeyForSandbox,
 } from "@/lib/pi-network-env";
 import {
   extractPaymentId,
@@ -16,6 +17,8 @@ export const maxDuration = 60;
 
 const bodyZ = z.object({
   payment: z.unknown(),
+  /** Must match Pi SDK sandbox flag — often no DB row yet for incomplete callbacks. */
+  sandbox: z.boolean().optional(),
 });
 
 /**
@@ -36,7 +39,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const sandbox = parsed.data.sandbox === true;
+    const apiKey = getPiNetworkApiKeyForSandbox(sandbox);
 
     if (!payment.status?.developer_approved) {
       await piApprovePaymentPlatform(id, apiKey);
@@ -49,7 +53,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "Incomplete payment resolution failed.";

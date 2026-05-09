@@ -4,8 +4,9 @@ import { getSessionUserId } from "@/lib/session";
 import { getDb, piPlatformPayments } from "@/db";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
 } from "@/lib/pi-network-env";
+import { resolvePiPlatformApiKeyForPaymentId } from "@/lib/pi-platform-payment-key";
 import { piApprovePaymentPlatform } from "@/lib/pi-platform-payments";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const { apiKey } = await resolvePiPlatformApiKeyForPaymentId(
+      parsed.data.paymentId,
+    );
     const data = await piApprovePaymentPlatform(parsed.data.paymentId, apiKey);
     const db = getDb();
     // Best-effort: record status even if init wasn't called (SDK retries).
@@ -51,7 +54,10 @@ export async function POST(req: Request) {
       });
     return NextResponse.json({ ok: true, payment: data });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "Approve failed.";

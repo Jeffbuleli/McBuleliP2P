@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
-import { piInit } from "@/lib/pi-browser";
+import { piInit, resolvePiSdkSandbox } from "@/lib/pi-browser";
 import { useI18n } from "@/components/i18n-provider";
 
 type AdType = "interstitial" | "rewarded";
@@ -99,7 +99,10 @@ export function PiAdsSection() {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ adId }),
+            body: JSON.stringify({
+              adId,
+              sandbox: resolvePiSdkSandbox(),
+            }),
             credentials: "same-origin",
           },
           28_000,

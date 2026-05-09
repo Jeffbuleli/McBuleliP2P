@@ -64,7 +64,11 @@ export async function creditUserAsset(
         .where(eq(users.id, userId));
       break;
     case "PI_TEST":
-      throw new Error("pi_test_asset_not_creditable");
+      await tx
+        .update(users)
+        .set({ piTestBalance: sql`${users.piTestBalance} + ${amtStr}::numeric` })
+        .where(eq(users.id, userId));
+      break;
     case "USD":
       await tx
         .update(users)

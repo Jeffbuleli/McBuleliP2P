@@ -3,8 +3,9 @@ import { eq } from "drizzle-orm";
 import { getDb, piPlatformPayments } from "@/db";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
 } from "@/lib/pi-network-env";
+import { resolvePiPlatformApiKeyForPaymentId } from "@/lib/pi-platform-payment-key";
 import { piFetchPaymentPlatform } from "@/lib/pi-platform-payments";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export async function GET(
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const { apiKey } = await resolvePiPlatformApiKeyForPaymentId(paymentId);
     const payment = await piFetchPaymentPlatform(paymentId, apiKey);
     const st = statusFromPlatform(payment);
     const meta =
@@ -49,7 +50,10 @@ export async function GET(
 
     return NextResponse.json({ ok: true, status: st, payment, local: row ?? null });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "Status fetch failed.";

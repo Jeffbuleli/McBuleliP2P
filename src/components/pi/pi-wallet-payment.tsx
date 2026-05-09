@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { getConfiguredPiTopupAmounts } from "@/lib/pi-topup-amounts";
-import { piAuthenticateForPayments, piInit } from "@/lib/pi-browser";
+import {
+  piAuthenticateForPayments,
+  piInit,
+  resolvePiSdkSandbox,
+} from "@/lib/pi-browser";
 import { useI18n } from "@/components/i18n-provider";
 
 type PiPaymentArgs = {
@@ -61,6 +65,7 @@ export function PiWalletPaymentSection() {
                 amount: String(amountPi),
                 memo: payment.memo,
                 meta: payment.metadata,
+                sandbox: resolvePiSdkSandbox(),
               }),
               credentials: "same-origin",
             },

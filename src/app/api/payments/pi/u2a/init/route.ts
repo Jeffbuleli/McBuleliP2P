@@ -16,6 +16,8 @@ const bodyZ = z.object({
   amount: z.string().min(1),
   memo: z.string().min(1),
   meta: z.record(z.string(), z.unknown()).optional(),
+  /** Matches Pi SDK `sandbox` / `resolvePiSdkSandbox()` — selects server API key + ledger asset. */
+  sandbox: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -30,7 +32,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Invalid body." }, { status: 400 });
   }
 
-  const { paymentId, action, actionRefId, amount, memo, meta } = parsed.data;
+  const { paymentId, action, actionRefId, amount, memo, meta, sandbox } =
+    parsed.data;
+
+  const mergedMeta: Record<string, unknown> = {
+    ...(meta ?? {}),
+    ...(sandbox === true ? { piSandbox: true } : {}),
+  };
 
   const db = getDb();
 
@@ -61,7 +69,7 @@ export async function POST(req: Request) {
       action,
       actionRefId: actionRefId ?? null,
       status: "INITIATED",
-      meta: meta ?? null,
+      meta: Object.keys(mergedMeta).length > 0 ? mergedMeta : null,
     })
     // drizzle doesn't support ON CONFLICT in all dialects; rely on unique index
     .onConflictDoNothing();

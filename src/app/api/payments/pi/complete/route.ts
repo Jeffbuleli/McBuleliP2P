@@ -5,9 +5,11 @@ import { getSessionUserId } from "@/lib/session";
 import { getDb, p2pAds, piPlatformPayments } from "@/db";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
 } from "@/lib/pi-network-env";
+import { resolvePiPlatformApiKeyForPaymentId } from "@/lib/pi-platform-payment-key";
 import { piCompletePaymentPlatform } from "@/lib/pi-platform-payments";
+import type { WalletAsset } from "@/lib/wallet-types";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const { apiKey, sandbox } = await resolvePiPlatformApiKeyForPaymentId(
+      parsed.data.paymentId,
+    );
     const data = await piCompletePaymentPlatform(
       parsed.data.paymentId,
       parsed.data.txid,
@@ -69,9 +73,10 @@ export async function POST(req: Request) {
     if (row && !row.fulfilledAt && row.action === "wallet_test") {
       const amtStr = row.amount != null ? row.amount.toString() : "0";
       const credited = Number(amtStr);
+      const creditAsset: WalletAsset = sandbox ? "PI_TEST" : "PI";
       if (Number.isFinite(credited) && credited > 0) {
         await db.transaction(async (tx) => {
-          await creditUserAsset(tx, userId, "PI", amtStr);
+          await creditUserAsset(tx, userId, creditAsset, amtStr);
           await tx
             .update(piPlatformPayments)
             .set({ fulfilledAt: new Date(), updatedAt: new Date() })
@@ -102,7 +107,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, payment: data });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "Complete failed.";

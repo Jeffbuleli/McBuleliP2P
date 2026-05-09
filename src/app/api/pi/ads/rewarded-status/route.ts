@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   PiNetworkApiKeyMissingError,
-  getPiNetworkApiKey,
+  PiNetworkTestApiKeyMissingError,
+  getPiNetworkApiKeyForSandbox,
 } from "@/lib/pi-network-env";
 import { piFetchRewardedAdStatus } from "@/lib/pi-platform-ads";
 
@@ -11,6 +12,7 @@ export const maxDuration = 60;
 
 const bodyZ = z.object({
   adId: z.string().min(6),
+  sandbox: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -21,11 +23,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    const apiKey = getPiNetworkApiKey();
+    const apiKey = getPiNetworkApiKeyForSandbox(parsed.data.sandbox === true);
     const status = await piFetchRewardedAdStatus(parsed.data.adId, apiKey);
     return NextResponse.json({ ok: true, status });
   } catch (e) {
-    if (e instanceof PiNetworkApiKeyMissingError) {
+    if (
+      e instanceof PiNetworkApiKeyMissingError ||
+      e instanceof PiNetworkTestApiKeyMissingError
+    ) {
       return NextResponse.json({ message: e.message }, { status: 503 });
     }
     const msg = e instanceof Error ? e.message : "Pi ad status check failed.";

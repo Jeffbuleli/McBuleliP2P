@@ -28,7 +28,10 @@ export async function piAuthenticateForPayments(
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ payment }),
+            body: JSON.stringify({
+              payment,
+              sandbox: resolvePiSdkSandbox(),
+            }),
             credentials: "same-origin",
           },
           45_000,
