@@ -5,6 +5,7 @@ import { getAdminDashboardStats } from "@/lib/admin-dashboard-stats";
 import { getSessionUser } from "@/lib/session-user";
 import { UserRole } from "@/lib/roles";
 import { agentHasScope } from "@/lib/staff-scopes";
+import { canAccessPlatformExpensesModule } from "@/lib/platform-expenses";
 
 export default async function AdminHomePage() {
   const u = await getSessionUser();
@@ -22,6 +23,8 @@ export default async function AdminHomePage() {
   const showGrowth = u?.role === UserRole.SUPER_ADMIN;
   const showLoans = u?.role === UserRole.SUPER_ADMIN;
   const showFinance = u?.role === UserRole.SUPER_ADMIN;
+  const showPlatformExpenses =
+    u && (u.role === UserRole.SUPER_ADMIN || canAccessPlatformExpensesModule(u));
 
   return (
     <div className="space-y-8">
@@ -130,6 +133,18 @@ export default async function AdminHomePage() {
                 {d.admin_nav_finance}
               </p>
               <p className="mt-2 text-sm text-stone-400">{d.admin_finance_blurb}</p>
+            </Link>
+          ) : null}
+
+          {showPlatformExpenses ? (
+            <Link
+              href="/admin/platform-expenses"
+              className="block rounded-2xl border border-teal-900/35 bg-teal-950/20 p-4 transition hover:border-teal-600/45"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-teal-300/90">
+                {d.admin_nav_platform_expenses}
+              </p>
+              <p className="mt-2 text-sm text-stone-400">{d.admin_platform_expenses_sub}</p>
             </Link>
           ) : null}
 

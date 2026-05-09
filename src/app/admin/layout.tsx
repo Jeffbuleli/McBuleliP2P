@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session-user";
-import { agentHasAnyStaffScope, agentHasScope } from "@/lib/staff-scopes";
+import {
+  agentHasAnyStaffScope,
+  agentHasScope,
+} from "@/lib/staff-scopes";
+import { canAccessPlatformExpensesModule } from "@/lib/platform-expenses";
 import { UserRole } from "@/lib/roles";
 import { LogoutButton } from "@/components/LogoutButton";
 import { getDictionary } from "@/i18n/messages";
@@ -24,6 +28,8 @@ export default async function AdminLayout({
   const showW = u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "withdrawals");
   const showG = u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "groups");
   const showP2p = u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "p2p_disputes");
+  const showPlatformExpenses =
+    u.role === UserRole.SUPER_ADMIN || canAccessPlatformExpensesModule(u);
   const noOps =
     u.role === UserRole.AGENT && !agentHasAnyStaffScope(u);
 
@@ -87,6 +93,14 @@ export default async function AdminLayout({
               className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
             >
               {d.admin_nav_p2p}
+            </Link>
+          ) : null}
+          {showPlatformExpenses ? (
+            <Link
+              href="/admin/platform-expenses"
+              className="rounded-lg border border-emerald-900/35 bg-emerald-950/20 px-3 py-2 text-emerald-100 hover:border-emerald-600/45"
+            >
+              {d.admin_nav_platform_expenses}
             </Link>
           ) : null}
           {u.role === "super_admin" ? (

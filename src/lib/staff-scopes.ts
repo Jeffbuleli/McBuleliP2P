@@ -2,7 +2,15 @@ import type { UserRoleType } from "@/lib/roles";
 import { UserRole } from "@/lib/roles";
 
 /** Operational modules an agent may be granted (super-admin always has all). */
-export const STAFF_SCOPES = ["withdrawals", "groups", "p2p_disputes"] as const;
+export const STAFF_SCOPES = [
+  "withdrawals",
+  "groups",
+  "p2p_disputes",
+  /** Create / edit drafts / submit platform OPEX requests. */
+  "platform_expenses",
+  /** Approve, reject, mark paid (cannot approve own submissions unless super-admin). */
+  "platform_expenses_approve",
+] as const;
 export type StaffScope = (typeof STAFF_SCOPES)[number];
 
 export function isStaffScope(s: string): s is StaffScope {

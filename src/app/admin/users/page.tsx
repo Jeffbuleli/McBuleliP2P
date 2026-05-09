@@ -205,6 +205,28 @@ export default function AdminUsersPage() {
                     />
                     {t("admin_agent_scope_p2p")}
                   </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
+                        "platform_expenses",
+                      )}
+                      onChange={() => toggleScope(u.id, "platform_expenses")}
+                      className="accent-amber-600"
+                    />
+                    {t("admin_agent_scope_platform_expenses")}
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
+                        "platform_expenses_approve",
+                      )}
+                      onChange={() => toggleScope(u.id, "platform_expenses_approve")}
+                      className="accent-amber-600"
+                    />
+                    {t("admin_agent_scope_platform_expenses_approve")}
+                  </label>
                 </div>
                 <button
                   type="button"

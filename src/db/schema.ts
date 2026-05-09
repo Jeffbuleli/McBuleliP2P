@@ -995,6 +995,75 @@ export const platformAdminAuditLog = pgTable(
   ],
 );
 
+/**
+ * Operating expenses (OPEX) — not user-wallet ledger lines.
+ * Workflow: draft → submitted → approved | rejected → paid (optional).
+ */
+export const platformExpenses = pgTable(
+  "platform_expenses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    amount: numeric("amount", { precision: 18, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 8 }).notNull().default("USD"),
+    category: varchar("category", { length: 64 }).notNull(),
+    description: text("description").notNull(),
+    vendor: text("vendor"),
+    attachmentUrl: text("attachment_url"),
+    /** Calendar date (YYYY-MM-DD) as stored by the app. */
+    expenseDate: varchar("expense_date", { length: 10 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("draft"),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectedByUserId: uuid("rejected_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    paidNote: text("paid_note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("platform_expenses_status_idx").on(t.status),
+    index("platform_expenses_creator_idx").on(t.createdByUserId),
+    index("platform_expenses_expense_date_idx").on(t.expenseDate),
+    index("platform_expenses_created_idx").on(t.createdAt),
+  ],
+);
+
+export const platformExpenseEvents = pgTable(
+  "platform_expense_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    expenseId: uuid("expense_id")
+      .notNull()
+      .references(() => platformExpenses.id, { onDelete: "cascade" }),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    action: varchar("action", { length: 32 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("platform_expense_events_expense_idx").on(t.expenseId),
+    index("platform_expense_events_created_idx").on(t.createdAt),
+  ],
+);
+
 export const pawapayWebhookEvents = pgTable(
   "pawapay_webhook_events",
   {
