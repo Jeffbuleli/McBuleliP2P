@@ -51,6 +51,8 @@ export default function P2pTradePage() {
   }, [adId, load]);
 
   const locNum = locale === "fr" ? "fr-FR" : "en-US";
+  const isCryptoQuote =
+    ad?.fiatCurrency?.toUpperCase() === "USDT" || ad?.fiatCurrency?.toUpperCase() === "PI";
 
   const estCrypto = useMemo(() => {
     if (!ad || !fiatAmount.trim()) return null;
@@ -142,6 +144,11 @@ export default function P2pTradePage() {
         <p className="font-semibold text-emerald-900 dark:text-emerald-200">
           {ad.side === "sell" ? t("p2p_side_sell") : t("p2p_side_buy")} · {ad.asset} / {ad.fiatCurrency}
         </p>
+        {isCryptoQuote ? (
+          <p className="mt-2 rounded-lg border border-emerald-900/15 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-950 dark:border-emerald-800/30 dark:bg-emerald-950/25 dark:text-emerald-100">
+            {t("p2p_crypto_quote_take_hint").replace("{quote}", ad.fiatCurrency)}
+          </p>
+        ) : null}
         {ad.side === "buy" ? (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
             You are taking a BUY ad. That means you are the seller: you must have {ad.asset} available on McBuleli to lock escrow.

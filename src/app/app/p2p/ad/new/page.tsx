@@ -46,6 +46,7 @@ export default function P2pNewAdPage() {
   const [loading, setLoading] = useState(false);
   const [balUsdt, setBalUsdt] = useState<number | null>(null);
   const [balPi, setBalPi] = useState<number | null>(null);
+  const cryptoQuote = fiat === "USDT" || fiat === "PI";
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +127,7 @@ export default function P2pNewAdPage() {
         codes && paymentDefs.length
           ? paymentDefs.filter((d) => codes.includes(d.code)).map((d) => d.label).join(", ")
           : paymentMethods;
-      if (!pm || pm.trim().length < 3) {
+      if (!cryptoQuote && (!pm || pm.trim().length < 3)) {
         setErr("p2p_payment_methods_required");
         return;
       }
@@ -140,8 +141,8 @@ export default function P2pNewAdPage() {
           price,
           minFiat,
           maxFiat,
-          paymentMethods: pm,
-          paymentMethodCodes: codes,
+          paymentMethods: cryptoQuote ? "On-platform" : pm,
+          paymentMethodCodes: cryptoQuote ? undefined : codes,
           reserveAmountCrypto: side === "sell" ? reserveAmountCrypto.trim() || undefined : undefined,
           terms: terms.trim() || undefined,
           countryCode: country === "OTHER" ? undefined : country,
@@ -260,50 +261,56 @@ export default function P2pNewAdPage() {
         ) : null}
       </label>
 
-      <div className="space-y-2 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-          {t("p2p_payment_detail")}
-        </p>
-        {!paymentDefs.length ? (
-          <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+      {cryptoQuote ? (
+        <div className="rounded-2xl border border-emerald-900/20 bg-emerald-50/70 p-4 text-sm text-emerald-950 dark:border-emerald-800/30 dark:bg-emerald-950/25 dark:text-emerald-100">
+          {t("p2p_crypto_quote_hint")}
+        </div>
+      ) : (
+        <div className="space-y-2 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+          <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
             {t("p2p_payment_detail")}
-            <textarea
-              value={paymentMethods}
-              onChange={(e) => setPaymentMethods(e.target.value)}
-              rows={4}
-              className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-            />
-          </label>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {paymentDefs.map((d) => {
-              const on = paymentCodes.includes(d.code);
-              return (
-                <button
-                  key={d.code}
-                  type="button"
-                  onClick={() =>
-                    setPaymentCodes((cur) =>
-                      on ? cur.filter((x) => x !== d.code) : [...cur, d.code],
-                    )
-                  }
-                  className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
-                    on
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
-                      : "border-stone-300 bg-stone-50 text-stone-800 dark:border-stone-600 dark:bg-stone-950/40 dark:text-stone-200"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {paymentDefs.length ? (
-          <p className="text-xs text-stone-500 dark:text-stone-400">
-            Les détails (nom/numéro) sont gérés dans Profil → “Mes moyens de paiement”.\n          </p>
-        ) : null}
-      </div>
+          </p>
+          {!paymentDefs.length ? (
+            <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+              {t("p2p_payment_detail")}
+              <textarea
+                value={paymentMethods}
+                onChange={(e) => setPaymentMethods(e.target.value)}
+                rows={4}
+                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+              />
+            </label>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {paymentDefs.map((d) => {
+                const on = paymentCodes.includes(d.code);
+                return (
+                  <button
+                    key={d.code}
+                    type="button"
+                    onClick={() =>
+                      setPaymentCodes((cur) =>
+                        on ? cur.filter((x) => x !== d.code) : [...cur, d.code],
+                      )
+                    }
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                      on
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                        : "border-stone-300 bg-stone-50 text-stone-800 dark:border-stone-600 dark:bg-stone-950/40 dark:text-stone-200"
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {paymentDefs.length ? (
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              Les détails (nom/numéro) sont gérés dans Profil → “Mes moyens de paiement”.\n            </p>
+          ) : null}
+        </div>
+      )}
 
       {side === "sell" ? (
         <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
@@ -367,7 +374,8 @@ export default function P2pNewAdPage() {
         disabled={
           loading ||
           (sellNeedHint != null && !sellNeedHint.ok) ||
-          (paymentDefs.length > 0 ? paymentCodes.length === 0 : paymentMethods.trim().length < 3)
+          (!cryptoQuote &&
+            (paymentDefs.length > 0 ? paymentCodes.length === 0 : paymentMethods.trim().length < 3))
         }
         onClick={() => void submit()}
         className="w-full rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white disabled:opacity-40"

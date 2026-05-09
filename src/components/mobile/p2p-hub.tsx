@@ -350,7 +350,7 @@ export function P2PHub() {
               </select>
             </label>
             <label className="block text-xs font-medium text-stone-700 dark:text-stone-300">
-              {t("p2p_filter_fiat")}
+              {t("p2p_filter_quote")}
               <select
                 value={fiat}
                 onChange={(e) => setFiat(e.target.value)}

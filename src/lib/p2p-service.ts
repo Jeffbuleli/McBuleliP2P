@@ -16,6 +16,7 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import {
   isAllowedP2pQuoteFiat,
+  isP2pCryptoQuoteCurrency,
   minCryptoForAsset,
   paymentWindowMinutes,
   p2pAllowedQuoteFiats,
@@ -202,6 +203,13 @@ async function finalizeReleaseToBuyer(tx: any, o: typeof p2pOrders.$inferSelect,
 
 function asWalletCrypto(asset: string): WalletAsset {
   return asset === "PI" ? "PI" : "USDT";
+}
+
+function asQuoteWalletAsset(code: string): WalletAsset | null {
+  const c = code.trim().toUpperCase();
+  if (c === "USDT") return "USDT";
+  if (c === "PI") return "PI";
+  return null;
 }
 
 export function tradeRoles(args: {
@@ -735,10 +743,13 @@ export async function createAd(args: {
   if (!Number.isFinite(minF) || !Number.isFinite(maxF) || minF <= 0 || maxF < minF) {
     return { ok: false, message: "p2p_invalid_limits" };
   }
-  const pm = args.paymentMethods.trim();
-  if (pm.length < 3) return { ok: false, message: "p2p_payment_methods_required" };
   if (!isAllowedP2pQuoteFiat(args.fiatCurrency)) {
     return { ok: false, message: "p2p_quote_fiat_not_allowed" };
+  }
+  const isCryptoQuote = isP2pCryptoQuoteCurrency(args.fiatCurrency);
+  const pm = args.paymentMethods.trim();
+  if (!isCryptoQuote && pm.length < 3) {
+    return { ok: false, message: "p2p_payment_methods_required" };
   }
 
   if (args.side === "sell") {
@@ -819,7 +830,7 @@ export async function createAd(args: {
         args.paymentMethodCodes && args.paymentMethodCodes.length
           ? args.paymentMethodCodes.map((s) => s.trim().toUpperCase()).filter(Boolean)
           : [];
-      if (codes.length) {
+      if (!isCryptoQuote && codes.length) {
         const cc = adCountryCode;
         const mine = await tx
           .select({ code: userP2pPaymentMethods.methodCode })
@@ -849,10 +860,9 @@ export async function createAd(args: {
           price: fmtWalletAmount(price),
           minFiat: fmtWalletAmount(minF),
           maxFiat: fmtWalletAmount(maxF),
-          paymentMethods: pm,
+          paymentMethods: isCryptoQuote ? `On-platform: ${args.fiatCurrency}` : pm,
           paymentMethodCodes:
-            codes.length ? codes
-              : null,
+            !isCryptoQuote && codes.length ? codes : null,
           reserveTotalCrypto: reserveTotal,
           reserveRemainingCrypto: reserveRemaining,
           terms: args.terms?.trim() || null,
@@ -992,6 +1002,12 @@ export async function createOrder(args: {
       });
 
       const wa = asWalletCrypto(asset);
+      const quoteCode = String(ad.ad.fiatCurrency);
+      const cryptoQuote = isP2pCryptoQuoteCurrency(quoteCode);
+      const quoteAsset = cryptoQuote ? asQuoteWalletAsset(quoteCode) : null;
+      if (cryptoQuote && (!quoteAsset || quoteAsset === wa)) {
+        throw new Error("p2p_invalid_limits");
+      }
       // For SELL ads with reserve, use ad reserveRemaining; otherwise, lock from seller wallet.
       const usesReserve =
         (ad.ad.side as P2pSide) === "sell" &&
@@ -1024,6 +1040,24 @@ export async function createOrder(args: {
               ? "p2p_sell_insufficient_balance"
               : "p2p_buy_escrow_insufficient_balance",
           );
+        }
+      }
+
+      if (cryptoQuote && quoteAsset) {
+        const [payerRow] = await tx
+          .select({
+            balance: users.balance,
+            piBalance: users.piBalance,
+          })
+          .from(users)
+          .where(eq(users.id, payerUserId));
+        if (!payerRow) throw new Error("wallet_not_found");
+        const payerBal =
+          quoteAsset === "USDT"
+            ? numFromNumeric(payerRow.balance)
+            : numFromNumeric(payerRow.piBalance);
+        if (payerBal + 1e-18 < fiatAmount) {
+          throw new Error("wallet_insufficient_balance");
         }
       }
 
@@ -1069,6 +1103,7 @@ export async function createOrder(args: {
         legacyPaymentMethods: ad.ad.paymentMethods,
       });
 
+      const paidMarkedAt = cryptoQuote ? now : null;
       const [ins] = await tx
         .insert(p2pOrders)
         .values({
@@ -1080,18 +1115,59 @@ export async function createOrder(args: {
           price: ad.ad.price,
           fiatAmount: fmtWalletAmount(fiatAmount),
           cryptoAmount: cryptoStr,
-          status: ST_AWAIT,
+          status: cryptoQuote ? ST_PAID : ST_AWAIT,
           sellerUserId,
           buyerUserId,
           payerUserId,
-          paymentSnapshot,
+          paymentSnapshot: cryptoQuote && quoteAsset
+            ? `On-platform: ${quoteAsset}`
+            : paymentSnapshot,
           expiresAt,
+          paidMarkedAt,
           updatedAt: now,
         })
         .returning({ id: p2pOrders.id });
 
       const oid = ins?.id;
       if (!oid) throw new Error("p2p_order_create_failed");
+
+      if (cryptoQuote && quoteAsset) {
+        const quoteStr = fmtWalletAmount(fiatAmount);
+        const quoteBatch = randomUUID();
+        await debitUserAsset(tx, payerUserId, quoteAsset, quoteStr);
+        await creditUserAsset(tx, sellerUserId, quoteAsset, quoteStr);
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId: quoteBatch,
+            userId: payerUserId,
+            entryType: "p2p_quote_out",
+            asset: quoteAsset,
+            amount: `-${quoteStr}`,
+            feeUsdEquivalent: "0",
+            counterpartyUserId: sellerUserId,
+            meta: { orderId: oid, quoteAsset },
+          },
+          {
+            batchId: quoteBatch,
+            userId: sellerUserId,
+            entryType: "p2p_quote_in",
+            asset: quoteAsset,
+            amount: quoteStr,
+            feeUsdEquivalent: "0",
+            counterpartyUserId: payerUserId,
+            meta: { orderId: oid, quoteAsset },
+          },
+        ]);
+
+        // Immediately release escrowed crypto to buyer.
+        const [o] = await tx
+          .select()
+          .from(p2pOrders)
+          .where(eq(p2pOrders.id, oid))
+          .limit(1);
+        if (!o) throw new Error("p2p_order_create_failed");
+        await finalizeReleaseToBuyer(tx, o, now, ST_PAID);
+      }
       return oid;
     });
     return { ok: true, orderId };

@@ -56,6 +56,8 @@ function entryLabel(t: (k: keyof Messages) => string, entryType: string): string
     p2p_platform_fee: "wallet_entry_p2p_platform_fee",
     p2p_ad_reserve_lock: "wallet_entry_p2p_ad_reserve_lock",
     p2p_ad_reserve_unlock: "wallet_entry_p2p_ad_reserve_unlock",
+    p2p_quote_out: "wallet_entry_p2p_quote_out",
+    p2p_quote_in: "wallet_entry_p2p_quote_in",
     trade_futures_open: "wallet_entry_trade_futures_open",
     trade_futures_close: "wallet_entry_trade_futures_close",
     trade_futures_liquidated: "wallet_entry_trade_futures_liquidated",

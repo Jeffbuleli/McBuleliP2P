@@ -16,7 +16,7 @@ const createZ = z.object({
   price: z.string().min(1),
   minFiat: z.string().min(1),
   maxFiat: z.string().min(1),
-  paymentMethods: z.string().min(3),
+  paymentMethods: z.string().optional().default(""),
   paymentMethodCodes: z.array(z.string().min(2).max(32)).min(1).optional(),
   reserveAmountCrypto: z.string().min(1).optional(),
   terms: z.string().optional(),

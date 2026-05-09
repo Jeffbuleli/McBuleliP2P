@@ -15,10 +15,13 @@ export type P2pOrderStatus =
   | "expired"
   | "refunded";
 
-/** Fiat codes commonly used across Central & West Africa + global rails (expand over time). */
+/** Quote currencies used for P2P pricing (off-platform by default). */
 export const P2P_FIAT_CURRENCIES = [
   "CDF",
   "USD",
+  // Crypto quotes (P2P atomic swap): USDT ⇄ PI
+  "USDT",
+  "PI",
   "EUR",
   "XAF",
   "XOF",
@@ -44,7 +47,7 @@ export function isP2pFiat(s: string): s is P2pFiatCurrency {
  * Override with `NEXT_PUBLIC_P2P_QUOTE_FIATS` (comma-separated ISO codes).
  * Set to `ALL`, `FULL`, or `*` to allow every {@link P2P_FIAT_CURRENCIES} code again.
  */
-const P2P_QUOTE_FIAT_DEFAULT: P2pFiatCurrency[] = ["CDF", "USD"];
+const P2P_QUOTE_FIAT_DEFAULT: P2pFiatCurrency[] = ["CDF", "USD", "USDT", "PI"];
 
 export function p2pQuoteFiatRestrictionEnabled(): boolean {
   const raw = process.env.NEXT_PUBLIC_P2P_QUOTE_FIATS?.trim();
@@ -74,6 +77,11 @@ export function isAllowedP2pQuoteFiat(code: string): boolean {
   if (!isP2pFiat(c)) return false;
   if (!p2pQuoteFiatRestrictionEnabled()) return true;
   return p2pAllowedQuoteFiats().includes(c as P2pFiatCurrency);
+}
+
+export function isP2pCryptoQuoteCurrency(code: string): boolean {
+  const c = code.trim().toUpperCase();
+  return c === "USDT" || c === "PI";
 }
 
 /** ISO 3166-1 alpha-2 — primary corridors McBuleli serves first. */
