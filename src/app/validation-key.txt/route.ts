@@ -1,3 +1,4 @@
+import { resolvePiDomainValidationKeyForHost } from "@/lib/pi-domain-validation-key-host";
 import {
   piDomainValidationHeadResponse,
   piDomainValidationResponse,
@@ -5,13 +6,15 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  return piDomainValidationResponse(
-    process.env.PI_DOMAIN_VALIDATION_KEY,
-    "Set PI_DOMAIN_VALIDATION_KEY in your hosting environment.",
-  );
+export async function GET(req: Request) {
+  const host = req.headers.get("host");
+  const { rawKey, missingMessage } =
+    resolvePiDomainValidationKeyForHost(host);
+  return piDomainValidationResponse(rawKey, missingMessage);
 }
 
-export async function HEAD() {
-  return piDomainValidationHeadResponse(process.env.PI_DOMAIN_VALIDATION_KEY);
+export async function HEAD(req: Request) {
+  const host = req.headers.get("host");
+  const { rawKey } = resolvePiDomainValidationKeyForHost(host);
+  return piDomainValidationHeadResponse(rawKey);
 }
