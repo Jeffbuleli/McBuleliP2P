@@ -48,6 +48,7 @@ export type WalletOverviewLabels = {
   hide_balance: string;
   show_balance: string;
   feeBulletLines: string[];
+  wallet_fiat_paused_hint: string;
 };
 
 export type StakingPromoDTO = {
@@ -76,16 +77,22 @@ function mask() {
   return "••••••";
 }
 
+function isFiatAccountAsset(a: WalletAsset) {
+  return a === "USD" || a === "CDF";
+}
+
 export function WalletOverview({
   labels,
   totalUsdDisplay,
   cryptoRows,
   fiatRows,
+  fiatDepositWithdrawPaused,
 }: {
   labels: WalletOverviewLabels;
   totalUsdDisplay: string;
   cryptoRows: WalletRowDTO[];
   fiatRows: WalletRowDTO[];
+  fiatDepositWithdrawPaused: boolean;
 }) {
   const [tab, setTab] = useState<"crypto" | "account">("crypto");
   const [q, setQ] = useState("");
@@ -108,6 +115,7 @@ export function WalletOverview({
     tab === "crypto" ? "/app/deposit" : "/app/wallet/fiat/deposit";
   const withdrawHrefTop =
     tab === "crypto" ? "/app/withdraw" : "/app/wallet/fiat/withdraw";
+  const fiatTopLocked = tab === "account" && fiatDepositWithdrawPaused;
 
   return (
     <div className="flex flex-col gap-0 pb-6">
@@ -152,18 +160,38 @@ export function WalletOverview({
         </p>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <Link
-            href={addFundsHref}
-            className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-2 text-center text-sm font-bold text-white shadow-md shadow-emerald-900/15 active:scale-[0.98] dark:bg-emerald-600"
-          >
-            {labels.wallet_add_funds}
-          </Link>
-          <Link
-            href={withdrawHrefTop}
-            className="flex min-h-[48px] items-center justify-center rounded-2xl border-2 border-[color:var(--mb-primary)]/35 bg-white px-2 text-center text-sm font-bold text-[color:var(--mb-primary)] active:scale-[0.98] dark:border-amber-900/40 dark:bg-stone-800 dark:text-amber-100"
-          >
-            {labels.wallet_quick_withdraw}
-          </Link>
+          {fiatTopLocked ? (
+            <span
+              title={labels.wallet_fiat_paused_hint}
+              className="flex min-h-[48px] cursor-not-allowed items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-2 text-center text-sm font-bold text-white opacity-50 shadow-md shadow-emerald-900/15 dark:bg-emerald-600"
+              aria-disabled
+            >
+              {labels.wallet_add_funds}
+            </span>
+          ) : (
+            <Link
+              href={addFundsHref}
+              className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[color:var(--mb-secondary)] px-2 text-center text-sm font-bold text-white shadow-md shadow-emerald-900/15 active:scale-[0.98] dark:bg-emerald-600"
+            >
+              {labels.wallet_add_funds}
+            </Link>
+          )}
+          {fiatTopLocked ? (
+            <span
+              title={labels.wallet_fiat_paused_hint}
+              className="flex min-h-[48px] cursor-not-allowed items-center justify-center rounded-2xl border-2 border-[color:var(--mb-primary)]/35 bg-white px-2 text-center text-sm font-bold text-[color:var(--mb-primary)] opacity-50 dark:border-amber-900/40 dark:bg-stone-800 dark:text-amber-100"
+              aria-disabled
+            >
+              {labels.wallet_quick_withdraw}
+            </span>
+          ) : (
+            <Link
+              href={withdrawHrefTop}
+              className="flex min-h-[48px] items-center justify-center rounded-2xl border-2 border-[color:var(--mb-primary)]/35 bg-white px-2 text-center text-sm font-bold text-[color:var(--mb-primary)] active:scale-[0.98] dark:border-amber-900/40 dark:bg-stone-800 dark:text-amber-100"
+            >
+              {labels.wallet_quick_withdraw}
+            </Link>
+          )}
           <Link
             href="/app/wallet/transfer"
             className="flex min-h-[48px] items-center justify-center rounded-2xl border border-stone-200 bg-stone-50/90 px-2 text-center text-sm font-semibold text-stone-800 active:scale-[0.98] dark:border-stone-600 dark:bg-stone-800/80 dark:text-stone-100"
@@ -271,18 +299,38 @@ export function WalletOverview({
                   </div>
                 </div>
                 <div className="mt-2.5 flex flex-wrap justify-end gap-1.5">
-                  <Link
-                    href={row.depositHref}
-                    className="rounded-lg bg-emerald-700/90 px-2.5 py-1.5 text-[11px] font-bold text-white active:scale-95"
-                  >
-                    {labels.wallet_add_funds}
-                  </Link>
-                  <Link
-                    href={row.withdrawHref}
-                    className="rounded-lg border border-[color:var(--mb-primary)]/30 px-2.5 py-1.5 text-[11px] font-bold text-[color:var(--mb-primary)] dark:border-amber-800/40 dark:text-amber-100"
-                  >
-                    {labels.wallet_quick_withdraw}
-                  </Link>
+                  {fiatDepositWithdrawPaused && isFiatAccountAsset(row.asset) ? (
+                    <span
+                      title={labels.wallet_fiat_paused_hint}
+                      className="rounded-lg bg-emerald-700/90 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-50"
+                      aria-disabled
+                    >
+                      {labels.wallet_add_funds}
+                    </span>
+                  ) : (
+                    <Link
+                      href={row.depositHref}
+                      className="rounded-lg bg-emerald-700/90 px-2.5 py-1.5 text-[11px] font-bold text-white active:scale-95"
+                    >
+                      {labels.wallet_add_funds}
+                    </Link>
+                  )}
+                  {fiatDepositWithdrawPaused && isFiatAccountAsset(row.asset) ? (
+                    <span
+                      title={labels.wallet_fiat_paused_hint}
+                      className="rounded-lg border border-[color:var(--mb-primary)]/30 px-2.5 py-1.5 text-[11px] font-bold text-[color:var(--mb-primary)] opacity-50 dark:border-amber-800/40 dark:text-amber-100"
+                      aria-disabled
+                    >
+                      {labels.wallet_quick_withdraw}
+                    </span>
+                  ) : (
+                    <Link
+                      href={row.withdrawHref}
+                      className="rounded-lg border border-[color:var(--mb-primary)]/30 px-2.5 py-1.5 text-[11px] font-bold text-[color:var(--mb-primary)] dark:border-amber-800/40 dark:text-amber-100"
+                    >
+                      {labels.wallet_quick_withdraw}
+                    </Link>
+                  )}
                   <Link
                     href={`/app/wallet/transfer?asset=${row.asset}`}
                     className="rounded-lg border border-stone-200 px-2.5 py-1.5 text-[11px] font-semibold text-stone-700 dark:border-stone-600 dark:text-stone-200"

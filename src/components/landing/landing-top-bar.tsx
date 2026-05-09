@@ -43,12 +43,13 @@ export function LandingTopBar() {
   const [open, setOpen] = useState(false);
 
   const deskNav = [
+    { href: "/#suite", label: t("landing_nav_suite") },
     { href: "/#preview", label: t("landing_nav_preview") },
     { href: "/#features", label: t("landing_nav_services") },
-    { href: "/#how", label: t("landing_nav_offers") },
+    { href: "/#how", label: t("landing_nav_how") },
     { href: "/#market", label: t("landing_nav_market") },
-    { href: "/terms", label: t("landing_nav_pricing") },
-    { href: "/#trust-h", label: t("landing_nav_security") },
+    { href: "/terms", label: t("landing_nav_terms") },
+    { href: "/#trust", label: t("landing_nav_security") },
     { href: "/about", label: t("landing_nav_about") },
     { href: "/contact", label: t("landing_nav_contact") },
   ];

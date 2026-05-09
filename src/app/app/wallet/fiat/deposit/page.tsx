@@ -7,6 +7,7 @@ import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { getDb, users } from "@/db";
 import { eq } from "drizzle-orm";
 import { isPawapaySupportedForCountry } from "@/lib/pawapay/availability";
+import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function WalletFiatDepositInfoPage() {
     .where(eq(users.id, userId))
     .limit(1);
   const pawapayOk = isPawapaySupportedForCountry(u?.countryCode ?? null);
+  const fiatPaused = isFiatDepositWithdrawPaused();
 
   return (
     <div className="mx-auto max-w-lg space-y-5 pb-10 pt-2">
@@ -36,7 +38,9 @@ export default async function WalletFiatDepositInfoPage() {
       <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
         {interpolate(d.wallet_fiat_deposit_intro, { pct })}
       </p>
-      {pawapayOk ? (
+      {fiatPaused ? (
+        <WalletFiatDepositClient fiatPaused />
+      ) : pawapayOk ? (
         <WalletFiatDepositClient />
       ) : (
         <div className="rounded-2xl border border-amber-600/40 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">

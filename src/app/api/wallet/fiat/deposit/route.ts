@@ -11,6 +11,7 @@ import {
   isPawapaySupportedCurrency,
   isPawapaySupportedForCountry,
 } from "@/lib/pawapay/availability";
+import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -24,6 +25,9 @@ export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isFiatDepositWithdrawPaused()) {
+    return NextResponse.json({ error: "wallet_fiat_paused" }, { status: 503 });
   }
   if (!hasPawapayKeys()) {
     return NextResponse.json({ error: "wallet_pawapay_unconfigured" }, { status: 503 });

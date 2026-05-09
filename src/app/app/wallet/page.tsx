@@ -1,6 +1,7 @@
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getSessionUserId } from "@/lib/session";
+import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 import { getStakingValuationUsd } from "@/lib/staking-service";
 import { getWalletUserState } from "@/lib/wallet-user-state";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
@@ -215,6 +216,8 @@ export default async function WalletPage() {
     .filter((l) => l.asset === "USD" || l.asset === "CDF")
     .map((l) => toRow(l, locale, lang));
 
+  const fiatDepositWithdrawPaused = isFiatDepositWithdrawPaused();
+
   const labels: WalletOverviewLabels = {
     wallet_title: d.wallet_title,
     wallet_asset_list: d.wallet_asset_list,
@@ -245,6 +248,7 @@ export default async function WalletPage() {
       d.wallet_fee_internal,
       d.wallet_crypto_deposit_free,
     ],
+    wallet_fiat_paused_hint: d.wallet_fiat_paused_hint,
   };
 
   return (
@@ -254,6 +258,7 @@ export default async function WalletPage() {
         totalUsdDisplay={totalUsdDisplay}
         cryptoRows={cryptoRows}
         fiatRows={fiatRows}
+        fiatDepositWithdrawPaused={fiatDepositWithdrawPaused}
       />
       <div id="pi-topup" className="scroll-mt-4">
         <PiWalletPaymentSection />
