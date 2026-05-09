@@ -1097,7 +1097,7 @@ export const en = {
   status_pending: "Waiting",
   status_busy: "Busy",
   status_done: "Done",
-  admin_finance_blurb: "Ledgers, group treasuries, withdrawal queue",
+  admin_finance_blurb: "Ledgers, drill-down lines, withdrawal queue",
   admin_intro:
     "Claim → send on-chain → paste TXID. Others see busy.",
   admin_header_ops: "McBuleli · ops",
@@ -1157,9 +1157,9 @@ export const en = {
   admin_loans_col_status: "Status",
   admin_loans_col_created: "Created",
   admin_nav_finance: "Finance",
-  admin_finance_title: "Cash flow (Phase 1)",
+  admin_finance_title: "Cash flow (Phase 2)",
   admin_finance_sub:
-    "Read-only: user-wallet ledger and group treasury ledger by UTC day. Withdrawals queue snapshot for USDT tickets. Signed USD uses reference rates (USDT≈1). External crypto deposits may not appear on the user ledger.",
+    "Read-only: daily aggregates, withdrawals snapshot, and recent ledger lines (users + group treasuries) in UTC. Signed USD uses reference rates (USDT≈1). External crypto deposits may not appear on the user ledger.",
   admin_finance_kpi_liability: "Custodial liability (USD est.)",
   admin_finance_kpi_lines: "Ledger lines in range",
   admin_finance_kpi_period: "Period",
@@ -1192,6 +1192,21 @@ export const en = {
   admin_finance_empty_group: "No group treasury lines in this period.",
   admin_finance_kpi_total_passive:
     "Combined passive (USD est. + group USDT)",
+  admin_finance_section_recent_user: "Recent user-wallet lines",
+  admin_finance_section_recent_group: "Recent group treasury lines",
+  admin_finance_recent_hint:
+    "Newest raw ledger rows in the selected period (Phase 2 drill-down). CSV export includes these sections.",
+  admin_finance_col_time_utc: "Time (UTC)",
+  admin_finance_col_user: "User",
+  admin_finance_col_group: "Group",
+  admin_finance_col_type: "Entry type",
+  admin_finance_col_asset: "Asset",
+  admin_finance_col_amount_raw: "Amount",
+  admin_finance_col_fee_usd: "Fee (USD eq.)",
+  admin_finance_col_usd_signed: "USD signed (est.)",
+  admin_finance_col_bucket: "Bucket",
+  admin_finance_empty_recent_user: "No user-wallet lines in this period.",
+  admin_finance_empty_recent_group: "No group treasury lines in this period.",
 };
 
 export const fr: Messages = {
@@ -2313,7 +2328,7 @@ export const fr: Messages = {
   status_pending: "Attente",
   status_busy: "En cours",
   status_done: "OK",
-  admin_finance_blurb: "Livres, trésoreries groupe, file retraits",
+  admin_finance_blurb: "Livres, lignes récentes, file retraits",
   admin_intro:
     "Prendre le ticket → envoyer → coller le TXID. Les autres voient « occupé ».",
   admin_header_ops: "McBuleli · équipe",
@@ -2374,9 +2389,9 @@ export const fr: Messages = {
   admin_loans_col_status: "Statut",
   admin_loans_col_created: "Créé",
   admin_nav_finance: "Finance",
-  admin_finance_title: "Flux de trésorerie (phase 1)",
+  admin_finance_title: "Flux de trésorerie (phase 2)",
   admin_finance_sub:
-    "Vue lecture seule : grand livre utilisateurs et livre des trésoreries de groupe par jour UTC. File des retraits USDT. USD signés selon les taux de référence (USDT≈1). Les dépôts crypto externes peuvent être absents du livre utilisateur.",
+    "Vue lecture seule : agrégats quotidiens, file des retraits, et dernières lignes du livre (utilisateurs + trésoreries groupe) en UTC. USD signés selon les taux de référence (USDT≈1). Les dépôts crypto externes peuvent être absents du livre utilisateur.",
   admin_finance_kpi_liability: "Passif custodial (USD est.)",
   admin_finance_kpi_lines: "Lignes du livre sur la période",
   admin_finance_kpi_period: "Période",
@@ -2409,6 +2424,21 @@ export const fr: Messages = {
   admin_finance_empty_group: "Aucune ligne trésorerie groupe sur cette période.",
   admin_finance_kpi_total_passive:
     "Passif combiné (USD est. + USDT groupe)",
+  admin_finance_section_recent_user: "Dernières lignes livre utilisateurs",
+  admin_finance_section_recent_group: "Dernières lignes trésorerie groupe",
+  admin_finance_recent_hint:
+    "Lignes brutes les plus récentes sur la période (zoom phase 2). L’export CSV inclut ces sections.",
+  admin_finance_col_time_utc: "Heure (UTC)",
+  admin_finance_col_user: "Utilisateur",
+  admin_finance_col_group: "Groupe",
+  admin_finance_col_type: "Type d’écriture",
+  admin_finance_col_asset: "Actif",
+  admin_finance_col_amount_raw: "Montant",
+  admin_finance_col_fee_usd: "Frais (USD eq.)",
+  admin_finance_col_usd_signed: "USD signé (est.)",
+  admin_finance_col_bucket: "Compartiment",
+  admin_finance_empty_recent_user: "Aucune ligne utilisateur sur cette période.",
+  admin_finance_empty_recent_group: "Aucune ligne trésorerie groupe sur cette période.",
 };
 
 export function getDictionary(locale: Locale): Messages {

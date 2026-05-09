@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import {
@@ -7,6 +8,8 @@ import {
   type CashFlowBucket,
   type GroupTreasuryBucket,
   getFinanceCashFlowReport,
+  getFinanceRecentGroupLedgerLines,
+  getFinanceRecentUserLedgerLines,
 } from "@/lib/finance-cashflow";
 import { getSessionUser } from "@/lib/session-user";
 import { UserRole } from "@/lib/roles";
@@ -29,6 +32,16 @@ function fmtUsdt(n: number, locale: string) {
   return `${s} USDT`;
 }
 
+function fmtUtcTime(d: Date, locale: string) {
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  return d.toLocaleString(loc, { timeZone: "UTC", dateStyle: "short", timeStyle: "medium" });
+}
+
+function fmtRawAmount(n: number, locale: string) {
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  return n.toLocaleString(loc, { maximumFractionDigits: 12 });
+}
+
 export default async function AdminFinancePage({
   searchParams,
 }: {
@@ -45,7 +58,11 @@ export default async function AdminFinancePage({
 
   const locale = await getLocale();
   const d = getDictionary(locale);
-  const report = await getFinanceCashFlowReport(days);
+  const [report, recentUserLines, recentGroupLines] = await Promise.all([
+    getFinanceCashFlowReport(days),
+    getFinanceRecentUserLedgerLines(days, 60),
+    getFinanceRecentGroupLedgerLines(days, 60),
+  ]);
 
   const bucketTitles: Record<CashFlowBucket, string> = {
     fiat_psp: d.admin_finance_bucket_fiat_psp,
@@ -269,6 +286,124 @@ export default async function AdminFinancePage({
                     </td>
                   ))}
                 </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2 pt-6">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+          {d.admin_finance_section_recent_user}
+        </h3>
+        <p className="text-xs text-stone-500">{d.admin_finance_recent_hint}</p>
+        {recentUserLines.length === 0 ? (
+          <p className="rounded-xl border border-stone-700 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+            {d.admin_finance_empty_recent_user}
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-stone-700">
+            <table className="min-w-[1100px] text-left text-sm">
+              <thead className="border-b border-stone-700 bg-stone-900/80 text-xs uppercase tracking-wide text-stone-500">
+                <tr>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_time_utc}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_user}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_type}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_asset}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_amount_raw}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_fee_usd}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_usd_signed}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_bucket}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-800">
+                {recentUserLines.map((row) => (
+                  <tr key={row.id} className="bg-stone-950/40">
+                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-stone-300">
+                      {fmtUtcTime(row.createdAt, locale)}
+                    </td>
+                    <td className="px-2 py-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <UserAvatarMark
+                          email={row.userEmail}
+                          avatarUrl={row.avatarUrl}
+                          sizeClass="h-8 w-8"
+                          textClass="text-xs"
+                        />
+                        <span className="min-w-0 truncate text-stone-200">{row.userEmail}</span>
+                      </div>
+                    </td>
+                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-stone-400">
+                      {row.entryType}
+                    </td>
+                    <td className="px-2 py-2 text-stone-300">{row.asset}</td>
+                    <td className="px-2 py-2 tabular-nums text-stone-200">
+                      {fmtRawAmount(row.amount, locale)}
+                    </td>
+                    <td className="px-2 py-2 tabular-nums text-stone-400">
+                      {fmtUsd(row.feeUsdEquivalent, locale)}
+                    </td>
+                    <td className="px-2 py-2 tabular-nums text-emerald-200/90">
+                      {fmtUsd(row.usdSigned, locale)}
+                    </td>
+                    <td className="px-2 py-2 text-stone-400">{bucketTitles[row.bucket]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2 pt-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+          {d.admin_finance_section_recent_group}
+        </h3>
+        {recentGroupLines.length === 0 ? (
+          <p className="rounded-xl border border-indigo-900/30 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+            {d.admin_finance_empty_recent_group}
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-indigo-900/30">
+            <table className="min-w-[960px] text-left text-sm">
+              <thead className="border-b border-stone-700 bg-indigo-950/40 text-xs uppercase tracking-wide text-stone-500">
+                <tr>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_time_utc}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_group}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_type}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_asset}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_amount_raw}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_usd_signed}</th>
+                  <th className="px-2 py-3 font-semibold">{d.admin_finance_col_bucket}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-800">
+                {recentGroupLines.map((row) => (
+                  <tr key={row.id} className="bg-stone-950/40">
+                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-stone-300">
+                      {fmtUtcTime(row.createdAt, locale)}
+                    </td>
+                    <td className="px-2 py-2">
+                      <Link
+                        href={`/admin/groups/${row.groupId}`}
+                        className="font-medium text-indigo-200 underline decoration-indigo-500/40 hover:text-indigo-100"
+                      >
+                        {row.groupName}
+                      </Link>
+                    </td>
+                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-stone-400">
+                      {row.entryType}
+                    </td>
+                    <td className="px-2 py-2 text-stone-300">{row.asset}</td>
+                    <td className="px-2 py-2 tabular-nums text-stone-200">
+                      {fmtRawAmount(row.amount, locale)}
+                    </td>
+                    <td className="px-2 py-2 tabular-nums text-indigo-200/90">
+                      {fmtUsd(row.usdSigned, locale)}
+                    </td>
+                    <td className="px-2 py-2 text-stone-400">{groupBucketTitles[row.bucket]}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   getDb,
+  groupSavingsGroups,
   groupWalletLedgerEntries,
   users,
   walletLedgerEntries,
@@ -397,6 +398,202 @@ export async function getFinanceCashFlowReport(
   };
 }
 
+export type FinanceRecentUserLedgerRow = {
+  id: string;
+  createdAt: Date;
+  entryType: string;
+  asset: string;
+  amount: number;
+  feeUsdEquivalent: number;
+  usdSigned: number;
+  bucket: CashFlowBucket;
+  userId: string;
+  userEmail: string;
+  avatarUrl: string | null;
+};
+
+export type FinanceRecentGroupLedgerRow = {
+  id: string;
+  createdAt: Date;
+  entryType: string;
+  asset: string;
+  amount: number;
+  usdSigned: number;
+  bucket: GroupTreasuryBucket;
+  groupId: string;
+  groupName: string;
+};
+
+/** Latest user-wallet ledger lines in range (newest first). For admin drill-down (Phase 2). */
+export async function getFinanceRecentUserLedgerLines(
+  days: number,
+  limit: number,
+): Promise<FinanceRecentUserLedgerRow[]> {
+  const d = Math.min(Math.max(1, Math.floor(days)), 365);
+  const until = new Date();
+  const since = new Date(until.getTime() - d * 24 * 60 * 60 * 1000);
+  const lim = Math.min(Math.max(1, Math.floor(limit)), 200);
+
+  const rates = await fetchReferenceRates();
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      id: walletLedgerEntries.id,
+      createdAt: walletLedgerEntries.createdAt,
+      entryType: walletLedgerEntries.entryType,
+      asset: walletLedgerEntries.asset,
+      amount: walletLedgerEntries.amount,
+      feeUsdEquivalent: walletLedgerEntries.feeUsdEquivalent,
+      userId: walletLedgerEntries.userId,
+      userEmail: users.email,
+      avatarUrl: users.avatarUrl,
+    })
+    .from(walletLedgerEntries)
+    .innerJoin(users, eq(walletLedgerEntries.userId, users.id))
+    .where(gte(walletLedgerEntries.createdAt, since))
+    .orderBy(desc(walletLedgerEntries.createdAt))
+    .limit(lim);
+
+  return rows.map((r) => {
+    const amt = numFromNumeric(r.amount);
+    const fee = numFromNumeric(r.feeUsdEquivalent);
+    const bucket = classifyLedgerEntryType(r.entryType);
+    const usdSigned = signedUsdForLine(r.asset, amt, rates);
+    return {
+      id: r.id,
+      createdAt: r.createdAt,
+      entryType: r.entryType,
+      asset: r.asset,
+      amount: amt,
+      feeUsdEquivalent: fee,
+      usdSigned,
+      bucket,
+      userId: r.userId,
+      userEmail: r.userEmail,
+      avatarUrl: r.avatarUrl ?? null,
+    };
+  });
+}
+
+/** Latest group treasury ledger lines in range (newest first). */
+export async function getFinanceRecentGroupLedgerLines(
+  days: number,
+  limit: number,
+): Promise<FinanceRecentGroupLedgerRow[]> {
+  const d = Math.min(Math.max(1, Math.floor(days)), 365);
+  const until = new Date();
+  const since = new Date(until.getTime() - d * 24 * 60 * 60 * 1000);
+  const lim = Math.min(Math.max(1, Math.floor(limit)), 200);
+
+  const rates = await fetchReferenceRates();
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      id: groupWalletLedgerEntries.id,
+      createdAt: groupWalletLedgerEntries.createdAt,
+      entryType: groupWalletLedgerEntries.entryType,
+      asset: groupWalletLedgerEntries.asset,
+      amount: groupWalletLedgerEntries.amount,
+      groupId: groupWalletLedgerEntries.groupId,
+      groupName: groupSavingsGroups.name,
+    })
+    .from(groupWalletLedgerEntries)
+    .innerJoin(
+      groupSavingsGroups,
+      eq(groupWalletLedgerEntries.groupId, groupSavingsGroups.id),
+    )
+    .where(gte(groupWalletLedgerEntries.createdAt, since))
+    .orderBy(desc(groupWalletLedgerEntries.createdAt))
+    .limit(lim);
+
+  return rows.map((r) => {
+    const amt = numFromNumeric(r.amount);
+    const bucket = classifyGroupLedgerEntryType(r.entryType);
+    const usdSigned = signedUsdForLine(r.asset, amt, rates);
+    return {
+      id: r.id,
+      createdAt: r.createdAt,
+      entryType: r.entryType,
+      asset: r.asset,
+      amount: amt,
+      usdSigned,
+      bucket,
+      groupId: r.groupId,
+      groupName: r.groupName,
+    };
+  });
+}
+
+function csvEscapeCell(cell: string): string {
+  return cell.includes(",") || cell.includes('"') || cell.includes("\n")
+    ? `"${cell.replace(/"/g, '""')}"`
+    : cell;
+}
+
+export function financeRecentUserLedgerToCsv(
+  rows: FinanceRecentUserLedgerRow[],
+  bucketLabels: Record<CashFlowBucket, string>,
+): string {
+  const header = [
+    "when_utc",
+    "entry_type",
+    "asset",
+    "amount",
+    "fee_usd_eq",
+    "usd_signed_est",
+    "bucket",
+    "user_email",
+    "user_id",
+  ];
+  const lines: string[][] = [header];
+  for (const r of rows) {
+    lines.push([
+      r.createdAt.toISOString(),
+      r.entryType,
+      r.asset,
+      String(r.amount),
+      String(r.feeUsdEquivalent),
+      String(r.usdSigned),
+      bucketLabels[r.bucket],
+      r.userEmail,
+      r.userId,
+    ]);
+  }
+  return lines.map((r) => r.map(csvEscapeCell).join(",")).join("\n");
+}
+
+export function financeRecentGroupLedgerToCsv(
+  rows: FinanceRecentGroupLedgerRow[],
+  bucketLabels: Record<GroupTreasuryBucket, string>,
+): string {
+  const header = [
+    "when_utc",
+    "entry_type",
+    "asset",
+    "amount",
+    "usd_signed_est",
+    "bucket",
+    "group_name",
+    "group_id",
+  ];
+  const lines: string[][] = [header];
+  for (const r of rows) {
+    lines.push([
+      r.createdAt.toISOString(),
+      r.entryType,
+      r.asset,
+      String(r.amount),
+      String(r.usdSigned),
+      bucketLabels[r.bucket],
+      r.groupName,
+      r.groupId,
+    ]);
+  }
+  return lines.map((r) => r.map(csvEscapeCell).join(",")).join("\n");
+}
+
 export function financeCashFlowToCsv(
   report: FinanceCashFlowReport,
   labels: Record<CashFlowBucket, string>,
@@ -426,9 +623,7 @@ export function financeCashFlowToCsv(
     String(report.ledgerLinesInRange),
   ]);
   return rows
-    .map((r) =>
-      r.map((cell) => (cell.includes(",") ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","),
-    )
+    .map((r) => r.map((cell) => csvEscapeCell(String(cell))).join(","))
     .join("\n");
 }
 
@@ -462,9 +657,7 @@ export function groupTreasuryCashFlowToCsv(
     String(report.groupLedgerLinesInRange),
   ]);
   return rows
-    .map((r) =>
-      r.map((cell) => (cell.includes(",") ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","),
-    )
+    .map((r) => r.map((cell) => csvEscapeCell(String(cell))).join(","))
     .join("\n");
 }
 

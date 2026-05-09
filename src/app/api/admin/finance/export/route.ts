@@ -4,8 +4,12 @@ import { getLocale } from "@/lib/get-locale";
 import {
   type CashFlowBucket,
   type GroupTreasuryBucket,
+  financeRecentGroupLedgerToCsv,
+  financeRecentUserLedgerToCsv,
   financeReportToFullCsv,
   getFinanceCashFlowReport,
+  getFinanceRecentGroupLedgerLines,
+  getFinanceRecentUserLedgerLines,
 } from "@/lib/finance-cashflow";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 
@@ -27,7 +31,11 @@ export async function GET(req: Request) {
   const locale = await getLocale();
   const d = getDictionary(locale);
 
-  const report = await getFinanceCashFlowReport(days);
+  const [report, recentUser, recentGroup] = await Promise.all([
+    getFinanceCashFlowReport(days),
+    getFinanceRecentUserLedgerLines(days, 200),
+    getFinanceRecentGroupLedgerLines(days, 200),
+  ]);
   const userLabels: Record<CashFlowBucket, string> = {
     fiat_psp: d.admin_finance_bucket_fiat_psp,
     p2p: d.admin_finance_bucket_p2p,
@@ -43,7 +51,12 @@ export async function GET(req: Request) {
     subscription_fee: d.admin_finance_group_bucket_subscription_fee,
     other: d.admin_finance_group_bucket_other,
   };
-  const csv = financeReportToFullCsv(report, userLabels, groupLabels);
+  const csv =
+    financeReportToFullCsv(report, userLabels, groupLabels) +
+    "\n\n# Phase 2 — recent user-wallet lines\n\n" +
+    financeRecentUserLedgerToCsv(recentUser, userLabels) +
+    "\n\n# Phase 2 — recent group treasury lines\n\n" +
+    financeRecentGroupLedgerToCsv(recentGroup, groupLabels);
   const filename = `mcbuleli-finance-cashflow-${days}d-${locale}.csv`;
 
   return new NextResponse(csv, {

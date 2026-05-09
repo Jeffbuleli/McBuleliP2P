@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { resolvePublicAssetUrl } from "@/lib/public-asset-url";
 
 type Props = {
@@ -10,6 +10,32 @@ type Props = {
   /** e.g. "text-sm" for the initial letter */
   textClass?: string;
 };
+
+/**
+ * Same-origin `/uploads/...` paths become absolute with `window.location.origin`
+ * after layout when `NEXT_PUBLIC_APP_URL` is unset (PWA / standalone / some WebViews).
+ */
+function usePublicAvatarSrc(resolved: string | null): string | null {
+  const [src, setSrc] = useState<string | null>(resolved);
+
+  useLayoutEffect(() => {
+    if (!resolved) {
+      setSrc(null);
+      return;
+    }
+    if (resolved.startsWith("http://") || resolved.startsWith("https://")) {
+      setSrc(resolved);
+      return;
+    }
+    if (resolved.startsWith("/") && typeof window !== "undefined") {
+      setSrc(new URL(resolved, window.location.origin).href);
+      return;
+    }
+    setSrc(resolved);
+  }, [resolved]);
+
+  return src;
+}
 
 /**
  * Profile image or first letter (app bar, profile header, P2P chat).
@@ -30,7 +56,8 @@ export function UserAvatarMark({
       avatarUrl.startsWith("http://"));
   const [imgBroken, setImgBroken] = useState(false);
   const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
-  const showImg = rawOk && resolved && !imgBroken;
+  const imgSrc = usePublicAvatarSrc(resolved);
+  const showImg = rawOk && imgSrc && !imgBroken;
 
   useEffect(() => {
     setImgBroken(false);
@@ -39,7 +66,7 @@ export function UserAvatarMark({
   if (showImg) {
     return (
       <img
-        src={resolved}
+        src={imgSrc}
         alt=""
         className={`${sizeClass} rounded-full object-cover ring-2 ring-white/30 dark:ring-stone-600`}
         onError={() => setImgBroken(true)}
@@ -76,7 +103,8 @@ export function ChatAvatarBubble({
       avatarUrl.startsWith("http://"));
   const [imgBroken, setImgBroken] = useState(false);
   const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
-  const showImg = rawOk && resolved && !imgBroken;
+  const imgSrc = usePublicAvatarSrc(resolved);
+  const showImg = rawOk && imgSrc && !imgBroken;
 
   useEffect(() => {
     setImgBroken(false);
@@ -88,7 +116,7 @@ export function ChatAvatarBubble({
         className={`relative flex h-7 w-7 shrink-0 overflow-hidden rounded-full ring-2 ${ring}`}
       >
         <img
-          src={resolved}
+          src={imgSrc}
           alt=""
           className="h-full w-full object-cover"
           onError={() => setImgBroken(true)}
