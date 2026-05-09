@@ -785,6 +785,8 @@ export const en = {
   p2p_ad_create_failed: "Could not create ad.",
   p2p_sell_insufficient_balance:
     "Insufficient crypto balance for a sell ad at this price and max amount.",
+  p2p_buy_escrow_insufficient_balance:
+    "You need enough crypto on McBuleli to lock escrow: taking a BUY ad means you sell on-platform.",
   p2p_sell_need_hint: "Sell max ≈ {need} {asset} · wallet {bal}",
   p2p_ad_inactive: "This ad is not active.",
   p2p_cannot_trade_own_ad: "You cannot trade your own ad.",
@@ -2055,6 +2057,8 @@ export const fr: Messages = {
   p2p_ad_create_failed: "Impossible de créer l’annonce.",
   p2p_sell_insufficient_balance:
     "Solde crypto insuffisant pour une annonce de vente à ce prix et montant max.",
+  p2p_buy_escrow_insufficient_balance:
+    "Il vous faut assez de crypto sur McBuleli pour verrouiller le séquestre : sur une annonce d’achat, vous vendez sur la plateforme.",
   p2p_sell_need_hint: "Vente max ≈ {need} {asset} · portefeuille {bal}",
   p2p_ad_inactive: "Cette annonce n’est pas active.",
   p2p_cannot_trade_own_ad: "Vous ne pouvez pas trader votre propre annonce.",

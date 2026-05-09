@@ -69,6 +69,10 @@ export default function P2pTradePage() {
       // show the P2P-specific message (avoid blaming the buyer).
       return t("p2p_sell_insufficient_balance");
     }
+    if (submitErr === "wallet_insufficient_balance" && ad?.side === "buy") {
+      // BUY ad: taker is seller — needs on-platform crypto for escrow (older API responses).
+      return t("p2p_buy_escrow_insufficient_balance");
+    }
     if (submitErr.startsWith("p2p_") || submitErr.startsWith("wallet_")) {
       return t(submitErr as keyof Messages);
     }

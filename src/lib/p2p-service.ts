@@ -1007,7 +1007,7 @@ export async function createOrder(args: {
           throw new Error(
             (ad.ad.side as P2pSide) === "sell"
               ? "p2p_sell_insufficient_balance"
-              : "wallet_insufficient_balance",
+              : "p2p_buy_escrow_insufficient_balance",
           );
         }
       }
