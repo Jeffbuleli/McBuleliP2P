@@ -24,6 +24,14 @@ export {
   isPlatformExpenseCategory,
 } from "@/lib/platform-expenses-constants";
 
+function isMissingRelationError(e: unknown): boolean {
+  const anyE = e as { code?: unknown; cause?: unknown } | null;
+  if (!anyE) return false;
+  if (anyE.code === "42P01") return true;
+  const c = anyE.cause as { code?: unknown } | null;
+  return c?.code === "42P01";
+}
+
 export function canSeeAllPlatformExpenses(u: SessionUser): boolean {
   return u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "platform_expenses_approve");
 }
@@ -60,13 +68,18 @@ async function appendExpenseEvent(args: {
   action: string;
   meta?: Record<string, unknown> | null;
 }) {
-  const db = getDb();
-  await db.insert(platformExpenseEvents).values({
-    expenseId: args.expenseId,
-    actorUserId: args.actorUserId,
-    action: args.action,
-    meta: args.meta ?? null,
-  });
+  try {
+    const db = getDb();
+    await db.insert(platformExpenseEvents).values({
+      expenseId: args.expenseId,
+      actorUserId: args.actorUserId,
+      action: args.action,
+      meta: args.meta ?? null,
+    });
+  } catch (e) {
+    if (isMissingRelationError(e)) return;
+    throw e;
+  }
 }
 
 export async function listPlatformExpensesForStaff(
@@ -77,52 +90,61 @@ export async function listPlatformExpensesForStaff(
     creatorEmail: string;
   })[]
 > {
-  const db = getDb();
-  const conds: SQL[] = [];
-  if (status && PLATFORM_EXPENSE_STATUSES.includes(status)) {
-    conds.push(eq(platformExpenses.status, status));
-  }
-  if (!canSeeAllPlatformExpenses(u)) {
-    conds.push(eq(platformExpenses.createdByUserId, u.id));
-  }
-  const whereClause = conds.length === 0 ? undefined : conds.length === 1 ? conds[0] : and(...conds);
+  try {
+    const db = getDb();
+    const conds: SQL[] = [];
+    if (status && PLATFORM_EXPENSE_STATUSES.includes(status)) {
+      conds.push(eq(platformExpenses.status, status));
+    }
+    if (!canSeeAllPlatformExpenses(u)) {
+      conds.push(eq(platformExpenses.createdByUserId, u.id));
+    }
+    const whereClause =
+      conds.length === 0 ? undefined : conds.length === 1 ? conds[0] : and(...conds);
 
-  const base = db
-    .select({
-      expense: platformExpenses,
-      creatorEmail: users.email,
-    })
-    .from(platformExpenses)
-    .innerJoin(users, eq(platformExpenses.createdByUserId, users.id));
-  const rows = await (whereClause
-    ? base.where(whereClause)
-    : base
-  )
-    .orderBy(desc(platformExpenses.createdAt))
-    .limit(500);
+    const base = db
+      .select({
+        expense: platformExpenses,
+        creatorEmail: users.email,
+      })
+      .from(platformExpenses)
+      .innerJoin(users, eq(platformExpenses.createdByUserId, users.id));
+    const rows = await (whereClause ? base.where(whereClause) : base)
+      .orderBy(desc(platformExpenses.createdAt))
+      .limit(500);
 
-  return rows.map((r) => ({ ...r.expense, creatorEmail: r.creatorEmail }));
+    return rows.map((r) => ({ ...r.expense, creatorEmail: r.creatorEmail }));
+  } catch (e) {
+    // Deployed app may run before DB migrations are applied.
+    if (isMissingRelationError(e)) return [];
+    throw e;
+  }
 }
 
 export async function getPlatformExpenseForStaff(
   u: SessionUser,
   id: string,
 ): Promise<(PlatformExpenseRow & { creatorEmail: string }) | null> {
-  const db = getDb();
-  const [row] = await db
-    .select({
-      expense: platformExpenses,
-      creatorEmail: users.email,
-    })
-    .from(platformExpenses)
-    .innerJoin(users, eq(platformExpenses.createdByUserId, users.id))
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return null;
-  if (!canSeeAllPlatformExpenses(u) && row.expense.createdByUserId !== u.id) {
-    return null;
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({
+        expense: platformExpenses,
+        creatorEmail: users.email,
+      })
+      .from(platformExpenses)
+      .innerJoin(users, eq(platformExpenses.createdByUserId, users.id))
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return null;
+    if (!canSeeAllPlatformExpenses(u) && row.expense.createdByUserId !== u.id) {
+      return null;
+    }
+    return { ...row.expense, creatorEmail: row.creatorEmail };
+  } catch (e) {
+    if (isMissingRelationError(e)) return null;
+    throw e;
   }
-  return { ...row.expense, creatorEmail: row.creatorEmail };
 }
 
 export type CreatePlatformExpenseInput = {
@@ -151,39 +173,44 @@ export async function createPlatformExpense(
   const desc = input.description.trim();
   if (desc.length < 2) return { ok: false, message: "invalid_description" };
 
-  const db = getDb();
-  const [ins] = await db
-    .insert(platformExpenses)
-    .values({
-      amount: String(input.amount),
-      currency: cur,
-      category: input.category,
-      description: desc,
-      vendor: input.vendor?.trim() || null,
-      attachmentUrl: input.attachmentUrl?.trim() || null,
-      expenseDate: dateOk,
-      status: "draft",
-      createdByUserId: u.id,
-    })
-    .returning({ id: platformExpenses.id });
+  try {
+    const db = getDb();
+    const [ins] = await db
+      .insert(platformExpenses)
+      .values({
+        amount: String(input.amount),
+        currency: cur,
+        category: input.category,
+        description: desc,
+        vendor: input.vendor?.trim() || null,
+        attachmentUrl: input.attachmentUrl?.trim() || null,
+        expenseDate: dateOk,
+        status: "draft",
+        createdByUserId: u.id,
+      })
+      .returning({ id: platformExpenses.id });
 
-  if (!ins) return { ok: false, message: "insert_failed" };
+    if (!ins) return { ok: false, message: "insert_failed" };
 
-  await appendExpenseEvent({
-    expenseId: ins.id,
-    actorUserId: u.id,
-    action: "created",
-    meta: { category: input.category, amount: input.amount, currency: cur },
-  });
-  await writePlatformAdminAudit({
-    actorUserId: u.id,
-    action: PlatformAdminAuditAction.PLATFORM_EXPENSE_CREATE,
-    resourceType: "platform_expense",
-    resourceId: ins.id,
-    meta: { category: input.category },
-  });
+    await appendExpenseEvent({
+      expenseId: ins.id,
+      actorUserId: u.id,
+      action: "created",
+      meta: { category: input.category, amount: input.amount, currency: cur },
+    });
+    await writePlatformAdminAudit({
+      actorUserId: u.id,
+      action: PlatformAdminAuditAction.PLATFORM_EXPENSE_CREATE,
+      resourceType: "platform_expense",
+      resourceId: ins.id,
+      meta: { category: input.category },
+    });
 
-  return { ok: true, id: ins.id };
+    return { ok: true, id: ins.id };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
 
 export type UpdatePlatformExpenseDraftInput = Partial<{
@@ -204,17 +231,18 @@ export async function updatePlatformExpenseDraft(
   if (!canSubmitPlatformExpenses(u)) {
     return { ok: false, message: "forbidden" };
   }
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(platformExpenses)
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return { ok: false, message: "not_found" };
-  if (row.status !== "draft") return { ok: false, message: "not_editable" };
-  if (row.createdByUserId !== u.id && u.role !== UserRole.SUPER_ADMIN) {
-    return { ok: false, message: "forbidden" };
-  }
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(platformExpenses)
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return { ok: false, message: "not_found" };
+    if (row.status !== "draft") return { ok: false, message: "not_editable" };
+    if (row.createdByUserId !== u.id && u.role !== UserRole.SUPER_ADMIN) {
+      return { ok: false, message: "forbidden" };
+    }
 
   const next: Record<string, unknown> = {
     updatedAt: new Date(),
@@ -249,10 +277,10 @@ export async function updatePlatformExpenseDraft(
     next.expenseDate = d;
   }
 
-  await db
-    .update(platformExpenses)
-    .set(next as Partial<typeof platformExpenses.$inferInsert>)
-    .where(eq(platformExpenses.id, id));
+    await db
+      .update(platformExpenses)
+      .set(next as Partial<typeof platformExpenses.$inferInsert>)
+      .where(eq(platformExpenses.id, id));
 
   await appendExpenseEvent({
     expenseId: id,
@@ -268,7 +296,11 @@ export async function updatePlatformExpenseDraft(
     meta: null,
   });
 
-  return { ok: true };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
 
 export async function submitPlatformExpense(
@@ -278,17 +310,18 @@ export async function submitPlatformExpense(
   if (!canSubmitPlatformExpenses(u)) {
     return { ok: false, message: "forbidden" };
   }
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(platformExpenses)
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return { ok: false, message: "not_found" };
-  if (row.status !== "draft") return { ok: false, message: "invalid_status" };
-  if (row.createdByUserId !== u.id && u.role !== UserRole.SUPER_ADMIN) {
-    return { ok: false, message: "forbidden" };
-  }
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(platformExpenses)
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return { ok: false, message: "not_found" };
+    if (row.status !== "draft") return { ok: false, message: "invalid_status" };
+    if (row.createdByUserId !== u.id && u.role !== UserRole.SUPER_ADMIN) {
+      return { ok: false, message: "forbidden" };
+    }
 
   const now = new Date();
   await db
@@ -309,7 +342,11 @@ export async function submitPlatformExpense(
     meta: null,
   });
 
-  return { ok: true };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
 
 export async function approvePlatformExpense(
@@ -319,17 +356,18 @@ export async function approvePlatformExpense(
   if (!canApprovePlatformExpenses(u)) {
     return { ok: false, message: "forbidden" };
   }
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(platformExpenses)
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return { ok: false, message: "not_found" };
-  if (row.status !== "submitted") return { ok: false, message: "invalid_status" };
-  if (u.role !== UserRole.SUPER_ADMIN && row.createdByUserId === u.id) {
-    return { ok: false, message: "cannot_approve_own" };
-  }
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(platformExpenses)
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return { ok: false, message: "not_found" };
+    if (row.status !== "submitted") return { ok: false, message: "invalid_status" };
+    if (u.role !== UserRole.SUPER_ADMIN && row.createdByUserId === u.id) {
+      return { ok: false, message: "cannot_approve_own" };
+    }
 
   const now = new Date();
   await db
@@ -354,7 +392,11 @@ export async function approvePlatformExpense(
     meta: null,
   });
 
-  return { ok: true };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
 
 export async function rejectPlatformExpense(
@@ -368,17 +410,18 @@ export async function rejectPlatformExpense(
   const r = reason.trim();
   if (r.length < 2) return { ok: false, message: "invalid_reason" };
 
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(platformExpenses)
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return { ok: false, message: "not_found" };
-  if (row.status !== "submitted") return { ok: false, message: "invalid_status" };
-  if (u.role !== UserRole.SUPER_ADMIN && row.createdByUserId === u.id) {
-    return { ok: false, message: "cannot_reject_own" };
-  }
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(platformExpenses)
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return { ok: false, message: "not_found" };
+    if (row.status !== "submitted") return { ok: false, message: "invalid_status" };
+    if (u.role !== UserRole.SUPER_ADMIN && row.createdByUserId === u.id) {
+      return { ok: false, message: "cannot_reject_own" };
+    }
 
   const now = new Date();
   await db
@@ -406,7 +449,11 @@ export async function rejectPlatformExpense(
     meta: { reason: r },
   });
 
-  return { ok: true };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
 
 export async function markPaidPlatformExpense(
@@ -417,14 +464,15 @@ export async function markPaidPlatformExpense(
   if (!canApprovePlatformExpenses(u)) {
     return { ok: false, message: "forbidden" };
   }
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(platformExpenses)
-    .where(eq(platformExpenses.id, id))
-    .limit(1);
-  if (!row) return { ok: false, message: "not_found" };
-  if (row.status !== "approved") return { ok: false, message: "invalid_status" };
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(platformExpenses)
+      .where(eq(platformExpenses.id, id))
+      .limit(1);
+    if (!row) return { ok: false, message: "not_found" };
+    if (row.status !== "approved") return { ok: false, message: "invalid_status" };
 
   const now = new Date();
   await db
@@ -451,5 +499,9 @@ export async function markPaidPlatformExpense(
     meta: null,
   });
 
-  return { ok: true };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "db_not_migrated" };
+    throw e;
+  }
 }
