@@ -787,7 +787,10 @@ export const en = {
     "Insufficient crypto balance for a sell ad at this price and max amount.",
   p2p_buy_escrow_insufficient_balance:
     "You need enough crypto on McBuleli to lock escrow: taking a BUY ad means you sell on-platform.",
-  p2p_sell_need_hint: "Sell max ≈ {need} {asset} · wallet {bal}",
+  p2p_sell_escrow_explainer:
+    "“Max” fiat is the biggest order you accept; McBuleli must hold ≈ that much crypto (max fiat ÷ price), not just the amount of one small trade.",
+  p2p_sell_need_hint:
+    "Upper trade limit: max {maxFiat} {fiat} needs ≈ {need} {asset} locked on McBuleli · your wallet {bal} {asset}",
   p2p_ad_inactive: "This ad is not active.",
   p2p_cannot_trade_own_ad: "You cannot trade your own ad.",
   p2p_amount_out_of_range: "Amount is outside the ad limits.",
@@ -2059,7 +2062,10 @@ export const fr: Messages = {
     "Solde crypto insuffisant pour une annonce de vente à ce prix et montant max.",
   p2p_buy_escrow_insufficient_balance:
     "Il vous faut assez de crypto sur McBuleli pour verrouiller le séquestre : sur une annonce d’achat, vous vendez sur la plateforme.",
-  p2p_sell_need_hint: "Vente max ≈ {need} {asset} · portefeuille {bal}",
+  p2p_sell_escrow_explainer:
+    "Le « max » en fiat est le plus gros ordre accepté ; McBuleli doit pouvoir bloquer ≈ autant de crypto (max fiat ÷ prix), pas seulement le montant d’un petit trade.",
+  p2p_sell_need_hint:
+    "Plafond de l’annonce : jusqu’à {maxFiat} {fiat} ⇒ ≈ {need} {asset} à bloquer sur McBuleli · votre portefeuille {bal} {asset}",
   p2p_ad_inactive: "Cette annonce n’est pas active.",
   p2p_cannot_trade_own_ad: "Vous ne pouvez pas trader votre propre annonce.",
   p2p_amount_out_of_range: "Montant hors limites de l’annonce.",

@@ -241,6 +241,9 @@ export default function P2pNewAdPage() {
           inputMode="decimal"
           className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
         />
+        {side === "sell" ? (
+          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("p2p_sell_escrow_explainer")}</p>
+        ) : null}
       </label>
 
       <div className="space-y-2 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
@@ -337,6 +340,8 @@ export default function P2pNewAdPage() {
       {sellNeedHint && !sellNeedHint.ok ? (
         <p className="rounded-lg border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-100">
           {t("p2p_sell_need_hint")
+            .replace("{maxFiat}", maxFiat.trim() || "—")
+            .replace("{fiat}", fiat)
             .replace("{need}", String(sellNeedHint.need))
             .replace("{asset}", asset)
             .replace("{bal}", String(sellNeedHint.bal))}
