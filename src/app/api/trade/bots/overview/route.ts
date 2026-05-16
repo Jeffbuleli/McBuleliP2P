@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
+import { isSuperAdminUserId } from "@/lib/bot-super-admin";
 import { BOT_PLANS, BOT_PLAN_IDS } from "@/lib/bot-config";
 import { listUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
@@ -19,12 +20,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [credentials, subscriptions, instances, tradeMode] = await Promise.all([
-    listUserBinanceCredentials(userId),
-    listActiveBotSubscriptions(userId),
-    listUserBotInstances(userId),
-    getTradeModeSnapshot(userId),
-  ]);
+  const [credentials, subscriptions, instances, tradeMode, isSuperAdmin] =
+    await Promise.all([
+      listUserBinanceCredentials(userId),
+      listActiveBotSubscriptions(userId),
+      listUserBotInstances(userId),
+      getTradeModeSnapshot(userId),
+      isSuperAdminUserId(userId),
+    ]);
 
   const plans = BOT_PLAN_IDS.map((id) => {
     const p = BOT_PLANS[id];
@@ -64,5 +67,6 @@ export async function GET() {
       process.env.BOT_KEYS_ENCRYPTION_SECRET?.trim() &&
         process.env.BOT_KEYS_ENCRYPTION_SECRET.trim().length >= 32,
     ),
+    isSuperAdmin,
   });
 }

@@ -1044,6 +1044,47 @@ export const en = {
   bots_err_min_notional: "Order size below Binance minimum.",
   bots_err_qty_precision: "Order size precision not accepted by Binance.",
   bots_err_binance_order: "Binance rejected the order—check balance and settings.",
+  bots_subscription_already_active:
+    "You already have an active subscription for this bot. Connect API keys below or wait until it expires to renew.",
+  bots_insufficient_balance:
+    "Not enough USDT in your main wallet to pay for this subscription.",
+  bots_insufficient_demo_balance:
+    "Not enough demo USDT in your trade wallet for this subscription.",
+  bots_subscribe_failed: "Subscription could not be completed. Please try again.",
+  bots_invalid_plan: "Unknown bot plan.",
+  bots_invalid_price: "Invalid subscription price.",
+  bots_invalid_body: "Invalid request.",
+  bots_invalid_environment: "Choose demo or live environment.",
+  bots_permissions_failed: "API permissions do not match this bot (Spot and/or Futures).",
+  bots_subscription_required_for_keys:
+    "Subscribe to a bot on this environment (demo/live) before connecting keys, or use the API hub below.",
+  bots_keys_hub_title: "Binance API keys (demo & live)",
+  bots_keys_hub_hint:
+    "One key pair per environment is shared by DCA, Grid, and Futures. Saving new keys replaces the previous pair. Use Revoke to remove them.",
+  bots_keys_shared_hint:
+    "The same API works for all three strategies on that environment—only demo vs live must match your subscription.",
+  bots_keys_connect_demo: "Connect demo (testnet)",
+  bots_keys_connect_live: "Connect live",
+  bots_keys_revoke: "Revoke keys",
+  bots_keys_revoked: "API keys removed.",
+  bots_keys_replace_hint: "Entering new keys overwrites the stored pair after validation.",
+  bots_privileged_badge: "Unlimited access (super-admin)",
+  bots_live_disabled_hint: "Live trading is disabled on your account. Contact support to enable it.",
+  admin_nav_bots: "Trading bots",
+  admin_bots_title: "Bots — subscribers & activity",
+  admin_bots_stat_subscriptions: "Active subscriptions",
+  admin_bots_stat_instances: "Running bot instances",
+  admin_bots_stat_subscribers: "Unique subscribers",
+  admin_bots_by_plan: "By plan",
+  admin_bots_recent_subs: "Recent subscriptions",
+  admin_bots_recent_logs: "Recent bot events",
+  admin_bots_col_email: "User",
+  admin_bots_col_plan: "Plan",
+  admin_bots_col_billing: "Billing",
+  admin_bots_col_price: "Paid",
+  admin_bots_col_expires: "Expires",
+  admin_bots_col_action: "Action",
+  admin_bots_col_time: "Time",
   bots_disclaimer:
     "Bots execute orders on your exchange account. McBuleli does not hold trading capital. Not financial advice.",
   bots_plan_dca: "DCA Spot",
@@ -1072,6 +1113,8 @@ export const en = {
   bots_close_wizard: "Close",
   bots_encryption_missing:
     "Server BOT_KEYS_ENCRYPTION_SECRET is not configured (min 32 chars). Contact support.",
+  bots_encryption_not_configured:
+    "API key storage is not configured on the server. Contact support.",
   bots_error_demo_spot_keys:
     "Demo mode uses Binance Spot TESTNET only. Create keys at testnet.binance.vision — your live Binance.com keys will not work here.",
   bots_error_demo_futures_keys:
@@ -2610,6 +2653,50 @@ export const fr: Messages = {
   bots_err_min_notional: "Taille d’ordre sous le minimum Binance.",
   bots_err_qty_precision: "Précision de quantité refusée par Binance.",
   bots_err_binance_order: "Ordre refusé par Binance — solde et réglages.",
+  bots_subscription_already_active:
+    "Vous avez déjà un abonnement actif pour ce bot. Connectez les clés API ci-dessous ou renouvelez à l’expiration.",
+  bots_insufficient_balance:
+    "Solde USDT insuffisant sur votre portefeuille principal pour cet abonnement.",
+  bots_insufficient_demo_balance:
+    "Solde USDT démo insuffisant sur votre portefeuille trade pour cet abonnement.",
+  bots_subscribe_failed: "Impossible de finaliser l’abonnement. Réessayez.",
+  bots_invalid_plan: "Plan de bot inconnu.",
+  bots_invalid_price: "Prix d’abonnement invalide.",
+  bots_invalid_body: "Requête invalide.",
+  bots_invalid_environment: "Choisissez l’environnement démo ou live.",
+  bots_permissions_failed:
+    "Permissions API insuffisantes pour ce bot (Spot et/ou Futures).",
+  bots_subscription_required_for_keys:
+    "Abonnez-vous à un bot sur cet environnement (démo/live) avant de connecter les clés, ou utilisez le hub API ci-dessous.",
+  bots_keys_hub_title: "Clés API Binance (démo et live)",
+  bots_keys_hub_hint:
+    "Une paire de clés par environnement est partagée entre DCA, Grille et Futures. Les nouvelles clés remplacent les anciennes. Révoquer pour les supprimer.",
+  bots_keys_shared_hint:
+    "La même API sert pour les trois stratégies sur cet environnement — seul démo vs live doit correspondre à l’abonnement.",
+  bots_keys_connect_demo: "Connecter démo (testnet)",
+  bots_keys_connect_live: "Connecter live",
+  bots_keys_revoke: "Révoquer les clés",
+  bots_keys_revoked: "Clés API supprimées.",
+  bots_keys_replace_hint:
+    "Saisir de nouvelles clés écrase la paire enregistrée après validation.",
+  bots_privileged_badge: "Accès illimité (super-admin)",
+  bots_live_disabled_hint:
+    "Le trading live est désactivé sur votre compte. Contactez le support pour l’activer.",
+  admin_nav_bots: "Bots de trading",
+  admin_bots_title: "Bots — abonnés et activité",
+  admin_bots_stat_subscriptions: "Abonnements actifs",
+  admin_bots_stat_instances: "Instances en cours",
+  admin_bots_stat_subscribers: "Abonnés distincts",
+  admin_bots_by_plan: "Par plan",
+  admin_bots_recent_subs: "Abonnements récents",
+  admin_bots_recent_logs: "Événements récents",
+  admin_bots_col_email: "Utilisateur",
+  admin_bots_col_plan: "Plan",
+  admin_bots_col_billing: "Facturation",
+  admin_bots_col_price: "Payé",
+  admin_bots_col_expires: "Expire",
+  admin_bots_col_action: "Action",
+  admin_bots_col_time: "Date",
   bots_disclaimer:
     "Les bots passent des ordres sur votre compte exchange. McBuleli ne détient pas le capital de trading. Pas un conseil financier.",
   bots_plan_dca: "DCA Spot",
@@ -2638,6 +2725,8 @@ export const fr: Messages = {
   bots_close_wizard: "Fermer",
   bots_encryption_missing:
     "BOT_KEYS_ENCRYPTION_SECRET non configuré sur le serveur (min. 32 caractères). Contactez le support.",
+  bots_encryption_not_configured:
+    "Le stockage des clés API n’est pas configuré sur le serveur. Contactez le support.",
   bots_error_demo_spot_keys:
     "Le mode démo utilise le TESTNET Spot Binance uniquement. Créez des clés sur testnet.binance.vision — les clés binance.com (live) ne fonctionnent pas.",
   bots_error_demo_futures_keys:

@@ -5,7 +5,7 @@ import {
   parseBotGridConfig,
 } from "@/lib/bot-grid-config";
 import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
-import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
+import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   appendBotExecutionLog,
   markBotInstanceSuccess,
@@ -45,8 +45,8 @@ export async function tickGridSpotInstance(args: {
   config: Record<string, unknown>;
   lastExecutedAt: Date | null;
 }): Promise<{ ran: boolean; skipped?: string }> {
-  const sub = await getActiveBotSubscription(args.userId, args.planId);
-  if (!sub || sub.billing !== args.billing) {
+  const allowed = await botAccessAllows(args.userId, args.planId, args.billing);
+  if (!allowed) {
     return { ran: false, skipped: "no_active_subscription" };
   }
 

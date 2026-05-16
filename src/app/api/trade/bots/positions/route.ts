@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { isBotPlanId } from "@/lib/bot-config";
-import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
+import { resolveBotSubscription } from "@/lib/bot-privilege";
 import { listUserBotInstances } from "@/lib/bot-instance-service";
 import { fetchBotOpenPositions } from "@/lib/bot-positions-service";
 
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "invalid_plan" }, { status: 400 });
   }
 
-  const sub = await getActiveBotSubscription(userId, planParam);
+  const sub = await resolveBotSubscription(userId, planParam);
   if (!sub) {
     return NextResponse.json({ open: [], error: "bots_subscription_required" });
   }

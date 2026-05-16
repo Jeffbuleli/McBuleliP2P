@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { isBotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment } from "@/lib/bot-config";
-import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
+import { resolveBotSubscription } from "@/lib/bot-privilege";
 import {
   evaluateTradeSignal,
   fetchMarketContext,
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "invalid_plan" }, { status: 400 });
   }
 
-  const sub = await getActiveBotSubscription(userId, planId);
+  const sub = await resolveBotSubscription(userId, planId);
   if (!sub) {
     return NextResponse.json({ error: "bots_subscription_required" }, { status: 409 });
   }

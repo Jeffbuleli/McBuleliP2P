@@ -15,13 +15,17 @@ import {
   permissionsMeetPlan,
   validateBinanceApiPermissions,
 } from "@/lib/binance-api-validate";
-import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
+import {
+  botAccessAllows,
+  isSuperAdminUserId,
+  userHasAnyBotSubscriptionForBilling,
+} from "@/lib/bot-privilege";
 
 const connectZ = z.object({
   environment: z.enum(["demo", "live"]),
   apiKey: z.string().trim().min(16).max(128),
   apiSecret: z.string().trim().min(16).max(128),
-  /** Optional: validate against a plan the user is subscribing to */
+  /** Optional: validate spot/futures for a specific plan */
   planId: z.enum(["dca_spot", "grid_spot", "futures_um"]).optional(),
 });
 
@@ -59,26 +63,42 @@ export async function POST(req: Request) {
   const { environment, apiKey, apiSecret, planId } = parsed.data;
   const env = environment as BotEnvironment;
 
+  const privileged = await isSuperAdminUserId(userId);
+  if (!privileged) {
+    const hasBilling = await userHasAnyBotSubscriptionForBilling(userId, env);
+    if (!hasBilling) {
+      return NextResponse.json(
+        { error: "bots_subscription_required_for_keys" },
+        { status: 409 },
+      );
+    }
+    if (planId) {
+      const allowed = await botAccessAllows(userId, planId as BotPlanId, env);
+      if (!allowed) {
+        return NextResponse.json(
+          { error: "bots_subscription_required_for_keys" },
+          { status: 409 },
+        );
+      }
+    }
+  }
+
   let requiresSpot = true;
   let requiresFutures = false;
   if (planId) {
     const p = BOT_PLANS[planId as BotPlanId];
     requiresSpot = p.requiresSpot;
     requiresFutures = p.requiresFutures;
-    const sub = await getActiveBotSubscription(userId, planId as BotPlanId);
-    if (!sub || sub.billing !== environment) {
-      return NextResponse.json(
-        { error: "bots_subscription_required_for_keys" },
-        { status: 409 },
-      );
-    }
+  } else {
+    requiresSpot = true;
+    requiresFutures = false;
   }
 
   const creds = { apiKey, apiSecret };
   const check = await validateBinanceApiPermissions({
     environment: env,
     creds,
-    checkFutures: requiresFutures,
+    checkFutures: true,
   });
 
   const meet = permissionsMeetPlan({

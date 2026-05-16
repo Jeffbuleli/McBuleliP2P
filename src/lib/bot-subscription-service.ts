@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { getDb, botSubscriptions, users } from "@/db";
 import {
   BOT_PLANS,
+  BOT_PLAN_IDS,
   BOT_SUBSCRIPTION_DAYS,
   type BotBillingMode,
   type BotPlanId,
@@ -12,6 +13,7 @@ import {
 import { debitTradeDemoUsdt } from "@/lib/trade-demo-balance";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
+import { isSuperAdminUserId } from "@/lib/bot-super-admin";
 
 export type BotSubscriptionRow = {
   id: string;
@@ -70,7 +72,8 @@ export async function listActiveBotSubscriptions(
       ),
     )
     .orderBy(desc(botSubscriptions.expiresAt));
-  return rows.map((row) => ({
+
+  const mapped = rows.map((row) => ({
     id: row.id,
     planId: row.planId as BotPlanId,
     billing: row.billing as BotBillingMode,
@@ -79,6 +82,25 @@ export async function listActiveBotSubscriptions(
     startsAt: row.startsAt.toISOString(),
     expiresAt: row.expiresAt.toISOString(),
   }));
+
+  if (await isSuperAdminUserId(userId)) {
+    const have = new Set(mapped.map((s) => s.planId));
+    for (const planId of BOT_PLAN_IDS) {
+      if (!have.has(planId)) {
+        mapped.push({
+          id: `privileged-${planId}`,
+          planId,
+          billing: "demo",
+          pricePaid: "0",
+          status: "active",
+          startsAt: now.toISOString(),
+          expiresAt: new Date("2099-12-31T23:59:59.000Z").toISOString(),
+        });
+      }
+    }
+  }
+
+  return mapped;
 }
 
 export async function purchaseBotSubscription(args: {
@@ -96,11 +118,14 @@ export async function purchaseBotSubscription(args: {
   if (!Number.isFinite(price) || price <= 0) {
     return { ok: false, message: "bots_invalid_price" };
   }
-  const priceStr = fmtWalletAmount(price);
-
+  const privileged = await isSuperAdminUserId(args.userId);
+  const priceStr = privileged ? "0" : fmtWalletAmount(price);
   const existing = await getActiveBotSubscription(args.userId, args.planId);
-  if (existing) {
+  if (existing && !privileged) {
     return { ok: false, message: "bots_subscription_already_active" };
+  }
+  if (existing && privileged) {
+    return { ok: true, subscription: existing };
   }
 
   const db = getDb();
@@ -110,7 +135,7 @@ export async function purchaseBotSubscription(args: {
 
   try {
     const subscription = await db.transaction(async (tx) => {
-      if (args.billing === "demo") {
+      if (!privileged && args.billing === "demo") {
         const [u] = await tx
           .select({ tradeDemoUsdtBalance: users.tradeDemoUsdtBalance })
           .from(users)
@@ -121,7 +146,7 @@ export async function purchaseBotSubscription(args: {
           throw new Error("bots_insufficient_demo_balance");
         }
         await debitTradeDemoUsdt(tx, args.userId, priceStr);
-      } else {
+      } else if (!privileged) {
         const [deducted] = await tx
           .update(users)
           .set({

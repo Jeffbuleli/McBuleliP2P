@@ -132,6 +132,12 @@ export default async function AdminLayout({
                 {d.admin_nav_finance}
               </Link>
               <Link
+                href="/admin/bots"
+                className="rounded-lg border border-violet-900/40 bg-violet-950/25 px-3 py-2 text-violet-100 hover:border-violet-600/50"
+              >
+                {d.admin_nav_bots}
+              </Link>
+              <Link
                 href="/admin/audit"
                 className="rounded-lg border border-stone-600 bg-stone-900/80 px-3 py-2 text-stone-200 hover:border-stone-500"
               >

@@ -7,6 +7,7 @@ import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
 import {
   BOT_PLAN_DESC_KEY,
+  botsApiMessage,
   formatBotRuntimeError,
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
@@ -72,6 +73,7 @@ type Overview = {
     tradeLiveEnabled: boolean;
   } | null;
   keysEncryptionConfigured: boolean;
+  isSuperAdmin?: boolean;
 };
 
 const PLAN_LABEL: Record<BotPlanId, string> = {
@@ -115,15 +117,6 @@ function BotStatusBadge({
       {t("bots_status_active")}
     </span>
   );
-}
-
-function apiErrorMessage(
-  code: string,
-  t: (k: keyof Messages) => string,
-): string {
-  if (code.startsWith("bots_")) return t(code as keyof Messages);
-  if (code.startsWith("smart_")) return formatBotRuntimeError(code, t);
-  return formatBotRuntimeError(code, t);
 }
 
 type SmartUiState = {
@@ -172,7 +165,7 @@ function SmartModePanel({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const err = typeof json.error === "string" ? json.error : "";
-        setPreview(apiErrorMessage(err, t));
+        setPreview(botsApiMessage(err, t));
         return;
       }
       const score = typeof json.score === "number" ? json.score : "—";
@@ -313,6 +306,8 @@ export function BotsTradingClient() {
   });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
+  const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
+  const [keysHubMsg, setKeysHubMsg] = useState<string | null>(null);
 
   const loadLogs = useCallback(async (planId: BotPlanId) => {
     const logRes = await fetch(
@@ -330,7 +325,8 @@ export function BotsTradingClient() {
     const res = await fetch("/api/trade/bots/overview", { cache: "no-store" });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr(typeof json.error === "string" ? json.error : "—");
+      const code = typeof json.error === "string" ? json.error : "";
+      setErr(code ? botsApiMessage(code, t) : t("bots_err_generic"));
       setData(null);
       return;
     }
@@ -343,7 +339,7 @@ export function BotsTradingClient() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, t]);
 
   useEffect(() => {
     const inst = data?.instances.find((i) => i.planId === "dca_spot");
@@ -405,7 +401,9 @@ export function BotsTradingClient() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(typeof json.error === "string" ? json.error : "bots_subscribe_failed");
+        const code =
+          typeof json.error === "string" ? json.error : "bots_subscribe_failed";
+        setErr(botsApiMessage(code, t));
         return;
       }
       setWizardStep(3);
@@ -420,26 +418,25 @@ export function BotsTradingClient() {
     setBusy(true);
     setConnectMsg(null);
     try {
+      const body: Record<string, string> = {
+        environment: wizardBilling,
+        apiKey: apiKey.trim(),
+        apiSecret: apiSecret.trim(),
+      };
+      if (wizardPlan) body.planId = wizardPlan;
       const res = await fetch("/api/trade/bots/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          environment: wizardBilling,
-          apiKey: apiKey.trim(),
-          apiSecret: apiSecret.trim(),
-          planId: wizardPlan,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code =
           typeof json.error === "string" ? json.error : "bots_error_binance_generic";
         setConnectMsg(
-          code.startsWith("bots_error_")
-            ? t(code as keyof Messages)
-            : typeof json.detail === "string"
-              ? json.detail
-              : code,
+          typeof json.detail === "string" && !code.startsWith("bots_")
+            ? json.detail
+            : botsApiMessage(code, t),
         );
         return;
       }
@@ -455,11 +452,42 @@ export function BotsTradingClient() {
   function startWizard(planId: BotPlanId) {
     setActiveTab(planId);
     setWizardPlan(planId);
-    setWizardBilling("demo");
+    setWizardBilling(accountBilling);
     setWizardStep(1);
     setConnectMsg(null);
     setApiKey("");
     setApiSecret("");
+  }
+
+  function openKeysHub(env: "demo" | "live") {
+    setWizardBilling(env);
+    setAccountBilling(env);
+    setWizardPlan(activeTab);
+    setWizardStep(3);
+    setConnectMsg(null);
+    setApiKey("");
+    setApiSecret("");
+  }
+
+  async function revokeKeys(env: "demo" | "live") {
+    setBusy(true);
+    setKeysHubMsg(null);
+    try {
+      const res = await fetch(
+        `/api/trade/bots/keys?environment=${env}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        const code = typeof json.error === "string" ? json.error : "bots_err_generic";
+        setKeysHubMsg(botsApiMessage(code, t));
+        return;
+      }
+      setKeysHubMsg(t("bots_keys_revoked"));
+      await load();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function reloadAfterSave() {
@@ -468,7 +496,18 @@ export function BotsTradingClient() {
   }
 
   function activeSub(planId: BotPlanId) {
-    return data?.subscriptions.find((s) => s.planId === planId);
+    const real = data?.subscriptions.find((s) => s.planId === planId);
+    if (real) return real;
+    if (data?.isSuperAdmin) {
+      return {
+        id: "privileged",
+        planId,
+        billing: accountBilling,
+        pricePaid: "0",
+        expiresAt: "2099-12-31T23:59:59.000Z",
+      };
+    }
+    return undefined;
   }
 
   function credFor(env: "demo" | "live") {
@@ -503,7 +542,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setDcaMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
+        setDcaMsg(code ? botsApiMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setDcaMsg(status === "active" ? t("bots_dca_started") : t("bots_dca_paused"));
@@ -561,7 +600,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setFutMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
+        setFutMsg(code ? botsApiMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setFutMsg(
@@ -600,7 +639,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setGridMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
+        setGridMsg(code ? botsApiMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setGridMsg(status === "active" ? t("bots_grid_started") : t("bots_grid_paused"));
@@ -663,6 +702,104 @@ export function BotsTradingClient() {
         }}
       />
 
+      {data.isSuperAdmin ? (
+        <p className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm text-violet-950 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100">
+          {t("bots_privileged_badge")}
+        </p>
+      ) : null}
+
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+        <h2 className="text-base font-bold text-stone-900 dark:text-stone-50">
+          {t("bots_keys_hub_title")}
+        </h2>
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+          {t("bots_keys_hub_hint")}
+        </p>
+        <p className="mt-2 text-xs text-stone-500 dark:text-stone-500">
+          {t("bots_keys_shared_hint")}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setAccountBilling("demo")}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              accountBilling === "demo"
+                ? "bg-violet-600 text-white"
+                : "bg-stone-200 dark:bg-stone-800"
+            }`}
+          >
+            {t("bots_billing_demo")}
+          </button>
+          <button
+            type="button"
+            disabled={!data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin}
+            onClick={() => setAccountBilling("live")}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-40 ${
+              accountBilling === "live"
+                ? "bg-violet-600 text-white"
+                : "bg-stone-200 dark:bg-stone-800"
+            }`}
+          >
+            {t("bots_billing_live")}
+          </button>
+        </div>
+        {!data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin ? (
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+            {t("bots_live_disabled_hint")}
+          </p>
+        ) : null}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {(["demo", "live"] as const).map((env) => {
+            const c = credFor(env);
+            const liveOk = env === "demo" || data.tradeMode?.tradeLiveEnabled || data.isSuperAdmin;
+            return (
+              <div
+                key={env}
+                className="rounded-xl border border-stone-200 p-3 dark:border-stone-600"
+              >
+                <p className="text-sm font-semibold">
+                  {env === "demo" ? t("bots_billing_demo") : t("bots_billing_live")}
+                </p>
+                {c?.validatedAt ? (
+                  <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+                    {t("bots_keys_connected", { hint: c.apiKeyHint })}
+                    {c.spotOk ? " · Spot" : ""}
+                    {c.futuresOk ? " · Futures" : ""}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-stone-500">{t("bots_err_no_keys")}</p>
+                )}
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    disabled={!liveOk || busy}
+                    onClick={() => openKeysHub(env)}
+                    className="rounded-lg bg-violet-700 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                  >
+                    {env === "demo"
+                      ? t("bots_keys_connect_demo")
+                      : t("bots_keys_connect_live")}
+                  </button>
+                  {c ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void revokeKeys(env)}
+                      className="rounded-lg border border-rose-400 py-2 text-xs font-semibold text-rose-800 dark:text-rose-200"
+                    >
+                      {t("bots_keys_revoke")}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs text-stone-500">{t("bots_keys_replace_hint")}</p>
+        {keysHubMsg ? (
+          <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">{keysHubMsg}</p>
+        ) : null}
+      </section>
 
       {activeTab === "dca_spot" && !dcaSub ? (
         <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">

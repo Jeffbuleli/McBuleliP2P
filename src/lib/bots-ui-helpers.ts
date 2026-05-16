@@ -25,6 +25,22 @@ const SMART_ERROR_I18N: Record<string, keyof Messages> = {
   bots_positions_fetch_failed: "bots_positions_fetch_failed",
 };
 
+export function botsApiMessage(
+  code: string,
+  t: (k: keyof Messages) => string,
+): string {
+  const trimmed = code?.trim();
+  if (!trimmed) return t("bots_err_generic");
+  if (
+    trimmed.startsWith("bots_") ||
+    trimmed.startsWith("smart_")
+  ) {
+    const msg = t(trimmed as keyof Messages);
+    if (msg && msg !== trimmed) return msg;
+  }
+  return formatBotRuntimeError(trimmed, t);
+}
+
 const SERVER_ERROR_I18N: Record<string, keyof Messages> = {
   "API keys not connected": "bots_err_no_keys",
   "Invalid DCA config": "bots_invalid_dca_config",

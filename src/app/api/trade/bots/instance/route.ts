@@ -5,7 +5,7 @@ import { BOT_PLANS, type BotPlanId } from "@/lib/bot-config";
 import { botDcaConfigSchema } from "@/lib/bot-dca-config";
 import { botGridConfigSchema } from "@/lib/bot-grid-config";
 import { botFuturesConfigSchema } from "@/lib/bot-futures-config";
-import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
+import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   listUserBotInstances,
   upsertBotInstance,
@@ -41,8 +41,12 @@ export async function POST(req: Request) {
   }
 
   const { planId, billing, status, config } = parsed.data;
-  const sub = await getActiveBotSubscription(userId, planId as BotPlanId);
-  if (!sub || sub.billing !== billing) {
+  const allowed = await botAccessAllows(
+    userId,
+    planId as BotPlanId,
+    billing,
+  );
+  if (!allowed) {
     return NextResponse.json(
       { error: "bots_subscription_required" },
       { status: 409 },
