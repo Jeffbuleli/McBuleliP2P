@@ -981,6 +981,30 @@ export const en = {
   bots_title: "Trading bots",
   bots_intro:
     "Subscribe to a strategy, connect your Binance API (trade only — no withdrawals), and run on testnet (demo) or live. Funds stay on your Binance account.",
+  bots_auto_title: "Runs automatically on the server",
+  bots_auto_body:
+    "After you subscribe, connect API keys, configure, and tap Start, our cron calls Binance for you—you do not need to keep this page open. Pause anytime to stop new orders.",
+  bots_plan_dca_desc: "Repeating spot market buys on a schedule (DCA).",
+  bots_plan_grid_desc: "Limit buy orders in a price range, refreshed on a timer.",
+  bots_plan_futures_desc: "USDⓈ-M positions with leverage, stop-loss and take-profit monitoring.",
+  bots_status_active: "Running",
+  bots_status_paused: "Paused",
+  bots_status_not_started: "Not started",
+  bots_keys_required_spot:
+    "Spot API keys required for this plan (testnet.binance.vision in demo).",
+  bots_keys_required_futures:
+    "Futures API keys required (testnet.binancefuture.com in demo).",
+  bots_keys_required_cta: "Connect API keys",
+  bots_wizard_progress: "Step {step} of {total}",
+  bots_api_key_label: "API key",
+  bots_api_secret_label: "API secret",
+  bots_loading: "Loading bots…",
+  bots_log_dca_buy: "DCA market buy",
+  bots_log_grid_refresh: "Grid refresh",
+  bots_log_futures_open: "Futures position opened",
+  bots_log_futures_sl_close: "Closed (stop loss)",
+  bots_log_futures_tp_close: "Closed (take profit)",
+  bots_log_error: "Error",
   bots_disclaimer:
     "Bots execute orders on your exchange account. McBuleli does not hold trading capital. Not financial advice.",
   bots_plan_dca: "DCA Spot",
@@ -2489,6 +2513,30 @@ export const fr: Messages = {
   bots_title: "Bots de trading",
   bots_intro:
     "Abonnez-vous à une stratégie, connectez votre API Binance (trade uniquement — pas de retrait), en testnet (démo) ou en live. Les fonds restent sur votre compte Binance.",
+  bots_auto_title: "Exécution automatique côté serveur",
+  bots_auto_body:
+    "Après abonnement, connexion des clés API, configuration et Démarrer, notre cron passe les ordres sur Binance—pas besoin de garder cette page ouverte. Mettez en pause pour arrêter les nouveaux ordres.",
+  bots_plan_dca_desc: "Achats spot market répétés selon un intervalle (DCA).",
+  bots_plan_grid_desc: "Ordres limit d’achat dans une fourchette, rafraîchis périodiquement.",
+  bots_plan_futures_desc: "Positions USDⓈ-M avec levier, surveillance stop-loss et take-profit.",
+  bots_status_active: "En cours",
+  bots_status_paused: "En pause",
+  bots_status_not_started: "Non démarré",
+  bots_keys_required_spot:
+    "Clés API Spot requises (testnet.binance.vision en démo).",
+  bots_keys_required_futures:
+    "Clés API Futures requises (testnet.binancefuture.com en démo).",
+  bots_keys_required_cta: "Connecter les clés API",
+  bots_wizard_progress: "Étape {step} sur {total}",
+  bots_api_key_label: "Clé API",
+  bots_api_secret_label: "Secret API",
+  bots_loading: "Chargement des bots…",
+  bots_log_dca_buy: "Achat market DCA",
+  bots_log_grid_refresh: "Rafraîchissement grille",
+  bots_log_futures_open: "Position futures ouverte",
+  bots_log_futures_sl_close: "Clôture (stop loss)",
+  bots_log_futures_tp_close: "Clôture (take profit)",
+  bots_log_error: "Erreur",
   bots_disclaimer:
     "Les bots passent des ordres sur votre compte exchange. McBuleli ne détient pas le capital de trading. Pas un conseil financier.",
   bots_plan_dca: "DCA Spot",

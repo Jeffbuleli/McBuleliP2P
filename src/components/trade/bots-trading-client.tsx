@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
+import {
+  BOT_PLAN_DESC_KEY,
+  botLogActionLabel,
+} from "@/lib/bots-ui-helpers";
 
 type Plan = {
   id: BotPlanId;
@@ -65,6 +69,34 @@ const PLAN_LABEL: Record<BotPlanId, string> = {
   grid_spot: "bots_plan_grid",
   futures_um: "bots_plan_futures",
 };
+
+function BotStatusBadge({
+  status,
+  t,
+}: {
+  status: "active" | "paused" | "none";
+  t: (k: keyof Messages) => string;
+}) {
+  if (status === "none") {
+    return (
+      <span className="rounded-full bg-stone-200 px-2.5 py-0.5 text-xs font-semibold text-stone-600 dark:bg-stone-700 dark:text-stone-300">
+        {t("bots_status_not_started")}
+      </span>
+    );
+  }
+  const active = status === "active";
+  return (
+    <span
+      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+        active
+          ? "bg-emerald-600 text-white"
+          : "bg-stone-400 text-white dark:bg-stone-600"
+      }`}
+    >
+      {t(active ? "bots_status_active" : "bots_status_paused")}
+    </span>
+  );
+}
 
 export function BotsTradingClient() {
   const { t } = useI18n();
@@ -383,10 +415,21 @@ export function BotsTradingClient() {
   }
 
   if (!data) {
+    if (err) {
+      return (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+          {err}
+        </p>
+      );
+    }
     return (
-      <p className="text-stone-500 dark:text-stone-400">
-        {err ?? "…"}
-      </p>
+      <div className="space-y-4 pt-6 animate-pulse" aria-busy="true">
+        <div className="h-8 w-56 rounded-lg bg-stone-200 dark:bg-stone-800" />
+        <div className="h-20 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
+        <div className="h-36 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
+        <div className="h-36 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
+        <p className="text-center text-sm text-stone-500">{t("bots_loading")}</p>
+      </div>
     );
   }
 
@@ -404,20 +447,38 @@ export function BotsTradingClient() {
             {t("bots_encryption_missing")}
           </p>
         ) : null}
+        <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/80 p-4 dark:border-sky-800/50 dark:bg-sky-950/25">
+          <p className="text-sm font-semibold text-sky-950 dark:text-sky-100">
+            {t("bots_auto_title")}
+          </p>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            {t("bots_auto_body")}
+          </p>
+        </div>
       </header>
 
       <section className="grid gap-4">
         {data.plans.map((plan) => {
           const sub = activeSub(plan.id);
+          const inst = instanceFor(plan.id);
+          const instStatus: "active" | "paused" | "none" = inst
+            ? inst.status
+            : "none";
           return (
             <article
               key={plan.id}
               className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900"
             >
-              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-50">
-                {t(PLAN_LABEL[plan.id] as keyof typeof t)}
-              </h2>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-50">
+                  {t(PLAN_LABEL[plan.id] as keyof typeof t)}
+                </h2>
+                {sub ? <BotStatusBadge status={instStatus} t={t} /> : null}
+              </div>
               <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {t(BOT_PLAN_DESC_KEY[plan.id])}
+              </p>
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-500">
                 {t("bots_price_line", {
                   demo: String(plan.demoPriceUsdt),
                   live: String(plan.livePriceUsdt),
@@ -443,11 +504,62 @@ export function BotsTradingClient() {
         })}
       </section>
 
+      {dcaSub && !dcaKeysOk ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+          <p className="text-sm text-amber-950 dark:text-amber-100">
+            {t("bots_keys_required_spot")}
+          </p>
+          <button
+            type="button"
+            onClick={() => startWizard("dca_spot")}
+            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
+          >
+            {t("bots_keys_required_cta")}
+          </button>
+        </div>
+      ) : null}
+
+      {gridSub && !gridKeysOk ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+          <p className="text-sm text-amber-950 dark:text-amber-100">
+            {t("bots_keys_required_spot")}
+          </p>
+          <button
+            type="button"
+            onClick={() => startWizard("grid_spot")}
+            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
+          >
+            {t("bots_keys_required_cta")}
+          </button>
+        </div>
+      ) : null}
+
+      {futSub && !futKeysOk ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+          <p className="text-sm text-amber-950 dark:text-amber-100">
+            {t("bots_keys_required_futures")}
+          </p>
+          <button
+            type="button"
+            onClick={() => startWizard("futures_um")}
+            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
+          >
+            {t("bots_keys_required_cta")}
+          </button>
+        </div>
+      ) : null}
+
       {dcaSub && dcaKeysOk ? (
         <section className="rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
-          <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
-            {t("bots_dca_config_title")}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
+              {t("bots_dca_config_title")}
+            </h2>
+            <BotStatusBadge
+              status={dcaInst?.status ?? "none"}
+              t={t}
+            />
+          </div>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             {t("bots_dca_config_hint")}
           </p>
@@ -525,9 +637,15 @@ export function BotsTradingClient() {
 
       {gridSub && gridKeysOk ? (
         <section className="rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
-          <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
-            {t("bots_grid_config_title")}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
+              {t("bots_grid_config_title")}
+            </h2>
+            <BotStatusBadge
+              status={gridInst?.status ?? "none"}
+              t={t}
+            />
+          </div>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             {t("bots_grid_config_hint")}
           </p>
@@ -623,9 +741,15 @@ export function BotsTradingClient() {
 
       {futSub && futKeysOk ? (
         <section className="rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
-          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
-            {t("bots_futures_config_title")}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
+              {t("bots_futures_config_title")}
+            </h2>
+            <BotStatusBadge
+              status={futInst?.status ?? "none"}
+              t={t}
+            />
+          </div>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             {t("bots_futures_config_hint")}
           </p>
@@ -757,7 +881,10 @@ export function BotsTradingClient() {
                 <span className="font-mono text-xs text-stone-500">
                   {new Date(l.createdAt).toLocaleString()}
                 </span>{" "}
-                <span className="font-medium">{l.planId}</span> · {l.action}
+                <span className="font-medium">
+                  {t(PLAN_LABEL[l.planId as BotPlanId] as keyof Messages)}
+                </span>{" "}
+                · {botLogActionLabel(t, l.action)}
               </li>
             ))}
           </ul>
@@ -765,10 +892,27 @@ export function BotsTradingClient() {
       ) : null}
 
       {wizardPlan ? (
-        <section className="rounded-2xl border-2 border-violet-600/50 bg-violet-50/50 p-4 dark:border-violet-500/40 dark:bg-violet-950/20">
-          <h3 className="font-bold text-violet-950 dark:text-violet-100">
-            {t(PLAN_LABEL[wizardPlan] as keyof typeof t)} — {t("bots_wizard_title")}
-          </h3>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-4 sm:items-center">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label={t("bots_close_wizard")}
+            onClick={() => {
+              setWizardPlan(null);
+              setWizardStep(1);
+            }}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border-2 border-violet-600/50 bg-violet-50/95 p-4 shadow-2xl dark:border-violet-500/40 dark:bg-violet-950/95"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+              {t("bots_wizard_progress", { step: String(wizardStep), total: "3" })}
+            </p>
+            <h3 className="mt-1 font-bold text-violet-950 dark:text-violet-100">
+              {t(PLAN_LABEL[wizardPlan] as keyof typeof t)} — {t("bots_wizard_title")}
+            </h3>
 
           {wizardStep === 1 ? (
             <div className="mt-4 space-y-3">
@@ -865,7 +1009,7 @@ export function BotsTradingClient() {
                 </p>
               ) : null}
               <label className="block text-sm font-medium">
-                API Key
+                {t("bots_api_key_label")}
                 <input
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
@@ -874,7 +1018,7 @@ export function BotsTradingClient() {
                 />
               </label>
               <label className="block text-sm font-medium">
-                Secret
+                {t("bots_api_secret_label")}
                 <input
                   type="password"
                   value={apiSecret}
@@ -906,7 +1050,8 @@ export function BotsTradingClient() {
               </button>
             </div>
           ) : null}
-        </section>
+          </section>
+        </div>
       ) : null}
 
       {err ? (
