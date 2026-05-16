@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
-import { botSmartConfigSchema } from "@/lib/bot-smart-config";
+import { botSmartFields } from "@/lib/bot-smart-config";
 
 export const BOT_FUTURES_LEVERAGE = [2, 3, 5, 10, 20] as const;
 export const BOT_FUTURES_INTERVAL_HOURS = [1, 4, 12, 24] as const;
@@ -24,7 +24,8 @@ export const botFuturesConfigSchema = z.object({
   ]),
   stopLossPct: z.number().min(1).max(50),
   takeProfitPct: z.number().min(1).max(100),
-}).merge(botSmartConfigSchema);
+  ...botSmartFields,
+});
 
 export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;
 

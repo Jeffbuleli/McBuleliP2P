@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { botSmartConfigSchema } from "@/lib/bot-smart-config";
+import { botSmartFields } from "@/lib/bot-smart-config";
 
 export const BOT_DCA_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
 export const BOT_DCA_INTERVAL_HOURS = [1, 4, 12, 24] as const;
@@ -13,7 +13,8 @@ export const botDcaConfigSchema = z.object({
     z.literal(12),
     z.literal(24),
   ]),
-}).merge(botSmartConfigSchema);
+  ...botSmartFields,
+});
 
 export type BotDcaConfig = z.infer<typeof botDcaConfigSchema>;
 

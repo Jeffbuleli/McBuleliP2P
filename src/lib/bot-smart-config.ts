@@ -2,12 +2,15 @@ import { z } from "zod";
 
 export const BOT_CANDLE_TIMEFRAMES = ["15m", "1h", "4h"] as const;
 
-export const botSmartConfigSchema = z.object({
+/** Spread into bot plan schemas (Zod 4: avoid .merge() on refined objects). */
+export const botSmartFields = {
   smartMode: z.boolean().default(false),
   /** Minimum |score| (0–100) required to open / allow DCA buy. */
   minSignalScore: z.number().min(10).max(80).default(35),
   timeframe: z.enum(BOT_CANDLE_TIMEFRAMES).default("1h"),
-});
+} as const;
+
+export const botSmartConfigSchema = z.object(botSmartFields);
 
 export type BotSmartConfig = z.infer<typeof botSmartConfigSchema>;
 
