@@ -14,7 +14,6 @@ import { BotPositionsPanel } from "@/components/trade/bot-positions-panel";
 import {
   BotPlanIcon,
   BotStrategyTabBar,
-  TAB_STYLES,
 } from "@/components/trade/bot-strategy-icons";
 
 type Plan = {

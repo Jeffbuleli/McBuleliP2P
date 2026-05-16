@@ -5,19 +5,9 @@ import { binanceUserSignedGet } from "@/lib/binance-user-client";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
 import { parseBotGridConfig } from "@/lib/bot-grid-config";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
+import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 
-export type BotOpenPositionRow = {
-  kind: "futures" | "spot_order" | "spot_holding";
-  symbol: string;
-  side?: string;
-  size?: string;
-  entryPrice?: string;
-  markPrice?: string;
-  unrealizedPnl?: string;
-  price?: string;
-  quantity?: string;
-  notionalUsdt?: string;
-};
+export type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 
 type PositionRisk = {
   symbol: string;

@@ -8,7 +8,7 @@ import {
   BOT_EXECUTION_ACTIONS,
   buildBotTradeHistoryRow,
 } from "@/lib/bots-trade-display";
-import type { BotOpenPositionRow } from "@/lib/bot-positions-service";
+import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
 import { BotPlanIcon } from "@/components/trade/bot-strategy-icons";
 
