@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   const check = await validateBinanceApiPermissions({
     environment: env,
     creds,
-    checkFutures: requiresFutures || true,
+    checkFutures: requiresFutures,
   });
 
   const meet = permissionsMeetPlan({
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
   if (!meet.ok) {
     return NextResponse.json(
       {
-        error: "bots_permissions_failed",
+        error: meet.errorCode ?? "bots_permissions_failed",
         check,
         detail: meet.reason,
       },

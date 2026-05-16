@@ -1000,7 +1000,8 @@ export const en = {
   bots_wizard_step2: "Enable Reading + Spot Trading (and Futures if needed). Disable Withdrawals.",
   bots_wizard_step3: "For demo: use testnet.binance.vision / testnet.binancefuture.com keys only.",
   bots_wizard_step4: "Paste key + secret below — we test permissions, encrypt, and never show the secret again.",
-  bots_env_demo_hint: "Demo uses Binance testnet. Create separate API keys on the testnet sites.",
+  bots_env_demo_hint:
+    "Demo = testnet only. Spot keys: testnet.binance.vision · Futures keys: testnet.binancefuture.com",
   bots_env_live_hint: "Live uses your real Binance account. Never enable withdrawal permission.",
   bots_keys_connected: "Connected: {hint}",
   bots_test_and_save: "Test permissions & save",
@@ -1008,6 +1009,17 @@ export const en = {
   bots_close_wizard: "Close",
   bots_encryption_missing:
     "Server BOT_KEYS_ENCRYPTION_SECRET is not configured (min 32 chars). Contact support.",
+  bots_error_demo_spot_keys:
+    "Demo mode uses Binance Spot TESTNET only. Create keys at testnet.binance.vision — your live Binance.com keys will not work here.",
+  bots_error_demo_futures_keys:
+    "Demo mode uses Binance Futures TESTNET only. Create keys at testnet.binancefuture.com — live account API keys will not work here.",
+  bots_error_live_spot_keys:
+    "Live mode needs API keys from binance.com (not testnet). Check permissions: Reading + Spot trading, withdrawals off.",
+  bots_error_live_futures_keys:
+    "Live mode needs futures-enabled keys from binance.com. Enable Reading + USDⓈ-M Futures trading; withdrawals must stay off.",
+  bots_error_ip_restrict:
+    "Binance rejected the request (IP restriction). Whitelist your server IP in API settings or disable IP lock for testing.",
+  bots_error_binance_generic: "Binance rejected the API keys. Check key, secret, environment (demo=testnet), and permissions.",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
@@ -2448,7 +2460,8 @@ export const fr: Messages = {
   bots_wizard_step2: "Activer Lecture + Trading Spot (et Futures si besoin). Désactiver les retraits.",
   bots_wizard_step3: "Démo : clés uniquement depuis testnet.binance.vision / testnet.binancefuture.com.",
   bots_wizard_step4: "Collez clé + secret — nous testons les permissions, chiffrons, et ne réaffichons jamais le secret.",
-  bots_env_demo_hint: "La démo utilise le testnet Binance. Créez des clés API séparées sur les sites testnet.",
+  bots_env_demo_hint:
+    "Démo = testnet uniquement. Spot : testnet.binance.vision · Futures : testnet.binancefuture.com",
   bots_env_live_hint: "Le live utilise votre compte Binance réel. Ne jamais activer le retrait.",
   bots_keys_connected: "Connecté : {hint}",
   bots_test_and_save: "Tester et enregistrer",
@@ -2456,6 +2469,18 @@ export const fr: Messages = {
   bots_close_wizard: "Fermer",
   bots_encryption_missing:
     "BOT_KEYS_ENCRYPTION_SECRET non configuré sur le serveur (min. 32 caractères). Contactez le support.",
+  bots_error_demo_spot_keys:
+    "Le mode démo utilise le TESTNET Spot Binance uniquement. Créez des clés sur testnet.binance.vision — les clés binance.com (live) ne fonctionnent pas.",
+  bots_error_demo_futures_keys:
+    "Le mode démo utilise le TESTNET Futures uniquement. Créez des clés sur testnet.binancefuture.com — les clés du compte live ne fonctionnent pas ici.",
+  bots_error_live_spot_keys:
+    "Le mode live exige des clés créées sur binance.com (pas testnet). Permissions : lecture + trading Spot, retraits désactivés.",
+  bots_error_live_futures_keys:
+    "Le mode live exige des clés futures sur binance.com. Activez lecture + trading USDⓈ-M Futures ; retraits désactivés.",
+  bots_error_ip_restrict:
+    "Binance a refusé (restriction IP). Ajoutez l’IP du serveur dans l’API ou désactivez le verrou IP pour tester.",
+  bots_error_binance_generic:
+    "Clés refusées par Binance. Vérifiez clé, secret, environnement (démo=testnet) et permissions.",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",

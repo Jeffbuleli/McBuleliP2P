@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
+import type { Messages } from "@/i18n/messages";
 
 type Plan = {
   id: BotPlanId;
@@ -114,12 +115,14 @@ export function BotsTradingClient() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const code =
+          typeof json.error === "string" ? json.error : "bots_error_binance_generic";
         setConnectMsg(
-          typeof json.detail === "string"
-            ? json.detail
-            : typeof json.error === "string"
-              ? json.error
-              : "—",
+          code.startsWith("bots_error_")
+            ? t(code as keyof Messages)
+            : typeof json.detail === "string"
+              ? json.detail
+              : code,
         );
         return;
       }
@@ -292,11 +295,17 @@ export function BotsTradingClient() {
                 <li>{t("bots_wizard_step3")}</li>
                 <li>{t("bots_wizard_step4")}</li>
               </ol>
-              <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
-                {wizardBilling === "demo"
-                  ? t("bots_env_demo_hint")
-                  : t("bots_env_live_hint")}
-              </p>
+              {wizardBilling === "demo" ? (
+                <p className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm font-medium text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
+                  {wizardPlan === "futures_um"
+                    ? t("bots_error_demo_futures_keys")
+                    : t("bots_error_demo_spot_keys")}
+                </p>
+              ) : (
+                <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
+                  {t("bots_env_live_hint")}
+                </p>
+              )}
               {credFor(wizardBilling) ? (
                 <p className="text-sm text-emerald-700 dark:text-emerald-300">
                   {t("bots_keys_connected", {
