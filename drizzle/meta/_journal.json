@@ -148,6 +148,13 @@
       "when": 1779500000000,
       "tag": "0020_user_pi_test_balance",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1779600000000,
+      "tag": "0024_trading_bots",
+      "breakpoints": true
     }
   ]
 }

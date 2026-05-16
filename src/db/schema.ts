@@ -1132,6 +1132,66 @@ export const fiatPawapayTransactions = pgTable(
   ],
 );
 
+/** Encrypted Binance API keys per user (demo testnet vs live). */
+export const userBinanceApiCredentials = pgTable(
+  "user_binance_api_credentials",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** demo = testnet keys; live = production */
+    environment: varchar("environment", { length: 8 }).notNull(),
+    apiKeyHint: varchar("api_key_hint", { length: 24 }).notNull(),
+    credentialsCiphertext: text("credentials_ciphertext").notNull(),
+    spotOk: boolean("spot_ok").notNull().default(false),
+    futuresOk: boolean("futures_ok").notNull().default(false),
+    lastValidationError: text("last_validation_error"),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("user_binance_api_credentials_user_env_uidx").on(
+      t.userId,
+      t.environment,
+    ),
+  ],
+);
+
+/** Paid bot plan (DCA / Grid / Futures) — demo or live billing. */
+export const botSubscriptions = pgTable(
+  "bot_subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: varchar("plan_id", { length: 32 }).notNull(),
+    billing: varchar("billing", { length: 8 }).notNull(),
+    pricePaid: numeric("price_paid", { precision: 18, scale: 8 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    startsAt: timestamp("starts_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("bot_subscriptions_user_active_idx").on(
+      t.userId,
+      t.status,
+      t.expiresAt,
+    ),
+  ],
+);
+
 /** In-app notifications (bell drawer). */
 export const userNotifications = pgTable(
   "user_notifications",

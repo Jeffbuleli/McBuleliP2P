@@ -9,6 +9,7 @@ export function TradeSubNav() {
   const { t } = useI18n();
   const isFutures = pathname.includes("/trade/futures");
   const isOptions = pathname.includes("/trade/options");
+  const isBots = pathname.includes("/trade/bots");
 
   const tab = (href: string, active: boolean, label: string) => (
     <Link
@@ -31,6 +32,7 @@ export function TradeSubNav() {
     >
       {tab("/app/trade/futures", isFutures, t("trade_ui_tab_futures"))}
       {tab("/app/trade/options", isOptions, t("trade_ui_tab_options"))}
+      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"))}
     </nav>
   );
 }
