@@ -11,6 +11,7 @@ import {
   BOT_FUTURES_INTERVAL_HOURS,
   BOT_FUTURES_LEVERAGE,
 } from "@/lib/bot-futures-config";
+import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -53,6 +54,10 @@ export async function GET() {
       symbols: [...BOT_DCA_SYMBOLS],
       intervalHours: [...BOT_FUTURES_INTERVAL_HOURS],
       leverage: [...BOT_FUTURES_LEVERAGE],
+    },
+    smartOptions: {
+      timeframes: [...BOT_CANDLE_TIMEFRAMES],
+      minSignalScores: [25, 35, 45, 55],
     },
     tradeMode,
     keysEncryptionConfigured: Boolean(

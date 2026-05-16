@@ -14,6 +14,14 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   futures_sl_close: "bots_log_futures_sl_close",
   futures_tp_close: "bots_log_futures_tp_close",
   error: "bots_log_failed",
+  smart_skip: "bots_log_smart_skip",
+};
+
+const SMART_ERROR_I18N: Record<string, keyof Messages> = {
+  smart_market_data_unavailable: "bots_smart_data_unavailable",
+  smart_signal_blocks_long: "bots_smart_blocks_long",
+  smart_signal_blocks_short: "bots_smart_blocks_short",
+  smart_signal_blocks_buy: "bots_smart_blocks_buy",
 };
 
 const SERVER_ERROR_I18N: Record<string, keyof Messages> = {
@@ -52,9 +60,12 @@ export function formatBotRuntimeError(
   if (!raw?.trim()) return t("bots_err_generic");
 
   const s = raw.trim();
+  if (s.startsWith("smart_")) {
+    const mapped = SMART_ERROR_I18N[s];
+    if (mapped) return t(mapped);
+  }
   if (s.startsWith("bots_")) {
-    const k = s as keyof Messages;
-    return t(k);
+    return t(s as keyof Messages);
   }
 
   const exact = SERVER_ERROR_I18N[s];
@@ -103,6 +114,16 @@ export function botLogDetailMessage(
     const msg =
       typeof log.detail?.message === "string" ? log.detail.message : null;
     return formatBotRuntimeError(msg, t);
+  }
+  if (log.action === "smart_skip") {
+    const reason =
+      typeof log.detail?.reason === "string" ? log.detail.reason : null;
+    const score = log.detail?.score;
+    const base = reason ? formatBotRuntimeError(reason, t) : t("bots_log_smart_skip");
+    if (typeof score === "number") {
+      return `${base} (score ${score})`;
+    }
+    return base;
   }
   return null;
 }

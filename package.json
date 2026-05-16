@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "ccxt": "^4.5.54",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.3",
     "next": "16.2.4",
@@ -26,6 +27,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-qr-code": "^2.0.21",
+    "technicalindicators": "^3.1.0",
     "zod": "^4.4.2"
   },
   "devDependencies": {

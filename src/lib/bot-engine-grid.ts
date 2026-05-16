@@ -17,6 +17,7 @@ import {
   binanceUserSignedPost,
   fetchBinanceSpotPrice,
 } from "@/lib/binance-user-client";
+import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
 
 type OpenOrder = {
   orderId: number;
@@ -92,6 +93,32 @@ export async function tickGridSpotInstance(args: {
     return { ran: false, skipped: "price_out_of_range" };
   }
 
+  const gate = await runSmartGate({
+    environment: env,
+    symbol: grid.symbol,
+    market: "spot",
+    smart: {
+      smartMode: grid.smartMode,
+      minSignalScore: grid.minSignalScore,
+      timeframe: grid.timeframe,
+    },
+    intent: "spot_buy",
+  });
+  if (!gate.ok) {
+    await appendBotExecutionLog({
+      instanceId: args.instanceId,
+      userId: args.userId,
+      planId: args.planId,
+      action: "smart_skip",
+      detail: {
+        reason: gate.reason,
+        score: gate.signal?.score,
+        factors: gate.signal?.reasons,
+      },
+    });
+    return { ran: false, skipped: "smart_blocked" };
+  }
+
   try {
     const openRaw = (await binanceUserSignedGet({
       environment: env,
@@ -144,6 +171,7 @@ export async function tickGridSpotInstance(args: {
       detail: {
         symbol: grid.symbol,
         mid,
+        signal: signalSummary(gate.signal),
         ordersPlaced: placed.length,
         levels,
       },

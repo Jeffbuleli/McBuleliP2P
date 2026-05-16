@@ -60,6 +60,10 @@ type Overview = {
     intervalHours: number[];
     leverage: number[];
   };
+  smartOptions: {
+    timeframes: string[];
+    minSignalScores: number[];
+  };
   tradeMode: {
     demoUsdt: string;
     tradeLiveEnabled: boolean;
@@ -115,7 +119,147 @@ function apiErrorMessage(
   t: (k: keyof Messages) => string,
 ): string {
   if (code.startsWith("bots_")) return t(code as keyof Messages);
+  if (code.startsWith("smart_")) return formatBotRuntimeError(code, t);
   return formatBotRuntimeError(code, t);
+}
+
+type SmartUiState = {
+  smartMode: boolean;
+  minSignalScore: number;
+  timeframe: "15m" | "1h" | "4h";
+};
+
+function loadSmartFromConfig(cfg: Record<string, unknown> | undefined): SmartUiState {
+  const tf = cfg?.timeframe;
+  return {
+    smartMode: Boolean(cfg?.smartMode),
+    minSignalScore: Number(cfg?.minSignalScore) || 35,
+    timeframe: tf === "15m" || tf === "4h" ? tf : "1h",
+  };
+}
+
+function SmartModePanel({
+  planId,
+  symbol,
+  smart,
+  setSmart,
+  smartOptions,
+  t,
+}: {
+  planId: BotPlanId;
+  symbol: string;
+  smart: SmartUiState;
+  setSmart: (s: SmartUiState) => void;
+  smartOptions: Overview["smartOptions"];
+  t: (k: keyof Messages) => string;
+}) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+
+  async function loadPreview() {
+    setPreviewBusy(true);
+    setPreview(null);
+    try {
+      const q = new URLSearchParams({
+        symbol,
+        planId,
+        timeframe: smart.timeframe,
+      });
+      const res = await fetch(`/api/trade/bots/signal?${q}`, { cache: "no-store" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = typeof json.error === "string" ? json.error : "";
+        setPreview(apiErrorMessage(err, t));
+        return;
+      }
+      const score = typeof json.score === "number" ? json.score : "—";
+      const bias = typeof json.bias === "string" ? json.bias : "";
+      setPreview(`${bias} · ${t("bots_smart_score_label")} ${score}`);
+    } finally {
+      setPreviewBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-800 dark:bg-indigo-950/30">
+      <label className="flex cursor-pointer items-start gap-2">
+        <input
+          type="checkbox"
+          checked={smart.smartMode}
+          onChange={(e) => setSmart({ ...smart, smartMode: e.target.checked })}
+          className="mt-1"
+        />
+        <span>
+          <span className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+            {t("bots_smart_mode")}
+          </span>
+          <span className="mt-0.5 block text-xs text-stone-600 dark:text-stone-400">
+            {t("bots_smart_mode_hint")}
+          </span>
+        </span>
+      </label>
+      {smart.smartMode ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs font-medium">
+            {t("bots_smart_min_score")}
+            <select
+              value={smart.minSignalScore}
+              onChange={(e) =>
+                setSmart({ ...smart, minSignalScore: Number(e.target.value) })
+              }
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+            >
+              {(smartOptions?.minSignalScores ?? [35]).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-xs font-medium">
+            {t("bots_smart_timeframe")}
+            <select
+              value={smart.timeframe}
+              onChange={(e) =>
+                setSmart({
+                  ...smart,
+                  timeframe: e.target.value as SmartUiState["timeframe"],
+                })
+              }
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+            >
+              {(smartOptions?.timeframes ?? ["1h"]).map((tf) => (
+                <option key={tf} value={tf}>
+                  {tf}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={previewBusy}
+            onClick={() => void loadPreview()}
+            className="sm:col-span-2 rounded-lg border border-indigo-400 px-3 py-1.5 text-xs font-semibold text-indigo-900 dark:border-indigo-600 dark:text-indigo-200"
+          >
+            {previewBusy ? t("bots_smart_loading") : t("bots_smart_preview")}
+          </button>
+          {preview ? (
+            <p className="sm:col-span-2 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+              {preview}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function smartConfigFields(s: SmartUiState) {
+  return {
+    smartMode: s.smartMode,
+    minSignalScore: s.minSignalScore,
+    timeframe: s.timeframe,
+  };
 }
 
 function BotActivityMini({
@@ -203,6 +347,21 @@ export function BotsTradingClient() {
   const [futSl, setFutSl] = useState(5);
   const [futTp, setFutTp] = useState(10);
   const [futMsg, setFutMsg] = useState<string | null>(null);
+  const [dcaSmart, setDcaSmart] = useState<SmartUiState>({
+    smartMode: false,
+    minSignalScore: 35,
+    timeframe: "1h",
+  });
+  const [gridSmart, setGridSmart] = useState<SmartUiState>({
+    smartMode: false,
+    minSignalScore: 35,
+    timeframe: "1h",
+  });
+  const [futSmart, setFutSmart] = useState<SmartUiState>({
+    smartMode: false,
+    minSignalScore: 35,
+    timeframe: "1h",
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
 
   const load = useCallback(async () => {
@@ -236,6 +395,7 @@ export function BotsTradingClient() {
     if (cfg?.symbol) setDcaSymbol(cfg.symbol);
     if (cfg?.quoteAmountUsdt) setDcaAmount(cfg.quoteAmountUsdt);
     if (cfg?.intervalHours) setDcaInterval(cfg.intervalHours);
+    setDcaSmart(loadSmartFromConfig(inst?.config));
 
     const ginst = data?.instances.find((i) => i.planId === "grid_spot");
     const gcfg = ginst?.config as {
@@ -252,6 +412,7 @@ export function BotsTradingClient() {
     if (gcfg?.gridCount) setGridCount(gcfg.gridCount);
     if (gcfg?.quotePerGrid) setGridQuote(gcfg.quotePerGrid);
     if (gcfg?.refreshHours) setGridRefresh(gcfg.refreshHours);
+    setGridSmart(loadSmartFromConfig(ginst?.config));
 
     const finst = data?.instances.find((i) => i.planId === "futures_um");
     const fcfg = finst?.config as {
@@ -270,6 +431,7 @@ export function BotsTradingClient() {
     if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
     if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
     if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
+    setFutSmart(loadSmartFromConfig(finst?.config));
   }, [data?.instances]);
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
@@ -368,6 +530,7 @@ export function BotsTradingClient() {
             symbol: dcaSymbol,
             quoteAmountUsdt: dcaAmount.trim().replace(",", "."),
             intervalHours: dcaInterval,
+            ...smartConfigFields(dcaSmart),
           },
         }),
       });
@@ -432,9 +595,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setFutMsg(
-          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
-        );
+        setFutMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setFutMsg(
@@ -466,6 +627,7 @@ export function BotsTradingClient() {
             gridCount,
             quotePerGrid: gridQuote.trim().replace(",", "."),
             refreshHours: gridRefresh,
+            ...smartConfigFields(gridSmart),
           },
         }),
       });
@@ -676,6 +838,14 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          <SmartModePanel
+            planId="dca_spot"
+            symbol={dcaSymbol}
+            smart={dcaSmart}
+            setSmart={setDcaSmart}
+            smartOptions={data.smartOptions}
+            t={t}
+          />
           {dcaInst?.status === "active" && !dcaInst.lastExecutedAt ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
@@ -797,6 +967,14 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          <SmartModePanel
+            planId="grid_spot"
+            symbol={gridSymbol}
+            smart={gridSmart}
+            setSmart={setGridSmart}
+            smartOptions={data.smartOptions}
+            t={t}
+          />
           {gridInst?.status === "active" && !gridInst.lastExecutedAt ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
@@ -936,6 +1114,14 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          <SmartModePanel
+            planId="futures_um"
+            symbol={futSymbol}
+            smart={futSmart}
+            setSmart={setFutSmart}
+            smartOptions={data.smartOptions}
+            t={t}
+          />
           {futInst?.status === "active" && !futInst.lastExecutedAt ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}

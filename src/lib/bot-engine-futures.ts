@@ -13,6 +13,7 @@ import {
   binanceUserSignedPost,
   fetchBinanceFuturesMarkPrice,
 } from "@/lib/binance-user-client";
+import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
 
 type PositionRisk = {
   symbol: string;
@@ -156,6 +157,33 @@ export async function tickFuturesUmInstance(args: {
       return { ran: false, skipped: "interval_not_elapsed" };
     }
 
+    const gate = await runSmartGate({
+      environment: env,
+      symbol: cfg.symbol,
+      market: "futures",
+      smart: {
+        smartMode: cfg.smartMode,
+        minSignalScore: cfg.minSignalScore,
+        timeframe: cfg.timeframe,
+      },
+      intent: cfg.side === "LONG" ? "long" : "short",
+    });
+    if (!gate.ok) {
+      await appendBotExecutionLog({
+        instanceId: args.instanceId,
+        userId: args.userId,
+        planId: args.planId,
+        action: "smart_skip",
+        detail: {
+          reason: gate.reason,
+          summary: gate.signal ? signalSummary(gate.signal) : null,
+          score: gate.signal?.score,
+          factors: gate.signal?.reasons,
+        },
+      });
+      return { ran: false, skipped: "smart_blocked" };
+    }
+
     await binanceUserSignedPost({
       environment: env,
       creds,
@@ -193,6 +221,7 @@ export async function tickFuturesUmInstance(args: {
         leverage: cfg.leverage,
         marginUsdt: cfg.marginUsdt,
         mark,
+        signal: gate.ok ? signalSummary(gate.signal) : null,
         order,
       },
     });

@@ -9,6 +9,7 @@ import {
   setBotInstanceError,
 } from "@/lib/bot-instance-service";
 import { binanceUserSignedPost } from "@/lib/binance-user-client";
+import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
 
 export async function tickDcaSpotInstance(args: {
   instanceId: string;
@@ -50,6 +51,32 @@ export async function tickDcaSpotInstance(args: {
     return { ran: false, skipped: "amount_too_small" };
   }
 
+  const gate = await runSmartGate({
+    environment: env,
+    symbol: dca.symbol,
+    market: "spot",
+    smart: {
+      smartMode: dca.smartMode,
+      minSignalScore: dca.minSignalScore,
+      timeframe: dca.timeframe,
+    },
+    intent: "spot_buy",
+  });
+  if (!gate.ok) {
+    await appendBotExecutionLog({
+      instanceId: args.instanceId,
+      userId: args.userId,
+      planId: args.planId,
+      action: "smart_skip",
+      detail: {
+        reason: gate.reason,
+        score: gate.signal?.score,
+        factors: gate.signal?.reasons,
+      },
+    });
+    return { ran: false, skipped: "smart_blocked" };
+  }
+
   try {
     const order = await binanceUserSignedPost({
       environment: env,
@@ -73,6 +100,7 @@ export async function tickDcaSpotInstance(args: {
       detail: {
         symbol: dca.symbol,
         quoteAmountUsdt: dca.quoteAmountUsdt,
+        signal: signalSummary(gate.signal),
         order,
       },
     });

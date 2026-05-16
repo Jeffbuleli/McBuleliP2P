@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
+import { botSmartConfigSchema } from "@/lib/bot-smart-config";
 
 export const BOT_GRID_REFRESH_HOURS = [4, 12, 24] as const;
 
@@ -15,7 +16,8 @@ export const botGridConfigSchema = z
   .refine(
     (c) => Number(c.priceHigh) > Number(c.priceLow),
     { message: "priceHigh must exceed priceLow" },
-  );
+  )
+  .merge(botSmartConfigSchema);
 
 export type BotGridConfig = z.infer<typeof botGridConfigSchema>;
 
