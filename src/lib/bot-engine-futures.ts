@@ -126,11 +126,11 @@ export async function tickFuturesUmInstance(args: {
       });
       if (closeReason) {
         const closeSide = position.amt > 0 ? "SELL" : "BUY";
-        const order = await binanceUserSignedPost({
+        const order = await futuresSignedPost({
           environment: env,
           creds,
-          market: "futures",
-          path: "/fapi/v1/order",
+          kind: futuresKind,
+          pathKey: "order",
           params: {
             symbol: cfg.symbol,
             side: closeSide,
