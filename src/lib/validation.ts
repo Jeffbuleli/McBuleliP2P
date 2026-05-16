@@ -22,8 +22,7 @@ const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
 
 const cexBinance: z.ZodType<Extract<CexId, "binance">> = z.literal("binance");
 
-/** USDT on-ramp via Binance deposit address only (no manual Pi on-chain deposit). */
-export const depositIntentSchema = z.object({
+const depositUsdtIntent = z.object({
   provider: cexBinance,
   asset: z.literal("USDT"),
   network: networkEnum,
@@ -32,6 +31,18 @@ export const depositIntentSchema = z.object({
   /** Optional reference / memo for the user’s own records (not the exchange destination tag). */
   userNote: z.string().trim().max(512).optional(),
 });
+
+const depositPiIntent = z.object({
+  provider: z.literal("manual"),
+  asset: z.literal("PI"),
+  network: z.literal("PI_MAIN"),
+});
+
+/** USDT via Binance address; Pi via super-admin receive address (manual review). */
+export const depositIntentSchema = z.discriminatedUnion("asset", [
+  depositUsdtIntent,
+  depositPiIntent,
+]);
 
 export const depositConfirmSchema = z.object({
   txid: z.string().trim().min(8).max(512),
@@ -61,6 +72,15 @@ export const adminCompleteWithdrawalSchema = z.object({
 });
 
 export const adminRejectWithdrawalSchema = z.object({
+  reason: z.string().trim().min(3).max(1000),
+});
+
+export const adminApproveDepositSchema = z.object({
+  amount: z.string().regex(/^\d+(\.\d+)?$/),
+  agentNote: z.string().trim().max(2000).optional(),
+});
+
+export const adminRejectDepositSchema = z.object({
   reason: z.string().trim().min(3).max(1000),
 });
 

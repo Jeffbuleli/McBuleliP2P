@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
-import { getDb, deposits } from "@/db";
+import { and, eq, ne } from "drizzle-orm";
+import { getDb, deposits, txidLedger } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { depositConfirmSchema } from "@/lib/validation";
 import { normalizeTxid } from "@/lib/networks";
-import {
-  applyConfirmedDeposit,
-  markDepositFailed,
-  verifyDepositTx,
-} from "@/lib/deposit-verify";
 import { createUserNotification } from "@/lib/notifications-service";
 import { DepositStatus } from "@/lib/status";
 
@@ -48,107 +43,60 @@ export async function POST(
     );
   }
 
-  await db
-    .update(deposits)
-    .set({ status: DepositStatus.PENDING_VALIDATION })
-    .where(eq(deposits.id, id));
-
-  let result;
-  try {
-    result = await verifyDepositTx(d, txidNorm);
-  } catch (e) {
-    await db
-      .update(deposits)
-      .set({
-        status: DepositStatus.AWAITING_TXID,
-        failureReason:
-          e instanceof Error ? e.message : "Validation error against exchange",
-      })
-      .where(eq(deposits.id, id));
+  const [ledgerDup] = await db
+    .select({ txidNorm: txidLedger.txidNorm })
+    .from(txidLedger)
+    .where(eq(txidLedger.txidNorm, txidNorm))
+    .limit(1);
+  if (ledgerDup) {
     return NextResponse.json(
-      {
-        status: "error",
-        message: e instanceof Error ? e.message : "Exchange lookup failed",
-      },
-      { status: 502 },
+      { status: "rejected", reason: "This TXID was already used." },
+      { status: 409 },
     );
   }
 
-  if (result.ok) {
-    try {
-      await applyConfirmedDeposit({
-        deposit: d,
-        userId,
-        txidNorm,
-        amountStr: result.amount,
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Could not finalize deposit";
-      if (msg.includes("already used")) {
-        return NextResponse.json({ status: "rejected", reason: msg }, { status: 409 });
-      }
-      await db
-        .update(deposits)
-        .set({ status: DepositStatus.AWAITING_TXID, failureReason: msg })
-        .where(eq(deposits.id, id));
-      return NextResponse.json({ status: "error", message: msg }, { status: 500 });
-    }
-    const [done] = await db
-      .select()
-      .from(deposits)
-      .where(eq(deposits.id, id))
-      .limit(1);
-    return NextResponse.json({ status: "confirmed", deposit: done });
+  const [otherDeposit] = await db
+    .select({ id: deposits.id })
+    .from(deposits)
+    .where(
+      and(
+        eq(deposits.txid, txidNorm),
+        ne(deposits.id, id),
+        ne(deposits.status, DepositStatus.FAILED),
+      ),
+    )
+    .limit(1);
+  if (otherDeposit) {
+    return NextResponse.json(
+      { status: "rejected", reason: "This TXID is already linked to another deposit." },
+      { status: 409 },
+    );
   }
 
-  if (result.failed) {
-    await markDepositFailed(id, userId, result.reason);
-    const [failed] = await db
-      .select()
-      .from(deposits)
-      .where(eq(deposits.id, id))
-      .limit(1);
-    return NextResponse.json({
-      status: "failed",
-      reason: result.reason,
-      deposit: failed,
-    });
-  }
+  const pendingMessage =
+    d.asset.toUpperCase() === "PI"
+      ? "TXID received. Our team will verify it on the Pi explorer before crediting your balance."
+      : "TXID received. Our team will verify the transfer before crediting your balance.";
 
-  // For manual PI deposits we accept TXID and keep it pending for staff review.
-  if (d.provider === "manual" && d.asset.toUpperCase() === "PI") {
-    await db
-      .update(deposits)
-      .set({
-        status: DepositStatus.PENDING_VALIDATION,
-        txid: txidNorm,
-        failureReason: result.reason,
-      })
-      .where(eq(deposits.id, id));
-    const [pending] = await db
-      .select()
-      .from(deposits)
-      .where(eq(deposits.id, id))
-      .limit(1);
-    await createUserNotification({
-      userId,
-      kind: "deposit_validation_pending",
-      payload: { depositId: id, asset: d.asset },
-    });
-    return NextResponse.json({ status: "pending", message: result.reason, deposit: pending });
-  }
-
-  await db
+  const [pending] = await db
     .update(deposits)
     .set({
       status: DepositStatus.PENDING_VALIDATION,
-      failureReason: result.reason,
+      txid: txidNorm,
+      failureReason: null,
     })
-    .where(eq(deposits.id, id));
+    .where(eq(deposits.id, id))
+    .returning();
+
   await createUserNotification({
     userId,
     kind: "deposit_validation_pending",
     payload: { depositId: id, asset: d.asset },
   });
-  return NextResponse.json({ status: "pending", message: result.reason });
+
+  return NextResponse.json({
+    status: "pending",
+    message: pendingMessage,
+    deposit: pending,
+  });
 }

@@ -1161,6 +1161,10 @@ export const en = {
   asset_pi_network: "Pi Network",
   deposit_pi_okx_note:
     "Pi deposits are manual. We will show you our receiving address. After you send Pi from your wallet, paste the on-chain TXID so our team can verify it on the public explorer.",
+  deposit_usdt_manual_review_note:
+    "After sending USDT, submit your TXID. Our team verifies the transfer on-chain before crediting your balance.",
+  deposit_pending_review_body:
+    "Your TXID is in the review queue. We will credit your wallet once verified.",
   withdraw_amt_pi: "Net (PI)",
   withdraw_addr_pi_ph: "Pi Network address",
   withdraw_pi_network_only:
@@ -1231,7 +1235,17 @@ export const en = {
   admin_link_app: "App",
   admin_link_roles: "Roles",
   admin_nav_dashboard: "Dashboard",
+  admin_nav_deposits: "Deposits",
   admin_nav_withdrawals: "Withdrawals",
+  admin_nav_pi_settings: "Pi address",
+  admin_deposits_queue: "Deposit review",
+  admin_deposits_pending: "Awaiting review",
+  admin_deposits_done: "Processed",
+  admin_deposits_empty: "No deposits in this filter.",
+  admin_deposits_receive_addr: "Receive address shown",
+  admin_deposits_no_txid: "User has not submitted a TXID yet.",
+  admin_deposits_credit_amount: "Amount to credit",
+  admin_deposits_approve: "Credit balance",
   admin_nav_groups: "Groups",
   admin_nav_p2p: "P2P disputes",
   admin_nav_team: "Team",
@@ -2570,6 +2584,10 @@ export const fr: Messages = {
   asset_pi_network: "Pi Network",
   deposit_pi_okx_note:
     "Les dépôts Pi sont manuels. Nous affichons l’adresse de réception. Après l’envoi depuis votre wallet Pi, collez le TXID on-chain pour vérification sur l’explorer public.",
+  deposit_usdt_manual_review_note:
+    "Après l’envoi USDT, soumettez votre TXID. Notre équipe vérifie le transfert on-chain avant de créditer votre solde.",
+  deposit_pending_review_body:
+    "Votre TXID est en file d’attente. Nous créditerons votre portefeuille après vérification.",
   withdraw_amt_pi: "Net (PI)",
   withdraw_addr_pi_ph: "Adresse Pi Network",
   withdraw_pi_network_only:
@@ -2640,7 +2658,17 @@ export const fr: Messages = {
   admin_link_app: "App",
   admin_link_roles: "Rôles",
   admin_nav_dashboard: "Tableau de bord",
+  admin_nav_deposits: "Dépôts",
   admin_nav_withdrawals: "Retraits",
+  admin_nav_pi_settings: "Adresse Pi",
+  admin_deposits_queue: "Validation dépôts",
+  admin_deposits_pending: "En attente",
+  admin_deposits_done: "Traités",
+  admin_deposits_empty: "Aucun dépôt pour ce filtre.",
+  admin_deposits_receive_addr: "Adresse de réception affichée",
+  admin_deposits_no_txid: "L’utilisateur n’a pas encore soumis de TXID.",
+  admin_deposits_credit_amount: "Montant à créditer",
+  admin_deposits_approve: "Créditer le solde",
   admin_nav_groups: "Groupes",
   admin_nav_p2p: "Litiges P2P",
   admin_nav_team: "Équipe",

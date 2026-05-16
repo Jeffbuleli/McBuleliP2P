@@ -12,6 +12,8 @@ import {
   MIN_DEPOSIT_USDT_SUBSEQUENT,
 } from "@/lib/usdt-deposit-constants";
 import { fmtWalletAmount } from "@/lib/wallet-types";
+import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
+import { getPiReceiveAddressForDeposits } from "@/lib/pi-receive-address";
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -29,6 +31,35 @@ export async function POST(req: Request) {
     );
   }
   const body = parsed.data;
+  const db = getDb();
+
+  if (body.asset === "PI") {
+    const addressShown = await getPiReceiveAddressForDeposits();
+    if (!addressShown) {
+      return NextResponse.json(
+        {
+          message:
+            "Pi deposits require a receiving address (super-admin → Pi settings).",
+        },
+        { status: 503 },
+      );
+    }
+    const [row] = await db
+      .insert(deposits)
+      .values({
+        userId,
+        provider: "manual",
+        asset: "PI",
+        networkCanonical: PI_MAIN_NETWORK_ID,
+        networkCex: "manual",
+        addressShown,
+        memoShown: null,
+        minConfirmations: 1,
+        status: DepositStatus.AWAITING_TRANSFER,
+      })
+      .returning();
+    return NextResponse.json({ deposit: row });
+  }
 
   if (!hasBinanceKeys()) {
     return NextResponse.json(
@@ -41,10 +72,12 @@ export async function POST(req: Request) {
   }
   const declaredNum = Number(body.declaredAmountUsdt);
   if (!Number.isFinite(declaredNum) || declaredNum <= 0) {
-    return NextResponse.json({ message: "deposit_invalid_declared_amount" }, { status: 400 });
+    return NextResponse.json(
+      { message: "deposit_invalid_declared_amount" },
+      { status: 400 },
+    );
   }
 
-  const db = getDb();
   const [{ c }] = await db
     .select({ c: sql<number>`count(*)::int` })
     .from(deposits)

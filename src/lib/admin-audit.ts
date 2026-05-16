@@ -6,6 +6,8 @@ export const PlatformAdminAuditAction = {
   WITHDRAWAL_CLAIM: "withdrawal.claim",
   WITHDRAWAL_COMPLETE: "withdrawal.complete",
   WITHDRAWAL_REJECT: "withdrawal.reject",
+  DEPOSIT_APPROVE: "deposit.approve",
+  DEPOSIT_REJECT: "deposit.reject",
   GROUP_REVIEW: "group.review",
   GROUP_SUBSCRIPTION_BILLING_RUN: "group.subscription_billing_run",
   P2P_DISPUTE_RESOLVE: "p2p.dispute_resolve",

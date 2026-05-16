@@ -72,12 +72,20 @@ export default async function AdminLayout({
             {d.admin_nav_dashboard}
           </Link>
           {showW ? (
-            <Link
-              href="/admin/withdrawals"
-              className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-            >
-              {d.admin_nav_withdrawals}
-            </Link>
+            <>
+              <Link
+                href="/admin/deposits"
+                className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
+              >
+                {d.admin_nav_deposits}
+              </Link>
+              <Link
+                href="/admin/withdrawals"
+                className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
+              >
+                {d.admin_nav_withdrawals}
+              </Link>
+            </>
           ) : null}
           {showG ? (
             <Link
@@ -128,6 +136,12 @@ export default async function AdminLayout({
                 className="rounded-lg border border-stone-600 bg-stone-900/80 px-3 py-2 text-stone-200 hover:border-stone-500"
               >
                 {d.admin_nav_audit}
+              </Link>
+              <Link
+                href="/admin/settings/pi"
+                className="rounded-lg border border-violet-800/40 bg-violet-950/25 px-3 py-2 text-violet-100 hover:border-violet-600/50"
+              >
+                {d.admin_nav_pi_settings}
               </Link>
             </>
           ) : null}

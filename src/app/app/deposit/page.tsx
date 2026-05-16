@@ -12,17 +12,20 @@ import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
+type PickAsset = "USDT" | "PI";
 
 export default function DepositWizardPage() {
   const { t } = useI18n();
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
+  const [asset, setAsset] = useState<PickAsset>("USDT");
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [acceptedRisk, setAcceptedRisk] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enabledUsdt, setEnabledUsdt] = useState<boolean | null>(null);
+  const [enabledPi, setEnabledPi] = useState<boolean | null>(null);
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [userNote, setUserNote] = useState("");
 
@@ -31,29 +34,41 @@ export default function DepositWizardPage() {
       try {
         const res = await fetch("/api/config/deposit-routes");
         const data = await res.json();
-        setEnabledUsdt(Boolean(data.usdtBinance ?? data.enabled));
+        setEnabledUsdt(Boolean(data.usdtBinance));
+        setEnabledPi(Boolean(data.piManual));
       } catch {
         setEnabledUsdt(false);
+        setEnabledPi(false);
       }
     })();
   }, []);
 
   const net = USDT_NETWORKS[network];
+  const anyEnabled = enabledUsdt === true || enabledPi === true;
 
   async function createIntent() {
     setError(null);
     setLoading(true);
     try {
+      const body =
+        asset === "USDT"
+          ? {
+              provider: "binance" as const,
+              asset: "USDT" as const,
+              network,
+              declaredAmountUsdt: declaredAmountUsdt.trim().replace(",", "."),
+              userNote: userNote.trim() || undefined,
+            }
+          : {
+              provider: "manual" as const,
+              asset: "PI" as const,
+              network: "PI_MAIN" as const,
+            };
+
       const res = await fetch("/api/deposits/intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: "binance" as const,
-          asset: "USDT" as const,
-          network,
-          declaredAmountUsdt: declaredAmountUsdt.trim().replace(",", "."),
-          userNote: userNote.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -82,7 +97,10 @@ export default function DepositWizardPage() {
     }
   }
 
-  const confirmLabel = `${network} (${net.label})`;
+  const confirmLabel =
+    asset === "USDT"
+      ? `${network} (${net.label})`
+      : t("asset_pi_network");
 
   return (
     <div className="pb-8 pt-10">
@@ -90,19 +108,48 @@ export default function DepositWizardPage() {
         {t("deposit")}
       </h1>
       <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-        {t("deposit_step")} {step}/2
-      </p>
-      <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-        {t("asset_usdt_full")}
+        {t("deposit_step")} {step}/3
       </p>
 
-      {enabledUsdt === false ? (
+      {!anyEnabled ? (
         <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
           {t("deposit_unavailable")}
         </p>
       ) : null}
 
       {step === 1 && (
+        <section className="mt-8 space-y-4">
+          <p className="font-medium text-stone-800 dark:text-stone-200">
+            {t("deposit_pick_asset")}
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              disabled={enabledUsdt !== true}
+              onClick={() => {
+                setAsset("USDT");
+                setStep(2);
+              }}
+              className="w-full rounded-xl border-2 border-emerald-800 bg-emerald-50 py-4 text-center text-lg font-semibold text-emerald-950 disabled:opacity-45 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-100"
+            >
+              {t("asset_usdt_full")}
+            </button>
+            <button
+              type="button"
+              disabled={enabledPi !== true}
+              onClick={() => {
+                setAsset("PI");
+                setStep(2);
+              }}
+              className="w-full rounded-xl border-2 border-violet-800 bg-violet-50 py-4 text-center text-lg font-semibold text-violet-950 disabled:opacity-45 dark:border-violet-600 dark:bg-violet-950/30 dark:text-violet-100"
+            >
+              {t("asset_pi_network")}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === 2 && asset === "USDT" && (
         <section className="mt-8 space-y-4">
           <p className="font-medium text-stone-800 dark:text-stone-200">
             {t("deposit_network")}
@@ -134,45 +181,78 @@ export default function DepositWizardPage() {
           </div>
           <button
             type="button"
-            onClick={() => setStep(2)}
+            onClick={() => setStep(3)}
             className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white"
           >
             {t("continue")}
           </button>
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
+          >
+            {t("back")}
+          </button>
         </section>
       )}
 
-      {step === 2 && (
+      {step === 2 && asset === "PI" && (
         <section className="mt-8 space-y-4">
-          <label className="block">
-            <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
-              {t("deposit_declared_amount_label")}
-            </span>
-            <input
-              value={declaredAmountUsdt}
-              onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
-              inputMode="decimal"
-              placeholder="20"
-              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-            />
-            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
-              {t("deposit_declared_amount_hint")}
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
-              {t("deposit_user_note_label")}
-            </span>
-            <input
-              value={userNote}
-              onChange={(e) => setUserNote(e.target.value)}
-              placeholder=""
-              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-            />
-            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
-              {t("deposit_user_note_hint")}
-            </span>
-          </label>
+          <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-100">
+            <p className="font-semibold">{t("asset_pi_network")}</p>
+            <p className="mt-2 text-pretty opacity-90">{t("deposit_pi_okx_note")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStep(3)}
+            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white"
+          >
+            {t("continue")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
+          >
+            {t("back")}
+          </button>
+        </section>
+      )}
+
+      {step === 3 && (
+        <section className="mt-8 space-y-4">
+          {asset === "USDT" ? (
+            <>
+              <label className="block">
+                <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                  {t("deposit_declared_amount_label")}
+                </span>
+                <input
+                  value={declaredAmountUsdt}
+                  onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
+                  inputMode="decimal"
+                  placeholder="20"
+                  className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                />
+                <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
+                  {t("deposit_declared_amount_hint")}
+                </span>
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                  {t("deposit_user_note_label")}
+                </span>
+                <input
+                  value={userNote}
+                  onChange={(e) => setUserNote(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                />
+                <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
+                  {t("deposit_user_note_hint")}
+                </span>
+              </label>
+            </>
+          ) : null}
           <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-stone-900 shadow-inner dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-50">
             <p className="text-sm font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
               {t("deposit_warn_title")}
@@ -180,12 +260,19 @@ export default function DepositWizardPage() {
             <p className="mt-3 text-pretty text-sm leading-relaxed">
               {t("deposit_warn_body")}
             </p>
-            <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
-              {t("deposit_usdt_min_rules", {
-                first: String(MIN_DEPOSIT_USDT_FIRST),
-                next: String(MIN_DEPOSIT_USDT_SUBSEQUENT),
-              })}
-            </p>
+            {asset === "USDT" ? (
+              <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
+                {t("deposit_usdt_min_rules", {
+                  first: String(MIN_DEPOSIT_USDT_FIRST),
+                  next: String(MIN_DEPOSIT_USDT_SUBSEQUENT),
+                })}
+              </p>
+            ) : null}
+            {asset === "USDT" ? (
+              <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
+                {t("deposit_usdt_manual_review_note")}
+              </p>
+            ) : null}
           </div>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-300 bg-white p-4 dark:border-stone-600 dark:bg-stone-900">
             <input
@@ -208,9 +295,11 @@ export default function DepositWizardPage() {
             disabled={
               !acceptedRisk ||
               loading ||
-              enabledUsdt !== true ||
-              !declaredAmountUsdt.trim() ||
-              Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0
+              (asset === "USDT" && enabledUsdt !== true) ||
+              (asset === "PI" && enabledPi !== true) ||
+              (asset === "USDT" &&
+                (!declaredAmountUsdt.trim() ||
+                  Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0))
             }
             onClick={() => void createIntent()}
             className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -219,7 +308,7 @@ export default function DepositWizardPage() {
           </button>
           <button
             type="button"
-            onClick={() => setStep(1)}
+            onClick={() => setStep(2)}
             className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
           >
             {t("back")}

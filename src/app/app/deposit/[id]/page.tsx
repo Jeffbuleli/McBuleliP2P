@@ -121,8 +121,8 @@ export default function DepositDetailPage() {
     ? t("deposit_network_pi_main")
     : (net?.label ?? deposit.networkCanonical);
 
-  const showTxid =
-    deposit.status === DepositStatus.AWAITING_TXID ||
+  const showTxid = deposit.status === DepositStatus.AWAITING_TXID;
+  const isPendingReview =
     deposit.status === DepositStatus.PENDING_VALIDATION;
 
   const copy = async (text: string) => {
@@ -238,6 +238,20 @@ export default function DepositDetailPage() {
         >
           {t("deposit_sent")}
         </button>
+      ) : null}
+
+      {isPendingReview ? (
+        <div className="rounded-xl border-2 border-amber-600/60 bg-amber-950/40 p-4 text-amber-50">
+          <p className="font-bold">{t("deposit_status_pending_validation")}</p>
+          <p className="mt-2 text-sm text-amber-100/90">
+            {t("deposit_pending_review_body")}
+          </p>
+          {deposit.txid ? (
+            <p className="mt-3 break-all font-mono text-xs text-stone-300">
+              {deposit.txid}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {showTxid ? (
