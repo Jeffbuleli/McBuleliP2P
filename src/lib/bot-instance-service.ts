@@ -46,6 +46,7 @@ export async function upsertBotInstance(args: {
 }): Promise<BotInstanceRow> {
   const now = new Date();
   const db = getDb();
+  const activating = args.status === "active";
   const [row] = await db
     .insert(botInstances)
     .values({
@@ -55,6 +56,7 @@ export async function upsertBotInstance(args: {
       status: args.status,
       config: args.config,
       updatedAt: now,
+      ...(activating ? { lastExecutedAt: null, lastError: null } : {}),
     })
     .onConflictDoUpdate({
       target: [botInstances.userId, botInstances.planId],
@@ -63,6 +65,9 @@ export async function upsertBotInstance(args: {
         status: args.status,
         config: args.config,
         updatedAt: now,
+        ...(activating
+          ? { lastExecutedAt: null, lastError: null }
+          : {}),
       },
     })
     .returning();
@@ -104,19 +109,44 @@ export async function listActiveBotInstancesForTick(): Promise<
   }));
 }
 
-export async function markBotInstanceExecuted(
-  instanceId: string,
-  error: string | null,
-) {
+/** Successful tick (order placed or grid refreshed). */
+export async function markBotInstanceSuccess(instanceId: string) {
   const db = getDb();
   await db
     .update(botInstances)
     .set({
       lastExecutedAt: new Date(),
+      lastError: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(botInstances.id, instanceId));
+}
+
+/** Binance/config error — does not block the next cron attempt. */
+export async function setBotInstanceError(
+  instanceId: string,
+  error: string,
+) {
+  const db = getDb();
+  await db
+    .update(botInstances)
+    .set({
       lastError: error,
       updatedAt: new Date(),
     })
     .where(eq(botInstances.id, instanceId));
+}
+
+/** @deprecated Use markBotInstanceSuccess / setBotInstanceError */
+export async function markBotInstanceExecuted(
+  instanceId: string,
+  error: string | null,
+) {
+  if (error) {
+    await setBotInstanceError(instanceId, error);
+  } else {
+    await markBotInstanceSuccess(instanceId);
+  }
 }
 
 export async function appendBotExecutionLog(args: {

@@ -8,7 +8,8 @@ import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
 import {
   appendBotExecutionLog,
-  markBotInstanceExecuted,
+  markBotInstanceSuccess,
+  setBotInstanceError,
 } from "@/lib/bot-instance-service";
 import {
   binanceUserSignedDelete,
@@ -50,14 +51,14 @@ export async function tickGridSpotInstance(args: {
 
   const grid = parseBotGridConfig(args.config);
   if (!grid) {
-    await markBotInstanceExecuted(args.instanceId, "Invalid grid config");
+    await setBotInstanceError(args.instanceId, "Invalid grid config");
     return { ran: false, skipped: "invalid_config" };
   }
 
   const env = billingToKeyEnvironment(args.billing);
   const creds = await loadUserBinanceCredentials(args.userId, env);
   if (!creds) {
-    await markBotInstanceExecuted(args.instanceId, "API keys not connected");
+    await setBotInstanceError(args.instanceId, "API keys not connected");
     return { ran: false, skipped: "no_keys" };
   }
 
@@ -71,20 +72,20 @@ export async function tickGridSpotInstance(args: {
 
   const quotePer = Number(grid.quotePerGrid);
   if (!Number.isFinite(quotePer) || quotePer < 10) {
-    await markBotInstanceExecuted(args.instanceId, "quotePerGrid too small");
+    await setBotInstanceError(args.instanceId, "quotePerGrid too small");
     return { ran: false, skipped: "amount_too_small" };
   }
 
   const mid = await fetchBinanceSpotPrice(env, grid.symbol);
   if (!mid) {
-    await markBotInstanceExecuted(args.instanceId, "Could not fetch spot price");
+    await setBotInstanceError(args.instanceId, "Could not fetch spot price");
     return { ran: false, skipped: "price_unavailable" };
   }
 
   const low = Number(grid.priceLow);
   const high = Number(grid.priceHigh);
   if (mid < low || mid > high) {
-    await markBotInstanceExecuted(
+    await setBotInstanceError(
       args.instanceId,
       `Price ${mid} outside grid range ${low}-${high}`,
     );
@@ -134,7 +135,7 @@ export async function tickGridSpotInstance(args: {
       placed.push(order);
     }
 
-    await markBotInstanceExecuted(args.instanceId, null);
+    await markBotInstanceSuccess(args.instanceId);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,
@@ -150,7 +151,7 @@ export async function tickGridSpotInstance(args: {
     return { ran: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Grid refresh failed";
-    await markBotInstanceExecuted(args.instanceId, msg);
+    await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,

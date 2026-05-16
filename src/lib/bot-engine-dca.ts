@@ -5,7 +5,8 @@ import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
 import {
   appendBotExecutionLog,
-  markBotInstanceExecuted,
+  markBotInstanceSuccess,
+  setBotInstanceError,
 } from "@/lib/bot-instance-service";
 import { binanceUserSignedPost } from "@/lib/binance-user-client";
 
@@ -24,14 +25,14 @@ export async function tickDcaSpotInstance(args: {
 
   const dca = parseBotDcaConfig(args.config);
   if (!dca) {
-    await markBotInstanceExecuted(args.instanceId, "Invalid DCA config");
+    await setBotInstanceError(args.instanceId, "Invalid DCA config");
     return { ran: false, skipped: "invalid_config" };
   }
 
   const env = billingToKeyEnvironment(args.billing);
   const creds = await loadUserBinanceCredentials(args.userId, env);
   if (!creds) {
-    await markBotInstanceExecuted(args.instanceId, "API keys not connected");
+    await setBotInstanceError(args.instanceId, "API keys not connected");
     return { ran: false, skipped: "no_keys" };
   }
 
@@ -45,7 +46,7 @@ export async function tickDcaSpotInstance(args: {
 
   const quoteQty = Number(dca.quoteAmountUsdt);
   if (!Number.isFinite(quoteQty) || quoteQty < 5) {
-    await markBotInstanceExecuted(args.instanceId, "quoteAmountUsdt too small");
+    await setBotInstanceError(args.instanceId, "quoteAmountUsdt too small");
     return { ran: false, skipped: "amount_too_small" };
   }
 
@@ -63,7 +64,7 @@ export async function tickDcaSpotInstance(args: {
       },
     });
 
-    await markBotInstanceExecuted(args.instanceId, null);
+    await markBotInstanceSuccess(args.instanceId);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,
@@ -78,7 +79,7 @@ export async function tickDcaSpotInstance(args: {
     return { ran: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "DCA order failed";
-    await markBotInstanceExecuted(args.instanceId, msg);
+    await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,

@@ -8,6 +8,9 @@ import type { Messages } from "@/i18n/messages";
 import {
   BOT_PLAN_DESC_KEY,
   botLogActionLabel,
+  botLogDetailMessage,
+  formatBotRuntimeError,
+  type BotLogRow,
 } from "@/lib/bots-ui-helpers";
 
 type Plan = {
@@ -72,9 +75,11 @@ const PLAN_LABEL: Record<BotPlanId, string> = {
 
 function BotStatusBadge({
   status,
+  lastExecutedAt,
   t,
 }: {
   status: "active" | "paused" | "none";
+  lastExecutedAt?: string | null;
   t: (k: keyof Messages) => string;
 }) {
   if (status === "none") {
@@ -84,17 +89,86 @@ function BotStatusBadge({
       </span>
     );
   }
-  const active = status === "active";
+  if (status === "paused") {
+    return (
+      <span className="rounded-full bg-stone-400 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-stone-600">
+        {t("bots_status_paused")}
+      </span>
+    );
+  }
+  if (!lastExecutedAt) {
+    return (
+      <span className="rounded-full bg-sky-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+        {t("bots_status_waiting")}
+      </span>
+    );
+  }
   return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        active
-          ? "bg-emerald-600 text-white"
-          : "bg-stone-400 text-white dark:bg-stone-600"
-      }`}
-    >
-      {t(active ? "bots_status_active" : "bots_status_paused")}
+    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+      {t("bots_status_active")}
     </span>
+  );
+}
+
+function apiErrorMessage(
+  code: string,
+  t: (k: keyof Messages) => string,
+): string {
+  if (code.startsWith("bots_")) return t(code as keyof Messages);
+  return formatBotRuntimeError(code, t);
+}
+
+function BotActivityMini({
+  planId,
+  logs,
+  t,
+}: {
+  planId: BotPlanId;
+  logs: BotLogRow[];
+  t: (k: keyof Messages) => string;
+}) {
+  const rows = logs.filter((l) => l.planId === planId).slice(0, 8);
+  if (rows.length === 0) return null;
+  return (
+    <div className="mt-4 border-t border-stone-200/80 pt-3 dark:border-stone-700/80">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+        {t("bots_logs_title")}
+      </h3>
+      <ul className="mt-2 max-h-36 space-y-1.5 overflow-y-auto text-sm">
+        {rows.map((l) => {
+          const fail = botLogDetailMessage(l, t);
+          const ok = l.action !== "error";
+          return (
+            <li
+              key={l.id}
+              className={`rounded-lg px-2 py-1.5 text-xs ${
+                ok
+                  ? "bg-stone-50 text-stone-700 dark:bg-stone-800/50 dark:text-stone-300"
+                  : "bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100"
+              }`}
+            >
+              <span className="text-stone-500 dark:text-stone-400">
+                {new Date(l.createdAt).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+              <span className="mx-1">·</span>
+              <span className="font-medium">
+                {ok ? botLogActionLabel(t, l.action) : t("bots_log_failed")}
+              </span>
+              {fail ? (
+                <p className="mt-0.5 leading-snug text-rose-800 dark:text-rose-200">
+                  {fail}
+                </p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -129,9 +203,7 @@ export function BotsTradingClient() {
   const [futSl, setFutSl] = useState(5);
   const [futTp, setFutTp] = useState(10);
   const [futMsg, setFutMsg] = useState<string | null>(null);
-  const [logs, setLogs] = useState<
-    Array<{ id: string; planId: string; action: string; createdAt: string }>
-  >([]);
+  const [logs, setLogs] = useState<BotLogRow[]>([]);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -302,9 +374,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setDcaMsg(
-          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
-        );
+        setDcaMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setDcaMsg(status === "active" ? t("bots_dca_started") : t("bots_dca_paused"));
@@ -402,9 +472,7 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
-        setGridMsg(
-          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
-        );
+        setGridMsg(code ? apiErrorMessage(code, t) : t("bots_err_generic"));
         return;
       }
       setGridMsg(status === "active" ? t("bots_grid_started") : t("bots_grid_paused"));
@@ -473,7 +541,13 @@ export function BotsTradingClient() {
                 <h2 className="text-lg font-bold text-stone-900 dark:text-stone-50">
                   {t(PLAN_LABEL[plan.id] as keyof typeof t)}
                 </h2>
-                {sub ? <BotStatusBadge status={instStatus} t={t} /> : null}
+                {sub ? (
+                  <BotStatusBadge
+                    status={instStatus}
+                    lastExecutedAt={inst?.lastExecutedAt}
+                    t={t}
+                  />
+                ) : null}
               </div>
               <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
                 {t(BOT_PLAN_DESC_KEY[plan.id])}
@@ -602,13 +676,20 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          {dcaInst?.status === "active" && !dcaInst.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
+              {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
           {dcaInst?.lastExecutedAt ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
             </p>
           ) : null}
           {dcaInst?.lastError ? (
-            <p className="mt-1 text-xs text-rose-600">{dcaInst.lastError}</p>
+            <p className="mt-1 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+              {formatBotRuntimeError(dcaInst.lastError, t)}
+            </p>
           ) : null}
           {dcaMsg ? <p className="mt-2 text-sm text-emerald-800">{dcaMsg}</p> : null}
           <div className="mt-4 flex gap-2">
@@ -632,6 +713,7 @@ export function BotsTradingClient() {
           {dcaInst?.status === "active" ? (
             <p className="mt-2 text-xs text-stone-500">{t("bots_dca_cron_note")}</p>
           ) : null}
+          <BotActivityMini planId="dca_spot" logs={logs} t={t} />
         </section>
       ) : null}
 
@@ -643,6 +725,7 @@ export function BotsTradingClient() {
             </h2>
             <BotStatusBadge
               status={gridInst?.status ?? "none"}
+              lastExecutedAt={gridInst?.lastExecutedAt}
               t={t}
             />
           </div>
@@ -714,8 +797,20 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          {gridInst?.status === "active" && !gridInst.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
+              {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
+          {gridInst?.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-stone-500">
+              {t("bots_dca_last_run")}: {new Date(gridInst.lastExecutedAt).toLocaleString()}
+            </p>
+          ) : null}
           {gridInst?.lastError ? (
-            <p className="mt-2 text-xs text-rose-600">{gridInst.lastError}</p>
+            <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+              {formatBotRuntimeError(gridInst.lastError, t)}
+            </p>
           ) : null}
           {gridMsg ? <p className="mt-2 text-sm text-violet-800">{gridMsg}</p> : null}
           <div className="mt-4 flex gap-2">
@@ -736,6 +831,7 @@ export function BotsTradingClient() {
               {t("bots_grid_pause")}
             </button>
           </div>
+          <BotActivityMini planId="grid_spot" logs={logs} t={t} />
         </section>
       ) : null}
 
@@ -747,6 +843,7 @@ export function BotsTradingClient() {
             </h2>
             <BotStatusBadge
               status={futInst?.status ?? "none"}
+              lastExecutedAt={futInst?.lastExecutedAt}
               t={t}
             />
           </div>
@@ -839,8 +936,20 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          {futInst?.status === "active" && !futInst.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
+              {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
+          {futInst?.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-stone-500">
+              {t("bots_dca_last_run")}: {new Date(futInst.lastExecutedAt).toLocaleString()}
+            </p>
+          ) : null}
           {futInst?.lastError ? (
-            <p className="mt-2 text-xs text-rose-600">{futInst.lastError}</p>
+            <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+              {formatBotRuntimeError(futInst.lastError, t)}
+            </p>
           ) : null}
           {futMsg ? <p className="mt-2 text-sm text-amber-900">{futMsg}</p> : null}
           <div className="mt-4 flex gap-2">
@@ -864,30 +973,7 @@ export function BotsTradingClient() {
           {futInst?.status === "active" ? (
             <p className="mt-2 text-xs text-stone-500">{t("bots_futures_cron_note")}</p>
           ) : null}
-        </section>
-      ) : null}
-
-      {logs.length > 0 ? (
-        <section className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
-            {t("bots_logs_title")}
-          </h2>
-          <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto text-sm">
-            {logs.map((l) => (
-              <li
-                key={l.id}
-                className="rounded-lg border border-stone-100 px-2 py-1.5 dark:border-stone-800"
-              >
-                <span className="font-mono text-xs text-stone-500">
-                  {new Date(l.createdAt).toLocaleString()}
-                </span>{" "}
-                <span className="font-medium">
-                  {t(PLAN_LABEL[l.planId as BotPlanId] as keyof Messages)}
-                </span>{" "}
-                · {botLogActionLabel(t, l.action)}
-              </li>
-            ))}
-          </ul>
+          <BotActivityMini planId="futures_um" logs={logs} t={t} />
         </section>
       ) : null}
 
