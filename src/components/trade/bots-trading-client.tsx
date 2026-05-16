@@ -7,11 +7,15 @@ import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
 import {
   BOT_PLAN_DESC_KEY,
-  botLogActionLabel,
-  botLogDetailMessage,
   formatBotRuntimeError,
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
+import { BotPositionsPanel } from "@/components/trade/bot-positions-panel";
+import {
+  BotPlanIcon,
+  BotStrategyTabBar,
+  TAB_STYLES,
+} from "@/components/trade/bot-strategy-icons";
 
 type Plan = {
   id: BotPlanId;
@@ -262,60 +266,6 @@ function smartConfigFields(s: SmartUiState) {
   };
 }
 
-function BotActivityMini({
-  planId,
-  logs,
-  t,
-}: {
-  planId: BotPlanId;
-  logs: BotLogRow[];
-  t: (k: keyof Messages) => string;
-}) {
-  const rows = logs.filter((l) => l.planId === planId).slice(0, 8);
-  if (rows.length === 0) return null;
-  return (
-    <div className="mt-4 border-t border-stone-200/80 pt-3 dark:border-stone-700/80">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-        {t("bots_logs_title")}
-      </h3>
-      <ul className="mt-2 max-h-36 space-y-1.5 overflow-y-auto text-sm">
-        {rows.map((l) => {
-          const fail = botLogDetailMessage(l, t);
-          const ok = l.action !== "error";
-          return (
-            <li
-              key={l.id}
-              className={`rounded-lg px-2 py-1.5 text-xs ${
-                ok
-                  ? "bg-stone-50 text-stone-700 dark:bg-stone-800/50 dark:text-stone-300"
-                  : "bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100"
-              }`}
-            >
-              <span className="text-stone-500 dark:text-stone-400">
-                {new Date(l.createdAt).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-              <span className="mx-1">·</span>
-              <span className="font-medium">
-                {ok ? botLogActionLabel(t, l.action) : t("bots_log_failed")}
-              </span>
-              {fail ? (
-                <p className="mt-0.5 leading-snug text-rose-800 dark:text-rose-200">
-                  {fail}
-                </p>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
 export function BotsTradingClient() {
   const { t } = useI18n();
   const [data, setData] = useState<Overview | null>(null);
@@ -363,6 +313,18 @@ export function BotsTradingClient() {
     timeframe: "1h",
   });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
+  const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
+
+  const loadLogs = useCallback(async (planId: BotPlanId) => {
+    const logRes = await fetch(
+      `/api/trade/bots/logs?planId=${planId}`,
+      { cache: "no-store" },
+    );
+    const logJson = await logRes.json().catch(() => ({}));
+    if (logRes.ok && Array.isArray(logJson.logs)) {
+      setLogs(logJson.logs);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -374,12 +336,11 @@ export function BotsTradingClient() {
       return;
     }
     setData(json as Overview);
-    const logRes = await fetch("/api/trade/bots/logs", { cache: "no-store" });
-    const logJson = await logRes.json().catch(() => ({}));
-    if (logRes.ok && Array.isArray(logJson.logs)) {
-      setLogs(logJson.logs);
-    }
   }, []);
+
+  useEffect(() => {
+    if (data) void loadLogs(activeTab);
+  }, [data, activeTab, loadLogs]);
 
   useEffect(() => {
     void load();
@@ -493,12 +454,18 @@ export function BotsTradingClient() {
   }
 
   function startWizard(planId: BotPlanId) {
+    setActiveTab(planId);
     setWizardPlan(planId);
     setWizardBilling("demo");
     setWizardStep(1);
     setConnectMsg(null);
     setApiKey("");
     setApiSecret("");
+  }
+
+  async function reloadAfterSave() {
+    await load();
+    await loadLogs(activeTab);
   }
 
   function activeSub(planId: BotPlanId) {
@@ -541,7 +508,7 @@ export function BotsTradingClient() {
         return;
       }
       setDcaMsg(status === "active" ? t("bots_dca_started") : t("bots_dca_paused"));
-      await load();
+      await reloadAfterSave();
     } finally {
       setBusy(false);
     }
@@ -601,7 +568,7 @@ export function BotsTradingClient() {
       setFutMsg(
         status === "active" ? t("bots_futures_started") : t("bots_futures_paused"),
       );
-      await load();
+      await reloadAfterSave();
     } finally {
       setBusy(false);
     }
@@ -638,7 +605,7 @@ export function BotsTradingClient() {
         return;
       }
       setGridMsg(status === "active" ? t("bots_grid_started") : t("bots_grid_paused"));
-      await load();
+      await reloadAfterSave();
     } finally {
       setBusy(false);
     }
@@ -687,61 +654,35 @@ export function BotsTradingClient() {
         </div>
       </header>
 
-      <section className="grid gap-4">
-        {data.plans.map((plan) => {
-          const sub = activeSub(plan.id);
-          const inst = instanceFor(plan.id);
-          const instStatus: "active" | "paused" | "none" = inst
-            ? inst.status
-            : "none";
-          return (
-            <article
-              key={plan.id}
-              className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-50">
-                  {t(PLAN_LABEL[plan.id] as keyof typeof t)}
-                </h2>
-                {sub ? (
-                  <BotStatusBadge
-                    status={instStatus}
-                    lastExecutedAt={inst?.lastExecutedAt}
-                    t={t}
-                  />
-                ) : null}
-              </div>
-              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                {t(BOT_PLAN_DESC_KEY[plan.id])}
-              </p>
-              <p className="mt-1 text-xs text-stone-500 dark:text-stone-500">
-                {t("bots_price_line", {
-                  demo: String(plan.demoPriceUsdt),
-                  live: String(plan.livePriceUsdt),
-                })}
-              </p>
-              {sub ? (
-                <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  {t("bots_active_until", {
-                    billing: sub.billing === "demo" ? t("bots_billing_demo") : t("bots_billing_live"),
-                    date: new Date(sub.expiresAt).toLocaleDateString(),
-                  })}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => startWizard(plan.id)}
-                className="mt-4 w-full rounded-xl bg-violet-700 py-2.5 text-sm font-semibold text-white"
-              >
-                {sub ? t("bots_connect_keys") : t("bots_get_started")}
-              </button>
-            </article>
-          );
-        })}
-      </section>
+      <BotStrategyTabBar
+        active={activeTab}
+        onSelect={setActiveTab}
+        labels={{
+          dca_spot: t("bots_tab_dca"),
+          grid_spot: t("bots_tab_grid"),
+          futures_um: t("bots_tab_futures"),
+        }}
+      />
 
-      {dcaSub && !dcaKeysOk ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+
+      {activeTab === "dca_spot" && !dcaSub ? (
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
+          <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-emerald-600" />
+          <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            {t(BOT_PLAN_DESC_KEY.dca_spot)}
+          </p>
+          <button
+            type="button"
+            onClick={() => startWizard("dca_spot")}
+            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
+          >
+            {t("bots_subscribe_cta")}
+          </button>
+        </section>
+      ) : null}
+
+      {activeTab === "dca_spot" && dcaSub && !dcaKeysOk ? (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
           <p className="text-sm text-amber-950 dark:text-amber-100">
             {t("bots_keys_required_spot")}
           </p>
@@ -755,8 +696,8 @@ export function BotsTradingClient() {
         </div>
       ) : null}
 
-      {gridSub && !gridKeysOk ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+      {activeTab === "grid_spot" && gridSub && !gridKeysOk ? (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
           <p className="text-sm text-amber-950 dark:text-amber-100">
             {t("bots_keys_required_spot")}
           </p>
@@ -770,8 +711,21 @@ export function BotsTradingClient() {
         </div>
       ) : null}
 
-      {futSub && !futKeysOk ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+      {activeTab === "grid_spot" && !gridSub ? (
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
+          <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-600" />
+          <button
+            type="button"
+            onClick={() => startWizard("grid_spot")}
+            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
+          >
+            {t("bots_subscribe_cta")}
+          </button>
+        </section>
+      ) : null}
+
+      {activeTab === "futures_um" && futSub && !futKeysOk ? (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
           <p className="text-sm text-amber-950 dark:text-amber-100">
             {t("bots_keys_required_futures")}
           </p>
@@ -785,8 +739,21 @@ export function BotsTradingClient() {
         </div>
       ) : null}
 
-      {dcaSub && dcaKeysOk ? (
-        <section className="rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+      {activeTab === "futures_um" && !futSub ? (
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
+          <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-600" />
+          <button
+            type="button"
+            onClick={() => startWizard("futures_um")}
+            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
+          >
+            {t("bots_subscribe_cta")}
+          </button>
+        </section>
+      ) : null}
+
+      {activeTab === "dca_spot" && dcaSub && dcaKeysOk ? (
+        <section className="mt-4 rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
               {t("bots_dca_config_title")}
@@ -883,12 +850,12 @@ export function BotsTradingClient() {
           {dcaInst?.status === "active" ? (
             <p className="mt-2 text-xs text-stone-500">{t("bots_dca_cron_note")}</p>
           ) : null}
-          <BotActivityMini planId="dca_spot" logs={logs} t={t} />
+          <BotPositionsPanel planId="dca_spot" logs={logs} keysOk t={t} />
         </section>
       ) : null}
 
-      {gridSub && gridKeysOk ? (
-        <section className="rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
+      {activeTab === "grid_spot" && gridSub && gridKeysOk ? (
+        <section className="mt-4 rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
               {t("bots_grid_config_title")}
@@ -1009,12 +976,12 @@ export function BotsTradingClient() {
               {t("bots_grid_pause")}
             </button>
           </div>
-          <BotActivityMini planId="grid_spot" logs={logs} t={t} />
+          <BotPositionsPanel planId="grid_spot" logs={logs} keysOk t={t} />
         </section>
       ) : null}
 
-      {futSub && futKeysOk ? (
-        <section className="rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
+      {activeTab === "futures_um" && futSub && futKeysOk ? (
+        <section className="mt-4 rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
               {t("bots_futures_config_title")}
@@ -1159,7 +1126,7 @@ export function BotsTradingClient() {
           {futInst?.status === "active" ? (
             <p className="mt-2 text-xs text-stone-500">{t("bots_futures_cron_note")}</p>
           ) : null}
-          <BotActivityMini planId="futures_um" logs={logs} t={t} />
+          <BotPositionsPanel planId="futures_um" logs={logs} keysOk t={t} />
         </section>
       ) : null}
 

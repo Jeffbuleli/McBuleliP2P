@@ -22,6 +22,7 @@ const SMART_ERROR_I18N: Record<string, keyof Messages> = {
   smart_signal_blocks_long: "bots_smart_blocks_long",
   smart_signal_blocks_short: "bots_smart_blocks_short",
   smart_signal_blocks_buy: "bots_smart_blocks_buy",
+  bots_positions_fetch_failed: "bots_positions_fetch_failed",
 };
 
 const SERVER_ERROR_I18N: Record<string, keyof Messages> = {
@@ -60,7 +61,7 @@ export function formatBotRuntimeError(
   if (!raw?.trim()) return t("bots_err_generic");
 
   const s = raw.trim();
-  if (s.startsWith("smart_")) {
+  if (s.startsWith("smart_") || s.startsWith("bots_positions_")) {
     const mapped = SMART_ERROR_I18N[s];
     if (mapped) return t(mapped);
   }
