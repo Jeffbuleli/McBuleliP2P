@@ -47,6 +47,7 @@ type Overview = {
   subscriptions: Subscription[];
   instances: BotInstance[];
   dcaOptions: { symbols: string[]; intervalHours: number[] };
+  gridOptions: { symbols: string[]; refreshHours: number[] };
   tradeMode: {
     demoUsdt: string;
     tradeLiveEnabled: boolean;
@@ -76,6 +77,16 @@ export function BotsTradingClient() {
   const [dcaAmount, setDcaAmount] = useState("20");
   const [dcaInterval, setDcaInterval] = useState(24);
   const [dcaMsg, setDcaMsg] = useState<string | null>(null);
+  const [gridSymbol, setGridSymbol] = useState("BTCUSDT");
+  const [gridLow, setGridLow] = useState("90000");
+  const [gridHigh, setGridHigh] = useState("100000");
+  const [gridCount, setGridCount] = useState(5);
+  const [gridQuote, setGridQuote] = useState("15");
+  const [gridRefresh, setGridRefresh] = useState(12);
+  const [gridMsg, setGridMsg] = useState<string | null>(null);
+  const [logs, setLogs] = useState<
+    Array<{ id: string; planId: string; action: string; createdAt: string }>
+  >([]);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -87,6 +98,11 @@ export function BotsTradingClient() {
       return;
     }
     setData(json as Overview);
+    const logRes = await fetch("/api/trade/bots/logs", { cache: "no-store" });
+    const logJson = await logRes.json().catch(() => ({}));
+    if (logRes.ok && Array.isArray(logJson.logs)) {
+      setLogs(logJson.logs);
+    }
   }, []);
 
   useEffect(() => {
@@ -103,6 +119,22 @@ export function BotsTradingClient() {
     if (cfg?.symbol) setDcaSymbol(cfg.symbol);
     if (cfg?.quoteAmountUsdt) setDcaAmount(cfg.quoteAmountUsdt);
     if (cfg?.intervalHours) setDcaInterval(cfg.intervalHours);
+
+    const ginst = data?.instances.find((i) => i.planId === "grid_spot");
+    const gcfg = ginst?.config as {
+      symbol?: string;
+      priceLow?: string;
+      priceHigh?: string;
+      gridCount?: number;
+      quotePerGrid?: string;
+      refreshHours?: number;
+    } | undefined;
+    if (gcfg?.symbol) setGridSymbol(gcfg.symbol);
+    if (gcfg?.priceLow) setGridLow(gcfg.priceLow);
+    if (gcfg?.priceHigh) setGridHigh(gcfg.priceHigh);
+    if (gcfg?.gridCount) setGridCount(gcfg.gridCount);
+    if (gcfg?.quotePerGrid) setGridQuote(gcfg.quotePerGrid);
+    if (gcfg?.refreshHours) setGridRefresh(gcfg.refreshHours);
   }, [data?.instances]);
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
@@ -225,6 +257,51 @@ export function BotsTradingClient() {
     dcaSub &&
     credFor(dcaSub.billing)?.spotOk &&
     credFor(dcaSub.billing)?.validatedAt;
+
+  const gridSub = activeSub("grid_spot");
+  const gridInst = instanceFor("grid_spot");
+  const gridKeysOk =
+    gridSub &&
+    credFor(gridSub.billing)?.spotOk &&
+    credFor(gridSub.billing)?.validatedAt;
+
+  async function saveGrid(status: "active" | "paused") {
+    const sub = activeSub("grid_spot");
+    if (!sub) return;
+    setBusy(true);
+    setGridMsg(null);
+    try {
+      const res = await fetch("/api/trade/bots/instance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: "grid_spot",
+          billing: sub.billing,
+          status,
+          config: {
+            symbol: gridSymbol,
+            priceLow: gridLow.trim().replace(",", "."),
+            priceHigh: gridHigh.trim().replace(",", "."),
+            gridCount,
+            quotePerGrid: gridQuote.trim().replace(",", "."),
+            refreshHours: gridRefresh,
+          },
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = typeof json.error === "string" ? json.error : "";
+        setGridMsg(
+          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
+        );
+        return;
+      }
+      setGridMsg(status === "active" ? t("bots_grid_started") : t("bots_grid_paused"));
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (!data) {
     return (
@@ -364,6 +441,125 @@ export function BotsTradingClient() {
           {dcaInst?.status === "active" ? (
             <p className="mt-2 text-xs text-stone-500">{t("bots_dca_cron_note")}</p>
           ) : null}
+        </section>
+      ) : null}
+
+      {gridSub && gridKeysOk ? (
+        <section className="rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
+          <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
+            {t("bots_grid_config_title")}
+          </h2>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            {t("bots_grid_config_hint")}
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-medium sm:col-span-2">
+              {t("bots_dca_symbol")}
+              <select
+                value={gridSymbol}
+                onChange={(e) => setGridSymbol(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.gridOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_grid_low")}
+              <input
+                value={gridLow}
+                onChange={(e) => setGridLow(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_grid_high")}
+              <input
+                value={gridHigh}
+                onChange={(e) => setGridHigh(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_grid_count")}
+              <input
+                type="number"
+                min={3}
+                max={15}
+                value={gridCount}
+                onChange={(e) => setGridCount(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_grid_quote")}
+              <input
+                value={gridQuote}
+                onChange={(e) => setGridQuote(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium sm:col-span-2">
+              {t("bots_grid_refresh")}
+              <select
+                value={gridRefresh}
+                onChange={(e) => setGridRefresh(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.gridOptions?.refreshHours ?? [12]).map((h) => (
+                  <option key={h} value={h}>
+                    {h}h
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {gridInst?.lastError ? (
+            <p className="mt-2 text-xs text-rose-600">{gridInst.lastError}</p>
+          ) : null}
+          {gridMsg ? <p className="mt-2 text-sm text-violet-800">{gridMsg}</p> : null}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveGrid("active")}
+              className="flex-1 rounded-xl bg-violet-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {t("bots_grid_start")}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveGrid("paused")}
+              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
+            >
+              {t("bots_grid_pause")}
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {logs.length > 0 ? (
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
+            {t("bots_logs_title")}
+          </h2>
+          <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto text-sm">
+            {logs.map((l) => (
+              <li
+                key={l.id}
+                className="rounded-lg border border-stone-100 px-2 py-1.5 dark:border-stone-800"
+              >
+                <span className="font-mono text-xs text-stone-500">
+                  {new Date(l.createdAt).toLocaleString()}
+                </span>{" "}
+                <span className="font-medium">{l.planId}</span> · {l.action}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

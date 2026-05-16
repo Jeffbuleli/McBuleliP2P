@@ -1022,7 +1022,8 @@ export const en = {
   bots_error_binance_generic: "Binance rejected the API keys. Check key, secret, environment (demo=testnet), and permissions.",
   bots_subscription_required: "Active subscription required for this plan.",
   bots_invalid_dca_config: "Invalid DCA settings.",
-  bots_strategy_not_implemented: "This strategy is not available yet — DCA Spot only for now.",
+  bots_strategy_not_implemented:
+    "Futures UM bot is not available yet — use DCA Spot or Grid Spot.",
   bots_dca_config_title: "DCA Spot configuration",
   bots_dca_config_hint:
     "Market buys on your Binance account at the chosen interval. Requires cron job on the server.",
@@ -1036,6 +1037,20 @@ export const en = {
   bots_dca_last_run: "Last run",
   bots_dca_cron_note:
     "Server cron must call POST /api/internal/bots/tick every few minutes (same CRON_SECRET as futures-risk).",
+  bots_invalid_grid_config: "Invalid grid settings.",
+  bots_grid_config_title: "Grid Spot configuration",
+  bots_grid_config_hint:
+    "Places limit BUY orders below the current price inside your range. Refreshes on the chosen interval (cancels and replaces orders).",
+  bots_grid_low: "Price low (USDT)",
+  bots_grid_high: "Price high (USDT)",
+  bots_grid_count: "Grid lines",
+  bots_grid_quote: "USDT per order",
+  bots_grid_refresh: "Refresh interval",
+  bots_grid_start: "Start grid",
+  bots_grid_pause: "Pause grid",
+  bots_grid_started: "Grid bot active.",
+  bots_grid_paused: "Grid bot paused.",
+  bots_logs_title: "Recent bot activity",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
@@ -2500,7 +2515,7 @@ export const fr: Messages = {
   bots_subscription_required: "Abonnement actif requis pour ce plan.",
   bots_invalid_dca_config: "Paramètres DCA invalides.",
   bots_strategy_not_implemented:
-    "Cette stratégie n’est pas encore disponible — DCA Spot uniquement pour l’instant.",
+    "Le bot Futures UM n’est pas encore disponible — utilisez DCA Spot ou Grille Spot.",
   bots_dca_config_title: "Configuration DCA Spot",
   bots_dca_config_hint:
     "Achats market sur votre compte Binance à l’intervalle choisi. Nécessite un cron sur le serveur.",
@@ -2514,6 +2529,20 @@ export const fr: Messages = {
   bots_dca_last_run: "Dernière exécution",
   bots_dca_cron_note:
     "Le cron serveur doit appeler POST /api/internal/bots/tick toutes les quelques minutes (même CRON_SECRET que futures-risk).",
+  bots_invalid_grid_config: "Paramètres grille invalides.",
+  bots_grid_config_title: "Configuration Grille Spot",
+  bots_grid_config_hint:
+    "Place des ordres limit BUY sous le prix actuel dans votre fourchette. Rafraîchit à l’intervalle choisi (annule et recrée les ordres).",
+  bots_grid_low: "Prix bas (USDT)",
+  bots_grid_high: "Prix haut (USDT)",
+  bots_grid_count: "Nombre de lignes",
+  bots_grid_quote: "USDT par ordre",
+  bots_grid_refresh: "Intervalle de rafraîchissement",
+  bots_grid_start: "Démarrer la grille",
+  bots_grid_pause: "Pause grille",
+  bots_grid_started: "Grille active.",
+  bots_grid_paused: "Grille en pause.",
+  bots_logs_title: "Activité récente des bots",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { BOT_PLANS, type BotPlanId } from "@/lib/bot-config";
 import { botDcaConfigSchema } from "@/lib/bot-dca-config";
+import { botGridConfigSchema } from "@/lib/bot-grid-config";
 import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
 import {
   listUserBotInstances,
@@ -52,6 +53,14 @@ export async function POST(req: Request) {
     if (!dcaParsed.success) {
       return NextResponse.json(
         { error: "bots_invalid_dca_config" },
+        { status: 400 },
+      );
+    }
+  } else if (planId === "grid_spot") {
+    const gridParsed = botGridConfigSchema.safeParse(config);
+    if (!gridParsed.success) {
+      return NextResponse.json(
+        { error: "bots_invalid_grid_config" },
         { status: 400 },
       );
     }

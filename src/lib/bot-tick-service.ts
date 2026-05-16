@@ -1,5 +1,6 @@
 import { listActiveBotInstancesForTick } from "@/lib/bot-instance-service";
 import { tickDcaSpotInstance } from "@/lib/bot-engine-dca";
+import { tickGridSpotInstance } from "@/lib/bot-engine-grid";
 
 export async function runBotsTick(): Promise<{
   instances: number;
@@ -16,6 +17,19 @@ export async function runBotsTick(): Promise<{
     try {
       if (inst.planId === "dca_spot") {
         const r = await tickDcaSpotInstance({
+          instanceId: inst.id,
+          userId: inst.userId,
+          planId: inst.planId,
+          billing: inst.billing,
+          config: inst.config,
+          lastExecutedAt: inst.lastExecutedAt,
+        });
+        if (r.ran) executed += 1;
+        else skipped += 1;
+        continue;
+      }
+      if (inst.planId === "grid_spot") {
+        const r = await tickGridSpotInstance({
           instanceId: inst.id,
           userId: inst.userId,
           planId: inst.planId,

@@ -87,3 +87,48 @@ export async function binanceUserSignedPost(args: {
   }
   return json;
 }
+
+export async function binanceUserSignedDelete(args: {
+  environment: BotEnvironment;
+  creds: StoredBinanceCredentials;
+  market: "spot" | "futures";
+  path: string;
+  params: Record<string, string>;
+}): Promise<unknown> {
+  const bases = binanceEndpointsFor(args.environment);
+  const base =
+    args.market === "spot" ? bases.spotRest : bases.futuresRest;
+  const merged = withTimestamp(args.params);
+  const qs = sortedQueryString(merged);
+  const signature = sign(qs, args.creds.apiSecret);
+  const url = `${base}${args.path}?${qs}&signature=${signature}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: { "X-MBX-APIKEY": args.creds.apiKey },
+    cache: "no-store",
+  });
+  const json = (await res.json()) as unknown;
+  if (!res.ok) {
+    const err = new Error(
+      `Binance ${args.market} HTTP ${res.status}: ${JSON.stringify(json)}`,
+    );
+    (err as Error & { binanceBody?: unknown }).binanceBody = json;
+    throw err;
+  }
+  return json;
+}
+
+export async function fetchBinanceSpotPrice(
+  environment: BotEnvironment,
+  symbol: string,
+): Promise<number | null> {
+  const base = binanceEndpointsFor(environment).spotRest;
+  const res = await fetch(
+    `${base}/api/v3/ticker/price?symbol=${symbol.toUpperCase()}`,
+    { cache: "no-store" },
+  );
+  const json = (await res.json()) as { price?: string };
+  if (!res.ok) return null;
+  const n = Number(json.price);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}

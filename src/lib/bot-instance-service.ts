@@ -2,6 +2,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb, botInstances, botExecutionLog } from "@/db";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
+import { parseBotGridConfig } from "@/lib/bot-grid-config";
 
 export type BotInstanceRow = {
   id: string;
@@ -144,5 +145,46 @@ export function validateInstanceConfig(
     }
     return { ok: true };
   }
+  if (planId === "grid_spot") {
+    if (!parseBotGridConfig(config)) {
+      return { ok: false, message: "bots_invalid_grid_config" };
+    }
+    return { ok: true };
+  }
   return { ok: false, message: "bots_strategy_not_implemented" };
+}
+
+export async function listBotExecutionLogs(
+  userId: string,
+  planId?: BotPlanId,
+  limit = 30,
+) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: botExecutionLog.id,
+      planId: botExecutionLog.planId,
+      action: botExecutionLog.action,
+      detail: botExecutionLog.detail,
+      createdAt: botExecutionLog.createdAt,
+    })
+    .from(botExecutionLog)
+    .where(
+      planId
+        ? and(
+            eq(botExecutionLog.userId, userId),
+            eq(botExecutionLog.planId, planId),
+          )
+        : eq(botExecutionLog.userId, userId),
+    )
+    .orderBy(desc(botExecutionLog.createdAt))
+    .limit(Math.min(limit, 100));
+
+  return rows.map((r) => ({
+    id: r.id,
+    planId: r.planId,
+    action: r.action,
+    detail: r.detail,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }
