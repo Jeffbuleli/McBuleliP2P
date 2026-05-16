@@ -11,6 +11,7 @@ import {
   formatBotRuntimeError,
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
+import { BotActivityMonitor } from "@/components/trade/bot-activity-monitor";
 import { BotPositionsPanel } from "@/components/trade/bot-positions-panel";
 import {
   BotPlanIcon,
@@ -701,6 +702,8 @@ export function BotsTradingClient() {
           futures_um: t("bots_tab_futures"),
         }}
       />
+
+      <BotActivityMonitor />
 
       {data.isSuperAdmin ? (
         <p className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm text-violet-950 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100">
