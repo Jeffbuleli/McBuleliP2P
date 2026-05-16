@@ -1163,6 +1163,54 @@ export const userBinanceApiCredentials = pgTable(
   ],
 );
 
+/** User bot strategy config (one row per plan). */
+export const botInstances = pgTable(
+  "bot_instances",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: varchar("plan_id", { length: 32 }).notNull(),
+    billing: varchar("billing", { length: 8 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("paused"),
+    config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+    lastExecutedAt: timestamp("last_executed_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("bot_instances_user_plan_uidx").on(t.userId, t.planId),
+  ],
+);
+
+export const botExecutionLog = pgTable(
+  "bot_execution_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    instanceId: uuid("instance_id")
+      .notNull()
+      .references(() => botInstances.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: varchar("plan_id", { length: 32 }).notNull(),
+    action: varchar("action", { length: 32 }).notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("bot_execution_log_instance_idx").on(t.instanceId, t.createdAt),
+  ],
+);
+
 /** Paid bot plan (DCA / Grid / Futures) — demo or live billing. */
 export const botSubscriptions = pgTable(
   "bot_subscriptions",

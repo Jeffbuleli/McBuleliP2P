@@ -155,6 +155,13 @@
       "when": 1779600000000,
       "tag": "0024_trading_bots",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1779700000000,
+      "tag": "0025_bot_instances",
+      "breakpoints": true
     }
   ]
 }

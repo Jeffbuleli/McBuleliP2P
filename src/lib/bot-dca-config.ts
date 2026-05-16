@@ -1,0 +1,22 @@
+import { z } from "zod";
+
+export const BOT_DCA_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
+export const BOT_DCA_INTERVAL_HOURS = [1, 4, 12, 24] as const;
+
+export const botDcaConfigSchema = z.object({
+  symbol: z.enum(BOT_DCA_SYMBOLS),
+  quoteAmountUsdt: z.string().regex(/^\d+(\.\d+)?$/),
+  intervalHours: z.union([
+    z.literal(1),
+    z.literal(4),
+    z.literal(12),
+    z.literal(24),
+  ]),
+});
+
+export type BotDcaConfig = z.infer<typeof botDcaConfigSchema>;
+
+export function parseBotDcaConfig(raw: unknown): BotDcaConfig | null {
+  const parsed = botDcaConfigSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}

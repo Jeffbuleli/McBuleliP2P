@@ -1020,6 +1020,22 @@ export const en = {
   bots_error_ip_restrict:
     "Binance rejected the request (IP restriction). Whitelist your server IP in API settings or disable IP lock for testing.",
   bots_error_binance_generic: "Binance rejected the API keys. Check key, secret, environment (demo=testnet), and permissions.",
+  bots_subscription_required: "Active subscription required for this plan.",
+  bots_invalid_dca_config: "Invalid DCA settings.",
+  bots_strategy_not_implemented: "This strategy is not available yet — DCA Spot only for now.",
+  bots_dca_config_title: "DCA Spot configuration",
+  bots_dca_config_hint:
+    "Market buys on your Binance account at the chosen interval. Requires cron job on the server.",
+  bots_dca_symbol: "Pair",
+  bots_dca_amount: "USDT per buy",
+  bots_dca_interval: "Interval",
+  bots_dca_start: "Start bot",
+  bots_dca_pause: "Pause",
+  bots_dca_started: "DCA bot is active.",
+  bots_dca_paused: "DCA bot paused.",
+  bots_dca_last_run: "Last run",
+  bots_dca_cron_note:
+    "Server cron must call POST /api/internal/bots/tick every few minutes (same CRON_SECRET as futures-risk).",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
@@ -2481,6 +2497,23 @@ export const fr: Messages = {
     "Binance a refusé (restriction IP). Ajoutez l’IP du serveur dans l’API ou désactivez le verrou IP pour tester.",
   bots_error_binance_generic:
     "Clés refusées par Binance. Vérifiez clé, secret, environnement (démo=testnet) et permissions.",
+  bots_subscription_required: "Abonnement actif requis pour ce plan.",
+  bots_invalid_dca_config: "Paramètres DCA invalides.",
+  bots_strategy_not_implemented:
+    "Cette stratégie n’est pas encore disponible — DCA Spot uniquement pour l’instant.",
+  bots_dca_config_title: "Configuration DCA Spot",
+  bots_dca_config_hint:
+    "Achats market sur votre compte Binance à l’intervalle choisi. Nécessite un cron sur le serveur.",
+  bots_dca_symbol: "Paire",
+  bots_dca_amount: "USDT par achat",
+  bots_dca_interval: "Intervalle",
+  bots_dca_start: "Démarrer le bot",
+  bots_dca_pause: "Pause",
+  bots_dca_started: "Bot DCA actif.",
+  bots_dca_paused: "Bot DCA en pause.",
+  bots_dca_last_run: "Dernière exécution",
+  bots_dca_cron_note:
+    "Le cron serveur doit appeler POST /api/internal/bots/tick toutes les quelques minutes (même CRON_SECRET que futures-risk).",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",

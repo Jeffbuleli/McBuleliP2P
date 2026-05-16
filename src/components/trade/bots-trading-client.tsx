@@ -31,10 +31,22 @@ type Subscription = {
   expiresAt: string;
 };
 
+type BotInstance = {
+  id: string;
+  planId: BotPlanId;
+  billing: "demo" | "live";
+  status: "active" | "paused";
+  config: Record<string, unknown>;
+  lastExecutedAt: string | null;
+  lastError: string | null;
+};
+
 type Overview = {
   plans: Plan[];
   credentials: Credential[];
   subscriptions: Subscription[];
+  instances: BotInstance[];
+  dcaOptions: { symbols: string[]; intervalHours: number[] };
   tradeMode: {
     demoUsdt: string;
     tradeLiveEnabled: boolean;
@@ -60,6 +72,10 @@ export function BotsTradingClient() {
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
   const [connectMsg, setConnectMsg] = useState<string | null>(null);
+  const [dcaSymbol, setDcaSymbol] = useState("BTCUSDT");
+  const [dcaAmount, setDcaAmount] = useState("20");
+  const [dcaInterval, setDcaInterval] = useState(24);
+  const [dcaMsg, setDcaMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -76,6 +92,18 @@ export function BotsTradingClient() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const inst = data?.instances.find((i) => i.planId === "dca_spot");
+    const cfg = inst?.config as {
+      symbol?: string;
+      quoteAmountUsdt?: string;
+      intervalHours?: number;
+    } | undefined;
+    if (cfg?.symbol) setDcaSymbol(cfg.symbol);
+    if (cfg?.quoteAmountUsdt) setDcaAmount(cfg.quoteAmountUsdt);
+    if (cfg?.intervalHours) setDcaInterval(cfg.intervalHours);
+  }, [data?.instances]);
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
     setBusy(true);
@@ -152,6 +180,52 @@ export function BotsTradingClient() {
     return data?.credentials.find((c) => c.environment === env);
   }
 
+  function instanceFor(planId: BotPlanId) {
+    return data?.instances.find((i) => i.planId === planId);
+  }
+
+  async function saveDca(status: "active" | "paused") {
+    const sub = activeSub("dca_spot");
+    if (!sub) return;
+    setBusy(true);
+    setDcaMsg(null);
+    try {
+      const res = await fetch("/api/trade/bots/instance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: "dca_spot",
+          billing: sub.billing,
+          status,
+          config: {
+            symbol: dcaSymbol,
+            quoteAmountUsdt: dcaAmount.trim().replace(",", "."),
+            intervalHours: dcaInterval,
+          },
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = typeof json.error === "string" ? json.error : "";
+        setDcaMsg(
+          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
+        );
+        return;
+      }
+      setDcaMsg(status === "active" ? t("bots_dca_started") : t("bots_dca_paused"));
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const dcaSub = activeSub("dca_spot");
+  const dcaInst = instanceFor("dca_spot");
+  const dcaKeysOk =
+    dcaSub &&
+    credFor(dcaSub.billing)?.spotOk &&
+    credFor(dcaSub.billing)?.validatedAt;
+
   if (!data) {
     return (
       <p className="text-stone-500 dark:text-stone-400">
@@ -212,6 +286,86 @@ export function BotsTradingClient() {
           );
         })}
       </section>
+
+      {dcaSub && dcaKeysOk ? (
+        <section className="rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+          <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
+            {t("bots_dca_config_title")}
+          </h2>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            {t("bots_dca_config_hint")}
+          </p>
+          <div className="mt-4 grid gap-3">
+            <label className="block text-sm font-medium">
+              {t("bots_dca_symbol")}
+              <select
+                value={dcaSymbol}
+                onChange={(e) => setDcaSymbol(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.dcaOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_dca_amount")}
+              <input
+                value={dcaAmount}
+                onChange={(e) => setDcaAmount(e.target.value)}
+                inputMode="decimal"
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_dca_interval")}
+              <select
+                value={dcaInterval}
+                onChange={(e) => setDcaInterval(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.dcaOptions?.intervalHours ?? [24]).map((h) => (
+                  <option key={h} value={h}>
+                    {h}h
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {dcaInst?.lastExecutedAt ? (
+            <p className="mt-2 text-xs text-stone-500">
+              {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
+            </p>
+          ) : null}
+          {dcaInst?.lastError ? (
+            <p className="mt-1 text-xs text-rose-600">{dcaInst.lastError}</p>
+          ) : null}
+          {dcaMsg ? <p className="mt-2 text-sm text-emerald-800">{dcaMsg}</p> : null}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveDca("active")}
+              className="flex-1 rounded-xl bg-emerald-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {t("bots_dca_start")}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveDca("paused")}
+              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
+            >
+              {t("bots_dca_pause")}
+            </button>
+          </div>
+          {dcaInst?.status === "active" ? (
+            <p className="mt-2 text-xs text-stone-500">{t("bots_dca_cron_note")}</p>
+          ) : null}
+        </section>
+      ) : null}
 
       {wizardPlan ? (
         <section className="rounded-2xl border-2 border-violet-600/50 bg-violet-50/50 p-4 dark:border-violet-500/40 dark:bg-violet-950/20">

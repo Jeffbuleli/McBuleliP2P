@@ -3,7 +3,9 @@ import { getSessionUserId } from "@/lib/session";
 import { BOT_PLANS, BOT_PLAN_IDS } from "@/lib/bot-config";
 import { listUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
+import { listUserBotInstances } from "@/lib/bot-instance-service";
 import { getTradeModeSnapshot } from "@/lib/trade-mode";
+import { BOT_DCA_INTERVAL_HOURS, BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -11,9 +13,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [credentials, subscriptions, tradeMode] = await Promise.all([
+  const [credentials, subscriptions, instances, tradeMode] = await Promise.all([
     listUserBinanceCredentials(userId),
     listActiveBotSubscriptions(userId),
+    listUserBotInstances(userId),
     getTradeModeSnapshot(userId),
   ]);
 
@@ -32,6 +35,11 @@ export async function GET() {
     plans,
     credentials,
     subscriptions,
+    instances,
+    dcaOptions: {
+      symbols: [...BOT_DCA_SYMBOLS],
+      intervalHours: [...BOT_DCA_INTERVAL_HOURS],
+    },
     tradeMode,
     keysEncryptionConfigured: Boolean(
       process.env.BOT_KEYS_ENCRYPTION_SECRET?.trim() &&
