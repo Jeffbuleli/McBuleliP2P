@@ -8,11 +8,12 @@ import {
   markBotInstanceSuccess,
   setBotInstanceError,
 } from "@/lib/bot-instance-service";
+import { fetchBinanceFuturesMarkPrice } from "@/lib/binance-user-client";
 import {
-  binanceUserSignedGet,
-  binanceUserSignedPost,
-  fetchBinanceFuturesMarkPrice,
-} from "@/lib/binance-user-client";
+  futuresSignedGet,
+  futuresSignedPost,
+  resolveFuturesApiKind,
+} from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
 
 type PositionRisk = {
@@ -53,15 +54,15 @@ function shouldClosePosition(args: {
 
 async function fetchPosition(
   env: ReturnType<typeof billingToKeyEnvironment>,
-  creds: Awaited<ReturnType<typeof loadUserBinanceCredentials>>,
+  creds: NonNullable<Awaited<ReturnType<typeof loadUserBinanceCredentials>>>,
   symbol: string,
+  apiKind: Awaited<ReturnType<typeof resolveFuturesApiKind>>,
 ): Promise<{ amt: number; entry: number } | null> {
-  if (!creds) return null;
-  const rows = (await binanceUserSignedGet({
+  const rows = (await futuresSignedGet({
     environment: env,
     creds,
-    market: "futures",
-    path: "/fapi/v2/positionRisk",
+    kind: apiKind,
+    pathKey: "positionRisk",
     params: { symbol },
   })) as PositionRisk[];
   const row = rows.find((r) => r.symbol === symbol);
@@ -110,8 +111,10 @@ export async function tickFuturesUmInstance(args: {
     return { ran: false, skipped: "price_unavailable" };
   }
 
+  const futuresKind = await resolveFuturesApiKind(env, creds);
+
   try {
-    const position = await fetchPosition(env, creds, cfg.symbol);
+    const position = await fetchPosition(env, creds, cfg.symbol, futuresKind);
 
     if (position) {
       const closeReason = shouldClosePosition({
@@ -184,11 +187,11 @@ export async function tickFuturesUmInstance(args: {
       return { ran: false, skipped: "smart_blocked" };
     }
 
-    await binanceUserSignedPost({
+    await futuresSignedPost({
       environment: env,
       creds,
-      market: "futures",
-      path: "/fapi/v1/leverage",
+      kind: futuresKind,
+      pathKey: "leverage",
       params: {
         symbol: cfg.symbol,
         leverage: String(cfg.leverage),
@@ -196,11 +199,11 @@ export async function tickFuturesUmInstance(args: {
     });
 
     const openSide = cfg.side === "LONG" ? "BUY" : "SELL";
-    const order = await binanceUserSignedPost({
+    const order = await futuresSignedPost({
       environment: env,
       creds,
-      market: "futures",
-      path: "/fapi/v1/order",
+      kind: futuresKind,
+      pathKey: "order",
       params: {
         symbol: cfg.symbol,
         side: openSide,

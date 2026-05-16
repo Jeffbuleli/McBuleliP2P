@@ -2,6 +2,10 @@ import type { BotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment, type BotBillingMode } from "@/lib/bot-config";
 import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { binanceUserSignedGet } from "@/lib/binance-user-client";
+import {
+  futuresSignedGet,
+  resolveFuturesApiKind,
+} from "@/lib/binance-futures-routing";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
 import { parseBotGridConfig } from "@/lib/bot-grid-config";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
@@ -46,11 +50,12 @@ export async function fetchBotOpenPositions(args: {
     if (args.planId === "futures_um") {
       const cfg = parseBotFuturesConfig(args.config);
       if (!cfg) return { open: [] };
-      const raw = (await binanceUserSignedGet({
+      const apiKind = await resolveFuturesApiKind(env, creds);
+      const raw = (await futuresSignedGet({
         environment: env,
         creds,
-        market: "futures",
-        path: "/fapi/v2/positionRisk",
+        kind: apiKind,
+        pathKey: "positionRisk",
         params: { symbol: cfg.symbol },
       })) as PositionRisk[];
       const row = raw.find((p) => p.symbol === cfg.symbol);

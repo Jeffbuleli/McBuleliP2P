@@ -23,16 +23,24 @@ function withTimestamp(params: Record<string, string>) {
   };
 }
 
+function restBase(
+  bases: ReturnType<typeof binanceEndpointsFor>,
+  market: "spot" | "futures" | "portfolio",
+): string {
+  if (market === "spot") return bases.spotRest;
+  if (market === "portfolio") return bases.portfolioRest;
+  return bases.futuresRest;
+}
+
 export async function binanceUserSignedGet(args: {
   environment: BotEnvironment;
   creds: StoredBinanceCredentials;
-  market: "spot" | "futures";
+  market: "spot" | "futures" | "portfolio";
   path: string;
   params?: Record<string, string>;
 }): Promise<unknown> {
   const bases = binanceEndpointsFor(args.environment);
-  const base =
-    args.market === "spot" ? bases.spotRest : bases.futuresRest;
+  const base = restBase(bases, args.market);
   const merged = withTimestamp(args.params ?? {});
   const qs = sortedQueryString(merged);
   const signature = sign(qs, args.creds.apiSecret);
@@ -56,13 +64,12 @@ export async function binanceUserSignedGet(args: {
 export async function binanceUserSignedPost(args: {
   environment: BotEnvironment;
   creds: StoredBinanceCredentials;
-  market: "spot" | "futures";
+  market: "spot" | "futures" | "portfolio";
   path: string;
   params: Record<string, string>;
 }): Promise<unknown> {
   const bases = binanceEndpointsFor(args.environment);
-  const base =
-    args.market === "spot" ? bases.spotRest : bases.futuresRest;
+  const base = restBase(bases, args.market);
   const merged = withTimestamp(args.params);
   const qs = sortedQueryString(merged);
   const signature = sign(qs, args.creds.apiSecret);
@@ -91,13 +98,12 @@ export async function binanceUserSignedPost(args: {
 export async function binanceUserSignedDelete(args: {
   environment: BotEnvironment;
   creds: StoredBinanceCredentials;
-  market: "spot" | "futures";
+  market: "spot" | "futures" | "portfolio";
   path: string;
   params: Record<string, string>;
 }): Promise<unknown> {
   const bases = binanceEndpointsFor(args.environment);
-  const base =
-    args.market === "spot" ? bases.spotRest : bases.futuresRest;
+  const base = restBase(bases, args.market);
   const merged = withTimestamp(args.params);
   const qs = sortedQueryString(merged);
   const signature = sign(qs, args.creds.apiSecret);

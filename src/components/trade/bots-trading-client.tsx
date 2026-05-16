@@ -1376,7 +1376,9 @@ export function BotsTradingClient() {
                 </p>
               ) : (
                 <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
-                  {t("bots_env_live_hint")}
+                  {wizardPlan === "futures_um"
+                    ? t("bots_env_live_futures_hint")
+                    : t("bots_env_live_hint")}
                 </p>
               )}
               {credFor(wizardBilling) ? (
