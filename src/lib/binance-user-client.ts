@@ -132,3 +132,19 @@ export async function fetchBinanceSpotPrice(
   const n = Number(json.price);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+
+export async function fetchBinanceFuturesMarkPrice(
+  environment: BotEnvironment,
+  symbol: string,
+): Promise<number | null> {
+  const base = binanceEndpointsFor(environment).futuresRest;
+  const sym = symbol.toUpperCase();
+  const res = await fetch(
+    `${base}/fapi/v1/premiumIndex?symbol=${sym}`,
+    { cache: "no-store" },
+  );
+  const json = (await res.json()) as { markPrice?: string };
+  if (!res.ok) return null;
+  const n = Number(json.markPrice);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { BOT_PLANS, type BotPlanId } from "@/lib/bot-config";
 import { botDcaConfigSchema } from "@/lib/bot-dca-config";
 import { botGridConfigSchema } from "@/lib/bot-grid-config";
+import { botFuturesConfigSchema } from "@/lib/bot-futures-config";
 import { getActiveBotSubscription } from "@/lib/bot-subscription-service";
 import {
   listUserBotInstances,
@@ -64,11 +65,14 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-  } else if (status === "active") {
-    return NextResponse.json(
-      { error: "bots_strategy_not_implemented" },
-      { status: 400 },
-    );
+  } else if (planId === "futures_um") {
+    const futuresParsed = botFuturesConfigSchema.safeParse(config);
+    if (!futuresParsed.success) {
+      return NextResponse.json(
+        { error: "bots_invalid_futures_config" },
+        { status: 400 },
+      );
+    }
   }
 
   const valid = validateInstanceConfig(planId as BotPlanId, config);

@@ -3,6 +3,7 @@ import { getDb, botInstances, botExecutionLog } from "@/db";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
 import { parseBotGridConfig } from "@/lib/bot-grid-config";
+import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
 
 export type BotInstanceRow = {
   id: string;
@@ -148,6 +149,12 @@ export function validateInstanceConfig(
   if (planId === "grid_spot") {
     if (!parseBotGridConfig(config)) {
       return { ok: false, message: "bots_invalid_grid_config" };
+    }
+    return { ok: true };
+  }
+  if (planId === "futures_um") {
+    if (!parseBotFuturesConfig(config)) {
+      return { ok: false, message: "bots_invalid_futures_config" };
     }
     return { ok: true };
   }

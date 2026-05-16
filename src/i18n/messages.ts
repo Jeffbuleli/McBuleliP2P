@@ -1022,8 +1022,7 @@ export const en = {
   bots_error_binance_generic: "Binance rejected the API keys. Check key, secret, environment (demo=testnet), and permissions.",
   bots_subscription_required: "Active subscription required for this plan.",
   bots_invalid_dca_config: "Invalid DCA settings.",
-  bots_strategy_not_implemented:
-    "Futures UM bot is not available yet — use DCA Spot or Grid Spot.",
+  bots_strategy_not_implemented: "This bot strategy is not supported.",
   bots_dca_config_title: "DCA Spot configuration",
   bots_dca_config_hint:
     "Market buys on your Binance account at the chosen interval. Requires cron job on the server.",
@@ -1051,6 +1050,24 @@ export const en = {
   bots_grid_started: "Grid bot active.",
   bots_grid_paused: "Grid bot paused.",
   bots_logs_title: "Recent bot activity",
+  bots_invalid_futures_config: "Invalid futures bot settings.",
+  bots_futures_config_title: "Futures UM configuration",
+  bots_futures_config_hint:
+    "Opens a market position on your Binance USDⓈ-M account when flat. Monitors stop-loss and take-profit on every cron tick; re-enters only after the interval following a close.",
+  bots_futures_side: "Direction",
+  bots_futures_long: "Long",
+  bots_futures_short: "Short",
+  bots_futures_leverage: "Leverage",
+  bots_futures_margin: "Margin (USDT)",
+  bots_futures_sl: "Stop loss (%)",
+  bots_futures_tp: "Take profit (%)",
+  bots_futures_reopen: "Re-entry interval (after close)",
+  bots_futures_start: "Start futures bot",
+  bots_futures_pause: "Pause",
+  bots_futures_started: "Futures bot active.",
+  bots_futures_paused: "Futures bot paused.",
+  bots_futures_cron_note:
+    "Cron checks SL/TP while a position is open. Requires futures API keys (testnet for demo).",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Reference prices from major exchange APIs. Derivatives carry significant risk — never trade money you cannot afford to lose.",
@@ -2514,8 +2531,7 @@ export const fr: Messages = {
     "Clés refusées par Binance. Vérifiez clé, secret, environnement (démo=testnet) et permissions.",
   bots_subscription_required: "Abonnement actif requis pour ce plan.",
   bots_invalid_dca_config: "Paramètres DCA invalides.",
-  bots_strategy_not_implemented:
-    "Le bot Futures UM n’est pas encore disponible — utilisez DCA Spot ou Grille Spot.",
+  bots_strategy_not_implemented: "Cette stratégie de bot n’est pas prise en charge.",
   bots_dca_config_title: "Configuration DCA Spot",
   bots_dca_config_hint:
     "Achats market sur votre compte Binance à l’intervalle choisi. Nécessite un cron sur le serveur.",
@@ -2543,6 +2559,24 @@ export const fr: Messages = {
   bots_grid_started: "Grille active.",
   bots_grid_paused: "Grille en pause.",
   bots_logs_title: "Activité récente des bots",
+  bots_invalid_futures_config: "Paramètres bot futures invalides.",
+  bots_futures_config_title: "Configuration Futures UM",
+  bots_futures_config_hint:
+    "Ouvre une position market sur votre compte Binance USDⓈ-M si vous êtes à plat. Surveille stop-loss et take-profit à chaque tick cron ; ré-entrée seulement après l’intervalle suivant une clôture.",
+  bots_futures_side: "Direction",
+  bots_futures_long: "Long",
+  bots_futures_short: "Short",
+  bots_futures_leverage: "Levier",
+  bots_futures_margin: "Marge (USDT)",
+  bots_futures_sl: "Stop loss (%)",
+  bots_futures_tp: "Take profit (%)",
+  bots_futures_reopen: "Intervalle de ré-entrée (après clôture)",
+  bots_futures_start: "Démarrer le bot futures",
+  bots_futures_pause: "Pause",
+  bots_futures_started: "Bot futures actif.",
+  bots_futures_paused: "Bot futures en pause.",
+  bots_futures_cron_note:
+    "Le cron vérifie SL/TP tant qu’une position est ouverte. Clés API futures requises (testnet en démo).",
   trade_ui_back_home: "Trade",
   trade_hub_disclaimer:
     "Prix de référence via API des grandes places. Les dérivés impliquent un risque important — n’engagez pas des fonds indispensables.",

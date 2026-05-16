@@ -48,6 +48,11 @@ type Overview = {
   instances: BotInstance[];
   dcaOptions: { symbols: string[]; intervalHours: number[] };
   gridOptions: { symbols: string[]; refreshHours: number[] };
+  futuresOptions: {
+    symbols: string[];
+    intervalHours: number[];
+    leverage: number[];
+  };
   tradeMode: {
     demoUsdt: string;
     tradeLiveEnabled: boolean;
@@ -84,6 +89,14 @@ export function BotsTradingClient() {
   const [gridQuote, setGridQuote] = useState("15");
   const [gridRefresh, setGridRefresh] = useState(12);
   const [gridMsg, setGridMsg] = useState<string | null>(null);
+  const [futSymbol, setFutSymbol] = useState("BTCUSDT");
+  const [futSide, setFutSide] = useState<"LONG" | "SHORT">("LONG");
+  const [futLeverage, setFutLeverage] = useState(5);
+  const [futMargin, setFutMargin] = useState("50");
+  const [futInterval, setFutInterval] = useState(24);
+  const [futSl, setFutSl] = useState(5);
+  const [futTp, setFutTp] = useState(10);
+  const [futMsg, setFutMsg] = useState<string | null>(null);
   const [logs, setLogs] = useState<
     Array<{ id: string; planId: string; action: string; createdAt: string }>
   >([]);
@@ -135,6 +148,24 @@ export function BotsTradingClient() {
     if (gcfg?.gridCount) setGridCount(gcfg.gridCount);
     if (gcfg?.quotePerGrid) setGridQuote(gcfg.quotePerGrid);
     if (gcfg?.refreshHours) setGridRefresh(gcfg.refreshHours);
+
+    const finst = data?.instances.find((i) => i.planId === "futures_um");
+    const fcfg = finst?.config as {
+      symbol?: string;
+      side?: "LONG" | "SHORT";
+      leverage?: number;
+      marginUsdt?: string;
+      intervalHours?: number;
+      stopLossPct?: number;
+      takeProfitPct?: number;
+    } | undefined;
+    if (fcfg?.symbol) setFutSymbol(fcfg.symbol);
+    if (fcfg?.side) setFutSide(fcfg.side);
+    if (fcfg?.leverage) setFutLeverage(fcfg.leverage);
+    if (fcfg?.marginUsdt) setFutMargin(fcfg.marginUsdt);
+    if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
+    if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
+    if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
   }, [data?.instances]);
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
@@ -264,6 +295,54 @@ export function BotsTradingClient() {
     gridSub &&
     credFor(gridSub.billing)?.spotOk &&
     credFor(gridSub.billing)?.validatedAt;
+
+  const futSub = activeSub("futures_um");
+  const futInst = instanceFor("futures_um");
+  const futKeysOk =
+    futSub &&
+    credFor(futSub.billing)?.futuresOk &&
+    credFor(futSub.billing)?.validatedAt;
+
+  async function saveFutures(status: "active" | "paused") {
+    const sub = activeSub("futures_um");
+    if (!sub) return;
+    setBusy(true);
+    setFutMsg(null);
+    try {
+      const res = await fetch("/api/trade/bots/instance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: "futures_um",
+          billing: sub.billing,
+          status,
+          config: {
+            symbol: futSymbol,
+            side: futSide,
+            leverage: futLeverage,
+            marginUsdt: futMargin.trim().replace(",", "."),
+            intervalHours: futInterval,
+            stopLossPct: futSl,
+            takeProfitPct: futTp,
+          },
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = typeof json.error === "string" ? json.error : "";
+        setFutMsg(
+          code.startsWith("bots_") ? t(code as keyof Messages) : code || "—",
+        );
+        return;
+      }
+      setFutMsg(
+        status === "active" ? t("bots_futures_started") : t("bots_futures_paused"),
+      );
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function saveGrid(status: "active" | "paused") {
     const sub = activeSub("grid_spot");
@@ -539,6 +618,128 @@ export function BotsTradingClient() {
               {t("bots_grid_pause")}
             </button>
           </div>
+        </section>
+      ) : null}
+
+      {futSub && futKeysOk ? (
+        <section className="rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
+          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
+            {t("bots_futures_config_title")}
+          </h2>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            {t("bots_futures_config_hint")}
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-medium sm:col-span-2">
+              {t("bots_dca_symbol")}
+              <select
+                value={futSymbol}
+                onChange={(e) => setFutSymbol(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.futuresOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_futures_side")}
+              <select
+                value={futSide}
+                onChange={(e) => setFutSide(e.target.value as "LONG" | "SHORT")}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                <option value="LONG">{t("bots_futures_long")}</option>
+                <option value="SHORT">{t("bots_futures_short")}</option>
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_futures_leverage")}
+              <select
+                value={futLeverage}
+                onChange={(e) => setFutLeverage(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.futuresOptions?.leverage ?? [5]).map((lv) => (
+                  <option key={lv} value={lv}>
+                    {lv}×
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_futures_margin")}
+              <input
+                value={futMargin}
+                onChange={(e) => setFutMargin(e.target.value)}
+                inputMode="decimal"
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_futures_sl")}
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={futSl}
+                onChange={(e) => setFutSl(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t("bots_futures_tp")}
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={futTp}
+                onChange={(e) => setFutTp(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </label>
+            <label className="block text-sm font-medium sm:col-span-2">
+              {t("bots_futures_reopen")}
+              <select
+                value={futInterval}
+                onChange={(e) => setFutInterval(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {(data.futuresOptions?.intervalHours ?? [24]).map((h) => (
+                  <option key={h} value={h}>
+                    {h}h
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {futInst?.lastError ? (
+            <p className="mt-2 text-xs text-rose-600">{futInst.lastError}</p>
+          ) : null}
+          {futMsg ? <p className="mt-2 text-sm text-amber-900">{futMsg}</p> : null}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveFutures("active")}
+              className="flex-1 rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {t("bots_futures_start")}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveFutures("paused")}
+              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
+            >
+              {t("bots_futures_pause")}
+            </button>
+          </div>
+          {futInst?.status === "active" ? (
+            <p className="mt-2 text-xs text-stone-500">{t("bots_futures_cron_note")}</p>
+          ) : null}
         </section>
       ) : null}
 

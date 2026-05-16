@@ -7,6 +7,10 @@ import { listUserBotInstances } from "@/lib/bot-instance-service";
 import { getTradeModeSnapshot } from "@/lib/trade-mode";
 import { BOT_DCA_INTERVAL_HOURS, BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
 import { BOT_GRID_REFRESH_HOURS } from "@/lib/bot-grid-config";
+import {
+  BOT_FUTURES_INTERVAL_HOURS,
+  BOT_FUTURES_LEVERAGE,
+} from "@/lib/bot-futures-config";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -44,6 +48,11 @@ export async function GET() {
     gridOptions: {
       symbols: [...BOT_DCA_SYMBOLS],
       refreshHours: [...BOT_GRID_REFRESH_HOURS],
+    },
+    futuresOptions: {
+      symbols: [...BOT_DCA_SYMBOLS],
+      intervalHours: [...BOT_FUTURES_INTERVAL_HOURS],
+      leverage: [...BOT_FUTURES_LEVERAGE],
     },
     tradeMode,
     keysEncryptionConfigured: Boolean(
