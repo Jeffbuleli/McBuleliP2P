@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
@@ -326,6 +326,7 @@ export function BotsTradingClient() {
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
   const [keysHubMsg, setKeysHubMsg] = useState<string | null>(null);
   const [futOpenRows, setFutOpenRows] = useState<BotOpenPositionRow[]>([]);
+  const billingDefaultApplied = useRef(false);
 
   const loadLogs = useCallback(async (planId: BotPlanId) => {
     const logRes = await fetch(
@@ -373,14 +374,20 @@ export function BotsTradingClient() {
   }, [load]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || billingDefaultApplied.current) return;
+    billingDefaultApplied.current = true;
+    const demoCred = data.credentials.find((c) => c.environment === "demo");
     const liveCred = data.credentials.find((c) => c.environment === "live");
-    if (
-      liveCred?.validatedAt &&
-      (data.tradeMode?.tradeLiveEnabled || data.isSuperAdmin)
-    ) {
-      setAccountBilling("live");
+    const liveOk =
+      Boolean(liveCred?.validatedAt) &&
+      (data.tradeMode?.tradeLiveEnabled || data.isSuperAdmin);
+    if (data.isSuperAdmin) {
+      if (demoCred?.validatedAt) setAccountBilling("demo");
+      else if (liveOk) setAccountBilling("live");
+      return;
     }
+    if (liveOk) setAccountBilling("live");
+    else if (demoCred?.validatedAt) setAccountBilling("demo");
   }, [data]);
 
   useEffect(() => {
@@ -572,23 +579,33 @@ export function BotsTradingClient() {
     await loadLogs(activeTab);
   }
 
-  function activeSub(planId: BotPlanId) {
-    const real = data?.subscriptions.find((s) => s.planId === planId);
-    if (real) return real;
+  function activeSub(planId: BotPlanId, billingOverride?: "demo" | "live") {
+    const billing = billingOverride ?? accountBilling;
     if (data?.isSuperAdmin) {
+      const paid = data.subscriptions.find(
+        (s) => s.planId === planId && s.billing === billing,
+      );
+      if (paid) return paid;
       return {
-        id: "privileged",
+        id: `privileged-${billing}-${planId}`,
         planId,
-        billing: accountBilling,
+        billing,
         pricePaid: "0",
         expiresAt: "2099-12-31T23:59:59.000Z",
       };
     }
-    return undefined;
+    return data?.subscriptions.find((s) => s.planId === planId);
   }
 
   function credFor(env: "demo" | "live") {
     return data?.credentials.find((c) => c.environment === env);
+  }
+
+  function keysOkForPlan(planId: BotPlanId, billing: "demo" | "live") {
+    const c = credFor(billing);
+    if (!c?.validatedAt) return false;
+    if (planId === "futures_um") return Boolean(c.futuresOk);
+    return Boolean(c.spotOk);
   }
 
   function instanceFor(planId: BotPlanId) {
@@ -632,25 +649,19 @@ export function BotsTradingClient() {
   const dcaSub = activeSub("dca_spot");
   const dcaInst = instanceFor("dca_spot");
   const dcaKeysOk = Boolean(
-    dcaSub &&
-      credFor(dcaSub.billing)?.spotOk &&
-      credFor(dcaSub.billing)?.validatedAt,
+    dcaSub && keysOkForPlan("dca_spot", dcaSub.billing),
   );
 
   const gridSub = activeSub("grid_spot");
   const gridInst = instanceFor("grid_spot");
   const gridKeysOk = Boolean(
-    gridSub &&
-      credFor(gridSub.billing)?.spotOk &&
-      credFor(gridSub.billing)?.validatedAt,
+    gridSub && keysOkForPlan("grid_spot", gridSub.billing),
   );
 
   const futSub = activeSub("futures_um");
   const futInst = instanceFor("futures_um");
   const futKeysOk = Boolean(
-    futSub &&
-      credFor(futSub.billing)?.futuresOk &&
-      credFor(futSub.billing)?.validatedAt,
+    futSub && keysOkForPlan("futures_um", futSub.billing),
   );
   const savedFutCfg = parseBotFuturesConfig(futInst?.config ?? null);
   const savedFutSymbol = savedFutCfg?.symbol;
@@ -1416,7 +1427,12 @@ export function BotsTradingClient() {
                     !data.isSuperAdmin)
                 }
                 onClick={() => {
-                  const sub = activeSub(wizardPlan);
+                  if (data.isSuperAdmin) {
+                    setAccountBilling(wizardBilling);
+                    setWizardStep(3);
+                    return;
+                  }
+                  const sub = activeSub(wizardPlan, wizardBilling);
                   if (sub && sub.billing === wizardBilling) {
                     setWizardStep(3);
                   } else {
