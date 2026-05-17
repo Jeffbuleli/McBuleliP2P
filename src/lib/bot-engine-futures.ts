@@ -25,6 +25,11 @@ import {
   resolveFuturesApiKind,
 } from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
+import {
+  isBreakevenArmed,
+  shouldClosePosition,
+} from "@/lib/bot-futures-breakeven";
+import { unrealizedProfitPct } from "@/lib/bot-futures-smart-exit";
 import { runFuturesSmartExitCheck } from "@/lib/bot-futures-smart-exit";
 
 function formatFuturesQty(qty: number): string {
@@ -36,25 +41,6 @@ function formatFuturesQty(qty: number): string {
 function qtyFromMargin(marginUsdt: number, leverage: number, price: number): string {
   const notional = marginUsdt * leverage;
   return formatFuturesQty(notional / price);
-}
-
-function shouldClosePosition(args: {
-  side: "LONG" | "SHORT";
-  entry: number;
-  mark: number;
-  stopLossPct: number;
-  takeProfitPct: number;
-}): "sl" | "tp" | null {
-  const { side, entry, mark, stopLossPct, takeProfitPct } = args;
-  if (!Number.isFinite(entry) || entry <= 0) return null;
-  if (side === "LONG") {
-    if (mark <= entry * (1 - stopLossPct / 100)) return "sl";
-    if (mark >= entry * (1 + takeProfitPct / 100)) return "tp";
-  } else {
-    if (mark >= entry * (1 + stopLossPct / 100)) return "sl";
-    if (mark <= entry * (1 - takeProfitPct / 100)) return "tp";
-  }
-  return null;
 }
 
 export async function tickFuturesUmInstance(args: {
@@ -114,12 +100,53 @@ export async function tickFuturesUmInstance(args: {
     const onOther = findOtherFuturesOpen(openSnaps, cfg.symbol);
 
     if (onConfig) {
+      const breakevenLatched = await hasRecentExecutionLog(
+        args.instanceId,
+        "futures_breakeven_armed",
+        30 * 24 * 60 * 60 * 1000,
+      );
+      const breakevenArmed = isBreakevenArmed({
+        side: cfg.side,
+        entry: onConfig.entry,
+        mark,
+        breakevenMode: cfg.breakevenMode,
+        breakevenTriggerPct: cfg.breakevenTriggerPct,
+        latched: breakevenLatched,
+      });
+
+      if (
+        cfg.breakevenMode &&
+        breakevenArmed &&
+        !breakevenLatched
+      ) {
+        const profitPct = unrealizedProfitPct({
+          side: cfg.side,
+          entry: onConfig.entry,
+          mark,
+        });
+        await appendBotExecutionLog({
+          instanceId: args.instanceId,
+          userId: args.userId,
+          planId: args.planId,
+          action: "futures_breakeven_armed",
+          detail: {
+            symbol: cfg.symbol,
+            entry: onConfig.entry,
+            mark,
+            profitPct,
+            triggerPct: cfg.breakevenTriggerPct,
+            profile: cfg.traderProfile,
+          },
+        });
+      }
+
       const closeReason = shouldClosePosition({
         side: cfg.side,
         entry: onConfig.entry,
         mark,
         stopLossPct: cfg.stopLossPct,
         takeProfitPct: cfg.takeProfitPct,
+        breakevenArmed,
       });
       if (closeReason) {
         const closeSide = onConfig.amt > 0 ? "SELL" : "BUY";
@@ -142,7 +169,13 @@ export async function tickFuturesUmInstance(args: {
           userId: args.userId,
           planId: args.planId,
           action: closeReason === "sl" ? "futures_sl_close" : "futures_tp_close",
-          detail: { symbol: cfg.symbol, mark, entry: onConfig.entry, order },
+          detail: {
+            symbol: cfg.symbol,
+            mark,
+            entry: onConfig.entry,
+            breakevenArmed,
+            order,
+          },
         });
         return { ran: true };
       }

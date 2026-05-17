@@ -100,6 +100,9 @@ export function buildBotTradeHistoryRow(
   if (typeof d.profitPct === "number" && Number.isFinite(d.profitPct)) {
     chips.push(chip("PnL", `${d.profitPct.toFixed(2)}%`));
   }
+  if (typeof d.triggerPct === "number" && Number.isFinite(d.triggerPct)) {
+    chips.push(chip("≥", `${d.triggerPct}%`));
+  }
   if (typeof d.timeframe === "string") {
     chips.push(chip("⏱", d.timeframe));
   }

@@ -1073,6 +1073,20 @@ export const en = {
   bots_log_futures_sl_close: "Closed (stop loss)",
   bots_log_futures_tp_close: "Closed (take profit)",
   bots_log_futures_smart_close: "Closed (smart exit — reversal)",
+  bots_trader_profile_label: "Trading style",
+  bots_trader_profile_tip:
+    "Presets align timeframe, SL/TP, smart exit and breakeven. Custom keeps your manual edits.",
+  bots_trader_profile_scalp: "Scalp",
+  bots_trader_profile_day: "Intraday",
+  bots_trader_profile_swing: "Swing",
+  bots_trader_profile_position: "Position",
+  bots_trader_profile_custom: "Custom",
+  bots_breakeven_mode: "Breakeven SL",
+  bots_breakeven_tip:
+    "After profit reaches the trigger %, the bot treats entry as stop loss (latched until close).",
+  bots_breakeven_trigger: "at",
+  bots_log_futures_breakeven_armed: "Breakeven armed",
+  bots_feed_badge_breakeven: "Breakeven",
   bots_smart_exit_mode: "Smart exit",
   bots_smart_exit_hint:
     "On each cron pass ({tf}), close the position if the signal reverses against your side and profit ≥ minimum.",
@@ -2824,6 +2838,20 @@ export const fr: Messages = {
   bots_log_futures_sl_close: "Clôture (stop loss)",
   bots_log_futures_tp_close: "Clôture (take profit)",
   bots_log_futures_smart_close: "Clôture (sortie smart — retournement)",
+  bots_trader_profile_label: "Style",
+  bots_trader_profile_tip:
+    "Préréglages : TF, SL/TP, sortie smart et breakeven. Personnalisé = vos réglages manuels.",
+  bots_trader_profile_scalp: "Scalp",
+  bots_trader_profile_day: "Intraday",
+  bots_trader_profile_swing: "Swing",
+  bots_trader_profile_position: "Position",
+  bots_trader_profile_custom: "Perso",
+  bots_breakeven_mode: "SL breakeven",
+  bots_breakeven_tip:
+    "Quand le profit atteint le seuil %, le bot place le SL virtuel à l’entrée (verrouillé jusqu’à clôture).",
+  bots_breakeven_trigger: "à",
+  bots_log_futures_breakeven_armed: "Breakeven actif",
+  bots_feed_badge_breakeven: "Breakeven",
   bots_smart_exit_mode: "Sortie smart",
   bots_smart_exit_hint:
     "À chaque cron ({tf}), clôture si le signal s’inverse contre votre sens et profit ≥ minimum.",

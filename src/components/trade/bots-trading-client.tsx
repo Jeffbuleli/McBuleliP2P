@@ -17,6 +17,17 @@ import {
   BotsCronHealthBar,
   type CronHealthSnapshot,
 } from "@/components/trade/bots-cron-health-bar";
+import {
+  FuturesTraderProfilePanel,
+  futBreakevenConfigFields,
+  loadFutBreakevenFromConfig,
+  type FutBreakevenUiState,
+} from "@/components/trade/futures-trader-profile-panel";
+import {
+  parseTraderProfileId,
+  type BotTraderProfileId,
+  type FuturesTraderProfilePreset,
+} from "@/lib/bot-futures-trader-profiles";
 import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
 import { BotRunControls } from "@/components/trade/bot-run-controls";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
@@ -493,6 +504,12 @@ export function BotsTradingClient() {
     smartExitUseEntryTimeframe: true,
     smartExitTimeframe: "1h",
   });
+  const [futTraderProfile, setFutTraderProfile] =
+    useState<BotTraderProfileId>("day");
+  const [futBreakeven, setFutBreakeven] = useState<FutBreakevenUiState>({
+    breakevenMode: true,
+    breakevenTriggerPct: 1,
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -619,7 +636,32 @@ export function BotsTradingClient() {
     if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
     setFutSmart(loadSmartFromConfig(finst?.config));
     setFutExit(loadFutExitFromConfig(finst?.config));
+    setFutBreakeven(loadFutBreakevenFromConfig(finst?.config));
+    setFutTraderProfile(parseTraderProfileId(finst?.config?.traderProfile));
   }, [data?.instances]);
+
+  function applyFuturesProfilePreset(preset: FuturesTraderProfilePreset) {
+    setFutTraderProfile(preset.traderProfile);
+    setFutInterval(preset.intervalHours);
+    setFutSl(preset.stopLossPct);
+    setFutTp(preset.takeProfitPct);
+    setFutSmart({
+      smartMode: preset.smartMode,
+      minSignalScore: preset.minSignalScore,
+      timeframe: preset.timeframe,
+    });
+    setFutExit({
+      smartExitMode: preset.smartExitMode,
+      minReversalScore: preset.minReversalScore,
+      minProfitPctForSmartExit: preset.minProfitPctForSmartExit,
+      smartExitUseEntryTimeframe: preset.smartExitUseEntryTimeframe,
+      smartExitTimeframe: preset.smartExitTimeframe ?? preset.timeframe,
+    });
+    setFutBreakeven({
+      breakevenMode: preset.breakevenMode,
+      breakevenTriggerPct: preset.breakevenTriggerPct,
+    });
+  }
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
     setBusy(true);
@@ -919,8 +961,10 @@ export function BotsTradingClient() {
             intervalHours: futInterval,
             stopLossPct: futSl,
             takeProfitPct: futTp,
+            traderProfile: futTraderProfile,
             ...smartConfigFields(futSmart),
             ...futExitConfigFields(futExit),
+            ...futBreakevenConfigFields(futBreakeven),
           },
         }),
       });
@@ -1508,6 +1552,14 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          <FuturesTraderProfilePanel
+            profile={futTraderProfile}
+            onProfileChange={setFutTraderProfile}
+            breakeven={futBreakeven}
+            onBreakevenChange={setFutBreakeven}
+            onApplyPreset={applyFuturesProfilePreset}
+            t={t}
+          />
           <SmartModePanel
             planId="futures_um"
             symbol={futSymbol}

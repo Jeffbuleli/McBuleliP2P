@@ -1,0 +1,116 @@
+import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
+
+export const BOT_TRADER_PROFILE_IDS = [
+  "scalp",
+  "day",
+  "swing",
+  "position",
+  "custom",
+] as const;
+
+export type BotTraderProfileId = (typeof BOT_TRADER_PROFILE_IDS)[number];
+
+export type FuturesTraderProfilePreset = {
+  traderProfile: Exclude<BotTraderProfileId, "custom">;
+  timeframe: (typeof BOT_CANDLE_TIMEFRAMES)[number];
+  intervalHours: 1 | 4 | 12 | 24;
+  stopLossPct: number;
+  takeProfitPct: number;
+  smartMode: boolean;
+  minSignalScore: number;
+  smartExitMode: boolean;
+  minReversalScore: number;
+  minProfitPctForSmartExit: number;
+  smartExitUseEntryTimeframe: boolean;
+  smartExitTimeframe?: (typeof BOT_CANDLE_TIMEFRAMES)[number];
+  breakevenMode: boolean;
+  breakevenTriggerPct: number;
+};
+
+const PRESETS: Record<
+  Exclude<BotTraderProfileId, "custom">,
+  FuturesTraderProfilePreset
+> = {
+  scalp: {
+    traderProfile: "scalp",
+    timeframe: "15m",
+    intervalHours: 1,
+    stopLossPct: 2,
+    takeProfitPct: 4,
+    smartMode: true,
+    minSignalScore: 40,
+    smartExitMode: true,
+    minReversalScore: 45,
+    minProfitPctForSmartExit: 0.3,
+    smartExitUseEntryTimeframe: false,
+    smartExitTimeframe: "15m",
+    breakevenMode: true,
+    breakevenTriggerPct: 0.4,
+  },
+  day: {
+    traderProfile: "day",
+    timeframe: "15m",
+    intervalHours: 4,
+    stopLossPct: 3,
+    takeProfitPct: 6,
+    smartMode: true,
+    minSignalScore: 40,
+    smartExitMode: true,
+    minReversalScore: 40,
+    minProfitPctForSmartExit: 0.5,
+    smartExitUseEntryTimeframe: false,
+    smartExitTimeframe: "15m",
+    breakevenMode: true,
+    breakevenTriggerPct: 1,
+  },
+  swing: {
+    traderProfile: "swing",
+    timeframe: "4h",
+    intervalHours: 24,
+    stopLossPct: 5,
+    takeProfitPct: 12,
+    smartMode: true,
+    minSignalScore: 45,
+    smartExitMode: true,
+    minReversalScore: 50,
+    minProfitPctForSmartExit: 1,
+    smartExitUseEntryTimeframe: false,
+    smartExitTimeframe: "4h",
+    breakevenMode: false,
+    breakevenTriggerPct: 1,
+  },
+  position: {
+    traderProfile: "position",
+    timeframe: "4h",
+    intervalHours: 24,
+    stopLossPct: 8,
+    takeProfitPct: 25,
+    smartMode: true,
+    minSignalScore: 50,
+    smartExitMode: false,
+    minReversalScore: 55,
+    minProfitPctForSmartExit: 3,
+    smartExitUseEntryTimeframe: true,
+    breakevenMode: false,
+    breakevenTriggerPct: 1,
+  },
+};
+
+export function getFuturesTraderProfilePreset(
+  id: Exclude<BotTraderProfileId, "custom">,
+): FuturesTraderProfilePreset {
+  return { ...PRESETS[id] };
+}
+
+export function parseTraderProfileId(raw: unknown): BotTraderProfileId {
+  if (
+    raw === "scalp" ||
+    raw === "day" ||
+    raw === "swing" ||
+    raw === "position" ||
+    raw === "custom"
+  ) {
+    return raw;
+  }
+  return "custom";
+}

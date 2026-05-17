@@ -70,6 +70,12 @@ const ACTION_VIS: Record<string, ActionVisual> = {
     rail: "border-l-teal-400/80",
     iconBg: "bg-teal-800/90 text-white",
   },
+  futures_breakeven_armed: {
+    badgeKey: "bots_feed_badge_breakeven",
+    icon: "═",
+    rail: "border-l-sky-500",
+    iconBg: "bg-sky-700 text-white",
+  },
   dca_buy: {
     badgeKey: "bots_feed_badge_buy",
     icon: "+",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
+import { BOT_TRADER_PROFILE_IDS } from "@/lib/bot-futures-trader-profiles";
 import { BOT_CANDLE_TIMEFRAMES, botSmartFields } from "@/lib/bot-smart-config";
 
 export const BOT_FUTURES_LEVERAGE = [2, 3, 5, 10, 20] as const;
@@ -14,6 +15,16 @@ export const botFuturesSmartExitFields = {
   minProfitPctForSmartExit: z.number().min(0).max(50).default(0.5),
   smartExitUseEntryTimeframe: z.boolean().default(true),
   smartExitTimeframe: z.enum(BOT_CANDLE_TIMEFRAMES).optional(),
+} as const;
+
+export const botFuturesBreakevenFields = {
+  /** Move effective SL to entry after profit % reaches trigger (latched). */
+  breakevenMode: z.boolean().default(false),
+  breakevenTriggerPct: z.number().min(0.1).max(20).default(1),
+} as const;
+
+export const botFuturesProfileField = {
+  traderProfile: z.enum(BOT_TRADER_PROFILE_IDS).default("custom"),
 } as const;
 
 export const botFuturesConfigSchema = z.object({
@@ -37,6 +48,8 @@ export const botFuturesConfigSchema = z.object({
   takeProfitPct: z.number().min(1).max(100),
   ...botSmartFields,
   ...botFuturesSmartExitFields,
+  ...botFuturesBreakevenFields,
+  ...botFuturesProfileField,
 });
 
 export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;
