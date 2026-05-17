@@ -1146,6 +1146,8 @@ export const userBinanceApiCredentials = pgTable(
     credentialsCiphertext: text("credentials_ciphertext").notNull(),
     spotOk: boolean("spot_ok").notNull().default(false),
     futuresOk: boolean("futures_ok").notNull().default(false),
+    /** fapi | papi — set when futuresOk after validation */
+    futuresApiKind: varchar("futures_api_kind", { length: 8 }),
     lastValidationError: text("last_validation_error"),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

@@ -9,8 +9,10 @@ import {
   BOT_PLAN_DESC_KEY,
   botsApiMessage,
   formatBotRuntimeError,
+  formatBotsCredentialValidationLine,
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
+import { BotsKeysHub } from "@/components/trade/bots-keys-hub";
 import { BotActivityMonitor } from "@/components/trade/bot-activity-monitor";
 import { BotPositionsPanel } from "@/components/trade/bot-positions-panel";
 import {
@@ -31,6 +33,7 @@ type Credential = {
   apiKeyHint: string;
   spotOk: boolean;
   futuresOk: boolean;
+  futuresApiKind: "fapi" | "papi" | null;
   validatedAt: string | null;
   lastValidationError: string | null;
 };
@@ -344,6 +347,17 @@ export function BotsTradingClient() {
   }, [load, t]);
 
   useEffect(() => {
+    if (!data) return;
+    const liveCred = data.credentials.find((c) => c.environment === "live");
+    if (
+      liveCred?.validatedAt &&
+      (data.tradeMode?.tradeLiveEnabled || data.isSuperAdmin)
+    ) {
+      setAccountBilling("live");
+    }
+  }, [data]);
+
+  useEffect(() => {
     const inst = data?.instances.find((i) => i.planId === "dca_spot");
     const cfg = inst?.config as {
       symbol?: string;
@@ -463,18 +477,21 @@ export function BotsTradingClient() {
         );
         return;
       }
-      setConnectOk(true);
-      setConnectMsg(
-        formatKeysSavedMessage(
-          json.check as {
-            spotOk?: boolean;
-            futuresOk?: boolean;
-            futuresApiKind?: string | null;
-          },
-        ),
+      const savedMsg = formatKeysSavedMessage(
+        json.check as {
+          spotOk?: boolean;
+          futuresOk?: boolean;
+          futuresApiKind?: "fapi" | "papi" | null;
+        },
       );
+      setConnectOk(true);
+      setConnectMsg(savedMsg);
+      setKeysHubMsg(savedMsg);
       setApiKey("");
       setApiSecret("");
+      if (wizardBilling === "live") {
+        setAccountBilling("live");
+      }
       await load();
     } finally {
       setBusy(false);
@@ -744,98 +761,26 @@ export function BotsTradingClient() {
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-base font-bold text-stone-900 dark:text-stone-50">
-          {t("bots_keys_hub_title")}
-        </h2>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          {t("bots_keys_hub_hint")}
+      {credFor("live")?.validatedAt ? (
+        <p className="rounded-xl border border-emerald-400 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-950 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-100">
+          {t("bots_live_keys_ready_banner")}{" "}
+          {formatBotsCredentialValidationLine(credFor("live"), t)}
         </p>
-        <p className="mt-2 text-xs text-stone-500 dark:text-stone-500">
-          {t("bots_keys_shared_hint")}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setAccountBilling("demo")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-              accountBilling === "demo"
-                ? "bg-violet-600 text-white"
-                : "bg-stone-200 dark:bg-stone-800"
-            }`}
-          >
-            {t("bots_billing_demo")}
-          </button>
-          <button
-            type="button"
-            disabled={!data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin}
-            onClick={() => setAccountBilling("live")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-40 ${
-              accountBilling === "live"
-                ? "bg-violet-600 text-white"
-                : "bg-stone-200 dark:bg-stone-800"
-            }`}
-          >
-            {t("bots_billing_live")}
-          </button>
-        </div>
-        {!data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin ? (
-          <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-            {t("bots_live_disabled_hint")}
-          </p>
-        ) : null}
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {(["demo", "live"] as const).map((env) => {
-            const c = credFor(env);
-            const liveOk = env === "demo" || data.tradeMode?.tradeLiveEnabled || data.isSuperAdmin;
-            return (
-              <div
-                key={env}
-                className="rounded-xl border border-stone-200 p-3 dark:border-stone-600"
-              >
-                <p className="text-sm font-semibold">
-                  {env === "demo" ? t("bots_billing_demo") : t("bots_billing_live")}
-                </p>
-                {c?.validatedAt ? (
-                  <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
-                    {t("bots_keys_connected", { hint: c.apiKeyHint })}
-                    {c.spotOk ? " · Spot" : ""}
-                    {c.futuresOk ? " · Futures" : ""}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-stone-500">{t("bots_err_no_keys")}</p>
-                )}
-                <div className="mt-3 flex flex-col gap-2">
-                  <button
-                    type="button"
-                    disabled={!liveOk || busy}
-                    onClick={() => openKeysHub(env)}
-                    className="rounded-lg bg-violet-700 py-2 text-xs font-semibold text-white disabled:opacity-40"
-                  >
-                    {env === "demo"
-                      ? t("bots_keys_connect_demo")
-                      : t("bots_keys_connect_live")}
-                  </button>
-                  {c ? (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void revokeKeys(env)}
-                      className="rounded-lg border border-rose-400 py-2 text-xs font-semibold text-rose-800 dark:text-rose-200"
-                    >
-                      {t("bots_keys_revoke")}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <p className="mt-3 text-xs text-stone-500">{t("bots_keys_replace_hint")}</p>
-        {keysHubMsg ? (
-          <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">{keysHubMsg}</p>
-        ) : null}
-      </section>
+      ) : null}
+
+      <BotsKeysHub
+        credentials={data.credentials}
+        accountBilling={accountBilling}
+        onBillingChange={setAccountBilling}
+        tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
+        isSuperAdmin={Boolean(data.isSuperAdmin)}
+        activePlanId={activeTab}
+        busy={busy}
+        keysHubMsg={keysHubMsg}
+        onConnect={openKeysHub}
+        onRevoke={(env) => void revokeKeys(env)}
+        t={t}
+      />
 
       {activeTab === "dca_spot" && !dcaSub ? (
         <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
@@ -1344,19 +1289,37 @@ export function BotsTradingClient() {
                 </button>
                 <button
                   type="button"
+                  disabled={
+                    !data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin
+                  }
                   onClick={() => setWizardBilling("live")}
-                  className={`flex-1 rounded-xl py-2 text-sm font-bold ${
+                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold disabled:opacity-40 ${
                     wizardBilling === "live"
-                      ? "bg-violet-600 text-white"
-                      : "bg-stone-200 dark:bg-stone-800"
+                      ? "border-rose-500 bg-rose-600 text-white"
+                      : "border-stone-200 bg-stone-200 dark:border-stone-600 dark:bg-stone-800"
                   }`}
                 >
-                  {t("bots_billing_live")}
+                  <span className="block">{t("bots_billing_live")}</span>
+                  <span className="text-[10px] font-medium opacity-90">
+                    {t("bots_billing_live_sub")}
+                  </span>
                 </button>
               </div>
+              {wizardBilling === "live" &&
+              !data.tradeMode?.tradeLiveEnabled &&
+              !data.isSuperAdmin ? (
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  {t("bots_live_disabled_hint")}
+                </p>
+              ) : null}
               <button
                 type="button"
-                disabled={busy}
+                disabled={
+                  busy ||
+                  (wizardBilling === "live" &&
+                    !data.tradeMode?.tradeLiveEnabled &&
+                    !data.isSuperAdmin)
+                }
                 onClick={() => {
                   const sub = activeSub(wizardPlan);
                   if (sub && sub.billing === wizardBilling) {
@@ -1396,10 +1359,21 @@ export function BotsTradingClient() {
           {wizardStep === 3 ? (
             <div className="mt-4 space-y-4">
               <ol className="list-decimal space-y-2 pl-5 text-sm text-stone-800 dark:text-stone-200">
-                <li>{t("bots_wizard_step1")}</li>
-                <li>{t("bots_wizard_step2")}</li>
-                <li>{t("bots_wizard_step3")}</li>
-                <li>{t("bots_wizard_step4")}</li>
+                {wizardBilling === "live" ? (
+                  <>
+                    <li>{t("bots_wizard_step1_live")}</li>
+                    <li>{t("bots_wizard_step2_live")}</li>
+                    <li>{t("bots_wizard_step3_live")}</li>
+                    <li>{t("bots_wizard_step4_live")}</li>
+                  </>
+                ) : (
+                  <>
+                    <li>{t("bots_wizard_step1")}</li>
+                    <li>{t("bots_wizard_step2")}</li>
+                    <li>{t("bots_wizard_step3")}</li>
+                    <li>{t("bots_wizard_step4")}</li>
+                  </>
+                )}
               </ol>
               {!credFor(wizardBilling) ? (
                 wizardBilling === "demo" ? (
@@ -1409,19 +1383,35 @@ export function BotsTradingClient() {
                       : t("bots_env_demo_spot_hint")}
                   </p>
                 ) : (
-                  <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
-                    {wizardPlan === "futures_um"
-                      ? t("bots_env_live_futures_hint")
-                      : t("bots_env_live_spot_hint")}
-                  </p>
+                  <div className="space-y-2 rounded-xl border-2 border-rose-400 bg-rose-50/90 p-3 dark:border-rose-600 dark:bg-rose-950/40">
+                    <p className="text-sm font-semibold text-rose-950 dark:text-rose-100">
+                      {t("bots_live_real_money_banner")}
+                    </p>
+                    <p className="text-xs text-rose-900/90 dark:text-rose-200/90">
+                      {wizardPlan === "futures_um"
+                        ? t("bots_env_live_futures_hint")
+                        : t("bots_env_live_spot_hint")}
+                    </p>
+                    <p className="text-xs text-stone-700 dark:text-stone-300">
+                      {t("bots_live_ip_note")}
+                    </p>
+                  </div>
                 )
               ) : null}
               {credFor(wizardBilling) ? (
-                <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                  {t("bots_keys_connected", {
-                    hint: credFor(wizardBilling)!.apiKeyHint,
-                  })}
-                </p>
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/30">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                    {t("bots_keys_connected", {
+                      hint: credFor(wizardBilling)!.apiKeyHint,
+                    })}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                    {formatBotsCredentialValidationLine(
+                      credFor(wizardBilling),
+                      t,
+                    )}
+                  </p>
+                </div>
               ) : null}
               <label className="block text-sm font-medium">
                 {t("bots_api_key_label")}

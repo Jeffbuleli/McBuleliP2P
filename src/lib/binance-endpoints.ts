@@ -26,6 +26,7 @@ export function binanceEndpointsFor(
     };
   }
   return {
+    /** Keys from https://www.binance.com → API Management */
     spotRest: "https://api.binance.com",
     futuresRest: "https://fapi.binance.com",
     portfolioRest: "https://papi.binance.com",

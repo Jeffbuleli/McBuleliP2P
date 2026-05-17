@@ -17,6 +17,7 @@ export type CredentialPublicRow = {
   apiKeyHint: string;
   spotOk: boolean;
   futuresOk: boolean;
+  futuresApiKind: "fapi" | "papi" | null;
   validatedAt: string | null;
   lastValidationError: string | null;
 };
@@ -31,6 +32,7 @@ export async function listUserBinanceCredentials(
       apiKeyHint: userBinanceApiCredentials.apiKeyHint,
       spotOk: userBinanceApiCredentials.spotOk,
       futuresOk: userBinanceApiCredentials.futuresOk,
+      futuresApiKind: userBinanceApiCredentials.futuresApiKind,
       validatedAt: userBinanceApiCredentials.validatedAt,
       lastValidationError: userBinanceApiCredentials.lastValidationError,
     })
@@ -42,6 +44,10 @@ export async function listUserBinanceCredentials(
     apiKeyHint: r.apiKeyHint,
     spotOk: r.spotOk,
     futuresOk: r.futuresOk,
+    futuresApiKind:
+      r.futuresApiKind === "fapi" || r.futuresApiKind === "papi"
+        ? r.futuresApiKind
+        : null,
     validatedAt: r.validatedAt?.toISOString() ?? null,
     lastValidationError: r.lastValidationError,
   }));
@@ -73,6 +79,7 @@ export async function saveUserBinanceCredentials(args: {
       credentialsCiphertext: ciphertext,
       spotOk: args.check.spotOk,
       futuresOk: args.check.futuresOk,
+      futuresApiKind: args.check.futuresApiKind,
       lastValidationError: validationError,
       validatedAt: args.check.spotOk || args.check.futuresOk ? now : null,
       updatedAt: now,
@@ -87,6 +94,7 @@ export async function saveUserBinanceCredentials(args: {
         credentialsCiphertext: ciphertext,
         spotOk: args.check.spotOk,
         futuresOk: args.check.futuresOk,
+        futuresApiKind: args.check.futuresApiKind,
         lastValidationError: validationError,
         validatedAt: args.check.spotOk || args.check.futuresOk ? now : null,
         updatedAt: now,
@@ -97,6 +105,7 @@ export async function saveUserBinanceCredentials(args: {
       apiKeyHint: userBinanceApiCredentials.apiKeyHint,
       spotOk: userBinanceApiCredentials.spotOk,
       futuresOk: userBinanceApiCredentials.futuresOk,
+      futuresApiKind: userBinanceApiCredentials.futuresApiKind,
       validatedAt: userBinanceApiCredentials.validatedAt,
       lastValidationError: userBinanceApiCredentials.lastValidationError,
     });
@@ -106,6 +115,10 @@ export async function saveUserBinanceCredentials(args: {
     apiKeyHint: row.apiKeyHint,
     spotOk: row.spotOk,
     futuresOk: row.futuresOk,
+    futuresApiKind:
+      row.futuresApiKind === "fapi" || row.futuresApiKind === "papi"
+        ? row.futuresApiKind
+        : null,
     validatedAt: row.validatedAt?.toISOString() ?? null,
     lastValidationError: row.lastValidationError,
   };

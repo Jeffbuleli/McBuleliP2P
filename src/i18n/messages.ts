@@ -992,8 +992,10 @@ export const en = {
   bots_status_paused: "Paused",
   bots_status_not_started: "Not started",
   bots_waiting_first_tick: "Waiting for the next server run (cron every few minutes).",
-  bots_keys_required_spot: "Connect Spot API keys (testnet in demo).",
-  bots_keys_required_futures: "Connect Futures API keys (futures testnet in demo).",
+  bots_keys_required_spot:
+    "Connect Spot API keys for your subscription environment (demo.binance.com or binance.com live).",
+  bots_keys_required_futures:
+    "Connect Futures API keys for your subscription environment (demo or live binance.com, PM supported).",
   bots_keys_required_cta: "Connect API keys",
   bots_wizard_progress: "Step {step} of {total}",
   bots_api_key_label: "API key",
@@ -1065,13 +1067,37 @@ export const en = {
   bots_permissions_failed: "API permissions do not match this bot (Spot and/or Futures).",
   bots_subscription_required_for_keys:
     "Subscribe to a bot on this environment (demo/live) before connecting keys, or use the API hub below.",
-  bots_keys_hub_title: "Binance API keys (demo & live)",
+  bots_keys_hub_title: "Binance API keys",
   bots_keys_hub_hint:
-    "One key pair per environment is shared by DCA, Grid, and Futures. Saving new keys replaces the previous pair. Use Revoke to remove them.",
+    "One key pair per environment is shared by DCA, Grid, and Futures. Saving new keys replaces the previous pair.",
+  bots_keys_hub_env_label: "Environment",
   bots_keys_shared_hint:
-    "The same API works for all three strategies on that environment—only demo vs live must match your subscription.",
-  bots_keys_connect_demo: "Connect demo (testnet)",
-  bots_keys_connect_live: "Connect live",
+    "Demo and live use different Binance portals and API hosts. Your subscription billing must match the environment you connect.",
+  bots_keys_connect_demo: "Set up demo keys",
+  bots_keys_connect_live: "Set up live keys",
+  bots_keys_status_none: "Not connected",
+  bots_keys_status_ok: "Validated",
+  bots_live_hub_badge: "Live · real account",
+  bots_live_real_money_banner:
+    "Live bots trade on your real Binance account (binance.com). Use a dedicated API key with withdrawals disabled.",
+  bots_live_checklist_title: "Live API checklist (binance.com)",
+  bots_live_checklist_reading: "Enable Reading",
+  bots_live_checklist_spot: "Enable Spot & Margin trading",
+  bots_live_checklist_pm: "Enable Portfolio Margin trading (if you use PM)",
+  bots_live_checklist_no_withdraw: "Never enable Withdrawals",
+  bots_live_checklist_ip: "Whitelist Render outbound IPs (Connect → Outbound on your Render service)",
+  bots_live_ip_note:
+    "Do not use your website DNS IPs (e.g. 216.24.57.x). Use the Outbound ranges from Render (often 74.220.51.0/24 and 74.220.59.0/24). Binance may require individual IPs—run curl https://api.ipify.org in Render Shell if needed.",
+  bots_live_open_binance: "Open binance.com API Management",
+  bots_demo_hub_badge: "Demo · paper trading",
+  bots_demo_hub_hint: "Keys from demo.binance.com only — not binance.com.",
+  bots_wizard_step1_live: "On binance.com → Profile → API Management → Create API.",
+  bots_wizard_step2_live:
+    "Enable Reading + Spot & Margin. For futures with Portfolio Margin, enable Portfolio Margin trading (no separate Futures checkbox needed). Disable Withdrawals.",
+  bots_wizard_step3_live:
+    "If IP-restricted: add Render outbound IPs (Dashboard → your Web Service → Connect → Outbound). Not the IPs from www.mcbuleli.online DNS.",
+  bots_wizard_step4_live: "Paste key + secret below — we validate Spot and Futures (PM uses papi.binance.com).",
+  bots_live_keys_ready_banner: "Live API keys are connected and validated.",
   bots_keys_revoke: "Revoke keys",
   bots_keys_revoked: "API keys removed.",
   bots_keys_replace_hint: "Entering new keys overwrites the stored pair after validation.",
@@ -1098,8 +1124,10 @@ export const en = {
   bots_plan_grid: "Grid Spot",
   bots_plan_futures: "Futures UM",
   bots_price_line: "Demo {demo} USDT · Live {live} USDT / 30 days",
-  bots_billing_demo: "Demo (testnet)",
+  bots_billing_demo: "Demo",
+  bots_billing_demo_sub: "demo.binance.com",
   bots_billing_live: "Live",
+  bots_billing_live_sub: "binance.com",
   bots_get_started: "Get started",
   bots_connect_keys: "Connect API keys",
   bots_active_until: "Active ({billing}) until {date}",
@@ -2626,8 +2654,10 @@ export const fr: Messages = {
   bots_status_paused: "En pause",
   bots_status_not_started: "Non démarré",
   bots_waiting_first_tick: "En attente du prochain passage cron (toutes les quelques minutes).",
-  bots_keys_required_spot: "Connectez les clés API Spot (testnet en démo).",
-  bots_keys_required_futures: "Connectez les clés API Futures (testnet futures en démo).",
+  bots_keys_required_spot:
+    "Connectez les clés API Spot pour l’environnement de votre abonnement (demo.binance.com ou binance.com live).",
+  bots_keys_required_futures:
+    "Connectez les clés API Futures pour votre abonnement (démo ou live binance.com, PM pris en charge).",
   bots_keys_required_cta: "Connecter les clés API",
   bots_wizard_progress: "Étape {step} sur {total}",
   bots_api_key_label: "Clé API",
@@ -2700,13 +2730,39 @@ export const fr: Messages = {
     "Permissions API insuffisantes pour ce bot (Spot et/ou Futures).",
   bots_subscription_required_for_keys:
     "Abonnez-vous à un bot sur cet environnement (démo/live) avant de connecter les clés, ou utilisez le hub API ci-dessous.",
-  bots_keys_hub_title: "Clés API Binance (démo et live)",
+  bots_keys_hub_title: "Clés API Binance",
   bots_keys_hub_hint:
-    "Une paire de clés par environnement est partagée entre DCA, Grille et Futures. Les nouvelles clés remplacent les anciennes. Révoquer pour les supprimer.",
+    "Une paire de clés par environnement est partagée entre DCA, Grille et Futures. Les nouvelles clés remplacent les anciennes.",
+  bots_keys_hub_env_label: "Environnement",
   bots_keys_shared_hint:
-    "La même API sert pour les trois stratégies sur cet environnement — seul démo vs live doit correspondre à l’abonnement.",
-  bots_keys_connect_demo: "Connecter démo (testnet)",
-  bots_keys_connect_live: "Connecter live",
+    "Démo et live utilisent des portails et hôtes API différents. La facturation de l’abonnement doit correspondre à l’environnement connecté.",
+  bots_keys_connect_demo: "Configurer les clés démo",
+  bots_keys_connect_live: "Configurer les clés live",
+  bots_keys_status_none: "Non connecté",
+  bots_keys_status_ok: "Validé",
+  bots_live_hub_badge: "Live · compte réel",
+  bots_live_real_money_banner:
+    "Les bots live tradent sur votre compte Binance réel (binance.com). Utilisez une clé API dédiée sans permission de retrait.",
+  bots_live_checklist_title: "Checklist API live (binance.com)",
+  bots_live_checklist_reading: "Activer Lecture",
+  bots_live_checklist_spot: "Activer trading Spot & Marge",
+  bots_live_checklist_pm: "Activer trading Portfolio Margin (si vous utilisez le PM)",
+  bots_live_checklist_no_withdraw: "Ne jamais activer les retraits",
+  bots_live_checklist_ip:
+    "Lister les IP sortantes Render (Connect → Outbound sur votre service Render)",
+  bots_live_ip_note:
+    "N’utilisez pas les IP DNS du site (ex. 216.24.57.x). Utilisez les plages Outbound Render (souvent 74.220.51.0/24 et 74.220.59.0/24). Binance peut exiger des IP une par une — testez avec curl https://api.ipify.org dans le Shell Render.",
+  bots_live_open_binance: "Ouvrir la gestion API binance.com",
+  bots_demo_hub_badge: "Démo · paper trading",
+  bots_demo_hub_hint: "Clés sur demo.binance.com uniquement — pas binance.com.",
+  bots_wizard_step1_live: "Sur binance.com → Profil → Gestion API → Créer une API.",
+  bots_wizard_step2_live:
+    "Activer Lecture + Spot & Marge. Pour les futures en Portfolio Margin, activer le trading PM (pas de case Futures séparée). Désactiver les retraits.",
+  bots_wizard_step3_live:
+    "Si IP restreintes : ajoutez les IP sortantes Render (Dashboard → service Web → Connect → Outbound). Pas les IP DNS de www.mcbuleli.online.",
+  bots_wizard_step4_live:
+    "Collez clé + secret — nous validons Spot et Futures (le PM utilise papi.binance.com).",
+  bots_live_keys_ready_banner: "Clés API live connectées et validées.",
   bots_keys_revoke: "Révoquer les clés",
   bots_keys_revoked: "Clés API supprimées.",
   bots_keys_replace_hint:
@@ -2735,8 +2791,10 @@ export const fr: Messages = {
   bots_plan_grid: "Grille Spot",
   bots_plan_futures: "Futures UM",
   bots_price_line: "Démo {demo} USDT · Live {live} USDT / 30 jours",
-  bots_billing_demo: "Démo (testnet)",
+  bots_billing_demo: "Démo",
+  bots_billing_demo_sub: "demo.binance.com",
   bots_billing_live: "Live",
+  bots_billing_live_sub: "binance.com",
   bots_get_started: "Commencer",
   bots_connect_keys: "Connecter les clés API",
   bots_active_until: "Actif ({billing}) jusqu’au {date}",

@@ -25,6 +25,30 @@ const SMART_ERROR_I18N: Record<string, keyof Messages> = {
   bots_positions_fetch_failed: "bots_positions_fetch_failed",
 };
 
+export type BotsCredentialStatus = {
+  spotOk: boolean;
+  futuresOk: boolean;
+  futuresApiKind?: "fapi" | "papi" | null;
+  validatedAt?: string | null;
+};
+
+/** Spot / Futures line for keys hub and wizard success. */
+export function formatBotsCredentialValidationLine(
+  cred: BotsCredentialStatus | null | undefined,
+  t: (k: keyof Messages) => string,
+): string {
+  if (!cred?.validatedAt) return "";
+  const spot = cred.spotOk ? t("bots_keys_validated_yes") : t("bots_keys_validated_no");
+  let futures = t("bots_keys_validated_no");
+  if (cred.futuresOk) {
+    futures =
+      cred.futuresApiKind === "papi"
+        ? t("bots_keys_validated_pm")
+        : t("bots_keys_validated_yes");
+  }
+  return t("bots_keys_validated_detail", { spot, futures });
+}
+
 export function botsApiMessage(
   code: string,
   t: (k: keyof Messages) => string,
