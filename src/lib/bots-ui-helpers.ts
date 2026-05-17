@@ -35,7 +35,7 @@ export type BotsCredentialStatus = {
 /** Spot / Futures line for keys hub and wizard success. */
 export function formatBotsCredentialValidationLine(
   cred: BotsCredentialStatus | null | undefined,
-  t: (k: keyof Messages) => string,
+  t: (key: keyof Messages, vars?: Record<string, string | number>) => string,
 ): string {
   if (!cred?.validatedAt) return "";
   const spot = cred.spotOk ? t("bots_keys_validated_yes") : t("bots_keys_validated_no");

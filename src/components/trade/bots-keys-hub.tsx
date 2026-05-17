@@ -23,7 +23,7 @@ type Props = {
   keysHubMsg: string | null;
   onConnect: (env: "demo" | "live") => void;
   onRevoke: (env: "demo" | "live") => void;
-  t: (k: keyof Messages) => string;
+  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 };
 
 function credFor(
@@ -42,7 +42,7 @@ function BillingToggle({
   value: "demo" | "live";
   onChange: (v: "demo" | "live") => void;
   liveDisabled: boolean;
-  t: (k: keyof Messages) => string;
+  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   function pill(id: "demo" | "live", disabled?: boolean) {
     const isLive = id === "live";
@@ -80,7 +80,11 @@ function BillingToggle({
   );
 }
 
-function LiveChecklist({ t }: { t: (k: keyof Messages) => string }) {
+function LiveChecklist({
+  t,
+}: {
+  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
+}) {
   const items: (keyof Messages)[] = [
     "bots_live_checklist_reading",
     "bots_live_checklist_spot",

@@ -64,6 +64,13 @@ const SCHEMA = "drizzle";
 const TABLE = "__drizzle_migrations";
 
 async function main() {
+  const postgresPkg = path.join(process.cwd(), "node_modules", "postgres");
+  if (!fs.existsSync(postgresPkg)) {
+    console.error(
+      "\n[drizzle-migrate-batched] Missing dependency `postgres`. Run: npm install\n",
+    );
+    process.exit(1);
+  }
   const postgres = (await import("postgres")).default;
   const sql = postgres(process.env.DATABASE_URL, {
     max: 1,
