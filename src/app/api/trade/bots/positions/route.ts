@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { isBotPlanId } from "@/lib/bot-config";
-import { resolveBotSubscription } from "@/lib/bot-privilege";
+import { isBotPlanId, type BotBillingMode } from "@/lib/bot-config";
+import { botAccessAllows, resolveBotSubscription } from "@/lib/bot-privilege";
 import { listUserBotInstances } from "@/lib/bot-instance-service";
 import { fetchBotOpenPositions } from "@/lib/bot-positions-service";
 
@@ -11,7 +11,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const planParam = new URL(req.url).searchParams.get("planId");
+  const { searchParams } = new URL(req.url);
+  const planParam = searchParams.get("planId");
   if (!planParam || !isBotPlanId(planParam)) {
     return NextResponse.json({ error: "invalid_plan" }, { status: 400 });
   }
@@ -27,12 +28,33 @@ export async function GET(req: Request) {
     return NextResponse.json({ open: [] });
   }
 
+  const billingParam = searchParams.get("billing");
+  let billing = inst.billing as BotBillingMode;
+  if (billingParam === "demo" || billingParam === "live") {
+    const allowed = await botAccessAllows(
+      userId,
+      planParam,
+      billingParam,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { open: [], error: "bots_subscription_required" },
+        { status: 409 },
+      );
+    }
+    billing = billingParam;
+  }
+
   const result = await fetchBotOpenPositions({
     userId,
     planId: planParam,
-    billing: sub.billing,
+    billing,
     config: inst.config,
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json({
+    ...result,
+    billing,
+    instanceBilling: inst.billing,
+  });
 }

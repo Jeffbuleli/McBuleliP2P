@@ -1037,6 +1037,8 @@ export const en = {
     "Close {symbol} on Binance or select that pair before starting on a new one.",
   bots_skip_other_symbol_open:
     "Another pair is open on Binance — close it or set the bot to that pair.",
+  bots_billing_view_mismatch:
+    "Bot saved on {saved} — you are viewing {viewing}. Switch the toggle above or press Start to apply {viewing}.",
   bots_waiting_first_tick: "Waiting for the next server run (cron every few minutes).",
   bots_keys_required_short: "Connect API keys above to configure this bot.",
   bots_wizard_steps_tip:
@@ -2762,6 +2764,8 @@ export const fr: Messages = {
     "Clôturez {symbol} sur Binance ou sélectionnez cette paire avant d’en démarrer une autre.",
   bots_skip_other_symbol_open:
     "Une autre paire est ouverte sur Binance — clôturez-la ou alignez le bot sur cette paire.",
+  bots_billing_view_mismatch:
+    "Bot enregistré en {saved} — vous consultez {viewing}. Changez le toggle ci-dessus ou appuyez sur Démarrer pour {viewing}.",
   bots_waiting_first_tick: "En attente du prochain passage cron (toutes les quelques minutes).",
   bots_keys_required_short: "Connectez les clés API ci-dessus pour configurer ce bot.",
   bots_wizard_steps_tip:

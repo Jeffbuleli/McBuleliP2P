@@ -142,6 +142,7 @@ function OpenRow({
 
 export function BotStrategyLivePanel({
   planId,
+  billing,
   botActive,
   keysOk,
   logs,
@@ -150,6 +151,7 @@ export function BotStrategyLivePanel({
   t,
 }: {
   planId: BotPlanId;
+  billing: "demo" | "live";
   botActive: boolean;
   keysOk: boolean;
   logs: BotLogRow[];
@@ -174,7 +176,7 @@ export function BotStrategyLivePanel({
       setPosErr(null);
       try {
         const res = await fetch(
-          `/api/trade/bots/positions?planId=${planId}`,
+          `/api/trade/bots/positions?planId=${planId}&billing=${billing}`,
           { cache: "no-store" },
         );
         const json = await res.json().catch(() => ({}));
@@ -198,7 +200,7 @@ export function BotStrategyLivePanel({
         if (!opts?.silent) setLoading(false);
       }
     },
-    [botActive, keysOk, onOpenChange, planId, t],
+    [billing, botActive, keysOk, onOpenChange, planId, t],
   );
 
   useEffect(() => {
@@ -210,7 +212,7 @@ export function BotStrategyLivePanel({
       void onLogsRefreshRef.current();
     }, POLL_MS);
     return () => window.clearInterval(id);
-  }, [botActive, loadOpen]);
+  }, [botActive, billing, loadOpen]);
 
   if (!botActive) {
     return null;

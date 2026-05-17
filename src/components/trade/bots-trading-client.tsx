@@ -150,9 +150,17 @@ function loadSmartFromConfig(cfg: Record<string, unknown> | undefined): SmartUiS
   };
 }
 
+function billingEnvLabel(
+  billing: "demo" | "live",
+  t: (k: keyof Messages) => string,
+) {
+  return billing === "demo" ? t("bots_billing_demo") : t("bots_billing_live");
+}
+
 function SmartModePanel({
   planId,
   symbol,
+  billing,
   smart,
   setSmart,
   smartOptions,
@@ -160,6 +168,7 @@ function SmartModePanel({
 }: {
   planId: BotPlanId;
   symbol: string;
+  billing: "demo" | "live";
   smart: SmartUiState;
   setSmart: (s: SmartUiState) => void;
   smartOptions: Overview["smartOptions"];
@@ -175,6 +184,7 @@ function SmartModePanel({
       const q = new URLSearchParams({
         symbol,
         planId,
+        billing,
         timeframe: smart.timeframe,
       });
       const res = await fetch(`/api/trade/bots/signal?${q}`, { cache: "no-store" });
@@ -612,6 +622,22 @@ export function BotsTradingClient() {
     return data?.instances.find((i) => i.planId === planId);
   }
 
+  function instEnvAligned(inst: { billing: "demo" | "live" } | undefined) {
+    return !inst || inst.billing === accountBilling;
+  }
+
+  function billingMismatchBanner(inst: { billing: "demo" | "live" } | undefined) {
+    if (!inst || inst.billing === accountBilling) return null;
+    return (
+      <p className="rounded-lg border border-violet-400/70 bg-violet-50 px-3 py-2 text-xs text-violet-950 dark:border-violet-600/50 dark:bg-violet-950/40 dark:text-violet-100 sm:col-span-2">
+        {t("bots_billing_view_mismatch", {
+          saved: billingEnvLabel(inst.billing, t),
+          viewing: billingEnvLabel(accountBilling, t),
+        })}
+      </p>
+    );
+  }
+
   async function saveDca(status: "active" | "paused") {
     const sub = activeSub("dca_spot");
     if (!sub) return;
@@ -837,7 +863,10 @@ export function BotsTradingClient() {
       <BotsKeysHub
         credentials={data.credentials}
         accountBilling={accountBilling}
-        onBillingChange={setAccountBilling}
+        onBillingChange={(env) => {
+          setAccountBilling(env);
+          setFutOpenRows([]);
+        }}
         tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
         isSuperAdmin={Boolean(data.isSuperAdmin)}
         busy={busy}
@@ -981,25 +1010,29 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          {billingMismatchBanner(dcaInst)}
           <SmartModePanel
             planId="dca_spot"
             symbol={dcaSymbol}
+            billing={accountBilling}
             smart={dcaSmart}
             setSmart={setDcaSmart}
             smartOptions={data.smartOptions}
             t={t}
           />
-          {dcaInst?.status === "active" && !dcaInst.lastExecutedAt ? (
+          {dcaInst?.status === "active" &&
+          instEnvAligned(dcaInst) &&
+          !dcaInst.lastExecutedAt ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
             </p>
           ) : null}
-          {dcaInst?.lastExecutedAt ? (
+          {dcaInst?.lastExecutedAt && instEnvAligned(dcaInst) ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
             </p>
           ) : null}
-          {dcaInst?.lastError ? (
+          {dcaInst?.lastError && instEnvAligned(dcaInst) ? (
             <p className="mt-1 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
               {formatBotRuntimeError(dcaInst.lastError, t)}
             </p>
@@ -1025,7 +1058,10 @@ export function BotsTradingClient() {
           </div>
           <BotStrategyLivePanel
             planId="dca_spot"
-            botActive={dcaInst?.status === "active"}
+            billing={accountBilling}
+            botActive={
+              dcaInst?.status === "active" && instEnvAligned(dcaInst)
+            }
             keysOk={dcaKeysOk}
             logs={logs}
             onLogsRefresh={refreshDcaLogs}
@@ -1114,25 +1150,29 @@ export function BotsTradingClient() {
               </select>
             </label>
           </div>
+          {billingMismatchBanner(gridInst)}
           <SmartModePanel
             planId="grid_spot"
             symbol={gridSymbol}
+            billing={accountBilling}
             smart={gridSmart}
             setSmart={setGridSmart}
             smartOptions={data.smartOptions}
             t={t}
           />
-          {gridInst?.status === "active" && !gridInst.lastExecutedAt ? (
+          {gridInst?.status === "active" &&
+          instEnvAligned(gridInst) &&
+          !gridInst.lastExecutedAt ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
             </p>
           ) : null}
-          {gridInst?.lastExecutedAt ? (
+          {gridInst?.lastExecutedAt && instEnvAligned(gridInst) ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}: {new Date(gridInst.lastExecutedAt).toLocaleString()}
             </p>
           ) : null}
-          {gridInst?.lastError ? (
+          {gridInst?.lastError && instEnvAligned(gridInst) ? (
             <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
               {formatBotRuntimeError(gridInst.lastError, t)}
             </p>
@@ -1158,7 +1198,10 @@ export function BotsTradingClient() {
           </div>
           <BotStrategyLivePanel
             planId="grid_spot"
-            botActive={gridInst?.status === "active"}
+            billing={accountBilling}
+            botActive={
+              gridInst?.status === "active" && instEnvAligned(gridInst)
+            }
             keysOk={gridKeysOk}
             logs={logs}
             onLogsRefresh={refreshGridLogs}
@@ -1178,14 +1221,19 @@ export function BotsTradingClient() {
             </h2>
             <BotStatusBadge
               status={futInst?.status ?? "none"}
-              lastExecutedAt={futInst?.lastExecutedAt}
+              lastExecutedAt={
+                instEnvAligned(futInst) ? futInst?.lastExecutedAt : undefined
+              }
               monitoringOpen={
-                futInst?.status === "active" && futHasConfigOpen
+                instEnvAligned(futInst) &&
+                futInst?.status === "active" &&
+                futHasConfigOpen
               }
               t={t}
             />
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {billingMismatchBanner(futInst)}
             <label className="block text-sm font-medium sm:col-span-2">
               {t("bots_dca_symbol")}
               <select
@@ -1298,25 +1346,28 @@ export function BotsTradingClient() {
           <SmartModePanel
             planId="futures_um"
             symbol={futSymbol}
+            billing={accountBilling}
             smart={futSmart}
             setSmart={setFutSmart}
             smartOptions={data.smartOptions}
             t={t}
           />
           {futInst?.status === "active" &&
+          instEnvAligned(futInst) &&
           !futInst.lastExecutedAt &&
-          !futOpenRows.some((r) => r.kind === "futures") ? (
+          !futHasConfigOpen &&
+          !futHasUnmanagedOpen ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
             </p>
           ) : null}
-          {futInst?.lastExecutedAt ? (
+          {futInst?.lastExecutedAt && instEnvAligned(futInst) ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}:{" "}
               {new Date(futInst.lastExecutedAt).toLocaleString()}
             </p>
           ) : null}
-          {futInst?.lastError ? (
+          {futInst?.lastError && instEnvAligned(futInst) ? (
             <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
               {formatBotRuntimeError(futInst.lastError, t)}
             </p>
@@ -1326,7 +1377,7 @@ export function BotsTradingClient() {
             status={futInst?.status ?? "none"}
             busy={busy}
             variant="amber"
-            monitoringOpen={futHasConfigOpen}
+            monitoringOpen={instEnvAligned(futInst) && futHasConfigOpen}
             monitoringLabel={t("bots_futures_monitoring_open")}
             startLabel={t("bots_futures_start")}
             pauseLabel={t("bots_futures_pause")}
@@ -1343,7 +1394,10 @@ export function BotsTradingClient() {
           </p>
           <BotStrategyLivePanel
             planId="futures_um"
-            botActive={futInst?.status === "active"}
+            billing={accountBilling}
+            botActive={
+              futInst?.status === "active" && instEnvAligned(futInst)
+            }
             keysOk={futKeysOk}
             logs={logs}
             onLogsRefresh={refreshFutLogs}

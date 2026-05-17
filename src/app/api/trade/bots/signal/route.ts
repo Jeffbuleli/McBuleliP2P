@@ -43,7 +43,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "bots_subscription_required" }, { status: 409 });
   }
 
-  const env = billingToKeyEnvironment(sub.billing);
+  const billingParam = searchParams.get("billing");
+  const billing =
+    billingParam === "demo" || billingParam === "live"
+      ? billingParam
+      : sub.billing;
+
+  const env = billingToKeyEnvironment(billing);
   const market = planId === "futures_um" ? "futures" : "spot";
   const ctx = await fetchMarketContext({
     environment: env,
