@@ -34,6 +34,7 @@ import {
   type FutTrailingUiState,
 } from "@/components/trade/futures-trader-profile-panel";
 import {
+  getFuturesTraderProfilePreset,
   parseTraderProfileId,
   type BotTraderProfileId,
   type FuturesTraderProfilePreset,
@@ -607,7 +608,11 @@ export function BotsTradingClient() {
   }, [data]);
 
   useEffect(() => {
-    const inst = data?.instances.find((i) => i.planId === "dca_spot");
+    if (!data?.instances) return;
+
+    const inst = data.instances.find(
+      (i) => i.planId === "dca_spot" && i.billing === accountBilling,
+    );
     const cfg = inst?.config as {
       symbol?: string;
       quoteAmountUsdt?: string;
@@ -618,7 +623,9 @@ export function BotsTradingClient() {
     if (cfg?.intervalHours) setDcaInterval(cfg.intervalHours);
     setDcaSmart(loadSmartFromConfig(inst?.config));
 
-    const ginst = data?.instances.find((i) => i.planId === "grid_spot");
+    const ginst = data.instances.find(
+      (i) => i.planId === "grid_spot" && i.billing === accountBilling,
+    );
     const gcfg = ginst?.config as {
       symbol?: string;
       priceLow?: string;
@@ -873,7 +880,9 @@ export function BotsTradingClient() {
   }
 
   function instanceFor(planId: BotPlanId) {
-    return data?.instances.find((i) => i.planId === planId);
+    return data?.instances.find(
+      (i) => i.planId === planId && i.billing === accountBilling,
+    );
   }
 
   function instEnvAligned(inst: { billing: "demo" | "live" } | undefined) {
@@ -1006,6 +1015,7 @@ export function BotsTradingClient() {
             ...futExitConfigFields(futExit),
             ...futBreakevenConfigFields(futBreakeven),
             ...futTrailingConfigFields(futTrailing),
+            ...futMultiTfConfigFields(futMultiTf, futSmart.timeframe),
           },
         }),
       });

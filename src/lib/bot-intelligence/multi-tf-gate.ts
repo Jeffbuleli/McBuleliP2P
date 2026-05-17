@@ -1,6 +1,6 @@
 import type { BotEnvironment } from "@/lib/bot-config";
-import type { BotSmartConfig } from "@/lib/bot-smart-config";
-import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
+import type { BotCandleTimeframe, BotSmartConfig } from "@/lib/bot-smart-config";
+import { isHigherTimeframe } from "@/lib/bot-candle-timeframe-utils";
 import { fetchMarketContext } from "@/lib/bot-intelligence/fetch-market-context";
 import {
   evaluateTradeSignal,
@@ -15,28 +15,13 @@ type SmartGateResult =
   | { ok: true; signal: TradeSignal }
   | { ok: false; reason: string; signal?: TradeSignal };
 
-const TF_RANK: Record<(typeof BOT_CANDLE_TIMEFRAMES)[number], number> = {
-  "1m": 0,
-  "5m": 1,
-  "15m": 2,
-  "1h": 3,
-  "4h": 4,
-};
-
-export function isHigherTimeframe(
-  entry: (typeof BOT_CANDLE_TIMEFRAMES)[number],
-  confirm: (typeof BOT_CANDLE_TIMEFRAMES)[number],
-): boolean {
-  return TF_RANK[confirm] > TF_RANK[entry];
-}
-
 export async function runMultiTfSmartGate(args: {
   environment: BotEnvironment;
   symbol: string;
   market: MarketKind;
   smart: BotSmartConfig;
   intent: "long" | "short" | "spot_buy";
-  confirmTimeframe: (typeof BOT_CANDLE_TIMEFRAMES)[number];
+  confirmTimeframe: BotCandleTimeframe;
 }): Promise<SmartGateResult & { confirmSignal?: TradeSignal }> {
   const entryGate = await runSingleTfGate({
     environment: args.environment,

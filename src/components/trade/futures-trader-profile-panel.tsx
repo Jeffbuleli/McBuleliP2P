@@ -7,7 +7,11 @@ import {
   type BotTraderProfileId,
   type FuturesTraderProfilePreset,
 } from "@/lib/bot-futures-trader-profiles";
-import { isHigherTimeframe } from "@/lib/bot-intelligence/multi-tf-gate";
+import {
+  defaultConfirmTimeframe,
+  higherTimeframesThan,
+  isHigherTimeframe,
+} from "@/lib/bot-candle-timeframe-utils";
 import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
 import { UiInfoTip } from "@/components/ui/ui-info-tip";
 
@@ -63,14 +67,6 @@ export type FutMultiTfUiState = {
   confirmTimeframe: CandleTf;
 };
 
-function defaultConfirmTimeframe(entry: CandleTf): CandleTf {
-  const idx = BOT_CANDLE_TIMEFRAMES.indexOf(entry);
-  if (idx < 0 || idx >= BOT_CANDLE_TIMEFRAMES.length - 1) {
-    return "4h";
-  }
-  return BOT_CANDLE_TIMEFRAMES[idx + 1];
-}
-
 function parseCandleTf(raw: unknown, fallback: CandleTf): CandleTf {
   if (
     typeof raw === "string" &&
@@ -109,9 +105,7 @@ export function futMultiTfConfigFields(
 }
 
 function confirmOptionsFor(entryTimeframe: CandleTf): CandleTf[] {
-  return BOT_CANDLE_TIMEFRAMES.filter((tf) =>
-    isHigherTimeframe(entryTimeframe, tf),
-  );
+  return higherTimeframesThan(entryTimeframe);
 }
 
 export type FuturesProfileApplyPayload = FuturesTraderProfilePreset;

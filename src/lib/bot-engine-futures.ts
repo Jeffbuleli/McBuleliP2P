@@ -26,8 +26,8 @@ import {
   resolveFuturesApiKind,
 } from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
+import { isHigherTimeframe } from "@/lib/bot-candle-timeframe-utils";
 import {
-  isHigherTimeframe,
   multiTfGateSummary,
   runMultiTfSmartGate,
 } from "@/lib/bot-intelligence/multi-tf-gate";
