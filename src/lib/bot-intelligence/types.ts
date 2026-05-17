@@ -1,4 +1,6 @@
-export type CandleTimeframe = "15m" | "1h" | "4h";
+import type { BotCandleTimeframe } from "@/lib/bot-smart-config";
+
+export type CandleTimeframe = BotCandleTimeframe;
 
 export type MarketKind = "spot" | "futures";
 

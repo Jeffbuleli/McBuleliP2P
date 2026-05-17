@@ -7,6 +7,8 @@ export type CronHealthSnapshot = {
   configured: boolean;
   inlineEnabled: boolean;
   intervalMinutes: number;
+  recommendedIntervalMinutes?: number;
+  cronNeedsFasterTick?: boolean;
   lastRunAt: string | null;
   lastRunExecuted: number | null;
   lastRunInstances: number | null;
@@ -75,29 +77,50 @@ export function BotsCronHealthBar({
       ? "border-emerald-400/50 bg-emerald-50/70 dark:border-emerald-700/40 dark:bg-emerald-950/25"
       : "border-amber-400/60 bg-amber-50/70 dark:border-amber-700/45 dark:bg-amber-950/30";
 
+  const needsFaster =
+    health.cronNeedsFasterTick &&
+    health.recommendedIntervalMinutes != null &&
+    health.intervalMinutes > health.recommendedIntervalMinutes;
+
   return (
-    <div
-      className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 ${border}`}
-      role="status"
-    >
-      <span className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-        {t("bots_cron_label")}
-      </span>
-      <span
-        className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
-          tone === "ok" ? "bg-emerald-500" : "bg-amber-500"
-        }`}
-        aria-hidden
-      />
-      <span className="min-w-0 flex-1 truncate text-xs font-medium text-stone-800 dark:text-stone-100">
-        {status}
-      </span>
-      {health.inlineEnabled ? (
-        <span className="shrink-0 rounded bg-stone-800/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-500 dark:bg-white/10 dark:text-stone-400">
-          {t("bots_cron_inline_badge")}
+    <div className="space-y-1.5">
+      <div
+        className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 ${border}`}
+        role="status"
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+          {t("bots_cron_label")}
         </span>
+        <span
+          className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+            tone === "ok" ? "bg-emerald-500" : "bg-amber-500"
+          }`}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-stone-800 dark:text-stone-100">
+          {status}
+        </span>
+        {health.inlineEnabled ? (
+          <span className="shrink-0 rounded bg-stone-800/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-500 dark:bg-white/10 dark:text-stone-400">
+            {t("bots_cron_inline_badge")}
+          </span>
+        ) : null}
+        <UiInfoTip tip={tip} />
+      </div>
+      {needsFaster ? (
+        <div
+          className="flex items-center gap-2 rounded-lg border border-sky-400/60 bg-sky-50/80 px-2.5 py-1.5 text-xs font-medium text-sky-950 dark:border-sky-700/50 dark:bg-sky-950/35 dark:text-sky-100"
+          role="status"
+        >
+          <span className="min-w-0 flex-1">
+            {t("bots_cron_scalp_fast_tick", {
+              current: String(health.intervalMinutes),
+              recommended: String(health.recommendedIntervalMinutes),
+            })}
+          </span>
+          <UiInfoTip tip={t("bots_cron_scalp_fast_tick_tip")} />
+        </div>
       ) : null}
-      <UiInfoTip tip={tip} />
     </div>
   );
 }

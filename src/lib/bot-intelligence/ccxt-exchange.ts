@@ -1,6 +1,6 @@
 import ccxt, { type Exchange } from "ccxt";
 import type { BotEnvironment } from "@/lib/bot-config";
-import type { MarketKind } from "@/lib/bot-intelligence/types";
+import type { MarketKind, CandleTimeframe } from "@/lib/bot-intelligence/types";
 
 export function binancePairToCcxt(symbol: string, market: MarketKind): string {
   const base = symbol.replace(/USDT$/i, "");
@@ -28,6 +28,6 @@ export function createCcxtMarketExchange(
   return ex;
 }
 
-export function timeframeToCcxt(tf: "15m" | "1h" | "4h"): string {
+export function timeframeToCcxt(tf: CandleTimeframe): string {
   return tf;
 }

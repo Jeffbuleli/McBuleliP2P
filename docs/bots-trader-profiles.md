@@ -52,9 +52,9 @@ Légende :
 
 | Paramètre | Valeur cible | Aujourd’hui (approx.) | Cible v2 |
 |-----------|--------------|------------------------|----------|
-| TF entrée | 1m–5m | 15m (min disponible) | TF 1m/5m + tick 30–60 s |
-| TF sortie | 1m–5m (identique) | 15m dédié smart exit | Même TF + order book / spread |
-| Cron / tick | 30 s – 1 min | ~5 min | `BOT_CRON_INTERVAL_MS` ≤ 60_000 |
+| TF entrée | 1m–5m | **1m** (preset scalp) | ✅ `BOT_CANDLE_TIMEFRAMES` inclut 1m/5m |
+| TF sortie | 1m–5m (identique) | **5m** smart exit dédié | ✅ preset scalp |
+| Cron / tick | 30 s – 1 min | ~5 min par défaut | ✅ alerte UI si scalp + cron &gt; 1 min ; `BOT_CRON_INTERVAL_MS=60000` |
 | SL % | 0,3 – 0,8 % | 1–2 % min UI | Profil « scalp » preset |
 | TP % | 0,5 – 1,5 % (R:R ≥ 1) | 2–5 % | TP partiel 50 % à 0,8 % |
 | Levier | 5–10× (risque maîtrisé) | User | Plafond par profil |
@@ -68,11 +68,11 @@ Légende :
 3. Après +X %, SL → breakeven automatiquement.
 4. Un seul trade actif par paire ; pas de ré-entrée avant cooldown 5 min.
 
-**Preset config actuelle (proxy scalp)** — en attendant v2 :
+**Preset config actuelle (scalp v2)** :
 
 ```json
 {
-  "timeframe": "15m",
+  "timeframe": "1m",
   "intervalHours": 1,
   "stopLossPct": 2,
   "takeProfitPct": 4,
@@ -80,7 +80,9 @@ Légende :
   "minReversalScore": 45,
   "minProfitPctForSmartExit": 0.3,
   "smartExitUseEntryTimeframe": false,
-  "smartExitTimeframe": "15m"
+  "smartExitTimeframe": "5m",
+  "multiTfGateMode": true,
+  "confirmTimeframe": "5m"
 }
 ```
 
@@ -239,7 +241,7 @@ Exemple incohérent (cause classique de give-back) :
 | **v1.3 Trailing stop** ✅ | Scalper, Day, Swing | `bot-futures-trailing.ts`, profils UI |
 | **v1.4 Profil preset UI** ✅ | Tous | `futures-trader-profile-panel.tsx` |
 | **v1.5 Multi-TF gate** ✅ | Day, Swing | `multi-tf-gate.ts`, profils UI |
-| **v2 Tick rapide / 1m data** | Scalper | cron, `BOT_CANDLE_TIMEFRAMES` |
+| **v2 Tick rapide / 1m data** ✅ | Scalper | `bot-cron-interval.ts`, `BOT_CANDLE_TIMEFRAMES`, preset scalp 1m |
 
 ---
 
@@ -249,7 +251,7 @@ Ajouter un sélecteur **« Style de trading »** qui applique un preset :
 
 | UI | Preset technique |
 |----|------------------|
-| Scalp | 15m, cron alerte, SL 2 %, TP 4 %, smart 15m agressif |
+| Scalp | 1m → 5m MTF, cron 60 s recommandé, SL 2 %, TP 4 %, smart exit 5m |
 | Intraday | 15m/1h, smart 15m, profit min 0,5 % |
 | Swing | 4h, smart 4h, profit min 1 %, interval 24h |
 | Position | 4h, smart off, SL 8 %, TP 25 % |

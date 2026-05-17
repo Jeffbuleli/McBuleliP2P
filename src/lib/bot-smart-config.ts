@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const BOT_CANDLE_TIMEFRAMES = ["15m", "1h", "4h"] as const;
+export const BOT_CANDLE_TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h"] as const;
+
+export type BotCandleTimeframe = (typeof BOT_CANDLE_TIMEFRAMES)[number];
 
 /** Spread into bot plan schemas (Zod 4: avoid .merge() on refined objects). */
 export const botSmartFields = {
@@ -14,6 +16,15 @@ export const botSmartConfigSchema = z.object(botSmartFields);
 
 export type BotSmartConfig = z.infer<typeof botSmartConfigSchema>;
 
+const TF_SET = new Set<string>(BOT_CANDLE_TIMEFRAMES);
+
+export function parseBotCandleTimeframe(raw: unknown): BotCandleTimeframe {
+  if (typeof raw === "string" && TF_SET.has(raw)) {
+    return raw as BotCandleTimeframe;
+  }
+  return "1h";
+}
+
 export function parseSmartConfig(
   raw: Record<string, unknown>,
 ): BotSmartConfig {
@@ -22,7 +33,6 @@ export function parseSmartConfig(
   return {
     smartMode: Boolean(raw.smartMode),
     minSignalScore: Number(raw.minSignalScore) || 35,
-    timeframe:
-      raw.timeframe === "15m" || raw.timeframe === "4h" ? raw.timeframe : "1h",
+    timeframe: parseBotCandleTimeframe(raw.timeframe),
   };
 }

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
+import {
+  parseBotCandleTimeframe,
+  type BotCandleTimeframe,
+} from "@/lib/bot-smart-config";
 import type { Messages } from "@/i18n/messages";
 import {
   BOT_PLAN_DESC_KEY,
@@ -161,15 +165,14 @@ function BotStatusBadge({
 type SmartUiState = {
   smartMode: boolean;
   minSignalScore: number;
-  timeframe: "15m" | "1h" | "4h";
+  timeframe: BotCandleTimeframe;
 };
 
 function loadSmartFromConfig(cfg: Record<string, unknown> | undefined): SmartUiState {
-  const tf = cfg?.timeframe;
   return {
     smartMode: Boolean(cfg?.smartMode),
     minSignalScore: Number(cfg?.minSignalScore) || 35,
-    timeframe: tf === "15m" || tf === "4h" ? tf : "1h",
+    timeframe: parseBotCandleTimeframe(cfg?.timeframe),
   };
 }
 
@@ -690,7 +693,13 @@ export function BotsTradingClient() {
       multiTfGateMode: preset.multiTfGateMode,
       confirmTimeframe:
         preset.confirmTimeframe ??
-        (preset.timeframe === "15m" ? "1h" : "4h"),
+        (preset.timeframe === "1m"
+          ? "5m"
+          : preset.timeframe === "5m"
+            ? "15m"
+            : preset.timeframe === "15m"
+              ? "1h"
+              : "4h"),
     });
   }
 
@@ -1610,7 +1619,9 @@ export function BotsTradingClient() {
             exit={futExit}
             setExit={setFutExit}
             entryTimeframe={futSmart.timeframe}
-            timeframes={data.smartOptions?.timeframes ?? ["15m", "1h", "4h"]}
+            timeframes={
+              data.smartOptions?.timeframes ?? ["1m", "5m", "15m", "1h", "4h"]
+            }
             t={t}
           />
           {futInst?.status === "active" && !instEnvAligned(futInst) ? (

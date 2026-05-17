@@ -38,7 +38,7 @@ const PRESETS: Record<
 > = {
   scalp: {
     traderProfile: "scalp",
-    timeframe: "15m",
+    timeframe: "1m",
     intervalHours: 1,
     stopLossPct: 2,
     takeProfitPct: 4,
@@ -48,14 +48,14 @@ const PRESETS: Record<
     minReversalScore: 45,
     minProfitPctForSmartExit: 0.3,
     smartExitUseEntryTimeframe: false,
-    smartExitTimeframe: "15m",
+    smartExitTimeframe: "5m",
     breakevenMode: true,
     breakevenTriggerPct: 0.4,
     trailingMode: true,
     trailingPct: 0.3,
     trailingTriggerPct: 0.5,
     multiTfGateMode: true,
-    confirmTimeframe: "1h",
+    confirmTimeframe: "5m",
   },
   day: {
     traderProfile: "day",

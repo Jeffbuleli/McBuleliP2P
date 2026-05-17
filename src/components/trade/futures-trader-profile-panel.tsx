@@ -63,20 +63,35 @@ export type FutMultiTfUiState = {
   confirmTimeframe: CandleTf;
 };
 
+function defaultConfirmTimeframe(entry: CandleTf): CandleTf {
+  const idx = BOT_CANDLE_TIMEFRAMES.indexOf(entry);
+  if (idx < 0 || idx >= BOT_CANDLE_TIMEFRAMES.length - 1) {
+    return "4h";
+  }
+  return BOT_CANDLE_TIMEFRAMES[idx + 1];
+}
+
+function parseCandleTf(raw: unknown, fallback: CandleTf): CandleTf {
+  if (
+    typeof raw === "string" &&
+    (BOT_CANDLE_TIMEFRAMES as readonly string[]).includes(raw)
+  ) {
+    return raw as CandleTf;
+  }
+  return fallback;
+}
+
 export function loadFutMultiTfFromConfig(
   cfg: Record<string, unknown> | undefined,
   entryTimeframe: CandleTf,
 ): FutMultiTfUiState {
-  const raw = cfg?.confirmTimeframe;
-  const confirm: CandleTf =
-    raw === "15m" || raw === "1h" || raw === "4h" ? raw : entryTimeframe === "15m" ? "1h" : "4h";
+  const fallback = defaultConfirmTimeframe(entryTimeframe);
+  const confirm = parseCandleTf(cfg?.confirmTimeframe, fallback);
   return {
     multiTfGateMode: Boolean(cfg?.multiTfGateMode),
     confirmTimeframe: isHigherTimeframe(entryTimeframe, confirm)
       ? confirm
-      : entryTimeframe === "15m"
-        ? "1h"
-        : "4h",
+      : fallback,
   };
 }
 

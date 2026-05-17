@@ -1049,6 +1049,10 @@ export const en = {
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Inline",
   bots_cron_label: "Cron",
+  bots_cron_scalp_fast_tick:
+    "Scalp: cron {current}m — set BOT_CRON_INTERVAL_MS=60000 (recommended {recommended}m)",
+  bots_cron_scalp_fast_tick_tip:
+    "Scalp profile uses 1m candles; a tick every ~1 min keeps breakeven, trailing, and smart exit responsive.",
   bots_logs_other_env:
     "Server log hidden — switch to the environment where the bot is saved, or press Start to run here.",
   bots_keys_required_short: "Connect API keys above to configure this bot.",
@@ -2828,6 +2832,10 @@ export const fr: Messages = {
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Inline",
   bots_cron_label: "Cron",
+  bots_cron_scalp_fast_tick:
+    "Scalp : cron {current} min — définir BOT_CRON_INTERVAL_MS=60000 (recommandé {recommended} min)",
+  bots_cron_scalp_fast_tick_tip:
+    "Le profil scalp utilise des chandelles 1m ; un tick ~1 min rend breakeven, trailing et smart exit plus réactifs.",
   bots_logs_other_env:
     "Journal masqué — passez sur l’environnement où le bot est enregistré, ou appuyez sur Démarrer ici.",
   bots_keys_required_short: "Connectez les clés API ci-dessus pour configurer ce bot.",

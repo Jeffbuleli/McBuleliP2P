@@ -13,8 +13,11 @@ export async function register() {
     return;
   }
 
-  const intervalMs = Number(process.env.BOT_CRON_INTERVAL_MS ?? "300000");
-  if (!Number.isFinite(intervalMs) || intervalMs < 60_000) return;
+  const { cronIntervalMs, BOT_CRON_MIN_INTERVAL_MS } = await import(
+    "@/lib/bot-cron-interval"
+  );
+  const intervalMs = cronIntervalMs();
+  if (!Number.isFinite(intervalMs) || intervalMs < BOT_CRON_MIN_INTERVAL_MS) return;
 
   const port = process.env.PORT ?? "3000";
   const base =

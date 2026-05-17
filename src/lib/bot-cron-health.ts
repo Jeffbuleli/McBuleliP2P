@@ -1,4 +1,8 @@
 import {
+  cronIntervalMs,
+  recommendedCronIntervalMs,
+} from "@/lib/bot-cron-interval";
+import {
   getPlatformSetting,
   PlatformSettingKey,
   setPlatformSetting,
@@ -17,16 +21,12 @@ export type BotCronHealth = {
   configured: boolean;
   inlineEnabled: boolean;
   intervalMs: number;
+  recommendedIntervalMs: number;
+  cronNeedsFasterTick: boolean;
   lastRun: BotCronRunSnapshot | null;
   stale: boolean;
   staleAfterMs: number;
 };
-
-function cronIntervalMs(): number {
-  const n = Number(process.env.BOT_CRON_INTERVAL_MS ?? "300000");
-  if (!Number.isFinite(n) || n < 60_000) return 300_000;
-  return n;
-}
 
 export async function recordBotCronRun(
   out: Omit<BotCronRunSnapshot, "at"> & { at?: string },
@@ -45,8 +45,13 @@ export async function recordBotCronRun(
   );
 }
 
-export async function getBotCronHealth(): Promise<BotCronHealth> {
+export async function getBotCronHealth(opts?: {
+  traderProfiles?: Array<string | undefined | null>;
+}): Promise<BotCronHealth> {
   const intervalMs = cronIntervalMs();
+  const recommendedIntervalMs = recommendedCronIntervalMs(
+    opts?.traderProfiles ?? [],
+  );
   const configured = Boolean(
     process.env.CRON_SECRET?.trim() &&
       process.env.CRON_SECRET.trim().length >= 12,
@@ -74,6 +79,8 @@ export async function getBotCronHealth(): Promise<BotCronHealth> {
     configured,
     inlineEnabled,
     intervalMs,
+    recommendedIntervalMs,
+    cronNeedsFasterTick: intervalMs > recommendedIntervalMs * 1.1,
     lastRun,
     stale,
     staleAfterMs,

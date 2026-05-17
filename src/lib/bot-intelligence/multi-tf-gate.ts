@@ -16,9 +16,11 @@ type SmartGateResult =
   | { ok: false; reason: string; signal?: TradeSignal };
 
 const TF_RANK: Record<(typeof BOT_CANDLE_TIMEFRAMES)[number], number> = {
-  "15m": 0,
-  "1h": 1,
-  "4h": 2,
+  "1m": 0,
+  "5m": 1,
+  "15m": 2,
+  "1h": 3,
+  "4h": 4,
 };
 
 export function isHigherTimeframe(

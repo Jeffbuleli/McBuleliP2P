@@ -32,14 +32,21 @@ export async function GET() {
     );
   }
 
-  const [subscriptions, instances, tradeMode, isSuperAdmin, cronHealth] =
-    await Promise.all([
-      listActiveBotSubscriptions(userId),
-      listUserBotInstances(userId),
-      getTradeModeSnapshot(userId),
-      isSuperAdminUserId(userId),
-      getBotCronHealth(),
-    ]);
+  const [subscriptions, instances, tradeMode, isSuperAdmin] = await Promise.all([
+    listActiveBotSubscriptions(userId),
+    listUserBotInstances(userId),
+    getTradeModeSnapshot(userId),
+    isSuperAdminUserId(userId),
+  ]);
+
+  const traderProfiles = instances
+    .filter((i) => i.planId === "futures_um" && i.status === "active")
+    .map((i) => {
+      const cfg = i.config as { traderProfile?: string };
+      return cfg.traderProfile;
+    });
+
+  const cronHealth = await getBotCronHealth({ traderProfiles });
 
   const plans = BOT_PLAN_IDS.map((id) => {
     const p = BOT_PLANS[id];
@@ -84,6 +91,10 @@ export async function GET() {
       configured: cronHealth.configured,
       inlineEnabled: cronHealth.inlineEnabled,
       intervalMinutes: Math.round(cronHealth.intervalMs / 60_000),
+      recommendedIntervalMinutes: Math.round(
+        cronHealth.recommendedIntervalMs / 60_000,
+      ),
+      cronNeedsFasterTick: cronHealth.cronNeedsFasterTick,
       lastRunAt: cronHealth.lastRun?.at ?? null,
       lastRunExecuted: cronHealth.lastRun?.executed ?? null,
       lastRunInstances: cronHealth.lastRun?.instances ?? null,
