@@ -53,8 +53,15 @@ function OpenRow({
 }) {
   if (row.kind === "futures") {
     const pnl = formatPnlLabel(row.unrealizedPnl);
+    const otherPair = row.matchesConfig === false;
     return (
-      <li className="flex items-start gap-3 rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-amber-100/40 p-3 shadow-sm dark:border-amber-700/50 dark:from-amber-950/40 dark:to-amber-950/15">
+      <li
+        className={`flex items-start gap-3 rounded-xl border p-3 shadow-sm ${
+          otherPair
+            ? "border-rose-400/80 bg-gradient-to-br from-rose-50 to-amber-50/60 dark:border-rose-700/50 dark:from-rose-950/30 dark:to-amber-950/15"
+            : "border-amber-300/70 bg-gradient-to-br from-amber-50 to-amber-100/40 dark:border-amber-700/50 dark:from-amber-950/40 dark:to-amber-950/15"
+        }`}
+      >
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white ${
             row.side === "LONG" ? "bg-emerald-600" : "bg-rose-600"
@@ -63,7 +70,19 @@ function OpenRow({
           {row.side === "LONG" ? "L" : "S"}
         </span>
         <div className="min-w-0 flex-1 text-sm">
-          <p className="font-bold text-amber-950 dark:text-amber-50">{row.symbol}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-bold text-amber-950 dark:text-amber-50">{row.symbol}</p>
+            {otherPair ? (
+              <span className="rounded-md bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800 dark:bg-rose-950/60 dark:text-rose-200">
+                {t("bots_futures_other_badge")}
+              </span>
+            ) : null}
+          </div>
+          {otherPair ? (
+            <p className="mt-1 text-xs text-rose-800 dark:text-rose-200">
+              {t("bots_futures_position_other")}
+            </p>
+          ) : null}
           <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
             {row.size ? (
               <>
@@ -259,7 +278,9 @@ export function BotStrategyLivePanel({
         </h4>
         <BotActivityFeed
           logs={feedLogs}
-          hidePositionOpenSkips={open.some((r) => r.kind === "futures")}
+          hidePositionOpenSkips={open.some(
+            (r) => r.kind === "futures" && r.matchesConfig !== false,
+          )}
           emptyLabel={t("bots_activity_feed_empty")}
           t={t}
         />

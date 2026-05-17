@@ -30,6 +30,7 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
   unknown_plan: "bots_skip_unknown_plan",
   exception: "bots_skip_exception",
   position_open: "bots_skip_position_open",
+  other_symbol_open: "bots_skip_other_symbol_open",
   futures_failed: "bots_log_failed",
 };
 

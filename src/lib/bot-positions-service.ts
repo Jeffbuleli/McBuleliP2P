@@ -5,24 +5,17 @@ import {
   loadUserBinanceCredentials,
 } from "@/lib/bot-credentials-service";
 import { binanceUserSignedGet } from "@/lib/binance-user-client";
-import {
-  futuresSignedGet,
-  resolveFuturesApiKind,
-} from "@/lib/binance-futures-routing";
+import { resolveFuturesApiKind } from "@/lib/binance-futures-routing";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
 import { parseBotGridConfig } from "@/lib/bot-grid-config";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
+import {
+  futuresSnapshotsToOpenRows,
+  listFuturesOpenPositions,
+} from "@/lib/bot-futures-positions";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 
 export type { BotOpenPositionRow } from "@/lib/bot-positions-types";
-
-type PositionRisk = {
-  symbol: string;
-  positionAmt: string;
-  entryPrice: string;
-  markPrice?: string;
-  unRealizedProfit?: string;
-};
 
 type OpenOrder = {
   symbol: string;
@@ -62,30 +55,13 @@ export async function fetchBotOpenPositions(args: {
         creds,
         credMeta?.futuresApiKind,
       );
-      const raw = (await futuresSignedGet({
+      const snaps = await listFuturesOpenPositions({
         environment: env,
         creds,
-        kind: apiKind,
-        pathKey: "positionRisk",
-        params: { symbol: cfg.symbol },
-      })) as PositionRisk[];
-      const row = raw.find((p) => p.symbol === cfg.symbol);
-      const amt = row ? Number(row.positionAmt) : 0;
-      if (!row || !Number.isFinite(amt) || Math.abs(amt) < 1e-8) {
-        return { open: [] };
-      }
+        apiKind,
+      });
       return {
-        open: [
-          {
-            kind: "futures",
-            symbol: cfg.symbol,
-            side: amt > 0 ? "LONG" : "SHORT",
-            size: String(Math.abs(amt)),
-            entryPrice: row.entryPrice,
-            markPrice: row.markPrice,
-            unrealizedPnl: row.unRealizedProfit,
-          },
-        ],
+        open: futuresSnapshotsToOpenRows(snaps, cfg.symbol),
       };
     }
 

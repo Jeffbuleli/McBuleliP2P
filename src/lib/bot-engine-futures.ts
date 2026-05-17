@@ -13,17 +13,14 @@ import {
 } from "@/lib/bot-instance-service";
 import { fetchBinanceFuturesMarkPrice } from "@/lib/binance-user-client";
 import {
-  futuresSignedGet,
+  findOtherFuturesOpen,
+  listFuturesOpenPositions,
+} from "@/lib/bot-futures-positions";
+import {
   futuresSignedPost,
   resolveFuturesApiKind,
 } from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
-
-type PositionRisk = {
-  symbol: string;
-  positionAmt: string;
-  entryPrice: string;
-};
 
 function formatFuturesQty(qty: number): string {
   if (qty >= 1) return qty.toFixed(3);
@@ -53,27 +50,6 @@ function shouldClosePosition(args: {
     if (mark <= entry * (1 - takeProfitPct / 100)) return "tp";
   }
   return null;
-}
-
-async function fetchPosition(
-  env: ReturnType<typeof billingToKeyEnvironment>,
-  creds: NonNullable<Awaited<ReturnType<typeof loadUserBinanceCredentials>>>,
-  symbol: string,
-  apiKind: Awaited<ReturnType<typeof resolveFuturesApiKind>>,
-): Promise<{ amt: number; entry: number } | null> {
-  const rows = (await futuresSignedGet({
-    environment: env,
-    creds,
-    kind: apiKind,
-    pathKey: "positionRisk",
-    params: { symbol },
-  })) as PositionRisk[];
-  const row = rows.find((r) => r.symbol === symbol);
-  if (!row) return null;
-  const amt = Number(row.positionAmt);
-  const entry = Number(row.entryPrice);
-  if (!Number.isFinite(amt) || Math.abs(amt) < 1e-12) return null;
-  return { amt, entry };
 }
 
 export async function tickFuturesUmInstance(args: {
@@ -124,18 +100,24 @@ export async function tickFuturesUmInstance(args: {
   );
 
   try {
-    const position = await fetchPosition(env, creds, cfg.symbol, futuresKind);
+    const openSnaps = await listFuturesOpenPositions({
+      environment: env,
+      creds,
+      apiKind: futuresKind,
+    });
+    const onConfig = openSnaps.find((p) => p.symbol === cfg.symbol);
+    const onOther = findOtherFuturesOpen(openSnaps, cfg.symbol);
 
-    if (position) {
+    if (onConfig) {
       const closeReason = shouldClosePosition({
         side: cfg.side,
-        entry: position.entry,
+        entry: onConfig.entry,
         mark,
         stopLossPct: cfg.stopLossPct,
         takeProfitPct: cfg.takeProfitPct,
       });
       if (closeReason) {
-        const closeSide = position.amt > 0 ? "SELL" : "BUY";
+        const closeSide = onConfig.amt > 0 ? "SELL" : "BUY";
         const order = await futuresSignedPost({
           environment: env,
           creds,
@@ -145,7 +127,7 @@ export async function tickFuturesUmInstance(args: {
             symbol: cfg.symbol,
             side: closeSide,
             type: "MARKET",
-            quantity: formatFuturesQty(Math.abs(position.amt)),
+            quantity: formatFuturesQty(Math.abs(onConfig.amt)),
             reduceOnly: "true",
           },
         });
@@ -155,11 +137,19 @@ export async function tickFuturesUmInstance(args: {
           userId: args.userId,
           planId: args.planId,
           action: closeReason === "sl" ? "futures_sl_close" : "futures_tp_close",
-          detail: { symbol: cfg.symbol, mark, entry: position.entry, order },
+          detail: { symbol: cfg.symbol, mark, entry: onConfig.entry, order },
         });
         return { ran: true };
       }
       return { ran: false, skipped: "position_open" };
+    }
+
+    if (onOther) {
+      await setBotInstanceError(
+        args.instanceId,
+        `Open position on ${onOther.symbol} — close it or set the bot to that pair`,
+      );
+      return { ran: false, skipped: "other_symbol_open" };
     }
 
     const intervalMs = cfg.intervalHours * 60 * 60 * 1000;

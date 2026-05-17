@@ -1026,6 +1026,17 @@ export const en = {
   bots_futures_size: "Size",
   bots_futures_entry: "Entry",
   bots_futures_mark: "Mark",
+  bots_futures_symbol_pending:
+    "Form shows {next} — the bot still follows {saved} until you press Start.",
+  bots_futures_other_badge: "Other pair",
+  bots_futures_position_other:
+    "Not managed by this bot — close on Binance or select that pair in the form.",
+  bots_futures_realign_form: "Align form with active pair",
+  bots_futures_realign_done: "Form aligned with {symbol}.",
+  bots_futures_other_symbol_open:
+    "Close {symbol} on Binance or select that pair before starting on a new one.",
+  bots_skip_other_symbol_open:
+    "Another pair is open on Binance — close it or set the bot to that pair.",
   bots_waiting_first_tick: "Waiting for the next server run (cron every few minutes).",
   bots_keys_required_short: "Connect API keys above to configure this bot.",
   bots_wizard_steps_tip:
@@ -2740,6 +2751,17 @@ export const fr: Messages = {
   bots_futures_size: "Taille",
   bots_futures_entry: "Entrée",
   bots_futures_mark: "Mark",
+  bots_futures_symbol_pending:
+    "Formulaire : {next} — le bot suit encore {saved} tant que vous n’appuyez pas sur Démarrer.",
+  bots_futures_other_badge: "Autre paire",
+  bots_futures_position_other:
+    "Non géré par ce bot — clôturez sur Binance ou choisissez cette paire dans le formulaire.",
+  bots_futures_realign_form: "Réaligner le formulaire sur la paire active",
+  bots_futures_realign_done: "Formulaire aligné sur {symbol}.",
+  bots_futures_other_symbol_open:
+    "Clôturez {symbol} sur Binance ou sélectionnez cette paire avant d’en démarrer une autre.",
+  bots_skip_other_symbol_open:
+    "Une autre paire est ouverte sur Binance — clôturez-la ou alignez le bot sur cette paire.",
   bots_waiting_first_tick: "En attente du prochain passage cron (toutes les quelques minutes).",
   bots_keys_required_short: "Connectez les clés API ci-dessus pour configurer ce bot.",
   bots_wizard_steps_tip:

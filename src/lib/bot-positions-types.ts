@@ -9,4 +9,6 @@ export type BotOpenPositionRow = {
   price?: string;
   quantity?: string;
   notionalUsdt?: string;
+  /** Futures: false when position is on Binance but not the bot’s saved pair. */
+  matchesConfig?: boolean;
 };

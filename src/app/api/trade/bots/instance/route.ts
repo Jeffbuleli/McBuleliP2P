@@ -1,7 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
-import { BOT_PLANS, type BotPlanId } from "@/lib/bot-config";
+import {
+  BOT_PLANS,
+  billingToKeyEnvironment,
+  type BotPlanId,
+} from "@/lib/bot-config";
+import {
+  listUserBinanceCredentials,
+  loadUserBinanceCredentials,
+} from "@/lib/bot-credentials-service";
+import {
+  findOtherFuturesOpen,
+  listFuturesOpenPositions,
+} from "@/lib/bot-futures-positions";
+import { resolveFuturesApiKind } from "@/lib/binance-futures-routing";
 import { botDcaConfigSchema } from "@/lib/bot-dca-config";
 import { botGridConfigSchema } from "@/lib/bot-grid-config";
 import { botFuturesConfigSchema } from "@/lib/bot-futures-config";
@@ -76,6 +89,35 @@ export async function POST(req: Request) {
         { error: "bots_invalid_futures_config" },
         { status: 400 },
       );
+    }
+    if (status === "active") {
+      const env = billingToKeyEnvironment(billing);
+      const creds = await loadUserBinanceCredentials(userId, env);
+      if (creds) {
+        const credMeta = (await listUserBinanceCredentials(userId)).find(
+          (c) => c.environment === env,
+        );
+        const apiKind = await resolveFuturesApiKind(
+          env,
+          creds,
+          credMeta?.futuresApiKind,
+        );
+        const open = await listFuturesOpenPositions({
+          environment: env,
+          creds,
+          apiKind,
+        });
+        const other = findOtherFuturesOpen(open, futuresParsed.data.symbol);
+        if (other) {
+          return NextResponse.json(
+            {
+              error: "bots_futures_other_symbol_open",
+              openSymbol: other.symbol,
+            },
+            { status: 409 },
+          );
+        }
+      }
     }
   }
 

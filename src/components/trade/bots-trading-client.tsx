@@ -16,6 +16,7 @@ import { BotsKeysHub } from "@/components/trade/bots-keys-hub";
 import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
 import { BotRunControls } from "@/components/trade/bot-run-controls";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
+import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
 import { UiInfoTip, UiSectionTitle } from "@/components/ui/ui-info-tip";
 import {
   BotPlanIcon,
@@ -651,6 +652,42 @@ export function BotsTradingClient() {
       credFor(futSub.billing)?.futuresOk &&
       credFor(futSub.billing)?.validatedAt,
   );
+  const savedFutCfg = parseBotFuturesConfig(futInst?.config ?? null);
+  const savedFutSymbol = savedFutCfg?.symbol;
+  const futFormSymbolDirty = Boolean(
+    savedFutSymbol && futSymbol !== savedFutSymbol,
+  );
+  const futUnmanagedRow = futOpenRows.find(
+    (r) => r.kind === "futures" && r.matchesConfig === false,
+  );
+  const futHasUnmanagedOpen = Boolean(futUnmanagedRow);
+  const futHasConfigOpen = futOpenRows.some(
+    (r) => r.kind === "futures" && r.matchesConfig !== false,
+  );
+  const futConfigOpenRow = futOpenRows.find(
+    (r) => r.kind === "futures" && r.matchesConfig !== false,
+  );
+  const futShowRealign =
+    futFormSymbolDirty ||
+    futHasUnmanagedOpen ||
+    Boolean(futConfigOpenRow && futSymbol !== futConfigOpenRow.symbol);
+
+  function realignFuturesForm() {
+    const targetSymbol =
+      futUnmanagedRow?.symbol ??
+      futConfigOpenRow?.symbol ??
+      savedFutSymbol;
+    if (!targetSymbol) return;
+    setFutSymbol(targetSymbol);
+    const side =
+      (targetSymbol === futUnmanagedRow?.symbol
+        ? futUnmanagedRow.side
+        : targetSymbol === futConfigOpenRow?.symbol
+          ? futConfigOpenRow.side
+          : savedFutCfg?.side) ?? futSide;
+    if (side === "LONG" || side === "SHORT") setFutSide(side);
+    setFutMsg(t("bots_futures_realign_done", { symbol: targetSymbol }));
+  }
 
   async function saveFutures(status: "active" | "paused") {
     const sub = activeSub("futures_um");
@@ -679,6 +716,15 @@ export function BotsTradingClient() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = typeof json.error === "string" ? json.error : "";
+        if (
+          code === "bots_futures_other_symbol_open" &&
+          typeof json.openSymbol === "string"
+        ) {
+          setFutMsg(
+            t("bots_futures_other_symbol_open", { symbol: json.openSymbol }),
+          );
+          return;
+        }
         setFutMsg(code ? botsApiMessage(code, t) : t("bots_err_generic"));
         return;
       }
@@ -1123,8 +1169,7 @@ export function BotsTradingClient() {
               status={futInst?.status ?? "none"}
               lastExecutedAt={futInst?.lastExecutedAt}
               monitoringOpen={
-                futInst?.status === "active" &&
-                futOpenRows.some((r) => r.kind === "futures")
+                futInst?.status === "active" && futHasConfigOpen
               }
               t={t}
             />
@@ -1144,6 +1189,30 @@ export function BotsTradingClient() {
                 ))}
               </select>
             </label>
+            {futFormSymbolDirty && savedFutSymbol ? (
+              <p className="rounded-lg border border-amber-400/60 bg-amber-100/80 px-3 py-2 text-xs text-amber-950 dark:border-amber-600/50 dark:bg-amber-950/40 dark:text-amber-100 sm:col-span-2">
+                {t("bots_futures_symbol_pending", {
+                  saved: savedFutSymbol,
+                  next: futSymbol,
+                })}
+              </p>
+            ) : null}
+            {futHasUnmanagedOpen ? (
+              <p className="rounded-lg border border-rose-400/60 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-700/50 dark:bg-rose-950/40 dark:text-rose-100 sm:col-span-2">
+                {t("bots_futures_position_other")}
+              </p>
+            ) : null}
+            {futShowRealign ? (
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={realignFuturesForm}
+                  className="w-full rounded-lg border border-amber-600/60 bg-white px-3 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-500/50 dark:bg-stone-900 dark:text-amber-100 dark:hover:bg-amber-950/50"
+                >
+                  {t("bots_futures_realign_form")}
+                </button>
+              </div>
+            ) : null}
             <label className="block text-sm font-medium">
               {t("bots_futures_side")}
               <select
@@ -1246,7 +1315,7 @@ export function BotsTradingClient() {
             status={futInst?.status ?? "none"}
             busy={busy}
             variant="amber"
-            monitoringOpen={futOpenRows.some((r) => r.kind === "futures")}
+            monitoringOpen={futHasConfigOpen}
             monitoringLabel={t("bots_futures_monitoring_open")}
             startLabel={t("bots_futures_start")}
             pauseLabel={t("bots_futures_pause")}
