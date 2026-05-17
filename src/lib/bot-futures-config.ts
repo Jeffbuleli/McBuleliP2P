@@ -23,6 +23,13 @@ export const botFuturesBreakevenFields = {
   breakevenTriggerPct: z.number().min(0.1).max(20).default(1),
 } as const;
 
+export const botFuturesTrailingFields = {
+  /** Close when profit retraces trailingPct from session peak (after trigger). */
+  trailingMode: z.boolean().default(false),
+  trailingPct: z.number().min(0.1).max(20).default(0.8),
+  trailingTriggerPct: z.number().min(0.1).max(50).default(2),
+} as const;
+
 export const botFuturesProfileField = {
   traderProfile: z.enum(BOT_TRADER_PROFILE_IDS).default("custom"),
 } as const;
@@ -49,6 +56,7 @@ export const botFuturesConfigSchema = z.object({
   ...botSmartFields,
   ...botFuturesSmartExitFields,
   ...botFuturesBreakevenFields,
+  ...botFuturesTrailingFields,
   ...botFuturesProfileField,
 });
 

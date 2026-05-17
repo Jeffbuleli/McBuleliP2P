@@ -1087,6 +1087,13 @@ export const en = {
   bots_breakeven_trigger: "at",
   bots_log_futures_breakeven_armed: "Breakeven armed",
   bots_feed_badge_breakeven: "Breakeven",
+  bots_trailing_mode: "Trailing stop",
+  bots_trailing_tip:
+    "After profit hits the trigger %, the bot tracks the session peak and closes if profit falls back by the retrace %.",
+  bots_trailing_retrace: "retrace",
+  bots_trailing_trigger: "from",
+  bots_log_futures_trailing_close: "Closed (trailing stop)",
+  bots_feed_badge_trailing: "Trailing",
   bots_smart_exit_mode: "Smart exit",
   bots_smart_exit_hint:
     "On each cron pass ({tf}), close the position if the signal reverses against your side and profit ≥ minimum.",
@@ -2852,6 +2859,13 @@ export const fr: Messages = {
   bots_breakeven_trigger: "à",
   bots_log_futures_breakeven_armed: "Breakeven actif",
   bots_feed_badge_breakeven: "Breakeven",
+  bots_trailing_mode: "Trailing stop",
+  bots_trailing_tip:
+    "Après le seuil %, le bot suit le pic de profit de la session et clôture si le profit recule du % de retrait.",
+  bots_trailing_retrace: "retrait",
+  bots_trailing_trigger: "dès",
+  bots_log_futures_trailing_close: "Clôture (trailing stop)",
+  bots_feed_badge_trailing: "Trailing",
   bots_smart_exit_mode: "Sortie smart",
   bots_smart_exit_hint:
     "À chaque cron ({tf}), clôture si le signal s’inverse contre votre sens et profit ≥ minimum.",

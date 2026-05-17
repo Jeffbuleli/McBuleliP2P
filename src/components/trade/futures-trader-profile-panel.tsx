@@ -14,6 +14,12 @@ export type FutBreakevenUiState = {
   breakevenTriggerPct: number;
 };
 
+export type FutTrailingUiState = {
+  trailingMode: boolean;
+  trailingPct: number;
+  trailingTriggerPct: number;
+};
+
 export function loadFutBreakevenFromConfig(
   cfg: Record<string, unknown> | undefined,
 ): FutBreakevenUiState {
@@ -23,10 +29,28 @@ export function loadFutBreakevenFromConfig(
   };
 }
 
+export function loadFutTrailingFromConfig(
+  cfg: Record<string, unknown> | undefined,
+): FutTrailingUiState {
+  return {
+    trailingMode: Boolean(cfg?.trailingMode),
+    trailingPct: Number(cfg?.trailingPct) || 0.8,
+    trailingTriggerPct: Number(cfg?.trailingTriggerPct) || 2,
+  };
+}
+
 export function futBreakevenConfigFields(s: FutBreakevenUiState) {
   return {
     breakevenMode: s.breakevenMode,
     breakevenTriggerPct: s.breakevenTriggerPct,
+  };
+}
+
+export function futTrailingConfigFields(s: FutTrailingUiState) {
+  return {
+    trailingMode: s.trailingMode,
+    trailingPct: s.trailingPct,
+    trailingTriggerPct: s.trailingTriggerPct,
   };
 }
 
@@ -47,6 +71,8 @@ export function FuturesTraderProfilePanel({
   onProfileChange,
   breakeven,
   onBreakevenChange,
+  trailing,
+  onTrailingChange,
   onApplyPreset,
   t,
 }: {
@@ -54,6 +80,8 @@ export function FuturesTraderProfilePanel({
   onProfileChange: (id: BotTraderProfileId) => void;
   breakeven: FutBreakevenUiState;
   onBreakevenChange: (s: FutBreakevenUiState) => void;
+  trailing: FutTrailingUiState;
+  onTrailingChange: (s: FutTrailingUiState) => void;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
@@ -126,6 +154,68 @@ export function FuturesTraderProfilePanel({
             />
             <span className="text-stone-500">%</span>
           </span>
+        ) : null}
+      </label>
+      <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <span className="flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            checked={trailing.trailingMode}
+            onChange={(e) =>
+              onTrailingChange({
+                ...trailing,
+                trailingMode: e.target.checked,
+              })
+            }
+          />
+          <span className="font-medium text-amber-950 dark:text-amber-100">
+            {t("bots_trailing_mode")}
+          </span>
+          <UiInfoTip tip={t("bots_trailing_tip")} />
+        </span>
+        {trailing.trailingMode ? (
+          <>
+            <span className="flex items-center gap-1">
+              <span className="text-stone-600 dark:text-stone-400">
+                {t("bots_trailing_retrace")}
+              </span>
+              <input
+                type="number"
+                min={0.1}
+                max={20}
+                step={0.1}
+                value={trailing.trailingPct}
+                onChange={(e) =>
+                  onTrailingChange({
+                    ...trailing,
+                    trailingPct: Number(e.target.value),
+                  })
+                }
+                className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+              />
+              <span className="text-stone-500">%</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-stone-600 dark:text-stone-400">
+                {t("bots_trailing_trigger")}
+              </span>
+              <input
+                type="number"
+                min={0.1}
+                max={50}
+                step={0.1}
+                value={trailing.trailingTriggerPct}
+                onChange={(e) =>
+                  onTrailingChange({
+                    ...trailing,
+                    trailingTriggerPct: Number(e.target.value),
+                  })
+                }
+                className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+              />
+              <span className="text-stone-500">%</span>
+            </span>
+          </>
         ) : null}
       </label>
     </div>

@@ -25,6 +25,9 @@ export type FuturesTraderProfilePreset = {
   smartExitTimeframe?: (typeof BOT_CANDLE_TIMEFRAMES)[number];
   breakevenMode: boolean;
   breakevenTriggerPct: number;
+  trailingMode: boolean;
+  trailingPct: number;
+  trailingTriggerPct: number;
 };
 
 const PRESETS: Record<
@@ -46,6 +49,9 @@ const PRESETS: Record<
     smartExitTimeframe: "15m",
     breakevenMode: true,
     breakevenTriggerPct: 0.4,
+    trailingMode: true,
+    trailingPct: 0.3,
+    trailingTriggerPct: 0.5,
   },
   day: {
     traderProfile: "day",
@@ -62,6 +68,9 @@ const PRESETS: Record<
     smartExitTimeframe: "15m",
     breakevenMode: true,
     breakevenTriggerPct: 1,
+    trailingMode: true,
+    trailingPct: 0.8,
+    trailingTriggerPct: 2,
   },
   swing: {
     traderProfile: "swing",
@@ -78,6 +87,9 @@ const PRESETS: Record<
     smartExitTimeframe: "4h",
     breakevenMode: false,
     breakevenTriggerPct: 1,
+    trailingMode: true,
+    trailingPct: 1.5,
+    trailingTriggerPct: 3,
   },
   position: {
     traderProfile: "position",
@@ -93,6 +105,9 @@ const PRESETS: Record<
     smartExitUseEntryTimeframe: true,
     breakevenMode: false,
     breakevenTriggerPct: 1,
+    trailingMode: false,
+    trailingPct: 0.8,
+    trailingTriggerPct: 2,
   },
 };
 

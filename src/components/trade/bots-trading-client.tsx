@@ -20,8 +20,11 @@ import {
 import {
   FuturesTraderProfilePanel,
   futBreakevenConfigFields,
+  futTrailingConfigFields,
   loadFutBreakevenFromConfig,
+  loadFutTrailingFromConfig,
   type FutBreakevenUiState,
+  type FutTrailingUiState,
 } from "@/components/trade/futures-trader-profile-panel";
 import {
   parseTraderProfileId,
@@ -510,6 +513,11 @@ export function BotsTradingClient() {
     breakevenMode: true,
     breakevenTriggerPct: 1,
   });
+  const [futTrailing, setFutTrailing] = useState<FutTrailingUiState>({
+    trailingMode: true,
+    trailingPct: 0.8,
+    trailingTriggerPct: 2,
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -637,6 +645,7 @@ export function BotsTradingClient() {
     setFutSmart(loadSmartFromConfig(finst?.config));
     setFutExit(loadFutExitFromConfig(finst?.config));
     setFutBreakeven(loadFutBreakevenFromConfig(finst?.config));
+    setFutTrailing(loadFutTrailingFromConfig(finst?.config));
     setFutTraderProfile(parseTraderProfileId(finst?.config?.traderProfile));
   }, [data?.instances]);
 
@@ -660,6 +669,11 @@ export function BotsTradingClient() {
     setFutBreakeven({
       breakevenMode: preset.breakevenMode,
       breakevenTriggerPct: preset.breakevenTriggerPct,
+    });
+    setFutTrailing({
+      trailingMode: preset.trailingMode,
+      trailingPct: preset.trailingPct,
+      trailingTriggerPct: preset.trailingTriggerPct,
     });
   }
 
@@ -965,6 +979,7 @@ export function BotsTradingClient() {
             ...smartConfigFields(futSmart),
             ...futExitConfigFields(futExit),
             ...futBreakevenConfigFields(futBreakeven),
+            ...futTrailingConfigFields(futTrailing),
           },
         }),
       });
@@ -1557,6 +1572,8 @@ export function BotsTradingClient() {
             onProfileChange={setFutTraderProfile}
             breakeven={futBreakeven}
             onBreakevenChange={setFutBreakeven}
+            trailing={futTrailing}
+            onTrailingChange={setFutTrailing}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}
           />

@@ -236,7 +236,7 @@ Exemple incohérent (cause classique de give-back) :
 | Smart Exit v1.1 (TF sortie dédié) | Day, Swing | `bot-futures-smart-exit.ts`, `bot-futures-config.ts` |
 | Cron health | Tous | `bot-cron-health.ts`, `bots-cron-health-bar.tsx` |
 | **v1.2 Breakeven SL** ✅ | Scalper, Day | `bot-futures-breakeven.ts`, profils UI |
-| **v1.3 Trailing stop** | Scalper, Day, Swing | idem + config `trailingPct` |
+| **v1.3 Trailing stop** ✅ | Scalper, Day, Swing | `bot-futures-trailing.ts`, profils UI |
 | **v1.4 Profil preset UI** ✅ | Tous | `futures-trader-profile-panel.tsx` |
 | **v1.5 Multi-TF gate** | Day, Swing | `evaluate-signal` + 2 TF |
 | **v2 Tick rapide / 1m data** | Scalper | cron, `BOT_CANDLE_TIMEFRAMES` |

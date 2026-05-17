@@ -15,6 +15,7 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   futures_tp_close: "bots_log_futures_tp_close",
   futures_smart_close: "bots_log_futures_smart_close",
   futures_breakeven_armed: "bots_log_futures_breakeven_armed",
+  futures_trailing_close: "bots_log_futures_trailing_close",
   smart_exit_hold: "bots_log_smart_exit_hold",
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",

@@ -25,6 +25,7 @@ export const BOT_CLOSED_ACTIONS = new Set([
   "futures_sl_close",
   "futures_tp_close",
   "futures_smart_close",
+  "futures_trailing_close",
 ]);
 
 export const BOT_EXECUTION_ACTIONS = new Set([
@@ -34,6 +35,7 @@ export const BOT_EXECUTION_ACTIONS = new Set([
   "futures_sl_close",
   "futures_tp_close",
   "futures_smart_close",
+  "futures_trailing_close",
   "smart_skip",
 ]);
 
@@ -102,6 +104,12 @@ export function buildBotTradeHistoryRow(
   }
   if (typeof d.triggerPct === "number" && Number.isFinite(d.triggerPct)) {
     chips.push(chip("≥", `${d.triggerPct}%`));
+  }
+  if (typeof d.peakProfitPct === "number" && Number.isFinite(d.peakProfitPct)) {
+    chips.push(chip("↑", `${d.peakProfitPct.toFixed(2)}%`));
+  }
+  if (typeof d.retracePct === "number" && Number.isFinite(d.retracePct)) {
+    chips.push(chip("↓", `${d.retracePct.toFixed(2)}%`));
   }
   if (typeof d.timeframe === "string") {
     chips.push(chip("⏱", d.timeframe));

@@ -163,6 +163,30 @@ export async function markBotInstanceExecuted(
   }
 }
 
+export async function getLatestBotExecutionLogDetail(
+  instanceId: string,
+  action: string,
+  withinMs: number,
+): Promise<Record<string, unknown> | null> {
+  const db = getDb();
+  const since = new Date(Date.now() - withinMs);
+  const [row] = await db
+    .select({ detail: botExecutionLog.detail })
+    .from(botExecutionLog)
+    .where(
+      and(
+        eq(botExecutionLog.instanceId, instanceId),
+        eq(botExecutionLog.action, action),
+        gte(botExecutionLog.createdAt, since),
+      ),
+    )
+    .orderBy(desc(botExecutionLog.createdAt))
+    .limit(1);
+  const detail = row?.detail;
+  if (!detail || typeof detail !== "object") return null;
+  return detail as Record<string, unknown>;
+}
+
 export async function hasRecentExecutionLog(
   instanceId: string,
   action: string,

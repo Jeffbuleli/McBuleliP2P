@@ -76,6 +76,12 @@ const ACTION_VIS: Record<string, ActionVisual> = {
     rail: "border-l-sky-500",
     iconBg: "bg-sky-700 text-white",
   },
+  futures_trailing_close: {
+    badgeKey: "bots_feed_badge_trailing",
+    icon: "↘",
+    rail: "border-l-sky-400",
+    iconBg: "bg-sky-600 text-white",
+  },
   dca_buy: {
     badgeKey: "bots_feed_badge_buy",
     icon: "+",
@@ -144,6 +150,8 @@ export function buildFeedViewModel(
         events.push(log);
         holdKept = true;
       }
+    } else if (log.action === "futures_trailing_peak") {
+      continue;
     } else {
       events.push(log);
     }

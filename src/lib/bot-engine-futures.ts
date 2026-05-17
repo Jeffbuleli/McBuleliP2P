@@ -11,6 +11,7 @@ import {
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   appendBotExecutionLog,
+  getLatestBotExecutionLogDetail,
   hasRecentExecutionLog,
   markBotInstanceSuccess,
   setBotInstanceError,
@@ -29,6 +30,10 @@ import {
   isBreakevenArmed,
   shouldClosePosition,
 } from "@/lib/bot-futures-breakeven";
+import {
+  evaluateTrailingStop,
+  peakProfitIncreased,
+} from "@/lib/bot-futures-trailing";
 import { unrealizedProfitPct } from "@/lib/bot-futures-smart-exit";
 import { runFuturesSmartExitCheck } from "@/lib/bot-futures-smart-exit";
 
@@ -138,6 +143,84 @@ export async function tickFuturesUmInstance(args: {
             profile: cfg.traderProfile,
           },
         });
+      }
+
+      const positionWindowMs = 30 * 24 * 60 * 60 * 1000;
+      const peakDetail = cfg.trailingMode
+        ? await getLatestBotExecutionLogDetail(
+            args.instanceId,
+            "futures_trailing_peak",
+            positionWindowMs,
+          )
+        : null;
+      const storedPeak =
+        typeof peakDetail?.peakProfitPct === "number" &&
+        Number.isFinite(peakDetail.peakProfitPct)
+          ? peakDetail.peakProfitPct
+          : null;
+
+      const trailing = evaluateTrailingStop({
+        side: cfg.side,
+        entry: onConfig.entry,
+        mark,
+        trailingMode: cfg.trailingMode,
+        trailingPct: cfg.trailingPct,
+        trailingTriggerPct: cfg.trailingTriggerPct,
+        storedPeakProfitPct: storedPeak,
+      });
+
+      if (
+        cfg.trailingMode &&
+        peakProfitIncreased(storedPeak, trailing.peakProfitPct)
+      ) {
+        await appendBotExecutionLog({
+          instanceId: args.instanceId,
+          userId: args.userId,
+          planId: args.planId,
+          action: "futures_trailing_peak",
+          detail: {
+            symbol: cfg.symbol,
+            entry: onConfig.entry,
+            mark,
+            peakProfitPct: trailing.peakProfitPct,
+            profile: cfg.traderProfile,
+          },
+        });
+      }
+
+      if (trailing.shouldClose) {
+        const closeSide = onConfig.amt > 0 ? "SELL" : "BUY";
+        const order = await futuresSignedPost({
+          environment: env,
+          creds,
+          kind: futuresKind,
+          pathKey: "order",
+          params: {
+            symbol: cfg.symbol,
+            side: closeSide,
+            type: "MARKET",
+            quantity: formatFuturesQty(Math.abs(onConfig.amt)),
+            reduceOnly: "true",
+          },
+        });
+        await markBotInstanceSuccess(args.instanceId);
+        await appendBotExecutionLog({
+          instanceId: args.instanceId,
+          userId: args.userId,
+          planId: args.planId,
+          action: "futures_trailing_close",
+          detail: {
+            symbol: cfg.symbol,
+            mark,
+            entry: onConfig.entry,
+            peakProfitPct: trailing.peakProfitPct,
+            profitPct: trailing.currentProfitPct,
+            retracePct: trailing.retracePct,
+            trailingPct: cfg.trailingPct,
+            order,
+          },
+        });
+        return { ran: true };
       }
 
       const closeReason = shouldClosePosition({
