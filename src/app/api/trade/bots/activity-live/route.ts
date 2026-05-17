@@ -1,19 +1,27 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { buildMockBotActivityFeed } from "@/lib/bot-activity-mock";
+import { isBotPlanId } from "@/lib/bot-config";
+import { listBotExecutionLogs } from "@/lib/bot-instance-service";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+/** @deprecated Use per-strategy logs + positions on the bots page. */
+export async function GET(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const feed = buildMockBotActivityFeed();
+  const planParam = new URL(req.url).searchParams.get("planId");
+  if (!planParam || !isBotPlanId(planParam)) {
+    return NextResponse.json({ error: "planId required" }, { status: 400 });
+  }
+
+  const logs = await listBotExecutionLogs(userId, planParam, 20);
   return NextResponse.json({
-    ...feed,
-    simulated: true,
+    planId: planParam,
+    logs,
+    simulated: false,
     polledAt: new Date().toISOString(),
   });
 }

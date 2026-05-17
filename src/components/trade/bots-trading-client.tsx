@@ -13,8 +13,8 @@ import {
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
 import { BotsKeysHub } from "@/components/trade/bots-keys-hub";
-import { BotActivityMonitor } from "@/components/trade/bot-activity-monitor";
-import { BotPositionsPanel } from "@/components/trade/bot-positions-panel";
+import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
+import { UiInfoTip, UiSectionTitle } from "@/components/ui/ui-info-tip";
 import {
   BotPlanIcon,
   BotStrategyTabBar,
@@ -605,24 +605,27 @@ export function BotsTradingClient() {
 
   const dcaSub = activeSub("dca_spot");
   const dcaInst = instanceFor("dca_spot");
-  const dcaKeysOk =
+  const dcaKeysOk = Boolean(
     dcaSub &&
-    credFor(dcaSub.billing)?.spotOk &&
-    credFor(dcaSub.billing)?.validatedAt;
+      credFor(dcaSub.billing)?.spotOk &&
+      credFor(dcaSub.billing)?.validatedAt,
+  );
 
   const gridSub = activeSub("grid_spot");
   const gridInst = instanceFor("grid_spot");
-  const gridKeysOk =
+  const gridKeysOk = Boolean(
     gridSub &&
-    credFor(gridSub.billing)?.spotOk &&
-    credFor(gridSub.billing)?.validatedAt;
+      credFor(gridSub.billing)?.spotOk &&
+      credFor(gridSub.billing)?.validatedAt,
+  );
 
   const futSub = activeSub("futures_um");
   const futInst = instanceFor("futures_um");
-  const futKeysOk =
+  const futKeysOk = Boolean(
     futSub &&
-    credFor(futSub.billing)?.futuresOk &&
-    credFor(futSub.billing)?.validatedAt;
+      credFor(futSub.billing)?.futuresOk &&
+      credFor(futSub.billing)?.validatedAt,
+  );
 
   async function saveFutures(status: "active" | "paused") {
     const sub = activeSub("futures_um");
@@ -721,26 +724,16 @@ export function BotsTradingClient() {
 
   return (
     <div className="space-y-8 pb-10 pt-6">
-      <header>
+      <header className="flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
           {t("bots_title")}
         </h1>
-        <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-          {t("bots_intro")}
-        </p>
+        <UiInfoTip tip={t("bots_intro_tip")} />
         {!data.keysEncryptionConfigured ? (
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+          <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
             {t("bots_encryption_missing")}
           </p>
         ) : null}
-        <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/80 p-4 dark:border-sky-800/50 dark:bg-sky-950/25">
-          <p className="text-sm font-semibold text-sky-950 dark:text-sky-100">
-            {t("bots_auto_title")}
-          </p>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            {t("bots_auto_body")}
-          </p>
-        </div>
       </header>
 
       <BotStrategyTabBar
@@ -753,18 +746,9 @@ export function BotsTradingClient() {
         }}
       />
 
-      <BotActivityMonitor />
-
       {data.isSuperAdmin ? (
         <p className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm text-violet-950 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100">
           {t("bots_privileged_badge")}
-        </p>
-      ) : null}
-
-      {credFor("live")?.validatedAt ? (
-        <p className="rounded-xl border border-emerald-400 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-950 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-100">
-          {t("bots_live_keys_ready_banner")}{" "}
-          {formatBotsCredentialValidationLine(credFor("live"), t)}
         </p>
       ) : null}
 
@@ -774,7 +758,6 @@ export function BotsTradingClient() {
         onBillingChange={setAccountBilling}
         tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
         isSuperAdmin={Boolean(data.isSuperAdmin)}
-        activePlanId={activeTab}
         busy={busy}
         keysHubMsg={keysHubMsg}
         onConnect={openKeysHub}
@@ -785,12 +768,56 @@ export function BotsTradingClient() {
       {activeTab === "dca_spot" && !dcaSub ? (
         <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
           <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-emerald-600" />
-          <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
-            {t(BOT_PLAN_DESC_KEY.dca_spot)}
-          </p>
+          <h2 className="mt-3 text-lg font-bold">
+            <UiSectionTitle
+              title={t("bots_plan_dca")}
+              tip={t(BOT_PLAN_DESC_KEY.dca_spot)}
+            />
+          </h2>
           <button
             type="button"
             onClick={() => startWizard("dca_spot")}
+            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
+          >
+            {t("bots_subscribe_cta")}
+          </button>
+        </section>
+      ) : null}
+
+
+
+      {activeTab === "grid_spot" && !gridSub ? (
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
+          <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-600" />
+          <h2 className="mt-3 text-lg font-bold">
+            <UiSectionTitle
+              title={t("bots_plan_grid")}
+              tip={t(BOT_PLAN_DESC_KEY.grid_spot)}
+            />
+          </h2>
+          <button
+            type="button"
+            onClick={() => startWizard("grid_spot")}
+            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
+          >
+            {t("bots_subscribe_cta")}
+          </button>
+        </section>
+      ) : null}
+
+
+      {activeTab === "futures_um" && !futSub ? (
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
+          <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-600" />
+          <h2 className="mt-3 text-lg font-bold">
+            <UiSectionTitle
+              title={t("bots_plan_futures")}
+              tip={t(BOT_PLAN_DESC_KEY.futures_um)}
+            />
+          </h2>
+          <button
+            type="button"
+            onClick={() => startWizard("futures_um")}
             className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
           >
             {t("bots_subscribe_cta")}
@@ -799,90 +826,40 @@ export function BotsTradingClient() {
       ) : null}
 
       {activeTab === "dca_spot" && dcaSub && !dcaKeysOk ? (
-        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-950 dark:text-amber-100">
-            {t("bots_keys_required_spot")}
-          </p>
-          <button
-            type="button"
-            onClick={() => startWizard("dca_spot")}
-            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
-          >
-            {t("bots_keys_required_cta")}
-          </button>
-        </div>
+        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
+          {t("bots_keys_required_short")}
+          <UiInfoTip tip={t("bots_keys_required_spot")} />
+        </p>
       ) : null}
 
       {activeTab === "grid_spot" && gridSub && !gridKeysOk ? (
-        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-950 dark:text-amber-100">
-            {t("bots_keys_required_spot")}
-          </p>
-          <button
-            type="button"
-            onClick={() => startWizard("grid_spot")}
-            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
-          >
-            {t("bots_keys_required_cta")}
-          </button>
-        </div>
-      ) : null}
-
-      {activeTab === "grid_spot" && !gridSub ? (
-        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
-          <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-600" />
-          <button
-            type="button"
-            onClick={() => startWizard("grid_spot")}
-            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
-          >
-            {t("bots_subscribe_cta")}
-          </button>
-        </section>
+        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
+          {t("bots_keys_required_short")}
+          <UiInfoTip tip={t("bots_keys_required_spot")} />
+        </p>
       ) : null}
 
       {activeTab === "futures_um" && futSub && !futKeysOk ? (
-        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-950 dark:text-amber-100">
-            {t("bots_keys_required_futures")}
-          </p>
-          <button
-            type="button"
-            onClick={() => startWizard("futures_um")}
-            className="mt-3 w-full rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white"
-          >
-            {t("bots_keys_required_cta")}
-          </button>
-        </div>
-      ) : null}
-
-      {activeTab === "futures_um" && !futSub ? (
-        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
-          <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-600" />
-          <button
-            type="button"
-            onClick={() => startWizard("futures_um")}
-            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
-          >
-            {t("bots_subscribe_cta")}
-          </button>
-        </section>
+        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
+          {t("bots_keys_required_short")}
+          <UiInfoTip tip={t("bots_keys_required_futures")} />
+        </p>
       ) : null}
 
       {activeTab === "dca_spot" && dcaSub && dcaKeysOk ? (
         <section className="mt-4 rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
-              {t("bots_dca_config_title")}
+              <UiSectionTitle
+                title={t("bots_dca_config_title")}
+                tip={t("bots_dca_config_tip")}
+              />
             </h2>
             <BotStatusBadge
               status={dcaInst?.status ?? "none"}
               t={t}
             />
           </div>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            {t("bots_dca_config_hint")}
-          </p>
           <div className="mt-4 grid gap-3">
             <label className="block text-sm font-medium">
               {t("bots_dca_symbol")}
@@ -964,10 +941,14 @@ export function BotsTradingClient() {
               {t("bots_dca_pause")}
             </button>
           </div>
-          {dcaInst?.status === "active" ? (
-            <p className="mt-2 text-xs text-stone-500">{t("bots_dca_cron_note")}</p>
-          ) : null}
-          <BotPositionsPanel planId="dca_spot" logs={logs} keysOk t={t} />
+          <BotStrategyLivePanel
+            planId="dca_spot"
+            botActive={dcaInst?.status === "active"}
+            keysOk={dcaKeysOk}
+            logs={logs}
+            onLogsRefresh={() => loadLogs("dca_spot")}
+            t={t}
+          />
         </section>
       ) : null}
 
@@ -975,7 +956,10 @@ export function BotsTradingClient() {
         <section className="mt-4 rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
-              {t("bots_grid_config_title")}
+              <UiSectionTitle
+                title={t("bots_grid_config_title")}
+                tip={t("bots_grid_config_tip")}
+              />
             </h2>
             <BotStatusBadge
               status={gridInst?.status ?? "none"}
@@ -983,9 +967,6 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            {t("bots_grid_config_hint")}
-          </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium sm:col-span-2">
               {t("bots_dca_symbol")}
@@ -1093,7 +1074,14 @@ export function BotsTradingClient() {
               {t("bots_grid_pause")}
             </button>
           </div>
-          <BotPositionsPanel planId="grid_spot" logs={logs} keysOk t={t} />
+          <BotStrategyLivePanel
+            planId="grid_spot"
+            botActive={gridInst?.status === "active"}
+            keysOk={gridKeysOk}
+            logs={logs}
+            onLogsRefresh={() => loadLogs("grid_spot")}
+            t={t}
+          />
         </section>
       ) : null}
 
@@ -1101,7 +1089,10 @@ export function BotsTradingClient() {
         <section className="mt-4 rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
-              {t("bots_futures_config_title")}
+              <UiSectionTitle
+                title={t("bots_futures_config_title")}
+                tip={t("bots_futures_config_tip")}
+              />
             </h2>
             <BotStatusBadge
               status={futInst?.status ?? "none"}
@@ -1109,9 +1100,6 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            {t("bots_futures_config_hint")}
-          </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium sm:col-span-2">
               {t("bots_dca_symbol")}
@@ -1240,10 +1228,14 @@ export function BotsTradingClient() {
               {t("bots_futures_pause")}
             </button>
           </div>
-          {futInst?.status === "active" ? (
-            <p className="mt-2 text-xs text-stone-500">{t("bots_futures_cron_note")}</p>
-          ) : null}
-          <BotPositionsPanel planId="futures_um" logs={logs} keysOk t={t} />
+          <BotStrategyLivePanel
+            planId="futures_um"
+            botActive={futInst?.status === "active"}
+            keysOk={futKeysOk}
+            logs={logs}
+            onLogsRefresh={() => loadLogs("futures_um")}
+            t={t}
+          />
         </section>
       ) : null}
 
@@ -1337,7 +1329,10 @@ export function BotsTradingClient() {
 
           {wizardStep === 2 ? (
             <div className="mt-4 space-y-3">
-              <p className="text-sm">{t("bots_subscribe_confirm")}</p>
+              <p className="flex items-center gap-1 text-sm font-medium">
+                {t("bots_confirm_subscribe")}
+                <UiInfoTip tip={t("bots_subscribe_confirm_tip")} />
+              </p>
               <button
                 type="button"
                 disabled={busy}
@@ -1358,46 +1353,26 @@ export function BotsTradingClient() {
 
           {wizardStep === 3 ? (
             <div className="mt-4 space-y-4">
-              <ol className="list-decimal space-y-2 pl-5 text-sm text-stone-800 dark:text-stone-200">
-                {wizardBilling === "live" ? (
-                  <>
-                    <li>{t("bots_wizard_step1_live")}</li>
-                    <li>{t("bots_wizard_step2_live")}</li>
-                    <li>{t("bots_wizard_step3_live")}</li>
-                    <li>{t("bots_wizard_step4_live")}</li>
-                  </>
-                ) : (
-                  <>
-                    <li>{t("bots_wizard_step1")}</li>
-                    <li>{t("bots_wizard_step2")}</li>
-                    <li>{t("bots_wizard_step3")}</li>
-                    <li>{t("bots_wizard_step4")}</li>
-                  </>
-                )}
-              </ol>
-              {!credFor(wizardBilling) ? (
-                wizardBilling === "demo" ? (
-                  <p className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm font-medium text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
-                    {wizardPlan === "futures_um"
-                      ? t("bots_env_demo_futures_hint")
-                      : t("bots_env_demo_spot_hint")}
-                  </p>
-                ) : (
-                  <div className="space-y-2 rounded-xl border-2 border-rose-400 bg-rose-50/90 p-3 dark:border-rose-600 dark:bg-rose-950/40">
-                    <p className="text-sm font-semibold text-rose-950 dark:text-rose-100">
-                      {t("bots_live_real_money_banner")}
-                    </p>
-                    <p className="text-xs text-rose-900/90 dark:text-rose-200/90">
-                      {wizardPlan === "futures_um"
-                        ? t("bots_env_live_futures_hint")
-                        : t("bots_env_live_spot_hint")}
-                    </p>
-                    <p className="text-xs text-stone-700 dark:text-stone-300">
-                      {t("bots_live_ip_note")}
-                    </p>
-                  </div>
-                )
-              ) : null}
+              <p className="flex flex-wrap items-center gap-1 text-sm font-medium">
+                {t("bots_connect_keys")}
+                <UiInfoTip
+                  tip={
+                    wizardBilling === "live"
+                      ? t("bots_wizard_steps_live_tip")
+                      : t("bots_wizard_steps_tip")
+                  }
+                />
+                <UiInfoTip
+                  variant="warn"
+                  tip={
+                    wizardBilling === "live"
+                      ? `${t("bots_live_real_money_banner")} ${wizardPlan === "futures_um" ? t("bots_env_live_futures_hint") : t("bots_env_live_spot_hint")} ${t("bots_live_ip_note")}`
+                      : wizardPlan === "futures_um"
+                        ? t("bots_env_demo_futures_hint")
+                        : t("bots_env_demo_spot_hint")
+                  }
+                />
+              </p>
               {credFor(wizardBilling) ? (
                 <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/30">
                   <p className="text-sm text-emerald-800 dark:text-emerald-200">
