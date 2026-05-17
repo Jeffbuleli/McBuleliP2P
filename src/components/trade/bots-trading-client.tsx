@@ -20,10 +20,13 @@ import {
 import {
   FuturesTraderProfilePanel,
   futBreakevenConfigFields,
+  futMultiTfConfigFields,
   futTrailingConfigFields,
   loadFutBreakevenFromConfig,
+  loadFutMultiTfFromConfig,
   loadFutTrailingFromConfig,
   type FutBreakevenUiState,
+  type FutMultiTfUiState,
   type FutTrailingUiState,
 } from "@/components/trade/futures-trader-profile-panel";
 import {
@@ -518,6 +521,10 @@ export function BotsTradingClient() {
     trailingPct: 0.8,
     trailingTriggerPct: 2,
   });
+  const [futMultiTf, setFutMultiTf] = useState<FutMultiTfUiState>({
+    multiTfGateMode: true,
+    confirmTimeframe: "1h",
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -642,10 +649,14 @@ export function BotsTradingClient() {
     if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
     if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
     if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
-    setFutSmart(loadSmartFromConfig(finst?.config));
+    const loadedSmart = loadSmartFromConfig(finst?.config);
+    setFutSmart(loadedSmart);
     setFutExit(loadFutExitFromConfig(finst?.config));
     setFutBreakeven(loadFutBreakevenFromConfig(finst?.config));
     setFutTrailing(loadFutTrailingFromConfig(finst?.config));
+    setFutMultiTf(
+      loadFutMultiTfFromConfig(finst?.config, loadedSmart.timeframe),
+    );
     setFutTraderProfile(parseTraderProfileId(finst?.config?.traderProfile));
   }, [data?.instances]);
 
@@ -674,6 +685,12 @@ export function BotsTradingClient() {
       trailingMode: preset.trailingMode,
       trailingPct: preset.trailingPct,
       trailingTriggerPct: preset.trailingTriggerPct,
+    });
+    setFutMultiTf({
+      multiTfGateMode: preset.multiTfGateMode,
+      confirmTimeframe:
+        preset.confirmTimeframe ??
+        (preset.timeframe === "15m" ? "1h" : "4h"),
     });
   }
 
@@ -1574,6 +1591,9 @@ export function BotsTradingClient() {
             onBreakevenChange={setFutBreakeven}
             trailing={futTrailing}
             onTrailingChange={setFutTrailing}
+            multiTf={futMultiTf}
+            onMultiTfChange={setFutMultiTf}
+            entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}
           />

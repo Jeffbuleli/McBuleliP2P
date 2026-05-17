@@ -27,6 +27,12 @@ import {
 } from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
 import {
+  isHigherTimeframe,
+  multiTfGateSummary,
+  runMultiTfSmartGate,
+} from "@/lib/bot-intelligence/multi-tf-gate";
+import type { TradeSignal } from "@/lib/bot-intelligence/types";
+import {
   isBreakevenArmed,
   shouldClosePosition,
 } from "@/lib/bot-futures-breakeven";
@@ -359,18 +365,38 @@ export async function tickFuturesUmInstance(args: {
       return { ran: false, skipped: "interval_not_elapsed" };
     }
 
-    const gate = await runSmartGate({
-      environment: env,
-      symbol: cfg.symbol,
-      market: "futures",
-      smart: {
-        smartMode: cfg.smartMode,
-        minSignalScore: cfg.minSignalScore,
-        timeframe: cfg.timeframe,
-      },
-      intent: cfg.side === "LONG" ? "long" : "short",
-    });
+    const smart = {
+      smartMode: cfg.smartMode,
+      minSignalScore: cfg.minSignalScore,
+      timeframe: cfg.timeframe,
+    };
+    const intent = cfg.side === "LONG" ? "long" : "short";
+    const useMultiTf =
+      cfg.multiTfGateMode &&
+      cfg.confirmTimeframe &&
+      isHigherTimeframe(cfg.timeframe, cfg.confirmTimeframe);
+
+    const gate = useMultiTf
+      ? await runMultiTfSmartGate({
+          environment: env,
+          symbol: cfg.symbol,
+          market: "futures",
+          smart,
+          intent,
+          confirmTimeframe: cfg.confirmTimeframe!,
+        })
+      : await runSmartGate({
+          environment: env,
+          symbol: cfg.symbol,
+          market: "futures",
+          smart,
+          intent,
+        });
+
     if (!gate.ok) {
+      const confirmSignal = useMultiTf
+        ? (gate as { confirmSignal?: TradeSignal }).confirmSignal
+        : undefined;
       await appendBotExecutionLog({
         instanceId: args.instanceId,
         userId: args.userId,
@@ -378,8 +404,20 @@ export async function tickFuturesUmInstance(args: {
         action: "smart_skip",
         detail: {
           reason: gate.reason,
-          summary: gate.signal ? signalSummary(gate.signal) : null,
+          summary:
+            gate.signal && confirmSignal && cfg.confirmTimeframe
+              ? multiTfGateSummary(
+                  gate.signal,
+                  confirmSignal,
+                  cfg.timeframe,
+                  cfg.confirmTimeframe,
+                )
+              : gate.signal
+                ? signalSummary(gate.signal)
+                : null,
           score: gate.signal?.score,
+          confirmScore: confirmSignal?.score,
+          confirmTimeframe: cfg.confirmTimeframe ?? null,
           factors: gate.signal?.reasons,
         },
       });

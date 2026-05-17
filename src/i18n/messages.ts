@@ -1094,6 +1094,13 @@ export const en = {
   bots_trailing_trigger: "from",
   bots_log_futures_trailing_close: "Closed (trailing stop)",
   bots_feed_badge_trailing: "Trailing",
+  bots_mtf_gate_mode: "MTF confirm",
+  bots_mtf_gate_tip:
+    "Entry timeframe and a higher timeframe must both agree (same min. score) before opening.",
+  bots_mtf_confirm_tf: "confirm",
+  bots_smart_mtf_blocks_long: "Higher TF not bullish enough for Long.",
+  bots_smart_mtf_blocks_short: "Higher TF not bearish enough for Short.",
+  bots_smart_mtf_blocks_buy: "Higher TF not favorable for buying.",
   bots_smart_exit_mode: "Smart exit",
   bots_smart_exit_hint:
     "On each cron pass ({tf}), close the position if the signal reverses against your side and profit ≥ minimum.",
@@ -2866,6 +2873,13 @@ export const fr: Messages = {
   bots_trailing_trigger: "dès",
   bots_log_futures_trailing_close: "Clôture (trailing stop)",
   bots_feed_badge_trailing: "Trailing",
+  bots_mtf_gate_mode: "Confirm. MTF",
+  bots_mtf_gate_tip:
+    "Le TF d’entrée et un TF supérieur doivent être alignés (même score min.) avant d’ouvrir.",
+  bots_mtf_confirm_tf: "confirm.",
+  bots_smart_mtf_blocks_long: "TF supérieur insuffisant pour un Long.",
+  bots_smart_mtf_blocks_short: "TF supérieur insuffisant pour un Short.",
+  bots_smart_mtf_blocks_buy: "TF supérieur défavorable à l’achat.",
   bots_smart_exit_mode: "Sortie smart",
   bots_smart_exit_hint:
     "À chaque cron ({tf}), clôture si le signal s’inverse contre votre sens et profit ≥ minimum.",

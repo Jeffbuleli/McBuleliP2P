@@ -238,7 +238,7 @@ Exemple incohérent (cause classique de give-back) :
 | **v1.2 Breakeven SL** ✅ | Scalper, Day | `bot-futures-breakeven.ts`, profils UI |
 | **v1.3 Trailing stop** ✅ | Scalper, Day, Swing | `bot-futures-trailing.ts`, profils UI |
 | **v1.4 Profil preset UI** ✅ | Tous | `futures-trader-profile-panel.tsx` |
-| **v1.5 Multi-TF gate** | Day, Swing | `evaluate-signal` + 2 TF |
+| **v1.5 Multi-TF gate** ✅ | Day, Swing | `multi-tf-gate.ts`, profils UI |
 | **v2 Tick rapide / 1m data** | Scalper | cron, `BOT_CANDLE_TIMEFRAMES` |
 
 ---
@@ -267,4 +267,4 @@ L’utilisateur peut toujours affiner ; le bot **documente** alors le profil act
 
 ---
 
-*Dernière mise à jour : alignée sur `main` post smart exit v1.1 + cron health (commit `3119431`).*
+*Dernière mise à jour : `main` — v1.5 multi-TF gate, profils scalp/day/swing avec confirm TF.*

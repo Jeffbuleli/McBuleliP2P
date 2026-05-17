@@ -7,7 +7,11 @@ import {
   type BotTraderProfileId,
   type FuturesTraderProfilePreset,
 } from "@/lib/bot-futures-trader-profiles";
+import { isHigherTimeframe } from "@/lib/bot-intelligence/multi-tf-gate";
+import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
 import { UiInfoTip } from "@/components/ui/ui-info-tip";
+
+type CandleTf = (typeof BOT_CANDLE_TIMEFRAMES)[number];
 
 export type FutBreakevenUiState = {
   breakevenMode: boolean;
@@ -54,6 +58,47 @@ export function futTrailingConfigFields(s: FutTrailingUiState) {
   };
 }
 
+export type FutMultiTfUiState = {
+  multiTfGateMode: boolean;
+  confirmTimeframe: CandleTf;
+};
+
+export function loadFutMultiTfFromConfig(
+  cfg: Record<string, unknown> | undefined,
+  entryTimeframe: CandleTf,
+): FutMultiTfUiState {
+  const raw = cfg?.confirmTimeframe;
+  const confirm: CandleTf =
+    raw === "15m" || raw === "1h" || raw === "4h" ? raw : entryTimeframe === "15m" ? "1h" : "4h";
+  return {
+    multiTfGateMode: Boolean(cfg?.multiTfGateMode),
+    confirmTimeframe: isHigherTimeframe(entryTimeframe, confirm)
+      ? confirm
+      : entryTimeframe === "15m"
+        ? "1h"
+        : "4h",
+  };
+}
+
+export function futMultiTfConfigFields(
+  s: FutMultiTfUiState,
+  entryTimeframe: CandleTf,
+) {
+  if (!s.multiTfGateMode || !isHigherTimeframe(entryTimeframe, s.confirmTimeframe)) {
+    return { multiTfGateMode: false };
+  }
+  return {
+    multiTfGateMode: true,
+    confirmTimeframe: s.confirmTimeframe,
+  };
+}
+
+function confirmOptionsFor(entryTimeframe: CandleTf): CandleTf[] {
+  return BOT_CANDLE_TIMEFRAMES.filter((tf) =>
+    isHigherTimeframe(entryTimeframe, tf),
+  );
+}
+
 export type FuturesProfileApplyPayload = FuturesTraderProfilePreset;
 
 const PROFILE_KEYS: Record<
@@ -73,6 +118,9 @@ export function FuturesTraderProfilePanel({
   onBreakevenChange,
   trailing,
   onTrailingChange,
+  multiTf,
+  onMultiTfChange,
+  entryTimeframe,
   onApplyPreset,
   t,
 }: {
@@ -82,9 +130,13 @@ export function FuturesTraderProfilePanel({
   onBreakevenChange: (s: FutBreakevenUiState) => void;
   trailing: FutTrailingUiState;
   onTrailingChange: (s: FutTrailingUiState) => void;
+  multiTf: FutMultiTfUiState;
+  onMultiTfChange: (s: FutMultiTfUiState) => void;
+  entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
+  const confirmOptions = confirmOptionsFor(entryTimeframe);
   function selectProfile(id: BotTraderProfileId) {
     onProfileChange(id);
     if (id !== "custom") {
@@ -218,6 +270,50 @@ export function FuturesTraderProfilePanel({
           </>
         ) : null}
       </label>
+      {confirmOptions.length > 0 ? (
+        <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <span className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={multiTf.multiTfGateMode}
+              onChange={(e) =>
+                onMultiTfChange({
+                  ...multiTf,
+                  multiTfGateMode: e.target.checked,
+                })
+              }
+            />
+            <span className="font-medium text-amber-950 dark:text-amber-100">
+              {t("bots_mtf_gate_mode")}
+            </span>
+            <UiInfoTip tip={t("bots_mtf_gate_tip")} />
+          </span>
+          {multiTf.multiTfGateMode ? (
+            <span className="flex items-center gap-1">
+              <span className="text-stone-600 dark:text-stone-400">
+                {t("bots_mtf_confirm_tf")}
+              </span>
+              <select
+                value={multiTf.confirmTimeframe}
+                onChange={(e) =>
+                  onMultiTfChange({
+                    ...multiTf,
+                    confirmTimeframe: e.target.value as CandleTf,
+                  })
+                }
+                className="rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+              >
+                {confirmOptions.map((tf) => (
+                  <option key={tf} value={tf}>
+                    {tf}
+                  </option>
+                ))}
+              </select>
+              <span className="text-stone-500">← {entryTimeframe}</span>
+            </span>
+          ) : null}
+        </label>
+      ) : null}
     </div>
   );
 }

@@ -30,6 +30,12 @@ export const botFuturesTrailingFields = {
   trailingTriggerPct: z.number().min(0.1).max(50).default(2),
 } as const;
 
+export const botFuturesMultiTfFields = {
+  /** Require entry TF + higher confirm TF to agree before opening. */
+  multiTfGateMode: z.boolean().default(false),
+  confirmTimeframe: z.enum(BOT_CANDLE_TIMEFRAMES).optional(),
+} as const;
+
 export const botFuturesProfileField = {
   traderProfile: z.enum(BOT_TRADER_PROFILE_IDS).default("custom"),
 } as const;
@@ -57,6 +63,7 @@ export const botFuturesConfigSchema = z.object({
   ...botFuturesSmartExitFields,
   ...botFuturesBreakevenFields,
   ...botFuturesTrailingFields,
+  ...botFuturesMultiTfFields,
   ...botFuturesProfileField,
 });
 
