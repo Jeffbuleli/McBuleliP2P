@@ -14,6 +14,7 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   futures_sl_close: "bots_log_futures_sl_close",
   futures_tp_close: "bots_log_futures_tp_close",
   futures_smart_close: "bots_log_futures_smart_close",
+  smart_exit_hold: "bots_log_smart_exit_hold",
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",
   tick_skip: "bots_log_tick_skip",
@@ -201,6 +202,11 @@ export function botLogDetailMessage(
       return `${base} (score ${score})`;
     }
     return base;
+  }
+  if (log.action === "smart_exit_hold") {
+    const reason =
+      typeof log.detail?.reason === "string" ? log.detail.reason : null;
+    return reason ? formatBotRuntimeError(reason, t) : null;
   }
   return null;
 }

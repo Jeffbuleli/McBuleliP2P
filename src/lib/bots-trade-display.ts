@@ -100,6 +100,18 @@ export function buildBotTradeHistoryRow(
   if (typeof d.profitPct === "number" && Number.isFinite(d.profitPct)) {
     chips.push(chip("PnL", `${d.profitPct.toFixed(2)}%`));
   }
+  if (typeof d.timeframe === "string") {
+    chips.push(chip("⏱", d.timeframe));
+  }
+  if (log.action === "smart_exit_hold" && typeof d.reason === "string") {
+    const short =
+      d.reason === "smart_exit_profit_below_min"
+        ? t("smart_exit_profit_below_min")
+        : d.reason === "smart_exit_no_reversal"
+          ? t("smart_exit_no_reversal")
+          : d.reason;
+    if (short.length < 32) chips.push(chip("·", short));
+  }
   const oid = orderIdFromDetail(d);
   if (oid) chips.push(chip("ID", oid.slice(-8)));
 

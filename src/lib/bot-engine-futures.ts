@@ -1,6 +1,9 @@
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment } from "@/lib/bot-config";
-import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
+import {
+  parseBotFuturesConfig,
+  resolveSmartExitTimeframe,
+} from "@/lib/bot-futures-config";
 import {
   listUserBinanceCredentials,
   loadUserBinanceCredentials,
@@ -8,6 +11,7 @@ import {
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   appendBotExecutionLog,
+  hasRecentExecutionLog,
   markBotInstanceSuccess,
   setBotInstanceError,
 } from "@/lib/bot-instance-service";
@@ -144,6 +148,7 @@ export async function tickFuturesUmInstance(args: {
       }
 
       if (cfg.smartExitMode) {
+        const exitTf = resolveSmartExitTimeframe(cfg);
         const exitCheck = await runFuturesSmartExitCheck({
           environment: env,
           symbol: cfg.symbol,
@@ -154,7 +159,7 @@ export async function tickFuturesUmInstance(args: {
             smartExitMode: true,
             minReversalScore: cfg.minReversalScore,
             minProfitPctForSmartExit: cfg.minProfitPctForSmartExit,
-            timeframe: cfg.timeframe,
+            timeframe: exitTf,
           },
         });
         if (exitCheck.close) {
@@ -190,6 +195,32 @@ export async function tickFuturesUmInstance(args: {
             },
           });
           return { ran: true };
+        }
+
+        const holdReason = exitCheck.close ? null : exitCheck.reason;
+        if (
+          holdReason &&
+          !(await hasRecentExecutionLog(
+            args.instanceId,
+            "smart_exit_hold",
+            60 * 60 * 1000,
+          ))
+        ) {
+          await appendBotExecutionLog({
+            instanceId: args.instanceId,
+            userId: args.userId,
+            planId: args.planId,
+            action: "smart_exit_hold",
+            detail: {
+              reason: holdReason,
+              profitPct: exitCheck.profitPct,
+              score: exitCheck.signal?.score,
+              signal: exitCheck.signal
+                ? signalSummary(exitCheck.signal)
+                : null,
+              timeframe: exitTf,
+            },
+          });
         }
       }
 

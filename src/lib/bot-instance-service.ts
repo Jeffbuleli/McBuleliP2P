@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { getDb, botInstances, botExecutionLog } from "@/db";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
@@ -161,6 +161,27 @@ export async function markBotInstanceExecuted(
   } else {
     await markBotInstanceSuccess(instanceId);
   }
+}
+
+export async function hasRecentExecutionLog(
+  instanceId: string,
+  action: string,
+  withinMs: number,
+): Promise<boolean> {
+  const db = getDb();
+  const since = new Date(Date.now() - withinMs);
+  const [row] = await db
+    .select({ id: botExecutionLog.id })
+    .from(botExecutionLog)
+    .where(
+      and(
+        eq(botExecutionLog.instanceId, instanceId),
+        eq(botExecutionLog.action, action),
+        gte(botExecutionLog.createdAt, since),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
 export async function appendBotExecutionLog(args: {

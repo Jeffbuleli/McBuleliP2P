@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordBotCronRun } from "@/lib/bot-cron-health";
 import { getCronSecret } from "@/lib/pool-env";
 import { runBotsTick } from "@/lib/bot-tick-service";
 
@@ -11,5 +12,13 @@ export async function POST(req: Request) {
   }
 
   const out = await runBotsTick();
+  if (!out.locked) {
+    await recordBotCronRun({
+      instances: out.instances,
+      executed: out.executed,
+      skipped: out.skipped,
+      errors: out.errors,
+    });
+  }
   return NextResponse.json({ ok: true, ...out });
 }

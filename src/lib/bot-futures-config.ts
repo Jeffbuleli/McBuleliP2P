@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
-import { botSmartFields } from "@/lib/bot-smart-config";
+import { BOT_CANDLE_TIMEFRAMES, botSmartFields } from "@/lib/bot-smart-config";
 
 export const BOT_FUTURES_LEVERAGE = [2, 3, 5, 10, 20] as const;
 export const BOT_FUTURES_INTERVAL_HOURS = [1, 4, 12, 24] as const;
@@ -12,6 +12,8 @@ export const botFuturesSmartExitFields = {
   minReversalScore: z.number().min(15).max(80).default(40),
   /** Min unrealized profit % before smart exit can fire (0 = any profit). */
   minProfitPctForSmartExit: z.number().min(0).max(50).default(0.5),
+  smartExitUseEntryTimeframe: z.boolean().default(true),
+  smartExitTimeframe: z.enum(BOT_CANDLE_TIMEFRAMES).optional(),
 } as const;
 
 export const botFuturesConfigSchema = z.object({
@@ -42,4 +44,13 @@ export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;
 export function parseBotFuturesConfig(raw: unknown): BotFuturesConfig | null {
   const parsed = botFuturesConfigSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
+}
+
+export function resolveSmartExitTimeframe(
+  cfg: BotFuturesConfig,
+): (typeof BOT_CANDLE_TIMEFRAMES)[number] {
+  if (cfg.smartExitUseEntryTimeframe !== false && !cfg.smartExitTimeframe) {
+    return cfg.timeframe;
+  }
+  return cfg.smartExitTimeframe ?? cfg.timeframe;
 }

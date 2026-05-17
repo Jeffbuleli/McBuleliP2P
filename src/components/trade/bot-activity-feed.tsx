@@ -64,6 +64,12 @@ const ACTION_VIS: Record<string, ActionVisual> = {
     rail: "border-l-teal-500",
     iconBg: "bg-teal-600 text-white",
   },
+  smart_exit_hold: {
+    badgeKey: "bots_feed_badge_smart_exit_watch",
+    icon: "◇",
+    rail: "border-l-teal-400/80",
+    iconBg: "bg-teal-800/90 text-white",
+  },
   dca_buy: {
     badgeKey: "bots_feed_badge_buy",
     icon: "+",
@@ -120,12 +126,18 @@ export function buildFeedViewModel(
   const ticks: BotLogRow[] = [];
   const events: BotLogRow[] = [];
 
+  let holdKept = false;
   for (const log of logs) {
     if (log.action === "tick_skip") {
       if (opts.hidePositionOpenSkips && tickReason(log) === "position_open") {
         continue;
       }
       ticks.push(log);
+    } else if (log.action === "smart_exit_hold") {
+      if (!holdKept) {
+        events.push(log);
+        holdKept = true;
+      }
     } else {
       events.push(log);
     }

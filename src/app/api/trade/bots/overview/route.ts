@@ -13,6 +13,7 @@ import {
   BOT_FUTURES_LEVERAGE,
 } from "@/lib/bot-futures-config";
 import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
+import { getBotCronHealth } from "@/lib/bot-cron-health";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -31,12 +32,14 @@ export async function GET() {
     );
   }
 
-  const [subscriptions, instances, tradeMode, isSuperAdmin] = await Promise.all([
-    listActiveBotSubscriptions(userId),
-    listUserBotInstances(userId),
-    getTradeModeSnapshot(userId),
-    isSuperAdminUserId(userId),
-  ]);
+  const [subscriptions, instances, tradeMode, isSuperAdmin, cronHealth] =
+    await Promise.all([
+      listActiveBotSubscriptions(userId),
+      listUserBotInstances(userId),
+      getTradeModeSnapshot(userId),
+      isSuperAdminUserId(userId),
+      getBotCronHealth(),
+    ]);
 
   const plans = BOT_PLAN_IDS.map((id) => {
     const p = BOT_PLANS[id];
@@ -76,10 +79,16 @@ export async function GET() {
       process.env.BOT_KEYS_ENCRYPTION_SECRET?.trim() &&
         process.env.BOT_KEYS_ENCRYPTION_SECRET.trim().length >= 32,
     ),
-    cronConfigured: Boolean(
-      process.env.CRON_SECRET?.trim() &&
-        process.env.CRON_SECRET.trim().length >= 12,
-    ),
+    cronConfigured: cronHealth.configured,
+    cronHealth: {
+      configured: cronHealth.configured,
+      inlineEnabled: cronHealth.inlineEnabled,
+      intervalMinutes: Math.round(cronHealth.intervalMs / 60_000),
+      lastRunAt: cronHealth.lastRun?.at ?? null,
+      lastRunExecuted: cronHealth.lastRun?.executed ?? null,
+      lastRunInstances: cronHealth.lastRun?.instances ?? null,
+      stale: cronHealth.stale,
+    },
     isSuperAdmin,
   });
 }

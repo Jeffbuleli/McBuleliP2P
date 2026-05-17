@@ -13,6 +13,10 @@ import {
   type BotLogRow,
 } from "@/lib/bots-ui-helpers";
 import { BotsKeysHub } from "@/components/trade/bots-keys-hub";
+import {
+  BotsCronHealthBar,
+  type CronHealthSnapshot,
+} from "@/components/trade/bots-cron-health-bar";
 import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
 import { BotRunControls } from "@/components/trade/bot-run-controls";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
@@ -81,6 +85,7 @@ type Overview = {
   } | null;
   keysEncryptionConfigured: boolean;
   cronConfigured?: boolean;
+  cronHealth?: CronHealthSnapshot;
   isSuperAdmin?: boolean;
 };
 
@@ -205,20 +210,16 @@ function SmartModePanel({
 
   return (
     <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-800 dark:bg-indigo-950/30">
-      <label className="flex cursor-pointer items-start gap-2">
+      <label className="flex cursor-pointer items-center gap-2">
         <input
           type="checkbox"
           checked={smart.smartMode}
           onChange={(e) => setSmart({ ...smart, smartMode: e.target.checked })}
-          className="mt-1"
+          className="shrink-0"
         />
-        <span>
-          <span className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
-            {t("bots_smart_mode")}
-          </span>
-          <span className="mt-0.5 block text-xs text-stone-600 dark:text-stone-400">
-            {t("bots_smart_mode_hint")}
-          </span>
+        <span className="flex min-w-0 flex-1 items-center gap-1 text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+          <span className="truncate">{t("bots_smart_mode")}</span>
+          <UiInfoTip tip={t("bots_smart_mode_hint")} />
         </span>
       </label>
       {smart.smartMode ? (
@@ -289,15 +290,23 @@ type FutExitUiState = {
   smartExitMode: boolean;
   minReversalScore: number;
   minProfitPctForSmartExit: number;
+  smartExitUseEntryTimeframe: boolean;
+  smartExitTimeframe: SmartUiState["timeframe"];
 };
 
 function loadFutExitFromConfig(
   cfg: Record<string, unknown> | undefined,
 ): FutExitUiState {
+  const entryTf =
+    (cfg?.timeframe as SmartUiState["timeframe"] | undefined) ?? "1h";
   return {
     smartExitMode: Boolean(cfg?.smartExitMode),
     minReversalScore: Number(cfg?.minReversalScore) || 40,
     minProfitPctForSmartExit: Number(cfg?.minProfitPctForSmartExit) ?? 0.5,
+    smartExitUseEntryTimeframe: cfg?.smartExitUseEntryTimeframe !== false,
+    smartExitTimeframe:
+      (cfg?.smartExitTimeframe as SmartUiState["timeframe"] | undefined) ??
+      entryTf,
   };
 }
 
@@ -306,43 +315,89 @@ function futExitConfigFields(s: FutExitUiState) {
     smartExitMode: s.smartExitMode,
     minReversalScore: s.minReversalScore,
     minProfitPctForSmartExit: s.minProfitPctForSmartExit,
+    smartExitUseEntryTimeframe: s.smartExitUseEntryTimeframe,
+    ...(s.smartExitUseEntryTimeframe
+      ? {}
+      : { smartExitTimeframe: s.smartExitTimeframe }),
   };
 }
+
+function resolveExitTfLabel(
+  exit: FutExitUiState,
+  entryTimeframe: SmartUiState["timeframe"],
+): SmartUiState["timeframe"] {
+  return exit.smartExitUseEntryTimeframe
+    ? entryTimeframe
+    : exit.smartExitTimeframe;
+}
+
+const SMART_EXIT_TF_ENTRY = "__entry__";
 
 function FuturesSmartExitPanel({
   exit,
   setExit,
-  smartTimeframe,
+  entryTimeframe,
+  timeframes,
   t,
 }: {
   exit: FutExitUiState;
   setExit: (s: FutExitUiState) => void;
-  smartTimeframe: SmartUiState["timeframe"];
+  entryTimeframe: SmartUiState["timeframe"];
+  timeframes: string[];
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
+  const exitTf = resolveExitTfLabel(exit, entryTimeframe);
+  const tfSelectValue = exit.smartExitUseEntryTimeframe
+    ? SMART_EXIT_TF_ENTRY
+    : exit.smartExitTimeframe;
+
   return (
     <div className="mt-3 rounded-xl border border-teal-300/80 bg-teal-50/70 p-3 dark:border-teal-800 dark:bg-teal-950/35">
-      <label className="flex cursor-pointer items-start gap-2">
+      <label className="flex cursor-pointer items-center gap-2">
         <input
           type="checkbox"
           checked={exit.smartExitMode}
           onChange={(e) =>
             setExit({ ...exit, smartExitMode: e.target.checked })
           }
-          className="mt-1"
+          className="shrink-0"
         />
-        <span>
-          <span className="text-sm font-semibold text-teal-950 dark:text-teal-100">
-            {t("bots_smart_exit_mode")}
-          </span>
-          <span className="mt-0.5 block text-xs text-stone-600 dark:text-stone-400">
-            {t("bots_smart_exit_hint", { tf: smartTimeframe })}
-          </span>
+        <span className="flex min-w-0 flex-1 items-center gap-1 text-sm font-semibold text-teal-950 dark:text-teal-100">
+          <span className="truncate">{t("bots_smart_exit_mode")}</span>
+          <UiInfoTip tip={t("bots_smart_exit_hint", { tf: exitTf })} />
         </span>
       </label>
       {exit.smartExitMode ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="block text-xs font-medium">
+        <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
+          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
+            {t("bots_smart_exit_tf_label")}
+            <select
+              value={tfSelectValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === SMART_EXIT_TF_ENTRY) {
+                  setExit({ ...exit, smartExitUseEntryTimeframe: true });
+                  return;
+                }
+                setExit({
+                  ...exit,
+                  smartExitUseEntryTimeframe: false,
+                  smartExitTimeframe: v as SmartUiState["timeframe"],
+                });
+              }}
+              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
+            >
+              <option value={SMART_EXIT_TF_ENTRY}>
+                {t("bots_smart_exit_tf_entry", { tf: entryTimeframe })}
+              </option>
+              {timeframes.map((tf) => (
+                <option key={tf} value={tf}>
+                  {tf}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
             {t("bots_smart_exit_reversal_score")}
             <select
               value={exit.minReversalScore}
@@ -352,7 +407,7 @@ function FuturesSmartExitPanel({
                   minReversalScore: Number(e.target.value),
                 })
               }
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
             >
               {[30, 35, 40, 45, 50, 55].map((s) => (
                 <option key={s} value={s}>
@@ -361,7 +416,7 @@ function FuturesSmartExitPanel({
               ))}
             </select>
           </label>
-          <label className="block text-xs font-medium">
+          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
             {t("bots_smart_exit_min_profit")}
             <input
               type="number"
@@ -375,7 +430,7 @@ function FuturesSmartExitPanel({
                   minProfitPctForSmartExit: Number(e.target.value),
                 })
               }
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
             />
           </label>
         </div>
@@ -435,6 +490,8 @@ export function BotsTradingClient() {
     smartExitMode: false,
     minReversalScore: 40,
     minProfitPctForSmartExit: 0.5,
+    smartExitUseEntryTimeframe: true,
+    smartExitTimeframe: "1h",
   });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
@@ -994,6 +1051,10 @@ export function BotsTradingClient() {
         t={t}
       />
 
+      {data.cronHealth ? (
+        <BotsCronHealthBar health={data.cronHealth} t={t} />
+      ) : null}
+
       {activeTab === "dca_spot" && !dcaSub ? (
         <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
           <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-emerald-600" />
@@ -1138,22 +1199,6 @@ export function BotsTradingClient() {
             smartOptions={data.smartOptions}
             t={t}
           />
-          {dcaInst?.status === "active" &&
-          instEnvAligned(dcaInst) &&
-          !dcaInst.lastExecutedAt &&
-          data.cronConfigured !== false ? (
-            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
-              {t("bots_waiting_first_tick")}
-            </p>
-          ) : null}
-          {dcaInst?.status === "active" &&
-          instEnvAligned(dcaInst) &&
-          !dcaInst.lastExecutedAt &&
-          data.cronConfigured === false ? (
-            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-              {t("bots_cron_not_configured")}
-            </p>
-          ) : null}
           {dcaInst?.lastExecutedAt && instEnvAligned(dcaInst) ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
@@ -1287,22 +1332,6 @@ export function BotsTradingClient() {
             smartOptions={data.smartOptions}
             t={t}
           />
-          {gridInst?.status === "active" &&
-          instEnvAligned(gridInst) &&
-          !gridInst.lastExecutedAt &&
-          data.cronConfigured !== false ? (
-            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
-              {t("bots_waiting_first_tick")}
-            </p>
-          ) : null}
-          {gridInst?.status === "active" &&
-          instEnvAligned(gridInst) &&
-          !gridInst.lastExecutedAt &&
-          data.cronConfigured === false ? (
-            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-              {t("bots_cron_not_configured")}
-            </p>
-          ) : null}
           {gridInst?.lastExecutedAt && instEnvAligned(gridInst) ? (
             <p className="mt-2 text-xs text-stone-500">
               {t("bots_dca_last_run")}: {new Date(gridInst.lastExecutedAt).toLocaleString()}
@@ -1491,27 +1520,10 @@ export function BotsTradingClient() {
           <FuturesSmartExitPanel
             exit={futExit}
             setExit={setFutExit}
-            smartTimeframe={futSmart.timeframe}
+            entryTimeframe={futSmart.timeframe}
+            timeframes={data.smartOptions?.timeframes ?? ["15m", "1h", "4h"]}
             t={t}
           />
-          {futInst?.status === "active" &&
-          instEnvAligned(futInst) &&
-          !futInst.lastExecutedAt &&
-          !futHasConfigOpen &&
-          !futHasUnmanagedOpen &&
-          data.cronConfigured !== false ? (
-            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
-              {t("bots_waiting_first_tick")}
-            </p>
-          ) : null}
-          {futInst?.status === "active" &&
-          instEnvAligned(futInst) &&
-          !futInst.lastExecutedAt &&
-          data.cronConfigured === false ? (
-            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-              {t("bots_cron_not_configured")}
-            </p>
-          ) : null}
           {futInst?.status === "active" && !instEnvAligned(futInst) ? (
             <p className="mt-2 text-xs text-violet-800 dark:text-violet-200">
               {t("bots_logs_other_env")}
