@@ -1,6 +1,10 @@
 import type { Messages } from "@/i18n/messages";
 import type { BotLogRow } from "@/lib/bots-ui-helpers";
-import { botLogActionLabel, formatBotRuntimeError } from "@/lib/bots-ui-helpers";
+import {
+  botLogActionLabel,
+  botTickSkipLabel,
+  formatBotRuntimeError,
+} from "@/lib/bots-ui-helpers";
 
 export type BotTradeHistoryChip = {
   icon: string;
@@ -98,6 +102,11 @@ export function buildBotTradeHistoryRow(
   const isClosed = BOT_CLOSED_ACTIONS.has(log.action);
 
   let title = botLogActionLabel(t, log.action);
+  if (log.action === "tick_skip") {
+    const reason =
+      typeof d.reason === "string" ? d.reason : undefined;
+    title = botTickSkipLabel(t, reason);
+  }
   if (isError) {
     const msg =
       typeof d.message === "string"

@@ -1,7 +1,29 @@
-import { listActiveBotInstancesForTick } from "@/lib/bot-instance-service";
+import {
+  appendBotExecutionLog,
+  listActiveBotInstancesForTick,
+} from "@/lib/bot-instance-service";
+import { withBotCronLock } from "@/lib/bot-cron-lock";
 import { tickDcaSpotInstance } from "@/lib/bot-engine-dca";
 import { tickGridSpotInstance } from "@/lib/bot-engine-grid";
 import { tickFuturesUmInstance } from "@/lib/bot-engine-futures";
+import type { BotPlanId } from "@/lib/bot-config";
+
+/** Skips that are normal between runs — not written to the user activity log. */
+const SILENT_SKIP = new Set(["interval_not_elapsed"]);
+
+async function logTickSkip(
+  inst: { id: string; userId: string; planId: string },
+  skipped: string | undefined,
+) {
+  if (!skipped || SILENT_SKIP.has(skipped)) return;
+  await appendBotExecutionLog({
+    instanceId: inst.id,
+    userId: inst.userId,
+    planId: inst.planId as BotPlanId,
+    action: "tick_skip",
+    detail: { reason: skipped },
+  });
+}
 
 export type BotTickResultRow = {
   instanceId: string;
@@ -12,6 +34,30 @@ export type BotTickResultRow = {
 };
 
 export async function runBotsTick(): Promise<{
+  instances: number;
+  executed: number;
+  skipped: number;
+  errors: number;
+  locked?: boolean;
+  results: BotTickResultRow[];
+}> {
+  const lockedResult = await withBotCronLock(async () => {
+    return runBotsTickUnlocked();
+  });
+  if (lockedResult === null) {
+    return {
+      instances: 0,
+      executed: 0,
+      skipped: 0,
+      errors: 0,
+      locked: true,
+      results: [],
+    };
+  }
+  return lockedResult;
+}
+
+async function runBotsTickUnlocked(): Promise<{
   instances: number;
   executed: number;
   skipped: number;
@@ -67,6 +113,7 @@ export async function runBotsTick(): Promise<{
       }
 
       if (!r) continue;
+      if (!r.ran) await logTickSkip(inst, r.skipped);
       results.push({
         instanceId: inst.id,
         planId: inst.planId,

@@ -15,7 +15,32 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   futures_tp_close: "bots_log_futures_tp_close",
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",
+  tick_skip: "bots_log_tick_skip",
 };
+
+const TICK_SKIP_I18N: Record<string, keyof Messages> = {
+  no_active_subscription: "bots_skip_no_subscription",
+  invalid_config: "bots_skip_invalid_config",
+  no_keys: "bots_skip_no_keys",
+  amount_too_small: "bots_err_amount_small",
+  smart_blocked: "bots_log_smart_skip",
+  price_unavailable: "bots_err_price_feed",
+  price_out_of_range: "bots_err_price_range",
+  order_failed: "bots_log_failed",
+  unknown_plan: "bots_skip_unknown_plan",
+  exception: "bots_skip_exception",
+  position_open: "bots_skip_position_open",
+  futures_failed: "bots_log_failed",
+};
+
+export function botTickSkipLabel(
+  t: (k: keyof Messages) => string,
+  reason: string | undefined,
+): string {
+  if (!reason) return t("bots_log_tick_skip");
+  const key = TICK_SKIP_I18N[reason];
+  return key ? t(key) : `${t("bots_log_tick_skip")} (${reason})`;
+}
 
 const SMART_ERROR_I18N: Record<string, keyof Messages> = {
   smart_market_data_unavailable: "bots_smart_data_unavailable",
