@@ -5,6 +5,15 @@ import { botSmartFields } from "@/lib/bot-smart-config";
 export const BOT_FUTURES_LEVERAGE = [2, 3, 5, 10, 20] as const;
 export const BOT_FUTURES_INTERVAL_HOURS = [1, 4, 12, 24] as const;
 
+export const botFuturesSmartExitFields = {
+  /** Close early when TA signals a reversal and min profit % is reached. */
+  smartExitMode: z.boolean().default(false),
+  /** Min |score| on the opposite bias to trigger smart exit (15–80). */
+  minReversalScore: z.number().min(15).max(80).default(40),
+  /** Min unrealized profit % before smart exit can fire (0 = any profit). */
+  minProfitPctForSmartExit: z.number().min(0).max(50).default(0.5),
+} as const;
+
 export const botFuturesConfigSchema = z.object({
   symbol: z.enum(BOT_DCA_SYMBOLS),
   side: z.enum(["LONG", "SHORT"]),
@@ -25,6 +34,7 @@ export const botFuturesConfigSchema = z.object({
   stopLossPct: z.number().min(1).max(50),
   takeProfitPct: z.number().min(1).max(100),
   ...botSmartFields,
+  ...botFuturesSmartExitFields,
 });
 
 export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;

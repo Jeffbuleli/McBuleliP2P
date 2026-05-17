@@ -21,6 +21,7 @@ import {
   resolveFuturesApiKind,
 } from "@/lib/binance-futures-routing";
 import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
+import { runFuturesSmartExitCheck } from "@/lib/bot-futures-smart-exit";
 
 function formatFuturesQty(qty: number): string {
   if (qty >= 1) return qty.toFixed(3);
@@ -141,6 +142,57 @@ export async function tickFuturesUmInstance(args: {
         });
         return { ran: true };
       }
+
+      if (cfg.smartExitMode) {
+        const exitCheck = await runFuturesSmartExitCheck({
+          environment: env,
+          symbol: cfg.symbol,
+          positionSide: cfg.side,
+          entry: onConfig.entry,
+          mark,
+          config: {
+            smartExitMode: true,
+            minReversalScore: cfg.minReversalScore,
+            minProfitPctForSmartExit: cfg.minProfitPctForSmartExit,
+            timeframe: cfg.timeframe,
+          },
+        });
+        if (exitCheck.close) {
+          const closeSide = onConfig.amt > 0 ? "SELL" : "BUY";
+          const order = await futuresSignedPost({
+            environment: env,
+            creds,
+            kind: futuresKind,
+            pathKey: "order",
+            params: {
+              symbol: cfg.symbol,
+              side: closeSide,
+              type: "MARKET",
+              quantity: formatFuturesQty(Math.abs(onConfig.amt)),
+              reduceOnly: "true",
+            },
+          });
+          await markBotInstanceSuccess(args.instanceId);
+          await appendBotExecutionLog({
+            instanceId: args.instanceId,
+            userId: args.userId,
+            planId: args.planId,
+            action: "futures_smart_close",
+            detail: {
+              symbol: cfg.symbol,
+              mark,
+              entry: onConfig.entry,
+              profitPct: exitCheck.profitPct,
+              signal: signalSummary(exitCheck.signal),
+              score: exitCheck.signal.score,
+              reasons: exitCheck.signal.reasons,
+              order,
+            },
+          });
+          return { ran: true };
+        }
+      }
+
       return { ran: false, skipped: "position_open" };
     }
 

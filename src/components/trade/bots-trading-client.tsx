@@ -285,6 +285,105 @@ function smartConfigFields(s: SmartUiState) {
   };
 }
 
+type FutExitUiState = {
+  smartExitMode: boolean;
+  minReversalScore: number;
+  minProfitPctForSmartExit: number;
+};
+
+function loadFutExitFromConfig(
+  cfg: Record<string, unknown> | undefined,
+): FutExitUiState {
+  return {
+    smartExitMode: Boolean(cfg?.smartExitMode),
+    minReversalScore: Number(cfg?.minReversalScore) || 40,
+    minProfitPctForSmartExit: Number(cfg?.minProfitPctForSmartExit) ?? 0.5,
+  };
+}
+
+function futExitConfigFields(s: FutExitUiState) {
+  return {
+    smartExitMode: s.smartExitMode,
+    minReversalScore: s.minReversalScore,
+    minProfitPctForSmartExit: s.minProfitPctForSmartExit,
+  };
+}
+
+function FuturesSmartExitPanel({
+  exit,
+  setExit,
+  smartTimeframe,
+  t,
+}: {
+  exit: FutExitUiState;
+  setExit: (s: FutExitUiState) => void;
+  smartTimeframe: SmartUiState["timeframe"];
+  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-teal-300/80 bg-teal-50/70 p-3 dark:border-teal-800 dark:bg-teal-950/35">
+      <label className="flex cursor-pointer items-start gap-2">
+        <input
+          type="checkbox"
+          checked={exit.smartExitMode}
+          onChange={(e) =>
+            setExit({ ...exit, smartExitMode: e.target.checked })
+          }
+          className="mt-1"
+        />
+        <span>
+          <span className="text-sm font-semibold text-teal-950 dark:text-teal-100">
+            {t("bots_smart_exit_mode")}
+          </span>
+          <span className="mt-0.5 block text-xs text-stone-600 dark:text-stone-400">
+            {t("bots_smart_exit_hint", { tf: smartTimeframe })}
+          </span>
+        </span>
+      </label>
+      {exit.smartExitMode ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs font-medium">
+            {t("bots_smart_exit_reversal_score")}
+            <select
+              value={exit.minReversalScore}
+              onChange={(e) =>
+                setExit({
+                  ...exit,
+                  minReversalScore: Number(e.target.value),
+                })
+              }
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+            >
+              {[30, 35, 40, 45, 50, 55].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-xs font-medium">
+            {t("bots_smart_exit_min_profit")}
+            <input
+              type="number"
+              min={0}
+              max={20}
+              step={0.1}
+              value={exit.minProfitPctForSmartExit}
+              onChange={(e) =>
+                setExit({
+                  ...exit,
+                  minProfitPctForSmartExit: Number(e.target.value),
+                })
+              }
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
+            />
+          </label>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function BotsTradingClient() {
   const { t } = useI18n();
   const [data, setData] = useState<Overview | null>(null);
@@ -331,6 +430,11 @@ export function BotsTradingClient() {
     smartMode: false,
     minSignalScore: 35,
     timeframe: "1h",
+  });
+  const [futExit, setFutExit] = useState<FutExitUiState>({
+    smartExitMode: false,
+    minReversalScore: 40,
+    minProfitPctForSmartExit: 0.5,
   });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
@@ -457,6 +561,7 @@ export function BotsTradingClient() {
     if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
     if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
     setFutSmart(loadSmartFromConfig(finst?.config));
+    setFutExit(loadFutExitFromConfig(finst?.config));
   }, [data?.instances]);
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
@@ -757,6 +862,8 @@ export function BotsTradingClient() {
             intervalHours: futInterval,
             stopLossPct: futSl,
             takeProfitPct: futTp,
+            ...smartConfigFields(futSmart),
+            ...futExitConfigFields(futExit),
           },
         }),
       });
@@ -1379,6 +1486,12 @@ export function BotsTradingClient() {
             smart={futSmart}
             setSmart={setFutSmart}
             smartOptions={data.smartOptions}
+            t={t}
+          />
+          <FuturesSmartExitPanel
+            exit={futExit}
+            setExit={setFutExit}
+            smartTimeframe={futSmart.timeframe}
             t={t}
           />
           {futInst?.status === "active" &&

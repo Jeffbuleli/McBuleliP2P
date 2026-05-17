@@ -24,6 +24,7 @@ export type BotTradeHistoryRow = {
 export const BOT_CLOSED_ACTIONS = new Set([
   "futures_sl_close",
   "futures_tp_close",
+  "futures_smart_close",
 ]);
 
 export const BOT_EXECUTION_ACTIONS = new Set([
@@ -32,6 +33,7 @@ export const BOT_EXECUTION_ACTIONS = new Set([
   "futures_open",
   "futures_sl_close",
   "futures_tp_close",
+  "futures_smart_close",
   "smart_skip",
 ]);
 
@@ -94,6 +96,9 @@ export function buildBotTradeHistoryRow(
   }
   if (typeof d.entry === "number" || typeof d.entry === "string") {
     chips.push(chip("→", String(d.entry)));
+  }
+  if (typeof d.profitPct === "number" && Number.isFinite(d.profitPct)) {
+    chips.push(chip("PnL", `${d.profitPct.toFixed(2)}%`));
   }
   const oid = orderIdFromDetail(d);
   if (oid) chips.push(chip("ID", oid.slice(-8)));

@@ -58,6 +58,12 @@ const ACTION_VIS: Record<string, ActionVisual> = {
     rail: "border-l-emerald-500",
     iconBg: "bg-emerald-700 text-white",
   },
+  futures_smart_close: {
+    badgeKey: "bots_feed_badge_smart_exit",
+    icon: "◆",
+    rail: "border-l-teal-500",
+    iconBg: "bg-teal-600 text-white",
+  },
   dca_buy: {
     badgeKey: "bots_feed_badge_buy",
     icon: "+",
