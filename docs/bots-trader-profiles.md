@@ -66,7 +66,7 @@ Légende :
 1. N’ouvre que si spread/volatilité OK (filtre marché).
 2. Ferme vite sur reversal **15m** ou perte de momentum (pas d’attente 1h).
 3. Après +X %, SL → breakeven automatiquement.
-4. Un seul trade actif par paire ; pas de ré-entrée avant cooldown 5 min.
+4. Un seul trade actif par paire ; pas de ré-entrée avant cooldown 5 min. ✅ (`reentryCooldownMinutes`)
 
 **Preset config actuelle (scalp v2)** :
 
@@ -82,7 +82,9 @@ Légende :
   "smartExitUseEntryTimeframe": false,
   "smartExitTimeframe": "5m",
   "multiTfGateMode": true,
-  "confirmTimeframe": "5m"
+  "confirmTimeframe": "5m",
+  "maxHoldMinutes": 15,
+  "reentryCooldownMinutes": 5
 }
 ```
 
@@ -242,6 +244,7 @@ Exemple incohérent (cause classique de give-back) :
 | **v1.4 Profil preset UI** ✅ | Tous | `futures-trader-profile-panel.tsx` |
 | **v1.5 Multi-TF gate** ✅ | Day, Swing | `multi-tf-gate.ts`, profils UI |
 | **v2 Tick rapide / 1m data** ✅ | Scalper | `bot-cron-interval.ts`, `BOT_CANDLE_TIMEFRAMES`, preset scalp 1m |
+| **v2.1 Max hold + re-entry cooldown** ✅ | Scalper, Day | `bot-futures-lifecycle.ts`, profils UI |
 
 ---
 

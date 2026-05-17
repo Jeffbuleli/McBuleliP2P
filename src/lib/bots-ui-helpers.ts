@@ -16,6 +16,7 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   futures_smart_close: "bots_log_futures_smart_close",
   futures_breakeven_armed: "bots_log_futures_breakeven_armed",
   futures_trailing_close: "bots_log_futures_trailing_close",
+  futures_max_hold_close: "bots_log_futures_max_hold_close",
   smart_exit_hold: "bots_log_smart_exit_hold",
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",
@@ -36,6 +37,7 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
   position_open: "bots_skip_position_open",
   other_symbol_open: "bots_skip_other_symbol_open",
   futures_failed: "bots_log_failed",
+  reentry_cooldown: "bots_skip_reentry_cooldown",
 };
 
 export function botTickSkipLabel(

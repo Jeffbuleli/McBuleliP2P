@@ -24,12 +24,15 @@ import {
 import {
   FuturesTraderProfilePanel,
   futBreakevenConfigFields,
+  futLifecycleConfigFields,
   futMultiTfConfigFields,
   futTrailingConfigFields,
   loadFutBreakevenFromConfig,
+  loadFutLifecycleFromConfig,
   loadFutMultiTfFromConfig,
   loadFutTrailingFromConfig,
   type FutBreakevenUiState,
+  type FutLifecycleUiState,
   type FutMultiTfUiState,
   type FutTrailingUiState,
 } from "@/components/trade/futures-trader-profile-panel";
@@ -529,6 +532,10 @@ export function BotsTradingClient() {
     multiTfGateMode: true,
     confirmTimeframe: "1h",
   });
+  const [futLifecycle, setFutLifecycle] = useState<FutLifecycleUiState>({
+    maxHoldMinutes: 0,
+    reentryCooldownMinutes: 0,
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -642,33 +649,40 @@ export function BotsTradingClient() {
     if (gcfg?.refreshHours) setGridRefresh(gcfg.refreshHours);
     setGridSmart(loadSmartFromConfig(ginst?.config));
 
-    const finst = data?.instances.find((i) => i.planId === "futures_um");
-    const fcfg = finst?.config as {
-      symbol?: string;
-      side?: "LONG" | "SHORT";
-      leverage?: number;
-      marginUsdt?: string;
-      intervalHours?: number;
-      stopLossPct?: number;
-      takeProfitPct?: number;
-    } | undefined;
-    if (fcfg?.symbol) setFutSymbol(fcfg.symbol);
-    if (fcfg?.side) setFutSide(fcfg.side);
-    if (fcfg?.leverage) setFutLeverage(fcfg.leverage);
-    if (fcfg?.marginUsdt) setFutMargin(fcfg.marginUsdt);
-    if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
-    if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
-    if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
-    const loadedSmart = loadSmartFromConfig(finst?.config);
-    setFutSmart(loadedSmart);
-    setFutExit(loadFutExitFromConfig(finst?.config));
-    setFutBreakeven(loadFutBreakevenFromConfig(finst?.config));
-    setFutTrailing(loadFutTrailingFromConfig(finst?.config));
-    setFutMultiTf(
-      loadFutMultiTfFromConfig(finst?.config, loadedSmart.timeframe),
+    const finst = data.instances.find(
+      (i) => i.planId === "futures_um" && i.billing === accountBilling,
     );
-    setFutTraderProfile(parseTraderProfileId(finst?.config?.traderProfile));
-  }, [data?.instances]);
+    if (finst) {
+      const fcfg = finst.config as {
+        symbol?: string;
+        side?: "LONG" | "SHORT";
+        leverage?: number;
+        marginUsdt?: string;
+        intervalHours?: number;
+        stopLossPct?: number;
+        takeProfitPct?: number;
+      };
+      if (fcfg?.symbol) setFutSymbol(fcfg.symbol);
+      if (fcfg?.side) setFutSide(fcfg.side);
+      if (fcfg?.leverage) setFutLeverage(fcfg.leverage);
+      if (fcfg?.marginUsdt) setFutMargin(fcfg.marginUsdt);
+      if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
+      if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
+      if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
+      const loadedSmart = loadSmartFromConfig(finst.config);
+      setFutSmart(loadedSmart);
+      setFutExit(loadFutExitFromConfig(finst.config));
+      setFutBreakeven(loadFutBreakevenFromConfig(finst.config));
+      setFutTrailing(loadFutTrailingFromConfig(finst.config));
+      setFutMultiTf(
+        loadFutMultiTfFromConfig(finst.config, loadedSmart.timeframe),
+      );
+      setFutLifecycle(loadFutLifecycleFromConfig(finst.config));
+      setFutTraderProfile(parseTraderProfileId(finst.config?.traderProfile));
+    } else {
+      applyFuturesProfilePreset(getFuturesTraderProfilePreset("day"));
+    }
+  }, [data?.instances, accountBilling]);
 
   function applyFuturesProfilePreset(preset: FuturesTraderProfilePreset) {
     setFutTraderProfile(preset.traderProfile);
@@ -707,6 +721,10 @@ export function BotsTradingClient() {
             : preset.timeframe === "15m"
               ? "1h"
               : "4h"),
+    });
+    setFutLifecycle({
+      maxHoldMinutes: preset.maxHoldMinutes,
+      reentryCooldownMinutes: preset.reentryCooldownMinutes,
     });
   }
 
@@ -1016,6 +1034,7 @@ export function BotsTradingClient() {
             ...futBreakevenConfigFields(futBreakeven),
             ...futTrailingConfigFields(futTrailing),
             ...futMultiTfConfigFields(futMultiTf, futSmart.timeframe),
+            ...futLifecycleConfigFields(futLifecycle),
           },
         }),
       });
@@ -1612,6 +1631,8 @@ export function BotsTradingClient() {
             onTrailingChange={setFutTrailing}
             multiTf={futMultiTf}
             onMultiTfChange={setFutMultiTf}
+            lifecycle={futLifecycle}
+            onLifecycleChange={setFutLifecycle}
             entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}

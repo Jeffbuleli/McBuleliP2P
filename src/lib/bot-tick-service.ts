@@ -9,7 +9,11 @@ import { tickFuturesUmInstance } from "@/lib/bot-engine-futures";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 
 /** Skips that are normal between runs — not written to the user activity log. */
-const SILENT_SKIP = new Set(["interval_not_elapsed", "position_open"]);
+const SILENT_SKIP = new Set([
+  "interval_not_elapsed",
+  "position_open",
+  "reentry_cooldown",
+]);
 
 async function logTickSkip(
   inst: {

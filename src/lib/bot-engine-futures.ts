@@ -12,10 +12,16 @@ import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   appendBotExecutionLog,
   getLatestBotExecutionLogDetail,
+  getLatestExecutionLogAt,
   hasRecentExecutionLog,
   markBotInstanceSuccess,
   setBotInstanceError,
 } from "@/lib/bot-instance-service";
+import {
+  evaluateMaxHold,
+  FUTURES_CLOSE_LOG_ACTIONS,
+  isInReentryCooldown,
+} from "@/lib/bot-futures-lifecycle";
 import { fetchBinanceFuturesMarkPrice } from "@/lib/binance-user-client";
 import {
   findOtherFuturesOpen,
@@ -363,6 +369,19 @@ export async function tickFuturesUmInstance(args: {
       Date.now() - args.lastExecutedAt.getTime() < intervalMs
     ) {
       return { ran: false, skipped: "interval_not_elapsed" };
+    }
+
+    const lastCloseAt = await getLatestExecutionLogAt(
+      args.instanceId,
+      [...FUTURES_CLOSE_LOG_ACTIONS],
+      7 * 24 * 60 * 60 * 1000,
+    );
+    const cooldown = isInReentryCooldown({
+      reentryCooldownMinutes: cfg.reentryCooldownMinutes,
+      lastCloseAt,
+    });
+    if (cooldown.blocked) {
+      return { ran: false, skipped: "reentry_cooldown" };
     }
 
     const smart = {

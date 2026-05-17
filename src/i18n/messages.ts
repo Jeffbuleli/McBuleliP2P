@@ -1097,7 +1097,16 @@ export const en = {
   bots_trailing_retrace: "retrace",
   bots_trailing_trigger: "from",
   bots_log_futures_trailing_close: "Closed (trailing stop)",
+  bots_log_futures_max_hold_close: "Closed (max hold time)",
   bots_feed_badge_trailing: "Trailing",
+  bots_max_hold_label: "Max hold",
+  bots_max_hold_tip:
+    "Force-close the position after this many minutes (0 = off). Scalp preset: 15 min.",
+  bots_reentry_cooldown_label: "Re-entry wait",
+  bots_reentry_cooldown_tip:
+    "Minutes to wait after a bot close before opening again (0 = off). Scalp preset: 5 min.",
+  bots_lifecycle_minutes: "min",
+  bots_skip_reentry_cooldown: "Waiting after last close (re-entry cooldown)",
   bots_mtf_gate_mode: "MTF confirm",
   bots_mtf_gate_tip:
     "Entry timeframe and a higher timeframe must both agree (same min. score) before opening.",
@@ -2880,7 +2889,16 @@ export const fr: Messages = {
   bots_trailing_retrace: "retrait",
   bots_trailing_trigger: "dès",
   bots_log_futures_trailing_close: "Clôture (trailing stop)",
+  bots_log_futures_max_hold_close: "Clôture (durée max)",
   bots_feed_badge_trailing: "Trailing",
+  bots_max_hold_label: "Durée max",
+  bots_max_hold_tip:
+    "Fermeture forcée après X minutes (0 = off). Preset scalp : 15 min.",
+  bots_reentry_cooldown_label: "Pause ré-entrée",
+  bots_reentry_cooldown_tip:
+    "Minutes d’attente après une clôture bot avant réouverture (0 = off). Scalp : 5 min.",
+  bots_lifecycle_minutes: "min",
+  bots_skip_reentry_cooldown: "Pause après dernière clôture (cooldown)",
   bots_mtf_gate_mode: "Confirm. MTF",
   bots_mtf_gate_tip:
     "Le TF d’entrée et un TF supérieur doivent être alignés (même score min.) avant d’ouvrir.",

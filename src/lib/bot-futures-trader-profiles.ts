@@ -30,6 +30,8 @@ export type FuturesTraderProfilePreset = {
   trailingTriggerPct: number;
   multiTfGateMode: boolean;
   confirmTimeframe?: (typeof BOT_CANDLE_TIMEFRAMES)[number];
+  maxHoldMinutes: number;
+  reentryCooldownMinutes: number;
 };
 
 const PRESETS: Record<
@@ -56,6 +58,8 @@ const PRESETS: Record<
     trailingTriggerPct: 0.5,
     multiTfGateMode: true,
     confirmTimeframe: "5m",
+    maxHoldMinutes: 15,
+    reentryCooldownMinutes: 5,
   },
   day: {
     traderProfile: "day",
@@ -77,6 +81,8 @@ const PRESETS: Record<
     trailingTriggerPct: 2,
     multiTfGateMode: true,
     confirmTimeframe: "1h",
+    maxHoldMinutes: 480,
+    reentryCooldownMinutes: 0,
   },
   swing: {
     traderProfile: "swing",
@@ -98,6 +104,8 @@ const PRESETS: Record<
     trailingTriggerPct: 3,
     multiTfGateMode: true,
     confirmTimeframe: "4h",
+    maxHoldMinutes: 0,
+    reentryCooldownMinutes: 0,
   },
   position: {
     traderProfile: "position",
@@ -117,6 +125,8 @@ const PRESETS: Record<
     trailingPct: 0.8,
     trailingTriggerPct: 2,
     multiTfGateMode: false,
+    maxHoldMinutes: 0,
+    reentryCooldownMinutes: 0,
   },
 };
 

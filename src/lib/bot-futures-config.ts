@@ -40,6 +40,13 @@ export const botFuturesProfileField = {
   traderProfile: z.enum(BOT_TRADER_PROFILE_IDS).default("custom"),
 } as const;
 
+export const botFuturesLifecycleFields = {
+  /** Force close when position age exceeds this (0 = off). */
+  maxHoldMinutes: z.number().min(0).max(10_080).default(0),
+  /** Block new entries for N minutes after any bot close (0 = off). */
+  reentryCooldownMinutes: z.number().min(0).max(1440).default(0),
+} as const;
+
 export const botFuturesConfigSchema = z.object({
   symbol: z.enum(BOT_DCA_SYMBOLS),
   side: z.enum(["LONG", "SHORT"]),
@@ -65,6 +72,7 @@ export const botFuturesConfigSchema = z.object({
   ...botFuturesTrailingFields,
   ...botFuturesMultiTfFields,
   ...botFuturesProfileField,
+  ...botFuturesLifecycleFields,
 });
 
 export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;

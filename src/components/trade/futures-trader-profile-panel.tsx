@@ -67,6 +67,29 @@ export type FutMultiTfUiState = {
   confirmTimeframe: CandleTf;
 };
 
+export type FutLifecycleUiState = {
+  maxHoldMinutes: number;
+  reentryCooldownMinutes: number;
+};
+
+export function loadFutLifecycleFromConfig(
+  cfg: Record<string, unknown> | undefined,
+): FutLifecycleUiState {
+  const max = Number(cfg?.maxHoldMinutes);
+  const cool = Number(cfg?.reentryCooldownMinutes);
+  return {
+    maxHoldMinutes: Number.isFinite(max) && max >= 0 ? max : 0,
+    reentryCooldownMinutes: Number.isFinite(cool) && cool >= 0 ? cool : 0,
+  };
+}
+
+export function futLifecycleConfigFields(s: FutLifecycleUiState) {
+  return {
+    maxHoldMinutes: s.maxHoldMinutes,
+    reentryCooldownMinutes: s.reentryCooldownMinutes,
+  };
+}
+
 function parseCandleTf(raw: unknown, fallback: CandleTf): CandleTf {
   if (
     typeof raw === "string" &&
@@ -129,6 +152,8 @@ export function FuturesTraderProfilePanel({
   onTrailingChange,
   multiTf,
   onMultiTfChange,
+  lifecycle,
+  onLifecycleChange,
   entryTimeframe,
   onApplyPreset,
   t,
@@ -141,6 +166,8 @@ export function FuturesTraderProfilePanel({
   onTrailingChange: (s: FutTrailingUiState) => void;
   multiTf: FutMultiTfUiState;
   onMultiTfChange: (s: FutMultiTfUiState) => void;
+  lifecycle: FutLifecycleUiState;
+  onLifecycleChange: (s: FutLifecycleUiState) => void;
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
@@ -323,6 +350,50 @@ export function FuturesTraderProfilePanel({
           ) : null}
         </label>
       ) : null}
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <span className="flex items-center gap-1">
+          <span className="font-medium text-amber-950 dark:text-amber-100">
+            {t("bots_max_hold_label")}
+          </span>
+          <UiInfoTip tip={t("bots_max_hold_tip")} />
+          <input
+            type="number"
+            min={0}
+            max={10080}
+            step={1}
+            value={lifecycle.maxHoldMinutes}
+            onChange={(e) =>
+              onLifecycleChange({
+                ...lifecycle,
+                maxHoldMinutes: Math.max(0, Number(e.target.value) || 0),
+              })
+            }
+            className="w-16 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+          />
+          <span className="text-stone-500">{t("bots_lifecycle_minutes")}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="font-medium text-amber-950 dark:text-amber-100">
+            {t("bots_reentry_cooldown_label")}
+          </span>
+          <UiInfoTip tip={t("bots_reentry_cooldown_tip")} />
+          <input
+            type="number"
+            min={0}
+            max={1440}
+            step={1}
+            value={lifecycle.reentryCooldownMinutes}
+            onChange={(e) =>
+              onLifecycleChange({
+                ...lifecycle,
+                reentryCooldownMinutes: Math.max(0, Number(e.target.value) || 0),
+              })
+            }
+            className="w-16 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+          />
+          <span className="text-stone-500">{t("bots_lifecycle_minutes")}</span>
+        </span>
+      </div>
     </div>
   );
 }
