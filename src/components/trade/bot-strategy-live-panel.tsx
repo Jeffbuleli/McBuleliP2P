@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
-import {
-  BOT_CLOSED_ACTIONS,
-  buildBotTradeHistoryRow,
-} from "@/lib/bots-trade-display";
+import { BOT_CLOSED_ACTIONS } from "@/lib/bots-trade-display";
+import { BotActivityFeed } from "@/components/trade/bot-activity-feed";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
 import { UiSectionTitle } from "@/components/ui/ui-info-tip";
@@ -27,12 +25,19 @@ function sortLogsNewest(logs: BotLogRow[]) {
   return [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+function fmtNum(v: string | undefined, maxFrac = 2) {
+  if (!v) return v;
+  const n = Number.parseFloat(String(v).replace(/,/g, ""));
+  if (!Number.isFinite(n)) return v;
+  return n.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
+}
+
 function formatPnlLabel(pnl: string | undefined) {
   if (!pnl) return null;
   const n = Number.parseFloat(pnl.replace(/,/g, ""));
   const positive = Number.isFinite(n) ? n >= 0 : !pnl.trim().startsWith("-");
   return {
-    text: pnl,
+    text: fmtNum(pnl, 2) ?? pnl,
     className: positive
       ? "text-emerald-700 dark:text-emerald-300"
       : "text-rose-700 dark:text-rose-300",
@@ -71,16 +76,16 @@ function OpenRow({
             {row.entryPrice ? (
               <>
                 <dt className="text-stone-500">{t("bots_futures_entry")}</dt>
-                <dd className="font-medium text-stone-800 dark:text-stone-200">
-                  {row.entryPrice}
+                <dd className="font-medium tabular-nums text-stone-800 dark:text-stone-200">
+                  {fmtNum(row.entryPrice) ?? row.entryPrice}
                 </dd>
               </>
             ) : null}
             {row.markPrice ? (
               <>
                 <dt className="text-stone-500">{t("bots_futures_mark")}</dt>
-                <dd className="font-medium text-stone-800 dark:text-stone-200">
-                  {row.markPrice}
+                <dd className="font-medium tabular-nums text-stone-800 dark:text-stone-200">
+                  {fmtNum(row.markPrice) ?? row.markPrice}
                 </dd>
               </>
             ) : null}
@@ -112,57 +117,6 @@ function OpenRow({
       <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
         {t("bots_holding_size")}: {row.size}
       </p>
-    </li>
-  );
-}
-
-function ActivityLine({
-  log,
-  t,
-}: {
-  log: BotLogRow;
-  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
-}) {
-  const row = buildBotTradeHistoryRow(log, t);
-  const isErr = log.action === "error";
-  const isSkip = log.action === "smart_skip";
-  const isTickSkip = log.action === "tick_skip";
-  return (
-    <li
-      className={`rounded-lg border px-3 py-2 text-sm ${
-        isErr
-          ? "border-rose-300 bg-rose-50/90 dark:border-rose-800 dark:bg-rose-950/40"
-          : isSkip
-            ? "border-sky-300/80 bg-sky-50/60 dark:border-sky-800 dark:bg-sky-950/30"
-            : isTickSkip
-              ? "border-amber-300/70 bg-amber-50/70 dark:border-amber-800/50 dark:bg-amber-950/25"
-              : "border-stone-200/80 bg-white/80 dark:border-stone-700 dark:bg-stone-900/50"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2 text-xs text-stone-500">
-        <time dateTime={log.createdAt}>
-          {new Date(log.createdAt).toLocaleString(undefined, {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          })}
-        </time>
-      </div>
-      <p className="mt-1 font-medium leading-snug">{row.title}</p>
-      {row.chips.length > 0 ? (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {row.chips.slice(0, 4).map((c, i) => (
-            <span
-              key={`${c.icon}-${i}`}
-              className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] dark:bg-stone-800"
-            >
-              {c.label}
-            </span>
-          ))}
-        </div>
-      ) : null}
     </li>
   );
 }
@@ -300,30 +254,27 @@ export function BotStrategyLivePanel({
       </section>
 
       <section>
-        <h4 className="text-xs font-semibold uppercase text-stone-500">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
           {t("bots_activity_feed_title")}
         </h4>
-        {feedLogs.length === 0 ? (
-          <p className="mt-2 text-xs text-stone-500">{t("bots_activity_feed_empty")}</p>
-        ) : (
-          <ul className="mt-2 max-h-72 space-y-2 overflow-y-auto">
-            {feedLogs.map((l) => (
-              <ActivityLine key={l.id} log={l} t={t} />
-            ))}
-          </ul>
-        )}
+        <BotActivityFeed
+          logs={feedLogs}
+          hidePositionOpenSkips={open.some((r) => r.kind === "futures")}
+          emptyLabel={t("bots_activity_feed_empty")}
+          t={t}
+        />
       </section>
 
       {closedLogs.length > 0 ? (
         <section>
-          <h4 className="text-xs font-semibold uppercase text-stone-500">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
             {t("bots_positions_closed")}
           </h4>
-          <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto">
-            {closedLogs.map((l) => (
-              <ActivityLine key={l.id} log={l} t={t} />
-            ))}
-          </ul>
+          <BotActivityFeed
+            logs={closedLogs}
+            emptyLabel={t("bots_positions_closed_empty")}
+            t={t}
+          />
         </section>
       ) : null}
     </div>
