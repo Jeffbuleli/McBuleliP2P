@@ -271,6 +271,7 @@ export function BotsTradingClient() {
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
   const [connectMsg, setConnectMsg] = useState<string | null>(null);
+  const [connectOk, setConnectOk] = useState(false);
   const [dcaSymbol, setDcaSymbol] = useState("BTCUSDT");
   const [dcaAmount, setDcaAmount] = useState("20");
   const [dcaInterval, setDcaInterval] = useState(24);
@@ -414,17 +415,37 @@ export function BotsTradingClient() {
     }
   }
 
+  function formatKeysSavedMessage(
+    check: {
+      spotOk?: boolean;
+      futuresOk?: boolean;
+      futuresApiKind?: string | null;
+    } | undefined,
+  ): string {
+    if (!check) return t("bots_keys_saved");
+    const spot = check.spotOk ? t("bots_keys_validated_yes") : t("bots_keys_validated_no");
+    let futures = t("bots_keys_validated_no");
+    if (check.futuresOk) {
+      futures =
+        check.futuresApiKind === "papi"
+          ? t("bots_keys_validated_pm")
+          : t("bots_keys_validated_yes");
+    }
+    return `${t("bots_keys_validated_ok")} ${t("bots_keys_validated_detail", { spot, futures })}`;
+  }
+
   async function connectKeys() {
     if (!wizardPlan) return;
     setBusy(true);
     setConnectMsg(null);
+    setConnectOk(false);
     try {
       const body: Record<string, string> = {
         environment: wizardBilling,
         apiKey: apiKey.trim(),
         apiSecret: apiSecret.trim(),
+        planId: wizardPlan,
       };
-      if (wizardPlan) body.planId = wizardPlan;
       const res = await fetch("/api/trade/bots/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -434,6 +455,7 @@ export function BotsTradingClient() {
       if (!res.ok) {
         const code =
           typeof json.error === "string" ? json.error : "bots_error_binance_generic";
+        setConnectOk(false);
         setConnectMsg(
           typeof json.detail === "string" && !code.startsWith("bots_")
             ? json.detail
@@ -441,7 +463,16 @@ export function BotsTradingClient() {
         );
         return;
       }
-      setConnectMsg(t("bots_keys_saved"));
+      setConnectOk(true);
+      setConnectMsg(
+        formatKeysSavedMessage(
+          json.check as {
+            spotOk?: boolean;
+            futuresOk?: boolean;
+            futuresApiKind?: string | null;
+          },
+        ),
+      );
       setApiKey("");
       setApiSecret("");
       await load();
@@ -456,6 +487,7 @@ export function BotsTradingClient() {
     setWizardBilling(accountBilling);
     setWizardStep(1);
     setConnectMsg(null);
+    setConnectOk(false);
     setApiKey("");
     setApiSecret("");
   }
@@ -466,6 +498,7 @@ export function BotsTradingClient() {
     setWizardPlan(activeTab);
     setWizardStep(3);
     setConnectMsg(null);
+    setConnectOk(false);
     setApiKey("");
     setApiSecret("");
   }
@@ -1368,19 +1401,21 @@ export function BotsTradingClient() {
                 <li>{t("bots_wizard_step3")}</li>
                 <li>{t("bots_wizard_step4")}</li>
               </ol>
-              {wizardBilling === "demo" ? (
-                <p className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm font-medium text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
-                  {wizardPlan === "futures_um"
-                    ? t("bots_error_demo_futures_keys")
-                    : t("bots_error_demo_spot_keys")}
-                </p>
-              ) : (
-                <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
-                  {wizardPlan === "futures_um"
-                    ? t("bots_env_live_futures_hint")
-                    : t("bots_env_live_hint")}
-                </p>
-              )}
+              {!credFor(wizardBilling) ? (
+                wizardBilling === "demo" ? (
+                  <p className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm font-medium text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
+                    {wizardPlan === "futures_um"
+                      ? t("bots_env_demo_futures_hint")
+                      : t("bots_env_demo_spot_hint")}
+                  </p>
+                ) : (
+                  <p className="rounded-lg bg-stone-100 p-3 text-xs dark:bg-stone-800">
+                    {wizardPlan === "futures_um"
+                      ? t("bots_env_live_futures_hint")
+                      : t("bots_env_live_spot_hint")}
+                  </p>
+                )
+              ) : null}
               {credFor(wizardBilling) ? (
                 <p className="text-sm text-emerald-700 dark:text-emerald-300">
                   {t("bots_keys_connected", {
@@ -1408,7 +1443,15 @@ export function BotsTradingClient() {
                 />
               </label>
               {connectMsg ? (
-                <p className="text-sm text-stone-700 dark:text-stone-300">{connectMsg}</p>
+                <p
+                  className={
+                    connectOk
+                      ? "text-sm text-emerald-700 dark:text-emerald-300"
+                      : "text-sm text-rose-800 dark:text-rose-200"
+                  }
+                >
+                  {connectMsg}
+                </p>
               ) : null}
               <button
                 type="button"

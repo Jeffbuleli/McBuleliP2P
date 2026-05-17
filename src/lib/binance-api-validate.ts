@@ -33,6 +33,12 @@ export function classifyBinanceAuthError(
   raw: string,
 ): string {
   const lower = raw.toLowerCase();
+  if (
+    lower.includes("ip") &&
+    (lower.includes("restrict") || lower.includes("whitelist"))
+  ) {
+    return "bots_error_ip_restrict";
+  }
   if (raw.includes("-2015") || lower.includes("invalid api-key")) {
     if (environment === "demo") {
       return market === "spot"
@@ -45,9 +51,6 @@ export function classifyBinanceAuthError(
     return market === "futures"
       ? "bots_error_live_futures_keys"
       : "bots_error_live_spot_keys";
-  }
-  if (lower.includes("ip") && lower.includes("restrict")) {
-    return "bots_error_ip_restrict";
   }
   return "bots_error_binance_generic";
 }
@@ -103,6 +106,21 @@ async function validateFuturesAccess(args: {
   }
 
   const restrictions = await fetchBinanceApiRestrictions(environment, creds);
+
+  if (!restrictions) {
+    try {
+      await binanceUserSignedGet({
+        environment,
+        creds,
+        market: "portfolio",
+        path: "/papi/v1/um/account",
+      });
+      return { ok: true, kind: "papi", error: null, errorCode: null };
+    } catch {
+      /* try classic fapi below */
+    }
+  }
+
   const usePortfolio =
     restrictions?.enablePortfolioMarginTrading === true &&
     restrictions.enableFutures !== true;
@@ -168,6 +186,7 @@ async function validateFuturesAccess(args: {
 export async function validateBinanceApiPermissions(args: {
   environment: BotEnvironment;
   creds: StoredBinanceCredentials;
+  checkSpot?: boolean;
   checkFutures: boolean;
 }): Promise<BinancePermissionCheck> {
   let spotOk = false;
@@ -178,21 +197,25 @@ export async function validateBinanceApiPermissions(args: {
   let futuresErrorCode: string | null = null;
   let futuresApiKind: "fapi" | "papi" | null = null;
 
-  try {
-    await binanceUserSignedGet({
-      environment: args.environment,
-      creds: args.creds,
-      market: "spot",
-      path: "/api/v3/account",
-    });
-    spotOk = true;
-  } catch (e) {
-    spotError = errMessage(e);
-    spotErrorCode = classifyBinanceAuthError(
-      args.environment,
-      "spot",
-      spotError,
-    );
+  const checkSpot = args.checkSpot !== false;
+
+  if (checkSpot) {
+    try {
+      await binanceUserSignedGet({
+        environment: args.environment,
+        creds: args.creds,
+        market: "spot",
+        path: "/api/v3/account",
+      });
+      spotOk = true;
+    } catch (e) {
+      spotError = errMessage(e);
+      spotErrorCode = classifyBinanceAuthError(
+        args.environment,
+        "spot",
+        spotError,
+      );
+    }
   }
 
   if (args.checkFutures) {

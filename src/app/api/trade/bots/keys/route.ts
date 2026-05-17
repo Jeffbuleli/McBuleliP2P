@@ -95,9 +95,11 @@ export async function POST(req: Request) {
   }
 
   const creds = { apiKey, apiSecret };
+  /** Probe spot + futures so stored flags match the shared key pair; plan gates what must pass. */
   const check = await validateBinanceApiPermissions({
     environment: env,
     creds,
+    checkSpot: true,
     checkFutures: true,
   });
 
@@ -124,7 +126,15 @@ export async function POST(req: Request) {
     check,
   });
 
-  return NextResponse.json({ ok: true, credential: saved, check });
+  return NextResponse.json({
+    ok: true,
+    credential: saved,
+    check: {
+      spotOk: check.spotOk,
+      futuresOk: check.futuresOk,
+      futuresApiKind: check.futuresApiKind,
+    },
+  });
 }
 
 export async function DELETE(req: Request) {
