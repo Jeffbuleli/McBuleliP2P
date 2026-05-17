@@ -18,7 +18,9 @@ export function binanceEndpointsFor(
 ): BinanceEndpointSet {
   if (environment === "demo") {
     return {
-      spotRest: "https://testnet.binance.vision",
+      /** Keys from https://demo.binance.com → API Management */
+      spotRest: "https://demo-api.binance.com",
+      /** USDⓈ-M demo REST (browser 403 on root URL is normal). */
       futuresRest: "https://demo-fapi.binance.com",
       portfolioRest: "https://demo-fapi.binance.com",
     };

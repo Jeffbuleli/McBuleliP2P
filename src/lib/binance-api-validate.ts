@@ -106,80 +106,64 @@ async function validateFuturesAccess(args: {
   }
 
   const restrictions = await fetchBinanceApiRestrictions(environment, creds);
+  const portfolioMargin = restrictions?.enablePortfolioMarginTrading === true;
 
-  if (!restrictions) {
-    try {
-      await binanceUserSignedGet({
-        environment,
-        creds,
-        market: "portfolio",
-        path: "/papi/v1/um/account",
-      });
-      return { ok: true, kind: "papi", error: null, errorCode: null };
-    } catch {
-      /* try classic fapi below */
-    }
+  async function tryPapi() {
+    await binanceUserSignedGet({
+      environment,
+      creds,
+      market: "portfolio",
+      path: "/papi/v1/um/account",
+    });
+    return { ok: true as const, kind: "papi" as const, error: null, errorCode: null };
   }
 
-  const usePortfolio =
-    restrictions?.enablePortfolioMarginTrading === true &&
-    restrictions.enableFutures !== true;
-
-  if (usePortfolio) {
-    try {
-      await binanceUserSignedGet({
-        environment,
-        creds,
-        market: "portfolio",
-        path: "/papi/v1/um/account",
-      });
-      return { ok: true, kind: "papi", error: null, errorCode: null };
-    } catch (e) {
-      const error = errMessage(e);
-      return {
-        ok: false,
-        kind: null,
-        error,
-        errorCode: classifyBinanceAuthError(environment, "portfolio", error),
-      };
-    }
-  }
-
-  try {
+  async function tryFapi() {
     await binanceUserSignedGet({
       environment,
       creds,
       market: "futures",
       path: "/fapi/v2/balance",
     });
-    return { ok: true, kind: "fapi", error: null, errorCode: null };
-  } catch (e) {
-    const error = errMessage(e);
-    if (restrictions?.enablePortfolioMarginTrading) {
+    return { ok: true as const, kind: "fapi" as const, error: null, errorCode: null };
+  }
+
+  if (portfolioMargin) {
+    try {
+      return await tryPapi();
+    } catch (e) {
+      const papiErr = errMessage(e);
+      const papiCode = classifyBinanceAuthError(environment, "portfolio", papiErr);
+      if (papiCode === "bots_error_ip_restrict") {
+        return { ok: false, kind: null, error: papiErr, errorCode: papiCode };
+      }
       try {
-        await binanceUserSignedGet({
-          environment,
-          creds,
-          market: "portfolio",
-          path: "/papi/v1/um/account",
-        });
-        return { ok: true, kind: "papi", error: null, errorCode: null };
-      } catch (e2) {
-        const err2 = errMessage(e2);
-        return {
-          ok: false,
-          kind: null,
-          error: err2,
-          errorCode: classifyBinanceAuthError(environment, "portfolio", err2),
-        };
+        return await tryFapi();
+      } catch {
+        return { ok: false, kind: null, error: papiErr, errorCode: papiCode };
       }
     }
-    return {
-      ok: false,
-      kind: null,
-      error,
-      errorCode: classifyBinanceAuthError(environment, "futures", error),
-    };
+  }
+
+  try {
+    return await tryFapi();
+  } catch (e) {
+    const error = errMessage(e);
+    const code = classifyBinanceAuthError(environment, "futures", error);
+    if (code === "bots_error_ip_restrict") {
+      return { ok: false, kind: null, error, errorCode: code };
+    }
+    try {
+      return await tryPapi();
+    } catch (e2) {
+      const err2 = errMessage(e2);
+      return {
+        ok: false,
+        kind: null,
+        error: err2,
+        errorCode: classifyBinanceAuthError(environment, "portfolio", err2),
+      };
+    }
   }
 }
 

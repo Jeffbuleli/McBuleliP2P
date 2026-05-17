@@ -1111,19 +1111,19 @@ export const en = {
   bots_wizard_step2:
     "Enable Reading + Spot/Margin trading. For futures: classic Futures API or Portfolio Margin trading (not both). Disable Withdrawals.",
   bots_wizard_step3:
-    "Demo: Spot keys at testnet.binance.vision (GitHub login). Futures demo: keys from Binance Futures Demo (demo-fapi.binance.com).",
+    "Demo: create API keys at demo.binance.com → API Management (same portal for Spot and Futures demo).",
   bots_wizard_step4: "Paste key + secret below — we test permissions, encrypt, and never show the secret again.",
   bots_env_demo_hint:
-    "Demo = testnet only. Spot: testnet.binance.vision · Futures: Binance Futures Demo (demo-fapi.binance.com).",
+    "Demo = keys from demo.binance.com only. Live keys from binance.com will not work in demo mode.",
   bots_env_live_hint: "Live uses your real Binance account. Never enable withdrawal permission.",
   bots_env_live_spot_hint:
     "Paste API keys from binance.com (not testnet). One key pair is shared for DCA and Grid on live.",
   bots_env_live_futures_hint:
     "Paste API keys from binance.com. Portfolio Margin or classic Futures — whitelist the McBuleli server IP if your key is IP-restricted.",
   bots_env_demo_spot_hint:
-    "Demo only: create keys at testnet.binance.vision (GitHub login). Live binance.com keys will not work here.",
+    "Demo only: API keys from demo.binance.com (Demo Trading). Not binance.com live keys.",
   bots_env_demo_futures_hint:
-    "Demo only: create keys on Binance Futures Demo (demo-fapi.binance.com). Live keys will not work here.",
+    "Demo only: same demo.binance.com API key (Futures demo wallet). Not binance.com live keys.",
   bots_keys_connected: "Connected: {hint}",
   bots_test_and_save: "Test permissions & save",
   bots_keys_saved: "API keys verified and saved.",
@@ -1138,18 +1138,19 @@ export const en = {
   bots_encryption_not_configured:
     "API key storage is not configured on the server. Contact support.",
   bots_error_demo_spot_keys:
-    "Demo mode uses Binance Spot TESTNET only. Create keys at testnet.binance.vision — your live Binance.com keys will not work here.",
+    "Demo Spot rejected. Create keys at demo.binance.com → API Management — not binance.com.",
   bots_error_demo_futures_keys:
-    "Demo futures needs keys from Binance Futures Demo (demo-fapi.binance.com), not your live binance.com key.",
+    "Demo Futures rejected. Use API keys created on demo.binance.com — not binance.com.",
   bots_error_live_spot_keys:
     "Binance refused the Spot API connection. Use live keys from binance.com (not testnet). If permissions are already set, add the McBuleli server IP to your API whitelist.",
   bots_error_live_futures_keys:
-    "Live futures failed on classic API (fapi). If you use Portfolio Margin, enable Portfolio Margin trading on the key; otherwise enable Futures. Check IP whitelist.",
+    "Binance refused the futures connection. With Portfolio Margin, McBuleli uses the PM API (not classic fapi). Whitelist the McBuleli server outbound IP on binance.com — not only your home IP.",
   bots_error_live_portfolio_margin_keys:
-    "Portfolio Margin API rejected the key. Enable Reading + Portfolio Margin trading on binance.com, and whitelist the server IP.",
+    "Portfolio Margin API rejected the key. Permissions look correct — add the McBuleli server IP to the API whitelist on binance.com.",
   bots_error_ip_restrict:
-    "Binance rejected the request (IP restriction). Whitelist your server IP in API settings or disable IP lock for testing.",
-  bots_error_binance_generic: "Binance rejected the API keys. Check key, secret, environment (demo=testnet), and permissions.",
+    "Binance IP restriction: add the McBuleli server outbound IP (Render hosting) to your API key whitelist on binance.com.",
+  bots_error_binance_generic:
+    "Binance rejected the API keys. Check key, secret, environment (demo=demo.binance.com, live=binance.com), and permissions.",
   bots_subscription_required: "Active subscription required for this plan.",
   bots_invalid_dca_config: "Invalid DCA settings.",
   bots_strategy_not_implemented: "This bot strategy is not supported.",
@@ -2747,19 +2748,19 @@ export const fr: Messages = {
   bots_wizard_step2:
     "Activer Lecture + trading Spot/Marge. Pour les futures : API Futures classique ou trading Portfolio Margin. Désactiver les retraits.",
   bots_wizard_step3:
-    "Démo : Spot sur testnet.binance.vision (connexion GitHub). Futures démo : clés Binance Futures Demo (demo-fapi.binance.com).",
+    "Démo : créez les clés sur demo.binance.com → Gestion API (même portail Spot et Futures démo).",
   bots_wizard_step4: "Collez clé + secret — nous testons les permissions, chiffrons, et ne réaffichons jamais le secret.",
   bots_env_demo_hint:
-    "Démo = testnet uniquement. Spot : testnet.binance.vision · Futures : Binance Futures Demo (demo-fapi.binance.com).",
+    "Démo = clés créées sur demo.binance.com uniquement. Les clés live binance.com ne fonctionnent pas en démo.",
   bots_env_live_hint: "Le live utilise votre compte Binance réel. Ne jamais activer le retrait.",
   bots_env_live_spot_hint:
     "Collez des clés créées sur binance.com (pas testnet). Une même paire sert pour DCA et Grille en live.",
   bots_env_live_futures_hint:
     "Collez des clés binance.com. Portfolio Margin ou Futures classique — ajoutez l’IP du serveur McBuleli si la clé est limitée par IP.",
   bots_env_demo_spot_hint:
-    "Démo uniquement : clés sur testnet.binance.vision (connexion GitHub). Les clés live binance.com ne fonctionnent pas ici.",
+    "Démo uniquement : clés API sur demo.binance.com (Demo Trading). Pas les clés live binance.com.",
   bots_env_demo_futures_hint:
-    "Démo uniquement : clés sur Binance Futures Demo (demo-fapi.binance.com). Les clés live ne fonctionnent pas ici.",
+    "Démo uniquement : même clé API demo.binance.com (portefeuille Futures démo). Pas binance.com live.",
   bots_keys_validated_ok: "Clés validées et enregistrées.",
   bots_keys_validated_detail: "Spot : {spot} · Futures : {futures}",
   bots_keys_validated_yes: "OK",
@@ -2774,19 +2775,19 @@ export const fr: Messages = {
   bots_encryption_not_configured:
     "Le stockage des clés API n’est pas configuré sur le serveur. Contactez le support.",
   bots_error_demo_spot_keys:
-    "Le mode démo utilise le TESTNET Spot Binance uniquement. Créez des clés sur testnet.binance.vision — les clés binance.com (live) ne fonctionnent pas.",
+    "Spot démo refusé. Créez les clés sur demo.binance.com → Gestion API — pas sur binance.com.",
   bots_error_demo_futures_keys:
-    "Futures démo : clés depuis Binance Futures Demo (demo-fapi.binance.com), pas la clé live binance.com.",
+    "Futures démo refusé. Utilisez des clés créées sur demo.binance.com — pas binance.com.",
   bots_error_live_spot_keys:
     "Binance a refusé la connexion Spot. Utilisez des clés live binance.com (pas testnet). Si les permissions sont déjà bonnes, ajoutez l’IP du serveur McBuleli à la liste blanche API.",
   bots_error_live_futures_keys:
-    "Échec API Futures classique (fapi). Avec Portfolio Margin, activez le trading PM sur la clé ; sinon activez Futures. Vérifiez la liste blanche IP.",
+    "Connexion futures refusée par Binance. Avec Portfolio Margin, McBuleli utilise l’API PM (pas fapi classique). Ajoutez l’IP sortante du serveur McBuleli sur binance.com — pas seulement votre IP locale.",
   bots_error_live_portfolio_margin_keys:
-    "API Portfolio Margin refusée. Activez Lecture + trading Portfolio Margin sur binance.com et autorisez l’IP du serveur.",
+    "API Portfolio Margin refusée. Les permissions semblent correctes — ajoutez l’IP sortante du serveur McBuleli à la liste blanche API sur binance.com.",
   bots_error_ip_restrict:
-    "Binance a refusé (restriction IP). Ajoutez l’IP du serveur dans l’API ou désactivez le verrou IP pour tester.",
+    "Restriction IP Binance : ajoutez l’IP sortante du serveur McBuleli (hébergement Render) dans la liste blanche de la clé sur binance.com.",
   bots_error_binance_generic:
-    "Clés refusées par Binance. Vérifiez clé, secret, environnement (démo=testnet) et permissions.",
+    "Clés refusées par Binance. Vérifiez clé, secret, environnement (démo=demo.binance.com, live=binance.com) et permissions.",
   bots_subscription_required: "Abonnement actif requis pour ce plan.",
   bots_invalid_dca_config: "Paramètres DCA invalides.",
   bots_strategy_not_implemented: "Cette stratégie de bot n’est pas prise en charge.",
