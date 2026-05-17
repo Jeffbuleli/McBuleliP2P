@@ -51,9 +51,9 @@ function BillingToggle({
         className={`flex min-w-[7rem] flex-1 flex-col rounded-xl border-2 px-3 py-2 text-center text-sm font-bold transition disabled:opacity-40 ${
           on
             ? isLive
-              ? "border-rose-500 bg-rose-50 text-rose-950 dark:bg-rose-950/50 dark:text-rose-100"
-              : "border-violet-500 bg-violet-50 text-violet-950 dark:bg-violet-950/40"
-            : "border-stone-200 dark:border-stone-600"
+              ? "border-rose-500 bg-rose-600 text-white dark:border-rose-400 dark:bg-rose-700 dark:text-white"
+              : "border-violet-500 bg-violet-600 text-white dark:border-violet-400 dark:bg-violet-700 dark:text-white"
+            : "border-stone-300 bg-stone-100 text-stone-800 dark:border-stone-500 dark:bg-stone-800 dark:text-stone-100"
         }`}
       >
         {id === "demo" ? t("bots_billing_demo") : t("bots_billing_live")}

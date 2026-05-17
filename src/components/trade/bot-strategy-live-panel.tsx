@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
 import {
@@ -12,6 +12,20 @@ import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
 import { UiSectionTitle } from "@/components/ui/ui-info-tip";
 
 const POLL_MS = 12_000;
+
+function openRowsEqual(a: BotOpenPositionRow[], b: BotOpenPositionRow[]) {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (row, i) =>
+      row.symbol === b[i]?.symbol &&
+      row.kind === b[i]?.kind &&
+      row.size === b[i]?.size,
+  );
+}
+
+function sortLogsNewest(logs: BotLogRow[]) {
+  return [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
 
 function OpenRow({
   row,
@@ -125,54 +139,62 @@ export function BotStrategyLivePanel({
   const [open, setOpen] = useState<BotOpenPositionRow[]>([]);
   const [posErr, setPosErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const onLogsRefreshRef = useRef(onLogsRefresh);
+  onLogsRefreshRef.current = onLogsRefresh;
 
-  const loadOpen = useCallback(async () => {
-    if (!keysOk || !botActive) {
-      setOpen([]);
-      return;
-    }
-    setLoading(true);
-    setPosErr(null);
-    try {
-      const res = await fetch(
-        `/api/trade/bots/positions?planId=${planId}`,
-        { cache: "no-store" },
-      );
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const err = typeof json.error === "string" ? json.error : "";
-        setPosErr(err ? formatBotRuntimeError(err, t) : t("bots_err_generic"));
+  const loadOpen = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!keysOk || !botActive) {
         setOpen([]);
         return;
       }
-      setOpen(Array.isArray(json.open) ? json.open : []);
-      if (typeof json.error === "string" && json.error) {
-        setPosErr(formatBotRuntimeError(json.error, t));
+      if (!opts?.silent) setLoading(true);
+      setPosErr(null);
+      try {
+        const res = await fetch(
+          `/api/trade/bots/positions?planId=${planId}`,
+          { cache: "no-store" },
+        );
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const err = typeof json.error === "string" ? json.error : "";
+          setPosErr(err ? formatBotRuntimeError(err, t) : t("bots_err_generic"));
+          setOpen([]);
+          return;
+        }
+        const next = Array.isArray(json.open) ? json.open : [];
+        setOpen((prev) => (openRowsEqual(prev, next) ? prev : next));
+        if (typeof json.error === "string" && json.error) {
+          setPosErr(formatBotRuntimeError(json.error, t));
+        }
+      } finally {
+        if (!opts?.silent) setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [botActive, keysOk, planId, t]);
+    },
+    [botActive, keysOk, planId, t],
+  );
 
   useEffect(() => {
     if (!botActive) return;
     void loadOpen();
-    void onLogsRefresh();
+    void onLogsRefreshRef.current();
     const id = window.setInterval(() => {
-      void loadOpen();
-      void onLogsRefresh();
+      void loadOpen({ silent: true });
+      void onLogsRefreshRef.current();
     }, POLL_MS);
     return () => window.clearInterval(id);
-  }, [botActive, loadOpen, onLogsRefresh]);
+  }, [botActive, loadOpen]);
 
   if (!botActive) {
     return null;
   }
 
-  const recentActivity = [...logs]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 25);
-  const closedLogs = logs.filter((l) => BOT_CLOSED_ACTIONS.has(l.action));
+  const feedLogs = sortLogsNewest(
+    logs.filter((l) => !BOT_CLOSED_ACTIONS.has(l.action)),
+  ).slice(0, 25);
+  const closedLogs = sortLogsNewest(
+    logs.filter((l) => BOT_CLOSED_ACTIONS.has(l.action)),
+  ).slice(0, 25);
 
   return (
     <div className="mt-6 space-y-5 border-t border-stone-200/80 pt-5 dark:border-stone-700/80">
@@ -186,8 +208,8 @@ export function BotStrategyLivePanel({
         <button
           type="button"
           onClick={() => {
-            void loadOpen();
-            void onLogsRefresh();
+            void loadOpen({ silent: open.length > 0 });
+            void onLogsRefreshRef.current();
           }}
           disabled={loading || !keysOk}
           className="ml-auto rounded-lg border border-stone-300 px-2 py-0.5 text-xs font-semibold disabled:opacity-40 dark:border-stone-600"
@@ -227,11 +249,11 @@ export function BotStrategyLivePanel({
         <h4 className="text-xs font-semibold uppercase text-stone-500">
           {t("bots_activity_feed_title")}
         </h4>
-        {recentActivity.length === 0 ? (
+        {feedLogs.length === 0 ? (
           <p className="mt-2 text-xs text-stone-500">{t("bots_activity_feed_empty")}</p>
         ) : (
           <ul className="mt-2 max-h-72 space-y-2 overflow-y-auto">
-            {recentActivity.map((l) => (
+            {feedLogs.map((l) => (
               <ActivityLine key={l.id} log={l} t={t} />
             ))}
           </ul>

@@ -321,9 +321,22 @@ export function BotsTradingClient() {
     );
     const logJson = await logRes.json().catch(() => ({}));
     if (logRes.ok && Array.isArray(logJson.logs)) {
-      setLogs(logJson.logs);
+      const next = logJson.logs as BotLogRow[];
+      setLogs((prev) => {
+        if (
+          prev.length === next.length &&
+          prev.every((row, i) => row.id === next[i]?.id)
+        ) {
+          return prev;
+        }
+        return next;
+      });
     }
   }, []);
+
+  const refreshDcaLogs = useCallback(() => loadLogs("dca_spot"), [loadLogs]);
+  const refreshGridLogs = useCallback(() => loadLogs("grid_spot"), [loadLogs]);
+  const refreshFutLogs = useCallback(() => loadLogs("futures_um"), [loadLogs]);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -344,7 +357,7 @@ export function BotsTradingClient() {
 
   useEffect(() => {
     void load();
-  }, [load, t]);
+  }, [load]);
 
   useEffect(() => {
     if (!data) return;
@@ -946,7 +959,7 @@ export function BotsTradingClient() {
             botActive={dcaInst?.status === "active"}
             keysOk={dcaKeysOk}
             logs={logs}
-            onLogsRefresh={() => loadLogs("dca_spot")}
+            onLogsRefresh={refreshDcaLogs}
             t={t}
           />
         </section>
@@ -1079,7 +1092,7 @@ export function BotsTradingClient() {
             botActive={gridInst?.status === "active"}
             keysOk={gridKeysOk}
             logs={logs}
-            onLogsRefresh={() => loadLogs("grid_spot")}
+            onLogsRefresh={refreshGridLogs}
             t={t}
           />
         </section>
@@ -1233,7 +1246,7 @@ export function BotsTradingClient() {
             botActive={futInst?.status === "active"}
             keysOk={futKeysOk}
             logs={logs}
-            onLogsRefresh={() => loadLogs("futures_um")}
+            onLogsRefresh={refreshFutLogs}
             t={t}
           />
         </section>
