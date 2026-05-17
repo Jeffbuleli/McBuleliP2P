@@ -27,6 +27,18 @@ function sortLogsNewest(logs: BotLogRow[]) {
   return [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+function formatPnlLabel(pnl: string | undefined) {
+  if (!pnl) return null;
+  const n = Number.parseFloat(pnl.replace(/,/g, ""));
+  const positive = Number.isFinite(n) ? n >= 0 : !pnl.trim().startsWith("-");
+  return {
+    text: pnl,
+    className: positive
+      ? "text-emerald-700 dark:text-emerald-300"
+      : "text-rose-700 dark:text-rose-300",
+  };
+}
+
 function OpenRow({
   row,
   t,
@@ -35,19 +47,50 @@ function OpenRow({
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   if (row.kind === "futures") {
+    const pnl = formatPnlLabel(row.unrealizedPnl);
     return (
-      <li className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-800 dark:bg-amber-950/30">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-200/80 text-lg dark:bg-amber-900/50">
-          {row.side === "LONG" ? "▲" : "▼"}
+      <li className="flex items-start gap-3 rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-amber-100/40 p-3 shadow-sm dark:border-amber-700/50 dark:from-amber-950/40 dark:to-amber-950/15">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white ${
+            row.side === "LONG" ? "bg-emerald-600" : "bg-rose-600"
+          }`}
+        >
+          {row.side === "LONG" ? "L" : "S"}
         </span>
         <div className="min-w-0 flex-1 text-sm">
-          <p className="font-bold text-amber-950 dark:text-amber-100">{row.symbol}</p>
-          <p className="mt-1 flex flex-wrap gap-2 text-xs text-stone-600 dark:text-stone-400">
-            <span>◎ {row.size}</span>
-            {row.entryPrice ? <span>→ {row.entryPrice}</span> : null}
-            {row.markPrice ? <span>≈ {row.markPrice}</span> : null}
-            {row.unrealizedPnl ? <span>PnL {row.unrealizedPnl}</span> : null}
-          </p>
+          <p className="font-bold text-amber-950 dark:text-amber-50">{row.symbol}</p>
+          <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+            {row.size ? (
+              <>
+                <dt className="text-stone-500">{t("bots_futures_size")}</dt>
+                <dd className="font-medium text-stone-800 dark:text-stone-200">
+                  {row.size}
+                </dd>
+              </>
+            ) : null}
+            {row.entryPrice ? (
+              <>
+                <dt className="text-stone-500">{t("bots_futures_entry")}</dt>
+                <dd className="font-medium text-stone-800 dark:text-stone-200">
+                  {row.entryPrice}
+                </dd>
+              </>
+            ) : null}
+            {row.markPrice ? (
+              <>
+                <dt className="text-stone-500">{t("bots_futures_mark")}</dt>
+                <dd className="font-medium text-stone-800 dark:text-stone-200">
+                  {row.markPrice}
+                </dd>
+              </>
+            ) : null}
+            {pnl ? (
+              <>
+                <dt className="text-stone-500">PnL</dt>
+                <dd className={`font-semibold ${pnl.className}`}>{pnl.text}</dd>
+              </>
+            ) : null}
+          </dl>
         </div>
       </li>
     );
@@ -83,6 +126,7 @@ function ActivityLine({
   const row = buildBotTradeHistoryRow(log, t);
   const isErr = log.action === "error";
   const isSkip = log.action === "smart_skip";
+  const isTickSkip = log.action === "tick_skip";
   return (
     <li
       className={`rounded-lg border px-3 py-2 text-sm ${
@@ -90,7 +134,9 @@ function ActivityLine({
           ? "border-rose-300 bg-rose-50/90 dark:border-rose-800 dark:bg-rose-950/40"
           : isSkip
             ? "border-sky-300/80 bg-sky-50/60 dark:border-sky-800 dark:bg-sky-950/30"
-            : "border-stone-200/80 bg-white/80 dark:border-stone-700 dark:bg-stone-900/50"
+            : isTickSkip
+              ? "border-amber-300/70 bg-amber-50/70 dark:border-amber-800/50 dark:bg-amber-950/25"
+              : "border-stone-200/80 bg-white/80 dark:border-stone-700 dark:bg-stone-900/50"
       }`}
     >
       <div className="flex items-center justify-between gap-2 text-xs text-stone-500">
@@ -127,6 +173,7 @@ export function BotStrategyLivePanel({
   keysOk,
   logs,
   onLogsRefresh,
+  onOpenChange,
   t,
 }: {
   planId: BotPlanId;
@@ -134,6 +181,7 @@ export function BotStrategyLivePanel({
   keysOk: boolean;
   logs: BotLogRow[];
   onLogsRefresh: () => Promise<void>;
+  onOpenChange?: (rows: BotOpenPositionRow[]) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   const [open, setOpen] = useState<BotOpenPositionRow[]>([]);
@@ -146,6 +194,7 @@ export function BotStrategyLivePanel({
     async (opts?: { silent?: boolean }) => {
       if (!keysOk || !botActive) {
         setOpen([]);
+        onOpenChange?.([]);
         return;
       }
       if (!opts?.silent) setLoading(true);
@@ -163,7 +212,12 @@ export function BotStrategyLivePanel({
           return;
         }
         const next = Array.isArray(json.open) ? json.open : [];
-        setOpen((prev) => (openRowsEqual(prev, next) ? prev : next));
+        setOpen((prev) => {
+          const same = openRowsEqual(prev, next);
+          if (!same) onOpenChange?.(next);
+          return same ? prev : next;
+        });
+        if (next.length === 0) onOpenChange?.([]);
         if (typeof json.error === "string" && json.error) {
           setPosErr(formatBotRuntimeError(json.error, t));
         }
@@ -171,7 +225,7 @@ export function BotStrategyLivePanel({
         if (!opts?.silent) setLoading(false);
       }
     },
-    [botActive, keysOk, planId, t],
+    [botActive, keysOk, onOpenChange, planId, t],
   );
 
   useEffect(() => {

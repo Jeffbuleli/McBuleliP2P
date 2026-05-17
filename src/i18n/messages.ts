@@ -991,7 +991,7 @@ export const en = {
   bots_live_setup_short: "Connect live keys (binance.com).",
   bots_demo_setup_short: "Connect demo keys (demo.binance.com).",
   bots_live_checklist_tip:
-    "Enable Reading, Spot/Margin, Portfolio Margin if needed, disable Withdrawals. Whitelist Render outbound IPs (Connect → Outbound), not website DNS IPs.",
+    "Enable Reading, Spot/Margin, Portfolio Margin if needed, disable Withdrawals. If IP-restricted, whitelist McBuleli server outbound IPs from your host dashboard (Outbound tab), not your website DNS.",
   bots_demo_setup_tip: "Create keys on demo.binance.com only—not binance.com live.",
   bots_live_disabled_tip: "Live trading must be enabled on your McBuleli account.",
   bots_live_panel_title: "Live activity",
@@ -1007,15 +1007,21 @@ export const en = {
   bots_plan_grid_desc: "Limit buys in a price range. Smart mode can block weak setups.",
   bots_plan_futures_desc: "USDⓈ-M with leverage, SL/TP. Smart mode aligns entries with TA.",
   bots_status_active: "Executed",
+  bots_status_position_open: "Active · open on Binance",
   bots_status_waiting: "Awaiting cron",
   bots_status_paused: "Paused",
   bots_status_not_started: "Not started",
+  bots_futures_monitoring_open:
+    "Active — position open on Binance. The server watches stop loss and take profit on each run.",
+  bots_futures_size: "Size",
+  bots_futures_entry: "Entry",
+  bots_futures_mark: "Mark",
   bots_waiting_first_tick: "Waiting for the next server run (cron every few minutes).",
   bots_keys_required_short: "Connect API keys above to configure this bot.",
   bots_wizard_steps_tip:
     "Create API on Binance → enable Reading + Spot/Margin (Futures or PM for futures bots) → disable Withdrawals → demo keys only on demo.binance.com → paste below; we validate and encrypt.",
   bots_wizard_steps_live_tip:
-    "On binance.com: create API → Reading + Spot/Margin + PM if needed → no withdrawals → whitelist Render Outbound IPs (not website DNS) → paste below; Spot + Futures validated (PM uses papi).",
+    "On binance.com: create API → Reading + Spot/Margin + PM if needed → no withdrawals → whitelist McBuleli server outbound IPs if restricted → paste below; Spot + Futures validated (PM uses papi).",
   bots_subscribe_confirm_tip:
     "Subscription is debited from your demo or live wallet for 30 days. Billing must match the API environment you connect.",
   bots_keys_required_spot:
@@ -2689,7 +2695,7 @@ export const fr: Messages = {
   bots_live_setup_short: "Connecter les clés live (binance.com).",
   bots_demo_setup_short: "Connecter les clés démo (demo.binance.com).",
   bots_live_checklist_tip:
-    "Activer Lecture, Spot/Marge, Portfolio Margin si besoin, pas de retrait. IP sortantes Render (Connect → Outbound), pas les IP DNS du site.",
+    "Activer Lecture, Spot/Marge, Portfolio Margin si besoin, pas de retrait. Si IP restreintes : lister les IP sortantes du serveur McBuleli (onglet Outbound de l’hébergeur), pas le DNS du site.",
   bots_demo_setup_tip: "Clés sur demo.binance.com uniquement — pas binance.com live.",
   bots_live_disabled_tip: "Le trading live doit être activé sur votre compte McBuleli.",
   bots_live_panel_title: "Activité en direct",
@@ -2705,15 +2711,21 @@ export const fr: Messages = {
   bots_plan_grid_desc: "Limits d’achat dans une fourchette. Mode intelligent pour filtrer les signaux faibles.",
   bots_plan_futures_desc: "USDⓈ-M avec levier, SL/TP. Mode intelligent pour les entrées.",
   bots_status_active: "Exécuté",
+  bots_status_position_open: "Actif · ouvert sur Binance",
   bots_status_waiting: "En attente du cron",
   bots_status_paused: "En pause",
   bots_status_not_started: "Non démarré",
+  bots_futures_monitoring_open:
+    "Actif — position ouverte sur Binance. Le serveur surveille le stop loss et le take profit à chaque passage.",
+  bots_futures_size: "Taille",
+  bots_futures_entry: "Entrée",
+  bots_futures_mark: "Mark",
   bots_waiting_first_tick: "En attente du prochain passage cron (toutes les quelques minutes).",
   bots_keys_required_short: "Connectez les clés API ci-dessus pour configurer ce bot.",
   bots_wizard_steps_tip:
     "Créer l’API sur Binance → Lecture + Spot/Marge (Futures ou PM pour les bots futures) → pas de retrait → clés démo uniquement sur demo.binance.com → coller ci-dessous ; validation et chiffrement.",
   bots_wizard_steps_live_tip:
-    "Sur binance.com : créer l’API → Lecture + Spot/Marge + PM si besoin → pas de retrait → IP sortantes Render (Outbound, pas le DNS du site) → coller ci-dessous ; Spot + Futures validés (PM = papi).",
+    "Sur binance.com : créer l’API → Lecture + Spot/Marge + PM si besoin → pas de retrait → IP sortantes McBuleli si restreint → coller ci-dessous ; Spot + Futures validés (PM = papi).",
   bots_subscribe_confirm_tip:
     "L’abonnement est débité du portefeuille démo ou live pour 30 jours. La facturation doit correspondre à l’environnement des clés API.",
   bots_keys_required_spot:

@@ -14,6 +14,8 @@ import {
 } from "@/lib/bots-ui-helpers";
 import { BotsKeysHub } from "@/components/trade/bots-keys-hub";
 import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
+import { BotRunControls } from "@/components/trade/bot-run-controls";
+import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { UiInfoTip, UiSectionTitle } from "@/components/ui/ui-info-tip";
 import {
   BotPlanIcon,
@@ -89,10 +91,12 @@ const PLAN_LABEL: Record<BotPlanId, string> = {
 function BotStatusBadge({
   status,
   lastExecutedAt,
+  monitoringOpen,
   t,
 }: {
   status: "active" | "paused" | "none";
   lastExecutedAt?: string | null;
+  monitoringOpen?: boolean;
   t: (k: keyof Messages) => string;
 }) {
   if (status === "none") {
@@ -106,6 +110,13 @@ function BotStatusBadge({
     return (
       <span className="rounded-full bg-stone-400 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-stone-600">
         {t("bots_status_paused")}
+      </span>
+    );
+  }
+  if (monitoringOpen) {
+    return (
+      <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-amber-700">
+        {t("bots_status_position_open")}
       </span>
     );
   }
@@ -313,6 +324,7 @@ export function BotsTradingClient() {
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
   const [keysHubMsg, setKeysHubMsg] = useState<string | null>(null);
+  const [futOpenRows, setFutOpenRows] = useState<BotOpenPositionRow[]>([]);
 
   const loadLogs = useCallback(async (planId: BotPlanId) => {
     const logRes = await fetch(
@@ -1110,6 +1122,10 @@ export function BotsTradingClient() {
             <BotStatusBadge
               status={futInst?.status ?? "none"}
               lastExecutedAt={futInst?.lastExecutedAt}
+              monitoringOpen={
+                futInst?.status === "active" &&
+                futOpenRows.some((r) => r.kind === "futures")
+              }
               t={t}
             />
           </div>
@@ -1207,14 +1223,17 @@ export function BotsTradingClient() {
             smartOptions={data.smartOptions}
             t={t}
           />
-          {futInst?.status === "active" && !futInst.lastExecutedAt ? (
+          {futInst?.status === "active" &&
+          !futInst.lastExecutedAt &&
+          !futOpenRows.some((r) => r.kind === "futures") ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
             </p>
           ) : null}
           {futInst?.lastExecutedAt ? (
             <p className="mt-2 text-xs text-stone-500">
-              {t("bots_dca_last_run")}: {new Date(futInst.lastExecutedAt).toLocaleString()}
+              {t("bots_dca_last_run")}:{" "}
+              {new Date(futInst.lastExecutedAt).toLocaleString()}
             </p>
           ) : null}
           {futInst?.lastError ? (
@@ -1223,30 +1242,32 @@ export function BotsTradingClient() {
             </p>
           ) : null}
           {futMsg ? <p className="mt-2 text-sm text-amber-900">{futMsg}</p> : null}
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveFutures("active")}
-              className="flex-1 rounded-xl bg-amber-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+          <BotRunControls
+            status={futInst?.status ?? "none"}
+            busy={busy}
+            variant="amber"
+            monitoringOpen={futOpenRows.some((r) => r.kind === "futures")}
+            monitoringLabel={t("bots_futures_monitoring_open")}
+            startLabel={t("bots_futures_start")}
+            pauseLabel={t("bots_futures_pause")}
+            onStart={() => void saveFutures("active")}
+            onPause={() => void saveFutures("paused")}
+          />
+          <p className="mt-3 text-center">
+            <Link
+              href="/app/trade/futures/guide"
+              className="text-xs font-medium text-amber-800 underline decoration-amber-600/50 underline-offset-2 dark:text-amber-200"
             >
-              {t("bots_futures_start")}
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveFutures("paused")}
-              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
-            >
-              {t("bots_futures_pause")}
-            </button>
-          </div>
+              {t("trade_ui_learn_futures")}
+            </Link>
+          </p>
           <BotStrategyLivePanel
             planId="futures_um"
             botActive={futInst?.status === "active"}
             keysOk={futKeysOk}
             logs={logs}
             onLogsRefresh={refreshFutLogs}
+            onOpenChange={setFutOpenRows}
             t={t}
           />
         </section>
@@ -1461,11 +1482,16 @@ export function BotsTradingClient() {
         </p>
       ) : null}
 
-      <p className="text-center text-sm">
-        <Link href="/app/trade/futures/guide" className="text-emerald-700 underline dark:text-emerald-300">
-          {t("trade_ui_learn_futures")}
-        </Link>
-      </p>
+      {activeTab !== "futures_um" ? (
+        <p className="text-center text-sm">
+          <Link
+            href="/app/trade/futures/guide"
+            className="text-emerald-700 underline dark:text-emerald-300"
+          >
+            {t("trade_ui_learn_futures")}
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }
