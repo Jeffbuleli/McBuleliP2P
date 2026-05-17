@@ -66,6 +66,7 @@ export function botsApiMessage(
 }
 
 const SERVER_ERROR_I18N: Record<string, keyof Messages> = {
+  bots_credentials_load_failed: "bots_credentials_load_failed",
   "API keys not connected": "bots_err_no_keys",
   "Invalid DCA config": "bots_invalid_dca_config",
   "Invalid grid config": "bots_invalid_grid_config",
@@ -113,6 +114,14 @@ export function formatBotRuntimeError(
   if (exact) return t(exact);
 
   const lower = s.toLowerCase();
+  const codeMatch = s.match(/"code":\s*(-?\d+)/);
+  if (codeMatch) {
+    const code = codeMatch[1];
+    if (code === "-2015") return t("bots_err_bad_keys");
+    if (code === "-2019") return t("bots_err_insufficient_balance");
+    if (code === "-1013") return t("bots_err_min_notional");
+    if (code === "-1111") return t("bots_err_qty_precision");
+  }
   if (lower.includes("outside grid range")) return t("bots_err_price_range");
   if (lower.includes("api keys not connected")) return t("bots_err_no_keys");
   if (lower.includes("could not fetch")) return t("bots_err_price_feed");

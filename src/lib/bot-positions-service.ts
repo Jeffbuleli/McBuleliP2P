@@ -1,6 +1,9 @@
 import type { BotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment, type BotBillingMode } from "@/lib/bot-config";
-import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
+import {
+  listUserBinanceCredentials,
+  loadUserBinanceCredentials,
+} from "@/lib/bot-credentials-service";
 import { binanceUserSignedGet } from "@/lib/binance-user-client";
 import {
   futuresSignedGet,
@@ -46,11 +49,19 @@ export async function fetchBotOpenPositions(args: {
     return { open: [], error: "bots_err_no_keys" };
   }
 
+  const credMeta = (await listUserBinanceCredentials(args.userId)).find(
+    (c) => c.environment === env,
+  );
+
   try {
     if (args.planId === "futures_um") {
       const cfg = parseBotFuturesConfig(args.config);
       if (!cfg) return { open: [] };
-      const apiKind = await resolveFuturesApiKind(env, creds);
+      const apiKind = await resolveFuturesApiKind(
+        env,
+        creds,
+        credMeta?.futuresApiKind,
+      );
       const raw = (await futuresSignedGet({
         environment: env,
         creds,

@@ -11,6 +11,7 @@ import {
   listUserBinanceCredentials,
   saveUserBinanceCredentials,
 } from "@/lib/bot-credentials-service";
+import { clearBotInstanceErrorsForBilling } from "@/lib/bot-instance-service";
 import {
   permissionsMeetPlan,
   validateBinanceApiPermissions,
@@ -125,6 +126,10 @@ export async function POST(req: Request) {
     creds,
     check,
   });
+
+  if (meet.ok) {
+    await clearBotInstanceErrorsForBilling(userId, env);
+  }
 
   return NextResponse.json({
     ok: true,

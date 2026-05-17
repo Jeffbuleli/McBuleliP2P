@@ -109,6 +109,20 @@ export async function listActiveBotInstancesForTick(): Promise<
   }));
 }
 
+/** After API keys are re-validated, drop stale cron errors for that billing mode. */
+export async function clearBotInstanceErrorsForBilling(
+  userId: string,
+  billing: BotBillingMode,
+) {
+  const db = getDb();
+  await db
+    .update(botInstances)
+    .set({ lastError: null, updatedAt: new Date() })
+    .where(
+      and(eq(botInstances.userId, userId), eq(botInstances.billing, billing)),
+    );
+}
+
 /** Successful tick (order placed or grid refreshed). */
 export async function markBotInstanceSuccess(instanceId: string) {
   const db = getDb();

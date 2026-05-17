@@ -1,7 +1,10 @@
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment } from "@/lib/bot-config";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
-import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
+import {
+  listUserBinanceCredentials,
+  loadUserBinanceCredentials,
+} from "@/lib/bot-credentials-service";
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   appendBotExecutionLog,
@@ -111,7 +114,14 @@ export async function tickFuturesUmInstance(args: {
     return { ran: false, skipped: "price_unavailable" };
   }
 
-  const futuresKind = await resolveFuturesApiKind(env, creds);
+  const credMeta = (await listUserBinanceCredentials(args.userId)).find(
+    (c) => c.environment === env,
+  );
+  const futuresKind = await resolveFuturesApiKind(
+    env,
+    creds,
+    credMeta?.futuresApiKind,
+  );
 
   try {
     const position = await fetchPosition(env, creds, cfg.symbol, futuresKind);

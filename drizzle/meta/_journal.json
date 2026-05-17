@@ -162,6 +162,13 @@
       "when": 1779700000000,
       "tag": "0025_bot_instances",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1779800000001,
+      "tag": "0026_bot_credentials_futures_kind",
+      "breakpoints": true
     }
   ]
 }

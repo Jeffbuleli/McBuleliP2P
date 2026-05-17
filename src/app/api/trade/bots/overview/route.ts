@@ -20,14 +20,23 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [credentials, subscriptions, instances, tradeMode, isSuperAdmin] =
-    await Promise.all([
-      listUserBinanceCredentials(userId),
-      listActiveBotSubscriptions(userId),
-      listUserBotInstances(userId),
-      getTradeModeSnapshot(userId),
-      isSuperAdminUserId(userId),
-    ]);
+  let credentials: Awaited<ReturnType<typeof listUserBinanceCredentials>> = [];
+  try {
+    credentials = await listUserBinanceCredentials(userId);
+  } catch (e) {
+    console.error("[bots/overview] credentials", e);
+    return NextResponse.json(
+      { error: "bots_credentials_load_failed" },
+      { status: 503 },
+    );
+  }
+
+  const [subscriptions, instances, tradeMode, isSuperAdmin] = await Promise.all([
+    listActiveBotSubscriptions(userId),
+    listUserBotInstances(userId),
+    getTradeModeSnapshot(userId),
+    isSuperAdminUserId(userId),
+  ]);
 
   const plans = BOT_PLAN_IDS.map((id) => {
     const p = BOT_PLANS[id];

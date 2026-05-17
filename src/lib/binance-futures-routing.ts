@@ -8,19 +8,37 @@ import { fetchBinanceApiRestrictions } from "@/lib/binance-api-validate";
 
 export type FuturesApiKind = "fapi" | "papi";
 
+/**
+ * Pick fapi vs papi for live futures calls.
+ * Prefer stored kind from key validation; else API restrictions; else probe papi.
+ */
 export async function resolveFuturesApiKind(
   environment: BotEnvironment,
   creds: StoredBinanceCredentials,
+  storedKind?: "fapi" | "papi" | null,
 ): Promise<FuturesApiKind> {
   if (environment === "demo") return "fapi";
+  if (storedKind === "papi" || storedKind === "fapi") return storedKind;
+
   const restrictions = await fetchBinanceApiRestrictions(environment, creds);
-  if (
-    restrictions?.enablePortfolioMarginTrading &&
-    !restrictions.enableFutures
-  ) {
+  if (restrictions?.enablePortfolioMarginTrading === true) {
     return "papi";
   }
-  return "fapi";
+  if (restrictions?.enableFutures === true) {
+    return "fapi";
+  }
+
+  try {
+    await binanceUserSignedGet({
+      environment,
+      creds,
+      market: "portfolio",
+      path: "/papi/v1/um/account",
+    });
+    return "papi";
+  } catch {
+    return "fapi";
+  }
 }
 
 function routes(kind: FuturesApiKind) {

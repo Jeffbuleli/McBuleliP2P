@@ -1043,6 +1043,8 @@ export const en = {
   bots_live_status_waiting: "WAITING",
   bots_live_status_trading: "TRADING",
   bots_err_generic: "Something went wrong. Check keys, balance, and settings.",
+  bots_credentials_load_failed:
+    "Could not load API key status. Run database migration 0026 on the server, then refresh.",
   bots_err_no_keys: "API keys missing or invalid.",
   bots_err_price_range: "Price is outside your grid range—adjust low/high.",
   bots_err_price_feed: "Could not load the market price.",
@@ -2705,6 +2707,8 @@ export const fr: Messages = {
   bots_live_status_waiting: "ATTENTE",
   bots_live_status_trading: "TRADING",
   bots_err_generic: "Problème — vérifiez clés, solde et réglages.",
+  bots_credentials_load_failed:
+    "Impossible de charger le statut des clés API. Exécutez la migration base 0026 sur le serveur, puis actualisez.",
   bots_err_no_keys: "Clés API manquantes ou invalides.",
   bots_err_price_range: "Prix hors fourchette grille — ajustez bas/haut.",
   bots_err_price_feed: "Impossible de lire le prix du marché.",
