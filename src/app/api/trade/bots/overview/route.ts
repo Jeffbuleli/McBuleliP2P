@@ -76,6 +76,10 @@ export async function GET() {
       process.env.BOT_KEYS_ENCRYPTION_SECRET?.trim() &&
         process.env.BOT_KEYS_ENCRYPTION_SECRET.trim().length >= 32,
     ),
+    cronConfigured: Boolean(
+      process.env.CRON_SECRET?.trim() &&
+        process.env.CRON_SECRET.trim().length >= 12,
+    ),
     isSuperAdmin,
   });
 }

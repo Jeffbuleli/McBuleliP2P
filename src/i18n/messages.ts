@@ -1040,6 +1040,10 @@ export const en = {
   bots_billing_view_mismatch:
     "Bot saved on {saved} — you are viewing {viewing}. Switch the toggle above or press Start to apply {viewing}.",
   bots_waiting_first_tick: "Waiting for the next server run (cron every few minutes).",
+  bots_cron_not_configured:
+    "Server cron is not configured (CRON_SECRET). The bot will not run until an admin enables it on the host.",
+  bots_logs_other_env:
+    "Server log hidden — switch to the environment where the bot is saved, or press Start to run here.",
   bots_keys_required_short: "Connect API keys above to configure this bot.",
   bots_wizard_steps_tip:
     "Create API on Binance → enable Reading + Spot/Margin (Futures or PM for futures bots) → disable Withdrawals → demo keys only on demo.binance.com → paste below; we validate and encrypt.",
@@ -2767,6 +2771,10 @@ export const fr: Messages = {
   bots_billing_view_mismatch:
     "Bot enregistré en {saved} — vous consultez {viewing}. Changez le toggle ci-dessus ou appuyez sur Démarrer pour {viewing}.",
   bots_waiting_first_tick: "En attente du prochain passage cron (toutes les quelques minutes).",
+  bots_cron_not_configured:
+    "Cron serveur non configuré (CRON_SECRET). Le bot ne pourra pas tourner tant que l’hébergeur ne l’active pas.",
+  bots_logs_other_env:
+    "Journal masqué — passez sur l’environnement où le bot est enregistré, ou appuyez sur Démarrer ici.",
   bots_keys_required_short: "Connectez les clés API ci-dessus pour configurer ce bot.",
   bots_wizard_steps_tip:
     "Créer l’API sur Binance → Lecture + Spot/Marge (Futures ou PM pour les bots futures) → pas de retrait → clés démo uniquement sur demo.binance.com → coller ci-dessous ; validation et chiffrement.",

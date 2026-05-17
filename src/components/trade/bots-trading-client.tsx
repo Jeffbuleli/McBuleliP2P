@@ -80,6 +80,7 @@ type Overview = {
     tradeLiveEnabled: boolean;
   } | null;
   keysEncryptionConfigured: boolean;
+  cronConfigured?: boolean;
   isSuperAdmin?: boolean;
 };
 
@@ -338,9 +339,9 @@ export function BotsTradingClient() {
   const [futOpenRows, setFutOpenRows] = useState<BotOpenPositionRow[]>([]);
   const billingDefaultApplied = useRef(false);
 
-  const loadLogs = useCallback(async (planId: BotPlanId) => {
+  const loadLogs = useCallback(async (planId: BotPlanId, billing: "demo" | "live") => {
     const logRes = await fetch(
-      `/api/trade/bots/logs?planId=${planId}`,
+      `/api/trade/bots/logs?planId=${planId}&billing=${billing}`,
       { cache: "no-store" },
     );
     const logJson = await logRes.json().catch(() => ({}));
@@ -358,9 +359,18 @@ export function BotsTradingClient() {
     }
   }, []);
 
-  const refreshDcaLogs = useCallback(() => loadLogs("dca_spot"), [loadLogs]);
-  const refreshGridLogs = useCallback(() => loadLogs("grid_spot"), [loadLogs]);
-  const refreshFutLogs = useCallback(() => loadLogs("futures_um"), [loadLogs]);
+  const refreshDcaLogs = useCallback(
+    () => loadLogs("dca_spot", accountBilling),
+    [loadLogs, accountBilling],
+  );
+  const refreshGridLogs = useCallback(
+    () => loadLogs("grid_spot", accountBilling),
+    [loadLogs, accountBilling],
+  );
+  const refreshFutLogs = useCallback(
+    () => loadLogs("futures_um", accountBilling),
+    [loadLogs, accountBilling],
+  );
 
   const load = useCallback(async () => {
     setErr(null);
@@ -376,8 +386,8 @@ export function BotsTradingClient() {
   }, []);
 
   useEffect(() => {
-    if (data) void loadLogs(activeTab);
-  }, [data, activeTab, loadLogs]);
+    if (data) void loadLogs(activeTab, accountBilling);
+  }, [data, activeTab, accountBilling, loadLogs]);
 
   useEffect(() => {
     void load();
@@ -586,7 +596,7 @@ export function BotsTradingClient() {
 
   async function reloadAfterSave() {
     await load();
-    await loadLogs(activeTab);
+    await loadLogs(activeTab, accountBilling);
   }
 
   function activeSub(planId: BotPlanId, billingOverride?: "demo" | "live") {
@@ -866,6 +876,7 @@ export function BotsTradingClient() {
         onBillingChange={(env) => {
           setAccountBilling(env);
           setFutOpenRows([]);
+          setLogs([]);
         }}
         tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
         isSuperAdmin={Boolean(data.isSuperAdmin)}
@@ -1022,9 +1033,18 @@ export function BotsTradingClient() {
           />
           {dcaInst?.status === "active" &&
           instEnvAligned(dcaInst) &&
-          !dcaInst.lastExecutedAt ? (
+          !dcaInst.lastExecutedAt &&
+          data.cronConfigured !== false ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
+          {dcaInst?.status === "active" &&
+          instEnvAligned(dcaInst) &&
+          !dcaInst.lastExecutedAt &&
+          data.cronConfigured === false ? (
+            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+              {t("bots_cron_not_configured")}
             </p>
           ) : null}
           {dcaInst?.lastExecutedAt && instEnvAligned(dcaInst) ? (
@@ -1162,9 +1182,18 @@ export function BotsTradingClient() {
           />
           {gridInst?.status === "active" &&
           instEnvAligned(gridInst) &&
-          !gridInst.lastExecutedAt ? (
+          !gridInst.lastExecutedAt &&
+          data.cronConfigured !== false ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
+          {gridInst?.status === "active" &&
+          instEnvAligned(gridInst) &&
+          !gridInst.lastExecutedAt &&
+          data.cronConfigured === false ? (
+            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+              {t("bots_cron_not_configured")}
             </p>
           ) : null}
           {gridInst?.lastExecutedAt && instEnvAligned(gridInst) ? (
@@ -1356,9 +1385,23 @@ export function BotsTradingClient() {
           instEnvAligned(futInst) &&
           !futInst.lastExecutedAt &&
           !futHasConfigOpen &&
-          !futHasUnmanagedOpen ? (
+          !futHasUnmanagedOpen &&
+          data.cronConfigured !== false ? (
             <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
               {t("bots_waiting_first_tick")}
+            </p>
+          ) : null}
+          {futInst?.status === "active" &&
+          instEnvAligned(futInst) &&
+          !futInst.lastExecutedAt &&
+          data.cronConfigured === false ? (
+            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+              {t("bots_cron_not_configured")}
+            </p>
+          ) : null}
+          {futInst?.status === "active" && !instEnvAligned(futInst) ? (
+            <p className="mt-2 text-xs text-violet-800 dark:text-violet-200">
+              {t("bots_logs_other_env")}
             </p>
           ) : null}
           {futInst?.lastExecutedAt && instEnvAligned(futInst) ? (

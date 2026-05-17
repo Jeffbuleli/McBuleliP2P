@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { isBotPlanId } from "@/lib/bot-config";
+import { isBotPlanId, type BotBillingMode } from "@/lib/bot-config";
 import { listBotExecutionLogs } from "@/lib/bot-instance-service";
 
 export async function GET(req: Request) {
@@ -12,6 +12,11 @@ export async function GET(req: Request) {
   const planParam = searchParams.get("planId");
   const planId =
     planParam && isBotPlanId(planParam) ? planParam : undefined;
-  const logs = await listBotExecutionLogs(userId, planId, 40);
-  return NextResponse.json({ logs });
+  const billingParam = searchParams.get("billing");
+  const billing: BotBillingMode | undefined =
+    billingParam === "demo" || billingParam === "live"
+      ? billingParam
+      : undefined;
+  const logs = await listBotExecutionLogs(userId, planId, 40, billing);
+  return NextResponse.json({ logs, billing: billing ?? null });
 }

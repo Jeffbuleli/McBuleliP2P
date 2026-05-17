@@ -209,8 +209,13 @@ export async function listBotExecutionLogs(
   userId: string,
   planId?: BotPlanId,
   limit = 30,
+  billing?: BotBillingMode,
 ) {
   const db = getDb();
+  const conditions = [eq(botExecutionLog.userId, userId)];
+  if (planId) conditions.push(eq(botExecutionLog.planId, planId));
+  if (billing) conditions.push(eq(botInstances.billing, billing));
+
   const rows = await db
     .select({
       id: botExecutionLog.id,
@@ -220,14 +225,11 @@ export async function listBotExecutionLogs(
       createdAt: botExecutionLog.createdAt,
     })
     .from(botExecutionLog)
-    .where(
-      planId
-        ? and(
-            eq(botExecutionLog.userId, userId),
-            eq(botExecutionLog.planId, planId),
-          )
-        : eq(botExecutionLog.userId, userId),
+    .innerJoin(
+      botInstances,
+      eq(botExecutionLog.instanceId, botInstances.id),
     )
+    .where(and(...conditions))
     .orderBy(desc(botExecutionLog.createdAt))
     .limit(Math.min(limit, 100));
 

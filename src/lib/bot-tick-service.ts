@@ -6,13 +6,18 @@ import { withBotCronLock } from "@/lib/bot-cron-lock";
 import { tickDcaSpotInstance } from "@/lib/bot-engine-dca";
 import { tickGridSpotInstance } from "@/lib/bot-engine-grid";
 import { tickFuturesUmInstance } from "@/lib/bot-engine-futures";
-import type { BotPlanId } from "@/lib/bot-config";
+import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 
 /** Skips that are normal between runs — not written to the user activity log. */
 const SILENT_SKIP = new Set(["interval_not_elapsed", "position_open"]);
 
 async function logTickSkip(
-  inst: { id: string; userId: string; planId: string },
+  inst: {
+    id: string;
+    userId: string;
+    planId: string;
+    billing: BotBillingMode;
+  },
   skipped: string | undefined,
 ) {
   if (!skipped || SILENT_SKIP.has(skipped)) return;
@@ -21,7 +26,7 @@ async function logTickSkip(
     userId: inst.userId,
     planId: inst.planId as BotPlanId,
     action: "tick_skip",
-    detail: { reason: skipped },
+    detail: { reason: skipped, billing: inst.billing },
   });
 }
 
