@@ -7,17 +7,23 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
   const d = getDictionary(locale);
 
   return (
-    <section className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+    <section className="fd-card p-4">
       <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-bold tracking-tight text-stone-50">Trade</h2>
-          <p className="mt-1 text-xs leading-snug text-stone-400">
-            {d.trade_preview_intro}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[color:var(--fd-mint-deep)] to-[color:var(--fd-mint)] text-lg"
+            aria-hidden
+          >
+            📈
+          </span>
+          <div>
+            <h2 className="fd-section-title">Trade</h2>
+            <p className="mt-0.5 fd-section-muted">{d.trade_preview_intro}</p>
+          </div>
         </div>
         <Link
           href="/app/trade"
-          className="shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+          className="shrink-0 text-xs font-semibold text-[color:var(--fd-primary)]"
         >
           {d.trade_view_hub} →
         </Link>
@@ -26,23 +32,23 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
       <div className="grid grid-cols-2 gap-2">
         <Link
           href="/app/trade/futures"
-          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-emerald-700/30 bg-emerald-950/40 px-3 py-3 text-center shadow-sm transition active:scale-[0.98] hover:bg-emerald-950/55"
+          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)] px-3 py-3 text-center transition active:scale-[0.98] hover:bg-[color:var(--fd-mint-deep)]"
         >
-          <span className="text-xs font-bold uppercase tracking-wide text-emerald-100">
+          <span className="text-xs font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
             Futures
           </span>
-          <span className="mt-0.5 text-[10px] leading-tight text-emerald-200/90">
+          <span className="mt-0.5 text-[10px] leading-tight text-[color:var(--fd-muted)]">
             {d.trade_card_futures_hint}
           </span>
         </Link>
         <Link
           href="/app/trade/options"
-          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-amber-700/30 bg-amber-950/35 px-3 py-3 text-center shadow-sm transition active:scale-[0.98] hover:bg-amber-950/45"
+          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-center transition active:scale-[0.98] hover:bg-amber-100/80"
         >
-          <span className="text-xs font-bold uppercase tracking-wide text-amber-100">
+          <span className="text-xs font-bold uppercase tracking-wide text-amber-800">
             Options
           </span>
-          <span className="mt-0.5 text-[10px] leading-tight text-amber-200/90">
+          <span className="mt-0.5 text-[10px] leading-tight text-amber-700/90">
             {d.trade_card_options_hint}
           </span>
         </Link>

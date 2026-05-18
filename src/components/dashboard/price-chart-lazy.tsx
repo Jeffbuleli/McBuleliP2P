@@ -2,13 +2,15 @@
 
 import nextDynamic from "next/dynamic";
 
+type UiAppearance = "light" | "dark";
+
 const PriceChartDynamic = nextDynamic(
   () => import("@/components/dashboard/price-chart"),
   {
     ssr: false,
     loading: () => (
       <div
-        className="h-56 animate-pulse rounded-2xl border border-emerald-900/10 bg-stone-100 dark:border-white/10 dark:bg-stone-800"
+        className="fd-card h-56 animate-pulse bg-[color:var(--fd-mint)]/40"
         aria-hidden
       />
     ),
@@ -16,6 +18,6 @@ const PriceChartDynamic = nextDynamic(
 );
 
 /** Lazy-loaded chart for server-rendered dashboard pages (no SSR — lighter bundle). */
-export function PriceChartLazy() {
-  return <PriceChartDynamic />;
+export function PriceChartLazy({ appearance = "dark" }: { appearance?: UiAppearance }) {
+  return <PriceChartDynamic appearance={appearance} />;
 }

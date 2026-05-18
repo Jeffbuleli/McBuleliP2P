@@ -48,43 +48,58 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-2">
-      <P2PHomeCard
-        inProgressCount={p2pHome.inProgressCount}
-        disputedCount={p2pHome.disputedCount}
-        previewOrders={p2pHome.items}
-      />
+    <div className="home-theme wallet-theme home-scroll -mx-4 space-y-3 px-4 pb-2">
+      <header className="pt-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--fd-primary)]">
+          McBuleli
+        </p>
+        <h1 className="text-xl font-bold tracking-tight text-[color:var(--fd-text)]">
+          {d.nav_home}
+        </h1>
+        <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">
+          {d.wallet_crypto_only_hint}
+        </p>
+      </header>
 
       <BalanceCard
         locale={locale}
         totalEquivDisplay={s.totalEquivDisplay}
         usdtDisplay={s.usdtDisplay}
         piDisplay={s.piDisplay}
-        fiatUsdDisplay={s.fiatUsdDisplay}
-        fiatCdfDisplay={s.fiatCdfDisplay}
       />
 
       <Link
         href="/app/wallet"
         prefetch
-        className="-mt-1 block min-h-[44px] rounded-xl border border-stone-700/50 bg-stone-950/50 py-3 text-center text-sm font-semibold text-emerald-200 transition hover:bg-stone-900/60 active:scale-[0.99]"
+        className="fd-card flex min-h-[48px] items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-[color:var(--fd-primary)] transition active:scale-[0.99]"
       >
-        {d.wallet_see_all}
+        <span>{d.wallet_see_all}</span>
+        <span aria-hidden className="text-[color:var(--fd-muted)]">
+          →
+        </span>
       </Link>
 
       <AssetStrip
         locale={locale}
         usdtBalance={s.usdtDisplay}
         piBalance={s.piDisplay}
-        fiatUsdApprox={s.fiatUsdDisplay}
-        fiatCdfApprox={s.fiatCdfDisplay}
       />
 
-      <PriceChartLazy />
+      <PriceChartLazy appearance="light" />
 
-      <MarketPreview locale={locale} initialTickers={tickers} />
+      <MarketPreview
+        locale={locale}
+        initialTickers={tickers}
+        appearance="light"
+      />
 
       <TradeHubPreview locale={locale} />
+
+      <P2PHomeCard
+        inProgressCount={p2pHome.inProgressCount}
+        disputedCount={p2pHome.disputedCount}
+        previewOrders={p2pHome.items}
+      />
 
       <P2PRecentActivity items={p2pHome.items} />
     </div>

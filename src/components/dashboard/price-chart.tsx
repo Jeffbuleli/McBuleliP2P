@@ -60,8 +60,11 @@ type KlineResponse = {
 const WIDTH = 320;
 const HEIGHT = 140;
 
-function PriceChart() {
+type UiAppearance = "light" | "dark";
+
+function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
   const { t, locale } = useI18n();
+  const isLight = appearance === "light";
   const uid = useId();
   const chartFillId = useMemo(
     () => `mc-fill-${uid.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -190,7 +193,13 @@ function PriceChart() {
       : (data?.lastPrice ?? null);
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+    <section
+      className={
+        isLight
+          ? "fd-card overflow-hidden p-4"
+          : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
+      }
+    >
       {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d — then price / % (same idea as before Pi) */}
       <div className="mb-3 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2">
         <div className="flex shrink-0 items-center gap-1.5">
@@ -202,8 +211,12 @@ function PriceChart() {
               onClick={() => setSymbol(s)}
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full p-1 transition active:scale-95 ${
                 symbol === s
-                  ? "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
-                  : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
+                  ? isLight
+                    ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/40"
+                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
+                  : isLight
+                    ? "border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] hover:bg-[color:var(--fd-mint)]"
+                    : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
               }`}
             >
               <ChartSymbolIcon symbol={s} />
@@ -211,7 +224,11 @@ function PriceChart() {
           ))}
         </div>
         <span
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+          className={
+            isLight
+              ? "fd-live-pill shrink-0"
+              : "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+          }
           title={t("market_live_hint")}
         >
           <span className="relative flex h-1.5 w-1.5">
@@ -236,8 +253,12 @@ function PriceChart() {
               onClick={() => setRange(r)}
               className={`min-h-[32px] min-w-[2.45rem] shrink-0 rounded-full px-2 py-1.5 text-xs font-semibold transition active:scale-95 ${
                 range === r
-                  ? "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
-                  : "text-stone-500 hover:text-stone-300"
+                  ? isLight
+                    ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
+                    : "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
+                  : isLight
+                    ? "text-[color:var(--fd-muted)] hover:text-[color:var(--fd-text)]"
+                    : "text-stone-500 hover:text-stone-300"
               }`}
             >
               {r === "1h"
@@ -251,20 +272,36 @@ function PriceChart() {
       </div>
 
       {loading ? (
-        <ChartSkeleton />
+        <ChartSkeleton light={isLight} />
       ) : error || !data ? (
-        <p className="py-10 text-center text-sm text-stone-400">
+        <p
+          className={
+            isLight
+              ? "py-10 text-center text-sm text-[color:var(--fd-muted)]"
+              : "py-10 text-center text-sm text-stone-400"
+          }
+        >
           {error ?? t("chart_unavailable")}
         </p>
       ) : (
         <>
           <div className="mb-2 flex items-end justify-between gap-3">
-            <p className="min-w-0 flex-1 text-2xl font-bold tabular-nums text-stone-50">
+            <p
+              className={`min-w-0 flex-1 text-2xl font-bold tabular-nums ${
+                isLight ? "text-[color:var(--fd-text)]" : "text-stone-50"
+              }`}
+            >
               {displayPrice != null ? formatUsd(displayPrice) : "—"}
             </p>
             <p
               className={`shrink-0 text-sm font-bold tabular-nums ${
-                up ? "text-emerald-400" : "text-rose-400"
+                up
+                  ? isLight
+                    ? "text-emerald-700"
+                    : "text-emerald-400"
+                  : isLight
+                    ? "text-rose-600"
+                    : "text-rose-400"
               }`}
             >
               {up ? "+" : ""}
@@ -272,7 +309,13 @@ function PriceChart() {
             </p>
           </div>
 
-          <div className="relative touch-pan-x rounded-xl bg-stone-900/60 ring-1 ring-stone-700/40">
+          <div
+            className={
+              isLight
+                ? "relative touch-pan-x rounded-xl bg-[color:var(--fd-mint)]/50 ring-1 ring-[color:var(--fd-border)]"
+                : "relative touch-pan-x rounded-xl bg-stone-900/60 ring-1 ring-stone-700/40"
+            }
+          >
             <svg
               ref={svgRef}
               viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -341,7 +384,11 @@ function PriceChart() {
 
           <Link
             href="/app/trade"
-            className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-stone-600/70 bg-stone-900/60 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-700/40 hover:bg-stone-900/90"
+            className={
+              isLight
+                ? "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)] py-3 text-sm font-semibold text-[color:var(--fd-primary)] transition hover:bg-[color:var(--fd-mint-deep)]"
+                : "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-stone-600/70 bg-stone-900/60 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-700/40 hover:bg-stone-900/90"
+            }
           >
             {t("view_trade")}
           </Link>
@@ -358,14 +405,24 @@ function formatUsd(n: number) {
   return n.toLocaleString(undefined, { maximumFractionDigits: 6 });
 }
 
-function ChartSkeleton() {
+function ChartSkeleton({ light }: { light?: boolean }) {
   return (
     <div className="animate-pulse space-y-3" aria-hidden>
       <div className="flex justify-between">
-        <div className="h-8 w-28 rounded-lg bg-stone-800" />
-        <div className="h-6 w-16 rounded-lg bg-stone-800" />
+        <div
+          className={`h-8 w-28 rounded-lg ${light ? "bg-[color:var(--fd-mint)]" : "bg-stone-800"}`}
+        />
+        <div
+          className={`h-6 w-16 rounded-lg ${light ? "bg-[color:var(--fd-mint)]" : "bg-stone-800"}`}
+        />
       </div>
-      <div className="h-[160px] rounded-xl bg-gradient-to-t from-stone-900 via-stone-900/90 to-emerald-950/20 ring-1 ring-stone-700/40" />
+      <div
+        className={`h-[160px] rounded-xl ring-1 ${
+          light
+            ? "bg-[color:var(--fd-mint)]/60 ring-[color:var(--fd-border)]"
+            : "bg-gradient-to-t from-stone-900 via-stone-900/90 to-emerald-950/20 ring-stone-700/40"
+        }`}
+      />
     </div>
   );
 }

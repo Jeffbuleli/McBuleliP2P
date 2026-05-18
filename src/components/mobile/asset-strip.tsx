@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getDictionary } from "@/i18n/messages";
 import type { Locale } from "@/i18n/locale";
 
@@ -14,14 +15,10 @@ export function AssetStrip({
   locale,
   usdtBalance,
   piBalance,
-  fiatUsdApprox,
-  fiatCdfApprox,
 }: {
   locale: Locale;
   usdtBalance: string;
   piBalance: string;
-  fiatUsdApprox: string;
-  fiatCdfApprox: string;
 }) {
   const d = getDictionary(locale);
 
@@ -40,35 +37,28 @@ export function AssetStrip({
       balance: piBalance,
       icon: "/assets/crypto/pi.png",
     },
-    {
-      code: "CDF",
-      name: d.asset_row_cdf_name,
-      sub: d.asset_row_cdf_sub,
-      balance: fiatCdfApprox,
-      icon: "/assets/crypto/cdf.png",
-    },
-    {
-      code: "USD",
-      name: d.asset_row_usd_name,
-      sub: d.asset_row_usd_sub,
-      balance: fiatUsdApprox,
-      icon: "/assets/crypto/usd.png",
-    },
   ];
 
   return (
     <section aria-label={d.assets_title}>
       <div className="mb-2 flex items-center justify-between px-0.5">
-        <h2 className="text-sm font-bold text-stone-100">{d.assets_title}</h2>
+        <h2 className="fd-section-title">{d.assets_title}</h2>
+        <Link
+          href="/app/wallet"
+          className="text-xs font-semibold text-[color:var(--fd-primary)]"
+        >
+          {d.wallet_see_all} →
+        </Link>
       </div>
-      <div className="grid grid-cols-2 justify-items-stretch gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2">
         {assets.map((a) => (
-          <div
+          <Link
             key={a.code}
-            className="flex min-w-0 flex-col rounded-2xl border border-stone-700/50 bg-stone-950/60 p-3 shadow-lg shadow-black/30 backdrop-blur-md"
+            href="/app/wallet"
+            className="fd-card flex min-w-0 flex-col p-3 transition active:scale-[0.99]"
           >
             <div className="flex items-center gap-2">
-              <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-700/70">
+              <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-[color:var(--fd-border)]">
                 <Image
                   src={a.icon}
                   alt=""
@@ -78,21 +68,21 @@ export function AssetStrip({
                 />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold leading-tight text-stone-50">
+                <p className="truncate text-xs font-bold leading-tight text-[color:var(--fd-text)]">
                   {a.code}
                 </p>
-                <p className="truncate text-[9px] leading-tight text-stone-400">
+                <p className="truncate text-[9px] leading-tight text-[color:var(--fd-muted)]">
                   {a.name}
                 </p>
               </div>
             </div>
-            <p className="mt-2 truncate text-center text-[11px] font-semibold tabular-nums leading-tight text-stone-100">
+            <p className="mt-2 truncate text-center text-[11px] font-semibold tabular-nums leading-tight text-[color:var(--fd-text)]">
               {a.balance}
             </p>
-            <p className="mt-0.5 truncate text-center text-[8px] text-stone-400">
+            <p className="mt-0.5 truncate text-center text-[8px] text-[color:var(--fd-muted)]">
               {a.sub}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

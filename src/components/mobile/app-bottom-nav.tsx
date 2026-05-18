@@ -17,11 +17,12 @@ export function AppBottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
   const onProfile = pathname.startsWith("/app/profile");
+  const onHome = pathname === "/app";
   const onWalletFlow =
     pathname.startsWith("/app/wallet") ||
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw");
-  const lightNav = onProfile || onWalletFlow;
+  const lightNav = onProfile || onWalletFlow || onHome;
 
   return (
     <nav
