@@ -70,7 +70,9 @@ export default function WalletTransferPage() {
 
       <FieldLabel label={t("wallet_transfer_asset")}>
         <select value={asset} onChange={(e) => setAsset(e.target.value as WalletAsset)} className={inputClass}>
-          {WALLET_ASSETS.filter((a) => a !== "PI_TEST").map((a) => (
+          {WALLET_ASSETS.filter(
+            (a) => a !== "PI_TEST" && a !== "USD" && a !== "CDF",
+          ).map((a) => (
             <option key={a} value={a}>
               {a}
             </option>

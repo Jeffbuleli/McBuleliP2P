@@ -2,10 +2,8 @@ import Link from "next/link";
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getSessionUserId } from "@/lib/session";
-import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 import { getStakingValuationUsd } from "@/lib/staking-service";
 import { getWalletUserState } from "@/lib/wallet-user-state";
-import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { formatWalletAssetBalance } from "@/lib/wallet-balance-format";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { EXTERNAL_WITHDRAW_FEE_USDT } from "@/lib/withdraw-fees";
@@ -18,7 +16,7 @@ import {
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
 import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
-import { PiWalletPaymentSection } from "@/components/pi/pi-wallet-payment";
+import { PiManualWalletSection } from "@/components/pi/pi-manual-wallet-section";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 
@@ -41,19 +39,13 @@ function toRow(
   lang: "en" | "fr",
 ): WalletRowDTO {
   const depositHref =
-    row.asset === "USDT"
-      ? "/app/deposit"
-      : row.asset === "PI"
-        ? "/app/wallet#pi-topup"
-        : row.asset === "PI_TEST"
-          ? "/admin/settings/pi"
-          : "/app/wallet/fiat/deposit";
+    row.asset === "PI_TEST" ? "/app/wallet/pi-test" : "/app/deposit";
   const withdrawHref =
-    row.asset === "USDT" || row.asset === "PI"
-      ? "/app/withdraw"
+    row.asset === "PI"
+      ? "/app/withdraw?asset=PI"
       : row.asset === "PI_TEST"
-        ? "/admin/settings/pi"
-      : "/app/wallet/fiat/withdraw";
+        ? "/app/wallet/pi-test"
+        : "/app/withdraw";
 
   return {
     asset: row.asset,
@@ -126,6 +118,7 @@ export default async function WalletPage() {
       cta: d.pool_cta,
       metaLine: d.pool_meta_line,
       tone: "emerald",
+      icon: "pool",
     },
     {
       href: "/app/wallet/groups?type=likelimba",
@@ -134,6 +127,7 @@ export default async function WalletPage() {
       cta: d.group_like_cta,
       metaLine: interpolate(d.group_like_meta, { total: 0, active: 0, overdue: 0 }),
       tone: "emerald",
+      icon: "likelimba",
     },
     {
       href: "/app/wallet/groups?type=avec",
@@ -142,6 +136,7 @@ export default async function WalletPage() {
       cta: d.group_avec_cta,
       metaLine: interpolate(d.group_avec_meta, { total: 0, active: 0, overdue: 0 }),
       tone: "amber",
+      icon: "avec",
     },
     {
       href: "/app/wallet/loans",
@@ -150,6 +145,7 @@ export default async function WalletPage() {
       cta: d.loans_cta,
       metaLine: d.loans_meta_line,
       tone: "amber",
+      icon: "loans",
     },
   ];
   try {
@@ -204,8 +200,6 @@ export default async function WalletPage() {
     // If DB is unavailable in a build context, keep wallet usable.
   }
 
-  const pct = Math.round(FIAT_FEE_RATE * 100);
-  const feeFiat = interpolate(d.wallet_fee_fiat, { pct });
   const feeCrypto = interpolate(d.wallet_fee_crypto_out, {
     feeUsd: EXTERNAL_WITHDRAW_FEE_USDT,
   });
@@ -216,11 +210,6 @@ export default async function WalletPage() {
         l.asset === "USDT" || l.asset === "PI" || l.asset === "PI_TEST",
     )
     .map((l) => toRow(l, locale, lang));
-  const fiatRows = state.lines
-    .filter((l) => l.asset === "USD" || l.asset === "CDF")
-    .map((l) => toRow(l, locale, lang));
-
-  const fiatDepositWithdrawPaused = isFiatDepositWithdrawPaused();
 
   const labels: WalletOverviewLabels = {
     wallet_title: d.wallet_title,
@@ -228,31 +217,23 @@ export default async function WalletPage() {
     wallet_asset_balance: d.wallet_asset_balance,
     wallet_col_usd: d.wallet_col_usd,
     wallet_no_match: d.wallet_no_match,
-    wallet_balance_hint: d.wallet_balance_hint,
     wallet_est_total: d.wallet_est_total,
-    wallet_tab_crypto: d.wallet_tab_crypto,
-    wallet_tab_account: d.wallet_tab_account,
-    wallet_tab_crypto_sub: d.wallet_tab_crypto_sub,
-    wallet_tab_account_sub: d.wallet_tab_account_sub,
     wallet_search_placeholder: d.wallet_search_placeholder,
-    wallet_add_funds: d.wallet_add_funds,
-    wallet_quick_withdraw: d.wallet_quick_withdraw,
-    wallet_quick_send: d.wallet_quick_send,
-    wallet_row_send: d.wallet_row_send,
+    wallet_action_deposit: d.wallet_action_deposit,
+    wallet_action_withdraw: d.wallet_action_withdraw,
+    wallet_action_send: d.wallet_action_send,
     wallet_link_history: d.wallet_link_history,
     wallet_fees_expand: d.wallet_fees_expand,
     wallet_fees_collapse: d.wallet_fees_collapse,
     wallet_fees_title: d.wallet_fees_title,
-    wallet_hub_actions: d.wallet_hub_actions,
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
+    wallet_crypto_only_hint: d.wallet_crypto_only_hint,
     feeBulletLines: [
-      feeFiat,
       feeCrypto,
       d.wallet_fee_internal,
       d.wallet_crypto_deposit_free,
     ],
-    wallet_fiat_paused_hint: d.wallet_fiat_paused_hint,
   };
 
   return (
@@ -261,20 +242,16 @@ export default async function WalletPage() {
         labels={labels}
         totalUsdDisplay={totalUsdDisplay}
         cryptoRows={cryptoRows}
-        fiatRows={fiatRows}
-        fiatDepositWithdrawPaused={fiatDepositWithdrawPaused}
       />
-      <p className="mt-2 text-center text-[11px] text-stone-500 dark:text-stone-400">
+      <p className="mt-2 text-center text-[11px] text-[color:var(--fd-muted)]">
         <Link
           href="/app/wallet/pi-test"
-          className="font-semibold text-emerald-700 underline dark:text-emerald-400"
+          className="font-semibold text-[color:var(--fd-primary)] underline"
         >
           {d.wallet_pi_test_title}
         </Link>
       </p>
-      <div id="pi-topup" className="scroll-mt-4">
-        <PiWalletPaymentSection />
-      </div>
+      <PiManualWalletSection />
       <WalletServicePromos
         stakingPromo={stakingPromo}
         servicePromos={groupPromos}

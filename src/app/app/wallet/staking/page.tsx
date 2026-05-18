@@ -7,6 +7,7 @@ import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import type { StakingChainAsset } from "@/lib/staking-config";
 import { maturityRewardAmount } from "@/lib/staking-math";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type TermRow = { days: number; aprPercent: number };
@@ -162,31 +163,41 @@ export default function WalletStakingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 pb-10 pt-2">
-      <Link
-        href="/app/wallet"
-        className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
-      >
-        ← {t("wallet_title")}
-      </Link>
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">{t("staking_title")}</h1>
-      <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400">
-        {t("staking_page_intro")}
-      </p>
+    <div className="space-y-4 pb-10">
+      <WalletSubpageHeader title={t("staking_title")} subtitle={t("staking_page_intro")} />
 
-      <section className="rounded-2xl border border-stone-200 bg-stone-50/80 p-4 text-sm dark:border-stone-700 dark:bg-stone-900/40">
-        <h2 className="font-semibold text-stone-900 dark:text-stone-100">{t("staking_how_title")}</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-stone-700 dark:text-stone-300">
-          <li>{t("staking_how_1")}</li>
-          <li>{t("staking_how_2")}</li>
-          <li>{t("staking_how_3")}</li>
-          <li>{t("staking_how_4")}</li>
-        </ul>
+      <section className="fd-card p-4">
+        <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-[color:var(--fd-muted)]">
+          <div>
+            <p className="text-xl" aria-hidden>
+              🔒
+            </p>
+            <p className="mt-1">{t("staking_how_1")}</p>
+          </div>
+          <div>
+            <p className="text-xl" aria-hidden>
+              📈
+            </p>
+            <p className="mt-1">{t("staking_how_2")}</p>
+          </div>
+          <div>
+            <p className="text-xl" aria-hidden>
+              ⏱
+            </p>
+            <p className="mt-1">{t("staking_how_3")}</p>
+          </div>
+          <div>
+            <p className="text-xl" aria-hidden>
+              ✅
+            </p>
+            <p className="mt-1">{t("staking_how_4")}</p>
+          </div>
+        </div>
       </section>
 
-      <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/50 p-3 text-xs text-emerald-950 dark:border-emerald-800/30 dark:bg-emerald-950/25 dark:text-emerald-100">
+      <p className="fd-card px-3 py-2 text-center text-[11px] font-medium text-[color:var(--fd-primary)]">
         {t("staking_risk_short")}
-      </div>
+      </p>
 
       <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
         {t("staking_asset")}

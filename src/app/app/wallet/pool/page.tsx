@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import type { Messages } from "@/i18n/messages";
 
 type PositionRow = {
@@ -197,33 +198,21 @@ export default function WalletPoolPage() {
 
   return (
     <div className="pb-8">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-[color:var(--mb-text)] dark:text-stone-50">
-              {t("pool_title")}
-            </h1>
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                payoutOpenNow
-                  ? "border border-emerald-700/25 bg-emerald-50 text-emerald-900 dark:border-emerald-600/30 dark:bg-emerald-950/40 dark:text-emerald-200"
-                  : "border border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-700 dark:bg-stone-800/40 dark:text-stone-200"
-              }`}
-            >
-              {payoutOpenNow ? t("pool_withdraw_open_badge") : t("pool_withdraw_closed_badge")}
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs text-[color:var(--mb-muted)] dark:text-stone-400">
-            {t("pool_tagline")}
-          </p>
-        </div>
-        <Link
-          href="/app/wallet"
-          className="shrink-0 rounded-xl border border-emerald-800/15 bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm active:scale-95 dark:border-emerald-600/25 dark:bg-stone-800 dark:text-emerald-300"
-        >
-          ← {t("nav_wallet")}
-        </Link>
-      </div>
+      <WalletSubpageHeader
+        title={t("pool_title")}
+        subtitle={t("pool_tagline")}
+        action={
+          <span
+            className={`inline-flex max-w-[5.5rem] items-center justify-center rounded-full px-2 py-1 text-center text-[9px] font-bold uppercase leading-tight ${
+              payoutOpenNow
+                ? "bg-emerald-100 text-[color:var(--fd-primary)]"
+                : "bg-stone-100 text-[color:var(--fd-muted)]"
+            }`}
+          >
+            {payoutOpenNow ? t("pool_withdraw_open_badge") : t("pool_withdraw_closed_badge")}
+          </span>
+        }
+      />
 
       {err ? (
         <p className="mt-3 rounded-2xl border border-rose-900/20 bg-rose-50/80 px-3 py-2 text-sm text-rose-900 dark:border-rose-700/30 dark:bg-rose-950/30 dark:text-rose-100">
@@ -232,7 +221,7 @@ export default function WalletPoolPage() {
       ) : null}
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-2xl border border-emerald-800/20 bg-gradient-to-br from-emerald-50/95 to-white p-4 shadow-sm ring-1 ring-emerald-900/10 dark:border-emerald-700/30 dark:from-emerald-950/40 dark:to-stone-900/80 dark:ring-emerald-500/10">
+        <div className="fd-card p-4">
           <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
             {t("pool_rewards_available")}
           </p>

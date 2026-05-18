@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type Snapshot =
@@ -104,20 +105,11 @@ export default function WalletLoansPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 pb-10 pt-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold tracking-tight text-[color:var(--mb-text)] dark:text-stone-50">
-            {t("loans_page_title")}
-          </h1>
-          <p className="mt-1 text-xs text-[color:var(--mb-muted)] dark:text-stone-400">
-            {t("loans_note")}
-          </p>
-        </div>
-      </div>
+    <div className="pb-10">
+      <WalletSubpageHeader title={t("loans_page_title")} subtitle={t("loans_note")} />
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="rounded-2xl border border-emerald-800/15 bg-white p-4 shadow-sm dark:border-emerald-700/25 dark:bg-stone-900">
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="fd-card p-3.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             {t("loans_kpi_limit")}
           </p>
@@ -128,7 +120,7 @@ export default function WalletLoansPage() {
             {snap && snap.ok ? `LTV ${Math.round(snap.ltv * 100)}%` : ""}
           </p>
         </div>
-        <div className="rounded-2xl border border-amber-800/15 bg-white p-4 shadow-sm dark:border-amber-700/25 dark:bg-stone-900">
+        <div className="fd-card p-3.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             {t("loans_kpi_outstanding")}
           </p>
@@ -143,7 +135,7 @@ export default function WalletLoansPage() {
         </div>
       </div>
 
-      <div className="mt-4 rounded-3xl border border-stone-200 bg-white/95 p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900/95">
+      <div className="fd-card mt-3 p-4">
         <label className="flex flex-col gap-1 text-sm font-medium text-stone-800 dark:text-stone-200">
           {t("loans_form_amount")}
           <input

@@ -1,8 +1,6 @@
-import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
-import WalletFiatWithdrawClient from "./wallet-fiat-withdraw-client";
+import { redirect } from "next/navigation";
 
+/** Fiat (USD/CDF) via PawaPay is disabled — crypto wallet only. */
 export default function WalletFiatWithdrawPage() {
-  return (
-    <WalletFiatWithdrawClient fiatPaused={isFiatDepositWithdrawPaused()} />
-  );
+  redirect("/app/wallet");
 }

@@ -17,6 +17,8 @@ export function AppBottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
   const onProfile = pathname.startsWith("/app/profile");
+  const onWallet = pathname.startsWith("/app/wallet");
+  const lightNav = onProfile || onWallet;
 
   return (
     <nav
@@ -25,7 +27,7 @@ export function AppBottomNav() {
     >
       <div
         className={
-          onProfile
+          lightNav
             ? "fd-nav-glow pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full px-1 py-1 backdrop-blur-md"
             : "pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full border border-stone-700/50 bg-stone-950/95 px-1 py-1 shadow-lg shadow-black/25 backdrop-blur-md"
         }
@@ -46,7 +48,7 @@ export function AppBottomNav() {
               key={href}
               href={href}
               className={`flex min-h-[48px] min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-transform active:scale-95 ${
-                onProfile
+                lightNav
                   ? active
                     ? "fd-nav-active"
                     : "fd-nav-idle"
@@ -55,10 +57,10 @@ export function AppBottomNav() {
                     : "text-stone-500 dark:text-stone-400"
               }`}
             >
-              <Icon active={active} onProfile={onProfile} />
+              <Icon active={active} onProfile={lightNav} />
               <span
                 className={`max-w-[4.25rem] truncate text-[9px] leading-tight ${
-                  onProfile && active ? "font-bold text-[#0c0a09]" : "font-semibold"
+                  lightNav && active ? "font-bold text-[#0c0a09]" : "font-semibold"
                 }`}
               >
                 {label}
@@ -71,8 +73,8 @@ export function AppBottomNav() {
   );
 }
 
-function navIconColor(active: boolean, onProfile?: boolean): string {
-  if (!onProfile) return active ? "text-emerald-600" : "text-current";
+function navIconColor(active: boolean, lightNav?: boolean): string {
+  if (!lightNav) return active ? "text-emerald-600" : "text-current";
   return active ? "fd-nav-active" : "fd-nav-idle";
 }
 

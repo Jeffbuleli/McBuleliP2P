@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type Row = {
@@ -46,24 +47,28 @@ export default function GroupsHubPage() {
     return base.filter((r) => r.type === typeFilter);
   }, [rows, typeFilter]);
 
+  const hubTitle =
+    typeFilter === "likelimba"
+      ? t("group_like_title")
+      : typeFilter === "avec"
+        ? t("group_avec_title")
+        : t("group_hub_title");
+
   return (
-    <div className="space-y-4 pb-8">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold text-stone-900 dark:text-stone-50">
-            {t("group_hub_title")}
-          </h1>
-          <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
-            {t("group_hub_sub")}
-          </p>
-        </div>
-        <Link
-          href="/app/wallet/groups/new"
-          className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
-        >
-          {t("group_hub_create")}
-        </Link>
-      </div>
+    <div className="space-y-3 pb-8">
+      <WalletSubpageHeader
+        title={hubTitle}
+        subtitle={t("group_hub_sub")}
+        action={
+          <Link
+            href="/app/wallet/groups/new"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-700 text-xl font-bold text-white shadow-md active:scale-95"
+            aria-label={t("group_hub_create")}
+          >
+            +
+          </Link>
+        }
+      />
 
       {err ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
@@ -74,11 +79,13 @@ export default function GroupsHubPage() {
       {rows === null ? (
         <p className="text-stone-500">…</p>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-          <p className="text-sm text-stone-600 dark:text-stone-300">
+        <div className="fd-card p-6 text-center">
+          <p className="text-3xl" aria-hidden>
+            {typeFilter === "avec" ? "👥" : "🤝"}
+          </p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--fd-text)]">
             {t("group_hub_empty")}
           </p>
-          <p className="mt-2 text-xs text-stone-500">{t("group_hub_empty_hint")}</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -86,27 +93,24 @@ export default function GroupsHubPage() {
             <li key={r.groupId}>
               <Link
                 href={`/app/wallet/groups/${r.groupId}`}
-                className="block rounded-2xl border border-stone-200 bg-white p-4 transition active:scale-[0.99] dark:border-stone-700 dark:bg-stone-900"
+                className="fd-card block p-3.5 active:scale-[0.99]"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-                      {r.type}
-                    </p>
-                    <p className="mt-1 truncate text-sm font-bold text-stone-900 dark:text-stone-50">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-amber-50 text-lg">
+                    {r.type === "avec" ? "👥" : "🤝"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
                       {r.name}
                     </p>
-                    <p className="mt-1 text-xs text-stone-500">
-                      {t("group_hub_role")}: {r.role} · {t("group_hub_sub_status")}:{" "}
-                      {r.subscriptionStatus}
+                    <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">
+                      {r.nextBillingAt
+                        ? new Date(r.nextBillingAt).toLocaleDateString()
+                        : "—"}
                     </p>
                   </div>
                   <GroupStatusBadge status={r.status} />
                 </div>
-                <p className="mt-2 text-[11px] text-stone-500">
-                  {t("group_hub_next_billing")}:{" "}
-                  {r.nextBillingAt ? new Date(r.nextBillingAt).toLocaleDateString() : "—"}
-                </p>
               </Link>
             </li>
           ))}
