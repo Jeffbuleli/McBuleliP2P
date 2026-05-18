@@ -978,6 +978,8 @@ export function BotsTradingClient() {
   );
 
   const futSub = activeSub("futures_um");
+  /** One DB row per user+plan; billing column updates on save (not separate demo/live rows). */
+  const futInstRow = data?.instances.find((i) => i.planId === "futures_um");
   const futInst = instanceFor("futures_um");
   const futKeysOk = Boolean(
     futSub && keysOkForPlan("futures_um", futSub.billing),
@@ -1647,7 +1649,8 @@ export function BotsTradingClient() {
             onLifecycleChange={setFutLifecycle}
             aiAssist={futAiAssist}
             onAiAssistChange={setFutAiAssist}
-            botInstanceId={futInst?.id}
+            botInstanceId={futInstRow?.id}
+            savedInstanceBilling={futInstRow?.billing}
             accountBilling={accountBilling}
             entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}

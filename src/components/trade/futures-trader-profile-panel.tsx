@@ -179,6 +179,7 @@ export function FuturesTraderProfilePanel({
   aiAssist,
   onAiAssistChange,
   botInstanceId,
+  savedInstanceBilling,
   accountBilling,
   entryTimeframe,
   onApplyPreset,
@@ -466,7 +467,21 @@ export function FuturesTraderProfilePanel({
       {aiAssist.aiAssistMode && botInstanceId ? (
         <p className="mt-1.5 break-all font-mono text-[10px] text-stone-600 dark:text-stone-400">
           {t("bots_ai_instance_id")}: {botInstanceId}
-          {accountBilling ? ` (${accountBilling})` : ""}
+          {savedInstanceBilling ? ` (${savedInstanceBilling})` : ""}
+          {savedInstanceBilling &&
+          accountBilling &&
+          savedInstanceBilling !== accountBilling ? (
+            <span className="block text-amber-800 dark:text-amber-200">
+              {t("bots_ai_instance_billing_mismatch", {
+                saved: savedInstanceBilling,
+                viewing: accountBilling,
+              })}
+            </span>
+          ) : null}
+        </p>
+      ) : aiAssist.aiAssistMode ? (
+        <p className="mt-1.5 text-[10px] text-amber-800 dark:text-amber-200">
+          {t("bots_ai_instance_save_first")}
         </p>
       ) : null}
     </div>
