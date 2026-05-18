@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from mcbuleli_ai.ai_layer.regime_detector import detect_regime
 from mcbuleli_ai.ai_layer.signal_engine import SignalEngine
 from mcbuleli_ai.ai_layer.strategy_selector import StrategySelector
-from mcbuleli_ai.config.settings import Settings, get_settings
+from mcbuleli_ai.config.settings import RunMode, Settings, get_settings
 from mcbuleli_ai.core.audit import append_audit
 from mcbuleli_ai.core.schemas import PortfolioState, StrategyKind, utc_now_iso
 from mcbuleli_ai.data_layer.market_data import MarketDataService
@@ -93,6 +93,10 @@ class TradingEngine:
         if intent and risk.decision.value in ("APPROVED", "REDUCED"):
             exec_out = self._executor.execute(signal, intent, risk)
 
+        bridge_out: Optional[Dict[str, Any]] = None
+        if self._settings.mode == RunMode.SIGNAL_ONLY:
+            bridge_out = self._executor.relay_signal(signal)
+
         record = {
             "ts": ts,
             "signal": signal.to_dict(),
@@ -111,6 +115,7 @@ class TradingEngine:
                 "reject_reasons": risk.reject_reasons,
             },
             "execution": exec_out,
+            "bridge": bridge_out,
             "news_headline_count": len(news.headlines),
             "news_x_enabled": self._settings.twitter_enabled,
             "analysis": _analysis_summary(
