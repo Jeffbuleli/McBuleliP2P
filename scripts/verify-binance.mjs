@@ -1,6 +1,7 @@
 /**
  * Quick check that BINANCE_API_KEY / BINANCE_API_SECRET work (signed GET /api/v3/account).
- * Run: node --env-file=.env scripts/verify-binance.mjs
+ * Run from repo root: npm run verify:binance
+ * Or: node --env-file=.env scripts/verify-binance.mjs
  *
  * Query string must be alphabetically sorted (Binance HMAC rule).
  */
@@ -32,8 +33,10 @@ if (!key || !secret) {
   process.exit(1);
 }
 
+const recvWindow = process.env.BINANCE_RECV_WINDOW?.trim() || "60000";
+
 const params = {
-  recvWindow: "5000",
+  recvWindow,
   timestamp: Date.now().toString(),
 };
 const qs = Object.keys(params)
@@ -66,9 +69,65 @@ const balances = (data.balances ?? []).filter(
   (b) => Number(b.free) > 0 || Number(b.locked) > 0,
 );
 
-console.log("OK — Binance credentials are valid.");
+console.log("OK — Binance Spot credentials are valid (same check as BOT LIVE).");
 console.log("canTrade:", canTrade);
 console.log(
   "Non-zero balances (sample):",
   balances.slice(0, 5).map((b) => `${b.asset}:${b.free}`),
 );
+
+function signedQuery(extra = {}) {
+  const p = {
+    recvWindow,
+    timestamp: Date.now().toString(),
+    ...extra,
+  };
+  const q = Object.keys(p)
+    .sort()
+    .map((k) => `${k}=${p[k]}`)
+    .join("&");
+  const sig = crypto.createHmac("sha256", secret).update(q).digest("hex");
+  return `${q}&signature=${sig}`;
+}
+
+const restrictionsQs = signedQuery();
+const restrictionsUrl = `${BASE}/sapi/v1/account/apiRestrictions?${restrictionsQs}`;
+const restrictionsRes = await fetch(restrictionsUrl, {
+  headers: { "X-MBX-APIKEY": key },
+});
+const restrictionsText = await restrictionsRes.text();
+let restrictions = null;
+try {
+  restrictions = JSON.parse(restrictionsText);
+} catch {
+  /* ignore */
+}
+
+if (restrictionsRes.ok && restrictions) {
+  console.log("\nAPI restrictions (platform wallet):");
+  console.log("  enableReading:", restrictions.enableReading);
+  console.log("  enableWithdrawals:", restrictions.enableWithdrawals);
+  console.log("  ipRestrict:", restrictions.ipRestrict);
+  if (!restrictions.enableWithdrawals) {
+    console.warn(
+      "\n⚠️  enableWithdrawals is OFF — USDT deposit addresses need Wallet API access.",
+    );
+    console.warn(
+      "    BOT LIVE only tests Spot/Futures. Enable Withdrawals on this key at binance.com → API Management,",
+    );
+    console.warn("    or use a dedicated platform key in BINANCE_API_* with Reading + Withdrawals.");
+  }
+} else {
+  console.warn("\nCould not read apiRestrictions:", restrictionsRes.status, restrictionsText.slice(0, 200));
+}
+
+const depositQs = signedQuery({ coin: "USDT", network: "TRX" });
+const depositUrl = `${BASE}/sapi/v1/capital/deposit/address?${depositQs}`;
+const depositRes = await fetch(depositUrl, { headers: { "X-MBX-APIKEY": key } });
+const depositText = await depositRes.text();
+if (depositRes.ok) {
+  console.log("\nOK — Wallet deposit address (USDT TRC20) can be generated.");
+} else {
+  console.error("\nWallet deposit address FAILED:", depositRes.status, depositText.slice(0, 300));
+  process.exit(1);
+}

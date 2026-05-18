@@ -33,6 +33,7 @@ export default function DepositWizardPage() {
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [userNote, setUserNote] = useState("");
   const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
+  const [binanceConfigWarn, setBinanceConfigWarn] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -43,13 +44,23 @@ export default function DepositWizardPage() {
         setEnabledPi(Boolean(data.piManual));
         const env = data.binanceEnv;
         setBinanceEnv(env === "demo" || env === "live" ? env : null);
+        if (
+          data.usdtBinance &&
+          data.binanceSpotOk === true &&
+          data.binanceEnableWithdrawals === false
+        ) {
+          setBinanceConfigWarn(t("wallet_binance_error_wallet_permission"));
+        } else {
+          setBinanceConfigWarn(null);
+        }
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
         setBinanceEnv(null);
+        setBinanceConfigWarn(null);
       }
     })();
-  }, []);
+  }, [t]);
 
   const anyEnabled = enabledUsdt === true || enabledPi === true;
 
@@ -144,6 +155,11 @@ export default function DepositWizardPage() {
     >
       {!anyEnabled ? (
         <p className="fd-card px-3 py-2 text-sm text-rose-800">{t("deposit_unavailable")}</p>
+      ) : null}
+      {binanceConfigWarn ? (
+        <p className="fd-card border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-950">
+          {binanceConfigWarn}
+        </p>
       ) : null}
 
       {step === 1 && (

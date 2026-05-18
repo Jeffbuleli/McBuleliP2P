@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     address = r.address;
     memo = r.tag?.trim() ? r.tag.trim() : null;
   } catch (e) {
-    const code = binanceWalletErrorCode(e);
+    const code = await binanceWalletErrorCode(e);
     const raw = e instanceof Error ? e.message : "Binance request failed";
     const detail =
       process.env.NODE_ENV === "development" && code === "deposit_provider_unavailable"

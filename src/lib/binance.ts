@@ -80,10 +80,49 @@ async function signedGet(path: string, params: Record<string, string>) {
   return json;
 }
 
+export type PlatformBinanceApiRestrictions = {
+  ipRestrict: boolean;
+  enableReading: boolean;
+  enableWithdrawals: boolean;
+  enableSpotAndMarginTrading: boolean;
+  enableFutures: boolean;
+};
+
+/** Platform .env key — same fields bots read on live user keys. */
+export async function fetchPlatformBinanceApiRestrictions(): Promise<PlatformBinanceApiRestrictions | null> {
+  try {
+    return (await signedGet("/sapi/v1/account/apiRestrictions", {})) as PlatformBinanceApiRestrictions;
+  } catch {
+    return null;
+  }
+}
+
+/** Spot ping with platform .env keys (same check as BOT LIVE Spot validation). */
+export async function probePlatformBinanceSpot(): Promise<boolean> {
+  try {
+    await signedGet("/api/v3/account", {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** User-facing error code for wallet Binance failures (deposit/withdraw rails). */
-export function binanceWalletErrorCode(e: unknown): string {
+export async function binanceWalletErrorCode(e: unknown): Promise<string> {
   const msg = e instanceof Error ? e.message : String(e);
-  return classifyBinanceWalletAuthError(msg);
+  let hint: Parameters<typeof classifyBinanceWalletAuthError>[1];
+  if (msg.includes("-2015")) {
+    const restrictions = await fetchPlatformBinanceApiRestrictions();
+    if (restrictions) {
+      hint = {
+        enableReading: restrictions.enableReading,
+        enableWithdrawals: restrictions.enableWithdrawals,
+        ipRestrict: restrictions.ipRestrict,
+        spotOk: await probePlatformBinanceSpot(),
+      };
+    }
+  }
+  return classifyBinanceWalletAuthError(msg, hint);
 }
 
 export async function binanceDepositAddress(args: {

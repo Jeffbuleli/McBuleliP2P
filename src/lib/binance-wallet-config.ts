@@ -33,11 +33,22 @@ export function binanceWalletPortalLabel(env: BotEnvironment): string {
   return env === "demo" ? "demo.binance.com" : "binance.com";
 }
 
+export type WalletRestrictionsHint = {
+  enableReading?: boolean;
+  enableWithdrawals?: boolean;
+  ipRestrict?: boolean;
+  /** True when /api/v3/account works — typical BOT LIVE validation. */
+  spotOk?: boolean;
+};
+
 /**
  * Map Binance HTTP body to i18n keys for deposit/withdraw rails.
- * -2015 almost always means wrong host for the key or IP whitelist.
+ * BOT LIVE validates Spot/Futures; wallet rails need capital SAPI (usually Withdrawals ON).
  */
-export function classifyBinanceWalletAuthError(raw: string): string {
+export function classifyBinanceWalletAuthError(
+  raw: string,
+  hint?: WalletRestrictionsHint,
+): string {
   const env = binanceWalletEnvironment();
   const lower = raw.toLowerCase();
 
@@ -49,6 +60,15 @@ export function classifyBinanceWalletAuthError(raw: string): string {
   }
 
   if (raw.includes("-2015") || lower.includes("invalid api-key")) {
+    if (hint?.spotOk === true && hint.enableWithdrawals === false) {
+      return "wallet_binance_error_wallet_permission";
+    }
+    if (hint?.enableReading === false) {
+      return "wallet_binance_error_reading";
+    }
+    if (hint?.ipRestrict === true) {
+      return "wallet_binance_error_ip";
+    }
     return env === "demo"
       ? "wallet_binance_error_demo_keys"
       : "wallet_binance_error_live_keys";
