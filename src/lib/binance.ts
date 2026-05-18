@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
 import type { NetworkId } from "./networks";
 import { USDT_NETWORKS } from "./networks";
-
-const BASE = process.env.BINANCE_API_BASE ?? "https://api.binance.com";
+import {
+  binanceWalletApiBase,
+  classifyBinanceWalletAuthError,
+} from "@/lib/binance-wallet-config";
 
 function sign(query: string, secret: string) {
   return crypto.createHmac("sha256", secret).update(query).digest("hex");
@@ -34,13 +36,17 @@ function withTimestamp(params: Record<string, string>) {
   };
 }
 
+function walletBase() {
+  return binanceWalletApiBase();
+}
+
 export async function signedPost(path: string, params: Record<string, string>) {
   const { key, secret } = getCredentials();
   const merged = withTimestamp(params);
   const qs = sortedQueryString(merged);
   const signature = sign(qs, secret);
   const body = `${qs}&signature=${signature}`;
-  const url = `${BASE}${path}`;
+  const url = `${walletBase()}${path}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -62,7 +68,7 @@ async function signedGet(path: string, params: Record<string, string>) {
   const merged = withTimestamp(params);
   const qs = sortedQueryString(merged);
   const signature = sign(qs, secret);
-  const url = `${BASE}${path}?${qs}&signature=${signature}`;
+  const url = `${walletBase()}${path}?${qs}&signature=${signature}`;
   const res = await fetch(url, {
     headers: { "X-MBX-APIKEY": key },
     cache: "no-store",
@@ -72,6 +78,12 @@ async function signedGet(path: string, params: Record<string, string>) {
     throw new Error(`Binance HTTP ${res.status}: ${JSON.stringify(json)}`);
   }
   return json;
+}
+
+/** User-facing error code for wallet Binance failures (deposit/withdraw rails). */
+export function binanceWalletErrorCode(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  return classifyBinanceWalletAuthError(msg);
 }
 
 export async function binanceDepositAddress(args: {

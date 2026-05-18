@@ -6,7 +6,24 @@
  */
 import crypto from "node:crypto";
 
-const BASE = process.env.BINANCE_API_BASE ?? "https://api.binance.com";
+function walletBase() {
+  const explicit = (process.env.BINANCE_ENV ?? "").trim().toLowerCase();
+  if (explicit === "demo" || explicit === "testnet") {
+    return "https://demo-api.binance.com";
+  }
+  if (explicit === "live" || explicit === "production" || explicit === "prod") {
+    return "https://api.binance.com";
+  }
+  const testnet = (process.env.BINANCE_TESTNET ?? "").trim().toLowerCase();
+  if (testnet === "1" || testnet === "true" || testnet === "yes") {
+    return "https://demo-api.binance.com";
+  }
+  const override = process.env.BINANCE_API_BASE?.trim();
+  if (override) return override.replace(/\/+$/, "");
+  return "https://api.binance.com";
+}
+
+const BASE = walletBase();
 const key = process.env.BINANCE_API_KEY?.trim();
 const secret = process.env.BINANCE_API_SECRET?.trim();
 

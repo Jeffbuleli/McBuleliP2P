@@ -8,6 +8,7 @@ export function WalletFlowShell({
   step,
   totalSteps = 0,
   backHref = "/app/wallet",
+  headerBadge,
   children,
 }: {
   title: string;
@@ -15,33 +16,19 @@ export function WalletFlowShell({
   step?: number;
   totalSteps?: number;
   backHref?: string;
+  headerBadge?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="wallet-theme -mx-1 pb-10">
-      <WalletSubpageHeader title={title} subtitle={subtitle} backHref={backHref} />
-      {step != null && totalSteps > 0 ? (
-        <div className="mb-5 flex items-center justify-center gap-2">
-          {Array.from({ length: totalSteps }, (_, i) => {
-            const n = i + 1;
-            const active = n === step;
-            const done = n < step;
-            return (
-              <span
-                key={n}
-                className={`h-2 rounded-full transition-all ${
-                  active
-                    ? "w-8 bg-[color:var(--fd-primary)]"
-                    : done
-                      ? "w-2 bg-[color:var(--fd-primary)]/50"
-                      : "w-2 bg-[color:var(--fd-border)]"
-                }`}
-                aria-hidden
-              />
-            );
-          })}
-        </div>
-      ) : null}
+      <WalletSubpageHeader
+        title={title}
+        subtitle={subtitle}
+        backHref={backHref}
+        step={step}
+        totalSteps={totalSteps}
+        badge={headerBadge}
+      />
       {children}
     </div>
   );
@@ -102,4 +89,3 @@ export function FlowHubLink({ label }: { label: string }) {
     </Link>
   );
 }
-

@@ -9,6 +9,7 @@ export function clientErrorText(
     key.startsWith("staking_") ||
     key.startsWith("p2p_") ||
     key.startsWith("deposit_") ||
+    key.startsWith("wallet_binance_") ||
     key.startsWith("lp_pool_") ||
     key.startsWith("pool_") ||
     key.startsWith("loan_") ||

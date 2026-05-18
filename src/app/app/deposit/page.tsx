@@ -32,6 +32,7 @@ export default function DepositWizardPage() {
   const [enabledPi, setEnabledPi] = useState<boolean | null>(null);
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [userNote, setUserNote] = useState("");
+  const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -40,9 +41,12 @@ export default function DepositWizardPage() {
         const data = await res.json();
         setEnabledUsdt(Boolean(data.usdtBinance));
         setEnabledPi(Boolean(data.piManual));
+        const env = data.binanceEnv;
+        setBinanceEnv(env === "demo" || env === "live" ? env : null);
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
+        setBinanceEnv(null);
       }
     })();
   }, []);
@@ -86,13 +90,17 @@ export default function DepositWizardPage() {
           setError(t("deposit_declared_below_min", { min: rec.min }));
           return;
         }
-        if (msg.startsWith("deposit_")) {
+        if (msg.startsWith("deposit_") || msg.startsWith("wallet_binance_")) {
           const detail =
             typeof rec.detail === "string" && rec.detail.trim()
               ? rec.detail.trim()
               : "";
           const base = clientErrorText(t, msg);
-          setError(detail && msg === "deposit_provider_unavailable" ? `${base} (${detail})` : base);
+          const showDetail =
+            detail &&
+            msg === "deposit_provider_unavailable" &&
+            process.env.NODE_ENV === "development";
+          setError(showDetail ? `${base} (${detail})` : base);
           return;
         }
         setError(
@@ -113,12 +121,26 @@ export default function DepositWizardPage() {
 
   const stepSubtitle = `${t("deposit_step")} ${step}/3`;
 
+  const envBadge =
+    binanceEnv && enabledUsdt ? (
+      <span
+        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+          binanceEnv === "demo"
+            ? "bg-amber-100 text-amber-900"
+            : "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+        }`}
+      >
+        {binanceEnv === "demo" ? t("wallet_binance_env_demo") : t("wallet_binance_env_live")}
+      </span>
+    ) : null;
+
   return (
     <WalletFlowShell
       title={t("deposit")}
       subtitle={stepSubtitle}
       step={step}
       totalSteps={3}
+      headerBadge={envBadge}
     >
       {!anyEnabled ? (
         <p className="fd-card px-3 py-2 text-sm text-rose-800">{t("deposit_unavailable")}</p>

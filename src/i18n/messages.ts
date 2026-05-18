@@ -1577,6 +1577,14 @@ export const en = {
   deposit_invalid_declared_amount: "Enter a valid USDT amount.",
   deposit_provider_unavailable:
     "Could not generate a deposit address right now. Please try again later or contact support.",
+  wallet_binance_error_demo_keys:
+    "Binance refused the connection. Use API keys from demo.binance.com (not binance.com) and set BINANCE_ENV=demo or BINANCE_API_BASE=https://demo-api.binance.com on the server.",
+  wallet_binance_error_live_keys:
+    "Binance refused the connection. Use live keys from binance.com with Reading + wallet permissions; if IP-restricted, whitelist McBuleli’s server outbound IP (not only your home IP).",
+  wallet_binance_error_ip:
+    "Binance IP restriction: add McBuleli’s server outbound IP to your API key whitelist on binance.com (or demo.binance.com for demo keys).",
+  wallet_binance_env_demo: "Demo · demo.binance.com",
+  wallet_binance_env_live: "Live · binance.com",
   deposit_status_awaiting_transfer: "Awaiting your transfer",
   deposit_status_awaiting_txid: "Awaiting transaction ID",
   deposit_status_pending_validation: "Under review",
@@ -3452,6 +3460,14 @@ export const fr: Messages = {
   deposit_invalid_declared_amount: "Indiquez un montant USDT valide.",
   deposit_provider_unavailable:
     "Impossible de générer l’adresse de dépôt pour le moment. Réessayez plus tard ou contactez le support.",
+  wallet_binance_error_demo_keys:
+    "Binance a refusé la connexion. Utilisez des clés créées sur demo.binance.com (pas binance.com) et BINANCE_ENV=demo ou BINANCE_API_BASE=https://demo-api.binance.com sur le serveur.",
+  wallet_binance_error_live_keys:
+    "Binance a refusé la connexion. Utilisez des clés live binance.com avec Lecture + permissions portefeuille ; si restriction IP, ajoutez l’IP sortante du serveur McBuleli (pas seulement votre IP locale).",
+  wallet_binance_error_ip:
+    "Restriction IP Binance : ajoutez l’IP sortante du serveur McBuleli à la liste blanche de la clé sur binance.com (ou demo.binance.com en démo).",
+  wallet_binance_env_demo: "Démo · demo.binance.com",
+  wallet_binance_env_live: "Live · binance.com",
   deposit_status_awaiting_transfer: "En attente de votre envoi",
   deposit_status_awaiting_txid: "En attente du TXID",
   deposit_status_pending_validation: "En vérification",
