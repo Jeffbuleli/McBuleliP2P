@@ -1,0 +1,45 @@
+# Optional Render Blueprint — import in Dashboard → Blueprints.
+# Web service (McBuleli Next.js) is usually created separately; this adds the AI relay worker.
+
+services:
+  - type: cron
+    name: mcbuleli-ai-relay
+    runtime: python
+    region: oregon
+    plan: starter
+    schedule: "*/1 * * * *"
+    rootDir: services/mcbuleli-ai-trading
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/relay_all_instances.py
+    envVars:
+      - key: MODE
+        value: SIGNAL_ONLY
+      - key: INTERVAL_SEC
+        value: "60"
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: MCBULELI_CRON_SECRET
+        sync: false
+      - key: MCBULELI_INSTANCE_ID
+        value: ""
+
+  # Alternative: continuous worker (uncomment and disable cron above if preferred).
+  # - type: worker
+  #   name: mcbuleli-ai-relay-worker
+  #   runtime: python
+  #   region: oregon
+  #   plan: starter
+  #   rootDir: services/mcbuleli-ai-trading
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python scripts/relay_loop.py
+  #   envVars:
+  #     - key: MODE
+  #       value: SIGNAL_ONLY
+  #     - key: INTERVAL_SEC
+  #       value: "60"
+  #     - key: MCBULELI_API_URL
+  #       sync: false
+  #     - key: MCBULELI_CRON_SECRET
+  #       sync: false
+  #     - key: MCBULELI_INSTANCE_ID
+  #       value: ""

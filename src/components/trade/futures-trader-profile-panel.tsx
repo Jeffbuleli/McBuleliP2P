@@ -15,6 +15,7 @@ import {
 } from "@/lib/bot-candle-timeframe-utils";
 import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
 import { UiInfoTip } from "@/components/ui/ui-info-tip";
+import { AiAssistStatusBadge } from "@/components/trade/ai-assist-status-badge";
 
 type CandleTf = (typeof BOT_CANDLE_TIMEFRAMES)[number];
 
@@ -480,6 +481,11 @@ export function FuturesTraderProfilePanel({
           {t("bots_ai_assist_user_note")}
         </p>
       ) : null}
+      <AiAssistStatusBadge
+        instanceId={botInstanceId}
+        enabled={aiAssist.aiAssistMode}
+        t={t}
+      />
       {aiAssist.aiAssistMode && showAiTechnicalRef && botInstanceId ? (
         <div className="mt-1.5 rounded border border-stone-200/80 bg-stone-50/80 px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900/50">
           <p className="text-[10px] font-medium text-stone-700 dark:text-stone-300">

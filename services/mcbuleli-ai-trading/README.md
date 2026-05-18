@@ -107,6 +107,24 @@ Node stores signals via `POST /api/internal/bots/ai-signal` (`x-cron-secret`). W
 
 **Multi-user worker:** `GET /api/internal/bots/ai-instances` lists every active futures bot with `aiAssistMode`. Run `python scripts/relay_all_instances.py` with empty `MCBULELI_INSTANCE_ID` to push signals for all of them (same `CRON_SECRET` as Render).
 
+### Production on Render
+
+1. In Render Dashboard → **New** → **Blueprint** (or add a Cron Job manually).
+2. Import repo `render.yaml` at the repo root, or create a **Cron Job**:
+   - **Root directory:** `services/mcbuleli-ai-trading`
+   - **Build:** `pip install -r requirements.txt`
+   - **Command:** `python scripts/relay_all_instances.py`
+   - **Schedule:** every minute (`*/1 * * * *`)
+3. Environment (same values as McBuleli Web):
+   - `MODE=SIGNAL_ONLY`
+   - `MCBULELI_API_URL=https://www.mcbuleli.online`
+   - `MCBULELI_CRON_SECRET` = Render Web `CRON_SECRET`
+   - `MCBULELI_INSTANCE_ID` = empty (fan-out to all AI-assist bots)
+   - `INTERVAL_SEC=60`
+4. **Alternative:** Background Worker with `python scripts/relay_loop.py` (continuous loop).
+
+After deploy, users with **Assistance IA** enabled see live analysis status in the McBuleli bots UI (`GET /api/trade/bots/ai-status`).
+
 ## Tests
 
 ```bash

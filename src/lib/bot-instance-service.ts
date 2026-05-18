@@ -16,6 +16,29 @@ export type BotInstanceRow = {
   updatedAt: string;
 };
 
+export async function getUserBotInstanceById(
+  userId: string,
+  instanceId: string,
+): Promise<BotInstanceRow | null> {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(botInstances)
+    .where(and(eq(botInstances.id, instanceId), eq(botInstances.userId, userId)))
+    .limit(1);
+  if (!row) return null;
+  return {
+    id: row.id,
+    planId: row.planId as BotPlanId,
+    billing: row.billing as BotBillingMode,
+    status: row.status as "active" | "paused",
+    config: (row.config ?? {}) as Record<string, unknown>,
+    lastExecutedAt: row.lastExecutedAt?.toISOString() ?? null,
+    lastError: row.lastError,
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
 export async function listUserBotInstances(
   userId: string,
 ): Promise<BotInstanceRow[]> {

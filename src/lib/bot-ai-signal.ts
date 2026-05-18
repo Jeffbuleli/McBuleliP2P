@@ -45,9 +45,8 @@ export async function storeAiSignal(
   return stored;
 }
 
-export async function getAiSignal(
+async function readStoredAiSignal(
   instanceId: string,
-  maxAgeMs = DEFAULT_MAX_AGE_MS,
 ): Promise<StoredAiSignal | null> {
   const db = getDb();
   const [row] = await db
@@ -59,12 +58,43 @@ export async function getAiSignal(
   try {
     const parsed = JSON.parse(row.value) as StoredAiSignal;
     if (typeof parsed.receivedAt !== "string") return null;
-    const age = Date.now() - new Date(parsed.receivedAt).getTime();
-    if (!Number.isFinite(age) || age > maxAgeMs) return null;
     return parsed;
   } catch {
     return null;
   }
+}
+
+export async function getAiSignal(
+  instanceId: string,
+  maxAgeMs = DEFAULT_MAX_AGE_MS,
+): Promise<StoredAiSignal | null> {
+  const parsed = await readStoredAiSignal(instanceId);
+  if (!parsed) return null;
+  const age = Date.now() - new Date(parsed.receivedAt).getTime();
+  if (!Number.isFinite(age) || age > maxAgeMs) return null;
+  return parsed;
+}
+
+export type AiSignalStatus = {
+  signal: StoredAiSignal | null;
+  ageMs: number | null;
+  fresh: boolean;
+  maxAgeMs: number;
+};
+
+/** UI / diagnostics — returns last signal even when stale. */
+export async function getAiSignalStatus(
+  instanceId: string,
+  maxAgeMs = DEFAULT_MAX_AGE_MS,
+): Promise<AiSignalStatus> {
+  const signal = await readStoredAiSignal(instanceId);
+  if (!signal) {
+    return { signal: null, ageMs: null, fresh: false, maxAgeMs };
+  }
+  const ageMs = Date.now() - new Date(signal.receivedAt).getTime();
+  const fresh =
+    Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= maxAgeMs;
+  return { signal, ageMs: Number.isFinite(ageMs) ? ageMs : null, fresh, maxAgeMs };
 }
 
 export type AiAssistGateResult =
