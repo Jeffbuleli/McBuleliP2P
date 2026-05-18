@@ -285,3 +285,67 @@ html {
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
     0 3px 14px rgba(48, 95, 51, 0.26);
 }
+
+/* Total balance — large mobile PWA actions (Deposit / Withdraw / Send) */
+.wallet-theme .wallet-balance-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.wallet-theme .wallet-balance-action {
+  display: flex;
+  min-height: 4.75rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--fd-text);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.wallet-theme .wallet-balance-action:active {
+  transform: scale(0.97);
+}
+.wallet-theme .wallet-balance-action-icon {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(28, 25, 23, 0.08);
+}
+.wallet-theme .wallet-balance-action-deposit {
+  background: linear-gradient(160deg, #fff8ed 0%, #fde8c8 100%);
+  border-color: rgba(244, 180, 90, 0.35);
+}
+.wallet-theme .wallet-balance-action-deposit .wallet-balance-action-icon {
+  color: #9a3412;
+}
+.wallet-theme .wallet-balance-action-withdraw {
+  background: linear-gradient(160deg, #eef7f0 0%, #c8e6d0 100%);
+  border-color: rgba(48, 95, 51, 0.2);
+}
+.wallet-theme .wallet-balance-action-withdraw .wallet-balance-action-icon {
+  color: var(--fd-primary);
+}
+.wallet-theme .wallet-balance-action-send {
+  grid-column: 1 / -1;
+  min-height: 3.25rem;
+  flex-direction: row;
+  gap: 0.65rem;
+  background: linear-gradient(160deg, #f5f5f4 0%, #e7e5e4 100%);
+  border-color: rgba(120, 113, 108, 0.2);
+}
+.wallet-theme .wallet-balance-action-send .wallet-balance-action-icon {
+  height: 2rem;
+  width: 2rem;
+  color: var(--fd-primary-dark);
+}

@@ -128,33 +128,24 @@ export function WalletOverview({
           {hidden ? mask() : totalUsdDisplay}
         </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <Link href="/app/deposit" className="wallet-action-btn active:scale-[0.98]">
-            <span className="wallet-action-icon wallet-action-deposit">
+        <div className="wallet-balance-actions">
+          <Link href="/app/deposit" className="wallet-balance-action wallet-balance-action-deposit">
+            <span className="wallet-balance-action-icon">
               <DepositIcon />
             </span>
-            <span className="text-[11px] font-bold text-[color:var(--fd-text)]">
-              {labels.wallet_action_deposit}
-            </span>
+            <span>{labels.wallet_action_deposit}</span>
           </Link>
-          <Link href="/app/withdraw" className="wallet-action-btn active:scale-[0.98]">
-            <span className="wallet-action-icon wallet-action-withdraw">
+          <Link href="/app/withdraw" className="wallet-balance-action wallet-balance-action-withdraw">
+            <span className="wallet-balance-action-icon">
               <WithdrawIcon />
             </span>
-            <span className="text-[11px] font-bold text-[color:var(--fd-text)]">
-              {labels.wallet_action_withdraw}
-            </span>
+            <span>{labels.wallet_action_withdraw}</span>
           </Link>
-          <Link
-            href="/app/wallet/transfer"
-            className="wallet-action-btn active:scale-[0.98]"
-          >
-            <span className="wallet-action-icon wallet-action-send">
+          <Link href="/app/wallet/transfer" className="wallet-balance-action wallet-balance-action-send">
+            <span className="wallet-balance-action-icon">
               <SendIcon />
             </span>
-            <span className="text-[11px] font-bold text-[color:var(--fd-text)]">
-              {labels.wallet_action_send}
-            </span>
+            <span>{labels.wallet_action_send}</span>
           </Link>
         </div>
       </section>

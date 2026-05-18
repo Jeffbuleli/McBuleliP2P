@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
+import type { NetworkId } from "@/lib/networks";
+import { NetworkPicker } from "@/components/wallet/network-picker";
 import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -46,8 +47,12 @@ export default function DepositWizardPage() {
     })();
   }, []);
 
-  const net = USDT_NETWORKS[network];
   const anyEnabled = enabledUsdt === true || enabledPi === true;
+
+  function pickNetwork(id: NetworkId) {
+    setNetwork(id);
+    setAcceptedRisk(false);
+  }
 
   async function createIntent() {
     setError(null);
@@ -82,7 +87,12 @@ export default function DepositWizardPage() {
           return;
         }
         if (msg.startsWith("deposit_")) {
-          setError(clientErrorText(t, msg));
+          const detail =
+            typeof rec.detail === "string" && rec.detail.trim()
+              ? rec.detail.trim()
+              : "";
+          const base = clientErrorText(t, msg);
+          setError(detail && msg === "deposit_provider_unavailable" ? `${base} (${detail})` : base);
           return;
         }
         setError(
@@ -150,30 +160,14 @@ export default function DepositWizardPage() {
 
       {step === 2 && asset === "USDT" && (
         <section>
-          <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-            {t("deposit_network")}
+          <NetworkPicker
+            label={t("deposit_network")}
+            value={network}
+            onChange={pickNetwork}
+          />
+          <p className="mt-3 text-center text-xs font-semibold text-[color:var(--fd-primary)]">
+            {network}
           </p>
-          <div className="flex flex-col gap-2">
-            {(Object.keys(USDT_NETWORKS) as NetworkId[]).map((id) => {
-              const s = USDT_NETWORKS[id];
-              const active = network === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setNetwork(id)}
-                  className={`fd-card flex items-center justify-between px-4 py-3 active:scale-[0.99] ${
-                    active ? "ring-2 ring-[color:var(--fd-primary)]" : ""
-                  }`}
-                >
-                  <span className="text-sm font-bold text-[color:var(--fd-text)]">{s.label}</span>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${s.badgeClass}`}>
-                    {id}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
           <FlowPrimaryBtn onClick={() => setStep(3)}>{t("continue")}</FlowPrimaryBtn>
           <FlowBackLink onClick={() => setStep(1)} label={t("back")} />
         </section>

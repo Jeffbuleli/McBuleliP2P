@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
+import type { NetworkId } from "@/lib/networks";
+import { NetworkPicker } from "@/components/wallet/network-picker";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -125,34 +126,13 @@ export default function WithdrawPage() {
       </FlowCard>
 
       {wAsset === "USDT" ? (
-        <FlowCard className="mt-3">
-          <p className="mb-2 text-xs font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("deposit_network")}
-          </p>
-          <div className="flex flex-col gap-2">
-            {(Object.keys(USDT_NETWORKS) as NetworkId[]).map((id) => {
-              const s = USDT_NETWORKS[id];
-              const active = network === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setNetwork(id)}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2.5 ${
-                    active
-                      ? "border-[color:var(--fd-primary)] bg-emerald-50/80"
-                      : "border-[color:var(--fd-border)]"
-                  }`}
-                >
-                  <span className="text-sm font-semibold">{s.label}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.badgeClass}`}>
-                    {id}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </FlowCard>
+        <div className="mt-3">
+          <NetworkPicker
+            label={t("deposit_network")}
+            value={network}
+            onChange={setNetwork}
+          />
+        </div>
       ) : null}
 
       <FlowCard className="mt-3 space-y-3">
