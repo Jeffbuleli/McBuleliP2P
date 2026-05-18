@@ -24,11 +24,11 @@ export function AppBottomNav() {
       aria-label="Main"
     >
       <div
-        className={`pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full border px-1 py-1 shadow-lg backdrop-blur-md ${
+        className={
           onProfile
-            ? "border-[var(--fd-border)] bg-[var(--fd-mint)]/95 shadow-[#4a674f]/10"
-            : "border-stone-700/50 bg-stone-950/95 shadow-black/25"
-        }`}
+            ? "fd-nav-glow pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full px-1 py-1 backdrop-blur-md"
+            : "pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full border border-stone-700/50 bg-stone-950/95 px-1 py-1 shadow-lg shadow-black/25 backdrop-blur-md"
+        }
       >
         {paths.map((p) => {
           const href = p.href;
@@ -40,23 +40,27 @@ export function AppBottomNav() {
                 ? pathname.startsWith("/app/trade")
                 : pathname.startsWith(href);
           const label = t(p.key);
-          const activeColor = onProfile
-            ? "text-[var(--fd-primary)]"
-            : "text-emerald-600 dark:text-emerald-400";
-          const idleColor = onProfile
-            ? "text-[var(--fd-muted)]"
-            : "text-stone-500 dark:text-stone-400";
 
           return (
             <Link
               key={href}
               href={href}
               className={`flex min-h-[48px] min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-transform active:scale-95 ${
-                active ? activeColor : idleColor
+                onProfile
+                  ? active
+                    ? "fd-nav-active"
+                    : "fd-nav-idle"
+                  : active
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-stone-500 dark:text-stone-400"
               }`}
             >
               <Icon active={active} onProfile={onProfile} />
-              <span className="max-w-[4.25rem] truncate text-[9px] font-semibold leading-tight">
+              <span
+                className={`max-w-[4.25rem] truncate text-[9px] leading-tight ${
+                  onProfile && active ? "font-bold text-[#0c0a09]" : "font-semibold"
+                }`}
+              >
                 {label}
               </span>
             </Link>
@@ -67,120 +71,50 @@ export function AppBottomNav() {
   );
 }
 
-function HomeIcon({
-  active,
-  onProfile,
-}: {
-  active: boolean;
-  onProfile?: boolean;
-}) {
-  const color = active
-    ? onProfile
-      ? "text-[var(--fd-primary)]"
-      : "text-emerald-600"
-    : "text-current";
+function navIconColor(active: boolean, onProfile?: boolean): string {
+  if (!onProfile) return active ? "text-emerald-600" : "text-current";
+  return active ? "fd-nav-active" : "fd-nav-idle";
+}
+
+function HomeIcon({ active, onProfile }: { active: boolean; onProfile?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={color} aria-hidden>
-      <path
-        d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active, onProfile)} aria-hidden>
+      <path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function WalletIcon({
-  active,
-  onProfile,
-}: {
-  active: boolean;
-  onProfile?: boolean;
-}) {
-  const color = active
-    ? onProfile
-      ? "text-[var(--fd-primary)]"
-      : "text-emerald-600"
-    : "text-current";
+function WalletIcon({ active, onProfile }: { active: boolean; onProfile?: boolean }) {
+  const extra = onProfile && active ? "text-[var(--fd-copper)]" : "";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={color} aria-hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={`${navIconColor(active, onProfile)} ${extra}`} aria-hidden>
       <rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
       <path d="M16 12h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-function P2PIcon({
-  active,
-  onProfile,
-}: {
-  active: boolean;
-  onProfile?: boolean;
-}) {
-  const color = active
-    ? onProfile
-      ? "text-[var(--fd-primary)]"
-      : "text-emerald-600"
-    : "text-current";
+function P2PIcon({ active, onProfile }: { active: boolean; onProfile?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={color} aria-hidden>
-      <path
-        d="M7 16V4L3 8m4-4 4 4M17 8v12l4-4m-4 4-4-4"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active, onProfile)} aria-hidden>
+      <path d="M7 16V4L3 8m4-4 4 4M17 8v12l4-4m-4 4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function MarketIcon({
-  active,
-  onProfile,
-}: {
-  active: boolean;
-  onProfile?: boolean;
-}) {
-  const color = active
-    ? onProfile
-      ? "text-[var(--fd-primary)]"
-      : "text-emerald-600"
-    : "text-current";
+function MarketIcon({ active, onProfile }: { active: boolean; onProfile?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={color} aria-hidden>
-      <path
-        d="M4 18V6M10 18V10M16 18v-8M22 18V4"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active, onProfile)} aria-hidden>
+      <path d="M4 18V6M10 18V10M16 18v-8M22 18V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-function ProfileIcon({
-  active,
-  onProfile,
-}: {
-  active: boolean;
-  onProfile?: boolean;
-}) {
-  const color = active
-    ? onProfile
-      ? "text-[var(--fd-primary)]"
-      : "text-emerald-600"
-    : "text-current";
+function ProfileIcon({ active, onProfile }: { active: boolean; onProfile?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={color} aria-hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active, onProfile)} aria-hidden>
       <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <path d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

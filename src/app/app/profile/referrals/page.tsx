@@ -1,4 +1,4 @@
-import { CopyValueButton } from "@/components/profile/profile-id-copy";
+import { ProfileReferralsView } from "@/components/profile/profile-referrals-view";
 import { ProfileSubpageHeader } from "@/components/profile/profile-subpage-header";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
@@ -32,66 +32,28 @@ export default async function ProfileReferralsPage() {
         subtitle={d.profile_tile_invite_sub}
       />
       {referral ? (
-        <div className="space-y-3">
-          <div className="fd-card grid grid-cols-2 gap-px overflow-hidden p-0">
-            <div className="bg-white p-4 text-center">
-              <p className="text-[10px] font-semibold uppercase text-[var(--fd-muted)]">
-                {d.profile_referral_balance}
-              </p>
-              <p className="mt-1 font-mono text-lg font-bold text-[var(--fd-primary)]">
-                {referral.referralBalanceUsdt.toLocaleString(
-                  locale === "fr" ? "fr-FR" : "en-US",
-                  { maximumFractionDigits: 2 },
-                )}{" "}
-                USDT
-              </p>
-            </div>
-            <div className="bg-white p-4 text-center">
-              <p className="text-[10px] font-semibold uppercase text-[var(--fd-muted)]">
-                {d.profile_referral_invited}
-              </p>
-              <p className="mt-1 text-lg font-bold">{referral.inviteCount}</p>
-            </div>
-          </div>
-
-          <div className="fd-card flex items-center justify-between gap-2 p-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase text-[var(--fd-muted)]">
-                {d.profile_referral_code}
-              </p>
-              <p className="truncate font-mono text-sm font-bold text-[var(--fd-primary)]">
-                {referral.code}
-              </p>
-            </div>
-            <CopyValueButton
-              value={referral.code}
-              copyLabel={d.profile_id_copy}
-              copiedLabel={d.profile_id_copied}
-              variant="light"
-            />
-          </div>
-
-          <div className="fd-card flex items-center justify-between gap-2 p-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase text-[var(--fd-muted)]">
-                {d.profile_referral_link}
-              </p>
-              <p className="truncate text-[11px] text-[var(--fd-muted)]" title={inviteLinkFull}>
-                {inviteLinkFull || referral.linkPath}
-              </p>
-            </div>
-            <CopyValueButton
-              value={inviteLinkFull || referral.linkPath}
-              copyLabel={d.profile_id_copy}
-              copiedLabel={d.profile_id_copied}
-              variant="light"
-            />
-          </div>
-
-          <p className="text-[11px] leading-relaxed text-[var(--fd-muted)]">
-            {d.profile_referral_note_short}
-          </p>
-        </div>
+        <ProfileReferralsView
+          referral={{
+            code: referral.code,
+            linkPath: referral.linkPath,
+            inviteLinkFull,
+            referralBalanceUsdt: referral.referralBalanceUsdt,
+            inviteCount: referral.inviteCount,
+            totalEarnedUsdt: referral.totalEarnedUsdt,
+          }}
+          locale={locale}
+          labels={{
+            balance: d.profile_referral_balance,
+            invited: d.profile_referral_invited,
+            earned: d.profile_referral_earned,
+            code: d.profile_referral_code,
+            link: d.profile_referral_link,
+            note: d.profile_referral_note_short,
+            copy: d.profile_id_copy,
+            copied: d.profile_id_copied,
+            shareHint: d.profile_referral_share_hint,
+          }}
+        />
       ) : (
         <p className="text-sm text-[var(--fd-muted)]">—</p>
       )}

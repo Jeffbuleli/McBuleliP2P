@@ -194,6 +194,15 @@ export const en = {
   profile_stat_age_short: "Since",
   profile_referral_note_short:
     "Rewards credit in USDT when your invitee’s first deposit meets the program rules.",
+  profile_referral_share_hint: "Invite friends and earn USDT",
+  profile_ops_sub: "Operations & moderation",
+  profile_ops_shortcuts: "Admin shortcuts",
+  profile_ops_dashboard: "Dashboard",
+  profile_ops_withdrawals: "Withdrawals",
+  profile_ops_p2p: "P2P disputes",
+  profile_ops_users: "Users",
+  profile_ops_finance: "Finance",
+  profile_ops_bots: "Trading bots",
   profile_link_password: "Password is managed at login — contact support to recover.",
   legal_about_title: "About McBuleli",
   legal_about_body:
@@ -2017,6 +2026,15 @@ export const fr: Messages = {
   profile_stat_age_short: "Depuis",
   profile_referral_note_short:
     "Récompense créditée en USDT lorsque le 1er dépôt du filleul respecte les règles du programme.",
+  profile_referral_share_hint: "Invitez vos proches et gagnez en USDT",
+  profile_ops_sub: "Opérations & modération",
+  profile_ops_shortcuts: "Raccourcis admin",
+  profile_ops_dashboard: "Tableau de bord",
+  profile_ops_withdrawals: "Retraits",
+  profile_ops_p2p: "Litiges P2P",
+  profile_ops_users: "Utilisateurs",
+  profile_ops_finance: "Finance",
+  profile_ops_bots: "Bots trading",
   profile_link_password: "Mot de passe géré à la connexion — contactez le support pour récupération.",
   legal_about_title: "À propos de McBuleli",
   legal_about_body:

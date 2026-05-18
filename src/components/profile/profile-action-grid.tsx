@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { profileChipClass, type ProfileChipTone } from "@/components/profile/profile-vibrant-styles";
 import type { Messages } from "@/i18n/messages";
 
 type Tile = {
   href: string;
   labelKey: keyof Messages;
-  tone: "mint" | "sky" | "amber" | "violet" | "rose" | "stone";
+  tone: ProfileChipTone;
   icon: "wallet" | "payments" | "invite" | "settings" | "pi" | "admin";
 };
 
@@ -28,21 +29,11 @@ const TILES: Tile[] = [
   {
     href: "/app/profile/settings",
     labelKey: "profile_tile_settings",
-    tone: "stone",
+    tone: "forest",
     icon: "settings",
   },
   { href: "/app/profile/pi", labelKey: "profile_tile_pi", tone: "violet", icon: "pi" },
 ];
-
-/** Pastels aligned with profile mint palette (wallet unchanged). */
-const toneBg: Record<Tile["tone"], string> = {
-  mint: "bg-[#dcebe3] text-[#4a674f]",
-  sky: "bg-[#dce8f0] text-[#3d6b7a]",
-  amber: "bg-[#ebe8d4] text-[#8a7340]",
-  violet: "bg-[#e4e0ef] text-[#5c5280]",
-  rose: "bg-[#ebe0e0] text-[#8f4f55]",
-  stone: "bg-[#e8ede9] text-[#4a674f]",
-};
 
 function TileIcon({ icon }: { icon: Tile["icon"] }) {
   const cls = "h-6 w-6";
@@ -111,9 +102,9 @@ export function ProfileActionGrid({ showAdmin }: { showAdmin: boolean }) {
     ? [
         ...TILES,
         {
-          href: "/admin",
-          labelKey: "profile_tile_admin" as keyof Messages,
-          tone: "rose" as const,
+          href: "/app/profile/ops",
+          labelKey: "ops" as keyof Messages,
+          tone: "copper" as const,
           icon: "admin" as const,
         },
       ]
@@ -132,13 +123,11 @@ export function ProfileActionGrid({ showAdmin }: { showAdmin: boolean }) {
             className="fd-tile flex flex-col items-center gap-2 px-2 py-3.5 text-center"
           >
             <span
-              className={`fd-icon-chip flex h-11 w-11 items-center justify-center ${toneBg[tile.tone]}`}
+              className={`${profileChipClass[tile.tone]} flex h-11 w-11 items-center justify-center`}
             >
               <TileIcon icon={tile.icon} />
             </span>
-            <span className="text-[11px] font-bold leading-tight text-[#1c1917]">
-              {t(tile.labelKey)}
-            </span>
+            <span className="fd-label-vivid text-[11px] leading-tight">{t(tile.labelKey)}</span>
           </Link>
         ))}
       </div>
