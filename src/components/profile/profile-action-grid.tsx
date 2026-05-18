@@ -34,13 +34,14 @@ const TILES: Tile[] = [
   { href: "/app/profile/pi", labelKey: "profile_tile_pi", tone: "violet", icon: "pi" },
 ];
 
+/** Pastels aligned with profile mint palette (wallet unchanged). */
 const toneBg: Record<Tile["tone"], string> = {
-  mint: "bg-[#e8f3ee] text-[#4a674f]",
-  sky: "bg-[#e0f2fe] text-[#0369a1]",
-  amber: "bg-[#fef3c7] text-[#b45309]",
-  violet: "bg-[#ede9fe] text-[#6d28d9]",
-  rose: "bg-[#ffe4e6] text-[#be123c]",
-  stone: "bg-[#f5f5f4] text-[#57534e]",
+  mint: "bg-[#dcebe3] text-[#4a674f]",
+  sky: "bg-[#dce8f0] text-[#3d6b7a]",
+  amber: "bg-[#ebe8d4] text-[#8a7340]",
+  violet: "bg-[#e4e0ef] text-[#5c5280]",
+  rose: "bg-[#ebe0e0] text-[#8f4f55]",
+  stone: "bg-[#e8ede9] text-[#4a674f]",
 };
 
 function TileIcon({ icon }: { icon: Tile["icon"] }) {
@@ -120,7 +121,7 @@ export function ProfileActionGrid({ showAdmin }: { showAdmin: boolean }) {
 
   return (
     <section className="fd-card p-4">
-      <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--fd-muted)]">
+      <h2 className="text-[11px] font-bold uppercase tracking-wider text-[var(--fd-muted)]">
         {t("profile_quick_actions")}
       </h2>
       <div className="mt-3 grid grid-cols-3 gap-2.5">
@@ -131,11 +132,11 @@ export function ProfileActionGrid({ showAdmin }: { showAdmin: boolean }) {
             className="fd-tile flex flex-col items-center gap-2 px-2 py-3.5 text-center"
           >
             <span
-              className={`flex h-11 w-11 items-center justify-center rounded-2xl ${toneBg[tile.tone]}`}
+              className={`fd-icon-chip flex h-11 w-11 items-center justify-center ${toneBg[tile.tone]}`}
             >
               <TileIcon icon={tile.icon} />
             </span>
-            <span className="text-[11px] font-semibold leading-tight text-[var(--fd-text)]">
+            <span className="text-[11px] font-bold leading-tight text-[#1c1917]">
               {t(tile.labelKey)}
             </span>
           </Link>

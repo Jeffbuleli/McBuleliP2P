@@ -13,7 +13,7 @@ export function ProfileSubpageHeader({
   const { t } = useI18n();
 
   return (
-    <header className="mb-5 flex items-start gap-3">
+      <header className="sticky top-0 z-20 -mx-0 mb-5 flex items-start gap-3 border-b border-[rgba(74,103,79,0.1)] bg-[var(--fd-bg)]/95 pb-3 pt-0 backdrop-blur-sm">
       <Link
         href="/app/profile"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--fd-primary)] text-white shadow-sm active:scale-95"

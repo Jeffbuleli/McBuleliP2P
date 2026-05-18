@@ -36,13 +36,13 @@ export function ProfileStatsRow({
   ];
 
   return (
-    <section className="fd-card grid grid-cols-4 divide-x divide-[var(--fd-border)] p-0 overflow-hidden">
+    <section className="fd-stat-bar grid grid-cols-4 divide-x divide-[rgba(74,103,79,0.12)]">
       {items.map((item) => (
         <div key={item.label} className="px-2 py-3 text-center">
-          <p className="text-[9px] font-semibold uppercase leading-tight text-[var(--fd-muted)]">
+          <p className="text-[9px] font-bold uppercase leading-tight tracking-wide text-[var(--fd-muted)]">
             {item.label}
           </p>
-          <p className="mt-1 text-sm font-bold tabular-nums text-[var(--fd-text)]">
+          <p className="mt-1 text-sm font-bold tabular-nums tracking-tight text-[#1c1917]">
             {item.value}
           </p>
         </div>

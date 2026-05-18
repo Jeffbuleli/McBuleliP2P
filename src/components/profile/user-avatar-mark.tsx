@@ -1,27 +1,26 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import { resolvePublicAssetUrl } from "@/lib/public-asset-url";
+import { isDisplayableAvatarUrl, resolveAvatarSrc } from "@/lib/avatar-url";
 
 type Props = {
   email: string;
   avatarUrl: string | null | undefined;
   sizeClass?: string;
-  /** e.g. "text-sm" for the initial letter */
   textClass?: string;
   variant?: "default" | "profile";
 };
 
-/**
- * Same-origin `/uploads/...` paths become absolute with `window.location.origin`
- * after layout when `NEXT_PUBLIC_APP_URL` is unset (PWA / standalone / some WebViews).
- */
-function usePublicAvatarSrc(resolved: string | null): string | null {
+function useAvatarImgSrc(resolved: string | null): string | null {
   const [src, setSrc] = useState<string | null>(resolved);
 
   useLayoutEffect(() => {
     if (!resolved) {
       setSrc(null);
+      return;
+    }
+    if (resolved.startsWith("data:image/")) {
+      setSrc(resolved);
       return;
     }
     if (resolved.startsWith("http://") || resolved.startsWith("https://")) {
@@ -38,10 +37,6 @@ function usePublicAvatarSrc(resolved: string | null): string | null {
   return src;
 }
 
-/**
- * Profile image or first letter (app bar, profile header, P2P chat).
- * Relative `/uploads/...` paths resolve with NEXT_PUBLIC_APP_URL when set (Android / installed PWA).
- */
 export function UserAvatarMark({
   email,
   avatarUrl,
@@ -50,27 +45,27 @@ export function UserAvatarMark({
   variant = "default",
 }: Props) {
   const initial = email.trim().charAt(0).toUpperCase() || "?";
-  const rawOk =
-    typeof avatarUrl === "string" &&
-    avatarUrl.length > 0 &&
-    (avatarUrl.startsWith("/") ||
-      avatarUrl.startsWith("https://") ||
-      avatarUrl.startsWith("http://"));
+  const rawOk = isDisplayableAvatarUrl(avatarUrl);
   const [imgBroken, setImgBroken] = useState(false);
-  const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
-  const imgSrc = usePublicAvatarSrc(resolved);
+  const resolved = rawOk ? resolveAvatarSrc(avatarUrl) : null;
+  const imgSrc = useAvatarImgSrc(resolved);
   const showImg = rawOk && imgSrc && !imgBroken;
 
   useEffect(() => {
     setImgBroken(false);
   }, [avatarUrl]);
 
+  const ringClass =
+    variant === "profile"
+      ? "ring-2 ring-white"
+      : "ring-2 ring-white/30 dark:ring-stone-600";
+
   if (showImg) {
     return (
       <img
         src={imgSrc}
         alt=""
-        className={`${sizeClass} rounded-full object-cover ring-2 ring-white/30 dark:ring-stone-600`}
+        className={`${sizeClass} rounded-full object-cover ${ringClass}`}
         onError={() => setImgBroken(true)}
       />
     );
@@ -88,7 +83,6 @@ export function UserAvatarMark({
   );
 }
 
-/** Compact avatar for P2P order chat (falls back to initial from label). */
 export function ChatAvatarBubble({
   label,
   avatarUrl,
@@ -99,15 +93,10 @@ export function ChatAvatarBubble({
   own: boolean;
 }) {
   const ring = own ? "ring-emerald-500/35" : "ring-stone-500/25";
-  const rawOk =
-    typeof avatarUrl === "string" &&
-    avatarUrl.length > 0 &&
-    (avatarUrl.startsWith("/") ||
-      avatarUrl.startsWith("https://") ||
-      avatarUrl.startsWith("http://"));
+  const rawOk = isDisplayableAvatarUrl(avatarUrl);
   const [imgBroken, setImgBroken] = useState(false);
-  const resolved = rawOk ? resolvePublicAssetUrl(avatarUrl) : null;
-  const imgSrc = usePublicAvatarSrc(resolved);
+  const resolved = rawOk ? resolveAvatarSrc(avatarUrl) : null;
+  const imgSrc = useAvatarImgSrc(resolved);
   const showImg = rawOk && imgSrc && !imgBroken;
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 
@@ -20,6 +20,10 @@ export function ProfileAvatarEditor({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAvatarUrl(initialAvatarUrl);
+  }, [initialAvatarUrl]);
 
   function mapErr(code: string): string {
     switch (code) {
@@ -47,6 +51,7 @@ export function ProfileAvatarEditor({
       const res = await fetch("/api/profile/avatar", {
         method: "POST",
         body: fd,
+        credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -65,7 +70,10 @@ export function ProfileAvatarEditor({
     setErr(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/profile/avatar", { method: "DELETE" });
+      const res = await fetch("/api/profile/avatar", {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!res.ok) {
         setErr(t("profile_avatar_err_generic"));
         return;
@@ -81,7 +89,7 @@ export function ProfileAvatarEditor({
     <input
       ref={inputRef}
       type="file"
-      accept="image/jpeg,image/png,image/webp"
+      accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
       className="hidden"
       onChange={(ev) => void onPick(ev)}
     />

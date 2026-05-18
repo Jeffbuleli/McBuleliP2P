@@ -57,17 +57,37 @@ html {
 /* Profile section — light, card-first UI */
 .profile-theme {
   color: var(--fd-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.profile-scroll {
+  background: var(--fd-bg);
 }
 .profile-theme .fd-card {
   border-radius: 1rem;
-  border: 1px solid var(--fd-border);
+  border: 1px solid rgba(74, 103, 79, 0.16);
   background: var(--fd-card);
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.04),
+    0 4px 14px rgba(74, 103, 79, 0.1),
+    0 12px 28px rgba(28, 25, 23, 0.05);
 }
 .profile-theme .fd-hero {
   border-radius: 1.25rem;
-  background: linear-gradient(160deg, var(--fd-mint) 0%, #f8fbf9 55%, var(--fd-card) 100%);
-  border: 1px solid var(--fd-border);
+  background: linear-gradient(165deg, var(--fd-mint) 0%, #f6faf8 48%, var(--fd-card) 100%);
+  border: 1px solid rgba(74, 103, 79, 0.14);
+  box-shadow:
+    0 2px 4px rgba(28, 25, 23, 0.04),
+    0 8px 22px rgba(74, 103, 79, 0.12);
+}
+.profile-theme .fd-stat-bar {
+  border-radius: 1rem;
+  border: 1px solid rgba(74, 103, 79, 0.14);
+  background: var(--fd-card);
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.04),
+    0 6px 18px rgba(74, 103, 79, 0.09);
+  overflow: hidden;
 }
 .profile-theme .fd-pill-ok {
   border-radius: 9999px;
@@ -108,10 +128,19 @@ html {
 }
 .profile-theme .fd-tile {
   border-radius: 1rem;
-  border: 1px solid var(--fd-border);
+  border: 1px solid rgba(74, 103, 79, 0.12);
   background: var(--fd-card);
-  transition: transform 0.12s ease;
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.03),
+    0 3px 10px rgba(74, 103, 79, 0.08);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .profile-theme .fd-tile:active {
   transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(74, 103, 79, 0.06);
+}
+.profile-theme .fd-icon-chip {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
