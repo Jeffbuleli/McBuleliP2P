@@ -17,8 +17,11 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const onProfile = pathname.startsWith("/app/profile");
-  const onWallet = pathname.startsWith("/app/wallet");
-  const lightShell = onProfile || onWallet;
+  const onWalletFlow =
+    pathname.startsWith("/app/wallet") ||
+    pathname.startsWith("/app/deposit") ||
+    pathname.startsWith("/app/withdraw");
+  const lightShell = onProfile || onWalletFlow;
 
   return (
     <div

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getSessionUserId } from "@/lib/session";
@@ -6,7 +5,6 @@ import { getStakingValuationUsd } from "@/lib/staking-service";
 import { getWalletUserState } from "@/lib/wallet-user-state";
 import { formatWalletAssetBalance } from "@/lib/wallet-balance-format";
 import type { WalletAsset } from "@/lib/wallet-types";
-import { EXTERNAL_WITHDRAW_FEE_USDT } from "@/lib/withdraw-fees";
 import type { Locale } from "@/i18n/locale";
 import {
   WalletOverview,
@@ -16,7 +14,6 @@ import {
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
 import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
-import { PiManualWalletSection } from "@/components/pi/pi-manual-wallet-section";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 
@@ -200,15 +197,8 @@ export default async function WalletPage() {
     // If DB is unavailable in a build context, keep wallet usable.
   }
 
-  const feeCrypto = interpolate(d.wallet_fee_crypto_out, {
-    feeUsd: EXTERNAL_WITHDRAW_FEE_USDT,
-  });
-
   const cryptoRows = state.lines
-    .filter(
-      (l) =>
-        l.asset === "USDT" || l.asset === "PI" || l.asset === "PI_TEST",
-    )
+    .filter((l) => l.asset === "USDT" || l.asset === "PI")
     .map((l) => toRow(l, locale, lang));
 
   const labels: WalletOverviewLabels = {
@@ -223,17 +213,9 @@ export default async function WalletPage() {
     wallet_action_withdraw: d.wallet_action_withdraw,
     wallet_action_send: d.wallet_action_send,
     wallet_link_history: d.wallet_link_history,
-    wallet_fees_expand: d.wallet_fees_expand,
-    wallet_fees_collapse: d.wallet_fees_collapse,
-    wallet_fees_title: d.wallet_fees_title,
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
     wallet_crypto_only_hint: d.wallet_crypto_only_hint,
-    feeBulletLines: [
-      feeCrypto,
-      d.wallet_fee_internal,
-      d.wallet_crypto_deposit_free,
-    ],
   };
 
   return (
@@ -243,15 +225,6 @@ export default async function WalletPage() {
         totalUsdDisplay={totalUsdDisplay}
         cryptoRows={cryptoRows}
       />
-      <p className="mt-2 text-center text-[11px] text-[color:var(--fd-muted)]">
-        <Link
-          href="/app/wallet/pi-test"
-          className="font-semibold text-[color:var(--fd-primary)] underline"
-        >
-          {d.wallet_pi_test_title}
-        </Link>
-      </p>
-      <PiManualWalletSection />
       <WalletServicePromos
         stakingPromo={stakingPromo}
         servicePromos={groupPromos}

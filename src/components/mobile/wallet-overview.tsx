@@ -35,12 +35,8 @@ export type WalletOverviewLabels = {
   wallet_action_withdraw: string;
   wallet_action_send: string;
   wallet_link_history: string;
-  wallet_fees_expand: string;
-  wallet_fees_collapse: string;
-  wallet_fees_title: string;
   hide_balance: string;
   show_balance: string;
-  feeBulletLines: string[];
   wallet_crypto_only_hint: string;
 };
 
@@ -82,8 +78,6 @@ export function WalletOverview({
 }) {
   const [q, setQ] = useState("");
   const [hidden, setHidden] = useState(false);
-  const [feesOpen, setFeesOpen] = useState(false);
-
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return cryptoRows;
@@ -250,26 +244,6 @@ export function WalletOverview({
         )}
       </ul>
 
-      <button
-        type="button"
-        onClick={() => setFeesOpen((o) => !o)}
-        className="fd-card mt-4 flex min-h-[48px] w-full items-center justify-between px-4 text-left text-sm font-semibold text-[color:var(--fd-text)] active:scale-[0.99]"
-      >
-        <span>{labels.wallet_fees_title}</span>
-        <span className="text-xs font-bold text-[color:var(--fd-primary)]">
-          {feesOpen ? labels.wallet_fees_collapse : labels.wallet_fees_expand}
-        </span>
-      </button>
-      {feesOpen ? (
-        <ul className="fd-card mt-2 space-y-1.5 p-4 text-sm text-[color:var(--fd-muted)]">
-          {labels.feeBulletLines.map((line, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="text-[color:var(--fd-primary)]">·</span>
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </div>
   );
 }

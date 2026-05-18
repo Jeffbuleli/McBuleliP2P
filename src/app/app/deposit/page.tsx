@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
-import {
-  MIN_DEPOSIT_USDT_FIRST,
-  MIN_DEPOSIT_USDT_SUBSEQUENT,
-} from "@/lib/usdt-deposit-constants";
 import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
+import {
+  FlowBackLink,
+  FlowCard,
+  FlowHubLink,
+  FlowPrimaryBtn,
+  WalletFlowShell,
+} from "@/components/wallet/wallet-flow-shell";
 
 type Step = 1 | 2 | 3;
 type PickAsset = "USDT" | "PI";
@@ -89,40 +92,34 @@ export default function DepositWizardPage() {
         return;
       }
       const id = data.deposit?.id as string | undefined;
-      if (id) {
-        router.push(`/app/deposit/${id}`);
-      }
+      if (id) router.push(`/app/deposit/${id}`);
     } finally {
       setLoading(false);
     }
   }
 
   const confirmLabel =
-    asset === "USDT"
-      ? `${network} (${net.label})`
-      : t("asset_pi_network");
+    asset === "USDT" ? `${network}` : "Pi";
+
+  const stepSubtitle = `${t("deposit_step")} ${step}/3`;
 
   return (
-    <div className="pb-8 pt-10">
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-        {t("deposit")}
-      </h1>
-      <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-        {t("deposit_step")} {step}/3
-      </p>
-
+    <WalletFlowShell
+      title={t("deposit")}
+      subtitle={stepSubtitle}
+      step={step}
+      totalSteps={3}
+    >
       {!anyEnabled ? (
-        <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {t("deposit_unavailable")}
-        </p>
+        <p className="fd-card px-3 py-2 text-sm text-rose-800">{t("deposit_unavailable")}</p>
       ) : null}
 
       {step === 1 && (
-        <section className="mt-8 space-y-4">
-          <p className="font-medium text-stone-800 dark:text-stone-200">
+        <section>
+          <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
             {t("deposit_pick_asset")}
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               disabled={enabledUsdt !== true}
@@ -130,31 +127,33 @@ export default function DepositWizardPage() {
                 setAsset("USDT");
                 setStep(2);
               }}
-              className="w-full rounded-xl border-2 border-emerald-800 bg-emerald-50 py-4 text-center text-lg font-semibold text-emerald-950 disabled:opacity-45 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-100"
+              className="fd-card flex flex-col items-center gap-2 p-4 active:scale-[0.98] disabled:opacity-45"
             >
-              {t("asset_usdt_full")}
+              <Image src="/assets/crypto/usdt.png" alt="" width={48} height={48} className="rounded-full" />
+              <span className="text-sm font-bold text-[color:var(--fd-text)]">USDT</span>
             </button>
             <button
               type="button"
               disabled={enabledPi !== true}
               onClick={() => {
                 setAsset("PI");
-                setStep(2);
+                setStep(3);
               }}
-              className="w-full rounded-xl border-2 border-violet-800 bg-violet-50 py-4 text-center text-lg font-semibold text-violet-950 disabled:opacity-45 dark:border-violet-600 dark:bg-violet-950/30 dark:text-violet-100"
+              className="fd-card flex flex-col items-center gap-2 p-4 active:scale-[0.98] disabled:opacity-45"
             >
-              {t("asset_pi_network")}
+              <Image src="/assets/crypto/pi.png" alt="" width={48} height={48} className="rounded-full" />
+              <span className="text-sm font-bold text-[color:var(--fd-text)]">Pi</span>
             </button>
           </div>
         </section>
       )}
 
       {step === 2 && asset === "USDT" && (
-        <section className="mt-8 space-y-4">
-          <p className="font-medium text-stone-800 dark:text-stone-200">
+        <section>
+          <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
             {t("deposit_network")}
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {(Object.keys(USDT_NETWORKS) as NetworkId[]).map((id) => {
               const s = USDT_NETWORKS[id];
               const active = network === id;
@@ -163,68 +162,29 @@ export default function DepositWizardPage() {
                   key={id}
                   type="button"
                   onClick={() => setNetwork(id)}
-                  className={`flex items-center justify-between rounded-xl border-2 px-4 py-4 text-left font-semibold transition ${
-                    active
-                      ? "border-stone-900 ring-2 ring-emerald-600/40 dark:border-stone-100"
-                      : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+                  className={`fd-card flex items-center justify-between px-4 py-3 active:scale-[0.99] ${
+                    active ? "ring-2 ring-[color:var(--fd-primary)]" : ""
                   }`}
                 >
-                  <span>{s.label}</span>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${s.badgeClass}`}
-                  >
+                  <span className="text-sm font-bold text-[color:var(--fd-text)]">{s.label}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${s.badgeClass}`}>
                     {id}
                   </span>
                 </button>
               );
             })}
           </div>
-          <button
-            type="button"
-            onClick={() => setStep(3)}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white"
-          >
-            {t("continue")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
-          >
-            {t("back")}
-          </button>
-        </section>
-      )}
-
-      {step === 2 && asset === "PI" && (
-        <section className="mt-8 space-y-4">
-          <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-100">
-            <p className="font-semibold">{t("asset_pi_network")}</p>
-            <p className="mt-2 text-pretty opacity-90">{t("deposit_pi_okx_note")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setStep(3)}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white"
-          >
-            {t("continue")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
-          >
-            {t("back")}
-          </button>
+          <FlowPrimaryBtn onClick={() => setStep(3)}>{t("continue")}</FlowPrimaryBtn>
+          <FlowBackLink onClick={() => setStep(1)} label={t("back")} />
         </section>
       )}
 
       {step === 3 && (
-        <section className="mt-8 space-y-4">
+        <section className="space-y-3">
           {asset === "USDT" ? (
-            <>
+            <FlowCard>
               <label className="block">
-                <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_declared_amount_label")}
                 </span>
                 <input
@@ -232,66 +192,47 @@ export default function DepositWizardPage() {
                   onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
                   inputMode="decimal"
                   placeholder="20"
-                  className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-lg font-bold tabular-nums text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
-                <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
-                  {t("deposit_declared_amount_hint")}
-                </span>
               </label>
-              <label className="block">
-                <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
+              <label className="mt-3 block">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_user_note_label")}
                 </span>
                 <input
                   value={userNote}
                   onChange={(e) => setUserNote(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
-                <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">
-                  {t("deposit_user_note_hint")}
-                </span>
               </label>
-            </>
-          ) : null}
-          <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-stone-900 shadow-inner dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-50">
-            <p className="text-sm font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
-              {t("deposit_warn_title")}
-            </p>
-            <p className="mt-3 text-pretty text-sm leading-relaxed">
-              {t("deposit_warn_body")}
-            </p>
-            {asset === "USDT" ? (
-              <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
-                {t("deposit_usdt_min_rules", {
-                  first: String(MIN_DEPOSIT_USDT_FIRST),
-                  next: String(MIN_DEPOSIT_USDT_SUBSEQUENT),
-                })}
-              </p>
-            ) : null}
-            {asset === "USDT" ? (
-              <p className="mt-3 text-pretty text-sm leading-relaxed text-stone-800 dark:text-stone-200">
-                {t("deposit_usdt_manual_review_note")}
-              </p>
-            ) : null}
-          </div>
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-300 bg-white p-4 dark:border-stone-600 dark:bg-stone-900">
+            </FlowCard>
+          ) : (
+            <FlowCard className="flex items-center gap-3">
+              <Image src="/assets/crypto/pi.png" alt="" width={44} height={44} className="rounded-full" />
+              <p className="text-sm font-bold text-[color:var(--fd-text)]">Pi · {t("deposit_network_pi_main")}</p>
+            </FlowCard>
+          )}
+
+          <label className="fd-card flex cursor-pointer items-center gap-3 p-4">
             <input
               type="checkbox"
               checked={acceptedRisk}
               onChange={(e) => setAcceptedRisk(e.target.checked)}
-              className="mt-1 size-5 accent-emerald-700"
+              className="size-5 shrink-0 accent-[color:var(--fd-primary)]"
             />
-            <span className="text-sm text-stone-800 dark:text-stone-200">
-              {t("deposit_confirm_chk")} <strong>{confirmLabel}</strong>.
+            <span className="flex items-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]">
+              <span className="text-lg" aria-hidden>
+                ⚠️
+              </span>
+              {t("deposit_confirm_chk")} <strong>{confirmLabel}</strong>
             </span>
           </label>
+
           {error ? (
-            <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-              {error}
-            </p>
+            <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">{error}</p>
           ) : null}
-          <button
-            type="button"
+
+          <FlowPrimaryBtn
             disabled={
               !acceptedRisk ||
               loading ||
@@ -302,26 +243,18 @@ export default function DepositWizardPage() {
                   Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0))
             }
             onClick={() => void createIntent()}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? t("deposit_loading") : t("deposit_show_addr")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(2)}
-            className="w-full text-sm font-medium text-stone-600 underline dark:text-stone-400"
-          >
-            {t("back")}
-          </button>
+          </FlowPrimaryBtn>
+          <FlowBackLink
+            onClick={() => setStep(asset === "USDT" ? 2 : 1)}
+            label={t("back")}
+          />
         </section>
       )}
 
-      <Link
-        href="/app"
-        className="mt-10 inline-block text-sm font-medium text-emerald-900 underline dark:text-emerald-300"
-      >
-        {t("dashboard")}
-      </Link>
-    </div>
+      <FlowHubLink label={t("wallet_title")} />
+    </WalletFlowShell>
   );
 }
+

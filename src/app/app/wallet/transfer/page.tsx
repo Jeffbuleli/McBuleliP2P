@@ -1,19 +1,24 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  ErrorBanner,
-  FieldLabel,
-  FormPageShell,
-  HelperText,
-  inputClass,
-  primaryBtnClass,
-} from "@/components/forms/standard-form";
 import { useI18n } from "@/components/i18n-provider";
 import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
 import { clientErrorText } from "@/lib/client-error-text";
+import {
+  FlowCard,
+  FlowHubLink,
+  FlowPrimaryBtn,
+  WalletFlowShell,
+} from "@/components/wallet/wallet-flow-shell";
+
+const TRANSFER_ASSETS = ["USDT", "PI"] as const satisfies readonly WalletAsset[];
+
+const ASSET_ICON: Partial<Record<WalletAsset, string>> = {
+  USDT: "/assets/crypto/usdt.png",
+  PI: "/assets/crypto/pi.png",
+};
 
 export default function WalletTransferPage() {
   const { t } = useI18n();
@@ -28,8 +33,8 @@ export default function WalletTransferPage() {
 
   useEffect(() => {
     const a = sp.get("asset");
-    if (a && WALLET_ASSETS.includes(a as WalletAsset)) {
-      setAsset(a as WalletAsset);
+    if (a && (TRANSFER_ASSETS as readonly string[]).includes(a)) {
+      setAsset(a as (typeof TRANSFER_ASSETS)[number]);
     }
   }, [sp]);
 
@@ -55,49 +60,89 @@ export default function WalletTransferPage() {
   }
 
   return (
-    <FormPageShell>
-      <Link href="/app/wallet" className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400">
-        ← {t("wallet_title")}
-      </Link>
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-        {t("wallet_transfer_title")}
-      </h1>
-      <HelperText>{t("wallet_fee_internal")}</HelperText>
+    <WalletFlowShell title={t("wallet_transfer_title")} subtitle={t("wallet_action_send")}>
+      <FlowCard>
+        <p className="mb-2 text-center text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+          {t("wallet_transfer_asset")}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {TRANSFER_ASSETS.map((a) => {
+            const icon = ASSET_ICON[a];
+            const active = asset === a;
+            return (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAsset(a)}
+                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${
+                  active ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
+                }`}
+              >
+                {icon ? (
+                  <Image src={icon} alt="" width={32} height={32} className="rounded-full" />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 text-xs font-bold">
+                    {a.slice(0, 2)}
+                  </span>
+                )}
+                <span className="text-[10px] font-bold">{a}</span>
+              </button>
+            );
+          })}
+        </div>
+      </FlowCard>
 
-      <FieldLabel label={t("wallet_transfer_email")}>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} autoComplete="email" />
-      </FieldLabel>
+      <FlowCard className="mt-3 space-y-3">
+        <label className="block">
+          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+            {t("wallet_transfer_email")}
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+            autoComplete="email"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+            {t("wallet_transfer_amount")}
+          </span>
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            inputMode="decimal"
+            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-lg font-bold tabular-nums outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+            {t("wallet_memo_motif")}
+          </span>
+          <input
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            placeholder={t("wallet_memo_motif_ph")}
+            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+          />
+        </label>
+      </FlowCard>
 
-      <FieldLabel label={t("wallet_transfer_asset")}>
-        <select value={asset} onChange={(e) => setAsset(e.target.value as WalletAsset)} className={inputClass}>
-          {WALLET_ASSETS.filter(
-            (a) => a !== "PI_TEST" && a !== "USD" && a !== "CDF",
-          ).map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-        </select>
-      </FieldLabel>
+      {err ? (
+        <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+          {clientErrorText(t, err)}
+        </p>
+      ) : null}
 
-      <FieldLabel label={t("wallet_transfer_amount")}>
-        <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className={inputClass} />
-      </FieldLabel>
-
-      <FieldLabel label={t("wallet_memo_motif")}>
-        <input value={memo} onChange={(e) => setMemo(e.target.value)} className={inputClass} placeholder={t("wallet_memo_motif_ph")} />
-      </FieldLabel>
-
-      {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
-
-      <button
-        type="button"
+      <FlowPrimaryBtn
         disabled={loading || !email.trim() || !amount.trim()}
         onClick={() => void submit()}
-        className={primaryBtnClass}
       >
         {loading ? "…" : t("wallet_transfer_submit")}
-      </button>
-    </FormPageShell>
+      </FlowPrimaryBtn>
+
+      <FlowHubLink label={t("wallet_title")} />
+    </WalletFlowShell>
   );
 }

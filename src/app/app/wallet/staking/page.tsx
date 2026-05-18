@@ -163,8 +163,8 @@ export default function WalletStakingPage() {
   }
 
   return (
-    <div className="space-y-4 pb-10">
-      <WalletSubpageHeader title={t("staking_title")} subtitle={t("staking_page_intro")} />
+    <div className="wallet-theme space-y-4 pb-10">
+      <WalletSubpageHeader title={t("staking_title")} />
 
       <section className="fd-card p-4">
         <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-[color:var(--fd-muted)]">
@@ -195,11 +195,15 @@ export default function WalletStakingPage() {
         </div>
       </section>
 
-      <p className="fd-card px-3 py-2 text-center text-[11px] font-medium text-[color:var(--fd-primary)]">
-        {t("staking_risk_short")}
-      </p>
+      <div className="fd-card flex items-center gap-2 px-3 py-2">
+        <span className="text-lg" aria-hidden>
+          ⚠️
+        </span>
+        <p className="text-[11px] font-medium text-[color:var(--fd-primary)]">{t("staking_risk_short")}</p>
+      </div>
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+      <div className="fd-card space-y-3 p-4">
+      <label className="block text-sm font-bold text-[color:var(--fd-text)]">
         {t("staking_asset")}
         <select
           value={asset}
@@ -252,22 +256,23 @@ export default function WalletStakingPage() {
         />
       </label>
 
-      <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/60 p-4 text-sm dark:border-emerald-800/30 dark:bg-emerald-950/30">
-        <p className="font-semibold text-emerald-950 dark:text-emerald-100">{t("staking_est_reward")}</p>
-        <p className="mt-2 tabular-nums text-stone-800 dark:text-stone-200">
+      <div className="flex items-center gap-3 rounded-xl bg-emerald-50/80 px-3 py-2">
+        <span className="text-xl" aria-hidden>
+          📈
+        </span>
+        <div className="min-w-0 flex-1 tabular-nums text-sm font-bold text-[color:var(--fd-text)]">
           {estReward != null && Number.isFinite(estReward) ? (
             <>
-              {estReward.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
-                maximumFractionDigits: 12,
+              +{estReward.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
+                maximumFractionDigits: 8,
               })}{" "}
               {asset}
             </>
           ) : (
             "—"
           )}
-        </p>
-        <p className="mt-3 font-semibold text-emerald-950 dark:text-emerald-100">{t("staking_est_end")}</p>
-        <p className="mt-1 font-mono text-xs text-stone-700 dark:text-stone-300">{estEndUtc}</p>
+        </div>
+        <span className="text-[10px] text-[color:var(--fd-muted)]">{estEndUtc.slice(0, 10)}</span>
       </div>
 
       <label className="flex cursor-pointer items-start gap-3 text-sm text-stone-700 dark:text-stone-300">
@@ -294,18 +299,18 @@ export default function WalletStakingPage() {
       >
         {loading ? "…" : t("staking_submit")}
       </button>
+      </div>
 
-      <section className="border-t border-stone-200 pt-6 dark:border-stone-700">
-        <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-50">{t("staking_active")}</h2>
+      <section className="pt-2">
+        <p className="mb-2 text-xs font-bold uppercase text-[color:var(--fd-muted)]">{t("staking_active")}</p>
         {!stakes?.length ? (
-          <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{t("staking_none")}</p>
+          <div className="fd-card p-6 text-center text-2xl" aria-hidden>
+            ⛓
+          </div>
         ) : (
-          <ul className="mt-3 space-y-3">
+          <ul className="flex flex-col gap-2">
             {stakes.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-xl border border-stone-200 bg-white p-3 text-sm dark:border-stone-700 dark:bg-stone-900"
-              >
+              <li key={s.id} className="fd-card p-3 text-sm">
                 <p className="font-medium text-stone-900 dark:text-stone-100">
                   {s.principal} {s.asset} · {s.termDays}d @ {s.aprAnnual}%
                 </p>

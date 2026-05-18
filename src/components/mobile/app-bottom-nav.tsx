@@ -17,8 +17,11 @@ export function AppBottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
   const onProfile = pathname.startsWith("/app/profile");
-  const onWallet = pathname.startsWith("/app/wallet");
-  const lightNav = onProfile || onWallet;
+  const onWalletFlow =
+    pathname.startsWith("/app/wallet") ||
+    pathname.startsWith("/app/deposit") ||
+    pathname.startsWith("/app/withdraw");
+  const lightNav = onProfile || onWalletFlow;
 
   return (
     <nav

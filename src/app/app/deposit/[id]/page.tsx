@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { useCallback, useEffect, useState } from "react";
@@ -9,6 +9,12 @@ import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { DepositStatus } from "@/lib/status";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
+import {
+  FlowCard,
+  FlowHubLink,
+  FlowPrimaryBtn,
+  WalletFlowShell,
+} from "@/components/wallet/wallet-flow-shell";
 
 type Deposit = {
   id: string;
@@ -98,32 +104,31 @@ export default function DepositDetailPage() {
   }
 
   if (loading) {
-    return <p className="text-stone-400">…</p>;
+    return (
+      <WalletFlowShell title={t("deposit_detail_title")}>
+        <p className="text-center text-[color:var(--fd-muted)]">…</p>
+      </WalletFlowShell>
+    );
   }
+
   if (!deposit) {
     return (
-      <p className="text-rose-200">
-        {msg ?? "—"}{" "}
-        <Link href="/app" className="underline text-emerald-300">
-          {t("dashboard")}
-        </Link>
-      </p>
+      <WalletFlowShell title={t("deposit_detail_title")}>
+        <p className="text-rose-800">{msg ?? "—"}</p>
+        <FlowHubLink label={t("wallet_title")} />
+      </WalletFlowShell>
     );
   }
 
   const isPiMain = deposit.networkCanonical === PI_MAIN_NETWORK_ID;
   const nid = parseNetwork(deposit.networkCanonical);
   const net = nid ? USDT_NETWORKS[nid] : null;
-  const badge = isPiMain
-    ? "bg-violet-700 text-white"
-    : (net?.badgeClass ?? "bg-stone-700 text-white");
   const networkLabel = isPiMain
-    ? t("deposit_network_pi_main")
+    ? "Pi"
     : (net?.label ?? deposit.networkCanonical);
 
   const showTxid = deposit.status === DepositStatus.AWAITING_TXID;
-  const isPendingReview =
-    deposit.status === DepositStatus.PENDING_VALIDATION;
+  const isPendingReview = deposit.status === DepositStatus.PENDING_VALIDATION;
 
   const copy = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -132,181 +137,121 @@ export default function DepositDetailPage() {
   };
 
   return (
-    <div className="space-y-6 pb-10 pt-8">
-      <div>
-        <h1 className="text-2xl font-bold text-stone-50">
-          {t("deposit_detail_title")}
-        </h1>
-        <p className="mt-1 text-sm text-stone-400">
-          {depositStatusLine(t, deposit.status)}
-        </p>
-      </div>
-
-      {deposit.asset === "USDT" &&
-      (deposit.declaredAmountUsdt != null || (deposit.userNote && deposit.userNote.length > 0)) ? (
-        <div className="rounded-xl border border-stone-600/50 bg-stone-900/50 p-4 text-sm text-stone-200">
-          {deposit.declaredAmountUsdt != null ? (
-            <p>
-              <span className="text-stone-500">{t("deposit_summary_declared")}: </span>
-              <strong className="tabular-nums text-stone-100">
-                {deposit.declaredAmountUsdt} USDT
-              </strong>
-            </p>
-          ) : null}
-          {deposit.userNote ? (
-            <p className={deposit.declaredAmountUsdt != null ? "mt-2" : ""}>
-              <span className="text-stone-500">{t("deposit_summary_note")}: </span>
-              {deposit.userNote}
-            </p>
+    <WalletFlowShell
+      title={t("deposit_detail_title")}
+      subtitle={depositStatusLine(t, deposit.status)}
+    >
+      <FlowCard className="flex flex-col items-center gap-3">
+        <div className="relative rounded-2xl bg-white p-3 shadow-inner">
+          <QRCode value={deposit.addressShown} size={200} />
+          {isPiMain ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Image src="/assets/crypto/pi.png" alt="" width={40} height={40} className="rounded-full" />
+            </div>
           ) : null}
         </div>
-      ) : null}
-
-      <div className="rounded-xl border border-amber-700/40 bg-amber-950/30 p-3 text-sm text-amber-100">
-        {t("deposit_warn_body")}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
         <span
-          className={`rounded-full px-4 py-2 text-sm font-bold uppercase ${badge}`}
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            isPiMain ? "bg-violet-100 text-violet-900" : "bg-emerald-100 text-[color:var(--fd-primary)]"
+          }`}
         >
-          {networkLabel}
-        </span>
-        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
-          {t("deposit_detail_route")}
-        </span>
-      </div>
-
-      <div className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
-        <p className="text-xs font-semibold uppercase text-stone-400">
           {deposit.asset} · {networkLabel}
-        </p>
-        <p className="mt-2 break-all font-mono text-sm text-stone-50">
+        </span>
+      </FlowCard>
+
+      <FlowCard className="mt-3">
+        <p className="break-all font-mono text-sm text-[color:var(--fd-text)]">
           {deposit.addressShown}
         </p>
         <button
           type="button"
           onClick={() => void copy(deposit.addressShown)}
-          className="mt-3 w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white shadow-sm shadow-black/20 active:scale-[0.99]"
+          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[color:var(--fd-primary)] text-sm font-bold text-white active:scale-[0.98]"
         >
           📋 {t("deposit_copy")}
         </button>
-      </div>
+      </FlowCard>
 
       {deposit.memoShown ? (
-        <div className="rounded-2xl border-2 border-rose-900/30 bg-rose-50 p-4 dark:border-rose-800/50 dark:bg-rose-950/30">
-          <p className="text-xs font-bold uppercase text-rose-900 dark:text-rose-100">
-            {t("deposit_memo_title")}
-          </p>
-          <p className="mt-2 font-mono text-sm">{deposit.memoShown}</p>
+        <FlowCard className="mt-3 border-rose-200 bg-rose-50/50">
+          <p className="text-xs font-bold text-rose-900">{t("deposit_memo_title")}</p>
+          <p className="mt-1 font-mono text-sm">{deposit.memoShown}</p>
           <button
             type="button"
             onClick={() => void copy(deposit.memoShown!)}
-            className="mt-2 text-sm font-semibold text-rose-900 underline"
+            className="mt-2 text-sm font-semibold text-rose-800 underline"
           >
             📋 {t("deposit_copy")}
           </button>
-        </div>
+        </FlowCard>
       ) : null}
 
-      <div className="flex flex-col items-center gap-2 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
-        <div className="relative">
-          <QRCode value={deposit.addressShown} size={220} />
-          {isPiMain ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-2xl bg-white p-2 shadow">
-                <img src="/assets/crypto/pi.png" alt="Pi" className="h-10 w-10" />
-              </div>
-            </div>
-          ) : null}
-        </div>
-        <p className="text-xs text-stone-400">
-          {isPiMain ? t("asset_pi_network") : t("deposit_detail_scan")}
-        </p>
-      </div>
-
-      <p className="text-sm text-stone-400">
-        {t("deposit_expected_conf")}{" "}
-        <strong>{deposit.minConfirmations}</strong>
-      </p>
-
       {deposit.status === DepositStatus.AWAITING_TRANSFER ? (
-        <button
-          type="button"
-          onClick={() => void markSent()}
-          className="w-full rounded-xl bg-emerald-700 py-3 text-lg font-semibold text-white"
-        >
-          {t("deposit_sent")}
-        </button>
+        <FlowPrimaryBtn onClick={() => void markSent()}>{t("deposit_sent")}</FlowPrimaryBtn>
       ) : null}
 
       {isPendingReview ? (
-        <div className="rounded-xl border-2 border-amber-600/60 bg-amber-950/40 p-4 text-amber-50">
-          <p className="font-bold">{t("deposit_status_pending_validation")}</p>
-          <p className="mt-2 text-sm text-amber-100/90">
-            {t("deposit_pending_review_body")}
+        <FlowCard className="mt-3 flex items-center gap-3 bg-amber-50">
+          <span className="text-2xl" aria-hidden>
+            ⏳
+          </span>
+          <p className="text-sm font-semibold text-amber-950">
+            {t("deposit_status_pending_validation")}
           </p>
-          {deposit.txid ? (
-            <p className="mt-3 break-all font-mono text-xs text-stone-300">
-              {deposit.txid}
-            </p>
-          ) : null}
-        </div>
+        </FlowCard>
       ) : null}
 
       {showTxid ? (
-        <div className="space-y-3 rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
-          <label className="block text-sm font-medium text-stone-200">
+        <FlowCard className="mt-3 space-y-3">
+          <label className="block text-sm font-semibold text-[color:var(--fd-text)]">
             {t("deposit_txid")}
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-900/70 px-3 py-2.5 font-mono text-sm text-stone-100 outline-none ring-emerald-500/40 placeholder:text-stone-500 focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
             />
           </label>
-          <button
-            type="button"
+          <FlowPrimaryBtn
             disabled={txid.trim().length < 8}
             onClick={() => void submitTxid()}
-            className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-sm shadow-black/20 disabled:opacity-40 active:scale-[0.99]"
           >
             {t("deposit_submit")}
-          </button>
-        </div>
+          </FlowPrimaryBtn>
+        </FlowCard>
       ) : null}
 
       {deposit.status === DepositStatus.CONFIRMED ? (
-        <div className="rounded-xl border-2 border-emerald-600 bg-emerald-50 p-4 text-emerald-950">
-          <p className="font-bold">{t("deposit_confirmed")}</p>
-          <p className="mt-1 text-sm">
-            {deposit.amount ?? ""} {deposit.asset} · {deposit.txid}
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push("/app")}
-            className="mt-4 w-full rounded-lg bg-emerald-700 py-2 font-semibold text-white"
-          >
-            {t("dashboard")}
-          </button>
-        </div>
+        <FlowCard className="mt-3 flex items-center gap-3 bg-emerald-50">
+          <span className="text-2xl" aria-hidden>
+            ✅
+          </span>
+          <div>
+            <p className="font-bold text-emerald-950">{t("deposit_confirmed")}</p>
+            <p className="text-sm tabular-nums text-emerald-900">
+              {deposit.amount ?? ""} {deposit.asset}
+            </p>
+          </div>
+        </FlowCard>
       ) : null}
 
       {deposit.status === DepositStatus.FAILED ? (
-        <div className="rounded-xl border-2 border-rose-700 bg-rose-50 p-4 text-rose-950">
-          <p className="font-bold">{t("deposit_failed")}</p>
-          <p className="mt-1 text-sm">{deposit.failureReason}</p>
-        </div>
+        <FlowCard className="mt-3 bg-rose-50">
+          <p className="font-bold text-rose-900">{t("deposit_failed")}</p>
+          <p className="text-sm text-rose-800">{deposit.failureReason}</p>
+        </FlowCard>
       ) : null}
 
       {msg ? (
-        <p className="rounded-lg bg-stone-100 px-3 py-2 text-sm text-stone-800">
-          {msg}
-        </p>
+        <p className="mt-2 text-center text-sm font-semibold text-[color:var(--fd-primary)]">{msg}</p>
       ) : null}
 
-      <Link href="/app" className="inline-block text-sm font-medium text-emerald-900 underline">
-        {t("dashboard")}
-      </Link>
-    </div>
+      {deposit.status === DepositStatus.CONFIRMED ? (
+        <FlowPrimaryBtn onClick={() => router.push("/app/wallet")}>
+          {t("wallet_title")}
+        </FlowPrimaryBtn>
+      ) : (
+        <FlowHubLink label={t("wallet_title")} />
+      )}
+    </WalletFlowShell>
   );
 }

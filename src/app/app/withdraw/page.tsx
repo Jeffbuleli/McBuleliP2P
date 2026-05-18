@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { USDT_NETWORKS, type NetworkId } from "@/lib/networks";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
@@ -9,16 +9,22 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   EXTERNAL_WITHDRAW_FEE_PI,
   EXTERNAL_WITHDRAW_FEE_USDT,
-  MIN_WITHDRAW_NET_PI,
-  MIN_WITHDRAW_NET_USDT,
 } from "@/lib/withdraw-fees";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
+import {
+  FlowBackLink,
+  FlowCard,
+  FlowHubLink,
+  FlowPrimaryBtn,
+  WalletFlowShell,
+} from "@/components/wallet/wallet-flow-shell";
 
 type WAsset = "USDT" | "PI";
 
 export default function WithdrawPage() {
   const { t } = useI18n();
   const router = useRouter();
+  const sp = useSearchParams();
   const [wAsset, setWAsset] = useState<WAsset>("USDT");
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [address, setAddress] = useState("");
@@ -27,22 +33,21 @@ export default function WithdrawPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [minNetUsdt, setMinNetUsdt] = useState(MIN_WITHDRAW_NET_USDT);
-  const [minNetPi, setMinNetPi] = useState(MIN_WITHDRAW_NET_PI);
   const [feeUsdt, setFeeUsdt] = useState(EXTERNAL_WITHDRAW_FEE_USDT);
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
-  const [withdrawalSlaHours, setWithdrawalSlaHours] = useState<number | null>(null);
+
+  useEffect(() => {
+    const a = sp.get("asset");
+    if (a === "PI" || a === "USDT") setWAsset(a);
+  }, [sp]);
 
   useEffect(() => {
     void (async () => {
       try {
         const res = await fetch("/api/config/withdraw-fees");
         const data = await res.json();
-        if (typeof data.minNetUsdt === "number") setMinNetUsdt(data.minNetUsdt);
-        if (typeof data.minNetPi === "number") setMinNetPi(data.minNetPi);
         if (typeof data.feeUsdt === "number") setFeeUsdt(data.feeUsdt);
         if (typeof data.feePi === "number") setFeePi(data.feePi);
-        if (typeof data.withdrawalSlaHours === "number") setWithdrawalSlaHours(data.withdrawalSlaHours);
       } catch {
         /* defaults */
       }
@@ -50,7 +55,6 @@ export default function WithdrawPage() {
   }, []);
 
   const fee = wAsset === "PI" ? feePi : feeUsdt;
-  const minNet = wAsset === "PI" ? minNetPi : minNetUsdt;
   const netNum = Number(amount);
   const totalDebit =
     Number.isFinite(netNum) && netNum > 0 ? netNum + fee : null;
@@ -77,7 +81,7 @@ export default function WithdrawPage() {
         setShowConfirm(false);
         return;
       }
-      router.push("/app");
+      router.push("/app/wallet");
       router.refresh();
     } finally {
       setLoading(false);
@@ -91,70 +95,41 @@ export default function WithdrawPage() {
       : address.trim().length >= 10;
 
   return (
-    <div className="space-y-6 pb-10 pt-10">
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-          {t("withdraw_title")}
-        </h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          {t("withdraw_sub", { fee })}
-        </p>
-        {wAsset === "USDT" ? (
-          <p className="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-            {t("withdraw_usdt_rail_note", {
-              min: String(minNetUsdt),
-              fee: String(feeUsdt),
-            })}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
-        {t("withdraw_warn")}
-      </div>
-
-      <div className="rounded-xl border border-stone-300 bg-stone-50 p-3 text-xs leading-relaxed text-stone-700 dark:border-stone-600 dark:bg-stone-900/60 dark:text-stone-300">
-        {t("withdraw_manual_queue_hint", {
-          hours: withdrawalSlaHours != null ? String(withdrawalSlaHours) : "—",
-        })}
-      </div>
-
-      <div>
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+    <WalletFlowShell title={t("withdraw_title")} subtitle={t("wallet_crypto_only_hint")}>
+      <FlowCard>
+        <p className="mb-2 text-center text-xs font-bold uppercase text-[color:var(--fd-muted)]">
           {t("deposit_pick_asset")}
         </p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setWAsset("USDT")}
-            className={`rounded-xl border-2 py-3 text-sm font-semibold ${
-              wAsset === "USDT"
-                ? "border-emerald-800 bg-emerald-50 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-100"
-                : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 ${
+              wAsset === "USDT" ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
             }`}
           >
-            USDT
+            <Image src="/assets/crypto/usdt.png" alt="" width={40} height={40} className="rounded-full" />
+            <span className="text-xs font-bold">USDT</span>
           </button>
           <button
             type="button"
             onClick={() => setWAsset("PI")}
-            className={`rounded-xl border-2 py-3 text-sm font-semibold ${
-              wAsset === "PI"
-                ? "border-violet-800 bg-violet-50 text-violet-950 dark:border-violet-500 dark:bg-violet-950/40 dark:text-violet-100"
-                : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 ${
+              wAsset === "PI" ? "bg-violet-50 ring-2 ring-violet-500" : "bg-stone-50"
             }`}
           >
-            Pi
+            <Image src="/assets/crypto/pi.png" alt="" width={40} height={40} className="rounded-full" />
+            <span className="text-xs font-bold">Pi</span>
           </button>
         </div>
-      </div>
+      </FlowCard>
 
       {wAsset === "USDT" ? (
-        <div>
-          <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+        <FlowCard className="mt-3">
+          <p className="mb-2 text-xs font-bold uppercase text-[color:var(--fd-muted)]">
             {t("deposit_network")}
           </p>
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {(Object.keys(USDT_NETWORKS) as NetworkId[]).map((id) => {
               const s = USDT_NETWORKS[id];
               const active = network === id;
@@ -163,111 +138,84 @@ export default function WithdrawPage() {
                   key={id}
                   type="button"
                   onClick={() => setNetwork(id)}
-                  className={`flex items-center justify-between rounded-xl border-2 px-4 py-3 text-left font-semibold ${
+                  className={`flex items-center justify-between rounded-xl border px-3 py-2.5 ${
                     active
-                      ? "border-stone-900 ring-2 ring-emerald-600/30 dark:border-stone-100"
-                      : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+                      ? "border-[color:var(--fd-primary)] bg-emerald-50/80"
+                      : "border-[color:var(--fd-border)]"
                   }`}
                 >
-                  <span className="text-sm">{s.label}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-bold ${s.badgeClass}`}
-                  >
+                  <span className="text-sm font-semibold">{s.label}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.badgeClass}`}>
                     {id}
                   </span>
                 </button>
               );
             })}
           </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-violet-200 bg-violet-50/70 px-4 py-3 text-sm text-violet-950 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-100">
-          {t("withdraw_pi_network_only")}
-        </div>
-      )}
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("withdraw_addr")}
-        <input
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 font-mono text-sm outline-none ring-emerald-700 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-          placeholder={wAsset === "PI" ? t("withdraw_addr_pi_ph") : "0x… / T…"}
-          autoComplete="off"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("withdraw_memo")}
-        <input
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-stone-800 dark:text-stone-200">
-        {wAsset === "PI" ? t("withdraw_amt_pi") : t("withdraw_amt")}
-        <input
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          inputMode="decimal"
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base tabular-nums outline-none ring-emerald-700 focus:ring-2 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-          placeholder="0.00"
-        />
-      </label>
-
-      {totalDebit !== null ? (
-        <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200">
-          {t("fee_note_asset", { fee, min: minNet, unit })} →{" "}
-          <strong className="tabular-nums">
-            {totalDebit.toLocaleString(undefined, { maximumFractionDigits: 8 })}{" "}
-            {unit}
-          </strong>
-        </p>
+        </FlowCard>
       ) : null}
+
+      <FlowCard className="mt-3 space-y-3">
+        <label className="block">
+          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+            {t("withdraw_addr")}
+          </span>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+            placeholder={wAsset === "PI" ? t("withdraw_addr_pi_ph") : "0x… / T…"}
+            autoComplete="off"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+            {wAsset === "PI" ? t("withdraw_amt_pi") : t("withdraw_amt")}
+          </span>
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            inputMode="decimal"
+            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-lg font-bold tabular-nums outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+            placeholder="0"
+          />
+        </label>
+      </FlowCard>
 
       {error ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {error}
-        </p>
+        <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">{error}</p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => setShowConfirm(true)}
+      <FlowPrimaryBtn
         disabled={!amount || Number(amount) <= 0 || !addrOk || loading}
-        className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
+        onClick={() => setShowConfirm(true)}
       >
         {t("withdraw_review")}
-      </button>
+      </FlowPrimaryBtn>
 
       {showConfirm ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-stone-900">
-            <p className="text-lg font-bold text-stone-900 dark:text-stone-50">
-              {t("withdraw_review")}
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-stone-700 dark:text-stone-300">
-              <li>
-                <strong>{wAsset}</strong> ·{" "}
-                {wAsset === "USDT"
-                  ? network
-                  : t("deposit_network_pi_main")}
-              </li>
-              <li className="break-all font-mono text-xs">{address.trim()}</li>
-              <li>
-                {wAsset === "PI" ? t("withdraw_amt_pi") : t("withdraw_amt")}:{" "}
-                {amount} · +{fee} {unit} →{" "}
-                {totalDebit?.toLocaleString(undefined, { maximumFractionDigits: 8 })}{" "}
-                {unit}
-              </li>
-            </ul>
-            <div className="mt-6 flex gap-3">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl bg-[color:var(--fd-card)] p-5 shadow-xl">
+            <p className="text-lg font-bold text-[color:var(--fd-text)]">{t("withdraw_review")}</p>
+            <div className="mt-4 space-y-2 text-sm text-[color:var(--fd-muted)]">
+              <p>
+                <span className="text-2xl" aria-hidden>
+                  {wAsset === "PI" ? "🟣" : "💵"}
+                </span>{" "}
+                <strong className="text-[color:var(--fd-text)]">{wAsset}</strong> ·{" "}
+                {wAsset === "USDT" ? network : "Pi"}
+              </p>
+              <p className="break-all font-mono text-xs">{address.trim()}</p>
+              <p className="font-bold tabular-nums text-[color:var(--fd-text)]">
+                {amount} {unit}
+                {totalDebit != null ? ` → ${totalDebit.toLocaleString()} ${unit}` : ""}
+              </p>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 rounded-xl border border-stone-300 py-3 font-semibold text-stone-800 dark:border-stone-600 dark:text-stone-100"
+                className="min-h-[48px] rounded-xl border border-[color:var(--fd-border)] font-semibold"
               >
                 {t("back")}
               </button>
@@ -275,7 +223,7 @@ export default function WithdrawPage() {
                 type="button"
                 disabled={loading}
                 onClick={() => void submit()}
-                className="flex-1 rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-60"
+                className="min-h-[48px] rounded-xl bg-[color:var(--fd-primary)] font-bold text-white disabled:opacity-50"
               >
                 {loading ? "…" : t("withdraw_confirm")}
               </button>
@@ -284,12 +232,8 @@ export default function WithdrawPage() {
         </div>
       ) : null}
 
-      <Link
-        href="/app"
-        className="inline-block text-sm font-medium text-emerald-900 underline dark:text-emerald-300"
-      >
-        {t("dashboard")}
-      </Link>
-    </div>
+      <FlowHubLink label={t("wallet_title")} />
+    </WalletFlowShell>
   );
 }
+
