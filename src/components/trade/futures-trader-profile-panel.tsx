@@ -90,6 +90,28 @@ export function futLifecycleConfigFields(s: FutLifecycleUiState) {
   };
 }
 
+export type FutAiAssistUiState = {
+  aiAssistMode: boolean;
+  minAiConfidence: number;
+};
+
+export function loadFutAiAssistFromConfig(
+  cfg: Record<string, unknown> | undefined,
+): FutAiAssistUiState {
+  return {
+    aiAssistMode: Boolean(cfg?.aiAssistMode),
+    minAiConfidence: Number(cfg?.minAiConfidence) || 40,
+  };
+}
+
+export function futAiAssistConfigFields(s: FutAiAssistUiState) {
+  return {
+    aiAssistMode: s.aiAssistMode,
+    minAiConfidence: s.minAiConfidence,
+    aiSignalMaxAgeMs: 120_000,
+  };
+}
+
 function parseCandleTf(raw: unknown, fallback: CandleTf): CandleTf {
   if (
     typeof raw === "string" &&
@@ -154,6 +176,8 @@ export function FuturesTraderProfilePanel({
   onMultiTfChange,
   lifecycle,
   onLifecycleChange,
+  aiAssist,
+  onAiAssistChange,
   entryTimeframe,
   onApplyPreset,
   t,
@@ -168,6 +192,8 @@ export function FuturesTraderProfilePanel({
   onMultiTfChange: (s: FutMultiTfUiState) => void;
   lifecycle: FutLifecycleUiState;
   onLifecycleChange: (s: FutLifecycleUiState) => void;
+  aiAssist: FutAiAssistUiState;
+  onAiAssistChange: (s: FutAiAssistUiState) => void;
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
@@ -394,6 +420,45 @@ export function FuturesTraderProfilePanel({
           <span className="text-stone-500">{t("bots_lifecycle_minutes")}</span>
         </span>
       </div>
+      <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <span className="flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            checked={aiAssist.aiAssistMode}
+            onChange={(e) =>
+              onAiAssistChange({
+                ...aiAssist,
+                aiAssistMode: e.target.checked,
+              })
+            }
+          />
+          <span className="font-medium text-amber-950 dark:text-amber-100">
+            {t("bots_ai_assist_mode")}
+          </span>
+          <UiInfoTip tip={t("bots_ai_assist_tip")} />
+        </span>
+        {aiAssist.aiAssistMode ? (
+          <span className="flex items-center gap-1">
+            <span className="text-stone-600 dark:text-stone-400">
+              {t("bots_ai_min_confidence")}
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              value={aiAssist.minAiConfidence}
+              onChange={(e) =>
+                onAiAssistChange({
+                  ...aiAssist,
+                  minAiConfidence: Math.max(0, Number(e.target.value) || 0),
+                })
+              }
+              className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
+            />
+          </span>
+        ) : null}
+      </label>
     </div>
   );
 }

@@ -20,6 +20,7 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   smart_exit_hold: "bots_log_smart_exit_hold",
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",
+  ai_skip: "bots_log_ai_skip",
   tick_skip: "bots_log_tick_skip",
 };
 
@@ -38,6 +39,11 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
   other_symbol_open: "bots_skip_other_symbol_open",
   futures_failed: "bots_log_failed",
   reentry_cooldown: "bots_skip_reentry_cooldown",
+  ai_signal_hold: "bots_skip_ai_signal_hold",
+  ai_signal_stale: "bots_skip_ai_signal_stale",
+  ai_low_confidence: "bots_skip_ai_low_confidence",
+  ai_side_mismatch: "bots_skip_ai_side_mismatch",
+  ai_high_risk: "bots_skip_ai_high_risk",
 };
 
 export function botTickSkipLabel(
@@ -137,6 +143,11 @@ export function formatBotRuntimeError(
   if (!raw?.trim()) return t("bots_err_generic");
 
   const s = raw.trim();
+  if (s.startsWith("ai_")) {
+    const aiKey = `bots_skip_${s}` as keyof Messages;
+    const aiMsg = t(aiKey);
+    if (aiMsg && aiMsg !== aiKey) return aiMsg;
+  }
   if (s.startsWith("smart_") || s.startsWith("bots_positions_")) {
     const mapped = SMART_ERROR_I18N[s];
     if (mapped) return t(mapped);
@@ -200,13 +211,26 @@ export function botLogDetailMessage(
       typeof log.detail?.message === "string" ? log.detail.message : null;
     return formatBotRuntimeError(msg, t);
   }
-  if (log.action === "smart_skip") {
+  if (log.action === "smart_skip" || log.action === "ai_skip") {
     const reason =
       typeof log.detail?.reason === "string" ? log.detail.reason : null;
     const score = log.detail?.score;
-    const base = reason ? formatBotRuntimeError(reason, t) : t("bots_log_smart_skip");
+    const ai = log.detail?.ai as Record<string, unknown> | undefined;
+    const base =
+      reason
+        ? formatBotRuntimeError(reason, t)
+        : log.action === "ai_skip"
+          ? t("bots_log_ai_skip")
+          : t("bots_log_smart_skip");
     if (typeof score === "number") {
       return `${base} (score ${score})`;
+    }
+    if (ai && typeof ai.confidence === "number") {
+      const action =
+        typeof ai.action === "string" ? ai.action : "";
+      return action
+        ? `${base} (AI ${action}, ${ai.confidence}%)`
+        : `${base} (${ai.confidence}%)`;
     }
     return base;
   }

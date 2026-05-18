@@ -32,6 +32,9 @@ export type FuturesTraderProfilePreset = {
   confirmTimeframe?: (typeof BOT_CANDLE_TIMEFRAMES)[number];
   maxHoldMinutes: number;
   reentryCooldownMinutes: number;
+  aiAssistMode: boolean;
+  minAiConfidence: number;
+  aiSignalMaxAgeMs: number;
 };
 
 const PRESETS: Record<
@@ -60,6 +63,9 @@ const PRESETS: Record<
     confirmTimeframe: "5m",
     maxHoldMinutes: 15,
     reentryCooldownMinutes: 5,
+    aiAssistMode: true,
+    minAiConfidence: 40,
+    aiSignalMaxAgeMs: 120_000,
   },
   day: {
     traderProfile: "day",
@@ -83,6 +89,9 @@ const PRESETS: Record<
     confirmTimeframe: "1h",
     maxHoldMinutes: 480,
     reentryCooldownMinutes: 0,
+    aiAssistMode: true,
+    minAiConfidence: 45,
+    aiSignalMaxAgeMs: 180_000,
   },
   swing: {
     traderProfile: "swing",
@@ -106,6 +115,9 @@ const PRESETS: Record<
     confirmTimeframe: "4h",
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
+    aiAssistMode: false,
+    minAiConfidence: 45,
+    aiSignalMaxAgeMs: 180_000,
   },
   position: {
     traderProfile: "position",
@@ -127,6 +139,9 @@ const PRESETS: Record<
     multiTfGateMode: false,
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
+    aiAssistMode: false,
+    minAiConfidence: 50,
+    aiSignalMaxAgeMs: 120_000,
   },
 };
 

@@ -101,7 +101,7 @@ MCBULELI_CRON_SECRET=...
 MCBULELI_INSTANCE_ID=...
 ```
 
-Add Node route `POST /api/internal/bots/ai-signal` to merge Python signals with existing `runSmartGate` / trader profiles.
+Node stores signals via `POST /api/internal/bots/ai-signal` (`x-cron-secret`). When `aiAssistMode` is on in the futures bot config, `bot-engine-futures` applies `runAiAssistGate` after the smart gate (scalp/day presets enable it by default).
 
 ## Tests
 

@@ -24,13 +24,16 @@ import {
 import {
   FuturesTraderProfilePanel,
   futBreakevenConfigFields,
+  futAiAssistConfigFields,
   futLifecycleConfigFields,
   futMultiTfConfigFields,
   futTrailingConfigFields,
+  loadFutAiAssistFromConfig,
   loadFutBreakevenFromConfig,
   loadFutLifecycleFromConfig,
   loadFutMultiTfFromConfig,
   loadFutTrailingFromConfig,
+  type FutAiAssistUiState,
   type FutBreakevenUiState,
   type FutLifecycleUiState,
   type FutMultiTfUiState,
@@ -536,6 +539,10 @@ export function BotsTradingClient() {
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
   });
+  const [futAiAssist, setFutAiAssist] = useState<FutAiAssistUiState>({
+    aiAssistMode: false,
+    minAiConfidence: 40,
+  });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -678,6 +685,7 @@ export function BotsTradingClient() {
         loadFutMultiTfFromConfig(finst.config, loadedSmart.timeframe),
       );
       setFutLifecycle(loadFutLifecycleFromConfig(finst.config));
+      setFutAiAssist(loadFutAiAssistFromConfig(finst.config));
       setFutTraderProfile(parseTraderProfileId(finst.config?.traderProfile));
     } else {
       applyFuturesProfilePreset(getFuturesTraderProfilePreset("day"));
@@ -725,6 +733,10 @@ export function BotsTradingClient() {
     setFutLifecycle({
       maxHoldMinutes: preset.maxHoldMinutes,
       reentryCooldownMinutes: preset.reentryCooldownMinutes,
+    });
+    setFutAiAssist({
+      aiAssistMode: preset.aiAssistMode,
+      minAiConfidence: preset.minAiConfidence,
     });
   }
 
@@ -1633,6 +1645,8 @@ export function BotsTradingClient() {
             onMultiTfChange={setFutMultiTf}
             lifecycle={futLifecycle}
             onLifecycleChange={setFutLifecycle}
+            aiAssist={futAiAssist}
+            onAiAssistChange={setFutAiAssist}
             entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}

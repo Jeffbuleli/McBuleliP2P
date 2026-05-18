@@ -1107,6 +1107,16 @@ export const en = {
     "Minutes to wait after a bot close before opening again (0 = off). Scalp preset: 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Waiting after last close (re-entry cooldown)",
+  bots_ai_assist_mode: "Python AI assist",
+  bots_ai_assist_tip:
+    "Requires a worker posting to /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). The bot only opens when the AI agrees with your side and confidence ≥ minimum.",
+  bots_ai_min_confidence: "min. confidence",
+  bots_log_ai_skip: "Skipped (AI gate)",
+  bots_skip_ai_signal_hold: "AI signal is HOLD",
+  bots_skip_ai_signal_stale: "No fresh AI signal (start Python worker or check instance ID)",
+  bots_skip_ai_low_confidence: "AI confidence below minimum",
+  bots_skip_ai_side_mismatch: "AI side does not match bot side",
+  bots_skip_ai_high_risk: "AI risk HIGH with low confidence",
   bots_mtf_gate_mode: "MTF confirm",
   bots_mtf_gate_tip:
     "Entry timeframe and a higher timeframe must both agree (same min. score) before opening.",
@@ -2899,6 +2909,16 @@ export const fr: Messages = {
     "Minutes d’attente après une clôture bot avant réouverture (0 = off). Scalp : 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Pause après dernière clôture (cooldown)",
+  bots_ai_assist_mode: "Assistance IA Python",
+  bots_ai_assist_tip:
+    "Nécessite un worker qui POST sur /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). Ouverture seulement si l’IA est alignée avec votre sens et confiance ≥ minimum.",
+  bots_ai_min_confidence: "confiance min.",
+  bots_log_ai_skip: "Ignoré (filtre IA)",
+  bots_skip_ai_signal_hold: "Signal IA = HOLD",
+  bots_skip_ai_signal_stale: "Pas de signal IA récent (worker Python ou instance ID)",
+  bots_skip_ai_low_confidence: "Confiance IA sous le minimum",
+  bots_skip_ai_side_mismatch: "Sens IA ≠ sens du bot",
+  bots_skip_ai_high_risk: "Risque IA HIGH avec faible confiance",
   bots_mtf_gate_mode: "Confirm. MTF",
   bots_mtf_gate_tip:
     "Le TF d’entrée et un TF supérieur doivent être alignés (même score min.) avant d’ouvrir.",

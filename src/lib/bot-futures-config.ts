@@ -47,6 +47,15 @@ export const botFuturesLifecycleFields = {
   reentryCooldownMinutes: z.number().min(0).max(1440).default(0),
 } as const;
 
+export const botFuturesAiAssistFields = {
+  /** Require fresh Python AI signal before opening (POST /api/internal/bots/ai-signal). */
+  aiAssistMode: z.boolean().default(false),
+  /** Min AI confidence 0–100 when aiAssistMode is on. */
+  minAiConfidence: z.number().min(0).max(100).default(40),
+  /** Max age of stored AI signal in ms (default 2 min). */
+  aiSignalMaxAgeMs: z.number().min(30_000).max(600_000).default(120_000),
+} as const;
+
 export const botFuturesConfigSchema = z.object({
   symbol: z.enum(BOT_DCA_SYMBOLS),
   side: z.enum(["LONG", "SHORT"]),
@@ -73,6 +82,7 @@ export const botFuturesConfigSchema = z.object({
   ...botFuturesMultiTfFields,
   ...botFuturesProfileField,
   ...botFuturesLifecycleFields,
+  ...botFuturesAiAssistFields,
 });
 
 export type BotFuturesConfig = z.infer<typeof botFuturesConfigSchema>;

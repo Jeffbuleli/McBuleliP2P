@@ -48,6 +48,7 @@ import {
 } from "@/lib/bot-futures-trailing";
 import { unrealizedProfitPct } from "@/lib/bot-futures-smart-exit";
 import { runFuturesSmartExitCheck } from "@/lib/bot-futures-smart-exit";
+import { getAiSignal, runAiAssistGate } from "@/lib/bot-ai-signal";
 
 function formatFuturesQty(qty: number): string {
   if (qty >= 1) return qty.toFixed(3);
@@ -441,6 +442,38 @@ export async function tickFuturesUmInstance(args: {
         },
       });
       return { ran: false, skipped: "smart_blocked" };
+    }
+
+    const aiSignal = await getAiSignal(
+      args.instanceId,
+      cfg.aiSignalMaxAgeMs ?? 120_000,
+    );
+    const aiGate = runAiAssistGate({
+      botSide: cfg.side,
+      minAiConfidence: cfg.minAiConfidence,
+      signal: aiSignal,
+      aiAssistMode: cfg.aiAssistMode,
+    });
+    if (!aiGate.ok) {
+      await appendBotExecutionLog({
+        instanceId: args.instanceId,
+        userId: args.userId,
+        planId: args.planId,
+        action: "ai_skip",
+        detail: {
+          reason: aiGate.reason,
+          ai: aiSignal
+            ? {
+                action: aiSignal.action,
+                confidence: aiSignal.confidence,
+                combined_score: aiSignal.combined_score,
+                risk_level: aiSignal.risk_level,
+                receivedAt: aiSignal.receivedAt,
+              }
+            : null,
+        },
+      });
+      return { ran: false, skipped: aiGate.reason };
     }
 
     await futuresSignedPost({
