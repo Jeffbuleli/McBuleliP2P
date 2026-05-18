@@ -178,6 +178,8 @@ export function FuturesTraderProfilePanel({
   onLifecycleChange,
   aiAssist,
   onAiAssistChange,
+  botInstanceId,
+  accountBilling,
   entryTimeframe,
   onApplyPreset,
   t,
@@ -194,6 +196,8 @@ export function FuturesTraderProfilePanel({
   onLifecycleChange: (s: FutLifecycleUiState) => void;
   aiAssist: FutAiAssistUiState;
   onAiAssistChange: (s: FutAiAssistUiState) => void;
+  botInstanceId?: string | null;
+  accountBilling?: "demo" | "live";
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
@@ -459,6 +463,12 @@ export function FuturesTraderProfilePanel({
           </span>
         ) : null}
       </label>
+      {aiAssist.aiAssistMode && botInstanceId ? (
+        <p className="mt-1.5 break-all font-mono text-[10px] text-stone-600 dark:text-stone-400">
+          {t("bots_ai_instance_id")}: {botInstanceId}
+          {accountBilling ? ` (${accountBilling})` : ""}
+        </p>
+      ) : null}
     </div>
   );
 }

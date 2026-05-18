@@ -23,13 +23,21 @@ class McBuleliBridge:
             and self._settings.mcbuleli_cron_secret
         )
 
-    def submit_signal(self, signal: TradingSignal) -> Optional[Dict[str, Any]]:
+    def submit_signal(
+        self,
+        signal: TradingSignal,
+        instance_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         if not self.is_configured():
             logger.info("mcbuleli_bridge_skip: not configured")
             return None
+        iid = (instance_id or self._settings.mcbuleli_instance_id or "").strip()
+        if not iid:
+            logger.info("mcbuleli_bridge_skip: no instance_id")
+            return None
         url = self._settings.mcbuleli_api_url.rstrip("/") + "/api/internal/bots/ai-signal"
         payload = {
-            "instanceId": self._settings.mcbuleli_instance_id,
+            "instanceId": iid,
             "signal": signal.to_dict(),
         }
         headers = {"x-cron-secret": self._settings.mcbuleli_cron_secret}

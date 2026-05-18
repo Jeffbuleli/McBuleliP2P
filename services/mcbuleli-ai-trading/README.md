@@ -98,10 +98,14 @@ Configure:
 MODE=SIGNAL_ONLY
 MCBULELI_API_URL=https://www.mcbuleli.online
 MCBULELI_CRON_SECRET=...
+# One bot (shown in McBuleli UI when AI assist is on):
 MCBULELI_INSTANCE_ID=...
+# Or leave empty and run: python scripts/relay_all_instances.py
 ```
 
-Node stores signals via `POST /api/internal/bots/ai-signal` (`x-cron-secret`). When `aiAssistMode` is on in the futures bot config, `bot-engine-futures` applies `runAiAssistGate` after the smart gate (scalp/day presets enable it by default).
+Node stores signals via `POST /api/internal/bots/ai-signal` (`x-cron-secret`). When `aiAssistMode` is on, `bot-engine-futures` applies `runAiAssistGate` after the smart gate.
+
+**Multi-user worker:** `GET /api/internal/bots/ai-instances` lists every active futures bot with `aiAssistMode`. Run `python scripts/relay_all_instances.py` with empty `MCBULELI_INSTANCE_ID` to push signals for all of them (same `CRON_SECRET` as Render).
 
 ## Tests
 

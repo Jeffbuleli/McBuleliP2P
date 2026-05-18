@@ -27,9 +27,13 @@ class OrderExecutor:
         with self._paper_log.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-    def relay_signal(self, signal: TradingSignal) -> Optional[Dict[str, Any]]:
+    def relay_signal(
+        self,
+        signal: TradingSignal,
+        instance_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Push every tick to McBuleli (including HOLD) — used in SIGNAL_ONLY."""
-        return self._bridge.submit_signal(signal)
+        return self._bridge.submit_signal(signal, instance_id=instance_id)
 
     def execute(
         self,

@@ -63,14 +63,18 @@ class TradingEngine:
         self._executor = OrderExecutor(self._settings)
         self._portfolio = PortfolioState()
 
-    def tick(self) -> Dict[str, Any]:
+    def tick(
+        self,
+        *,
+        symbol: Optional[str] = None,
+        instance_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        from mcbuleli_ai.utils.symbols import to_ccxt_futures_symbol
+
         ts = utc_now_iso()
-        market = self._market.refresh(
-            self._settings.symbol, self._settings.timeframe
-        )
-        confirm = self._market.refresh(
-            self._settings.symbol, self._settings.confirm_timeframe
-        )
+        sym = to_ccxt_futures_symbol(symbol or self._settings.symbol)
+        market = self._market.refresh(sym, self._settings.timeframe)
+        confirm = self._market.refresh(sym, self._settings.confirm_timeframe)
         news = self._news.fetch_all()
 
         signal = self._signal_engine.run(
@@ -95,7 +99,10 @@ class TradingEngine:
 
         bridge_out: Optional[Dict[str, Any]] = None
         if self._settings.mode == RunMode.SIGNAL_ONLY:
-            bridge_out = self._executor.relay_signal(signal)
+            bridge_out = self._executor.relay_signal(
+                signal,
+                instance_id=instance_id or self._settings.mcbuleli_instance_id or None,
+            )
 
         record = {
             "ts": ts,

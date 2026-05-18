@@ -1111,6 +1111,7 @@ export const en = {
   bots_ai_assist_tip:
     "Requires a worker posting to /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). The bot only opens when the AI agrees with your side and confidence ≥ minimum.",
   bots_ai_min_confidence: "min. confidence",
+  bots_ai_instance_id: "Instance ID (Python .env MCBULELI_INSTANCE_ID)",
   bots_log_ai_skip: "Skipped (AI gate)",
   bots_skip_ai_signal_hold: "AI signal is HOLD",
   bots_skip_ai_signal_stale: "No fresh AI signal (start Python worker or check instance ID)",
@@ -2913,6 +2914,7 @@ export const fr: Messages = {
   bots_ai_assist_tip:
     "Nécessite un worker qui POST sur /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). Ouverture seulement si l’IA est alignée avec votre sens et confiance ≥ minimum.",
   bots_ai_min_confidence: "confiance min.",
+  bots_ai_instance_id: "ID instance (.env MCBULELI_INSTANCE_ID)",
   bots_log_ai_skip: "Ignoré (filtre IA)",
   bots_skip_ai_signal_hold: "Signal IA = HOLD",
   bots_skip_ai_signal_stale: "Pas de signal IA récent (worker Python ou instance ID)",

@@ -1647,6 +1647,8 @@ export function BotsTradingClient() {
             onLifecycleChange={setFutLifecycle}
             aiAssist={futAiAssist}
             onAiAssistChange={setFutAiAssist}
+            botInstanceId={futInst?.id}
+            accountBilling={accountBilling}
             entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}

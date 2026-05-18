@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 
 from mcbuleli_ai.ai_layer.indicators import IndicatorSnapshot
+from mcbuleli_ai.utils.symbols import normalize_binance_symbol
 from mcbuleli_ai.core.schemas import Action, RiskLevel, StrategyKind, TradingSignal, utc_now_iso
 from mcbuleli_ai.data_layer.market_data import MarketSnapshot
 from mcbuleli_ai.data_layer.news_data import NewsBundle
@@ -182,7 +183,7 @@ class SignalEngine:
         if market.status != "ok" or market.indicators is None:
             return TradingSignal(
                 version=1,
-                symbol=market.symbol.replace("/", "").replace(":USDT", "USDT"),
+                symbol=normalize_binance_symbol(market.symbol),
                 action=Action.HOLD,
                 confidence=0,
                 strategy=StrategyKind.FUTURES,
@@ -233,7 +234,7 @@ class SignalEngine:
         if news.headlines:
             reasons.append("News samples: %d" % len(news.headlines))
 
-        symbol_out = market.symbol.replace("/", "").replace(":USDT", "USDT")
+        symbol_out = normalize_binance_symbol(market.symbol)
 
         return TradingSignal(
             version=1,
