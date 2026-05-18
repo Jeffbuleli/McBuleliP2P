@@ -42,6 +42,13 @@ migrate_*.log
 .env.*
 !.env.example
 
+# Python AI trading service
+services/mcbuleli-ai-trading/.venv/
+services/mcbuleli-ai-trading/**/__pycache__/
+services/mcbuleli-ai-trading/.pytest_cache/
+services/mcbuleli-ai-trading/logs/*.jsonl
+services/mcbuleli-ai-trading/.env
+
 # vercel
 .vercel
 
