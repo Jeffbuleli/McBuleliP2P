@@ -173,6 +173,16 @@ export function BotsKeysHub({
             binance.com ↗
           </a>
         ) : null}
+        {!isLive && !validated ? (
+          <a
+            href="https://demo.binance.com/en/my/settings/api-management"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="self-center text-xs font-semibold text-violet-700 underline dark:text-violet-300"
+          >
+            demo.binance.com ↗
+          </a>
+        ) : null}
       </div>
 
       {keysHubMsg ? (

@@ -198,6 +198,7 @@ export function FuturesTraderProfilePanel({
   aiAssist: FutAiAssistUiState;
   onAiAssistChange: (s: FutAiAssistUiState) => void;
   botInstanceId?: string | null;
+  savedInstanceBilling?: "demo" | "live" | null;
   accountBilling?: "demo" | "live";
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;

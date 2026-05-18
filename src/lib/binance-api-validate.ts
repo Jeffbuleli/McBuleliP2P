@@ -86,23 +86,27 @@ async function validateFuturesAccess(args: {
   const { environment, creds } = args;
 
   if (environment === "demo") {
-    try {
-      await binanceUserSignedGet({
-        environment,
-        creds,
-        market: "futures",
-        path: "/fapi/v2/balance",
-      });
-      return { ok: true, kind: "fapi", error: null, errorCode: null };
-    } catch (e) {
-      const error = errMessage(e);
-      return {
-        ok: false,
-        kind: null,
-        error,
-        errorCode: classifyBinanceAuthError(environment, "futures", error),
-      };
+    const demoPaths = ["/fapi/v2/balance", "/fapi/v3/account"] as const;
+    let lastError = "";
+    for (const path of demoPaths) {
+      try {
+        await binanceUserSignedGet({
+          environment,
+          creds,
+          market: "futures",
+          path,
+        });
+        return { ok: true, kind: "fapi", error: null, errorCode: null };
+      } catch (e) {
+        lastError = errMessage(e);
+      }
     }
+    return {
+      ok: false,
+      kind: null,
+      error: lastError,
+      errorCode: classifyBinanceAuthError(environment, "futures", lastError),
+    };
   }
 
   const restrictions = await fetchBinanceApiRestrictions(environment, creds);

@@ -4,6 +4,7 @@ import {
   parseBotFuturesConfig,
   resolveSmartExitTimeframe,
 } from "@/lib/bot-futures-config";
+import { classifyBinanceAuthError } from "@/lib/binance-api-validate";
 import {
   listUserBinanceCredentials,
   loadUserBinanceCredentials,
@@ -82,8 +83,30 @@ export async function tickFuturesUmInstance(args: {
 
   const env = billingToKeyEnvironment(args.billing);
   const creds = await loadUserBinanceCredentials(args.userId, env);
+  const credMeta = (await listUserBinanceCredentials(args.userId)).find(
+    (c) => c.environment === env,
+  );
   if (!creds) {
-    await setBotInstanceError(args.instanceId, "API keys not connected");
+    const hint =
+      env === "demo"
+        ? "bots_error_demo_futures_keys"
+        : "bots_err_no_keys";
+    await setBotInstanceError(args.instanceId, hint);
+    return { ran: false, skipped: "no_keys" };
+  }
+  if (credMeta && !credMeta.futuresOk) {
+    const raw = credMeta.lastValidationError ?? "";
+    const hint =
+      env === "demo"
+        ? classifyBinanceAuthError(env, "futures", raw) !==
+          "bots_error_binance_generic"
+          ? classifyBinanceAuthError(env, "futures", raw)
+          : "bots_error_demo_futures_keys"
+        : classifyBinanceAuthError(env, "futures", raw) !==
+            "bots_error_binance_generic"
+          ? classifyBinanceAuthError(env, "futures", raw)
+          : "bots_error_live_futures_keys";
+    await setBotInstanceError(args.instanceId, hint);
     return { ran: false, skipped: "no_keys" };
   }
 
@@ -99,9 +122,6 @@ export async function tickFuturesUmInstance(args: {
     return { ran: false, skipped: "price_unavailable" };
   }
 
-  const credMeta = (await listUserBinanceCredentials(args.userId)).find(
-    (c) => c.environment === env,
-  );
   const futuresKind = await resolveFuturesApiKind(
     env,
     creds,
@@ -519,7 +539,11 @@ export async function tickFuturesUmInstance(args: {
     });
     return { ran: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Futures order failed";
+    const raw = e instanceof Error ? e.message : "Futures order failed";
+    const market =
+      env === "demo" || futuresKind === "fapi" ? "futures" : "portfolio";
+    const code = classifyBinanceAuthError(env, market, raw);
+    const msg = code !== "bots_error_binance_generic" ? code : raw;
     await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,

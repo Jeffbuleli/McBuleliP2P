@@ -992,7 +992,8 @@ export const en = {
   bots_demo_setup_short: "Connect demo keys (demo.binance.com).",
   bots_live_checklist_tip:
     "Enable Reading, Spot/Margin, Portfolio Margin if needed, disable Withdrawals. If IP-restricted, whitelist McBuleli server outbound IPs from your host dashboard (Outbound tab), not your website DNS.",
-  bots_demo_setup_tip: "Create keys on demo.binance.com only—not binance.com live.",
+  bots_demo_setup_tip:
+    "Create API keys on demo.binance.com (Demo Trading → API Management). Default permission is Reading; enable trading if offered. Do not use binance.com live keys. Futures REST: demo-fapi.binance.com.",
   bots_live_disabled_tip: "Live trading must be enabled on your McBuleli account.",
   bots_live_panel_title: "Live activity",
   bots_live_panel_tip:
@@ -1313,7 +1314,7 @@ export const en = {
   bots_error_demo_spot_keys:
     "Demo Spot rejected. Create keys at demo.binance.com → API Management — not binance.com.",
   bots_error_demo_futures_keys:
-    "Demo Futures rejected. Use API keys created on demo.binance.com — not binance.com.",
+    "Demo futures rejected (-2015). Keys must be created on demo.binance.com (not binance.com). Same key works on demo-api + demo-fapi. Re-validate under Bots → Demo after saving the key.",
   bots_error_live_spot_keys:
     "Binance refused the Spot API connection. Use live keys from binance.com (not testnet). If permissions are already set, add the McBuleli server IP to your API whitelist.",
   bots_error_live_futures_keys:
@@ -2799,7 +2800,8 @@ export const fr: Messages = {
   bots_demo_setup_short: "Connecter les clés démo (demo.binance.com).",
   bots_live_checklist_tip:
     "Activer Lecture, Spot/Marge, Portfolio Margin si besoin, pas de retrait. Si IP restreintes : lister les IP sortantes du serveur McBuleli (onglet Outbound de l’hébergeur), pas le DNS du site.",
-  bots_demo_setup_tip: "Clés sur demo.binance.com uniquement — pas binance.com live.",
+  bots_demo_setup_tip:
+    "Créer les clés sur demo.binance.com (Trading démo → Gestion API). Permission par défaut : lecture ; activer le trading si proposé. Pas de clés binance.com live. Futures : demo-fapi.binance.com.",
   bots_live_disabled_tip: "Le trading live doit être activé sur votre compte McBuleli.",
   bots_live_panel_title: "Activité en direct",
   bots_live_panel_tip:
@@ -3125,7 +3127,7 @@ export const fr: Messages = {
   bots_error_demo_spot_keys:
     "Spot démo refusé. Créez les clés sur demo.binance.com → Gestion API — pas sur binance.com.",
   bots_error_demo_futures_keys:
-    "Futures démo refusé. Utilisez des clés créées sur demo.binance.com — pas binance.com.",
+    "Futures démo refusées (-2015). Clés obligatoirement sur demo.binance.com (pas binance.com). Même clé pour demo-api + demo-fapi. Revalider dans Bots → Démo.",
   bots_error_live_spot_keys:
     "Binance a refusé la connexion Spot. Utilisez des clés live binance.com (pas testnet). Si les permissions sont déjà bonnes, ajoutez l’IP du serveur McBuleli à la liste blanche API.",
   bots_error_live_futures_keys:
