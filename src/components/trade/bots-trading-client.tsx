@@ -1180,7 +1180,11 @@ export function BotsTradingClient() {
       />
 
       {data.cronHealth ? (
-        <BotsCronHealthBar health={data.cronHealth} t={t} />
+        <BotsCronHealthBar
+          health={data.cronHealth}
+          isSuperAdmin={Boolean(data.isSuperAdmin)}
+          t={t}
+        />
       ) : null}
 
       {activeTab === "dca_spot" && !dcaSub ? (
@@ -1652,6 +1656,7 @@ export function BotsTradingClient() {
             botInstanceId={futInstRow?.id}
             savedInstanceBilling={futInstRow?.billing}
             accountBilling={accountBilling}
+            showAiTechnicalRef={Boolean(data.isSuperAdmin)}
             entryTimeframe={futSmart.timeframe}
             onApplyPreset={applyFuturesProfilePreset}
             t={t}

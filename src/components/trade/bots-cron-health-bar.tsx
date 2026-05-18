@@ -26,9 +26,11 @@ function formatCronTime(iso: string, locale?: string) {
 
 export function BotsCronHealthBar({
   health,
+  isSuperAdmin = false,
   t,
 }: {
   health: CronHealthSnapshot;
+  isSuperAdmin?: boolean;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   const tip = t("bots_cron_health_tip");
@@ -107,7 +109,7 @@ export function BotsCronHealthBar({
         ) : null}
         <UiInfoTip tip={tip} />
       </div>
-      {needsFaster ? (
+      {needsFaster && isSuperAdmin ? (
         <div
           className="flex items-center gap-2 rounded-lg border border-sky-400/60 bg-sky-50/80 px-2.5 py-1.5 text-xs font-medium text-sky-950 dark:border-sky-700/50 dark:bg-sky-950/35 dark:text-sky-100"
           role="status"

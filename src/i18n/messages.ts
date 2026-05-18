@@ -993,7 +993,7 @@ export const en = {
   bots_live_checklist_tip:
     "Enable Reading, Spot/Margin, Portfolio Margin if needed, disable Withdrawals. If IP-restricted, whitelist McBuleli server outbound IPs from your host dashboard (Outbound tab), not your website DNS.",
   bots_demo_setup_tip:
-    "Create API keys on demo.binance.com (Demo Trading → API Management). Default permission is Reading; enable trading if offered. Do not use binance.com live keys. Futures REST: demo-fapi.binance.com.",
+    "Create keys on demo.binance.com (Demo Trading → API Management). Enable reading and trading if offered. Do not use binance.com live keys.",
   bots_live_disabled_tip: "Live trading must be enabled on your McBuleli account.",
   bots_live_panel_title: "Live activity",
   bots_live_panel_tip:
@@ -1042,16 +1042,16 @@ export const en = {
   bots_billing_view_mismatch:
     "Bot saved on {saved} — you are viewing {viewing}. Switch the toggle above or press Start to apply {viewing}.",
   bots_waiting_first_tick: "First run soon",
-  bots_cron_not_configured: "Cron off",
+  bots_cron_not_configured: "Scheduler off",
   bots_cron_health_tip:
-    "Bots run on a schedule (inline cron or POST /api/internal/bots/tick with CRON_SECRET). Green = recent run.",
+    "McBuleli checks your bots on a schedule. Green means a recent successful run.",
   bots_cron_health_never: "Pending · ~{minutes}m",
   bots_cron_health_stale: "Late · {time}",
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
-  bots_cron_inline_badge: "Inline",
-  bots_cron_label: "Cron",
+  bots_cron_inline_badge: "Auto",
+  bots_cron_label: "Scheduler",
   bots_cron_scalp_fast_tick:
-    "Scalp: cron {current}m — set BOT_CRON_INTERVAL_MS=60000 (recommended {recommended}m)",
+    "Scalp: interval {current} min (recommended {recommended} min for 1m candles)",
   bots_cron_scalp_fast_tick_tip:
     "Scalp profile uses 1m candles; a tick every ~1 min keeps breakeven, trailing, and smart exit responsive.",
   bots_logs_other_env:
@@ -1108,21 +1108,24 @@ export const en = {
     "Minutes to wait after a bot close before opening again (0 = off). Scalp preset: 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Waiting after last close (re-entry cooldown)",
-  bots_ai_assist_mode: "Python AI assist",
+  bots_ai_assist_mode: "AI",
   bots_ai_assist_tip:
-    "Requires a worker posting to /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). The bot only opens when the AI agrees with your side and confidence ≥ minimum.",
-  bots_ai_min_confidence: "min. confidence",
-  bots_ai_instance_id: "Instance ID (Python .env MCBULELI_INSTANCE_ID)",
+    "Uses McBuleli market analysis before opening. The bot only trades when the signal matches your direction and meets the minimum confidence.",
+  bots_ai_assist_user_note:
+    "AI assist is on. McBuleli will only open when the analysis agrees with your side and confidence level.",
+  bots_ai_min_confidence: "Min. confidence",
+  bots_ai_instance_ref_admin: "Bot reference (admin)",
+  bots_ai_copy_ref: "Copy reference",
   bots_ai_instance_billing_mismatch:
-    "Bot saved as {saved} — switch to {saved} or save again while viewing {viewing} to run on {viewing}.",
+    "This bot is saved on {saved}. Switch to {saved}, or save again while on {viewing} to run in {viewing}.",
   bots_ai_instance_save_first:
-    "Save or start the futures bot once to generate an Instance ID.",
-  bots_log_ai_skip: "Skipped (AI gate)",
-  bots_skip_ai_signal_hold: "AI signal is HOLD",
-  bots_skip_ai_signal_stale: "No fresh AI signal (start Python worker or check instance ID)",
-  bots_skip_ai_low_confidence: "AI confidence below minimum",
-  bots_skip_ai_side_mismatch: "AI side does not match bot side",
-  bots_skip_ai_high_risk: "AI risk HIGH with low confidence",
+    "Save or start the futures bot once to generate a reference.",
+  bots_log_ai_skip: "Skipped (AI filter)",
+  bots_skip_ai_signal_hold: "AI recommends waiting (no clear direction)",
+  bots_skip_ai_signal_stale: "No recent AI analysis — try again in a minute",
+  bots_skip_ai_low_confidence: "AI confidence is below your minimum",
+  bots_skip_ai_side_mismatch: "AI direction does not match your Long/Short setting",
+  bots_skip_ai_high_risk: "AI sees high risk with low confidence",
   bots_mtf_gate_mode: "MTF confirm",
   bots_mtf_gate_tip:
     "Entry timeframe and a higher timeframe must both agree (same min. score) before opening.",
@@ -1149,7 +1152,7 @@ export const en = {
   bots_skip_no_keys: "API keys missing for this environment — connect keys above.",
   bots_skip_invalid_config: "Invalid bot configuration.",
   bots_skip_unknown_plan: "Unknown bot plan.",
-  bots_skip_exception: "Server error during cron — check logs.",
+  bots_skip_exception: "Temporary server error — will retry on the next run.",
   bots_skip_position_open:
     "Futures position already open on Binance — waiting for stop loss or take profit.",
   bots_log_other: "Event",
@@ -1314,17 +1317,17 @@ export const en = {
   bots_error_demo_spot_keys:
     "Demo Spot rejected. Create keys at demo.binance.com → API Management — not binance.com.",
   bots_error_demo_futures_keys:
-    "Demo futures rejected (-2015). Keys must be created on demo.binance.com (not binance.com). Same key works on demo-api + demo-fapi. Re-validate under Bots → Demo after saving the key.",
+    "Demo futures keys rejected. Create keys on demo.binance.com (not binance.com), then validate again under Bots → Demo.",
   bots_error_live_spot_keys:
-    "Binance refused the Spot API connection. Use live keys from binance.com (not testnet). If permissions are already set, add the McBuleli server IP to your API whitelist.",
+    "Binance refused the Spot connection. Use live keys from binance.com. If your key is IP-restricted, allow McBuleli’s server IP on Binance.",
   bots_error_live_futures_keys:
-    "Binance refused the futures connection. With Portfolio Margin, McBuleli uses the PM API (not classic fapi). Whitelist the McBuleli server outbound IP on binance.com — not only your home IP.",
+    "Binance refused the futures connection. Check futures permissions on your live key and IP whitelist on binance.com.",
   bots_error_live_portfolio_margin_keys:
-    "Portfolio Margin API rejected the key. Permissions look correct — add the McBuleli server IP to the API whitelist on binance.com.",
+    "Portfolio Margin access refused. Enable PM trading on your key and whitelist McBuleli’s server IP if restricted.",
   bots_error_ip_restrict:
-    "Binance IP restriction: add the McBuleli server outbound IP (Render hosting) to your API key whitelist on binance.com.",
+    "Binance IP restriction: add McBuleli’s server IP to your API key whitelist on Binance.",
   bots_error_binance_generic:
-    "Binance rejected the API keys. Check key, secret, environment (demo=demo.binance.com, live=binance.com), and permissions.",
+    "Binance refused the connection. Check demo vs live keys, permissions, and IP whitelist.",
   bots_subscription_required: "Active subscription required for this plan.",
   bots_invalid_dca_config: "Invalid DCA settings.",
   bots_strategy_not_implemented: "This bot strategy is not supported.",
@@ -2801,7 +2804,7 @@ export const fr: Messages = {
   bots_live_checklist_tip:
     "Activer Lecture, Spot/Marge, Portfolio Margin si besoin, pas de retrait. Si IP restreintes : lister les IP sortantes du serveur McBuleli (onglet Outbound de l’hébergeur), pas le DNS du site.",
   bots_demo_setup_tip:
-    "Créer les clés sur demo.binance.com (Trading démo → Gestion API). Permission par défaut : lecture ; activer le trading si proposé. Pas de clés binance.com live. Futures : demo-fapi.binance.com.",
+    "Créer les clés sur demo.binance.com (Trading démo → Gestion API). Activer lecture et trading si proposé. Pas de clés binance.com live.",
   bots_live_disabled_tip: "Le trading live doit être activé sur votre compte McBuleli.",
   bots_live_panel_title: "Activité en direct",
   bots_live_panel_tip:
@@ -2850,16 +2853,16 @@ export const fr: Messages = {
   bots_billing_view_mismatch:
     "Bot enregistré en {saved} — vous consultez {viewing}. Changez le toggle ci-dessus ou appuyez sur Démarrer pour {viewing}.",
   bots_waiting_first_tick: "Premier passage bientôt",
-  bots_cron_not_configured: "Cron off",
+  bots_cron_not_configured: "Planificateur inactif",
   bots_cron_health_tip:
-    "Exécution planifiée (cron inline ou POST /api/internal/bots/tick + CRON_SECRET). Vert = passage récent.",
+    "McBuleli vérifie vos bots régulièrement. Vert = dernier passage réussi.",
   bots_cron_health_never: "En attente · ~{minutes} min",
   bots_cron_health_stale: "Retard · {time}",
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
-  bots_cron_inline_badge: "Inline",
-  bots_cron_label: "Cron",
+  bots_cron_inline_badge: "Auto",
+  bots_cron_label: "Planification",
   bots_cron_scalp_fast_tick:
-    "Scalp : cron {current} min — définir BOT_CRON_INTERVAL_MS=60000 (recommandé {recommended} min)",
+    "Scalp : intervalle {current} min (recommandé {recommended} min pour chandelles 1m)",
   bots_cron_scalp_fast_tick_tip:
     "Le profil scalp utilise des chandelles 1m ; un tick ~1 min rend breakeven, trailing et smart exit plus réactifs.",
   bots_logs_other_env:
@@ -2916,21 +2919,24 @@ export const fr: Messages = {
     "Minutes d’attente après une clôture bot avant réouverture (0 = off). Scalp : 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Pause après dernière clôture (cooldown)",
-  bots_ai_assist_mode: "Assistance IA Python",
+  bots_ai_assist_mode: "Assistance IA",
   bots_ai_assist_tip:
-    "Nécessite un worker qui POST sur /api/internal/bots/ai-signal (MODE=SIGNAL_ONLY). Ouverture seulement si l’IA est alignée avec votre sens et confiance ≥ minimum.",
-  bots_ai_min_confidence: "confiance min.",
-  bots_ai_instance_id: "ID instance (.env MCBULELI_INSTANCE_ID)",
+    "Analyse McBuleli avant ouverture. Le bot n’entre en position que si le signal est aligné avec votre sens et la confiance minimum.",
+  bots_ai_assist_user_note:
+    "Assistance IA activée. Ouverture seulement si l’analyse est alignée avec votre sens et le niveau de confiance choisi.",
+  bots_ai_min_confidence: "Confiance min.",
+  bots_ai_instance_ref_admin: "Référence bot (admin)",
+  bots_ai_copy_ref: "Copier la référence",
   bots_ai_instance_billing_mismatch:
-    "Bot enregistré en {saved} — passez en {saved} ou sauvegardez en étant sur {viewing} pour trader en {viewing}.",
+    "Bot enregistré en {saved}. Passez en {saved}, ou sauvegardez depuis {viewing} pour trader en {viewing}.",
   bots_ai_instance_save_first:
-    "Enregistrez ou démarrez le bot futures une fois pour obtenir un ID instance.",
+    "Enregistrez ou démarrez le bot futures une fois pour obtenir une référence.",
   bots_log_ai_skip: "Ignoré (filtre IA)",
-  bots_skip_ai_signal_hold: "Signal IA = HOLD",
-  bots_skip_ai_signal_stale: "Pas de signal IA récent (worker Python ou instance ID)",
-  bots_skip_ai_low_confidence: "Confiance IA sous le minimum",
-  bots_skip_ai_side_mismatch: "Sens IA ≠ sens du bot",
-  bots_skip_ai_high_risk: "Risque IA HIGH avec faible confiance",
+  bots_skip_ai_signal_hold: "L’IA recommande d’attendre (pas de direction claire)",
+  bots_skip_ai_signal_stale: "Pas d’analyse IA récente — réessayez dans une minute",
+  bots_skip_ai_low_confidence: "Confiance IA sous votre minimum",
+  bots_skip_ai_side_mismatch: "Sens IA différent de votre réglage Long/Short",
+  bots_skip_ai_high_risk: "Risque élevé détecté avec faible confiance",
   bots_mtf_gate_mode: "Confirm. MTF",
   bots_mtf_gate_tip:
     "Le TF d’entrée et un TF supérieur doivent être alignés (même score min.) avant d’ouvrir.",
@@ -2957,7 +2963,7 @@ export const fr: Messages = {
   bots_skip_no_keys: "Clés API manquantes pour cet environnement — connectez-les ci-dessus.",
   bots_skip_invalid_config: "Configuration du bot invalide.",
   bots_skip_unknown_plan: "Plan bot inconnu.",
-  bots_skip_exception: "Erreur serveur pendant le cron — voir les logs.",
+  bots_skip_exception: "Erreur serveur temporaire — nouvel essai au prochain passage.",
   bots_skip_position_open:
     "Position futures déjà ouverte sur Binance — attente du stop loss ou take profit.",
   bots_log_other: "Événement",

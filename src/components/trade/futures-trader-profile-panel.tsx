@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Messages } from "@/i18n/messages";
 import {
   getFuturesTraderProfilePreset,
@@ -181,6 +182,7 @@ export function FuturesTraderProfilePanel({
   botInstanceId,
   savedInstanceBilling,
   accountBilling,
+  showAiTechnicalRef,
   entryTimeframe,
   onApplyPreset,
   t,
@@ -200,11 +202,19 @@ export function FuturesTraderProfilePanel({
   botInstanceId?: string | null;
   savedInstanceBilling?: "demo" | "live" | null;
   accountBilling?: "demo" | "live";
+  /** Super-admin only: show bot UUID for AI worker wiring. */
+  showAiTechnicalRef?: boolean;
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
+  const [refCopied, setRefCopied] = useState(false);
   const confirmOptions = confirmOptionsFor(entryTimeframe);
+
+  function billingLabel(b: "demo" | "live") {
+    return b === "demo" ? t("bots_billing_demo") : t("bots_billing_live");
+  }
+
   function selectProfile(id: BotTraderProfileId) {
     onProfileChange(id);
     if (id !== "custom") {
@@ -465,22 +475,46 @@ export function FuturesTraderProfilePanel({
           </span>
         ) : null}
       </label>
-      {aiAssist.aiAssistMode && botInstanceId ? (
-        <p className="mt-1.5 break-all font-mono text-[10px] text-stone-600 dark:text-stone-400">
-          {t("bots_ai_instance_id")}: {botInstanceId}
-          {savedInstanceBilling ? ` (${savedInstanceBilling})` : ""}
+      {aiAssist.aiAssistMode && !showAiTechnicalRef ? (
+        <p className="mt-1.5 text-[10px] text-stone-600 dark:text-stone-400">
+          {t("bots_ai_assist_user_note")}
+        </p>
+      ) : null}
+      {aiAssist.aiAssistMode && showAiTechnicalRef && botInstanceId ? (
+        <div className="mt-1.5 rounded border border-stone-200/80 bg-stone-50/80 px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900/50">
+          <p className="text-[10px] font-medium text-stone-700 dark:text-stone-300">
+            {t("bots_ai_instance_ref_admin")}
+            {savedInstanceBilling
+              ? ` · ${billingLabel(savedInstanceBilling)}`
+              : ""}
+          </p>
+          <p className="mt-0.5 break-all font-mono text-[10px] text-stone-600 dark:text-stone-400">
+            {botInstanceId}
+          </p>
+          <button
+            type="button"
+            className="mt-1 text-[10px] font-semibold text-violet-700 underline dark:text-violet-300"
+            onClick={() => {
+              void navigator.clipboard.writeText(botInstanceId).then(() => {
+                setRefCopied(true);
+                window.setTimeout(() => setRefCopied(false), 2000);
+              });
+            }}
+          >
+            {refCopied ? t("profile_id_copied") : t("bots_ai_copy_ref")}
+          </button>
           {savedInstanceBilling &&
           accountBilling &&
           savedInstanceBilling !== accountBilling ? (
-            <span className="block text-amber-800 dark:text-amber-200">
+            <p className="mt-1 text-[10px] text-amber-800 dark:text-amber-200">
               {t("bots_ai_instance_billing_mismatch", {
-                saved: savedInstanceBilling,
-                viewing: accountBilling,
+                saved: billingLabel(savedInstanceBilling),
+                viewing: billingLabel(accountBilling),
               })}
-            </span>
+            </p>
           ) : null}
-        </p>
-      ) : aiAssist.aiAssistMode ? (
+        </div>
+      ) : aiAssist.aiAssistMode && showAiTechnicalRef ? (
         <p className="mt-1.5 text-[10px] text-amber-800 dark:text-amber-200">
           {t("bots_ai_instance_save_first")}
         </p>

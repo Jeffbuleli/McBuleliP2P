@@ -226,11 +226,7 @@ export function botLogDetailMessage(
       return `${base} (score ${score})`;
     }
     if (ai && typeof ai.confidence === "number") {
-      const action =
-        typeof ai.action === "string" ? ai.action : "";
-      return action
-        ? `${base} (AI ${action}, ${ai.confidence}%)`
-        : `${base} (${ai.confidence}%)`;
+      return `${base} (${ai.confidence}%)`;
     }
     return base;
   }
