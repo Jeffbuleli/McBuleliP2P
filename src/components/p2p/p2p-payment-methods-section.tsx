@@ -14,7 +14,11 @@ type Mine = {
   updatedAt: string;
 };
 
-export function P2pPaymentMethodsSection() {
+export function P2pPaymentMethodsSection({
+  variant = "dark",
+}: {
+  variant?: "dark" | "profile";
+}) {
   const { t } = useI18n();
   const [defs, setDefs] = useState<Def[]>([]);
   const [mine, setMine] = useState<Mine[]>([]);
@@ -120,10 +124,31 @@ export function P2pPaymentMethodsSection() {
     }
   }
 
+  const shell =
+    variant === "profile"
+      ? "fd-card p-4"
+      : "rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4";
+  const titleClass =
+    variant === "profile"
+      ? "text-sm font-bold text-[var(--fd-text)]"
+      : "text-sm font-bold text-stone-200";
+  const subClass =
+    variant === "profile"
+      ? "mt-2 text-xs leading-relaxed text-[var(--fd-muted)]"
+      : "mt-2 text-xs leading-relaxed text-stone-400";
+  const labelClass =
+    variant === "profile"
+      ? "text-xs font-semibold text-[var(--fd-text)]"
+      : "text-xs font-semibold text-stone-300";
+  const fieldClass =
+    variant === "profile"
+      ? "mt-1 w-full rounded-xl border border-[var(--fd-border)] bg-white px-3 py-2 text-sm text-[var(--fd-text)] outline-none disabled:opacity-50"
+      : "mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50";
+
   return (
-    <section className="rounded-2xl border border-stone-700/50 bg-stone-900/40 p-4">
-      <h2 className="text-sm font-bold text-stone-200">{t("p2p_payment_methods_title")}</h2>
-      <p className="mt-2 text-xs leading-relaxed text-stone-400">{t("p2p_payment_methods_intro")}</p>
+    <section className={shell}>
+      <h2 className={titleClass}>{t("p2p_payment_methods_title")}</h2>
+      <p className={subClass}>{t("p2p_payment_methods_intro")}</p>
 
       {errMsg ? (
         <p className="mt-3 rounded-lg bg-rose-950/50 px-3 py-2 text-sm text-rose-100">{errMsg}</p>
@@ -140,13 +165,13 @@ export function P2pPaymentMethodsSection() {
             {t("p2p_payment_methods_no_networks")}
           </p>
         ) : null}
-        <label className="text-xs font-semibold text-stone-300">
+        <label className={labelClass}>
           {t("p2p_payment_method_code")}
           <select
             value={methodCode}
             onChange={(e) => setMethodCode(e.target.value)}
             disabled={!defs.length}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
+            className={fieldClass}
           >
             {defs.map((d) => (
               <option key={d.code} value={d.code}>
@@ -155,22 +180,22 @@ export function P2pPaymentMethodsSection() {
             ))}
           </select>
         </label>
-        <label className="text-xs font-semibold text-stone-300">
+        <label className={labelClass}>
           {t("p2p_payment_method_name")}
           <input
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
             disabled={!defs.length || !methodCode}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
+            className={fieldClass}
           />
         </label>
-        <label className="text-xs font-semibold text-stone-300">
+        <label className={labelClass}>
           {t("p2p_payment_method_number")}
           <input
             value={accountNumberOrPhone}
             onChange={(e) => setAccountNumberOrPhone(e.target.value)}
             disabled={!defs.length || !methodCode}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-sm text-stone-100 outline-none disabled:opacity-50"
+            className={fieldClass}
           />
         </label>
         <button
@@ -183,7 +208,9 @@ export function P2pPaymentMethodsSection() {
             accountNumberOrPhone.trim().length < 3
           }
           onClick={() => void add()}
-          className="mt-1 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-40"
+          className={`mt-1 rounded-xl px-4 py-3 text-sm font-bold text-white disabled:opacity-40 ${
+            variant === "profile" ? "bg-[var(--fd-primary)]" : "bg-emerald-700"
+          }`}
         >
           {t("p2p_payment_methods_add")}
         </button>

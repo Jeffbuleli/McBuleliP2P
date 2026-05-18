@@ -9,6 +9,7 @@ type Props = {
   sizeClass?: string;
   /** e.g. "text-sm" for the initial letter */
   textClass?: string;
+  variant?: "default" | "profile";
 };
 
 /**
@@ -46,6 +47,7 @@ export function UserAvatarMark({
   avatarUrl,
   sizeClass = "h-10 w-10",
   textClass = "text-sm",
+  variant = "default",
 }: Props) {
   const initial = email.trim().charAt(0).toUpperCase() || "?";
   const rawOk =
@@ -74,11 +76,13 @@ export function UserAvatarMark({
     );
   }
 
+  const fallbackClass =
+    variant === "profile"
+      ? `flex ${sizeClass} items-center justify-center rounded-full bg-[var(--fd-primary)] font-bold text-white shadow-md ring-2 ring-white ${textClass}`
+      : `flex ${sizeClass} items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 font-bold text-white shadow-md ring-2 ring-white/30 dark:ring-stone-700 ${textClass}`;
+
   return (
-    <span
-      className={`flex ${sizeClass} items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 font-bold text-white shadow-md ring-2 ring-white/30 dark:ring-stone-700 ${textClass}`}
-      aria-hidden
-    >
+    <span className={fallbackClass} aria-hidden>
       {initial}
     </span>
   );
