@@ -10,14 +10,7 @@ import { P2pHubHeader } from "@/components/p2p/p2p-hub-header";
 import { P2pMarketAdCard } from "@/components/p2p/p2p-market-ad-card";
 import { P2pMyAdCard } from "@/components/p2p/p2p-my-ad-card";
 import { P2pOrderListRow } from "@/components/p2p/p2p-order-list-row";
-import {
-  FlowField,
-  FlowMarketViewTabs,
-  FlowPrimaryBtn,
-  FlowSection,
-  FlowSelect,
-  FlowTabBar,
-} from "@/components/p2p/p2p-flow-ui";
+import { FlowMarketViewTabs, FlowSelect, FlowTabBar } from "@/components/p2p/p2p-flow-ui";
 import type { P2pMarketView, P2pPaymentKindFilter } from "@/lib/p2p-market-view";
 import {
   P2P_COUNTRY_CODES,
@@ -39,8 +32,10 @@ type MarketAd = {
   countryCode: string | null;
   createdAt: string;
   makerName: string;
-  makerAvatarUrl: string | null;
+  makerAvatarUrl?: string | null;
   makerRating: { avg: number; count: number } | null;
+  makerTradeCount?: number;
+  reserveRemainingCrypto?: string | null;
   boostedUntil: string | null;
   boostAmountPi: string;
 };
@@ -239,99 +234,74 @@ export function P2PHub() {
             sellLabel={t("p2p_market_tab_sell")}
           />
 
-          <p
-            className={`rounded-2xl px-3 py-2 text-[11px] leading-snug ${
-              marketView === "buy"
-                ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
-                : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)]"
-            }`}
-          >
-            {marketView === "buy" ? t("p2p_market_buy_hint") : t("p2p_market_sell_hint")}
-          </p>
-
-          <Link
-            href={`/app/p2p/ad/new?view=${marketView}`}
-            className={`flex min-h-[48px] w-full items-center justify-center rounded-2xl text-sm font-bold active:scale-[0.98] ${
-              marketView === "buy" ? "fd-btn-soft" : "fd-btn-sell"
-            }`}
-          >
-            {marketView === "buy" ? t("p2p_post_market_buy") : t("p2p_post_market_sell")}
-          </Link>
-
-          <FlowSection title={t("p2p_hub_filters")}>
-            <div className="grid grid-cols-2 gap-2">
-              <FlowField label={t("p2p_filter_asset")}>
-                <FlowSelect
-                  value={asset}
-                  onChange={(e) => setAsset(e.target.value as P2pCryptoAsset | "")}
+          <div className="fd-card flex flex-wrap items-center gap-1.5 p-2">
+            <FlowSelect
+              value={asset}
+              onChange={(e) => setAsset(e.target.value as P2pCryptoAsset | "")}
+              className="!min-h-0 !py-1.5 !text-[11px] !rounded-xl flex-1 min-w-[4.5rem]"
+            >
+              <option value="">{t("p2p_filter_asset")}</option>
+              <option value="USDT">USDT</option>
+              <option value="PI">PI</option>
+            </FlowSelect>
+            <FlowSelect
+              value={fiat}
+              onChange={(e) => setFiat(e.target.value)}
+              className="!min-h-0 !py-1.5 !text-[11px] !rounded-xl flex-1 min-w-[4.5rem]"
+            >
+              <option value="">{t("p2p_filter_quote")}</option>
+              {(marketView === "sell"
+                ? p2pAllowedQuoteFiats().filter((f) => f !== "USDT" && f !== "PI")
+                : p2pAllowedQuoteFiats()
+              ).map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </FlowSelect>
+            <FlowSelect
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="!min-h-0 !py-1.5 !text-[11px] !rounded-xl flex-[1.4] min-w-[5rem]"
+            >
+              <option value="">{t("p2p_filter_country")}</option>
+              {P2P_COUNTRY_CODES.map((c) => (
+                <option key={c} value={c}>
+                  {countryLabel(locale, c)}
+                </option>
+              ))}
+            </FlowSelect>
+            {(
+              [
+                { id: "all" as const, label: t("p2p_payment_kind_all") },
+                { id: "mobile" as const, label: "MoMo" },
+                { id: "bank" as const, label: t("p2p_payment_kind_bank") },
+              ] as const
+            ).map((chip) => {
+              const on = paymentKind === chip.id;
+              const accent =
+                marketView === "buy"
+                  ? on
+                    ? "bg-[color:var(--fd-primary)] text-white"
+                    : "bg-white text-[color:var(--fd-muted)]"
+                  : on
+                    ? "bg-[color:var(--fd-sell)] text-white"
+                    : "bg-white text-[color:var(--fd-muted)]";
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setPaymentKind(chip.id)}
+                  className={`rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-[color:var(--fd-border)] ${accent}`}
                 >
-                  <option value="">{t("p2p_filter_all")}</option>
-                  <option value="USDT">USDT</option>
-                  <option value="PI">PI</option>
-                </FlowSelect>
-              </FlowField>
-              <FlowField label={t("p2p_filter_quote")}>
-                <FlowSelect value={fiat} onChange={(e) => setFiat(e.target.value)}>
-                  <option value="">{t("p2p_filter_all")}</option>
-                  {(marketView === "sell"
-                    ? p2pAllowedQuoteFiats().filter((f) => f !== "USDT" && f !== "PI")
-                    : p2pAllowedQuoteFiats()
-                  ).map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </FlowSelect>
-              </FlowField>
-              <div className="col-span-2">
-                <FlowField label={t("p2p_filter_country")}>
-                  <FlowSelect value={country} onChange={(e) => setCountry(e.target.value)}>
-                    <option value="">{t("p2p_filter_all")}</option>
-                    {P2P_COUNTRY_CODES.map((c) => (
-                      <option key={c} value={c}>
-                        {countryLabel(locale, c)}
-                      </option>
-                    ))}
-                  </FlowSelect>
-                </FlowField>
-              </div>
-            </div>
-            <FlowField label={t("p2p_filter_payment_kind")}>
-              <div className="flex flex-wrap gap-2">
-                {(
-                  [
-                    { id: "all" as const, label: t("p2p_payment_kind_all") },
-                    { id: "mobile" as const, label: t("p2p_payment_kind_mobile") },
-                    { id: "bank" as const, label: t("p2p_payment_kind_bank") },
-                  ] as const
-                ).map((chip) => {
-                  const on = paymentKind === chip.id;
-                  const accent =
-                    marketView === "buy"
-                      ? on
-                        ? "bg-[color:var(--fd-primary)] text-white ring-[color:var(--fd-primary)]"
-                        : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]"
-                      : on
-                        ? "bg-[color:var(--fd-sell)] text-white ring-[color:var(--fd-sell)]"
-                        : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]";
-                  return (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      onClick={() => setPaymentKind(chip.id)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${accent}`}
-                    >
-                      {chip.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </FlowField>
-          </FlowSection>
-
-          <FlowPrimaryBtn disabled={loading} onClick={() => void loadMarket()}>
-            {loading ? "…" : t("continue")}
-          </FlowPrimaryBtn>
+                  {chip.label}
+                </button>
+              );
+            })}
+            {loading ? (
+              <span className="px-1 text-[10px] text-[color:var(--fd-muted)]">…</span>
+            ) : null}
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <button

@@ -4,13 +4,8 @@ import { countryLabel } from "@/lib/country-label";
 import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import type { Locale } from "@/i18n/locale";
 import { getDictionary } from "@/i18n/messages";
+import { p2pDisplayName } from "@/lib/p2p-display";
 import type { ProfileDashboard } from "@/lib/profile-stats";
-
-function displayName(email: string): string {
-  const local = email.split("@")[0]?.trim();
-  if (!local) return email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
 
 function kycPillClass(status: string): string {
   const s = status.toLowerCase();
@@ -42,7 +37,12 @@ export function ProfileHero({
           variant="compact"
         />
         <h1 className="mt-3 text-xl font-bold tracking-tight text-[#1c1917]">
-          {displayName(dash.email)}
+          {p2pDisplayName({
+            email: dash.email,
+            displayName: dash.displayName,
+            avatarUrl: dash.avatarUrl,
+            piUsername: null,
+          })}
         </h1>
         <p className="mt-0.5 truncate text-xs font-medium text-[var(--fd-muted)]">
           {dash.email}

@@ -38,20 +38,25 @@ export function FlowSection({
   children,
   action,
 }: {
-  title: string;
+  title?: string;
   hint?: string;
   children: ReactNode;
   action?: ReactNode;
 }) {
+  const hasHeader = Boolean(title || hint || action);
   return (
     <section className="fd-card p-4">
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-bold text-[color:var(--fd-text)]">{title}</h2>
-          {hint ? <p className="text-[10px] text-[color:var(--fd-muted)]">{hint}</p> : null}
+      {hasHeader ? (
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div>
+            {title ? (
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">{title}</h2>
+            ) : null}
+            {hint ? <p className="text-[10px] text-[color:var(--fd-muted)]">{hint}</p> : null}
+          </div>
+          {action}
         </div>
-        {action}
-      </div>
+      ) : null}
       {children}
     </section>
   );

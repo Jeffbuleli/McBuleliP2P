@@ -13,6 +13,7 @@ import {
   P2pFlowShell,
 } from "@/components/p2p/p2p-flow-ui";
 import { P2pIconStar } from "@/components/p2p/p2p-icons";
+import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import {
@@ -21,9 +22,10 @@ import {
   type P2pCryptoAsset,
   type P2pSide,
 } from "@/lib/p2p-config";
+import { P2pPaymentPickChips } from "@/components/p2p/p2p-payment-pick";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { p2pTradePreviewSteps } from "@/lib/p2p-progress-steps";
-import { p2pAdTradeLimits, p2pFlowHint, p2pTakerFlowHintKey } from "@/lib/p2p-ui";
+import { p2pAdTradeLimits } from "@/lib/p2p-ui";
 
 type AdDetail = {
   id: string;
@@ -34,11 +36,13 @@ type AdDetail = {
   minFiat: string;
   maxFiat: string;
   paymentMethods: string;
+  paymentOptions: { code: string; label: string }[];
   terms: string | null;
   countryCode: string | null;
   makerName: string;
   makerAvatarUrl: string | null;
   makerRating: { avg: number; count: number } | null;
+  makerTradeCount?: number;
   reserveRemainingCrypto?: string | null;
   reserveTotalCrypto?: string | null;
 };
@@ -58,6 +62,7 @@ export default function P2pTradePage() {
   const [fiatAmount, setFiatAmount] = useState("");
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [paymentCode, setPaymentCode] = useState("");
 
   const load = useCallback(async () => {
     setLoadErr(null);
@@ -74,6 +79,14 @@ export default function P2pTradePage() {
   useEffect(() => {
     if (adId) void load();
   }, [adId, load]);
+
+  useEffect(() => {
+    if (ad?.paymentOptions?.length === 1) {
+      setPaymentCode(ad.paymentOptions[0]!.code);
+    } else {
+      setPaymentCode("");
+    }
+  }, [ad?.id, ad?.paymentOptions]);
 
   const locNum = locale === "fr" ? "fr-FR" : "en-US";
   const cryptoQuote = ad ? isP2pCryptoQuoteCurrency(ad.fiatCurrency) : false;
@@ -118,7 +131,11 @@ export default function P2pTradePage() {
       const res = await fetch("/api/p2p/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adId, fiatAmount: fiatAmount.trim() }),
+        body: JSON.stringify({
+          adId,
+          fiatAmount: fiatAmount.trim(),
+          ...(paymentCode ? { paymentMethodCode: paymentCode } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -152,34 +169,43 @@ export default function P2pTradePage() {
   }
 
   const icon = ASSET_ICON[ad.asset];
-  const roleHint = p2pFlowHint(t, p2pTakerFlowHintKey(ad.side, ad.fiatCurrency), ad.fiatCurrency);
-
   return (
-    <P2pFlowShell title={t("p2p_take_trade")} subtitle={t("p2p_trade_subtitle")}>
+    <P2pFlowShell title={t("p2p_take_trade")} subtitle={`${ad.asset}/${ad.fiatCurrency}`}>
       <div className="fd-card overflow-hidden p-0">
         <TransactionStepper steps={p2pTradePreviewSteps(ad.fiatCurrency)} />
       </div>
 
-      <FlowSection title={`${ad.asset}/${ad.fiatCurrency}`} hint={roleHint}>
-        <div className="flex items-center gap-3">
-          {icon ? (
-            <Image src={icon} alt="" width={40} height={40} className="rounded-full" />
-          ) : null}
+      <FlowSection title={`${ad.asset}/${ad.fiatCurrency}`}>
+        <div className="flex items-start gap-3">
+          <div className="relative h-11 w-[3.5rem] shrink-0">
+            {icon ? (
+              <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] ring-2 ring-white">
+                <Image src={icon} alt="" width={28} height={28} className="rounded-full" />
+              </span>
+            ) : null}
+            <span className="absolute -bottom-0.5 right-0 rounded-full ring-2 ring-white">
+              <UserAvatarMark
+                email={ad.makerName}
+                avatarUrl={ad.makerAvatarUrl}
+                sizeClass="h-8 w-8"
+                variant="profile"
+              />
+            </span>
+          </div>
           <div className="min-w-0 flex-1">
             <p className="text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
-              {Number(ad.price).toLocaleString(locNum, { maximumFractionDigits: 8 })}{" "}
-              <span className="text-sm font-normal text-[color:var(--fd-muted)]">
-                {ad.fiatCurrency}/{ad.asset}
-              </span>
+              {Number(ad.price).toLocaleString(locNum, { maximumFractionDigits: 8 })}
+              <span className="text-sm font-normal text-[color:var(--fd-muted)]">/{ad.asset}</span>
             </p>
-            <p className="text-xs text-[color:var(--fd-muted)]">
-              {ad.makerName}
+            <p className="truncate text-xs font-bold text-[color:var(--fd-text)]">{ad.makerName}</p>
+            <p className="flex items-center gap-2 text-[10px] font-semibold text-[color:var(--fd-muted)]">
               {ad.makerRating && ad.makerRating.count > 0 ? (
-                <span className="ml-2 inline-flex items-center gap-0.5 text-amber-600">
+                <span className="inline-flex items-center gap-0.5 text-amber-600">
                   <P2pIconStar filled className="h-3 w-3" />
                   {ad.makerRating.avg.toFixed(1)}
                 </span>
               ) : null}
+              <span>{t("p2p_maker_trades", { count: ad.makerTradeCount ?? 0 })}</span>
             </p>
             {tradeLimits ? (
               <>
@@ -213,14 +239,20 @@ export default function P2pTradePage() {
                 ) : null}
               </>
             ) : null}
-            {cryptoQuote ? (
-              <p className="text-[10px] text-[color:var(--fd-primary)]">
-                {interpolate(t("p2p_crypto_quote_take_hint"), { quote: ad.fiatCurrency })}
-              </p>
-            ) : null}
           </div>
         </div>
       </FlowSection>
+
+      {ad.paymentOptions.length > 1 ? (
+        <FlowSection title={t("p2p_choose_payment")}>
+          <P2pPaymentPickChips
+            options={ad.paymentOptions.map((o) => ({ id: o.code, label: o.label }))}
+            value={paymentCode}
+            onChange={setPaymentCode}
+            accent={ad.side === "sell" ? "buy" : "sell"}
+          />
+        </FlowSection>
+      ) : null}
 
       <FlowSection title={t("p2p_order_fiat_amount")}>
         <FlowInput
@@ -238,7 +270,12 @@ export default function P2pTradePage() {
       {errMsg ? <FlowError>{errMsg}</FlowError> : null}
 
       <FlowPrimaryBtn
-        disabled={loading || !fiatAmount.trim() || tradeLimits?.untradeable === true}
+        disabled={
+          loading ||
+          !fiatAmount.trim() ||
+          tradeLimits?.untradeable === true ||
+          (ad.paymentOptions.length > 1 && !paymentCode)
+        }
         onClick={() => void confirm()}
       >
         {loading ? "…" : t("p2p_order_start")}

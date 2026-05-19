@@ -6,10 +6,20 @@ import { getSessionUserId } from "@/lib/session";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 import { isP2pCatalogMethodCode } from "@/lib/p2p-payment-method-catalog";
 
+const bankExtraZ = z
+  .object({
+    bankName: z.string().max(96).optional(),
+    iban: z.string().max(64).optional(),
+    swift: z.string().max(32).optional(),
+    branch: z.string().max(96).optional(),
+  })
+  .optional();
+
 const postZ = z.object({
   methodCode: z.string().min(2).max(32),
   accountName: z.string().min(2).max(96),
   accountNumberOrPhone: z.string().min(3).max(64),
+  extra: bankExtraZ,
 });
 
 const patchZ = z.object({
@@ -17,6 +27,7 @@ const patchZ = z.object({
   active: z.boolean().optional(),
   accountName: z.string().min(2).max(96).optional(),
   accountNumberOrPhone: z.string().min(3).max(64).optional(),
+  extra: bankExtraZ,
 });
 
 const deleteZ = z.object({ id: z.string().min(8) });
@@ -59,6 +70,7 @@ export async function GET() {
       methodCode: userP2pPaymentMethods.methodCode,
       accountName: userP2pPaymentMethods.accountName,
       accountNumberOrPhone: userP2pPaymentMethods.accountNumberOrPhone,
+      extra: userP2pPaymentMethods.extra,
       active: userP2pPaymentMethods.active,
       updatedAt: userP2pPaymentMethods.updatedAt,
     })
@@ -92,7 +104,7 @@ export async function POST(req: Request) {
       methodCode: codeUp,
       accountName: parsed.data.accountName.trim(),
       accountNumberOrPhone: parsed.data.accountNumberOrPhone.trim(),
-      extra: null,
+      extra: parsed.data.extra ?? null,
       active: true,
       updatedAt: now,
     })
@@ -108,11 +120,12 @@ export async function PATCH(req: Request) {
   const parsed = patchZ.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
 
-  const { id, active, accountName, accountNumberOrPhone } = parsed.data;
+  const { id, active, accountName, accountNumberOrPhone, extra } = parsed.data;
   if (
     active === undefined &&
     accountName === undefined &&
-    accountNumberOrPhone === undefined
+    accountNumberOrPhone === undefined &&
+    extra === undefined
   ) {
     return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
   }
@@ -123,6 +136,7 @@ export async function PATCH(req: Request) {
     active?: boolean;
     accountName?: string;
     accountNumberOrPhone?: string;
+    extra?: Record<string, unknown> | null;
     updatedAt: Date;
   } = { updatedAt: now };
   if (active !== undefined) patch.active = active;
@@ -130,6 +144,7 @@ export async function PATCH(req: Request) {
   if (accountNumberOrPhone !== undefined) {
     patch.accountNumberOrPhone = accountNumberOrPhone.trim();
   }
+  if (extra !== undefined) patch.extra = extra ?? null;
 
   const [upd] = await db
     .update(userP2pPaymentMethods)

@@ -31,6 +31,13 @@ import { P2pProofPreview } from "@/components/p2p/p2p-proof-preview";
 import { prepareP2pProofFile } from "@/lib/p2p-proof-image";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 import { P2pOrderChat, type P2pChatMessage } from "@/components/p2p/p2p-order-chat";
+import { P2pPaymentPickChips } from "@/components/p2p/p2p-payment-pick";
+import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
+import {
+  parsePaymentSnapshotLines,
+  paymentSnapshotLineDetail,
+  paymentSnapshotLineLabel,
+} from "@/lib/p2p-payment-snapshot";
 
 type OrderDetail = {
   id: string;
@@ -49,6 +56,8 @@ type OrderDetail = {
   paymentSnapshot: string;
   makerMasked: string;
   takerMasked: string;
+  counterpartyName: string;
+  counterpartyAvatarUrl: string | null;
   role: "maker" | "taker";
   youAreSeller: boolean;
   youArePayer: boolean;
@@ -96,6 +105,7 @@ export function P2pOrderScreen() {
   const [ratingComment, setRatingComment] = useState("");
 
   const [modal, setModal] = useState<null | "paid" | "release" | "cancel" | "dispute">(null);
+  const [payLineId, setPayLineId] = useState("0");
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/p2p/orders/${orderId}`);
@@ -309,6 +319,20 @@ export function P2pOrderScreen() {
     return clientErrorText(t, proofErr);
   }, [proofErr, t]);
 
+  const payLines = useMemo(
+    () => parsePaymentSnapshotLines(order?.paymentSnapshot ?? ""),
+    [order?.paymentSnapshot],
+  );
+  const payPickOptions = useMemo(
+    () =>
+      payLines.map((line, i) => ({
+        id: String(i),
+        label: paymentSnapshotLineLabel(line),
+      })),
+    [payLines],
+  );
+  const activePayLine = payLines[Number(payLineId)] ?? payLines[0] ?? order?.paymentSnapshot ?? "";
+
   if (err) {
     return (
       <P2pFlowShell title={t("p2p_order_page")} subtitle={t("p2p_order_subtitle")}>
@@ -398,10 +422,27 @@ export function P2pOrderScreen() {
       ) : null}
 
       {showPaymentAndCrypto && !cryptoQuote ? (
-        <FlowSection title={t("p2p_section_payment")} hint={`${order.makerMasked} · ${order.takerMasked}`}>
-          <pre className="whitespace-pre-wrap rounded-2xl border border-[color:var(--fd-border)] bg-stone-50/80 p-3 text-xs text-[color:var(--fd-text)]">
-            {order.paymentSnapshot}
-          </pre>
+        <FlowSection title={t("p2p_section_payment")}>
+          <div className="mb-2 flex items-center gap-2">
+            <UserAvatarMark
+              email={order.counterpartyName}
+              avatarUrl={order.counterpartyAvatarUrl}
+              sizeClass="h-8 w-8"
+              variant="profile"
+            />
+            <span className="truncate text-sm font-bold text-[color:var(--fd-text)]">
+              {order.counterpartyName}
+            </span>
+          </div>
+          <P2pPaymentPickChips
+            options={payPickOptions}
+            value={payLineId}
+            onChange={setPayLineId}
+            accent={order.youAreBuyer ? "buy" : "sell"}
+          />
+          <p className="whitespace-pre-wrap rounded-2xl border border-[color:var(--fd-border)] bg-stone-50/80 p-3 text-xs font-medium text-[color:var(--fd-text)]">
+            {paymentSnapshotLineDetail(activePayLine) || activePayLine}
+          </p>
         </FlowSection>
       ) : null}
 
@@ -443,7 +484,7 @@ export function P2pOrderScreen() {
         </div>
       ) : null}
 
-      <FlowSection title={t("p2p_section_actions")}>
+      <FlowSection>
         {order.youAreSeller && !cryptoQuote && order.status === "paid" ? (
           <FlowError>
             <span className="inline-flex items-center gap-2">

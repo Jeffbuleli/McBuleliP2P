@@ -7,11 +7,19 @@ import { clientErrorText } from "@/lib/client-error-text";
 import { getP2pCatalogMethodKind } from "@/lib/p2p-payment-method-catalog";
 
 type Def = { code: string; label: string; countryCode: string };
+type BankExtra = {
+  bankName?: string;
+  iban?: string;
+  swift?: string;
+  branch?: string;
+};
+
 type Mine = {
   id: string;
   methodCode: string;
   accountName: string;
   accountNumberOrPhone: string;
+  extra?: BankExtra | null;
   active: boolean;
   updatedAt: string;
 };
@@ -38,6 +46,12 @@ export function P2pPaymentMethodsSection() {
   const [methodCode, setMethodCode] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNumberOrPhone, setAccountNumberOrPhone] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [iban, setIban] = useState("");
+  const [swift, setSwift] = useState("");
+  const [branch, setBranch] = useState("");
+
+  const isBank = getP2pCatalogMethodKind(countryCode, methodCode) === "bank";
 
   const errMsg = useMemo(() => (err ? clientErrorText(t, err) : null), [err, t]);
   const defLabel = useMemo(() => {
@@ -88,8 +102,22 @@ export function P2pPaymentMethodsSection() {
   function resetForm() {
     setAccountName("");
     setAccountNumberOrPhone("");
+    setBankName("");
+    setIban("");
+    setSwift("");
+    setBranch("");
     setEditId(null);
     if (defs.length) setMethodCode(defs[0]!.code);
+  }
+
+  function bankPayload(): BankExtra | undefined {
+    if (!isBank) return undefined;
+    const out: BankExtra = {};
+    if (bankName.trim()) out.bankName = bankName.trim();
+    if (iban.trim()) out.iban = iban.trim();
+    if (swift.trim()) out.swift = swift.trim();
+    if (branch.trim()) out.branch = branch.trim();
+    return Object.keys(out).length ? out : undefined;
   }
 
   function startEdit(m: Mine) {
@@ -97,8 +125,22 @@ export function P2pPaymentMethodsSection() {
     setMethodCode(m.methodCode);
     setAccountName(m.accountName);
     setAccountNumberOrPhone(m.accountNumberOrPhone);
+    const ex = (m.extra ?? {}) as BankExtra;
+    setBankName(ex.bankName ?? "");
+    setIban(ex.iban ?? "");
+    setSwift(ex.swift ?? "");
+    setBranch(ex.branch ?? "");
     setShowAdd(true);
     setErr(null);
+  }
+
+  function methodSubline(m: Mine): string {
+    const ex = (m.extra ?? {}) as BankExtra;
+    if (ex.bankName) {
+      const parts = [ex.bankName, ex.iban, ex.swift].filter(Boolean);
+      return parts.join(" · ");
+    }
+    return m.accountNumberOrPhone;
   }
 
   async function save() {
@@ -113,6 +155,7 @@ export function P2pPaymentMethodsSection() {
             id: editId,
             accountName: accountName.trim(),
             accountNumberOrPhone: accountNumberOrPhone.trim(),
+            extra: bankPayload(),
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -128,6 +171,7 @@ export function P2pPaymentMethodsSection() {
             methodCode,
             accountName: accountName.trim(),
             accountNumberOrPhone: accountNumberOrPhone.trim(),
+            extra: bankPayload(),
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -192,7 +236,8 @@ export function P2pPaymentMethodsSection() {
     defs.length > 0 &&
     methodCode &&
     accountName.trim().length >= 2 &&
-    accountNumberOrPhone.trim().length >= 3;
+    accountNumberOrPhone.trim().length >= 3 &&
+    (!isBank || bankName.trim().length >= 2);
 
   const activeMethods = mine.filter((m) => m.active);
   const inactiveMethods = mine.filter((m) => !m.active);
@@ -267,7 +312,7 @@ export function P2pPaymentMethodsSection() {
                       <td className="px-3 py-2.5">
                         <p className="font-semibold text-[color:var(--fd-text)]">{m.accountName}</p>
                         <p className="font-mono text-[10px] tabular-nums text-[color:var(--fd-muted)]">
-                          {m.accountNumberOrPhone}
+                          {methodSubline(m)}
                         </p>
                       </td>
                       <td className="px-2 py-2">
@@ -332,10 +377,42 @@ export function P2pPaymentMethodsSection() {
             <input
               value={accountNumberOrPhone}
               onChange={(e) => setAccountNumberOrPhone(e.target.value)}
-              placeholder={t("p2p_payment_method_number")}
+              placeholder={
+                isBank ? t("p2p_payment_account_number") : t("p2p_payment_method_number")
+              }
               className={fieldCls}
-              inputMode="tel"
+              inputMode={isBank ? "text" : "tel"}
             />
+            {isBank ? (
+              <>
+                <input
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  placeholder={t("p2p_payment_bank_name")}
+                  className={fieldCls}
+                />
+                <input
+                  value={iban}
+                  onChange={(e) => setIban(e.target.value)}
+                  placeholder={t("p2p_payment_iban")}
+                  className={fieldCls}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={swift}
+                    onChange={(e) => setSwift(e.target.value)}
+                    placeholder={t("p2p_payment_swift")}
+                    className={fieldCls}
+                  />
+                  <input
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    placeholder={t("p2p_payment_branch")}
+                    className={fieldCls}
+                  />
+                </div>
+              </>
+            ) : null}
             <div className="flex gap-2 pt-1">
               <button
                 type="button"

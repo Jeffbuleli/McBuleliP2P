@@ -6,6 +6,7 @@ import { createOrder, listUserOrders } from "@/lib/p2p-service";
 const postZ = z.object({
   adId: z.string().uuid(),
   fiatAmount: z.string().min(1),
+  paymentMethodCode: z.string().min(2).max(32).optional(),
 });
 
 export async function GET() {
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
     takerId: userId,
     adId: parsed.data.adId,
     fiatAmountStr: parsed.data.fiatAmount,
+    paymentMethodCode: parsed.data.paymentMethodCode,
   });
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });

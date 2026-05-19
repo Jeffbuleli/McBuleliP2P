@@ -12,6 +12,7 @@ const ST_RELEASED = "released";
 export type ProfileDashboard = {
   id: string;
   email: string;
+  displayName: string | null;
   avatarUrl: string | null;
   countryCode: string | null;
   kycStatus: string;
@@ -33,6 +34,7 @@ export async function getProfileDashboard(
     .select({
       id: users.id,
       email: users.email,
+      displayName: users.displayName,
       avatarUrl: users.avatarUrl,
       countryCode: users.countryCode,
       kycStatus: users.kycStatus,
@@ -86,6 +88,7 @@ export async function getProfileDashboard(
   return {
     id: u.id,
     email: u.email,
+    displayName: u.displayName ?? null,
     avatarUrl: u.avatarUrl ?? null,
     countryCode: u.countryCode ?? null,
     kycStatus: u.kycStatus ?? "none",

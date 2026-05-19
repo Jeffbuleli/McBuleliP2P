@@ -80,8 +80,16 @@ async function buildPaymentSnapshot(args: {
   countryCode: string | null;
   paymentMethodCodes: string[] | null;
   legacyPaymentMethods: string;
+  onlyCode?: string | null;
 }): Promise<string> {
-  const codes = args.paymentMethodCodes?.map((c) => c.trim().toUpperCase()).filter(Boolean) ?? [];
+  let codes = args.paymentMethodCodes?.map((c) => c.trim().toUpperCase()).filter(Boolean) ?? [];
+  const only = args.onlyCode?.trim().toUpperCase();
+  if (only) {
+    if (codes.length && !codes.includes(only)) {
+      throw new Error("p2p_payment_method_invalid");
+    }
+    codes = codes.length ? [only] : [only];
+  }
   if (!codes.length) return args.legacyPaymentMethods;
 
   const cc = effectiveP2pCountryCode(args.countryCode);
@@ -104,6 +112,7 @@ async function buildPaymentSnapshot(args: {
       methodCode: userP2pPaymentMethods.methodCode,
       accountName: userP2pPaymentMethods.accountName,
       accountNumberOrPhone: userP2pPaymentMethods.accountNumberOrPhone,
+      extra: userP2pPaymentMethods.extra,
       active: userP2pPaymentMethods.active,
     })
     .from(userP2pPaymentMethods)
@@ -122,7 +131,12 @@ async function buildPaymentSnapshot(args: {
     const hits = mine.filter((m: any) => m.methodCode === c);
     if (!hits.length) continue;
     for (const h of hits) {
-      lines.push(`${label}: ${h.accountName} · ${h.accountNumberOrPhone}`);
+      const ex = (h.extra ?? {}) as Record<string, string>;
+      const bankBits = [ex.bankName, ex.iban, ex.swift].filter(Boolean).join(" · ");
+      const detail = bankBits
+        ? `${h.accountName} · ${bankBits}`
+        : `${h.accountName} · ${h.accountNumberOrPhone}`;
+      lines.push(`${label}: ${detail}`);
     }
   }
 
@@ -501,6 +515,33 @@ export async function getP2pPaymentProof(args: {
   };
 }
 
+async function loadP2pTradeCountMap(userIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  const uniq = [...new Set(userIds)].filter(Boolean);
+  if (!uniq.length) return out;
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      makerId: p2pOrders.makerId,
+      takerId: p2pOrders.takerId,
+    })
+    .from(p2pOrders)
+    .where(
+      and(
+        eq(p2pOrders.status, ST_RELEASED),
+        or(inArray(p2pOrders.makerId, uniq), inArray(p2pOrders.takerId, uniq)),
+      ),
+    );
+
+  const set = new Set(uniq);
+  for (const r of rows) {
+    if (set.has(r.makerId)) out.set(r.makerId, (out.get(r.makerId) ?? 0) + 1);
+    if (set.has(r.takerId)) out.set(r.takerId, (out.get(r.takerId) ?? 0) + 1);
+  }
+  return out;
+}
+
 async function loadReputationMap(
   userIds: string[],
 ): Promise<Map<string, { avg: number; count: number }>> {
@@ -555,6 +596,7 @@ export async function listMarketAds(filters: {
     makerName: string;
     makerAvatarUrl: string | null;
     makerRating: { avg: number; count: number } | null;
+    makerTradeCount: number;
     boostedUntil: string | null;
     boostAmountPi: string;
     reserveTotalCrypto: string | null;
@@ -597,7 +639,9 @@ export async function listMarketAds(filters: {
     .where(and(...cond))
     .orderBy(desc(p2pAds.createdAt));
 
-  const rep = await loadReputationMap(rows.map((r) => r.ad.userId));
+  const userIds = rows.map((r) => r.ad.userId);
+  const rep = await loadReputationMap(userIds);
+  const trades = await loadP2pTradeCountMap(userIds);
 
   const mapped = rows.map(({ ad, u }) => ({
     id: ad.id,
@@ -615,6 +659,7 @@ export async function listMarketAds(filters: {
     makerName: p2pDisplayName(u),
     makerAvatarUrl: u.avatarUrl ?? null,
     makerRating: rep.get(ad.userId) ?? null,
+    makerTradeCount: trades.get(ad.userId) ?? 0,
     boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
     boostAmountPi: ad.boostAmountPi.toString(),
     reserveTotalCrypto: ad.reserveTotalCrypto?.toString() ?? null,
@@ -698,11 +743,13 @@ export async function getAdForTaker(args: {
         minFiat: string;
         maxFiat: string;
         paymentMethods: string;
+        paymentOptions: { code: string; label: string }[];
         terms: string | null;
         countryCode: string | null;
         makerName: string;
         makerAvatarUrl: string | null;
         makerRating: { avg: number; count: number } | null;
+        makerTradeCount: number;
         reserveTotalCrypto: string | null;
         reserveRemainingCrypto: string | null;
       };
@@ -736,6 +783,15 @@ export async function getAdForTaker(args: {
   }
 
   const rep = await loadReputationMap([row.ad.userId]);
+  const trades = await loadP2pTradeCountMap([row.ad.userId]);
+  const cc = effectiveP2pCountryCode(row.ad.countryCode);
+  const codes =
+    (row.ad.paymentMethodCodes as string[] | null)?.map((c) => c.trim().toUpperCase()).filter(Boolean) ??
+    [];
+  const paymentOptions = codes.map((code) => ({
+    code,
+    label: getP2pCatalogMethodLabel(cc, code) ?? code,
+  }));
 
   return {
     ok: true,
@@ -748,11 +804,13 @@ export async function getAdForTaker(args: {
       minFiat: row.ad.minFiat.toString(),
       maxFiat: row.ad.maxFiat.toString(),
       paymentMethods: row.ad.paymentMethods,
+      paymentOptions,
       terms: row.ad.terms,
       countryCode: row.ad.countryCode,
       makerName: p2pDisplayName(row.u),
       makerAvatarUrl: row.u.avatarUrl ?? null,
       makerRating: rep.get(row.ad.userId) ?? null,
+      makerTradeCount: trades.get(row.ad.userId) ?? 0,
       reserveTotalCrypto: row.ad.reserveTotalCrypto?.toString() ?? null,
       reserveRemainingCrypto: row.ad.reserveRemainingCrypto?.toString() ?? null,
     },
@@ -1130,6 +1188,7 @@ export async function createOrder(args: {
   takerId: string;
   adId: string;
   fiatAmountStr: string;
+  paymentMethodCode?: string | null;
 }): Promise<{ ok: true; orderId: string } | { ok: false; message: string }> {
   await processExpiredP2pOrders();
   const fiatAmount = Number(args.fiatAmountStr);
@@ -1280,12 +1339,24 @@ export async function createOrder(args: {
         ]);
       }
 
+      const adCodes =
+        (ad.ad.paymentMethodCodes as string[] | null)?.map((c) => c.trim().toUpperCase()).filter(Boolean) ??
+        [];
+      let chosenCode = args.paymentMethodCode?.trim().toUpperCase() || null;
+      if (adCodes.length === 1) chosenCode = adCodes[0]!;
+      else if (adCodes.length > 1 && !chosenCode) {
+        throw new Error("p2p_payment_method_required");
+      } else if (chosenCode && adCodes.length && !adCodes.includes(chosenCode)) {
+        throw new Error("p2p_payment_method_invalid");
+      }
+
       const paymentSnapshot = await buildPaymentSnapshot({
         tx,
         sellerUserId,
         countryCode: ad.ad.countryCode ?? null,
         paymentMethodCodes: (ad.ad.paymentMethodCodes as string[] | null) ?? null,
         legacyPaymentMethods: ad.ad.paymentMethods,
+        onlyCode: chosenCode,
       });
 
       const paidMarkedAt = cryptoQuote ? now : null;
@@ -1399,6 +1470,8 @@ export async function getOrderDetailForUser(args: {
         paymentSnapshot: string;
         makerMasked: string;
         takerMasked: string;
+        counterpartyName: string;
+        counterpartyAvatarUrl: string | null;
         role: "maker" | "taker";
         youAreSeller: boolean;
         youArePayer: boolean;
@@ -1440,12 +1513,22 @@ export async function getOrderDetailForUser(args: {
   }
 
   const [mk] = await db
-    .select({ email: users.email })
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+      piUsername: users.piUsername,
+      avatarUrl: users.avatarUrl,
+    })
     .from(users)
     .where(eq(users.id, o.makerId))
     .limit(1);
   const [tk] = await db
-    .select({ email: users.email })
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+      piUsername: users.piUsername,
+      avatarUrl: users.avatarUrl,
+    })
     .from(users)
     .where(eq(users.id, o.takerId))
     .limit(1);
@@ -1469,6 +1552,7 @@ export async function getOrderDetailForUser(args: {
   const youArePayer = o.payerUserId === uid;
   const youAreBuyer = o.buyerUserId === uid;
   const counterpartyId = o.makerId === uid ? o.takerId : o.makerId;
+  const counterpartyRow = o.makerId === uid ? tk : mk;
   const st = o.status;
   const chatAllowsNewMessages = ![
     ST_RELEASED,
@@ -1496,6 +1580,8 @@ export async function getOrderDetailForUser(args: {
       paymentSnapshot: o.paymentSnapshot,
       makerMasked: maskTraderEmail(mk?.email ?? ""),
       takerMasked: maskTraderEmail(tk?.email ?? ""),
+      counterpartyName: counterpartyRow ? p2pDisplayName(counterpartyRow) : "",
+      counterpartyAvatarUrl: counterpartyRow?.avatarUrl ?? null,
       role,
       youAreSeller,
       youArePayer,
