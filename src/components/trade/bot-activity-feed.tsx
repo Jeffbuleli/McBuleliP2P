@@ -174,16 +174,16 @@ function CronSummaryLine({
 }) {
   const title = botTickSkipLabel(t, tickReason(summary.log));
   return (
-    <li className="flex items-center gap-2.5 rounded-lg border border-stone-700/60 bg-stone-900/40 px-3 py-2 dark:border-stone-600/50">
+    <li className="flex items-center gap-2.5 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2">
       <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] font-bold text-amber-100"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-bold text-amber-900"
         aria-hidden
       >
         ◎
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs leading-snug text-stone-400">{title}</p>
-        <p className="mt-0.5 text-[10px] text-stone-500">
+        <p className="text-xs leading-snug text-[color:var(--fd-text)]">{title}</p>
+        <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
           {summary.count > 1
             ? t("bots_feed_cron_repeat", { count: String(summary.count) })
             : t("bots_feed_cron_once")}
@@ -215,7 +215,7 @@ function ActivityEventLine({
 
   return (
     <li
-      className={`flex gap-3 rounded-xl border border-stone-700/40 border-l-[3px] bg-stone-900/30 py-2.5 pl-2 pr-3 dark:border-stone-600/40 dark:bg-stone-950/50 ${vis.rail}`}
+      className={`flex gap-3 rounded-xl border border-[color:var(--fd-border)] border-l-[3px] bg-white py-2 pl-2 pr-3 ${vis.rail}`}
     >
       <span
         className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${vis.iconBg}`}
@@ -225,21 +225,19 @@ function ActivityEventLine({
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-          <span className="rounded-md bg-stone-800/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-300">
+          <span className="rounded-md bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
             {badgeLabel}
           </span>
           <time
             dateTime={log.createdAt}
-            className="shrink-0 text-[11px] font-medium tabular-nums text-stone-500"
+            className="shrink-0 text-[11px] font-medium tabular-nums text-[color:var(--fd-muted)]"
           >
             {formatLogTime(log.createdAt)}
           </time>
         </div>
         <p
           className={`mt-1.5 text-sm font-medium leading-snug ${
-            isErr
-              ? "text-rose-300"
-              : "text-stone-100 dark:text-stone-100"
+            isErr ? "text-rose-700" : "text-[color:var(--fd-text)]"
           }`}
         >
           {title}
@@ -249,7 +247,7 @@ function ActivityEventLine({
             {row.chips.slice(0, 5).map((c, i) => (
               <span
                 key={`${c.icon}-${i}`}
-                className="rounded-md border border-stone-600/50 bg-stone-800/60 px-1.5 py-0.5 text-[10px] font-medium text-stone-300"
+                className="rounded-md border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/50 px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--fd-muted)]"
               >
                 {c.label}
               </span>
@@ -279,7 +277,7 @@ export function BotActivityFeed({
 
   if (!hasContent) {
     return (
-      <p className="mt-2 rounded-lg border border-dashed border-stone-600/50 px-3 py-4 text-center text-xs text-stone-500">
+      <p className="py-4 text-center text-xs text-[color:var(--fd-muted)]">
         {emptyLabel}
       </p>
     );

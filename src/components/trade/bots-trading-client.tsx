@@ -10,7 +10,6 @@ import {
 } from "@/lib/bot-smart-config";
 import type { Messages } from "@/i18n/messages";
 import {
-  BOT_PLAN_DESC_KEY,
   botsApiMessage,
   formatBotRuntimeError,
   formatBotsCredentialValidationLine,
@@ -54,6 +53,18 @@ import {
   BotPlanIcon,
   BotStrategyTabBar,
 } from "@/components/trade/bot-strategy-icons";
+import {
+  BotFlowBtn,
+  BotFlowCard,
+  BotFlowError,
+  BotFlowField,
+  BotFlowInput,
+  BotFlowSelect,
+  BotFlowToggle,
+  BotFormGrid,
+  BotPlanCard,
+  BotStatusPill,
+} from "@/components/trade/bots-flow-ui";
 
 type Plan = {
   id: BotPlanId;
@@ -135,38 +146,18 @@ function BotStatusBadge({
   t: (k: keyof Messages) => string;
 }) {
   if (status === "none") {
-    return (
-      <span className="rounded-full bg-stone-200 px-2.5 py-0.5 text-xs font-semibold text-stone-600 dark:bg-stone-700 dark:text-stone-300">
-        {t("bots_status_not_started")}
-      </span>
-    );
+    return <BotStatusPill tone="idle">{t("bots_status_not_started")}</BotStatusPill>;
   }
   if (status === "paused") {
-    return (
-      <span className="rounded-full bg-stone-400 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-stone-600">
-        {t("bots_status_paused")}
-      </span>
-    );
+    return <BotStatusPill tone="paused">{t("bots_status_paused")}</BotStatusPill>;
   }
   if (monitoringOpen) {
-    return (
-      <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-amber-700">
-        {t("bots_status_position_open")}
-      </span>
-    );
+    return <BotStatusPill tone="open">{t("bots_status_position_open")}</BotStatusPill>;
   }
   if (!lastExecutedAt) {
-    return (
-      <span className="rounded-full bg-sky-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-        {t("bots_status_waiting")}
-      </span>
-    );
+    return <BotStatusPill tone="wait">{t("bots_status_waiting")}</BotStatusPill>;
   }
-  return (
-    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-      {t("bots_status_active")}
-    </span>
-  );
+  return <BotStatusPill tone="active">{t("bots_status_active")}</BotStatusPill>;
 }
 
 type SmartUiState = {
@@ -236,70 +227,59 @@ function SmartModePanel({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-800 dark:bg-indigo-950/30">
-      <label className="flex cursor-pointer items-center gap-2">
-        <input
-          type="checkbox"
-          checked={smart.smartMode}
-          onChange={(e) => setSmart({ ...smart, smartMode: e.target.checked })}
-          className="shrink-0"
-        />
-        <span className="flex min-w-0 flex-1 items-center gap-1 text-sm font-semibold text-indigo-950 dark:text-indigo-100">
-          <span className="truncate">{t("bots_smart_mode")}</span>
-          <UiInfoTip tip={t("bots_smart_mode_hint")} />
-        </span>
-      </label>
+    <div className="mt-3 space-y-2">
+      <BotFlowToggle
+        label={t("bots_smart_mode")}
+        checked={smart.smartMode}
+        onChange={(v) => setSmart({ ...smart, smartMode: v })}
+      />
       {smart.smartMode ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="block text-xs font-medium">
-            {t("bots_smart_min_score")}
-            <select
-              value={smart.minSignalScore}
-              onChange={(e) =>
-                setSmart({ ...smart, minSignalScore: Number(e.target.value) })
-              }
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
-            >
-              {(smartOptions?.minSignalScores ?? [35]).map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium">
-            {t("bots_smart_timeframe")}
-            <select
-              value={smart.timeframe}
-              onChange={(e) =>
-                setSmart({
-                  ...smart,
-                  timeframe: e.target.value as SmartUiState["timeframe"],
-                })
-              }
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900"
-            >
-              {(smartOptions?.timeframes ?? ["1h"]).map((tf) => (
-                <option key={tf} value={tf}>
-                  {tf}
-                </option>
-              ))}
-            </select>
-          </label>
+        <>
+          <BotFormGrid>
+            <BotFlowField label={t("bots_smart_min_score")}>
+              <BotFlowSelect
+                value={smart.minSignalScore}
+                onChange={(e) =>
+                  setSmart({ ...smart, minSignalScore: Number(e.target.value) })
+                }
+              >
+                {(smartOptions?.minSignalScores ?? [35]).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </BotFlowSelect>
+            </BotFlowField>
+            <BotFlowField label={t("bots_smart_timeframe")}>
+              <BotFlowSelect
+                value={smart.timeframe}
+                onChange={(e) =>
+                  setSmart({
+                    ...smart,
+                    timeframe: e.target.value as SmartUiState["timeframe"],
+                  })
+                }
+              >
+                {(smartOptions?.timeframes ?? ["1h"]).map((tf) => (
+                  <option key={tf} value={tf}>
+                    {tf}
+                  </option>
+                ))}
+              </BotFlowSelect>
+            </BotFlowField>
+          </BotFormGrid>
           <button
             type="button"
             disabled={previewBusy}
             onClick={() => void loadPreview()}
-            className="sm:col-span-2 rounded-lg border border-indigo-400 px-3 py-1.5 text-xs font-semibold text-indigo-900 dark:border-indigo-600 dark:text-indigo-200"
+            className="w-full rounded-xl border border-[color:var(--fd-border)] py-2 text-xs font-bold text-[color:var(--fd-primary)]"
           >
             {previewBusy ? t("bots_smart_loading") : t("bots_smart_preview")}
           </button>
           {preview ? (
-            <p className="sm:col-span-2 text-xs font-medium text-indigo-900 dark:text-indigo-200">
-              {preview}
-            </p>
+            <p className="text-xs font-medium text-[color:var(--fd-muted)]">{preview}</p>
           ) : null}
-        </div>
+        </>
       ) : null}
     </div>
   );
@@ -379,88 +359,78 @@ function FuturesSmartExitPanel({
     : exit.smartExitTimeframe;
 
   return (
-    <div className="mt-3 rounded-xl border border-teal-300/80 bg-teal-50/70 p-3 dark:border-teal-800 dark:bg-teal-950/35">
-      <label className="flex cursor-pointer items-center gap-2">
-        <input
-          type="checkbox"
-          checked={exit.smartExitMode}
-          onChange={(e) =>
-            setExit({ ...exit, smartExitMode: e.target.checked })
-          }
-          className="shrink-0"
-        />
-        <span className="flex min-w-0 flex-1 items-center gap-1 text-sm font-semibold text-teal-950 dark:text-teal-100">
-          <span className="truncate">{t("bots_smart_exit_mode")}</span>
-          <UiInfoTip tip={t("bots_smart_exit_hint", { tf: exitTf })} />
-        </span>
-      </label>
+    <div className="mt-3 space-y-2">
+      <BotFlowToggle
+        label={t("bots_smart_exit_mode")}
+        checked={exit.smartExitMode}
+        onChange={(v) => setExit({ ...exit, smartExitMode: v })}
+      />
       {exit.smartExitMode ? (
-        <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
-          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
-            {t("bots_smart_exit_tf_label")}
-            <select
-              value={tfSelectValue}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === SMART_EXIT_TF_ENTRY) {
-                  setExit({ ...exit, smartExitUseEntryTimeframe: true });
-                  return;
+        <>
+          <BotFormGrid>
+            <BotFlowField label={t("bots_smart_exit_tf_label")}>
+              <BotFlowSelect
+                value={tfSelectValue}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === SMART_EXIT_TF_ENTRY) {
+                    setExit({ ...exit, smartExitUseEntryTimeframe: true });
+                    return;
+                  }
+                  setExit({
+                    ...exit,
+                    smartExitUseEntryTimeframe: false,
+                    smartExitTimeframe: v as SmartUiState["timeframe"],
+                  });
+                }}
+              >
+                <option value={SMART_EXIT_TF_ENTRY}>
+                  {t("bots_smart_exit_tf_entry", { tf: entryTimeframe })}
+                </option>
+                {timeframes.map((tf) => (
+                  <option key={tf} value={tf}>
+                    {tf}
+                  </option>
+                ))}
+              </BotFlowSelect>
+            </BotFlowField>
+            <BotFlowField label={t("bots_smart_exit_reversal_score")}>
+              <BotFlowSelect
+                value={exit.minReversalScore}
+                onChange={(e) =>
+                  setExit({
+                    ...exit,
+                    minReversalScore: Number(e.target.value),
+                  })
                 }
-                setExit({
-                  ...exit,
-                  smartExitUseEntryTimeframe: false,
-                  smartExitTimeframe: v as SmartUiState["timeframe"],
-                });
-              }}
-              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
-            >
-              <option value={SMART_EXIT_TF_ENTRY}>
-                {t("bots_smart_exit_tf_entry", { tf: entryTimeframe })}
-              </option>
-              {timeframes.map((tf) => (
-                <option key={tf} value={tf}>
-                  {tf}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
-            {t("bots_smart_exit_reversal_score")}
-            <select
-              value={exit.minReversalScore}
-              onChange={(e) =>
-                setExit({
-                  ...exit,
-                  minReversalScore: Number(e.target.value),
-                })
-              }
-              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
-            >
-              {[30, 35, 40, 45, 50, 55].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-[11px] font-medium text-teal-950/90 dark:text-teal-100/90">
-            {t("bots_smart_exit_min_profit")}
-            <input
-              type="number"
-              min={0}
-              max={20}
-              step={0.1}
-              value={exit.minProfitPctForSmartExit}
-              onChange={(e) =>
-                setExit({
-                  ...exit,
-                  minProfitPctForSmartExit: Number(e.target.value),
-                })
-              }
-              className="mt-0.5 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs dark:border-stone-600 dark:bg-stone-900"
-            />
-          </label>
-        </div>
+              >
+                {[30, 35, 40, 45, 50, 55].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </BotFlowSelect>
+            </BotFlowField>
+            <BotFlowField label={t("bots_smart_exit_min_profit")}>
+              <BotFlowInput
+                type="number"
+                min={0}
+                max={20}
+                step={0.1}
+                value={exit.minProfitPctForSmartExit}
+                onChange={(e) =>
+                  setExit({
+                    ...exit,
+                    minProfitPctForSmartExit: Number(e.target.value),
+                  })
+                }
+              />
+            </BotFlowField>
+          </BotFormGrid>
+          <p className="text-[10px] text-[color:var(--fd-muted)]">
+            {t("bots_smart_exit_hint", { tf: exitTf })}
+          </p>
+        </>
       ) : null}
     </div>
   );
@@ -922,12 +892,12 @@ export function BotsTradingClient() {
   function billingMismatchBanner(inst: { billing: "demo" | "live" } | undefined) {
     if (!inst || inst.billing === accountBilling) return null;
     return (
-      <p className="rounded-lg border border-violet-400/70 bg-violet-50 px-3 py-2 text-xs text-violet-950 dark:border-violet-600/50 dark:bg-violet-950/40 dark:text-violet-100 sm:col-span-2">
+      <BotFlowError>
         {t("bots_billing_view_mismatch", {
           saved: billingEnvLabel(inst.billing, t),
           viewing: billingEnvLabel(accountBilling, t),
         })}
-      </p>
+      </BotFlowError>
     );
   }
 
@@ -1133,14 +1103,11 @@ export function BotsTradingClient() {
   }
 
   return (
-    <div className="space-y-8 pb-10 pt-6">
-      <header className="flex flex-wrap items-center gap-2">
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-          {t("bots_title")}
-        </h1>
-        <UiInfoTip tip={t("bots_intro_tip")} />
+    <div className="space-y-3 pb-10 pt-2">
+      <header>
+        <h1 className="text-lg font-bold text-[color:var(--fd-text)]">{t("bots_title")}</h1>
         {!data.keysEncryptionConfigured ? (
-          <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+          <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             {t("bots_encryption_missing")}
           </p>
         ) : null}
@@ -1157,7 +1124,7 @@ export function BotsTradingClient() {
       />
 
       {data.isSuperAdmin ? (
-        <p className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm text-violet-950 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100">
+        <p className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-medium text-violet-900">
           {t("bots_privileged_badge")}
         </p>
       ) : null}
@@ -1188,138 +1155,113 @@ export function BotsTradingClient() {
       ) : null}
 
       {activeTab === "dca_spot" && !dcaSub ? (
-        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
-          <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-emerald-600" />
-          <h2 className="mt-3 text-lg font-bold">
-            <UiSectionTitle
-              title={t("bots_plan_dca")}
-              tip={t(BOT_PLAN_DESC_KEY.dca_spot)}
-            />
+        <BotFlowCard className="mt-4 text-center">
+          <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-[color:var(--fd-primary)]" />
+          <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
+            {t("bots_plan_dca")}
           </h2>
-          <button
-            type="button"
+          <BotFlowBtn
+            variant="violet"
+            className="mx-auto mt-4 w-full max-w-xs"
             onClick={() => startWizard("dca_spot")}
-            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
           >
             {t("bots_subscribe_cta")}
-          </button>
-        </section>
+          </BotFlowBtn>
+        </BotFlowCard>
       ) : null}
 
 
 
       {activeTab === "grid_spot" && !gridSub ? (
-        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
-          <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-600" />
-          <h2 className="mt-3 text-lg font-bold">
-            <UiSectionTitle
-              title={t("bots_plan_grid")}
-              tip={t(BOT_PLAN_DESC_KEY.grid_spot)}
-            />
+        <BotFlowCard className="mt-4 text-center">
+          <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-700" />
+          <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
+            {t("bots_plan_grid")}
           </h2>
-          <button
-            type="button"
+          <BotFlowBtn
+            variant="violet"
+            className="mx-auto mt-4 w-full max-w-xs"
             onClick={() => startWizard("grid_spot")}
-            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
           >
             {t("bots_subscribe_cta")}
-          </button>
-        </section>
+          </BotFlowBtn>
+        </BotFlowCard>
       ) : null}
 
 
       {activeTab === "futures_um" && !futSub ? (
-        <section className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-stone-900">
-          <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-600" />
-          <h2 className="mt-3 text-lg font-bold">
-            <UiSectionTitle
-              title={t("bots_plan_futures")}
-              tip={t(BOT_PLAN_DESC_KEY.futures_um)}
-            />
+        <BotFlowCard className="mt-4 text-center">
+          <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-800" />
+          <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
+            {t("bots_plan_futures")}
           </h2>
-          <button
-            type="button"
+          <BotFlowBtn
+            variant="violet"
+            className="mx-auto mt-4 w-full max-w-xs"
             onClick={() => startWizard("futures_um")}
-            className="mt-4 w-full max-w-xs rounded-xl bg-violet-700 py-3 text-sm font-semibold text-white"
           >
             {t("bots_subscribe_cta")}
-          </button>
-        </section>
+          </BotFlowBtn>
+        </BotFlowCard>
       ) : null}
 
       {activeTab === "dca_spot" && dcaSub && !dcaKeysOk ? (
-        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
-          {t("bots_keys_required_short")}
-          <UiInfoTip tip={t("bots_keys_required_spot")} />
-        </p>
+        <BotFlowError>{t("bots_keys_required_short")}</BotFlowError>
       ) : null}
 
       {activeTab === "grid_spot" && gridSub && !gridKeysOk ? (
-        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
-          {t("bots_keys_required_short")}
-          <UiInfoTip tip={t("bots_keys_required_spot")} />
-        </p>
+        <BotFlowError>{t("bots_keys_required_short")}</BotFlowError>
       ) : null}
 
       {activeTab === "futures_um" && futSub && !futKeysOk ? (
-        <p className="mt-4 flex items-center gap-1 text-sm text-stone-600 dark:text-stone-400">
-          {t("bots_keys_required_short")}
-          <UiInfoTip tip={t("bots_keys_required_futures")} />
-        </p>
+        <BotFlowError>{t("bots_keys_required_short")}</BotFlowError>
       ) : null}
 
       {activeTab === "dca_spot" && dcaSub && dcaKeysOk ? (
-        <section className="mt-4 rounded-2xl border border-emerald-700/40 bg-emerald-50/60 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+        <BotPlanCard planId="dca_spot" className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
-              <UiSectionTitle
-                title={t("bots_dca_config_title")}
-                tip={t("bots_dca_config_tip")}
-              />
+            <h2 className="text-base font-bold text-[color:var(--fd-text)]">
+              {t("bots_dca_config_title")}
             </h2>
             <BotStatusBadge
               status={dcaInst?.status ?? "none"}
               t={t}
             />
           </div>
-          <div className="mt-4 grid gap-3">
-            <label className="block text-sm font-medium">
-              {t("bots_dca_symbol")}
-              <select
+          <div className="mt-3 space-y-3">
+            <BotFlowField label={t("bots_dca_symbol")}>
+              <BotFlowSelect
                 value={dcaSymbol}
                 onChange={(e) => setDcaSymbol(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
               >
                 {(data.dcaOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_dca_amount")}
-              <input
-                value={dcaAmount}
-                onChange={(e) => setDcaAmount(e.target.value)}
-                inputMode="decimal"
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_dca_interval")}
-              <select
-                value={dcaInterval}
-                onChange={(e) => setDcaInterval(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              >
-                {(data.dcaOptions?.intervalHours ?? [24]).map((h) => (
-                  <option key={h} value={h}>
-                    {h}h
-                  </option>
-                ))}
-              </select>
-            </label>
+              </BotFlowSelect>
+            </BotFlowField>
+            <BotFormGrid>
+              <BotFlowField label={t("bots_dca_amount")}>
+                <BotFlowInput
+                  value={dcaAmount}
+                  onChange={(e) => setDcaAmount(e.target.value)}
+                  inputMode="decimal"
+                />
+              </BotFlowField>
+              <BotFlowField label={t("bots_dca_interval")}>
+                <BotFlowSelect
+                  value={dcaInterval}
+                  onChange={(e) => setDcaInterval(Number(e.target.value))}
+                >
+                  {(data.dcaOptions?.intervalHours ?? [24]).map((h) => (
+                    <option key={h} value={h}>
+                      {h}h
+                    </option>
+                  ))}
+                </BotFlowSelect>
+              </BotFlowField>
+            </BotFormGrid>
           </div>
           {billingMismatchBanner(dcaInst)}
           <SmartModePanel
@@ -1337,29 +1279,19 @@ export function BotsTradingClient() {
             </p>
           ) : null}
           {dcaInst?.lastError && instEnvAligned(dcaInst) ? (
-            <p className="mt-1 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-              {formatBotRuntimeError(dcaInst.lastError, t)}
-            </p>
+            <BotFlowError>{formatBotRuntimeError(dcaInst.lastError, t)}</BotFlowError>
           ) : null}
-          {dcaMsg ? <p className="mt-2 text-sm text-emerald-800">{dcaMsg}</p> : null}
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveDca("active")}
-              className="flex-1 rounded-xl bg-emerald-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-            >
-              {t("bots_dca_start")}
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveDca("paused")}
-              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
-            >
-              {t("bots_dca_pause")}
-            </button>
-          </div>
+          {dcaMsg ? (
+            <p className="mt-2 text-xs font-medium text-[color:var(--fd-primary)]">{dcaMsg}</p>
+          ) : null}
+          <BotRunControls
+            status={dcaInst?.status ?? "none"}
+            busy={busy}
+            startLabel={t("bots_dca_start")}
+            pauseLabel={t("bots_dca_pause")}
+            onStart={() => void saveDca("active")}
+            onPause={() => void saveDca("paused")}
+          />
           <BotStrategyLivePanel
             planId="dca_spot"
             billing={accountBilling}
@@ -1371,17 +1303,14 @@ export function BotsTradingClient() {
             onLogsRefresh={refreshDcaLogs}
             t={t}
           />
-        </section>
+        </BotPlanCard>
       ) : null}
 
       {activeTab === "grid_spot" && gridSub && gridKeysOk ? (
-        <section className="mt-4 rounded-2xl border border-violet-700/40 bg-violet-50/40 p-4 dark:border-violet-800/50 dark:bg-violet-950/15">
+        <BotPlanCard planId="grid_spot" className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold text-violet-950 dark:text-violet-100">
-              <UiSectionTitle
-                title={t("bots_grid_config_title")}
-                tip={t("bots_grid_config_tip")}
-              />
+            <h2 className="text-base font-bold text-[color:var(--fd-text)]">
+              {t("bots_grid_config_title")}
             </h2>
             <BotStatusBadge
               status={gridInst?.status ?? "none"}
@@ -1389,70 +1318,51 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium sm:col-span-2">
-              {t("bots_dca_symbol")}
-              <select
+          <div className="mt-3 space-y-3">
+            <BotFlowField label={t("bots_dca_symbol")}>
+              <BotFlowSelect
                 value={gridSymbol}
                 onChange={(e) => setGridSymbol(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
               >
                 {(data.gridOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_grid_low")}
-              <input
-                value={gridLow}
-                onChange={(e) => setGridLow(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_grid_high")}
-              <input
-                value={gridHigh}
-                onChange={(e) => setGridHigh(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_grid_count")}
-              <input
-                type="number"
-                min={3}
-                max={15}
-                value={gridCount}
-                onChange={(e) => setGridCount(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_grid_quote")}
-              <input
-                value={gridQuote}
-                onChange={(e) => setGridQuote(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium sm:col-span-2">
-              {t("bots_grid_refresh")}
-              <select
+              </BotFlowSelect>
+            </BotFlowField>
+            <BotFormGrid>
+              <BotFlowField label={t("bots_grid_low")}>
+                <BotFlowInput value={gridLow} onChange={(e) => setGridLow(e.target.value)} />
+              </BotFlowField>
+              <BotFlowField label={t("bots_grid_high")}>
+                <BotFlowInput value={gridHigh} onChange={(e) => setGridHigh(e.target.value)} />
+              </BotFlowField>
+              <BotFlowField label={t("bots_grid_count")}>
+                <BotFlowInput
+                  type="number"
+                  min={3}
+                  max={15}
+                  value={gridCount}
+                  onChange={(e) => setGridCount(Number(e.target.value))}
+                />
+              </BotFlowField>
+              <BotFlowField label={t("bots_grid_quote")}>
+                <BotFlowInput value={gridQuote} onChange={(e) => setGridQuote(e.target.value)} />
+              </BotFlowField>
+            </BotFormGrid>
+            <BotFlowField label={t("bots_grid_refresh")}>
+              <BotFlowSelect
                 value={gridRefresh}
                 onChange={(e) => setGridRefresh(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
               >
                 {(data.gridOptions?.refreshHours ?? [12]).map((h) => (
                   <option key={h} value={h}>
                     {h}h
                   </option>
                 ))}
-              </select>
-            </label>
+              </BotFlowSelect>
+            </BotFlowField>
           </div>
           {billingMismatchBanner(gridInst)}
           <SmartModePanel
@@ -1470,29 +1380,20 @@ export function BotsTradingClient() {
             </p>
           ) : null}
           {gridInst?.lastError && instEnvAligned(gridInst) ? (
-            <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-              {formatBotRuntimeError(gridInst.lastError, t)}
-            </p>
+            <BotFlowError>{formatBotRuntimeError(gridInst.lastError, t)}</BotFlowError>
           ) : null}
-          {gridMsg ? <p className="mt-2 text-sm text-violet-800">{gridMsg}</p> : null}
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveGrid("active")}
-              className="flex-1 rounded-xl bg-violet-700 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-            >
-              {t("bots_grid_start")}
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveGrid("paused")}
-              className="flex-1 rounded-xl border border-stone-400 py-2.5 text-sm font-semibold dark:border-stone-600"
-            >
-              {t("bots_grid_pause")}
-            </button>
-          </div>
+          {gridMsg ? (
+            <p className="mt-2 text-xs font-medium text-violet-800">{gridMsg}</p>
+          ) : null}
+          <BotRunControls
+            status={gridInst?.status ?? "none"}
+            busy={busy}
+            variant="violet"
+            startLabel={t("bots_grid_start")}
+            pauseLabel={t("bots_grid_pause")}
+            onStart={() => void saveGrid("active")}
+            onPause={() => void saveGrid("paused")}
+          />
           <BotStrategyLivePanel
             planId="grid_spot"
             billing={accountBilling}
@@ -1504,17 +1405,14 @@ export function BotsTradingClient() {
             onLogsRefresh={refreshGridLogs}
             t={t}
           />
-        </section>
+        </BotPlanCard>
       ) : null}
 
       {activeTab === "futures_um" && futSub && futKeysOk ? (
-        <section className="mt-4 rounded-2xl border border-amber-600/50 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-950/20">
+        <BotPlanCard planId="futures_um" className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">
-              <UiSectionTitle
-                title={t("bots_futures_config_title")}
-                tip={t("bots_futures_config_tip")}
-              />
+            <h2 className="text-base font-bold text-[color:var(--fd-text)]">
+              {t("bots_futures_config_title")}
             </h2>
             <BotStatusBadge
               status={futInst?.status ?? "none"}
@@ -1529,24 +1427,22 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-3 space-y-3">
             {billingMismatchBanner(futInst)}
-            <label className="block text-sm font-medium sm:col-span-2">
-              {t("bots_dca_symbol")}
-              <select
+            <BotFlowField label={t("bots_dca_symbol")}>
+              <BotFlowSelect
                 value={futSymbol}
                 onChange={(e) => setFutSymbol(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
               >
                 {(data.futuresOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
                 ))}
-              </select>
-            </label>
+              </BotFlowSelect>
+            </BotFlowField>
             {futFormSymbolDirty && savedFutSymbol ? (
-              <p className="rounded-lg border border-amber-400/60 bg-amber-100/80 px-3 py-2 text-xs text-amber-950 dark:border-amber-600/50 dark:bg-amber-950/40 dark:text-amber-100 sm:col-span-2">
+              <p className="text-xs font-medium text-amber-900">
                 {t("bots_futures_symbol_pending", {
                   saved: savedFutSymbol,
                   next: futSymbol,
@@ -1554,91 +1450,73 @@ export function BotsTradingClient() {
               </p>
             ) : null}
             {futHasUnmanagedOpen ? (
-              <p className="rounded-lg border border-rose-400/60 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-700/50 dark:bg-rose-950/40 dark:text-rose-100 sm:col-span-2">
-                {t("bots_futures_position_other")}
-              </p>
+              <BotFlowError>{t("bots_futures_other_short")}</BotFlowError>
             ) : null}
             {futShowRealign ? (
-              <div className="sm:col-span-2">
-                <button
-                  type="button"
-                  onClick={realignFuturesForm}
-                  className="w-full rounded-lg border border-amber-600/60 bg-white px-3 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-500/50 dark:bg-stone-900 dark:text-amber-100 dark:hover:bg-amber-950/50"
-                >
-                  {t("bots_futures_realign_form")}
-                </button>
-              </div>
+              <BotFlowBtn variant="ghost" onClick={realignFuturesForm}>
+                {t("bots_futures_realign_form")}
+              </BotFlowBtn>
             ) : null}
-            <label className="block text-sm font-medium">
-              {t("bots_futures_side")}
-              <select
-                value={futSide}
-                onChange={(e) => setFutSide(e.target.value as "LONG" | "SHORT")}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              >
-                <option value="LONG">{t("bots_futures_long")}</option>
-                <option value="SHORT">{t("bots_futures_short")}</option>
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_futures_leverage")}
-              <select
-                value={futLeverage}
-                onChange={(e) => setFutLeverage(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              >
-                {(data.futuresOptions?.leverage ?? [5]).map((lv) => (
-                  <option key={lv} value={lv}>
-                    {lv}×
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_futures_margin")}
-              <input
-                value={futMargin}
-                onChange={(e) => setFutMargin(e.target.value)}
-                inputMode="decimal"
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_futures_sl")}
-              <input
-                type="number"
-                min={1}
-                max={50}
-                value={futSl}
-                onChange={(e) => setFutSl(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              {t("bots_futures_tp")}
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={futTp}
-                onChange={(e) => setFutTp(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              />
-            </label>
-            <label className="block text-sm font-medium sm:col-span-2">
-              {t("bots_futures_reopen")}
-              <select
-                value={futInterval}
-                onChange={(e) => setFutInterval(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 dark:border-stone-600 dark:bg-stone-900"
-              >
-                {(data.futuresOptions?.intervalHours ?? [24]).map((h) => (
-                  <option key={h} value={h}>
-                    {h}h
-                  </option>
-                ))}
-              </select>
-            </label>
+            <BotFormGrid>
+              <BotFlowField label={t("bots_futures_side")}>
+                <BotFlowSelect
+                  value={futSide}
+                  onChange={(e) => setFutSide(e.target.value as "LONG" | "SHORT")}
+                >
+                  <option value="LONG">{t("bots_futures_long")}</option>
+                  <option value="SHORT">{t("bots_futures_short")}</option>
+                </BotFlowSelect>
+              </BotFlowField>
+              <BotFlowField label={t("bots_futures_leverage")}>
+                <BotFlowSelect
+                  value={futLeverage}
+                  onChange={(e) => setFutLeverage(Number(e.target.value))}
+                >
+                  {(data.futuresOptions?.leverage ?? [5]).map((lv) => (
+                    <option key={lv} value={lv}>
+                      {lv}×
+                    </option>
+                  ))}
+                </BotFlowSelect>
+              </BotFlowField>
+              <BotFlowField label={t("bots_futures_margin")}>
+                <BotFlowInput
+                  value={futMargin}
+                  onChange={(e) => setFutMargin(e.target.value)}
+                  inputMode="decimal"
+                />
+              </BotFlowField>
+              <BotFlowField label={t("bots_futures_sl")}>
+                <BotFlowInput
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={futSl}
+                  onChange={(e) => setFutSl(Number(e.target.value))}
+                />
+              </BotFlowField>
+              <BotFlowField label={t("bots_futures_tp")}>
+                <BotFlowInput
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={futTp}
+                  onChange={(e) => setFutTp(Number(e.target.value))}
+                />
+              </BotFlowField>
+              <BotFlowField label={t("bots_futures_reopen")}>
+                <BotFlowSelect
+                  value={futInterval}
+                  onChange={(e) => setFutInterval(Number(e.target.value))}
+                >
+                  {(data.futuresOptions?.intervalHours ?? [24]).map((h) => (
+                    <option key={h} value={h}>
+                      {h}h
+                    </option>
+                  ))}
+                </BotFlowSelect>
+              </BotFlowField>
+            </BotFormGrid>
           </div>
           <FuturesTraderProfilePanel
             profile={futTraderProfile}
@@ -1691,11 +1569,11 @@ export function BotsTradingClient() {
             </p>
           ) : null}
           {futInst?.lastError && instEnvAligned(futInst) ? (
-            <p className="mt-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-              {formatBotRuntimeError(futInst.lastError, t)}
-            </p>
+            <BotFlowError>{formatBotRuntimeError(futInst.lastError, t)}</BotFlowError>
           ) : null}
-          {futMsg ? <p className="mt-2 text-sm text-amber-900">{futMsg}</p> : null}
+          {futMsg ? (
+            <p className="mt-2 text-xs font-medium text-amber-900">{futMsg}</p>
+          ) : null}
           <BotRunControls
             status={futInst?.status ?? "none"}
             busy={busy}
@@ -1710,7 +1588,7 @@ export function BotsTradingClient() {
           <p className="mt-3 text-center">
             <Link
               href="/app/trade/futures/guide"
-              className="text-xs font-medium text-amber-800 underline decoration-amber-600/50 underline-offset-2 dark:text-amber-200"
+              className="text-xs font-medium text-[color:var(--fd-primary)] underline underline-offset-2"
             >
               {t("trade_ui_learn_futures")}
             </Link>
@@ -1727,7 +1605,7 @@ export function BotsTradingClient() {
             onOpenChange={setFutOpenRows}
             t={t}
           />
-        </section>
+        </BotPlanCard>
       ) : null}
 
       {wizardPlan ? (
@@ -1744,7 +1622,7 @@ export function BotsTradingClient() {
           <section
             role="dialog"
             aria-modal="true"
-            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border-2 border-violet-600/50 bg-violet-50/95 p-4 shadow-2xl dark:border-violet-500/40 dark:bg-violet-950/95"
+            className="fd-card relative max-h-[90vh] w-full max-w-lg overflow-y-auto p-4 shadow-xl"
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
               {t("bots_wizard_progress", { step: String(wizardStep), total: "3" })}

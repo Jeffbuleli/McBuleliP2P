@@ -8,7 +8,7 @@ export default async function TradeBotsPage() {
   return (
     <>
       <BotsTradingClient />
-      <p className="mt-8 text-xs text-stone-500 dark:text-stone-400">
+      <p className="mt-8 text-xs text-[color:var(--fd-muted)]">
         {d.bots_disclaimer}
       </p>
     </>

@@ -14,8 +14,14 @@ import {
   isHigherTimeframe,
 } from "@/lib/bot-candle-timeframe-utils";
 import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
-import { UiInfoTip } from "@/components/ui/ui-info-tip";
 import { AiAssistStatusBadge } from "@/components/trade/ai-assist-status-badge";
+import {
+  BotFlowField,
+  BotFlowInput,
+  BotFlowSelect,
+  BotFlowToggle,
+  BotFormGrid,
+} from "@/components/trade/bots-flow-ui";
 
 type CandleTf = (typeof BOT_CANDLE_TIMEFRAMES)[number];
 
@@ -203,12 +209,12 @@ export function FuturesTraderProfilePanel({
   botInstanceId?: string | null;
   savedInstanceBilling?: "demo" | "live" | null;
   accountBilling?: "demo" | "live";
-  /** Super-admin only: show bot UUID for AI worker wiring. */
   showAiTechnicalRef?: boolean;
   entryTimeframe: CandleTf;
   onApplyPreset: (preset: FuturesProfileApplyPayload) => void;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [refCopied, setRefCopied] = useState(false);
   const confirmOptions = confirmOptionsFor(entryTimeframe);
 
@@ -224,18 +230,11 @@ export function FuturesTraderProfilePanel({
   }
 
   return (
-    <div className="mt-3 rounded-xl border border-amber-200/90 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/25">
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex min-w-[8rem] flex-1 items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100">
-          <span>{t("bots_trader_profile_label")}</span>
-          <UiInfoTip tip={t("bots_trader_profile_tip")} />
-        </label>
-        <select
+    <div className="mt-3 space-y-2">
+      <BotFlowField label={t("bots_trader_profile_label")}>
+        <BotFlowSelect
           value={profile}
-          onChange={(e) =>
-            selectProfile(parseTraderProfileId(e.target.value))
-          }
-          className="min-w-[9rem] flex-1 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs font-medium dark:border-stone-600 dark:bg-stone-900"
+          onChange={(e) => selectProfile(parseTraderProfileId(e.target.value))}
         >
           {(Object.keys(PROFILE_KEYS) as Exclude<BotTraderProfileId, "custom">[]).map(
             (id) => (
@@ -245,261 +244,140 @@ export function FuturesTraderProfilePanel({
             ),
           )}
           <option value="custom">{t("bots_trader_profile_custom")}</option>
-        </select>
-      </div>
-      <label className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={breakeven.breakevenMode}
+        </BotFlowSelect>
+      </BotFlowField>
+
+      <BotFlowToggle
+        label={t("bots_breakeven_mode")}
+        checked={breakeven.breakevenMode}
+        onChange={(v) => onBreakevenChange({ ...breakeven, breakevenMode: v })}
+      />
+      {breakeven.breakevenMode ? (
+        <BotFlowField label={t("bots_breakeven_trigger")}>
+          <BotFlowInput
+            type="number"
+            min={0.1}
+            max={20}
+            step={0.1}
+            value={breakeven.breakevenTriggerPct}
             onChange={(e) =>
               onBreakevenChange({
                 ...breakeven,
-                breakevenMode: e.target.checked,
+                breakevenTriggerPct: Number(e.target.value),
               })
             }
           />
-          <span className="font-medium text-amber-950 dark:text-amber-100">
-            {t("bots_breakeven_mode")}
-          </span>
-          <UiInfoTip tip={t("bots_breakeven_tip")} />
-        </span>
-        {breakeven.breakevenMode ? (
-          <span className="flex items-center gap-1">
-            <span className="text-stone-600 dark:text-stone-400">
-              {t("bots_breakeven_trigger")}
-            </span>
-            <input
+        </BotFlowField>
+      ) : null}
+
+      <BotFlowToggle
+        label={t("bots_trailing_mode")}
+        checked={trailing.trailingMode}
+        onChange={(v) => onTrailingChange({ ...trailing, trailingMode: v })}
+      />
+      {trailing.trailingMode ? (
+        <BotFormGrid>
+          <BotFlowField label={t("bots_trailing_retrace")}>
+            <BotFlowInput
               type="number"
               min={0.1}
               max={20}
               step={0.1}
-              value={breakeven.breakevenTriggerPct}
+              value={trailing.trailingPct}
               onChange={(e) =>
-                onBreakevenChange({
-                  ...breakeven,
-                  breakevenTriggerPct: Number(e.target.value),
-                })
-              }
-              className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-            />
-            <span className="text-stone-500">%</span>
-          </span>
-        ) : null}
-      </label>
-      <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={trailing.trailingMode}
-            onChange={(e) =>
-              onTrailingChange({
-                ...trailing,
-                trailingMode: e.target.checked,
-              })
-            }
-          />
-          <span className="font-medium text-amber-950 dark:text-amber-100">
-            {t("bots_trailing_mode")}
-          </span>
-          <UiInfoTip tip={t("bots_trailing_tip")} />
-        </span>
-        {trailing.trailingMode ? (
-          <>
-            <span className="flex items-center gap-1">
-              <span className="text-stone-600 dark:text-stone-400">
-                {t("bots_trailing_retrace")}
-              </span>
-              <input
-                type="number"
-                min={0.1}
-                max={20}
-                step={0.1}
-                value={trailing.trailingPct}
-                onChange={(e) =>
-                  onTrailingChange({
-                    ...trailing,
-                    trailingPct: Number(e.target.value),
-                  })
-                }
-                className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-              />
-              <span className="text-stone-500">%</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-stone-600 dark:text-stone-400">
-                {t("bots_trailing_trigger")}
-              </span>
-              <input
-                type="number"
-                min={0.1}
-                max={50}
-                step={0.1}
-                value={trailing.trailingTriggerPct}
-                onChange={(e) =>
-                  onTrailingChange({
-                    ...trailing,
-                    trailingTriggerPct: Number(e.target.value),
-                  })
-                }
-                className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-              />
-              <span className="text-stone-500">%</span>
-            </span>
-          </>
-        ) : null}
-      </label>
-      {confirmOptions.length > 0 ? (
-        <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <span className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={multiTf.multiTfGateMode}
-              onChange={(e) =>
-                onMultiTfChange({
-                  ...multiTf,
-                  multiTfGateMode: e.target.checked,
+                onTrailingChange({
+                  ...trailing,
+                  trailingPct: Number(e.target.value),
                 })
               }
             />
-            <span className="font-medium text-amber-950 dark:text-amber-100">
-              {t("bots_mtf_gate_mode")}
-            </span>
-            <UiInfoTip tip={t("bots_mtf_gate_tip")} />
-          </span>
-          {multiTf.multiTfGateMode ? (
-            <span className="flex items-center gap-1">
-              <span className="text-stone-600 dark:text-stone-400">
-                {t("bots_mtf_confirm_tf")}
-              </span>
-              <select
-                value={multiTf.confirmTimeframe}
-                onChange={(e) =>
-                  onMultiTfChange({
-                    ...multiTf,
-                    confirmTimeframe: e.target.value as CandleTf,
-                  })
-                }
-                className="rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-              >
-                {confirmOptions.map((tf) => (
-                  <option key={tf} value={tf}>
-                    {tf}
-                  </option>
-                ))}
-              </select>
-              <span className="text-stone-500">← {entryTimeframe}</span>
-            </span>
-          ) : null}
-        </label>
+          </BotFlowField>
+          <BotFlowField label={t("bots_trailing_trigger")}>
+            <BotFlowInput
+              type="number"
+              min={0.1}
+              max={50}
+              step={0.1}
+              value={trailing.trailingTriggerPct}
+              onChange={(e) =>
+                onTrailingChange({
+                  ...trailing,
+                  trailingTriggerPct: Number(e.target.value),
+                })
+              }
+            />
+          </BotFlowField>
+        </BotFormGrid>
       ) : null}
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1">
-          <span className="font-medium text-amber-950 dark:text-amber-100">
-            {t("bots_max_hold_label")}
-          </span>
-          <UiInfoTip tip={t("bots_max_hold_tip")} />
-          <input
-            type="number"
-            min={0}
-            max={10080}
-            step={1}
-            value={lifecycle.maxHoldMinutes}
+
+      {confirmOptions.length > 0 ? (
+        <BotFlowToggle
+          label={t("bots_mtf_gate_mode")}
+          checked={multiTf.multiTfGateMode}
+          onChange={(v) => onMultiTfChange({ ...multiTf, multiTfGateMode: v })}
+        />
+      ) : null}
+      {multiTf.multiTfGateMode && confirmOptions.length > 0 ? (
+        <BotFlowField label={t("bots_mtf_confirm_tf")}>
+          <BotFlowSelect
+            value={multiTf.confirmTimeframe}
             onChange={(e) =>
-              onLifecycleChange({
-                ...lifecycle,
-                maxHoldMinutes: Math.max(0, Number(e.target.value) || 0),
+              onMultiTfChange({
+                ...multiTf,
+                confirmTimeframe: e.target.value as CandleTf,
               })
             }
-            className="w-16 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-          />
-          <span className="text-stone-500">{t("bots_lifecycle_minutes")}</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="font-medium text-amber-950 dark:text-amber-100">
-            {t("bots_reentry_cooldown_label")}
-          </span>
-          <UiInfoTip tip={t("bots_reentry_cooldown_tip")} />
-          <input
+          >
+            {confirmOptions.map((tf) => (
+              <option key={tf} value={tf}>
+                {tf}
+              </option>
+            ))}
+          </BotFlowSelect>
+        </BotFlowField>
+      ) : null}
+
+      <BotFlowToggle
+        label={t("bots_ai_assist_mode")}
+        checked={aiAssist.aiAssistMode}
+        onChange={(v) => onAiAssistChange({ ...aiAssist, aiAssistMode: v })}
+      />
+      {aiAssist.aiAssistMode ? (
+        <BotFlowField label={t("bots_ai_min_confidence")}>
+          <BotFlowInput
             type="number"
             min={0}
-            max={1440}
+            max={100}
             step={1}
-            value={lifecycle.reentryCooldownMinutes}
-            onChange={(e) =>
-              onLifecycleChange({
-                ...lifecycle,
-                reentryCooldownMinutes: Math.max(0, Number(e.target.value) || 0),
-              })
-            }
-            className="w-16 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-          />
-          <span className="text-stone-500">{t("bots_lifecycle_minutes")}</span>
-        </span>
-      </div>
-      <label className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={aiAssist.aiAssistMode}
+            value={aiAssist.minAiConfidence}
             onChange={(e) =>
               onAiAssistChange({
                 ...aiAssist,
-                aiAssistMode: e.target.checked,
+                minAiConfidence: Math.max(0, Number(e.target.value) || 0),
               })
             }
           />
-          <span className="font-medium text-amber-950 dark:text-amber-100">
-            {t("bots_ai_assist_mode")}
-          </span>
-          <UiInfoTip tip={t("bots_ai_assist_tip")} />
-        </span>
-        {aiAssist.aiAssistMode ? (
-          <span className="flex items-center gap-1">
-            <span className="text-stone-600 dark:text-stone-400">
-              {t("bots_ai_min_confidence")}
-            </span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={aiAssist.minAiConfidence}
-              onChange={(e) =>
-                onAiAssistChange({
-                  ...aiAssist,
-                  minAiConfidence: Math.max(0, Number(e.target.value) || 0),
-                })
-              }
-              className="w-14 rounded border border-stone-300 bg-white px-1.5 py-0.5 dark:border-stone-600 dark:bg-stone-900"
-            />
-          </span>
-        ) : null}
-      </label>
-      {aiAssist.aiAssistMode && !showAiTechnicalRef ? (
-        <p className="mt-1.5 text-[10px] text-stone-600 dark:text-stone-400">
-          {t("bots_ai_assist_user_note")}
-        </p>
+        </BotFlowField>
       ) : null}
+
       <AiAssistStatusBadge
         instanceId={botInstanceId}
         enabled={aiAssist.aiAssistMode}
         t={t}
       />
+
       {aiAssist.aiAssistMode && showAiTechnicalRef && botInstanceId ? (
-        <div className="mt-1.5 rounded border border-stone-200/80 bg-stone-50/80 px-2 py-1.5 dark:border-stone-600 dark:bg-stone-900/50">
-          <p className="text-[10px] font-medium text-stone-700 dark:text-stone-300">
+        <div className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2">
+          <p className="text-[10px] font-medium text-[color:var(--fd-muted)]">
             {t("bots_ai_instance_ref_admin")}
-            {savedInstanceBilling
-              ? ` · ${billingLabel(savedInstanceBilling)}`
-              : ""}
+            {savedInstanceBilling ? ` · ${billingLabel(savedInstanceBilling)}` : ""}
           </p>
-          <p className="mt-0.5 break-all font-mono text-[10px] text-stone-600 dark:text-stone-400">
+          <p className="mt-0.5 break-all font-mono text-[10px] text-[color:var(--fd-text)]">
             {botInstanceId}
           </p>
           <button
             type="button"
-            className="mt-1 text-[10px] font-semibold text-violet-700 underline dark:text-violet-300"
+            className="mt-1 text-[10px] font-semibold text-[color:var(--fd-primary)] underline"
             onClick={() => {
               void navigator.clipboard.writeText(botInstanceId).then(() => {
                 setRefCopied(true);
@@ -509,21 +387,50 @@ export function FuturesTraderProfilePanel({
           >
             {refCopied ? t("profile_id_copied") : t("bots_ai_copy_ref")}
           </button>
-          {savedInstanceBilling &&
-          accountBilling &&
-          savedInstanceBilling !== accountBilling ? (
-            <p className="mt-1 text-[10px] text-amber-800 dark:text-amber-200">
-              {t("bots_ai_instance_billing_mismatch", {
-                saved: billingLabel(savedInstanceBilling),
-                viewing: billingLabel(accountBilling),
-              })}
-            </p>
-          ) : null}
         </div>
-      ) : aiAssist.aiAssistMode && showAiTechnicalRef ? (
-        <p className="mt-1.5 text-[10px] text-amber-800 dark:text-amber-200">
-          {t("bots_ai_instance_save_first")}
-        </p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => setAdvancedOpen((o) => !o)}
+        className="w-full rounded-xl border border-[color:var(--fd-border)] py-2 text-xs font-bold text-[color:var(--fd-muted)]"
+      >
+        {advancedOpen ? "−" : "+"} {t("bots_advanced_options")}
+      </button>
+
+      {advancedOpen ? (
+        <BotFormGrid>
+          <BotFlowField label={t("bots_max_hold_label")}>
+            <BotFlowInput
+              type="number"
+              min={0}
+              max={10080}
+              step={1}
+              value={lifecycle.maxHoldMinutes}
+              onChange={(e) =>
+                onLifecycleChange({
+                  ...lifecycle,
+                  maxHoldMinutes: Math.max(0, Number(e.target.value) || 0),
+                })
+              }
+            />
+          </BotFlowField>
+          <BotFlowField label={t("bots_reentry_cooldown_label")}>
+            <BotFlowInput
+              type="number"
+              min={0}
+              max={1440}
+              step={1}
+              value={lifecycle.reentryCooldownMinutes}
+              onChange={(e) =>
+                onLifecycleChange({
+                  ...lifecycle,
+                  reentryCooldownMinutes: Math.max(0, Number(e.target.value) || 0),
+                })
+              }
+            />
+          </BotFlowField>
+        </BotFormGrid>
       ) : null}
     </div>
   );

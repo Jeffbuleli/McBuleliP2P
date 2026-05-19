@@ -308,6 +308,23 @@ html {
 .p2p-theme .fd-btn-sell:active {
   box-shadow: 0 1px 4px rgba(120, 53, 15, 0.16);
 }
+
+/* Trading bots — same light Fondeka shell as wallet / P2P */
+.trade-bots-theme {
+  --fd-primary: #4a7350;
+  --fd-primary-dark: #3d5f42;
+  --fd-mint: #eef3ef;
+  --fd-mint-deep: #e2ebe4;
+  --fd-border: rgba(61, 95, 66, 0.11);
+  --fd-sell: #b45309;
+  --fd-sell-mint: #f5ebe0;
+}
+.trade-bots-theme .fd-card {
+  border: 1px solid var(--fd-border);
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.05),
+    0 3px 10px rgba(28, 25, 23, 0.04);
+}
 .home-theme .wallet-hero,
 .wallet-theme .wallet-hero {
   border-radius: 1.25rem;

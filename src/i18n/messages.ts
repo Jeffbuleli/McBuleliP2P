@@ -1161,6 +1161,8 @@ export const en = {
   bots_futures_symbol_pending:
     "Form shows {next} — the bot still follows {saved} until you press Start.",
   bots_futures_other_badge: "Other pair",
+  bots_futures_other_short: "Wrong pair on Binance — align form or close there.",
+  bots_advanced_options: "Advanced",
   bots_futures_position_other:
     "Not managed by this bot — close on Binance or select that pair in the form.",
   bots_futures_realign_form: "Align form with active pair",
@@ -3144,6 +3146,8 @@ export const fr: Messages = {
   bots_futures_symbol_pending:
     "Formulaire : {next} — le bot suit encore {saved} tant que vous n’appuyez pas sur Démarrer.",
   bots_futures_other_badge: "Autre paire",
+  bots_futures_other_short: "Mauvaise paire sur Binance — alignez le formulaire ou fermez là-bas.",
+  bots_advanced_options: "Avancé",
   bots_futures_position_other:
     "Non géré par ce bot — clôturez sur Binance ou choisissez cette paire dans le formulaire.",
   bots_futures_realign_form: "Réaligner le formulaire sur la paire active",

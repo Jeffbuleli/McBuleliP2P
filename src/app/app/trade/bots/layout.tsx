@@ -6,7 +6,7 @@ export default function BotsSectionLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="wallet-theme trade-bots-theme mx-auto max-w-lg">
       <TradeSubNav />
       {children}
     </div>
