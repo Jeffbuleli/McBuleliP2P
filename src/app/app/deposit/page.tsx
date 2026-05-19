@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { NetworkId } from "@/lib/networks";
 import { NetworkPicker } from "@/components/wallet/network-picker";
@@ -23,8 +23,14 @@ type PickAsset = "USDT" | "PI";
 export default function DepositWizardPage() {
   const { t } = useI18n();
   const router = useRouter();
+  const sp = useSearchParams();
   const [step, setStep] = useState<Step>(1);
   const [asset, setAsset] = useState<PickAsset>("USDT");
+
+  useEffect(() => {
+    const a = sp.get("asset");
+    if (a === "PI" || a === "USDT") setAsset(a);
+  }, [sp]);
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [acceptedRisk, setAcceptedRisk] = useState(false);
   const [loading, setLoading] = useState(false);

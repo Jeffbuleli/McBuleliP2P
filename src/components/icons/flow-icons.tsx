@@ -83,6 +83,14 @@ export function IconArrowUp({ className = S }: { className?: string }) {
   );
 }
 
+export function IconArrowLeft({ className = S }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconArrowRight({ className = S }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>

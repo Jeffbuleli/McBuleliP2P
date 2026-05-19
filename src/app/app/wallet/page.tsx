@@ -36,7 +36,9 @@ function toRow(
   lang: "en" | "fr",
 ): WalletRowDTO {
   const depositHref =
-    row.asset === "PI_TEST" ? "/app/wallet/pi-test" : "/app/deposit";
+    row.asset === "PI_TEST"
+      ? "/app/wallet/pi-test"
+      : `/app/deposit?asset=${row.asset}`;
   const withdrawHref =
     row.asset === "PI"
       ? "/app/withdraw?asset=PI"

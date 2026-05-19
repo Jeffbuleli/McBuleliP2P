@@ -177,7 +177,10 @@ export function WalletOverview({
         ) : (
           rows.map((row) => (
             <li key={row.asset} className="fd-card p-3">
-              <div className="flex items-center gap-3">
+              <Link
+                href={`/app/wallet/${row.asset}`}
+                className="flex items-center gap-3 active:opacity-90"
+              >
                 <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
                   <Image
                     src={ICON[row.asset]}
@@ -203,7 +206,7 @@ export function WalletOverview({
                     {hidden ? mask() : row.valueUsdApprox}
                   </p>
                 </div>
-              </div>
+              </Link>
               <div className="mt-3 flex justify-end gap-2">
                 <Link
                   href={row.depositHref}
