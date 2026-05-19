@@ -7,13 +7,13 @@ import type { NetworkId } from "@/lib/networks";
 import { NetworkPicker } from "@/components/wallet/network-picker";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
+import { interpolate } from "@/i18n/messages";
 import {
   EXTERNAL_WITHDRAW_FEE_PI,
   EXTERNAL_WITHDRAW_FEE_USDT,
 } from "@/lib/withdraw-fees";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import {
-  FlowBackLink,
   FlowCard,
   FlowHubLink,
   FlowPrimaryBtn,
@@ -29,13 +29,13 @@ export default function WithdrawPage() {
   const [wAsset, setWAsset] = useState<WAsset>("USDT");
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [address, setAddress] = useState("");
-  const [memo, setMemo] = useState("");
   const [amount, setAmount] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [feeUsdt, setFeeUsdt] = useState(EXTERNAL_WITHDRAW_FEE_USDT);
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
+  const [minUsdt, setMinUsdt] = useState(10);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -49,6 +49,7 @@ export default function WithdrawPage() {
         const data = await res.json();
         if (typeof data.feeUsdt === "number") setFeeUsdt(data.feeUsdt);
         if (typeof data.feePi === "number") setFeePi(data.feePi);
+        if (typeof data.minNetUsdt === "number") setMinUsdt(data.minNetUsdt);
       } catch {
         /* defaults */
       }
@@ -72,7 +73,6 @@ export default function WithdrawPage() {
           asset: wAsset,
           network: wAsset === "PI" ? PI_MAIN_NETWORK_ID : network,
           address,
-          memo: memo || undefined,
           amount,
         }),
       });
@@ -95,50 +95,76 @@ export default function WithdrawPage() {
       ? address.trim().length >= 20
       : address.trim().length >= 10;
 
+  const flowHint = wAsset === "USDT" ? t("withdraw_flow_usdt_hint") : t("withdraw_flow_pi_hint");
+  const feeNote =
+    wAsset === "USDT"
+      ? interpolate(t("fee_note"), { fee: String(feeUsdt), min: String(minUsdt) })
+      : interpolate(t("fee_note_asset"), {
+          fee: String(feePi),
+          min: "0",
+          unit: "PI",
+        });
+
   return (
-    <WalletFlowShell title={t("withdraw_title")} subtitle={t("wallet_crypto_only_hint")}>
+    <WalletFlowShell
+      title={t("withdraw_title")}
+      subtitle={t("withdraw_pick_asset")}
+    >
       <FlowCard>
-        <p className="mb-2 text-center text-xs font-bold uppercase text-[color:var(--fd-muted)]">
-          {t("deposit_pick_asset")}
-        </p>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setWAsset("USDT")}
-            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 ${
-              wAsset === "USDT" ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
+            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
+              wAsset === "USDT"
+                ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]"
+                : "bg-stone-50"
             }`}
           >
             <Image src="/assets/crypto/usdt.png" alt="" width={40} height={40} className="rounded-full" />
             <span className="text-xs font-bold">USDT</span>
+            <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
+              {t("asset_usdt_full")}
+            </span>
           </button>
           <button
             type="button"
             onClick={() => setWAsset("PI")}
-            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 ${
+            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
               wAsset === "PI" ? "bg-violet-50 ring-2 ring-violet-500" : "bg-stone-50"
             }`}
           >
             <Image src="/assets/crypto/pi.png" alt="" width={40} height={40} className="rounded-full" />
             <span className="text-xs font-bold">Pi</span>
+            <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
+              {t("asset_pi_network")}
+            </span>
           </button>
         </div>
       </FlowCard>
 
+      <p className="fd-card mt-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+        {flowHint}
+      </p>
+
       {wAsset === "USDT" ? (
         <div className="mt-3">
           <NetworkPicker
-            label={t("deposit_network")}
+            label={t("deposit_step_usdt_network")}
             value={network}
             onChange={setNetwork}
           />
         </div>
-      ) : null}
+      ) : (
+        <p className="mt-3 text-center text-xs font-semibold text-violet-800">
+          {t("deposit_network_pi_main")}
+        </p>
+      )}
 
       <FlowCard className="mt-3 space-y-3">
         <label className="block">
           <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("withdraw_addr")}
+            {wAsset === "PI" ? t("withdraw_addr_pi_ph") : t("withdraw_addr")}
           </span>
           <input
             value={address}
@@ -159,6 +185,7 @@ export default function WithdrawPage() {
             className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-lg font-bold tabular-nums outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
             placeholder="0"
           />
+          <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">{feeNote}</p>
         </label>
       </FlowCard>
 
@@ -177,21 +204,25 @@ export default function WithdrawPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-2xl bg-[color:var(--fd-card)] p-5 shadow-xl">
             <p className="text-lg font-bold text-[color:var(--fd-text)]">{t("withdraw_review")}</p>
+            <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{flowHint}</p>
             <div className="mt-4 space-y-2 text-sm text-[color:var(--fd-muted)]">
               <p>
-                <span className="text-2xl" aria-hidden>
-                  {wAsset === "PI" ? "🟣" : "💵"}
-                </span>{" "}
-                <strong className="text-[color:var(--fd-text)]">{wAsset}</strong> ·{" "}
-                {wAsset === "USDT" ? network : "Pi"}
+                <strong className="text-[color:var(--fd-text)]">{wAsset}</strong>
+                {wAsset === "USDT" ? ` · ${network}` : ` · ${t("deposit_network_pi_main")}`}
               </p>
               <p className="break-all font-mono text-xs">{address.trim()}</p>
-              <p className="font-bold tabular-nums text-[color:var(--fd-text)]">
-                {amount} {unit}
-                {totalDebit != null ? ` → ${totalDebit.toLocaleString()} ${unit}` : ""}
-              </p>
+              {totalDebit != null ? (
+                <p className="font-bold tabular-nums text-[color:var(--fd-text)]">
+                  {interpolate(t("withdraw_confirm_debit"), {
+                    net: amount,
+                    total: String(totalDebit),
+                    unit,
+                  })}
+                </p>
+              ) : null}
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <p className="mt-3 text-xs text-amber-900">{t("withdraw_warn")}</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
@@ -216,4 +247,3 @@ export default function WithdrawPage() {
     </WalletFlowShell>
   );
 }
-

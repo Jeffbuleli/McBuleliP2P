@@ -92,6 +92,10 @@ export default function WalletTransferPage() {
         </div>
       </FlowCard>
 
+      <p className="fd-card mt-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+        {t("wallet_action_send_hint")}
+      </p>
+
       <FlowCard className="mt-3 space-y-3">
         <label className="block">
           <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">

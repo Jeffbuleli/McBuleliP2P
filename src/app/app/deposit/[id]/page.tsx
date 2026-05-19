@@ -138,9 +138,12 @@ export default function DepositDetailPage() {
 
   return (
     <WalletFlowShell
-      title={t("deposit_detail_title")}
+      title={`${t("deposit_detail_title")} · ${deposit.asset}`}
       subtitle={depositStatusLine(t, deposit.status)}
     >
+      <p className="fd-card mb-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+        {isPiMain ? t("deposit_detail_pi_steps") : t("deposit_detail_usdt_steps")}
+      </p>
       <FlowCard className="flex flex-col items-center gap-3">
         <div className="relative rounded-2xl bg-white p-3 shadow-inner">
           <QRCode value={deposit.addressShown} size={200} />
@@ -187,7 +190,9 @@ export default function DepositDetailPage() {
       ) : null}
 
       {deposit.status === DepositStatus.AWAITING_TRANSFER ? (
-        <FlowPrimaryBtn onClick={() => void markSent()}>{t("deposit_sent")}</FlowPrimaryBtn>
+        <FlowPrimaryBtn onClick={() => void markSent()}>
+          {t("deposit_sent_btn", { asset: deposit.asset })}
+        </FlowPrimaryBtn>
       ) : null}
 
       {isPendingReview ? (
@@ -205,6 +210,9 @@ export default function DepositDetailPage() {
         <FlowCard className="mt-3 space-y-3">
           <label className="block text-sm font-semibold text-[color:var(--fd-text)]">
             {t("deposit_txid")}
+            <span className="mt-0.5 block text-xs font-normal text-[color:var(--fd-muted)]">
+              {isPiMain ? t("deposit_txid_hint_pi") : t("deposit_txid_hint_usdt")}
+            </span>
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}

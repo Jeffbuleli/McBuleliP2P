@@ -33,8 +33,6 @@ export default function DepositWizardPage() {
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [userNote, setUserNote] = useState("");
   const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
-  const [binanceConfigWarn, setBinanceConfigWarn] = useState<string | null>(null);
-
   useEffect(() => {
     void (async () => {
       try {
@@ -44,23 +42,13 @@ export default function DepositWizardPage() {
         setEnabledPi(Boolean(data.piManual));
         const env = data.binanceEnv;
         setBinanceEnv(env === "demo" || env === "live" ? env : null);
-        if (
-          data.usdtBinance &&
-          data.binanceSpotOk === true &&
-          data.binanceEnableWithdrawals === false
-        ) {
-          setBinanceConfigWarn(t("wallet_binance_error_wallet_permission"));
-        } else {
-          setBinanceConfigWarn(null);
-        }
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
         setBinanceEnv(null);
-        setBinanceConfigWarn(null);
       }
     })();
-  }, [t]);
+  }, []);
 
   const anyEnabled = enabledUsdt === true || enabledPi === true;
 
@@ -127,8 +115,10 @@ export default function DepositWizardPage() {
     }
   }
 
-  const confirmLabel =
-    asset === "USDT" ? `${network}` : "Pi";
+  const confirmText =
+    asset === "USDT"
+      ? `${t("deposit_confirm_chk_usdt")} ${network}`
+      : t("deposit_confirm_chk_pi");
 
   const stepSubtitle = `${t("deposit_step")} ${step}/3`;
 
@@ -156,12 +146,6 @@ export default function DepositWizardPage() {
       {!anyEnabled ? (
         <p className="fd-card px-3 py-2 text-sm text-rose-800">{t("deposit_unavailable")}</p>
       ) : null}
-      {binanceConfigWarn ? (
-        <p className="fd-card border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-950">
-          {binanceConfigWarn}
-        </p>
-      ) : null}
-
       {step === 1 && (
         <section>
           <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
@@ -179,6 +163,9 @@ export default function DepositWizardPage() {
             >
               <Image src="/assets/crypto/usdt.png" alt="" width={48} height={48} className="rounded-full" />
               <span className="text-sm font-bold text-[color:var(--fd-text)]">USDT</span>
+              <span className="text-center text-[10px] leading-tight text-[color:var(--fd-muted)]">
+                {t("asset_usdt_full")}
+              </span>
             </button>
             <button
               type="button"
@@ -191,6 +178,9 @@ export default function DepositWizardPage() {
             >
               <Image src="/assets/crypto/pi.png" alt="" width={48} height={48} className="rounded-full" />
               <span className="text-sm font-bold text-[color:var(--fd-text)]">Pi</span>
+              <span className="text-center text-[10px] leading-tight text-[color:var(--fd-muted)]">
+                {t("asset_pi_network")}
+              </span>
             </button>
           </div>
         </section>
@@ -198,8 +188,11 @@ export default function DepositWizardPage() {
 
       {step === 2 && asset === "USDT" && (
         <section>
+          <p className="fd-card mb-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+            {t("deposit_flow_usdt_hint")}
+          </p>
           <NetworkPicker
-            label={t("deposit_network")}
+            label={t("deposit_step_usdt_network")}
             value={network}
             onChange={pickNetwork}
           />
@@ -213,6 +206,9 @@ export default function DepositWizardPage() {
 
       {step === 3 && (
         <section className="space-y-3">
+          <p className="fd-card px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+            {asset === "USDT" ? t("deposit_flow_usdt_hint") : t("deposit_flow_pi_hint")}
+          </p>
           {asset === "USDT" ? (
             <FlowCard>
               <label className="block">
@@ -256,7 +252,7 @@ export default function DepositWizardPage() {
               <span className="text-lg" aria-hidden>
                 ⚠️
               </span>
-              {t("deposit_confirm_chk")} <strong>{confirmLabel}</strong>
+              {confirmText}
             </span>
           </label>
 

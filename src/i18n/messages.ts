@@ -362,24 +362,24 @@ export const en = {
   install_later: "Later",
   notifications_title: "Notifications",
   notifications_empty: "No notifications yet.",
-  notif_withdrawal_completed_title: "Withdrawal completed",
+  notif_withdrawal_completed_title: "{asset} withdrawal sent",
   notif_withdrawal_completed_body:
-    "Your {asset} withdrawal was sent on-chain. Reference TXID in History.",
-  notif_withdrawal_rejected_title: "Withdrawal refunded",
+    "Your {asset} was sent to your external address. See TXID in Wallet → History.",
+  notif_withdrawal_rejected_title: "{asset} withdrawal cancelled",
   notif_withdrawal_rejected_body:
-    "Your withdrawal was cancelled and funds returned. Reason: {reason}",
-  notif_deposit_confirmed_title: "Deposit credited",
+    "Your {asset} withdrawal was cancelled and funds returned. Reason: {reason}",
+  notif_deposit_confirmed_title: "{asset} deposit credited",
   notif_deposit_confirmed_body:
-    "Your {asset} deposit was credited ({amount}).",
-  notif_withdrawal_queued_title: "Withdrawal received",
+    "Your {asset} balance was updated ({amount}).",
+  notif_withdrawal_queued_title: "{asset} withdrawal queued",
   notif_withdrawal_queued_body:
-    "Your {asset} payout request is in our manual queue. Staff will send funds after review — check Wallet history for updates.",
-  notif_withdrawal_claimed_title: "Withdrawal being sent",
+    "Your {asset} payout is in the manual queue. Staff sends to your external address after review — see Wallet → History.",
+  notif_withdrawal_claimed_title: "{asset} payout processing",
   notif_withdrawal_claimed_body:
-    "Our team is processing your {asset} payout. You’ll get another notice when the transfer is completed.",
-  notif_deposit_validation_pending_title: "Deposit verification",
+    "Our team is sending your {asset} to the address you provided. You’ll get a notice when it’s done.",
+  notif_deposit_validation_pending_title: "{asset} deposit under review",
   notif_deposit_validation_pending_body:
-    "We received your {asset} transaction details and will verify them shortly.",
+    "We received your {asset} TXID and are verifying it on-chain before crediting your wallet.",
   withdraw_manual_queue_hint:
     "Manual queue: requests stay open until an agent sends funds — typical target within {hours}h (not instant). You will get in-app notices when the ticket moves.",
   security_trusted: "Protected session",
@@ -1597,6 +1597,27 @@ export const en = {
   deposit_summary_declared: "You declared",
   deposit_summary_note: "Your note",
   deposit_confirm_chk: "I send USDT on",
+  deposit_confirm_chk_usdt: "I will send USDT on network",
+  deposit_confirm_chk_pi: "I will send PI (π) on Pi Network — not USDT",
+  deposit_flow_usdt_hint:
+    "USDT only (Tether). Choose TRC20, ERC20, or BEP20 — never send Pi or other coins to a USDT address.",
+  deposit_flow_pi_hint:
+    "PI (π) only on Pi Network. Send from your Pi wallet — do not send USDT here.",
+  deposit_step_usdt_network: "Choose USDT network",
+  deposit_detail_usdt_steps:
+    "Send USDT on the network shown · tap Sent when done · paste your on-chain TXID for review.",
+  deposit_detail_pi_steps:
+    "Send PI from your Pi wallet to this address · tap Sent when done · paste your on-chain TXID.",
+  deposit_sent_btn: "I have sent {asset}",
+  deposit_txid_hint_usdt: "Blockchain transaction ID for your USDT transfer",
+  deposit_txid_hint_pi: "On-chain TXID from your Pi wallet",
+  withdraw_pick_asset: "Withdraw which asset?",
+  withdraw_flow_usdt_hint:
+    "USDT leaves McBuleli to your external address on the network you select (TRC20 / ERC20 / BEP20).",
+  withdraw_flow_pi_hint:
+    "PI (π) leaves McBuleli to your Pi Network address. Manual queue — processing is not instant.",
+  wallet_action_send_hint:
+    "Send to another McBuleli user (same asset). This is not an on-chain deposit.",
   deposit_show_addr: "Show address",
   deposit_loading: "…",
   deposit_unavailable: "Deposit unavailable — check server .env",
@@ -1612,6 +1633,7 @@ export const en = {
   withdraw_amt: "Net (USDT)",
   withdraw_review: "Review",
   withdraw_confirm: "Confirm",
+  withdraw_confirm_debit: "Net {net} {unit} · wallet debited {total} {unit}",
   withdraw_warn: "⚠️ Wrong address/network = loss",
   fee_note: "+ {fee} USDT fee · net must be > {min} USDT",
   fee_note_asset: "+ {fee} {unit} fee · net must be > {min} {unit}",
@@ -2230,24 +2252,24 @@ export const fr: Messages = {
   install_later: "Plus tard",
   notifications_title: "Notifications",
   notifications_empty: "Aucune notification.",
-  notif_withdrawal_completed_title: "Retrait effectué",
+  notif_withdrawal_completed_title: "Retrait {asset} envoyé",
   notif_withdrawal_completed_body:
-    "Votre retrait {asset} a été envoyé sur la chaîne. Voir le TXID dans l’historique.",
-  notif_withdrawal_rejected_title: "Retrait annulé",
+    "Votre {asset} a été envoyé vers votre adresse externe. TXID dans Portefeuille → Historique.",
+  notif_withdrawal_rejected_title: "Retrait {asset} annulé",
   notif_withdrawal_rejected_body:
-    "Le retrait a été annulé et les fonds rendus. Motif : {reason}",
-  notif_deposit_confirmed_title: "Dépôt crédité",
+    "Votre retrait {asset} a été annulé et les fonds rendus. Motif : {reason}",
+  notif_deposit_confirmed_title: "Dépôt {asset} crédité",
   notif_deposit_confirmed_body:
-    "Votre dépôt {asset} a été crédité ({amount}).",
-  notif_withdrawal_queued_title: "Demande de retrait reçue",
+    "Votre solde {asset} a été mis à jour ({amount}).",
+  notif_withdrawal_queued_title: "Retrait {asset} en file",
   notif_withdrawal_queued_body:
-    "Votre demande de paiement {asset} est en file manuelle. L’envoi se fait après validation — consultez l’historique du portefeuille.",
-  notif_withdrawal_claimed_title: "Envoi en cours",
+    "Votre retrait {asset} est en file manuelle. Envoi vers votre adresse externe après validation — voir Historique.",
+  notif_withdrawal_claimed_title: "Paiement {asset} en cours",
   notif_withdrawal_claimed_body:
-    "Notre équipe traite votre paiement {asset}. Vous recevrez un dernier avis une fois le transfert terminé.",
-  notif_deposit_validation_pending_title: "Vérification du dépôt",
+    "Notre équipe envoie votre {asset} à l’adresse indiquée. Vous serez notifié à la fin.",
+  notif_deposit_validation_pending_title: "Dépôt {asset} en vérification",
   notif_deposit_validation_pending_body:
-    "Nous avons bien reçu les informations de votre dépôt {asset} ; la validation arrive sous peu.",
+    "Nous avons reçu votre TXID {asset} et vérifions la transaction on-chain avant crédit.",
   withdraw_manual_queue_hint:
     "File manuelle : la demande reste ouverte jusqu’à l’envoi par un agent — objectif typique sous {hours}h (pas instantané). Vous recevrez des avis in-app quand le ticket avance.",
   security_trusted: "Session protégée",
@@ -3484,6 +3506,27 @@ export const fr: Messages = {
   deposit_summary_declared: "Montant déclaré",
   deposit_summary_note: "Votre note",
   deposit_confirm_chk: "J’envoie l’USDT sur",
+  deposit_confirm_chk_usdt: "J’envoie des USDT sur le réseau",
+  deposit_confirm_chk_pi: "J’envoie des PI (π) sur Pi Network — pas des USDT",
+  deposit_flow_usdt_hint:
+    "USDT uniquement (Tether). Choisissez TRC20, ERC20 ou BEP20 — n’envoyez jamais du Pi ou une autre crypto sur une adresse USDT.",
+  deposit_flow_pi_hint:
+    "PI (π) uniquement sur Pi Network. Envoyez depuis votre wallet Pi — pas d’USDT ici.",
+  deposit_step_usdt_network: "Choisir le réseau USDT",
+  deposit_detail_usdt_steps:
+    "Envoyez les USDT sur le réseau indiqué · appuyez sur Envoyé · collez le TXID on-chain pour vérification.",
+  deposit_detail_pi_steps:
+    "Envoyez les PI depuis votre wallet Pi vers cette adresse · appuyez sur Envoyé · collez le TXID on-chain.",
+  deposit_sent_btn: "J’ai envoyé des {asset}",
+  deposit_txid_hint_usdt: "TXID blockchain de votre transfert USDT",
+  deposit_txid_hint_pi: "TXID on-chain depuis votre wallet Pi",
+  withdraw_pick_asset: "Retirer quel actif ?",
+  withdraw_flow_usdt_hint:
+    "Les USDT quittent McBuleli vers votre adresse externe sur le réseau choisi (TRC20 / ERC20 / BEP20).",
+  withdraw_flow_pi_hint:
+    "Les PI (π) quittent McBuleli vers votre adresse Pi Network. File manuelle — pas instantané.",
+  wallet_action_send_hint:
+    "Envoi à un autre utilisateur McBuleli (même actif). Ce n’est pas un dépôt on-chain.",
   deposit_show_addr: "Voir l’adresse",
   deposit_loading: "…",
   deposit_unavailable: "Dépôt indisponible — voir .env",
@@ -3499,6 +3542,7 @@ export const fr: Messages = {
   withdraw_amt: "Net (USDT)",
   withdraw_review: "Vérifier",
   withdraw_confirm: "Confirmer",
+  withdraw_confirm_debit: "Net {net} {unit} · portefeuille débité {total} {unit}",
   withdraw_warn: "⚠️ Mauvaise adresse/réseau = perte",
   fee_note: "+ {fee} USDT frais · le net doit être strictement supérieur à {min} USDT",
   fee_note_asset: "+ {fee} {unit} frais · net strictement supérieur à {min} {unit}",
