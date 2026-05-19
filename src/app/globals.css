@@ -318,12 +318,150 @@ html {
   --fd-border: rgba(61, 95, 66, 0.11);
   --fd-sell: #b45309;
   --fd-sell-mint: #f5ebe0;
+  background: linear-gradient(180deg, #f4f6f4 0%, #eef2ee 42%, #f8faf8 100%);
+  min-height: 100%;
 }
 .trade-bots-theme .fd-card {
   border: 1px solid var(--fd-border);
   box-shadow:
     0 1px 2px rgba(28, 25, 23, 0.05),
     0 3px 10px rgba(28, 25, 23, 0.04);
+}
+.trade-bots-theme .bot-category {
+  border-radius: 1.25rem;
+  background: var(--fd-mint-deep);
+  border: 1px solid var(--fd-border);
+  padding: 0.75rem;
+}
+.trade-bots-theme .bot-category__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+  padding: 0 0.15rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bot-category__icon {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-strategy-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  background: #fff;
+  padding: 0.65rem 0.35rem 0.55rem;
+  text-align: center;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.trade-bots-theme .bot-strategy-tile:active {
+  transform: scale(0.98);
+}
+.trade-bots-theme .bot-strategy-tile--active {
+  box-shadow:
+    0 2px 8px rgba(28, 25, 23, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.trade-bots-theme .bot-strategy-tile__icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--fd-mint);
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-strategy-tile--active .bot-strategy-tile__icon {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.trade-bots-theme .bot-strategy-tile--active .bot-strategy-tile__label {
+  color: #fff;
+}
+.trade-bots-theme .bot-strategy-tile__label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--fd-text);
+}
+.trade-bots-theme .bot-strategy-tile__dot {
+  height: 0.4rem;
+  width: 0.4rem;
+  border-radius: 9999px;
+  background: var(--fd-primary);
+}
+.trade-bots-theme .bot-strategy-tile__dot--paused {
+  background: #a8a29e;
+}
+.trade-bots-theme .bot-strategy-tile__dot--wait {
+  background: #0ea5e9;
+}
+.trade-bots-theme .bot-coord-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--fd-border);
+  background: #fff;
+  padding: 0.5rem 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+.trade-bots-theme .bot-coord-tile__icon {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.trade-bots-theme .bot-coord-tile__label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bot-coord-tile__state {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--fd-text);
+}
+.trade-bots-theme .bot-coord-tile--ok .bot-coord-tile__icon {
+  background: #dcfce7;
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-coord-tile--warn .bot-coord-tile__icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+.trade-bots-theme .bot-coord-tile--off .bot-coord-tile__icon {
+  background: #f5f5f4;
+  color: #a8a29e;
+}
+.trade-bots-theme .bot-coord-arrow {
+  flex-shrink: 0;
+  color: var(--fd-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.55;
 }
 .home-theme .wallet-hero,
 .wallet-theme .wallet-hero {

@@ -76,7 +76,7 @@ export function AiAssistStatusBadge({
 
   if (!instanceId) {
     return (
-      <p className="mt-1.5 text-[10px] text-stone-600 dark:text-stone-400">
+      <p className="mt-1.5 text-[10px] text-[color:var(--fd-muted)]">
         {t("bots_ai_status_save_first")}
       </p>
     );
@@ -84,7 +84,7 @@ export function AiAssistStatusBadge({
 
   if (!status?.enabled) {
     return (
-      <p className="mt-1.5 text-[10px] text-stone-600 dark:text-stone-400">
+      <p className="mt-1.5 text-[10px] text-[color:var(--fd-muted)]">
         {t("bots_ai_status_waiting")}
       </p>
     );
@@ -97,7 +97,7 @@ export function AiAssistStatusBadge({
   if (!action || status.receivedAt == null) {
     return (
       <div
-        className="mt-1.5 flex items-center gap-1.5 rounded border border-amber-300/70 bg-amber-50/90 px-2 py-1 text-[10px] text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/35 dark:text-amber-100"
+        className="mt-1.5 flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-900"
         role="status"
       >
         <span
@@ -116,7 +116,7 @@ export function AiAssistStatusBadge({
   if (!fresh) {
     return (
       <div
-        className="mt-1.5 flex items-center gap-1.5 rounded border border-amber-300/70 bg-amber-50/90 px-2 py-1 text-[10px] text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/35 dark:text-amber-100"
+        className="mt-1.5 flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-900"
         role="status"
       >
         <span
@@ -130,10 +130,10 @@ export function AiAssistStatusBadge({
 
   const tone =
     action === "HOLD"
-      ? "border-stone-300/80 bg-stone-50/90 text-stone-800 dark:border-stone-600 dark:bg-stone-900/50 dark:text-stone-200"
+      ? "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
       : action === "LONG"
-        ? "border-emerald-400/60 bg-emerald-50/90 text-emerald-950 dark:border-emerald-700/45 dark:bg-emerald-950/35 dark:text-emerald-100"
-        : "border-rose-400/60 bg-rose-50/90 text-rose-950 dark:border-rose-700/45 dark:bg-rose-950/35 dark:text-rose-100";
+        ? "border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+        : "border-rose-200 bg-rose-50 text-rose-900";
 
   const dot =
     action === "HOLD"

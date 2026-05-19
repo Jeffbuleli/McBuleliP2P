@@ -2,6 +2,8 @@
 
 import type { BotPlanId } from "@/lib/bot-config";
 
+export type BotTabRunState = "running" | "paused" | "idle";
+
 export function BotPlanIcon({
   planId,
   className = "h-7 w-7",
@@ -44,42 +46,77 @@ export function BotPlanIcon({
   );
 }
 
-const TAB_ACTIVE: Record<BotPlanId, string> = {
-  dca_spot: "bg-[color:var(--fd-primary)] text-white",
-  grid_spot: "bg-violet-600 text-white",
-  futures_um: "bg-amber-700 text-white",
+const TAB_ORDER: BotPlanId[] = ["futures_um", "grid_spot", "dca_spot"];
+
+const TILE_CLASS: Record<BotPlanId, string> = {
+  futures_um: "bot-strategy-tile--futures",
+  grid_spot: "bot-strategy-tile--grid",
+  dca_spot: "bot-strategy-tile--dca",
+};
+
+const ACTIVE_BG: Record<BotPlanId, string> = {
+  futures_um: "bg-amber-700",
+  grid_spot: "bg-violet-600",
+  dca_spot: "bg-[color:var(--fd-primary)]",
 };
 
 export function BotStrategyTabBar({
   active,
   onSelect,
   labels,
+  runState,
+  categoryTitle = "Bots",
 }: {
   active: BotPlanId;
   onSelect: (id: BotPlanId) => void;
   labels: Record<BotPlanId, string>;
+  runState?: Partial<Record<BotPlanId, BotTabRunState>>;
+  categoryTitle?: string;
 }) {
-  const ids: BotPlanId[] = ["dca_spot", "grid_spot", "futures_um"];
   return (
-    <div className="fd-card flex gap-1 p-1">
-      {ids.map((id) => {
-        const on = active === id;
-        return (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onSelect(id)}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2.5 transition ${
-              on
-                ? TAB_ACTIVE[id]
-                : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/50"
-            }`}
-          >
-            <BotPlanIcon planId={id} className="h-6 w-6" />
-            <span className="text-[10px] font-bold uppercase tracking-wide">{labels[id]}</span>
-          </button>
-        );
-      })}
-    </div>
+    <section className="bot-category">
+      <div className="bot-category__head">
+        <span className="bot-category__icon" aria-hidden>
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M13 2L4 14h7l-1 8 9-14h-7l1-6z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span>{categoryTitle}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {TAB_ORDER.map((id) => {
+          const on = active === id;
+          const state = runState?.[id] ?? "idle";
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onSelect(id)}
+              className={`bot-strategy-tile ${TILE_CLASS[id]} ${
+                on ? `bot-strategy-tile--active ${ACTIVE_BG[id]} text-white` : ""
+              }`}
+            >
+              <span className="bot-strategy-tile__icon">
+                <BotPlanIcon planId={id} className="h-6 w-6" />
+              </span>
+              <span className="bot-strategy-tile__label">{labels[id]}</span>
+              {state !== "idle" ? (
+                <span
+                  className={`bot-strategy-tile__dot ${
+                    state === "paused" ? "bot-strategy-tile__dot--paused" : ""
+                  } ${on ? "bg-white" : ""}`}
+                  aria-hidden
+                />
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }

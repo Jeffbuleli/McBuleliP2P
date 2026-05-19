@@ -52,10 +52,13 @@ import { UiInfoTip, UiSectionTitle } from "@/components/ui/ui-info-tip";
 import {
   BotPlanIcon,
   BotStrategyTabBar,
+  type BotTabRunState,
 } from "@/components/trade/bot-strategy-icons";
+import { BotCoordinationRail } from "@/components/trade/bot-coordination-rail";
 import {
   BotFlowBtn,
   BotFlowCard,
+  BotFlowCategory,
   BotFlowError,
   BotFlowField,
   BotFlowInput,
@@ -133,6 +136,16 @@ const PLAN_LABEL: Record<BotPlanId, string> = {
   grid_spot: "bots_plan_grid",
   futures_um: "bots_plan_futures",
 };
+
+function botTabRunState(
+  subscribed: boolean,
+  inst: { status: "active" | "paused" } | undefined,
+): BotTabRunState {
+  if (!subscribed) return "idle";
+  if (inst?.status === "active") return "running";
+  if (inst?.status === "paused") return "paused";
+  return "idle";
+}
 
 function BotStatusBadge({
   status,
@@ -514,7 +527,7 @@ export function BotsTradingClient() {
     minAiConfidence: 40,
   });
   const [logs, setLogs] = useState<BotLogRow[]>([]);
-  const [activeTab, setActiveTab] = useState<BotPlanId>("dca_spot");
+  const [activeTab, setActiveTab] = useState<BotPlanId>("futures_um");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
   const [keysHubMsg, setKeysHubMsg] = useState<string | null>(null);
   const [futOpenRows, setFutOpenRows] = useState<BotOpenPositionRow[]>([]);
@@ -974,6 +987,12 @@ export function BotsTradingClient() {
     futHasUnmanagedOpen ||
     Boolean(futConfigOpenRow && futSymbol !== futConfigOpenRow.symbol);
 
+  const botTabRunStates: Record<BotPlanId, BotTabRunState> = {
+    futures_um: botTabRunState(Boolean(futSub), futInst),
+    grid_spot: botTabRunState(Boolean(gridSub), gridInst),
+    dca_spot: botTabRunState(Boolean(dcaSub), dcaInst),
+  };
+
   function realignFuturesForm() {
     const targetSymbol =
       futUnmanagedRow?.symbol ??
@@ -1116,6 +1135,8 @@ export function BotsTradingClient() {
       <BotStrategyTabBar
         active={activeTab}
         onSelect={setActiveTab}
+        runState={botTabRunStates}
+        categoryTitle={t("bots_category_bots")}
         labels={{
           dca_spot: t("bots_tab_dca"),
           grid_spot: t("bots_tab_grid"),
@@ -1129,30 +1150,48 @@ export function BotsTradingClient() {
         </p>
       ) : null}
 
-      <BotsKeysHub
-        credentials={data.credentials}
-        accountBilling={accountBilling}
-        onBillingChange={(env) => {
-          setAccountBilling(env);
-          setFutOpenRows([]);
-          setLogs([]);
-        }}
-        tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
-        isSuperAdmin={Boolean(data.isSuperAdmin)}
-        busy={busy}
-        keysHubMsg={keysHubMsg}
-        onConnect={openKeysHub}
-        onRevoke={(env) => void revokeKeys(env)}
-        t={t}
-      />
-
-      {data.cronHealth ? (
-        <BotsCronHealthBar
-          health={data.cronHealth}
+      <BotFlowCategory
+        title={t("bots_category_setup")}
+        icon={
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        }
+        className="space-y-2"
+      >
+        <BotsKeysHub
+          credentials={data.credentials}
+          accountBilling={accountBilling}
+          onBillingChange={(env) => {
+            setAccountBilling(env);
+            setFutOpenRows([]);
+            setLogs([]);
+          }}
+          tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
           isSuperAdmin={Boolean(data.isSuperAdmin)}
+          busy={busy}
+          keysHubMsg={keysHubMsg}
+          onConnect={openKeysHub}
+          onRevoke={(env) => void revokeKeys(env)}
           t={t}
         />
-      ) : null}
+        {data.cronHealth ? (
+          <BotsCronHealthBar
+            health={data.cronHealth}
+            isSuperAdmin={Boolean(data.isSuperAdmin)}
+            t={t}
+          />
+        ) : null}
+      </BotFlowCategory>
 
       {activeTab === "dca_spot" && !dcaSub ? (
         <BotFlowCard className="mt-4 text-center">
@@ -1228,76 +1267,91 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <div className="mt-3 space-y-3">
-            <BotFlowField label={t("bots_dca_symbol")}>
-              <BotFlowSelect
-                value={dcaSymbol}
-                onChange={(e) => setDcaSymbol(e.target.value)}
-              >
-                {(data.dcaOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-            <BotFormGrid>
-              <BotFlowField label={t("bots_dca_amount")}>
-                <BotFlowInput
-                  value={dcaAmount}
-                  onChange={(e) => setDcaAmount(e.target.value)}
-                  inputMode="decimal"
-                />
-              </BotFlowField>
-              <BotFlowField label={t("bots_dca_interval")}>
+          <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
+            <div className="space-y-3">
+              {billingMismatchBanner(dcaInst)}
+              <BotFlowField label={t("bots_dca_symbol")}>
                 <BotFlowSelect
-                  value={dcaInterval}
-                  onChange={(e) => setDcaInterval(Number(e.target.value))}
+                  value={dcaSymbol}
+                  onChange={(e) => setDcaSymbol(e.target.value)}
                 >
-                  {(data.dcaOptions?.intervalHours ?? [24]).map((h) => (
-                    <option key={h} value={h}>
-                      {h}h
+                  {(data.dcaOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
                     </option>
                   ))}
                 </BotFlowSelect>
               </BotFlowField>
-            </BotFormGrid>
-          </div>
-          {billingMismatchBanner(dcaInst)}
-          <SmartModePanel
-            planId="dca_spot"
-            symbol={dcaSymbol}
-            billing={accountBilling}
-            smart={dcaSmart}
-            setSmart={setDcaSmart}
-            smartOptions={data.smartOptions}
-            t={t}
-          />
-          {dcaInst?.lastExecutedAt && instEnvAligned(dcaInst) ? (
-            <p className="mt-2 text-xs text-stone-500">
-              {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
-            </p>
-          ) : null}
-          {dcaInst?.lastError && instEnvAligned(dcaInst) ? (
-            <BotFlowError>{formatBotRuntimeError(dcaInst.lastError, t)}</BotFlowError>
-          ) : null}
-          {dcaMsg ? (
-            <p className="mt-2 text-xs font-medium text-[color:var(--fd-primary)]">{dcaMsg}</p>
-          ) : null}
-          <BotRunControls
-            status={dcaInst?.status ?? "none"}
-            busy={busy}
-            startLabel={t("bots_dca_start")}
-            pauseLabel={t("bots_dca_pause")}
-            onStart={() => void saveDca("active")}
-            onPause={() => void saveDca("paused")}
-          />
+              <BotFormGrid>
+                <BotFlowField label={t("bots_dca_amount")}>
+                  <BotFlowInput
+                    value={dcaAmount}
+                    onChange={(e) => setDcaAmount(e.target.value)}
+                    inputMode="decimal"
+                  />
+                </BotFlowField>
+                <BotFlowField label={t("bots_dca_interval")}>
+                  <BotFlowSelect
+                    value={dcaInterval}
+                    onChange={(e) => setDcaInterval(Number(e.target.value))}
+                  >
+                    {(data.dcaOptions?.intervalHours ?? [24]).map((h) => (
+                      <option key={h} value={h}>
+                        {h}h
+                      </option>
+                    ))}
+                  </BotFlowSelect>
+                </BotFlowField>
+              </BotFormGrid>
+            </div>
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
+            <SmartModePanel
+              planId="dca_spot"
+              symbol={dcaSymbol}
+              billing={accountBilling}
+              smart={dcaSmart}
+              setSmart={setDcaSmart}
+              smartOptions={data.smartOptions}
+              t={t}
+            />
+            <BotCoordinationRail
+              cronHealth={data.cronHealth}
+              smartMode={dcaSmart.smartMode}
+              botStatus={dcaInst?.status ?? "none"}
+              t={t}
+            />
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_execution")} className="mt-3">
+            {dcaInst?.lastExecutedAt && instEnvAligned(dcaInst) ? (
+              <p className="text-xs text-[color:var(--fd-muted)]">
+                {t("bots_dca_last_run")}: {new Date(dcaInst.lastExecutedAt).toLocaleString()}
+              </p>
+            ) : null}
+            {dcaInst?.lastError && instEnvAligned(dcaInst) ? (
+              <BotFlowError>{formatBotRuntimeError(dcaInst.lastError, t)}</BotFlowError>
+            ) : null}
+            {dcaMsg ? (
+              <p className="text-xs font-medium text-[color:var(--fd-primary)]">{dcaMsg}</p>
+            ) : null}
+            <BotRunControls
+              status={dcaInst?.status ?? "none"}
+              busy={busy}
+              startLabel={t("bots_dca_start")}
+              pauseLabel={t("bots_dca_pause")}
+              runningLabel={t("bots_coord_running")}
+              stoppedLabel={t("bots_coord_stopped")}
+              onStart={() => void saveDca("active")}
+              onPause={() => void saveDca("paused")}
+            />
+          </BotFlowCategory>
           <BotStrategyLivePanel
             planId="dca_spot"
             billing={accountBilling}
             botActive={
               dcaInst?.status === "active" && instEnvAligned(dcaInst)
             }
+            paused={dcaInst?.status === "paused" && instEnvAligned(dcaInst)}
             keysOk={dcaKeysOk}
             logs={logs}
             onLogsRefresh={refreshDcaLogs}
@@ -1318,88 +1372,103 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <div className="mt-3 space-y-3">
-            <BotFlowField label={t("bots_dca_symbol")}>
-              <BotFlowSelect
-                value={gridSymbol}
-                onChange={(e) => setGridSymbol(e.target.value)}
-              >
-                {(data.gridOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-            <BotFormGrid>
-              <BotFlowField label={t("bots_grid_low")}>
-                <BotFlowInput value={gridLow} onChange={(e) => setGridLow(e.target.value)} />
+          <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
+            <div className="space-y-3">
+              {billingMismatchBanner(gridInst)}
+              <BotFlowField label={t("bots_dca_symbol")}>
+                <BotFlowSelect
+                  value={gridSymbol}
+                  onChange={(e) => setGridSymbol(e.target.value)}
+                >
+                  {(data.gridOptions?.symbols ?? ["BTCUSDT"]).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </BotFlowSelect>
               </BotFlowField>
-              <BotFlowField label={t("bots_grid_high")}>
-                <BotFlowInput value={gridHigh} onChange={(e) => setGridHigh(e.target.value)} />
+              <BotFormGrid>
+                <BotFlowField label={t("bots_grid_low")}>
+                  <BotFlowInput value={gridLow} onChange={(e) => setGridLow(e.target.value)} />
+                </BotFlowField>
+                <BotFlowField label={t("bots_grid_high")}>
+                  <BotFlowInput value={gridHigh} onChange={(e) => setGridHigh(e.target.value)} />
+                </BotFlowField>
+                <BotFlowField label={t("bots_grid_count")}>
+                  <BotFlowInput
+                    type="number"
+                    min={3}
+                    max={15}
+                    value={gridCount}
+                    onChange={(e) => setGridCount(Number(e.target.value))}
+                  />
+                </BotFlowField>
+                <BotFlowField label={t("bots_grid_quote")}>
+                  <BotFlowInput value={gridQuote} onChange={(e) => setGridQuote(e.target.value)} />
+                </BotFlowField>
+              </BotFormGrid>
+              <BotFlowField label={t("bots_grid_refresh")}>
+                <BotFlowSelect
+                  value={gridRefresh}
+                  onChange={(e) => setGridRefresh(Number(e.target.value))}
+                >
+                  {(data.gridOptions?.refreshHours ?? [12]).map((h) => (
+                    <option key={h} value={h}>
+                      {h}h
+                    </option>
+                  ))}
+                </BotFlowSelect>
               </BotFlowField>
-              <BotFlowField label={t("bots_grid_count")}>
-                <BotFlowInput
-                  type="number"
-                  min={3}
-                  max={15}
-                  value={gridCount}
-                  onChange={(e) => setGridCount(Number(e.target.value))}
-                />
-              </BotFlowField>
-              <BotFlowField label={t("bots_grid_quote")}>
-                <BotFlowInput value={gridQuote} onChange={(e) => setGridQuote(e.target.value)} />
-              </BotFlowField>
-            </BotFormGrid>
-            <BotFlowField label={t("bots_grid_refresh")}>
-              <BotFlowSelect
-                value={gridRefresh}
-                onChange={(e) => setGridRefresh(Number(e.target.value))}
-              >
-                {(data.gridOptions?.refreshHours ?? [12]).map((h) => (
-                  <option key={h} value={h}>
-                    {h}h
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-          </div>
-          {billingMismatchBanner(gridInst)}
-          <SmartModePanel
-            planId="grid_spot"
-            symbol={gridSymbol}
-            billing={accountBilling}
-            smart={gridSmart}
-            setSmart={setGridSmart}
-            smartOptions={data.smartOptions}
-            t={t}
-          />
-          {gridInst?.lastExecutedAt && instEnvAligned(gridInst) ? (
-            <p className="mt-2 text-xs text-stone-500">
-              {t("bots_dca_last_run")}: {new Date(gridInst.lastExecutedAt).toLocaleString()}
-            </p>
-          ) : null}
-          {gridInst?.lastError && instEnvAligned(gridInst) ? (
-            <BotFlowError>{formatBotRuntimeError(gridInst.lastError, t)}</BotFlowError>
-          ) : null}
-          {gridMsg ? (
-            <p className="mt-2 text-xs font-medium text-violet-800">{gridMsg}</p>
-          ) : null}
-          <BotRunControls
-            status={gridInst?.status ?? "none"}
-            busy={busy}
-            variant="violet"
-            startLabel={t("bots_grid_start")}
-            pauseLabel={t("bots_grid_pause")}
-            onStart={() => void saveGrid("active")}
-            onPause={() => void saveGrid("paused")}
-          />
+            </div>
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
+            <SmartModePanel
+              planId="grid_spot"
+              symbol={gridSymbol}
+              billing={accountBilling}
+              smart={gridSmart}
+              setSmart={setGridSmart}
+              smartOptions={data.smartOptions}
+              t={t}
+            />
+            <BotCoordinationRail
+              cronHealth={data.cronHealth}
+              smartMode={gridSmart.smartMode}
+              botStatus={gridInst?.status ?? "none"}
+              t={t}
+            />
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_execution")} className="mt-3">
+            {gridInst?.lastExecutedAt && instEnvAligned(gridInst) ? (
+              <p className="text-xs text-[color:var(--fd-muted)]">
+                {t("bots_dca_last_run")}: {new Date(gridInst.lastExecutedAt).toLocaleString()}
+              </p>
+            ) : null}
+            {gridInst?.lastError && instEnvAligned(gridInst) ? (
+              <BotFlowError>{formatBotRuntimeError(gridInst.lastError, t)}</BotFlowError>
+            ) : null}
+            {gridMsg ? (
+              <p className="text-xs font-medium text-violet-800">{gridMsg}</p>
+            ) : null}
+            <BotRunControls
+              status={gridInst?.status ?? "none"}
+              busy={busy}
+              variant="violet"
+              startLabel={t("bots_grid_start")}
+              pauseLabel={t("bots_grid_pause")}
+              runningLabel={t("bots_coord_running")}
+              stoppedLabel={t("bots_coord_stopped")}
+              onStart={() => void saveGrid("active")}
+              onPause={() => void saveGrid("paused")}
+            />
+          </BotFlowCategory>
           <BotStrategyLivePanel
             planId="grid_spot"
             billing={accountBilling}
             botActive={
               gridInst?.status === "active" && instEnvAligned(gridInst)
             }
+            paused={gridInst?.status === "paused" && instEnvAligned(gridInst)}
             keysOk={gridKeysOk}
             logs={logs}
             onLogsRefresh={refreshGridLogs}
@@ -1427,7 +1496,8 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
-          <div className="mt-3 space-y-3">
+          <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
+            <div className="space-y-3">
             {billingMismatchBanner(futInst)}
             <BotFlowField label={t("bots_dca_symbol")}>
               <BotFlowSelect
@@ -1517,7 +1587,9 @@ export function BotsTradingClient() {
                 </BotFlowSelect>
               </BotFlowField>
             </BotFormGrid>
-          </div>
+            </div>
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_style")} className="mt-3">
           <FuturesTraderProfilePanel
             profile={futTraderProfile}
             onProfileChange={setFutTraderProfile}
@@ -1539,6 +1611,8 @@ export function BotsTradingClient() {
             onApplyPreset={applyFuturesProfilePreset}
             t={t}
           />
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
           <SmartModePanel
             planId="futures_um"
             symbol={futSymbol}
@@ -1557,6 +1631,16 @@ export function BotsTradingClient() {
             }
             t={t}
           />
+          <BotCoordinationRail
+            cronHealth={data.cronHealth}
+            smartMode={futSmart.smartMode}
+            aiAssistMode={futAiAssist.aiAssistMode}
+            botStatus={futInst?.status ?? "none"}
+            instanceId={futInstRow?.id}
+            t={t}
+          />
+          </BotFlowCategory>
+          <BotFlowCategory title={t("bots_category_execution")} className="mt-3">
           {futInst?.status === "active" && !instEnvAligned(futInst) ? (
             <p className="mt-2 text-xs text-violet-800 dark:text-violet-200">
               {t("bots_logs_other_env")}
@@ -1582,9 +1666,12 @@ export function BotsTradingClient() {
             monitoringLabel={t("bots_futures_monitoring_open")}
             startLabel={t("bots_futures_start")}
             pauseLabel={t("bots_futures_pause")}
+            runningLabel={t("bots_coord_running")}
+            stoppedLabel={t("bots_coord_stopped")}
             onStart={() => void saveFutures("active")}
             onPause={() => void saveFutures("paused")}
           />
+          </BotFlowCategory>
           <p className="mt-3 text-center">
             <Link
               href="/app/trade/futures/guide"
@@ -1599,6 +1686,7 @@ export function BotsTradingClient() {
             botActive={
               futInst?.status === "active" && instEnvAligned(futInst)
             }
+            paused={futInst?.status === "paused" && instEnvAligned(futInst)}
             keysOk={futKeysOk}
             logs={logs}
             onLogsRefresh={refreshFutLogs}

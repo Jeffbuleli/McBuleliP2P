@@ -175,3 +175,25 @@ export function BotPlanCard({
 export function BotFormGrid({ children }: { children: ReactNode }) {
   return <div className="grid grid-cols-2 gap-3">{children}</div>;
 }
+
+export function BotFlowCategory({
+  title,
+  icon,
+  children,
+  className = "",
+}: {
+  title: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`bot-category ${className}`}>
+      <div className="bot-category__head">
+        {icon ? <span className="bot-category__icon">{icon}</span> : null}
+        <span>{title}</span>
+      </div>
+      {children}
+    </section>
+  );
+}

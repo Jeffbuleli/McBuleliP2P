@@ -7,7 +7,7 @@ import { BOT_CLOSED_ACTIONS } from "@/lib/bots-trade-display";
 import { BotActivityFeed } from "@/components/trade/bot-activity-feed";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
-import { BotFlowCard } from "@/components/trade/bots-flow-ui";
+import { BotFlowCard, BotFlowCategory } from "@/components/trade/bots-flow-ui";
 
 const POLL_MS = 12_000;
 
@@ -103,6 +103,7 @@ export function BotStrategyLivePanel({
   planId,
   billing,
   botActive,
+  paused = false,
   keysOk,
   logs,
   onLogsRefresh,
@@ -112,6 +113,7 @@ export function BotStrategyLivePanel({
   planId: BotPlanId;
   billing: "demo" | "live";
   botActive: boolean;
+  paused?: boolean;
   keysOk: boolean;
   logs: BotLogRow[];
   onLogsRefresh: () => Promise<void>;
@@ -173,7 +175,22 @@ export function BotStrategyLivePanel({
     return () => window.clearInterval(id);
   }, [botActive, billing, loadOpen]);
 
-  if (!botActive) return null;
+  if (!botActive && !paused) return null;
+
+  if (paused) {
+    return (
+      <BotFlowCategory title={t("bots_category_activity")} className="mt-4">
+        <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-200 text-lg">
+            ⏸
+          </span>
+          <p className="text-xs font-medium text-[color:var(--fd-muted)]">
+            {t("bots_paused_hint")}
+          </p>
+        </div>
+      </BotFlowCategory>
+    );
+  }
 
   const feedLogs = sortLogsNewest(
     logs.filter((l) => !BOT_CLOSED_ACTIONS.has(l.action)),
@@ -183,11 +200,8 @@ export function BotStrategyLivePanel({
   ).slice(0, 15);
 
   return (
-    <div className="mt-4 space-y-3 border-t border-[color:var(--fd-border)] pt-4">
-      <div className="flex items-center gap-2">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-          {t("bots_live_panel_title")}
-        </h3>
+    <BotFlowCategory title={t("bots_category_activity")} className="mt-4">
+      <div className="mb-2 flex justify-end">
         <button
           type="button"
           onClick={() => {
@@ -201,7 +215,8 @@ export function BotStrategyLivePanel({
         </button>
       </div>
 
-      <BotFlowCard className="!p-3">
+      <div className="space-y-2">
+      <BotFlowCard className="!p-3 !shadow-none">
         <p className="mb-2 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
           {t("bots_positions_open")}
         </p>
@@ -224,7 +239,7 @@ export function BotStrategyLivePanel({
         )}
       </BotFlowCard>
 
-      <BotFlowCard className="!p-3">
+      <BotFlowCard className="!p-3 !shadow-none">
         <p className="mb-2 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
           {t("bots_activity_feed_title")}
         </p>
@@ -239,7 +254,7 @@ export function BotStrategyLivePanel({
       </BotFlowCard>
 
       {closedLogs.length > 0 ? (
-        <BotFlowCard className="!p-3">
+        <BotFlowCard className="!p-3 !shadow-none">
           <p className="mb-2 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
             {t("bots_positions_closed")}
           </p>
@@ -250,6 +265,7 @@ export function BotStrategyLivePanel({
           />
         </BotFlowCard>
       ) : null}
-    </div>
+      </div>
+    </BotFlowCategory>
   );
 }
