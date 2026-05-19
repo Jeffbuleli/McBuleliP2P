@@ -39,6 +39,20 @@ import {
   adMatchesPaymentKind,
   type P2pPaymentKindFilter,
 } from "@/lib/p2p-market-view";
+import {
+  fetchOrderNotifyCtx,
+  notifyP2pDisputeRefunded,
+  notifyP2pDisputeReleased,
+  notifyP2pOrderCancelled,
+  notifyP2pOrderCreated,
+  notifyP2pOrderDisputed,
+  notifyP2pOrderExpired,
+  notifyP2pOrderMessage,
+  notifyP2pOrderPaid,
+  notifyP2pOrderProof,
+  notifyP2pOrderReleased,
+  notifyP2pSupportMessage,
+} from "@/lib/p2p-notifications";
 
 const AD_ACTIVE = "active";
 const AD_PAUSED = "paused";
@@ -299,6 +313,8 @@ export async function processExpiredP2pOrders(): Promise<void> {
         },
       ]);
     });
+    const ctx = await fetchOrderNotifyCtx(o.id);
+    if (ctx) void notifyP2pOrderExpired(ctx);
   }
 
   // Best-effort purge of old proof attachments for closed orders.
@@ -430,6 +446,8 @@ export async function upsertP2pPaymentProof(args: {
     .returning({ id: p2pOrderPaymentProofs.id });
 
   if (!row) return { ok: false, message: "p2p_action_not_allowed" };
+  const ctx = await fetchOrderNotifyCtx(args.orderId);
+  if (ctx) void notifyP2pOrderProof(ctx);
   return { ok: true, id: row.id };
 }
 
@@ -1336,6 +1354,13 @@ export async function createOrder(args: {
       }
       return oid;
     });
+    const ctx = await fetchOrderNotifyCtx(orderId);
+    if (ctx) {
+      void notifyP2pOrderCreated(ctx);
+      if (ctx.status === ST_RELEASED) {
+        void notifyP2pOrderReleased(ctx);
+      }
+    }
     return { ok: true, orderId };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "p2p_order_create_failed";
@@ -1547,6 +1572,8 @@ export async function markOrderPaid(args: {
     .returning({ id: p2pOrders.id });
 
   if (!res.length) return { ok: false, message: "p2p_action_not_allowed" };
+  const paidCtx = await fetchOrderNotifyCtx(args.orderId);
+  if (paidCtx) void notifyP2pOrderPaid(paidCtx);
   return { ok: true };
 }
 
@@ -1578,6 +1605,8 @@ export async function releaseOrder(args: {
 
       await finalizeReleaseToBuyer(tx, o, now, ST_PAID);
     });
+    const releasedCtx = await fetchOrderNotifyCtx(args.orderId);
+    if (releasedCtx) void notifyP2pOrderReleased(releasedCtx);
     return { ok: true };
   } catch {
     return { ok: false, message: "p2p_action_not_allowed" };
@@ -1651,6 +1680,8 @@ export async function cancelOrder(args: {
         },
       ]);
     });
+    const cancelCtx = await fetchOrderNotifyCtx(args.orderId);
+    if (cancelCtx) void notifyP2pOrderCancelled(cancelCtx, args.userId);
     return { ok: true };
   } catch {
     return { ok: false, message: "p2p_action_not_allowed" };
@@ -1687,6 +1718,8 @@ export async function openOrderDispute(args: {
     .returning({ id: p2pOrders.id });
 
   if (!res.length) return { ok: false, message: "p2p_action_not_allowed" };
+  const disputeCtx = await fetchOrderNotifyCtx(args.orderId);
+  if (disputeCtx) void notifyP2pOrderDisputed(disputeCtx, args.userId);
   return { ok: true };
 }
 
@@ -1752,6 +1785,8 @@ export async function adminResolveP2pOrder(args: {
         if (!o) throw new Error("p2p_order_not_found");
         await finalizeReleaseToBuyer(tx, o, now, ST_DISPUTED);
       });
+      const resolvedCtx = await fetchOrderNotifyCtx(args.orderId);
+      if (resolvedCtx) void notifyP2pDisputeReleased(resolvedCtx);
       return { ok: true };
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
@@ -1814,6 +1849,8 @@ export async function adminResolveP2pOrder(args: {
         },
       ]);
     });
+    const refundCtx = await fetchOrderNotifyCtx(args.orderId);
+    if (refundCtx) void notifyP2pDisputeRefunded(refundCtx);
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
@@ -1971,6 +2008,8 @@ export async function postP2pOrderMessageForStaff(args: {
     userId: args.staffUserId,
     body: text,
   });
+  const supportCtx = await fetchOrderNotifyCtx(args.orderId);
+  if (supportCtx) void notifyP2pSupportMessage(supportCtx, text);
   return { ok: true };
 }
 
@@ -2002,6 +2041,9 @@ export async function postP2pOrderMessage(args: {
     userId: args.userId,
     body: text,
   });
+
+  const msgCtx = await fetchOrderNotifyCtx(args.orderId);
+  if (msgCtx) void notifyP2pOrderMessage(msgCtx, args.userId, text);
 
   return { ok: true };
 }

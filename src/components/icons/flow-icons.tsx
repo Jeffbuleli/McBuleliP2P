@@ -181,6 +181,23 @@ export function NotifKindIcon({ kind, className = "h-5 w-5" }: { kind: string; c
       return <IconX className={className} />;
     case "withdrawal_claimed":
       return <IconArrowRight className={className} />;
+    case "p2p_order_created":
+      return <IconInbox className={className} />;
+    case "p2p_order_paid":
+    case "p2p_order_proof":
+      return <IconClock className={className} />;
+    case "p2p_order_released":
+    case "p2p_order_dispute_released":
+    case "p2p_order_dispute_refunded":
+      return <IconCheck className={className} />;
+    case "p2p_order_cancelled":
+    case "p2p_order_expired":
+      return <IconX className={className} />;
+    case "p2p_order_disputed":
+      return <IconAlert className={className} />;
+    case "p2p_order_message":
+    case "p2p_order_support_message":
+      return <IconSend className={className} />;
     default:
       return <IconArrowUp className={className} />;
   }

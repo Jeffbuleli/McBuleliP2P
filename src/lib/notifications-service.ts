@@ -7,7 +7,18 @@ export type NotificationKind =
   | "withdrawal_completed"
   | "withdrawal_rejected"
   | "deposit_confirmed"
-  | "deposit_validation_pending";
+  | "deposit_validation_pending"
+  | "p2p_order_created"
+  | "p2p_order_paid"
+  | "p2p_order_proof"
+  | "p2p_order_released"
+  | "p2p_order_cancelled"
+  | "p2p_order_expired"
+  | "p2p_order_disputed"
+  | "p2p_order_dispute_released"
+  | "p2p_order_dispute_refunded"
+  | "p2p_order_message"
+  | "p2p_order_support_message";
 
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;

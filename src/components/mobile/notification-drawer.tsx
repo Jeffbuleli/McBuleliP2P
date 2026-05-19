@@ -29,6 +29,21 @@ function notifMeta(
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
   const asset = str("asset") || "—";
   const amount = str("amount") || str("net") || "";
+  const orderId = str("orderId");
+  const p2pHref = orderId ? `/app/p2p/order/${orderId}` : "/app/p2p";
+  const p2pBody = () => {
+    const fiatAmount = str("fiatAmount");
+    const fiatCurrency = str("fiatCurrency");
+    const fiat =
+      fiatAmount && fiatCurrency ? ` · ${fiatAmount} ${fiatCurrency}` : "";
+    const crypto = amount ? `${amount} ${asset}` : asset;
+    return `${crypto}${fiat}`.trim();
+  };
+  const p2pPreviewBody = () => {
+    const preview = str("preview");
+    const base = p2pBody();
+    return preview ? `${base} — ${preview}` : base;
+  };
 
   switch (row.kind) {
     case "withdrawal_queued":
@@ -79,6 +94,83 @@ function notifMeta(
         href: "/app/wallet/history",
         pill: { variant: "pending", label: t("status_ui_pending") },
       };
+    case "p2p_order_created":
+      return {
+        title: t("notif_p2p_order_created_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "p2p_order_paid":
+      return {
+        title: t("notif_p2p_order_paid_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
+    case "p2p_order_proof":
+      return {
+        title: t("notif_p2p_order_proof_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
+    case "p2p_order_released":
+      return {
+        title: t("notif_p2p_order_released_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    case "p2p_order_cancelled":
+      return {
+        title: t("notif_p2p_order_cancelled_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "failed", label: t("status_ui_failed") },
+      };
+    case "p2p_order_expired":
+      return {
+        title: t("notif_p2p_order_expired_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "failed", label: t("status_ui_failed") },
+      };
+    case "p2p_order_disputed":
+      return {
+        title: t("notif_p2p_order_disputed_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "p2p_order_dispute_released":
+      return {
+        title: t("notif_p2p_order_dispute_released_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    case "p2p_order_dispute_refunded":
+      return {
+        title: t("notif_p2p_order_dispute_refunded_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    case "p2p_order_message":
+      return {
+        title: t("notif_p2p_order_message_title"),
+        body: p2pPreviewBody(),
+        href: p2pHref,
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
+    case "p2p_order_support_message":
+      return {
+        title: t("notif_p2p_order_support_message_title"),
+        body: p2pPreviewBody(),
+        href: p2pHref,
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
     default:
       return {
         title: row.kind,
@@ -90,8 +182,18 @@ function notifMeta(
 }
 
 function NotifIconWrap({ kind }: { kind: string }) {
-  const tone =
-    kind === "deposit_confirmed" || kind === "withdrawal_completed"
+  const isP2p = kind.startsWith("p2p_");
+  const tone = isP2p
+    ? kind === "p2p_order_released" ||
+        kind === "p2p_order_dispute_released" ||
+        kind === "p2p_order_dispute_refunded"
+      ? "bg-emerald-100 text-emerald-800"
+      : kind === "p2p_order_cancelled" || kind === "p2p_order_expired"
+        ? "bg-rose-100 text-rose-800"
+        : kind === "p2p_order_disputed"
+          ? "bg-amber-100 text-amber-900"
+          : "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+    : kind === "deposit_confirmed" || kind === "withdrawal_completed"
       ? "bg-emerald-100 text-emerald-800"
       : kind === "withdrawal_rejected"
         ? "bg-rose-100 text-rose-800"
