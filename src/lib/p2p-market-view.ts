@@ -27,6 +27,11 @@ const MOBILE_HINTS = [
   "MOBILE",
   "WAVE",
   "ECOCASH",
+  "LUMICASH",
+  "FREE",
+  "OPAY",
+  "PALMPAY",
+  "KUDA",
 ];
 
 const BANK_HINTS = ["BANK", "SEPA", "SWIFT", "WIRE", "IBAN", "TRANSFER", "VIREMENT"];

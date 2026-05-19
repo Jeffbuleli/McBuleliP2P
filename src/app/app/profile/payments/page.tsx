@@ -15,7 +15,7 @@ export default async function ProfilePaymentsPage() {
         title={d.profile_payments_heading}
         subtitle={d.profile_tile_payments_sub}
       />
-      <P2pPaymentMethodsSection variant="profile" />
+      <P2pPaymentMethodsSection />
     </>
   );
 }

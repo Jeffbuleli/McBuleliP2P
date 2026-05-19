@@ -39,6 +39,7 @@ import {
   adMatchesPaymentKind,
   type P2pPaymentKindFilter,
 } from "@/lib/p2p-market-view";
+import { getP2pCatalogMethodLabel } from "@/lib/p2p-payment-method-catalog";
 import {
   fetchOrderNotifyCtx,
   notifyP2pDisputeRefunded,
@@ -117,7 +118,7 @@ async function buildPaymentSnapshot(args: {
 
   const lines: string[] = [];
   for (const c of codes) {
-    const label = labelByCode.get(c) ?? c;
+    const label = labelByCode.get(c) ?? getP2pCatalogMethodLabel(cc, c) ?? c;
     const hits = mine.filter((m: any) => m.methodCode === c);
     if (!hits.length) continue;
     for (const h of hits) {

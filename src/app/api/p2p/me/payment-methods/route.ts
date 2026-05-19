@@ -4,7 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { getDb, p2pPaymentMethodDefs, userP2pPaymentMethods, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
-import { isCdP2pFallbackMethodCode } from "@/lib/p2p-cd-payment-fallback";
+import { isP2pCatalogMethodCode } from "@/lib/p2p-payment-method-catalog";
 
 const postZ = z.object({
   methodCode: z.string().min(2).max(32),
@@ -12,16 +12,46 @@ const postZ = z.object({
   accountNumberOrPhone: z.string().min(3).max(64),
 });
 
-export async function GET() {
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const patchZ = z.object({
+  id: z.string().min(8),
+  active: z.boolean().optional(),
+  accountName: z.string().min(2).max(96).optional(),
+  accountNumberOrPhone: z.string().min(3).max(64).optional(),
+});
+
+const deleteZ = z.object({ id: z.string().min(8) });
+
+async function userCountry(userId: string): Promise<string> {
   const db = getDb();
   const [u] = await db
     .select({ countryCode: users.countryCode })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  const cc = effectiveP2pCountryCode(u?.countryCode ?? null);
+  return effectiveP2pCountryCode(u?.countryCode ?? null);
+}
+
+async function methodCodeAllowed(cc: string, codeUp: string): Promise<boolean> {
+  const db = getDb();
+  const [def] = await db
+    .select({ code: p2pPaymentMethodDefs.code })
+    .from(p2pPaymentMethodDefs)
+    .where(
+      and(
+        eq(p2pPaymentMethodDefs.countryCode, cc),
+        eq(p2pPaymentMethodDefs.code, codeUp),
+        eq(p2pPaymentMethodDefs.active, true),
+      ),
+    )
+    .limit(1);
+  return Boolean(def) || isP2pCatalogMethodCode(cc, codeUp);
+}
+
+export async function GET() {
+  const userId = await getSessionUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const cc = await userCountry(userId);
+  const db = getDb();
 
   const rows = await db
     .select({
@@ -46,32 +76,13 @@ export async function POST(req: Request) {
   const parsed = postZ.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: "p2p_invalid_limits" }, { status: 400 });
 
-  const db = getDb();
-  const [u] = await db
-    .select({ countryCode: users.countryCode })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  const cc = effectiveP2pCountryCode(u?.countryCode ?? null);
-
-  // Validate method code exists for this country (active).
+  const cc = await userCountry(userId);
   const codeUp = parsed.data.methodCode.toUpperCase();
-  const [def] = await db
-    .select({ code: p2pPaymentMethodDefs.code })
-    .from(p2pPaymentMethodDefs)
-    .where(
-      and(
-        eq(p2pPaymentMethodDefs.countryCode, cc),
-        eq(p2pPaymentMethodDefs.code, codeUp),
-        eq(p2pPaymentMethodDefs.active, true),
-      ),
-    )
-    .limit(1);
-  const allowedFallback = cc === "CD" && isCdP2pFallbackMethodCode(codeUp);
-  if (!def && !allowedFallback) {
+  if (!(await methodCodeAllowed(cc, codeUp))) {
     return NextResponse.json({ error: "p2p_payment_methods_required" }, { status: 400 });
   }
 
+  const db = getDb();
   const now = new Date();
   const [row] = await db
     .insert(userP2pPaymentMethods)
@@ -90,8 +101,6 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, id: row?.id ?? null });
 }
 
-const patchZ = z.object({ id: z.string().min(8), active: z.boolean() });
-
 export async function PATCH(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -99,12 +108,57 @@ export async function PATCH(req: Request) {
   const parsed = patchZ.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
 
+  const { id, active, accountName, accountNumberOrPhone } = parsed.data;
+  if (
+    active === undefined &&
+    accountName === undefined &&
+    accountNumberOrPhone === undefined
+  ) {
+    return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
+  }
+
   const db = getDb();
   const now = new Date();
-  await db
+  const patch: {
+    active?: boolean;
+    accountName?: string;
+    accountNumberOrPhone?: string;
+    updatedAt: Date;
+  } = { updatedAt: now };
+  if (active !== undefined) patch.active = active;
+  if (accountName !== undefined) patch.accountName = accountName.trim();
+  if (accountNumberOrPhone !== undefined) {
+    patch.accountNumberOrPhone = accountNumberOrPhone.trim();
+  }
+
+  const [upd] = await db
     .update(userP2pPaymentMethods)
-    .set({ active: parsed.data.active, updatedAt: now })
-    .where(and(eq(userP2pPaymentMethods.id, parsed.data.id), eq(userP2pPaymentMethods.userId, userId)));
+    .set(patch)
+    .where(and(eq(userP2pPaymentMethods.id, id), eq(userP2pPaymentMethods.userId, userId)))
+    .returning({ id: userP2pPaymentMethods.id });
+
+  if (!upd) return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
 
+export async function DELETE(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const json = await req.json().catch(() => null);
+  const parsed = deleteZ.safeParse(json);
+  if (!parsed.success) return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
+
+  const db = getDb();
+  const [del] = await db
+    .delete(userP2pPaymentMethods)
+    .where(
+      and(
+        eq(userP2pPaymentMethods.id, parsed.data.id),
+        eq(userP2pPaymentMethods.userId, userId),
+      ),
+    )
+    .returning({ id: userP2pPaymentMethods.id });
+
+  if (!del) return NextResponse.json({ error: "p2p_action_not_allowed" }, { status: 400 });
+  return NextResponse.json({ ok: true });
+}

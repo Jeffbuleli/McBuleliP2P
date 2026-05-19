@@ -1,21 +1,17 @@
 /**
- * When `p2p_payment_method_defs` has no rows for CD (e.g. migrations not applied),
- * still offer PawaPay-aligned corridor codes so Profile → payment methods works.
+ * @deprecated Use `p2p-payment-method-catalog` — kept for imports.
  */
-export type P2pMethodDefRow = {
-  code: string;
-  label: string;
-  countryCode: string;
-};
+import {
+  getP2pPaymentMethodsForCountry,
+  isP2pCatalogMethodCode,
+  type P2pMethodDefRow,
+} from "@/lib/p2p-payment-method-catalog";
 
-export const P2P_CD_PAYMENT_METHOD_FALLBACK: P2pMethodDefRow[] = [
-  { code: "AIRTEL_COD", label: "Airtel Money (RDC)", countryCode: "CD" },
-  { code: "ORANGE_COD", label: "Orange Money (RDC)", countryCode: "CD" },
-  { code: "VODACOM_MPESA_COD", label: "Vodacom M-Pesa (RDC)", countryCode: "CD" },
-];
+export type { P2pMethodDefRow };
 
-const ALLOW = new Set(P2P_CD_PAYMENT_METHOD_FALLBACK.map((x) => x.code));
+export const P2P_CD_PAYMENT_METHOD_FALLBACK: P2pMethodDefRow[] =
+  getP2pPaymentMethodsForCountry("CD");
 
 export function isCdP2pFallbackMethodCode(code: string): boolean {
-  return ALLOW.has(code.trim().toUpperCase());
+  return isP2pCatalogMethodCode("CD", code);
 }
