@@ -39,6 +39,8 @@ type AdDetail = {
   makerName: string;
   makerAvatarUrl: string | null;
   makerRating: { avg: number; count: number } | null;
+  reserveRemainingCrypto?: string | null;
+  reserveTotalCrypto?: string | null;
 };
 
 const ASSET_ICON: Record<string, string> = {
@@ -186,20 +188,21 @@ export default function P2pTradePage() {
                     min: tradeLimits.effectiveMin.toLocaleString(locNum, {
                       maximumFractionDigits: 2,
                     }),
-                    max: tradeLimits.maxAd.toLocaleString(locNum, {
+                    max: tradeLimits.effectiveMax.toLocaleString(locNum, {
                       maximumFractionDigits: 2,
                     }),
                     quote: ad.fiatCurrency,
                   })}
                 </p>
-                {tradeLimits.effectiveMin > tradeLimits.minAd + 1e-9 ? (
-                  <p className="text-[10px] text-[color:var(--fd-muted)]">
-                    {interpolate(t("p2p_trade_platform_min_note"), {
-                      amount: tradeLimits.platformMin.toLocaleString(locNum, {
-                        maximumFractionDigits: 2,
+                {ad.side === "sell" &&
+                tradeLimits.reserveRemainingCrypto != null &&
+                Number.isFinite(tradeLimits.reserveRemainingCrypto) ? (
+                  <p className="text-[10px] font-bold text-[color:var(--fd-primary)]">
+                    {interpolate(t("p2p_stock_remaining"), {
+                      amount: tradeLimits.reserveRemainingCrypto.toLocaleString(locNum, {
+                        maximumFractionDigits: 8,
                       }),
-                      quote: ad.fiatCurrency,
-                      asset,
+                      asset: ad.asset,
                     })}
                   </p>
                 ) : null}

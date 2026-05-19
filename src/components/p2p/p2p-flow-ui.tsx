@@ -200,6 +200,98 @@ export function FlowSegment<T extends string>({
   );
 }
 
+export function FlowPaymentTable({
+  items,
+  selected,
+  onToggle,
+  configured,
+  colMethod,
+  colStatus,
+  statusOk,
+  statusSetup,
+  verifyLabel,
+}: {
+  items: { code: string; label: string }[];
+  selected: string[];
+  onToggle: (code: string) => void;
+  configured?: Set<string>;
+  colMethod: string;
+  colStatus: string;
+  statusOk: string;
+  statusSetup: string;
+  verifyLabel: string;
+}) {
+  if (!items.length) {
+    return (
+      <p className="rounded-2xl border border-[color:var(--fd-border)] px-3 py-4 text-center text-[10px] text-[color:var(--fd-muted)]">
+        {statusSetup}
+      </p>
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
+      <table className="w-full border-collapse text-left text-xs">
+        <thead>
+          <tr className="bg-stone-100/90 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            <th className="px-3 py-2">{colMethod}</th>
+            <th className="px-3 py-2 text-center">{colStatus}</th>
+            <th className="w-10 px-2 py-2" />
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((d) => {
+            const code = d.code.toUpperCase();
+            const on = selected.some((c) => c.toUpperCase() === code);
+            const ready = !configured || configured.has(code);
+            return (
+              <tr
+                key={d.code}
+                className={`border-t border-[color:var(--fd-border)] ${
+                  on
+                    ? ready
+                      ? "bg-[color:var(--fd-mint)]/35"
+                      : "bg-amber-50/90"
+                    : "bg-white"
+                }`}
+              >
+                <td className="px-3 py-2.5 font-semibold text-[color:var(--fd-text)]">{d.label}</td>
+                <td className="px-3 py-2.5 text-center">
+                  {ready ? (
+                    <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                      {statusOk}
+                    </span>
+                  ) : (
+                    <Link
+                      href="/app/profile/payments"
+                      className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 underline"
+                    >
+                      {verifyLabel}
+                    </Link>
+                  )}
+                </td>
+                <td className="px-2 py-2.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => onToggle(d.code)}
+                    aria-pressed={on}
+                    className={`mx-auto flex h-8 w-8 items-center justify-center rounded-xl border-2 transition ${
+                      on
+                        ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-primary)] text-white"
+                        : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+                    }`}
+                  >
+                    {on ? <IconCheck className="h-3.5 w-3.5" /> : null}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function FlowChipGrid({
   items,
   selected,

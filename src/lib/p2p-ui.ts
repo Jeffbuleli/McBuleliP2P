@@ -48,25 +48,52 @@ export function minQuoteAmountForAd(asset: P2pCryptoAsset, price: string | numbe
 }
 
 export function p2pAdTradeLimits(
-  ad: { minFiat: string; maxFiat: string; price: string },
+  ad: {
+    minFiat: string;
+    maxFiat: string;
+    price: string;
+    reserveRemainingCrypto?: string | null;
+  },
   asset: P2pCryptoAsset,
 ): {
   minAd: number;
   maxAd: number;
   platformMin: number;
   effectiveMin: number;
+  effectiveMax: number;
+  reserveRemainingCrypto: number | null;
   untradeable: boolean;
 } {
   const minAd = Number(ad.minFiat);
   const maxAd = Number(ad.maxFiat);
+  const price = Number(ad.price);
   const platformMin = minQuoteAmountForAd(asset, ad.price);
   const effectiveMin = Math.max(
     Number.isFinite(minAd) && minAd > 0 ? minAd : 0,
     platformMin,
   );
+  let effectiveMax = Number.isFinite(maxAd) && maxAd > 0 ? maxAd : 0;
+  let reserveRemainingCrypto: number | null = null;
+  if (ad.reserveRemainingCrypto != null && ad.reserveRemainingCrypto !== "") {
+    const rem = Number(ad.reserveRemainingCrypto);
+    if (Number.isFinite(rem) && rem >= 0) {
+      reserveRemainingCrypto = rem;
+      if (Number.isFinite(price) && price > 0) {
+        effectiveMax = Math.min(effectiveMax, rem * price);
+      }
+    }
+  }
   const untradeable =
-    !Number.isFinite(maxAd) || maxAd <= 0 || maxAd < effectiveMin;
-  return { minAd, maxAd, platformMin, effectiveMin, untradeable };
+    !Number.isFinite(effectiveMax) || effectiveMax <= 0 || effectiveMax < effectiveMin;
+  return {
+    minAd,
+    maxAd,
+    platformMin,
+    effectiveMin,
+    effectiveMax,
+    reserveRemainingCrypto,
+    untradeable,
+  };
 }
 
 /** Flow hint with optional `{quote}` interpolation. */

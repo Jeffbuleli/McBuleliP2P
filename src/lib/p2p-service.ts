@@ -538,6 +538,8 @@ export async function listMarketAds(filters: {
     makerRating: { avg: number; count: number } | null;
     boostedUntil: string | null;
     boostAmountPi: string;
+    reserveTotalCrypto: string | null;
+    reserveRemainingCrypto: string | null;
   }[]
 > {
   await processExpiredP2pOrders();
@@ -596,6 +598,8 @@ export async function listMarketAds(filters: {
     makerRating: rep.get(ad.userId) ?? null,
     boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
     boostAmountPi: ad.boostAmountPi.toString(),
+    reserveTotalCrypto: ad.reserveTotalCrypto?.toString() ?? null,
+    reserveRemainingCrypto: ad.reserveRemainingCrypto?.toString() ?? null,
   }));
 
   const kindFiltered =
@@ -680,6 +684,8 @@ export async function getAdForTaker(args: {
         makerName: string;
         makerAvatarUrl: string | null;
         makerRating: { avg: number; count: number } | null;
+        reserveTotalCrypto: string | null;
+        reserveRemainingCrypto: string | null;
       };
     }
   | { ok: false; message: string }
@@ -728,6 +734,8 @@ export async function getAdForTaker(args: {
       makerName: p2pDisplayName(row.u),
       makerAvatarUrl: row.u.avatarUrl ?? null,
       makerRating: rep.get(row.ad.userId) ?? null,
+      reserveTotalCrypto: row.ad.reserveTotalCrypto?.toString() ?? null,
+      reserveRemainingCrypto: row.ad.reserveRemainingCrypto?.toString() ?? null,
     },
   };
 }
@@ -789,8 +797,9 @@ export async function createAd(args: {
   if (args.side === "buy" && isCryptoQuote) {
     return { ok: false, message: "p2p_buy_ad_fiat_only" };
   }
-  const platMinFiat = minCryptoForAsset(args.asset) * price;
-  if (!isCryptoQuote && minF + 1e-12 < platMinFiat) {
+  const minCryptoOrder = minF / price;
+  const platMinCrypto = minCryptoForAsset(args.asset);
+  if (minCryptoOrder + 1e-12 < platMinCrypto) {
     return { ok: false, message: "p2p_min_below_platform" };
   }
   const pm = args.paymentMethods.trim();
@@ -874,14 +883,8 @@ export async function createAd(args: {
       let reserveRemaining: string | null = null;
 
       if (args.side === "sell") {
-        const maxCryptoNeeded = maxF / price;
-        const minReserve = Number(fmtWalletAmount(maxCryptoNeeded));
-        const requested = Number(args.reserveAmountCryptoStr ?? "");
-        const reserve = Number.isFinite(requested) && requested > 0 ? requested : minReserve;
+        const reserve = Number(fmtWalletAmount(maxF / price));
         if (!Number.isFinite(reserve) || reserve <= 0) {
-          throw new Error("p2p_invalid_limits");
-        }
-        if (reserve + 1e-12 < minReserve) {
           throw new Error("p2p_invalid_limits");
         }
         reserveTotal = fmtWalletAmount(reserve);
@@ -1137,13 +1140,26 @@ export async function createOrder(args: {
 
       const minF = Number(ad.ad.minFiat);
       const maxF = Number(ad.ad.maxFiat);
-      if (fiatAmount + 1e-12 < minF || fiatAmount > maxF + 1e-12) {
+      const price = Number(ad.ad.price);
+      const asset = ad.ad.asset as P2pCryptoAsset;
+      const platMinFiat = minCryptoForAsset(asset) * price;
+      const effectiveMinF = Math.max(minF, platMinFiat);
+      let effectiveMaxF = maxF;
+      const usesReserve =
+        (ad.ad.side as P2pSide) === "sell" &&
+        ad.ad.reserveRemainingCrypto != null &&
+        ad.ad.reserveTotalCrypto != null;
+      if (usesReserve) {
+        const rem = Number(ad.ad.reserveRemainingCrypto);
+        if (Number.isFinite(rem) && rem >= 0 && Number.isFinite(price) && price > 0) {
+          effectiveMaxF = Math.min(maxF, rem * price);
+        }
+      }
+      if (fiatAmount + 1e-12 < effectiveMinF || fiatAmount > effectiveMaxF + 1e-12) {
         throw new Error("p2p_amount_out_of_range");
       }
 
-      const price = Number(ad.ad.price);
       const cryptoRaw = fiatAmount / price;
-      const asset = ad.ad.asset as P2pCryptoAsset;
       const minC = minCryptoForAsset(asset);
       if (cryptoRaw + 1e-18 < minC) throw new Error("p2p_below_min_crypto");
 
@@ -1164,12 +1180,6 @@ export async function createOrder(args: {
       if (cryptoQuote && (!quoteAsset || quoteAsset === wa)) {
         throw new Error("p2p_invalid_limits");
       }
-      // For SELL ads with reserve, use ad reserveRemaining; otherwise, lock from seller wallet.
-      const usesReserve =
-        (ad.ad.side as P2pSide) === "sell" &&
-        ad.ad.reserveRemainingCrypto != null &&
-        ad.ad.reserveTotalCrypto != null;
-
       if (usesReserve) {
         const rem = Number(ad.ad.reserveRemainingCrypto);
         if (!Number.isFinite(rem) || rem + 1e-18 < cryptoNum) {

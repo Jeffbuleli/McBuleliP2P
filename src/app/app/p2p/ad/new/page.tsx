@@ -4,10 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
-  FlowChipGrid,
   FlowError,
   FlowField,
   FlowInput,
+  FlowKvCard,
+  FlowPaymentTable,
   FlowPrimaryBtn,
   FlowProfileLink,
   FlowSection,
@@ -23,6 +24,7 @@ import {
   type P2pMarketView,
 } from "@/lib/p2p-market-view";
 import {
+  minCryptoForAsset,
   P2P_COUNTRY_CODES,
   p2pAllowedQuoteFiats,
   p2pListingFeeAmount,
@@ -52,6 +54,7 @@ export default function P2pNewAdPage() {
   const [fiat, setFiat] = useState<P2pFiatCurrency>(() => quoteFiats[0] ?? "CDF");
   const listingFee = p2pListingFeeAmount();
   const listingFeeAsset = p2pListingFeeAsset();
+  const platformMinCrypto = minCryptoForAsset(asset);
   const isBuyMarketPost = lockedView === "buy" || (!lockedView && side === "sell");
 
   useEffect(() => {
@@ -78,7 +81,6 @@ export default function P2pNewAdPage() {
   const [myMethodCodes, setMyMethodCodes] = useState<Set<string>>(new Set());
   const [terms, setTerms] = useState("");
   const [country, setCountry] = useState("CD");
-  const [reserveAmountCrypto, setReserveAmountCrypto] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [balUsdt, setBalUsdt] = useState<number | null>(null);
@@ -149,19 +151,32 @@ export default function P2pNewAdPage() {
     if (labels.length) setPaymentMethods(labels.join(", "));
   }, [paymentCodes, paymentDefs]);
 
-  const sellNeedHint = useMemo(() => {
+  const sellBalance = asset === "USDT" ? balUsdt : balPi;
+
+  const maxFiatCap = useMemo(() => {
+    if (side !== "sell") return null;
+    const p = Number(price.replace(",", "."));
+    const bal = sellBalance;
+    if (!Number.isFinite(p) || p <= 0 || bal == null) return null;
+    return Math.floor(bal * p * 1e8) / 1e8;
+  }, [side, price, sellBalance]);
+
+  const escrowCrypto = useMemo(() => {
     if (side !== "sell") return null;
     const p = Number(price.replace(",", "."));
     const maxF = Number(maxFiat.replace(",", "."));
     if (!Number.isFinite(p) || p <= 0 || !Number.isFinite(maxF) || maxF <= 0) return null;
-    const need = maxF / p;
-    if (!Number.isFinite(need) || need <= 0) return null;
-    const bal = asset === "USDT" ? balUsdt : balPi;
-    if (bal == null) return null;
-    const needR = Math.ceil(need * 1e8) / 1e8;
-    const balR = Math.floor(bal * 1e8) / 1e8;
-    return { need: needR, bal: balR, ok: bal + 1e-12 >= need };
-  }, [side, price, maxFiat, asset, balUsdt, balPi]);
+    const c = maxF / p;
+    if (!Number.isFinite(c) || c <= 0) return null;
+    return Math.ceil(c * 1e8) / 1e8;
+  }, [side, price, maxFiat]);
+
+  const sellNeedHint = useMemo(() => {
+    if (side !== "sell" || escrowCrypto == null || sellBalance == null) return null;
+    const needR = escrowCrypto;
+    const balR = Math.floor(sellBalance * 1e8) / 1e8;
+    return { need: needR, bal: balR, ok: sellBalance + 1e-12 >= needR };
+  }, [side, escrowCrypto, sellBalance]);
 
   const errMsg = useMemo(() => {
     if (!err) return null;
@@ -181,10 +196,46 @@ export default function P2pNewAdPage() {
     );
   }
 
+  function capMaxToBalance() {
+    if (maxFiatCap == null) return;
+    const maxF = Number(maxFiat.replace(",", "."));
+    if (!Number.isFinite(maxF) || maxF > maxFiatCap) {
+      setMaxFiat(String(maxFiatCap));
+    }
+  }
+
   async function submit() {
     setErr(null);
     setLoading(true);
     try {
+      const p = Number(price.replace(",", "."));
+      const minF = Number(minFiat.replace(",", "."));
+      const maxF = Number(maxFiat.replace(",", "."));
+      if (!Number.isFinite(p) || p <= 0) {
+        setErr("p2p_invalid_price");
+        return;
+      }
+      if (!Number.isFinite(minF) || !Number.isFinite(maxF) || minF <= 0 || maxF < minF) {
+        setErr("p2p_invalid_limits");
+        return;
+      }
+      if (minF / p + 1e-12 < platformMinCrypto) {
+        setErr("p2p_min_below_platform");
+        return;
+      }
+      if (side === "sell") {
+        const need = maxF / p;
+        const bal = sellBalance ?? 0;
+        if (bal + 1e-12 < need) {
+          setErr("p2p_sell_insufficient_balance");
+          return;
+        }
+      }
+      if (listingFee > 0 && (balUsdt ?? 0) + 1e-12 < listingFee) {
+        setErr("p2p_listing_fee_insufficient");
+        return;
+      }
+
       const codes = paymentCodes.length ? paymentCodes : undefined;
       const pm =
         codes && paymentDefs.length
@@ -219,7 +270,6 @@ export default function P2pNewAdPage() {
           maxFiat,
           paymentMethods: cryptoQuote ? "On-platform" : pm,
           paymentMethodCodes: cryptoQuote ? undefined : codes,
-          reserveAmountCrypto: side === "sell" ? reserveAmountCrypto.trim() || undefined : undefined,
           terms: terms.trim() || undefined,
           countryCode: country === "OTHER" ? undefined : country,
         }),
@@ -257,22 +307,18 @@ export default function P2pNewAdPage() {
 
   return (
     <P2pFlowShell title={pageTitle} subtitle={pageSubtitle}>
-      <p
-        className={`rounded-2xl px-3 py-2 text-[11px] leading-snug ${
-          isBuyMarketPost
-            ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
-            : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)]"
-        }`}
-      >
-        {isBuyMarketPost ? t("p2p_market_buy_hint") : t("p2p_market_sell_hint")}
-      </p>
-
-      <p className="rounded-2xl border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[11px] text-[color:var(--fd-muted)]">
-        {t("p2p_listing_fee_note", {
-          amount: listingFee,
-          asset: listingFeeAsset,
-        })}
-      </p>
+      <FlowKvCard
+        rows={[
+          {
+            k: t("p2p_listing_fee_short"),
+            v: `${listingFee} ${listingFeeAsset}`,
+          },
+          {
+            k: t("p2p_platform_min_label"),
+            v: `${platformMinCrypto} ${asset}`,
+          },
+        ]}
+      />
 
       {!lockedView ? (
         <FlowSection title={t("p2p_side_label")}>
@@ -297,7 +343,7 @@ export default function P2pNewAdPage() {
             <option value="PI">PI</option>
           </FlowSelect>
         </FlowField>
-        <FlowField label={t("p2p_fiat_label")} hint={cryptoQuote ? t("p2p_crypto_quote_hint") : t("p2p_fiat_quote_escrow_note")}>
+        <FlowField label={t("p2p_fiat_label")}>
           <FlowSelect
             value={fiat}
             onChange={(e) => setFiat(e.target.value as P2pFiatCurrency)}
@@ -319,16 +365,36 @@ export default function P2pNewAdPage() {
           <FlowField label={t("p2p_min_fiat")}>
             <FlowInput value={minFiat} onChange={(e) => setMinFiat(e.target.value)} inputMode="decimal" />
           </FlowField>
-          <FlowField label={t("p2p_max_fiat")} hint={side === "sell" ? t("p2p_sell_escrow_explainer") : undefined}>
-            <FlowInput value={maxFiat} onChange={(e) => setMaxFiat(e.target.value)} inputMode="decimal" />
+          <FlowField label={t("p2p_max_fiat")}>
+            <FlowInput
+              value={maxFiat}
+              onChange={(e) => setMaxFiat(e.target.value)}
+              onBlur={capMaxToBalance}
+              inputMode="decimal"
+            />
           </FlowField>
         </div>
+        {side === "sell" && escrowCrypto != null ? (
+          <p className="mt-2 text-[11px] font-semibold text-[color:var(--fd-primary)]">
+            {t("p2p_escrow_lock_line", {
+              amount: String(escrowCrypto),
+              asset,
+            })}
+          </p>
+        ) : null}
+        {side === "sell" && sellBalance != null ? (
+          <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
+            {t("p2p_balance_cap_line", {
+              amount: String(sellBalance),
+              asset,
+            })}
+          </p>
+        ) : null}
       </FlowSection>
 
       {!cryptoQuote ? (
         <FlowSection
           title={t("p2p_payment_detail")}
-          hint={t("p2p_payment_methods_profile_hint")}
           action={<FlowProfileLink label={t("p2p_payment_methods_title")} />}
         >
           {!paymentDefs.length ? (
@@ -341,24 +407,18 @@ export default function P2pNewAdPage() {
               rows={3}
             />
           ) : (
-            <FlowChipGrid
+            <FlowPaymentTable
               items={paymentDefs}
               selected={paymentCodes}
               onToggle={togglePayment}
               configured={myMethodCodes}
+              colMethod={t("p2p_payment_col_method")}
+              colStatus={t("p2p_payment_col_status")}
+              statusOk={t("p2p_payment_status_ok")}
+              statusSetup={t("p2p_payment_status_setup")}
+              verifyLabel={t("p2p_payment_verify_link")}
             />
           )}
-        </FlowSection>
-      ) : null}
-
-      {side === "sell" ? (
-        <FlowSection title={t("p2p_reserve_label")} hint={t("p2p_reserve_hint")}>
-          <FlowInput
-            value={reserveAmountCrypto}
-            onChange={(e) => setReserveAmountCrypto(e.target.value)}
-            inputMode="decimal"
-            placeholder={asset === "USDT" ? "100" : "20"}
-          />
         </FlowSection>
       ) : null}
 

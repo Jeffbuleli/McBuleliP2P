@@ -155,7 +155,7 @@ export function p2pListingFeeAsset(): P2pCryptoAsset {
 export function minCryptoForAsset(asset: P2pCryptoAsset): number {
   const raw =
     asset === "USDT"
-      ? Number(process.env.P2P_MIN_CRYPTO_USDT ?? "5")
-      : Number(process.env.P2P_MIN_CRYPTO_PI ?? "50");
-  return Number.isFinite(raw) && raw > 0 ? raw : asset === "USDT" ? 5 : 50;
+      ? Number(process.env.P2P_MIN_CRYPTO_USDT ?? "1")
+      : Number(process.env.P2P_MIN_CRYPTO_PI ?? "1");
+  return Number.isFinite(raw) && raw > 0 ? raw : 1;
 }

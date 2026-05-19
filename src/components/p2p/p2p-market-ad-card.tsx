@@ -21,6 +21,8 @@ export type P2pMarketAd = {
   countryCode: string | null;
   makerName: string;
   makerRating: { avg: number; count: number } | null;
+  reserveRemainingCrypto?: string | null;
+  reserveTotalCrypto?: string | null;
 };
 
 const ASSET_ICON: Record<string, string> = {
@@ -45,6 +47,10 @@ export function P2pMarketAdCard({
   const roleLabel = isBuyTab ? t("p2p_role_you_buy") : t("p2p_role_you_sell");
   const ctaLabel = isBuyTab ? t("p2p_cta_buy") : t("p2p_cta_sell");
   const tabLabel = isBuyTab ? t("p2p_market_tab_buy") : t("p2p_market_tab_sell");
+  const stockRem =
+    ad.side === "sell" && ad.reserveRemainingCrypto != null
+      ? Number(ad.reserveRemainingCrypto)
+      : null;
 
   const headerBg = isBuyTab
     ? "bg-[color:var(--fd-mint)]/50"
@@ -107,6 +113,16 @@ export function P2pMarketAdCard({
             <p className="text-[10px] text-[color:var(--fd-muted)]">
               {fmt(ad.minFiat, ad.fiatCurrency)} — {fmt(ad.maxFiat, ad.fiatCurrency)}
             </p>
+            {stockRem != null && Number.isFinite(stockRem) ? (
+              <p className="text-[10px] font-bold text-[color:var(--fd-primary)]">
+                {t("p2p_stock_remaining", {
+                  amount: stockRem.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
+                    maximumFractionDigits: 8,
+                  }),
+                  asset: ad.asset,
+                })}
+              </p>
+            ) : null}
           </div>
         </div>
 
