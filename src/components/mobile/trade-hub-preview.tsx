@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getDictionary } from "@/i18n/messages";
 import type { Locale } from "@/i18n/locale";
 
-/** Compact dashboard card — links to Trade hub; live tickers are shown below in MarketPreview. */
 export function TradeHubPreview({ locale }: { locale: Locale }) {
   const d = getDictionary(locale);
 
@@ -22,7 +21,7 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
           </div>
         </div>
         <Link
-          href="/app/trade"
+          href="/app/trade/bots"
           className="shrink-0 text-xs font-semibold text-[color:var(--fd-primary)]"
         >
           {d.trade_view_hub} →
@@ -31,25 +30,25 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
 
       <div className="grid grid-cols-2 gap-2">
         <Link
-          href="/app/trade/futures"
+          href="/app/trade/bots"
           className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)] px-3 py-3 text-center transition active:scale-[0.98] hover:bg-[color:var(--fd-mint-deep)]"
         >
-          <span className="text-xs font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
-            Futures
+          <span className="text-lg" aria-hidden>
+            🤖
           </span>
-          <span className="mt-0.5 text-[10px] leading-tight text-[color:var(--fd-muted)]">
-            {d.trade_card_futures_hint}
+          <span className="text-xs font-bold text-[color:var(--fd-primary)]">
+            {d.trade_ui_tab_bots}
           </span>
         </Link>
         <Link
-          href="/app/trade/options"
-          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-center transition active:scale-[0.98] hover:bg-amber-100/80"
+          href="/app/trade/futures"
+          className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-center transition active:scale-[0.98] hover:bg-[color:var(--fd-mint)]"
         >
-          <span className="text-xs font-bold uppercase tracking-wide text-amber-800">
-            Options
+          <span className="text-lg" aria-hidden>
+            📈
           </span>
-          <span className="mt-0.5 text-[10px] leading-tight text-amber-700/90">
-            {d.trade_card_options_hint}
+          <span className="text-xs font-bold text-[color:var(--fd-text)]">
+            {d.trade_ui_tab_futures}
           </span>
         </Link>
       </div>

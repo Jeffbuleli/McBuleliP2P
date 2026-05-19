@@ -113,7 +113,7 @@ export function TradeMiniChart({
   const tfs: TradeTf[] = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"];
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+    <section className="fd-card p-3">
       <div className="mb-2 flex flex-wrap gap-1">
         {tfs.map((x) => (
           <button
@@ -122,20 +122,15 @@ export function TradeMiniChart({
             onClick={() => onTfChange(x)}
             className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
               tf === x
-                ? "bg-emerald-600 text-white"
-                : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                ? "bg-[color:var(--fd-primary)] text-white"
+                : "bg-[color:var(--fd-mint)] text-[color:var(--fd-muted)]"
             }`}
           >
             {x}
           </button>
         ))}
       </div>
-      <p className="mb-2 text-[10px] leading-snug text-stone-500 dark:text-stone-400">
-        {symbol.toUpperCase() === "PIUSDT"
-          ? t("trade_ui_chart_caption_okx_pi")
-          : t("trade_ui_chart_caption")}
-      </p>
-      <div className="relative flex justify-center overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-950">
+      <div className="relative flex justify-center overflow-hidden rounded-xl bg-[color:var(--fd-mint)]/50">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center text-xs text-stone-500">
             {d.market_loading}
@@ -181,6 +176,6 @@ export function TradeMiniChart({
           </svg>
         )}
       </div>
-    </div>
+    </section>
   );
 }

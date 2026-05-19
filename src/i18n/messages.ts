@@ -1657,6 +1657,10 @@ export const en = {
   trade_ui_hist_cause: "Close",
   trade_ui_hist_fees: "Fees",
   trade_ui_hist_pnl: "PnL",
+  trade_ui_hist_prev: "Previous",
+  trade_ui_hist_next: "Next",
+  trade_live_disabled_hint_short: "Practice first — enable real trading when ready.",
+  trade_mode_live_hint_short: "Real USDT wallet",
   trade_ui_chart_caption_okx_pi:
     "OKX PI-USDT candles: each point is the candle close (interval above). Reference chart only.",
   trade_ui_chart_caption:
@@ -3718,6 +3722,10 @@ export const fr: Messages = {
   trade_ui_hist_cause: "Motif",
   trade_ui_hist_fees: "Frais",
   trade_ui_hist_pnl: "PnL",
+  trade_ui_hist_prev: "Précédent",
+  trade_ui_hist_next: "Suivant",
+  trade_live_disabled_hint_short: "Entraînez-vous d’abord — activez le réel quand vous êtes prêt.",
+  trade_mode_live_hint_short: "Portefeuille USDT réel",
   trade_ui_chart_caption_okx_pi:
     "Bougies OKX PI-USDT : chaque point = clôture (intervalle ci-dessus). Graphique de référence uniquement.",
   trade_ui_chart_caption:

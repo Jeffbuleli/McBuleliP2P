@@ -9,7 +9,7 @@ const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
   { href: "/app", key: "nav_home", icon: HomeIcon },
   { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
   { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
-  { href: "/app/trade/futures", key: "nav_trade", icon: MarketIcon },
+  { href: "/app/trade/bots", key: "nav_trade", icon: MarketIcon },
   { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
 
@@ -42,7 +42,7 @@ export function AppBottomNav() {
           const active =
             href === "/app"
               ? pathname === "/app"
-              : href === "/app/trade/futures"
+              : href === "/app/trade/bots"
                 ? pathname.startsWith("/app/trade")
                 : pathname.startsWith(href);
           const label = t(p.key);

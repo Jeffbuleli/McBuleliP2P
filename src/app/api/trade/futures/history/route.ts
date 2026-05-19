@@ -11,9 +11,11 @@ export async function GET(req: Request) {
   }
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get("mode") === "live" ? "live" : "demo";
-  const limitRaw = Number(searchParams.get("limit") ?? "30");
-  const limit = Number.isFinite(limitRaw) ? limitRaw : 30;
-  const data = await listFuturesHistory(userId, mode, limit);
+  const limitRaw = Number(searchParams.get("limit") ?? "10");
+  const limit = ([10, 20, 30] as const).includes(limitRaw as 10 | 20 | 30)
+    ? (limitRaw as 10 | 20 | 30)
+    : 10;
+  const offset = Math.max(0, Number(searchParams.get("offset") ?? "0") || 0);
+  const data = await listFuturesHistory(userId, mode, { limit, offset });
   return NextResponse.json(data);
 }
-

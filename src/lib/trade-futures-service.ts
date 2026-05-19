@@ -276,8 +276,9 @@ export async function listFuturesPositions(
 export async function listFuturesHistory(
   userId: string,
   mode: "demo" | "live",
-  limit = 30,
+  opts: { limit?: number; offset?: number } = {},
 ): Promise<{
+  total: number;
   trades: Array<{
     id: string;
     symbol: string;
@@ -299,19 +300,29 @@ export async function listFuturesHistory(
   const isDemo = mode === "demo";
   await processFuturesRisk(userId);
 
+  const limitRaw = opts.limit ?? 30;
+  const limit = [10, 20, 30].includes(limitRaw) ? limitRaw : 30;
+  const offset = Math.max(0, Math.floor(opts.offset ?? 0));
+
   const db = getDb();
+  const whereCond = and(
+    eq(tradeFuturesPositions.userId, userId),
+    inArray(tradeFuturesPositions.status, ["closed", "liquidated"]),
+    eq(tradeFuturesPositions.isDemo, isDemo),
+  );
+
+  const [countRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(tradeFuturesPositions)
+    .where(whereCond);
+
   const rows = await db
     .select()
     .from(tradeFuturesPositions)
-    .where(
-      and(
-        eq(tradeFuturesPositions.userId, userId),
-        inArray(tradeFuturesPositions.status, ["closed", "liquidated"]),
-        eq(tradeFuturesPositions.isDemo, isDemo),
-      ),
-    )
+    .where(whereCond)
     .orderBy(desc(tradeFuturesPositions.closedAt))
-    .limit(Math.max(1, Math.min(100, Math.floor(limit))));
+    .limit(limit)
+    .offset(offset);
 
   const trades = rows
     .filter((r) => r.closedAt != null && r.closePrice != null && r.realizedPnlUsdt != null)
@@ -333,7 +344,7 @@ export async function listFuturesHistory(
       closedAt: r.closedAt!.toISOString(),
     }));
 
-  return { trades };
+  return { trades, total: countRow?.n ?? 0 };
 }
 
 export async function openFuturesPosition(args: {

@@ -23,6 +23,14 @@ import {
   TradeModeBar,
   type TradeAppMode,
 } from "@/components/trade/trade-mode-bar";
+import {
+  TradeFlowCard,
+  TradeFlowInput,
+  TradeFlowSelect,
+  TradeFlowSectionTitle,
+  TradeHistoryPager,
+  tradeFieldCls,
+} from "@/components/trade/trade-flow-ui";
 
 const TradeMiniChart = dynamic(
   () =>
@@ -92,6 +100,9 @@ export function FuturesTradingClient() {
   const [maxLev, setMaxLev] = useState(10);
   const [positions, setPositions] = useState<PositionRow[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [histPage, setHistPage] = useState(0);
+  const [histPageSize, setHistPageSize] = useState<10 | 20 | 30>(10);
+  const [histTotal, setHistTotal] = useState(0);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -272,16 +283,20 @@ export function FuturesTradingClient() {
 
   const pollHistory = useCallback(async () => {
     try {
+      const offset = histPage * histPageSize;
       const res = await fetch(
-        `/api/trade/futures/history?mode=${encodeURIComponent(tradeMode)}&limit=30`,
+        `/api/trade/futures/history?mode=${encodeURIComponent(tradeMode)}&limit=${histPageSize}&offset=${offset}`,
         { cache: "no-store" },
       );
-      const j = (await res.json()) as { trades?: HistoryRow[] };
-      if (res.ok) setHistory(j.trades ?? []);
+      const j = (await res.json()) as { trades?: HistoryRow[]; total?: number };
+      if (res.ok) {
+        setHistory(j.trades ?? []);
+        setHistTotal(typeof j.total === "number" ? j.total : 0);
+      }
     } catch {
       /* ignore */
     }
-  }, [tradeMode]);
+  }, [tradeMode, histPage, histPageSize]);
 
   useEffect(() => {
     if (leverage > maxLev) {
@@ -314,6 +329,10 @@ export function FuturesTradingClient() {
     const id = window.setInterval(() => void pollPositions(), 8000);
     return () => window.clearInterval(id);
   }, [pollPositions]);
+
+  useEffect(() => {
+    setHistPage(0);
+  }, [tradeMode, histPageSize]);
 
   useEffect(() => {
     void pollHistory();
@@ -482,85 +501,83 @@ export function FuturesTradingClient() {
         }}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-          {t("trade_ui_mode")}
-        </p>
-        <button
-          type="button"
-          onClick={() => setGuided((v) => !v)}
-          className="rounded-lg border border-stone-700/50 bg-stone-950/65 px-3 py-1.5 text-[11px] font-bold text-stone-100 shadow-lg shadow-black/40 backdrop-blur-xl"
-        >
-          {guided ? t("trade_ui_guided_on") : t("trade_ui_guided_off")}
-        </button>
-      </div>
-
-      {warnings.length > 0 ? (
-        <div className="rounded-xl border border-amber-700/30 bg-amber-950/40 p-3 text-[11px] text-amber-100">
-          <p className="font-bold">{t("trade_ui_risk_checks")}</p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-4">
-            {warnings.map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="flex flex-col gap-1 text-xs font-semibold text-stone-600 dark:text-stone-400">
-          {t("trade_ui_pair")}
-          <select
-            value={symbol}
-            onChange={(e) =>
-              setSymbol(e.target.value as (typeof TRADE_SYMBOLS)[number])
-            }
-            className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-50"
+      <TradeFlowCard className="!py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] font-bold text-[color:var(--fd-muted)]">
+            {guided ? "🛡 " + t("trade_ui_guided_on") : "⚡ " + t("trade_ui_guided_off")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setGuided((v) => !v)}
+            className="rounded-lg bg-[color:var(--fd-mint)] px-2.5 py-1 text-[10px] font-bold text-[color:var(--fd-primary)]"
           >
-            {TRADE_SYMBOLS.map((s) => (
-              <option key={s} value={s}>
-                {s.replace("USDT", "")}/USDT
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase text-stone-500">
-            {t("trade_ui_live")}
-          </p>
-          <p className="font-mono text-lg font-bold tabular-nums text-stone-900 dark:text-stone-50">
-            {mark > 0 ? mark.toLocaleString(locTag, { maximumFractionDigits: 2 }) : "—"}
-          </p>
-          <p
-            className={`text-xs font-semibold tabular-nums ${
-              (ticker?.changePct24h ?? 0) >= 0
-                ? "text-emerald-600"
-                : "text-rose-600"
-            }`}
-          >
-            {t("trade_ui_24h")} {changeStr}
-          </p>
+            {guided ? t("trade_ui_guided_off") : t("trade_ui_guided_on")}
+          </button>
         </div>
-      </div>
+        {warnings.length > 0 ? (
+          <p className="mt-1.5 text-[10px] leading-snug text-amber-800">
+            ⚠ {warnings.slice(0, 2).join(" · ")}
+          </p>
+        ) : null}
+      </TradeFlowCard>
+
+      <TradeFlowCard>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="min-w-[8rem] flex-1">
+            <span className="text-[10px] font-bold text-[color:var(--fd-muted)]">
+              {t("trade_ui_pair")}
+            </span>
+            <TradeFlowSelect
+              value={symbol}
+              onChange={(e) =>
+                setSymbol(e.target.value as (typeof TRADE_SYMBOLS)[number])
+              }
+              className="mt-1"
+            >
+              {TRADE_SYMBOLS.map((s) => (
+                <option key={s} value={s}>
+                  {s.replace("USDT", "")}/USDT
+                </option>
+              ))}
+            </TradeFlowSelect>
+          </label>
+          <div className="text-right">
+            <p className="text-[9px] font-bold uppercase text-[color:var(--fd-muted)]">
+              {t("trade_ui_live")}
+            </p>
+            <p className="font-mono text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
+              {mark > 0 ? mark.toLocaleString(locTag, { maximumFractionDigits: 2 }) : "—"}
+            </p>
+            <p
+              className={`text-xs font-semibold tabular-nums ${
+                (ticker?.changePct24h ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+              }`}
+            >
+              {t("trade_ui_24h")} {changeStr}
+            </p>
+          </div>
+        </div>
+      </TradeFlowCard>
 
       <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
 
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <p className="mb-2 text-xs font-semibold text-stone-500">
+      <TradeFlowCard>
+        <p className="mb-2 text-xs font-semibold text-[color:var(--fd-muted)]">
           {tradeMode === "demo"
             ? t("trade_ui_demo_balance")
             : t("trade_ui_usdt_balance")}
           :{" "}
-          <span className="text-stone-900 dark:text-stone-100">
+          <span className="text-[color:var(--fd-text)]">
             {displayBal != null
               ? displayBal.toLocaleString(locTag, { maximumFractionDigits: 2 })
               : "—"}
           </span>
         </p>
-        {maxLev < 10 && (
-          <p className="mb-3 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+        {maxLev < 10 ? (
+          <p className="mb-3 text-[10px] text-amber-800">
             {t("trade_ui_beginner_cap").replace("{max}", String(maxLev))}
           </p>
-        )}
+        ) : null}
 
         <div className="mb-3 grid grid-cols-2 gap-2">
           <button
@@ -731,13 +748,6 @@ export function FuturesTradingClient() {
           </div>
         )}
 
-        <p className="mb-2 text-[11px] leading-snug text-stone-500">
-          {t("trade_ui_min_max_margin")
-            .replace("{min}", String(TRADE_MIN_MARGIN_USDT))
-            .replace("{max}", String(tradeMaxMarginUsdt()))}{" "}
-          · {TRADE_FEE_RATE * 100}% {t("trade_ui_fee_notional")}
-        </p>
-
         {msg && (
           <p className="mb-2 rounded-lg bg-rose-50 px-2 py-1.5 text-xs text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
             {msg}
@@ -758,12 +768,10 @@ export function FuturesTradingClient() {
         >
           {t("trade_ui_place_order")}
         </button>
-      </div>
+      </TradeFlowCard>
 
-      <div>
-        <h3 className="mb-2 text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("trade_ui_positions")}
-        </h3>
+      <TradeFlowCard>
+        <TradeFlowSectionTitle>{t("trade_ui_positions")}</TradeFlowSectionTitle>
         {positions.length === 0 ? (
           <p className="text-sm text-stone-500">{t("trade_ui_no_positions")}</p>
         ) : (
@@ -784,7 +792,7 @@ export function FuturesTradingClient() {
                 return (
               <li
                 key={p.id}
-                className="rounded-xl border border-stone-700/50 bg-stone-950/65 p-3 shadow-lg shadow-black/40 backdrop-blur-xl"
+                className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -926,103 +934,80 @@ export function FuturesTradingClient() {
             ))}
           </ul>
         )}
-      </div>
+      </TradeFlowCard>
 
-      <div>
-        <h3 className="mb-2 text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("trade_ui_history")}
-        </h3>
+      <TradeFlowCard>
+        <TradeFlowSectionTitle>{t("trade_ui_history")}</TradeFlowSectionTitle>
         {history.length === 0 ? (
-          <p className="text-sm text-stone-500">{t("trade_ui_history_empty")}</p>
+          <p className="text-sm text-[color:var(--fd-muted)]">{t("trade_ui_history_empty")}</p>
         ) : (
-          <ul className="space-y-2">
-            {history.map((x) => {
-              const pnl = Number(x.realizedPnlUsdt);
-              const opened = new Date(x.openedAt);
-              const closed = new Date(x.closedAt);
-              const durationMin = Math.max(
-                0,
-                Math.round((closed.getTime() - opened.getTime()) / 60000),
-              );
-              const openedStr = opened.toLocaleString(locTag, {
-                dateStyle: "short",
-                timeStyle: "short",
-              });
-              const closedStr = closed.toLocaleString(locTag, {
-                dateStyle: "short",
-                timeStyle: "short",
-              });
-              return (
-                <li
-                  key={x.id}
-                  className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-stone-900 dark:text-stone-50">
-                        {x.symbol.replace("USDT", "")}/USDT ·{" "}
-                        <span
-                          className={
-                            x.side === "long"
-                              ? "text-emerald-600"
-                              : "text-rose-600"
-                          }
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] text-left text-[11px]">
+                <thead>
+                  <tr className="border-b border-[color:var(--fd-border)] text-[color:var(--fd-muted)]">
+                    <th className="py-1.5 pr-2 font-semibold">Pair</th>
+                    <th className="py-1.5 pr-2 font-semibold">Side</th>
+                    <th className="py-1.5 pr-2 font-semibold text-right">{t("trade_ui_hist_pnl")}</th>
+                    <th className="py-1.5 font-semibold">{t("trade_ui_hist_cause")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((x) => {
+                    const pnl = Number(x.realizedPnlUsdt);
+                    const closed = new Date(x.closedAt);
+                    const closedStr = closed.toLocaleString(locTag, {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    });
+                    return (
+                      <tr
+                        key={x.id}
+                        className="border-b border-[color:var(--fd-border)]/60 last:border-0"
+                      >
+                        <td className="py-2 pr-2 font-bold text-[color:var(--fd-text)]">
+                          {x.symbol.replace("USDT", "")}
+                          <span className="block text-[9px] font-normal text-[color:var(--fd-muted)]">
+                            {x.leverage}× · {closedStr}
+                          </span>
+                        </td>
+                        <td
+                          className={`py-2 pr-2 font-bold uppercase ${
+                            x.side === "long" ? "text-emerald-600" : "text-rose-600"
+                          }`}
                         >
-                          {x.side.toUpperCase()}
-                        </span>{" "}
-                        {x.leverage}×
-                      </p>
-                      <p className="mt-1 text-[11px] text-stone-600 dark:text-stone-400">
-                        <span className="font-semibold text-stone-700 dark:text-stone-300">
-                          {t("trade_ui_hist_opened")}:
-                        </span>{" "}
-                        {openedStr}{" "}
-                        <span className="mx-1 text-stone-400">·</span>
-                        <span className="font-semibold text-stone-700 dark:text-stone-300">
-                          {t("trade_ui_hist_closed")}:
-                        </span>{" "}
-                        {closedStr}{" "}
-                        <span className="mx-1 text-stone-400">·</span>
-                        <span className="font-semibold text-stone-700 dark:text-stone-300">
-                          {t("trade_ui_hist_cause")}:
-                        </span>{" "}
-                        {reasonLabel(x.closeReason)}{" "}
-                        <span className="mx-1 text-stone-400">·</span>
-                        {t("trade_ui_hist_duration").replace("{m}", String(durationMin))}
-                      </p>
-                      <p className="mt-1 font-mono text-[11px] text-stone-600 dark:text-stone-400">
-                        {t("trade_ui_hist_entry")} {Number(x.entryPrice).toFixed(2)} ·{" "}
-                        {t("trade_ui_hist_exit")} {Number(x.closePrice).toFixed(2)}
-                        {x.stopLossPrice ? ` · SL ${Number(x.stopLossPrice).toFixed(2)}` : ""}
-                        {x.takeProfitPrice
-                          ? ` · TP ${Number(x.takeProfitPrice).toFixed(2)}`
-                          : ""}
-                      </p>
-                      <p className="mt-1 text-[11px] text-stone-500">
-                        {t("trade_ui_hist_fees")}: −{Number(x.feeOpenUsdt).toFixed(2)} / −
-                        {Number(x.feeCloseUsdt).toFixed(2)} USDT
-                      </p>
-                    </div>
-                    <div
-                      className={`shrink-0 text-right text-sm font-bold tabular-nums ${
-                        pnl >= 0 ? "text-emerald-600" : "text-rose-600"
-                      }`}
-                      title={t("trade_ui_hist_pnl")}
-                    >
-                      <span className="block text-[9px] font-semibold uppercase text-stone-500">
-                        {t("trade_ui_hist_pnl")}
-                      </span>
-                      {pnl >= 0 ? "+" : ""}
-                      {pnl.toFixed(2)} USDT
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                          {x.side}
+                        </td>
+                        <td
+                          className={`py-2 pr-2 text-right font-mono font-bold tabular-nums ${
+                            pnl >= 0 ? "text-emerald-600" : "text-rose-600"
+                          }`}
+                        >
+                          {pnl >= 0 ? "+" : ""}
+                          {pnl.toFixed(2)}
+                        </td>
+                        <td className="py-2 text-[color:var(--fd-muted)]">
+                          {reasonLabel(x.closeReason)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <TradeHistoryPager
+              page={histPage}
+              pageSize={histPageSize}
+              total={histTotal}
+              onPageChange={setHistPage}
+              onPageSizeChange={(n) => {
+                setHistPageSize(n);
+                setHistPage(0);
+              }}
+            />
+          </>
         )}
-      </div>
-
+      </TradeFlowCard>
       <p className="text-center">
         <Link
           href="/app/trade/futures/guide"

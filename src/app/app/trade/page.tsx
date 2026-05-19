@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Hub is skipped on mobile: bottom nav opens futures first; keep route for deep links. */
+/** Trade hub — Bots first, then Futures. */
 export default function TradeHubRedirectPage() {
-  redirect("/app/trade/futures");
+  redirect("/app/trade/bots");
 }

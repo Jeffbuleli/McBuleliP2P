@@ -8,31 +8,32 @@ export function TradeSubNav() {
   const pathname = usePathname();
   const { t } = useI18n();
   const isFutures = pathname.includes("/trade/futures");
-  const isOptions = pathname.includes("/trade/options");
   const isBots = pathname.includes("/trade/bots");
 
-  const tab = (href: string, active: boolean, label: string) => (
+  const tab = (href: string, active: boolean, label: string, icon: string) => (
     <Link
       href={href}
       prefetch
-      className={`flex-1 rounded-xl py-2.5 text-center text-sm font-bold transition ${
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition active:scale-[0.98] ${
         active
-          ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-500"
-          : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+          ? "bg-[color:var(--fd-primary)] text-white shadow-sm"
+          : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]"
       }`}
     >
+      <span className="text-base leading-none" aria-hidden>
+        {icon}
+      </span>
       {label}
     </Link>
   );
 
   return (
     <nav
-      className="sticky top-0 z-30 mb-4 flex gap-2 rounded-2xl border border-stone-200 bg-white/95 p-1 shadow-sm backdrop-blur-md dark:border-stone-700 dark:bg-stone-900/95"
+      className="fd-card mb-3 flex gap-1 p-1"
       aria-label={t("trade_ui_tabs_aria")}
     >
-      {tab("/app/trade/futures", isFutures, t("trade_ui_tab_futures"))}
-      {tab("/app/trade/options", isOptions, t("trade_ui_tab_options"))}
-      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"))}
+      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"), "🤖")}
+      {tab("/app/trade/futures", isFutures, t("trade_ui_tab_futures"), "📈")}
     </nav>
   );
 }

@@ -327,6 +327,24 @@ html {
     0 1px 2px rgba(28, 25, 23, 0.05),
     0 3px 10px rgba(28, 25, 23, 0.04);
 }
+.trade-futures-theme {
+  --fd-primary: #4a7350;
+  --fd-primary-dark: #3d5f42;
+  --fd-mint: #eef3ef;
+  --fd-mint-deep: #e2ebe4;
+  --fd-border: rgba(61, 95, 66, 0.11);
+  --fd-sell: #b45309;
+  --fd-sell-mint: #f5ebe0;
+  background: linear-gradient(180deg, #f4f6f4 0%, #eef2ee 42%, #f8faf8 100%);
+  min-height: 100%;
+}
+.trade-futures-theme .fd-card {
+  border: 1px solid var(--fd-border);
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.05),
+    0 3px 10px rgba(28, 25, 23, 0.04);
+}
+
 .trade-bots-theme .bot-category {
   border-radius: 1.25rem;
   background: var(--fd-mint-deep);
