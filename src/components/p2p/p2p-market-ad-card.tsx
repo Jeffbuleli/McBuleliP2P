@@ -6,6 +6,8 @@ import { useI18n } from "@/components/i18n-provider";
 import type { Locale } from "@/i18n/locale";
 import { countryLabel } from "@/lib/country-label";
 import { P2pIconBuy, P2pIconEscrow, P2pIconSell, P2pIconStar } from "@/components/p2p/p2p-icons";
+import type { P2pSide } from "@/lib/p2p-config";
+import { p2pFlowHint, p2pTakerFlowHintKey } from "@/lib/p2p-ui";
 
 export type P2pMarketAd = {
   id: string;
@@ -39,6 +41,11 @@ export function P2pMarketAdCard({
   const { t } = useI18n();
   const isSellAd = ad.side === "sell";
   const icon = ASSET_ICON[ad.asset];
+  const roleHint = p2pFlowHint(
+    t,
+    p2pTakerFlowHintKey(ad.side as P2pSide, ad.fiatCurrency),
+    ad.fiatCurrency,
+  );
 
   return (
     <li className="overflow-hidden rounded-2xl border border-stone-700 bg-stone-900 shadow-sm">
@@ -96,7 +103,7 @@ export function P2pMarketAdCard({
             }`}
           >
             {isSellAd ? <P2pIconBuy className="h-3 w-3" /> : <P2pIconSell className="h-3 w-3" />}
-            {isSellAd ? t("p2p_role_you_buy") : t("p2p_role_you_sell")}
+            {roleHint}
           </span>
           <span className="truncate text-stone-300">{ad.makerName}</span>
           {ad.makerRating && ad.makerRating.count > 0 ? (

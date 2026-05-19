@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { P2pConfirmDialog } from "@/components/p2p/p2p-confirm-dialog";
+import { P2pOrderSummary } from "@/components/p2p/p2p-order-summary";
 import { P2pOrderTimeline } from "@/components/p2p/p2p-order-timeline";
 import {
   P2pStatusIcon,
@@ -15,6 +16,9 @@ import { P2pIconAlert, P2pIconEscrow, P2pIconStar } from "@/components/p2p/p2p-i
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
+import { isP2pCryptoQuoteCurrency } from "@/lib/p2p-config";
+import { p2pFlowHint, p2pOrderFlowHintKey } from "@/lib/p2p-ui";
+import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
 
 type OrderDetail = {
@@ -168,15 +172,6 @@ export function P2pOrderScreen() {
   }, [order]);
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-
-  const expiresDisplay = useMemo(() => {
-    if (!order) return "";
-    return new Date(order.expiresAt).toLocaleString(loc, {
-      timeZone: "UTC",
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  }, [order, loc]);
 
   const countdown = useMemo(() => {
     if (!order || order.status !== "awaiting_payment") return null;
@@ -351,6 +346,15 @@ export function P2pOrderScreen() {
     order.status === "disputed";
 
   const shortId = order.id.replace(/-/g, "").slice(0, 10);
+  const cryptoQuote = isP2pCryptoQuoteCurrency(order.fiatCurrency);
+  const roleHint = p2pFlowHint(
+    t,
+    p2pOrderFlowHintKey({
+      youAreBuyer: order.youAreBuyer,
+      quoteCurrency: order.fiatCurrency,
+    }),
+    order.fiatCurrency,
+  );
   const roleBuy = order.youAreBuyer;
   const roleBannerClass = roleBuy
     ? "border-emerald-600 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white"
@@ -373,9 +377,7 @@ export function P2pOrderScreen() {
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
           <P2pIconEscrow className="h-5 w-5" />
         </span>
-        <p className="text-sm font-semibold">
-          {roleBuy ? t("p2p_trade_role_buy_short") : t("p2p_trade_role_sell_short")}
-        </p>
+        <p className="text-sm font-semibold">{roleHint}</p>
       </div>
 
       <header className="mt-5 flex flex-wrap items-start justify-between gap-3">
@@ -396,93 +398,57 @@ export function P2pOrderScreen() {
         </span>
       </header>
 
-      <div className="mt-5">
-        <P2pOrderTimeline status={order.status} />
+      <div className="wallet-theme mt-4 space-y-3">
+        <P2pOrderTimeline status={order.status} quoteCurrency={order.fiatCurrency} />
+
+        {order.status === "released" ? (
+          <StatusOutcomeBanner
+            variant="success"
+            title={t("p2p_order_status_released")}
+            detail={`${order.cryptoAmount} ${order.asset}`}
+          />
+        ) : null}
+        {order.status === "cancelled" || order.status === "expired" ? (
+          <StatusOutcomeBanner variant="failed" title={t(p2pStatusLabelKey(order.status))} />
+        ) : null}
+        {order.status === "disputed" ? (
+          <StatusOutcomeBanner variant="pending" title={t("p2p_order_status_disputed")} />
+        ) : null}
+        {order.status === "refunded" ? (
+          <StatusOutcomeBanner variant="failed" title={t("p2p_order_status_refunded")} />
+        ) : null}
+
+        {(showPaymentAndCrypto || order.status === "awaiting_payment") && (
+          <P2pOrderSummary
+            fiatAmount={order.fiatAmount}
+            fiatCurrency={order.fiatCurrency}
+            cryptoAmount={order.cryptoAmount}
+            asset={order.asset}
+            locale={locale}
+          />
+        )}
       </div>
 
-      {showPaymentAndCrypto || order.status === "awaiting_payment" ? (
-        <section
-          className="mt-4 overflow-hidden rounded-2xl border-2 border-emerald-800/25 bg-gradient-to-b from-emerald-50/90 to-white shadow-md dark:border-emerald-700/40 dark:from-emerald-950/50 dark:to-stone-900"
-          aria-label={t("p2p_escrow_card_title")}
-        >
-          <div className="flex items-center gap-3 border-b border-emerald-900/10 bg-emerald-900/[0.06] px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/40">
-            <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-inner dark:bg-emerald-500">
-              <svg className="h-7 w-7 animate-pulse" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm-3 8V7a3 3 0 016 0v3H9z" />
-              </svg>
-            </span>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-emerald-900 dark:text-emerald-100">
-                {t("p2p_escrow_card_title")}
-              </p>
-              <p className="text-sm font-bold tabular-nums text-emerald-950 dark:text-emerald-50">
-                {interpolate(t("p2p_escrow_locked_amount"), {
-                  amount: order.cryptoAmount,
-                  asset: order.asset,
-                })}
-              </p>
-              <p className="text-[11px] text-emerald-800/90 dark:text-emerald-200/90">
-                {t("p2p_escrow_secured")}
-              </p>
-            </div>
-          </div>
-          <div className="px-4 py-3 text-sm text-stone-800 dark:text-stone-200">
-            <strong>
-              {Number(order.fiatAmount).toLocaleString(loc)} {order.fiatCurrency}
-            </strong>{" "}
-            →{" "}
-            <strong>
-              {order.cryptoAmount} {order.asset}
-            </strong>
-          </div>
-        </section>
-      ) : null}
-
-      {order.status === "awaiting_payment" && countdown && (
-        <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950/40">
-          <p className="text-xs font-semibold text-amber-950 dark:text-amber-100">
-            {t("p2p_countdown_label")}
-          </p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-amber-900 dark:text-amber-50">
-            {countdown.expired ? t("p2p_countdown_expired") : countdown.label}
-          </p>
-          <p className="mt-1 text-[11px] text-amber-900/80 dark:text-amber-200/80">
-            {t("p2p_order_expires")} (UTC): {expiresDisplay}
+      {order.status === "awaiting_payment" && countdown && !cryptoQuote ? (
+        <div className="mt-3 flex items-center gap-3 rounded-2xl border border-amber-600/40 bg-amber-950/30 px-4 py-3">
+          <span className="font-mono text-3xl font-bold tabular-nums text-amber-200">
+            {countdown.expired ? "—" : countdown.label}
+          </span>
+          <p className="text-xs text-amber-200/80">
+            {countdown.expired ? t("p2p_countdown_expired") : t("p2p_countdown_label")}
           </p>
         </div>
-      )}
+      ) : null}
 
-      <section className="mt-4 text-xs text-stone-600 dark:text-stone-400">
-        <p>
-          <span className="font-semibold text-stone-800 dark:text-stone-200">{t("p2p_maker")}:</span>{" "}
-          {order.makerMasked}
-        </p>
-        <p>
-          <span className="font-semibold text-stone-800 dark:text-stone-200">{t("p2p_taker")}:</span>{" "}
-          {order.takerMasked}
-        </p>
-      </section>
-
-      {showPaymentAndCrypto ? (
-        <>
-          <section className="mt-6">
-            <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-              {t("p2p_section_payment")}
-            </h2>
-            <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-800 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-200">
-              {order.paymentSnapshot}
-            </pre>
-          </section>
-
-          <section className="mt-4">
-            <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-              {t("p2p_order_crypto_title")}
-            </h2>
-            <p className="mt-1 text-sm tabular-nums text-stone-800 dark:text-stone-200">
-              {order.cryptoAmount} {order.asset}
-            </p>
-          </section>
-        </>
+      {showPaymentAndCrypto && !cryptoQuote ? (
+        <section className="mt-4">
+          <pre className="whitespace-pre-wrap rounded-2xl border border-stone-700 bg-stone-900 p-3 text-xs text-stone-300">
+            {order.paymentSnapshot}
+          </pre>
+          <p className="mt-1 text-[10px] text-stone-500">
+            {order.makerMasked} · {order.takerMasked}
+          </p>
+        </section>
       ) : null}
 
       {order.status === "released" &&
@@ -518,14 +484,16 @@ export function P2pOrderScreen() {
       ) : null}
 
       <section className="mt-8 space-y-4">
-        <div className="flex items-start gap-2 rounded-xl border border-rose-200/80 bg-rose-50/70 px-3 py-2 text-xs text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-100">
-          <P2pIconAlert className="h-4 w-4 shrink-0" />
-          <span>{t("p2p_trust_release_warning")}</span>
-        </div>
+        {order.youAreSeller && !cryptoQuote && order.status === "paid" ? (
+          <div className="flex items-start gap-2 rounded-xl border border-rose-200/80 bg-rose-50/70 px-3 py-2 text-xs text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-100">
+            <P2pIconAlert className="h-4 w-4 shrink-0" />
+            <span>{t("p2p_trust_release_warning_fiat")}</span>
+          </div>
+        ) : null}
 
         <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">{t("p2p_section_actions")}</h2>
 
-        {order.status === "awaiting_payment" && order.youArePayer ? (
+        {order.status === "awaiting_payment" && order.youArePayer && !cryptoQuote ? (
           <div className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
             <label className="block text-xs font-medium text-stone-700 dark:text-stone-300">
               {t("p2p_payment_ref")}
@@ -599,19 +567,19 @@ export function P2pOrderScreen() {
               onClick={() => setModal("paid")}
               className="w-full rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/20 disabled:opacity-40"
             >
-              {t("p2p_order_mark_paid")}
+              {t("p2p_mark_paid_payer")}
             </button>
           </div>
         ) : null}
 
-        {order.status === "paid" && order.youAreSeller ? (
+        {order.status === "paid" && order.youAreSeller && !cryptoQuote ? (
           <button
             type="button"
             disabled={busy}
             onClick={() => setModal("release")}
             className="w-full rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg disabled:opacity-40"
           >
-            {t("p2p_order_release")}
+            {t("p2p_order_release_fiat")}
           </button>
         ) : null}
 

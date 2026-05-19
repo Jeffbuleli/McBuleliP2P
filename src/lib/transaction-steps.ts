@@ -11,7 +11,15 @@ export type TxStep = {
     | "tx_step_review"
     | "tx_step_done"
     | "tx_step_queued"
-    | "tx_step_processing";
+    | "tx_step_processing"
+    | "p2p_step_created_short"
+    | "p2p_step_escrow_short"
+    | "p2p_step_pay_short"
+    | "p2p_step_paid_short"
+    | "p2p_step_release_short"
+    | "p2p_step_done_short"
+    | "p2p_step_pay_wallet_short"
+    | "p2p_step_settled_short";
   state: StepState;
 };
 

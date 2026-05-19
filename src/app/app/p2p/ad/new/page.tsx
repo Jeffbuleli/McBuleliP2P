@@ -307,14 +307,15 @@ export default function P2pNewAdPage() {
           )}
           {paymentDefs.length ? (
             <p className="text-xs text-stone-500 dark:text-stone-400">
-              Les détails (nom/numéro) sont gérés dans Profil → “Mes moyens de paiement”.\n            </p>
+              {t("p2p_payment_methods_profile_hint")}
+            </p>
           ) : null}
         </div>
       )}
 
       {side === "sell" ? (
         <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          Réserve (crypto) pour cette annonce
+          {t("p2p_reserve_label")}
           <input
             value={reserveAmountCrypto}
             onChange={(e) => setReserveAmountCrypto(e.target.value)}
@@ -323,7 +324,8 @@ export default function P2pNewAdPage() {
             className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
           />
           <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-            Ce montant sera bloqué (escrow) et diminuera à chaque ordre.\n          </p>
+            {t("p2p_reserve_hint")}
+          </p>
         </label>
       ) : null}
 

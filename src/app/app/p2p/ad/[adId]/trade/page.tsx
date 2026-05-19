@@ -12,7 +12,20 @@ import {
   P2pIconStar,
 } from "@/components/p2p/p2p-icons";
 import type { Messages } from "@/i18n/messages";
-import type { P2pSide } from "@/lib/p2p-config";
+import { interpolate } from "@/i18n/messages";
+import {
+  isP2pCryptoQuoteCurrency,
+  minCryptoForAsset,
+  type P2pCryptoAsset,
+  type P2pSide,
+} from "@/lib/p2p-config";
+import { TransactionStepper } from "@/components/wallet/transaction-progress";
+import { p2pTradePreviewSteps } from "@/lib/p2p-progress-steps";
+import {
+  minQuoteAmountForAd,
+  p2pFlowHint,
+  p2pTakerFlowHintKey,
+} from "@/lib/p2p-ui";
 
 type AdDetail = {
   id: string;
@@ -63,8 +76,8 @@ export default function P2pTradePage() {
   }, [adId, load]);
 
   const locNum = locale === "fr" ? "fr-FR" : "en-US";
-  const isCryptoQuote =
-    ad?.fiatCurrency?.toUpperCase() === "USDT" || ad?.fiatCurrency?.toUpperCase() === "PI";
+  const cryptoQuote = ad ? isP2pCryptoQuoteCurrency(ad.fiatCurrency) : false;
+  const asset = (ad?.asset ?? "USDT") as P2pCryptoAsset;
 
   const estCrypto = useMemo(() => {
     if (!ad || !fiatAmount.trim()) return null;
@@ -76,19 +89,27 @@ export default function P2pTradePage() {
     return c.toLocaleString(locNum, { maximumFractionDigits: 12 });
   }, [ad, fiatAmount, locNum]);
 
+  const minQuote = useMemo(() => {
+    if (!ad) return null;
+    return minQuoteAmountForAd(asset, ad.price);
+  }, [ad, asset]);
+
   const errMsg = useMemo(() => {
-    if (!submitErr) return null;
-    if (submitErr === "wallet_insufficient_balance" && ad?.side === "sell") {
+    if (!submitErr || !ad) return null;
+    if (submitErr === "wallet_insufficient_balance" && cryptoQuote) {
+      return interpolate(t("p2p_quote_wallet_insufficient"), { quote: ad.fiatCurrency });
+    }
+    if (submitErr === "wallet_insufficient_balance" && ad.side === "sell") {
       return t("p2p_sell_insufficient_balance");
     }
-    if (submitErr === "wallet_insufficient_balance" && ad?.side === "buy") {
+    if (submitErr === "wallet_insufficient_balance" && ad.side === "buy") {
       return t("p2p_buy_escrow_insufficient_balance");
     }
     if (submitErr.startsWith("p2p_") || submitErr.startsWith("wallet_")) {
       return t(submitErr as keyof Messages);
     }
     return submitErr;
-  }, [submitErr, t, ad?.side]);
+  }, [submitErr, t, ad, cryptoQuote]);
 
   async function confirm() {
     setSubmitErr(null);
@@ -135,7 +156,7 @@ export default function P2pTradePage() {
 
   const isSellAd = ad.side === "sell";
   const icon = ASSET_ICON[ad.asset];
-  const roleHint = isSellAd ? t("p2p_trade_role_buy_short") : t("p2p_trade_role_sell_short");
+  const roleHint = p2pFlowHint(t, p2pTakerFlowHintKey(ad.side, ad.fiatCurrency), ad.fiatCurrency);
 
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
@@ -144,6 +165,10 @@ export default function P2pTradePage() {
       </Link>
 
       <h1 className="text-xl font-bold text-stone-50">{t("p2p_take_trade")}</h1>
+
+      <div className="wallet-theme">
+        <TransactionStepper steps={p2pTradePreviewSteps(ad.fiatCurrency)} />
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-stone-700 bg-stone-900">
         <div
@@ -178,12 +203,14 @@ export default function P2pTradePage() {
             {roleHint}
           </p>
 
-          {isCryptoQuote ? (
+          {cryptoQuote ? (
             <p className="flex items-center gap-1.5 text-[10px] text-stone-400">
               <P2pIconEscrow className="h-3 w-3" />
-              {t("p2p_crypto_quote_take_hint").replace("{quote}", ad.fiatCurrency)}
+              {interpolate(t("p2p_crypto_quote_take_hint"), { quote: ad.fiatCurrency })}
             </p>
-          ) : null}
+          ) : (
+            <p className="text-[10px] text-stone-500">{t("p2p_fiat_quote_escrow_note")}</p>
+          )}
 
           <p className="flex flex-wrap items-center gap-2 text-[10px] text-stone-400">
             <span className="text-stone-300">{ad.makerName}</span>
@@ -198,6 +225,16 @@ export default function P2pTradePage() {
               {ad.fiatCurrency}
             </span>
           </p>
+          {minQuote != null ? (
+            <p className="text-[10px] text-amber-400/90">
+              {interpolate(t("p2p_trade_min_quote"), {
+                amount: minQuote.toLocaleString(locNum, { maximumFractionDigits: 4 }),
+                quote: ad.fiatCurrency,
+                minCrypto: String(minCryptoForAsset(asset)),
+                asset: ad.asset,
+              })}
+            </p>
+          ) : null}
         </div>
       </div>
 
