@@ -33,6 +33,47 @@ if (!key || !secret) {
   process.exit(1);
 }
 
+/** Binance keys are usually 64 chars; truncated .env lines often fail with -2015. */
+function warnIfKeyShapeLooksWrong() {
+  const issues = [];
+  if (key.length < 60 || key.length > 70) {
+    issues.push(`BINANCE_API_KEY length is ${key.length} (expected ~64 on one line).`);
+  }
+  if (secret.length < 60 || secret.length > 70) {
+    issues.push(`BINANCE_API_SECRET length is ${secret.length} (expected ~64 on one line).`);
+  }
+  if (issues.length) {
+    console.error("\n⚠️  Key shape looks wrong in .env:");
+    for (const line of issues) console.error("   ", line);
+    console.error(
+      "   Paste each key from binance.com → API Management on a SINGLE line (no line break, no # comment in the middle).",
+    );
+    console.error(
+      "   If you redacted the file with #.....suffix lines, restore the full key from Binance.\n",
+    );
+  }
+}
+warnIfKeyShapeLooksWrong();
+
+console.log("API host:", BASE);
+console.log("Key prefix:", `${key.slice(0, 8)}… (${key.length} chars)`);
+console.log("Secret length:", `${secret.length} chars (must match what Binance showed once at key creation)`);
+
+try {
+  const ipRes = await fetch("https://api.ipify.org?format=json", {
+    signal: AbortSignal.timeout(8000),
+  });
+  const ipJson = await ipRes.json();
+  if (ipJson?.ip) {
+    console.log(
+      "Your public IP (add to Binance API whitelist if “Restrict access to trusted IPs” is ON):",
+      ipJson.ip,
+    );
+  }
+} catch {
+  console.log("Could not detect public IP — check https://ifconfig.me and whitelist on Binance.");
+}
+
 const recvWindow = process.env.BINANCE_RECV_WINDOW?.trim() || "60000";
 
 const params = {
@@ -53,6 +94,34 @@ const res = await fetch(url, {
 const text = await res.text();
 if (!res.ok) {
   console.error("Binance API error", res.status, text);
+  if (text.includes("-2015")) {
+    console.error(`
+-2015 on Spot /api/v3/account — usual causes (in order):
+
+  A) IP WHITELIST (most common locally)
+     Binance → API Management → your key → “Restrict access to trusted IPs”
+     → add the public IP printed above (Mac). For Render prod, add Render outbound IP too.
+     Or turn OFF IP restriction temporarily to test.
+
+  B) WRONG OR OLD SECRET
+     The secret is shown only once when you create the key. You cannot recover it.
+     If you only kept the first 64 characters, create a NEW API key on binance.com and
+     paste BOTH key + secret into .env in one line each.
+
+  C) KEY ≠ BOT LIVE KEYS
+     Bots store keys in the database (what you pasted in the app). .env is separate.
+     Use the exact same pair in both places, or create one dedicated “McBuleli platform” key.
+
+  D) DEMO vs LIVE
+     Keys from demo.binance.com need: BINANCE_ENV=demo in .env
+     Keys from binance.com need: api.binance.com (default) — no BINANCE_ENV=demo
+`);
+    if (BASE.includes("api.binance.com") && !BASE.includes("demo")) {
+      console.error(
+        "  Tip: If this key was created on demo.binance.com, add BINANCE_ENV=demo to .env and retry.\n",
+      );
+    }
+  }
   process.exit(1);
 }
 
