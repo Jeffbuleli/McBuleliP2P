@@ -54,12 +54,6 @@ const TILE_CLASS: Record<BotPlanId, string> = {
   dca_spot: "bot-strategy-tile--dca",
 };
 
-const ACTIVE_BG: Record<BotPlanId, string> = {
-  futures_um: "bg-amber-700",
-  grid_spot: "bg-violet-600",
-  dca_spot: "bg-[color:var(--fd-primary)]",
-};
-
 export function BotStrategyTabBar({
   active,
   onSelect,
@@ -97,8 +91,9 @@ export function BotStrategyTabBar({
               key={id}
               type="button"
               onClick={() => onSelect(id)}
+              aria-pressed={on}
               className={`bot-strategy-tile ${TILE_CLASS[id]} ${
-                on ? `bot-strategy-tile--active ${ACTIVE_BG[id]} text-white` : ""
+                on ? "bot-strategy-tile--active" : ""
               }`}
             >
               <span className="bot-strategy-tile__icon">
@@ -109,7 +104,7 @@ export function BotStrategyTabBar({
                 <span
                   className={`bot-strategy-tile__dot ${
                     state === "paused" ? "bot-strategy-tile__dot--paused" : ""
-                  } ${on ? "bg-white" : ""}`}
+                  } ${state === "running" ? "bot-strategy-tile__dot--running" : ""}`}
                   aria-hidden
                 />
               ) : null}

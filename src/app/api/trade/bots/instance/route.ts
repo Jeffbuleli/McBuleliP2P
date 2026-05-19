@@ -17,7 +17,7 @@ import {
 import { resolveFuturesApiKind } from "@/lib/binance-futures-routing";
 import { botDcaConfigSchema } from "@/lib/bot-dca-config";
 import { botGridConfigSchema } from "@/lib/bot-grid-config";
-import { botFuturesConfigSchema } from "@/lib/bot-futures-config";
+import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
   listUserBotInstances,
@@ -53,7 +53,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bots_invalid_body" }, { status: 400 });
   }
 
-  const { planId, billing, status, config } = parsed.data;
+  const { planId, billing, status, config: rawConfig } = parsed.data;
+  let config: Record<string, unknown> = rawConfig;
   const allowed = await botAccessAllows(
     userId,
     planId as BotPlanId,
@@ -83,13 +84,14 @@ export async function POST(req: Request) {
       );
     }
   } else if (planId === "futures_um") {
-    const futuresParsed = botFuturesConfigSchema.safeParse(config);
-    if (!futuresParsed.success) {
+    const futuresCfg = parseBotFuturesConfig(config);
+    if (!futuresCfg) {
       return NextResponse.json(
         { error: "bots_invalid_futures_config" },
         { status: 400 },
       );
     }
+    config = { ...futuresCfg };
     if (status === "active") {
       const env = billingToKeyEnvironment(billing);
       const creds = await loadUserBinanceCredentials(userId, env);
@@ -107,7 +109,7 @@ export async function POST(req: Request) {
           creds,
           apiKind,
         });
-        const other = findOtherFuturesOpen(open, futuresParsed.data.symbol);
+        const other = findOtherFuturesOpen(open, futuresCfg.symbol);
         if (other) {
           return NextResponse.json(
             {

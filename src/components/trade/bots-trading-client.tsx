@@ -1016,6 +1016,27 @@ export function BotsTradingClient() {
     setBusy(true);
     setFutMsg(null);
     try {
+      const futConfigPayload = {
+        symbol: futSymbol,
+        side: futSide,
+        leverage: futLeverage,
+        marginUsdt: futMargin.trim().replace(",", "."),
+        intervalHours: futInterval,
+        stopLossPct: futSl,
+        takeProfitPct: futTp,
+        traderProfile: futTraderProfile,
+        ...smartConfigFields(futSmart),
+        ...futExitConfigFields(futExit),
+        ...futBreakevenConfigFields(futBreakeven),
+        ...futTrailingConfigFields(futTrailing),
+        ...futMultiTfConfigFields(futMultiTf, futSmart.timeframe),
+        ...futLifecycleConfigFields(futLifecycle),
+        ...futAiAssistConfigFields(futAiAssist),
+      };
+      if (!parseBotFuturesConfig(futConfigPayload)) {
+        setFutMsg(t("bots_invalid_futures_config"));
+        return;
+      }
       const res = await fetch("/api/trade/bots/instance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1023,22 +1044,7 @@ export function BotsTradingClient() {
           planId: "futures_um",
           billing: sub.billing,
           status,
-          config: {
-            symbol: futSymbol,
-            side: futSide,
-            leverage: futLeverage,
-            marginUsdt: futMargin.trim().replace(",", "."),
-            intervalHours: futInterval,
-            stopLossPct: futSl,
-            takeProfitPct: futTp,
-            traderProfile: futTraderProfile,
-            ...smartConfigFields(futSmart),
-            ...futExitConfigFields(futExit),
-            ...futBreakevenConfigFields(futBreakeven),
-            ...futTrailingConfigFields(futTrailing),
-            ...futMultiTfConfigFields(futMultiTf, futSmart.timeframe),
-            ...futLifecycleConfigFields(futLifecycle),
-          },
+          config: futConfigPayload,
         }),
       });
       const json = await res.json().catch(() => ({}));
