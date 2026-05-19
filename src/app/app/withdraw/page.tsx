@@ -13,12 +13,15 @@ import {
   EXTERNAL_WITHDRAW_FEE_USDT,
 } from "@/lib/withdraw-fees";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
+import { ProcessingSheet } from "@/components/wallet/processing-sheet";
 import {
   FlowCard,
   FlowHubLink,
   FlowPrimaryBtn,
   WalletFlowShell,
 } from "@/components/wallet/wallet-flow-shell";
+import { withdrawalProgressSteps } from "@/lib/transaction-steps";
+import { WithdrawalStatus } from "@/lib/status";
 
 type WAsset = "USDT" | "PI";
 
@@ -36,6 +39,7 @@ export default function WithdrawPage() {
   const [feeUsdt, setFeeUsdt] = useState(EXTERNAL_WITHDRAW_FEE_USDT);
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
   const [minUsdt, setMinUsdt] = useState(10);
+  const [processingOpen, setProcessingOpen] = useState(false);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -82,8 +86,11 @@ export default function WithdrawPage() {
         setShowConfirm(false);
         return;
       }
-      router.push("/app/wallet");
-      router.refresh();
+      setProcessingOpen(true);
+      window.setTimeout(() => {
+        router.push("/app/wallet/history");
+        router.refresh();
+      }, 2200);
     } finally {
       setLoading(false);
       setShowConfirm(false);
@@ -95,7 +102,6 @@ export default function WithdrawPage() {
       ? address.trim().length >= 20
       : address.trim().length >= 10;
 
-  const flowHint = wAsset === "USDT" ? t("withdraw_flow_usdt_hint") : t("withdraw_flow_pi_hint");
   const feeNote =
     wAsset === "USDT"
       ? interpolate(t("fee_note"), { fee: String(feeUsdt), min: String(minUsdt) })
@@ -142,10 +148,6 @@ export default function WithdrawPage() {
           </button>
         </div>
       </FlowCard>
-
-      <p className="fd-card mt-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
-        {flowHint}
-      </p>
 
       {wAsset === "USDT" ? (
         <div className="mt-3">
@@ -204,7 +206,6 @@ export default function WithdrawPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-2xl bg-[color:var(--fd-card)] p-5 shadow-xl">
             <p className="text-lg font-bold text-[color:var(--fd-text)]">{t("withdraw_review")}</p>
-            <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{flowHint}</p>
             <div className="mt-4 space-y-2 text-sm text-[color:var(--fd-muted)]">
               <p>
                 <strong className="text-[color:var(--fd-text)]">{wAsset}</strong>
@@ -221,7 +222,6 @@ export default function WithdrawPage() {
                 </p>
               ) : null}
             </div>
-            <p className="mt-3 text-xs text-amber-900">{t("withdraw_warn")}</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -244,6 +244,13 @@ export default function WithdrawPage() {
       ) : null}
 
       <FlowHubLink label={t("wallet_title")} />
+
+      <ProcessingSheet
+        open={processingOpen}
+        title={t("withdraw_title")}
+        steps={withdrawalProgressSteps(WithdrawalStatus.PENDING_AGENT)}
+        onClose={() => setProcessingOpen(false)}
+      />
     </WalletFlowShell>
   );
 }

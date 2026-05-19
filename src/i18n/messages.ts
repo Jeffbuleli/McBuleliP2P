@@ -363,23 +363,27 @@ export const en = {
   notifications_title: "Notifications",
   notifications_empty: "No notifications yet.",
   notif_withdrawal_completed_title: "{asset} withdrawal sent",
-  notif_withdrawal_completed_body:
-    "Your {asset} was sent to your external address. See TXID in Wallet → History.",
+  notif_withdrawal_completed_body: "{amount} {asset}",
   notif_withdrawal_rejected_title: "{asset} withdrawal cancelled",
-  notif_withdrawal_rejected_body:
-    "Your {asset} withdrawal was cancelled and funds returned. Reason: {reason}",
+  notif_withdrawal_rejected_body: "{reason}",
   notif_deposit_confirmed_title: "{asset} deposit credited",
-  notif_deposit_confirmed_body:
-    "Your {asset} balance was updated ({amount}).",
+  notif_deposit_confirmed_body: "+{amount} {asset}",
   notif_withdrawal_queued_title: "{asset} withdrawal queued",
-  notif_withdrawal_queued_body:
-    "Your {asset} payout is in the manual queue. Staff sends to your external address after review — see Wallet → History.",
+  notif_withdrawal_queued_body: "{amount} {asset}",
   notif_withdrawal_claimed_title: "{asset} payout processing",
-  notif_withdrawal_claimed_body:
-    "Our team is sending your {asset} to the address you provided. You’ll get a notice when it’s done.",
+  notif_withdrawal_claimed_body: "{amount} {asset}",
   notif_deposit_validation_pending_title: "{asset} deposit under review",
-  notif_deposit_validation_pending_body:
-    "We received your {asset} TXID and are verifying it on-chain before crediting your wallet.",
+  notif_deposit_validation_pending_body: "TXID · {asset}",
+  tx_progress: "Progress",
+  tx_step_address: "Address",
+  tx_step_sent: "Sent",
+  tx_step_verify: "TXID",
+  tx_step_review: "Review",
+  tx_step_done: "Done",
+  tx_step_queued: "Queued",
+  tx_step_processing: "Processing",
+  status_ui_processing: "Processing",
+  copy_done: "Copied",
   withdraw_manual_queue_hint:
     "Manual queue: requests stay open until an agent sends funds — typical target within {hours}h (not instant). You will get in-app notices when the ticket moves.",
   security_trusted: "Protected session",
@@ -2253,23 +2257,27 @@ export const fr: Messages = {
   notifications_title: "Notifications",
   notifications_empty: "Aucune notification.",
   notif_withdrawal_completed_title: "Retrait {asset} envoyé",
-  notif_withdrawal_completed_body:
-    "Votre {asset} a été envoyé vers votre adresse externe. TXID dans Portefeuille → Historique.",
+  notif_withdrawal_completed_body: "{amount} {asset}",
   notif_withdrawal_rejected_title: "Retrait {asset} annulé",
-  notif_withdrawal_rejected_body:
-    "Votre retrait {asset} a été annulé et les fonds rendus. Motif : {reason}",
+  notif_withdrawal_rejected_body: "{reason}",
   notif_deposit_confirmed_title: "Dépôt {asset} crédité",
-  notif_deposit_confirmed_body:
-    "Votre solde {asset} a été mis à jour ({amount}).",
+  notif_deposit_confirmed_body: "+{amount} {asset}",
   notif_withdrawal_queued_title: "Retrait {asset} en file",
-  notif_withdrawal_queued_body:
-    "Votre retrait {asset} est en file manuelle. Envoi vers votre adresse externe après validation — voir Historique.",
+  notif_withdrawal_queued_body: "{amount} {asset}",
   notif_withdrawal_claimed_title: "Paiement {asset} en cours",
-  notif_withdrawal_claimed_body:
-    "Notre équipe envoie votre {asset} à l’adresse indiquée. Vous serez notifié à la fin.",
+  notif_withdrawal_claimed_body: "{amount} {asset}",
   notif_deposit_validation_pending_title: "Dépôt {asset} en vérification",
-  notif_deposit_validation_pending_body:
-    "Nous avons reçu votre TXID {asset} et vérifions la transaction on-chain avant crédit.",
+  notif_deposit_validation_pending_body: "TXID · {asset}",
+  tx_progress: "Avancement",
+  tx_step_address: "Adresse",
+  tx_step_sent: "Envoyé",
+  tx_step_verify: "TXID",
+  tx_step_review: "Contrôle",
+  tx_step_done: "Terminé",
+  tx_step_queued: "En file",
+  tx_step_processing: "Traitement",
+  status_ui_processing: "En cours",
+  copy_done: "Copié",
   withdraw_manual_queue_hint:
     "File manuelle : la demande reste ouverte jusqu’à l’envoi par un agent — objectif typique sous {hours}h (pas instantané). Vous recevrez des avis in-app quand le ticket avance.",
   security_trusted: "Session protégée",

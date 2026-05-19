@@ -6,6 +6,13 @@ import type { Messages } from "@/i18n/messages";
 import { WALLET_ASSETS, formatWalletHistoryAmount } from "@/lib/wallet-types";
 import { piSandboxFromMeta } from "@/lib/pi-network-env";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
+import {
+  HistoryEntryIcon,
+  IconInbox,
+  IconList,
+  IconSend,
+  IconSwap,
+} from "@/components/icons/flow-icons";
 
 type Entry = {
   id: string;
@@ -31,27 +38,14 @@ type PiPayment = {
 };
 
 const TYPE_CHIPS = [
-  { prefix: "", icon: "📋", key: "wallet_history_all" as const },
-  { prefix: "transfer_", icon: "✈️", key: "wallet_history_cat_transfer" as const },
-  { prefix: "swap_", icon: "🔄", key: "wallet_history_cat_swap" as const },
+  { prefix: "", Icon: IconList, key: "wallet_history_all" as const },
+  { prefix: "transfer_", Icon: IconSend, key: "wallet_history_cat_transfer" as const },
+  { prefix: "swap_", Icon: IconSwap, key: "wallet_history_cat_swap" as const },
 ] as const;
 
 const HISTORY_ASSETS = WALLET_ASSETS.filter(
   (a) => a !== "USD" && a !== "CDF" && a !== "PI_TEST",
 );
-
-function entryIcon(entryType: string): string {
-  if (entryType.includes("stake")) return "⛓";
-  if (entryType.includes("pool") || entryType.includes("lp_")) return "💧";
-  if (entryType.includes("loan")) return "🏦";
-  if (entryType.includes("group")) return "🤝";
-  if (entryType.includes("transfer")) return "✈️";
-  if (entryType.includes("swap")) return "🔄";
-  if (entryType.includes("p2p") || entryType.includes("trade")) return "📊";
-  if (entryType.includes("deposit")) return "⬇️";
-  if (entryType.includes("withdraw")) return "⬆️";
-  return "•";
-}
 
 function entryLabel(t: (k: keyof Messages) => string, entryType: string): string {
   const map: Record<string, keyof Messages> = {
@@ -129,13 +123,13 @@ export default function WalletHistoryPage() {
             key={c.prefix || "all"}
             type="button"
             onClick={() => setTypePrefix(c.prefix)}
-            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
               typePrefix === c.prefix
                 ? "bg-[color:var(--fd-primary)] text-white"
                 : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
             }`}
           >
-            <span aria-hidden>{c.icon}</span>
+            <c.Icon className="h-3.5 w-3.5" />
             {t(c.key)}
           </button>
         ))}
@@ -172,11 +166,14 @@ export default function WalletHistoryPage() {
       {rows === null ? (
         <p className="text-center text-[color:var(--fd-muted)]">…</p>
       ) : rows.length === 0 ? (
-        <div className="fd-card p-8 text-center">
-          <p className="text-3xl" aria-hidden>
-            📭
-          </p>
-          <p className="mt-2 text-sm font-semibold text-[color:var(--fd-muted)]">
+        <div className="fd-card flex flex-col items-center p-8 text-center">
+          <span
+            className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+            aria-hidden
+          >
+            <IconInbox className="h-7 w-7" />
+          </span>
+          <p className="text-sm font-semibold text-[color:var(--fd-muted)]">
             {t("wallet_history_empty")}
           </p>
         </div>
@@ -184,8 +181,8 @@ export default function WalletHistoryPage() {
         <ul className="flex flex-col gap-2">
           {rows.map((r) => (
             <li key={r.id} className="fd-card flex items-center gap-3 p-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-amber-50 text-lg">
-                {entryIcon(r.entryType)}
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+                <HistoryEntryIcon entryType={r.entryType} className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
@@ -213,8 +210,8 @@ export default function WalletHistoryPage() {
         <ul className="mt-4 flex flex-col gap-2">
           {piRows.map((p) => (
             <li key={p.id} className="fd-card flex items-center gap-3 p-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-lg">
-                🟣
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-800">
+                <HistoryEntryIcon entryType="deposit" className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-[color:var(--fd-text)]">Pi</p>
@@ -235,4 +232,3 @@ export default function WalletHistoryPage() {
     </div>
   );
 }
-

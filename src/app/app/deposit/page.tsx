@@ -8,6 +8,7 @@ import { NetworkPicker } from "@/components/wallet/network-picker";
 import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
+import { IconAlert } from "@/components/icons/flow-icons";
 import {
   FlowBackLink,
   FlowCard,
@@ -188,9 +189,6 @@ export default function DepositWizardPage() {
 
       {step === 2 && asset === "USDT" && (
         <section>
-          <p className="fd-card mb-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
-            {t("deposit_flow_usdt_hint")}
-          </p>
           <NetworkPicker
             label={t("deposit_step_usdt_network")}
             value={network}
@@ -206,9 +204,6 @@ export default function DepositWizardPage() {
 
       {step === 3 && (
         <section className="space-y-3">
-          <p className="fd-card px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
-            {asset === "USDT" ? t("deposit_flow_usdt_hint") : t("deposit_flow_pi_hint")}
-          </p>
           {asset === "USDT" ? (
             <FlowCard>
               <label className="block">
@@ -249,9 +244,7 @@ export default function DepositWizardPage() {
               className="size-5 shrink-0 accent-[color:var(--fd-primary)]"
             />
             <span className="flex items-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]">
-              <span className="text-lg" aria-hidden>
-                ⚠️
-              </span>
+              <IconAlert className="h-5 w-5 shrink-0 text-amber-700" />
               {confirmText}
             </span>
           </label>

@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Messages } from "@/i18n/messages";
 import { useI18n } from "@/components/i18n-provider";
+import { IconBell, IconClose, NotifKindIcon } from "@/components/icons/flow-icons";
+import { StatusPill } from "@/components/wallet/transaction-progress";
 
 type Row = {
   id: string;
@@ -13,32 +16,41 @@ type Row = {
   createdAt: string;
 };
 
-function titleBodyForRow(
+function notifMeta(
   row: Row,
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string,
-): { title: string; body: string; href: string } {
+): {
+  title: string;
+  body: string;
+  href: string;
+  pill: { variant: "success" | "failed" | "pending" | "processing"; label: string };
+} {
   const p = row.payload ?? {};
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
   const asset = str("asset") || "—";
+  const amount = str("amount") || str("net") || "";
 
   switch (row.kind) {
     case "withdrawal_queued":
       return {
         title: t("notif_withdrawal_queued_title", { asset }),
-        body: t("notif_withdrawal_queued_body", { asset }),
+        body: t("notif_withdrawal_queued_body", { asset, amount }),
         href: "/app/wallet/history",
+        pill: { variant: "pending", label: t("status_ui_pending") },
       };
     case "withdrawal_claimed":
       return {
         title: t("notif_withdrawal_claimed_title", { asset }),
-        body: t("notif_withdrawal_claimed_body", { asset }),
+        body: t("notif_withdrawal_claimed_body", { asset, amount }),
         href: "/app/wallet/history",
+        pill: { variant: "processing", label: t("status_ui_processing") },
       };
     case "withdrawal_completed":
       return {
         title: t("notif_withdrawal_completed_title", { asset }),
-        body: t("notif_withdrawal_completed_body", { asset }),
+        body: t("notif_withdrawal_completed_body", { asset, amount }),
         href: "/app/wallet/history",
+        pill: { variant: "success", label: t("status_ui_success") },
       };
     case "withdrawal_rejected":
       return {
@@ -48,69 +60,50 @@ function titleBodyForRow(
           reason: str("reason") || "—",
         }),
         href: "/app/wallet/history",
+        pill: { variant: "failed", label: t("status_ui_failed") },
       };
     case "deposit_confirmed":
       return {
         title: t("notif_deposit_confirmed_title", { asset }),
         body: t("notif_deposit_confirmed_body", {
           asset,
-          amount: str("amount") || "—",
+          amount: amount || "—",
         }),
         href: "/app/wallet/history",
+        pill: { variant: "success", label: t("status_ui_success") },
       };
     case "deposit_validation_pending":
       return {
         title: t("notif_deposit_validation_pending_title", { asset }),
         body: t("notif_deposit_validation_pending_body", { asset }),
         href: "/app/wallet/history",
+        pill: { variant: "pending", label: t("status_ui_pending") },
       };
     default:
       return {
         title: row.kind,
         body: "",
         href: "/app",
+        pill: { variant: "pending", label: t("status_ui_pending") },
       };
   }
 }
 
-function NotifIcon({ kind }: { kind: string }) {
-  const base =
-    "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg shadow-sm";
-  switch (kind) {
-    case "deposit_confirmed":
-      return (
-        <span className={`${base} bg-emerald-100 text-emerald-800`} aria-hidden>
-          ↓
-        </span>
-      );
-    case "deposit_validation_pending":
-      return (
-        <span className={`${base} bg-amber-100 text-amber-800`} aria-hidden>
-          ⏳
-        </span>
-      );
-    case "withdrawal_completed":
-      return (
-        <span className={`${base} bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]`} aria-hidden>
-          ✓
-        </span>
-      );
-    case "withdrawal_rejected":
-      return (
-        <span className={`${base} bg-rose-100 text-rose-700`} aria-hidden>
-          ↩
-        </span>
-      );
-    case "withdrawal_claimed":
-      return (
-        <span className={`${base} bg-sky-100 text-sky-800`} aria-hidden>
-          →
-        </span>
-      );
-  }
+function NotifIconWrap({ kind }: { kind: string }) {
+  const tone =
+    kind === "deposit_confirmed" || kind === "withdrawal_completed"
+      ? "bg-emerald-100 text-emerald-800"
+      : kind === "withdrawal_rejected"
+        ? "bg-rose-100 text-rose-800"
+        : kind === "withdrawal_claimed"
+          ? "bg-sky-100 text-sky-800"
+          : "bg-amber-100 text-amber-900";
   return (
-    <span className={`${base} bg-stone-100 text-stone-600`} aria-hidden>
-      ↑
+    <span
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm ${tone}`}
+      aria-hidden
+    >
+      <NotifKindIcon kind={kind} className="h-5 w-5" />
     </span>
   );
 }
@@ -122,12 +115,14 @@ export function NotificationDrawer({
 }: {
   open: boolean;
   onClose: () => void;
-  /** After drawer closes (mark-all-read + parent refresh). */
   onDidClose?: () => void;
 }) {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -160,24 +155,30 @@ export function NotificationDrawer({
     onDidClose?.();
   }
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
   const unreadCount = rows?.filter((r) => r.readAt == null).length ?? 0;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+  const panel = (
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
       <button
         type="button"
-        className="absolute inset-0 bg-stone-900/35 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-stone-900/40 backdrop-blur-[2px]"
         aria-label={t("notifications_title")}
         onClick={() => void handleBackdropClose()}
       />
-      <div className="relative mx-auto max-h-[78vh] w-full max-w-lg rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-[0_-8px_40px_rgba(28,25,23,0.12)]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notif-drawer-title"
+        className="notif-drawer-panel relative mx-auto max-h-[82vh] w-full max-w-lg rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-[0_-12px_48px_rgba(28,25,23,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-stone-300" />
         <div className="flex items-start justify-between gap-3 border-b border-[color:var(--fd-border)] px-4 pb-3 pt-4">
           <div>
-            <h2 className="text-lg font-bold text-[color:var(--fd-text)]">
+            <h2 id="notif-drawer-title" className="text-lg font-bold text-[color:var(--fd-text)]">
               {t("notifications_title")}
             </h2>
             {unreadCount > 0 ? (
@@ -192,10 +193,10 @@ export function NotificationDrawer({
             className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--fd-border)] text-[color:var(--fd-muted)] active:scale-95"
             aria-label={t("notifications_title")}
           >
-            ✕
+            <IconClose className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[58vh] overflow-y-auto px-3 py-2">
+        <div className="max-h-[62vh] overflow-y-auto px-3 py-2">
           {loading ? (
             <div className="space-y-2 py-6" aria-hidden>
               {[0, 1, 2].map((i) => (
@@ -208,17 +209,17 @@ export function NotificationDrawer({
           ) : !rows || rows.length === 0 ? (
             <div className="flex flex-col items-center px-4 py-12 text-center">
               <span
-                className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-2xl"
+                className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
                 aria-hidden
               >
-                🔔
+                <IconBell className="h-7 w-7" />
               </span>
               <p className="text-sm text-[color:var(--fd-muted)]">{t("notifications_empty")}</p>
             </div>
           ) : (
             <ul className="flex flex-col gap-2 pb-2">
               {rows.map((row) => {
-                const { title, body, href } = titleBodyForRow(row, t);
+                const { title, body, href, pill } = notifMeta(row, t);
                 const unread = row.readAt == null;
                 const when = new Date(row.createdAt).toLocaleString(loc, {
                   dateStyle: "short",
@@ -235,18 +236,16 @@ export function NotificationDrawer({
                           : "border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] hover:bg-[color:var(--fd-mint)]/40"
                       }`}
                     >
-                      <NotifIcon kind={row.kind} />
+                      <NotifIconWrap kind={row.kind} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-semibold leading-snug text-[color:var(--fd-text)]">
                             {title}
                           </p>
-                          {unread ? (
-                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
-                          ) : null}
+                          <StatusPill variant={pill.variant} label={pill.label} />
                         </div>
                         {body ? (
-                          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[color:var(--fd-muted)]">
+                          <p className="mt-0.5 font-mono text-xs tabular-nums text-[color:var(--fd-muted)]">
                             {body}
                           </p>
                         ) : null}
@@ -265,4 +264,6 @@ export function NotificationDrawer({
       </div>
     </div>
   );
+
+  return createPortal(panel, document.body);
 }

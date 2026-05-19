@@ -7,14 +7,20 @@ import { useCallback, useEffect, useState } from "react";
 import { USDT_NETWORKS, parseNetwork } from "@/lib/networks";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { DepositStatus } from "@/lib/status";
+import { depositProgressSteps } from "@/lib/transaction-steps";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
+import { IconCopy } from "@/components/icons/flow-icons";
 import {
   FlowCard,
   FlowHubLink,
   FlowPrimaryBtn,
   WalletFlowShell,
 } from "@/components/wallet/wallet-flow-shell";
+import {
+  StatusOutcomeBanner,
+  TransactionStepper,
+} from "@/components/wallet/transaction-progress";
 
 type Deposit = {
   id: string;
@@ -66,6 +72,18 @@ export default function DepositDetailPage() {
     void load().finally(() => setLoading(false));
   }, [load]);
 
+  useEffect(() => {
+    if (!deposit) return;
+    if (
+      deposit.status === DepositStatus.CONFIRMED ||
+      deposit.status === DepositStatus.FAILED
+    ) {
+      return;
+    }
+    const tmr = window.setInterval(() => void load(), 12_000);
+    return () => window.clearInterval(tmr);
+  }, [deposit, load]);
+
   async function markSent() {
     setMsg(null);
     const res = await fetch(`/api/deposits/${id}/sent`, { method: "POST" });
@@ -96,7 +114,6 @@ export default function DepositDetailPage() {
       return;
     }
     if (data.status === "pending") {
-      setMsg(data.message ?? "…");
       await load();
       return;
     }
@@ -123,16 +140,13 @@ export default function DepositDetailPage() {
   const isPiMain = deposit.networkCanonical === PI_MAIN_NETWORK_ID;
   const nid = parseNetwork(deposit.networkCanonical);
   const net = nid ? USDT_NETWORKS[nid] : null;
-  const networkLabel = isPiMain
-    ? "Pi"
-    : (net?.label ?? deposit.networkCanonical);
-
+  const networkLabel = isPiMain ? "Pi" : (net?.label ?? deposit.networkCanonical);
   const showTxid = deposit.status === DepositStatus.AWAITING_TXID;
-  const isPendingReview = deposit.status === DepositStatus.PENDING_VALIDATION;
+  const steps = depositProgressSteps(deposit.status);
 
   const copy = async (text: string) => {
     await navigator.clipboard.writeText(text);
-    setMsg("✓");
+    setMsg(t("copy_done"));
     setTimeout(() => setMsg(null), 2000);
   };
 
@@ -141,10 +155,25 @@ export default function DepositDetailPage() {
       title={`${t("deposit_detail_title")} · ${deposit.asset}`}
       subtitle={depositStatusLine(t, deposit.status)}
     >
-      <p className="fd-card mb-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
-        {isPiMain ? t("deposit_detail_pi_steps") : t("deposit_detail_usdt_steps")}
-      </p>
-      <FlowCard className="flex flex-col items-center gap-3">
+      <TransactionStepper steps={steps} />
+
+      {deposit.status === DepositStatus.CONFIRMED ? (
+        <StatusOutcomeBanner
+          variant="success"
+          title={t("deposit_confirmed")}
+          detail={`${deposit.amount ?? ""} ${deposit.asset}`.trim()}
+        />
+      ) : null}
+
+      {deposit.status === DepositStatus.FAILED ? (
+        <StatusOutcomeBanner
+          variant="failed"
+          title={t("deposit_failed")}
+          detail={deposit.failureReason ?? undefined}
+        />
+      ) : null}
+
+      <FlowCard className="mt-3 flex flex-col items-center gap-3">
         <div className="relative rounded-2xl bg-white p-3 shadow-inner">
           <QRCode value={deposit.addressShown} size={200} />
           {isPiMain ? (
@@ -171,7 +200,8 @@ export default function DepositDetailPage() {
           onClick={() => void copy(deposit.addressShown)}
           className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[color:var(--fd-primary)] text-sm font-bold text-white active:scale-[0.98]"
         >
-          📋 {t("deposit_copy")}
+          <IconCopy className="h-4 w-4" />
+          {t("deposit_copy")}
         </button>
       </FlowCard>
 
@@ -182,37 +212,26 @@ export default function DepositDetailPage() {
           <button
             type="button"
             onClick={() => void copy(deposit.memoShown!)}
-            className="mt-2 text-sm font-semibold text-rose-800 underline"
+            className="mt-2 flex items-center gap-1 text-sm font-semibold text-rose-800"
           >
-            📋 {t("deposit_copy")}
+            <IconCopy className="h-4 w-4" />
+            {t("deposit_copy")}
           </button>
         </FlowCard>
       ) : null}
 
       {deposit.status === DepositStatus.AWAITING_TRANSFER ? (
+        <div className="mt-3">
         <FlowPrimaryBtn onClick={() => void markSent()}>
           {t("deposit_sent_btn", { asset: deposit.asset })}
         </FlowPrimaryBtn>
-      ) : null}
-
-      {isPendingReview ? (
-        <FlowCard className="mt-3 flex items-center gap-3 bg-amber-50">
-          <span className="text-2xl" aria-hidden>
-            ⏳
-          </span>
-          <p className="text-sm font-semibold text-amber-950">
-            {t("deposit_status_pending_validation")}
-          </p>
-        </FlowCard>
+        </div>
       ) : null}
 
       {showTxid ? (
         <FlowCard className="mt-3 space-y-3">
           <label className="block text-sm font-semibold text-[color:var(--fd-text)]">
             {t("deposit_txid")}
-            <span className="mt-0.5 block text-xs font-normal text-[color:var(--fd-muted)]">
-              {isPiMain ? t("deposit_txid_hint_pi") : t("deposit_txid_hint_usdt")}
-            </span>
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
@@ -228,35 +247,16 @@ export default function DepositDetailPage() {
         </FlowCard>
       ) : null}
 
-      {deposit.status === DepositStatus.CONFIRMED ? (
-        <FlowCard className="mt-3 flex items-center gap-3 bg-emerald-50">
-          <span className="text-2xl" aria-hidden>
-            ✅
-          </span>
-          <div>
-            <p className="font-bold text-emerald-950">{t("deposit_confirmed")}</p>
-            <p className="text-sm tabular-nums text-emerald-900">
-              {deposit.amount ?? ""} {deposit.asset}
-            </p>
-          </div>
-        </FlowCard>
-      ) : null}
-
-      {deposit.status === DepositStatus.FAILED ? (
-        <FlowCard className="mt-3 bg-rose-50">
-          <p className="font-bold text-rose-900">{t("deposit_failed")}</p>
-          <p className="text-sm text-rose-800">{deposit.failureReason}</p>
-        </FlowCard>
-      ) : null}
-
       {msg ? (
         <p className="mt-2 text-center text-sm font-semibold text-[color:var(--fd-primary)]">{msg}</p>
       ) : null}
 
       {deposit.status === DepositStatus.CONFIRMED ? (
+        <div className="mt-3">
         <FlowPrimaryBtn onClick={() => router.push("/app/wallet")}>
           {t("wallet_title")}
         </FlowPrimaryBtn>
+        </div>
       ) : (
         <FlowHubLink label={t("wallet_title")} />
       )}

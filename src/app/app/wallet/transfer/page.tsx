@@ -6,12 +6,15 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
 import { clientErrorText } from "@/lib/client-error-text";
+import { ProcessingSheet } from "@/components/wallet/processing-sheet";
+import { transferProgressSteps } from "@/lib/transaction-steps";
 import {
   FlowCard,
   FlowHubLink,
   FlowPrimaryBtn,
   WalletFlowShell,
 } from "@/components/wallet/wallet-flow-shell";
+import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 
 const TRANSFER_ASSETS = ["USDT", "PI"] as const satisfies readonly WalletAsset[];
 
@@ -30,6 +33,8 @@ export default function WalletTransferPage() {
   const [memo, setMemo] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [processingOpen, setProcessingOpen] = useState(false);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -52,8 +57,12 @@ export default function WalletTransferPage() {
         setErr(typeof data.error === "string" ? data.error : "wallet_transfer_failed");
         return;
       }
-      router.push("/app/wallet");
-      router.refresh();
+      setDone(true);
+      setProcessingOpen(true);
+      window.setTimeout(() => {
+        router.push("/app/wallet");
+        router.refresh();
+      }, 1800);
     } finally {
       setLoading(false);
     }
@@ -92,9 +101,13 @@ export default function WalletTransferPage() {
         </div>
       </FlowCard>
 
-      <p className="fd-card mt-3 px-3 py-2 text-xs leading-snug text-[color:var(--fd-muted)]">
-        {t("wallet_action_send_hint")}
-      </p>
+      {done ? (
+        <StatusOutcomeBanner
+          variant="success"
+          title={t("wallet_transfer_submit")}
+          detail={`${amount} ${asset}`}
+        />
+      ) : null}
 
       <FlowCard className="mt-3 space-y-3">
         <label className="block">
@@ -147,6 +160,13 @@ export default function WalletTransferPage() {
       </FlowPrimaryBtn>
 
       <FlowHubLink label={t("wallet_title")} />
+
+      <ProcessingSheet
+        open={processingOpen}
+        title={t("wallet_action_send")}
+        steps={transferProgressSteps(true)}
+        onClose={() => setProcessingOpen(false)}
+      />
     </WalletFlowShell>
   );
 }

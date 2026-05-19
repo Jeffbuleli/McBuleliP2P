@@ -22,8 +22,12 @@ export function AppShell({
     pathname.startsWith("/app/wallet") ||
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw");
+  const hideTopBarForFlow =
+    pathname.startsWith("/app/deposit") ||
+    pathname.startsWith("/app/withdraw") ||
+    pathname === "/app/wallet/transfer";
   const lightMainBg = onProfile || onWalletFlow || onHome;
-  const showTopBar = !onProfile;
+  const showTopBar = !onProfile && !hideTopBarForFlow;
 
   return (
     <div
