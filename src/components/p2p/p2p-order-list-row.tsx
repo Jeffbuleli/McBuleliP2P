@@ -36,7 +36,6 @@ function statusPillVariant(
 export function P2pOrderListRow({
   order,
   fmt,
-  locale,
 }: {
   order: P2pOrderRow;
   fmt: (n: string, cur: string) => string;
@@ -48,20 +47,22 @@ export function P2pOrderListRow({
     <li>
       <Link
         href={`/app/p2p/order/${order.id}`}
-        className="flex items-center gap-3 rounded-2xl border border-stone-700 bg-stone-900 p-3 transition active:scale-[0.99]"
+        className="fd-card flex items-center gap-3 p-3 transition active:scale-[0.99]"
       >
         {icon ? (
-          <Image src={icon} alt="" width={40} height={40} className="rounded-full" />
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)]">
+            <Image src={icon} alt="" width={36} height={36} className="rounded-full" />
+          </span>
         ) : (
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-bold">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
             {order.asset}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold tabular-nums text-stone-50">
+          <p className="text-sm font-bold tabular-nums text-[color:var(--fd-text)]">
             {fmt(order.fiatAmount, order.fiatCurrency)} → {order.cryptoAmount} {order.asset}
           </p>
-          <p className="text-[10px] text-stone-400">
+          <p className="text-[10px] text-[color:var(--fd-muted)]">
             {order.role === "maker" ? t("p2p_home_role_maker") : t("p2p_home_role_taker")}
           </p>
         </div>

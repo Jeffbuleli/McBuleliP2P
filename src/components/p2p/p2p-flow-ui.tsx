@@ -89,6 +89,38 @@ export function FlowSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${inputCls} ${props.className ?? ""}`} />;
 }
 
+export function FlowTabBar<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="fd-card flex gap-1 p-1">
+      {options.map((o) => {
+        const on = value === o.id;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm ${
+              on
+                ? "bg-[color:var(--fd-primary)] text-white shadow-sm"
+                : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/50"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function FlowSegment<T extends string>({
   options,
   value,
@@ -209,7 +241,7 @@ export function FlowUploadZone({
     <label className="flex min-h-[100px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[color:var(--fd-border)] bg-stone-50/50 px-4 py-6 transition hover:bg-[color:var(--fd-mint)]/40">
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         className="hidden"
         disabled={busy}
         onChange={(e) => {
@@ -243,13 +275,13 @@ export function FlowPrimaryBtn({
       ? "bg-rose-600 text-white"
       : variant === "ghost"
         ? "border-2 border-[color:var(--fd-border)] bg-white text-[color:var(--fd-text)]"
-        : "bg-gradient-to-br from-[color:var(--fd-primary)] to-[color:var(--fd-primary-dark)] text-white";
+        : "fd-btn-soft";
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-base font-bold shadow-md active:scale-[0.98] disabled:opacity-45 ${cls}`}
+      className={`flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-base font-bold active:scale-[0.98] disabled:opacity-45 ${cls}`}
     >
       {children}
     </button>

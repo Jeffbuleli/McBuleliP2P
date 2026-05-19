@@ -51,35 +51,31 @@ export function P2pMyAdCard({
         : t("p2p_ad_closed");
 
   return (
-    <li className="overflow-hidden rounded-2xl border border-stone-700 bg-stone-900 p-0 shadow-sm">
-      <div
-        className={`flex items-center gap-3 border-b px-3 py-2 ${
-          isSell ? "border-rose-900/30 bg-rose-950/35" : "border-emerald-900/30 bg-emerald-950/40"
-        }`}
-      >
+    <li className="fd-card overflow-hidden p-0">
+      <div className="flex items-center gap-3 border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
         {icon ? (
           <Image src={icon} alt="" width={36} height={36} className="rounded-full" />
         ) : (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-800 text-xs font-bold text-stone-200">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
             {ad.asset.slice(0, 2)}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className={`text-sm font-bold ${isSell ? "text-rose-300" : "text-emerald-300"}`}>
+          <p className="text-xs font-bold text-[color:var(--fd-muted)]">
             {isSell ? t("p2p_side_sell") : t("p2p_side_buy")} · {ad.asset}/{ad.fiatCurrency}
           </p>
-          <p className="text-lg font-bold tabular-nums text-stone-50">
+          <p className="text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
             {fmt(ad.price, ad.fiatCurrency)}
-            <span className="text-xs font-normal text-stone-400"> / {ad.asset}</span>
+            <span className="text-xs font-semibold text-[color:var(--fd-muted)]"> / {ad.asset}</span>
           </p>
         </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
             ad.status === "active"
-              ? "bg-emerald-600/20 text-emerald-300 ring-1 ring-emerald-600/40"
+              ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
               : ad.status === "paused"
-                ? "bg-amber-600/20 text-amber-200 ring-1 ring-amber-600/40"
-                : "bg-stone-700 text-stone-400 ring-1 ring-stone-600"
+                ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
+                : "bg-stone-100 text-stone-500 ring-1 ring-stone-200"
           }`}
         >
           {statusLabel}
@@ -87,11 +83,11 @@ export function P2pMyAdCard({
       </div>
 
       <div className="space-y-2 p-3">
-        <p className="text-[10px] text-stone-400">
+        <p className="text-[10px] text-[color:var(--fd-muted)]">
           {fmt(ad.minFiat, ad.fiatCurrency)} — {fmt(ad.maxFiat, ad.fiatCurrency)}
         </p>
         {ad.boostedUntil && new Date(ad.boostedUntil).getTime() > Date.now() ? (
-          <p className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300">
+          <p className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
             <P2pIconEscrow className="h-3 w-3" />
             {t("p2p_boosted_until")}{" "}
             {new Date(ad.boostedUntil).toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
@@ -105,7 +101,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onPause}
-              className="rounded-lg border border-stone-600 px-3 py-1.5 text-xs font-semibold text-stone-200"
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
             >
               {t("p2p_ad_pause")}
             </button>
@@ -115,7 +111,7 @@ export function P2pMyAdCard({
               type="button"
               disabled={boostBusy}
               onClick={onBoost}
-              className="rounded-lg border border-amber-700 px-3 py-1.5 text-xs font-semibold text-amber-200 disabled:opacity-60"
+              className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 disabled:opacity-60"
             >
               {boostBusy ? t("p2p_boost_busy") : t("p2p_boost")}
             </button>
@@ -124,7 +120,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onResume}
-              className="rounded-lg border border-stone-600 px-3 py-1.5 text-xs font-semibold text-stone-200"
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
             >
               {t("p2p_ad_resume")}
             </button>
@@ -133,7 +129,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-rose-800 px-3 py-1.5 text-xs font-semibold text-rose-300"
+              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800"
             >
               {t("p2p_ad_close")}
             </button>

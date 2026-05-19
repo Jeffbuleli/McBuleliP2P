@@ -22,11 +22,14 @@ export function AppShell({
     pathname.startsWith("/app/wallet") ||
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw");
+  const onP2p = pathname.startsWith("/app/p2p");
   const hideTopBarForFlow =
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw") ||
-    pathname === "/app/wallet/transfer";
-  const lightMainBg = onProfile || onWalletFlow || onHome;
+    pathname === "/app/wallet/transfer" ||
+    pathname.startsWith("/app/p2p/ad/") ||
+    pathname.startsWith("/app/p2p/order/");
+  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p;
   const showTopBar = !onProfile && !hideTopBarForFlow;
 
   return (

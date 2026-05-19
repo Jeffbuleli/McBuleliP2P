@@ -27,6 +27,8 @@ import {
   FlowUploadZone,
   P2pFlowShell,
 } from "@/components/p2p/p2p-flow-ui";
+import { P2pProofPreview } from "@/components/p2p/p2p-proof-preview";
+import { prepareP2pProofFile } from "@/lib/p2p-proof-image";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
 
@@ -122,15 +124,12 @@ export function P2pOrderScreen() {
   const loadProof = useCallback(async () => {
     const res = await fetch(`/api/p2p/orders/${orderId}/proof`);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) return;
-    setOrder((cur) =>
-      cur
-        ? {
-            ...cur,
-            paymentProofImage: data.proof ?? null,
-          }
-        : cur,
-    );
+    if (!res.ok) {
+      if (typeof data.error === "string") setProofErr(data.error);
+      return;
+    }
+    const proof = data.proof as OrderDetail["paymentProofImage"];
+    setOrder((cur) => (cur ? { ...cur, paymentProofImage: proof ?? null } : cur));
   }, [orderId]);
 
   const loadMessages = useCallback(async () => {
@@ -230,27 +229,11 @@ export function P2pOrderScreen() {
     setProofOk(false);
     setProofBusy(true);
     try {
-      const mime = file.type || "application/octet-stream";
-      if (!mime.startsWith("image/")) {
-        setProofErr("p2p_proof_invalid");
-        return;
-      }
-      const maxBytes = Number(process.env.NEXT_PUBLIC_P2P_PROOF_MAX_BYTES ?? "250000");
-      const limit = Number.isFinite(maxBytes) && maxBytes > 50_000 ? Math.floor(maxBytes) : 250_000;
-      if (file.size > limit) {
-        setProofErr("p2p_proof_too_large");
-        return;
-      }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onerror = () => reject(new Error("read_failed"));
-        r.onload = () => resolve(String(r.result || ""));
-        r.readAsDataURL(file);
-      });
+      const prepared = await prepareP2pProofFile(file);
       const res = await fetch(`/api/p2p/orders/${orderId}/proof`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataUrl, mime, sizeBytes: file.size }),
+        body: JSON.stringify(prepared),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -258,7 +241,15 @@ export function P2pOrderScreen() {
         return;
       }
       setProofOk(true);
-      await loadProof();
+      const proof = data.proof as OrderDetail["paymentProofImage"] | undefined;
+      if (proof?.dataUrl) {
+        setOrder((cur) => (cur ? { ...cur, paymentProofImage: proof } : cur));
+      } else {
+        await loadProof();
+      }
+    } catch (e) {
+      const key = e instanceof Error ? e.message : "p2p_proof_invalid";
+      setProofErr(key.startsWith("p2p_") ? key : "p2p_proof_invalid");
     } finally {
       setProofBusy(false);
     }
@@ -445,8 +436,14 @@ export function P2pOrderScreen() {
         </p>
       ) : null}
 
+      {order.paymentProofImage?.dataUrl &&
+      !cryptoQuote &&
+      !(order.status === "awaiting_payment" && order.youArePayer) ? (
+        <P2pProofPreview dataUrl={order.paymentProofImage.dataUrl} />
+      ) : null}
+
       {order.paymentReference || order.paymentProofNote ? (
-        <div className="mt-4 text-xs text-stone-600 dark:text-stone-400">
+        <div className="text-xs text-[color:var(--fd-muted)]">
           {order.paymentReference ? (
             <p>
               {t("p2p_payment_ref")}: {order.paymentReference}

@@ -4,9 +4,9 @@ import { getSessionUserId } from "@/lib/session";
 import { getP2pPaymentProof, upsertP2pPaymentProof } from "@/lib/p2p-service";
 
 const postZ = z.object({
-  dataUrl: z.string().min(20).max(2_000_000),
+  dataUrl: z.string().min(20).max(3_500_000),
   mime: z.string().min(3).max(64),
-  sizeBytes: z.number().int().min(1).max(5_000_000),
+  sizeBytes: z.number().int().min(1).max(800_000),
 });
 
 export async function GET(
@@ -49,6 +49,11 @@ export async function POST(
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
-  return NextResponse.json({ ok: true, id: r.id });
+  const proof = await getP2pPaymentProof({ orderId: id, userId });
+  return NextResponse.json({
+    ok: true,
+    id: r.id,
+    proof: proof.ok ? proof.proof : null,
+  });
 }
 

@@ -336,6 +336,18 @@ async function purgeClosedP2pPaymentProofs(): Promise<void> {
     );
 }
 
+function normalizeP2pProofMime(mime: string, dataUrl: string): string | null {
+  let m = mime.toLowerCase().replace("image/jpg", "image/jpeg");
+  if (["image/jpeg", "image/png", "image/webp"].includes(m)) return m;
+  const fromData = /^data:(image\/[a-z0-9.+-]+);/i.exec(dataUrl)?.[1]?.toLowerCase();
+  if (fromData) {
+    m = fromData.replace("image/jpg", "image/jpeg");
+    if (["image/jpeg", "image/png", "image/webp"].includes(m)) return m;
+    if (m.startsWith("image/")) return "image/jpeg";
+  }
+  return dataUrl.startsWith("data:image/") ? "image/jpeg" : null;
+}
+
 export async function upsertP2pPaymentProof(args: {
   orderId: string;
   userId: string;
@@ -375,7 +387,8 @@ export async function upsertP2pPaymentProof(args: {
   if (!dataUrl.startsWith("data:image/")) {
     return { ok: false, message: "p2p_proof_invalid" };
   }
-  if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mime)) {
+  const mimeNorm = normalizeP2pProofMime(mime, dataUrl);
+  if (!mimeNorm) {
     return { ok: false, message: "p2p_proof_invalid" };
   }
   const maxBytes = Number(process.env.P2P_PROOF_MAX_BYTES ?? "250000");
@@ -391,7 +404,7 @@ export async function upsertP2pPaymentProof(args: {
       orderId: args.orderId,
       userId: args.userId,
       dataUrl,
-      mime,
+      mime: mimeNorm,
       sizeBytes,
       deletedAt: null,
     })
@@ -399,7 +412,7 @@ export async function upsertP2pPaymentProof(args: {
       target: p2pOrderPaymentProofs.orderId,
       set: {
         dataUrl,
-        mime,
+        mime: mimeNorm,
         sizeBytes,
         deletedAt: null,
         createdAt: new Date(),
