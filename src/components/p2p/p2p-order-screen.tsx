@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
@@ -12,12 +11,22 @@ import {
   p2pStatusBadgeClasses,
   p2pStatusLabelKey,
 } from "@/components/p2p/p2p-status-badge";
-import { P2pIconAlert, P2pIconEscrow, P2pIconStar } from "@/components/p2p/p2p-icons";
+import { P2pIconAlert, P2pIconStar } from "@/components/p2p/p2p-icons";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
 import { isP2pCryptoQuoteCurrency } from "@/lib/p2p-config";
 import { p2pFlowHint, p2pOrderFlowHintKey } from "@/lib/p2p-ui";
+import {
+  FlowError,
+  FlowField,
+  FlowInput,
+  FlowPrimaryBtn,
+  FlowSection,
+  FlowTextarea,
+  FlowUploadZone,
+  P2pFlowShell,
+} from "@/components/p2p/p2p-flow-ui";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
 
@@ -323,20 +332,17 @@ export function P2pOrderScreen() {
 
   if (err) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
-        <Link href="/app/p2p" className="text-sm font-medium text-emerald-800 underline">
-          ← {t("p2p_title")}
-        </Link>
-        <p className="text-sm text-rose-700">{t(err as keyof Messages)}</p>
-      </div>
+      <P2pFlowShell title={t("p2p_order_page")} subtitle={t("p2p_order_subtitle")}>
+        <FlowError>{t(err as keyof Messages)}</FlowError>
+      </P2pFlowShell>
     );
   }
 
   if (!order) {
     return (
-      <div className="mx-auto max-w-lg py-10 text-center text-sm text-stone-500">
-        {t("deposit_loading")}
-      </div>
+      <P2pFlowShell title={t("p2p_order_page")} subtitle={t("p2p_order_subtitle")}>
+        <p className="py-10 text-center text-sm text-[color:var(--fd-muted)]">{t("deposit_loading")}</p>
+      </P2pFlowShell>
     );
   }
 
@@ -355,50 +361,23 @@ export function P2pOrderScreen() {
     }),
     order.fiatCurrency,
   );
-  const roleBuy = order.youAreBuyer;
-  const roleBannerClass = roleBuy
-    ? "border-emerald-600 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white"
-    : "border-amber-600 bg-gradient-to-r from-amber-700 to-amber-600 text-white";
-
   const showStickyChat = order.chatAllowsNewMessages;
+  const statusBadge = (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${p2pStatusBadgeClasses(order.status)}`}
+    >
+      <P2pStatusIcon status={order.status} />
+      {t(p2pStatusLabelKey(order.status))}
+    </span>
+  );
 
   return (
-    <div
-      className={`mx-auto max-w-lg pt-1 ${showStickyChat ? "pb-[calc(11rem+env(safe-area-inset-bottom))]" : "pb-10"}`}
-    >
-      <Link
-        href="/app/p2p"
-        className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
+    <div className={showStickyChat ? "pb-[calc(11rem+env(safe-area-inset-bottom))]" : ""}>
+      <P2pFlowShell
+        title={`${t("p2p_order_short_id")}${shortId}`}
+        subtitle={roleHint}
+        headerBadge={statusBadge}
       >
-        ← {t("p2p_title")}
-      </Link>
-
-      <div className={`mt-4 flex items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-md ${roleBannerClass}`}>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-          <P2pIconEscrow className="h-5 w-5" />
-        </span>
-        <p className="text-sm font-semibold">{roleHint}</p>
-      </div>
-
-      <header className="mt-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">
-            {t("p2p_header_order_id")}
-          </p>
-          <p className="font-mono text-sm font-bold text-stone-900 dark:text-stone-100">
-            {t("p2p_order_short_id")}
-            {shortId}
-          </p>
-        </div>
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${p2pStatusBadgeClasses(order.status)}`}
-        >
-          <P2pStatusIcon status={order.status} />
-          {t(p2pStatusLabelKey(order.status))}
-        </span>
-      </header>
-
-      <div className="wallet-theme mt-4 space-y-3">
         <P2pOrderTimeline status={order.status} quoteCurrency={order.fiatCurrency} />
 
         {order.status === "released" ? (
@@ -427,28 +406,24 @@ export function P2pOrderScreen() {
             locale={locale}
           />
         )}
-      </div>
 
       {order.status === "awaiting_payment" && countdown && !cryptoQuote ? (
-        <div className="mt-3 flex items-center gap-3 rounded-2xl border border-amber-600/40 bg-amber-950/30 px-4 py-3">
-          <span className="font-mono text-3xl font-bold tabular-nums text-amber-200">
+        <div className="fd-card flex items-center gap-3 px-4 py-3">
+          <span className="font-mono text-3xl font-bold tabular-nums text-[color:var(--fd-text)]">
             {countdown.expired ? "—" : countdown.label}
           </span>
-          <p className="text-xs text-amber-200/80">
+          <p className="text-xs text-[color:var(--fd-muted)]">
             {countdown.expired ? t("p2p_countdown_expired") : t("p2p_countdown_label")}
           </p>
         </div>
       ) : null}
 
       {showPaymentAndCrypto && !cryptoQuote ? (
-        <section className="mt-4">
-          <pre className="whitespace-pre-wrap rounded-2xl border border-stone-700 bg-stone-900 p-3 text-xs text-stone-300">
+        <FlowSection title={t("p2p_section_payment")} hint={`${order.makerMasked} · ${order.takerMasked}`}>
+          <pre className="whitespace-pre-wrap rounded-2xl border border-[color:var(--fd-border)] bg-stone-50/80 p-3 text-xs text-[color:var(--fd-text)]">
             {order.paymentSnapshot}
           </pre>
-          <p className="mt-1 text-[10px] text-stone-500">
-            {order.makerMasked} · {order.takerMasked}
-          </p>
-        </section>
+        </FlowSection>
       ) : null}
 
       {order.status === "released" &&
@@ -483,136 +458,68 @@ export function P2pOrderScreen() {
         </div>
       ) : null}
 
-      <section className="mt-8 space-y-4">
+      <FlowSection title={t("p2p_section_actions")}>
         {order.youAreSeller && !cryptoQuote && order.status === "paid" ? (
-          <div className="flex items-start gap-2 rounded-xl border border-rose-200/80 bg-rose-50/70 px-3 py-2 text-xs text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-100">
-            <P2pIconAlert className="h-4 w-4 shrink-0" />
-            <span>{t("p2p_trust_release_warning_fiat")}</span>
-          </div>
+          <FlowError>
+            <span className="inline-flex items-center gap-2">
+              <P2pIconAlert className="h-4 w-4 shrink-0" />
+              {t("p2p_trust_release_warning_fiat")}
+            </span>
+          </FlowError>
         ) : null}
 
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">{t("p2p_section_actions")}</h2>
-
         {order.status === "awaiting_payment" && order.youArePayer && !cryptoQuote ? (
-          <div className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-            <label className="block text-xs font-medium text-stone-700 dark:text-stone-300">
-              {t("p2p_payment_ref")}
-              <input
-                value={paymentRef}
-                onChange={(e) => setPaymentRef(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
-              />
-            </label>
-            <label className="block text-xs font-medium text-stone-700 dark:text-stone-300">
-              {t("p2p_payment_proof_note")}
-              <textarea
-                value={paymentNote}
-                onChange={(e) => setPaymentNote(e.target.value)}
-                rows={2}
-                className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
-              />
-            </label>
-
-            <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3 dark:border-stone-700 dark:bg-stone-950/40">
-              <p className="text-xs font-semibold text-stone-800 dark:text-stone-200">
-                {t("p2p_proof_title")}
-              </p>
-              <p className="mt-1 text-[11px] text-stone-600 dark:text-stone-400">
-                {t("p2p_proof_hint")}
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    disabled={proofBusy}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) void uploadProof(f);
-                      e.currentTarget.value = "";
-                    }}
-                  />
-                  {proofBusy ? "…" : t("p2p_proof_upload")}
-                </label>
-                {order.paymentProofImage?.dataUrl ? (
-                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                    {t("p2p_proof_uploaded")}
-                  </span>
-                ) : null}
-                {proofOk ? (
-                  <span className="text-xs text-emerald-700 dark:text-emerald-300">
-                    {t("p2p_proof_uploaded")}
-                  </span>
-                ) : null}
+          <div className="space-y-3">
+            <FlowField label={t("p2p_payment_ref")}>
+              <FlowInput value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} />
+            </FlowField>
+            <FlowField label={t("p2p_payment_proof_note")}>
+              <FlowTextarea value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} rows={2} />
+            </FlowField>
+            <FlowUploadZone
+              label={t("p2p_proof_upload")}
+              hint={t("p2p_proof_hint")}
+              busy={proofBusy}
+              hasFile={!!order.paymentProofImage?.dataUrl || proofOk}
+              onPick={(f) => void uploadProof(f)}
+            />
+            {proofErrMsg ? <FlowError>{proofErrMsg}</FlowError> : null}
+            {order.paymentProofImage?.dataUrl ? (
+              <div className="overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={order.paymentProofImage.dataUrl}
+                  alt={t("p2p_proof_title")}
+                  className="max-h-64 w-full object-contain bg-white"
+                />
               </div>
-              {proofErrMsg ? (
-                <p className="mt-2 text-xs text-rose-700 dark:text-rose-200">{proofErrMsg}</p>
-              ) : null}
-              {order.paymentProofImage?.dataUrl ? (
-                <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={order.paymentProofImage.dataUrl}
-                    alt={t("p2p_proof_title")}
-                    className="max-h-64 w-full object-contain bg-white dark:bg-stone-950"
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => setModal("paid")}
-              className="w-full rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/20 disabled:opacity-40"
-            >
+            ) : null}
+            <FlowPrimaryBtn disabled={busy} onClick={() => setModal("paid")}>
               {t("p2p_mark_paid_payer")}
-            </button>
+            </FlowPrimaryBtn>
           </div>
         ) : null}
 
         {order.status === "paid" && order.youAreSeller && !cryptoQuote ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => setModal("release")}
-            className="w-full rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg disabled:opacity-40"
-          >
+          <FlowPrimaryBtn disabled={busy} onClick={() => setModal("release")}>
             {t("p2p_order_release_fiat")}
-          </button>
+          </FlowPrimaryBtn>
         ) : null}
 
         {order.status === "paid" ? (
-          <div className="space-y-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => setModal("dispute")}
-              className="w-full rounded-2xl border-2 border-amber-500 py-3 text-sm font-bold text-amber-950 dark:text-amber-100"
-            >
-              {t("p2p_dispute_open")}
-            </button>
-          </div>
+          <FlowPrimaryBtn disabled={busy} variant="ghost" onClick={() => setModal("dispute")}>
+            {t("p2p_dispute_open")}
+          </FlowPrimaryBtn>
         ) : null}
 
         {order.status === "awaiting_payment" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => setModal("cancel")}
-            className="w-full rounded-2xl border border-stone-300 py-3 text-sm font-bold text-stone-800 dark:border-stone-600 dark:text-stone-200"
-          >
+          <FlowPrimaryBtn disabled={busy} variant="ghost" onClick={() => setModal("cancel")}>
             {t("p2p_order_cancel")}
-          </button>
+          </FlowPrimaryBtn>
         ) : null}
-      </section>
+      </FlowSection>
 
-      {actionErrMsg ? (
-        <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {actionErrMsg}
-        </p>
-      ) : null}
+      {actionErrMsg ? <FlowError>{actionErrMsg}</FlowError> : null}
 
       {order.canRate ? (
         <section className="mt-8 rounded-2xl border border-emerald-900/20 bg-emerald-50/60 p-4 dark:border-emerald-800/40 dark:bg-emerald-950/30">
@@ -705,6 +612,8 @@ export function P2pOrderScreen() {
           <p className="mt-2 text-xs text-stone-500">{t("p2p_chat_closed")}</p>
         </section>
       ) : null}
+
+      </P2pFlowShell>
 
       {showStickyChat ? (
         <div

@@ -1,16 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
-  P2pIconBuy,
-  P2pIconEscrow,
-  P2pIconSell,
-  P2pIconStar,
-} from "@/components/p2p/p2p-icons";
+  FlowAmountBox,
+  FlowError,
+  FlowInput,
+  FlowPrimaryBtn,
+  FlowSection,
+  P2pFlowShell,
+} from "@/components/p2p/p2p-flow-ui";
+import { P2pIconStar } from "@/components/p2p/p2p-icons";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import {
@@ -21,11 +23,7 @@ import {
 } from "@/lib/p2p-config";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { p2pTradePreviewSteps } from "@/lib/p2p-progress-steps";
-import {
-  minQuoteAmountForAd,
-  p2pFlowHint,
-  p2pTakerFlowHintKey,
-} from "@/lib/p2p-ui";
+import { minQuoteAmountForAd, p2pFlowHint, p2pTakerFlowHintKey } from "@/lib/p2p-ui";
 
 type AdDetail = {
   id: string;
@@ -137,137 +135,89 @@ export default function P2pTradePage() {
 
   if (loadErr) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
-        <Link href="/app/p2p" className="text-sm font-medium text-emerald-400 underline">
-          ← {t("p2p_title")}
-        </Link>
-        <p className="text-sm text-rose-300">{t(loadErr as keyof Messages)}</p>
-      </div>
+      <P2pFlowShell title={t("p2p_take_trade")} subtitle={t("p2p_trade_subtitle")}>
+        <FlowError>{t(loadErr as keyof Messages)}</FlowError>
+      </P2pFlowShell>
     );
   }
 
   if (!ad) {
     return (
-      <div className="mx-auto max-w-lg py-10 text-center text-sm text-stone-500">
-        {t("deposit_loading")}
-      </div>
+      <P2pFlowShell title={t("p2p_take_trade")} subtitle={t("p2p_trade_subtitle")}>
+        <p className="py-10 text-center text-sm text-[color:var(--fd-muted)]">{t("deposit_loading")}</p>
+      </P2pFlowShell>
     );
   }
 
-  const isSellAd = ad.side === "sell";
   const icon = ASSET_ICON[ad.asset];
   const roleHint = p2pFlowHint(t, p2pTakerFlowHintKey(ad.side, ad.fiatCurrency), ad.fiatCurrency);
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
-      <Link href="/app/p2p" className="text-sm font-medium text-emerald-400 underline">
-        ← {t("p2p_title")}
-      </Link>
-
-      <h1 className="text-xl font-bold text-stone-50">{t("p2p_take_trade")}</h1>
-
-      <div className="wallet-theme">
+    <P2pFlowShell title={t("p2p_take_trade")} subtitle={t("p2p_trade_subtitle")}>
+      <div className="fd-card overflow-hidden p-0">
         <TransactionStepper steps={p2pTradePreviewSteps(ad.fiatCurrency)} />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-stone-700 bg-stone-900">
-        <div
-          className={`flex items-center gap-3 border-b px-3 py-3 ${
-            isSellAd ? "border-rose-900/30 bg-rose-950/35" : "border-emerald-900/30 bg-emerald-950/40"
-          }`}
-        >
+      <FlowSection title={`${ad.asset}/${ad.fiatCurrency}`} hint={roleHint}>
+        <div className="flex items-center gap-3">
           {icon ? (
-            <Image src={icon} alt="" width={44} height={44} className="rounded-full" />
+            <Image src={icon} alt="" width={40} height={40} className="rounded-full" />
           ) : null}
           <div className="min-w-0 flex-1">
-            <p className={`text-sm font-bold ${isSellAd ? "text-rose-300" : "text-emerald-300"}`}>
-              {isSellAd ? t("p2p_side_sell") : t("p2p_side_buy")} · {ad.asset}/{ad.fiatCurrency}
-            </p>
-            <p className="text-lg font-bold tabular-nums text-stone-50">
+            <p className="text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
               {Number(ad.price).toLocaleString(locNum, { maximumFractionDigits: 8 })}{" "}
-              {ad.fiatCurrency}
-              <span className="text-xs font-normal text-stone-400"> / {ad.asset}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2 p-3">
-          <p
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-              isSellAd
-                ? "bg-rose-950/60 text-rose-200 ring-1 ring-rose-800/50"
-                : "bg-emerald-950/60 text-emerald-200 ring-1 ring-emerald-800/50"
-            }`}
-          >
-            {isSellAd ? <P2pIconBuy className="h-3.5 w-3.5" /> : <P2pIconSell className="h-3.5 w-3.5" />}
-            {roleHint}
-          </p>
-
-          {cryptoQuote ? (
-            <p className="flex items-center gap-1.5 text-[10px] text-stone-400">
-              <P2pIconEscrow className="h-3 w-3" />
-              {interpolate(t("p2p_crypto_quote_take_hint"), { quote: ad.fiatCurrency })}
-            </p>
-          ) : (
-            <p className="text-[10px] text-stone-500">{t("p2p_fiat_quote_escrow_note")}</p>
-          )}
-
-          <p className="flex flex-wrap items-center gap-2 text-[10px] text-stone-400">
-            <span className="text-stone-300">{ad.makerName}</span>
-            {ad.makerRating && ad.makerRating.count > 0 ? (
-              <span className="inline-flex items-center gap-0.5 text-amber-400">
-                <P2pIconStar filled className="h-3 w-3" />
-                {ad.makerRating.avg.toFixed(1)}
+              <span className="text-sm font-normal text-[color:var(--fd-muted)]">
+                {ad.fiatCurrency}/{ad.asset}
               </span>
-            ) : null}
-            <span>
+            </p>
+            <p className="text-xs text-[color:var(--fd-muted)]">
+              {ad.makerName}
+              {ad.makerRating && ad.makerRating.count > 0 ? (
+                <span className="ml-2 inline-flex items-center gap-0.5 text-amber-600">
+                  <P2pIconStar filled className="h-3 w-3" />
+                  {ad.makerRating.avg.toFixed(1)}
+                </span>
+              ) : null}
+            </p>
+            <p className="text-[10px] text-[color:var(--fd-muted)]">
               {Number(ad.minFiat).toLocaleString(locNum)} — {Number(ad.maxFiat).toLocaleString(locNum)}{" "}
               {ad.fiatCurrency}
-            </span>
-          </p>
-          {minQuote != null ? (
-            <p className="text-[10px] text-amber-400/90">
-              {interpolate(t("p2p_trade_min_quote"), {
-                amount: minQuote.toLocaleString(locNum, { maximumFractionDigits: 4 }),
-                quote: ad.fiatCurrency,
-                minCrypto: String(minCryptoForAsset(asset)),
-                asset: ad.asset,
-              })}
             </p>
-          ) : null}
+            {cryptoQuote ? (
+              <p className="text-[10px] text-[color:var(--fd-primary)]">
+                {interpolate(t("p2p_crypto_quote_take_hint"), { quote: ad.fiatCurrency })}
+              </p>
+            ) : null}
+            {minQuote != null ? (
+              <p className="text-[10px] text-amber-700">
+                {interpolate(t("p2p_trade_min_quote"), {
+                  amount: minQuote.toLocaleString(locNum, { maximumFractionDigits: 4 }),
+                  quote: ad.fiatCurrency,
+                })}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </FlowSection>
 
-      <label className="block text-sm font-medium text-stone-200">
-        {t("p2p_order_fiat_amount")}
-        <input
+      <FlowSection title={t("p2p_order_fiat_amount")}>
+        <FlowInput
           value={fiatAmount}
           onChange={(e) => setFiatAmount(e.target.value)}
           inputMode="decimal"
-          className="mt-1 w-full rounded-xl border border-stone-600 bg-stone-900 px-3 py-3 text-lg tabular-nums text-stone-100 outline-none ring-emerald-500/40 focus:ring-2"
           placeholder="0"
+          className="text-lg tabular-nums"
         />
-      </label>
+        <div className="mt-3">
+          <FlowAmountBox label={ad.asset} amount={`≈ ${estCrypto ?? "—"}`} unit={ad.asset} />
+        </div>
+      </FlowSection>
 
-      <div className="rounded-xl border border-emerald-800/30 bg-emerald-950/30 p-3 text-center">
-        <p className="text-xs text-stone-400">{ad.asset}</p>
-        <p className="text-2xl font-bold tabular-nums text-emerald-200">≈ {estCrypto ?? "—"}</p>
-      </div>
+      {errMsg ? <FlowError>{errMsg}</FlowError> : null}
 
-      {errMsg ? (
-        <p className="rounded-lg bg-rose-950/40 px-3 py-2 text-sm text-rose-100">{errMsg}</p>
-      ) : null}
-
-      <button
-        type="button"
-        disabled={loading || !fiatAmount.trim()}
-        onClick={() => void confirm()}
-        className={`w-full rounded-2xl py-3.5 text-lg font-semibold text-white disabled:opacity-40 ${
-          isSellAd ? "bg-rose-600" : "bg-emerald-700"
-        }`}
-      >
+      <FlowPrimaryBtn disabled={loading || !fiatAmount.trim()} onClick={() => void confirm()}>
         {loading ? "…" : t("p2p_order_start")}
-      </button>
-    </div>
+      </FlowPrimaryBtn>
+    </P2pFlowShell>
   );
 }

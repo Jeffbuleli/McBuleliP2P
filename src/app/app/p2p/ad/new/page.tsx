@@ -1,11 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import {
+  FlowChipGrid,
+  FlowError,
+  FlowField,
+  FlowInput,
+  FlowPrimaryBtn,
+  FlowProfileLink,
+  FlowSection,
+  FlowSegment,
+  FlowSelect,
+  FlowTextarea,
+  P2pFlowShell,
+} from "@/components/p2p/p2p-flow-ui";
 import { countryLabel } from "@/lib/country-label";
-import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
   P2P_COUNTRY_CODES,
@@ -33,12 +44,14 @@ export default function P2pNewAdPage() {
       setFiat(quoteFiats[0] ?? "CDF");
     }
   }, [quoteFiats, fiat]);
+
   const [price, setPrice] = useState("");
   const [minFiat, setMinFiat] = useState("");
   const [maxFiat, setMaxFiat] = useState("");
   const [paymentMethods, setPaymentMethods] = useState("");
   const [paymentDefs, setPaymentDefs] = useState<PaymentDef[]>([]);
   const [paymentCodes, setPaymentCodes] = useState<string[]>([]);
+  const [myMethodCodes, setMyMethodCodes] = useState<Set<string>>(new Set());
   const [terms, setTerms] = useState("");
   const [country, setCountry] = useState("CD");
   const [reserveAmountCrypto, setReserveAmountCrypto] = useState("");
@@ -68,6 +81,22 @@ export default function P2pNewAdPage() {
 
   useEffect(() => {
     let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/p2p/me/payment-methods", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || cancelled) return;
+      const rows = (data.methods as { methodCode: string; active: boolean }[]) ?? [];
+      setMyMethodCodes(
+        new Set(rows.filter((r) => r.active).map((r) => r.methodCode.toUpperCase())),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
     async function loadDefs() {
       const cc = country === "OTHER" ? "CD" : country;
       const res = await fetch(`/api/p2p/payment-methods?country=${encodeURIComponent(cc)}`);
@@ -79,7 +108,6 @@ export default function P2pNewAdPage() {
       const list = (data.methods as PaymentDef[]) ?? [];
       if (!cancelled) {
         setPaymentDefs(list);
-        // Keep existing selections, but drop unknown codes.
         setPaymentCodes((cur) => cur.filter((c) => list.some((d) => d.code === c)));
       }
     }
@@ -90,13 +118,11 @@ export default function P2pNewAdPage() {
   }, [country]);
 
   useEffect(() => {
-    // Keep legacy string in sync for now (public display).
     if (!paymentCodes.length) return;
     const labels = paymentDefs
       .filter((d) => paymentCodes.includes(d.code))
       .map((d) => d.label);
     if (labels.length) setPaymentMethods(labels.join(", "));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentCodes, paymentDefs]);
 
   const sellNeedHint = useMemo(() => {
@@ -118,6 +144,19 @@ export default function P2pNewAdPage() {
     return clientErrorText(t, err);
   }, [err, t]);
 
+  const missingProfileCodes = useMemo(
+    () =>
+      paymentCodes.filter((c) => !myMethodCodes.has(c.toUpperCase())),
+    [paymentCodes, myMethodCodes],
+  );
+
+  function togglePayment(code: string) {
+    setErr(null);
+    setPaymentCodes((cur) =>
+      cur.includes(code) ? cur.filter((x) => x !== code) : [...cur, code],
+    );
+  }
+
   async function submit() {
     setErr(null);
     setLoading(true);
@@ -127,10 +166,23 @@ export default function P2pNewAdPage() {
         codes && paymentDefs.length
           ? paymentDefs.filter((d) => codes.includes(d.code)).map((d) => d.label).join(", ")
           : paymentMethods;
-      if (!cryptoQuote && (!pm || pm.trim().length < 3)) {
-        setErr("p2p_payment_methods_required");
-        return;
+
+      if (!cryptoQuote) {
+        if (paymentDefs.length > 0) {
+          if (!paymentCodes.length) {
+            setErr("p2p_payment_pick_one");
+            return;
+          }
+          if (missingProfileCodes.length > 0) {
+            setErr("p2p_payment_profile_missing");
+            return;
+          }
+        } else if (!pm || pm.trim().length < 3) {
+          setErr("p2p_payment_methods_required");
+          return;
+        }
       }
+
       const res = await fetch("/api/p2p/ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,230 +212,130 @@ export default function P2pNewAdPage() {
     }
   }
 
+  const publishDisabled =
+    loading ||
+    (sellNeedHint != null && !sellNeedHint.ok) ||
+    (!cryptoQuote &&
+      (paymentDefs.length > 0
+        ? paymentCodes.length === 0 || missingProfileCodes.length > 0
+        : paymentMethods.trim().length < 3));
+
   return (
-    <div className="mx-auto max-w-lg space-y-4 pb-10 pt-1">
-      <Link
-        href="/app/p2p"
-        className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
-      >
-        ← {t("p2p_title")}
-      </Link>
-      <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">{t("p2p_post_title")}</h1>
+    <P2pFlowShell title={t("p2p_post_title")} subtitle={t("p2p_post_subtitle")}>
+      <FlowSection title={t("p2p_side_label")}>
+        <FlowSegment
+          value={side}
+          onChange={setSide}
+          options={[
+            { id: "buy" as const, label: t("p2p_side_buy") },
+            { id: "sell" as const, label: t("p2p_side_sell") },
+          ]}
+        />
+      </FlowSection>
 
-      <div>
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("p2p_side_label")}</p>
-        <div className="mt-1 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setSide("buy")}
-            className={`rounded-xl py-3 text-sm font-bold transition ${
-              side === "buy"
-                ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400/40"
-                : "border border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"
-            }`}
+      <FlowSection title={t("p2p_asset_label")}>
+        <FlowField label={t("p2p_asset_label")}>
+          <FlowSelect
+            value={asset}
+            onChange={(e) => setAsset(e.target.value as P2pCryptoAsset)}
           >
-            {t("p2p_side_buy")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSide("sell")}
-            className={`rounded-xl py-3 text-sm font-bold transition ${
-              side === "sell"
-                ? "bg-rose-600 text-white shadow-md ring-2 ring-rose-400/40"
-                : "border border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"
-            }`}
+            <option value="USDT">USDT</option>
+            <option value="PI">PI</option>
+          </FlowSelect>
+        </FlowField>
+        <FlowField label={t("p2p_fiat_label")} hint={cryptoQuote ? t("p2p_crypto_quote_hint") : t("p2p_fiat_quote_escrow_note")}>
+          <FlowSelect
+            value={fiat}
+            onChange={(e) => setFiat(e.target.value as P2pFiatCurrency)}
           >
-            {t("p2p_side_sell")}
-          </button>
+            {quoteFiats.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </FlowSelect>
+        </FlowField>
+      </FlowSection>
+
+      <FlowSection title={t("p2p_price_label")}>
+        <FlowField label={t("p2p_price_per_unit")}>
+          <FlowInput value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" />
+        </FlowField>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <FlowField label={t("p2p_min_fiat")}>
+            <FlowInput value={minFiat} onChange={(e) => setMinFiat(e.target.value)} inputMode="decimal" />
+          </FlowField>
+          <FlowField label={t("p2p_max_fiat")} hint={side === "sell" ? t("p2p_sell_escrow_explainer") : undefined}>
+            <FlowInput value={maxFiat} onChange={(e) => setMaxFiat(e.target.value)} inputMode="decimal" />
+          </FlowField>
         </div>
-      </div>
+      </FlowSection>
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_asset_label")}
-        <select
-          value={asset}
-          onChange={(e) => setAsset(e.target.value as P2pCryptoAsset)}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+      {!cryptoQuote ? (
+        <FlowSection
+          title={t("p2p_payment_detail")}
+          hint={t("p2p_payment_methods_profile_hint")}
+          action={<FlowProfileLink label={t("p2p_payment_methods_title")} />}
         >
-          <option value="USDT">USDT</option>
-          <option value="PI">PI</option>
-        </select>
-      </label>
-
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_fiat_label")}
-        <select
-          value={fiat}
-          onChange={(e) => setFiat(e.target.value as P2pFiatCurrency)}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        >
-          {quoteFiats.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1.5 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-          {t("p2p_fiat_quote_escrow_note")}
-        </p>
-      </label>
-
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_price_per_unit")}
-        <input
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          inputMode="decimal"
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-      </label>
-
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_min_fiat")}
-        <input
-          value={minFiat}
-          onChange={(e) => setMinFiat(e.target.value)}
-          inputMode="decimal"
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-      </label>
-
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_max_fiat")}
-        <input
-          value={maxFiat}
-          onChange={(e) => setMaxFiat(e.target.value)}
-          inputMode="decimal"
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-        {side === "sell" ? (
-          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("p2p_sell_escrow_explainer")}</p>
-        ) : null}
-      </label>
-
-      {cryptoQuote ? (
-        <div className="rounded-2xl border border-emerald-900/20 bg-emerald-50/70 p-4 text-sm text-emerald-950 dark:border-emerald-800/30 dark:bg-emerald-950/25 dark:text-emerald-100">
-          {t("p2p_crypto_quote_hint")}
-        </div>
-      ) : (
-        <div className="space-y-2 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-          <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-            {t("p2p_payment_detail")}
-          </p>
           {!paymentDefs.length ? (
-            <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-              {t("p2p_payment_detail")}
-              <textarea
-                value={paymentMethods}
-                onChange={(e) => setPaymentMethods(e.target.value)}
-                rows={4}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-              />
-            </label>
+            <FlowTextarea
+              value={paymentMethods}
+              onChange={(e) => {
+                setPaymentMethods(e.target.value);
+                setErr(null);
+              }}
+              rows={3}
+            />
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {paymentDefs.map((d) => {
-                const on = paymentCodes.includes(d.code);
-                return (
-                  <button
-                    key={d.code}
-                    type="button"
-                    onClick={() =>
-                      setPaymentCodes((cur) =>
-                        on ? cur.filter((x) => x !== d.code) : [...cur, d.code],
-                      )
-                    }
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
-                      on
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
-                        : "border-stone-300 bg-stone-50 text-stone-800 dark:border-stone-600 dark:bg-stone-950/40 dark:text-stone-200"
-                    }`}
-                  >
-                    {d.label}
-                  </button>
-                );
-              })}
-            </div>
+            <FlowChipGrid
+              items={paymentDefs}
+              selected={paymentCodes}
+              onToggle={togglePayment}
+              configured={myMethodCodes}
+            />
           )}
-          {paymentDefs.length ? (
-            <p className="text-xs text-stone-500 dark:text-stone-400">
-              {t("p2p_payment_methods_profile_hint")}
-            </p>
-          ) : null}
-        </div>
-      )}
+        </FlowSection>
+      ) : null}
 
       {side === "sell" ? (
-        <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-          {t("p2p_reserve_label")}
-          <input
+        <FlowSection title={t("p2p_reserve_label")} hint={t("p2p_reserve_hint")}>
+          <FlowInput
             value={reserveAmountCrypto}
             onChange={(e) => setReserveAmountCrypto(e.target.value)}
             inputMode="decimal"
             placeholder={asset === "USDT" ? "100" : "20"}
-            className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
           />
-          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-            {t("p2p_reserve_hint")}
-          </p>
-        </label>
+        </FlowSection>
       ) : null}
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_terms_optional")}
-        <textarea
-          value={terms}
-          onChange={(e) => setTerms(e.target.value)}
-          rows={2}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        />
-      </label>
+      <FlowSection title={t("p2p_terms_optional")}>
+        <FlowTextarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={2} />
+      </FlowSection>
 
-      <label className="block text-sm font-medium text-stone-800 dark:text-stone-200">
-        {t("p2p_country_label")}
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-        >
+      <FlowSection title={t("p2p_country_label")}>
+        <FlowSelect value={country} onChange={(e) => setCountry(e.target.value)}>
           {P2P_COUNTRY_CODES.map((c) => (
             <option key={c} value={c}>
               {countryLabel(locale, c)}
             </option>
           ))}
-        </select>
-      </label>
+        </FlowSelect>
+      </FlowSection>
 
-      {errMsg ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          {errMsg}
-        </p>
-      ) : null}
+      {errMsg ? <FlowError>{errMsg}</FlowError> : null}
 
       {sellNeedHint && !sellNeedHint.ok ? (
-        <p className="rounded-lg border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-100">
+        <FlowError>
           {t("p2p_sell_need_hint")
-            .replace("{maxFiat}", maxFiat.trim() || "—")
-            .replace("{fiat}", fiat)
             .replace("{need}", String(sellNeedHint.need))
             .replace("{asset}", asset)
             .replace("{bal}", String(sellNeedHint.bal))}
-        </p>
+        </FlowError>
       ) : null}
 
-      <button
-        type="button"
-        disabled={
-          loading ||
-          (sellNeedHint != null && !sellNeedHint.ok) ||
-          (!cryptoQuote &&
-            (paymentDefs.length > 0 ? paymentCodes.length === 0 : paymentMethods.trim().length < 3))
-        }
-        onClick={() => void submit()}
-        className="w-full rounded-2xl bg-emerald-700 py-3.5 text-lg font-semibold text-white disabled:opacity-40"
-      >
+      <FlowPrimaryBtn disabled={publishDisabled} onClick={() => void submit()}>
         {loading ? "…" : t("p2p_create_ad")}
-      </button>
-    </div>
+      </FlowPrimaryBtn>
+    </P2pFlowShell>
   );
 }
