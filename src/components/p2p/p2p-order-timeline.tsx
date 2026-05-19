@@ -6,12 +6,12 @@ import type { Messages } from "@/i18n/messages";
 type StepDef = { key: keyof Messages; icon: "doc" | "lock" | "clock" | "check" | "hand" | "flag" };
 
 const STEP_DEFS: StepDef[] = [
-  { key: "p2p_step_order_created", icon: "doc" },
-  { key: "p2p_step_escrow_locked", icon: "lock" },
-  { key: "p2p_step_await_fiat", icon: "clock" },
-  { key: "p2p_step_fiat_marked", icon: "check" },
-  { key: "p2p_step_settlement", icon: "hand" },
-  { key: "p2p_step_finished", icon: "flag" },
+  { key: "p2p_step_created_short", icon: "doc" },
+  { key: "p2p_step_escrow_short", icon: "lock" },
+  { key: "p2p_step_pay_short", icon: "clock" },
+  { key: "p2p_step_paid_short", icon: "check" },
+  { key: "p2p_step_release_short", icon: "hand" },
+  { key: "p2p_step_done_short", icon: "flag" },
 ];
 
 function StepIcon({ icon }: { icon: StepDef["icon"] }) {
@@ -137,11 +137,6 @@ export function P2pOrderTimeline({ status }: { status: string }) {
                 ? "bg-stone-200 dark:bg-stone-700"
                 : "bg-stone-200 dark:bg-stone-700";
 
-          let subtitle = "";
-          if (variant === "cancelled" && i === 2) subtitle = ` — ${t("p2p_step_cancelled_hint")}`;
-          if (variant === "dispute" && i === 4) subtitle = ` — ${t("p2p_step_dispute_hint")}`;
-          if (variant === "refunded" && i === 5) subtitle = ` (${t("p2p_order_status_refunded")})`;
-
           return (
             <li key={def.key} className="relative flex gap-3 pb-8 last:pb-0">
               {!isLast ? (
@@ -161,9 +156,6 @@ export function P2pOrderTimeline({ status }: { status: string }) {
                   } ${cancelledStale ? "opacity-50" : ""}`}
                 >
                   {t(def.key)}
-                  {subtitle ? (
-                    <span className="font-normal text-stone-600 dark:text-stone-400">{subtitle}</span>
-                  ) : null}
                 </p>
               </div>
             </li>

@@ -11,6 +11,7 @@ import {
   p2pStatusBadgeClasses,
   p2pStatusLabelKey,
 } from "@/components/p2p/p2p-status-badge";
+import { P2pIconAlert, P2pIconEscrow, P2pIconStar } from "@/components/p2p/p2p-icons";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -368,16 +369,12 @@ export function P2pOrderScreen() {
         ← {t("p2p_title")}
       </Link>
 
-      <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-snug text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-100">
-        {t("p2p_trust_top_banner")}
-      </div>
-
-      <div className={`mt-4 rounded-2xl border-2 px-4 py-3 shadow-md ${roleBannerClass}`}>
-        <p className="text-[10px] font-bold uppercase tracking-wider opacity-90">
-          {roleBuy ? t("p2p_role_banner_buy") : t("p2p_role_banner_sell")}
-        </p>
-        <p className="mt-1 text-xs opacity-95">
-          {roleBuy ? t("p2p_role_sub_buy") : t("p2p_role_sub_sell")}
+      <div className={`mt-4 flex items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-md ${roleBannerClass}`}>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+          <P2pIconEscrow className="h-5 w-5" />
+        </span>
+        <p className="text-sm font-semibold">
+          {roleBuy ? t("p2p_trade_role_buy_short") : t("p2p_trade_role_sell_short")}
         </p>
       </div>
 
@@ -522,7 +519,7 @@ export function P2pOrderScreen() {
 
       <section className="mt-8 space-y-4">
         <div className="flex items-start gap-2 rounded-xl border border-rose-200/80 bg-rose-50/70 px-3 py-2 text-xs text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-100">
-          <span aria-hidden>⚠️</span>
+          <P2pIconAlert className="h-4 w-4 shrink-0" />
           <span>{t("p2p_trust_release_warning")}</span>
         </div>
 
@@ -658,13 +655,14 @@ export function P2pOrderScreen() {
                 key={n}
                 type="button"
                 onClick={() => setRatingStars(n)}
-                className={`h-10 w-10 rounded-lg text-lg font-bold ${
+                className={`flex h-10 w-10 items-center justify-center rounded-lg ${
                   ratingStars >= n
                     ? "bg-amber-500 text-stone-950"
                     : "bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300"
                 }`}
+                aria-label={`${n}`}
               >
-                ★
+                <P2pIconStar filled={ratingStars >= n} className="h-5 w-5" />
               </button>
             ))}
           </div>
@@ -739,8 +737,6 @@ export function P2pOrderScreen() {
           <p className="mt-2 text-xs text-stone-500">{t("p2p_chat_closed")}</p>
         </section>
       ) : null}
-
-      <p className="mt-8 text-xs text-stone-500 dark:text-stone-400">{t("p2p_disclaimer")}</p>
 
       {showStickyChat ? (
         <div
