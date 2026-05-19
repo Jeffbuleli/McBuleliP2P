@@ -44,6 +44,20 @@ export async function POST(req: Request) {
         { status: 503 },
       );
     }
+    const declaredNum = Number(body.declaredAmountPi);
+    if (!Number.isFinite(declaredNum) || declaredNum <= 0) {
+      return NextResponse.json(
+        { message: "deposit_invalid_declared_amount" },
+        { status: 400 },
+      );
+    }
+    const minPi = Number(process.env.MIN_DEPOSIT_PI ?? "1");
+    if (declaredNum + 1e-12 < minPi) {
+      return NextResponse.json(
+        { message: "deposit_declared_below_min", min: String(minPi) },
+        { status: 400 },
+      );
+    }
     const [row] = await db
       .insert(deposits)
       .values({
@@ -54,6 +68,8 @@ export async function POST(req: Request) {
         networkCex: "manual",
         addressShown,
         memoShown: null,
+        declaredAmountUsdt: fmtWalletAmount(declaredNum),
+        userNote: body.userNote ?? null,
         minConfirmations: 1,
         status: DepositStatus.AWAITING_TRANSFER,
       })

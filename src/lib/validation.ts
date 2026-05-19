@@ -36,6 +36,8 @@ const depositPiIntent = z.object({
   provider: z.literal("manual"),
   asset: z.literal("PI"),
   network: z.literal("PI_MAIN"),
+  declaredAmountPi: z.string().regex(/^\d+(\.\d+)?$/),
+  userNote: z.string().trim().max(512).optional(),
 });
 
 /** USDT via Binance address; Pi via super-admin receive address (manual review). */

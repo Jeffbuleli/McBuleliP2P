@@ -40,10 +40,33 @@ export function p2pOrderFlowHintKey(args: {
   return wallet ? "p2p_flow_order_sell_wallet" : "p2p_flow_order_sell_fiat";
 }
 
+/** Platform minimum trade size in quote currency (min crypto × price). */
 export function minQuoteAmountForAd(asset: P2pCryptoAsset, price: string | number): number {
   const p = Number(price);
   if (!Number.isFinite(p) || p <= 0) return minCryptoForAsset(asset);
   return minCryptoForAsset(asset) * p;
+}
+
+export function p2pAdTradeLimits(
+  ad: { minFiat: string; maxFiat: string; price: string },
+  asset: P2pCryptoAsset,
+): {
+  minAd: number;
+  maxAd: number;
+  platformMin: number;
+  effectiveMin: number;
+  untradeable: boolean;
+} {
+  const minAd = Number(ad.minFiat);
+  const maxAd = Number(ad.maxFiat);
+  const platformMin = minQuoteAmountForAd(asset, ad.price);
+  const effectiveMin = Math.max(
+    Number.isFinite(minAd) && minAd > 0 ? minAd : 0,
+    platformMin,
+  );
+  const untradeable =
+    !Number.isFinite(maxAd) || maxAd <= 0 || maxAd < effectiveMin;
+  return { minAd, maxAd, platformMin, effectiveMin, untradeable };
 }
 
 /** Flow hint with optional `{quote}` interpolation. */

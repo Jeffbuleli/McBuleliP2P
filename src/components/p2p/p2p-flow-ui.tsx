@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { IconCheck } from "@/components/icons/flow-icons";
+import type { P2pMarketView } from "@/lib/p2p-market-view";
 
 export function P2pFlowShell({
   title,
@@ -87,6 +88,47 @@ export function FlowTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>)
 
 export function FlowSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${inputCls} ${props.className ?? ""}`} />;
+}
+
+export function FlowMarketViewTabs({
+  value,
+  onChange,
+  buyLabel,
+  sellLabel,
+}: {
+  value: P2pMarketView;
+  onChange: (v: P2pMarketView) => void;
+  buyLabel: string;
+  sellLabel: string;
+}) {
+  const tabs: { id: P2pMarketView; label: string }[] = [
+    { id: "buy", label: buyLabel },
+    { id: "sell", label: sellLabel },
+  ];
+  return (
+    <div className="fd-card flex gap-1 p-1">
+      {tabs.map((o) => {
+        const on = value === o.id;
+        const isBuy = o.id === "buy";
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={`flex-1 rounded-xl px-2 py-3 text-sm font-extrabold uppercase tracking-wide transition ${
+              on
+                ? isBuy
+                  ? "bg-[color:var(--fd-primary)] text-white shadow-sm"
+                  : "bg-[color:var(--fd-sell)] text-white shadow-sm"
+                : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/50"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function FlowTabBar<T extends string>({
@@ -268,14 +310,16 @@ export function FlowPrimaryBtn({
   children: ReactNode;
   disabled?: boolean;
   onClick?: () => void;
-  variant?: "primary" | "danger" | "ghost";
+  variant?: "primary" | "danger" | "ghost" | "sell";
 }) {
   const cls =
     variant === "danger"
       ? "bg-rose-600 text-white"
       : variant === "ghost"
         ? "border-2 border-[color:var(--fd-border)] bg-white text-[color:var(--fd-text)]"
-        : "fd-btn-soft";
+        : variant === "sell"
+          ? "fd-btn-sell"
+          : "fd-btn-soft";
   return (
     <button
       type="button"

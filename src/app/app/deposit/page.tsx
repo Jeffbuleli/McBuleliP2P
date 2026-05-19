@@ -38,6 +38,7 @@ export default function DepositWizardPage() {
   const [enabledUsdt, setEnabledUsdt] = useState<boolean | null>(null);
   const [enabledPi, setEnabledPi] = useState<boolean | null>(null);
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
+  const [declaredAmountPi, setDeclaredAmountPi] = useState("");
   const [userNote, setUserNote] = useState("");
   const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
   useEffect(() => {
@@ -81,6 +82,8 @@ export default function DepositWizardPage() {
               provider: "manual" as const,
               asset: "PI" as const,
               network: "PI_MAIN" as const,
+              declaredAmountPi: declaredAmountPi.trim().replace(",", "."),
+              userNote: userNote.trim() || undefined,
             };
 
       const res = await fetch("/api/deposits/intent", {
@@ -93,7 +96,11 @@ export default function DepositWizardPage() {
         const rec = data as Record<string, unknown>;
         const msg = typeof rec.message === "string" ? rec.message : "";
         if (msg === "deposit_declared_below_min" && typeof rec.min === "string") {
-          setError(t("deposit_declared_below_min", { min: rec.min }));
+          setError(
+            asset === "PI"
+              ? t("deposit_declared_below_min", { min: `${rec.min} π` })
+              : t("deposit_declared_below_min", { min: rec.min }),
+          );
           return;
         }
         if (msg.startsWith("deposit_") || msg.startsWith("wallet_binance_")) {
@@ -236,9 +243,36 @@ export default function DepositWizardPage() {
               </label>
             </FlowCard>
           ) : (
-            <FlowCard className="flex items-center gap-3">
-              <Image src="/assets/crypto/pi.png" alt="" width={44} height={44} className="rounded-full" />
-              <p className="text-sm font-bold text-[color:var(--fd-text)]">Pi · {t("deposit_network_pi_main")}</p>
+            <FlowCard>
+              <div className="mb-3 flex items-center gap-3">
+                <Image src="/assets/crypto/pi.png" alt="" width={44} height={44} className="rounded-full" />
+                <p className="text-sm font-bold text-[color:var(--fd-text)]">
+                  Pi · {t("deposit_network_pi_main")}
+                </p>
+              </div>
+              <label className="block">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+                  {t("deposit_declared_amount_pi_label")}
+                </span>
+                <input
+                  value={declaredAmountPi}
+                  onChange={(e) => setDeclaredAmountPi(e.target.value)}
+                  inputMode="decimal"
+                  placeholder="10"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-lg font-bold tabular-nums text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+                  {t("deposit_pi_memo_label")}
+                </span>
+                <input
+                  value={userNote}
+                  onChange={(e) => setUserNote(e.target.value)}
+                  placeholder={t("deposit_pi_memo_placeholder")}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+                />
+              </label>
             </FlowCard>
           )}
 
@@ -267,7 +301,10 @@ export default function DepositWizardPage() {
               (asset === "PI" && enabledPi !== true) ||
               (asset === "USDT" &&
                 (!declaredAmountUsdt.trim() ||
-                  Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0))
+                  Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0)) ||
+              (asset === "PI" &&
+                (!declaredAmountPi.trim() ||
+                  Number(declaredAmountPi.trim().replace(",", ".")) <= 0))
             }
             onClick={() => void createIntent()}
           >

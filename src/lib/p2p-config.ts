@@ -47,7 +47,8 @@ export function isP2pFiat(s: string): s is P2pFiatCurrency {
  * Override with `NEXT_PUBLIC_P2P_QUOTE_FIATS` (comma-separated ISO codes).
  * Set to `ALL`, `FULL`, or `*` to allow every {@link P2P_FIAT_CURRENCIES} code again.
  */
-const P2P_QUOTE_FIAT_DEFAULT: P2pFiatCurrency[] = ["CDF", "USD", "USDT", "PI"];
+/** Fiat off-platform only — no PI/USDT ⇄ USDT/PI swap ads on P2P. */
+const P2P_QUOTE_FIAT_DEFAULT: P2pFiatCurrency[] = ["CDF", "USD"];
 
 export function p2pQuoteFiatRestrictionEnabled(): boolean {
   const raw = process.env.NEXT_PUBLIC_P2P_QUOTE_FIATS?.trim();
@@ -84,6 +85,25 @@ export function isP2pCryptoQuoteCurrency(code: string): boolean {
   return c === "USDT" || c === "PI";
 }
 
+/** P2P marketplace excludes on-platform crypto↔crypto quote pairs. */
+export function p2pCryptoQuotePairsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_P2P_CRYPTO_QUOTES === "1";
+}
+
+export function p2pBoostFeeUsdt(): number {
+  const n = Number(
+    process.env.NEXT_PUBLIC_P2P_BOOST_FEE_USDT ??
+      process.env.P2P_BOOST_FEE_USDT ??
+      "1",
+  );
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+export function p2pBoostDurationDays(): number {
+  const n = Number(process.env.P2P_BOOST_DAYS ?? "7");
+  return Number.isFinite(n) && n >= 1 ? Math.min(90, Math.floor(n)) : 7;
+}
+
 /** ISO 3166-1 alpha-2 — primary corridors McBuleli serves first. */
 export const P2P_COUNTRY_CODES = [
   "CD",
@@ -116,6 +136,20 @@ export function p2pFeeBpsConfigured(): number {
   const n = Number(process.env.P2P_FEE_BPS ?? "0");
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.min(500, Math.floor(n));
+}
+
+/** USDT debited when publishing any P2P ad (platform fee; fiat leg is off-platform). */
+export function p2pListingFeeAmount(): number {
+  const n = Number(
+    process.env.NEXT_PUBLIC_P2P_LISTING_FEE_USDT ??
+      process.env.P2P_LISTING_FEE_USDT ??
+      "0.25",
+  );
+  return Number.isFinite(n) && n > 0 ? n : 0.25;
+}
+
+export function p2pListingFeeAsset(): P2pCryptoAsset {
+  return "USDT";
 }
 
 export function minCryptoForAsset(asset: P2pCryptoAsset): number {

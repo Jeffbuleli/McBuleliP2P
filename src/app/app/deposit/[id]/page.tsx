@@ -205,6 +205,22 @@ export default function DepositDetailPage() {
         </button>
       </FlowCard>
 
+      {deposit.declaredAmountUsdt && deposit.asset === "PI" ? (
+        <FlowCard className="mt-3">
+          <p className="text-xs font-bold text-[color:var(--fd-muted)]">
+            {t("deposit_declared_amount_pi_label")}
+          </p>
+          <p className="mt-1 text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
+            {deposit.declaredAmountUsdt} π
+          </p>
+          {deposit.userNote ? (
+            <p className="mt-2 text-sm text-[color:var(--fd-muted)]">
+              {t("deposit_pi_memo_label")}: {deposit.userNote}
+            </p>
+          ) : null}
+        </FlowCard>
+      ) : null}
+
       {deposit.memoShown ? (
         <FlowCard className="mt-3 border-rose-200 bg-rose-50/50">
           <p className="text-xs font-bold text-rose-900">{t("deposit_memo_title")}</p>

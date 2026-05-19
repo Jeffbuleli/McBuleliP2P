@@ -30,7 +30,7 @@ import {
 import { P2pProofPreview } from "@/components/p2p/p2p-proof-preview";
 import { prepareP2pProofFile } from "@/lib/p2p-proof-image";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
-import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
+import { P2pOrderChat, type P2pChatMessage } from "@/components/p2p/p2p-order-chat";
 
 type OrderDetail = {
   id: string;
@@ -69,18 +69,6 @@ type OrderDetail = {
   viewerAvatarUrl?: string | null;
 };
 
-type ChatMsg = {
-  id: string;
-  body: string;
-  createdAt: string;
-  senderMasked: string;
-  senderRole: string;
-  senderAvatarUrl?: string | null;
-  own: boolean;
-};
-
-const FIXED_BOTTOM_OFFSET = "bottom-[calc(4.35rem+env(safe-area-inset-bottom))]";
-
 export function P2pOrderScreen() {
   const params = useParams();
   const orderId = typeof params.orderId === "string" ? params.orderId : "";
@@ -97,7 +85,7 @@ export function P2pOrderScreen() {
   const [proofOk, setProofOk] = useState(false);
   const [disputeText, setDisputeText] = useState("");
   const [nowTick, setNowTick] = useState(0);
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [messages, setMessages] = useState<P2pChatMessage[]>([]);
   const [chatDraft, setChatDraft] = useState("");
   const chatListRef = useCallback((el: HTMLDivElement | null) => {
     if (!el) return;
@@ -136,7 +124,7 @@ export function P2pOrderScreen() {
     const res = await fetch(`/api/p2p/orders/${orderId}/messages`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return;
-    setMessages((data.messages as ChatMsg[]) ?? []);
+    setMessages((data.messages as P2pChatMessage[]) ?? []);
   }, [orderId]);
 
   useEffect(() => {
@@ -260,7 +248,7 @@ export function P2pOrderScreen() {
     if (!text) return;
     setBusy(true);
     try {
-      const optimistic: ChatMsg = {
+      const optimistic: P2pChatMessage = {
         id: `tmp_${Date.now()}`,
         body: text,
         createdAt: new Date().toISOString(),
@@ -563,125 +551,39 @@ export function P2pOrderScreen() {
       ) : null}
 
       {!showStickyChat && messages.length > 0 ? (
-        <section className="mt-8 rounded-2xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900">
-          <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-50">{t("p2p_chat_title")}</h2>
-          <ul className="mt-2 max-h-40 space-y-2 overflow-y-auto text-xs">
-            {messages.map((m) => (
-              <li
-                key={m.id}
-                className={`rounded-lg px-2 py-1.5 ${
-                  m.own ? "bg-emerald-50 text-right dark:bg-emerald-950/40" : "bg-stone-100 dark:bg-stone-800"
-                }`}
-              >
-                <div
-                  className={`flex items-start gap-2 ${m.own ? "flex-row-reverse" : ""}`}
-                >
-                  <ChatAvatarBubble
-                    label={m.senderMasked}
-                    avatarUrl={m.senderAvatarUrl}
-                    own={m.own}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-medium text-stone-600 dark:text-stone-400">
-                        {m.senderMasked}
-                        {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                          <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
-                            Support
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="text-[10px] text-stone-400">
-                        {new Date(m.createdAt).toLocaleTimeString(loc, {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 whitespace-pre-wrap text-stone-900 dark:text-stone-100">
-                      {m.body}
-                    </p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs text-stone-500">{t("p2p_chat_closed")}</p>
-        </section>
+        <P2pOrderChat
+          messages={messages}
+          draft={chatDraft}
+          onDraftChange={setChatDraft}
+          onSend={() => void sendChat()}
+          busy={busy}
+          canSend={false}
+          locale={locale}
+          title={t("p2p_chat_title")}
+          placeholder={t("p2p_chat_placeholder")}
+          sendLabel={t("p2p_chat_send")}
+          closedHint={t("p2p_chat_closed")}
+        />
       ) : null}
 
       </P2pFlowShell>
 
       {showStickyChat ? (
-        <div
-          className={`fixed left-1/2 z-40 w-full max-w-lg -translate-x-1/2 px-4 ${FIXED_BOTTOM_OFFSET}`}
-          aria-label={t("p2p_chat_title")}
-        >
-          <div className="rounded-t-2xl border border-stone-200 bg-white/98 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-950/98">
-            <div id="p2p-chat-scroll" ref={chatListRef} className="max-h-36 space-y-2 overflow-y-auto px-3 pt-3">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`rounded-lg px-2 py-1.5 text-xs ${
-                    m.own ? "ml-6 bg-emerald-50 text-right dark:bg-emerald-950/40" : "mr-6 bg-stone-100 dark:bg-stone-800"
-                  }`}
-                >
-                  <div
-                    className={`flex items-start gap-2 ${m.own ? "flex-row-reverse" : ""}`}
-                  >
-                    <ChatAvatarBubble
-                      label={m.senderMasked}
-                      avatarUrl={m.senderAvatarUrl}
-                      own={m.own}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-medium text-stone-600 dark:text-stone-400">
-                          {m.senderMasked}
-                          {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                            <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-200">
-                              Support
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="text-[10px] text-stone-400">
-                          {new Date(m.createdAt).toLocaleTimeString(loc, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 whitespace-pre-wrap text-stone-900 dark:text-stone-100">
-                        {m.body}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 border-t border-stone-100 p-3 dark:border-stone-800">
-              <input
-                value={chatDraft}
-                onChange={(e) => setChatDraft(e.target.value)}
-                placeholder={t("p2p_chat_placeholder")}
-                className="min-w-0 flex-1 rounded-xl border border-stone-300 px-3 py-2.5 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
-              />
-              <button
-                type="button"
-                disabled={busy || !chatDraft.trim()}
-                onClick={() => void sendChat()}
-                className="shrink-0 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"
-              >
-                {t("p2p_chat_send")}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : messages.length === 0 ? (
-        <section className="mt-8 rounded-2xl border border-stone-200 bg-white p-3 opacity-90 dark:border-stone-700 dark:bg-stone-900">
-          <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-50">{t("p2p_chat_title")}</h2>
-          <p className="mt-2 text-xs text-stone-500">{t("p2p_chat_closed")}</p>
-        </section>
+        <P2pOrderChat
+          messages={messages}
+          draft={chatDraft}
+          onDraftChange={setChatDraft}
+          onSend={() => void sendChat()}
+          busy={busy}
+          canSend
+          locale={locale}
+          title={t("p2p_chat_title")}
+          placeholder={t("p2p_chat_placeholder")}
+          sendLabel={t("p2p_chat_send")}
+          closedHint={t("p2p_chat_closed")}
+          sticky
+          listRef={chatListRef}
+        />
       ) : null}
 
       <P2pConfirmDialog

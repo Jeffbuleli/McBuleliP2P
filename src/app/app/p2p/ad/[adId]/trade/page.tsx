@@ -23,7 +23,7 @@ import {
 } from "@/lib/p2p-config";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { p2pTradePreviewSteps } from "@/lib/p2p-progress-steps";
-import { minQuoteAmountForAd, p2pFlowHint, p2pTakerFlowHintKey } from "@/lib/p2p-ui";
+import { p2pAdTradeLimits, p2pFlowHint, p2pTakerFlowHintKey } from "@/lib/p2p-ui";
 
 type AdDetail = {
   id: string;
@@ -87,9 +87,9 @@ export default function P2pTradePage() {
     return c.toLocaleString(locNum, { maximumFractionDigits: 12 });
   }, [ad, fiatAmount, locNum]);
 
-  const minQuote = useMemo(() => {
+  const tradeLimits = useMemo(() => {
     if (!ad) return null;
-    return minQuoteAmountForAd(asset, ad.price);
+    return p2pAdTradeLimits(ad, asset);
   }, [ad, asset]);
 
   const errMsg = useMemo(() => {
@@ -179,21 +179,40 @@ export default function P2pTradePage() {
                 </span>
               ) : null}
             </p>
-            <p className="text-[10px] text-[color:var(--fd-muted)]">
-              {Number(ad.minFiat).toLocaleString(locNum)} — {Number(ad.maxFiat).toLocaleString(locNum)}{" "}
-              {ad.fiatCurrency}
-            </p>
+            {tradeLimits ? (
+              <>
+                <p className="text-xs font-semibold tabular-nums text-[color:var(--fd-text)]">
+                  {interpolate(t("p2p_trade_limits_line"), {
+                    min: tradeLimits.effectiveMin.toLocaleString(locNum, {
+                      maximumFractionDigits: 2,
+                    }),
+                    max: tradeLimits.maxAd.toLocaleString(locNum, {
+                      maximumFractionDigits: 2,
+                    }),
+                    quote: ad.fiatCurrency,
+                  })}
+                </p>
+                {tradeLimits.effectiveMin > tradeLimits.minAd + 1e-9 ? (
+                  <p className="text-[10px] text-[color:var(--fd-muted)]">
+                    {interpolate(t("p2p_trade_platform_min_note"), {
+                      amount: tradeLimits.platformMin.toLocaleString(locNum, {
+                        maximumFractionDigits: 2,
+                      }),
+                      quote: ad.fiatCurrency,
+                      asset,
+                    })}
+                  </p>
+                ) : null}
+                {tradeLimits.untradeable ? (
+                  <p className="text-[10px] font-semibold text-rose-700">
+                    {t("p2p_trade_limits_invalid")}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
             {cryptoQuote ? (
               <p className="text-[10px] text-[color:var(--fd-primary)]">
                 {interpolate(t("p2p_crypto_quote_take_hint"), { quote: ad.fiatCurrency })}
-              </p>
-            ) : null}
-            {minQuote != null ? (
-              <p className="text-[10px] text-amber-700">
-                {interpolate(t("p2p_trade_min_quote"), {
-                  amount: minQuote.toLocaleString(locNum, { maximumFractionDigits: 4 }),
-                  quote: ad.fiatCurrency,
-                })}
               </p>
             ) : null}
           </div>
@@ -215,7 +234,10 @@ export default function P2pTradePage() {
 
       {errMsg ? <FlowError>{errMsg}</FlowError> : null}
 
-      <FlowPrimaryBtn disabled={loading || !fiatAmount.trim()} onClick={() => void confirm()}>
+      <FlowPrimaryBtn
+        disabled={loading || !fiatAmount.trim() || tradeLimits?.untradeable === true}
+        onClick={() => void confirm()}
+      >
         {loading ? "…" : t("p2p_order_start")}
       </FlowPrimaryBtn>
     </P2pFlowShell>

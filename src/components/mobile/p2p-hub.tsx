@@ -4,24 +4,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
-import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
-import {
-  piAuthenticateForPayments,
-  piInit,
-  resolvePiSdkSandbox,
-} from "@/lib/pi-browser";
+import { clientErrorText } from "@/lib/client-error-text";
+import { p2pBoostFeeUsdt } from "@/lib/p2p-config";
 import { P2pHubHeader } from "@/components/p2p/p2p-hub-header";
 import { P2pMarketAdCard } from "@/components/p2p/p2p-market-ad-card";
 import { P2pMyAdCard } from "@/components/p2p/p2p-my-ad-card";
 import { P2pOrderListRow } from "@/components/p2p/p2p-order-list-row";
 import {
   FlowField,
-  FlowInput,
+  FlowMarketViewTabs,
   FlowPrimaryBtn,
   FlowSection,
   FlowSelect,
   FlowTabBar,
 } from "@/components/p2p/p2p-flow-ui";
+import type { P2pMarketView, P2pPaymentKindFilter } from "@/lib/p2p-market-view";
 import {
   P2P_COUNTRY_CODES,
   p2pAllowedQuoteFiats,
@@ -97,11 +94,11 @@ export function P2PHub() {
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, []);
 
+  const [marketView, setMarketView] = useState<P2pMarketView>("buy");
+  const [paymentKind, setPaymentKind] = useState<P2pPaymentKindFilter>("all");
   const [asset, setAsset] = useState<P2pCryptoAsset | "">("");
   const [fiat, setFiat] = useState("");
-  const [side, setSide] = useState<P2pSide | "">("");
   const [country, setCountry] = useState("");
-  const [paymentContains, setPaymentContains] = useState("");
   const [boostedOnly, setBoostedOnly] = useState(false);
   const [trustedOnly, setTrustedOnly] = useState(false);
   const [marketAds, setMarketAds] = useState<MarketAd[] | null>(null);
@@ -115,11 +112,11 @@ export function P2PHub() {
     setLoading(true);
     try {
       const q = new URLSearchParams();
+      q.set("view", marketView);
       if (asset) q.set("asset", asset);
       if (fiat) q.set("fiat", fiat);
-      if (side) q.set("side", side);
       if (country) q.set("country", country);
-      if (paymentContains.trim()) q.set("payment", paymentContains.trim());
+      if (paymentKind !== "all") q.set("paymentKind", paymentKind);
       if (boostedOnly) q.set("boosted", "1");
       if (trustedOnly) q.set("trusted", "1");
       const res = await fetch(`/api/p2p/market?${q.toString()}`);
@@ -132,7 +129,7 @@ export function P2PHub() {
     } finally {
       setLoading(false);
     }
-  }, [asset, fiat, side, country, paymentContains, boostedOnly, trustedOnly]);
+  }, [asset, fiat, marketView, country, paymentKind, boostedOnly, trustedOnly]);
 
   const loadAds = useCallback(async () => {
     const res = await fetch("/api/p2p/ads");
@@ -144,122 +141,26 @@ export function P2PHub() {
     setMyAds(data.ads as MyAd[]);
   }, []);
 
-  const boostAmount = useMemo(
-    () => Number(process.env.NEXT_PUBLIC_PI_P2P_BOOST_AMOUNT ?? "0.1"),
-    [],
-  );
+  const boostFeeUsdt = useMemo(() => p2pBoostFeeUsdt(), []);
 
   async function boostAd(adId: string) {
     setBoostMsg(null);
     setBoostBusyId(adId);
     try {
-      const Pi = await piInit();
-      if (typeof Pi.createPayment !== "function") {
-        setBoostMsg(t("pi_pay_no_sdk"));
+      const res = await fetch(`/api/p2p/ads/${adId}/boost`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err =
+          typeof data.error === "string" ? data.error : "p2p_boost_failed";
+        setBoostMsg(clientErrorText(t, err));
         return;
       }
-      await piAuthenticateForPayments(Pi);
-
-      const memo = t("p2p_boost_memo");
-      const amountStr = String(boostAmount);
-      Pi.createPayment!(
-        {
-          amount: boostAmount,
-          memo,
-          metadata: { action: "p2p_ad_boost", adId },
-        },
-        {
-          onReadyForServerApproval: async (paymentId: string) => {
-            const initRes = await fetchWithDeadline(
-              "/api/payments/pi/u2a/init",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  paymentId,
-                  action: "p2p_ad_boost",
-                  actionRefId: adId,
-                  amount: amountStr,
-                  memo,
-                  meta: { source: "p2p_hub" },
-                  sandbox: resolvePiSdkSandbox(),
-                }),
-                credentials: "same-origin",
-              },
-              28_000,
-            );
-            if (!initRes.ok) {
-              const d = await initRes.json().catch(() => ({}));
-              throw new Error(
-                typeof d === "object" &&
-                  d !== null &&
-                  "message" in d &&
-                  typeof (d as { message: unknown }).message === "string"
-                  ? (d as { message: string }).message
-                  : "init_failed",
-              );
-            }
-
-            const res = await fetchWithDeadline(
-              "/api/payments/pi/approve",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentId }),
-                credentials: "same-origin",
-              },
-              45_000,
-            );
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              throw new Error(
-                typeof data === "object" &&
-                  data !== null &&
-                  "message" in data &&
-                  typeof (data as { message: unknown }).message === "string"
-                  ? (data as { message: string }).message
-                  : "approve_failed",
-              );
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            const res = await fetchWithDeadline(
-              "/api/payments/pi/complete",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentId, txid }),
-                credentials: "same-origin",
-              },
-              45_000,
-            );
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              throw new Error(
-                typeof data === "object" &&
-                  data !== null &&
-                  "message" in data &&
-                  typeof (data as { message: unknown }).message === "string"
-                  ? (data as { message: string }).message
-                  : "complete_failed",
-              );
-            }
-            setBoostMsg(t("p2p_boost_success"));
-            void loadAds();
-            void loadMarket();
-          },
-          onCancel: () => {
-            setBoostMsg(t("pi_pay_cancelled"));
-          },
-          onError: (err: Error) => {
-            setBoostMsg(`${t("pi_pay_failed")}: ${err?.message ?? String(err)}`);
-          },
-        },
-      );
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : typeof e === "string" ? e : null;
-      setBoostMsg(msg ? `Pi: ${msg}` : t("pi_pay_failed"));
+      setBoostMsg(t("p2p_boost_success"));
+      void loadAds();
+      void loadMarket();
     } finally {
       setBoostBusyId(null);
     }
@@ -278,6 +179,12 @@ export function P2PHub() {
   useEffect(() => {
     if (tab === "market") void loadMarket();
   }, [tab, loadMarket]);
+
+  useEffect(() => {
+    if (marketView === "sell" && (fiat === "USDT" || fiat === "PI")) {
+      setFiat("");
+    }
+  }, [marketView, fiat]);
 
   useEffect(() => {
     if (tab === "ads") void loadAds();
@@ -325,6 +232,32 @@ export function P2PHub() {
 
       {tab === "market" ? (
         <div className="space-y-3">
+          <FlowMarketViewTabs
+            value={marketView}
+            onChange={setMarketView}
+            buyLabel={t("p2p_market_tab_buy")}
+            sellLabel={t("p2p_market_tab_sell")}
+          />
+
+          <p
+            className={`rounded-2xl px-3 py-2 text-[11px] leading-snug ${
+              marketView === "buy"
+                ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)]"
+            }`}
+          >
+            {marketView === "buy" ? t("p2p_market_buy_hint") : t("p2p_market_sell_hint")}
+          </p>
+
+          <Link
+            href={`/app/p2p/ad/new?view=${marketView}`}
+            className={`flex min-h-[48px] w-full items-center justify-center rounded-2xl text-sm font-bold active:scale-[0.98] ${
+              marketView === "buy" ? "fd-btn-soft" : "fd-btn-sell"
+            }`}
+          >
+            {marketView === "buy" ? t("p2p_post_market_buy") : t("p2p_post_market_sell")}
+          </Link>
+
           <FlowSection title={t("p2p_hub_filters")}>
             <div className="grid grid-cols-2 gap-2">
               <FlowField label={t("p2p_filter_asset")}>
@@ -340,40 +273,59 @@ export function P2PHub() {
               <FlowField label={t("p2p_filter_quote")}>
                 <FlowSelect value={fiat} onChange={(e) => setFiat(e.target.value)}>
                   <option value="">{t("p2p_filter_all")}</option>
-                  {p2pAllowedQuoteFiats().map((f) => (
+                  {(marketView === "sell"
+                    ? p2pAllowedQuoteFiats().filter((f) => f !== "USDT" && f !== "PI")
+                    : p2pAllowedQuoteFiats()
+                  ).map((f) => (
                     <option key={f} value={f}>
                       {f}
                     </option>
                   ))}
                 </FlowSelect>
               </FlowField>
-              <FlowField label={t("p2p_filter_side")}>
-                <FlowSelect
-                  value={side}
-                  onChange={(e) => setSide(e.target.value as P2pSide | "")}
-                >
-                  <option value="">{t("p2p_filter_all")}</option>
-                  <option value="sell">{t("p2p_side_sell")}</option>
-                  <option value="buy">{t("p2p_side_buy")}</option>
-                </FlowSelect>
-              </FlowField>
-              <FlowField label={t("p2p_filter_country")}>
-                <FlowSelect value={country} onChange={(e) => setCountry(e.target.value)}>
-                  <option value="">{t("p2p_filter_all")}</option>
-                  {P2P_COUNTRY_CODES.map((c) => (
-                    <option key={c} value={c}>
-                      {countryLabel(locale, c)}
-                    </option>
-                  ))}
-                </FlowSelect>
-              </FlowField>
+              <div className="col-span-2">
+                <FlowField label={t("p2p_filter_country")}>
+                  <FlowSelect value={country} onChange={(e) => setCountry(e.target.value)}>
+                    <option value="">{t("p2p_filter_all")}</option>
+                    {P2P_COUNTRY_CODES.map((c) => (
+                      <option key={c} value={c}>
+                        {countryLabel(locale, c)}
+                      </option>
+                    ))}
+                  </FlowSelect>
+                </FlowField>
+              </div>
             </div>
-            <FlowField label={t("p2p_filter_payment")} hint={t("p2p_filter_payment_hint")}>
-              <FlowInput
-                type="search"
-                value={paymentContains}
-                onChange={(e) => setPaymentContains(e.target.value)}
-              />
+            <FlowField label={t("p2p_filter_payment_kind")}>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    { id: "all" as const, label: t("p2p_payment_kind_all") },
+                    { id: "mobile" as const, label: t("p2p_payment_kind_mobile") },
+                    { id: "bank" as const, label: t("p2p_payment_kind_bank") },
+                  ] as const
+                ).map((chip) => {
+                  const on = paymentKind === chip.id;
+                  const accent =
+                    marketView === "buy"
+                      ? on
+                        ? "bg-[color:var(--fd-primary)] text-white ring-[color:var(--fd-primary)]"
+                        : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]"
+                      : on
+                        ? "bg-[color:var(--fd-sell)] text-white ring-[color:var(--fd-sell)]"
+                        : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]";
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => setPaymentKind(chip.id)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${accent}`}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
             </FlowField>
           </FlowSection>
 
@@ -398,7 +350,9 @@ export function P2PHub() {
               onClick={() => setTrustedOnly((v) => !v)}
               className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
                 trustedOnly
-                  ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-[color:var(--fd-primary)]/30"
+                  ? marketView === "buy"
+                    ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-[color:var(--fd-primary)]/30"
+                    : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)] ring-[color:var(--fd-sell)]/30"
                   : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]"
               }`}
             >
@@ -411,7 +365,13 @@ export function P2PHub() {
           ) : (
             <ul className="space-y-3">
               {marketAds.map((a) => (
-                <P2pMarketAdCard key={a.id} ad={a} locale={locale} fmt={fmt} />
+                <P2pMarketAdCard
+                  key={a.id}
+                  ad={a}
+                  locale={locale}
+                  fmt={fmt}
+                  marketView={marketView}
+                />
               ))}
             </ul>
           )}

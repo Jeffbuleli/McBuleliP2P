@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -19,8 +19,14 @@ import {
 import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
+  makerSideForMarketView,
+  type P2pMarketView,
+} from "@/lib/p2p-market-view";
+import {
   P2P_COUNTRY_CODES,
   p2pAllowedQuoteFiats,
+  p2pListingFeeAmount,
+  p2pListingFeeAsset,
   type P2pCryptoAsset,
   type P2pFiatCurrency,
   type P2pSide,
@@ -31,10 +37,28 @@ type PaymentDef = { code: string; label: string };
 export default function P2pNewAdPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
-  const [side, setSide] = useState<P2pSide>("sell");
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const lockedView: P2pMarketView | null =
+    viewParam === "buy" || viewParam === "sell" ? viewParam : null;
+  const [side, setSide] = useState<P2pSide>(() =>
+    lockedView ? makerSideForMarketView(lockedView) : "sell",
+  );
   const [asset, setAsset] = useState<P2pCryptoAsset>("USDT");
-  const quoteFiats = p2pAllowedQuoteFiats();
+  const quoteFiats = useMemo(
+    () => p2pAllowedQuoteFiats().filter((f) => f !== "USDT" && f !== "PI"),
+    [],
+  );
   const [fiat, setFiat] = useState<P2pFiatCurrency>(() => quoteFiats[0] ?? "CDF");
+  const listingFee = p2pListingFeeAmount();
+  const listingFeeAsset = p2pListingFeeAsset();
+  const isBuyMarketPost = lockedView === "buy" || (!lockedView && side === "sell");
+
+  useEffect(() => {
+    if (lockedView) {
+      setSide(makerSideForMarketView(lockedView));
+    }
+  }, [lockedView]);
 
   useEffect(() => {
     if (
@@ -59,7 +83,7 @@ export default function P2pNewAdPage() {
   const [loading, setLoading] = useState(false);
   const [balUsdt, setBalUsdt] = useState<number | null>(null);
   const [balPi, setBalPi] = useState<number | null>(null);
-  const cryptoQuote = fiat === "USDT" || fiat === "PI";
+  const cryptoQuote = false;
 
   useEffect(() => {
     let cancelled = false;
@@ -220,18 +244,48 @@ export default function P2pNewAdPage() {
         ? paymentCodes.length === 0 || missingProfileCodes.length > 0
         : paymentMethods.trim().length < 3));
 
+  const pageTitle = lockedView === "buy"
+    ? t("p2p_post_title_buy")
+    : lockedView === "sell"
+      ? t("p2p_post_title_sell")
+      : t("p2p_post_title");
+  const pageSubtitle = lockedView === "buy"
+    ? t("p2p_post_subtitle_buy")
+    : lockedView === "sell"
+      ? t("p2p_post_subtitle_sell")
+      : t("p2p_post_subtitle");
+
   return (
-    <P2pFlowShell title={t("p2p_post_title")} subtitle={t("p2p_post_subtitle")}>
-      <FlowSection title={t("p2p_side_label")}>
-        <FlowSegment
-          value={side}
-          onChange={setSide}
-          options={[
-            { id: "buy" as const, label: t("p2p_side_buy") },
-            { id: "sell" as const, label: t("p2p_side_sell") },
-          ]}
-        />
-      </FlowSection>
+    <P2pFlowShell title={pageTitle} subtitle={pageSubtitle}>
+      <p
+        className={`rounded-2xl px-3 py-2 text-[11px] leading-snug ${
+          isBuyMarketPost
+            ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+            : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)]"
+        }`}
+      >
+        {isBuyMarketPost ? t("p2p_market_buy_hint") : t("p2p_market_sell_hint")}
+      </p>
+
+      <p className="rounded-2xl border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[11px] text-[color:var(--fd-muted)]">
+        {t("p2p_listing_fee_note", {
+          amount: listingFee,
+          asset: listingFeeAsset,
+        })}
+      </p>
+
+      {!lockedView ? (
+        <FlowSection title={t("p2p_side_label")}>
+          <FlowSegment
+            value={side}
+            onChange={setSide}
+            options={[
+              { id: "buy" as const, label: t("p2p_side_buy") },
+              { id: "sell" as const, label: t("p2p_side_sell") },
+            ]}
+          />
+        </FlowSection>
+      ) : null}
 
       <FlowSection title={t("p2p_asset_label")}>
         <FlowField label={t("p2p_asset_label")}>
@@ -333,7 +387,11 @@ export default function P2pNewAdPage() {
         </FlowError>
       ) : null}
 
-      <FlowPrimaryBtn disabled={publishDisabled} onClick={() => void submit()}>
+      <FlowPrimaryBtn
+        disabled={publishDisabled}
+        onClick={() => void submit()}
+        variant={isBuyMarketPost ? "primary" : "sell"}
+      >
         {loading ? "…" : t("p2p_create_ad")}
       </FlowPrimaryBtn>
     </P2pFlowShell>

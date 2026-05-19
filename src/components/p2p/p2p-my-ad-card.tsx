@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useI18n } from "@/components/i18n-provider";
+import { interpolate } from "@/i18n/messages";
 import { P2pIconEscrow } from "@/components/p2p/p2p-icons";
+import { p2pBoostFeeUsdt } from "@/lib/p2p-config";
 
 const ASSET_ICON: Record<string, string> = {
   USDT: "/assets/crypto/usdt.png",
@@ -113,7 +115,9 @@ export function P2pMyAdCard({
               onClick={onBoost}
               className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 disabled:opacity-60"
             >
-              {boostBusy ? t("p2p_boost_busy") : t("p2p_boost")}
+              {boostBusy
+                ? t("p2p_boost_busy")
+                : interpolate(t("p2p_boost_usdt_note"), { amount: p2pBoostFeeUsdt() })}
             </button>
           ) : null}
           {ad.status === "paused" ? (

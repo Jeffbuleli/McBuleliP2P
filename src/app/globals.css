@@ -280,6 +280,9 @@ html {
   --fd-mint: #eef3ef;
   --fd-mint-deep: #e2ebe4;
   --fd-border: rgba(61, 95, 66, 0.11);
+  --fd-sell: var(--fd-brown);
+  --fd-sell-mint: #f5ebe0;
+  --fd-sell-deep: #e8d5c4;
 }
 .p2p-theme .fd-card,
 .wallet-theme.p2p-theme .fd-card {
@@ -296,6 +299,14 @@ html {
 }
 .p2p-theme .fd-btn-soft:active {
   box-shadow: 0 1px 4px rgba(61, 95, 66, 0.14);
+}
+.p2p-theme .fd-btn-sell {
+  background: var(--fd-sell);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(120, 53, 15, 0.22);
+}
+.p2p-theme .fd-btn-sell:active {
+  box-shadow: 0 1px 4px rgba(120, 53, 15, 0.16);
 }
 .home-theme .wallet-hero,
 .wallet-theme .wallet-hero {

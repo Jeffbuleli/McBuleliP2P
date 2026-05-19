@@ -21,6 +21,11 @@ import {
   paymentWindowMinutes,
   p2pAllowedQuoteFiats,
   p2pFeeBpsConfigured,
+  p2pBoostDurationDays,
+  p2pBoostFeeUsdt,
+  p2pCryptoQuotePairsEnabled,
+  p2pListingFeeAmount,
+  p2pListingFeeAsset,
   p2pQuoteFiatRestrictionEnabled,
   type P2pAdStatus,
   type P2pCryptoAsset,
@@ -30,6 +35,10 @@ import {
 import { fmtWalletAmount, numFromNumeric, type WalletAsset } from "@/lib/wallet-types";
 import { maskTraderEmail, p2pDisplayName } from "@/lib/p2p-display";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
+import {
+  adMatchesPaymentKind,
+  type P2pPaymentKindFilter,
+} from "@/lib/p2p-market-view";
 
 const AD_ACTIVE = "active";
 const AD_PAUSED = "paused";
@@ -506,6 +515,8 @@ export async function listMarketAds(filters: {
   side?: P2pSide;
   country?: string;
   paymentContains?: string;
+  paymentKind?: P2pPaymentKindFilter;
+  fiatQuotesOnly?: boolean;
   boostedOnly?: boolean;
   trustedOnly?: boolean;
 }): Promise<
@@ -518,6 +529,7 @@ export async function listMarketAds(filters: {
     minFiat: string;
     maxFiat: string;
     paymentMethods: string;
+    paymentMethodCodes: string[] | null;
     terms: string | null;
     countryCode: string | null;
     createdAt: string;
@@ -537,6 +549,9 @@ export async function listMarketAds(filters: {
   if (filters.asset) cond.push(eq(p2pAds.asset, filters.asset));
   if (filters.fiat) cond.push(eq(p2pAds.fiatCurrency, filters.fiat));
   if (filters.side) cond.push(eq(p2pAds.side, filters.side));
+  if (filters.fiatQuotesOnly || !p2pCryptoQuotePairsEnabled()) {
+    cond.push(sql`${p2pAds.fiatCurrency} not in ('USDT', 'PI')`);
+  }
   if (filters.country) {
     cond.push(eq(p2pAds.countryCode, effectiveP2pCountryCode(filters.country)));
   }
@@ -572,6 +587,7 @@ export async function listMarketAds(filters: {
     minFiat: ad.minFiat.toString(),
     maxFiat: ad.maxFiat.toString(),
     paymentMethods: ad.paymentMethods,
+    paymentMethodCodes: (ad.paymentMethodCodes as string[] | null) ?? null,
     terms: ad.terms,
     countryCode: ad.countryCode,
     createdAt: ad.createdAt.toISOString(),
@@ -582,11 +598,18 @@ export async function listMarketAds(filters: {
     boostAmountPi: ad.boostAmountPi.toString(),
   }));
 
+  const kindFiltered =
+    filters.paymentKind && filters.paymentKind !== "all"
+      ? mapped.filter((a) =>
+          adMatchesPaymentKind(a.paymentMethodCodes, a.paymentMethods, filters.paymentKind!),
+        )
+      : mapped;
+
   const trustedMinAvg = Number(process.env.P2P_TRUSTED_MIN_AVG ?? "4.5");
   const trustedMinCount = Number(process.env.P2P_TRUSTED_MIN_COUNT ?? "10");
 
   const filtered = filters.trustedOnly
-    ? mapped.filter((a) => {
+    ? kindFiltered.filter((a) => {
         const r = a.makerRating;
         return (
           r != null &&
@@ -596,7 +619,7 @@ export async function listMarketAds(filters: {
           r.count >= trustedMinCount
         );
       })
-    : mapped;
+    : kindFiltered;
 
   // Score-based sort: Boost + Trust + Price + Freshness.
   const prices = filtered
@@ -760,9 +783,35 @@ export async function createAd(args: {
     return { ok: false, message: "p2p_quote_fiat_not_allowed" };
   }
   const isCryptoQuote = isP2pCryptoQuoteCurrency(args.fiatCurrency);
+  if (isCryptoQuote && !p2pCryptoQuotePairsEnabled()) {
+    return { ok: false, message: "p2p_crypto_pairs_disabled" };
+  }
+  if (args.side === "buy" && isCryptoQuote) {
+    return { ok: false, message: "p2p_buy_ad_fiat_only" };
+  }
+  const platMinFiat = minCryptoForAsset(args.asset) * price;
+  if (!isCryptoQuote && minF + 1e-12 < platMinFiat) {
+    return { ok: false, message: "p2p_min_below_platform" };
+  }
   const pm = args.paymentMethods.trim();
   if (!isCryptoQuote && pm.length < 3) {
     return { ok: false, message: "p2p_payment_methods_required" };
+  }
+
+  const listingFee = fmtWalletAmount(p2pListingFeeAmount());
+  const listingFeeNum = Number(listingFee);
+  if (listingFeeNum > 0) {
+    const dbCheck = getDb();
+    const [urow] = await dbCheck
+      .select({ balance: users.balance })
+      .from(users)
+      .where(eq(users.id, args.userId))
+      .limit(1);
+    if (!urow) return { ok: false, message: "wallet_not_found" };
+    const feeBal = numFromNumeric(String(urow.balance));
+    if (feeBal + 1e-18 < listingFeeNum) {
+      return { ok: false, message: "p2p_listing_fee_insufficient" };
+    }
   }
 
   if (args.side === "sell") {
@@ -805,6 +854,22 @@ export async function createAd(args: {
   const now = new Date();
   try {
     const [row] = await db.transaction(async (tx) => {
+      if (listingFeeNum > 0) {
+        const feeAsset = asWalletCrypto(p2pListingFeeAsset());
+        await debitUserAsset(tx, args.userId, feeAsset, listingFee);
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId: randomUUID(),
+            userId: args.userId,
+            entryType: "p2p_listing_fee",
+            asset: p2pListingFeeAsset(),
+            amount: `-${listingFee}`,
+            feeUsdEquivalent: listingFee,
+            meta: { side: args.side, fiatCurrency: args.fiatCurrency },
+          },
+        ]);
+      }
+
       let reserveTotal: string | null = null;
       let reserveRemaining: string | null = null;
 
@@ -897,6 +962,84 @@ export async function createAd(args: {
     return { ok: false, message: "p2p_ad_create_failed" };
   }
 
+}
+
+/** Boost ad ranking — fee debited from main USDT balance. */
+export async function boostP2pAd(args: {
+  userId: string;
+  adId: string;
+}): Promise<{ ok: true; boostedUntil: string } | { ok: false; message: string }> {
+  const fee = fmtWalletAmount(p2pBoostFeeUsdt());
+  const feeNum = Number(fee);
+  if (feeNum <= 0) return { ok: false, message: "p2p_boost_unavailable" };
+
+  const db = getDb();
+  const [urow] = await db
+    .select({ balance: users.balance })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  if (!urow) return { ok: false, message: "wallet_not_found" };
+  const bal = numFromNumeric(String(urow.balance));
+  if (bal + 1e-18 < feeNum) {
+    return { ok: false, message: "p2p_boost_insufficient_usdt" };
+  }
+
+  const days = p2pBoostDurationDays();
+  const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+  try {
+    await db.transaction(async (tx) => {
+      const [ad] = await tx
+        .select({ id: p2pAds.id, status: p2pAds.status })
+        .from(p2pAds)
+        .where(and(eq(p2pAds.id, args.adId), eq(p2pAds.userId, args.userId)))
+        .limit(1);
+      if (!ad) throw new Error("p2p_ad_not_found");
+      if (ad.status === AD_CLOSED) throw new Error("p2p_ad_closed");
+
+      await debitUserAsset(tx, args.userId, "USDT", fee);
+      await insertWalletLedgerLines(tx, [
+        {
+          batchId: randomUUID(),
+          userId: args.userId,
+          entryType: "p2p_ad_boost",
+          asset: "USDT",
+          amount: `-${fee}`,
+          feeUsdEquivalent: fee,
+          meta: { adId: args.adId },
+        },
+      ]);
+
+      const existingUntil = await tx
+        .select({ boostedUntil: p2pAds.boostedUntil, boostAmountPi: p2pAds.boostAmountPi })
+        .from(p2pAds)
+        .where(eq(p2pAds.id, args.adId))
+        .limit(1);
+      const curUntil = existingUntil[0]?.boostedUntil;
+      const baseMs =
+        curUntil && new Date(curUntil).getTime() > Date.now()
+          ? new Date(curUntil).getTime()
+          : Date.now();
+      const newUntil = new Date(baseMs + days * 24 * 60 * 60 * 1000);
+      const prevBoost = Number(existingUntil[0]?.boostAmountPi ?? 0);
+      const newBoostAmt = prevBoost + feeNum;
+
+      await tx
+        .update(p2pAds)
+        .set({
+          boostedUntil: newUntil,
+          boostAmountPi: String(newBoostAmt),
+          updatedAt: new Date(),
+        })
+        .where(eq(p2pAds.id, args.adId));
+    });
+    return { ok: true, boostedUntil: until.toISOString() };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.startsWith("p2p_")) return { ok: false, message: msg };
+    return { ok: false, message: "p2p_boost_failed" };
+  }
 }
 
 export async function updateAdStatus(args: {
