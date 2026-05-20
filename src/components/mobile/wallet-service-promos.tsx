@@ -1,38 +1,44 @@
 import Link from "next/link";
 import type { ServicePromoDTO, StakingPromoDTO } from "@/components/mobile/wallet-overview";
+import {
+  WalletIconGroup,
+  WalletIconLoans,
+  WalletIconPool,
+  WalletIconStaking,
+} from "@/components/wallet/wallet-service-icons";
 
 function PromoIcon({ icon }: { icon: ServicePromoDTO["icon"] | "staking" }) {
   const cls =
-    "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg shadow-sm ring-1 ring-white/80";
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ring-white/80";
   switch (icon) {
     case "staking":
       return (
-        <span className={`${cls} bg-gradient-to-br from-emerald-100 to-amber-100`} aria-hidden>
-          ⛓
+        <span className={`${cls} bg-gradient-to-br from-emerald-200 to-amber-200 text-[color:var(--fd-primary)]`} aria-hidden>
+          <WalletIconStaking />
         </span>
       );
     case "pool":
       return (
-        <span className={`${cls} bg-gradient-to-br from-cyan-100 to-emerald-100`} aria-hidden>
-          💧
+        <span className={`${cls} bg-gradient-to-br from-cyan-200 to-emerald-200 text-cyan-900`} aria-hidden>
+          <WalletIconPool />
         </span>
       );
     case "likelimba":
       return (
-        <span className={`${cls} bg-gradient-to-br from-emerald-100 to-teal-100`} aria-hidden>
-          🤝
+        <span className={`${cls} bg-gradient-to-br from-emerald-200 to-teal-200 text-teal-900`} aria-hidden>
+          <WalletIconGroup />
         </span>
       );
     case "avec":
       return (
-        <span className={`${cls} bg-gradient-to-br from-amber-100 to-orange-100`} aria-hidden>
-          👥
+        <span className={`${cls} bg-gradient-to-br from-amber-200 to-orange-200 text-orange-900`} aria-hidden>
+          <WalletIconGroup />
         </span>
       );
     case "loans":
       return (
-        <span className={`${cls} bg-gradient-to-br from-amber-50 to-stone-200`} aria-hidden>
-          🏦
+        <span className={`${cls} bg-gradient-to-br from-amber-100 to-stone-300 text-stone-800`} aria-hidden>
+          <WalletIconLoans />
         </span>
       );
     default:

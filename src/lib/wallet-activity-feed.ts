@@ -1,4 +1,5 @@
 import { and, desc, asc, eq, inArray, notInArray } from "drizzle-orm";
+import { matchesHistoryCategory } from "@/lib/wallet-history-labels";
 import { getDb, deposits, walletLedgerEntries, withdrawals } from "@/db";
 import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
@@ -17,6 +18,9 @@ export type WalletActivityItem = {
   resumeHref: string | null;
   detailHref: string;
   txid?: string | null;
+  feeUsdEquivalent?: string | null;
+  meta?: Record<string, unknown> | null;
+  destination?: string | null;
 };
 
 const TERMINAL_DEPOSIT = [DepositStatus.CONFIRMED, DepositStatus.FAILED] as string[];
@@ -56,7 +60,7 @@ export async function fetchWalletActivitiesForAsset(args: {
   const db = getDb();
   const order = args.sort === "oldest" ? asc : desc;
 
-  const [openDeposits, openWithdrawals, ledgerRows] = await Promise.all([
+  const [depositRows, withdrawalRows, ledgerRows] = await Promise.all([
     db
       .select({
         id: deposits.id,
@@ -66,16 +70,12 @@ export async function fetchWalletActivitiesForAsset(args: {
         asset: deposits.asset,
         createdAt: deposits.createdAt,
         txid: deposits.txid,
+        addressShown: deposits.addressShown,
       })
       .from(deposits)
-      .where(
-        and(
-          eq(deposits.userId, args.userId),
-          eq(deposits.asset, args.asset),
-          notInArray(deposits.status, TERMINAL_DEPOSIT),
-        ),
-      )
-      .orderBy(order(deposits.createdAt)),
+      .where(and(eq(deposits.userId, args.userId), eq(deposits.asset, args.asset)))
+      .orderBy(order(deposits.createdAt))
+      .limit(120),
     db
       .select({
         id: withdrawals.id,
@@ -84,16 +84,12 @@ export async function fetchWalletActivitiesForAsset(args: {
         asset: withdrawals.asset,
         createdAt: withdrawals.createdAt,
         txid: withdrawals.txid,
+        toAddress: withdrawals.toAddress,
       })
       .from(withdrawals)
-      .where(
-        and(
-          eq(withdrawals.userId, args.userId),
-          eq(withdrawals.asset, args.asset),
-          notInArray(withdrawals.status, TERMINAL_WITHDRAWAL),
-        ),
-      )
-      .orderBy(order(withdrawals.createdAt)),
+      .where(and(eq(withdrawals.userId, args.userId), eq(withdrawals.asset, args.asset)))
+      .orderBy(order(withdrawals.createdAt))
+      .limit(120),
     db
       .select({
         id: walletLedgerEntries.id,
@@ -102,6 +98,7 @@ export async function fetchWalletActivitiesForAsset(args: {
         asset: walletLedgerEntries.asset,
         createdAt: walletLedgerEntries.createdAt,
         meta: walletLedgerEntries.meta,
+        feeUsdEquivalent: walletLedgerEntries.feeUsdEquivalent,
       })
       .from(walletLedgerEntries)
       .where(
@@ -115,7 +112,7 @@ export async function fetchWalletActivitiesForAsset(args: {
 
   const merged: WalletActivityItem[] = [];
 
-  for (const d of openDeposits) {
+  for (const d of depositRows) {
     const amt =
       d.amount?.toString() ||
       d.declaredAmountUsdt?.toString() ||
@@ -129,13 +126,15 @@ export async function fetchWalletActivitiesForAsset(args: {
       amount: amt,
       asset: d.asset,
       createdAt: d.createdAt.toISOString(),
-      resumeHref: `/app/deposit/${d.id}`,
+      resumeHref:
+        st === "processing" ? `/app/deposit/${d.id}` : null,
       detailHref: `/app/wallet/activity/deposit/${d.id}`,
       txid: d.txid,
+      destination: d.addressShown,
     });
   }
 
-  for (const w of openWithdrawals) {
+  for (const w of withdrawalRows) {
     const st = withdrawalStatusToActivity(w.status);
     merged.push({
       id: `withdrawal-${w.id}`,
@@ -148,10 +147,18 @@ export async function fetchWalletActivitiesForAsset(args: {
       resumeHref: null,
       detailHref: `/app/wallet/activity/withdraw/${w.id}`,
       txid: w.txid,
+      destination: w.toAddress,
     });
   }
 
   for (const r of ledgerRows) {
+    const meta = r.meta;
+    const dest =
+      typeof meta?.toAddress === "string"
+        ? meta.toAddress
+        : typeof meta?.address === "string"
+          ? meta.address
+          : null;
     merged.push({
       id: `ledger-${r.id}`,
       kind: "ledger",
@@ -163,6 +170,9 @@ export async function fetchWalletActivitiesForAsset(args: {
       createdAt: r.createdAt.toISOString(),
       resumeHref: null,
       detailHref: `/app/wallet/activity/ledger/${r.id}`,
+      feeUsdEquivalent: r.feeUsdEquivalent?.toString() ?? null,
+      meta: r.meta,
+      destination: dest,
     });
   }
 
@@ -214,4 +224,162 @@ export async function fetchOpenDepositForAsset(
     status: row.status,
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+export async function fetchWalletGlobalActivities(args: {
+  userId: string;
+  category?: string;
+  asset?: string;
+  sort: "newest" | "oldest";
+  page: number;
+  pageSize: number;
+}): Promise<{
+  items: WalletActivityItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const db = getDb();
+  const order = args.sort === "oldest" ? asc : desc;
+  const assetFilter = args.asset?.trim();
+
+  const depositWhere = assetFilter
+    ? and(eq(deposits.userId, args.userId), eq(deposits.asset, assetFilter))
+    : eq(deposits.userId, args.userId);
+  const withdrawalWhere = assetFilter
+    ? and(eq(withdrawals.userId, args.userId), eq(withdrawals.asset, assetFilter))
+    : eq(withdrawals.userId, args.userId);
+  const ledgerWhere = assetFilter
+    ? and(eq(walletLedgerEntries.userId, args.userId), eq(walletLedgerEntries.asset, assetFilter))
+    : eq(walletLedgerEntries.userId, args.userId);
+
+  const [depositRows, withdrawalRows, ledgerRows] = await Promise.all([
+    db
+      .select({
+        id: deposits.id,
+        status: deposits.status,
+        amount: deposits.amount,
+        declaredAmountUsdt: deposits.declaredAmountUsdt,
+        asset: deposits.asset,
+        createdAt: deposits.createdAt,
+        txid: deposits.txid,
+        addressShown: deposits.addressShown,
+      })
+      .from(deposits)
+      .where(depositWhere)
+      .orderBy(order(deposits.createdAt))
+      .limit(150),
+    db
+      .select({
+        id: withdrawals.id,
+        status: withdrawals.status,
+        amount: withdrawals.amount,
+        asset: withdrawals.asset,
+        createdAt: withdrawals.createdAt,
+        txid: withdrawals.txid,
+        toAddress: withdrawals.toAddress,
+      })
+      .from(withdrawals)
+      .where(withdrawalWhere)
+      .orderBy(order(withdrawals.createdAt))
+      .limit(150),
+    db
+      .select({
+        id: walletLedgerEntries.id,
+        entryType: walletLedgerEntries.entryType,
+        amount: walletLedgerEntries.amount,
+        asset: walletLedgerEntries.asset,
+        createdAt: walletLedgerEntries.createdAt,
+        meta: walletLedgerEntries.meta,
+        feeUsdEquivalent: walletLedgerEntries.feeUsdEquivalent,
+      })
+      .from(walletLedgerEntries)
+      .where(ledgerWhere)
+      .orderBy(order(walletLedgerEntries.createdAt))
+      .limit(300),
+  ]);
+
+  const merged: WalletActivityItem[] = [];
+
+  for (const d of depositRows) {
+    const amt =
+      d.amount?.toString() || d.declaredAmountUsdt?.toString() || "0";
+    const st = depositStatusToActivity(d.status);
+    merged.push({
+      id: `deposit-${d.id}`,
+      kind: "deposit",
+      refId: d.id,
+      status: st,
+      amount: amt,
+      asset: d.asset,
+      createdAt: d.createdAt.toISOString(),
+      resumeHref: st === "processing" ? `/app/deposit/${d.id}` : null,
+      detailHref: `/app/wallet/activity/deposit/${d.id}`,
+      txid: d.txid,
+      destination: d.addressShown,
+    });
+  }
+
+  for (const w of withdrawalRows) {
+    const st = withdrawalStatusToActivity(w.status);
+    merged.push({
+      id: `withdrawal-${w.id}`,
+      kind: "withdrawal",
+      refId: w.id,
+      status: st,
+      amount: w.amount.toString(),
+      asset: w.asset,
+      createdAt: w.createdAt.toISOString(),
+      resumeHref: null,
+      detailHref: `/app/wallet/activity/withdraw/${w.id}`,
+      txid: w.txid,
+      destination: w.toAddress,
+    });
+  }
+
+  for (const r of ledgerRows) {
+    const meta = r.meta;
+    const dest =
+      typeof meta?.toAddress === "string"
+        ? meta.toAddress
+        : typeof meta?.address === "string"
+          ? meta.address
+          : null;
+    merged.push({
+      id: `ledger-${r.id}`,
+      kind: "ledger",
+      refId: r.id,
+      entryType: r.entryType,
+      status: "completed",
+      amount: r.amount.toString(),
+      asset: r.asset,
+      createdAt: r.createdAt.toISOString(),
+      resumeHref: null,
+      detailHref: `/app/wallet/activity/ledger/${r.id}`,
+      feeUsdEquivalent: r.feeUsdEquivalent?.toString() ?? null,
+      meta: r.meta,
+      destination: dest,
+    });
+  }
+
+  const category = args.category?.trim() ?? "";
+  const filtered = category
+    ? merged.filter((item) => matchesHistoryCategory(item, category))
+    : merged;
+
+  filtered.sort((a, b) => {
+    const ta = new Date(a.createdAt).getTime();
+    const tb = new Date(b.createdAt).getTime();
+    return args.sort === "oldest" ? ta - tb : tb - ta;
+  });
+
+  const total = filtered.length;
+  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(args.page, 1), totalPages);
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+
+  return { items, total, page, pageSize, totalPages };
 }

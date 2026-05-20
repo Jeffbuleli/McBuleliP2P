@@ -91,25 +91,7 @@ export function WalletOverview({
 
   return (
     <div className="flex flex-col gap-0 pb-2">
-      <header className="mb-1 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold tracking-tight text-[color:var(--fd-text)]">
-            {labels.wallet_title}
-          </h1>
-          <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">
-            {labels.wallet_crypto_only_hint}
-          </p>
-        </div>
-        <Link
-          href="/app/wallet/history"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] text-[color:var(--fd-primary)] shadow-sm active:scale-95"
-          aria-label={labels.wallet_link_history}
-        >
-          <HistoryIcon />
-        </Link>
-      </header>
-
-      <section className="wallet-hero mt-3 p-4">
+      <section className="wallet-hero mt-1 p-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
             {labels.wallet_est_total}
@@ -160,16 +142,19 @@ export function WalletOverview({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={labels.wallet_search_placeholder}
-            className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] py-3 pl-10 pr-3 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)] focus:ring-2"
+            className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] py-3 pl-10 pr-14 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)] focus:ring-2"
           />
+          <Link
+            href="/app/wallet/history"
+            className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] shadow-sm active:scale-95"
+            aria-label={labels.wallet_link_history}
+          >
+            <HistoryIcon />
+          </Link>
         </label>
       </div>
 
-      <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-        {labels.wallet_asset_list}
-      </p>
-
-      <ul className="mt-2 flex flex-col gap-2">
+      <ul className="mt-3 flex flex-col gap-2">
         {rows.length === 0 ? (
           <li className="fd-card px-4 py-8 text-center text-sm text-[color:var(--fd-muted)]">
             {labels.wallet_no_match}
@@ -202,7 +187,7 @@ export function WalletOverview({
                   <p className="font-mono text-sm font-bold tabular-nums text-[color:var(--fd-text)]">
                     {hidden ? mask() : row.balanceDisplay}
                   </p>
-                  <p className="text-[11px] tabular-nums text-[color:var(--fd-muted)]">
+                  <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-[color:var(--fd-muted)]">
                     {hidden ? mask() : row.valueUsdApprox}
                   </p>
                 </div>

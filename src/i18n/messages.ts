@@ -452,6 +452,17 @@ export const en = {
   wallet_tx_when: "Date",
   wallet_tx_amount: "Amount",
   wallet_tx_fee: "Fee",
+  wallet_tx_destination: "Destination",
+  wallet_tx_txid: "TXID",
+  wallet_tx_est_usd: "Est. value (USD)",
+  wallet_tx_reference: "Reference",
+  wallet_tx_batch: "Batch",
+  wallet_history_cat_receive: "Receive",
+  wallet_history_cat_send: "Send",
+  wallet_history_cat_withdraw: "Withdraw",
+  wallet_history_cat_p2p: "P2P",
+  wallet_entry_p2p_listing_fee: "P2P — listing fee",
+  wallet_entry_p2p_ad_boost: "P2P — ad boost",
   wallet_tab_crypto: "Crypto",
   wallet_tab_account: "Account",
   wallet_search_placeholder: "Search an asset…",
@@ -1777,7 +1788,19 @@ export const en = {
     "Send to another McBuleli user (same asset). This is not an on-chain deposit.",
   deposit_show_addr: "Show address",
   deposit_loading: "…",
-  deposit_unavailable: "Deposit unavailable — check server .env",
+  deposit_unavailable: "Deposits are temporarily unavailable.",
+  deposit_unavailable_usdt:
+    "USDT deposits are not configured on the server (Binance API keys missing).",
+  deposit_unavailable_pi:
+    "Pi deposits are not configured yet (receiving address missing in admin settings).",
+  deposit_unavailable_both:
+    "No deposit method is available right now. USDT needs Binance API keys; Pi needs a receive address in admin.",
+  deposit_routes_load_error:
+    "Could not load deposit options. Check your connection and try again.",
+  deposit_binance_not_configured:
+    "USDT deposits are not configured on the server (Binance API keys).",
+  deposit_binance_setup_hint:
+    "USDT deposits are configured but Binance rejected the connection. Check API permissions (Reading + Withdrawals), IP whitelist, and demo vs live keys.",
   continue: "Continue",
   back: "Back",
   dashboard: "← Hub",
@@ -2499,6 +2522,17 @@ export const fr: Messages = {
   wallet_tx_when: "Date",
   wallet_tx_amount: "Montant",
   wallet_tx_fee: "Frais",
+  wallet_tx_destination: "Destination",
+  wallet_tx_txid: "TXID",
+  wallet_tx_est_usd: "Estimation (USD)",
+  wallet_tx_reference: "Référence",
+  wallet_tx_batch: "Lot",
+  wallet_history_cat_receive: "Réception",
+  wallet_history_cat_send: "Envoi",
+  wallet_history_cat_withdraw: "Retrait",
+  wallet_history_cat_p2p: "P2P",
+  wallet_entry_p2p_listing_fee: "P2P — frais publication",
+  wallet_entry_p2p_ad_boost: "P2P — boost annonce",
   wallet_tab_crypto: "Crypto",
   wallet_tab_account: "Compte",
   wallet_search_placeholder: "Rechercher un actif…",
@@ -3842,7 +3876,19 @@ export const fr: Messages = {
     "Envoi à un autre utilisateur McBuleli (même actif). Ce n’est pas un dépôt on-chain.",
   deposit_show_addr: "Voir l’adresse",
   deposit_loading: "…",
-  deposit_unavailable: "Dépôt indisponible — voir .env",
+  deposit_unavailable: "Dépôts temporairement indisponibles.",
+  deposit_unavailable_usdt:
+    "Dépôt USDT non configuré sur le serveur (clés API Binance manquantes).",
+  deposit_unavailable_pi:
+    "Dépôt Pi non configuré (adresse de réception absente dans l’admin).",
+  deposit_unavailable_both:
+    "Aucun dépôt disponible : USDT nécessite les clés Binance ; Pi une adresse admin.",
+  deposit_routes_load_error:
+    "Impossible de charger les options de dépôt. Vérifiez la connexion.",
+  deposit_binance_not_configured:
+    "Dépôt USDT non configuré (clés API Binance sur le serveur).",
+  deposit_binance_setup_hint:
+    "USDT est configuré mais Binance a refusé la connexion. Vérifiez les permissions API (Lecture + Retraits), la liste blanche IP et demo vs live.",
   continue: "Suivant",
   back: "Retour",
   dashboard: "← Accueil",

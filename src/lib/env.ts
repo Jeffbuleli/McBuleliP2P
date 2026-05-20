@@ -26,7 +26,10 @@ export function getAmountTolerance(): number {
 }
 
 export function hasBinanceKeys(): boolean {
-  return Boolean(process.env.BINANCE_API_KEY && process.env.BINANCE_API_SECRET);
+  return Boolean(
+    process.env.BINANCE_API_KEY?.trim() &&
+      process.env.BINANCE_API_SECRET?.trim(),
+  );
 }
 
 export function hasOkxKeys(): boolean {

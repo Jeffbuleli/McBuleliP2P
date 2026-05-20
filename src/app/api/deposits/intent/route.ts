@@ -79,10 +79,7 @@ export async function POST(req: Request) {
 
   if (!hasBinanceKeys()) {
     return NextResponse.json(
-      {
-        message:
-          "USDT deposits require BINANCE_API_KEY and BINANCE_API_SECRET in .env.",
-      },
+      { message: "deposit_binance_not_configured" },
       { status: 503 },
     );
   }

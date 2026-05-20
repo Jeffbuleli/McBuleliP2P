@@ -3,30 +3,29 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import type { Messages } from "@/i18n/messages";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
+import { TransactionDetailRows } from "@/components/wallet/transaction-detail-rows";
 import { FlowHubLink } from "@/components/wallet/wallet-flow-shell";
+import { formatSignedWalletAmount, walletEntryLabel } from "@/lib/wallet-history-labels";
 import { formatWalletHistoryAmount } from "@/lib/wallet-types";
 
 type Entry = {
   id: string;
+  batchId: string;
   entryType: string;
   asset: string;
   amount: string;
+  feeUsdEquivalent: string;
+  counterpartyUserId: string | null;
+  meta: Record<string, unknown> | null;
   createdAt: string;
 };
 
-function entryLabel(t: (k: keyof Messages) => string, entryType: string): string {
-  const map: Record<string, keyof Messages> = {
-    swap_in: "wallet_entry_swap_in",
-    swap_out: "wallet_entry_swap_out",
-    transfer_in: "wallet_entry_transfer_in",
-    transfer_out: "wallet_entry_transfer_out",
-  };
-  const k = map[entryType];
-  if (k) return t(k);
-  return entryType.replace(/_/g, " ");
+function metaStr(meta: Record<string, unknown> | null, key: string): string | null {
+  const v = meta?.[key];
+  if (typeof v === "string" && v.trim()) return v.trim();
+  return null;
 }
 
 export default function LedgerActivityDetailPage() {
@@ -45,8 +44,8 @@ export default function LedgerActivityDetailPage() {
 
   if (!entry) {
     return (
-      <div className="pb-8">
-        <WalletSubpageHeader title={t("wallet_tx_details")} backHref="/app/wallet" />
+      <div className="wallet-theme pb-8">
+        <WalletSubpageHeader title={t("wallet_tx_details")} backHref="/app/wallet/history" />
         <p className="text-center text-[color:var(--fd-muted)]">…</p>
       </div>
     );
@@ -56,13 +55,56 @@ export default function LedgerActivityDetailPage() {
     dateStyle: "medium",
     timeStyle: "short",
   });
+  const label = walletEntryLabel(t, entry.entryType);
+  const signed = formatSignedWalletAmount(entry.asset, entry.amount, {
+    kind: "ledger",
+    entryType: entry.entryType,
+  });
+  const destination =
+    metaStr(entry.meta, "toAddress") ??
+    metaStr(entry.meta, "address") ??
+    metaStr(entry.meta, "destination");
+  const txid = metaStr(entry.meta, "txid") ?? metaStr(entry.meta, "txId");
+  const orderId = metaStr(entry.meta, "orderId") ?? metaStr(entry.meta, "adId");
+  const feeUsd = Number(entry.feeUsdEquivalent);
+  const network = metaStr(entry.meta, "network") ?? metaStr(entry.meta, "networkCanonical");
+
+  const rows: { label: string; value: string; mono?: boolean }[] = [
+    { label: t("wallet_tx_asset"), value: entry.asset },
+    { label: t("wallet_tx_type"), value: label },
+    { label: t("wallet_tx_when"), value: when },
+    { label: t("wallet_tx_amount"), value: `${signed} ${entry.asset}` },
+  ];
+  if (Number.isFinite(feeUsd) && feeUsd !== 0) {
+    rows.push({
+      label: t("wallet_tx_est_usd"),
+      value: `$${Math.abs(feeUsd).toFixed(2)}`,
+    });
+  }
+  if (destination) {
+    rows.push({ label: t("wallet_tx_destination"), value: destination, mono: true });
+  }
+  if (txid) {
+    rows.push({ label: t("wallet_tx_txid"), value: txid, mono: true });
+  }
+  if (orderId) {
+    rows.push({ label: t("wallet_tx_reference"), value: orderId, mono: true });
+  }
+  if (network) {
+    rows.push({ label: t("deposit_step_usdt_network"), value: network });
+  }
+  rows.push({
+    label: t("wallet_tx_batch"),
+    value: entry.batchId.slice(0, 8) + "…",
+    mono: true,
+  });
 
   return (
-    <div className="pb-8">
+    <div className="wallet-theme pb-8">
       <WalletSubpageHeader
         title={t("wallet_tx_details")}
-        subtitle={entryLabel(t, entry.entryType)}
-        backHref={`/app/wallet/${entry.asset}`}
+        subtitle={label}
+        backHref="/app/wallet/history"
       />
 
       <StatusOutcomeBanner
@@ -71,28 +113,9 @@ export default function LedgerActivityDetailPage() {
         detail={`${formatWalletHistoryAmount(entry.asset, entry.amount)} ${entry.asset}`}
       />
 
-      <div className="fd-card mt-3 space-y-2 p-4 text-sm">
-        <div className="flex justify-between gap-3 border-b border-[color:var(--fd-border)] py-2">
-          <span className="text-[color:var(--fd-muted)]">{t("wallet_tx_asset")}</span>
-          <span className="font-bold">{entry.asset}</span>
-        </div>
-        <div className="flex justify-between gap-3 border-b border-[color:var(--fd-border)] py-2">
-          <span className="text-[color:var(--fd-muted)]">{t("wallet_tx_type")}</span>
-          <span className="font-bold">{entryLabel(t, entry.entryType)}</span>
-        </div>
-        <div className="flex justify-between gap-3 border-b border-[color:var(--fd-border)] py-2">
-          <span className="text-[color:var(--fd-muted)]">{t("wallet_tx_when")}</span>
-          <span className="font-bold">{when}</span>
-        </div>
-        <div className="flex justify-between gap-3 py-2">
-          <span className="text-[color:var(--fd-muted)]">{t("wallet_tx_amount")}</span>
-          <span className="font-mono font-bold tabular-nums">
-            {formatWalletHistoryAmount(entry.asset, entry.amount)} {entry.asset}
-          </span>
-        </div>
-      </div>
+      <TransactionDetailRows rows={rows} />
 
-      <FlowHubLink label={t("wallet_title")} />
+      <FlowHubLink label={t("wallet_history_title")} href="/app/wallet/history" />
     </div>
   );
 }

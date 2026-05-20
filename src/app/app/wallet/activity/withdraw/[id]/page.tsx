@@ -11,6 +11,8 @@ import {
   TransactionStepper,
 } from "@/components/wallet/transaction-progress";
 import { FlowHubLink } from "@/components/wallet/wallet-flow-shell";
+import { TransactionDetailRows } from "@/components/wallet/transaction-detail-rows";
+import { formatSignedWalletAmount } from "@/lib/wallet-history-labels";
 import { formatWalletHistoryAmount } from "@/lib/wallet-types";
 
 type Withdrawal = {
@@ -103,43 +105,30 @@ export default function WithdrawActivityDetailPage() {
         </div>
       ) : null}
 
-      <div className="fd-card mt-3 space-y-2 p-4 text-sm">
-        <Row label={t("wallet_tx_asset")} value={w.asset} />
-        <Row label={t("deposit_step_usdt_network")} value={w.networkCanonical} />
-        <Row label={t("withdraw_addr")} value={w.toAddress} mono />
-        <Row
-          label={t("withdraw_amt")}
-          value={`${formatWalletHistoryAmount(w.asset, w.amount)} ${w.asset}`}
-        />
-        <Row label={t("wallet_tx_fee")} value={formatWalletHistoryAmount(w.asset, w.fee)} />
-        {w.txid ? <Row label={t("deposit_txid")} value={w.txid} mono /> : null}
-        {w.failureReason ? (
-          <Row label={t("status_ui_failed")} value={w.failureReason} />
-        ) : null}
-      </div>
+      <TransactionDetailRows
+        rows={[
+          { label: t("wallet_tx_asset"), value: w.asset },
+          { label: t("wallet_tx_type"), value: t("wallet_activity_withdraw") },
+          { label: t("deposit_step_usdt_network"), value: w.networkCanonical },
+          { label: t("wallet_tx_destination"), value: w.toAddress, mono: true },
+          {
+            label: t("wallet_tx_amount"),
+            value: `${formatSignedWalletAmount(w.asset, w.amount, { kind: "withdrawal" })} ${w.asset}`,
+          },
+          {
+            label: t("wallet_tx_fee"),
+            value: formatWalletHistoryAmount(w.asset, w.fee),
+          },
+          ...(w.txid
+            ? [{ label: t("wallet_tx_txid"), value: w.txid, mono: true }]
+            : []),
+          ...(w.failureReason
+            ? [{ label: t("status_ui_failed"), value: w.failureReason }]
+            : []),
+        ]}
+      />
 
-      <FlowHubLink label={t("wallet_title")} />
-    </div>
-  );
-}
-
-function Row({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex justify-between gap-3 border-b border-[color:var(--fd-border)] py-2 last:border-0">
-      <span className="text-[color:var(--fd-muted)]">{label}</span>
-      <span
-        className={`max-w-[60%] text-right font-semibold text-[color:var(--fd-text)] ${mono ? "break-all font-mono text-xs" : ""}`}
-      >
-        {value}
-      </span>
+      <FlowHubLink label={t("wallet_history_title")} href="/app/wallet/history" />
     </div>
   );
 }

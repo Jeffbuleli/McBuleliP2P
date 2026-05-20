@@ -203,6 +203,48 @@ export function NotifKindIcon({ kind, className = "h-5 w-5" }: { kind: string; c
   }
 }
 
+export function IconP2P({ className = S }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 8h10M7 12h6M7 16h8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5 6h14v12H5zM9 6V4h6v2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function HistoryVisualIcon({
+  visual,
+  className = "h-5 w-5",
+}: {
+  visual: "receive" | "send" | "withdraw" | "p2p" | "swap" | "other";
+  className?: string;
+}) {
+  switch (visual) {
+    case "receive":
+      return <IconArrowDown className={className} />;
+    case "send":
+      return <IconSend className={className} />;
+    case "withdraw":
+      return <IconArrowUp className={className} />;
+    case "p2p":
+      return <IconP2P className={className} />;
+    case "swap":
+      return <IconSwap className={className} />;
+    default:
+      return <IconList className={className} />;
+  }
+}
+
 export function HistoryEntryIcon({
   entryType,
   className = "h-5 w-5",
@@ -210,9 +252,15 @@ export function HistoryEntryIcon({
   entryType: string;
   className?: string;
 }) {
-  if (entryType.includes("transfer")) return <IconSend className={className} />;
+  if (entryType.startsWith("p2p_")) return <IconP2P className={className} />;
+  if (entryType === "transfer_out") return <IconSend className={className} />;
+  if (entryType === "transfer_in") return <IconArrowDown className={className} />;
   if (entryType.includes("swap")) return <IconSwap className={className} />;
-  if (entryType.includes("deposit")) return <IconArrowDown className={className} />;
-  if (entryType.includes("withdraw")) return <IconArrowUp className={className} />;
+  if (entryType.includes("deposit") || entryType.endsWith("_in")) {
+    return <IconArrowDown className={className} />;
+  }
+  if (entryType.includes("withdraw") || entryType.endsWith("_out")) {
+    return <IconArrowUp className={className} />;
+  }
   return <IconList className={className} />;
 }

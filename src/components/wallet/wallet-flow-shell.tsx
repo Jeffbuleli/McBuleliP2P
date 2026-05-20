@@ -79,10 +79,16 @@ export function FlowBackLink({ onClick, label }: { onClick: () => void; label: s
   );
 }
 
-export function FlowHubLink({ label }: { label: string }) {
+export function FlowHubLink({
+  label,
+  href = "/app/wallet",
+}: {
+  label: string;
+  href?: string;
+}) {
   return (
     <Link
-      href="/app/wallet"
+      href={href}
       className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[color:var(--fd-primary)]"
     >
       ← {label}

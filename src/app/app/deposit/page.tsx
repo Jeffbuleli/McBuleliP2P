@@ -37,28 +37,58 @@ export default function DepositWizardPage() {
   const [error, setError] = useState<string | null>(null);
   const [enabledUsdt, setEnabledUsdt] = useState<boolean | null>(null);
   const [enabledPi, setEnabledPi] = useState<boolean | null>(null);
+  const [routesLoading, setRoutesLoading] = useState(true);
+  const [routesError, setRoutesError] = useState<string | null>(null);
+  const [usdtNeedsSetup, setUsdtNeedsSetup] = useState(false);
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [declaredAmountPi, setDeclaredAmountPi] = useState("");
   const [userNote, setUserNote] = useState("");
   const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
   useEffect(() => {
     void (async () => {
+      setRoutesLoading(true);
+      setRoutesError(null);
       try {
         const res = await fetch("/api/config/deposit-routes");
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setEnabledUsdt(false);
+          setEnabledPi(false);
+          setBinanceEnv(null);
+          setUsdtNeedsSetup(false);
+          setRoutesError(t("deposit_routes_load_error"));
+          return;
+        }
         setEnabledUsdt(Boolean(data.usdtBinance));
         setEnabledPi(Boolean(data.piManual));
+        setUsdtNeedsSetup(Boolean(data.usdtBinanceNeedsSetup));
         const env = data.binanceEnv;
         setBinanceEnv(env === "demo" || env === "live" ? env : null);
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
         setBinanceEnv(null);
+        setUsdtNeedsSetup(false);
+        setRoutesError(t("deposit_routes_load_error"));
+      } finally {
+        setRoutesLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   const anyEnabled = enabledUsdt === true || enabledPi === true;
+  const routesReady = !routesLoading;
+  const noneEnabled = routesReady && !anyEnabled;
+
+  const unavailableMsg = (() => {
+    if (!noneEnabled) return null;
+    if (enabledUsdt === false && enabledPi === false) {
+      return t("deposit_unavailable_both");
+    }
+    if (enabledUsdt === false) return t("deposit_unavailable_usdt");
+    return t("deposit_unavailable_pi");
+  })();
 
   function pickNetwork(id: NetworkId) {
     setNetwork(id);
@@ -157,8 +187,21 @@ export default function DepositWizardPage() {
       totalSteps={3}
       headerBadge={envBadge}
     >
-      {!anyEnabled ? (
-        <p className="fd-card px-3 py-2 text-sm text-rose-800">{t("deposit_unavailable")}</p>
+      {routesLoading ? (
+        <p className="fd-card px-3 py-2 text-sm text-[color:var(--fd-muted)]">
+          {t("deposit_loading")}
+        </p>
+      ) : null}
+      {routesError ? (
+        <p className="fd-card px-3 py-2 text-sm text-rose-800">{routesError}</p>
+      ) : null}
+      {unavailableMsg ? (
+        <p className="fd-card px-3 py-2 text-sm text-rose-800">{unavailableMsg}</p>
+      ) : null}
+      {routesReady && enabledUsdt && usdtNeedsSetup ? (
+        <p className="fd-card border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          {t("deposit_binance_setup_hint")}
+        </p>
       ) : null}
       {step === 1 && (
         <section>
@@ -168,7 +211,7 @@ export default function DepositWizardPage() {
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              disabled={enabledUsdt !== true}
+              disabled={!routesReady || enabledUsdt !== true}
               onClick={() => {
                 setAsset("USDT");
                 setStep(2);
@@ -183,7 +226,7 @@ export default function DepositWizardPage() {
             </button>
             <button
               type="button"
-              disabled={enabledPi !== true}
+              disabled={!routesReady || enabledPi !== true}
               onClick={() => {
                 setAsset("PI");
                 setStep(3);
@@ -297,6 +340,7 @@ export default function DepositWizardPage() {
             disabled={
               !acceptedRisk ||
               loading ||
+              !routesReady ||
               (asset === "USDT" && enabledUsdt !== true) ||
               (asset === "PI" && enabledPi !== true) ||
               (asset === "USDT" &&

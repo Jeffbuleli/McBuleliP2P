@@ -1,48 +1,20 @@
 import { NextResponse } from "next/server";
-import { hasBinanceKeys } from "@/lib/env";
-import {
-  fetchPlatformBinanceApiRestrictions,
-  probePlatformBinanceSpot,
-} from "@/lib/binance";
-import {
-  binanceWalletApiBase,
-  binanceWalletEnvironment,
-  binanceWalletPortalLabel,
-} from "@/lib/binance-wallet-config";
-import { isPiManualDepositEnabled } from "@/lib/pi-receive-address";
+import { getWalletRailsSnapshot } from "@/lib/wallet-rails";
 
 /** Which on-ramp flows are configured server-side. */
 export async function GET() {
-  const usdtBinance = hasBinanceKeys();
-  const piManual = await isPiManualDepositEnabled();
-  const binanceEnv = usdtBinance ? binanceWalletEnvironment() : null;
-
-  let binanceSpotOk: boolean | null = null;
-  let binanceEnableWithdrawals: boolean | null = null;
-  let binanceEnableReading: boolean | null = null;
-  let binanceIpRestrict: boolean | null = null;
-
-  if (usdtBinance) {
-    binanceSpotOk = await probePlatformBinanceSpot();
-    const restrictions = await fetchPlatformBinanceApiRestrictions();
-    if (restrictions) {
-      binanceEnableWithdrawals = restrictions.enableWithdrawals;
-      binanceEnableReading = restrictions.enableReading;
-      binanceIpRestrict = restrictions.ipRestrict;
-    }
+  try {
+    const rails = await getWalletRailsSnapshot();
+    return NextResponse.json({
+      ...rails,
+      /** @deprecated use usdtBinance */
+      enabled: rails.usdtBinance || rails.piManual,
+    });
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : "wallet_rails_error";
+    return NextResponse.json(
+      { ok: false, error: "wallet_rails_error", detail },
+      { status: 503 },
+    );
   }
-
-  return NextResponse.json({
-    usdtBinance,
-    piManual,
-    binanceEnv,
-    binancePortal: binanceEnv ? binanceWalletPortalLabel(binanceEnv) : null,
-    binanceApiBase: usdtBinance ? binanceWalletApiBase() : null,
-    binanceSpotOk,
-    binanceEnableWithdrawals,
-    binanceEnableReading,
-    binanceIpRestrict,
-    /** @deprecated use usdtBinance */
-    enabled: usdtBinance || piManual,
-  });
 }
