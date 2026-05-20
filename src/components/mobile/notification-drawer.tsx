@@ -181,6 +181,34 @@ function notifMeta(
         href: "/app/support",
         pill: { variant: "processing", label: t("status_ui_processing") },
       };
+    case "admin_deposit_order":
+      return {
+        title: t("notif_admin_deposit_order_title"),
+        body: t("notif_admin_deposit_order_body", { asset }),
+        href: "/admin/deposits",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "admin_deposit_review":
+      return {
+        title: t("notif_admin_deposit_review_title"),
+        body: t("notif_admin_deposit_review_body", { asset }),
+        href: str("depositId")
+          ? `/admin/deposits/${encodeURIComponent(str("depositId"))}`
+          : "/admin/deposits",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "admin_withdrawal_order":
+      return {
+        title: t("notif_admin_withdrawal_order_title"),
+        body: t("notif_admin_withdrawal_order_body", {
+          asset,
+          amount: amount || "—",
+        }),
+        href: str("withdrawalId")
+          ? `/admin/withdrawals/${encodeURIComponent(str("withdrawalId"))}`
+          : "/admin/withdrawals",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
     default:
       return {
         title: row.kind,
@@ -209,7 +237,11 @@ function NotifIconWrap({ kind }: { kind: string }) {
         ? "bg-rose-100 text-rose-800"
         : kind === "withdrawal_claimed"
           ? "bg-sky-100 text-sky-800"
-          : "bg-amber-100 text-amber-900";
+          : kind === "deposit_validation_pending"
+            ? "bg-sky-100 text-sky-800"
+            : kind.startsWith("admin_")
+              ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+              : "bg-amber-100 text-amber-900";
   return (
     <span
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm ${tone}`}

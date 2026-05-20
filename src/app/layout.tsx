@@ -44,7 +44,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/icons/icon-144.png", type: "image/png", sizes: "144x144" },
       { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icons/icon-256.png", type: "image/png", sizes: "256x256" },
       { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
     shortcut: "/icons/icon-192.png",
@@ -59,7 +61,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   /** Align with PWA manifest — green chrome / status tint on Android */
-  themeColor: "#166534",
+  themeColor: "#305f33",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

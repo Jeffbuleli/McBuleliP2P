@@ -14,7 +14,8 @@
     "db:migrate:render": "node scripts/drizzle-migrate-batched.cjs",
     "db:migrate:render:kit": "node scripts/drizzle-migrate-render.cjs",
     "db:studio": "node --env-file=.env ./node_modules/.bin/drizzle-kit studio --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
-    "verify:binance": "node --env-file=.env scripts/verify-binance.mjs"
+    "verify:binance": "node --env-file=.env scripts/verify-binance.mjs",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -40,6 +41,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

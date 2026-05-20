@@ -199,6 +199,12 @@ export function NotifKindIcon({ kind, className = "h-5 w-5" }: { kind: string; c
     case "p2p_order_support_message":
     case "support_message":
       return <IconSend className={className} />;
+    case "admin_deposit_order":
+      return <IconArrowDown className={className} />;
+    case "admin_deposit_review":
+      return <IconClock className={className} />;
+    case "admin_withdrawal_order":
+      return <IconArrowUp className={className} />;
     default:
       return <IconArrowUp className={className} />;
   }

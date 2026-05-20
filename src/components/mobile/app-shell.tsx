@@ -49,7 +49,7 @@ export function AppShell({
         </div>
       ) : null}
       <main
-        className={`flex-1 px-4 ${lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0" : ""}`}
+        className={`flex-1 px-4 ${lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
       >
         {children}
       </main>

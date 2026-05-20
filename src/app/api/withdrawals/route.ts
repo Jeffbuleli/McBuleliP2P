@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb, loans, users, withdrawals } from "@/db";
 import { getSessionUserId } from "@/lib/session";
@@ -198,6 +199,16 @@ export async function POST(req: Request) {
   await createUserNotification({
     userId,
     kind: "withdrawal_queued",
+    payload: {
+      withdrawalId: w.id,
+      asset: body.asset,
+      amount: net,
+      fee,
+    },
+  });
+
+  await notifyStaffWithdrawalsScope({
+    kind: "admin_withdrawal_order",
     payload: {
       withdrawalId: w.id,
       asset: body.asset,

@@ -820,24 +820,122 @@ export async function countSupportUnread(viewerUserId: string): Promise<number> 
   }
 }
 
+/** Derived queue priority for the staff inbox (not persisted). */
+export type SupportUrgency = "urgent" | "attention" | "normal" | "closed";
+
+export type SupportThreadSort = "urgency" | "lastMessage" | "unread" | "status";
+
 export type SupportThreadListItem = {
   id: string;
   userId: string;
   userLabel: string;
   userAvatarUrl: string | null;
   status: string;
+  urgency: SupportUrgency;
   lastMessageAt: string;
   preview: string;
   unreadCount: number;
   assignedToUserId: string | null;
+  /** Last non-system message was written by the end-user (vs staff). */
+  lastSenderIsUser: boolean;
+  /** Minutes since last non-system activity (staff or user). */
+  waitingMinutes: number;
 };
+
+const URGENCY_RANK: Record<SupportUrgency, number> = {
+  urgent: 0,
+  attention: 1,
+  normal: 2,
+  closed: 3,
+};
+
+function supportStaffPreview(body: string | undefined | null): string {
+  const raw = (body ?? "").trim();
+  if (!raw || isSystemBody(raw)) return "";
+  if (raw === " ") return "📷";
+  return raw.replace(/\s+/g, " ").slice(0, 120);
+}
+
+function computeSupportUrgency(args: {
+  status: string;
+  unreadCount: number;
+  waitingMs: number;
+  lastSenderIsUser: boolean;
+}): SupportUrgency {
+  if (args.status === "closed") return "closed";
+  if (args.unreadCount >= 3) return "urgent";
+  if (
+    args.unreadCount >= 1 &&
+    args.lastSenderIsUser &&
+    args.waitingMs >= 2 * 60 * 60 * 1000
+  ) {
+    return "urgent";
+  }
+  if (args.unreadCount >= 1) return "attention";
+  if (args.lastSenderIsUser && args.waitingMs >= 4 * 60 * 60 * 1000) {
+    return "attention";
+  }
+  return "normal";
+}
+
+export type SupportThreadsPage = {
+  threads: SupportThreadListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+const STAFF_THREADS_FETCH_LIMIT = 500;
 
 export async function listSupportThreadsForStaff(
   staffUserId: string,
 ): Promise<SupportThreadListItem[]> {
+  const pg = await listSupportThreadsForStaffPaginated(staffUserId, {
+    page: 1,
+    limit: 80,
+    sort: "lastMessage",
+    order: "desc",
+  });
+  return pg.threads;
+}
+
+export async function listSupportThreadsForStaffPaginated(
+  staffUserId: string,
+  opts: {
+    status?: "all" | "open" | "closed";
+    urgency?: "all" | "urgent" | "attention";
+    sort?: SupportThreadSort;
+    order?: "asc" | "desc";
+    page?: number;
+    /** Page size — only 10, 20 or 30 are accepted. */
+    limit?: number;
+  } = {},
+): Promise<SupportThreadsPage> {
+  const rawLimit = opts.limit ?? 20;
+  const pageSize =
+    rawLimit === 10 ||
+    rawLimit === 20 ||
+    rawLimit === 30 ||
+    rawLimit === 80
+      ? rawLimit
+      : 20;
+  const page = Math.max(1, opts.page ?? 1);
+  const statusFilter = opts.status ?? "all";
+  const urgencyFilter = opts.urgency ?? "all";
+  const sort = opts.sort ?? "urgency";
+  const order = opts.order === "asc" ? "asc" : "desc";
+
   try {
     await ensureSupportSchema();
     const db = getDb();
+
+    const statusCond =
+      statusFilter === "open"
+        ? eq(supportThreads.status, "open")
+        : statusFilter === "closed"
+          ? eq(supportThreads.status, "closed")
+          : undefined;
+
     const threads = await db
       .select({
         id: supportThreads.id,
@@ -852,15 +950,28 @@ export async function listSupportThreadsForStaff(
       })
       .from(supportThreads)
       .innerJoin(users, eq(supportThreads.userId, users.id))
+      .where(statusCond ?? sql`true`)
       .orderBy(desc(supportThreads.lastMessageAt))
-      .limit(80);
+      .limit(STAFF_THREADS_FETCH_LIMIT);
 
-    const out: SupportThreadListItem[] = [];
+    const enriched: SupportThreadListItem[] = [];
+    const now = Date.now();
+    const systemLike = SUPPORT_SYSTEM_PREFIX + "%";
+
     for (const t of threads) {
       const [last] = await db
-        .select({ body: supportMessages.body })
+        .select({
+          body: supportMessages.body,
+          senderUserId: supportMessages.senderUserId,
+          createdAt: supportMessages.createdAt,
+        })
         .from(supportMessages)
-        .where(eq(supportMessages.threadId, t.id))
+        .where(
+          and(
+            eq(supportMessages.threadId, t.id),
+            sql`${supportMessages.body} NOT LIKE ${systemLike}`,
+          ),
+        )
         .orderBy(desc(supportMessages.createdAt))
         .limit(1);
 
@@ -869,28 +980,100 @@ export async function listSupportThreadsForStaff(
         FROM support_messages m
         WHERE m.thread_id = ${t.id}
           AND m.sender_user_id = ${t.userId}
+          AND m.body NOT LIKE ${systemLike}
           AND NOT EXISTS (
             SELECT 1 FROM support_message_reads r
             WHERE r.message_id = m.id AND r.user_id = ${staffUserId}
           )
       `);
-      const unread = unreadRows[0]?.n ?? 0;
+      const unreadRaw = unreadRows[0]?.n ?? 0;
+      const unreadCount =
+        typeof unreadRaw === "number" ? unreadRaw : Number(unreadRaw);
 
-      out.push({
+      const lastSenderIsUser =
+        !!last?.senderUserId && last.senderUserId === t.userId;
+      const lastAt = last?.createdAt ?? t.lastMessageAt;
+      const waitingMs = Math.max(0, now - lastAt.getTime());
+      const urgency = computeSupportUrgency({
+        status: t.status,
+        unreadCount,
+        waitingMs,
+        lastSenderIsUser,
+      });
+
+      if (urgencyFilter === "urgent" && urgency !== "urgent") continue;
+      if (urgencyFilter === "attention" && urgency !== "attention") continue;
+
+      const previewRaw = supportStaffPreview(last?.body);
+      enriched.push({
         id: t.id,
         userId: t.userId,
         userLabel: p2pDisplayName(t),
         userAvatarUrl: t.avatarUrl ?? null,
         status: t.status,
+        urgency,
         lastMessageAt: t.lastMessageAt.toISOString(),
-        preview: last?.body?.slice(0, 80) ?? "",
-        unreadCount: typeof unread === "number" ? unread : Number(unread),
+        preview: previewRaw.length > 0 ? previewRaw : "—",
+        unreadCount,
         assignedToUserId: t.assignedToUserId ?? null,
+        lastSenderIsUser,
+        waitingMinutes: Math.floor(waitingMs / 60_000),
       });
     }
-    return out;
+
+    const dirSign = order === "asc" ? 1 : -1;
+
+    enriched.sort((a, b) => {
+      let cmp = 0;
+      switch (sort) {
+        case "lastMessage":
+          cmp =
+            new Date(a.lastMessageAt).getTime() -
+            new Date(b.lastMessageAt).getTime();
+          cmp *= dirSign;
+          break;
+        case "unread":
+          cmp = a.unreadCount - b.unreadCount;
+          cmp *= dirSign;
+          break;
+        case "status":
+          cmp =
+            (a.status === "open" ? 0 : 1) - (b.status === "open" ? 0 : 1);
+          cmp *= dirSign;
+          if (cmp === 0) {
+            cmp =
+              new Date(b.lastMessageAt).getTime() -
+              new Date(a.lastMessageAt).getTime();
+          }
+          break;
+        case "urgency":
+        default:
+          cmp = URGENCY_RANK[a.urgency] - URGENCY_RANK[b.urgency];
+          if (cmp === 0) cmp = b.unreadCount - a.unreadCount;
+          if (cmp === 0) {
+            cmp =
+              new Date(b.lastMessageAt).getTime() -
+              new Date(a.lastMessageAt).getTime();
+          }
+          break;
+      }
+      if (sort !== "urgency" && sort !== "status" && cmp === 0) {
+        cmp =
+          new Date(b.lastMessageAt).getTime() -
+          new Date(a.lastMessageAt).getTime();
+      }
+      return cmp;
+    });
+
+    const total = enriched.length;
+    const offset = (page - 1) * pageSize;
+    const pageRows = enriched.slice(offset, offset + pageSize);
+
+    return { threads: pageRows, total, page, pageSize };
   } catch (e) {
-    if (isMissingRelationError(e)) return [];
+    if (isMissingRelationError(e)) {
+      return { threads: [], total: 0, page: 1, pageSize };
+    }
     throw e;
   }
 }

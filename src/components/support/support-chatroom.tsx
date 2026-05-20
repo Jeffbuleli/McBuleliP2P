@@ -269,8 +269,8 @@ export function SupportChatroom({
   const inputDisabled = busy || (mode === "user" && !threadOpen);
 
   return (
-    <div className="-mx-4 flex min-h-[calc(100dvh-5.5rem)] flex-col bg-[#e8ece8]">
-      <header className="sticky top-0 z-20 border-b border-[color:var(--fd-border)] bg-white px-4 py-3 shadow-sm">
+    <div className="flex flex-1 flex-col min-h-0 bg-[#e8ece8]">
+      <header className="sticky top-0 z-20 shrink-0 border-b border-[color:var(--fd-border)] bg-white px-4 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <Link
             href={backHref}
@@ -319,7 +319,7 @@ export function SupportChatroom({
 
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto bg-[#e8ece8] px-4 py-3"
+        className="min-h-0 flex-1 overflow-y-auto bg-[#e8ece8] px-4 py-3 overscroll-contain"
         role="log"
         aria-live="polite"
       >
@@ -379,54 +379,59 @@ export function SupportChatroom({
         </ul>
       ) : null}
 
-      {showEmoji ? (
-        <div className="flex flex-wrap gap-1 bg-[#e8ece8] px-4 pb-2">
-          {EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              className="rounded-lg px-2 py-1 text-lg hover:bg-white/80"
-              onClick={() => setDraft((d) => d + e)}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-      ) : null}
 
-      <footer className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 rounded-t-2xl border border-b-0 border-[color:var(--fd-border)] bg-white px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="mb-1.5 flex items-center gap-0.5">
-          <FormatBtn label="B" onClick={() => applyFormat("**")} />
-          <FormatBtn label="I" onClick={() => applyFormat("*")} />
-          <FormatBtn label="U" onClick={() => applyFormat("__")} />
-          <button
-            type="button"
-            className="rounded-lg px-2 py-1 text-xs font-bold text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]"
-            onClick={() => setShowEmoji((s) => !s)}
-            aria-label="Emoji"
-          >
-            ☺
-          </button>
-          <label className="cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-[color:var(--fd-primary)] hover:bg-[color:var(--fd-mint)]">
-            {t("support_attach_image")}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              disabled={inputDisabled}
-              onChange={(e) => void onPickImage(e.target.files?.[0] ?? null)}
-            />
-          </label>
-        </div>
+      <footer className="shrink-0 border-t border-[color:var(--fd-border)] bg-white px-3 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <details className="group mb-2 rounded-xl border border-[color:var(--fd-border)]/60 bg-[#f9faf9] [&_summary::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none px-3 py-2 text-center text-[10px] font-extrabold uppercase tracking-wide text-[color:var(--fd-primary)]">
+            {t("support_tools_toggle")}
+          </summary>
+          <div className="flex flex-wrap items-center gap-0.5 border-t border-[color:var(--fd-border)]/40 px-2 py-2">
+            <FormatBtn label="B" onClick={() => applyFormat("**")} />
+            <FormatBtn label="I" onClick={() => applyFormat("*")} />
+            <FormatBtn label="U" onClick={() => applyFormat("__")} />
+            <button
+              type="button"
+              className="rounded-lg px-2 py-1 text-xs font-bold text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]"
+              onClick={() => setShowEmoji((s) => !s)}
+              aria-label="Emoji"
+            >
+              ☺
+            </button>
+            <label className="cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-[color:var(--fd-primary)] hover:bg-[color:var(--fd-mint)]">
+              {t("support_attach_image")}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={inputDisabled}
+                onChange={(e) => void onPickImage(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </div>
+          {showEmoji ? (
+            <div className="flex flex-wrap gap-1 border-t border-[color:var(--fd-border)]/40 px-2 py-2">
+              {EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  className="rounded-lg px-2 py-1 text-lg hover:bg-white"
+                  onClick={() => setDraft((d) => d + e)}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </details>
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
-            rows={2}
+            rows={3}
             disabled={inputDisabled}
             placeholder={t("support_placeholder")}
-            className="min-h-[44px] flex-1 resize-none rounded-xl border border-[color:var(--fd-border)] bg-[#f4f6f4] px-3 py-2 text-sm text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)] disabled:opacity-50"
+            className="min-h-[52px] max-h-32 flex-1 resize-y rounded-xl border border-[color:var(--fd-border)] bg-[#f4f6f4] px-3 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)] disabled:opacity-50"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -438,12 +443,12 @@ export function SupportChatroom({
             type="button"
             disabled={inputDisabled}
             onClick={() => void send()}
-            className="shrink-0 self-end rounded-xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-xs font-extrabold text-white disabled:opacity-50"
+            className="shrink-0 self-end rounded-xl bg-[color:var(--fd-primary)] px-4 py-3 text-xs font-extrabold text-white disabled:opacity-50"
           >
             {t("support_send")}
           </button>
         </div>
-        <p className="mt-1 text-center text-[9px] text-[color:var(--fd-muted)]">
+        <p className="mt-2 text-center text-[10px] leading-snug text-[color:var(--fd-muted)]">
           {t("support_image_policy")}
         </p>
       </footer>

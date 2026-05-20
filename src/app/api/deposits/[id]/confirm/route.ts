@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { depositConfirmSchema } from "@/lib/validation";
 import { normalizeTxid } from "@/lib/networks";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { DepositStatus } from "@/lib/status";
 
 export async function POST(
@@ -91,6 +92,11 @@ export async function POST(
   await createUserNotification({
     userId,
     kind: "deposit_validation_pending",
+    payload: { depositId: id, asset: d.asset },
+  });
+
+  await notifyStaffWithdrawalsScope({
+    kind: "admin_deposit_review",
     payload: { depositId: id, asset: d.asset },
   });
 

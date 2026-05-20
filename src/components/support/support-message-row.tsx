@@ -87,7 +87,7 @@ export function SupportMessageRow({
           own={false}
         />
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
@@ -118,7 +118,7 @@ export function SupportMessageRow({
           </div>
 
           {showBody ? (
-            <div className="mt-1.5 text-sm text-[color:var(--fd-text)]">
+            <div className="mt-1.5">
               <SupportMessageBody body={m.body} mentionHandles={mentionHandles} />
             </div>
           ) : null}
@@ -153,7 +153,7 @@ export function SupportMessageRow({
                 <img
                   src={a.dataUrl}
                   alt=""
-                  className="max-h-40 w-full object-cover"
+                  className="mx-auto max-h-56 max-w-full rounded-lg object-contain"
                 />
               </div>
             ) : null,

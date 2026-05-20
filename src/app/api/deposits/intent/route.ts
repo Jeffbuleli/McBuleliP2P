@@ -14,6 +14,7 @@ import {
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { getPiReceiveAddressForDeposits } from "@/lib/pi-receive-address";
+import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -74,6 +75,10 @@ export async function POST(req: Request) {
         status: DepositStatus.AWAITING_TRANSFER,
       })
       .returning();
+    await notifyStaffWithdrawalsScope({
+      kind: "admin_deposit_order",
+      payload: { depositId: row.id, asset: row.asset },
+    });
     return NextResponse.json({ deposit: row });
   }
 
@@ -161,6 +166,11 @@ export async function POST(req: Request) {
       userNote: noteTrim ? noteTrim : null,
     })
     .returning();
+
+  await notifyStaffWithdrawalsScope({
+    kind: "admin_deposit_order",
+    payload: { depositId: row.id, asset: row.asset },
+  });
 
   return NextResponse.json({ deposit: row });
 }

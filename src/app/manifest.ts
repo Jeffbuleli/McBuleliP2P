@@ -2,18 +2,32 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "McBuleli",
     short_name: "McBuleli",
     description: "P2P crypto & mobile money — escrow wallet for Africa",
-    start_url: "/app",
+    start_url: "/",
+    scope: "/",
     display: "standalone",
-    background_color: "#0c0a09",
-    theme_color: "#166534",
+    background_color: "#f4f6f5",
+    theme_color: "#305f33",
     orientation: "portrait-primary",
     icons: [
       {
+        src: "/icons/icon-144.png",
+        sizes: "144x144",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
         src: "/icons/icon-192.png",
         sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-256.png",
+        sizes: "256x256",
         type: "image/png",
         purpose: "any",
       },
@@ -22,6 +36,18 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
+      },
+      {
+        src: "/icons/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   };
