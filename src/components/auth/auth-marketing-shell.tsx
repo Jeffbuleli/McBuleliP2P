@@ -74,8 +74,9 @@ export function AuthPageFooter({
   );
 }
 
+/** `auth-input` — autofill overrides in globals.css (.fd-public-light) */
 const authInputClass =
-  "rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-3 text-base text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)]/60 focus:ring-2";
+  "auth-input w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-3 text-base text-[color:var(--fd-text)] shadow-sm outline-none placeholder:text-[color:var(--fd-muted)]/70 focus:border-[color:var(--fd-primary)] focus:ring-2 focus:ring-[color:var(--fd-primary)]/20 disabled:opacity-60";
 
 export const authLabelClass = "flex flex-col gap-1 text-sm font-medium text-[color:var(--fd-text)]";
 export { authInputClass };

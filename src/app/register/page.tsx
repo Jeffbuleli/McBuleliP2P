@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
@@ -12,6 +11,7 @@ import {
   authInputClass,
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
+import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
 
 const COUNTRY_OPTIONS = [
   { code: "CD", en: "DR Congo", fr: "RDC" },
@@ -77,6 +77,7 @@ function RegisterForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(formatAuthClientError(data));
+        setLoading(false);
         return;
       }
       window.location.replace("/app");
@@ -85,9 +86,16 @@ function RegisterForm() {
         (err instanceof DOMException || err instanceof Error) &&
         err.name === "AbortError";
       setError(aborted ? t("auth_timeout") : t("auth_network_error"));
-    } finally {
       setLoading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <AuthMarketingShell>
+        <AuthWaitingScreen message={t("registering")} />
+      </AuthMarketingShell>
+    );
   }
 
   return (
@@ -101,18 +109,20 @@ function RegisterForm() {
       }
     >
       {referralCode.trim() ? (
-        <p className="mb-4 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-3 py-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+        <p className="mb-3 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-3 py-2 text-center text-xs font-bold text-[color:var(--fd-primary)]">
           {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
 
-      <div className="fd-card mt-2 rounded-[1.75rem] p-5">
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <div className="fd-card rounded-[1.75rem] p-5">
+        <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
           <label className={authLabelClass}>
             {t("email")}
             <input
               type="email"
+              name="email"
               autoComplete="email"
+              inputMode="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -127,6 +137,7 @@ function RegisterForm() {
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
               className={authInputClass}
+              autoComplete="country"
             >
               <option value="">{t("register_country_ph")}</option>
               {countries.map((c) => (
@@ -135,49 +146,47 @@ function RegisterForm() {
                 </option>
               ))}
             </select>
-            <span className="text-xs font-normal text-stone-500">{t("register_country_help")}</span>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
+          <label className={authLabelClass}>
             {t("password")}
             <input
               type="password"
+              name="password"
               autoComplete="new-password"
               required
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 focus:ring-2"
+              className={authInputClass}
             />
-            <span className="text-xs font-normal text-stone-500">{t("register_password_hint")}</span>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
+          <label className={authLabelClass}>
             {t("register_ref_label")}
             <input
               type="text"
+              name="referral"
               inputMode="text"
               autoComplete="off"
               value={referralCode}
               onChange={(e) => setReferralCode(e.target.value)}
               placeholder={t("register_ref_ph")}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 focus:ring-2"
+              className={authInputClass}
             />
-            <span className="text-xs font-normal text-stone-500">{t("register_ref_help")}</span>
           </label>
 
           {error ? (
-            <p className="rounded-2xl border border-rose-900/40 bg-rose-950/35 px-3 py-2 text-sm text-rose-50">
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               {error}
             </p>
           ) : null}
 
           <button
             type="submit"
-            disabled={loading}
-            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 disabled:opacity-60 active:scale-[0.99]"
+            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 text-base font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
           >
-            {loading ? t("registering") : t("register_btn")}
+            {t("register_btn")}
           </button>
         </form>
       </div>
@@ -189,12 +198,9 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto min-h-full max-w-md animate-pulse space-y-4 px-4 pb-10 pt-14">
-          <div className="h-11 w-11 rounded-2xl bg-stone-200 dark:bg-stone-800" />
-          <div className="h-8 w-48 rounded-lg bg-stone-200 dark:bg-stone-800" />
-          <div className="h-4 w-full rounded bg-stone-200 dark:bg-stone-800" />
-          <div className="mt-8 h-11 w-full rounded-xl bg-stone-200 dark:bg-stone-800" />
-        </div>
+        <AuthMarketingShell>
+          <AuthWaitingScreen />
+        </AuthMarketingShell>
       }
     >
       <RegisterForm />

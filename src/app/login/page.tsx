@@ -11,6 +11,7 @@ import {
   authInputClass,
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
+import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
 import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
 
 const PI_AUTO_SESSION_KEY = "mcbuleli_pi_login_auto_fired_v1";
@@ -171,6 +172,14 @@ export default function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (loading || piBusy) {
+    return (
+      <AuthMarketingShell>
+        <AuthWaitingScreen message={piBusy ? t("auth_pi_signing") : t("signing")} />
+      </AuthMarketingShell>
+    );
+  }
+
   return (
     <AuthMarketingShell
       footer={
@@ -187,7 +196,9 @@ export default function LoginPage() {
             {t("email")}
             <input
               type="email"
+              name="email"
               autoComplete="email"
+              inputMode="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -207,6 +218,7 @@ export default function LoginPage() {
             </div>
             <input
               type="password"
+              name="password"
               autoComplete="current-password"
               required
               value={password}
@@ -221,10 +233,9 @@ export default function LoginPage() {
           ) : null}
           <button
             type="submit"
-            disabled={loading}
-            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 disabled:opacity-60 active:scale-[0.99]"
+            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 text-base font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
           >
-            {loading ? t("signing") : t("signin")}
+            {t("signin")}
           </button>
         </form>
 
@@ -239,7 +250,6 @@ export default function LoginPage() {
 
         <button
           type="button"
-          disabled={piBusy}
           onClick={() => void startPiAuth({ manual: true })}
           className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
         >

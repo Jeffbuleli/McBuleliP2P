@@ -260,6 +260,20 @@ html {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
+/* Auth inputs — keep white background when iOS/Android autofill is applied */
+.fd-public-light input.auth-input:-webkit-autofill,
+.fd-public-light input.auth-input:-webkit-autofill:hover,
+.fd-public-light input.auth-input:-webkit-autofill:focus,
+.fd-public-light input.auth-input:-webkit-autofill:active,
+.fd-public-light select.auth-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--fd-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--fd-card) inset !important;
+  -webkit-text-fill-color: var(--fd-text) !important;
+  caret-color: var(--fd-text);
+  border-color: rgba(48, 95, 51, 0.22) !important;
+  transition: background-color 99999s ease-out 0s;
+}
+
 .fd-public-light .fd-card,
 .fd-public-light.home-theme .fd-card {
   border-radius: 1rem;
