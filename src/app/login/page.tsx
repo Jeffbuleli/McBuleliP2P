@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
-import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
+import {
+  AuthMarketingShell,
+  AuthPageFooter,
+} from "@/components/auth/auth-marketing-shell";
 import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
 
 const PI_AUTO_SESSION_KEY = "mcbuleli_pi_login_auto_fired_v1";
@@ -167,7 +170,15 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <AuthMarketingShell title={t("brand")} eyebrow={t("login_title")} backLabel={t("auth_back_home")}>
+    <AuthMarketingShell
+      footer={
+        <AuthPageFooter
+          prefix={t("no_account")}
+          linkHref="/register"
+          linkLabel={t("home_register")}
+        />
+      }
+    >
       <div className="rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
@@ -233,13 +244,6 @@ export default function LoginPage() {
           {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
         </button>
       </div>
-
-      <p className="mt-6 text-center text-sm text-stone-400">
-        {t("no_account")}{" "}
-        <Link href="/register" className="font-semibold text-emerald-300 underline-offset-4 hover:text-emerald-200 hover:underline">
-          {t("home_register")}
-        </Link>
-      </p>
     </AuthMarketingShell>
   );
 }

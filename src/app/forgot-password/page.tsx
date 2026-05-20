@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
+import {
+  AuthMarketingShell,
+  AuthPageFooter,
+} from "@/components/auth/auth-marketing-shell";
 import { useI18n } from "@/components/i18n-provider";
 
 export default function ForgotPasswordPage() {
   const { t } = useI18n();
 
   return (
-    <AuthMarketingShell title={t("brand")} eyebrow={t("forgot_title")} backLabel={t("auth_back_home")}>
+    <AuthMarketingShell
+      footer={
+        <AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />
+      }
+    >
       <div className="rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
         <p className="text-sm leading-relaxed text-stone-300">{t("forgot_body")}</p>
         <div className="mt-5 grid gap-2">

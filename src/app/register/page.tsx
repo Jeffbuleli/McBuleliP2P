@@ -6,7 +6,10 @@ import { Suspense, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
-import { AuthMarketingShell } from "@/components/auth/auth-marketing-shell";
+import {
+  AuthMarketingShell,
+  AuthPageFooter,
+} from "@/components/auth/auth-marketing-shell";
 
 const COUNTRY_OPTIONS = [
   { code: "CD", en: "DR Congo", fr: "RDC" },
@@ -86,10 +89,17 @@ function RegisterForm() {
   }
 
   return (
-    <AuthMarketingShell title={t("brand")} eyebrow={t("register_title")} backLabel={t("auth_back_home")}>
-      <p className="text-sm leading-relaxed text-stone-400">{t("register_sub")}</p>
+    <AuthMarketingShell
+      footer={
+        <AuthPageFooter
+          prefix={t("has_account")}
+          linkHref="/login"
+          linkLabel={t("home_login")}
+        />
+      }
+    >
       {referralCode.trim() ? (
-        <p className="mt-4 rounded-2xl border border-emerald-900/35 bg-emerald-950/25 px-3 py-2 text-xs font-semibold text-emerald-100">
+        <p className="mb-4 rounded-2xl border border-emerald-900/35 bg-emerald-950/25 px-3 py-2 text-xs font-semibold text-emerald-100">
           {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
@@ -168,53 +178,7 @@ function RegisterForm() {
             {loading ? t("registering") : t("register_btn")}
           </button>
         </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden>
-            <div className="w-full border-t border-stone-800" />
-          </div>
-          <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-            <span className="bg-stone-950/40 px-3">{t("auth_or")}</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          disabled
-          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-white px-4 text-sm font-semibold text-stone-900 opacity-70"
-          title={t("auth_google_soon")}
-        >
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
-            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-              <path
-                fill="#FFC107"
-                d="M43.6 20.5H42V20H24v8h11.3C33.7 33.9 29.3 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.4 1.2 8.8 3.2l5.7-5.7C34.9 5.6 29.7 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-4z"
-              />
-              <path
-                fill="#FF3D00"
-                d="M6.3 14.7l6.6 4.8C14.5 16.4 18.9 13 24 13c3.3 0 6.4 1.2 8.8 3.2l5.7-5.7C34.9 5.6 29.7 3 24 3 16.3 3 9.6 7.8 6.3 14.7z"
-              />
-              <path
-                fill="#4CAF50"
-                d="M24 45c5.6 0 10.7-2.1 14.6-5.5l-6.8-5.7c-2 1.4-4.6 2.2-7.8 2.2-5.3 0-9.8-3.1-11.7-7.5l-6.8 5.2C9.7 40.7 16.3 45 24 45z"
-              />
-              <path
-                fill="#1976D2"
-                d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.2 5.5-6.3 7.2l.1-.1 6.8 5.7h.1c4.4-4.1 7-10 7-16.6 0-1.4-.1-2.7-.4-4z"
-              />
-            </svg>
-          </span>
-          {t("auth_google")}
-        </button>
-        <p className="mt-3 text-center text-[11px] leading-snug text-stone-500">{t("auth_google_soon")}</p>
       </div>
-
-      <p className="mt-6 text-center text-sm text-stone-400">
-        {t("has_account")}{" "}
-        <Link href="/login" className="font-semibold text-emerald-300 underline-offset-4 hover:text-emerald-200 hover:underline">
-          {t("home_login")}
-        </Link>
-      </p>
     </AuthMarketingShell>
   );
 }
