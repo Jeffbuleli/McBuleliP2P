@@ -7,7 +7,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { SupportHeadsetIcon } from "@/components/support/support-chatroom";
-import { syncAppIconBadge } from "@/lib/app-icon-badge";
+import { useUnreadCountsContext } from "@/components/mobile/unread-counts-provider";
 
 function TopBarCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -65,37 +65,7 @@ export function AppTopBar({
   const { t } = useI18n();
   const [innerScroll, setInnerScroll] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [unreadNotif, setUnreadNotif] = useState(0);
-  const [unreadSupport, setUnreadSupport] = useState(0);
-
-  const totalUnread = unreadNotif + unreadSupport;
-
-  function refreshUnread() {
-    void fetch("/api/notifications", { credentials: "include", cache: "no-store" })
-      .then((r) => r.json())
-      .then((j: { unreadCount?: number }) => {
-        const n = Number(j.unreadCount ?? 0);
-        setUnreadNotif(Number.isFinite(n) ? n : 0);
-      })
-      .catch(() => {});
-    void fetch("/api/support/unread", { credentials: "include", cache: "no-store" })
-      .then((r) => r.json())
-      .then((j: { unreadCount?: number }) => {
-        const n = Number(j.unreadCount ?? 0);
-        setUnreadSupport(Number.isFinite(n) ? n : 0);
-      })
-      .catch(() => {});
-  }
-
-  useEffect(() => {
-    refreshUnread();
-    const id = window.setInterval(refreshUnread, 20000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    void syncAppIconBadge(totalUnread);
-  }, [totalUnread]);
+  const { unreadNotif, unreadSupport, refresh } = useUnreadCountsContext();
 
   useEffect(() => {
     const onScroll = () => setInnerScroll(window.scrollY > 6);
@@ -115,14 +85,10 @@ export function AppTopBar({
       >
         <Link
           href="/app"
-          className="relative flex min-h-[44px] min-w-0 flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
-          aria-label={
-            totalUnread > 0
-              ? `${t("brand")} — ${totalUnread} ${t("notifications_title")}`
-              : t("brand")
-          }
+          className="flex min-h-[44px] min-w-0 flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
+          aria-label={t("brand")}
         >
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
             <Image
               src="/brand/logo.png"
               alt=""
@@ -132,7 +98,6 @@ export function AppTopBar({
               priority
               unoptimized
             />
-            <TopBarCountBadge count={totalUnread} />
           </span>
           <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
             {t("brand")}
@@ -173,8 +138,7 @@ export function AppTopBar({
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
         onDidClose={() => {
-          setUnreadNotif(0);
-          refreshUnread();
+          refresh();
         }}
       />
     </>
