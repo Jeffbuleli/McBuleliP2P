@@ -33,12 +33,12 @@ function ServiceTile({
   tag: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-emerald-800/25 bg-gradient-to-b from-stone-900/80 to-stone-950/90 p-4 text-center shadow-lg shadow-black/25 transition hover:border-emerald-600/40">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-2 ring-emerald-500/25">
+    <div className="fd-card flex flex-col items-center gap-2 p-4 text-center transition hover:shadow-md">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/15">
         <Icon className="h-7 w-7" />
       </div>
-      <h3 className="text-sm font-extrabold leading-tight text-stone-50">{title}</h3>
-      <p className="text-[11px] font-medium leading-snug text-emerald-400/90">{tag}</p>
+      <h3 className="text-sm font-extrabold leading-tight text-[color:var(--fd-text)]">{title}</h3>
+      <p className="text-[11px] font-medium leading-snug text-[color:var(--fd-primary)]">{tag}</p>
     </div>
   );
 }
@@ -51,22 +51,22 @@ function TrustChip({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-stone-700/40 bg-stone-950/60 px-3 py-2.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+    <div className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 shadow-sm">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
         <Icon className="h-4 w-4" />
       </div>
-      <p className="text-xs font-semibold leading-snug text-stone-300">{label}</p>
+      <p className="text-xs font-semibold leading-snug text-[color:var(--fd-text)]">{label}</p>
     </div>
   );
 }
 
 function StepChip({ n, label }: { n: number; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-stone-700/45 bg-stone-950/50 px-3 py-4 text-center">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-black text-white shadow-md shadow-emerald-950/50">
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-4 text-center shadow-sm">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-sm font-black text-white shadow-md shadow-[color:var(--fd-primary)]/25">
         {n}
       </span>
-      <p className="text-[11px] font-bold leading-snug text-stone-200">{label}</p>
+      <p className="text-[11px] font-bold leading-snug text-[color:var(--fd-text)]">{label}</p>
     </div>
   );
 }
@@ -108,32 +108,32 @@ export async function HomeLanding() {
   ];
 
   return (
-    <div className="min-h-full">
+    <div className="home-theme fd-public-light min-h-dvh">
       <div
-        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(16,185,129,0.14),transparent)]"
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(48,95,51,0.12),transparent)]"
         aria-hidden
       />
 
       <LandingTopBar />
 
       <div className="relative mx-auto max-w-lg px-3 pb-4 pt-1 sm:max-w-2xl lg:max-w-5xl">
-        <section className="overflow-hidden rounded-[1.75rem] border-2 border-emerald-800/30 bg-gradient-to-br from-stone-900/90 via-stone-950 to-stone-950 p-6 shadow-2xl shadow-black/50 sm:p-8">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-emerald-400">
+        <section className="fd-card overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[color:var(--fd-mint)] via-[color:var(--fd-card)] to-[color:var(--fd-card)] p-6 sm:p-8">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[color:var(--fd-primary)]">
             {d.landing_presentation_eyebrow}
           </p>
-          <h1 className="mt-3 text-balance text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-4xl">
+          <h1 className="mt-3 text-balance text-3xl font-black leading-[1.1] tracking-tight text-[color:var(--fd-text)] sm:text-4xl">
             {d.landing_presentation_title}
           </h1>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <Link
               href="/register"
-              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl bg-emerald-600 px-6 text-base font-extrabold text-white shadow-lg shadow-emerald-950/40 active:scale-[0.99]"
+              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-6 text-base font-extrabold text-white shadow-lg shadow-[color:var(--fd-primary)]/25 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
             <Link
               href="/login"
-              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl border-2 border-stone-600 bg-stone-900/60 px-6 text-base font-bold text-stone-100 active:scale-[0.99]"
+              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl border-2 border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-6 text-base font-bold text-[color:var(--fd-text)] active:scale-[0.99]"
             >
               {d.landing_cta_login}
             </Link>
@@ -142,7 +142,7 @@ export async function HomeLanding() {
             {[d.landing_stat_1_t, d.landing_stat_2_t, d.landing_stat_3_t].map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-emerald-700/35 bg-emerald-950/50 px-3 py-1 text-[11px] font-bold text-emerald-300"
+                className="rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-3 py-1 text-[11px] font-bold text-[color:var(--fd-primary)]"
               >
                 {label}
               </span>
@@ -151,9 +151,9 @@ export async function HomeLanding() {
         </section>
 
         <div className="mt-6 space-y-6">
-          <PriceChartLazy />
+          <PriceChartLazy appearance="light" />
           <section id="market" className="scroll-mt-24">
-            <MarketPreview locale={locale} initialTickers={tickers} />
+            <MarketPreview locale={locale} initialTickers={tickers} appearance="light" />
           </section>
         </div>
       </div>
@@ -162,7 +162,7 @@ export async function HomeLanding() {
         <section id="services" className="scroll-mt-24" aria-labelledby="services-h">
           <h2
             id="services-h"
-            className="text-center text-xl font-black text-stone-50 sm:text-2xl"
+            className="text-center text-xl font-black text-[color:var(--fd-text)] sm:text-2xl"
           >
             {d.landing_services_heading}
           </h2>
@@ -174,7 +174,7 @@ export async function HomeLanding() {
           <div className="mt-8 flex justify-center">
             <Link
               href="/register"
-              className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-emerald-600 px-10 text-sm font-extrabold text-white shadow-lg shadow-emerald-950/35 active:scale-[0.99]"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-10 text-sm font-extrabold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
@@ -182,7 +182,7 @@ export async function HomeLanding() {
         </section>
 
         <section id="how" className="scroll-mt-24" aria-labelledby="how-h">
-          <h2 id="how-h" className="text-center text-xl font-black text-stone-50">
+          <h2 id="how-h" className="text-center text-xl font-black text-[color:var(--fd-text)]">
             {d.landing_how_heading}
           </h2>
           <div className="mt-6 grid grid-cols-4 gap-2">
@@ -194,10 +194,13 @@ export async function HomeLanding() {
 
         <section
           id="trust"
-          className="scroll-mt-24 rounded-2xl border border-emerald-900/25 bg-stone-950/80 p-4 sm:p-6"
+          className="scroll-mt-24 fd-card p-4 sm:p-6"
           aria-labelledby="trust-h"
         >
-          <h2 id="trust-h" className="text-center text-sm font-extrabold uppercase tracking-wide text-emerald-400">
+          <h2
+            id="trust-h"
+            className="text-center text-sm font-extrabold uppercase tracking-wide text-[color:var(--fd-primary)]"
+          >
             {d.landing_trust_heading}
           </h2>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -208,24 +211,24 @@ export async function HomeLanding() {
         </section>
       </main>
 
-      <footer className="border-t border-stone-800 bg-stone-950 px-4 py-8">
+      <footer className="border-t border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-8">
         <div className="mx-auto max-w-md text-center">
-          <p className="text-sm font-bold text-stone-300">{d.landing_footer_tagline}</p>
-          <nav className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-semibold text-emerald-400">
-            <Link href="/about" className="hover:text-emerald-300">
+          <p className="text-sm font-bold text-[color:var(--fd-text)]">{d.landing_footer_tagline}</p>
+          <nav className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-semibold text-[color:var(--fd-primary)]">
+            <Link href="/about" className="hover:opacity-80">
               {d.landing_footer_about}
             </Link>
-            <Link href="/contact" className="hover:text-emerald-300">
+            <Link href="/contact" className="hover:opacity-80">
               {d.landing_footer_contact}
             </Link>
-            <Link href="/terms" className="hover:text-emerald-300">
+            <Link href="/terms" className="hover:opacity-80">
               {d.landing_footer_terms}
             </Link>
-            <Link href="/privacy" className="hover:text-emerald-300">
+            <Link href="/privacy" className="hover:opacity-80">
               {d.landing_footer_privacy}
             </Link>
           </nav>
-          <p className="mt-6 text-xs text-stone-600">
+          <p className="mt-6 text-xs text-[color:var(--fd-muted)]">
             © {new Date().getFullYear()} {d.brand}
           </p>
         </div>

@@ -201,8 +201,8 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
       }
     >
       {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d — then price / % (same idea as before Pi) */}
-      <div className="mb-3 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2">
-        <div className="flex shrink-0 items-center gap-1.5">
+      <div className="mb-3 flex min-w-0 flex-nowrap items-center gap-x-1.5 overflow-x-auto">
+        <div className="flex shrink-0 items-center gap-1">
           {CHART_SYMBOLS.map((s) => (
             <button
               key={s}
@@ -245,13 +245,13 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
           </span>
           {t("market_live")}
         </span>
-        <div className="flex min-h-[34px] min-w-0 flex-1 flex-wrap items-center justify-end gap-1">
+        <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-0.5">
           {(["1h", "24h", "7d"] as const).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRange(r)}
-              className={`min-h-[32px] min-w-[2.45rem] shrink-0 rounded-full px-2 py-1.5 text-xs font-semibold transition active:scale-95 ${
+              className={`min-h-[32px] shrink-0 whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-semibold leading-none transition active:scale-95 sm:min-w-[2.45rem] sm:text-xs ${
                 range === r
                   ? isLight
                     ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"

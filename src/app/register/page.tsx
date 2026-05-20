@@ -9,6 +9,8 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   AuthMarketingShell,
   AuthPageFooter,
+  authInputClass,
+  authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 
 const COUNTRY_OPTIONS = [
@@ -99,14 +101,14 @@ function RegisterForm() {
       }
     >
       {referralCode.trim() ? (
-        <p className="mb-4 rounded-2xl border border-emerald-900/35 bg-emerald-950/25 px-3 py-2 text-xs font-semibold text-emerald-100">
+        <p className="mb-4 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-3 py-2 text-xs font-semibold text-[color:var(--fd-primary)]">
           {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
 
-      <div className="mt-6 rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
+      <div className="fd-card mt-2 rounded-[1.75rem] p-5">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
+          <label className={authLabelClass}>
             {t("email")}
             <input
               type="email"
@@ -114,17 +116,17 @@ function RegisterForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 placeholder:text-stone-600 focus:ring-2"
+              className={authInputClass}
               placeholder="you@email.com"
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
+          <label className={authLabelClass}>
             {t("register_country_label")}
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 focus:ring-2"
+              className={authInputClass}
             >
               <option value="">{t("register_country_ph")}</option>
               {countries.map((c) => (
@@ -173,7 +175,7 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 min-h-[52px] rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-3 font-semibold text-white shadow-lg shadow-emerald-900/25 disabled:opacity-60 active:scale-[0.99]"
+            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 disabled:opacity-60 active:scale-[0.99]"
           >
             {loading ? t("registering") : t("register_btn")}
           </button>

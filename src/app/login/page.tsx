@@ -8,6 +8,8 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   AuthMarketingShell,
   AuthPageFooter,
+  authInputClass,
+  authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
 
@@ -179,9 +181,9 @@ export default function LoginPage() {
         />
       }
     >
-      <div className="rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
+      <div className="fd-card rounded-[1.75rem] p-5">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm font-medium text-stone-100">
+          <label className={authLabelClass}>
             {t("email")}
             <input
               type="email"
@@ -189,16 +191,16 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 placeholder:text-stone-600 focus:ring-2"
+              className={authInputClass}
               placeholder="you@email.com"
             />
           </label>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
-              <label className="text-sm font-medium text-stone-100">{t("password")}</label>
+              <label className="text-sm font-medium text-[color:var(--fd-text)]">{t("password")}</label>
               <Link
                 href="/forgot-password"
-                className="text-xs font-semibold text-emerald-300/90 underline-offset-4 hover:text-emerald-200 hover:underline"
+                className="text-xs font-semibold text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
               >
                 {t("login_forgot")}
               </Link>
@@ -209,18 +211,18 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-2xl border border-stone-700 bg-stone-950/40 px-3 py-3 text-base text-stone-50 outline-none ring-emerald-600/40 placeholder:text-stone-600 focus:ring-2"
+              className={authInputClass}
             />
           </div>
           {error ? (
-            <p className="rounded-2xl border border-rose-900/40 bg-rose-950/35 px-3 py-2 text-sm text-rose-50">
+            <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               {error}
             </p>
           ) : null}
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 min-h-[52px] rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-3 font-semibold text-white shadow-lg shadow-emerald-900/25 disabled:opacity-60 active:scale-[0.99]"
+            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 disabled:opacity-60 active:scale-[0.99]"
           >
             {loading ? t("signing") : t("signin")}
           </button>
@@ -228,10 +230,10 @@ export default function LoginPage() {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center" aria-hidden>
-            <div className="w-full border-t border-stone-800" />
+            <div className="w-full border-t border-[color:var(--fd-border)]" />
           </div>
-          <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-            <span className="bg-stone-950/40 px-3">{t("auth_or")}</span>
+          <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--fd-muted)]">
+            <span className="bg-[color:var(--fd-card)] px-3">{t("auth_or")}</span>
           </div>
         </div>
 
@@ -239,7 +241,7 @@ export default function LoginPage() {
           type="button"
           disabled={piBusy}
           onClick={() => void startPiAuth({ manual: true })}
-          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-stone-950/40 px-4 text-sm font-semibold text-stone-50 disabled:opacity-60"
+          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
         >
           {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
         </button>

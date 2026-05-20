@@ -31,26 +31,22 @@ export function AppShell({
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support");
-  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p || onSupport;
   const showTopBar = !onProfile && !hideTopBarForFlow;
+  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p || onSupport;
 
   return (
     <div
-      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] ${
-        lightMainBg ? "bg-[var(--fd-bg)]" : ""
-      }`}
+      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[var(--fd-bg)] pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]`}
     >
       {showTopBar ? (
         <div className="sticky top-0 z-40 px-3 pt-2">
-          <div className="rounded-2xl border border-stone-700/50 bg-stone-900/90 shadow-lg shadow-black/20 ring-1 ring-stone-800/80 backdrop-blur-md">
-            <div className="px-2 py-1.5">
-              <AppTopBar email={email} avatarUrl={avatarUrl} />
-            </div>
+          <div className="fd-app-topbar px-2 py-1.5">
+            <AppTopBar email={email} avatarUrl={avatarUrl} />
           </div>
         </div>
       ) : null}
       <main
-        className={`flex-1 ${lightMainBg ? "bg-[var(--fd-bg)] px-4 pt-2" : "px-4 pt-3"} ${onSupport ? "!px-0 !pt-0" : ""}`}
+        className={`flex-1 px-4 ${lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0" : ""}`}
       >
         {children}
       </main>

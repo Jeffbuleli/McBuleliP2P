@@ -253,6 +253,35 @@ html {
   color: var(--fd-primary);
 }
 
+/* Marketing / auth — same light surface as app home */
+.fd-public-light {
+  color: var(--fd-text);
+  background: var(--fd-bg);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+.fd-public-light .fd-card,
+.fd-public-light.home-theme .fd-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(48, 95, 51, 0.16);
+  background: var(--fd-card);
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.04),
+    0 4px 14px rgba(48, 95, 51, 0.1),
+    0 12px 28px rgba(28, 25, 23, 0.05);
+}
+
+/* In-app sticky title bar — light glass */
+.fd-app-topbar {
+  border-radius: 1rem;
+  border: 1px solid rgba(48, 95, 51, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 2px 8px rgba(48, 95, 51, 0.08),
+    0 8px 24px rgba(28, 25, 23, 0.05);
+  backdrop-filter: blur(10px);
+}
+
 /* Wallet section — reuses profile tokens */
 .wallet-theme {
   color: var(--fd-text);

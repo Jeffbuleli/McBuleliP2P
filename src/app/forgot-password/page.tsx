@@ -16,18 +16,18 @@ export default function ForgotPasswordPage() {
         <AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />
       }
     >
-      <div className="rounded-[1.75rem] border border-stone-700/55 bg-stone-950/55 p-5 shadow-2xl shadow-black/45 backdrop-blur-xl">
-        <p className="text-sm leading-relaxed text-stone-300">{t("forgot_body")}</p>
+      <div className="fd-card rounded-[1.75rem] p-5">
+        <p className="text-sm leading-relaxed text-[color:var(--fd-muted)]">{t("forgot_body")}</p>
         <div className="mt-5 grid gap-2">
           <Link
             href="/contact"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/25 active:scale-[0.99]"
+            className="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-5 text-sm font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
           >
             {t("forgot_contact")}
           </Link>
           <Link
             href="/login"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-stone-700 bg-stone-950/40 px-5 text-sm font-semibold text-stone-100 active:scale-[0.99]"
+            className="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-5 text-sm font-semibold text-[color:var(--fd-text)] active:scale-[0.99]"
           >
             {t("forgot_back_login")}
           </Link>

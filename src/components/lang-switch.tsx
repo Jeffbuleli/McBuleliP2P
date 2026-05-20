@@ -18,10 +18,10 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
           active
             ? dark
               ? "bg-emerald-500 text-stone-950 ring-2 ring-emerald-400/60"
-              : "bg-emerald-800 text-white ring-2 ring-emerald-600"
+              : "bg-[color:var(--fd-primary)] text-white ring-2 ring-[color:var(--fd-primary)]/30"
             : dark
               ? "bg-stone-800/90 text-stone-200 hover:bg-stone-700"
-              : "bg-stone-950/70 text-stone-200 hover:bg-stone-900/70 border border-stone-700/60"
+              : "border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] text-[color:var(--fd-text)] hover:bg-[color:var(--fd-mint-deep)]"
         }`}
         aria-pressed={active}
       >
@@ -36,7 +36,7 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
       className={`flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
         dark
           ? "border border-stone-600/80 bg-stone-900/90"
-          : "border border-stone-700/60 bg-stone-950/70"
+          : "border border-[color:var(--fd-border)] bg-white/95"
       }`}
       role="group"
       aria-label={locale === "fr" ? "Langue" : "Language"}

@@ -59,16 +59,14 @@ export function AppTopBar({
     <>
       <header
         className={`relative flex min-h-[48px] items-center justify-between gap-2 px-0.5 py-1 transition-[box-shadow] duration-200 ${
-          scrolled
-            ? "shadow-sm shadow-emerald-900/10 dark:shadow-black/30"
-            : ""
+          scrolled ? "shadow-sm shadow-[color:var(--fd-primary)]/10" : ""
         }`}
       >
         <Link
           href="/app"
           className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
         >
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-500/75 bg-emerald-950/55 shadow-[0_0_0_1px_rgba(16,185,129,0.35)] shadow-lg shadow-black/40 ring-2 ring-emerald-400/20 backdrop-blur-md">
+          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
             <Image
               src="/brand/logo.png"
               alt=""
@@ -79,7 +77,7 @@ export function AppTopBar({
               unoptimized
             />
           </span>
-          <span className="font-bold tracking-tight text-emerald-100">
+          <span className="font-bold tracking-tight text-[color:var(--fd-text)]">
             {t("brand")}
           </span>
         </Link>
@@ -101,13 +99,13 @@ export function AppTopBar({
 
           <button
             type="button"
-            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-stone-200 transition hover:bg-stone-900/50 active:scale-95"
+            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] active:scale-95"
             aria-label={t("notifications_title")}
             onClick={() => setNotifOpen(true)}
           >
             <BellIcon />
             {unreadNotif > 0 ? (
-              <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-stone-950">
+              <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
                 {unreadNotif > 99 ? "99+" : unreadNotif}
               </span>
             ) : null}
