@@ -115,7 +115,7 @@ const PRESETS: Record<
     confirmTimeframe: "4h",
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
-    aiAssistMode: false,
+    aiAssistMode: true,
     minAiConfidence: 45,
     aiSignalMaxAgeMs: 180_000,
   },

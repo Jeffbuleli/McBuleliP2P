@@ -1251,8 +1251,31 @@ export const en = {
   bots_category_basics: "Trade setup",
   bots_category_style: "Trading style",
   bots_category_intelligence: "Signals & exit",
+  bots_category_coordination: "AI + BOT",
   bots_category_execution: "Execution",
   bots_category_activity: "Live",
+  bots_coord_hint:
+    "Technical analysis and McBuleli AI run together when you tap Start. No manual signal tuning — the bot applies a coordinated preset.",
+  bots_coord_analysis: "Analysis",
+  bots_coord_style_label: "Rhythm",
+  bots_coord_style_day: "Day trade",
+  bots_coord_style_swing: "Swing",
+  bots_ai_doc_link: "How AI works with the bot",
+  bots_ai_doc_title: "AI & trading bot",
+  bots_ai_doc_intro:
+    "McBuleli pairs in-app technical analysis (TA) with an external analysis service (Python worker). Execution runs on your connected exchange via API keys.",
+  bots_ai_doc_binance_title: "Binance.com",
+  bots_ai_doc_binance_body:
+    "Spot DCA and Grid use Binance Spot API. Futures UM uses Binance USD-M Futures (FAPI or Portfolio Margin). The cron worker loads OHLCV and order books from Binance, applies TA gates, then places orders only when rules and AI (futures) agree.",
+  bots_ai_doc_okx_title: "OKX.com",
+  bots_ai_doc_okx_body:
+    "OKX is used in the platform for Pi market data and deposit verification (PI-USDT reference). Automated trading bots on McBuleli execute on Binance with your stored API keys. Pi deposits are validated against OKX ledger history when applicable.",
+  bots_ai_doc_flow_title: "Coordinated flow",
+  bots_ai_doc_flow_body:
+    "1) Cron tick every few minutes. 2) TA scores the market (bias, strength, multi-timeframe on futures). 3) AI worker pushes a fresh signal for active futures bots. 4) BOT opens, manages SL/TP, breakeven, trailing, and smart exit using the same preset you chose (Day or Swing).",
+  bots_ai_doc_start_title: "What you configure",
+  bots_ai_doc_start_body:
+    "Pair, size, leverage (futures), stop-loss and take-profit percentages, and rhythm (Day / Swing). Start activates TA + AI + BOT together; Pause stops new actions.",
   bots_coord_title: "Pipeline",
   bots_coord_cron: "Cron",
   bots_coord_smart: "TA",
@@ -3347,8 +3370,31 @@ export const fr: Messages = {
   bots_category_basics: "Paramètres trade",
   bots_category_style: "Style de trading",
   bots_category_intelligence: "Signaux & sortie",
+  bots_category_coordination: "IA + BOT",
   bots_category_execution: "Exécution",
   bots_category_activity: "En direct",
+  bots_coord_hint:
+    "L’analyse technique et l’IA McBuleli travaillent ensemble lorsque vous appuyez sur Démarrer. Plus de réglages manuels de signaux — le bot applique un préréglage coordonné.",
+  bots_coord_analysis: "Analyse",
+  bots_coord_style_label: "Rythme",
+  bots_coord_style_day: "Day trade",
+  bots_coord_style_swing: "Swing",
+  bots_ai_doc_link: "Comment l’IA travaille avec le bot",
+  bots_ai_doc_title: "IA & bot de trading",
+  bots_ai_doc_intro:
+    "McBuleli combine l’analyse technique intégrée (TA) avec un service d’analyse externe (worker Python). L’exécution passe par vos clés API sur l’exchange connecté.",
+  bots_ai_doc_binance_title: "Binance.com",
+  bots_ai_doc_binance_body:
+    "DCA et Grid spot utilisent l’API Spot Binance. Futures UM utilise Binance USD-M Futures (FAPI ou Portfolio Margin). Le cron charge les chandeliers et carnets, applique les filtres TA, puis passe des ordres seulement si les règles et l’IA (futures) sont d’accord.",
+  bots_ai_doc_okx_title: "OKX.com",
+  bots_ai_doc_okx_body:
+    "OKX sert aux données marché Pi et à la vérification des dépôts (référence PI-USDT). Les bots automatisés McBuleli exécutent sur Binance avec vos clés API. Les dépôts Pi peuvent être validés via l’historique OKX le cas échéant.",
+  bots_ai_doc_flow_title: "Flux coordonné",
+  bots_ai_doc_flow_body:
+    "1) Tick cron toutes les quelques minutes. 2) La TA note le marché (biais, force, multi-timeframe sur futures). 3) Le worker IA envoie un signal frais pour les bots futures actifs. 4) Le BOT ouvre, gère SL/TP, breakeven, trailing et sortie intelligente selon le préréglage (Day ou Swing).",
+  bots_ai_doc_start_title: "Ce que vous configurez",
+  bots_ai_doc_start_body:
+    "Paire, taille, levier (futures), pourcentages stop-loss et take-profit, et rythme (Day / Swing). Démarrer active TA + IA + BOT ensemble ; Pause arrête les nouvelles actions.",
   bots_coord_title: "Pipeline",
   bots_coord_cron: "Cron",
   bots_coord_smart: "TA",

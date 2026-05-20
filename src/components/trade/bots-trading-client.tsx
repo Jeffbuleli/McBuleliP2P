@@ -4,10 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
-import {
-  parseBotCandleTimeframe,
-  type BotCandleTimeframe,
-} from "@/lib/bot-smart-config";
 import type { Messages } from "@/i18n/messages";
 import {
   botsApiMessage,
@@ -21,28 +17,16 @@ import {
   type CronHealthSnapshot,
 } from "@/components/trade/bots-cron-health-bar";
 import {
-  FuturesTraderProfilePanel,
-  futBreakevenConfigFields,
-  futAiAssistConfigFields,
-  futLifecycleConfigFields,
-  futMultiTfConfigFields,
-  futTrailingConfigFields,
-  loadFutAiAssistFromConfig,
-  loadFutBreakevenFromConfig,
-  loadFutLifecycleFromConfig,
-  loadFutMultiTfFromConfig,
-  loadFutTrailingFromConfig,
-  type FutAiAssistUiState,
-  type FutBreakevenUiState,
-  type FutLifecycleUiState,
-  type FutMultiTfUiState,
-  type FutTrailingUiState,
-} from "@/components/trade/futures-trader-profile-panel";
+  buildCoordinatedDcaConfig,
+  buildCoordinatedFuturesConfig,
+  buildCoordinatedGridConfig,
+  coordinatedStyleFromProfile,
+  parseCoordinatedStyle,
+  type BotCoordinatedStyleId,
+} from "@/lib/bot-coordinated-config";
 import {
   getFuturesTraderProfilePreset,
   parseTraderProfileId,
-  type BotTraderProfileId,
-  type FuturesTraderProfilePreset,
 } from "@/lib/bot-futures-trader-profiles";
 import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel";
 import { BotRunControls } from "@/components/trade/bot-run-controls";
@@ -63,7 +47,6 @@ import {
   BotFlowField,
   BotFlowInput,
   BotFlowSelect,
-  BotFlowToggle,
   BotFormGrid,
   BotPlanCard,
   BotStatusPill,
@@ -173,20 +156,6 @@ function BotStatusBadge({
   return <BotStatusPill tone="active">{t("bots_status_active")}</BotStatusPill>;
 }
 
-type SmartUiState = {
-  smartMode: boolean;
-  minSignalScore: number;
-  timeframe: BotCandleTimeframe;
-};
-
-function loadSmartFromConfig(cfg: Record<string, unknown> | undefined): SmartUiState {
-  return {
-    smartMode: Boolean(cfg?.smartMode),
-    minSignalScore: Number(cfg?.minSignalScore) || 35,
-    timeframe: parseBotCandleTimeframe(cfg?.timeframe),
-  };
-}
-
 function billingEnvLabel(
   billing: "demo" | "live",
   t: (k: keyof Messages) => string,
@@ -194,259 +163,26 @@ function billingEnvLabel(
   return billing === "demo" ? t("bots_billing_demo") : t("bots_billing_live");
 }
 
-function SmartModePanel({
-  planId,
-  symbol,
-  billing,
-  smart,
-  setSmart,
-  smartOptions,
-  t,
-}: {
-  planId: BotPlanId;
-  symbol: string;
-  billing: "demo" | "live";
-  smart: SmartUiState;
-  setSmart: (s: SmartUiState) => void;
-  smartOptions: Overview["smartOptions"];
-  t: (k: keyof Messages) => string;
-}) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [previewBusy, setPreviewBusy] = useState(false);
-
-  async function loadPreview() {
-    setPreviewBusy(true);
-    setPreview(null);
-    try {
-      const q = new URLSearchParams({
-        symbol,
-        planId,
-        billing,
-        timeframe: smart.timeframe,
-      });
-      const res = await fetch(`/api/trade/bots/signal?${q}`, { cache: "no-store" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const err = typeof json.error === "string" ? json.error : "";
-        setPreview(botsApiMessage(err, t));
-        return;
-      }
-      const score = typeof json.score === "number" ? json.score : "—";
-      const bias = typeof json.bias === "string" ? json.bias : "";
-      setPreview(`${bias} · ${t("bots_smart_score_label")} ${score}`);
-    } finally {
-      setPreviewBusy(false);
-    }
-  }
-
+function BotCoordinationHint({ t }: { t: (k: keyof Messages) => string }) {
   return (
-    <div className="mt-3 space-y-2">
-      <BotFlowToggle
-        label={t("bots_smart_mode")}
-        checked={smart.smartMode}
-        onChange={(v) => setSmart({ ...smart, smartMode: v })}
-      />
-      {smart.smartMode ? (
-        <>
-          <BotFormGrid>
-            <BotFlowField label={t("bots_smart_min_score")}>
-              <BotFlowSelect
-                value={smart.minSignalScore}
-                onChange={(e) =>
-                  setSmart({ ...smart, minSignalScore: Number(e.target.value) })
-                }
-              >
-                {(smartOptions?.minSignalScores ?? [35]).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-            <BotFlowField label={t("bots_smart_timeframe")}>
-              <BotFlowSelect
-                value={smart.timeframe}
-                onChange={(e) =>
-                  setSmart({
-                    ...smart,
-                    timeframe: e.target.value as SmartUiState["timeframe"],
-                  })
-                }
-              >
-                {(smartOptions?.timeframes ?? ["1h"]).map((tf) => (
-                  <option key={tf} value={tf}>
-                    {tf}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-          </BotFormGrid>
-          <button
-            type="button"
-            disabled={previewBusy}
-            onClick={() => void loadPreview()}
-            className="w-full rounded-xl border border-[color:var(--fd-border)] py-2 text-xs font-bold text-[color:var(--fd-primary)]"
-          >
-            {previewBusy ? t("bots_smart_loading") : t("bots_smart_preview")}
-          </button>
-          {preview ? (
-            <p className="text-xs font-medium text-[color:var(--fd-muted)]">{preview}</p>
-          ) : null}
-        </>
-      ) : null}
-    </div>
+    <p className="rounded-xl border border-[color:var(--fd-border)]/80 bg-[color:var(--fd-mint)]/40 px-3 py-2.5 text-xs leading-relaxed text-[color:var(--fd-muted)]">
+      {t("bots_coord_hint")}
+    </p>
   );
 }
 
-function smartConfigFields(s: SmartUiState) {
-  return {
-    smartMode: s.smartMode,
-    minSignalScore: s.minSignalScore,
-    timeframe: s.timeframe,
-  };
-}
-
-type FutExitUiState = {
-  smartExitMode: boolean;
-  minReversalScore: number;
-  minProfitPctForSmartExit: number;
-  smartExitUseEntryTimeframe: boolean;
-  smartExitTimeframe: SmartUiState["timeframe"];
-};
-
-function loadFutExitFromConfig(
-  cfg: Record<string, unknown> | undefined,
-): FutExitUiState {
-  const entryTf =
-    (cfg?.timeframe as SmartUiState["timeframe"] | undefined) ?? "1h";
-  return {
-    smartExitMode: Boolean(cfg?.smartExitMode),
-    minReversalScore: Number(cfg?.minReversalScore) || 40,
-    minProfitPctForSmartExit: Number(cfg?.minProfitPctForSmartExit) ?? 0.5,
-    smartExitUseEntryTimeframe: cfg?.smartExitUseEntryTimeframe !== false,
-    smartExitTimeframe:
-      (cfg?.smartExitTimeframe as SmartUiState["timeframe"] | undefined) ??
-      entryTf,
-  };
-}
-
-function futExitConfigFields(s: FutExitUiState) {
-  return {
-    smartExitMode: s.smartExitMode,
-    minReversalScore: s.minReversalScore,
-    minProfitPctForSmartExit: s.minProfitPctForSmartExit,
-    smartExitUseEntryTimeframe: s.smartExitUseEntryTimeframe,
-    ...(s.smartExitUseEntryTimeframe
-      ? {}
-      : { smartExitTimeframe: s.smartExitTimeframe }),
-  };
-}
-
-function resolveExitTfLabel(
-  exit: FutExitUiState,
-  entryTimeframe: SmartUiState["timeframe"],
-): SmartUiState["timeframe"] {
-  return exit.smartExitUseEntryTimeframe
-    ? entryTimeframe
-    : exit.smartExitTimeframe;
-}
-
-const SMART_EXIT_TF_ENTRY = "__entry__";
-
-function FuturesSmartExitPanel({
-  exit,
-  setExit,
-  entryTimeframe,
-  timeframes,
-  t,
-}: {
-  exit: FutExitUiState;
-  setExit: (s: FutExitUiState) => void;
-  entryTimeframe: SmartUiState["timeframe"];
-  timeframes: string[];
-  t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
-}) {
-  const exitTf = resolveExitTfLabel(exit, entryTimeframe);
-  const tfSelectValue = exit.smartExitUseEntryTimeframe
-    ? SMART_EXIT_TF_ENTRY
-    : exit.smartExitTimeframe;
-
-  return (
-    <div className="mt-3 space-y-2">
-      <BotFlowToggle
-        label={t("bots_smart_exit_mode")}
-        checked={exit.smartExitMode}
-        onChange={(v) => setExit({ ...exit, smartExitMode: v })}
-      />
-      {exit.smartExitMode ? (
-        <>
-          <BotFormGrid>
-            <BotFlowField label={t("bots_smart_exit_tf_label")}>
-              <BotFlowSelect
-                value={tfSelectValue}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === SMART_EXIT_TF_ENTRY) {
-                    setExit({ ...exit, smartExitUseEntryTimeframe: true });
-                    return;
-                  }
-                  setExit({
-                    ...exit,
-                    smartExitUseEntryTimeframe: false,
-                    smartExitTimeframe: v as SmartUiState["timeframe"],
-                  });
-                }}
-              >
-                <option value={SMART_EXIT_TF_ENTRY}>
-                  {t("bots_smart_exit_tf_entry", { tf: entryTimeframe })}
-                </option>
-                {timeframes.map((tf) => (
-                  <option key={tf} value={tf}>
-                    {tf}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-            <BotFlowField label={t("bots_smart_exit_reversal_score")}>
-              <BotFlowSelect
-                value={exit.minReversalScore}
-                onChange={(e) =>
-                  setExit({
-                    ...exit,
-                    minReversalScore: Number(e.target.value),
-                  })
-                }
-              >
-                {[30, 35, 40, 45, 50, 55].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </BotFlowSelect>
-            </BotFlowField>
-            <BotFlowField label={t("bots_smart_exit_min_profit")}>
-              <BotFlowInput
-                type="number"
-                min={0}
-                max={20}
-                step={0.1}
-                value={exit.minProfitPctForSmartExit}
-                onChange={(e) =>
-                  setExit({
-                    ...exit,
-                    minProfitPctForSmartExit: Number(e.target.value),
-                  })
-                }
-              />
-            </BotFlowField>
-          </BotFormGrid>
-          <p className="text-[10px] text-[color:var(--fd-muted)]">
-            {t("bots_smart_exit_hint", { tf: exitTf })}
-          </p>
-        </>
-      ) : null}
-    </div>
-  );
+function applyCoordinatedStyleDefaults(
+  style: BotCoordinatedStyleId,
+  setters: {
+    setFutInterval: (h: number) => void;
+    setFutSl: (n: number) => void;
+    setFutTp: (n: number) => void;
+  },
+) {
+  const preset = getFuturesTraderProfilePreset(style);
+  setters.setFutInterval(preset.intervalHours);
+  setters.setFutSl(preset.stopLossPct);
+  setters.setFutTp(preset.takeProfitPct);
 }
 
 export function BotsTradingClient() {
@@ -481,51 +217,7 @@ export function BotsTradingClient() {
   const [futSl, setFutSl] = useState(5);
   const [futTp, setFutTp] = useState(10);
   const [futMsg, setFutMsg] = useState<string | null>(null);
-  const [dcaSmart, setDcaSmart] = useState<SmartUiState>({
-    smartMode: false,
-    minSignalScore: 35,
-    timeframe: "1h",
-  });
-  const [gridSmart, setGridSmart] = useState<SmartUiState>({
-    smartMode: false,
-    minSignalScore: 35,
-    timeframe: "1h",
-  });
-  const [futSmart, setFutSmart] = useState<SmartUiState>({
-    smartMode: false,
-    minSignalScore: 35,
-    timeframe: "1h",
-  });
-  const [futExit, setFutExit] = useState<FutExitUiState>({
-    smartExitMode: false,
-    minReversalScore: 40,
-    minProfitPctForSmartExit: 0.5,
-    smartExitUseEntryTimeframe: true,
-    smartExitTimeframe: "1h",
-  });
-  const [futTraderProfile, setFutTraderProfile] =
-    useState<BotTraderProfileId>("day");
-  const [futBreakeven, setFutBreakeven] = useState<FutBreakevenUiState>({
-    breakevenMode: true,
-    breakevenTriggerPct: 1,
-  });
-  const [futTrailing, setFutTrailing] = useState<FutTrailingUiState>({
-    trailingMode: true,
-    trailingPct: 0.8,
-    trailingTriggerPct: 2,
-  });
-  const [futMultiTf, setFutMultiTf] = useState<FutMultiTfUiState>({
-    multiTfGateMode: true,
-    confirmTimeframe: "1h",
-  });
-  const [futLifecycle, setFutLifecycle] = useState<FutLifecycleUiState>({
-    maxHoldMinutes: 0,
-    reentryCooldownMinutes: 0,
-  });
-  const [futAiAssist, setFutAiAssist] = useState<FutAiAssistUiState>({
-    aiAssistMode: false,
-    minAiConfidence: 40,
-  });
+  const [futStyle, setFutStyle] = useState<BotCoordinatedStyleId>("day");
   const [logs, setLogs] = useState<BotLogRow[]>([]);
   const [activeTab, setActiveTab] = useState<BotPlanId>("futures_um");
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
@@ -618,7 +310,6 @@ export function BotsTradingClient() {
     if (cfg?.symbol) setDcaSymbol(cfg.symbol);
     if (cfg?.quoteAmountUsdt) setDcaAmount(cfg.quoteAmountUsdt);
     if (cfg?.intervalHours) setDcaInterval(cfg.intervalHours);
-    setDcaSmart(loadSmartFromConfig(inst?.config));
 
     const ginst = data.instances.find(
       (i) => i.planId === "grid_spot" && i.billing === accountBilling,
@@ -637,7 +328,6 @@ export function BotsTradingClient() {
     if (gcfg?.gridCount) setGridCount(gcfg.gridCount);
     if (gcfg?.quotePerGrid) setGridQuote(gcfg.quotePerGrid);
     if (gcfg?.refreshHours) setGridRefresh(gcfg.refreshHours);
-    setGridSmart(loadSmartFromConfig(ginst?.config));
 
     const finst = data.instances.find(
       (i) => i.planId === "futures_um" && i.billing === accountBilling,
@@ -659,69 +349,19 @@ export function BotsTradingClient() {
       if (fcfg?.intervalHours) setFutInterval(fcfg.intervalHours);
       if (fcfg?.stopLossPct) setFutSl(fcfg.stopLossPct);
       if (fcfg?.takeProfitPct) setFutTp(fcfg.takeProfitPct);
-      const loadedSmart = loadSmartFromConfig(finst.config);
-      setFutSmart(loadedSmart);
-      setFutExit(loadFutExitFromConfig(finst.config));
-      setFutBreakeven(loadFutBreakevenFromConfig(finst.config));
-      setFutTrailing(loadFutTrailingFromConfig(finst.config));
-      setFutMultiTf(
-        loadFutMultiTfFromConfig(finst.config, loadedSmart.timeframe),
+      setFutStyle(
+        coordinatedStyleFromProfile(
+          parseTraderProfileId(finst.config?.traderProfile),
+        ),
       );
-      setFutLifecycle(loadFutLifecycleFromConfig(finst.config));
-      setFutAiAssist(loadFutAiAssistFromConfig(finst.config));
-      setFutTraderProfile(parseTraderProfileId(finst.config?.traderProfile));
     } else {
-      applyFuturesProfilePreset(getFuturesTraderProfilePreset("day"));
+      applyCoordinatedStyleDefaults("day", {
+        setFutInterval,
+        setFutSl,
+        setFutTp,
+      });
     }
   }, [data?.instances, accountBilling]);
-
-  function applyFuturesProfilePreset(preset: FuturesTraderProfilePreset) {
-    setFutTraderProfile(preset.traderProfile);
-    setFutInterval(preset.intervalHours);
-    setFutSl(preset.stopLossPct);
-    setFutTp(preset.takeProfitPct);
-    setFutSmart({
-      smartMode: preset.smartMode,
-      minSignalScore: preset.minSignalScore,
-      timeframe: preset.timeframe,
-    });
-    setFutExit({
-      smartExitMode: preset.smartExitMode,
-      minReversalScore: preset.minReversalScore,
-      minProfitPctForSmartExit: preset.minProfitPctForSmartExit,
-      smartExitUseEntryTimeframe: preset.smartExitUseEntryTimeframe,
-      smartExitTimeframe: preset.smartExitTimeframe ?? preset.timeframe,
-    });
-    setFutBreakeven({
-      breakevenMode: preset.breakevenMode,
-      breakevenTriggerPct: preset.breakevenTriggerPct,
-    });
-    setFutTrailing({
-      trailingMode: preset.trailingMode,
-      trailingPct: preset.trailingPct,
-      trailingTriggerPct: preset.trailingTriggerPct,
-    });
-    setFutMultiTf({
-      multiTfGateMode: preset.multiTfGateMode,
-      confirmTimeframe:
-        preset.confirmTimeframe ??
-        (preset.timeframe === "1m"
-          ? "5m"
-          : preset.timeframe === "5m"
-            ? "15m"
-            : preset.timeframe === "15m"
-              ? "1h"
-              : "4h"),
-    });
-    setFutLifecycle({
-      maxHoldMinutes: preset.maxHoldMinutes,
-      reentryCooldownMinutes: preset.reentryCooldownMinutes,
-    });
-    setFutAiAssist({
-      aiAssistMode: preset.aiAssistMode,
-      minAiConfidence: preset.minAiConfidence,
-    });
-  }
 
   async function subscribe(planId: BotPlanId, billing: "demo" | "live") {
     setBusy(true);
@@ -927,12 +567,14 @@ export function BotsTradingClient() {
           planId: "dca_spot",
           billing: sub.billing,
           status,
-          config: {
-            symbol: dcaSymbol,
-            quoteAmountUsdt: dcaAmount.trim().replace(",", "."),
-            intervalHours: dcaInterval,
-            ...smartConfigFields(dcaSmart),
-          },
+          config: buildCoordinatedDcaConfig(
+            {
+              symbol: dcaSymbol,
+              quoteAmountUsdt: dcaAmount.trim().replace(",", "."),
+              intervalHours: dcaInterval,
+            },
+            "day",
+          ),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -1016,23 +658,18 @@ export function BotsTradingClient() {
     setBusy(true);
     setFutMsg(null);
     try {
-      const futConfigPayload = {
-        symbol: futSymbol,
-        side: futSide,
-        leverage: futLeverage,
-        marginUsdt: futMargin.trim().replace(",", "."),
-        intervalHours: futInterval,
-        stopLossPct: futSl,
-        takeProfitPct: futTp,
-        traderProfile: futTraderProfile,
-        ...smartConfigFields(futSmart),
-        ...futExitConfigFields(futExit),
-        ...futBreakevenConfigFields(futBreakeven),
-        ...futTrailingConfigFields(futTrailing),
-        ...futMultiTfConfigFields(futMultiTf, futSmart.timeframe),
-        ...futLifecycleConfigFields(futLifecycle),
-        ...futAiAssistConfigFields(futAiAssist),
-      };
+      const futConfigPayload = buildCoordinatedFuturesConfig(
+        {
+          symbol: futSymbol,
+          side: futSide,
+          leverage: futLeverage,
+          marginUsdt: futMargin.trim().replace(",", "."),
+          intervalHours: futInterval,
+          stopLossPct: futSl,
+          takeProfitPct: futTp,
+        },
+        futStyle,
+      );
       if (!parseBotFuturesConfig(futConfigPayload)) {
         setFutMsg(t("bots_invalid_futures_config"));
         return;
@@ -1084,15 +721,17 @@ export function BotsTradingClient() {
           planId: "grid_spot",
           billing: sub.billing,
           status,
-          config: {
-            symbol: gridSymbol,
-            priceLow: gridLow.trim().replace(",", "."),
-            priceHigh: gridHigh.trim().replace(",", "."),
-            gridCount,
-            quotePerGrid: gridQuote.trim().replace(",", "."),
-            refreshHours: gridRefresh,
-            ...smartConfigFields(gridSmart),
-          },
+          config: buildCoordinatedGridConfig(
+            {
+              symbol: gridSymbol,
+              priceLow: gridLow.trim().replace(",", "."),
+              priceHigh: gridHigh.trim().replace(",", "."),
+              gridCount,
+              quotePerGrid: gridQuote.trim().replace(",", "."),
+              refreshHours: gridRefresh,
+            },
+            "day",
+          ),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -1311,19 +950,10 @@ export function BotsTradingClient() {
               </BotFormGrid>
             </div>
           </BotFlowCategory>
-          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
-            <SmartModePanel
-              planId="dca_spot"
-              symbol={dcaSymbol}
-              billing={accountBilling}
-              smart={dcaSmart}
-              setSmart={setDcaSmart}
-              smartOptions={data.smartOptions}
-              t={t}
-            />
+          <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
+            <BotCoordinationHint t={t} />
             <BotCoordinationRail
               cronHealth={data.cronHealth}
-              smartMode={dcaSmart.smartMode}
               botStatus={dcaInst?.status ?? "none"}
               t={t}
             />
@@ -1427,19 +1057,10 @@ export function BotsTradingClient() {
               </BotFlowField>
             </div>
           </BotFlowCategory>
-          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
-            <SmartModePanel
-              planId="grid_spot"
-              symbol={gridSymbol}
-              billing={accountBilling}
-              smart={gridSmart}
-              setSmart={setGridSmart}
-              smartOptions={data.smartOptions}
-              t={t}
-            />
+          <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
+            <BotCoordinationHint t={t} />
             <BotCoordinationRail
               cronHealth={data.cronHealth}
-              smartMode={gridSmart.smartMode}
               botStatus={gridInst?.status ?? "none"}
               t={t}
             />
@@ -1593,58 +1214,34 @@ export function BotsTradingClient() {
                 </BotFlowSelect>
               </BotFlowField>
             </BotFormGrid>
+              <BotFlowField label={t("bots_coord_style_label")}>
+                <BotFlowSelect
+                  value={futStyle}
+                  onChange={(e) => {
+                    const style = parseCoordinatedStyle(e.target.value);
+                    setFutStyle(style);
+                    applyCoordinatedStyleDefaults(style, {
+                      setFutInterval,
+                      setFutSl,
+                      setFutTp,
+                    });
+                  }}
+                >
+                  <option value="day">{t("bots_coord_style_day")}</option>
+                  <option value="swing">{t("bots_coord_style_swing")}</option>
+                </BotFlowSelect>
+              </BotFlowField>
             </div>
           </BotFlowCategory>
-          <BotFlowCategory title={t("bots_category_style")} className="mt-3">
-          <FuturesTraderProfilePanel
-            profile={futTraderProfile}
-            onProfileChange={setFutTraderProfile}
-            breakeven={futBreakeven}
-            onBreakevenChange={setFutBreakeven}
-            trailing={futTrailing}
-            onTrailingChange={setFutTrailing}
-            multiTf={futMultiTf}
-            onMultiTfChange={setFutMultiTf}
-            lifecycle={futLifecycle}
-            onLifecycleChange={setFutLifecycle}
-            aiAssist={futAiAssist}
-            onAiAssistChange={setFutAiAssist}
-            botInstanceId={futInstRow?.id}
-            savedInstanceBilling={futInstRow?.billing}
-            accountBilling={accountBilling}
-            showAiTechnicalRef={Boolean(data.isSuperAdmin)}
-            entryTimeframe={futSmart.timeframe}
-            onApplyPreset={applyFuturesProfilePreset}
-            t={t}
-          />
-          </BotFlowCategory>
-          <BotFlowCategory title={t("bots_category_intelligence")} className="mt-3">
-          <SmartModePanel
-            planId="futures_um"
-            symbol={futSymbol}
-            billing={accountBilling}
-            smart={futSmart}
-            setSmart={setFutSmart}
-            smartOptions={data.smartOptions}
-            t={t}
-          />
-          <FuturesSmartExitPanel
-            exit={futExit}
-            setExit={setFutExit}
-            entryTimeframe={futSmart.timeframe}
-            timeframes={
-              data.smartOptions?.timeframes ?? ["1m", "5m", "15m", "1h", "4h"]
-            }
-            t={t}
-          />
-          <BotCoordinationRail
-            cronHealth={data.cronHealth}
-            smartMode={futSmart.smartMode}
-            aiAssistMode={futAiAssist.aiAssistMode}
-            botStatus={futInst?.status ?? "none"}
-            instanceId={futInstRow?.id}
-            t={t}
-          />
+          <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
+            <BotCoordinationHint t={t} />
+            <BotCoordinationRail
+              cronHealth={data.cronHealth}
+              botStatus={futInst?.status ?? "none"}
+              instanceId={futInstRow?.id}
+              aiAssistMode
+              t={t}
+            />
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_execution")} className="mt-3">
           {futInst?.status === "active" && !instEnvAligned(futInst) ? (
@@ -1678,10 +1275,16 @@ export function BotsTradingClient() {
             onPause={() => void saveFutures("paused")}
           />
           </BotFlowCategory>
-          <p className="mt-3 text-center">
+          <p className="mt-3 flex flex-wrap justify-center gap-3 text-center">
+            <Link
+              href="/app/trade/bots/guide"
+              className="text-xs font-medium text-[color:var(--fd-primary)] underline underline-offset-2"
+            >
+              {t("bots_ai_doc_link")}
+            </Link>
             <Link
               href="/app/trade/futures/guide"
-              className="text-xs font-medium text-[color:var(--fd-primary)] underline underline-offset-2"
+              className="text-xs font-medium text-[color:var(--fd-muted)] underline underline-offset-2"
             >
               {t("trade_ui_learn_futures")}
             </Link>

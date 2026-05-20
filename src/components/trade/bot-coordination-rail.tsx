@@ -31,14 +31,15 @@ function CoordTile({
 
 export function BotCoordinationRail({
   cronHealth,
-  smartMode,
-  aiAssistMode,
+  coordinated = true,
+  aiAssistMode = true,
   botStatus,
   instanceId,
   t,
 }: {
   cronHealth?: CronHealthSnapshot | null;
-  smartMode: boolean;
+  /** When true, TA + AI are shown as one “Analysis” step (default product UX). */
+  coordinated?: boolean;
   aiAssistMode?: boolean;
   botStatus: "active" | "paused" | "none";
   instanceId?: string | null;
@@ -77,6 +78,7 @@ export function BotCoordinationRail({
     const id = window.setInterval(() => void loadAi(), 20_000);
     return () => window.clearInterval(id);
   }, [aiAssistMode, instanceId, loadAi]);
+
   let cronTone: StepState = "off";
   let cronLabel = t("bots_coord_off");
   if (cronHealth?.configured) {
@@ -89,18 +91,15 @@ export function BotCoordinationRail({
     }
   }
 
-  let smartTone: StepState = smartMode ? "ok" : "off";
-  const smartLabel = smartMode ? t("bots_coord_ok") : t("bots_coord_off");
-
-  let aiTone: StepState = "off";
-  let aiLabel = t("bots_coord_off");
-  if (aiAssistMode) {
+  let analysisTone: StepState = coordinated ? "ok" : "off";
+  let analysisLabel = coordinated ? t("bots_coord_ok") : t("bots_coord_off");
+  if (coordinated && aiAssistMode && instanceId) {
     if (aiFresh && aiHasSignal) {
-      aiTone = "ok";
-      aiLabel = t("bots_coord_ok");
-    } else {
-      aiTone = "warn";
-      aiLabel = t("bots_coord_warn");
+      analysisTone = "ok";
+      analysisLabel = t("bots_coord_ok");
+    } else if (botStatus === "active") {
+      analysisTone = "warn";
+      analysisLabel = t("bots_coord_warn");
     }
   }
 
@@ -114,27 +113,46 @@ export function BotCoordinationRail({
     botLabel = t("bots_coord_paused");
   }
 
-  const steps: { key: string; label: string; state: string; tone: StepState; glyph: string }[] =
-    [
-      { key: "cron", label: t("bots_coord_cron"), state: cronLabel, tone: cronTone, glyph: "⏱" },
-      { key: "smart", label: t("bots_coord_smart"), state: smartLabel, tone: smartTone, glyph: "◎" },
-    ];
-  if (aiAssistMode !== undefined) {
-    steps.push({
-      key: "ai",
-      label: t("bots_coord_ai"),
-      state: aiLabel,
-      tone: aiTone,
-      glyph: "✦",
-    });
-  }
-  steps.push({
-    key: "bot",
-    label: t("bots_coord_bot"),
-    state: botLabel,
-    tone: botTone,
-    glyph: "⚡",
-  });
+  const steps = coordinated
+    ? [
+        {
+          key: "cron",
+          label: t("bots_coord_cron"),
+          state: cronLabel,
+          tone: cronTone,
+          glyph: "⏱",
+        },
+        {
+          key: "analysis",
+          label: t("bots_coord_analysis"),
+          state: analysisLabel,
+          tone: analysisTone,
+          glyph: "✦",
+        },
+        {
+          key: "bot",
+          label: t("bots_coord_bot"),
+          state: botLabel,
+          tone: botTone,
+          glyph: "⚡",
+        },
+      ]
+    : [
+        {
+          key: "cron",
+          label: t("bots_coord_cron"),
+          state: cronLabel,
+          tone: cronTone,
+          glyph: "⏱",
+        },
+        {
+          key: "bot",
+          label: t("bots_coord_bot"),
+          state: botLabel,
+          tone: botTone,
+          glyph: "⚡",
+        },
+      ];
 
   return (
     <BotFlowCategory
