@@ -11,6 +11,12 @@ const EMOJIS = ["👍", "🙏", "✅", "❓", "🔥", "💚", "📷", "⏳", "�
 
 type Mode = "user" | "staff";
 
+type ThreadMeta = {
+  id: string;
+  status: string;
+  isNew: boolean;
+};
+
 export function SupportChatroom({
   mode,
   threadId: threadIdProp,
@@ -22,6 +28,7 @@ export function SupportChatroom({
 }) {
   const { t, locale } = useI18n();
   const [threadId, setThreadId] = useState<string | null>(threadIdProp ?? null);
+  const [threadMeta, setThreadMeta] = useState<ThreadMeta | null>(null);
   const [messages, setMessages] = useState<SupportMessageDto[]>([]);
   const [participants, setParticipants] = useState<SupportParticipant[]>([]);
   const [draft, setDraft] = useState("");
@@ -40,11 +47,33 @@ export function SupportChatroom({
       ? `/api/admin/support/threads/${encodeURIComponent(threadId)}`
       : "/api/support";
 
+  const threadOpen = threadMeta?.status === "open";
+  const hasUserMessages = messages.some((m) => !m.isSystem);
+
   const mentionMap = useMemo(() => {
     const m = new Map<string, string>();
     for (const p of participants) m.set(p.handle.toLowerCase(), p.label);
     return m;
   }, [participants]);
+
+  const loadThread = useCallback(async () => {
+    if (mode !== "user") return;
+    const res = await fetch("/api/support/thread", {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const key = typeof data.error === "string" ? data.error : "";
+      setErr(key ? t(key as never) : t("support_unavailable"));
+      return;
+    }
+    const th = data.thread as ThreadMeta | undefined;
+    if (th?.id) {
+      setThreadId(th.id);
+      setThreadMeta(th);
+    }
+  }, [mode, t]);
 
   const loadMentionables = useCallback(async () => {
     const q = threadId ? `?threadId=${encodeURIComponent(threadId)}` : "";
@@ -63,18 +92,23 @@ export function SupportChatroom({
     const url =
       mode === "staff"
         ? `${apiBase}/messages`
-        : threadId
-          ? `/api/support/messages?threadId=${encodeURIComponent(threadId)}`
-          : "/api/support/messages";
+        : "/api/support/messages";
     const res = await fetch(url, { credentials: "include", cache: "no-store" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const key = typeof data.error === "string" ? data.error : "";
-      setErr(key && key in { support_unavailable: 1, support_forbidden: 1 } ? t(key as never) : t("support_unavailable"));
+      setErr(
+        key && key in { support_unavailable: 1, support_forbidden: 1 }
+          ? t(key as never)
+          : t("support_unavailable"),
+      );
       return;
     }
     setErr(null);
-    if (typeof data.thread?.id === "string") setThreadId(data.thread.id);
+    if (typeof data.thread?.id === "string") {
+      setThreadId(data.thread.id);
+      setThreadMeta(data.thread as ThreadMeta);
+    }
     setMessages((data.messages as SupportMessageDto[]) ?? []);
     const tid = (data.thread?.id as string) ?? threadId;
     if (tid) {
@@ -90,13 +124,9 @@ export function SupportChatroom({
 
   useEffect(() => {
     if (mode === "user" && !threadIdProp) {
-      void fetch("/api/support/thread", { credentials: "include", cache: "no-store" })
-        .then((r) => r.json())
-        .then((j: { thread?: { id: string } }) => {
-          if (j.thread?.id) setThreadId(j.thread.id);
-        });
+      void loadThread();
     }
-  }, [mode, threadIdProp]);
+  }, [mode, threadIdProp, loadThread]);
 
   useEffect(() => {
     void loadMentionables();
@@ -113,9 +143,35 @@ export function SupportChatroom({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
+  async function markResolved() {
+    if (!threadId || mode !== "user") return;
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/support/close", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      const key = typeof data.error === "string" ? data.error : "";
+      setErr(key ? t(key as never) : t("support_unavailable"));
+      return;
+    }
+    if (data.thread?.id) {
+      setThreadId(data.thread.id);
+      setThreadMeta(data.thread as ThreadMeta);
+    }
+    setMessages([]);
+    void loadMessages();
+  }
+
   async function send() {
     const body = draft.trim();
     if (!body && !pendingImages.length) return;
+    if (mode === "user" && !threadOpen) return;
     setBusy(true);
     setErr(null);
     const payload = {
@@ -199,12 +255,21 @@ export function SupportChatroom({
     setPendingImages((prev) =>
       prev.length >= 2
         ? prev
-        : [...prev, { dataUrl: `data:${file.type};base64,${b64}`, mime: file.type, sizeBytes: file.size }],
+        : [
+            ...prev,
+            {
+              dataUrl: `data:${file.type};base64,${b64}`,
+              mime: file.type,
+              sizeBytes: file.size,
+            },
+          ],
     );
   }
 
+  const inputDisabled = busy || (mode === "user" && !threadOpen);
+
   return (
-    <div className="-mx-4 flex min-h-[calc(100dvh-5.5rem)] flex-col bg-[var(--fd-bg)]">
+    <div className="-mx-4 flex min-h-[calc(100dvh-5.5rem)] flex-col bg-[#e8ece8]">
       <header className="sticky top-0 z-20 border-b border-[color:var(--fd-border)] bg-white px-4 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <Link
@@ -225,9 +290,24 @@ export function SupportChatroom({
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
             <SupportHeadsetIcon className="h-5 w-5" />
           </div>
-          <h1 className="min-w-0 flex-1 text-lg font-extrabold text-[color:var(--fd-text)]">
-            {t("support_title")}
-          </h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-extrabold text-[color:var(--fd-text)]">
+              {t("support_title")}
+            </h1>
+            <p className="truncate text-[10px] text-[color:var(--fd-muted)]">
+              {t("support_new_chat_hint")}
+            </p>
+          </div>
+          {mode === "user" && threadOpen && hasUserMessages ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void markResolved()}
+              className="shrink-0 rounded-full border border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] px-3 py-1.5 text-[10px] font-extrabold text-[color:var(--fd-primary)] disabled:opacity-50"
+            >
+              {t("support_mark_resolved")}
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -239,13 +319,13 @@ export function SupportChatroom({
 
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto px-4 py-3"
+        className="flex-1 overflow-y-auto bg-[#e8ece8] px-4 py-3"
         role="log"
         aria-live="polite"
       >
         {messages.length === 0 && !err ? (
-          <p className="py-12 text-center text-sm text-[color:var(--fd-muted)]">
-            {t("support_empty_room")}
+          <p className="py-12 text-center text-sm text-stone-600">
+            {threadMeta?.isNew ? t("support_welcome") : t("support_empty_room")}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -262,9 +342,12 @@ export function SupportChatroom({
       </div>
 
       {pendingImages.length > 0 ? (
-        <div className="flex gap-2 px-4 pb-2">
+        <div className="flex gap-2 bg-[#e8ece8] px-4 pb-2">
           {pendingImages.map((img, i) => (
-            <div key={i} className="relative h-14 w-14 overflow-hidden rounded-lg border border-[color:var(--fd-border)]">
+            <div
+              key={i}
+              className="relative h-14 w-14 overflow-hidden rounded-lg border border-[color:var(--fd-border)]"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.dataUrl} alt="" className="h-full w-full object-cover" />
               <button
@@ -297,12 +380,12 @@ export function SupportChatroom({
       ) : null}
 
       {showEmoji ? (
-        <div className="flex flex-wrap gap-1 px-4 pb-2">
+        <div className="flex flex-wrap gap-1 bg-[#e8ece8] px-4 pb-2">
           {EMOJIS.map((e) => (
             <button
               key={e}
               type="button"
-              className="rounded-lg px-2 py-1 text-lg hover:bg-[color:var(--fd-mint)]"
+              className="rounded-lg px-2 py-1 text-lg hover:bg-white/80"
               onClick={() => setDraft((d) => d + e)}
             >
               {e}
@@ -330,6 +413,7 @@ export function SupportChatroom({
               type="file"
               accept="image/*"
               className="hidden"
+              disabled={inputDisabled}
               onChange={(e) => void onPickImage(e.target.files?.[0] ?? null)}
             />
           </label>
@@ -340,8 +424,9 @@ export function SupportChatroom({
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
             rows={2}
+            disabled={inputDisabled}
             placeholder={t("support_placeholder")}
-            className="min-h-[44px] flex-1 resize-none rounded-xl border border-[color:var(--fd-border)] bg-[var(--fd-bg)] px-3 py-2 text-sm outline-none focus:border-[color:var(--fd-primary)]"
+            className="min-h-[44px] flex-1 resize-none rounded-xl border border-[color:var(--fd-border)] bg-[#f4f6f4] px-3 py-2 text-sm text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)] disabled:opacity-50"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -351,7 +436,7 @@ export function SupportChatroom({
           />
           <button
             type="button"
-            disabled={busy}
+            disabled={inputDisabled}
             onClick={() => void send()}
             className="shrink-0 self-end rounded-xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-xs font-extrabold text-white disabled:opacity-50"
           >

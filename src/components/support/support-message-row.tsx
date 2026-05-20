@@ -37,6 +37,16 @@ function ReadStatusIcon({ read }: { read: boolean }) {
   );
 }
 
+function systemCopy(
+  kind: string | null,
+  t: (k: "support_welcome" | "support_closed_satisfied" | "support_closed_inactive") => string,
+): string {
+  if (kind === "welcome") return t("support_welcome");
+  if (kind === "closed_satisfied") return t("support_closed_satisfied");
+  if (kind === "closed_inactive") return t("support_closed_inactive");
+  return t("support_welcome");
+}
+
 export function SupportMessageRow({
   message: m,
   mentionHandles,
@@ -47,6 +57,17 @@ export function SupportMessageRow({
   locale: string;
 }) {
   const { t } = useI18n();
+
+  if (m.isSystem) {
+    return (
+      <li className="flex justify-center py-1.5">
+        <p className="max-w-[92%] rounded-2xl border border-[color:var(--fd-border)]/60 bg-white/95 px-4 py-2.5 text-center text-xs leading-relaxed text-[color:var(--fd-text)] shadow-sm">
+          {systemCopy(m.systemKind, t)}
+        </p>
+      </li>
+    );
+  }
+
   const when = formatWhen(m.createdAt, locale);
   const isAgent = m.senderRole === "agent" || m.senderRole === "super_admin";
   const hasImage = (m.attachments ?? []).some((a) => a.type === "image");

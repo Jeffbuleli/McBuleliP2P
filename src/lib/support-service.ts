@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt, ne, sql } from "drizzle-orm";
 import {
   getDb,
   supportMessageReads,
@@ -15,9 +15,24 @@ import {
   purgeExpiredSupportAttachments,
 } from "@/lib/support-attachments";
 import { bodyHasLink, extractMentionHandles } from "@/lib/support-rich-text";
+import { ensureSupportSchema } from "@/lib/support-schema";
 
 const MAX_BODY = 4000;
 const MAX_IMAGE_BYTES = 350_000;
+/** Close open threads after 3 hours without messages. */
+export const SUPPORT_INACTIVE_MS = 3 * 60 * 60 * 1000;
+export const SUPPORT_SYSTEM_PREFIX = "__support_system__:";
+
+export type SupportClosedReason = "satisfied" | "inactive";
+
+export type SupportThreadDto = {
+  id: string;
+  status: string;
+  assignedToUserId: string | null;
+  closedAt: string | null;
+  closedReason: SupportClosedReason | null;
+  isNew: boolean;
+};
 
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;
@@ -52,7 +67,22 @@ export type SupportMessageDto = {
   unreadForViewer: boolean;
   hasLink: boolean;
   hadExpiredImages: boolean;
+  isSystem: boolean;
+  systemKind: string | null;
 };
+
+function isSystemBody(body: string): boolean {
+  return body.startsWith(SUPPORT_SYSTEM_PREFIX);
+}
+
+function systemKindFromBody(body: string): string | null {
+  if (!isSystemBody(body)) return null;
+  return body.slice(SUPPORT_SYSTEM_PREFIX.length).split(":")[0] ?? null;
+}
+
+function systemMessageBody(kind: string): string {
+  return `${SUPPORT_SYSTEM_PREFIX}${kind}`;
+}
 
 function userHandle(u: {
   displayName: string | null;
@@ -100,6 +130,7 @@ export async function listSupportMentionables(args: {
   threadId?: string;
 }): Promise<SupportParticipant[]> {
   try {
+    await ensureSupportSchema();
     const db = getDb();
     const staff = await listStaffUsers();
     const out = new Map<string, SupportParticipant>();
@@ -169,44 +200,184 @@ export async function listSupportMentionables(args: {
   }
 }
 
+function toThreadDto(
+  row: {
+    id: string;
+    status: string;
+    assignedToUserId: string | null;
+    closedAt: Date | null;
+    closedReason: string | null;
+  },
+  isNew: boolean,
+): SupportThreadDto {
+  const reason = row.closedReason;
+  return {
+    id: row.id,
+    status: row.status,
+    assignedToUserId: row.assignedToUserId,
+    closedAt: row.closedAt?.toISOString() ?? null,
+    closedReason:
+      reason === "satisfied" || reason === "inactive" ? reason : null,
+    isNew,
+  };
+}
+
+async function insertSystemMessage(
+  threadId: string,
+  senderUserId: string,
+  kind: string,
+): Promise<void> {
+  const db = getDb();
+  const [msg] = await db
+    .insert(supportMessages)
+    .values({
+      threadId,
+      senderUserId,
+      body: systemMessageBody(kind),
+    })
+    .returning({ id: supportMessages.id });
+  await db.insert(supportMessageReads).values({
+    messageId: msg.id,
+    userId: senderUserId,
+  });
+}
+
+async function closeSupportThreadInternal(
+  threadId: string,
+  reason: SupportClosedReason,
+): Promise<void> {
+  const db = getDb();
+  const [th] = await db
+    .select({
+      id: supportThreads.id,
+      userId: supportThreads.userId,
+      status: supportThreads.status,
+    })
+    .from(supportThreads)
+    .where(eq(supportThreads.id, threadId))
+    .limit(1);
+  if (!th || th.status !== "open") return;
+
+  await db
+    .update(supportThreads)
+    .set({
+      status: "closed",
+      closedAt: new Date(),
+      closedReason: reason,
+    })
+    .where(eq(supportThreads.id, threadId));
+
+  await insertSystemMessage(threadId, th.userId, `closed_${reason}`);
+}
+
+async function closeInactiveOpenThreadsForUser(userId: string): Promise<void> {
+  const db = getDb();
+  const cutoff = new Date(Date.now() - SUPPORT_INACTIVE_MS);
+  const stale = await db
+    .select({ id: supportThreads.id })
+    .from(supportThreads)
+    .where(
+      and(
+        eq(supportThreads.userId, userId),
+        eq(supportThreads.status, "open"),
+        lt(supportThreads.lastMessageAt, cutoff),
+      ),
+    );
+  for (const row of stale) {
+    await closeSupportThreadInternal(row.id, "inactive");
+  }
+}
+
+async function createOpenSupportThread(userId: string): Promise<SupportThreadDto> {
+  const db = getDb();
+  const [created] = await db
+    .insert(supportThreads)
+    .values({ userId })
+    .returning({
+      id: supportThreads.id,
+      status: supportThreads.status,
+      assignedToUserId: supportThreads.assignedToUserId,
+      closedAt: supportThreads.closedAt,
+      closedReason: supportThreads.closedReason,
+    });
+  if (!created) throw new Error("support_thread_create_failed");
+  await insertSystemMessage(created.id, userId, "welcome");
+  return toThreadDto(created, true);
+}
+
+/** Ensures schema, auto-closes inactive threads, returns open thread or creates a new one. */
+export async function ensureOpenSupportThread(
+  userId: string,
+): Promise<SupportThreadDto | null> {
+  try {
+    await ensureSupportSchema();
+    const db = getDb();
+    await closeInactiveOpenThreadsForUser(userId);
+
+    const [open] = await db
+      .select()
+      .from(supportThreads)
+      .where(
+        and(eq(supportThreads.userId, userId), eq(supportThreads.status, "open")),
+      )
+      .orderBy(desc(supportThreads.lastMessageAt))
+      .limit(1);
+
+    if (open) {
+      return toThreadDto(open, false);
+    }
+
+    return await createOpenSupportThread(userId);
+  } catch (e) {
+    if (isMissingRelationError(e)) return null;
+    throw e;
+  }
+}
+
+export async function closeSupportThreadByUser(args: {
+  threadId: string;
+  userId: string;
+  reason?: SupportClosedReason;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    await ensureSupportSchema();
+    const db = getDb();
+    const [th] = await db
+      .select()
+      .from(supportThreads)
+      .where(eq(supportThreads.id, args.threadId))
+      .limit(1);
+    if (!th) return { ok: false, message: "support_thread_not_found" };
+    if (th.userId !== args.userId) {
+      return { ok: false, message: "support_forbidden" };
+    }
+    if (th.status !== "open") {
+      return { ok: false, message: "support_thread_closed" };
+    }
+    await closeSupportThreadInternal(
+      args.threadId,
+      args.reason ?? "satisfied",
+    );
+    return { ok: true };
+  } catch (e) {
+    if (isMissingRelationError(e)) return { ok: false, message: "support_unavailable" };
+    throw e;
+  }
+}
+
+/** @deprecated Use ensureOpenSupportThread */
 export async function getOrCreateSupportThread(userId: string): Promise<{
   id: string;
   status: string;
   assignedToUserId: string | null;
 } | null> {
-  try {
-    const db = getDb();
-    const [existing] = await db
-      .select()
-      .from(supportThreads)
-      .where(eq(supportThreads.userId, userId))
-      .limit(1);
-    if (existing) {
-      return {
-        id: existing.id,
-        status: existing.status,
-        assignedToUserId: existing.assignedToUserId ?? null,
-      };
-    }
-    const [created] = await db
-      .insert(supportThreads)
-      .values({ userId })
-      .returning({
-        id: supportThreads.id,
-        status: supportThreads.status,
-        assignedToUserId: supportThreads.assignedToUserId,
-      });
-    return created
-      ? {
-          id: created.id,
-          status: created.status,
-          assignedToUserId: created.assignedToUserId ?? null,
-        }
-      : null;
-  } catch (e) {
-    if (isMissingRelationError(e)) return null;
-    throw e;
-  }
+  const th = await ensureOpenSupportThread(userId);
+  if (!th) return null;
+  return {
+    id: th.id,
+    status: th.status,
+    assignedToUserId: th.assignedToUserId,
+  };
 }
 
 async function resolveMentionUserIds(
@@ -272,6 +443,7 @@ export async function postSupportMessage(args: {
   if (text.length > MAX_BODY) return { ok: false, message: "support_too_long" };
 
   try {
+    await ensureSupportSchema();
     const db = getDb();
     const [th] = await db
       .select()
@@ -279,6 +451,9 @@ export async function postSupportMessage(args: {
       .where(eq(supportThreads.id, args.threadId))
       .limit(1);
     if (!th) return { ok: false, message: "support_thread_not_found" };
+    if (th.status !== "open") {
+      return { ok: false, message: "support_thread_closed" };
+    }
 
     const [sender] = await db
       .select({
@@ -419,6 +594,7 @@ async function buildMessageDtos(args: {
   }
 
   return args.rows.map((r) => {
+    const sys = isSystemBody(r.body);
     const staff = isStaffRole(r.role);
     const label = staff ? "McBuleli Support" : p2pDisplayName(r);
     const handle = staff ? "support" : userHandle(r);
@@ -438,12 +614,16 @@ async function buildMessageDtos(args: {
       senderAvatarUrl: r.avatarUrl ?? null,
       senderRole: r.role,
       own: r.senderUserId === args.viewerUserId,
-      attachments,
+      attachments: sys ? null : attachments,
       mentions: r.mentions,
-      readBy,
-      unreadForViewer: !viewerRead && r.senderUserId !== args.viewerUserId,
-      hasLink: bodyHasLink(r.body),
-      hadExpiredImages,
+      readBy: sys ? [] : readBy,
+      unreadForViewer: sys
+        ? false
+        : !viewerRead && r.senderUserId !== args.viewerUserId,
+      hasLink: sys ? false : bodyHasLink(r.body),
+      hadExpiredImages: sys ? false : hadExpiredImages,
+      isSystem: sys,
+      systemKind: systemKindFromBody(r.body),
     };
   });
 }
@@ -501,10 +681,21 @@ export async function listSupportMessages(args: {
       rows,
     });
 
+    const userMsgCount = rows.filter((r) => !isSystemBody(r.body)).length;
+
     return {
       ok: true,
       messages,
-      thread: { id: th.id, status: th.status },
+      thread: toThreadDto(
+        {
+          id: th.id,
+          status: th.status,
+          assignedToUserId: th.assignedToUserId ?? null,
+          closedAt: th.closedAt ?? null,
+          closedReason: th.closedReason ?? null,
+        },
+        userMsgCount === 0,
+      ),
     };
   } catch (e) {
     if (isMissingRelationError(e)) return { ok: false, message: "support_unavailable" };
@@ -517,6 +708,7 @@ export async function markSupportThreadRead(args: {
   viewerUserId: string;
 }): Promise<{ ok: true; marked: number } | { ok: false; message: string }> {
   try {
+    await ensureSupportSchema();
     const db = getDb();
     const [th] = await db
       .select()
@@ -572,6 +764,7 @@ export async function markSupportThreadRead(args: {
 
 export async function countSupportUnread(viewerUserId: string): Promise<number> {
   try {
+    await ensureSupportSchema();
     const db = getDb();
     const [viewer] = await db
       .select({ role: users.role })
@@ -595,14 +788,25 @@ export async function countSupportUnread(viewerUserId: string): Promise<number> 
       return typeof n === "number" ? n : Number(n ?? 0);
     }
 
-    const th = await getOrCreateSupportThread(viewerUserId);
-    if (!th) return 0;
+    await closeInactiveOpenThreadsForUser(viewerUserId);
+    const [open] = await db
+      .select({ id: supportThreads.id })
+      .from(supportThreads)
+      .where(
+        and(
+          eq(supportThreads.userId, viewerUserId),
+          eq(supportThreads.status, "open"),
+        ),
+      )
+      .limit(1);
+    if (!open) return 0;
 
     const rows = await db.execute<{ n: number }>(sql`
       SELECT COUNT(*)::int AS n
       FROM support_messages m
-      WHERE m.thread_id = ${th.id}
+      WHERE m.thread_id = ${open.id}
         AND m.sender_user_id <> ${viewerUserId}
+        AND m.body NOT LIKE ${SUPPORT_SYSTEM_PREFIX + "%"}
         AND NOT EXISTS (
           SELECT 1 FROM support_message_reads r
           WHERE r.message_id = m.id AND r.user_id = ${viewerUserId}
@@ -632,6 +836,7 @@ export async function listSupportThreadsForStaff(
   staffUserId: string,
 ): Promise<SupportThreadListItem[]> {
   try {
+    await ensureSupportSchema();
     const db = getDb();
     const threads = await db
       .select({

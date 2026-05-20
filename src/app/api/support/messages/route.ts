@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import {
-  getOrCreateSupportThread,
+  ensureOpenSupportThread,
   listSupportMessages,
   postSupportMessage,
 } from "@/lib/support-service";
@@ -26,15 +26,11 @@ export async function GET(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const url = new URL(req.url);
-  let threadId = url.searchParams.get("threadId");
-  if (!threadId) {
-    const th = await getOrCreateSupportThread(userId);
-    if (!th) {
-      return NextResponse.json({ error: "support_unavailable" }, { status: 503 });
-    }
-    threadId = th.id;
+  const th = await ensureOpenSupportThread(userId);
+  if (!th) {
+    return NextResponse.json({ error: "support_unavailable" }, { status: 503 });
   }
+  const threadId = th.id;
   const r = await listSupportMessages({ threadId, viewerUserId: userId });
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 404 });
@@ -54,11 +50,17 @@ export async function POST(req: Request) {
   }
   let threadId = parsed.data.threadId;
   if (!threadId) {
-    const th = await getOrCreateSupportThread(userId);
+    const th = await ensureOpenSupportThread(userId);
     if (!th) {
       return NextResponse.json({ error: "support_unavailable" }, { status: 503 });
     }
     threadId = th.id;
+  } else {
+    const open = await ensureOpenSupportThread(userId);
+    if (!open) {
+      return NextResponse.json({ error: "support_unavailable" }, { status: 503 });
+    }
+    threadId = open.id;
   }
   const r = await postSupportMessage({
     threadId,

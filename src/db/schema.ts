@@ -1262,7 +1262,7 @@ export const userNotifications = pgTable(
   ],
 );
 
-/** Global support chat — one open thread per end-user. */
+/** Global support chat — one open thread per end-user at a time. */
 export const supportThreads = pgTable(
   "support_threads",
   {
@@ -1278,11 +1278,13 @@ export const supportThreads = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    closedReason: varchar("closed_reason", { length: 16 }),
   },
   (t) => [
-    uniqueIndex("support_threads_user_uq").on(t.userId),
     index("support_threads_last_msg_idx").on(t.lastMessageAt),
     index("support_threads_assigned_idx").on(t.assignedToUserId),
+    index("support_threads_user_status_idx").on(t.userId, t.status),
   ],
 );
 
