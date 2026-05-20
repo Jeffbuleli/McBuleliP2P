@@ -207,8 +207,6 @@ export const en = {
   auth_pi_failed: "Pi sign-in failed. Please try again.",
   auth_pi_timeout:
     "Pi sign-in took too long. Use email and password below, or open this page in Pi Browser and tap “Continue with Pi”.",
-  auth_pi_manual_hint:
-    "Email and password always work here. Pi Network sign-in runs only when you tap “Continue with Pi” (inside Pi Browser).",
   pi_pay_section_title: "Pi payments",
   pi_pay_section_hint:
     "Test U2A payment (Pi Browser). Complete the approval steps in Pi Wallet.",
@@ -2292,8 +2290,6 @@ export const fr: Messages = {
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
   auth_pi_timeout:
     "La connexion Pi a expiré. Utilisez e-mail et mot de passe ci‑dessous, ou ouvrez cette page dans Pi Browser puis « Continuer avec Pi ».",
-  auth_pi_manual_hint:
-    "E-mail et mot de passe fonctionnent toujours ici. La connexion Pi ne se lance que si vous appuyez sur « Continuer avec Pi » (dans Pi Browser).",
   pi_pay_section_title: "Paiements Pi",
   pi_pay_section_hint:
     "Test de paiement U2A (navigateur Pi). Valide les étapes dans le Wallet Pi.",

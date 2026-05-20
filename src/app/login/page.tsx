@@ -190,9 +190,6 @@ export default function LoginPage() {
         />
       }
     >
-      <p className="mb-4 px-1 text-center text-xs text-[color:var(--fd-muted)]">
-        {t("auth_pi_manual_hint")}
-      </p>
       <div className="fd-card rounded-[1.75rem] p-5">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <label className={authLabelClass}>
