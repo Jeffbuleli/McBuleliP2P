@@ -157,6 +157,41 @@ export function IconBell({ className }: { className?: string }) {
   );
 }
 
+export function IconBot({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="5" y="8" width="14" height="11" rx="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M9 8V6a3 3 0 116 0v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M9 14h.01M15 14h.01M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconHeadset({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2a4 4 0 00-4 4v2.5a4 4 0 008 0V6a4 4 0 00-4-4zm-6 8.5A6 6 0 0112 5a6 6 0 016 5.5V14a2 2 0 01-2 2h-1v3.5a1.5 1.5 0 11-3 0V16h-2v3.5a1.5 1.5 0 11-3 0V16H8a2 2 0 01-2-2v-3.5z" />
+    </svg>
+  );
+}
+
+export function IconStaking({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 3l8 4v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V7l8-4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconLoan({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 3v18M8 7h8M7 12h10M9 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconCoins({ className }: { className?: string }) {
   return (
     <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>

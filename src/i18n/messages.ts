@@ -26,24 +26,32 @@ export const en = {
   landing_nav_suite: "Overview",
   landing_nav_how: "How it works",
   landing_nav_terms: "Terms",
-  landing_features_heading: "Built for Africa — mobile money meets crypto",
-  landing_feature_p2p_t: "Peer-to-peer",
-  landing_feature_p2p_d:
-    "Buy and sell USDT with other people. We hold the crypto safely until the trade is finished.",
-  landing_feature_mm_t: "Mobile money",
-  landing_feature_mm_d:
-    "Deposit and withdraw in corridors we support (e.g. USD/CDF mobile money in DRC via integrated rails). Availability depends on your profile and region.",
-  landing_feature_escrow_t: "Protected trades",
-  landing_feature_escrow_d:
-    "We keep the crypto until payment is confirmed and both sides agree.",
-  landing_feature_fast_t: "Clear activity trail",
-  landing_feature_fast_d:
-    "Wallet history, Pi payments, fiat movements, and P2P orders — so you always know what happened.",
-  landing_how_heading: "Four steps",
-  landing_step_1: "Create your McBuleli account",
-  landing_step_2: "Fund wallet — USDT/Pi on-chain or fiat mobile money where enabled",
-  landing_step_3: "Trade P2P with escrow, explore groups & pool, or learn trades",
-  landing_step_4: "Withdraw or cash out — crypto goes through our queue; fiat follows payout rules",
+  landing_services_heading: "What you get",
+  landing_svc_wallet_t: "Wallet",
+  landing_svc_wallet_tag: "USDT · Pi · Fiat",
+  landing_svc_p2p_t: "P2P Marketplace",
+  landing_svc_p2p_tag: "Escrow deals",
+  landing_svc_bots_t: "Bots",
+  landing_svc_bots_tag: "Auto strategies",
+  landing_svc_futures_t: "Futures",
+  landing_svc_futures_tag: "USDT margin",
+  landing_svc_groups_t: "Group savings",
+  landing_svc_groups_tag: "Tontines",
+  landing_svc_pool_t: "Liquidity pool",
+  landing_svc_pool_tag: "Earn USDT",
+  landing_svc_staking_t: "Staking",
+  landing_svc_staking_tag: "Yield",
+  landing_svc_loans_t: "Loans",
+  landing_svc_loans_tag: "Credit",
+  landing_svc_support_t: "Support",
+  landing_svc_support_tag: "Live chat",
+  landing_svc_mm_t: "Mobile money",
+  landing_svc_mm_tag: "RDC corridors",
+  landing_how_heading: "4 steps",
+  landing_step_1: "Sign up",
+  landing_step_2: "Fund",
+  landing_step_3: "Trade & save",
+  landing_step_4: "Cash out",
   landing_nav_preview: "Product",
   landing_nav_services: "Services",
   landing_nav_offers: "Offers",
@@ -52,75 +60,27 @@ export const en = {
   landing_nav_security: "Security",
   landing_nav_about: "About",
   landing_nav_contact: "Contact",
-  landing_trust_heading: "Trust & transparency",
-  landing_trust_1:
-    "P2P escrow locks crypto on-platform until the fiat side is settled according to the order rules.",
-  landing_trust_2:
-    "In-app notifications for payouts, deposits, and staff-reviewed flows — fewer surprises.",
-  landing_trust_3:
-    "Custodial wallet model: we safeguard balances server-side; follow network-specific deposit instructions carefully.",
-  landing_trust_4:
-    "Manual crypto deposits & withdrawals are queued by operators — status stays visible in your history.",
+  landing_trust_heading: "Security",
+  landing_trust_1: "P2P escrow until fiat is settled",
+  landing_trust_2: "Bell alerts on every key event",
+  landing_trust_3: "Custodial wallet — balances protected",
+  landing_trust_4: "Queued payouts with visible status",
   landing_market_heading: "Market prices",
   landing_market_sub: "Indicative prices (24h change). Not investment advice.",
-  landing_footer_tagline: "McBuleli — your corridor for crypto, P2P, and mobile money.",
+  landing_footer_tagline: "McBuleli — crypto, P2P & mobile money",
   landing_footer_about: "About",
   landing_footer_contact: "Contact",
   landing_footer_terms: "Terms",
   landing_footer_privacy: "Privacy",
-  landing_presentation_eyebrow: "McBuleli · Africa-first wallet",
-  landing_presentation_title: "Crypto, P2P, and mobile money — one secure hub.",
-  landing_presentation_body:
-    "Trade USDT & Pi with others while we hold escrow. Move local currency where corridors are live (e.g. RDC USD/CDF via integrated providers). Track everything in history and notifications. Install the web app to your home screen for the full experience.",
+  landing_presentation_eyebrow: "Africa-first wallet",
+  landing_presentation_title: "Wallet · P2P · Trade · Savings",
   landing_cta_market: "Live prices",
   landing_stat_1_t: "24/7",
-  landing_stat_1_d: "Open the app whenever you need it.",
+  landing_stat_1_d: "",
   landing_stat_2_t: "Escrow",
-  landing_stat_2_d: "Crypto stays locked until your P2P deal completes.",
-  landing_stat_3_t: "Corridors",
-  landing_stat_3_d: "Mobile money & banks where we integrate them.",
-  landing_post_market_eyebrow: "After the tickers",
-  landing_post_market_title: "What McBuleli is today",
-  landing_post_market_body:
-    "Everything below mirrors the live app: multi-asset wallet, peer-to-peer marketplace with reserve & escrow, optional trading education, group savings, and liquidity pool rewards — plus transparent queues when human operators handle on-chain flows.",
-  landing_pillar_assets_t: "USDT, Pi, fiat pockets",
-  landing_pillar_assets_d:
-    "Hold and move assets in one place; deposit routes depend on your region and enabled providers.",
-  landing_pillar_p2p_t: "P2P with escrow",
-  landing_pillar_p2p_d:
-    "Post or take ads with clear buyer/seller roles; crypto is locked so both sides can settle confidently.",
-  landing_pillar_rails_t: "Mobile money (RDC & more)",
-  landing_pillar_rails_d:
-    "Where configured, add or withdraw fiat using partner rails (e.g. PawaPay-supported networks). Always pick the provider your wallet shows.",
-  landing_pillar_notify_t: "Notifications & history",
-  landing_pillar_notify_d:
-    "Bell alerts for withdrawals, deposits, and key events — alongside a detailed wallet ledger.",
-  landing_pillar_transparency_t: "Honest operations",
-  landing_pillar_transparency_d:
-    "Some transfers need manual review or queued payouts; we surface status instead of silent delays.",
-  landing_preview_heading: "Inside the app",
-  landing_preview_sub:
-    "These modules are available after sign-in — https://www.mcbuleli.online.",
-  landing_preview_wallet_t: "Wallet",
-  landing_preview_wallet_d:
-    "USDT & Pi balances, internal transfers, deposits with declared amounts, and withdrawal queues with fee transparency.",
-  landing_preview_p2p_t: "Peer-to-peer deals",
-  landing_preview_p2p_d:
-    "Marketplace ads, reserve for sell listings, dispute tools, and ratings — built for clarity on who pays off-platform.",
-  landing_preview_trade_t: "Trading",
-  landing_preview_trade_d:
-    "Educational futures/options hubs with demo balances — learn mechanics before opting into live risk.",
-  landing_preview_groups_t: "Group savings",
-  landing_preview_groups_d:
-    "Community savings circles with tracked contributions, payouts, and governance hooks.",
-  landing_preview_pool_t: "Earn on your USDT",
-  landing_preview_pool_d:
-    "Participate in liquidity pools when windows open — rewards follow published schedules.",
-  landing_preview_cta: "Open account",
-  landing_preview_hint:
-    "Already registered? Log in on this device to sync your profile, payment presets, and limits.",
-  landing_inspired_note:
-    "McBuleli continuously ships improvements — what you see here reflects the production stack powering African traders and savers.",
+  landing_stat_2_d: "",
+  landing_stat_3_t: "Support",
+  landing_stat_3_d: "",
   profile_theme_fixed: "The app uses dark mode for readability and low glare.",
   profile_header_member: "Member",
   profile_header_country: "Region",
@@ -2106,28 +2066,32 @@ export const fr: Messages = {
   landing_nav_suite: "Présentation",
   landing_nav_how: "Fonctionnement",
   landing_nav_terms: "Conditions",
-  landing_features_heading:
-    "Pensé pour l’Afrique — mobile money et crypto réunis",
-  landing_feature_p2p_t: "Échanges entre particuliers",
-  landing_feature_p2p_d:
-    "Achetez ou vendez de l’USDT avec d’autres personnes. Nous gardons la crypto en sécurité jusqu’à la fin de l’échange.",
-  landing_feature_mm_t: "Mobile money",
-  landing_feature_mm_d:
-    "Dépôts et retraits sur les corridors pris en charge (ex. USD/CDF en RDC via nos rails intégrés). Disponibilité selon votre profil et région.",
-  landing_feature_escrow_t: "Échanges protégés",
-  landing_feature_escrow_d:
-    "Nous gardons la crypto jusqu’à confirmation du paiement et accord des deux parties.",
-  landing_feature_fast_t: "Historique clair",
-  landing_feature_fast_d:
-    "Portefeuille, paiements Pi, mouvements fiat et ordres P2P — vous savez toujours ce qui s’est passé.",
-  landing_how_heading: "Quatre étapes",
-  landing_step_1: "Créez votre compte McBuleli",
-  landing_step_2:
-    "Alimentez le portefeuille — USDT/Pi on-chain ou mobile money fiat si activé",
-  landing_step_3:
-    "Échangez en P2P avec séquestre, explorez groupes & pool, ou formez-vous au trading",
-  landing_step_4:
-    "Retirez ou encaissez — la crypto passe par notre file d’attente ; le fiat suit les règles de versement",
+  landing_services_heading: "Nos services",
+  landing_svc_wallet_t: "Portefeuille",
+  landing_svc_wallet_tag: "USDT · Pi · Fiat",
+  landing_svc_p2p_t: "P2P Marketplace",
+  landing_svc_p2p_tag: "Séquestre",
+  landing_svc_bots_t: "Bots",
+  landing_svc_bots_tag: "Stratégies auto",
+  landing_svc_futures_t: "Futures",
+  landing_svc_futures_tag: "Marge USDT",
+  landing_svc_groups_t: "Épargne groupe",
+  landing_svc_groups_tag: "Tontines",
+  landing_svc_pool_t: "Pool liquidité",
+  landing_svc_pool_tag: "Gains USDT",
+  landing_svc_staking_t: "Staking",
+  landing_svc_staking_tag: "Rendement",
+  landing_svc_loans_t: "Prêts",
+  landing_svc_loans_tag: "Crédit",
+  landing_svc_support_t: "Support",
+  landing_svc_support_tag: "Chat live",
+  landing_svc_mm_t: "Mobile money",
+  landing_svc_mm_tag: "Corridors RDC",
+  landing_how_heading: "4 étapes",
+  landing_step_1: "Inscription",
+  landing_step_2: "Dépôt",
+  landing_step_3: "Trade & épargne",
+  landing_step_4: "Retrait",
   landing_nav_preview: "Produit",
   landing_nav_services: "Services",
   landing_nav_offers: "Offres",
@@ -2136,79 +2100,27 @@ export const fr: Messages = {
   landing_nav_security: "Sécurité",
   landing_nav_about: "À propos",
   landing_nav_contact: "Contact",
-  landing_trust_heading: "Confiance & transparence",
-  landing_trust_1:
-    "Le séquestre P2P bloque la crypto sur la plateforme jusqu’à ce que le côté fiat soit réglé selon les règles de l’ordre.",
-  landing_trust_2:
-    "Notifications in-app pour versements, dépôts et flux examinés par l’équipe — moins de mauvaises surprises.",
-  landing_trust_3:
-    "Portefeuille custodial : nous sécurisons les soldes côté serveur ; suivez attentivement les instructions de dépôt par réseau.",
-  landing_trust_4:
-    "Les dépôts et retraits crypto manuels passent par une file opérateurs — le statut reste visible dans votre historique.",
+  landing_trust_heading: "Sécurité",
+  landing_trust_1: "Séquestre P2P jusqu’au règlement fiat",
+  landing_trust_2: "Alertes cloche sur chaque événement",
+  landing_trust_3: "Portefeuille custodial protégé",
+  landing_trust_4: "Files de paiement visibles",
   landing_market_heading: "Cours du marché",
   landing_market_sub: "Prix indicatifs (variation 24 h). Ce n’est pas un conseil financier.",
-  landing_footer_tagline:
-    "McBuleli — votre corridor crypto, P2P et mobile money.",
+  landing_footer_tagline: "McBuleli — crypto, P2P & mobile money",
   landing_footer_about: "À propos",
   landing_footer_contact: "Contact",
   landing_footer_terms: "Conditions",
   landing_footer_privacy: "Confidentialité",
-  landing_presentation_eyebrow: "McBuleli · portefeuille pensé pour l’Afrique",
-  landing_presentation_title:
-    "Crypto, P2P et mobile money — un hub sécurisé.",
-  landing_presentation_body:
-    "Échangez USDT et Pi avec séquestre. Déplacez la monnaie locale où les corridors sont ouverts (ex. RDC USD/CDF via nos partenaires). Suivez tout dans l’historique et les notifications. Installez la webapp sur l’écran d’accueil pour l’expérience complète.",
+  landing_presentation_eyebrow: "Portefeuille Afrique",
+  landing_presentation_title: "Wallet · P2P · Trade · Épargne",
   landing_cta_market: "Cours en direct",
   landing_stat_1_t: "24/7",
-  landing_stat_1_d: "Ouvrez l’app quand vous en avez besoin.",
+  landing_stat_1_d: "",
   landing_stat_2_t: "Séquestre",
-  landing_stat_2_d:
-    "La crypto reste bloquée jusqu’à la fin de votre échange P2P.",
-  landing_stat_3_t: "Corridors",
-  landing_stat_3_d:
-    "Mobile money et banques là où nous les intégrons.",
-  landing_post_market_eyebrow: "Après les cours",
-  landing_post_market_title: "Ce qu’est McBuleli aujourd’hui",
-  landing_post_market_body:
-    "Tout ce qui suit reflète l’app en production : portefeuille multi-actifs, marketplace P2P avec réserve et séquestre, formation trading optionnelle, épargne de groupe et récompenses pool — plus des files transparentes quand des opérateurs traitent les flux on-chain.",
-  landing_pillar_assets_t: "USDT, Pi, poches fiat",
-  landing_pillar_assets_d:
-    "Détenez et déplacez vos actifs au même endroit ; les routes de dépôt dépendent de votre région et des prestataires activés.",
-  landing_pillar_p2p_t: "P2P avec séquestre",
-  landing_pillar_p2p_d:
-    "Publiez ou prenez des annonces avec rôles acheteur/vendeur clairs ; la crypto est verrouillée pour rassurer les deux côtés.",
-  landing_pillar_rails_t: "Mobile money (RDC & plus)",
-  landing_pillar_rails_d:
-    "Là où c’est configuré, ajoutez ou retirez du fiat via nos rails partenaires (ex. réseaux pris en charge par PawaPay). Choisissez toujours le prestataire affiché par votre portefeuille.",
-  landing_pillar_notify_t: "Notifications & historique",
-  landing_pillar_notify_d:
-    "Alertes cloche pour retraits, dépôts et événements clés — avec un livre de portefeuille détaillé.",
-  landing_pillar_transparency_t: "Opérations assumées",
-  landing_pillar_transparency_d:
-    "Certains transferts nécessitent une revue manuelle ou une file de paiements ; nous affichons le statut plutôt que des silences.",
-  landing_preview_heading: "Dans l’application",
-  landing_preview_sub:
-    "Ces modules sont disponibles après connexion — https://www.mcbuleli.online.",
-  landing_preview_wallet_t: "Portefeuille",
-  landing_preview_wallet_d:
-    "Soldes USDT et Pi, transferts internes, dépôts avec montants déclarés et files de retrait avec frais visibles.",
-  landing_preview_p2p_t: "Petites annonces",
-  landing_preview_p2p_d:
-    "Annonces, réserve pour les ventes, litiges et notes — pour savoir qui paie hors plateforme.",
-  landing_preview_trade_t: "Trading",
-  landing_preview_trade_d:
-    "Hubs éducatifs futures/options avec soldes démo — comprenez les mécaniques avant le risque réel.",
-  landing_preview_groups_t: "Épargne de groupe",
-  landing_preview_groups_d:
-    "Cercles d’épargne avec cotisations, versements et règles suivis dans l’app.",
-  landing_preview_pool_t: "Faire fructifier l’USDT",
-  landing_preview_pool_d:
-    "Participez aux pools de liquidité quand les fenêtres s’ouvrent — les récompenses suivent les calendriers publiés.",
-  landing_preview_cta: "Ouvrir un compte",
-  landing_preview_hint:
-    "Déjà inscrit ? Connectez-vous sur cet appareil pour synchroniser profil, moyens de paiement et plafonds.",
-  landing_inspired_note:
-    "McBuleli évolue en continu — ce que vous voyez ici reflète la stack qui sert les traders et épargnants africains en production.",
+  landing_stat_2_d: "",
+  landing_stat_3_t: "Support",
+  landing_stat_3_d: "",
   profile_theme_fixed: "L’application est en mode sombre pour le confort visuel.",
   profile_header_member: "Membre",
   profile_header_country: "Région",

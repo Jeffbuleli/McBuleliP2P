@@ -8,105 +8,65 @@ import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
 import {
   IconBell,
+  IconBot,
   IconChartLine,
   IconCheck,
   IconCoins,
+  IconHeadset,
+  IconLoan,
   IconLock,
   IconP2P,
   IconShield,
   IconSmartphone,
+  IconStaking,
   IconUsers,
   IconWallet,
-  IconZap,
 } from "@/components/landing/landing-icons";
 
-function FeatureCard({
+function ServiceTile({
   icon: Icon,
   title,
-  body,
+  tag,
 }: {
   icon: ComponentType<{ className?: string }>;
   title: string;
-  body: string;
+  tag: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-stone-700/50 bg-gradient-to-b from-stone-900/50 to-stone-950/70 p-5 shadow-lg shadow-black/20">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20">
-        <Icon className="h-6 w-6" />
+    <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-emerald-800/25 bg-gradient-to-b from-stone-900/80 to-stone-950/90 p-4 text-center shadow-lg shadow-black/25 transition hover:border-emerald-600/40">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-2 ring-emerald-500/25">
+        <Icon className="h-7 w-7" />
       </div>
-      <h3 className="text-base font-bold text-stone-50">{title}</h3>
-      <p className="text-sm leading-relaxed text-stone-400">{body}</p>
+      <h3 className="text-sm font-extrabold leading-tight text-stone-50">{title}</h3>
+      <p className="text-[11px] font-medium leading-snug text-emerald-400/90">{tag}</p>
     </div>
   );
 }
 
-function StatTile({
-  title,
-  subtitle,
+function TrustChip({
+  icon: Icon,
+  label,
 }: {
-  title: string;
-  subtitle: string;
+  icon: ComponentType<{ className?: string }>;
+  label: string;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-2xl border border-stone-700/45 bg-stone-900/50 px-3 py-3 backdrop-blur-sm">
-      <p className="text-lg font-bold leading-none text-emerald-400">{title}</p>
-      <p className="text-[11px] leading-snug text-stone-500">{subtitle}</p>
+    <div className="flex items-center gap-3 rounded-xl border border-stone-700/40 bg-stone-950/60 px-3 py-2.5">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="text-xs font-semibold leading-snug text-stone-300">{label}</p>
     </div>
   );
 }
 
-function PillarCard({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-  body: string;
-}) {
+function StepChip({ n, label }: { n: number; label: string }) {
   return (
-    <div className="flex gap-4 rounded-2xl border border-emerald-900/25 bg-stone-950/50 p-4 ring-1 ring-emerald-500/10">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300">
-        <Icon className="h-6 w-6" />
-      </div>
-      <div className="min-w-0">
-        <h3 className="text-sm font-bold text-stone-100">{title}</h3>
-        <p className="mt-1 text-xs leading-relaxed text-stone-500">{body}</p>
-      </div>
-    </div>
-  );
-}
-
-function PreviewTile({
-  icon: Icon,
-  title,
-  body,
-  href,
-  cta,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-  body: string;
-  href: string;
-  cta: string;
-}) {
-  return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-stone-700/45 bg-gradient-to-b from-stone-950/80 to-stone-950/40 p-5 shadow-xl shadow-black/30 backdrop-blur-sm">
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/15">
-          <Icon className="h-6 w-6" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-base font-bold leading-snug text-stone-50">{title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-stone-400">{body}</p>
-        </div>
-      </div>
-      <Link
-        href={href}
-        className="mt-auto inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-600/90 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-950/40 transition hover:bg-emerald-500 active:scale-[0.99]"
-      >
-        {cta} →
-      </Link>
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-stone-700/45 bg-stone-950/50 px-3 py-4 text-center">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-black text-white shadow-md shadow-emerald-950/50">
+        {n}
+      </span>
+      <p className="text-[11px] font-bold leading-snug text-stone-200">{label}</p>
     </div>
   );
 }
@@ -116,11 +76,35 @@ export async function HomeLanding() {
   const d = getDictionary(locale);
   const tickers = await fetchMarketTickers();
 
-  const steps: { label: string; n: number }[] = [
-    { n: 1, label: d.landing_step_1 },
-    { n: 2, label: d.landing_step_2 },
-    { n: 3, label: d.landing_step_3 },
-    { n: 4, label: d.landing_step_4 },
+  const services: {
+    icon: ComponentType<{ className?: string }>;
+    title: string;
+    tag: string;
+  }[] = [
+    { icon: IconWallet, title: d.landing_svc_wallet_t, tag: d.landing_svc_wallet_tag },
+    { icon: IconP2P, title: d.landing_svc_p2p_t, tag: d.landing_svc_p2p_tag },
+    { icon: IconBot, title: d.landing_svc_bots_t, tag: d.landing_svc_bots_tag },
+    { icon: IconChartLine, title: d.landing_svc_futures_t, tag: d.landing_svc_futures_tag },
+    { icon: IconUsers, title: d.landing_svc_groups_t, tag: d.landing_svc_groups_tag },
+    { icon: IconCoins, title: d.landing_svc_pool_t, tag: d.landing_svc_pool_tag },
+    { icon: IconStaking, title: d.landing_svc_staking_t, tag: d.landing_svc_staking_tag },
+    { icon: IconLoan, title: d.landing_svc_loans_t, tag: d.landing_svc_loans_tag },
+    { icon: IconHeadset, title: d.landing_svc_support_t, tag: d.landing_svc_support_tag },
+    { icon: IconSmartphone, title: d.landing_svc_mm_t, tag: d.landing_svc_mm_tag },
+  ];
+
+  const steps = [
+    d.landing_step_1,
+    d.landing_step_2,
+    d.landing_step_3,
+    d.landing_step_4,
+  ];
+
+  const trust = [
+    { icon: IconShield, label: d.landing_trust_1 },
+    { icon: IconBell, label: d.landing_trust_2 },
+    { icon: IconLock, label: d.landing_trust_3 },
+    { icon: IconCheck, label: d.landing_trust_4 },
   ];
 
   return (
@@ -132,261 +116,116 @@ export async function HomeLanding() {
 
       <LandingTopBar />
 
-      <div className="relative mx-auto max-w-lg px-3 pb-6 pt-1 sm:max-w-2xl lg:max-w-5xl">
-        <div className="overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/70 p-6 shadow-2xl shadow-black/50 backdrop-blur-xl sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-400/95">
+      <div className="relative mx-auto max-w-lg px-3 pb-4 pt-1 sm:max-w-2xl lg:max-w-5xl">
+        <section className="overflow-hidden rounded-[1.75rem] border-2 border-emerald-800/30 bg-gradient-to-br from-stone-900/90 via-stone-950 to-stone-950 p-6 shadow-2xl shadow-black/50 sm:p-8">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-emerald-400">
             {d.landing_presentation_eyebrow}
           </p>
-          <h1 className="mt-4 text-balance text-3xl font-bold leading-[1.12] tracking-tight text-stone-50 sm:text-4xl">
+          <h1 className="mt-3 text-balance text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-4xl">
             {d.landing_presentation_title}
           </h1>
-          <p className="mt-4 text-pretty text-base leading-relaxed text-stone-400 sm:text-[1.05rem]">
-            {d.landing_presentation_body}
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <Link
               href="/register"
-              className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 text-base font-semibold text-white shadow-lg shadow-emerald-900/35 transition active:scale-[0.99] sm:min-w-[200px]"
+              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl bg-emerald-600 px-6 text-base font-extrabold text-white shadow-lg shadow-emerald-950/40 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
             <Link
               href="/login"
-              className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-2xl border border-stone-600 bg-stone-900/50 px-6 text-base font-semibold text-stone-100 backdrop-blur-sm transition active:scale-[0.99] hover:border-stone-500 sm:min-w-[160px]"
+              className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-2xl border-2 border-stone-600 bg-stone-900/60 px-6 text-base font-bold text-stone-100 active:scale-[0.99]"
             >
               {d.landing_cta_login}
             </Link>
-            <Link
-              href="/#market"
-              className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-2xl border border-stone-600/80 bg-transparent px-6 text-base font-semibold text-stone-200 transition active:scale-[0.99] hover:border-emerald-700/50 hover:bg-stone-900/40 sm:min-w-[160px]"
-            >
-              {d.landing_cta_market}
-            </Link>
           </div>
-        </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {[d.landing_stat_1_t, d.landing_stat_2_t, d.landing_stat_3_t].map((label) => (
+              <span
+                key={label}
+                className="rounded-full border border-emerald-700/35 bg-emerald-950/50 px-3 py-1 text-[11px] font-bold text-emerald-300"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </section>
 
-        <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-          <StatTile title={d.landing_stat_1_t} subtitle={d.landing_stat_1_d} />
-          <StatTile title={d.landing_stat_2_t} subtitle={d.landing_stat_2_d} />
-          <StatTile title={d.landing_stat_3_t} subtitle={d.landing_stat_3_d} />
-        </div>
-
-        <div className="mt-8 space-y-8">
+        <div className="mt-6 space-y-6">
           <PriceChartLazy />
-          <section id="market" className="scroll-mt-28">
+          <section id="market" className="scroll-mt-24">
             <MarketPreview locale={locale} initialTickers={tickers} />
           </section>
         </div>
       </div>
 
-      {/* Transition + “McBuleli today” band — after live crypto list */}
-      <div className="relative mx-auto mt-6 max-w-5xl px-4">
-        <div
-          className="h-px w-full bg-gradient-to-r from-transparent via-emerald-500/35 to-transparent"
-          aria-hidden
-        />
-        <section
-          id="suite"
-          className="scroll-mt-28 mt-10 rounded-[1.75rem] border border-emerald-900/20 bg-gradient-to-br from-stone-900/60 via-stone-950/80 to-stone-950 p-6 shadow-inner shadow-black/40 sm:p-8"
-        >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
-            {d.landing_post_market_eyebrow}
-          </p>
-          <h2 className="mt-3 text-xl font-bold leading-snug text-stone-50 sm:text-2xl">
-            {d.landing_post_market_title}
+      <main className="relative mx-auto max-w-5xl space-y-14 px-4 pb-20 pt-10">
+        <section id="services" className="scroll-mt-24" aria-labelledby="services-h">
+          <h2
+            id="services-h"
+            className="text-center text-xl font-black text-stone-50 sm:text-2xl"
+          >
+            {d.landing_services_heading}
           </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-stone-400 sm:text-base">
-            {d.landing_post_market_body}
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <PillarCard icon={IconWallet} title={d.landing_pillar_assets_t} body={d.landing_pillar_assets_d} />
-            <PillarCard icon={IconP2P} title={d.landing_pillar_p2p_t} body={d.landing_pillar_p2p_d} />
-            <PillarCard icon={IconSmartphone} title={d.landing_pillar_rails_t} body={d.landing_pillar_rails_d} />
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {services.map((s) => (
+              <ServiceTile key={s.title} icon={s.icon} title={s.title} tag={s.tag} />
+            ))}
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <PillarCard icon={IconBell} title={d.landing_pillar_notify_t} body={d.landing_pillar_notify_d} />
-            <PillarCard icon={IconShield} title={d.landing_pillar_transparency_t} body={d.landing_pillar_transparency_d} />
-          </div>
-        </section>
-      </div>
-
-      <main className="relative mx-auto max-w-5xl space-y-20 px-4 pb-24 pt-16">
-        <section id="preview" className="scroll-mt-28" aria-labelledby="preview-h">
-          <div className="flex flex-col gap-3 border-l-4 border-emerald-500/70 pl-5 sm:pl-6">
-            <h2 id="preview-h" className="text-2xl font-bold text-stone-50 sm:text-3xl">
-              {d.landing_preview_heading}
-            </h2>
-            <p className="max-w-2xl text-sm leading-relaxed text-stone-400 sm:text-base">
-              {d.landing_preview_sub}
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            <PreviewTile
-              icon={IconWallet}
-              title={d.landing_preview_wallet_t}
-              body={d.landing_preview_wallet_d}
-              href="/register"
-              cta={d.landing_preview_cta}
-            />
-            <PreviewTile
-              icon={IconP2P}
-              title={d.landing_preview_p2p_t}
-              body={d.landing_preview_p2p_d}
-              href="/register"
-              cta={d.landing_preview_cta}
-            />
-            <PreviewTile
-              icon={IconChartLine}
-              title={d.landing_preview_trade_t}
-              body={d.landing_preview_trade_d}
-              href="/register"
-              cta={d.landing_preview_cta}
-            />
-            <PreviewTile
-              icon={IconUsers}
-              title={d.landing_preview_groups_t}
-              body={d.landing_preview_groups_d}
-              href="/register"
-              cta={d.landing_preview_cta}
-            />
-            <PreviewTile
-              icon={IconCoins}
-              title={d.landing_preview_pool_t}
-              body={d.landing_preview_pool_d}
-              href="/register"
-              cta={d.landing_preview_cta}
-            />
-          </div>
-
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex justify-center">
             <Link
               href="/register"
-              className="inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-2xl bg-emerald-600 px-8 text-sm font-bold text-white shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-500 sm:w-auto"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-emerald-600 px-10 text-sm font-extrabold text-white shadow-lg shadow-emerald-950/35 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-2xl border border-stone-600 bg-stone-900/60 px-8 text-sm font-semibold text-stone-100 transition hover:border-stone-500 sm:w-auto"
-            >
-              {d.landing_cta_login}
-            </Link>
-          </div>
-
-          <p className="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-stone-500 sm:text-sm">
-            {d.landing_preview_hint}
-          </p>
-        </section>
-
-        <section id="features" aria-labelledby="features-h">
-          <h2
-            id="features-h"
-            className="text-center text-2xl font-bold text-stone-50 sm:text-3xl"
-          >
-            {d.landing_features_heading}
-          </h2>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2">
-            <FeatureCard
-              icon={IconP2P}
-              title={d.landing_feature_p2p_t}
-              body={d.landing_feature_p2p_d}
-            />
-            <FeatureCard
-              icon={IconSmartphone}
-              title={d.landing_feature_mm_t}
-              body={d.landing_feature_mm_d}
-            />
-            <FeatureCard
-              icon={IconShield}
-              title={d.landing_feature_escrow_t}
-              body={d.landing_feature_escrow_d}
-            />
-            <FeatureCard
-              icon={IconZap}
-              title={d.landing_feature_fast_t}
-              body={d.landing_feature_fast_d}
-            />
           </div>
         </section>
 
-        <section id="how" className="scroll-mt-28" aria-labelledby="how-h">
-          <h2
-            id="how-h"
-            className="text-center text-2xl font-bold text-stone-50 sm:text-3xl"
-          >
+        <section id="how" className="scroll-mt-24" aria-labelledby="how-h">
+          <h2 id="how-h" className="text-center text-xl font-black text-stone-50">
             {d.landing_how_heading}
           </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((s) => (
-              <div
-                key={s.n}
-                className="flex flex-col rounded-2xl border border-stone-700/50 bg-stone-950/50 p-5"
-              >
-                <span className="text-4xl font-black tabular-nums text-emerald-500/25">
-                  {String(s.n).padStart(2, "0")}
-                </span>
-                <p className="mt-3 text-sm font-semibold leading-snug text-stone-200">{s.label}</p>
-              </div>
+          <div className="mt-6 grid grid-cols-4 gap-2">
+            {steps.map((label, i) => (
+              <StepChip key={i} n={i + 1} label={label} />
             ))}
           </div>
         </section>
 
         <section
           id="trust"
-          className="scroll-mt-28 rounded-3xl border border-emerald-800/25 bg-gradient-to-br from-emerald-950/40 via-stone-900/90 to-stone-950 p-6 sm:p-10"
+          className="scroll-mt-24 rounded-2xl border border-emerald-900/25 bg-stone-950/80 p-4 sm:p-6"
           aria-labelledby="trust-h"
         >
-          <h2 id="trust-h" className="text-xl font-bold text-stone-50 sm:text-2xl">
+          <h2 id="trust-h" className="text-center text-sm font-extrabold uppercase tracking-wide text-emerald-400">
             {d.landing_trust_heading}
           </h2>
-          <ul className="mt-6 space-y-5">
-            <li className="flex gap-4 text-sm leading-relaxed text-stone-300">
-              <IconShield className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400/90" />
-              <span>{d.landing_trust_1}</span>
-            </li>
-            <li className="flex gap-4 text-sm leading-relaxed text-stone-300">
-              <IconBell className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400/90" />
-              <span>{d.landing_trust_2}</span>
-            </li>
-            <li className="flex gap-4 text-sm leading-relaxed text-stone-300">
-              <IconLock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400/90" />
-              <span>{d.landing_trust_3}</span>
-            </li>
-            <li className="flex gap-4 text-sm leading-relaxed text-stone-300">
-              <IconCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400/90" />
-              <span>{d.landing_trust_4}</span>
-            </li>
-          </ul>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {trust.map((t) => (
+              <TrustChip key={t.label} icon={t.icon} label={t.label} />
+            ))}
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-stone-800 bg-stone-950/95 px-4 py-12">
-        <div className="mx-auto max-w-4xl">
-          <p className="text-center text-base font-semibold text-stone-200">
-            {d.landing_footer_tagline}
-          </p>
-          <p className="mx-auto mt-4 max-w-lg text-center text-sm leading-relaxed text-stone-500">
-            {d.landing_inspired_note}
-          </p>
-          <nav
-            className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-emerald-400/95"
-            aria-label="Footer"
-          >
-            <Link href="/about" className="transition hover:text-emerald-300 hover:underline">
+      <footer className="border-t border-stone-800 bg-stone-950 px-4 py-8">
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-sm font-bold text-stone-300">{d.landing_footer_tagline}</p>
+          <nav className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-semibold text-emerald-400">
+            <Link href="/about" className="hover:text-emerald-300">
               {d.landing_footer_about}
             </Link>
-            <Link href="/contact" className="transition hover:text-emerald-300 hover:underline">
+            <Link href="/contact" className="hover:text-emerald-300">
               {d.landing_footer_contact}
             </Link>
-            <Link href="/terms" className="transition hover:text-emerald-300 hover:underline">
+            <Link href="/terms" className="hover:text-emerald-300">
               {d.landing_footer_terms}
             </Link>
-            <Link href="/privacy" className="transition hover:text-emerald-300 hover:underline">
+            <Link href="/privacy" className="hover:text-emerald-300">
               {d.landing_footer_privacy}
             </Link>
           </nav>
-          <p className="mt-10 text-center text-xs text-stone-600">
+          <p className="mt-6 text-xs text-stone-600">
             © {new Date().getFullYear()} {d.brand}
           </p>
         </div>
