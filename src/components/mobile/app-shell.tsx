@@ -28,7 +28,8 @@ export function AppShell({
     pathname.startsWith("/app/withdraw") ||
     pathname === "/app/wallet/transfer" ||
     pathname.startsWith("/app/p2p/ad/") ||
-    pathname.startsWith("/app/p2p/order/");
+    pathname.startsWith("/app/p2p/order/") ||
+    pathname.startsWith("/app/support");
   const lightMainBg = onProfile || onWalletFlow || onHome || onP2p;
   const showTopBar = !onProfile && !hideTopBarForFlow;
 

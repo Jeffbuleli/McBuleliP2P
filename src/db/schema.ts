@@ -1261,3 +1261,74 @@ export const userNotifications = pgTable(
     index("user_notifications_user_created_idx").on(t.userId, t.createdAt),
   ],
 );
+
+/** Global support chat — one open thread per end-user. */
+export const supportThreads = pgTable(
+  "support_threads",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    assignedToUserId: uuid("assigned_to_user_id").references(() => users.id),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("support_threads_user_uq").on(t.userId),
+    index("support_threads_last_msg_idx").on(t.lastMessageAt),
+    index("support_threads_assigned_idx").on(t.assignedToUserId),
+  ],
+);
+
+export type SupportAttachment = {
+  type: "image";
+  dataUrl: string;
+  mime: string;
+  sizeBytes: number;
+};
+
+export const supportMessages = pgTable(
+  "support_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => supportThreads.id, { onDelete: "cascade" }),
+    senderUserId: uuid("sender_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    attachments: jsonb("attachments").$type<SupportAttachment[] | null>(),
+    /** Mentioned user ids (@agent / @user). */
+    mentions: jsonb("mentions").$type<string[] | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("support_messages_thread_created_idx").on(t.threadId, t.createdAt),
+  ],
+);
+
+export const supportMessageReads = pgTable(
+  "support_message_reads",
+  {
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => supportMessages.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    readAt: timestamp("read_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("support_message_reads_uq").on(t.messageId, t.userId),
+    index("support_message_reads_user_idx").on(t.userId),
+  ],
+);

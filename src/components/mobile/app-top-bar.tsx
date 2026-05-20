@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
+import { SupportHeadsetIcon } from "@/components/support/support-chatroom";
 
 export function AppTopBar({
   email,
@@ -20,6 +21,7 @@ export function AppTopBar({
   const [innerScroll, setInnerScroll] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadNotif, setUnreadNotif] = useState(0);
+  const [unreadSupport, setUnreadSupport] = useState(0);
 
   function refreshUnread() {
     void fetch("/api/notifications", { credentials: "include", cache: "no-store" })
@@ -29,10 +31,19 @@ export function AppTopBar({
         setUnreadNotif(Number.isFinite(n) ? n : 0);
       })
       .catch(() => {});
+    void fetch("/api/support/unread", { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { unreadCount?: number }) => {
+        const n = Number(j.unreadCount ?? 0);
+        setUnreadSupport(Number.isFinite(n) ? n : 0);
+      })
+      .catch(() => {});
   }
 
   useEffect(() => {
     refreshUnread();
+    const id = window.setInterval(refreshUnread, 20000);
+    return () => window.clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -74,13 +85,19 @@ export function AppTopBar({
         </Link>
 
         <div className="flex items-center gap-0.5">
-          <span
-            className="inline-flex items-center gap-1 rounded-full border border-emerald-700/30 bg-emerald-950/40 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-200"
-            title={t("security_trusted")}
+          <Link
+            href="/app/support"
+            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-emerald-700 text-white shadow-md shadow-emerald-900/40 transition hover:bg-emerald-600 active:scale-95"
+            aria-label={t("support_open_chat")}
+            title={t("support_title")}
           >
-            <ShieldIcon />
-            <span className="max-[380px]:hidden">{t("security_badge")}</span>
-          </span>
+            <SupportHeadsetIcon className="h-5 w-5" />
+            {unreadSupport > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-stone-950">
+                {unreadSupport > 99 ? "99+" : unreadSupport}
+              </span>
+            ) : null}
+          </Link>
 
           <button
             type="button"
@@ -131,16 +148,3 @@ function BellIcon() {
   );
 }
 
-function ShieldIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z" />
-    </svg>
-  );
-}

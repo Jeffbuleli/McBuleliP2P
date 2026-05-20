@@ -18,7 +18,8 @@ export type NotificationKind =
   | "p2p_order_dispute_released"
   | "p2p_order_dispute_refunded"
   | "p2p_order_message"
-  | "p2p_order_support_message";
+  | "p2p_order_support_message"
+  | "support_message";
 
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;

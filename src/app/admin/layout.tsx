@@ -71,6 +71,12 @@ export default async function AdminLayout({
           >
             {d.admin_nav_dashboard}
           </Link>
+          <Link
+            href="/admin/support"
+            className="rounded-lg border border-emerald-800/40 bg-emerald-950/25 px-3 py-2 text-emerald-100 hover:border-emerald-600/50"
+          >
+            {d.admin_support_inbox}
+          </Link>
           {showW ? (
             <>
               <Link

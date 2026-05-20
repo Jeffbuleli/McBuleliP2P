@@ -171,6 +171,16 @@ function notifMeta(
         href: p2pHref,
         pill: { variant: "processing", label: t("status_ui_processing") },
       };
+    case "support_message":
+      return {
+        title: t("notif_support_message_title"),
+        body: t("notif_support_message_body", {
+          fromLabel: str("fromLabel") || t("support_typing_agents"),
+          preview: str("preview") || "—",
+        }),
+        href: "/app/support",
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
     default:
       return {
         title: row.kind,
