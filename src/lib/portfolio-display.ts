@@ -2,7 +2,10 @@ import type { Locale } from "@/i18n/locale";
 import { formatMoneyLocale } from "@/lib/fx";
 import { getStakingValuationUsd } from "@/lib/staking-service";
 import { getWalletUserState } from "@/lib/wallet-user-state";
-import { formatWalletAssetBalance } from "@/lib/wallet-balance-format";
+import {
+  formatHomeAssetBalance,
+  formatWalletAssetBalance,
+} from "@/lib/wallet-balance-format";
 import type { WalletAsset } from "@/lib/wallet-types";
 
 export type PortfolioSnapshot = {
@@ -69,11 +72,11 @@ export async function getPortfolioSnapshotForUser(
   const usd = line("USD");
   const cdf = line("CDF");
 
-  const usdtDisplay = `${formatWalletAssetBalance(usdt.balanceNum, "USDT", locale)} USDT`;
+  const usdtDisplay = `${formatHomeAssetBalance(usdt.balanceNum, "USDT", locale)} USDT`;
   const piDisplay =
     pi.balanceNum > 0 && pi.valueUsd > 0
-      ? `${formatWalletAssetBalance(pi.balanceNum, "PI", locale)} Pi · ≈ ${formatMoneyLocale(pi.valueUsd, locale, 2)} USDT`
-      : `${formatWalletAssetBalance(pi.balanceNum, "PI", locale)} Pi`;
+      ? `${formatHomeAssetBalance(pi.balanceNum, "PI", locale)} Pi · ≈ ${formatMoneyLocale(pi.valueUsd, locale, 2)}`
+      : `${formatHomeAssetBalance(pi.balanceNum, "PI", locale)} Pi`;
 
   const fiatUsdDisplay = `≈ ${formatMoneyLocale(usd.balanceNum, locale, 2)} USD`;
   const fiatCdfDisplay = `≈ ${formatWalletAssetBalance(cdf.balanceNum, "CDF", locale)} CDF`;

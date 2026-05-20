@@ -8,12 +8,13 @@ import {
 } from "@/components/p2p/p2p-status-badge";
 import type { P2pActivityItem } from "@/lib/p2p-activity";
 import { interpolate } from "@/i18n/messages";
+import { IconP2P } from "@/components/icons/flow-icons";
 
 function fmtAmt(raw: string, locale: "en" | "fr") {
   const x = Number(raw);
   if (!Number.isFinite(x)) return raw;
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  return x.toLocaleString(loc, { maximumFractionDigits: 8 });
+  return x.toLocaleString(loc, { maximumFractionDigits: 4 });
 }
 
 export function P2PHomeCard({
@@ -36,10 +37,10 @@ export function P2PHomeCard({
     >
       <div className="flex items-start gap-3">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] text-lg text-white shadow-sm"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] text-white shadow-sm"
           aria-hidden
         >
-          ⇄
+          <IconP2P className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="fd-section-title">{t("p2p_home_section_title")}</h2>

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
 import { loadP2pHomeActivity } from "@/lib/p2p-activity";
 import {
   emptyPortfolioSnapshot,
@@ -8,6 +9,7 @@ import {
 import { getSessionUserId } from "@/lib/session";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
+import { homeDisplayName, homeGreetingLine } from "@/lib/home-greeting";
 import { BalanceCard } from "@/components/mobile/balance-card";
 import { AssetStrip } from "@/components/mobile/asset-strip";
 import { TradeHubPreview } from "@/components/mobile/trade-hub-preview";
@@ -15,7 +17,6 @@ import { MarketPreview } from "@/components/mobile/market-preview";
 import { P2PHomeCard } from "@/components/mobile/p2p-home-card";
 import { P2PRecentActivity } from "@/components/mobile/p2p-recent-activity";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
-import { getDictionary } from "@/i18n/messages";
 import { getStakingValuationUsd } from "@/lib/staking-service";
 
 export const dynamic = "force-dynamic";
@@ -28,11 +29,22 @@ export default async function DashboardPage() {
     return null;
   }
 
+  const db = getDb();
+  const [userRow] = await db
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+      piUsername: users.piUsername,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
   const snapshot = await getPortfolioSnapshotForUser(userId, locale);
   const stakeVal = await getStakingValuationUsd(userId);
-  const d = getDictionary(locale);
+  const lang = locale === "fr" ? "fr" : "en";
 
-  const p2pHome = await loadP2pHomeActivity({ userId, limit: 8 });
+  const p2pHome = await loadP2pHomeActivity({ userId, limit: 3 });
   const tickers = await fetchMarketTickers();
 
   let s = snapshot ?? emptyPortfolioSnapshot(locale);
@@ -47,18 +59,17 @@ export default async function DashboardPage() {
     };
   }
 
+  const greeting = homeGreetingLine(
+    lang,
+    userRow ? homeDisplayName(userRow) : null,
+  );
+
   return (
     <div className="home-theme wallet-theme home-scroll -mx-4 space-y-3 px-4 pb-2">
-      <header className="pt-0.5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--fd-primary)]">
-          McBuleli
-        </p>
-        <h1 className="text-xl font-bold tracking-tight text-[color:var(--fd-text)]">
-          {d.nav_home}
+      <header className="pt-1">
+        <h1 className="text-2xl font-extrabold tracking-tight text-[color:var(--fd-text)]">
+          {greeting}
         </h1>
-        <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">
-          {d.wallet_crypto_only_hint}
-        </p>
       </header>
 
       <BalanceCard
@@ -67,17 +78,6 @@ export default async function DashboardPage() {
         usdtDisplay={s.usdtDisplay}
         piDisplay={s.piDisplay}
       />
-
-      <Link
-        href="/app/wallet"
-        prefetch
-        className="fd-card flex min-h-[48px] items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-[color:var(--fd-primary)] transition active:scale-[0.99]"
-      >
-        <span>{d.wallet_see_all}</span>
-        <span aria-hidden className="text-[color:var(--fd-muted)]">
-          →
-        </span>
-      </Link>
 
       <AssetStrip
         locale={locale}
@@ -101,7 +101,9 @@ export default async function DashboardPage() {
         previewOrders={p2pHome.items}
       />
 
-      <P2PRecentActivity items={p2pHome.items} />
+      {p2pHome.items.length > 0 ? (
+        <P2PRecentActivity items={p2pHome.items} />
+      ) : null}
     </div>
   );
 }

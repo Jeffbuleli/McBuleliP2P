@@ -40,10 +40,10 @@ export default function DepositWizardPage() {
   const [routesLoading, setRoutesLoading] = useState(true);
   const [routesError, setRoutesError] = useState<string | null>(null);
   const [usdtNeedsSetup, setUsdtNeedsSetup] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [declaredAmountPi, setDeclaredAmountPi] = useState("");
   const [userNote, setUserNote] = useState("");
-  const [binanceEnv, setBinanceEnv] = useState<"demo" | "live" | null>(null);
   useEffect(() => {
     void (async () => {
       setRoutesLoading(true);
@@ -54,22 +54,21 @@ export default function DepositWizardPage() {
         if (!res.ok) {
           setEnabledUsdt(false);
           setEnabledPi(false);
-          setBinanceEnv(null);
           setUsdtNeedsSetup(false);
-          setRoutesError(t("deposit_routes_load_error"));
+          setIsAdmin(false);
+          setRoutesError(t("deposit_unavailable"));
           return;
         }
         setEnabledUsdt(Boolean(data.usdtBinance));
         setEnabledPi(Boolean(data.piManual));
         setUsdtNeedsSetup(Boolean(data.usdtBinanceNeedsSetup));
-        const env = data.binanceEnv;
-        setBinanceEnv(env === "demo" || env === "live" ? env : null);
+        setIsAdmin(Boolean(data.isAdmin));
       } catch {
         setEnabledUsdt(false);
         setEnabledPi(false);
-        setBinanceEnv(null);
         setUsdtNeedsSetup(false);
-        setRoutesError(t("deposit_routes_load_error"));
+        setIsAdmin(false);
+        setRoutesError(t("deposit_unavailable"));
       } finally {
         setRoutesLoading(false);
       }
@@ -83,6 +82,7 @@ export default function DepositWizardPage() {
 
   const unavailableMsg = (() => {
     if (!noneEnabled) return null;
+    if (!isAdmin) return t("deposit_unavailable");
     if (enabledUsdt === false && enabledPi === false) {
       return t("deposit_unavailable_both");
     }
@@ -166,26 +166,12 @@ export default function DepositWizardPage() {
 
   const stepSubtitle = `${t("deposit_step")} ${step}/3`;
 
-  const envBadge =
-    binanceEnv && enabledUsdt ? (
-      <span
-        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-          binanceEnv === "demo"
-            ? "bg-amber-100 text-amber-900"
-            : "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
-        }`}
-      >
-        {binanceEnv === "demo" ? t("wallet_binance_env_demo") : t("wallet_binance_env_live")}
-      </span>
-    ) : null;
-
   return (
     <WalletFlowShell
       title={t("deposit")}
       subtitle={stepSubtitle}
       step={step}
       totalSteps={3}
-      headerBadge={envBadge}
     >
       {routesLoading ? (
         <p className="fd-card px-3 py-2 text-sm text-[color:var(--fd-muted)]">
@@ -198,7 +184,7 @@ export default function DepositWizardPage() {
       {unavailableMsg ? (
         <p className="fd-card px-3 py-2 text-sm text-rose-800">{unavailableMsg}</p>
       ) : null}
-      {routesReady && enabledUsdt && usdtNeedsSetup ? (
+      {routesReady && isAdmin && enabledUsdt && usdtNeedsSetup ? (
         <p className="fd-card border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-950">
           {t("deposit_binance_setup_hint")}
         </p>

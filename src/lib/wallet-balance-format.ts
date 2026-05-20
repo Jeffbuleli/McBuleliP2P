@@ -20,3 +20,18 @@ export function formatWalletAssetBalance(
     minimumFractionDigits: 0,
   });
 }
+
+/** Compact balances on Home hero (fewer decimals). */
+export function formatHomeAssetBalance(
+  n: number,
+  asset: WalletAsset,
+  locale: Locale,
+): string {
+  if (!Number.isFinite(n) || n === 0) return "0";
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
+  const maxFrac = asset === "USDT" ? 4 : asset === "PI" ? 4 : 2;
+  return n.toLocaleString(loc, {
+    maximumFractionDigits: maxFrac,
+    minimumFractionDigits: 0,
+  });
+}

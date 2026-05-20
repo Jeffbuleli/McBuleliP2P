@@ -838,7 +838,7 @@ export const en = {
   deposit_pi_memo_label: "Memo / note (optional)",
   deposit_pi_memo_placeholder: "e.g. your username or payment reference",
   p2p_hub_filters: "Filters",
-  p2p_home_section_title: "P2P marketplace",
+  p2p_home_section_title: "P2P Marketplace",
   p2p_home_hint: "Escrow · pay off-platform",
   p2p_legal_info: "Legal info",
   p2p_role_you_buy: "You buy",
@@ -1788,7 +1788,8 @@ export const en = {
     "Send to another McBuleli user (same asset). This is not an on-chain deposit.",
   deposit_show_addr: "Show address",
   deposit_loading: "…",
-  deposit_unavailable: "Deposits are temporarily unavailable.",
+  deposit_unavailable:
+    "Deposits are temporarily unavailable. Please try again later or contact support.",
   deposit_unavailable_usdt:
     "USDT deposits are not configured on the server (Binance API keys missing).",
   deposit_unavailable_pi:
@@ -2393,7 +2394,7 @@ export const fr: Messages = {
   nav_home: "Home",
   nav_wallet: "Wallet",
   nav_p2p: "P2P",
-  nav_trade: "Marché",
+  nav_trade: "Trade",
   nav_market: "Marché",
   nav_profile: "Profil",
   total_balance: "Solde total",
@@ -2914,7 +2915,7 @@ export const fr: Messages = {
   deposit_pi_memo_label: "Mémo / note (optionnel)",
   deposit_pi_memo_placeholder: "ex. pseudo ou référence de paiement",
   p2p_hub_filters: "Filtres",
-  p2p_home_section_title: "Marché P2P",
+  p2p_home_section_title: "P2P Marketplace",
   p2p_home_hint: "Séquestre · paiement hors app",
   p2p_legal_info: "Infos légales",
   p2p_role_you_buy: "Vous achetez",
@@ -3876,7 +3877,8 @@ export const fr: Messages = {
     "Envoi à un autre utilisateur McBuleli (même actif). Ce n’est pas un dépôt on-chain.",
   deposit_show_addr: "Voir l’adresse",
   deposit_loading: "…",
-  deposit_unavailable: "Dépôts temporairement indisponibles.",
+  deposit_unavailable:
+    "Dépôts temporairement indisponibles. Réessayez plus tard ou contactez le support.",
   deposit_unavailable_usdt:
     "Dépôt USDT non configuré sur le serveur (clés API Binance manquantes).",
   deposit_unavailable_pi:

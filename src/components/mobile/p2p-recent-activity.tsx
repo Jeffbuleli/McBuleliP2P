@@ -10,22 +10,23 @@ function fmtAmt(raw: string, locale: Locale) {
   const x = Number(raw);
   if (!Number.isFinite(x)) return raw;
   const loc = locale === "fr" ? "fr-FR" : "en-US";
-  return x.toLocaleString(loc, { maximumFractionDigits: 8 });
+  return x.toLocaleString(loc, { maximumFractionDigits: 4 });
 }
 
 export function P2PRecentActivity({ items }: { items: P2pActivityItem[] }) {
   const { t, locale } = useI18n();
+  const rows = items.slice(0, 3);
 
   return (
     <section className="fd-card p-4">
       <h2 className="fd-section-title mb-3">{t("p2p_recent_activity")}</h2>
-      {items.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="py-6 text-center text-sm text-[color:var(--fd-muted)]">
           {t("p2p_recent_empty")}
         </p>
       ) : (
         <ul className="flex flex-col gap-0">
-          {items.map((row) => (
+          {rows.map((row) => (
             <li
               key={row.id}
               className="border-b border-[color:var(--fd-border)] py-3 last:border-0"

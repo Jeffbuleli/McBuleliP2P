@@ -43,10 +43,6 @@ export function BalanceCard({
       <p className="mt-1 text-center text-[1.65rem] font-bold leading-tight tabular-nums tracking-tight text-[color:var(--fd-text)]">
         {hidden ? formatHidden() : totalEquivDisplay}
       </p>
-      <p className="mt-0.5 text-center text-[10px] text-[color:var(--fd-muted)]">
-        {d.balance_equiv_usdt_note}
-      </p>
-
       <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[color:var(--fd-border)] pt-3">
         <div className="fd-card rounded-xl px-2.5 py-2 shadow-none">
           <p className="text-[9px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">

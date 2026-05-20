@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
+import { isSuperAdminUserId } from "@/lib/bot-super-admin";
 import { getWalletRailsSnapshot } from "@/lib/wallet-rails";
+import { getSessionUserId } from "@/lib/session";
 
 /** Which on-ramp flows are configured server-side. */
 export async function GET() {
   try {
+    const userId = await getSessionUserId();
+    const isAdmin = userId ? await isSuperAdminUserId(userId) : false;
     const rails = await getWalletRailsSnapshot();
     return NextResponse.json({
       ...rails,
+      isAdmin,
       /** @deprecated use usdtBinance */
       enabled: rails.usdtBinance || rails.piManual,
     });
