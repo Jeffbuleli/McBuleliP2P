@@ -10,7 +10,11 @@ import {
 import { UserRole } from "@/lib/roles";
 import { createUserNotification } from "@/lib/notifications-service";
 import { p2pDisplayName } from "@/lib/p2p-display";
-import { extractMentionHandles } from "@/lib/support-rich-text";
+import {
+  filterAttachmentsForDisplay,
+  purgeExpiredSupportAttachments,
+} from "@/lib/support-attachments";
+import { bodyHasLink, extractMentionHandles } from "@/lib/support-rich-text";
 
 const MAX_BODY = 4000;
 const MAX_IMAGE_BYTES = 350_000;
@@ -46,6 +50,8 @@ export type SupportMessageDto = {
   mentions: string[] | null;
   readBy: { userId: string; label: string; readAt: string }[];
   unreadForViewer: boolean;
+  hasLink: boolean;
+  hadExpiredImages: boolean;
 };
 
 function userHandle(u: {
@@ -329,7 +335,7 @@ export async function postSupportMessage(args: {
     }
 
     const fromLabel = staff ? "McBuleli Support" : p2pDisplayName(sender);
-    const preview = text || (attachments?.length ? "📷 Image" : "");
+    const preview = text || (attachments?.length ? "Image" : "");
 
     const notifyIds = new Set<string>();
     notifyIds.add(th.userId);
@@ -418,9 +424,13 @@ async function buildMessageDtos(args: {
     const handle = staff ? "support" : userHandle(r);
     const readBy = readsByMsg.get(r.id) ?? [];
     const viewerRead = readBy.some((x) => x.userId === args.viewerUserId);
+    const { attachments, hadExpiredImages } = filterAttachmentsForDisplay(
+      r.attachments,
+      r.createdAt,
+    );
     return {
       id: r.id,
-      body: r.body,
+      body: r.body.trim(),
       createdAt: r.createdAt.toISOString(),
       senderUserId: r.senderUserId,
       senderLabel: label,
@@ -428,10 +438,12 @@ async function buildMessageDtos(args: {
       senderAvatarUrl: r.avatarUrl ?? null,
       senderRole: r.role,
       own: r.senderUserId === args.viewerUserId,
-      attachments: r.attachments,
+      attachments,
       mentions: r.mentions,
       readBy,
       unreadForViewer: !viewerRead && r.senderUserId !== args.viewerUserId,
+      hasLink: bodyHasLink(r.body),
+      hadExpiredImages,
     };
   });
 }
@@ -461,6 +473,8 @@ export async function listSupportMessages(args: {
     if (!staff && th.userId !== args.viewerUserId) {
       return { ok: false, message: "support_forbidden" };
     }
+
+    void purgeExpiredSupportAttachments();
 
     const rows = await db
       .select({

@@ -87,6 +87,13 @@ function splitUrls(text: string, nextKey: () => number): ReactNode[] {
   return out.length ? out : [text];
 }
 
+export function bodyHasLink(body: string): boolean {
+  const trimmed = body.trim();
+  if (!trimmed) return false;
+  URL_RE.lastIndex = 0;
+  return URL_RE.test(trimmed);
+}
+
 export function extractMentionHandles(body: string): string[] {
   const handles = new Set<string>();
   const re = /@([\w][\w.-]*)/g;

@@ -23,6 +23,7 @@ export function AppShell({
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw");
   const onP2p = pathname.startsWith("/app/p2p");
+  const onSupport = pathname.startsWith("/app/support");
   const hideTopBarForFlow =
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw") ||
@@ -30,7 +31,7 @@ export function AppShell({
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support");
-  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p;
+  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p || onSupport;
   const showTopBar = !onProfile && !hideTopBarForFlow;
 
   return (
@@ -49,7 +50,7 @@ export function AppShell({
         </div>
       ) : null}
       <main
-        className={`flex-1 ${lightMainBg ? "bg-[var(--fd-bg)] px-4 pt-2" : "px-4 pt-3"}`}
+        className={`flex-1 ${lightMainBg ? "bg-[var(--fd-bg)] px-4 pt-2" : "px-4 pt-3"} ${onSupport ? "!px-0 !pt-0" : ""}`}
       >
         {children}
       </main>
