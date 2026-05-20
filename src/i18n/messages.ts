@@ -1073,8 +1073,7 @@ export const en = {
   wallet_entry_p2p_escrow_refund: "P2P — escrow refunded",
   market_title: "Market",
   market_disclaimer: "Prices shown are indicative (USDT reference pairs).",
-  trade_preview_intro:
-    "Automated bots and USDT-margined futures — open a tab below to trade.",
+  trade_preview_intro: "Bots and USDT futures.",
   trade_view_hub: "How it works",
   trade_card_futures_hint: "Directional exposure with leverage & margin rules",
   trade_card_options_hint: "Calls, puts, strike, expiry — defined risk",
@@ -3136,8 +3135,7 @@ export const fr: Messages = {
   wallet_entry_p2p_escrow_refund: "P2P — séquestre remboursé",
   market_title: "Marché",
   market_disclaimer: "Prix indicatifs (paires de référence USDT).",
-  trade_preview_intro:
-    "Bots automatisés et futures en marge USDT — choisissez un onglet ci-dessous.",
+  trade_preview_intro: "Bots et futures USDT.",
   trade_view_hub: "Comment ça marche",
   trade_card_futures_hint: "Exposition directionnelle, effet de levier & marge",
   trade_card_options_hint: "Calls, puts, strike, échéance — risque défini (acheteur)",

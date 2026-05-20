@@ -7,6 +7,51 @@ import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { SupportHeadsetIcon } from "@/components/support/support-chatroom";
+import { syncAppIconBadge } from "@/lib/app-icon-badge";
+
+function TopBarCountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function TopBarActionButton({
+  children,
+  badge,
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  badge: number;
+  className: string;
+} & (
+  | React.ComponentPropsWithoutRef<"button">
+  | React.ComponentPropsWithoutRef<typeof Link>
+)) {
+  const inner = (
+    <>
+      {children}
+      <TopBarCountBadge count={badge} />
+    </>
+  );
+  const cls = `relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition active:scale-95 ${className}`;
+
+  if ("href" in props) {
+    return (
+      <Link {...props} className={cls}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" {...props} className={cls}>
+      {inner}
+    </button>
+  );
+}
 
 export function AppTopBar({
   email,
@@ -22,6 +67,8 @@ export function AppTopBar({
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadNotif, setUnreadNotif] = useState(0);
   const [unreadSupport, setUnreadSupport] = useState(0);
+
+  const totalUnread = unreadNotif + unreadSupport;
 
   function refreshUnread() {
     void fetch("/api/notifications", { credentials: "include", cache: "no-store" })
@@ -47,6 +94,10 @@ export function AppTopBar({
   }, []);
 
   useEffect(() => {
+    void syncAppIconBadge(totalUnread);
+  }, [totalUnread]);
+
+  useEffect(() => {
     const onScroll = () => setInnerScroll(window.scrollY > 6);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -64,7 +115,12 @@ export function AppTopBar({
       >
         <Link
           href="/app"
-          className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
+          className="relative flex min-h-[44px] min-w-0 flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
+          aria-label={
+            totalUnread > 0
+              ? `${t("brand")} — ${totalUnread} ${t("notifications_title")}`
+              : t("brand")
+          }
         >
           <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
             <Image
@@ -76,44 +132,36 @@ export function AppTopBar({
               priority
               unoptimized
             />
+            <TopBarCountBadge count={totalUnread} />
           </span>
-          <span className="font-bold tracking-tight text-[color:var(--fd-text)]">
+          <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
             {t("brand")}
           </span>
         </Link>
 
-        <div className="flex items-center gap-0.5">
-          <Link
+        <div className="flex items-center gap-1">
+          <TopBarActionButton
             href="/app/support"
-            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-emerald-700 text-white shadow-md shadow-emerald-900/40 transition hover:bg-emerald-600 active:scale-95"
+            badge={unreadSupport}
+            className="bg-[color:var(--fd-primary)] text-white shadow-md shadow-[color:var(--fd-primary)]/25 hover:opacity-95"
             aria-label={t("support_open_chat")}
             title={t("support_title")}
           >
             <SupportHeadsetIcon className="h-5 w-5" />
-            {unreadSupport > 0 ? (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-stone-950">
-                {unreadSupport > 99 ? "99+" : unreadSupport}
-              </span>
-            ) : null}
-          </Link>
+          </TopBarActionButton>
 
-          <button
-            type="button"
-            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] active:scale-95"
+          <TopBarActionButton
+            badge={unreadNotif}
+            className="border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] text-[color:var(--fd-primary)] shadow-sm hover:bg-[color:var(--fd-mint)]"
             aria-label={t("notifications_title")}
             onClick={() => setNotifOpen(true)}
           >
             <BellIcon />
-            {unreadNotif > 0 ? (
-              <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-                {unreadNotif > 99 ? "99+" : unreadNotif}
-              </span>
-            ) : null}
-          </button>
+          </TopBarActionButton>
 
           <Link
             href="/app/profile"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl active:scale-95"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full active:scale-95"
             aria-label={t("nav_profile")}
           >
             <UserAvatarMark email={email} avatarUrl={avatarUrl} />
@@ -145,4 +193,3 @@ function BellIcon() {
     </svg>
   );
 }
-
