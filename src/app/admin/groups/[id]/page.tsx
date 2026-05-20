@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
+import { adminCls, AdminBackLink } from "@/components/admin/admin-ui";
 
 type Group = {
   id: string;
@@ -109,46 +109,42 @@ export default function AdminGroupDetailPage({
 
   if (!row) {
     return (
-      <div>
+      <div className={adminCls.page}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">{t("admin_group")}</h2>
-          <Link href="/admin/groups" className="text-sm text-amber-200 underline">
-            {t("admin_back")}
-          </Link>
+          <h2 className={adminCls.h1}>{t("admin_group")}</h2>
+          <AdminBackLink href="/admin/groups">{t("admin_back")}</AdminBackLink>
         </div>
-        {err ? <p className="text-rose-400">{err}</p> : <p className="text-stone-500">…</p>}
+        {err ? <p className={adminCls.error}>{err}</p> : <p className={adminCls.muted}>…</p>}
       </div>
     );
   }
 
   return (
-    <div>
+    <div className={adminCls.page}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/80">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--fd-primary)]">
             {row.type}
           </p>
-          <h2 className="text-xl font-bold text-white">{row.name}</h2>
-          <p className="mt-1 text-sm text-stone-300">{row.createdByEmail}</p>
+          <h2 className={adminCls.h1}>{row.name}</h2>
+          <p className={`mt-1 text-sm ${adminCls.muted}`}>{row.createdByEmail}</p>
         </div>
-        <Link href="/admin/groups" className="text-sm text-amber-200 underline">
-          {t("admin_back")}
-        </Link>
+        <AdminBackLink href="/admin/groups">{t("admin_back")}</AdminBackLink>
       </div>
 
-      {err ? <p className="mb-3 text-rose-400">{err}</p> : null}
+      {err ? <p className={adminCls.error}>{err}</p> : null}
 
-      <div className="rounded-2xl border border-stone-700 bg-stone-900/80 p-4">
-        <p className="text-sm text-stone-200">
+      <div className={adminCls.card}>
+        <p className="text-sm text-[color:var(--fd-text)]">
           {t("admin_status")}: <span className="font-mono">{row.status}</span> ·{" "}
           {t("admin_subscription")}:{" "}
           <span className="font-mono">{row.subscriptionStatus}</span>
         </p>
-        <p className="mt-1 text-sm text-stone-400">
+        <p className={`mt-1 text-sm ${adminCls.muted}`}>
           {row.contributionAmountUsdt} USDT · {row.cycleDurationDays}d ·{" "}
           {row.countryCode ? countryLabel(locale, row.countryCode) : "—"}
         </p>
-        <p className="mt-1 text-xs text-stone-500">
+        <p className={`mt-1 text-xs ${adminCls.muted}`}>
           Next billing:{" "}
           {row.nextBillingAt ? new Date(row.nextBillingAt).toLocaleString() : "—"}
         </p>
@@ -159,7 +155,7 @@ export default function AdminGroupDetailPage({
           type="button"
           disabled={busy}
           onClick={runBilling}
-          className="rounded-xl border border-stone-600 bg-stone-950 px-4 py-2 text-sm font-semibold text-stone-100 disabled:opacity-50"
+          className={adminCls.btnSecondary}
         >
           {t("admin_run_billing")}
         </button>
@@ -169,7 +165,7 @@ export default function AdminGroupDetailPage({
               type="button"
               disabled={busy}
               onClick={() => void review("approve")}
-              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+              className={adminCls.btnPrimary}
             >
               {t("admin_approve")}
             </button>
@@ -178,7 +174,7 @@ export default function AdminGroupDetailPage({
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder={t("admin_reject_reason")}
-                className="w-full rounded-xl border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100"
+                className={`w-full ${adminCls.input}`}
               />
               <button
                 type="button"
@@ -194,26 +190,26 @@ export default function AdminGroupDetailPage({
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-stone-700 bg-stone-900/80 p-4">
-          <h3 className="text-sm font-bold text-white">{t("group_settings_payment_history")}</h3>
+        <div className={adminCls.card}>
+          <h3 className={adminCls.h2}>{t("group_settings_payment_history")}</h3>
           {invoices === null ? (
-            <p className="mt-2 text-stone-500">…</p>
+            <p className={`mt-2 ${adminCls.muted}`}>…</p>
           ) : invoices.length === 0 ? (
-            <p className="mt-2 text-stone-500">—</p>
+            <p className={`mt-2 ${adminCls.muted}`}>—</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {invoices.map((x: any) => (
-                <li key={x.id} className="rounded-xl border border-stone-700 bg-stone-950/50 px-3 py-2">
+                <li key={x.id} className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs text-stone-200">{x.period}</span>
-                    <span className="text-xs text-stone-400">{x.status}</span>
+                    <span className="font-mono text-xs text-[color:var(--fd-text)]">{x.period}</span>
+                    <span className={`text-xs ${adminCls.muted}`}>{x.status}</span>
                   </div>
-                  <p className="mt-1 text-xs text-stone-400">
+                  <p className={`mt-1 text-xs ${adminCls.muted}`}>
                     {Number(x.amountUsdt).toFixed(2)} USDT ·{" "}
                     {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
                   </p>
                   {x.failureReason ? (
-                    <p className="mt-1 text-[11px] text-rose-300">{x.failureReason}</p>
+                    <p className="mt-1 text-[11px] text-rose-700">{x.failureReason}</p>
                   ) : null}
                 </li>
               ))}
@@ -221,18 +217,18 @@ export default function AdminGroupDetailPage({
           )}
         </div>
 
-        <div className="rounded-2xl border border-stone-700 bg-stone-900/80 p-4">
-          <h3 className="text-sm font-bold text-white">{t("group_settings_audit_log")}</h3>
+        <div className={adminCls.card}>
+          <h3 className={adminCls.h2}>{t("group_settings_audit_log")}</h3>
           {audit === null ? (
-            <p className="mt-2 text-stone-500">…</p>
+            <p className={`mt-2 ${adminCls.muted}`}>…</p>
           ) : audit.length === 0 ? (
-            <p className="mt-2 text-stone-500">—</p>
+            <p className={`mt-2 ${adminCls.muted}`}>—</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {audit.map((x: any) => (
-                <li key={x.id} className="rounded-xl border border-stone-700 bg-stone-950/50 px-3 py-2">
-                  <p className="text-xs font-semibold text-stone-200">{x.action}</p>
-                  <p className="mt-1 text-[11px] text-stone-500">
+                <li key={x.id} className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
+                  <p className="text-xs font-semibold text-[color:var(--fd-text)]">{x.action}</p>
+                  <p className={`mt-1 text-[11px] ${adminCls.muted}`}>
                     {new Date(x.createdAt).toLocaleString()}
                   </p>
                 </li>
@@ -244,4 +240,3 @@ export default function AdminGroupDetailPage({
     </div>
   );
 }
-

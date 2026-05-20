@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 type InboxRow = {
   id: string;
@@ -40,47 +41,40 @@ export default function AdminP2pInboxPage() {
   }, [load]);
 
   return (
-    <div className="space-y-4">
-      <Link href="/admin/p2p" className="text-sm text-amber-200 underline">
-        ← {t("admin_p2p_disputes")}
-      </Link>
-      <h2 className="text-lg font-bold text-white">Support inbox</h2>
-      <p className="text-sm text-stone-400">
-        Disputes need urgent review. Open an order to read chat and reply as Support.
-      </p>
+    <div className={adminCls.page}>
+      <AdminBackLink href="/admin/p2p">{t("admin_p2p_disputes")}</AdminBackLink>
+      <AdminPageHeader
+        title="Support inbox"
+        subtitle="Disputes need urgent review. Open an order to read chat and reply as Support."
+      />
 
-      {err ? (
-        <p className="rounded-lg bg-rose-950/50 px-3 py-2 text-sm text-rose-100">{err}</p>
-      ) : null}
+      {err ? <p className={adminCls.error}>{err}</p> : null}
 
       {!rows?.length ? (
-        <p className="text-sm text-stone-400">{t("admin_p2p_none")}</p>
+        <p className={adminCls.empty}>{t("admin_p2p_none")}</p>
       ) : (
         <ul className="space-y-3">
           {rows.map((r) => (
-            <li
-              key={r.id}
-              className="rounded-xl border border-stone-700 bg-stone-900/80 p-4 text-sm text-stone-100"
-            >
+            <li key={r.id} className={adminCls.card}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs text-stone-500">{r.id}</p>
-                  <p className="mt-1 font-semibold">
+                  <p className={`font-mono text-xs ${adminCls.muted}`}>{r.id}</p>
+                  <p className="mt-1 font-semibold text-[color:var(--fd-text)]">
                     {r.fiatAmount} {r.fiatCurrency} → {r.cryptoAmount} {r.asset}
                   </p>
-                  <p className="mt-1 text-xs text-stone-400">
+                  <p className={`mt-1 text-xs ${adminCls.muted}`}>
                     {r.makerMasked} ↔ {r.takerMasked}
                   </p>
                 </div>
                 <Link
                   href={`/admin/p2p/orders/${encodeURIComponent(r.id)}`}
-                  className="shrink-0 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white"
+                  className={adminCls.btnPrimary}
                 >
                   Open chat
                 </Link>
               </div>
               {r.disputeReason ? (
-                <p className="mt-3 whitespace-pre-wrap text-xs text-stone-300">
+                <p className={`mt-3 whitespace-pre-wrap text-xs ${adminCls.muted}`}>
                   {r.disputeReason}
                 </p>
               ) : null}
@@ -91,4 +85,3 @@ export default function AdminP2pInboxPage() {
     </div>
   );
 }
-

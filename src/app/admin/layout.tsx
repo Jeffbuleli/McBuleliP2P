@@ -8,6 +8,7 @@ import {
 import { canAccessPlatformExpensesModule } from "@/lib/platform-expenses";
 import { UserRole } from "@/lib/roles";
 import { LogoutButton } from "@/components/LogoutButton";
+import { AdminNavLink } from "@/components/admin/admin-ui";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 
@@ -34,132 +35,96 @@ export default async function AdminLayout({
     u.role === UserRole.AGENT && !agentHasAnyStaffScope(u);
 
   return (
-    <div className="min-h-full bg-stone-950 text-stone-100">
+    <div className="admin-theme home-theme min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <header className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-800/90 pb-5">
+        <header className="fd-app-topbar mb-5 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/80">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
               {d.admin_header_ops}
             </p>
-            <h1 className="text-lg font-bold text-white">{d.admin_control_room}</h1>
+            <h1 className="text-xl font-black text-[color:var(--fd-text)]">
+              {d.admin_control_room}
+            </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-rose-900/50 px-2 py-0.5 text-xs text-rose-100">
-              {u.role}
-            </span>
+            <span className={adminClsRole()}>{u.role}</span>
             <Link
               href="/app"
-              className="rounded-lg border border-stone-600 px-3 py-1.5 text-sm text-stone-200"
+              className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-1.5 text-sm font-semibold text-[color:var(--fd-primary)] shadow-sm hover:bg-[color:var(--fd-mint)]"
             >
               {d.admin_link_app}
             </Link>
-            <LogoutButton className="border-stone-600 text-stone-200" />
+            <LogoutButton className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-1.5 text-sm font-semibold text-[color:var(--fd-text)] shadow-sm hover:bg-[color:var(--fd-mint)]" />
           </div>
         </header>
+
         {noOps ? (
-          <p className="mb-4 rounded-lg border border-amber-900/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
+          <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             {d.admin_nav_no_ops}
           </p>
         ) : null}
+
         <nav
-          className="mb-8 flex flex-wrap gap-2 border-b border-stone-800/90 pb-5 text-sm"
+          className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
           aria-label="Admin"
         >
-          <Link
-            href="/admin"
-            className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-          >
-            {d.admin_nav_dashboard}
-          </Link>
-          <Link
-            href="/admin/support"
-            className="rounded-lg border border-emerald-800/40 bg-emerald-950/25 px-3 py-2 text-emerald-100 hover:border-emerald-600/50"
-          >
+          <AdminNavLink href="/admin">{d.admin_nav_dashboard}</AdminNavLink>
+          <AdminNavLink href="/admin/support" variant="support">
             {d.admin_support_inbox}
-          </Link>
+          </AdminNavLink>
           {showW ? (
             <>
-              <Link
-                href="/admin/deposits"
-                className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-              >
+              <AdminNavLink href="/admin/deposits" variant="money">
                 {d.admin_nav_deposits}
-              </Link>
-              <Link
-                href="/admin/withdrawals"
-                className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/withdrawals" variant="money">
                 {d.admin_nav_withdrawals}
-              </Link>
+              </AdminNavLink>
             </>
           ) : null}
           {showG ? (
-            <Link
-              href="/admin/groups"
-              className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-            >
-              {d.admin_nav_groups}
-            </Link>
+            <AdminNavLink href="/admin/groups">{d.admin_nav_groups}</AdminNavLink>
           ) : null}
           {showP2p ? (
-            <Link
-              href="/admin/p2p"
-              className="rounded-lg border border-stone-700 bg-stone-900/50 px-3 py-2 text-stone-200 hover:border-amber-700/50 hover:text-white"
-            >
+            <AdminNavLink href="/admin/p2p" variant="support">
               {d.admin_nav_p2p}
-            </Link>
+            </AdminNavLink>
           ) : null}
           {showPlatformExpenses ? (
-            <Link
-              href="/admin/platform-expenses"
-              className="rounded-lg border border-emerald-900/35 bg-emerald-950/20 px-3 py-2 text-emerald-100 hover:border-emerald-600/45"
-            >
+            <AdminNavLink href="/admin/platform-expenses" variant="money">
               {d.admin_nav_platform_expenses}
-            </Link>
+            </AdminNavLink>
           ) : null}
           {u.role === "super_admin" ? (
             <>
-              <Link
-                href="/admin/team"
-                className="rounded-lg border border-amber-800/40 bg-amber-950/25 px-3 py-2 text-amber-100 hover:border-amber-600/60"
-              >
+              <AdminNavLink href="/admin/team" variant="team">
                 {d.admin_nav_team}
-              </Link>
-              <Link
-                href="/admin/users"
-                className="rounded-lg border border-amber-800/40 bg-amber-950/25 px-3 py-2 text-amber-100 hover:border-amber-600/60"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/users" variant="team">
                 {d.admin_nav_users}
-              </Link>
-              <Link
-                href="/admin/finance"
-                className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-2 text-emerald-100 hover:border-emerald-600/50"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/finance" variant="money">
                 {d.admin_nav_finance}
-              </Link>
-              <Link
-                href="/admin/bots"
-                className="rounded-lg border border-violet-900/40 bg-violet-950/25 px-3 py-2 text-violet-100 hover:border-violet-600/50"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/bots" variant="bots">
                 {d.admin_nav_bots}
-              </Link>
-              <Link
-                href="/admin/audit"
-                className="rounded-lg border border-stone-600 bg-stone-900/80 px-3 py-2 text-stone-200 hover:border-stone-500"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/audit" variant="audit">
                 {d.admin_nav_audit}
-              </Link>
-              <Link
-                href="/admin/settings/pi"
-                className="rounded-lg border border-violet-800/40 bg-violet-950/25 px-3 py-2 text-violet-100 hover:border-violet-600/50"
-              >
+              </AdminNavLink>
+              <AdminNavLink href="/admin/settings/pi" variant="bots">
                 {d.admin_nav_pi_settings}
-              </Link>
+              </AdminNavLink>
             </>
           ) : null}
         </nav>
+
         <main className="pb-10">{children}</main>
       </div>
     </div>
   );
+}
+
+function adminClsRole() {
+  return "rounded-full bg-[color:var(--fd-mint)] px-2.5 py-0.5 text-xs font-bold capitalize text-[color:var(--fd-primary)]";
 }

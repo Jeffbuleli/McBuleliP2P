@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, platformAdminAuditLog, users } from "@/db";
@@ -6,6 +5,7 @@ import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { UserRole } from "@/lib/roles";
 import { getSessionUser } from "@/lib/session-user";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 export default async function AdminAuditPage() {
   const me = await getSessionUser();
@@ -33,25 +33,19 @@ export default async function AdminAuditPage() {
     .limit(200);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-white">{d.admin_audit_title}</h2>
-          <p className="mt-1 max-w-2xl text-sm text-stone-400">{d.admin_audit_sub}</p>
-        </div>
-        <Link href="/admin" className="text-sm text-amber-200 underline">
-          {d.admin_back}
-        </Link>
-      </div>
+    <div className={adminCls.page}>
+      <AdminPageHeader
+        title={d.admin_audit_title}
+        subtitle={d.admin_audit_sub}
+        action={<AdminBackLink>{d.admin_back}</AdminBackLink>}
+      />
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-stone-700 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
-          {d.admin_audit_empty}
-        </p>
+        <p className={adminCls.empty}>{d.admin_audit_empty}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-stone-700">
+        <div className="fd-card overflow-x-auto rounded-2xl">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-stone-700 bg-stone-900/80 text-xs uppercase tracking-wide text-stone-500">
+            <thead className="border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 text-xs uppercase tracking-wide text-[color:var(--fd-muted)]">
               <tr>
                 <th className="px-3 py-3 font-semibold">{d.admin_audit_when}</th>
                 <th className="px-3 py-3 font-semibold">{d.admin_audit_actor}</th>
@@ -60,17 +54,19 @@ export default async function AdminAuditPage() {
                 <th className="px-3 py-3 font-semibold">{d.admin_audit_details}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-800">
+            <tbody className="divide-y divide-[color:var(--fd-border)]">
               {rows.map((r) => (
-                <tr key={r.id} className="bg-stone-950/40 align-top">
-                  <td className="whitespace-nowrap px-3 py-2 text-xs text-stone-400">
+                <tr key={r.id} className="align-top">
+                  <td className={`whitespace-nowrap px-3 py-2 text-xs ${adminCls.muted}`}>
                     {r.createdAt.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
                   </td>
-                  <td className="max-w-[140px] break-all px-3 py-2 font-mono text-xs text-stone-300">
+                  <td className="max-w-[140px] break-all px-3 py-2 font-mono text-xs text-[color:var(--fd-text)]">
                     {r.actorEmail ?? "—"}
                   </td>
-                  <td className="px-3 py-2 text-xs text-amber-100/95">{r.action}</td>
-                  <td className="max-w-[120px] break-all px-3 py-2 font-mono text-[11px] text-stone-400">
+                  <td className="px-3 py-2 text-xs font-medium text-[color:var(--fd-primary)]">
+                    {r.action}
+                  </td>
+                  <td className={`max-w-[120px] break-all px-3 py-2 font-mono text-[11px] ${adminCls.muted}`}>
                     {r.resourceType ? `${r.resourceType}` : "—"}
                     {r.resourceId ? (
                       <>
@@ -79,7 +75,7 @@ export default async function AdminAuditPage() {
                       </>
                     ) : null}
                   </td>
-                  <td className="max-w-md px-3 py-2 font-mono text-[11px] text-stone-500">
+                  <td className={`max-w-md px-3 py-2 font-mono text-[11px] ${adminCls.muted}`}>
                     {r.meta ? JSON.stringify(r.meta) : "—"}
                   </td>
                 </tr>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { adminCls } from "@/components/admin/admin-ui";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -108,52 +109,52 @@ export default function PiReceiveAddressSettingsClient() {
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-      <div className="rounded-2xl border border-stone-700 bg-stone-950/40 p-3">
-        <p className="text-sm font-semibold text-stone-100">Pi Test (sandbox)</p>
-        <p className="mt-1 text-[11px] text-stone-400">
+    <div className={`space-y-4 ${adminCls.card}`}>
+      <div className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 p-3">
+        <p className="text-sm font-semibold text-[color:var(--fd-text)]">Pi Test (sandbox)</p>
+        <p className={`mt-1 text-[11px] ${adminCls.muted}`}>
           Balance is stored per user (<span className="font-mono">users.pi_test_balance</span>),
           separate from real Pi (<span className="font-mono">users.pi_balance</span>). Operations
           (send, withdraw, transfers) use each asset&apos;s own balance — the wallet total is the sum of
           the rows below it.
         </p>
 
-        <label className="mt-3 block text-xs font-medium text-stone-300">
+        <label className={`mt-3 block text-xs font-medium ${adminCls.muted}`}>
           Target user ID (optional — empty = your admin account)
           <input
             value={targetUserId}
             onChange={(e) => setTargetUserId(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2.5 font-mono text-xs text-stone-100"
+            className={`mt-1 w-full font-mono text-xs ${adminCls.input}`}
             placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           />
         </label>
 
-        <div className="mt-3 rounded-xl border border-stone-800 bg-stone-950/60 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+        <div className="mt-3 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2">
+          <p className={`text-[10px] font-semibold uppercase tracking-wide ${adminCls.muted}`}>
             Current Pi Test balance (read-only)
           </p>
-          <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-emerald-200">
+          <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-emerald-700">
             {piTestBalance}
           </p>
         </div>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-stone-300 sm:col-span-2">
+          <label className={`block text-xs font-medium ${adminCls.muted} sm:col-span-2`}>
             Amount (Pi Test)
             <input
               value={piTestAmount}
               onChange={(e) => setPiTestAmount(e.target.value)}
               inputMode="decimal"
-              className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2.5 font-mono text-xs text-stone-100"
+              className={`mt-1 w-full font-mono text-xs ${adminCls.input}`}
               placeholder="0.1"
             />
           </label>
-          <label className="block text-xs font-medium text-stone-300 sm:col-span-2">
+          <label className={`block text-xs font-medium ${adminCls.muted} sm:col-span-2`}>
             Memo / motif
             <input
               value={piTestMemo}
               onChange={(e) => setPiTestMemo(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2.5 text-xs text-stone-100"
+              className={`mt-1 w-full text-xs ${adminCls.input}`}
               placeholder="Training refill, demo payout, ..."
             />
           </label>
@@ -161,7 +162,7 @@ export default function PiReceiveAddressSettingsClient() {
             type="button"
             disabled={piTestBusy || !piTestAmount.trim()}
             onClick={() => void adjust("deposit")}
-            className="rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            className={`${adminCls.btnPrimary} disabled:opacity-60`}
           >
             {piTestBusy ? "…" : "Deposit Pi Test"}
           </button>
@@ -169,36 +170,36 @@ export default function PiReceiveAddressSettingsClient() {
             type="button"
             disabled={piTestBusy || !piTestAmount.trim()}
             onClick={() => void adjust("withdraw")}
-            className="rounded-xl border border-rose-700/50 bg-rose-950/30 py-2.5 text-sm font-bold text-rose-100 disabled:opacity-60"
+            className="rounded-xl border border-rose-300 bg-rose-50 py-2.5 text-sm font-bold text-rose-800 disabled:opacity-60"
           >
             {piTestBusy ? "…" : "Withdraw Pi Test"}
           </button>
         </div>
 
         {piTestLedger.length ? (
-          <div className="mt-4 overflow-hidden rounded-xl border border-stone-800">
-            <div className="border-b border-stone-800 bg-stone-950/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500">
+          <div className="mt-4 overflow-hidden rounded-xl border border-[color:var(--fd-border)]">
+            <div className={`border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide ${adminCls.muted}`}>
               Recent Pi Test activity (this user)
             </div>
-            <ul className="divide-y divide-stone-800">
+            <ul className="divide-y divide-[color:var(--fd-border)]">
               {piTestLedger.slice(0, 20).map((x) => (
-                <li key={x.id} className="px-3 py-2 text-xs text-stone-200">
+                <li key={x.id} className={`px-3 py-2 text-xs ${adminCls.muted}`}>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[11px] text-stone-400">
+                    <span className="font-mono text-[11px]">
                       {new Date(x.createdAt).toLocaleString()}
                     </span>
                     <span
                       className={
                         x.kind === "deposit"
-                          ? "font-semibold text-emerald-200"
-                          : "font-semibold text-rose-200"
+                          ? "font-semibold text-emerald-700"
+                          : "font-semibold text-rose-700"
                       }
                     >
                       {x.kind === "deposit" ? "+" : "-"}
                       {x.amount}
                     </span>
                   </div>
-                  {x.memo ? <div className="mt-1 text-stone-400">{x.memo}</div> : null}
+                  {x.memo ? <div className="mt-1">{x.memo}</div> : null}
                 </li>
               ))}
             </ul>
@@ -206,28 +207,28 @@ export default function PiReceiveAddressSettingsClient() {
         ) : null}
       </div>
 
-      <label className="block text-sm font-medium text-stone-200">
+      <label className={`block text-sm font-medium ${adminCls.muted}`}>
         Pi receiving address (real)
         <input
           value={realAddress}
           onChange={(e) => setRealAddress(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-3 font-mono text-xs text-stone-100"
+          className={`mt-1 w-full font-mono text-xs ${adminCls.input}`}
           placeholder="G... (Pi address)"
         />
       </label>
 
-      <label className="block text-sm font-medium text-stone-200">
+      <label className={`block text-sm font-medium ${adminCls.muted}`}>
         Pi receiving address (test)
         <input
           value={testAddress}
           onChange={(e) => setTestAddress(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-3 font-mono text-xs text-stone-100"
+          className={`mt-1 w-full font-mono text-xs ${adminCls.input}`}
           placeholder="G... (Pi test address)"
         />
       </label>
 
       {msg ? (
-        <p className="rounded-xl border border-stone-700 bg-stone-950/60 px-3 py-2 text-xs text-stone-200">
+        <p className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2 text-xs text-[color:var(--fd-text)]">
           {msg}
         </p>
       ) : null}
@@ -236,7 +237,7 @@ export default function PiReceiveAddressSettingsClient() {
         type="button"
         disabled={loading}
         onClick={() => void save()}
-        className="w-full rounded-xl bg-amber-600 py-3 text-sm font-bold text-stone-950 disabled:opacity-60"
+        className={`w-full ${adminCls.btnPrimary} disabled:opacity-60`}
       >
         {loading ? "…" : "Save addresses"}
       </button>

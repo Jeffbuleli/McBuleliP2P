@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 import { getDictionary, interpolate } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import {
@@ -92,109 +93,105 @@ export default async function AdminFinancePage({
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-white">{d.admin_finance_title}</h2>
-          <p className="mt-1 max-w-3xl text-sm text-stone-400">{d.admin_finance_sub}</p>
-        </div>
-        <Link href="/admin" className="text-sm text-amber-200 underline">
-          {d.admin_back}
-        </Link>
-      </div>
+    <div className={adminCls.page}>
+      <AdminPageHeader
+        title={d.admin_finance_title}
+        subtitle={d.admin_finance_sub}
+        action={<AdminBackLink>{d.admin_back}</AdminBackLink>}
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         {[7, 30, 90].map((n) => (
           <Link
             key={n}
             href={`/admin/finance?days=${n}`}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
+            className={
               days === n
-                ? "border-amber-500 bg-amber-950/40 text-amber-100"
-                : "border-stone-600 bg-stone-900/60 text-stone-300"
-            }`}
+                ? adminCls.btnPrimary
+                : adminCls.btnSecondary
+            }
           >
             {interpolate(d.admin_finance_days, { days: n })}
           </Link>
         ))}
         <a
           href={`/api/admin/finance/export?days=${days}`}
-          className="ml-auto rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-3 py-1.5 text-sm font-semibold text-emerald-100"
+          className={`ml-auto ${adminCls.btnSecondary}`}
         >
           {d.admin_finance_export_csv}
         </a>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+        <div className={adminCls.card}>
+          <p className={adminCls.kpiLabel}>
             {d.admin_finance_kpi_liability}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-100">
+          <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-700">
             {fmtUsd(report.liabilityUsdEstimate, locale)}
           </p>
         </div>
-        <div className="rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+        <div className={adminCls.card}>
+          <p className={adminCls.kpiLabel}>
             {d.admin_finance_kpi_lines}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-amber-100">
+          <p className={adminCls.kpiValue}>
             {report.ledgerLinesInRange}
           </p>
         </div>
-        <div className="rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+        <div className={adminCls.card}>
+          <p className={adminCls.kpiLabel}>
             {d.admin_finance_kpi_period}
           </p>
-          <p className="mt-2 text-sm text-stone-300">{periodLabel}</p>
-          <p className="mt-2 font-mono text-[11px] text-stone-500">
+          <p className={`mt-2 text-sm ${adminCls.muted}`}>{periodLabel}</p>
+          <p className={`mt-2 font-mono text-[11px] ${adminCls.muted}`}>
             {report.sinceIso.slice(0, 10)} → {report.untilIso.slice(0, 10)}
           </p>
         </div>
-        <div className="rounded-2xl border border-indigo-900/40 bg-indigo-950/25 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300/90">
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-800">
             {d.admin_finance_kpi_group_usdt}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-indigo-100">
+          <p className="mt-2 text-2xl font-bold tabular-nums text-indigo-900">
             {fmtUsdt(report.groupTreasuryLiabilityUsdt, locale)}
           </p>
         </div>
-        <div className="rounded-2xl border border-rose-900/40 bg-rose-950/20 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/90">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rose-800">
             {d.admin_finance_kpi_withdrawals}
           </p>
-          <p className="mt-2 text-sm leading-snug text-rose-50/90">{wdDetail}</p>
+          <p className="mt-2 text-sm leading-snug text-rose-900">{wdDetail}</p>
         </div>
-        <div className="rounded-2xl border border-teal-900/40 bg-teal-950/20 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-300/90">
+        <div className="rounded-2xl border border-teal-200 bg-teal-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
             {d.admin_finance_kpi_total_passive}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-teal-100">
+          <p className="mt-2 text-2xl font-bold tabular-nums text-teal-900">
             {fmtUsd(combinedPassive, locale)}
           </p>
         </div>
       </div>
 
-      <p className="text-xs leading-relaxed text-stone-500">
-        <span className="font-semibold text-stone-400">{d.admin_finance_rates_note}: </span>
+      <p className="text-xs leading-relaxed text-[color:var(--fd-muted)]">
+        <span className="font-semibold text-[color:var(--fd-text)]">{d.admin_finance_rates_note}: </span>
         {report.ratesNote}
       </p>
-      <p className="text-xs text-stone-400">{d.admin_finance_hint_signed}</p>
+      <p className="text-xs text-[color:var(--fd-muted)]">{d.admin_finance_hint_signed}</p>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {d.admin_finance_section_user_ledger}
         </h3>
         {report.daily.length === 0 ? (
-          <p className="rounded-xl border border-stone-700 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+          <p className={adminCls.empty}>
             {d.admin_finance_empty}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-stone-700">
+          <div className="fd-card overflow-x-auto rounded-2xl">
             <table className="min-w-[960px] text-left text-sm">
-              <thead className="border-b border-stone-700 bg-stone-900/80 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 text-xs uppercase tracking-wide text-[color:var(--fd-muted)]">
                 <tr>
-                  <th className="sticky left-0 z-10 bg-stone-900/95 px-3 py-3 font-semibold">
+                  <th className="sticky left-0 z-10 bg-[color:var(--fd-card)] px-3 py-3 font-semibold">
                     {d.admin_finance_col_day}
                   </th>
                   {CASH_FLOW_BUCKETS.map((k) => (
@@ -205,32 +202,32 @@ export default async function AdminFinancePage({
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_fees_recorded}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-[color:var(--fd-border)]">
                 {report.daily.map((row) => (
-                  <tr key={row.day} className="bg-stone-950/40">
-                    <td className="sticky left-0 z-10 bg-stone-950/90 px-3 py-2 font-mono text-xs text-stone-200">
+                  <tr key={row.day} className="">
+                    <td className="sticky left-0 z-10 bg-[color:var(--fd-mint)]/50 px-3 py-2 font-mono text-xs text-[color:var(--fd-text)]">
                       {row.day}
                     </td>
                     {CASH_FLOW_BUCKETS.map((k) => (
-                      <td key={k} className="px-2 py-2 tabular-nums text-stone-300">
+                      <td key={k} className="px-2 py-2 tabular-nums text-[color:var(--fd-text)]">
                         {fmtUsd(row.buckets[k].usdSigned, locale)}
                       </td>
                     ))}
-                    <td className="px-2 py-2 tabular-nums text-emerald-200/90">
+                    <td className="px-2 py-2 tabular-nums text-emerald-700">
                       {fmtUsd(row.feesRecordedUsd, locale)}
                     </td>
                   </tr>
                 ))}
-                <tr className="border-t-2 border-amber-900/40 bg-amber-950/20">
-                  <td className="sticky left-0 z-10 bg-amber-950/30 px-3 py-3 font-semibold text-amber-100">
+                <tr className="border-t-2 border-amber-200 bg-amber-50">
+                  <td className="sticky left-0 z-10 bg-amber-50 px-3 py-3 font-semibold text-amber-900">
                     {d.admin_finance_period_row}
                   </td>
                   {CASH_FLOW_BUCKETS.map((k) => (
-                    <td key={k} className="px-2 py-3 tabular-nums font-semibold text-amber-50">
+                    <td key={k} className="px-2 py-3 tabular-nums font-semibold text-amber-900">
                       {fmtUsd(report.periodTotals[k].usdSigned, locale)}
                     </td>
                   ))}
-                  <td className="px-2 py-3 tabular-nums font-semibold text-emerald-100">
+                  <td className="px-2 py-3 tabular-nums font-semibold text-emerald-700">
                     {fmtUsd(report.periodFeesRecordedUsd, locale)}
                   </td>
                 </tr>
@@ -241,17 +238,17 @@ export default async function AdminFinancePage({
       </div>
 
       <div className="space-y-2 pt-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {d.admin_finance_section_group_ledger}
         </h3>
         {report.groupTreasuryDaily.length === 0 ? (
-          <p className="rounded-xl border border-stone-700 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+          <p className={adminCls.empty}>
             {d.admin_finance_empty_group}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-indigo-900/30">
+          <div className="fd-card overflow-x-auto rounded-2xl border border-indigo-200">
             <table className="min-w-[720px] text-left text-sm">
-              <thead className="border-b border-stone-700 bg-indigo-950/40 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="border-b border-[color:var(--fd-border)] bg-indigo-50/60 text-xs uppercase tracking-wide text-[color:var(--fd-muted)]">
                 <tr>
                   <th className="sticky left-0 z-10 bg-indigo-950/90 px-3 py-3 font-semibold">
                     {d.admin_finance_col_day}
@@ -263,25 +260,25 @@ export default async function AdminFinancePage({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-[color:var(--fd-border)]">
                 {report.groupTreasuryDaily.map((row) => (
-                  <tr key={row.day} className="bg-stone-950/40">
-                    <td className="sticky left-0 z-10 bg-stone-950/90 px-3 py-2 font-mono text-xs text-stone-200">
+                  <tr key={row.day} className="">
+                    <td className="sticky left-0 z-10 bg-[color:var(--fd-mint)]/50 px-3 py-2 font-mono text-xs text-[color:var(--fd-text)]">
                       {row.day}
                     </td>
                     {GROUP_TREASURY_BUCKETS.map((k) => (
-                      <td key={k} className="px-2 py-2 tabular-nums text-stone-300">
+                      <td key={k} className="px-2 py-2 tabular-nums text-[color:var(--fd-text)]">
                         {fmtUsd(row.buckets[k].usdSigned, locale)}
                       </td>
                     ))}
                   </tr>
                 ))}
-                <tr className="border-t-2 border-indigo-800/40 bg-indigo-950/30">
-                  <td className="sticky left-0 z-10 bg-indigo-950/40 px-3 py-3 font-semibold text-indigo-100">
+                <tr className="border-t-2 border-indigo-200 bg-indigo-50">
+                  <td className="sticky left-0 z-10 bg-indigo-50 px-3 py-3 font-semibold text-indigo-900">
                     {d.admin_finance_period_row}
                   </td>
                   {GROUP_TREASURY_BUCKETS.map((k) => (
-                    <td key={k} className="px-2 py-3 tabular-nums font-semibold text-indigo-50">
+                    <td key={k} className="px-2 py-3 tabular-nums font-semibold text-indigo-900">
                       {fmtUsd(report.groupTreasuryPeriodTotals[k].usdSigned, locale)}
                     </td>
                   ))}
@@ -293,18 +290,18 @@ export default async function AdminFinancePage({
       </div>
 
       <div className="space-y-2 pt-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {d.admin_finance_section_recent_user}
         </h3>
-        <p className="text-xs text-stone-500">{d.admin_finance_recent_hint}</p>
+        <p className="text-xs text-[color:var(--fd-muted)]">{d.admin_finance_recent_hint}</p>
         {recentUserLines.length === 0 ? (
-          <p className="rounded-xl border border-stone-700 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+          <p className={adminCls.empty}>
             {d.admin_finance_empty_recent_user}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-stone-700">
+          <div className="fd-card overflow-x-auto rounded-2xl">
             <table className="min-w-[1100px] text-left text-sm">
-              <thead className="border-b border-stone-700 bg-stone-900/80 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 text-xs uppercase tracking-wide text-[color:var(--fd-muted)]">
                 <tr>
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_time_utc}</th>
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_user}</th>
@@ -316,10 +313,10 @@ export default async function AdminFinancePage({
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_bucket}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-[color:var(--fd-border)]">
                 {recentUserLines.map((row) => (
-                  <tr key={row.id} className="bg-stone-950/40">
-                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-stone-300">
+                  <tr key={row.id} className="">
+                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-[color:var(--fd-muted)]">
                       {fmtUtcTime(row.createdAt, locale)}
                     </td>
                     <td className="px-2 py-2">
@@ -330,23 +327,23 @@ export default async function AdminFinancePage({
                           sizeClass="h-8 w-8"
                           textClass="text-xs"
                         />
-                        <span className="min-w-0 truncate text-stone-200">{row.userEmail}</span>
+                        <span className="min-w-0 truncate text-[color:var(--fd-text)]">{row.userEmail}</span>
                       </div>
                     </td>
-                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-stone-400">
+                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-[color:var(--fd-muted)]">
                       {row.entryType}
                     </td>
-                    <td className="px-2 py-2 text-stone-300">{row.asset}</td>
-                    <td className="px-2 py-2 tabular-nums text-stone-200">
+                    <td className="px-2 py-2 text-[color:var(--fd-text)]">{row.asset}</td>
+                    <td className="px-2 py-2 tabular-nums text-[color:var(--fd-text)]">
                       {fmtRawAmount(row.amount, locale)}
                     </td>
-                    <td className="px-2 py-2 tabular-nums text-stone-400">
+                    <td className="px-2 py-2 tabular-nums text-[color:var(--fd-muted)]">
                       {fmtUsd(row.feeUsdEquivalent, locale)}
                     </td>
-                    <td className="px-2 py-2 tabular-nums text-emerald-200/90">
+                    <td className="px-2 py-2 tabular-nums text-emerald-700">
                       {fmtUsd(row.usdSigned, locale)}
                     </td>
-                    <td className="px-2 py-2 text-stone-400">{bucketTitles[row.bucket]}</td>
+                    <td className="px-2 py-2 text-[color:var(--fd-muted)]">{bucketTitles[row.bucket]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -356,17 +353,17 @@ export default async function AdminFinancePage({
       </div>
 
       <div className="space-y-2 pt-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {d.admin_finance_section_recent_group}
         </h3>
         {recentGroupLines.length === 0 ? (
-          <p className="rounded-xl border border-indigo-900/30 bg-stone-900/50 px-4 py-6 text-sm text-stone-400">
+          <p className={adminCls.empty}>
             {d.admin_finance_empty_recent_group}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-indigo-900/30">
+          <div className="fd-card overflow-x-auto rounded-2xl border border-indigo-200">
             <table className="min-w-[960px] text-left text-sm">
-              <thead className="border-b border-stone-700 bg-indigo-950/40 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="border-b border-[color:var(--fd-border)] bg-indigo-50/60 text-xs uppercase tracking-wide text-[color:var(--fd-muted)]">
                 <tr>
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_time_utc}</th>
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_group}</th>
@@ -377,31 +374,31 @@ export default async function AdminFinancePage({
                   <th className="px-2 py-3 font-semibold">{d.admin_finance_col_bucket}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-[color:var(--fd-border)]">
                 {recentGroupLines.map((row) => (
-                  <tr key={row.id} className="bg-stone-950/40">
-                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-stone-300">
+                  <tr key={row.id} className="">
+                    <td className="whitespace-nowrap px-2 py-2 font-mono text-xs text-[color:var(--fd-muted)]">
                       {fmtUtcTime(row.createdAt, locale)}
                     </td>
                     <td className="px-2 py-2">
                       <Link
                         href={`/admin/groups/${row.groupId}`}
-                        className="font-medium text-indigo-200 underline decoration-indigo-500/40 hover:text-indigo-100"
+                        className="font-medium text-[color:var(--fd-primary)] underline hover:opacity-80"
                       >
                         {row.groupName}
                       </Link>
                     </td>
-                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-stone-400">
+                    <td className="max-w-[200px] truncate px-2 py-2 font-mono text-xs text-[color:var(--fd-muted)]">
                       {row.entryType}
                     </td>
-                    <td className="px-2 py-2 text-stone-300">{row.asset}</td>
-                    <td className="px-2 py-2 tabular-nums text-stone-200">
+                    <td className="px-2 py-2 text-[color:var(--fd-text)]">{row.asset}</td>
+                    <td className="px-2 py-2 tabular-nums text-[color:var(--fd-text)]">
                       {fmtRawAmount(row.amount, locale)}
                     </td>
-                    <td className="px-2 py-2 tabular-nums text-indigo-200/90">
+                    <td className="px-2 py-2 tabular-nums text-indigo-700">
                       {fmtUsd(row.usdSigned, locale)}
                     </td>
-                    <td className="px-2 py-2 text-stone-400">{groupBucketTitles[row.bucket]}</td>
+                    <td className="px-2 py-2 text-[color:var(--fd-muted)]">{groupBucketTitles[row.bucket]}</td>
                   </tr>
                 ))}
               </tbody>

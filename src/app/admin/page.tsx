@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/session-user";
 import { UserRole } from "@/lib/roles";
 import { agentHasScope } from "@/lib/staff-scopes";
 import { canAccessPlatformExpensesModule } from "@/lib/platform-expenses";
+import { AdminKpiCard, adminCls } from "@/components/admin/admin-ui";
 
 export default async function AdminHomePage() {
   const u = await getSessionUser();
@@ -29,163 +30,114 @@ export default async function AdminHomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-lg font-semibold text-white">{d.admin_dashboard_kpi_title}</h2>
-        <p className="mt-1 text-sm text-stone-500">{d.admin_dashboard_kpi_sub}</p>
+        <h2 className={adminCls.h1}>{d.admin_dashboard_kpi_title}</h2>
+        <p className={`mt-1 ${adminCls.muted}`}>{d.admin_dashboard_kpi_sub}</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {showW ? (
             <>
-              <Link
+              <AdminKpiCard
                 href="/admin/withdrawals?status=PENDING_AGENT&assignFilter=all"
-                className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-amber-700/50"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  {d.admin_kpi_open}
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-amber-100">
-                  {stats.withdrawalsPendingAgent}
-                </p>
-                <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_w_pending}</p>
-                <p className="mt-1 text-xs text-stone-500">
-                  {d.admin_kpi_w_unassigned}:{" "}
-                  <span className="font-mono text-stone-300">
-                    {stats.withdrawalsPendingUnassigned}
-                  </span>
-                </p>
-              </Link>
-              <Link
+                label={d.admin_kpi_open}
+                value={stats.withdrawalsPendingAgent}
+                sub={d.admin_kpi_w_pending}
+                meta={
+                  <>
+                    {d.admin_kpi_w_unassigned}:{" "}
+                    <span className="font-mono font-semibold text-[color:var(--fd-text)]">
+                      {stats.withdrawalsPendingUnassigned}
+                    </span>
+                  </>
+                }
+              />
+              <AdminKpiCard
                 href="/admin/withdrawals?status=PROCESSING&assignFilter=all"
-                className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-amber-700/50"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  {d.admin_kpi_open}
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-amber-100">
-                  {stats.withdrawalsProcessing}
-                </p>
-                <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_w_processing}</p>
-              </Link>
+                label={d.admin_kpi_open}
+                value={stats.withdrawalsProcessing}
+                sub={d.admin_kpi_w_processing}
+              />
             </>
           ) : null}
 
           {showG ? (
             <>
-              <Link
+              <AdminKpiCard
                 href="/admin/groups?status=pending"
-                className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-amber-700/50"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  {d.admin_kpi_open}
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-amber-100">
-                  {stats.groupsPendingReview}
-                </p>
-                <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_g_pending}</p>
-              </Link>
-              <Link
+                label={d.admin_kpi_open}
+                value={stats.groupsPendingReview}
+                sub={d.admin_kpi_g_pending}
+              />
+              <AdminKpiCard
                 href="/admin/groups?status=approved%2Cactive&subscriptionStatus=overdue"
-                className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-amber-700/50"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  {d.admin_kpi_open}
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-rose-200/90">
-                  {stats.groupsSubscriptionOverdue}
-                </p>
-                <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_g_overdue}</p>
-              </Link>
+                label={d.admin_kpi_open}
+                value={stats.groupsSubscriptionOverdue}
+                sub={d.admin_kpi_g_overdue}
+                tone="warn"
+              />
             </>
           ) : null}
 
           {showP2p ? (
-            <Link
+            <AdminKpiCard
               href="/admin/p2p"
-              className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-emerald-600/40"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                {d.admin_kpi_open}
-              </p>
-              <p className="mt-1 text-3xl font-bold tabular-nums text-emerald-200">
-                {stats.p2pDisputesOpen}
-              </p>
-              <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_p2p}</p>
-            </Link>
+              label={d.admin_kpi_open}
+              value={stats.p2pDisputesOpen}
+              sub={d.admin_kpi_p2p}
+            />
           ) : null}
 
           {showLoans ? (
-            <Link
+            <AdminKpiCard
               href="/admin/loans?status=open"
-              className="block rounded-2xl border border-stone-700 bg-stone-900/60 p-4 transition hover:border-amber-700/50"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                {d.admin_loans_title}
-              </p>
-              <p className="mt-2 text-sm text-stone-400">{d.admin_loans_sub}</p>
-            </Link>
+              label={d.admin_loans_title}
+              value="→"
+              sub={d.admin_loans_sub}
+            />
           ) : null}
 
           {showFinance ? (
-            <Link
+            <AdminKpiCard
               href="/admin/finance"
-              className="block rounded-2xl border border-emerald-900/40 bg-emerald-950/25 p-4 transition hover:border-emerald-600/45"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
-                {d.admin_nav_finance}
-              </p>
-              <p className="mt-2 text-sm text-stone-400">{d.admin_finance_blurb}</p>
-            </Link>
+              label={d.admin_nav_finance}
+              value="→"
+              sub={d.admin_finance_blurb}
+            />
           ) : null}
 
           {showPlatformExpenses ? (
-            <Link
+            <AdminKpiCard
               href="/admin/platform-expenses"
-              className="block rounded-2xl border border-teal-900/35 bg-teal-950/20 p-4 transition hover:border-teal-600/45"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-teal-300/90">
-                {d.admin_nav_platform_expenses}
-              </p>
-              <p className="mt-2 text-sm text-stone-400">{d.admin_platform_expenses_sub}</p>
-            </Link>
+              label={d.admin_nav_platform_expenses}
+              value="→"
+              sub={d.admin_platform_expenses_sub}
+            />
           ) : null}
 
           {showGrowth ? (
-            <div className="rounded-2xl border border-stone-700 bg-stone-900/60 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                {d.admin_kpi_growth}
-              </p>
-              <p className="mt-1 text-3xl font-bold tabular-nums text-stone-100">
-                {stats.usersRegisteredLast7Days}
-              </p>
-              <p className="mt-2 text-sm text-stone-400">{d.admin_kpi_users_7d}</p>
-            </div>
+            <AdminKpiCard
+              label={d.admin_kpi_growth}
+              value={stats.usersRegisteredLast7Days}
+              sub={d.admin_kpi_users_7d}
+            />
           ) : null}
         </div>
       </div>
 
-      <div>
-        <p className="text-sm text-stone-400">{d.admin_intro}</p>
-        <div className="mt-4 flex flex-wrap gap-3">
+      <div className="fd-card rounded-2xl p-4">
+        <p className={adminCls.muted}>{d.admin_intro}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
           {showW ? (
-            <Link
-              href="/admin/withdrawals"
-              className="inline-block rounded-xl bg-amber-600 px-5 py-3 font-semibold text-stone-950"
-            >
+            <Link href="/admin/withdrawals" className={adminCls.btnPrimary}>
               {d.admin_queue}
             </Link>
           ) : null}
           {showG ? (
-            <Link
-              href="/admin/groups"
-              className="inline-block rounded-xl border border-amber-600/40 bg-stone-900/70 px-5 py-3 font-semibold text-amber-100"
-            >
+            <Link href="/admin/groups" className={adminCls.btnSecondary}>
               {d.admin_groups}
             </Link>
           ) : null}
           {showP2p ? (
-            <Link
-              href="/admin/p2p"
-              className="inline-block rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-5 py-3 font-semibold text-emerald-100"
-            >
+            <Link href="/admin/p2p" className={adminCls.btnSecondary}>
               {d.admin_p2p_disputes}
             </Link>
           ) : null}

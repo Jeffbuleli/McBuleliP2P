@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { WithdrawalStatus } from "@/lib/status";
 import { activityNetworkLabel } from "@/lib/activity-network-label";
 import { useI18n } from "@/components/i18n-provider";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 type Row = {
   id: string;
@@ -52,7 +53,7 @@ export default function AdminWithdrawalsPage() {
   }, [status, assignFilter, slaBreachedOnly]);
 
   if (rows === null) {
-    return <p className="text-stone-500">…</p>;
+    return <p className={adminCls.muted}>…</p>;
   }
 
   function statusLabel(s: string) {
@@ -80,18 +81,19 @@ export default function AdminWithdrawalsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h2 className="text-xl font-bold text-white">{t("admin_queue")}</h2>
-        <span className="text-xs text-stone-500">
-          {t("admin_withdrawal_sla_hours_note")}: {slaHoursWithdrawal}h
-        </span>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-300">
+    <div className={adminCls.page}>
+      <AdminPageHeader
+        title={t("admin_queue")}
+        subtitle={`${t("admin_withdrawal_sla_hours_note")}: ${slaHoursWithdrawal}h`}
+        action={<AdminBackLink>{t("admin_back")}</AdminBackLink>}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <label className={`flex cursor-pointer items-center gap-2 ${adminCls.muted}`}>
           <input
             type="checkbox"
             checked={slaBreachedOnly}
             onChange={(e) => setSlaBreachedOnly(e.target.checked)}
-            className="rounded border-stone-600"
+            className="rounded border-[color:var(--fd-border)]"
           />
           {t("admin_withdrawal_sla_filter")}
         </label>
@@ -99,7 +101,7 @@ export default function AdminWithdrawalsPage() {
           value={status}
           disabled={slaBreachedOnly}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200 disabled:opacity-40"
+          className={adminCls.select}
         >
           <option value="active">{t("admin_pending")} + {t("admin_processing")}</option>
           <option value={WithdrawalStatus.PENDING_AGENT}>{t("admin_pending")}</option>
@@ -110,48 +112,42 @@ export default function AdminWithdrawalsPage() {
         <select
           value={assignFilter}
           onChange={(e) => setAssignFilter(e.target.value)}
-          className="rounded-lg border border-stone-600 bg-stone-900 px-2 py-1 text-sm text-stone-200"
+          className={adminCls.select}
         >
           <option value="all">{t("admin_all")}</option>
           <option value="unassigned">{t("admin_unassigned")}</option>
           <option value="mine">{t("admin_mine")}</option>
         </select>
-        <Link href="/admin" className="ml-auto text-sm text-amber-200 underline">
-          {t("admin_back")}
-        </Link>
       </div>
-      {err ? <p className="mb-2 text-rose-400">{err}</p> : null}
+      {err ? <p className={adminCls.error}>{err}</p> : null}
       {rows.length === 0 ? (
-        <p className="text-stone-500">—</p>
+        <p className={adminCls.empty}>—</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((r) => (
             <li key={r.id}>
-              <Link
-                href={`/admin/withdrawals/${r.id}`}
-                className="block rounded-xl border border-stone-700 bg-stone-900/80 px-4 py-3 transition hover:border-amber-600/50"
-              >
+              <Link href={`/admin/withdrawals/${r.id}`} className={adminCls.listLink}>
                 <div className="flex flex-wrap justify-between gap-2">
-                  <span className="min-w-0 font-mono text-sm text-amber-100/90">
+                  <span className="min-w-0 font-mono text-sm text-[color:var(--fd-primary)]">
                     {rowOverSla(r) ? (
-                      <span className="mr-1 inline-block rounded bg-rose-950/70 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-100">
+                      <span className="mr-1 inline-block rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-800">
                         {t("admin_withdrawal_over_sla_badge")} · {waitHours(r)}h
                       </span>
                     ) : null}
-                    <span className="mr-1 inline-block rounded bg-amber-950/60 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                    <span className="mr-1 inline-block rounded bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
                       {r.asset}
                     </span>
-                    <span className="break-all">
+                    <span className="break-all text-[color:var(--fd-text)]">
                       {r.amount}+{r.fee} {r.asset} ·{" "}
                       {activityNetworkLabel(locale, r.networkCanonical)}
                     </span>
                   </span>
-                  <span className="text-xs text-stone-500">
+                  <span className={`text-xs ${adminCls.muted}`}>
                     {new Date(r.createdAt).toLocaleString()}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-stone-300">{r.userEmail}</p>
-                <p className="mt-1 text-xs text-amber-100/80">
+                <p className={`mt-1 text-sm ${adminCls.muted}`}>{r.userEmail}</p>
+                <p className="mt-1 text-xs font-medium text-[color:var(--fd-primary)]">
                   {statusLabel(r.status)}
                   {r.assigneeEmail ? ` · ${r.assigneeEmail}` : ""}
                 </p>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import type { SupportThreadListItem } from "@/lib/support-service";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 export default function AdminSupportInboxPage() {
   const { t, locale } = useI18n();
@@ -34,26 +35,18 @@ export default function AdminSupportInboxPage() {
   }, [load]);
 
   return (
-    <div className="space-y-4">
-      <Link href="/admin" className="text-sm text-amber-200 underline">
-        ← {t("admin_nav_dashboard")}
-      </Link>
-      <h2 className="text-lg font-bold text-white">{t("admin_support_inbox")}</h2>
-      <p className="text-sm text-stone-400">{t("support_subtitle")}</p>
+    <div className={adminCls.page}>
+      <AdminBackLink>{t("admin_nav_dashboard")}</AdminBackLink>
+      <AdminPageHeader title={t("admin_support_inbox")} subtitle={t("support_subtitle")} />
 
-      {err ? (
-        <p className="rounded-lg bg-rose-950/50 px-3 py-2 text-sm text-rose-100">{err}</p>
-      ) : null}
+      {err ? <p className={adminCls.error}>{err}</p> : null}
 
       {!rows?.length ? (
-        <p className="text-sm text-stone-400">{t("admin_support_none")}</p>
+        <p className={adminCls.empty}>{t("admin_support_none")}</p>
       ) : (
         <ul className="space-y-3">
           {rows.map((r) => (
-            <li
-              key={r.id}
-              className="rounded-xl border border-stone-700 bg-stone-900/80 p-4 text-sm text-stone-100"
-            >
+            <li key={r.id} className={adminCls.card}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <UserAvatarMark
@@ -61,9 +54,9 @@ export default function AdminSupportInboxPage() {
                     avatarUrl={r.userAvatarUrl}
                   />
                   <div className="min-w-0">
-                    <p className="font-semibold">{r.userLabel}</p>
-                    <p className="mt-0.5 truncate text-xs text-stone-400">{r.preview}</p>
-                    <p className="mt-1 text-[10px] text-stone-500">
+                    <p className="font-semibold text-[color:var(--fd-text)]">{r.userLabel}</p>
+                    <p className={`mt-0.5 truncate text-xs ${adminCls.muted}`}>{r.preview}</p>
+                    <p className={`mt-1 text-[10px] ${adminCls.muted}`}>
                       {new Date(r.lastMessageAt).toLocaleString(loc)}
                     </p>
                   </div>
@@ -76,7 +69,7 @@ export default function AdminSupportInboxPage() {
                   ) : null}
                   <Link
                     href={`/admin/support/${encodeURIComponent(r.id)}`}
-                    className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white"
+                    className={adminCls.btnPrimary}
                   >
                     {t("admin_support_open")}
                   </Link>

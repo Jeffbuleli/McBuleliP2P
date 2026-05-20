@@ -7,6 +7,7 @@ import { WithdrawalStatus } from "@/lib/status";
 import { activityNetworkLabel } from "@/lib/activity-network-label";
 import { useI18n } from "@/components/i18n-provider";
 import { parsePiTxidOrUrl, piExplorerUrlFromTxid } from "@/lib/pi-explorer";
+import { adminCls, AdminBackLink } from "@/components/admin/admin-ui";
 
 type W = {
   id: string;
@@ -109,16 +110,18 @@ export default function AdminWithdrawalDetailPage() {
   }
 
   if (loading) {
-    return <p className="text-stone-500">…</p>;
+    return <p className={adminCls.muted}>…</p>;
   }
   if (!w) {
     return (
-      <p className="text-rose-400">
-        {msg ?? "—"}{" "}
-        <Link href="/admin/withdrawals" className="underline">
-          {t("admin_back")}
-        </Link>
-      </p>
+      <div className={adminCls.page}>
+        <p className={adminCls.error}>
+          {msg ?? "—"}{" "}
+          <Link href="/admin/withdrawals" className={adminCls.back}>
+            {t("admin_back")}
+          </Link>
+        </p>
+      </div>
     );
   }
 
@@ -136,31 +139,29 @@ export default function AdminWithdrawalDetailPage() {
       : null;
 
   return (
-    <div className="space-y-6 pb-12">
-      <Link href="/admin/withdrawals" className="text-sm text-amber-200 underline">
-        {t("admin_back")}
-      </Link>
+    <div className={`${adminCls.page} pb-12`}>
+      <AdminBackLink href="/admin/withdrawals">{t("admin_back")}</AdminBackLink>
 
-      <div className="rounded-xl border border-stone-700 bg-stone-900/60 p-4">
-        <p className="text-xs uppercase text-stone-500">User</p>
-        <p className="font-medium text-white">{userEmail}</p>
-        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_asset")}</p>
-        <p className="text-lg font-semibold text-white">{w.asset}</p>
-        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_net_fee")}</p>
-        <p className="text-lg font-semibold text-amber-100">
+      <div className={adminCls.card}>
+        <p className={`text-xs uppercase ${adminCls.muted}`}>User</p>
+        <p className="font-medium text-[color:var(--fd-text)]">{userEmail}</p>
+        <p className={`mt-3 text-xs uppercase ${adminCls.muted}`}>{t("admin_asset")}</p>
+        <p className={`text-lg font-semibold ${adminCls.h2}`}>{w.asset}</p>
+        <p className={`mt-3 text-xs uppercase ${adminCls.muted}`}>{t("admin_net_fee")}</p>
+        <p className="text-lg font-semibold text-[color:var(--fd-primary)]">
           {w.amount} + {w.fee} {w.asset} → {totalDebit} {w.asset}
         </p>
-        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_network")}</p>
-        <p className="text-white">{networkLine}</p>
-        <p className="mt-1 text-xs text-stone-500">{w.networkCex}</p>
-        <p className="mt-3 text-xs uppercase text-stone-500">{t("admin_dest")}</p>
-        <p className="break-all font-mono text-sm text-emerald-200/90">
+        <p className={`mt-3 text-xs uppercase ${adminCls.muted}`}>{t("admin_network")}</p>
+        <p className="text-[color:var(--fd-text)]">{networkLine}</p>
+        <p className={`mt-1 text-xs ${adminCls.muted}`}>{w.networkCex}</p>
+        <p className={`mt-3 text-xs uppercase ${adminCls.muted}`}>{t("admin_dest")}</p>
+        <p className="break-all font-mono text-sm text-emerald-700">
           {w.toAddress}
         </p>
         {w.memoTo ? (
-          <p className="mt-2 font-mono text-sm text-rose-200">Memo: {w.memoTo}</p>
+          <p className="mt-2 font-mono text-sm text-rose-700">Memo: {w.memoTo}</p>
         ) : null}
-        <p className="mt-3 text-xs text-stone-500">
+        <p className={`mt-3 text-xs ${adminCls.muted}`}>
           {w.status === WithdrawalStatus.PENDING_AGENT && t("status_pending")}
           {w.status === WithdrawalStatus.PROCESSING && (
             <>
@@ -171,13 +172,13 @@ export default function AdminWithdrawalDetailPage() {
         </p>
         {w.txid ? (
           <div className="mt-2">
-            <p className="font-mono text-sm text-stone-400">TXID: {w.txid}</p>
+            <p className={`font-mono text-sm ${adminCls.muted}`}>TXID: {w.txid}</p>
             {explorerUrl ? (
               <a
                 href={explorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block text-sm font-semibold text-emerald-300 underline"
+                className="mt-1 inline-block text-sm font-semibold text-emerald-700 underline"
               >
                 Open Explorer
               </a>
@@ -187,17 +188,13 @@ export default function AdminWithdrawalDetailPage() {
       </div>
 
       {pending ? (
-        <button
-          type="button"
-          onClick={() => void claim()}
-          className="w-full rounded-xl bg-amber-600 py-3 font-semibold text-white"
-        >
+        <button type="button" onClick={() => void claim()} className={`w-full ${adminCls.btnPrimary}`}>
           {t("admin_claim")}
         </button>
       ) : null}
 
       {processing && !canAct ? (
-        <div className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-sm text-amber-100">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {t("admin_release_hint")}
           {assigneeEmail ? ` (${assigneeEmail})` : ""}
         </div>
@@ -205,15 +202,15 @@ export default function AdminWithdrawalDetailPage() {
 
       {showActions ? (
         <>
-          <div className="rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-3 text-sm text-emerald-100/90">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
             {t("admin_txid")} → {t("admin_mark_sent")}
           </div>
-          <label className="block text-sm text-stone-300">
+          <label className={`block text-sm ${adminCls.muted}`}>
             {t("admin_txid")}
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 font-mono text-sm text-white"
+              className={`mt-1 w-full font-mono ${adminCls.input}`}
             />
           </label>
           {w.asset === "PI" && txid.trim() ? (
@@ -225,21 +222,21 @@ export default function AdminWithdrawalDetailPage() {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block text-sm font-semibold text-emerald-300 underline"
+                  className="inline-block text-sm font-semibold text-emerald-700 underline"
                 >
                   Open Explorer
                 </a>
               ) : (
-                <p className="text-xs text-rose-200">Invalid Pi TXID/URL.</p>
+                <p className="text-xs text-rose-700">Invalid Pi TXID/URL.</p>
               );
             })()
           ) : null}
-          <label className="block text-sm text-stone-300">
+          <label className={`block text-sm ${adminCls.muted}`}>
             {t("admin_note")}
             <textarea
               value={agentNote}
               onChange={(e) => setAgentNote(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 text-sm text-white"
+              className={`mt-1 w-full ${adminCls.input}`}
               rows={2}
             />
           </label>
@@ -247,23 +244,23 @@ export default function AdminWithdrawalDetailPage() {
             type="button"
             disabled={txid.trim().length < 8}
             onClick={() => void complete()}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
+            className={`w-full ${adminCls.btnPrimary} disabled:opacity-40`}
           >
             {t("admin_mark_sent")}
           </button>
 
-          <div className="border-t border-stone-700 pt-6">
+          <div className="border-t border-[color:var(--fd-border)] pt-6">
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="mb-2 w-full rounded-lg border border-stone-600 bg-stone-950 px-3 py-2 text-sm text-white"
+              className={`mb-2 w-full ${adminCls.input}`}
               rows={2}
             />
             <button
               type="button"
               disabled={rejectReason.trim().length < 3}
               onClick={() => void reject()}
-              className="w-full rounded-xl border border-rose-700 bg-rose-950/40 py-3 font-semibold text-rose-100 disabled:opacity-40"
+              className="w-full rounded-xl border border-rose-300 bg-rose-50 py-3 font-semibold text-rose-800 disabled:opacity-40"
             >
               {t("admin_reject")}
             </button>
@@ -271,7 +268,7 @@ export default function AdminWithdrawalDetailPage() {
         </>
       ) : null}
 
-      {msg ? <p className="text-rose-400">{msg}</p> : null}
+      {msg ? <p className={adminCls.error}>{msg}</p> : null}
     </div>
   );
 }

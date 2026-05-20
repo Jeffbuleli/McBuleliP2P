@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -8,6 +7,7 @@ import {
   type StaffScope,
   isStaffScope,
 } from "@/lib/staff-scopes";
+import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 type U = {
   id: string;
@@ -131,34 +131,29 @@ export default function AdminUsersPage() {
   }
 
   if (users === null) {
-    return <p className="text-stone-500">…</p>;
+    return <p className={adminCls.muted}>…</p>;
   }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">{t("admin_users")}</h2>
-        <Link href="/admin" className="text-sm text-amber-200 underline">
-          {t("admin_back")}
-        </Link>
-      </div>
-      <p className="mb-4 text-xs text-stone-500">{t("admin_agent_full_access_hint")}</p>
-      {err ? <p className="mb-4 text-rose-400">{err}</p> : null}
+    <div className={adminCls.page}>
+      <AdminPageHeader
+        title={t("admin_users")}
+        action={<AdminBackLink>{t("admin_back")}</AdminBackLink>}
+      />
+      <p className={`text-xs ${adminCls.muted}`}>{t("admin_agent_full_access_hint")}</p>
+      {err ? <p className={adminCls.error}>{err}</p> : null}
       <ul className="space-y-4">
         {users.map((u) => (
-          <li
-            key={u.id}
-            className="rounded-lg border border-stone-700 bg-stone-900/60 px-3 py-3"
-          >
+          <li key={u.id} className={adminCls.card}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-white">{u.email}</p>
-                <p className="text-xs text-stone-500">{u.id}</p>
+                <p className="text-[color:var(--fd-text)]">{u.email}</p>
+                <p className={`text-xs ${adminCls.muted}`}>{u.id}</p>
               </div>
               <select
                 value={u.role}
                 onChange={(e) => void setRole(u.id, e.target.value)}
-                className="rounded-lg border border-stone-600 bg-stone-950 px-2 py-1 text-sm text-stone-200"
+                className={adminCls.select}
                 aria-label={t("admin_role")}
               >
                 <option value="user">{t("admin_role_option_user")}</option>
@@ -167,11 +162,11 @@ export default function AdminUsersPage() {
               </select>
             </div>
             {u.role === "agent" ? (
-              <div className="mt-3 border-t border-stone-800 pt-3">
-                <p className="mb-2 text-xs font-semibold uppercase text-stone-500">
+              <div className="mt-3 border-t border-[color:var(--fd-border)] pt-3">
+                <p className={`mb-2 text-xs font-semibold uppercase ${adminCls.muted}`}>
                   {t("admin_agent_modules")}
                 </p>
-                <div className="flex flex-col gap-2 text-sm text-stone-300">
+                <div className={`flex flex-col gap-2 text-sm ${adminCls.muted}`}>
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
@@ -179,7 +174,6 @@ export default function AdminUsersPage() {
                         "withdrawals",
                       )}
                       onChange={() => toggleScope(u.id, "withdrawals")}
-                      className="accent-amber-600"
                     />
                     {t("admin_agent_scope_withdrawals")}
                   </label>
@@ -190,7 +184,6 @@ export default function AdminUsersPage() {
                         "groups",
                       )}
                       onChange={() => toggleScope(u.id, "groups")}
-                      className="accent-amber-600"
                     />
                     {t("admin_agent_scope_groups")}
                   </label>
@@ -201,7 +194,6 @@ export default function AdminUsersPage() {
                         "p2p_disputes",
                       )}
                       onChange={() => toggleScope(u.id, "p2p_disputes")}
-                      className="accent-amber-600"
                     />
                     {t("admin_agent_scope_p2p")}
                   </label>
@@ -212,7 +204,6 @@ export default function AdminUsersPage() {
                         "platform_expenses",
                       )}
                       onChange={() => toggleScope(u.id, "platform_expenses")}
-                      className="accent-amber-600"
                     />
                     {t("admin_agent_scope_platform_expenses")}
                   </label>
@@ -223,7 +214,6 @@ export default function AdminUsersPage() {
                         "platform_expenses_approve",
                       )}
                       onChange={() => toggleScope(u.id, "platform_expenses_approve")}
-                      className="accent-amber-600"
                     />
                     {t("admin_agent_scope_platform_expenses_approve")}
                   </label>
@@ -231,7 +221,7 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => void saveScopes(u.id, u.role)}
-                  className="mt-3 rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-semibold text-stone-950"
+                  className={`mt-3 ${adminCls.btnPrimary}`}
                 >
                   {t("admin_save_modules")}
                 </button>
