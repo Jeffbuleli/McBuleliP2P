@@ -132,7 +132,7 @@ export function TradeMiniChart({
       </div>
       <div className="relative flex justify-center overflow-hidden rounded-xl bg-[color:var(--fd-mint)]/50">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center text-xs text-stone-500">
+          <div className="absolute inset-0 z-10 flex items-center justify-center text-xs text-[color:var(--fd-muted)]">
             {d.market_loading}
           </div>
         )}
@@ -151,12 +151,12 @@ export function TradeMiniChart({
               <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor="rgb(16 185 129)"
+                  stopColor="#2a7d3e"
                   stopOpacity="0.35"
                 />
                 <stop
                   offset="100%"
-                  stopColor="rgb(16 185 129)"
+                  stopColor="#2a7d3e"
                   stopOpacity="0"
                 />
               </linearGradient>
@@ -168,7 +168,7 @@ export function TradeMiniChart({
             <path
               d={pathD}
               fill="none"
-              stroke="rgb(16 185 129)"
+              stroke="#2a7d3e"
               strokeWidth="1.75"
               strokeLinecap="round"
               strokeLinejoin="round"

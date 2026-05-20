@@ -309,40 +309,42 @@ html {
   box-shadow: 0 1px 4px rgba(120, 53, 15, 0.16);
 }
 
-/* Trading bots — same light Fondeka shell as wallet / P2P */
+/* Trade — vivid Fondeka (bots + futures) */
+.trade-futures-theme,
 .trade-bots-theme {
-  --fd-primary: #4a7350;
-  --fd-primary-dark: #3d5f42;
-  --fd-mint: #eef3ef;
-  --fd-mint-deep: #e2ebe4;
-  --fd-border: rgba(61, 95, 66, 0.11);
-  --fd-sell: #b45309;
-  --fd-sell-mint: #f5ebe0;
-  background: linear-gradient(180deg, #f4f6f4 0%, #eef2ee 42%, #f8faf8 100%);
+  --fd-primary: #2a7d3e;
+  --fd-primary-dark: #1e5f2e;
+  --fd-mint: #c8ebd0;
+  --fd-mint-deep: #a8ddb4;
+  --fd-text: #0c1a12;
+  --fd-muted: #3d5245;
+  --fd-border: rgba(42, 125, 62, 0.22);
+  --fd-live: #e85d04;
+  --fd-sell: #c2410c;
+  --fd-sell-mint: #fde8d4;
+  background: linear-gradient(165deg, #e4f4e8 0%, #f2f9f4 38%, #ffffff 100%);
   min-height: 100%;
 }
+.trade-futures-theme .fd-card,
 .trade-bots-theme .fd-card {
   border: 1px solid var(--fd-border);
+  background: #ffffff;
   box-shadow:
-    0 1px 2px rgba(28, 25, 23, 0.05),
-    0 3px 10px rgba(28, 25, 23, 0.04);
+    0 2px 8px rgba(42, 125, 62, 0.1),
+    0 8px 24px rgba(12, 26, 18, 0.06);
 }
-.trade-futures-theme {
-  --fd-primary: #4a7350;
-  --fd-primary-dark: #3d5f42;
-  --fd-mint: #eef3ef;
-  --fd-mint-deep: #e2ebe4;
-  --fd-border: rgba(61, 95, 66, 0.11);
-  --fd-sell: #b45309;
-  --fd-sell-mint: #f5ebe0;
-  background: linear-gradient(180deg, #f4f6f4 0%, #eef2ee 42%, #f8faf8 100%);
-  min-height: 100%;
+.trade-futures-theme .trade-btn-primary,
+.trade-bots-theme .trade-btn-primary {
+  background: linear-gradient(180deg, var(--fd-primary) 0%, var(--fd-primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(42, 125, 62, 0.35);
 }
-.trade-futures-theme .fd-card {
-  border: 1px solid var(--fd-border);
-  box-shadow:
-    0 1px 2px rgba(28, 25, 23, 0.05),
-    0 3px 10px rgba(28, 25, 23, 0.04);
+.trade-futures-theme .trade-summary-panel,
+.trade-bots-theme .trade-summary-panel {
+  border-radius: 1rem;
+  border: 2px solid var(--fd-border);
+  background: linear-gradient(135deg, var(--fd-mint) 0%, #fff 100%);
+  padding: 0.75rem 1rem;
 }
 
 .trade-bots-theme .bot-category {

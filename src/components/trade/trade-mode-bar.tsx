@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { TradeFlowCard } from "@/components/trade/trade-flow-ui";
+import { TradeFlowCard, TradePrimaryBtn } from "@/components/trade/trade-flow-ui";
+import {
+  TradeIconBadge,
+  TradeIconLive,
+  TradeIconPractice,
+  TradeIconWallet,
+} from "@/components/trade/trade-icons";
 
 export type TradeAppMode = "demo" | "live";
 
@@ -57,52 +63,49 @@ export function TradeModeBar({
   return (
     <>
       <TradeFlowCard className="!p-2">
-        <div className="flex gap-1">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => onModeChange("demo")}
-            className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2.5 text-xs font-bold ${
+            className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-2.5 text-xs font-extrabold ${
               mode === "demo"
-                ? "bg-[color:var(--fd-primary)] text-white"
-                : "text-[color:var(--fd-muted)]"
+                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-primary)] text-white"
+                : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
             }`}
           >
-            <span aria-hidden>🎓</span>
+            <TradeIconPractice className="h-4 w-4" />
             {t("trade_mode_demo")}
           </button>
           <button
             type="button"
             onClick={() => onModeChange("live")}
-            className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2.5 text-xs font-bold ${
+            className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-2.5 text-xs font-extrabold ${
               mode === "live"
-                ? "bg-amber-600 text-white"
-                : "text-[color:var(--fd-muted)]"
+                ? "border-[color:var(--fd-live)] bg-[color:var(--fd-live)] text-white"
+                : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
             }`}
           >
-            <span aria-hidden>💰</span>
+            <TradeIconLive className="h-4 w-4" />
             {t("trade_mode_live")}
           </button>
         </div>
 
         {mode === "demo" ? (
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-[color:var(--fd-mint)] px-2.5 py-2">
-            <p className="min-w-0 text-[11px] font-semibold text-[color:var(--fd-text)]">
-              <span className="font-mono tabular-nums">
+          <div className="mt-2 flex items-center gap-2 rounded-2xl bg-[color:var(--fd-mint)] px-2.5 py-2">
+            <TradeIconBadge tone="mint">
+              <TradeIconWallet className="h-4 w-4" />
+            </TradeIconBadge>
+            <p className="min-w-0 flex-1 text-[11px] font-bold text-[color:var(--fd-text)]">
+              <span className="font-mono tabular-nums text-sm">
                 {eff.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </span>{" "}
               USDT
-              {demoPiTestUsd > 1e-8 ? (
-                <span className="text-[color:var(--fd-muted)]">
-                  {" "}
-                  · π {piTest.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                </span>
-              ) : null}
             </p>
             <button
               type="button"
               disabled={!canRefill || refillBusy}
               onClick={() => void refillDemo()}
-              className="shrink-0 rounded-lg bg-[color:var(--fd-primary)] px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+              className="shrink-0 rounded-xl bg-[color:var(--fd-primary)] px-2.5 py-1.5 text-[10px] font-extrabold text-white disabled:opacity-40"
             >
               +10k
             </button>
@@ -110,21 +113,22 @@ export function TradeModeBar({
         ) : null}
 
         {mode === "live" && !tradeLiveEnabled ? (
-          <div className="mt-2 space-y-2">
-            <p className="text-[11px] text-[color:var(--fd-muted)]">{t("trade_live_disabled_hint_short")}</p>
-            <button
-              type="button"
+          <div className="mt-2 space-y-2 rounded-2xl border-2 border-[color:var(--fd-live)]/30 bg-[color:var(--fd-sell-mint)] p-2.5">
+            <p className="text-[11px] font-semibold text-[color:var(--fd-text)]">
+              {t("trade_live_disabled_hint_short")}
+            </p>
+            <TradePrimaryBtn
               disabled={enableBusy}
               onClick={() => setShowEnable(true)}
-              className="w-full rounded-xl bg-amber-600 py-2 text-xs font-bold text-white disabled:opacity-50"
+              className="!bg-[color:var(--fd-live)] !shadow-[0_4px_14px_rgba(232,93,4,0.35)]"
             >
               {t("trade_enable_live")}
-            </button>
+            </TradePrimaryBtn>
           </div>
         ) : null}
 
         {mode === "live" && tradeLiveEnabled ? (
-          <p className="mt-2 text-center text-[10px] font-semibold text-amber-800">
+          <p className="mt-2 text-center text-[10px] font-bold text-[color:var(--fd-live)]">
             {t("trade_mode_live_hint_short")}
           </p>
         ) : null}
@@ -133,14 +137,14 @@ export function TradeModeBar({
       {showEnable ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
           <TradeFlowCard className="w-full max-w-md">
-            <h4 className="text-base font-bold text-[color:var(--fd-text)]">
+            <h4 className="text-base font-extrabold text-[color:var(--fd-text)]">
               {t("trade_enable_live_title")}
             </h4>
             <p className="mt-2 text-sm text-[color:var(--fd-muted)]">{t("trade_enable_live_body")}</p>
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                className="flex-1 rounded-xl border border-[color:var(--fd-border)] py-2.5 text-sm font-semibold"
+                className="flex-1 rounded-2xl border-2 border-[color:var(--fd-border)] py-2.5 text-sm font-bold"
                 onClick={() => setShowEnable(false)}
               >
                 {t("trade_ui_cancel")}
@@ -148,7 +152,7 @@ export function TradeModeBar({
               <button
                 type="button"
                 disabled={enableBusy}
-                className="flex-1 rounded-xl bg-amber-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-[color:var(--fd-live)] py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
                 onClick={async () => {
                   await onEnableLive();
                   setShowEnable(false);
