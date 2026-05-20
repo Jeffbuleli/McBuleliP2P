@@ -205,8 +205,10 @@ export const en = {
   profile_link_pi_done: "Pi linked.",
   pi_uid_already_linked: "This Pi account is already linked to another user.",
   auth_pi_failed: "Pi sign-in failed. Please try again.",
+  auth_pi_timeout:
+    "Pi sign-in took too long. Use email and password below, or open this page in Pi Browser and tap “Continue with Pi”.",
   auth_pi_manual_hint:
-    "Tap “Continue with Pi” once and approve in Pi Browser. Auto sign-in is off unless NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
+    "Email and password always work here. Pi Network sign-in runs only when you tap “Continue with Pi” (inside Pi Browser).",
   pi_pay_section_title: "Pi payments",
   pi_pay_section_hint:
     "Test U2A payment (Pi Browser). Complete the approval steps in Pi Wallet.",
@@ -2288,8 +2290,10 @@ export const fr: Messages = {
   profile_link_pi_done: "Pi lié.",
   pi_uid_already_linked: "Ce compte Pi est déjà lié à un autre utilisateur.",
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
+  auth_pi_timeout:
+    "La connexion Pi a expiré. Utilisez e-mail et mot de passe ci‑dessous, ou ouvrez cette page dans Pi Browser puis « Continuer avec Pi ».",
   auth_pi_manual_hint:
-    "Appuie une fois sur « Continuer avec Pi » et valide dans Pi Browser. La connexion auto est désactivée sauf si NEXT_PUBLIC_PI_AUTO_LOGIN=1.",
+    "E-mail et mot de passe fonctionnent toujours ici. La connexion Pi ne se lance que si vous appuyez sur « Continuer avec Pi » (dans Pi Browser).",
   pi_pay_section_title: "Paiements Pi",
   pi_pay_section_hint:
     "Test de paiement U2A (navigateur Pi). Valide les étapes dans le Wallet Pi.",

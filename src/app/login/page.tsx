@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -14,10 +14,31 @@ import {
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
 import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
 
-const PI_AUTO_SESSION_KEY = "mcbuleli_pi_login_auto_fired_v1";
+const PI_AUTH_TIMEOUT_MS = 55_000;
 
 /** One in-flight Pi.authenticate at a time (avoids piBusy / SDK fighting). */
 let piAuthInFlightGlobal = false;
+
+async function piAuthenticateWithTimeout(
+  Pi: NonNullable<Window["Pi"]>,
+  onIncompletePayment: (payment: unknown) => Promise<void>,
+): Promise<unknown> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const auth = Promise.resolve(
+    Pi.authenticate(["username", "payments"], onIncompletePayment),
+  );
+  const timeout = new Promise<never>((_, rej) => {
+    timeoutId = setTimeout(
+      () => rej(new Error("pi_auth_timeout")),
+      PI_AUTH_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([auth, timeout]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -26,11 +47,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
-
-  const canAutoPi = useMemo(
-    () => process.env.NEXT_PUBLIC_PI_AUTO_LOGIN === "1",
-    [],
-  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,42 +89,40 @@ export default function LoginPage() {
     }
   }
 
-  async function startPiAuth(opts?: { manual?: boolean }) {
+  async function startPiAuth() {
     if (piAuthInFlightGlobal) return;
     piAuthInFlightGlobal = true;
     setError(null);
     setPiBusy(true);
     try {
       const Pi = await piInit();
-      const authRes = (await Promise.resolve(
-        Pi.authenticate(
-          ["username", "payments"],
-          async (payment: unknown) => {
-            const pid = paymentIdFromPiSdk(payment);
-            if (!pid) return;
-            const res = await fetchWithDeadline(
-              "/api/payments/pi/incomplete",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ payment }),
-                credentials: "same-origin",
-              },
-              45_000,
+      const authRes = (await piAuthenticateWithTimeout(
+        Pi,
+        async (payment: unknown) => {
+          const pid = paymentIdFromPiSdk(payment);
+          if (!pid) return;
+          const res = await fetchWithDeadline(
+            "/api/payments/pi/incomplete",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ payment }),
+              credentials: "same-origin",
+            },
+            45_000,
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(
+              typeof data === "object" &&
+                data !== null &&
+                "message" in data &&
+                typeof (data as { message: unknown }).message === "string"
+                ? (data as { message: string }).message
+                : "pi_incomplete_payment_failed",
             );
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              throw new Error(
-                typeof data === "object" &&
-                  data !== null &&
-                  "message" in data &&
-                  typeof (data as { message: unknown }).message === "string"
-                  ? (data as { message: string }).message
-                  : "pi_incomplete_payment_failed",
-              );
-            }
-          },
-        ),
+          }
+        },
       )) as unknown as {
         accessToken?: string;
         user?: { username?: string };
@@ -146,35 +160,21 @@ export default function LoginPage() {
       window.location.replace("/app");
     } catch (e) {
       const msg =
-        e instanceof Error
-          ? e.message
-          : typeof e === "string"
-            ? e
-            : null;
-      setError(msg ? `Pi: ${msg}` : t("auth_pi_failed"));
+        e instanceof Error ? e.message : typeof e === "string" ? e : null;
+      if (msg === "pi_auth_timeout") {
+        setError(t("auth_pi_timeout"));
+      } else {
+        setError(msg ? `Pi: ${msg}` : t("auth_pi_failed"));
+      }
     } finally {
       piAuthInFlightGlobal = false;
       setPiBusy(false);
     }
   }
 
-  useEffect(() => {
-    if (!canAutoPi) return;
-    try {
-      if (sessionStorage.getItem(PI_AUTO_SESSION_KEY) === "1") return;
-      sessionStorage.setItem(PI_AUTO_SESSION_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-    queueMicrotask(() => {
-      void startPiAuth();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   if (loading || piBusy) {
     return (
-      <AuthMarketingShell>
+      <AuthMarketingShell showBrandHeader={false}>
         <AuthWaitingScreen message={piBusy ? t("auth_pi_signing") : t("signing")} />
       </AuthMarketingShell>
     );
@@ -190,6 +190,9 @@ export default function LoginPage() {
         />
       }
     >
+      <p className="mb-4 px-1 text-center text-xs text-[color:var(--fd-muted)]">
+        {t("auth_pi_manual_hint")}
+      </p>
       <div className="fd-card rounded-[1.75rem] p-5">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <label className={authLabelClass}>
@@ -250,10 +253,10 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={() => void startPiAuth({ manual: true })}
+          onClick={() => void startPiAuth()}
           className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
         >
-          {piBusy ? t("auth_pi_signing") : t("auth_pi_continue")}
+          {t("auth_pi_continue")}
         </button>
       </div>
     </AuthMarketingShell>

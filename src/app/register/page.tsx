@@ -92,7 +92,7 @@ function RegisterForm() {
 
   if (loading) {
     return (
-      <AuthMarketingShell>
+      <AuthMarketingShell showBrandHeader={false}>
         <AuthWaitingScreen message={t("registering")} />
       </AuthMarketingShell>
     );
@@ -198,7 +198,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <AuthMarketingShell>
+        <AuthMarketingShell showBrandHeader={false}>
           <AuthWaitingScreen />
         </AuthMarketingShell>
       }

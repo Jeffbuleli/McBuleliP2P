@@ -84,9 +84,12 @@ export { authInputClass };
 export function AuthMarketingShell({
   children,
   footer,
+  showBrandHeader = true,
 }: {
   children: ReactNode;
   footer?: ReactNode;
+  /** When false, skip the top logo block (e.g. `AuthWaitingScreen` already brands the view). */
+  showBrandHeader?: boolean;
 }) {
   return (
     <div className="home-theme fd-public-light relative min-h-dvh">
@@ -95,7 +98,7 @@ export function AuthMarketingShell({
         aria-hidden
       />
       <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <AuthBrandHeader />
+        {showBrandHeader ? <AuthBrandHeader /> : null}
         <div className="flex-1">{children}</div>
         {footer}
       </div>
