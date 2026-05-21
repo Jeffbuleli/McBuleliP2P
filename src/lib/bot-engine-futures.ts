@@ -648,8 +648,13 @@ export async function tickFuturesUmInstance(args: {
             ? {
                 action: aiSignal.action,
                 confidence: aiSignal.confidence,
+                effectiveConfidence: Math.max(
+                  aiSignal.confidence,
+                  Math.abs(aiSignal.combined_score),
+                ),
                 combined_score: aiSignal.combined_score,
                 risk_level: aiSignal.risk_level,
+                strategy: aiSignal.strategy,
                 receivedAt: aiSignal.receivedAt,
               }
             : null,

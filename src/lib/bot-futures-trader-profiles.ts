@@ -64,7 +64,7 @@ const PRESETS: Record<
     maxHoldMinutes: 15,
     reentryCooldownMinutes: 5,
     aiAssistMode: true,
-    minAiConfidence: 40,
+    minAiConfidence: 22,
     aiSignalMaxAgeMs: 120_000,
   },
   day: {
@@ -90,7 +90,7 @@ const PRESETS: Record<
     maxHoldMinutes: 480,
     reentryCooldownMinutes: 0,
     aiAssistMode: true,
-    minAiConfidence: 45,
+    minAiConfidence: 25,
     aiSignalMaxAgeMs: 180_000,
   },
   swing: {
@@ -116,7 +116,7 @@ const PRESETS: Record<
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
     aiAssistMode: true,
-    minAiConfidence: 40,
+    minAiConfidence: 22,
     aiSignalMaxAgeMs: 180_000,
   },
   position: {

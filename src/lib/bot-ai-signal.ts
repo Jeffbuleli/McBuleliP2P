@@ -32,6 +32,22 @@ export type StoredAiSignal = {
 const AI_CLOSE_MIN_CONF = 75;
 const AI_REVERSE_MIN_CONF = 85;
 
+/** Align with Python worker `SIGNAL_MIN_EDGE` (default 15 on Render). */
+export const AI_WORKER_MIN_EDGE = 15;
+
+function effectiveAiConfidence(sig: StoredAiSignal): number {
+  return Math.max(sig.confidence, Math.abs(sig.combined_score));
+}
+
+function combinedAlignsWithSide(
+  botSide: "LONG" | "SHORT",
+  combinedScore: number,
+  minEdge: number = AI_WORKER_MIN_EDGE,
+): boolean {
+  if (botSide === "LONG") return combinedScore >= minEdge;
+  return combinedScore <= -minEdge;
+}
+
 const KEY_PREFIX = "bots_ai:";
 const DEFAULT_MAX_AGE_MS = 120_000;
 
@@ -206,9 +222,13 @@ export async function getAiSignalStatus(
 }
 
 export type AiAssistGateResult =
-  | { ok: true; signal: StoredAiSignal }
+  | { ok: true; signal: StoredAiSignal; softAlign?: boolean }
   | { ok: false; reason: string };
 
+/**
+ * IA gate runs **after** TA (`smart_blocked`). Worker gives direction; TA already allowed entry.
+ * Uses effective confidence = max(confidence, |combined_score|) so app limits match Python edge.
+ */
 export function runAiAssistGate(args: {
   botSide: "LONG" | "SHORT";
   minAiConfidence: number;
@@ -235,15 +255,23 @@ export function runAiAssistGate(args: {
     return { ok: true, signal: sig };
   }
 
+  const effConf = effectiveAiConfidence(sig);
+
   if (sig.action === "HOLD") {
+    if (
+      combinedAlignsWithSide(args.botSide, sig.combined_score) &&
+      effConf >= args.minAiConfidence
+    ) {
+      return { ok: true, signal: sig, softAlign: true };
+    }
     return { ok: false, reason: "ai_signal_hold" };
   }
 
-  if (sig.confidence < args.minAiConfidence) {
+  if (effConf < args.minAiConfidence) {
     return { ok: false, reason: "ai_low_confidence" };
   }
 
-  if (sig.risk_level === "HIGH" && sig.confidence < 55) {
+  if (sig.risk_level === "HIGH" && effConf < 55) {
     return { ok: false, reason: "ai_high_risk" };
   }
 
