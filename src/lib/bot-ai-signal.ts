@@ -226,15 +226,16 @@ export type AiAssistGateResult =
   | { ok: false; reason: string };
 
 /**
- * IA gate runs **after** TA (`smart_blocked`). Worker gives direction; TA already allowed entry.
- * Uses effective confidence = max(confidence, |combined_score|) so app limits match Python edge.
+ * Legacy AI gate — modulator only (no paralysis on HOLD / mild opposition).
+ * Primary entry path uses `runFuturesDecisionOrchestrator`.
  */
 export function runAiAssistGate(args: {
   botSide: "LONG" | "SHORT";
   minAiConfidence: number;
   signal: StoredAiSignal | null;
   aiAssistMode: boolean;
-  /** After X close_and_reverse — allow open if x_new_direction matches botSide. */
+  /** Technical score from TA gate when available */
+  technicalScore?: number;
   allowXReverse?: boolean;
 }): AiAssistGateResult {
   if (!args.aiAssistMode) {
@@ -243,6 +244,12 @@ export function runAiAssistGate(args: {
 
   const sig = args.signal;
   if (!sig) {
+    const techStrong =
+      args.technicalScore != null &&
+      Math.abs(args.technicalScore) >= args.minAiConfidence;
+    if (techStrong) {
+      return { ok: true, signal: {} as StoredAiSignal, softAlign: true };
+    }
     return { ok: false, reason: "ai_signal_stale" };
   }
 
@@ -255,30 +262,39 @@ export function runAiAssistGate(args: {
     return { ok: true, signal: sig };
   }
 
+  const text = [sig.x_reason ?? "", ...(sig.reasons ?? [])].join(" ");
+  const macroBlock =
+    /\b(cpi|fomc|crash|hack|exploit|liquidation\s+cascade)\b/i.test(text) &&
+    sig.confidence >= 80;
+  if (macroBlock) {
+    return { ok: false, reason: "ai_signal_hold" };
+  }
+
   const effConf = effectiveAiConfidence(sig);
+  const techStrong =
+    (args.technicalScore != null &&
+      Math.abs(args.technicalScore) >= args.minAiConfidence) ||
+    effConf >= args.minAiConfidence;
 
   if (sig.action === "HOLD") {
-    if (
-      combinedAlignsWithSide(args.botSide, sig.combined_score) &&
-      effConf >= args.minAiConfidence
-    ) {
+    if (combinedAlignsWithSide(args.botSide, sig.combined_score) || techStrong) {
       return { ok: true, signal: sig, softAlign: true };
     }
     return { ok: false, reason: "ai_signal_hold" };
   }
 
-  if (effConf < args.minAiConfidence) {
+  if (effConf < args.minAiConfidence && !techStrong) {
     return { ok: false, reason: "ai_low_confidence" };
   }
 
-  if (sig.risk_level === "HIGH" && effConf < 55) {
+  if (sig.risk_level === "HIGH" && effConf < 45 && !techStrong) {
     return { ok: false, reason: "ai_high_risk" };
   }
 
-  if (args.botSide === "LONG" && sig.action !== "LONG") {
+  if (args.botSide === "LONG" && sig.action === "SHORT" && !techStrong) {
     return { ok: false, reason: "ai_side_mismatch" };
   }
-  if (args.botSide === "SHORT" && sig.action !== "SHORT") {
+  if (args.botSide === "SHORT" && sig.action === "LONG" && !techStrong) {
     return { ok: false, reason: "ai_side_mismatch" };
   }
 

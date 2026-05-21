@@ -39,7 +39,14 @@ import {
   multiTfGateSummary,
   runMultiTfSmartGate,
 } from "@/lib/bot-intelligence/multi-tf-gate";
-import type { TradeSignal } from "@/lib/bot-intelligence/types";
+import {
+  classifyExecutionError,
+  runFuturesDecisionOrchestrator,
+} from "@/lib/bot-decision";
+import {
+  getSmoothedScoreState,
+  setSmoothedScoreState,
+} from "@/lib/bot-decision/score-state";
 import {
   isBreakevenArmed,
   shouldClosePosition,
@@ -559,60 +566,10 @@ export async function tickFuturesUmInstance(args: {
       minSignalScore: cfg.minSignalScore,
       timeframe: cfg.timeframe,
     };
-    const intent = cfg.side === "LONG" ? "long" : "short";
     const useMultiTf =
       cfg.multiTfGateMode &&
       cfg.confirmTimeframe &&
       isHigherTimeframe(cfg.timeframe, cfg.confirmTimeframe);
-
-    const gate = useMultiTf
-      ? await runMultiTfSmartGate({
-          environment: env,
-          symbol: cfg.symbol,
-          market: "futures",
-          smart,
-          intent,
-          confirmTimeframe: cfg.confirmTimeframe!,
-        })
-      : await runSmartGate({
-          environment: env,
-          symbol: cfg.symbol,
-          market: "futures",
-          smart,
-          intent,
-        });
-
-    if (!gate.ok) {
-      const confirmSignal = useMultiTf
-        ? (gate as { confirmSignal?: TradeSignal }).confirmSignal
-        : undefined;
-      await appendBotExecutionLog({
-        instanceId: args.instanceId,
-        userId: args.userId,
-        planId: args.planId,
-        action: "smart_skip",
-        detail: {
-          reason: gate.reason,
-          summary:
-            gate.signal && confirmSignal && cfg.confirmTimeframe
-              ? multiTfGateSummary(
-                  gate.signal,
-                  confirmSignal,
-                  cfg.timeframe,
-                  cfg.confirmTimeframe,
-                )
-              : gate.signal
-                ? signalSummary(gate.signal)
-                : null,
-          score: gate.signal?.score,
-          confirmScore: confirmSignal?.score,
-          minRequired: cfg.minSignalScore,
-          confirmTimeframe: cfg.confirmTimeframe ?? null,
-          factors: gate.signal?.reasons,
-        },
-      });
-      return { ran: false, skipped: "smart_blocked" };
-    }
 
     if (cfg.aiAssistMode) {
       await refreshAiSignalFromTaIfStale({
@@ -625,43 +582,80 @@ export async function tickFuturesUmInstance(args: {
       });
     }
 
+    const prevSmooth = await getSmoothedScoreState(args.instanceId);
     const aiSignal = await getAiSignal(
       args.instanceId,
       cfg.aiSignalMaxAgeMs ?? 120_000,
     );
-    const aiGate = runAiAssistGate({
+
+    const decision = await runFuturesDecisionOrchestrator({
+      instanceId: args.instanceId,
+      environment: env,
+      symbol: cfg.symbol,
       botSide: cfg.side,
-      minAiConfidence: cfg.minAiConfidence,
-      signal: aiSignal,
+      smart,
+      confirmTimeframe: useMultiTf ? cfg.confirmTimeframe : null,
+      aiSignal,
       aiAssistMode: cfg.aiAssistMode,
+      leverage: cfg.leverage,
+      marginUsdt: margin,
+      fundingRate: undefined,
+      markPrice: mark,
+      previousSmoothedScore: prevSmooth,
     });
-    if (!aiGate.ok) {
+
+    if (decision.status === "IGNORED") {
+      const { trace } = decision;
+      const t = decision.technical;
+      const summary =
+        t?.confirmSignal && cfg.confirmTimeframe
+          ? multiTfGateSummary(
+              t.tradeSignal,
+              t.confirmSignal,
+              cfg.timeframe,
+              cfg.confirmTimeframe,
+            )
+          : t
+            ? signalSummary(t.tradeSignal)
+            : null;
       await appendBotExecutionLog({
         instanceId: args.instanceId,
         userId: args.userId,
         planId: args.planId,
-        action: "ai_skip",
+        action: "decision_skip",
         detail: {
-          reason: aiGate.reason,
-          minAiRequired: cfg.minAiConfidence,
-          ai: aiSignal
+          trace,
+          legacy_skip: trace.category === "TECHNICAL" ? "smart_blocked" : trace.category === "AI" ? "ai_signal_hold" : trace.reason_code,
+          summary,
+          score: trace.score,
+          minRequired: cfg.minSignalScore,
+          technical: t
             ? {
-                action: aiSignal.action,
-                confidence: aiSignal.confidence,
-                effectiveConfidence: Math.max(
-                  aiSignal.confidence,
-                  Math.abs(aiSignal.combined_score),
-                ),
-                combined_score: aiSignal.combined_score,
-                risk_level: aiSignal.risk_level,
-                strategy: aiSignal.strategy,
-                receivedAt: aiSignal.receivedAt,
+                signal: t.signal,
+                confidence: t.confidence,
+                regime: t.market_regime,
+                reasons: t.reasons,
               }
             : null,
+          ai: decision.ai
+            ? {
+                sentiment: decision.ai.sentiment,
+                confidence: decision.ai.confidence,
+                warning_level: decision.ai.warning_level,
+                leverage_modifier: decision.ai.leverage_modifier,
+                notes: decision.ai.ai_notes,
+              }
+            : null,
+          risk: decision.risk ?? null,
         },
       });
-      return { ran: false, skipped: aiGate.reason };
+      return { ran: false, skipped: trace.reason_code };
     }
+
+    await setSmoothedScoreState(args.instanceId, decision.technical.score);
+
+    const execLev = decision.execution.leverage ?? decision.risk.leverage;
+    const execMargin = decision.execution.marginUsdt ?? margin;
 
     await futuresSignedPost({
       environment: env,
@@ -670,7 +664,7 @@ export async function tickFuturesUmInstance(args: {
       pathKey: "leverage",
       params: {
         symbol: cfg.symbol,
-        leverage: String(cfg.leverage),
+        leverage: String(execLev),
       },
     });
 
@@ -684,7 +678,7 @@ export async function tickFuturesUmInstance(args: {
         symbol: cfg.symbol,
         side: openSide,
         type: "MARKET",
-        quantity: qtyFromMargin(margin, cfg.leverage, mark),
+        quantity: qtyFromMargin(execMargin, execLev, mark),
       },
     });
 
@@ -697,10 +691,22 @@ export async function tickFuturesUmInstance(args: {
       detail: {
         symbol: cfg.symbol,
         side: cfg.side,
-        leverage: cfg.leverage,
-        marginUsdt: cfg.marginUsdt,
+        leverage: execLev,
+        marginUsdt: execMargin,
         mark,
-        signal: gate.ok ? signalSummary(gate.signal) : null,
+        signal: signalSummary(decision.technical.tradeSignal),
+        decision_trace_id: decision.trace_id,
+        technical: {
+          score: decision.technical.score,
+          confidence: decision.technical.confidence,
+          regime: decision.technical.market_regime,
+        },
+        ai: {
+          sentiment: decision.ai.sentiment,
+          warning: decision.ai.warning_level,
+          leverage_modifier: decision.ai.leverage_modifier,
+        },
+        risk_level: decision.risk.risk_level,
         order,
       },
     });
@@ -711,14 +717,19 @@ export async function tickFuturesUmInstance(args: {
       env === "demo" || futuresKind === "fapi" ? "futures" : "portfolio";
     const code = classifyBinanceAuthError(env, market, raw);
     const msg = code !== "bots_error_binance_generic" ? code : raw;
+    const execErr = classifyExecutionError(raw);
     await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,
       planId: args.planId,
       action: "error",
-      detail: { message: msg },
+      detail: {
+        message: msg,
+        execution: execErr,
+        reason_code: execErr.reason_code,
+      },
     });
-    return { ran: false, skipped: "futures_failed" };
+    return { ran: false, skipped: execErr.reason_code };
   }
 }

@@ -2,6 +2,8 @@
 
 Pipeline détaillé (indicateurs, GPT-5.5, scores) : [market-analysis-pipeline.md](./market-analysis-pipeline.md).
 
+Architecture 4 couches + codes « Ignoré » : [bot-decision-architecture.md](./bot-decision-architecture.md).
+
 ## Qui fait quoi
 
 | Couche | Où | Rôle | Ne fait pas |

@@ -2,9 +2,16 @@
 
 import type { Messages } from "@/i18n/messages";
 import {
-  buildBotTradeHistoryRow,
-} from "@/lib/bots-trade-display";
-import { botTickSkipLabel, type BotLogRow } from "@/lib/bots-ui-helpers";
+  CronPulseIcon,
+  DecisionSkipCard,
+} from "@/components/trade/bot-decision-visual";
+import { buildBotTradeHistoryRow } from "@/lib/bots-trade-display";
+import {
+  botLogDetailMessage,
+  botTickSkipLabel,
+  decisionCategoryClass,
+  type BotLogRow,
+} from "@/lib/bots-ui-helpers";
 
 function tickReason(log: BotLogRow): string {
   const d = log.detail as { reason?: string } | null | undefined;
@@ -106,6 +113,12 @@ const ACTION_VIS: Record<string, ActionVisual> = {
     rail: "border-l-violet-500",
     iconBg: "bg-violet-700 text-white",
   },
+  decision_skip: {
+    badgeKey: "bots_feed_badge_skip",
+    icon: "⊘",
+    rail: "border-l-sky-500",
+    iconBg: "bg-sky-800 text-white",
+  },
   tick_skip: {
     badgeKey: "bots_feed_badge_cron",
     icon: "◎",
@@ -178,26 +191,20 @@ function CronSummaryLine({
   summary: { log: BotLogRow; count: number };
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
-  const title = botTickSkipLabel(
-    t,
-    tickReason(summary.log),
-    summary.log.detail as Record<string, unknown> | null,
-  );
+  const trace = (summary.log.detail as { trace?: { reason_code?: string } } | null)
+    ?.trace;
+  const reason = trace?.reason_code ?? tickReason(summary.log);
+
   return (
     <li className="flex items-center gap-2.5 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2">
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-bold text-amber-900"
-        aria-hidden
-      >
-        ◎
-      </span>
+      <CronPulseIcon />
       <div className="min-w-0 flex-1">
-        <p className="text-xs leading-snug text-[color:var(--fd-text)]">{title}</p>
+        <p className="font-mono text-xs font-bold text-amber-900">
+          {reason ? reason.replace(/_/g, " ") : t("bots_feed_badge_cron")}
+        </p>
         <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
-          {summary.count > 1
-            ? t("bots_feed_cron_repeat", { count: String(summary.count) })
-            : t("bots_feed_cron_once")}
-          {" · "}
+          {summary.count > 1 ? `×${summary.count}` : null}
+          {summary.count > 1 ? " · " : null}
           <time dateTime={summary.log.createdAt} className="tabular-nums">
             {formatLogTime(summary.log.createdAt)}
           </time>
@@ -217,19 +224,31 @@ function ActivityEventLine({
   const row = buildBotTradeHistoryRow(log, t);
   const isErr = log.action === "error";
   const vis = visualFor(log.action, isErr);
-  const badgeLabel = t(vis.badgeKey);
-  const title =
-    log.action === "tick_skip"
-      ? botTickSkipLabel(
-          t,
-          tickReason(log),
-          log.detail as Record<string, unknown> | null,
-        )
-      : row.title;
+  const detail = log.detail as Record<string, unknown> | null;
+  const trace = detail?.trace as
+    | {
+        reason_code?: string;
+        category?: string;
+        score?: number;
+        reason_message?: string;
+      }
+    | undefined;
+  const technical = detail?.technical as { confidence?: number } | undefined;
+  const ai = detail?.ai as
+    | { confidence?: number; warning_level?: string }
+    | undefined;
+  const categoryRail =
+    log.action === "decision_skip" && trace?.category
+      ? decisionCategoryClass(trace.category)
+      : vis.rail;
+  const isSkip =
+    log.action === "smart_skip" ||
+    log.action === "ai_skip" ||
+    log.action === "decision_skip";
 
   return (
     <li
-      className={`flex gap-3 rounded-xl border border-[color:var(--fd-border)] border-l-[3px] bg-white py-2 pl-2 pr-3 ${vis.rail}`}
+      className={`flex gap-2.5 rounded-xl border border-[color:var(--fd-border)] border-l-[3px] bg-white py-2 pl-2 pr-3 ${categoryRail}`}
     >
       <span
         className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${vis.iconBg}`}
@@ -238,51 +257,50 @@ function ActivityEventLine({
         {vis.icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+        <div className="flex items-center justify-between gap-2">
           <span className="rounded-md bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
-            {badgeLabel}
+            {t(vis.badgeKey)}
           </span>
           <time
             dateTime={log.createdAt}
-            className="shrink-0 text-[11px] font-medium tabular-nums text-[color:var(--fd-muted)]"
+            className="shrink-0 text-[10px] font-medium tabular-nums text-[color:var(--fd-muted)]"
           >
             {formatLogTime(log.createdAt)}
           </time>
         </div>
-        {log.action === "smart_skip" || log.action === "ai_skip" ? (
-          <p className="mt-1.5 font-mono text-base font-bold tabular-nums text-[color:var(--fd-text)]">
-            {title}
+
+        {isSkip && trace?.reason_code ? (
+          <DecisionSkipCard
+            reasonCode={trace.reason_code}
+            category={trace.category}
+            score={typeof trace.score === "number" ? trace.score : undefined}
+            confidence={ai?.confidence ?? technical?.confidence}
+            warningLevel={ai?.warning_level}
+          />
+        ) : isSkip ? (
+          <p className="mt-1 font-mono text-sm font-bold text-[color:var(--fd-text)]">
+            {botLogDetailMessage(log, t) ?? row.title}
           </p>
         ) : (
           <p
-            className={`mt-1.5 text-sm font-medium leading-snug ${
+            className={`mt-1 text-sm font-medium leading-snug ${
               isErr ? "text-rose-700" : "text-[color:var(--fd-text)]"
             }`}
           >
-            {title}
+            {row.title}
           </p>
         )}
-        {row.chips.length > 0 &&
-        log.action !== "smart_skip" &&
-        log.action !== "ai_skip" ? (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {row.chips.slice(0, 5).map((c, i) => (
+
+        {!isSkip && row.chips.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {row.chips.slice(0, 4).map((c, i) => (
               <span
                 key={`${c.icon}-${i}`}
                 className="rounded-md border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/50 px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--fd-muted)]"
+                title={c.label}
               >
-                {c.label}
-              </span>
-            ))}
-          </div>
-        ) : log.action === "smart_skip" && row.chips.length > 1 ? (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {row.chips.slice(1, 4).map((c, i) => (
-              <span
-                key={`${c.icon}-${i}`}
-                className="rounded-md border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-1.5 py-0.5 text-[10px] text-[color:var(--fd-muted)]"
-              >
-                {c.label}
+                <span className="mr-0.5 opacity-70">{c.icon}</span>
+                {c.label.length > 12 ? `${c.label.slice(0, 12)}…` : c.label}
               </span>
             ))}
           </div>
@@ -310,7 +328,7 @@ export function BotActivityFeed({
 
   if (!hasContent) {
     return (
-      <p className="py-4 text-center text-xs text-[color:var(--fd-muted)]">
+      <p className="py-6 text-center text-xs text-[color:var(--fd-muted)]">
         {emptyLabel}
       </p>
     );

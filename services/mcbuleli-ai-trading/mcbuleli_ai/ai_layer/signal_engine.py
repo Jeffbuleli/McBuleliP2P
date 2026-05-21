@@ -172,7 +172,17 @@ def apply_sentiment_adjustment(
     return _clamp(adj, -100, 100), reasons
 
 
-def score_to_action(combined_score: int, min_edge: int = 20) -> Action:
+def score_to_action(
+    combined_score: int,
+    min_edge: int = 20,
+    technical_score: int = 0,
+) -> Action:
+    """Anti-paralysis: strong technical bias can surface LONG/SHORT despite soft sentiment."""
+    if abs(technical_score) >= 35:
+        if technical_score >= 35 and combined_score > 0:
+            return Action.LONG
+        if technical_score <= -35 and combined_score < 0:
+            return Action.SHORT
     if combined_score >= min_edge:
         return Action.LONG
     if combined_score <= -min_edge:
@@ -253,7 +263,7 @@ class SignalEngine:
         if ind.atr14 and market.price > 0:
             atr_pct = (ind.atr14 / market.price) * 100
 
-        action = score_to_action(combined)
+        action = score_to_action(combined, min_edge, tech)
         confidence = score_to_confidence(combined) if action != Action.HOLD else 0
 
         reasons = tech_reasons + sent_reasons

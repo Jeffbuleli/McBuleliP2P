@@ -4,6 +4,7 @@ import {
   gridPriceLevels,
   parseBotGridConfig,
 } from "@/lib/bot-grid-config";
+import { classifyBinanceAuthError } from "@/lib/binance-api-validate";
 import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
@@ -17,7 +18,18 @@ import {
   binanceUserSignedPost,
   fetchBinanceSpotPrice,
 } from "@/lib/binance-user-client";
-import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
+import { signalSummary } from "@/lib/bot-intelligence";
+import {
+  appendDecisionSkipLog,
+  classifyExecutionError,
+  runSpotDecisionOrchestrator,
+} from "@/lib/bot-decision";
+import {
+  getSmoothedScoreState,
+  setSmoothedScoreState,
+} from "@/lib/bot-decision/score-state";
+import { buildIgnoredTrace } from "@/lib/bot-decision/trace";
+import { REASON_CATEGORY } from "@/lib/bot-decision/reason-codes";
 
 type OpenOrder = {
   orderId: number;
@@ -86,38 +98,61 @@ export async function tickGridSpotInstance(args: {
   const low = Number(grid.priceLow);
   const high = Number(grid.priceHigh);
   if (mid < low || mid > high) {
+    const trace = buildIgnoredTrace({
+      signal: "NEUTRAL",
+      score: 0,
+      category: REASON_CATEGORY["RANGE_MARKET"],
+      reason_code: "RANGE_MARKET",
+      reason_message: `Price ${mid} outside grid ${low}–${high}`,
+      debug: { mid, low, high, plan: "grid" },
+    });
+    await appendDecisionSkipLog({
+      instanceId: args.instanceId,
+      userId: args.userId,
+      planId: args.planId,
+      trace,
+      plan: "grid",
+    });
     await setBotInstanceError(
       args.instanceId,
       `Price ${mid} outside grid range ${low}-${high}`,
     );
-    return { ran: false, skipped: "price_out_of_range" };
+    return { ran: false, skipped: "RANGE_MARKET" };
   }
 
-  const gate = await runSmartGate({
+  const smart = {
+    smartMode: grid.smartMode,
+    minSignalScore: grid.minSignalScore,
+    timeframe: grid.timeframe,
+  };
+
+  const prevSmooth = await getSmoothedScoreState(args.instanceId);
+  const decision = await runSpotDecisionOrchestrator({
     environment: env,
     symbol: grid.symbol,
-    market: "spot",
-    smart: {
-      smartMode: grid.smartMode,
-      minSignalScore: grid.minSignalScore,
-      timeframe: grid.timeframe,
-    },
-    intent: "spot_buy",
+    smart,
+    quoteUsdt: quotePer,
+    minQuoteUsdt: 10,
+    markPrice: mid,
+    previousSmoothedScore: prevSmooth,
   });
-  if (!gate.ok) {
-    await appendBotExecutionLog({
+
+  if (decision.status === "IGNORED") {
+    await appendDecisionSkipLog({
       instanceId: args.instanceId,
       userId: args.userId,
       planId: args.planId,
-      action: "smart_skip",
-      detail: {
-        reason: gate.reason,
-        score: gate.signal?.score,
-        factors: gate.signal?.reasons,
-      },
+      trace: decision.trace,
+      technical: decision.technical,
+      minRequired: grid.minSignalScore,
+      plan: "grid",
     });
-    return { ran: false, skipped: "smart_blocked" };
+    return { ran: false, skipped: decision.trace.reason_code };
   }
+
+  await setSmoothedScoreState(args.instanceId, decision.technical.score);
+  const execQuote =
+    decision.execution.quoteUsdt ?? quotePer;
 
   try {
     const openRaw = (await binanceUserSignedGet({
@@ -143,8 +178,8 @@ export async function tickGridSpotInstance(args: {
 
     const levels = gridPriceLevels(grid);
     const placed: unknown[] = [];
-    for (const price of levels) {
-      if (price >= mid) continue;
+    for (const levelPrice of levels) {
+      if (levelPrice >= mid) continue;
       const order = await binanceUserSignedPost({
         environment: env,
         creds,
@@ -155,8 +190,8 @@ export async function tickGridSpotInstance(args: {
           side: "BUY",
           type: "LIMIT",
           timeInForce: "GTC",
-          price: formatLimitPrice(price),
-          quantity: qtyFromQuote(quotePer, price),
+          price: formatLimitPrice(levelPrice),
+          quantity: qtyFromQuote(execQuote, levelPrice),
         },
       });
       placed.push(order);
@@ -171,22 +206,30 @@ export async function tickGridSpotInstance(args: {
       detail: {
         symbol: grid.symbol,
         mid,
-        signal: signalSummary(gate.signal),
+        signal: signalSummary(decision.technical.tradeSignal),
+        technical: {
+          score: decision.technical.score,
+          regime: decision.technical.market_regime,
+        },
+        risk_level: decision.risk.risk_level,
         ordersPlaced: placed.length,
+        quotePerGrid: execQuote,
         levels,
       },
     });
     return { ran: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Grid refresh failed";
+    const raw = e instanceof Error ? e.message : "Grid refresh failed";
+    const execErr = classifyExecutionError(raw);
+    const msg = classifyBinanceAuthError(env, "spot", raw);
     await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,
       planId: args.planId,
       action: "error",
-      detail: { message: msg },
+      detail: { message: msg, execution: execErr, reason_code: execErr.reason_code },
     });
-    return { ran: false, skipped: "grid_failed" };
+    return { ran: false, skipped: execErr.reason_code };
   }
 }

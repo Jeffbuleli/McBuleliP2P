@@ -1,5 +1,11 @@
 import type { Messages } from "@/i18n/messages";
 import type { BotPlanId } from "@/lib/bot-config";
+import {
+  categoryAccent,
+  mapLegacySkipToReasonCode,
+  type DecisionReasonCode,
+} from "@/lib/bot-decision/reason-codes";
+import { formatIgnoredLabel } from "@/lib/bot-decision/trace";
 
 export const BOT_PLAN_DESC_KEY: Record<BotPlanId, keyof Messages> = {
   dca_spot: "bots_plan_dca_desc",
@@ -21,6 +27,7 @@ const LOG_ACTION_I18N: Record<string, keyof Messages> = {
   error: "bots_log_failed",
   smart_skip: "bots_log_smart_skip",
   ai_skip: "bots_log_ai_skip",
+  decision_skip: "bots_log_decision_skip",
   tick_skip: "bots_log_tick_skip",
 };
 
@@ -45,7 +52,30 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
   ai_low_confidence: "bots_skip_ai_low_confidence",
   ai_side_mismatch: "bots_skip_ai_side_mismatch",
   ai_high_risk: "bots_skip_ai_high_risk",
+  TREND_CONFLICT: "bots_reason_trend_conflict",
+  LOW_SCORE: "bots_reason_low_score",
+  MACRO_EVENT_WARNING: "bots_reason_macro_event",
+  COOLDOWN_ACTIVE: "bots_reason_cooldown",
+  INTERVAL_NOT_ELAPSED: "bots_skip_interval_not_elapsed",
+  FUNDING_TOO_HIGH: "bots_reason_funding_high",
+  MIN_NOTIONAL_ERROR: "bots_err_min_notional",
 };
+
+/** Category tailwind token for feed badges (technical / ai / risk / …). */
+export function decisionCategoryClass(category: string | undefined): string {
+  const accent = categoryAccent(
+    (category?.toUpperCase() as "TECHNICAL" | "AI" | "RISK" | "EXECUTION" | "SYSTEM") ??
+      "SYSTEM",
+  );
+  const map: Record<string, string> = {
+    sky: "border-l-sky-500 bg-sky-950/40",
+    violet: "border-l-violet-500 bg-violet-950/40",
+    amber: "border-l-amber-500 bg-amber-950/40",
+    rose: "border-l-rose-500 bg-rose-950/40",
+    stone: "border-l-stone-500 bg-stone-900/40",
+  };
+  return map[accent] ?? map.stone;
+}
 
 export function botTickSkipLabel(
   t: (k: keyof Messages, vars?: Record<string, string | number>) => string,
@@ -53,6 +83,25 @@ export function botTickSkipLabel(
   detail?: Record<string, unknown> | null,
 ): string {
   if (!reason) return t("bots_log_tick_skip");
+  const trace = detail?.trace as { reason_code?: string; reason_message?: string } | undefined;
+  if (trace?.reason_code) {
+    const code = trace.reason_code as DecisionReasonCode;
+    const key = `bots_reason_${code.toLowerCase()}` as keyof Messages;
+    const msg = t(key);
+    const labeled =
+      msg && msg !== key
+        ? msg
+        : trace.reason_message ?? code;
+    return `${t("bots_log_ignored")}${formatIgnoredLabel(code)} — ${labeled}`;
+  }
+  const mapped = TICK_SKIP_I18N[reason];
+  if (mapped) {
+    const msg = t(mapped);
+    if (reason === reason.toUpperCase() && reason.includes("_")) {
+      return `${t("bots_log_ignored")}${formatIgnoredLabel(reason)} — ${msg}`;
+    }
+    return msg;
+  }
   if (reason === "interval_not_elapsed") {
     const minutes = detail?.remainingMinutes;
     const hours = detail?.intervalHours;
@@ -63,8 +112,13 @@ export function botTickSkipLabel(
       });
     }
   }
-  const key = TICK_SKIP_I18N[reason];
-  return key ? t(key) : `${t("bots_log_tick_skip")} (${reason})`;
+  const legacy = mapLegacySkipToReasonCode(reason);
+  const legacyKey = `bots_reason_${legacy.reason_code.toLowerCase()}` as keyof Messages;
+  const legacyMsg = t(legacyKey);
+  if (legacyMsg && legacyMsg !== legacyKey) {
+    return `${t("bots_log_ignored")}${formatIgnoredLabel(legacy.reason_code)} — ${legacyMsg}`;
+  }
+  return `${t("bots_log_ignored")}${formatIgnoredLabel(reason)}`;
 }
 
 const SMART_ERROR_I18N: Record<string, keyof Messages> = {
@@ -223,7 +277,26 @@ export function botLogDetailMessage(
       typeof log.detail?.message === "string" ? log.detail.message : null;
     return formatBotRuntimeError(msg, t);
   }
-  if (log.action === "smart_skip" || log.action === "ai_skip") {
+  if (
+    log.action === "smart_skip" ||
+    log.action === "ai_skip" ||
+    log.action === "decision_skip"
+  ) {
+    const trace = log.detail?.trace as
+      | {
+          reason_code?: string;
+          reason_message?: string;
+          category?: string;
+          score?: number;
+        }
+      | undefined;
+    if (trace?.reason_code) {
+      const key = `bots_reason_${trace.reason_code.toLowerCase()}` as keyof Messages;
+      const short = t(key);
+      return short && short !== key
+        ? short
+        : trace.reason_code.replace(/_/g, " ");
+    }
     const reason =
       typeof log.detail?.reason === "string" ? log.detail.reason : null;
     const score = log.detail?.score;

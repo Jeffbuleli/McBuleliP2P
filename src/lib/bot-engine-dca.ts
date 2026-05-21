@@ -1,6 +1,7 @@
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment } from "@/lib/bot-config";
 import { parseBotDcaConfig } from "@/lib/bot-dca-config";
+import { classifyBinanceAuthError } from "@/lib/binance-api-validate";
 import { loadUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { botAccessAllows } from "@/lib/bot-privilege";
 import {
@@ -8,8 +9,19 @@ import {
   markBotInstanceSuccess,
   setBotInstanceError,
 } from "@/lib/bot-instance-service";
-import { binanceUserSignedPost } from "@/lib/binance-user-client";
-import { runSmartGate, signalSummary } from "@/lib/bot-intelligence";
+import { binanceUserSignedPost, fetchBinanceSpotPrice } from "@/lib/binance-user-client";
+import { signalSummary } from "@/lib/bot-intelligence";
+import {
+  appendDecisionSkipLog,
+  classifyExecutionError,
+  runSpotDecisionOrchestrator,
+} from "@/lib/bot-decision";
+import {
+  getSmoothedScoreState,
+  setSmoothedScoreState,
+} from "@/lib/bot-decision/score-state";
+import { buildIgnoredTrace } from "@/lib/bot-decision/trace";
+import { REASON_CATEGORY } from "@/lib/bot-decision/reason-codes";
 
 export async function tickDcaSpotInstance(args: {
   instanceId: string;
@@ -51,31 +63,44 @@ export async function tickDcaSpotInstance(args: {
     return { ran: false, skipped: "amount_too_small" };
   }
 
-  const gate = await runSmartGate({
+  const price = await fetchBinanceSpotPrice(env, dca.symbol);
+  if (!price) {
+    await setBotInstanceError(args.instanceId, "Could not fetch spot price");
+    return { ran: false, skipped: "price_unavailable" };
+  }
+
+  const smart = {
+    smartMode: dca.smartMode,
+    minSignalScore: dca.minSignalScore,
+    timeframe: dca.timeframe,
+  };
+
+  const prevSmooth = await getSmoothedScoreState(args.instanceId);
+  const decision = await runSpotDecisionOrchestrator({
     environment: env,
     symbol: dca.symbol,
-    market: "spot",
-    smart: {
-      smartMode: dca.smartMode,
-      minSignalScore: dca.minSignalScore,
-      timeframe: dca.timeframe,
-    },
-    intent: "spot_buy",
+    smart,
+    quoteUsdt: quoteQty,
+    minQuoteUsdt: 5,
+    markPrice: price,
+    previousSmoothedScore: prevSmooth,
   });
-  if (!gate.ok) {
-    await appendBotExecutionLog({
+
+  if (decision.status === "IGNORED") {
+    await appendDecisionSkipLog({
       instanceId: args.instanceId,
       userId: args.userId,
       planId: args.planId,
-      action: "smart_skip",
-      detail: {
-        reason: gate.reason,
-        score: gate.signal?.score,
-        factors: gate.signal?.reasons,
-      },
+      trace: decision.trace,
+      technical: decision.technical,
+      minRequired: dca.minSignalScore,
+      plan: "dca",
     });
-    return { ran: false, skipped: "smart_blocked" };
+    return { ran: false, skipped: decision.trace.reason_code };
   }
+
+  await setSmoothedScoreState(args.instanceId, decision.technical.score);
+  const execQuote = decision.execution.quoteUsdt ?? quoteQty;
 
   try {
     const order = await binanceUserSignedPost({
@@ -87,7 +112,7 @@ export async function tickDcaSpotInstance(args: {
         symbol: dca.symbol,
         side: "BUY",
         type: "MARKET",
-        quoteOrderQty: String(quoteQty),
+        quoteOrderQty: String(execQuote),
       },
     });
 
@@ -99,22 +124,29 @@ export async function tickDcaSpotInstance(args: {
       action: "dca_buy",
       detail: {
         symbol: dca.symbol,
-        quoteAmountUsdt: dca.quoteAmountUsdt,
-        signal: signalSummary(gate.signal),
+        quoteAmountUsdt: String(execQuote),
+        signal: signalSummary(decision.technical.tradeSignal),
+        technical: {
+          score: decision.technical.score,
+          regime: decision.technical.market_regime,
+        },
+        risk_level: decision.risk.risk_level,
         order,
       },
     });
     return { ran: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "DCA order failed";
+    const raw = e instanceof Error ? e.message : "DCA order failed";
+    const execErr = classifyExecutionError(raw);
+    const msg = classifyBinanceAuthError(env, "spot", raw);
     await setBotInstanceError(args.instanceId, msg);
     await appendBotExecutionLog({
       instanceId: args.instanceId,
       userId: args.userId,
       planId: args.planId,
       action: "error",
-      detail: { message: msg },
+      detail: { message: msg, execution: execErr, reason_code: execErr.reason_code },
     });
-    return { ran: false, skipped: "order_failed" };
+    return { ran: false, skipped: execErr.reason_code };
   }
 }
