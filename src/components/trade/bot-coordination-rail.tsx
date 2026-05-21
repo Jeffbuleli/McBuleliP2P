@@ -138,9 +138,16 @@ export function BotCoordinationRail({
   let cronTone: StepState = "off";
   let cronAria = t("bots_coord_aria_cron_off");
   if (cronHealth?.configured) {
-    if (!cronHealth.lastRunAt || cronHealth.stale) {
+    if (!cronHealth.lastRunAt) {
       cronTone = "warn";
-      cronAria = t("bots_coord_aria_cron_wait");
+      cronAria = t("bots_coord_aria_cron_never");
+    } else if (cronHealth.stale) {
+      cronTone = "warn";
+      const ago =
+        cronHealth.minutesSinceLastRun != null
+          ? String(cronHealth.minutesSinceLastRun)
+          : "?";
+      cronAria = `${t("bots_coord_aria_cron_wait")} · ${ago} min`;
     } else {
       cronTone = "ok";
       cronAria = t("bots_coord_aria_cron_ok");

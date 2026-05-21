@@ -14,6 +14,8 @@ import {
 } from "@/lib/bot-futures-config";
 import { BOT_CANDLE_TIMEFRAMES } from "@/lib/bot-smart-config";
 import { getBotCronHealth } from "@/lib/bot-cron-health";
+import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
+import { getFuturesEntryIntervalBlock } from "@/lib/bot-futures-lifecycle";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -47,6 +49,33 @@ export async function GET() {
     });
 
   const cronHealth = await getBotCronHealth({ traderProfiles });
+  const minutesSinceLastRun = cronHealth.lastRun
+    ? Math.floor(
+        (Date.now() - new Date(cronHealth.lastRun.at).getTime()) / 60_000,
+      )
+    : null;
+
+  const instancesEnriched = await Promise.all(
+    instances.map(async (inst) => {
+      if (inst.planId !== "futures_um") return inst;
+      try {
+        const cfg = parseBotFuturesConfig(inst.config);
+        if (!cfg) return { ...inst, entryIntervalRemainingMinutes: 0 };
+        const block = await getFuturesEntryIntervalBlock({
+          instanceId: inst.id,
+          intervalHours: cfg.intervalHours,
+        });
+        return {
+          ...inst,
+          entryIntervalRemainingMinutes: block.blocked
+            ? block.remainingMinutes
+            : 0,
+        };
+      } catch {
+        return { ...inst, entryIntervalRemainingMinutes: 0 };
+      }
+    }),
+  );
 
   const plans = BOT_PLAN_IDS.map((id) => {
     const p = BOT_PLANS[id];
@@ -63,7 +92,7 @@ export async function GET() {
     plans,
     credentials,
     subscriptions,
-    instances,
+    instances: instancesEnriched,
     dcaOptions: {
       symbols: [...BOT_DCA_SYMBOLS],
       intervalHours: [...BOT_DCA_INTERVAL_HOURS],
@@ -99,6 +128,8 @@ export async function GET() {
       lastRunExecuted: cronHealth.lastRun?.executed ?? null,
       lastRunInstances: cronHealth.lastRun?.instances ?? null,
       stale: cronHealth.stale,
+      minutesSinceLastRun,
+      staleAfterMinutes: Math.round(cronHealth.staleAfterMs / 60_000),
     },
     isSuperAdmin,
   });

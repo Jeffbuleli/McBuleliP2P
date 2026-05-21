@@ -39,6 +39,7 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
   other_symbol_open: "bots_skip_other_symbol_open",
   futures_failed: "bots_log_failed",
   reentry_cooldown: "bots_skip_reentry_cooldown",
+  interval_not_elapsed: "bots_skip_interval_not_elapsed",
   ai_signal_hold: "bots_skip_ai_signal_hold",
   ai_signal_stale: "bots_skip_ai_signal_stale",
   ai_low_confidence: "bots_skip_ai_low_confidence",
@@ -47,10 +48,21 @@ const TICK_SKIP_I18N: Record<string, keyof Messages> = {
 };
 
 export function botTickSkipLabel(
-  t: (k: keyof Messages) => string,
+  t: (k: keyof Messages, vars?: Record<string, string | number>) => string,
   reason: string | undefined,
+  detail?: Record<string, unknown> | null,
 ): string {
   if (!reason) return t("bots_log_tick_skip");
+  if (reason === "interval_not_elapsed") {
+    const minutes = detail?.remainingMinutes;
+    const hours = detail?.intervalHours;
+    if (typeof minutes === "number" && Number.isFinite(minutes)) {
+      return t("bots_skip_interval_not_elapsed", {
+        minutes: String(minutes),
+        hours: typeof hours === "number" ? String(hours) : "?",
+      });
+    }
+  }
   const key = TICK_SKIP_I18N[reason];
   return key ? t(key) : `${t("bots_log_tick_skip")} (${reason})`;
 }

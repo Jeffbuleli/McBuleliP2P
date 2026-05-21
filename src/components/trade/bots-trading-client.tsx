@@ -85,6 +85,7 @@ type BotInstance = {
   status: "active" | "paused";
   config: Record<string, unknown>;
   lastExecutedAt: string | null;
+  entryIntervalRemainingMinutes?: number;
   lastError: string | null;
 };
 
@@ -133,13 +134,15 @@ function botTabRunState(
 function BotStatusBadge({
   status,
   lastExecutedAt,
+  entryIntervalRemainingMinutes = 0,
   monitoringOpen,
   t,
 }: {
   status: "active" | "paused" | "none";
   lastExecutedAt?: string | null;
+  entryIntervalRemainingMinutes?: number;
   monitoringOpen?: boolean;
-  t: (k: keyof Messages) => string;
+  t: (k: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   if (status === "none") {
     return <BotStatusPill tone="idle">{t("bots_status_not_started")}</BotStatusPill>;
@@ -150,8 +153,17 @@ function BotStatusBadge({
   if (monitoringOpen) {
     return <BotStatusPill tone="open">{t("bots_status_position_open")}</BotStatusPill>;
   }
+  if (entryIntervalRemainingMinutes > 0) {
+    return (
+      <BotStatusPill tone="wait">
+        {t("bots_status_entry_interval", {
+          minutes: String(entryIntervalRemainingMinutes),
+        })}
+      </BotStatusPill>
+    );
+  }
   if (!lastExecutedAt) {
-    return <BotStatusPill tone="wait">{t("bots_status_waiting")}</BotStatusPill>;
+    return <BotStatusPill tone="active">{t("bots_status_ready")}</BotStatusPill>;
   }
   return <BotStatusPill tone="active">{t("bots_status_active")}</BotStatusPill>;
 }
@@ -1112,6 +1124,11 @@ export function BotsTradingClient() {
               lastExecutedAt={
                 instEnvAligned(futInst) ? futInst?.lastExecutedAt : undefined
               }
+              entryIntervalRemainingMinutes={
+                instEnvAligned(futInst)
+                  ? futInst?.entryIntervalRemainingMinutes ?? 0
+                  : 0
+              }
               monitoringOpen={
                 instEnvAligned(futInst) &&
                 futInst?.status === "active" &&
@@ -1209,6 +1226,9 @@ export function BotsTradingClient() {
                     </option>
                   ))}
                 </BotFlowSelect>
+                <p className="mt-1 text-[10px] font-medium text-[color:var(--fd-muted)]">
+                  {t("bots_futures_interval_tip")}
+                </p>
               </BotFlowField>
             </BotFormGrid>
               <BotFlowField label={t("bots_coord_style_label")}>

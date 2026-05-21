@@ -178,7 +178,11 @@ function CronSummaryLine({
   summary: { log: BotLogRow; count: number };
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
-  const title = botTickSkipLabel(t, tickReason(summary.log));
+  const title = botTickSkipLabel(
+    t,
+    tickReason(summary.log),
+    summary.log.detail as Record<string, unknown> | null,
+  );
   return (
     <li className="flex items-center gap-2.5 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2">
       <span
@@ -216,7 +220,11 @@ function ActivityEventLine({
   const badgeLabel = t(vis.badgeKey);
   const title =
     log.action === "tick_skip"
-      ? botTickSkipLabel(t, tickReason(log))
+      ? botTickSkipLabel(
+          t,
+          tickReason(log),
+          log.detail as Record<string, unknown> | null,
+        )
       : row.title;
 
   return (

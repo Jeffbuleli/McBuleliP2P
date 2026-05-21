@@ -1234,6 +1234,8 @@ export const en = {
   bots_status_active: "Executed",
   bots_status_position_open: "Active · open on Binance",
   bots_status_waiting: "Awaiting cron",
+  bots_status_ready: "Ready · scanning",
+  bots_status_entry_interval: "Entry pause · {minutes}m",
   bots_status_paused: "Paused",
   bots_status_not_started: "Not started",
   bots_futures_monitoring_open:
@@ -1293,7 +1295,8 @@ export const en = {
   bots_coord_warn: "Wait",
   bots_coord_off: "Off",
   bots_coord_aria_cron_ok: "Cron: running on schedule",
-  bots_coord_aria_cron_wait: "Cron: waiting for next tick",
+  bots_coord_aria_cron_wait: "Cron: overdue — check server tick",
+  bots_coord_aria_cron_never: "Cron: no server tick recorded yet",
   bots_coord_aria_cron_off: "Cron: not configured",
   bots_coord_aria_analysis_ok: "Analysis: TA and AI signal ready",
   bots_coord_aria_analysis_wait: "Analysis: waiting for AI signal",
@@ -1325,11 +1328,13 @@ export const en = {
   bots_cron_not_configured: "Scheduler off",
   bots_cron_health_tip:
     "McBuleli checks your bots on a schedule. Green means a recent successful run.",
-  bots_cron_health_never: "Pending · ~{minutes}m",
-  bots_cron_health_stale: "Late · {time}",
+  bots_cron_health_never: "No tick yet · target every {minutes} min",
+  bots_cron_health_stale: "Overdue · {ago} min ago ({time})",
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Auto",
   bots_cron_label: "Scheduler",
+  bots_futures_interval_tip:
+    "Min time between new positions (not the 5‑min server tick). After a close you can re-enter sooner if re-entry wait is 0.",
   bots_cron_scalp_fast_tick:
     "Scalp: interval {current} min (recommended {recommended} min for 1m candles)",
   bots_cron_scalp_fast_tick_tip:
@@ -1388,6 +1393,8 @@ export const en = {
     "Minutes to wait after a bot close before opening again (0 = off). Scalp preset: 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Waiting after last close (re-entry cooldown)",
+  bots_skip_interval_not_elapsed:
+    "Entry interval · {minutes}m left (preset: {hours}h between opens)",
   bots_ai_assist_mode: "AI",
   bots_ai_assist_tip:
     "Uses McBuleli market analysis before opening. The bot only trades when the signal matches your direction and meets the minimum confidence.",
@@ -3381,6 +3388,8 @@ export const fr: Messages = {
   bots_status_active: "Exécuté",
   bots_status_position_open: "Actif · ouvert sur Binance",
   bots_status_waiting: "En attente du cron",
+  bots_status_ready: "Prêt · analyse en cours",
+  bots_status_entry_interval: "Pause entrée · {minutes} min",
   bots_status_paused: "En pause",
   bots_status_not_started: "Non démarré",
   bots_futures_monitoring_open:
@@ -3440,7 +3449,8 @@ export const fr: Messages = {
   bots_coord_warn: "Attente",
   bots_coord_off: "Off",
   bots_coord_aria_cron_ok: "Cron : actif",
-  bots_coord_aria_cron_wait: "Cron : en attente du prochain tick",
+  bots_coord_aria_cron_wait: "Cron : retard — tick serveur à vérifier",
+  bots_coord_aria_cron_never: "Cron : aucun passage serveur enregistré",
   bots_coord_aria_cron_off: "Cron : non configuré",
   bots_coord_aria_analysis_ok: "Analyse : TA et signal IA prêts",
   bots_coord_aria_analysis_wait: "Analyse : en attente du signal IA",
@@ -3473,11 +3483,13 @@ export const fr: Messages = {
   bots_cron_not_configured: "Planificateur inactif",
   bots_cron_health_tip:
     "McBuleli vérifie vos bots régulièrement. Vert = dernier passage réussi.",
-  bots_cron_health_never: "En attente · ~{minutes} min",
-  bots_cron_health_stale: "Retard · {time}",
+  bots_cron_health_never: "Aucun passage · cible toutes les {minutes} min",
+  bots_cron_health_stale: "Retard · il y a {ago} min ({time})",
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Auto",
   bots_cron_label: "Planification",
+  bots_futures_interval_tip:
+    "Délai minimum entre nouvelles positions (pas le tick serveur ~5 min). Après une clôture, la ré-entrée peut être plus tôt si la pause ré-entrée est à 0.",
   bots_cron_scalp_fast_tick:
     "Scalp : intervalle {current} min (recommandé {recommended} min pour chandelles 1m)",
   bots_cron_scalp_fast_tick_tip:
@@ -3536,6 +3548,8 @@ export const fr: Messages = {
     "Minutes d’attente après une clôture bot avant réouverture (0 = off). Scalp : 5 min.",
   bots_lifecycle_minutes: "min",
   bots_skip_reentry_cooldown: "Pause après dernière clôture (cooldown)",
+  bots_skip_interval_not_elapsed:
+    "Intervalle d’entrée · encore {minutes} min (profil : {hours} h entre ouvertures)",
   bots_ai_assist_mode: "Assistance IA",
   bots_ai_assist_tip:
     "Analyse McBuleli avant ouverture. Le bot n’entre en position que si le signal est aligné avec votre sens et la confiance minimum.",

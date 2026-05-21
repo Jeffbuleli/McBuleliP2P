@@ -12,6 +12,8 @@ export type CronHealthSnapshot = {
   lastRunExecuted: number | null;
   lastRunInstances: number | null;
   stale: boolean;
+  minutesSinceLastRun?: number | null;
+  staleAfterMinutes?: number;
 };
 
 function formatCronTime(iso: string, locale?: string) {
@@ -48,7 +50,11 @@ export function BotsCronHealthBar({
     status = t("bots_cron_health_never", { minutes: String(health.intervalMinutes) });
     warn = true;
   } else if (health.stale) {
-    status = t("bots_cron_health_stale", { time: timeLabel! });
+    const ago =
+      health.minutesSinceLastRun != null
+        ? String(health.minutesSinceLastRun)
+        : "?";
+    status = t("bots_cron_health_stale", { time: timeLabel!, ago });
     warn = true;
   } else {
     status = t("bots_cron_health_ok", {

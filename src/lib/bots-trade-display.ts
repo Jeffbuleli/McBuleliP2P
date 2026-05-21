@@ -133,7 +133,7 @@ export function buildBotTradeHistoryRow(
   if (log.action === "tick_skip") {
     const reason =
       typeof d.reason === "string" ? d.reason : undefined;
-    title = botTickSkipLabel(t, reason);
+    title = botTickSkipLabel(t, reason, d);
   }
   if (log.action === "smart_skip") {
     const score = typeof d.score === "number" ? d.score : null;

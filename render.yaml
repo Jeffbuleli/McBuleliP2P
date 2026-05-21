@@ -1,7 +1,22 @@
 # Optional Render Blueprint — import in Dashboard → Blueprints.
-# Web service (McBuleli Next.js) is usually created separately; this adds the AI relay worker.
+# Web service (McBuleli Next.js) is usually created separately.
+# Either enable BOT_CRON_INLINE=1 on the web service OR use mcbuleli-bots-tick below.
 
 services:
+  - type: cron
+    name: mcbuleli-bots-tick
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/5 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-bots-tick.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
   - type: cron
     name: mcbuleli-ai-relay
     runtime: python

@@ -21,6 +21,7 @@ import {
 import {
   evaluateMaxHold,
   FUTURES_CLOSE_LOG_ACTIONS,
+  getFuturesEntryIntervalBlock,
   isInReentryCooldown,
 } from "@/lib/bot-futures-lifecycle";
 import { fetchBinanceFuturesMarkPrice } from "@/lib/binance-user-client";
@@ -511,11 +512,31 @@ export async function tickFuturesUmInstance(args: {
       return { ran: false, skipped: "other_symbol_open" };
     }
 
-    const intervalMs = cfg.intervalHours * 60 * 60 * 1000;
-    if (
-      args.lastExecutedAt &&
-      Date.now() - args.lastExecutedAt.getTime() < intervalMs
-    ) {
+    const entryInterval = await getFuturesEntryIntervalBlock({
+      instanceId: args.instanceId,
+      intervalHours: cfg.intervalHours,
+    });
+    if (entryInterval.blocked) {
+      if (
+        !(await hasRecentExecutionLog(
+          args.instanceId,
+          "tick_skip",
+          60 * 60 * 1000,
+        ))
+      ) {
+        await appendBotExecutionLog({
+          instanceId: args.instanceId,
+          userId: args.userId,
+          planId: args.planId,
+          action: "tick_skip",
+          detail: {
+            reason: "interval_not_elapsed",
+            remainingMinutes: entryInterval.remainingMinutes,
+            intervalHours: cfg.intervalHours,
+            lastEntryAt: entryInterval.lastEntryAt?.toISOString() ?? null,
+          },
+        });
+      }
       return { ran: false, skipped: "interval_not_elapsed" };
     }
 

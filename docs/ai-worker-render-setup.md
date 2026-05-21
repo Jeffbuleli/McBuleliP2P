@@ -2,7 +2,20 @@
 
 The Python service is **separate** from the McBuleli Web cron. It only pushes analysis to **active Futures** bots with `aiAssistMode`.
 
-## 1. Create Cron Job
+## 0. Web bot tick (required for orders)
+
+Futures/DCA/Grid **orders** run on `POST /api/internal/bots/tick`. The Python relay does **not** replace this.
+
+Pick **one**:
+
+| Option | Setup |
+|--------|--------|
+| **A — Inline** | On the **Web** service: `BOT_CRON_INLINE=1`, `CRON_SECRET`, optional `BOT_CRON_INTERVAL_MS=300000` (5 min) |
+| **B — Render cron** | Cron `mcbuleli-bots-tick` in `render.yaml`: `node scripts/cron-bots-tick.mjs` every 5 min, `MCBULELI_API_URL` + `CRON_SECRET` |
+
+Without A or B, the UI shows **Cron overdue** (orange tile) and bots do not evaluate trades on schedule.
+
+## 1. Create Cron Job (AI relay)
 
 | Field | Value |
 |--------|--------|
