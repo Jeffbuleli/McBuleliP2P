@@ -1,26 +1,11 @@
 "use client";
 
+import {
+  DecisionCategoryIcon,
+  DecisionReasonIcon,
+} from "@/components/trade/bot-feed-icons";
 import { categoryAccent } from "@/lib/bot-decision/reason-codes";
-
-const CATEGORY_ICON: Record<string, string> = {
-  TECHNICAL: "◫",
-  AI: "◈",
-  RISK: "⚠",
-  EXECUTION: "⚡",
-  SYSTEM: "⏱",
-};
-
-const REASON_ICON: Record<string, string> = {
-  TREND_CONFLICT: "↔",
-  LOW_SCORE: "▽",
-  HIGH_VOLATILITY: "〰",
-  RANGE_MARKET: "▭",
-  MACRO_EVENT_WARNING: "◉",
-  COOLDOWN_ACTIVE: "⏳",
-  FUNDING_TOO_HIGH: "₿",
-  MIN_NOTIONAL_ERROR: "⊘",
-  BAD_RISK_REWARD: "⚖",
-};
+import { IconCron } from "@/components/trade/bot-visual-icons";
 
 export function DecisionCategoryDot({ category }: { category?: string }) {
   const accent = categoryAccent(
@@ -36,7 +21,7 @@ export function DecisionCategoryDot({ category }: { category?: string }) {
   };
   return (
     <span
-      className={`inline-block h-2 w-2 shrink-0 rounded-full ${colors[accent] ?? colors.stone}`}
+      className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${colors[accent] ?? colors.stone}`}
       title={category}
       aria-hidden
     />
@@ -48,16 +33,16 @@ export function TechnicalScoreBar({ score }: { score: number }) {
   const positive = score >= 0;
   return (
     <div className="flex items-center gap-2" title={`Score ${score}`}>
-      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-stone-200/90">
+      <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-stone-200/80">
         <div
           className={`absolute inset-y-0 left-0 rounded-full transition-all ${
-            positive ? "bg-emerald-500" : "bg-rose-500"
+            positive ? "bg-emerald-500/90" : "bg-rose-500/90"
           }`}
           style={{ width: `${pct}%` }}
         />
       </div>
       <span
-        className={`min-w-[2.25rem] text-right text-xs font-bold tabular-nums ${
+        className={`min-w-[2rem] text-right text-[10px] font-semibold tabular-nums ${
           positive ? "text-emerald-700" : "text-rose-700"
         }`}
       >
@@ -81,39 +66,33 @@ export function DecisionSkipCard({
   confidence?: number;
   warningLevel?: string;
 }) {
-  const cat = category?.toUpperCase() ?? "SYSTEM";
-  const icon = REASON_ICON[reasonCode] ?? CATEGORY_ICON[cat] ?? "⊘";
+  const label = reasonCode.replace(/_/g, " ");
 
   return (
     <div className="mt-1.5 space-y-1.5">
-      <div className="flex items-center gap-2">
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-base"
-          aria-hidden
-        >
-          {icon}
+      <div className="flex items-start gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[color:var(--fd-border)] bg-stone-50 text-[color:var(--fd-primary)]">
+          <DecisionReasonIcon code={reasonCode} />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <DecisionCategoryDot category={cat} />
-            <span className="truncate font-mono text-sm font-bold tracking-tight text-[color:var(--fd-text)]">
-              {reasonCode.replace(/_/g, " ")}
-            </span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-1">
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="truncate font-mono text-xs font-semibold tracking-tight text-[color:var(--fd-text)]">
+            {label}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            <DecisionCategoryIcon category={category} size={14} />
             {typeof score === "number" ? (
-              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-stone-700">
+              <span className="rounded border border-[color:var(--fd-border)] bg-white px-1.5 py-px text-[10px] font-medium tabular-nums text-[color:var(--fd-muted)]">
                 TA {score > 0 ? "+" : ""}
                 {score}
               </span>
             ) : null}
             {typeof confidence === "number" ? (
-              <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800">
+              <span className="rounded border border-violet-200/80 bg-violet-50/80 px-1.5 py-px text-[10px] font-medium text-violet-800">
                 IA {confidence}%
               </span>
             ) : null}
             {warningLevel ? (
-              <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+              <span className="rounded border border-amber-200/80 bg-amber-50/80 px-1.5 py-px text-[10px] font-medium text-amber-900">
                 {warningLevel}
               </span>
             ) : null}
@@ -128,11 +107,10 @@ export function DecisionSkipCard({
 export function CronPulseIcon() {
   return (
     <span
-      className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100"
+      className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50/90 text-amber-800"
       aria-hidden
     >
-      <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-amber-400 opacity-60" />
-      <span className="relative text-[11px] font-bold text-amber-900">◎</span>
+      <IconCron size={14} className="relative" />
     </span>
   );
 }

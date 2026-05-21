@@ -8,6 +8,8 @@ import { BotActivityFeed } from "@/components/trade/bot-activity-feed";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
 import { BotFuturesPositionCard } from "@/components/trade/bot-futures-position-card";
+import { IconRefresh } from "@/components/trade/bot-feed-icons";
+import { IconPause } from "@/components/trade/bot-visual-icons";
 import { BotFlowCard, BotFlowCategory } from "@/components/trade/bots-flow-ui";
 
 const POLL_MS = 12_000;
@@ -139,9 +141,12 @@ export function BotStrategyLivePanel({
   if (paused) {
     return (
       <BotFlowCategory title={t("bots_category_activity")} className="mt-4">
-        <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-200 text-lg">
-            ⏸
+        <div className="bot-data-row flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--fd-border)] bg-stone-50 text-stone-600">
+            <IconPause size={18} />
+          </span>
+          <span className="text-sm font-medium text-[color:var(--fd-muted)]">
+            {t("bots_status_paused")}
           </span>
         </div>
       </BotFlowCategory>
@@ -165,9 +170,10 @@ export function BotStrategyLivePanel({
             void onLogsRefreshRef.current();
           }}
           disabled={loading || !keysOk}
-          className="ml-auto rounded-lg border border-[color:var(--fd-border)] px-2 py-1 text-xs font-bold text-[color:var(--fd-primary)] disabled:opacity-40"
+          className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg border border-[color:var(--fd-border)] text-[color:var(--fd-primary)] disabled:opacity-40"
+          title={t("bots_positions_refresh")}
         >
-          ↻
+          <IconRefresh />
         </button>
       </div>
 

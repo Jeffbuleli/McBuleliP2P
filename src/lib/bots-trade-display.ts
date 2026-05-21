@@ -1,4 +1,5 @@
 import type { Messages } from "@/i18n/messages";
+import type { BotChipKind } from "@/components/trade/bot-feed-icons";
 import type { BotLogRow } from "@/lib/bots-ui-helpers";
 import {
   botLogActionLabel,
@@ -7,7 +8,7 @@ import {
 } from "@/lib/bots-ui-helpers";
 
 export type BotTradeHistoryChip = {
-  icon: string;
+  kind: BotChipKind;
   label: string;
 };
 
@@ -37,10 +38,11 @@ export const BOT_EXECUTION_ACTIONS = new Set([
   "futures_smart_close",
   "futures_trailing_close",
   "smart_skip",
+  "decision_skip",
 ]);
 
-function chip(icon: string, label: string): BotTradeHistoryChip {
-  return { icon, label };
+function chip(kind: BotChipKind, label: string): BotTradeHistoryChip {
+  return { kind, label };
 }
 
 function orderIdFromDetail(
@@ -60,59 +62,61 @@ export function buildBotTradeHistoryRow(
   const chips: BotTradeHistoryChip[] = [];
 
   if (typeof d.symbol === "string") {
-    chips.push(chip("◎", d.symbol));
+    chips.push(chip("symbol", d.symbol));
   }
   if (typeof d.side === "string") {
-    chips.push(chip(d.side === "LONG" ? "▲" : "▼", d.side));
+    chips.push(
+      chip(d.side === "LONG" ? "side_long" : "side_short", d.side),
+    );
   }
   if (typeof d.quoteAmountUsdt === "string") {
-    chips.push(chip("$", `${d.quoteAmountUsdt} USDT`));
+    chips.push(chip("quote", `${d.quoteAmountUsdt} USDT`));
   }
   if (typeof d.marginUsdt === "string") {
-    chips.push(chip("$", `${d.marginUsdt} USDT`));
+    chips.push(chip("margin", `${d.marginUsdt} USDT`));
   }
   if (typeof d.leverage === "number") {
-    chips.push(chip("×", String(d.leverage)));
+    chips.push(chip("leverage", `${d.leverage}×`));
   }
   if (typeof d.signal === "string") {
-    chips.push(chip("◈", d.signal));
+    chips.push(chip("signal", d.signal));
   }
   if (typeof d.summary === "string") {
-    chips.push(chip("◈", d.summary));
+    chips.push(chip("signal", d.summary));
   }
   if (typeof d.score === "number") {
-    chips.push(chip("Σ", `${d.score > 0 ? "+" : ""}${d.score}`));
+    chips.push(chip("score", `${d.score > 0 ? "+" : ""}${d.score}`));
   }
   if (Array.isArray(d.factors) && d.factors.length > 0) {
     const first = String(d.factors[0]);
-    if (first.length < 48) chips.push(chip("•", first));
+    if (first.length < 48) chips.push(chip("factor", first));
   }
   if (typeof d.ordersPlaced === "number") {
-    chips.push(chip("#", String(d.ordersPlaced)));
+    chips.push(chip("orders", String(d.ordersPlaced)));
   }
   if (typeof d.mid === "number") {
-    chips.push(chip("≈", String(d.mid)));
+    chips.push(chip("mark", String(d.mid)));
   }
   if (typeof d.mark === "number") {
-    chips.push(chip("≈", `mark ${d.mark}`));
+    chips.push(chip("mark", `mark ${d.mark}`));
   }
   if (typeof d.entry === "number" || typeof d.entry === "string") {
-    chips.push(chip("→", String(d.entry)));
+    chips.push(chip("entry", String(d.entry)));
   }
   if (typeof d.profitPct === "number" && Number.isFinite(d.profitPct)) {
-    chips.push(chip("PnL", `${d.profitPct.toFixed(2)}%`));
+    chips.push(chip("pnl", `${d.profitPct.toFixed(2)}%`));
   }
   if (typeof d.triggerPct === "number" && Number.isFinite(d.triggerPct)) {
-    chips.push(chip("≥", `${d.triggerPct}%`));
+    chips.push(chip("trigger", `${d.triggerPct}%`));
   }
   if (typeof d.peakProfitPct === "number" && Number.isFinite(d.peakProfitPct)) {
-    chips.push(chip("↑", `${d.peakProfitPct.toFixed(2)}%`));
+    chips.push(chip("peak", `${d.peakProfitPct.toFixed(2)}%`));
   }
   if (typeof d.retracePct === "number" && Number.isFinite(d.retracePct)) {
-    chips.push(chip("↓", `${d.retracePct.toFixed(2)}%`));
+    chips.push(chip("retrace", `${d.retracePct.toFixed(2)}%`));
   }
   if (typeof d.timeframe === "string") {
-    chips.push(chip("⏱", d.timeframe));
+    chips.push(chip("timeframe", d.timeframe));
   }
   if (log.action === "smart_exit_hold" && typeof d.reason === "string") {
     const short =
@@ -121,10 +125,10 @@ export function buildBotTradeHistoryRow(
         : d.reason === "smart_exit_no_reversal"
           ? t("smart_exit_no_reversal")
           : d.reason;
-    if (short.length < 32) chips.push(chip("·", short));
+    if (short.length < 32) chips.push(chip("factor", short));
   }
   const oid = orderIdFromDetail(d);
-  if (oid) chips.push(chip("ID", oid.slice(-8)));
+  if (oid) chips.push(chip("order_id", oid.slice(-8)));
 
   const isError = log.action === "error";
   const isClosed = BOT_CLOSED_ACTIONS.has(log.action);
@@ -135,12 +139,14 @@ export function buildBotTradeHistoryRow(
       typeof d.reason === "string" ? d.reason : undefined;
     title = botTickSkipLabel(t, reason, d);
   }
-  if (log.action === "smart_skip") {
-    const score = typeof d.score === "number" ? d.score : null;
-    const min = typeof d.minRequired === "number" ? d.minRequired : null;
-    if (score != null && min != null) {
-      title = `${score}/${min}`;
-      chips.unshift(chip("Σ", "TA"));
+  if (log.action === "smart_skip" || log.action === "decision_skip") {
+    const trace = d.trace as { reason_code?: string } | undefined;
+    if (trace?.reason_code) {
+      title = trace.reason_code.replace(/_/g, " ");
+    } else {
+      const score = typeof d.score === "number" ? d.score : null;
+      const min = typeof d.minRequired === "number" ? d.minRequired : null;
+      if (score != null && min != null) title = `${score} / ${min}`;
     }
   }
   if (log.action === "ai_skip") {
@@ -148,10 +154,7 @@ export function buildBotTradeHistoryRow(
     const conf =
       ai && typeof ai.confidence === "number" ? ai.confidence : null;
     const min = typeof d.minAiRequired === "number" ? d.minAiRequired : null;
-    if (conf != null && min != null) {
-      title = `${conf}/${min}`;
-      chips.unshift(chip("◈", "IA"));
-    }
+    if (conf != null && min != null) title = `${conf} / ${min}`;
   }
   if (isError) {
     const msg =
@@ -166,7 +169,7 @@ export function buildBotTradeHistoryRow(
     at: log.createdAt,
     action: log.action,
     title,
-    chips: chips.slice(0, 6),
+    chips: chips.slice(0, 5),
     isClosed,
     isError,
   };

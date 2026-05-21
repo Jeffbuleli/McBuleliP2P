@@ -883,13 +883,13 @@ export function FuturesTradingClient() {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[300px] text-left text-[11px]">
+              <table className="fd-table-minimal min-w-[300px]">
                 <thead>
-                  <tr className="border-b border-[color:var(--fd-border)] text-[color:var(--fd-muted)]">
-                    <th className="py-1.5 pr-2 font-semibold">Pair</th>
-                    <th className="py-1.5 pr-2 font-semibold">Side</th>
-                    <th className="py-1.5 pr-2 font-semibold text-right">{t("trade_ui_hist_pnl")}</th>
-                    <th className="py-1.5 font-semibold">{t("trade_ui_hist_cause")}</th>
+                  <tr>
+                    <th>Pair</th>
+                    <th>Side</th>
+                    <th className="text-right">{t("trade_ui_hist_pnl")}</th>
+                    <th>{t("trade_ui_hist_cause")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -901,32 +901,29 @@ export function FuturesTradingClient() {
                       timeStyle: "short",
                     });
                     return (
-                      <tr
-                        key={x.id}
-                        className="border-b border-[color:var(--fd-border)]/60 last:border-0"
-                      >
-                        <td className="py-2 pr-2 font-bold text-[color:var(--fd-text)]">
+                      <tr key={x.id}>
+                        <td className="font-semibold">
                           {x.symbol.replace("USDT", "")}
-                          <span className="block text-[9px] font-normal text-[color:var(--fd-muted)]">
+                          <span className="mt-0.5 block text-[10px] font-normal text-[color:var(--fd-muted)]">
                             {x.leverage}× · {closedStr}
                           </span>
                         </td>
                         <td
-                          className={`py-2 pr-2 font-bold uppercase ${
+                          className={`font-semibold uppercase ${
                             x.side === "long" ? "text-emerald-600" : "text-rose-600"
                           }`}
                         >
                           {x.side}
                         </td>
                         <td
-                          className={`py-2 pr-2 text-right font-mono font-bold tabular-nums ${
+                          className={`text-right font-mono font-semibold tabular-nums ${
                             pnl >= 0 ? "text-emerald-600" : "text-rose-600"
                           }`}
                         >
                           {pnl >= 0 ? "+" : ""}
                           {pnl.toFixed(2)}
                         </td>
-                        <td className="py-2 text-[color:var(--fd-muted)]">
+                        <td className="text-[color:var(--fd-muted)]">
                           {reasonLabel(x.closeReason)}
                         </td>
                       </tr>

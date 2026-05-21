@@ -465,6 +465,62 @@ html {
 .trade-bots-theme .bot-strategy-tile--dca.bot-strategy-tile--active {
   border-color: var(--fd-primary);
 }
+
+/* Bots — minimalist data rows & tables (no emoji/game UI) */
+.trade-bots-theme .bot-data-list,
+.trade-futures-theme .bot-data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.trade-bots-theme .bot-data-row,
+.trade-futures-theme .bot-data-row {
+  border-radius: 0.65rem;
+  border: 1px solid var(--fd-border);
+  background: #fff;
+  padding: 0.5rem 0.65rem;
+}
+.trade-bots-theme .bot-chip,
+.trade-futures-theme .bot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--fd-border);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .fd-table-minimal,
+.trade-futures-theme .fd-table-minimal {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.6875rem;
+  text-align: left;
+}
+.trade-bots-theme .fd-table-minimal thead th,
+.trade-futures-theme .fd-table-minimal thead th {
+  border-bottom: 1px solid var(--fd-border);
+  padding: 0.4rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .fd-table-minimal tbody td,
+.trade-futures-theme .fd-table-minimal tbody td {
+  border-bottom: 1px solid rgba(42, 125, 62, 0.08);
+  padding: 0.5rem 0.5rem;
+  vertical-align: top;
+  color: var(--fd-text);
+}
+.trade-bots-theme .fd-table-minimal tbody tr:last-child td,
+.trade-futures-theme .fd-table-minimal tbody tr:last-child td {
+  border-bottom: none;
+}
 .trade-bots-theme .bot-strategy-tile__icon {
   display: flex;
   height: 2.75rem;
