@@ -1,6 +1,5 @@
 import { ProfileActionGrid } from "@/components/profile/profile-action-grid";
 import { ProfileHero } from "@/components/profile/profile-hero";
-import { ProfilePayQrCard } from "@/components/profile/profile-pay-qr-card";
 import { ProfileLogoutButton } from "@/components/profile/profile-logout-button";
 import { ProfileScreenHeader } from "@/components/profile/profile-screen-header";
 import { ProfileStatsRow } from "@/components/profile/profile-stats-row";
@@ -39,7 +38,6 @@ export default async function ProfilePage() {
     <div className="flex flex-col gap-4 pb-4">
       <ProfileScreenHeader title={d.profile_title} />
       <ProfileHero dash={dash} locale={locale} />
-      <ProfilePayQrCard userId={dash.id} />
       <ProfileStatsRow dash={dash} locale={locale} memberSince={memberSince} />
       <ProfileActionGrid showAdmin={staff} />
       <ProfileLogoutButton />

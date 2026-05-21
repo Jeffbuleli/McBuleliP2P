@@ -578,6 +578,10 @@ html {
   color: var(--fd-muted);
   opacity: 0.45;
 }
+.profile-pay-qr svg {
+  display: block;
+  border-radius: 0.5rem;
+}
 .trade-bots-theme .bot-run-controls__btn {
   min-height: 3rem;
 }

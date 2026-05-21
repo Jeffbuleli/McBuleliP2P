@@ -21,6 +21,7 @@
     "bcryptjs": "^3.0.3",
     "ccxt": "^4.5.54",
     "drizzle-orm": "^0.45.2",
+    "html5-qrcode": "^2.3.8",
     "jose": "^6.2.3",
     "next": "16.2.4",
     "postgres": "^3.4.9",
