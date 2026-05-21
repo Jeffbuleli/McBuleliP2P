@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Messages } from "@/i18n/messages";
 import {
   ActionIcon,
+  IconAnalysis,
   IconClock,
   IconLock,
   IconSpinner,
@@ -17,6 +18,8 @@ type AiStatusPayload = {
   enabled: boolean;
   fresh?: boolean;
   ageMs?: number | null;
+  source?: "worker" | "ta_sync" | "none";
+  relayOffline?: boolean;
   minAiConfidence?: number;
   meetsMinConfidence?: boolean;
   action?: "LONG" | "SHORT" | "HOLD" | null;
@@ -107,17 +110,18 @@ export function AiAssistSignalStrip({
       <div
         className="bot-ai-strip bot-ai-strip--stale"
         role="status"
-        aria-label={t("bots_ai_aria_stale")}
-        title={t("bots_ai_aria_stale_detail", { age: compactAge(ageMs) })}
+        aria-label={t("bots_ai_aria_relay_off")}
+        title={t("bots_ai_aria_relay_off_detail", { age: compactAge(ageMs) })}
       >
         <IconStatusWarn className="text-amber-600" />
-        <IconClock className="opacity-60" />
-        <span className="bot-ai-strip__mono" aria-hidden>
-          {compactAge(ageMs)}
+        <span className="bot-ai-strip__mono text-[10px] font-bold uppercase tracking-wide">
+          {t("bots_ai_relay_off_short")}
         </span>
       </div>
     );
   }
+
+  const taSync = status.source === "ta_sync";
 
   const tone =
     action === "LONG"
@@ -135,9 +139,19 @@ export function AiAssistSignalStrip({
         confidence: String(conf ?? 0),
         age: compactAge(ageMs),
       })}
-      title={status.xInsight ?? undefined}
+      title={
+        taSync
+          ? t("bots_ai_aria_ta_sync")
+          : (status.xInsight ?? undefined)
+      }
     >
       <ActionIcon action={action} size={18} />
+      {taSync ? (
+        <>
+          <span className="bot-ai-strip__sep" aria-hidden />
+          <IconAnalysis size={14} className="opacity-70" />
+        </>
+      ) : null}
       {conf != null ? (
         <span
           className={`bot-ai-strip__conf ${belowMin ? "bot-ai-strip__conf--low" : ""}`}
@@ -161,7 +175,7 @@ export function AiAssistSignalStrip({
       <span className="bot-ai-strip__sep" aria-hidden />
       <IconClock size={14} className="opacity-70" />
       <span className="bot-ai-strip__mono">{compactAge(ageMs)}</span>
-      {xKind ? (
+      {!taSync && xKind ? (
         <>
           <span className="bot-ai-strip__sep" aria-hidden />
           <IconXLogo size={12} className="opacity-50" />

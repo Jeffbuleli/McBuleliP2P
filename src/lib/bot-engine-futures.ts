@@ -55,6 +55,7 @@ import {
   getAiSignal,
   runAiAssistGate,
 } from "@/lib/bot-ai-signal";
+import { refreshAiSignalFromTaIfStale } from "@/lib/bot-ai-ta-fallback";
 
 function formatFuturesQty(qty: number): string {
   if (qty >= 1) return qty.toFixed(3);
@@ -611,6 +612,17 @@ export async function tickFuturesUmInstance(args: {
         },
       });
       return { ran: false, skipped: "smart_blocked" };
+    }
+
+    if (cfg.aiAssistMode) {
+      await refreshAiSignalFromTaIfStale({
+        instanceId: args.instanceId,
+        environment: env,
+        symbol: cfg.symbol,
+        side: cfg.side,
+        smart,
+        maxAgeMs: cfg.aiSignalMaxAgeMs ?? 120_000,
+      });
     }
 
     const aiSignal = await getAiSignal(

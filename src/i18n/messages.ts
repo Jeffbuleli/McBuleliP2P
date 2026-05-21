@@ -1308,6 +1308,11 @@ export const en = {
   bots_ai_aria_waiting: "Waiting for first AI analysis",
   bots_ai_aria_stale: "AI analysis expired",
   bots_ai_aria_stale_detail: "Last AI signal {age} ago — check Python worker on Render",
+  bots_ai_aria_relay_off: "AI relay offline — bot uses TA only",
+  bots_ai_aria_relay_off_detail:
+    "No fresh signal for {age} — start Render cron mcbuleli-ai-relay (every 1 min)",
+  bots_ai_relay_off_short: "IA off",
+  bots_ai_aria_ta_sync: "TA sync — full X/LLM relay inactive on server",
   bots_ai_aria_signal: "AI signal {action}, confidence {confidence}%, {age} ago",
   bots_ai_below_min: "Below entry threshold ({min}%) — no new open",
   bots_coord_running: "On",
@@ -3461,6 +3466,11 @@ export const fr: Messages = {
   bots_ai_aria_stale: "Analyse IA expirée",
   bots_ai_aria_stale_detail:
     "Dernier signal IA il y a {age} — vérifier le worker Python sur Render",
+  bots_ai_aria_relay_off: "Relay IA arrêté — le bot utilise la TA seule",
+  bots_ai_aria_relay_off_detail:
+    "Pas de signal frais depuis {age} — activer le cron Render mcbuleli-ai-relay (1 min)",
+  bots_ai_relay_off_short: "IA off",
+  bots_ai_aria_ta_sync: "Sync TA — relay X/LLM inactif côté serveur",
   bots_ai_aria_signal: "Signal IA {action}, confiance {confidence} %, il y a {age}",
   bots_ai_below_min: "Sous le seuil d’entrée ({min} %) — pas d’ouverture",
   bots_coord_running: "Actif",

@@ -118,11 +118,12 @@ export function BotCoordinationRail({
       if (!res.ok) return;
       const json = (await res.json()) as {
         fresh?: boolean;
+        relayOffline?: boolean;
         action?: string | null;
         receivedAt?: string | null;
       };
-      setAiFresh(Boolean(json.fresh));
-      setAiHasSignal(Boolean(json.receivedAt && json.action));
+      setAiFresh(Boolean(json.fresh) && !json.relayOffline);
+      setAiHasSignal(Boolean(json.receivedAt && json.action && json.fresh));
     } catch {
       /* ignore */
     }

@@ -52,6 +52,10 @@ Expect `instances: [...]` when a Futures bot is **Started** (active).
 
 After one cron run, the app should show a fresh AI strip (age in seconds/minutes, not hours).
 
+If the strip shows **IA off** / **9h** in yellow, the Python relay is not running — the bot falls back to **TA only** until the cron is fixed.
+
+**Fallback:** while the bot is active, McBuleli can push a short-lived **TA sync** signal (icon Analysis, not X) so entries are not blocked by a 9h-old worker payload. Full X/LLM analysis still requires `mcbuleli-ai-relay`.
+
 ## 4. Local test
 
 ```bash

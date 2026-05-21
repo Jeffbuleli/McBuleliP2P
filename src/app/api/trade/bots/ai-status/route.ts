@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  aiSignalSource,
+  refreshAiSignalFromTaIfStale,
+} from "@/lib/bot-ai-ta-fallback";
 import { extractXAnalystInsight, getAiSignalStatus } from "@/lib/bot-ai-signal";
 import { getUserBotInstanceById } from "@/lib/bot-instance-service";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
@@ -28,8 +32,26 @@ export async function GET(req: Request) {
   }
 
   const maxAgeMs = cfg.aiSignalMaxAgeMs;
+
+  if (instance.status === "active") {
+    await refreshAiSignalFromTaIfStale({
+      instanceId,
+      environment: instance.billing,
+      symbol: cfg.symbol,
+      side: cfg.side,
+      smart: {
+        smartMode: cfg.smartMode,
+        minSignalScore: cfg.minSignalScore,
+        timeframe: cfg.timeframe,
+      },
+      maxAgeMs,
+    });
+  }
+
   const status = await getAiSignalStatus(instanceId, maxAgeMs);
   const sig = status.signal;
+  const source = aiSignalSource(sig?.strategy);
+  const relayOffline = !status.fresh && source !== "ta_sync";
 
   const reasons = sig?.reasons ?? [];
   const xInsight = extractXAnalystInsight(reasons);
@@ -47,6 +69,8 @@ export async function GET(req: Request) {
     fresh: status.fresh,
     ageMs: status.ageMs,
     maxAgeMs: status.maxAgeMs,
+    source,
+    relayOffline,
     minAiConfidence: minAi,
     meetsMinConfidence,
     action,
