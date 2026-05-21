@@ -42,6 +42,37 @@ function isMissingRelationError(e: unknown): boolean {
   return c?.code === "42P01";
 }
 
+function pgErrorInfo(
+  e: unknown,
+): { code?: string; constraint?: string } | null {
+  let cur: unknown = e;
+  for (let i = 0; i < 4 && cur && typeof cur === "object"; i++) {
+    const o = cur as Record<string, unknown>;
+    if (typeof o.code === "string") {
+      return {
+        code: o.code,
+        constraint:
+          typeof o.constraint_name === "string"
+            ? o.constraint_name
+            : typeof o.constraint === "string"
+              ? o.constraint
+              : undefined,
+      };
+    }
+    cur = o.cause;
+  }
+  return null;
+}
+
+function isPgUniqueViolation(e: unknown, constraint?: string): boolean {
+  const info = pgErrorInfo(e);
+  if (info?.code !== "23505") return false;
+  if (constraint && info.constraint && info.constraint !== constraint) {
+    return false;
+  }
+  return true;
+}
+
 export type SupportParticipant = {
   id: string;
   label: string;
@@ -288,21 +319,42 @@ async function closeInactiveOpenThreadsForUser(userId: string): Promise<void> {
   }
 }
 
+async function findOpenSupportThreadForUser(userId: string) {
+  const db = getDb();
+  const [open] = await db
+    .select()
+    .from(supportThreads)
+    .where(
+      and(eq(supportThreads.userId, userId), eq(supportThreads.status, "open")),
+    )
+    .orderBy(desc(supportThreads.lastMessageAt))
+    .limit(1);
+  return open ?? null;
+}
+
 async function createOpenSupportThread(userId: string): Promise<SupportThreadDto> {
   const db = getDb();
-  const [created] = await db
-    .insert(supportThreads)
-    .values({ userId })
-    .returning({
-      id: supportThreads.id,
-      status: supportThreads.status,
-      assignedToUserId: supportThreads.assignedToUserId,
-      closedAt: supportThreads.closedAt,
-      closedReason: supportThreads.closedReason,
-    });
-  if (!created) throw new Error("support_thread_create_failed");
-  await insertSystemMessage(created.id, userId, "welcome");
-  return toThreadDto(created, true);
+  try {
+    const [created] = await db
+      .insert(supportThreads)
+      .values({ userId })
+      .returning({
+        id: supportThreads.id,
+        status: supportThreads.status,
+        assignedToUserId: supportThreads.assignedToUserId,
+        closedAt: supportThreads.closedAt,
+        closedReason: supportThreads.closedReason,
+      });
+    if (!created) throw new Error("support_thread_create_failed");
+    await insertSystemMessage(created.id, userId, "welcome");
+    return toThreadDto(created, true);
+  } catch (e) {
+    if (isPgUniqueViolation(e, "support_threads_user_open_uq")) {
+      const existing = await findOpenSupportThreadForUser(userId);
+      if (existing) return toThreadDto(existing, false);
+    }
+    throw e;
+  }
 }
 
 /** Ensures schema, auto-closes inactive threads, returns open thread or creates a new one. */
@@ -314,15 +366,7 @@ export async function ensureOpenSupportThread(
     const db = getDb();
     await closeInactiveOpenThreadsForUser(userId);
 
-    const [open] = await db
-      .select()
-      .from(supportThreads)
-      .where(
-        and(eq(supportThreads.userId, userId), eq(supportThreads.status, "open")),
-      )
-      .orderBy(desc(supportThreads.lastMessageAt))
-      .limit(1);
-
+    const open = await findOpenSupportThreadForUser(userId);
     if (open) {
       return toThreadDto(open, false);
     }
