@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AdminNavIcon, type AdminNavIconKey } from "@/components/admin/admin-icons";
 
 /** Shared light admin (Room) design tokens — matches app home-theme. */
 export const adminCls = {
@@ -55,18 +56,25 @@ const navVariant: Record<AdminNavVariant, string> = {
 export function AdminNavLink({
   href,
   variant = "default",
+  icon,
   children,
 }: {
   href: string;
   variant?: AdminNavVariant;
+  icon?: AdminNavIconKey;
   children: ReactNode;
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-xl border px-3 py-2.5 text-center text-xs font-bold leading-snug shadow-sm transition active:scale-[0.98] ${navVariant[variant]}`}
+      className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-[11px] font-bold leading-tight shadow-sm transition active:scale-[0.98] ${navVariant[variant]}`}
     >
-      {children}
+      {icon ? (
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/60 bg-white/75 shadow-sm">
+          <AdminNavIcon name={icon} />
+        </span>
+      ) : null}
+      <span>{children}</span>
     </Link>
   );
 }

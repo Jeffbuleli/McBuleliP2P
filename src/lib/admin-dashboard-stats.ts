@@ -10,6 +10,9 @@ export type AdminDashboardStats = {
   groupsSubscriptionOverdue: number;
   p2pDisputesOpen: number;
   usersRegisteredLast7Days: number;
+  totalUsers: number;
+  totalAgents: number;
+  totalSuperAdmins: number;
 };
 
 function intFromCount(v: unknown): number {
@@ -69,6 +72,18 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     .from(users)
     .where(gte(users.createdAt, weekAgo));
 
+  const [totalU] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(users);
+  const [totalAgents] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(users)
+    .where(eq(users.role, "agent"));
+  const [totalSuper] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(users)
+    .where(eq(users.role, "super_admin"));
+
   return {
     withdrawalsPendingAgent: intFromCount(wPend?.c),
     withdrawalsPendingUnassigned: intFromCount(wUn?.c),
@@ -77,5 +92,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     groupsSubscriptionOverdue: intFromCount(gOverdue?.c),
     p2pDisputesOpen: intFromCount(p2pD?.c),
     usersRegisteredLast7Days: intFromCount(reg?.c),
+    totalUsers: intFromCount(totalU?.c),
+    totalAgents: intFromCount(totalAgents?.c),
+    totalSuperAdmins: intFromCount(totalSuper?.c),
   };
 }

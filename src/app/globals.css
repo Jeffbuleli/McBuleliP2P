@@ -302,6 +302,122 @@ html {
     0 12px 28px rgba(28, 25, 23, 0.05);
 }
 
+.admin-snapshot-row {
+  display: flex;
+  gap: 0.625rem;
+  overflow-x: auto;
+  padding-bottom: 0.125rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-total-badge {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(48, 95, 51, 0.14);
+  background: var(--fd-card);
+  padding: 0.625rem 0.875rem;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+}
+
+.admin-total-badge__label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+}
+
+.admin-total-badge__value {
+  margin-top: 0.125rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.admin-table-scroll {
+  border-radius: 1rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.admin-table thead {
+  border-bottom: 1px solid rgba(48, 95, 51, 0.12);
+  background: rgba(232, 245, 233, 0.45);
+}
+
+.admin-table th {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 0.625rem 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(48, 95, 51, 0.08);
+  color: var(--fd-text);
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover td {
+  background: rgba(232, 245, 233, 0.35);
+}
+
+.admin-table-nav-btn {
+  display: inline-flex;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(48, 95, 51, 0.18);
+  background: var(--fd-card);
+  color: var(--fd-primary);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.05);
+}
+
+.admin-table-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin-table-nav-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.admin-table-select {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(48, 95, 51, 0.18);
+  background: var(--fd-card);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fd-text);
+  outline: none;
+}
+
+.admin-table-select:focus {
+  border-color: var(--fd-primary);
+  box-shadow: 0 0 0 2px rgba(48, 95, 51, 0.12);
+}
+
+.admin-table-row-warn td {
+  background: rgba(254, 242, 242, 0.55);
+}
+
 /* In-app sticky title bar — light glass */
 .fd-app-topbar {
   border-radius: 1rem;

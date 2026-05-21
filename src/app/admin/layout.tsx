@@ -68,51 +68,55 @@ export default async function AdminLayout({
           className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
           aria-label="Admin"
         >
-          <AdminNavLink href="/admin">{d.admin_nav_dashboard}</AdminNavLink>
-          <AdminNavLink href="/admin/support" variant="support">
+          <AdminNavLink href="/admin" icon="dashboard">
+            {d.admin_nav_dashboard}
+          </AdminNavLink>
+          <AdminNavLink href="/admin/support" variant="support" icon="support">
             {d.admin_support_inbox}
           </AdminNavLink>
           {showW ? (
             <>
-              <AdminNavLink href="/admin/deposits" variant="money">
+              <AdminNavLink href="/admin/deposits" variant="money" icon="deposits">
                 {d.admin_nav_deposits}
               </AdminNavLink>
-              <AdminNavLink href="/admin/withdrawals" variant="money">
+              <AdminNavLink href="/admin/withdrawals" variant="money" icon="withdrawals">
                 {d.admin_nav_withdrawals}
               </AdminNavLink>
             </>
           ) : null}
           {showG ? (
-            <AdminNavLink href="/admin/groups">{d.admin_nav_groups}</AdminNavLink>
+            <AdminNavLink href="/admin/groups" icon="groups">
+              {d.admin_nav_groups}
+            </AdminNavLink>
           ) : null}
           {showP2p ? (
-            <AdminNavLink href="/admin/p2p" variant="support">
+            <AdminNavLink href="/admin/p2p" variant="support" icon="p2p">
               {d.admin_nav_p2p}
             </AdminNavLink>
           ) : null}
           {showPlatformExpenses ? (
-            <AdminNavLink href="/admin/platform-expenses" variant="money">
+            <AdminNavLink href="/admin/platform-expenses" variant="money" icon="expenses">
               {d.admin_nav_platform_expenses}
             </AdminNavLink>
           ) : null}
           {u.role === "super_admin" ? (
             <>
-              <AdminNavLink href="/admin/team" variant="team">
+              <AdminNavLink href="/admin/team" variant="team" icon="team">
                 {d.admin_nav_team}
               </AdminNavLink>
-              <AdminNavLink href="/admin/users" variant="team">
+              <AdminNavLink href="/admin/users" variant="team" icon="users">
                 {d.admin_nav_users}
               </AdminNavLink>
-              <AdminNavLink href="/admin/finance" variant="money">
+              <AdminNavLink href="/admin/finance" variant="money" icon="finance">
                 {d.admin_nav_finance}
               </AdminNavLink>
-              <AdminNavLink href="/admin/bots" variant="bots">
+              <AdminNavLink href="/admin/bots" variant="bots" icon="bots">
                 {d.admin_nav_bots}
               </AdminNavLink>
-              <AdminNavLink href="/admin/audit" variant="audit">
+              <AdminNavLink href="/admin/audit" variant="audit" icon="audit">
                 {d.admin_nav_audit}
               </AdminNavLink>
-              <AdminNavLink href="/admin/settings/pi" variant="bots">
+              <AdminNavLink href="/admin/settings/pi" variant="bots" icon="pi">
                 {d.admin_nav_pi_settings}
               </AdminNavLink>
             </>

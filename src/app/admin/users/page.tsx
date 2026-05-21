@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   STAFF_SCOPES,
   type StaffScope,
   isStaffScope,
 } from "@/lib/staff-scopes";
+import {
+  AdminDataTable,
+  type AdminTableColumn,
+} from "@/components/admin/admin-data-table";
+import { AdminSnapshotRow } from "@/components/admin/admin-snapshot-row";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 type U = {
@@ -35,10 +40,12 @@ function selectionToPayload(s: Set<StaffScope>): StaffScope[] | null {
 }
 
 export default function AdminUsersPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [users, setUsers] = useState<U[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [scopeSel, setScopeSel] = useState<Record<string, Set<StaffScope>>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/users");
@@ -60,6 +67,16 @@ export default function AdminUsersPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const totals = useMemo(() => {
+    const list = users ?? [];
+    return {
+      all: list.length,
+      user: list.filter((u) => u.role === "user").length,
+      agent: list.filter((u) => u.role === "agent").length,
+      super: list.filter((u) => u.role === "super_admin").length,
+    };
+  }, [users]);
 
   async function setRole(userId: string, role: string) {
     const res = await fetch(`/api/admin/users/${userId}`, {
@@ -130,6 +147,71 @@ export default function AdminUsersPage() {
     });
   }
 
+  const columns: AdminTableColumn<U>[] = [
+    {
+      id: "email",
+      header: t("admin_team_col_email"),
+      sortable: true,
+      sortValue: (u) => u.email,
+      cell: (u) => (
+        <div>
+          <p className="font-medium text-[color:var(--fd-text)]">{u.email}</p>
+          <p className="font-mono text-[10px] text-[color:var(--fd-muted)]">{u.id}</p>
+        </div>
+      ),
+    },
+    {
+      id: "role",
+      header: t("admin_role"),
+      sortable: true,
+      sortValue: (u) => u.role,
+      cell: (u) => (
+        <select
+          value={u.role}
+          onChange={(e) => void setRole(u.id, e.target.value)}
+          className={adminCls.select}
+          aria-label={t("admin_role")}
+        >
+          <option value="user">{t("admin_role_option_user")}</option>
+          <option value="agent">{t("admin_role_option_agent")}</option>
+          <option value="super_admin">{t("admin_role_option_super_admin")}</option>
+        </select>
+      ),
+    },
+    {
+      id: "created",
+      header: t("admin_team_col_since"),
+      sortable: true,
+      sortValue: (u) => new Date(u.createdAt).getTime(),
+      cell: (u) => (
+        <span className="text-xs text-[color:var(--fd-muted)]">
+          {new Date(u.createdAt).toLocaleDateString(loc, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      align: "right",
+      cell: (u) =>
+        u.role === "agent" ? (
+          <button
+            type="button"
+            onClick={() => setExpandedId((id) => (id === u.id ? null : u.id))}
+            className={adminCls.btnSecondary}
+          >
+            {expandedId === u.id ? t("admin_users_collapse") : t("admin_users_expand")}
+          </button>
+        ) : null,
+    },
+  ];
+
+  const expanded = users?.find((u) => u.id === expandedId);
+
   if (users === null) {
     return <p className={adminCls.muted}>…</p>;
   }
@@ -142,94 +224,69 @@ export default function AdminUsersPage() {
       />
       <p className={`text-xs ${adminCls.muted}`}>{t("admin_agent_full_access_hint")}</p>
       {err ? <p className={adminCls.error}>{err}</p> : null}
-      <ul className="space-y-4">
-        {users.map((u) => (
-          <li key={u.id} className={adminCls.card}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-[color:var(--fd-text)]">{u.email}</p>
-                <p className={`text-xs ${adminCls.muted}`}>{u.id}</p>
-              </div>
-              <select
-                value={u.role}
-                onChange={(e) => void setRole(u.id, e.target.value)}
-                className={adminCls.select}
-                aria-label={t("admin_role")}
-              >
-                <option value="user">{t("admin_role_option_user")}</option>
-                <option value="agent">{t("admin_role_option_agent")}</option>
-                <option value="super_admin">{t("admin_role_option_super_admin")}</option>
-              </select>
-            </div>
-            {u.role === "agent" ? (
-              <div className="mt-3 border-t border-[color:var(--fd-border)] pt-3">
-                <p className={`mb-2 text-xs font-semibold uppercase ${adminCls.muted}`}>
-                  {t("admin_agent_modules")}
-                </p>
-                <div className={`flex flex-col gap-2 text-sm ${adminCls.muted}`}>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
-                        "withdrawals",
-                      )}
-                      onChange={() => toggleScope(u.id, "withdrawals")}
-                    />
-                    {t("admin_agent_scope_withdrawals")}
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
-                        "groups",
-                      )}
-                      onChange={() => toggleScope(u.id, "groups")}
-                    />
-                    {t("admin_agent_scope_groups")}
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
-                        "p2p_disputes",
-                      )}
-                      onChange={() => toggleScope(u.id, "p2p_disputes")}
-                    />
-                    {t("admin_agent_scope_p2p")}
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
-                        "platform_expenses",
-                      )}
-                      onChange={() => toggleScope(u.id, "platform_expenses")}
-                    />
-                    {t("admin_agent_scope_platform_expenses")}
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={(scopeSel[u.id] ?? scopesToSelection(u.staffScopes)).has(
-                        "platform_expenses_approve",
-                      )}
-                      onChange={() => toggleScope(u.id, "platform_expenses_approve")}
-                    />
-                    {t("admin_agent_scope_platform_expenses_approve")}
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void saveScopes(u.id, u.role)}
-                  className={`mt-3 ${adminCls.btnPrimary}`}
-                >
-                  {t("admin_save_modules")}
-                </button>
-              </div>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+
+      <AdminSnapshotRow
+        items={[
+          { label: t("admin_kpi_total_users"), value: totals.all },
+          { label: t("admin_role_option_user"), value: totals.user, tone: "neutral" },
+          { label: t("admin_kpi_total_agents"), value: totals.agent },
+          {
+            label: t("admin_kpi_total_super_admins"),
+            value: totals.super,
+            tone: "neutral",
+          },
+        ]}
+      />
+
+      <AdminDataTable
+        rows={users}
+        columns={columns}
+        rowKey={(u) => u.id}
+        emptyMessage="—"
+        initialSortId="email"
+        totalLabel={t("admin_table_total", { count: users.length })}
+      />
+
+      {expanded?.role === "agent" ? (
+        <div className={`${adminCls.card} space-y-3`}>
+          <p className="text-sm font-bold text-[color:var(--fd-text)]">{expanded.email}</p>
+          <p className={`text-xs font-semibold uppercase ${adminCls.muted}`}>
+            {t("admin_agent_modules")}
+          </p>
+          <div className={`flex flex-col gap-2 text-sm ${adminCls.muted}`}>
+            {(
+              [
+                ["withdrawals", t("admin_agent_scope_withdrawals")] as const,
+                ["groups", t("admin_agent_scope_groups")] as const,
+                ["p2p_disputes", t("admin_agent_scope_p2p")] as const,
+                ["platform_expenses", t("admin_agent_scope_platform_expenses")] as const,
+                [
+                  "platform_expenses_approve",
+                  t("admin_agent_scope_platform_expenses_approve"),
+                ] as const,
+              ] as const
+            ).map(([scope, label]) => (
+              <label key={scope} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={(
+                    scopeSel[expanded.id] ?? scopesToSelection(expanded.staffScopes)
+                  ).has(scope)}
+                  onChange={() => toggleScope(expanded.id, scope)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => void saveScopes(expanded.id, expanded.role)}
+            className={adminCls.btnPrimary}
+          >
+            {t("admin_save_modules")}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

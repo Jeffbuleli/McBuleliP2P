@@ -5,6 +5,11 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
+import {
+  AdminDataTable,
+  type AdminTableColumn,
+} from "@/components/admin/admin-data-table";
+import { AdminSnapshotRow } from "@/components/admin/admin-snapshot-row";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
 type Row = {
@@ -49,6 +54,70 @@ function AdminGroupsContent() {
     })();
   }, [status, subscriptionStatus]);
 
+  const columns: AdminTableColumn<Row>[] = [
+    {
+      id: "name",
+      header: t("admin_groups"),
+      sortable: true,
+      sortValue: (r) => r.name,
+      cell: (r) => (
+        <Link
+          href={`/admin/groups/${r.id}`}
+          className="font-medium text-[color:var(--fd-primary)] hover:underline"
+        >
+          <span className="mr-1 rounded bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase">
+            {r.type}
+          </span>
+          {r.name}
+        </Link>
+      ),
+    },
+    {
+      id: "creator",
+      header: t("admin_team_col_email"),
+      sortable: true,
+      sortValue: (r) => r.createdByEmail,
+      cell: (r) => (
+        <span className="text-xs text-[color:var(--fd-muted)]">{r.createdByEmail}</span>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin_status"),
+      sortable: true,
+      sortValue: (r) => `${r.status}:${r.subscriptionStatus}`,
+      cell: (r) => (
+        <span className="text-xs font-medium text-[color:var(--fd-primary)]">
+          {r.status} · {r.subscriptionStatus}
+        </span>
+      ),
+    },
+    {
+      id: "contrib",
+      header: "USDT",
+      sortable: true,
+      sortValue: (r) => Number(r.contributionAmountUsdt) || 0,
+      cell: (r) => (
+        <span className="font-mono text-xs text-[color:var(--fd-muted)]">
+          {r.contributionAmountUsdt} · {r.cycleDurationDays}d
+          {r.countryCode ? ` · ${countryLabel(locale, r.countryCode)}` : ""}
+        </span>
+      ),
+    },
+    {
+      id: "when",
+      header: t("admin_audit_when"),
+      sortable: true,
+      sortValue: (r) => new Date(r.createdAt).getTime(),
+      align: "right",
+      cell: (r) => (
+        <span className="whitespace-nowrap text-xs text-[color:var(--fd-muted)]">
+          {new Date(r.createdAt).toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
+        </span>
+      ),
+    },
+  ];
+
   if (rows === null) return <p className={adminCls.muted}>…</p>;
 
   return (
@@ -85,35 +154,25 @@ function AdminGroupsContent() {
         </select>
       </div>
       {err ? <p className={adminCls.error}>{err}</p> : null}
-      {rows.length === 0 ? (
-        <p className={adminCls.empty}>—</p>
-      ) : (
-        <ul className="space-y-2">
-          {rows.map((r) => (
-            <li key={r.id}>
-              <Link href={`/admin/groups/${r.id}`} className={adminCls.listLink}>
-                <div className="flex flex-wrap justify-between gap-2">
-                  <span className="min-w-0 font-mono text-sm text-[color:var(--fd-primary)]">
-                    <span className="mr-1 inline-block rounded bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
-                      {r.type}
-                    </span>
-                    <span className="break-all text-[color:var(--fd-text)]">{r.name}</span>
-                  </span>
-                  <span className={`text-xs ${adminCls.muted}`}>
-                    {new Date(r.createdAt).toLocaleString()}
-                  </span>
-                </div>
-                <p className={`mt-1 text-sm ${adminCls.muted}`}>{r.createdByEmail}</p>
-                <p className="mt-1 text-xs font-medium text-[color:var(--fd-primary)]">
-                  {r.status} · {r.subscriptionStatus} · {r.contributionAmountUsdt} USDT ·{" "}
-                  {r.cycleDurationDays}d
-                  {r.countryCode ? ` · ${countryLabel(locale, r.countryCode)}` : ""}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+
+      <AdminSnapshotRow
+        items={[
+          {
+            label: t("admin_groups"),
+            value: rows.length,
+          },
+        ]}
+      />
+
+      <AdminDataTable
+        rows={rows}
+        columns={columns}
+        rowKey={(r) => r.id}
+        emptyMessage="—"
+        initialSortId="when"
+        initialSortDir="desc"
+        totalLabel={t("admin_table_total", { count: rows.length })}
+      />
     </div>
   );
 }

@@ -114,11 +114,33 @@ export default async function AdminHomePage() {
           ) : null}
 
           {showGrowth ? (
-            <AdminKpiCard
-              label={d.admin_kpi_growth}
-              value={stats.usersRegisteredLast7Days}
-              sub={d.admin_kpi_users_7d}
-            />
+            <>
+              <AdminKpiCard
+                href="/admin/users"
+                label={d.admin_kpi_total_users}
+                value={stats.totalUsers}
+                sub={d.admin_nav_users}
+              />
+              <AdminKpiCard
+                href="/admin/team"
+                label={d.admin_kpi_total_agents}
+                value={stats.totalAgents}
+                sub={d.admin_nav_team}
+                meta={
+                  <>
+                    {d.admin_kpi_total_super_admins}:{" "}
+                    <span className="font-mono font-semibold text-[color:var(--fd-text)]">
+                      {stats.totalSuperAdmins}
+                    </span>
+                  </>
+                }
+              />
+              <AdminKpiCard
+                label={d.admin_kpi_growth}
+                value={stats.usersRegisteredLast7Days}
+                sub={d.admin_kpi_users_7d}
+              />
+            </>
           ) : null}
         </div>
       </div>
