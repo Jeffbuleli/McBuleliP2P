@@ -1333,8 +1333,6 @@ export const en = {
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Auto",
   bots_cron_label: "Scheduler",
-  bots_futures_interval_tip:
-    "Min time between new positions (not the 5‑min server tick). After a close you can re-enter sooner if re-entry wait is 0.",
   bots_cron_scalp_fast_tick:
     "Scalp: interval {current} min (recommended {recommended} min for 1m candles)",
   bots_cron_scalp_fast_tick_tip:
@@ -3488,8 +3486,6 @@ export const fr: Messages = {
   bots_cron_health_ok: "OK · {time} · {executed}/{instances}",
   bots_cron_inline_badge: "Auto",
   bots_cron_label: "Planification",
-  bots_futures_interval_tip:
-    "Délai minimum entre nouvelles positions (pas le tick serveur ~5 min). Après une clôture, la ré-entrée peut être plus tôt si la pause ré-entrée est à 0.",
   bots_cron_scalp_fast_tick:
     "Scalp : intervalle {current} min (recommandé {recommended} min pour chandelles 1m)",
   bots_cron_scalp_fast_tick_tip:

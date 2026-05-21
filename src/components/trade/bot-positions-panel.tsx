@@ -201,9 +201,7 @@ export function BotPositionsPanel({
         </button>
       </div>
 
-      {!keysOk ? (
-        <p className="text-xs text-stone-500">{t("bots_positions_keys_hint")}</p>
-      ) : loading ? (
+      {!keysOk ? null : loading ? (
         <p className="text-xs text-stone-500">{t("bots_loading")}</p>
       ) : posErr ? (
         <p className="text-xs text-amber-800 dark:text-amber-200">{posErr}</p>
@@ -221,9 +219,6 @@ export function BotPositionsPanel({
         <h3 className="text-sm font-bold uppercase tracking-wide text-stone-600 dark:text-stone-400">
           {t("bots_positions_closed")}
         </h3>
-        {closedLogs.length === 0 && planId !== "futures_um" ? (
-          <p className="mt-2 text-xs text-stone-500">{t("bots_history_spot_hint")}</p>
-        ) : null}
         <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto">
           {closedLogs.length === 0 ? (
             <li className="rounded-lg bg-stone-50 px-3 py-3 text-center text-xs text-stone-500 dark:bg-stone-800/50">

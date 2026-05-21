@@ -65,9 +65,6 @@ function OpenRow({
                 </span>
               ) : null}
             </p>
-            {otherPair ? (
-              <p className="mt-0.5 text-[10px] text-rose-800">{t("bots_futures_other_short")}</p>
-            ) : null}
             <p className="mt-1 text-xs tabular-nums text-[color:var(--fd-muted)]">
               {row.size ? `${t("bots_futures_size")} ${row.size}` : ""}
               {row.entryPrice ? ` · ${fmtNum(row.entryPrice)}` : ""}
@@ -184,9 +181,6 @@ export function BotStrategyLivePanel({
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-200 text-lg">
             ⏸
           </span>
-          <p className="text-xs font-medium text-[color:var(--fd-muted)]">
-            {t("bots_paused_hint")}
-          </p>
         </div>
       </BotFlowCategory>
     );
@@ -220,9 +214,7 @@ export function BotStrategyLivePanel({
         <p className="mb-2 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
           {t("bots_positions_open")}
         </p>
-        {!keysOk ? (
-          <p className="text-xs text-[color:var(--fd-muted)]">{t("bots_positions_keys_hint")}</p>
-        ) : loading && open.length === 0 ? (
+        {!keysOk ? null : loading && open.length === 0 ? (
           <p className="text-xs text-[color:var(--fd-muted)]">{t("bots_loading")}</p>
         ) : posErr && open.length === 0 ? (
           <p className="text-xs text-amber-800">{posErr}</p>

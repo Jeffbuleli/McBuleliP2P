@@ -21,9 +21,9 @@ export default async function BotsAiGuidePage() {
   ];
 
   const cards = [
-    { icon: IconCron, title: d.bots_ai_doc_start_title, hint: d.bots_ai_doc_start_short },
-    { icon: IconAnalysis, title: d.bots_ai_doc_binance_title, hint: d.bots_ai_doc_binance_short },
-    { icon: IconBot, title: d.bots_ai_doc_okx_title, hint: d.bots_ai_doc_okx_short },
+    { icon: IconCron, title: d.bots_ai_doc_start_title },
+    { icon: IconAnalysis, title: d.bots_ai_doc_binance_title },
+    { icon: IconBot, title: d.bots_ai_doc_okx_title },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default async function BotsAiGuidePage() {
 
       <ul className="space-y-3">
         {cards.map((c) => (
-          <BotsAiGuideCard key={c.title} icon={c.icon} title={c.title} hint={c.hint} />
+          <BotsAiGuideCard key={c.title} icon={c.icon} title={c.title} />
         ))}
       </ul>
     </div>

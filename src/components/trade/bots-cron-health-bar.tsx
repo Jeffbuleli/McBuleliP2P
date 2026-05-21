@@ -27,11 +27,9 @@ function formatCronTime(iso: string, locale?: string) {
 
 export function BotsCronHealthBar({
   health,
-  isSuperAdmin = false,
   t,
 }: {
   health: CronHealthSnapshot;
-  isSuperAdmin?: boolean;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   if (!health.configured) {
@@ -64,11 +62,6 @@ export function BotsCronHealthBar({
     });
   }
 
-  const needsFaster =
-    health.cronNeedsFasterTick &&
-    health.recommendedIntervalMinutes != null &&
-    health.intervalMinutes > health.recommendedIntervalMinutes;
-
   return (
     <div className="space-y-2">
       <p
@@ -86,14 +79,6 @@ export function BotsCronHealthBar({
           </span>
         ) : null}
       </p>
-      {needsFaster && isSuperAdmin ? (
-        <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] text-sky-900">
-          {t("bots_cron_scalp_fast_tick", {
-            current: String(health.intervalMinutes),
-            recommended: String(health.recommendedIntervalMinutes),
-          })}
-        </p>
-      ) : null}
     </div>
   );
 }

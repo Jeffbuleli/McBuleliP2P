@@ -43,11 +43,9 @@ export function BotsAiGuideVisual({ steps }: { steps: GuideStep[] }) {
 export function BotsAiGuideCard({
   icon: Icon,
   title,
-  hint,
 }: {
   icon: typeof IconCron;
   title: string;
-  hint: string;
 }) {
   return (
     <li className="fd-card flex gap-3 rounded-2xl p-4">
@@ -59,7 +57,6 @@ export function BotsAiGuideCard({
       </span>
       <div className="min-w-0">
         <h2 className="text-sm font-bold text-[color:var(--fd-text)]">{title}</h2>
-        <p className="mt-1 text-xs leading-snug text-[color:var(--fd-muted)]">{hint}</p>
       </div>
     </li>
   );

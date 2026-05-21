@@ -31,7 +31,6 @@ import { BotStrategyLivePanel } from "@/components/trade/bot-strategy-live-panel
 import { BotRunControls } from "@/components/trade/bot-run-controls";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
-import { UiInfoTip, UiSectionTitle } from "@/components/ui/ui-info-tip";
 import {
   BotPlanIcon,
   BotStrategyTabBar,
@@ -841,11 +840,7 @@ export function BotsTradingClient() {
           t={t}
         />
         {data.cronHealth ? (
-          <BotsCronHealthBar
-            health={data.cronHealth}
-            isSuperAdmin={Boolean(data.isSuperAdmin)}
-            t={t}
-          />
+          <BotsCronHealthBar health={data.cronHealth} t={t} />
         ) : null}
       </BotFlowCategory>
 
@@ -1154,10 +1149,7 @@ export function BotsTradingClient() {
             </BotFlowField>
             {futFormSymbolDirty && savedFutSymbol ? (
               <p className="text-xs font-medium text-amber-900">
-                {t("bots_futures_symbol_pending", {
-                  saved: savedFutSymbol,
-                  next: futSymbol,
-                })}
+                {savedFutSymbol} → {futSymbol}
               </p>
             ) : null}
             {futHasUnmanagedOpen ? (
@@ -1226,9 +1218,6 @@ export function BotsTradingClient() {
                     </option>
                   ))}
                 </BotFlowSelect>
-                <p className="mt-1 text-[10px] font-medium text-[color:var(--fd-muted)]">
-                  {t("bots_futures_interval_tip")}
-                </p>
               </BotFlowField>
             </BotFormGrid>
               <BotFlowField label={t("bots_coord_style_label")}>
@@ -1261,8 +1250,11 @@ export function BotsTradingClient() {
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_execution")} className="mt-3">
           {futInst?.status === "active" && !instEnvAligned(futInst) ? (
-            <p className="mt-2 text-xs text-violet-800 dark:text-violet-200">
-              {t("bots_logs_other_env")}
+            <p className="mt-2 text-xs font-medium text-violet-800 dark:text-violet-200">
+              {t("bots_billing_view_mismatch", {
+                saved: billingEnvLabel(futInst!.billing, t),
+                viewing: billingEnvLabel(accountBilling, t),
+              })}
             </p>
           ) : null}
           {futInst?.lastExecutedAt && instEnvAligned(futInst) ? (
@@ -1282,7 +1274,7 @@ export function BotsTradingClient() {
             busy={busy}
             variant="amber"
             monitoringOpen={instEnvAligned(futInst) && futHasConfigOpen}
-            monitoringLabel={t("bots_futures_monitoring_open")}
+            monitoringLabel={t("bots_status_position_open")}
             startLabel={t("bots_futures_start")}
             pauseLabel={t("bots_futures_pause")}
             runningLabel={t("bots_coord_running")}
@@ -1402,10 +1394,7 @@ export function BotsTradingClient() {
 
           {wizardStep === 2 ? (
             <div className="mt-4 space-y-3">
-              <p className="flex items-center gap-1 text-sm font-medium">
-                {t("bots_confirm_subscribe")}
-                <UiInfoTip tip={t("bots_subscribe_confirm_tip")} />
-              </p>
+              <p className="text-sm font-medium">{t("bots_confirm_subscribe")}</p>
               <button
                 type="button"
                 disabled={busy}
@@ -1426,26 +1415,7 @@ export function BotsTradingClient() {
 
           {wizardStep === 3 ? (
             <div className="mt-4 space-y-4">
-              <p className="flex flex-wrap items-center gap-1 text-sm font-medium">
-                {t("bots_connect_keys")}
-                <UiInfoTip
-                  tip={
-                    wizardBilling === "live"
-                      ? t("bots_wizard_steps_live_tip")
-                      : t("bots_wizard_steps_tip")
-                  }
-                />
-                <UiInfoTip
-                  variant="warn"
-                  tip={
-                    wizardBilling === "live"
-                      ? `${t("bots_live_real_money_banner")} ${wizardPlan === "futures_um" ? t("bots_env_live_futures_hint") : t("bots_env_live_spot_hint")} ${t("bots_live_ip_note")}`
-                      : wizardPlan === "futures_um"
-                        ? t("bots_env_demo_futures_hint")
-                        : t("bots_env_demo_spot_hint")
-                  }
-                />
-              </p>
+              <p className="text-sm font-medium">{t("bots_connect_keys")}</p>
               {credFor(wizardBilling) ? (
                 <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/30">
                   <p className="text-sm text-emerald-800 dark:text-emerald-200">
