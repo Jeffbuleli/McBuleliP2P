@@ -582,6 +582,164 @@ html {
   display: block;
   border-radius: 0.5rem;
 }
+.trade-bots-theme .bots-wizard {
+  --wizard-accent: var(--fd-primary);
+  --wizard-accent-dark: var(--fd-primary-dark);
+  --wizard-surface: var(--fd-mint);
+}
+.trade-bots-theme .bots-wizard--grid {
+  --wizard-accent: #6d28d9;
+  --wizard-accent-dark: #5b21b6;
+  --wizard-surface: #f5f3ff;
+}
+.trade-bots-theme .bots-wizard--futures {
+  --wizard-accent: #b45309;
+  --wizard-accent-dark: #92400e;
+  --wizard-surface: #fffbeb;
+}
+.trade-bots-theme .bots-wizard__head {
+  border-bottom: 1px solid var(--fd-border);
+  background: linear-gradient(180deg, var(--wizard-surface) 0%, #fff 100%);
+}
+.trade-bots-theme .bots-wizard__plan-icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  background: #fff;
+  color: var(--wizard-accent);
+  box-shadow: 0 1px 4px rgba(12, 26, 18, 0.08);
+}
+.trade-bots-theme .bots-wizard__progress {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wizard-accent);
+}
+.trade-bots-theme .bots-wizard__title {
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--fd-text);
+}
+.trade-bots-theme .bots-wizard__subtitle {
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bots-wizard__close {
+  background: #fff;
+  color: var(--fd-muted);
+  border: 1px solid var(--fd-border);
+}
+.trade-bots-theme .bots-wizard__dots {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+.trade-bots-theme .bots-wizard__dot {
+  height: 0.35rem;
+  flex: 1;
+  border-radius: 9999px;
+  background: rgba(42, 125, 62, 0.15);
+}
+.trade-bots-theme .bots-wizard__dot--on {
+  background: var(--wizard-accent);
+  opacity: 0.45;
+}
+.trade-bots-theme .bots-wizard__dot--current {
+  opacity: 1;
+}
+.trade-bots-theme .bots-wizard__lead {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--fd-text);
+}
+.trade-bots-theme .bots-wizard__hint {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bots-wizard__warn {
+  font-size: 0.7rem;
+  color: #b45309;
+}
+.trade-bots-theme .bots-wizard__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bots-wizard__env-btn {
+  border-radius: 1rem;
+  border: 2px solid var(--fd-border);
+  background: #fff;
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  color: var(--fd-muted);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.trade-bots-theme .bots-wizard__env-btn--on {
+  border-color: var(--wizard-accent);
+  background: var(--wizard-surface);
+  color: var(--wizard-accent-dark);
+}
+.trade-bots-theme .bots-wizard__env-btn--on-live {
+  border-color: #e11d48;
+  background: #fff1f2;
+  color: #9f1239;
+}
+.trade-bots-theme .bots-wizard__primary {
+  min-height: 3rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, var(--wizard-accent) 0%, var(--wizard-accent-dark) 100%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--wizard-accent) 35%, transparent);
+}
+.trade-bots-theme .bots-wizard__primary:disabled {
+  opacity: 0.45;
+}
+.trade-bots-theme .bots-wizard__ghost {
+  min-height: 2.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fd-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.trade-bots-theme .bots-wizard__checklist li {
+  padding-left: 0.15rem;
+}
+.trade-bots-theme .bots-wizard__ok-box {
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--wizard-accent) 35%, transparent);
+  background: var(--wizard-surface);
+  padding: 0.65rem 0.75rem;
+  color: var(--wizard-accent-dark);
+}
+.trade-bots-theme .bots-wizard__msg-ok {
+  border-radius: 0.75rem;
+  background: var(--wizard-surface);
+  padding: 0.5rem 0.65rem;
+  color: var(--wizard-accent-dark);
+  font-weight: 600;
+}
+.trade-bots-theme .bots-wizard__msg-err {
+  border-radius: 0.75rem;
+  background: #fff1f2;
+  border: 1px solid #fecaca;
+  padding: 0.5rem 0.65rem;
+  color: #9f1239;
+  font-weight: 600;
+}
 .trade-bots-theme .bot-run-controls__btn {
   min-height: 3rem;
 }

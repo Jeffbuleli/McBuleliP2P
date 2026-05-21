@@ -38,6 +38,7 @@ import {
 } from "@/components/trade/bot-strategy-icons";
 import { BotCoordinationRail } from "@/components/trade/bot-coordination-rail";
 import { BotsAiGuideButton } from "@/components/trade/bots-page-chrome";
+import { BotsSetupWizard } from "@/components/trade/bots-setup-wizard";
 import {
   BotFlowBtn,
   BotFlowCard,
@@ -1300,189 +1301,44 @@ export function BotsTradingClient() {
       ) : null}
 
       {wizardPlan ? (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-4 sm:items-center">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            aria-label={t("bots_close_wizard")}
-            onClick={() => {
-              setWizardPlan(null);
-              setWizardStep(1);
-            }}
-          />
-          <section
-            role="dialog"
-            aria-modal="true"
-            className="fd-card relative max-h-[90vh] w-full max-w-lg overflow-y-auto p-4 shadow-xl"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              {t("bots_wizard_progress", { step: String(wizardStep), total: "3" })}
-            </p>
-            <h3 className="mt-1 font-bold text-violet-950 dark:text-violet-100">
-              {t(PLAN_LABEL[wizardPlan] as keyof typeof t)} — {t("bots_wizard_title")}
-            </h3>
-
-          {wizardStep === 1 ? (
-            <div className="mt-4 space-y-3">
-              <p className="text-sm text-stone-700 dark:text-stone-300">
-                {t("bots_choose_billing")}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWizardBilling("demo")}
-                  className={`flex-1 rounded-xl py-2 text-sm font-bold ${
-                    wizardBilling === "demo"
-                      ? "bg-violet-600 text-white"
-                      : "bg-stone-200 dark:bg-stone-800"
-                  }`}
-                >
-                  {t("bots_billing_demo")} ({data.tradeMode?.demoUsdt ?? "0"} USDT)
-                </button>
-                <button
-                  type="button"
-                  disabled={
-                    !data.tradeMode?.tradeLiveEnabled && !data.isSuperAdmin
-                  }
-                  onClick={() => setWizardBilling("live")}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold disabled:opacity-40 ${
-                    wizardBilling === "live"
-                      ? "border-rose-500 bg-rose-600 text-white"
-                      : "border-stone-200 bg-stone-200 dark:border-stone-600 dark:bg-stone-800"
-                  }`}
-                >
-                  <span className="block">{t("bots_billing_live")}</span>
-                  <span className="text-[10px] font-medium opacity-90">
-                    {t("bots_billing_live_sub")}
-                  </span>
-                </button>
-              </div>
-              {wizardBilling === "live" &&
-              !data.tradeMode?.tradeLiveEnabled &&
-              !data.isSuperAdmin ? (
-                <p className="text-xs text-amber-800 dark:text-amber-200">
-                  {t("bots_live_disabled_hint")}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                disabled={
-                  busy ||
-                  (wizardBilling === "live" &&
-                    !data.tradeMode?.tradeLiveEnabled &&
-                    !data.isSuperAdmin)
-                }
-                onClick={() => {
-                  if (data.isSuperAdmin) {
-                    setAccountBilling(wizardBilling);
-                    setWizardStep(3);
-                    return;
-                  }
-                  const sub = activeSub(wizardPlan, wizardBilling);
-                  if (sub && sub.billing === wizardBilling) {
-                    setWizardStep(3);
-                  } else {
-                    setWizardStep(2);
-                  }
-                }}
-                className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
-              >
-                {t("continue")}
-              </button>
-            </div>
-          ) : null}
-
-          {wizardStep === 2 ? (
-            <div className="mt-4 space-y-3">
-              <p className="text-sm font-medium">{t("bots_confirm_subscribe")}</p>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void subscribe(wizardPlan, wizardBilling)}
-                className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
-              >
-                {busy ? "…" : t("bots_confirm_subscribe")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setWizardStep(1)}
-                className="w-full text-sm underline"
-              >
-                {t("back")}
-              </button>
-            </div>
-          ) : null}
-
-          {wizardStep === 3 ? (
-            <div className="mt-4 space-y-4">
-              <p className="text-sm font-medium">{t("bots_connect_keys")}</p>
-              {credFor(wizardBilling) ? (
-                <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/30">
-                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                    {t("bots_keys_connected", {
-                      hint: credFor(wizardBilling)!.apiKeyHint,
-                    })}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                    {formatBotsCredentialValidationLine(
-                      credFor(wizardBilling),
-                      t,
-                    )}
-                  </p>
-                </div>
-              ) : null}
-              <label className="block text-sm font-medium">
-                {t("bots_api_key_label")}
-                <input
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm dark:border-stone-600 dark:bg-stone-900"
-                  autoComplete="off"
-                />
-              </label>
-              <label className="block text-sm font-medium">
-                {t("bots_api_secret_label")}
-                <input
-                  type="password"
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm dark:border-stone-600 dark:bg-stone-900"
-                  autoComplete="off"
-                />
-              </label>
-              {connectMsg ? (
-                <p
-                  className={
-                    connectOk
-                      ? "text-sm text-emerald-700 dark:text-emerald-300"
-                      : "text-sm text-rose-800 dark:text-rose-200"
-                  }
-                >
-                  {connectMsg}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                disabled={busy || apiKey.length < 16 || apiSecret.length < 16}
-                onClick={() => void connectKeys()}
-                className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white disabled:opacity-40"
-              >
-                {busy ? "…" : t("bots_test_and_save")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setWizardPlan(null);
-                  setWizardStep(1);
-                }}
-                className="w-full text-sm underline"
-              >
-                {t("bots_close_wizard")}
-              </button>
-            </div>
-          ) : null}
-          </section>
-        </div>
+        <BotsSetupWizard
+          planId={wizardPlan}
+          step={wizardStep}
+          billing={wizardBilling}
+          demoUsdt={data.tradeMode?.demoUsdt ?? "0"}
+          tradeLiveEnabled={Boolean(data.tradeMode?.tradeLiveEnabled)}
+          isSuperAdmin={Boolean(data.isSuperAdmin)}
+          busy={busy}
+          apiKey={apiKey}
+          apiSecret={apiSecret}
+          connectMsg={connectMsg}
+          connectOk={connectOk}
+          existingCred={credFor(wizardBilling)}
+          onClose={() => {
+            setWizardPlan(null);
+            setWizardStep(1);
+          }}
+          onBillingChange={setWizardBilling}
+          onStepBack={() => setWizardStep(1)}
+          onContinueStep1={() => {
+            if (data.isSuperAdmin) {
+              setAccountBilling(wizardBilling);
+              setWizardStep(3);
+              return;
+            }
+            const sub = activeSub(wizardPlan, wizardBilling);
+            if (sub && sub.billing === wizardBilling) {
+              setWizardStep(3);
+            } else {
+              setWizardStep(2);
+            }
+          }}
+          onSubscribe={() => void subscribe(wizardPlan, wizardBilling)}
+          onApiKeyChange={setApiKey}
+          onApiSecretChange={setApiSecret}
+          onTestAndSave={() => void connectKeys()}
+          t={t}
+        />
       ) : null}
 
       {err ? (
