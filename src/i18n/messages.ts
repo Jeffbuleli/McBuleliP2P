@@ -1306,6 +1306,7 @@ export const en = {
   bots_ai_aria_stale: "AI analysis expired",
   bots_ai_aria_stale_detail: "Last AI signal {age} ago — check Python worker on Render",
   bots_ai_aria_signal: "AI signal {action}, confidence {confidence}%, {age} ago",
+  bots_ai_below_min: "Below entry threshold ({min}%) — no new open",
   bots_coord_running: "On",
   bots_coord_paused: "Pause",
   bots_coord_stopped: "Off",
@@ -3453,6 +3454,7 @@ export const fr: Messages = {
   bots_ai_aria_stale_detail:
     "Dernier signal IA il y a {age} — vérifier le worker Python sur Render",
   bots_ai_aria_signal: "Signal IA {action}, confiance {confidence} %, il y a {age}",
+  bots_ai_below_min: "Sous le seuil d’entrée ({min} %) — pas d’ouverture",
   bots_coord_running: "Actif",
   bots_coord_paused: "Pause",
   bots_coord_stopped: "Arrêt",

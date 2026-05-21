@@ -96,9 +96,15 @@ const ACTION_VIS: Record<string, ActionVisual> = {
   },
   smart_skip: {
     badgeKey: "bots_feed_badge_skip",
-    icon: "◇",
+    icon: "Σ",
     rail: "border-l-sky-500",
     iconBg: "bg-sky-700 text-white",
+  },
+  ai_skip: {
+    badgeKey: "bots_feed_badge_skip",
+    icon: "◈",
+    rail: "border-l-violet-500",
+    iconBg: "bg-violet-700 text-white",
   },
   tick_skip: {
     badgeKey: "bots_feed_badge_cron",
@@ -235,19 +241,38 @@ function ActivityEventLine({
             {formatLogTime(log.createdAt)}
           </time>
         </div>
-        <p
-          className={`mt-1.5 text-sm font-medium leading-snug ${
-            isErr ? "text-rose-700" : "text-[color:var(--fd-text)]"
-          }`}
-        >
-          {title}
-        </p>
-        {row.chips.length > 0 ? (
+        {log.action === "smart_skip" || log.action === "ai_skip" ? (
+          <p className="mt-1.5 font-mono text-base font-bold tabular-nums text-[color:var(--fd-text)]">
+            {title}
+          </p>
+        ) : (
+          <p
+            className={`mt-1.5 text-sm font-medium leading-snug ${
+              isErr ? "text-rose-700" : "text-[color:var(--fd-text)]"
+            }`}
+          >
+            {title}
+          </p>
+        )}
+        {row.chips.length > 0 &&
+        log.action !== "smart_skip" &&
+        log.action !== "ai_skip" ? (
           <div className="mt-2 flex flex-wrap gap-1">
             {row.chips.slice(0, 5).map((c, i) => (
               <span
                 key={`${c.icon}-${i}`}
                 className="rounded-md border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/50 px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--fd-muted)]"
+              >
+                {c.label}
+              </span>
+            ))}
+          </div>
+        ) : log.action === "smart_skip" && row.chips.length > 1 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {row.chips.slice(1, 4).map((c, i) => (
+              <span
+                key={`${c.icon}-${i}`}
+                className="rounded-md border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-1.5 py-0.5 text-[10px] text-[color:var(--fd-muted)]"
               >
                 {c.label}
               </span>

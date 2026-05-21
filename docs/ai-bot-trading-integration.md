@@ -112,6 +112,8 @@ Stored under `platform_settings` key `bots_ai:{instanceId}`.
 
 ### 5. X (Twitter) + LLM analyst
 
+Deploy the worker: [ai-worker-render-setup.md](./ai-worker-render-setup.md).
+
 Python worker (`services/mcbuleli-ai-trading`):
 
 | Step | Env |

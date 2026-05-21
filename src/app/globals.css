@@ -621,6 +621,10 @@ html {
   border: 1px solid currentColor;
   opacity: 0.9;
 }
+.trade-bots-theme .bot-ai-strip__conf--low {
+  border-style: dashed;
+  opacity: 0.75;
+}
 .trade-bots-theme .bot-ai-strip__mono {
   font-size: 0.65rem;
   font-weight: 700;

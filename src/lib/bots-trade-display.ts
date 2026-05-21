@@ -135,6 +135,24 @@ export function buildBotTradeHistoryRow(
       typeof d.reason === "string" ? d.reason : undefined;
     title = botTickSkipLabel(t, reason);
   }
+  if (log.action === "smart_skip") {
+    const score = typeof d.score === "number" ? d.score : null;
+    const min = typeof d.minRequired === "number" ? d.minRequired : null;
+    if (score != null && min != null) {
+      title = `${score}/${min}`;
+      chips.unshift(chip("Σ", "TA"));
+    }
+  }
+  if (log.action === "ai_skip") {
+    const ai = d.ai as { confidence?: number; action?: string } | undefined;
+    const conf =
+      ai && typeof ai.confidence === "number" ? ai.confidence : null;
+    const min = typeof d.minAiRequired === "number" ? d.minAiRequired : null;
+    if (conf != null && min != null) {
+      title = `${conf}/${min}`;
+      chips.unshift(chip("◈", "IA"));
+    }
+  }
   if (isError) {
     const msg =
       typeof d.message === "string"

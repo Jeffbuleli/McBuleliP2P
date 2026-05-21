@@ -584,6 +584,7 @@ export async function tickFuturesUmInstance(args: {
                 : null,
           score: gate.signal?.score,
           confirmScore: confirmSignal?.score,
+          minRequired: cfg.minSignalScore,
           confirmTimeframe: cfg.confirmTimeframe ?? null,
           factors: gate.signal?.reasons,
         },
@@ -609,6 +610,7 @@ export async function tickFuturesUmInstance(args: {
         action: "ai_skip",
         detail: {
           reason: aiGate.reason,
+          minAiRequired: cfg.minAiConfidence,
           ai: aiSignal
             ? {
                 action: aiSignal.action,

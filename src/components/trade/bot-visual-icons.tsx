@@ -236,6 +236,21 @@ export function IconSentimentVolatile(props: IconProps) {
   );
 }
 
+export function IconLock({ size = 14, className = "", ...props }: IconProps) {
+  const p = base({ size, className, ...props });
+  return (
+    <svg {...p}>
+      <rect x="6" y="11" width="12" height="9" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M8 11V8a4 4 0 118 0v3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function IconSpinner({ className = "", ...props }: IconProps) {
   const p = base({
     size: 16,

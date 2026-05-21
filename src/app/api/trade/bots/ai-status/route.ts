@@ -33,14 +33,24 @@ export async function GET(req: Request) {
 
   const reasons = sig?.reasons ?? [];
   const xInsight = extractXAnalystInsight(reasons);
+  const minAi = cfg.minAiConfidence;
+  const conf = sig?.confidence ?? null;
+  const action = sig?.action ?? null;
+  const meetsMinConfidence =
+    typeof conf === "number" &&
+    conf >= minAi &&
+    action !== "HOLD" &&
+    status.fresh;
 
   return NextResponse.json({
     enabled: true,
     fresh: status.fresh,
     ageMs: status.ageMs,
     maxAgeMs: status.maxAgeMs,
-    action: sig?.action ?? null,
-    confidence: sig?.confidence ?? null,
+    minAiConfidence: minAi,
+    meetsMinConfidence,
+    action,
+    confidence: conf,
     riskLevel: sig?.risk_level ?? null,
     receivedAt: sig?.receivedAt ?? null,
     symbol: sig?.symbol ?? null,

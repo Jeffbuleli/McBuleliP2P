@@ -100,7 +100,7 @@ const PRESETS: Record<
     stopLossPct: 5,
     takeProfitPct: 12,
     smartMode: true,
-    minSignalScore: 45,
+    minSignalScore: 38,
     smartExitMode: true,
     minReversalScore: 50,
     minProfitPctForSmartExit: 1,
@@ -116,7 +116,7 @@ const PRESETS: Record<
     maxHoldMinutes: 0,
     reentryCooldownMinutes: 0,
     aiAssistMode: true,
-    minAiConfidence: 45,
+    minAiConfidence: 40,
     aiSignalMaxAgeMs: 180_000,
   },
   position: {

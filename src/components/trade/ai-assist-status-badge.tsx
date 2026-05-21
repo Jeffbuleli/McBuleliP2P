@@ -5,6 +5,7 @@ import type { Messages } from "@/i18n/messages";
 import {
   ActionIcon,
   IconClock,
+  IconLock,
   IconSpinner,
   IconStatusWarn,
   IconXLogo,
@@ -16,6 +17,8 @@ type AiStatusPayload = {
   enabled: boolean;
   fresh?: boolean;
   ageMs?: number | null;
+  minAiConfidence?: number;
+  meetsMinConfidence?: boolean;
   action?: "LONG" | "SHORT" | "HOLD" | null;
   confidence?: number | null;
   receivedAt?: string | null;
@@ -91,6 +94,13 @@ export function AiAssistSignalStrip({
   const fresh = Boolean(status.fresh);
   const ageMs = status.ageMs ?? 0;
   const xKind = status.xInsight ? parseXSentiment(status.xInsight) : null;
+  const minAi = status.minAiConfidence ?? 0;
+  const belowMin =
+    fresh &&
+    action !== "HOLD" &&
+    conf != null &&
+    !status.meetsMinConfidence &&
+    conf < minAi;
 
   if (!fresh) {
     return (
@@ -129,9 +139,24 @@ export function AiAssistSignalStrip({
     >
       <ActionIcon action={action} size={18} />
       {conf != null ? (
-        <span className="bot-ai-strip__conf" aria-hidden>
+        <span
+          className={`bot-ai-strip__conf ${belowMin ? "bot-ai-strip__conf--low" : ""}`}
+          aria-hidden
+        >
           {conf}
         </span>
+      ) : null}
+      {belowMin ? (
+        <>
+          <span className="bot-ai-strip__sep" aria-hidden />
+          <span
+            className="inline-flex shrink-0"
+            role="img"
+            aria-label={t("bots_ai_below_min", { min: minAi })}
+          >
+            <IconLock size={14} className="text-amber-700" />
+          </span>
+        </>
       ) : null}
       <span className="bot-ai-strip__sep" aria-hidden />
       <IconClock size={14} className="opacity-70" />
