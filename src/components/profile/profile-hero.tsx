@@ -72,9 +72,7 @@ export function ProfileHero({
           </span>
         </div>
 
-        <div className="profile-pay-qr mt-4 rounded-2xl border border-[var(--fd-border)] bg-white p-3 shadow-sm">
-          <QRCode value={walletPayUri(dash.id)} size={132} level="M" />
-        </div>
+        <ProfileHeroQr userId={dash.id} />
 
         <div className="mt-3 flex max-w-full items-center gap-1.5 rounded-full border border-[var(--fd-border)] bg-white/70 px-2.5 py-1">
           <span className="truncate font-mono text-[10px] text-[var(--fd-muted)]">
