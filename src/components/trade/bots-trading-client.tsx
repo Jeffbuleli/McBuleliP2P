@@ -115,12 +115,6 @@ type Overview = {
   isSuperAdmin?: boolean;
 };
 
-const PLAN_LABEL: Record<BotPlanId, string> = {
-  dca_spot: "bots_plan_dca",
-  grid_spot: "bots_plan_grid",
-  futures_um: "bots_plan_futures",
-};
-
 function botTabRunState(
   subscribed: boolean,
   inst: { status: "active" | "paused" } | undefined,
