@@ -3,9 +3,18 @@ import type { CexId } from "./networks";
 
 const email = z.string().trim().min(3).max(255).email();
 
-export const registerSchema = z.object({
+export const loginSchema = z.object({
   email: email,
   password: z.string().min(8).max(128),
+});
+
+export const registerSchema = loginSchema.extend({
+  displayName: z
+    .string()
+    .trim()
+    .min(2, "Pseudo too short")
+    .max(32, "Pseudo too long")
+    .regex(/^[\p{L}\p{N}._ -]+$/u, "Invalid characters in pseudo"),
   /** ISO 3166-1 alpha-2, or OTHER if the user is outside the quick list. */
   countryCode: z
     .string()
@@ -15,8 +24,6 @@ export const registerSchema = z.object({
     .optional(),
   referralCode: z.string().trim().min(4).max(16).optional(),
 });
-
-export const loginSchema = registerSchema;
 
 const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
 

@@ -38,6 +38,7 @@ function RegisterForm() {
   const refParam = searchParams.get("ref")?.trim() ?? "";
   const initialReferralCode = refParam ? refParam.toUpperCase() : "";
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [referralCode, setReferralCode] = useState(initialReferralCode);
@@ -64,6 +65,7 @@ function RegisterForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email,
+            displayName: displayName.trim(),
             password,
             ...(countryCode.trim() ? { countryCode: countryCode.trim().toUpperCase() } : {}),
             ...(referralCode.trim()
@@ -128,6 +130,22 @@ function RegisterForm() {
               onChange={(e) => setEmail(e.target.value)}
               className={authInputClass}
               placeholder="you@email.com"
+            />
+          </label>
+
+          <label className={authLabelClass}>
+            {t("register_display_name")}
+            <input
+              type="text"
+              name="displayName"
+              autoComplete="nickname"
+              required
+              minLength={2}
+              maxLength={32}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className={authInputClass}
+              placeholder={t("register_display_name_ph")}
             />
           </label>
 

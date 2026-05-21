@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProfileAvatarEditor } from "@/components/profile/profile-avatar-editor";
 import { ProfileIdCopy } from "@/components/profile/profile-id-copy";
 import { countryLabel } from "@/lib/country-label";
@@ -36,7 +37,21 @@ export function ProfileHero({
           initialAvatarUrl={dash.avatarUrl}
           variant="compact"
         />
-        <h1 className="mt-3 text-xl font-bold tracking-tight text-[#1c1917]">
+        <Link
+          href="/app/profile/settings#pseudo"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--fd-border)] bg-white/90 px-3 py-1.5 text-xs font-bold text-[color:var(--fd-primary)] shadow-sm active:scale-[0.98]"
+        >
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M4 20h4l10.5-10.5a2.12 2.12 0 00-3-3L5 17v3z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {d.profile_edit_pseudo}
+        </Link>
+        <h1 className="mt-2 text-xl font-bold tracking-tight text-[#1c1917]">
           {p2pDisplayName({
             email: dash.email,
             displayName: dash.displayName,

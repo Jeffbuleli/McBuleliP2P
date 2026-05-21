@@ -7,6 +7,7 @@ import { BOT_CLOSED_ACTIONS } from "@/lib/bots-trade-display";
 import { BotActivityFeed } from "@/components/trade/bot-activity-feed";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 import { formatBotRuntimeError, type BotLogRow } from "@/lib/bots-ui-helpers";
+import { BotFuturesPositionCard } from "@/components/trade/bot-futures-position-card";
 import { BotFlowCard, BotFlowCategory } from "@/components/trade/bots-flow-ui";
 
 const POLL_MS = 12_000;
@@ -40,46 +41,7 @@ function OpenRow({
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   if (row.kind === "futures") {
-    const pnlRaw = row.unrealizedPnl;
-    const pnlN = pnlRaw ? Number.parseFloat(pnlRaw.replace(/,/g, "")) : NaN;
-    const pnlPos = Number.isFinite(pnlN) ? pnlN >= 0 : !pnlRaw?.trim().startsWith("-");
-    const otherPair = row.matchesConfig === false;
-    return (
-      <li
-        className={`fd-card p-3 ${otherPair ? "border-rose-300 bg-rose-50/80" : ""}`}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white ${
-              row.side === "LONG" ? "bg-[color:var(--fd-primary)]" : "bg-rose-600"
-            }`}
-          >
-            {row.side === "LONG" ? "L" : "S"}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-[color:var(--fd-text)]">
-              {row.symbol}
-              {otherPair ? (
-                <span className="ml-2 text-[10px] font-semibold uppercase text-rose-700">
-                  {t("bots_futures_other_badge")}
-                </span>
-              ) : null}
-            </p>
-            <p className="mt-1 text-xs tabular-nums text-[color:var(--fd-muted)]">
-              {row.size ? `${t("bots_futures_size")} ${row.size}` : ""}
-              {row.entryPrice ? ` · ${fmtNum(row.entryPrice)}` : ""}
-              {row.markPrice ? ` → ${fmtNum(row.markPrice)}` : ""}
-              {pnlRaw ? (
-                <span className={pnlPos ? " text-[color:var(--fd-primary)]" : " text-rose-700"}>
-                  {" "}
-                  · PnL {fmtNum(pnlRaw)}
-                </span>
-              ) : null}
-            </p>
-          </div>
-        </div>
-      </li>
-    );
+    return <BotFuturesPositionCard row={row} t={t} />;
   }
   if (row.kind === "spot_order") {
     return (

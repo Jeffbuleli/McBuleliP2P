@@ -578,6 +578,87 @@ html {
   color: var(--fd-muted);
   opacity: 0.45;
 }
+.trade-bots-theme .bot-run-controls__btn {
+  min-height: 3rem;
+}
+.trade-bots-theme .bot-fut-pos {
+  list-style: none;
+  border-radius: 1rem;
+  border: 1px solid var(--fd-border);
+  background: #fff;
+  padding: 0.75rem;
+}
+.trade-bots-theme .bot-fut-pos--warn {
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+.trade-bots-theme .bot-fut-pos__head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.trade-bots-theme .bot-fut-pos__side {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: #fff;
+}
+.trade-bots-theme .bot-fut-pos__side--long {
+  background: var(--fd-primary);
+}
+.trade-bots-theme .bot-fut-pos__side--short {
+  background: #e11d48;
+}
+.trade-bots-theme .bot-fut-pos__pnl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.trade-bots-theme .bot-fut-pos__pnl-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.trade-bots-theme .bot-fut-pos__pnl--up {
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-fut-pos__pnl--down {
+  color: #be123c;
+}
+.trade-bots-theme .bot-fut-pos__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+}
+.trade-bots-theme .bot-fut-pos__chip {
+  border-radius: 0.65rem;
+  background: var(--fd-mint);
+  padding: 0.35rem 0.4rem;
+  text-align: center;
+}
+.trade-bots-theme .bot-fut-pos__chip-label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bot-fut-pos__chip-value {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--fd-text);
+}
 .trade-bots-theme .bot-ai-strip {
   display: flex;
   align-items: center;

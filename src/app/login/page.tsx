@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
@@ -253,7 +254,14 @@ export default function LoginPage() {
           onClick={() => void startPiAuth()}
           className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
         >
-          {t("auth_pi_continue")}
+          <span>{t("auth_pi_continue")}</span>
+          <Image
+            src="/assets/crypto/pi.png"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0 rounded-full"
+          />
         </button>
       </div>
     </AuthMarketingShell>

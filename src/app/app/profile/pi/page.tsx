@@ -1,4 +1,3 @@
-import { PiAdsSection } from "@/components/pi/pi-ads";
 import { PiLinkSection } from "@/components/pi/pi-link-section";
 import { ProfileSubpageHeader } from "@/components/profile/profile-subpage-header";
 import { getDictionary } from "@/i18n/messages";
@@ -16,10 +15,7 @@ export default async function ProfilePiPage() {
         title={d.profile_tile_pi}
         subtitle={d.profile_tile_pi_sub}
       />
-      <div className="space-y-4">
-        <PiLinkSection />
-        <PiAdsSection />
-      </div>
+      <PiLinkSection />
     </>
   );
 }

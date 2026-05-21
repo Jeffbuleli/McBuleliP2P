@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const { email, password, referralCode, countryCode } = parsed.data;
+    const { email, password, referralCode, countryCode, displayName } = parsed.data;
     const db = getDb();
 
     let referredByUserId: string | null = null;
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         tradeLiveEnabled: false,
         referredByUserId,
         ...(countryCode ? { countryCode } : {}),
+        displayName: displayName.trim(),
       })
       .returning({
         id: users.id,

@@ -58,9 +58,9 @@ export function BotRunControls({
       : stoppedLabel;
 
   return (
-    <div className="mt-2 space-y-2">
+    <div className="bot-run-controls mt-2 space-y-3">
       <div
-        className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold ${
+        className={`mx-auto flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-bold ${
           active
             ? "border border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
             : status === "paused"
@@ -81,27 +81,29 @@ export function BotRunControls({
         <span className="truncate">{statusText}</span>
       </div>
 
-      {!active ? (
-        <BotFlowBtn
-          variant={btnVariant}
-          disabled={busy}
-          onClick={onStart}
-          className="!flex gap-2"
-        >
-          <PlayIcon />
-          <span>{startLabel}</span>
-        </BotFlowBtn>
-      ) : (
-        <BotFlowBtn
-          variant="danger"
-          disabled={busy}
-          onClick={onPause}
-          className="!flex gap-2"
-        >
-          <PauseIcon />
-          <span>{pauseLabel}</span>
-        </BotFlowBtn>
-      )}
+      <div className="flex justify-center">
+        {!active ? (
+          <BotFlowBtn
+            variant={btnVariant}
+            disabled={busy}
+            onClick={onStart}
+            className="bot-run-controls__btn !flex !w-[min(100%,13rem)] !flex-none gap-2 rounded-full shadow-md"
+          >
+            <PlayIcon />
+            <span>{startLabel}</span>
+          </BotFlowBtn>
+        ) : (
+          <BotFlowBtn
+            variant="danger"
+            disabled={busy}
+            onClick={onPause}
+            className="bot-run-controls__btn !flex !w-[min(100%,13rem)] !flex-none gap-2 rounded-full shadow-md"
+          >
+            <PauseIcon />
+            <span>{pauseLabel}</span>
+          </BotFlowBtn>
+        )}
+      </div>
     </div>
   );
 }

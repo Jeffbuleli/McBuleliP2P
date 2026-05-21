@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
 import { clientErrorText } from "@/lib/client-error-text";
+import { parseWalletPayRecipient } from "@/lib/wallet-pay-uri";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
 import { transferProgressSteps } from "@/lib/transaction-steps";
 import {
@@ -23,12 +25,16 @@ const ASSET_ICON: Partial<Record<WalletAsset, string>> = {
   PI: "/assets/crypto/pi.png",
 };
 
+type RecipientMode = "email" | "qr";
+
 export default function WalletTransferPage() {
   const { t } = useI18n();
   const router = useRouter();
   const sp = useSearchParams();
   const [asset, setAsset] = useState<WalletAsset>("USDT");
+  const [mode, setMode] = useState<RecipientMode>("email");
   const [email, setEmail] = useState("");
+  const [recipientRaw, setRecipientRaw] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -41,16 +47,39 @@ export default function WalletTransferPage() {
     if (a && (TRANSFER_ASSETS as readonly string[]).includes(a)) {
       setAsset(a as (typeof TRANSFER_ASSETS)[number]);
     }
+    const to = sp.get("to");
+    if (to) {
+      const id = parseWalletPayRecipient(to);
+      if (id) {
+        setMode("qr");
+        setRecipientRaw(id);
+      }
+    }
   }, [sp]);
+
+  const parsedRecipientId = parseWalletPayRecipient(recipientRaw);
+  const canSubmit =
+    mode === "email"
+      ? email.trim().includes("@") && amount.trim()
+      : Boolean(parsedRecipientId) && amount.trim();
 
   async function submit() {
     setErr(null);
     setLoading(true);
     try {
+      const body =
+        mode === "email"
+          ? { recipientEmail: email.trim(), asset, amount, memo }
+          : {
+              recipientUserId: parsedRecipientId,
+              asset,
+              amount,
+              memo,
+            };
       const res = await fetch("/api/wallet/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail: email, asset, amount, memo }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -110,18 +139,70 @@ export default function WalletTransferPage() {
       ) : null}
 
       <FlowCard className="mt-3 space-y-3">
-        <label className="block">
-          <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("wallet_transfer_email")}
-          </span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
-            autoComplete="email"
-          />
-        </label>
+        <div className="flex gap-2 rounded-xl bg-stone-100 p-1">
+          <button
+            type="button"
+            onClick={() => setMode("email")}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold ${
+              mode === "email"
+                ? "bg-white text-[color:var(--fd-primary)] shadow-sm"
+                : "text-[color:var(--fd-muted)]"
+            }`}
+          >
+            {t("wallet_transfer_mode_email")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("qr")}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold ${
+              mode === "qr"
+                ? "bg-white text-[color:var(--fd-primary)] shadow-sm"
+                : "text-[color:var(--fd-muted)]"
+            }`}
+          >
+            {t("wallet_transfer_mode_qr")}
+          </button>
+        </div>
+
+        {mode === "email" ? (
+          <label className="block">
+            <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+              {t("wallet_transfer_email")}
+            </span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+              autoComplete="email"
+            />
+          </label>
+        ) : (
+          <>
+            <label className="block">
+              <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+                {t("wallet_transfer_recipient_id")}
+              </span>
+              <input
+                value={recipientRaw}
+                onChange={(e) => setRecipientRaw(e.target.value)}
+                placeholder={t("wallet_transfer_recipient_id_ph")}
+                className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
+                autoComplete="off"
+              />
+            </label>
+            <p className="text-center text-[11px] text-[color:var(--fd-muted)]">
+              {t("wallet_transfer_qr_hint")}{" "}
+              <Link
+                href="/app/profile"
+                className="font-bold text-[color:var(--fd-primary)] underline-offset-2 hover:underline"
+              >
+                {t("profile_pay_qr_title")}
+              </Link>
+            </p>
+          </>
+        )}
+
         <label className="block">
           <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
             {t("wallet_transfer_amount")}
@@ -152,10 +233,7 @@ export default function WalletTransferPage() {
         </p>
       ) : null}
 
-      <FlowPrimaryBtn
-        disabled={loading || !email.trim() || !amount.trim()}
-        onClick={() => void submit()}
-      >
+      <FlowPrimaryBtn disabled={loading || !canSubmit} onClick={() => void submit()}>
         {loading ? "…" : t("wallet_transfer_submit")}
       </FlowPrimaryBtn>
 

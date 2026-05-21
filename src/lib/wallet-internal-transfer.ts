@@ -13,7 +13,8 @@ import {
 
 export async function executeInternalTransfer(args: {
   fromUserId: string;
-  recipientEmail: string;
+  recipientEmail?: string;
+  recipientUserId?: string;
   asset: string;
   amountStr: string;
   memo?: string;
@@ -27,9 +28,13 @@ export async function executeInternalTransfer(args: {
     return { ok: false, message: "wallet_transfer_invalid_amount" };
   }
   const amtStr = fmtWalletAmount(amt);
-  const email = args.recipientEmail.trim().toLowerCase();
+  const email = args.recipientEmail?.trim().toLowerCase() ?? "";
+  const recipientUserId = args.recipientUserId?.trim() ?? "";
   const memo = args.memo?.trim() ? args.memo.trim().slice(0, 180) : null;
-  if (!email.includes("@")) {
+  if (!email && !recipientUserId) {
+    return { ok: false, message: "wallet_transfer_recipient_required" };
+  }
+  if (email && !email.includes("@")) {
     return { ok: false, message: "wallet_transfer_invalid_email" };
   }
 
@@ -37,11 +42,17 @@ export async function executeInternalTransfer(args: {
   try {
     const batchId = randomUUID();
     const out = await db.transaction(async (tx) => {
-      const [recv] = await tx
-        .select({ id: users.id })
-        .from(users)
-        .where(sql`lower(${users.email}) = ${email}`)
-        .limit(1);
+      const [recv] = recipientUserId
+        ? await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, recipientUserId))
+            .limit(1)
+        : await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(sql`lower(${users.email}) = ${email}`)
+            .limit(1);
 
       if (!recv) {
         return { ok: false as const, message: "wallet_transfer_user_not_found" };

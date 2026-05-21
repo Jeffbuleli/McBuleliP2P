@@ -68,9 +68,10 @@ export function ProfilePersonalInfo({
 
       <label className="mt-4 block">
         <span className="text-xs font-semibold text-[color:var(--fd-text)]">{t("profile_display_name")}</span>
-        <input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
+          <input
+            id="pseudo"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
           maxLength={64}
           placeholder={t("profile_display_name")}
           className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-sm"
