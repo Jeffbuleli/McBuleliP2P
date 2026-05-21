@@ -147,18 +147,22 @@ export function BotCoordinationRail({
     }
   }
 
-  let analysisTone: StepState = coordinated ? "ok" : "off";
-  let analysisAria = coordinated
-    ? t("bots_coord_aria_analysis_ok")
-    : t("bots_coord_aria_analysis_off");
+  let analysisTone: StepState = "off";
+  let analysisAria = t("bots_coord_aria_analysis_off");
   if (coordinated && aiAssistMode && instanceId) {
-    if (aiFresh && aiHasSignal) {
+    if (botStatus !== "active") {
+      analysisTone = "off";
+      analysisAria = t("bots_coord_aria_analysis_paused");
+    } else if (aiFresh && aiHasSignal) {
       analysisTone = "ok";
       analysisAria = t("bots_coord_aria_analysis_ok");
-    } else if (botStatus === "active") {
+    } else {
       analysisTone = "warn";
       analysisAria = t("bots_coord_aria_analysis_wait");
     }
+  } else if (coordinated) {
+    analysisTone = "ok";
+    analysisAria = t("bots_coord_aria_analysis_ok");
   }
 
   let botTone: StepState = "off";
@@ -239,7 +243,7 @@ export function BotCoordinationRail({
           </span>
         ))}
       </div>
-      {coordinated && aiAssistMode && instanceId ? (
+      {coordinated && aiAssistMode && instanceId && botStatus === "active" ? (
         <AiAssistSignalStrip instanceId={instanceId} enabled t={t} />
       ) : null}
     </div>

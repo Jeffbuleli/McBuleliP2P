@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
@@ -39,6 +38,7 @@ import {
   type BotTabRunState,
 } from "@/components/trade/bot-strategy-icons";
 import { BotCoordinationRail } from "@/components/trade/bot-coordination-rail";
+import { BotsAiGuideButton } from "@/components/trade/bots-page-chrome";
 import {
   BotFlowBtn,
   BotFlowCard,
@@ -760,10 +760,17 @@ export function BotsTradingClient() {
 
   return (
     <div className="space-y-3 pb-10 pt-2">
-      <header>
-        <h1 className="text-lg font-bold text-[color:var(--fd-text)]">{t("bots_title")}</h1>
+      <header className="space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="min-w-0 flex-1 text-lg font-bold text-[color:var(--fd-text)]">
+            {t("bots_title")}
+          </h1>
+          <div className="relative shrink-0">
+            <BotsAiGuideButton t={t} />
+          </div>
+        </div>
         {!data.keysEncryptionConfigured ? (
-          <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             {t("bots_encryption_missing")}
           </p>
         ) : null}
@@ -1264,40 +1271,6 @@ export function BotsTradingClient() {
             onPause={() => void saveFutures("paused")}
           />
           </BotFlowCategory>
-          <div className="mt-3 flex justify-center gap-4">
-            <Link
-              href="/app/trade/bots/guide"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)]/50"
-              title={t("bots_ai_doc_link")}
-              aria-label={t("bots_ai_doc_link")}
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M4 14l4-6 4 4 4-8 4 10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="18" cy="6" r="2.5" fill="currentColor" />
-              </svg>
-            </Link>
-            <Link
-              href="/app/trade/futures/guide"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)] shadow-sm transition hover:bg-stone-50"
-              title={t("trade_ui_learn_futures")}
-              aria-label={t("trade_ui_learn_futures")}
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M12 3v18M8 8h8M8 16h5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Link>
-          </div>
           <BotStrategyLivePanel
             planId="futures_um"
             billing={accountBilling}
@@ -1528,16 +1501,6 @@ export function BotsTradingClient() {
         </p>
       ) : null}
 
-      {activeTab !== "futures_um" ? (
-        <p className="text-center text-sm">
-          <Link
-            href="/app/trade/futures/guide"
-            className="text-emerald-700 underline dark:text-emerald-300"
-          >
-            {t("trade_ui_learn_futures")}
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

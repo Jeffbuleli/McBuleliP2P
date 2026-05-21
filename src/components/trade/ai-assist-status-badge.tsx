@@ -25,7 +25,11 @@ type AiStatusPayload = {
 function compactAge(ageMs: number): string {
   const sec = Math.max(0, Math.round(ageMs / 1000));
   if (sec < 60) return `${sec}s`;
-  return `${Math.round(sec / 60)}m`;
+  const min = Math.round(sec / 60);
+  if (min < 120) return `${min}m`;
+  const h = Math.round(min / 60);
+  if (h < 48) return `${h}h`;
+  return ">48h";
 }
 
 /** Icon-only AI signal row (futures coordination). */
@@ -94,11 +98,13 @@ export function AiAssistSignalStrip({
         className="bot-ai-strip bot-ai-strip--stale"
         role="status"
         aria-label={t("bots_ai_aria_stale")}
-        title={t("bots_ai_aria_stale")}
+        title={t("bots_ai_aria_stale_detail", { age: compactAge(ageMs) })}
       >
         <IconStatusWarn className="text-amber-600" />
         <IconClock className="opacity-60" />
-        <span className="bot-ai-strip__mono">{compactAge(ageMs)}</span>
+        <span className="bot-ai-strip__mono" aria-hidden>
+          {compactAge(ageMs)}
+        </span>
       </div>
     );
   }

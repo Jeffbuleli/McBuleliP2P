@@ -1,6 +1,7 @@
+import { BotsDisclaimerStrip } from "@/components/trade/bots-page-chrome";
+import { BotsTradingClient } from "@/components/trade/bots-trading-client";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
-import { BotsTradingClient } from "@/components/trade/bots-trading-client";
 
 export default async function TradeBotsPage() {
   const locale = await getLocale();
@@ -8,9 +9,14 @@ export default async function TradeBotsPage() {
   return (
     <>
       <BotsTradingClient />
-      <p className="mt-8 text-xs text-[color:var(--fd-muted)]">
-        {d.bots_disclaimer}
-      </p>
+      <BotsDisclaimerStrip
+        labels={{
+          aria: d.bots_disclaimer_aria,
+          orders: d.bots_disclaimer_orders,
+          custody: d.bots_disclaimer_custody,
+          nfa: d.bots_disclaimer_nfa,
+        }}
+      />
     </>
   );
 }
