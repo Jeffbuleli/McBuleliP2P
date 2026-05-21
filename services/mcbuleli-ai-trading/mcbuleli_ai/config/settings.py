@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     twitter_search_query: str = ""
     twitter_max_posts: int = 25
 
+    # X posts → OpenAI-compatible LLM (structured analyst JSON)
+    x_llm_enabled: bool = False
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-4o-mini"
+    x_llm_blend_weight: float = 0.45
+
     # Signal: |combined_score| must exceed this for LONG/SHORT (else HOLD)
     signal_min_edge: int = 20
 

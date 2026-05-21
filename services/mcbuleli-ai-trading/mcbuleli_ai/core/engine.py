@@ -125,6 +125,8 @@ class TradingEngine:
             "bridge": bridge_out,
             "news_headline_count": len(news.headlines),
             "news_x_enabled": self._settings.twitter_enabled,
+            "news_x_llm": news.sentiment.x_llm_used,
+            "news_x_posts": news.sentiment.x_post_count,
             "analysis": _analysis_summary(
                 signal,
                 regime.regime.value,

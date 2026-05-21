@@ -110,6 +110,17 @@ Stored under `platform_settings` key `bots_ai:{instanceId}`.
 
 `GET /api/trade/bots/ai-status?instanceId=` — polled by the coordination rail on the bots page.
 
+### 5. X (Twitter) + LLM analyst
+
+Python worker (`services/mcbuleli-ai-trading`):
+
+| Step | Env |
+|------|-----|
+| Fetch posts | `TWITTER_ENABLED=1`, `TWITTER_BEARER_TOKEN` |
+| Structured analysis | `X_LLM_ENABLED=1`, `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
+
+The system prompt lives in `mcbuleli_ai/data_layer/x_analyst_prompt.py` (coins, sentiment, signals, confidence, recommended_action, reasoning). Output is blended into `sentiment_score` before TA combination. Audit logs include `news_x_llm` and `news_x_posts`.
+
 ## Presets (Day / Swing)
 
 Presets live in `src/lib/bot-futures-trader-profiles.ts` and are applied via `src/lib/bot-coordinated-config.ts`:

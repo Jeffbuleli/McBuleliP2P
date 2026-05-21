@@ -22,6 +22,17 @@ export type StoredAiSignal = {
 const KEY_PREFIX = "bots_ai:";
 const DEFAULT_MAX_AGE_MS = 120_000;
 
+const X_ANALYST_REASON_PREFIX = "X analyst:";
+
+/** Parses worker reason line from X LLM analyst (e.g. "bullish · long bias · conf 72"). */
+export function extractXAnalystInsight(reasons: string[] | undefined): string | null {
+  if (!reasons?.length) return null;
+  const line = reasons.find((r) => r.trimStart().startsWith(X_ANALYST_REASON_PREFIX));
+  if (!line) return null;
+  const insight = line.replace(new RegExp(`^\\s*${X_ANALYST_REASON_PREFIX}\\s*`, "i"), "").trim();
+  return insight.length > 0 ? insight : null;
+}
+
 function settingKey(instanceId: string): string {
   return `${KEY_PREFIX}${instanceId}`;
 }

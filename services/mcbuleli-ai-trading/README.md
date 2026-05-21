@@ -80,6 +80,24 @@ TWITTER_BEARER_TOKEN=your_bearer_token
 
 Uses API v2 `search/recent` (public posts). API Key / Secret are stored for future OAuth; **Bearer is required** for read.
 
+### X → LLM analyst (structured signals)
+
+When `X_LLM_ENABLED=1` and `OPENAI_API_KEY` is set, posts from X are analyzed with the **crypto market analyst** system prompt (`mcbuleli_ai/data_layer/x_analyst_prompt.py`). The model returns JSON:
+
+`coins`, `sentiment`, `signals`, `confidence`, `recommended_action`, `reasoning`
+
+That output is blended with VADER/RSS sentiment (`X_LLM_BLEND_WEIGHT`, default `0.45`) and appears in signal `reasons` (e.g. `X analyst: bullish · long bias · conf 72`).
+
+Works with any OpenAI-compatible endpoint (`OPENAI_BASE_URL`).
+
+```env
+TWITTER_ENABLED=1
+TWITTER_BEARER_TOKEN=...
+X_LLM_ENABLED=1
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
 ## Understanding HOLD + REJECTED
 
 Normal output when the edge is not strong enough:

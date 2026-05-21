@@ -2,29 +2,86 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Messages } from "@/i18n/messages";
-import { BotFlowCategory } from "@/components/trade/bots-flow-ui";
+import { AiAssistSignalStrip } from "@/components/trade/ai-assist-status-badge";
+import {
+  IconAnalysis,
+  IconBot,
+  IconChevronRight,
+  IconCron,
+  IconPause,
+  IconPlay,
+  IconStatusOff,
+  IconStatusOk,
+  IconStatusWarn,
+} from "@/components/trade/bot-visual-icons";
 import type { CronHealthSnapshot } from "@/components/trade/bots-cron-health-bar";
 
 type StepState = "ok" | "warn" | "off";
 
+type StepIcon = typeof IconCron;
+
+function stepStatusIcon(state: StepState, botRunning?: boolean, botPaused?: boolean) {
+  if (botRunning) {
+    return (
+      <span className="bot-coord-tile__status bot-coord-tile__status--ok" aria-hidden>
+        <IconPlay size={14} />
+      </span>
+    );
+  }
+  if (botPaused) {
+    return (
+      <span className="bot-coord-tile__status bot-coord-tile__status--warn" aria-hidden>
+        <IconPause size={14} />
+      </span>
+    );
+  }
+  if (state === "ok") {
+    return (
+      <span className="bot-coord-tile__status bot-coord-tile__status--ok" aria-hidden>
+        <IconStatusOk />
+      </span>
+    );
+  }
+  if (state === "warn") {
+    return (
+      <span className="bot-coord-tile__status bot-coord-tile__status--warn" aria-hidden>
+        <IconStatusWarn />
+      </span>
+    );
+  }
+  return (
+    <span className="bot-coord-tile__status bot-coord-tile__status--off" aria-hidden>
+      <IconStatusOff />
+    </span>
+  );
+}
+
 function CoordTile({
-  label,
-  stateLabel,
+  ariaLabel,
   tone,
-  glyph,
+  Icon,
+  state,
+  botRunning,
+  botPaused,
 }: {
-  label: string;
-  stateLabel: string;
+  ariaLabel: string;
   tone: StepState;
-  glyph: string;
+  Icon: StepIcon;
+  state: StepState;
+  botRunning?: boolean;
+  botPaused?: boolean;
 }) {
   return (
-    <div className={`bot-coord-tile bot-coord-tile--${tone}`}>
-      <span className="bot-coord-tile__icon" aria-hidden>
-        {glyph}
-      </span>
-      <span className="bot-coord-tile__label">{label}</span>
-      <span className="bot-coord-tile__state">{stateLabel}</span>
+    <div
+      className={`bot-coord-tile bot-coord-tile--${tone}`}
+      title={ariaLabel}
+      role="img"
+      aria-label={ariaLabel}
+    >
+      <div className="bot-coord-tile__icon-wrap">
+        <Icon size={22} className="bot-coord-tile__glyph" />
+        {stepStatusIcon(state, botRunning, botPaused)}
+      </div>
     </div>
   );
 }
@@ -38,7 +95,6 @@ export function BotCoordinationRail({
   t,
 }: {
   cronHealth?: CronHealthSnapshot | null;
-  /** When true, TA + AI are shown as one “Analysis” step (default product UX). */
   coordinated?: boolean;
   aiAssistMode?: boolean;
   botStatus: "active" | "paused" | "none";
@@ -80,109 +136,112 @@ export function BotCoordinationRail({
   }, [aiAssistMode, instanceId, loadAi]);
 
   let cronTone: StepState = "off";
-  let cronLabel = t("bots_coord_off");
+  let cronAria = t("bots_coord_aria_cron_off");
   if (cronHealth?.configured) {
     if (!cronHealth.lastRunAt || cronHealth.stale) {
       cronTone = "warn";
-      cronLabel = t("bots_coord_warn");
+      cronAria = t("bots_coord_aria_cron_wait");
     } else {
       cronTone = "ok";
-      cronLabel = t("bots_coord_ok");
+      cronAria = t("bots_coord_aria_cron_ok");
     }
   }
 
   let analysisTone: StepState = coordinated ? "ok" : "off";
-  let analysisLabel = coordinated ? t("bots_coord_ok") : t("bots_coord_off");
+  let analysisAria = coordinated
+    ? t("bots_coord_aria_analysis_ok")
+    : t("bots_coord_aria_analysis_off");
   if (coordinated && aiAssistMode && instanceId) {
     if (aiFresh && aiHasSignal) {
       analysisTone = "ok";
-      analysisLabel = t("bots_coord_ok");
+      analysisAria = t("bots_coord_aria_analysis_ok");
     } else if (botStatus === "active") {
       analysisTone = "warn";
-      analysisLabel = t("bots_coord_warn");
+      analysisAria = t("bots_coord_aria_analysis_wait");
     }
   }
 
   let botTone: StepState = "off";
-  let botLabel = t("bots_coord_stopped");
-  if (botStatus === "active") {
+  let botAria = t("bots_coord_aria_bot_off");
+  const botRunning = botStatus === "active";
+  const botPaused = botStatus === "paused";
+  if (botRunning) {
     botTone = "ok";
-    botLabel = t("bots_coord_running");
-  } else if (botStatus === "paused") {
+    botAria = t("bots_coord_aria_bot_on");
+  } else if (botPaused) {
     botTone = "warn";
-    botLabel = t("bots_coord_paused");
+    botAria = t("bots_coord_aria_bot_pause");
   }
 
   const steps = coordinated
     ? [
         {
           key: "cron",
-          label: t("bots_coord_cron"),
-          state: cronLabel,
+          aria: cronAria,
           tone: cronTone,
-          glyph: "⏱",
+          Icon: IconCron,
+          state: cronTone,
         },
         {
           key: "analysis",
-          label: t("bots_coord_analysis"),
-          state: analysisLabel,
+          aria: analysisAria,
           tone: analysisTone,
-          glyph: "✦",
+          Icon: IconAnalysis,
+          state: analysisTone,
         },
         {
           key: "bot",
-          label: t("bots_coord_bot"),
-          state: botLabel,
+          aria: botAria,
           tone: botTone,
-          glyph: "⚡",
+          Icon: IconBot,
+          state: botTone,
+          botRunning,
+          botPaused,
         },
       ]
     : [
         {
           key: "cron",
-          label: t("bots_coord_cron"),
-          state: cronLabel,
+          aria: cronAria,
           tone: cronTone,
-          glyph: "⏱",
+          Icon: IconCron,
+          state: cronTone,
         },
         {
           key: "bot",
-          label: t("bots_coord_bot"),
-          state: botLabel,
+          aria: botAria,
           tone: botTone,
-          glyph: "⚡",
+          Icon: IconBot,
+          state: botTone,
+          botRunning,
+          botPaused,
         },
       ];
 
   return (
-    <BotFlowCategory
-      title={t("bots_coord_title")}
-      icon={
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M4 12h4l2-5 4 10 2-5h4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      }
-      className="mt-3"
-    >
+    <div className="bot-coord-rail">
       <div className="flex items-center gap-1">
         {steps.map((step, i) => (
           <span key={step.key} className="flex min-w-0 flex-1 items-center gap-1">
-            {i > 0 ? <span className="bot-coord-arrow" aria-hidden>→</span> : null}
+            {i > 0 ? (
+              <span className="bot-coord-arrow" aria-hidden>
+                <IconChevronRight />
+              </span>
+            ) : null}
             <CoordTile
-              label={step.label}
-              stateLabel={step.state}
+              ariaLabel={step.aria}
               tone={step.tone}
-              glyph={step.glyph}
+              Icon={step.Icon}
+              state={step.state}
+              botRunning={step.botRunning}
+              botPaused={step.botPaused}
             />
           </span>
         ))}
       </div>
-    </BotFlowCategory>
+      {coordinated && aiAssistMode && instanceId ? (
+        <AiAssistSignalStrip instanceId={instanceId} enabled t={t} />
+      ) : null}
+    </div>
   );
 }

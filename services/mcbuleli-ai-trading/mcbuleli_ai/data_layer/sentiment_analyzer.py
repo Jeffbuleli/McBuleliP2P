@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 try:
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -61,6 +61,11 @@ class SentimentResult:
     volatility_flag: bool
     rumor_flag: bool
     top_themes: List[str]
+    x_post_count: int = 0
+    x_llm_used: bool = False
+    x_sentiment: Optional[str] = None
+    x_recommended_action: Optional[str] = None
+    x_confidence: Optional[float] = None
 
 
 class SentimentAnalyzer:

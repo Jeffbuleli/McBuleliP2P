@@ -507,58 +507,130 @@ html {
 .trade-bots-theme .bot-strategy-tile__dot--paused {
   background: #f59e0b;
 }
+.trade-bots-theme .bot-coord-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 .trade-bots-theme .bot-coord-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
   border-radius: 0.875rem;
   border: 1px solid var(--fd-border);
   background: #fff;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem;
   min-width: 0;
   flex: 1;
+  min-height: 3.25rem;
 }
-.trade-bots-theme .bot-coord-tile__icon {
+.trade-bots-theme .bot-coord-tile__icon-wrap {
+  position: relative;
   display: flex;
-  height: 2rem;
-  width: 2rem;
   align-items: center;
   justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
   border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 800;
 }
-.trade-bots-theme .bot-coord-tile__label {
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--fd-muted);
+.trade-bots-theme .bot-coord-tile__glyph {
+  display: block;
 }
-.trade-bots-theme .bot-coord-tile__state {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: var(--fd-text);
+.trade-bots-theme .bot-coord-tile__status {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.1rem;
+  width: 1.1rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--fd-border);
 }
-.trade-bots-theme .bot-coord-tile--ok .bot-coord-tile__icon {
+.trade-bots-theme .bot-coord-tile__status--ok {
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-coord-tile__status--warn {
+  color: #b45309;
+}
+.trade-bots-theme .bot-coord-tile__status--off {
+  color: #a8a29e;
+}
+.trade-bots-theme .bot-coord-tile--ok .bot-coord-tile__icon-wrap {
   background: #dcfce7;
   color: var(--fd-primary);
 }
-.trade-bots-theme .bot-coord-tile--warn .bot-coord-tile__icon {
+.trade-bots-theme .bot-coord-tile--warn .bot-coord-tile__icon-wrap {
   background: #fef3c7;
   color: #b45309;
 }
-.trade-bots-theme .bot-coord-tile--off .bot-coord-tile__icon {
+.trade-bots-theme .bot-coord-tile--off .bot-coord-tile__icon-wrap {
   background: #f5f5f4;
   color: #a8a29e;
 }
 .trade-bots-theme .bot-coord-arrow {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
   color: var(--fd-muted);
-  font-size: 0.75rem;
+  opacity: 0.45;
+}
+.trade-bots-theme .bot-ai-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--fd-border);
+  background: #fff;
+  padding: 0.35rem 0.6rem;
+  min-height: 2rem;
+}
+.trade-bots-theme .bot-ai-strip--long {
+  border-color: rgba(48, 95, 51, 0.25);
+  background: #f0fdf4;
+  color: var(--fd-primary);
+}
+.trade-bots-theme .bot-ai-strip--short {
+  border-color: rgba(225, 29, 72, 0.2);
+  background: #fff1f2;
+  color: #be123c;
+}
+.trade-bots-theme .bot-ai-strip--hold {
+  color: var(--fd-muted);
+}
+.trade-bots-theme .bot-ai-strip--wait,
+.trade-bots-theme .bot-ai-strip--stale {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.trade-bots-theme .bot-ai-strip__conf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid currentColor;
+  opacity: 0.9;
+}
+.trade-bots-theme .bot-ai-strip__mono {
+  font-size: 0.65rem;
   font-weight: 700;
-  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+.trade-bots-theme .bot-ai-strip__sep {
+  width: 1px;
+  height: 0.9rem;
+  background: currentColor;
+  opacity: 0.2;
 }
 .home-theme .wallet-hero,
 .wallet-theme .wallet-hero {

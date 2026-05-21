@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAiSignalStatus } from "@/lib/bot-ai-signal";
+import { extractXAnalystInsight, getAiSignalStatus } from "@/lib/bot-ai-signal";
 import { getUserBotInstanceById } from "@/lib/bot-instance-service";
 import { parseBotFuturesConfig } from "@/lib/bot-futures-config";
 import { getSessionUserId } from "@/lib/session";
@@ -31,6 +31,9 @@ export async function GET(req: Request) {
   const status = await getAiSignalStatus(instanceId, maxAgeMs);
   const sig = status.signal;
 
+  const reasons = sig?.reasons ?? [];
+  const xInsight = extractXAnalystInsight(reasons);
+
   return NextResponse.json({
     enabled: true,
     fresh: status.fresh,
@@ -41,5 +44,8 @@ export async function GET(req: Request) {
     riskLevel: sig?.risk_level ?? null,
     receivedAt: sig?.receivedAt ?? null,
     symbol: sig?.symbol ?? null,
+    sentimentScore: sig?.sentiment_score ?? null,
+    xInsight,
+    reasons: reasons.slice(0, 6),
   });
 }

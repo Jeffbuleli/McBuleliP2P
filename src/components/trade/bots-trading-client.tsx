@@ -163,14 +163,6 @@ function billingEnvLabel(
   return billing === "demo" ? t("bots_billing_demo") : t("bots_billing_live");
 }
 
-function BotCoordinationHint({ t }: { t: (k: keyof Messages) => string }) {
-  return (
-    <p className="rounded-xl border border-[color:var(--fd-border)]/80 bg-[color:var(--fd-mint)]/40 px-3 py-2.5 text-xs leading-relaxed text-[color:var(--fd-muted)]">
-      {t("bots_coord_hint")}
-    </p>
-  );
-}
-
 function applyCoordinatedStyleDefaults(
   style: BotCoordinatedStyleId,
   setters: {
@@ -951,7 +943,6 @@ export function BotsTradingClient() {
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
-            <BotCoordinationHint t={t} />
             <BotCoordinationRail
               cronHealth={data.cronHealth}
               botStatus={dcaInst?.status ?? "none"}
@@ -1058,7 +1049,6 @@ export function BotsTradingClient() {
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
-            <BotCoordinationHint t={t} />
             <BotCoordinationRail
               cronHealth={data.cronHealth}
               botStatus={gridInst?.status ?? "none"}
@@ -1234,7 +1224,6 @@ export function BotsTradingClient() {
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
-            <BotCoordinationHint t={t} />
             <BotCoordinationRail
               cronHealth={data.cronHealth}
               botStatus={futInst?.status ?? "none"}
@@ -1275,20 +1264,40 @@ export function BotsTradingClient() {
             onPause={() => void saveFutures("paused")}
           />
           </BotFlowCategory>
-          <p className="mt-3 flex flex-wrap justify-center gap-3 text-center">
+          <div className="mt-3 flex justify-center gap-4">
             <Link
               href="/app/trade/bots/guide"
-              className="text-xs font-medium text-[color:var(--fd-primary)] underline underline-offset-2"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)]/50"
+              title={t("bots_ai_doc_link")}
+              aria-label={t("bots_ai_doc_link")}
             >
-              {t("bots_ai_doc_link")}
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 14l4-6 4 4 4-8 4 10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="18" cy="6" r="2.5" fill="currentColor" />
+              </svg>
             </Link>
             <Link
               href="/app/trade/futures/guide"
-              className="text-xs font-medium text-[color:var(--fd-muted)] underline underline-offset-2"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)] shadow-sm transition hover:bg-stone-50"
+              title={t("trade_ui_learn_futures")}
+              aria-label={t("trade_ui_learn_futures")}
             >
-              {t("trade_ui_learn_futures")}
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M12 3v18M8 8h8M8 16h5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </Link>
-          </p>
+          </div>
           <BotStrategyLivePanel
             planId="futures_um"
             billing={accountBilling}

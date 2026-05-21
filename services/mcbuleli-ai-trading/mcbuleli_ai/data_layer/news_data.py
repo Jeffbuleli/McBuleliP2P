@@ -9,7 +9,9 @@ import feedparser
 
 from mcbuleli_ai.config.settings import Settings
 from mcbuleli_ai.data_layer.sentiment_analyzer import SentimentAnalyzer, SentimentResult
+from mcbuleli_ai.data_layer.x_llm_analyzer import XLLMAnalyzer
 from mcbuleli_ai.data_layer.x_twitter import XTwitterClient
+from mcbuleli_ai.utils.symbols import normalize_binance_symbol
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +34,16 @@ class NewsDataService:
         self._analyzer = SentimentAnalyzer()
 
     def fetch_all(self) -> NewsBundle:
-        """RSS + optional X/Twitter recent search."""
+        """RSS + optional X/Twitter recent search (+ optional LLM analyst)."""
         headlines: List[str] = []
         sources: List[str] = []
+        x_posts: List[str] = []
         max_n = self._settings.news_max_headlines
 
         if self._settings.twitter_enabled:
             x_client = XTwitterClient(self._settings)
             x_texts, x_sources = x_client.fetch_posts()
+            x_posts = list(x_texts)
             for t, s in zip(x_texts, x_sources):
                 headlines.append(t)
                 sources.append(s)
@@ -62,7 +66,68 @@ class NewsDataService:
 
         headlines = headlines[:max_n]
         sentiment = self._analyzer.analyze_headlines(headlines)
+        sentiment = self._maybe_blend_x_llm(sentiment, x_posts)
         return NewsBundle(headlines=headlines, sources=sources, sentiment=sentiment)
+
+    def _maybe_blend_x_llm(
+        self, base: SentimentResult, x_posts: List[str]
+    ) -> SentimentResult:
+        if not x_posts:
+            return base
+
+        llm = XLLMAnalyzer(self._settings)
+        if not llm.is_configured():
+            return SentimentResult(
+                score=base.score,
+                compound=base.compound,
+                headline_count=base.headline_count,
+                volatility_flag=base.volatility_flag,
+                rumor_flag=base.rumor_flag,
+                top_themes=base.top_themes,
+                x_post_count=len(x_posts),
+            )
+
+        symbol = normalize_binance_symbol(self._settings.symbol)
+        analysis = llm.analyze_posts(x_posts, symbol=symbol)
+        if not analysis:
+            return SentimentResult(
+                score=base.score,
+                compound=base.compound,
+                headline_count=base.headline_count,
+                volatility_flag=base.volatility_flag,
+                rumor_flag=base.rumor_flag,
+                top_themes=base.top_themes,
+                x_post_count=len(x_posts),
+            )
+
+        w = max(0.0, min(1.0, self._settings.x_llm_blend_weight))
+        llm_score = analysis.sentiment_score()
+        blended = (1.0 - w) * base.score + w * llm_score
+        volatile = base.volatility_flag or analysis.sentiment == "volatile"
+        avoid = "avoid" in analysis.recommended_action.lower()
+        if avoid:
+            blended *= 0.65
+            volatile = True
+
+        themes = list(base.top_themes)
+        for sig in analysis.signals[:4]:
+            themes.append(f"x:{sig[:48]}")
+        if analysis.coins:
+            themes.append("x:coins=" + ",".join(analysis.coins[:5]))
+
+        return SentimentResult(
+            score=max(-1.0, min(1.0, blended)),
+            compound=blended,
+            headline_count=base.headline_count,
+            volatility_flag=volatile,
+            rumor_flag=base.rumor_flag,
+            top_themes=list(dict.fromkeys(themes))[:10],
+            x_post_count=len(x_posts),
+            x_llm_used=True,
+            x_sentiment=analysis.sentiment,
+            x_recommended_action=analysis.recommended_action,
+            x_confidence=analysis.confidence,
+        )
 
     def fetch_rss_headlines(self) -> NewsBundle:
         return self.fetch_all()

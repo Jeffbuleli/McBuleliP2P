@@ -145,6 +145,15 @@ def apply_sentiment_adjustment(
     if news.sentiment.top_themes:
         reasons.append("Themes: " + ", ".join(news.sentiment.top_themes[:3]))
 
+    s = news.sentiment
+    if s.x_llm_used and s.x_sentiment:
+        parts = [f"X analyst: {s.x_sentiment}"]
+        if s.x_recommended_action:
+            parts.append(s.x_recommended_action)
+        if s.x_confidence is not None:
+            parts.append(f"conf {int(s.x_confidence)}")
+        reasons.append(" · ".join(parts))
+
     return _clamp(adj, -100, 100), reasons
 
 
