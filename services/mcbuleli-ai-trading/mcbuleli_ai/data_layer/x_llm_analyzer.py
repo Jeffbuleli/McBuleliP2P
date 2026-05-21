@@ -11,20 +11,30 @@ from pydantic import BaseModel, Field, field_validator
 
 from mcbuleli_ai.config.settings import Settings
 from mcbuleli_ai.data_layer.x_analyst_prompt import (
+    XPositionContext,
     X_ANALYST_SYSTEM_PROMPT,
     build_x_analyst_user_message,
 )
 
 logger = logging.getLogger(__name__)
 
+POSITION_ACTIONS = frozenset(
+    {"close_now", "close_and_reverse", "monitor", "no_action"}
+)
+
 
 class XAnalystJson(BaseModel):
     coins: List[str] = Field(default_factory=list)
     sentiment: str = "neutral"
-    signals: List[str] = Field(default_factory=list)
     confidence: float = 0.0
-    recommended_action: str = "monitor"
-    reasoning: str = ""
+    signals: List[str] = Field(default_factory=list)
+    position_action: str = "no_action"
+    reason: str = ""
+    recommended_direction: str = "none"
+    new_direction: Optional[str] = None
+    action: Optional[str] = None
+    recommended_action: Optional[str] = None
+    reasoning: Optional[str] = None
 
     @field_validator("sentiment")
     @classmethod
@@ -32,7 +42,7 @@ class XAnalystJson(BaseModel):
         s = (v or "neutral").strip().lower()
         if s in ("bullish", "bearish", "neutral", "volatile"):
             return s
-        if "volat" in s or "high-vol" in s:
+        if "volat" in s:
             return "volatile"
         if "bull" in s:
             return "bullish"
@@ -49,6 +59,32 @@ class XAnalystJson(BaseModel):
             return 0.0
         return max(0.0, min(100.0, n))
 
+    def resolved_position_action(self) -> str:
+        raw = (
+            (self.action or "")
+            or self.position_action
+            or (self.recommended_action or "")
+            or "no_action"
+        ).strip().lower()
+        if raw in POSITION_ACTIONS:
+            return raw
+        if "close_and_reverse" in raw or "reverse" in raw:
+            return "close_and_reverse"
+        if "close" in raw:
+            return "close_now"
+        if raw in ("monitor", "hold", "wait"):
+            return "monitor"
+        return "no_action"
+
+    def resolved_reason(self) -> str:
+        return (self.reason or self.reasoning or "").strip()[:500]
+
+    def resolved_new_direction(self) -> Optional[str]:
+        d = (self.new_direction or self.recommended_direction or "").strip().lower()
+        if d in ("long", "short"):
+            return d.upper()
+        return None
+
 
 @dataclass
 class XAnalystResult:
@@ -56,26 +92,47 @@ class XAnalystResult:
     sentiment: str
     signals: List[str]
     confidence: float
-    recommended_action: str
-    reasoning: str
+    position_action: str
+    reason: str
+    recommended_direction: Optional[str]
+    new_direction: Optional[str]
 
     def sentiment_score(self) -> float:
-        """Map analyst labels to -1..1 for blending with VADER."""
         base = {
             "bullish": 0.38,
             "bearish": -0.38,
             "neutral": 0.0,
             "volatile": -0.12,
         }.get(self.sentiment, 0.0)
-        action = self.recommended_action.lower()
-        if "long" in action:
-            base += 0.08
-        elif "short" in action:
-            base -= 0.08
-        elif "avoid" in action:
-            base *= 0.5
+        if self.position_action == "close_and_reverse":
+            base *= 1.15
+        elif self.position_action == "close_now":
+            base *= 1.05
         weight = self.confidence / 100.0
         return max(-1.0, min(1.0, base * (0.35 + 0.65 * weight)))
+
+    def entry_action_hint(self) -> Optional[str]:
+        """LONG | SHORT | None — bias for combined TA signal."""
+        if self.position_action == "close_and_reverse" and self.new_direction:
+            return self.new_direction
+        d = (self.recommended_direction or "").lower()
+        if d == "long":
+            return "LONG"
+        if d == "short":
+            return "SHORT"
+        if self.sentiment == "bullish" and self.confidence >= 60:
+            return "LONG"
+        if self.sentiment == "bearish" and self.confidence >= 60:
+            return "SHORT"
+        return None
+
+    def opposes_side(self, side: str) -> bool:
+        s = side.upper()
+        if s == "LONG" and self.sentiment in ("bearish", "volatile"):
+            return self.confidence >= 75
+        if s == "SHORT" and self.sentiment == "bullish":
+            return self.confidence >= 75
+        return False
 
 
 def _extract_json_object(raw: str) -> Optional[dict]:
@@ -100,8 +157,6 @@ def _extract_json_object(raw: str) -> Optional[dict]:
 
 
 class XLLMAnalyzer:
-    """Optional OpenAI-compatible LLM pass over X posts (structured JSON)."""
-
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
 
@@ -116,6 +171,7 @@ class XLLMAnalyzer:
         posts: List[str],
         *,
         symbol: str,
+        position: Optional[XPositionContext] = None,
     ) -> Optional[XAnalystResult]:
         if not self.is_configured() or not posts:
             return None
@@ -125,6 +181,7 @@ class XLLMAnalyzer:
             symbol=symbol,
             timeframe=self._settings.timeframe,
             confirm_timeframe=self._settings.confirm_timeframe,
+            position=position,
         )
         base = self._settings.openai_base_url.rstrip("/")
         url = f"{base}/chat/completions"
@@ -134,7 +191,7 @@ class XLLMAnalyzer:
         }
         payload = {
             "model": self._settings.openai_model,
-            "temperature": 0.2,
+            "temperature": 0.15,
             "messages": [
                 {"role": "system", "content": X_ANALYST_SYSTEM_PROMPT},
                 {"role": "user", "content": user_msg},
@@ -146,7 +203,11 @@ class XLLMAnalyzer:
             with httpx.Client(timeout=45.0) as client:
                 res = client.post(url, headers=headers, json=payload)
                 if res.status_code >= 400:
-                    logger.warning("x_llm_http_error status=%s body=%s", res.status_code, res.text[:200])
+                    logger.warning(
+                        "x_llm_http_error status=%s body=%s",
+                        res.status_code,
+                        res.text[:200],
+                    )
                     return None
                 data = res.json()
         except Exception as e:
@@ -170,14 +231,19 @@ class XLLMAnalyzer:
             logger.warning("x_llm_validation_failed: %s", e)
             return None
 
-        coins = [c.strip().upper() for c in model.coins if str(c).strip()][:12]
-        signals = [s.strip() for s in model.signals if str(s).strip()][:8]
+        pos_action = model.resolved_position_action()
+        new_dir = model.resolved_new_direction()
+        rec = (model.recommended_direction or "none").strip().lower()
+        if rec not in ("long", "short", "none"):
+            rec = "none"
 
         return XAnalystResult(
-            coins=coins,
+            coins=[c.strip().upper() for c in model.coins if str(c).strip()][:12],
             sentiment=model.sentiment,
-            signals=signals,
+            signals=[s.strip() for s in model.signals if str(s).strip()][:8],
             confidence=model.confidence,
-            recommended_action=model.recommended_action.strip() or "monitor",
-            reasoning=(model.reasoning or "").strip()[:500],
+            position_action=pos_action,
+            reason=model.resolved_reason(),
+            recommended_direction=rec if rec != "none" else None,
+            new_direction=new_dir,
         )

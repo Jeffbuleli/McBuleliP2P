@@ -47,9 +47,13 @@ class TradingSignal:
     sentiment_score: float  # -1..1
     reasons: List[str]
     ts: str
+    x_position_action: Optional[str] = None
+    x_new_direction: Optional[str] = None
+    x_sentiment: Optional[str] = None
+    x_reason: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        out: Dict[str, Any] = {
             "version": self.version,
             "symbol": self.symbol,
             "action": self.action.value,
@@ -63,6 +67,15 @@ class TradingSignal:
             "reasons": self.reasons,
             "ts": self.ts,
         }
+        if self.x_position_action:
+            out["x_position_action"] = self.x_position_action
+        if self.x_new_direction:
+            out["x_new_direction"] = self.x_new_direction
+        if self.x_sentiment:
+            out["x_sentiment"] = self.x_sentiment
+        if self.x_reason:
+            out["x_reason"] = self.x_reason
+        return out
 
 
 @dataclass

@@ -147,12 +147,27 @@ def apply_sentiment_adjustment(
 
     s = news.sentiment
     if s.x_llm_used and s.x_sentiment:
-        parts = [f"X analyst: {s.x_sentiment}"]
-        if s.x_recommended_action:
-            parts.append(s.x_recommended_action)
+        parts = [f"X: {s.x_sentiment}"]
+        if s.x_position_action and s.x_position_action != "no_action":
+            parts.append(s.x_position_action)
         if s.x_confidence is not None:
-            parts.append(f"conf {int(s.x_confidence)}")
-        reasons.append(" · ".join(parts))
+            parts.append(f"{int(s.x_confidence)}%")
+        reasons.append(" ".join(parts))
+        if s.x_reason:
+            reasons.append(s.x_reason[:120])
+
+    if s.x_position_action == "close_now" and (s.x_confidence or 0) >= 75:
+        adj = int(round(adj * 0.5))
+        if s.x_sentiment == "bearish":
+            adj -= 15
+        elif s.x_sentiment == "bullish":
+            adj += 15
+    elif s.x_position_action == "close_and_reverse" and (s.x_confidence or 0) >= 85:
+        hint = s.x_new_direction or s.x_recommended_action
+        if hint == "LONG":
+            adj = max(adj, 35)
+        elif hint == "SHORT":
+            adj = min(adj, -35)
 
     return _clamp(adj, -100, 100), reasons
 
@@ -245,6 +260,9 @@ class SignalEngine:
 
         symbol_out = normalize_binance_symbol(market.symbol)
 
+        s = news.sentiment
+        x_action = s.x_position_action if s.x_llm_used else None
+
         return TradingSignal(
             version=1,
             symbol=symbol_out,
@@ -260,4 +278,8 @@ class SignalEngine:
             sentiment_score=news.sentiment.score,
             reasons=reasons[:12],
             ts=utc_now_iso(),
+            x_position_action=x_action,
+            x_new_direction=s.x_new_direction if s.x_llm_used else None,
+            x_sentiment=s.x_sentiment if s.x_llm_used else None,
+            x_reason=s.x_reason if s.x_llm_used else None,
         )

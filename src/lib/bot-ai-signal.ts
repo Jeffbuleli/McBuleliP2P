@@ -3,6 +3,12 @@ import { getDb, botInstances, platformSettings } from "@/db";
 
 export type AiSignalAction = "LONG" | "SHORT" | "HOLD";
 
+export type XPositionAction =
+  | "close_now"
+  | "close_and_reverse"
+  | "monitor"
+  | "no_action";
+
 export type StoredAiSignal = {
   version: number;
   symbol: string;
@@ -17,20 +23,111 @@ export type StoredAiSignal = {
   reasons: string[];
   ts: string;
   receivedAt: string;
+  x_position_action?: XPositionAction;
+  x_new_direction?: "LONG" | "SHORT";
+  x_sentiment?: string;
+  x_reason?: string;
 };
+
+const AI_CLOSE_MIN_CONF = 75;
+const AI_REVERSE_MIN_CONF = 85;
 
 const KEY_PREFIX = "bots_ai:";
 const DEFAULT_MAX_AGE_MS = 120_000;
 
 const X_ANALYST_REASON_PREFIX = "X analyst:";
 
-/** Parses worker reason line from X LLM analyst (e.g. "bullish · long bias · conf 72"). */
+/** Parses worker reason line from X LLM analyst (e.g. "bearish close_now 85%"). */
 export function extractXAnalystInsight(reasons: string[] | undefined): string | null {
   if (!reasons?.length) return null;
-  const line = reasons.find((r) => r.trimStart().startsWith(X_ANALYST_REASON_PREFIX));
-  if (!line) return null;
-  const insight = line.replace(new RegExp(`^\\s*${X_ANALYST_REASON_PREFIX}\\s*`, "i"), "").trim();
-  return insight.length > 0 ? insight : null;
+  const line = reasons.find((r) => r.trimStart().startsWith("X:"));
+  if (!line) {
+    const legacy = reasons.find((r) =>
+      r.trimStart().startsWith(X_ANALYST_REASON_PREFIX),
+    );
+    if (!legacy) return null;
+    const insight = legacy
+      .replace(new RegExp(`^\\s*${X_ANALYST_REASON_PREFIX}\\s*`, "i"), "")
+      .trim();
+    return insight.length > 0 ? insight : null;
+  }
+  return line.replace(/^X:\s*/i, "").trim() || null;
+}
+
+function sentimentOpposesSide(
+  sentiment: string | undefined,
+  side: "LONG" | "SHORT",
+  confidence: number,
+): boolean {
+  const s = (sentiment ?? "").toLowerCase();
+  if (confidence < AI_CLOSE_MIN_CONF) return false;
+  if (side === "LONG" && (s === "bearish" || s === "volatile")) return true;
+  if (side === "SHORT" && s === "bullish") return true;
+  return false;
+}
+
+export type AiPositionExitResult =
+  | {
+      exit: true;
+      kind: "close_now" | "close_and_reverse";
+      reverseTo?: "LONG" | "SHORT";
+      reason: string;
+    }
+  | { exit: false };
+
+/** X-driven early exit when open position conflicts with strong sentiment. */
+export function evaluateAiPositionExit(args: {
+  positionSide: "LONG" | "SHORT";
+  signal: StoredAiSignal | null;
+  aiAssistMode: boolean;
+}): AiPositionExitResult {
+  if (!args.aiAssistMode || !args.signal) {
+    return { exit: false };
+  }
+
+  const sig = args.signal;
+  const xAction = sig.x_position_action;
+  const conf = sig.confidence;
+  const opposes = sentimentOpposesSide(
+    sig.x_sentiment,
+    args.positionSide,
+    conf,
+  );
+
+  if (!xAction || xAction === "no_action" || xAction === "monitor") {
+    return { exit: false };
+  }
+
+  if (xAction === "close_now") {
+    if (conf < AI_CLOSE_MIN_CONF || !opposes) {
+      return { exit: false };
+    }
+    return {
+      exit: true,
+      kind: "close_now",
+      reason: sig.x_reason ?? "ai_x_close_now",
+    };
+  }
+
+  if (xAction === "close_and_reverse") {
+    if (conf < AI_REVERSE_MIN_CONF || !opposes) {
+      return { exit: false };
+    }
+    const reverseTo =
+      sig.x_new_direction === "LONG" || sig.x_new_direction === "SHORT"
+        ? sig.x_new_direction
+        : args.positionSide === "LONG"
+          ? "SHORT"
+          : "LONG";
+    return {
+      exit: true,
+      kind: "close_and_reverse",
+      reverseTo,
+      reason: sig.x_reason ?? "ai_x_close_and_reverse",
+    };
+  }
+
+  return { exit: false };
 }
 
 function settingKey(instanceId: string): string {
@@ -117,6 +214,8 @@ export function runAiAssistGate(args: {
   minAiConfidence: number;
   signal: StoredAiSignal | null;
   aiAssistMode: boolean;
+  /** After X close_and_reverse — allow open if x_new_direction matches botSide. */
+  allowXReverse?: boolean;
 }): AiAssistGateResult {
   if (!args.aiAssistMode) {
     return { ok: true, signal: args.signal ?? ({} as StoredAiSignal) };
@@ -125,6 +224,15 @@ export function runAiAssistGate(args: {
   const sig = args.signal;
   if (!sig) {
     return { ok: false, reason: "ai_signal_stale" };
+  }
+
+  if (
+    args.allowXReverse &&
+    sig.x_position_action === "close_and_reverse" &&
+    sig.confidence >= AI_REVERSE_MIN_CONF &&
+    sig.x_new_direction === args.botSide
+  ) {
+    return { ok: true, signal: sig };
   }
 
   if (sig.action === "HOLD") {

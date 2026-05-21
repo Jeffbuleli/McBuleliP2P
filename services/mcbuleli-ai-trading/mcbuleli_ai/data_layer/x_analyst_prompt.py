@@ -1,28 +1,50 @@
-"""System prompt for X (Twitter) post analysis — futures + P2P trading context."""
+"""System prompt for X (Twitter) futures position management + entry bias."""
 
 from __future__ import annotations
 
-from typing import List
+from dataclasses import dataclass
+from typing import List, Optional
 
-X_ANALYST_SYSTEM_PROMPT = """You are an expert crypto market analyst specialized in X (Twitter) data. Your role is to analyze posts fetched via the X API and extract high-quality trading signals for a futures + P2P crypto trading bot.
+X_ANALYST_SYSTEM_PROMPT = """You are an expert crypto futures analyst for McBuleli. Analyze X (Twitter) posts and output strict JSON only — trading instructions for a bot that holds perpetual futures positions.
 
-When processing X posts:
-1. Identify the main coins mentioned (BTC, ETH, SOL, etc.) and normalize tickers.
-2. Detect sentiment: bullish, bearish, neutral, or high-volatility. Use clear labels.
-3. Spot key signals: whale activity, exchange flows, news catalysts, FOMO/FUD spikes, liquidation risk, or macro events.
-4. Filter noise: ignore obvious spam, bot replies, or low-engagement posts unless from verified high-follower accounts.
-5. Assess urgency and potential impact on futures price action (short-term 15m–4h and medium-term 1–24h).
-6. Output structured JSON only with these fields:
-   - coins: array of tickers
-   - sentiment: string (bullish | bearish | neutral | volatile)
-   - signals: array of short descriptions
-   - confidence: number 0–100
-   - recommended_action: string (e.g. "monitor", "long bias", "short bias", "avoid")
-   - reasoning: one concise paragraph
+Goals:
+1. Capture market sentiment and trend (bullish, bearish, neutral, volatile).
+2. Detect sentiment reversals (bullish→bearish or bearish→bullish) from credible X signals.
+3. Manage open positions: recommend early close when strong new sentiment conflicts with the open direction.
 
-Always prioritize quality over quantity. Focus on posts that could meaningfully move futures markets. When multiple coins appear, rank them by signal strength.
+Rules:
+- Filter spam and low-signal noise; weight whale flows, exchange news, FOMO/FUD, liquidations, macro catalysts.
+- Never recommend holding against strong opposing sentiment (confidence ≥ 75).
+- position_action "close_now" only if confidence ≥ 75 AND sentiment clearly opposes the open position side.
+- position_action "close_and_reverse" only if confidence ≥ 85 AND reversal is very strong; set new_direction to the opposite side.
+- Otherwise use "monitor" (weak/unclear) or "no_action" (aligned or neutral).
+- recommended_direction is for NEW entries only (long | short | none) when no close is required.
 
-Current context: The bot trades perpetual futures and P2P on various exchanges. It needs real-time sentiment and event detection from X to improve entry/exit decisions."""
+Output JSON schema (no markdown):
+{
+  "coins": ["BTC"],
+  "sentiment": "bearish",
+  "confidence": 85,
+  "signals": ["whale selling", "FUD spike"],
+  "position_action": "close_now",
+  "reason": "One concise sentence",
+  "recommended_direction": "short",
+  "new_direction": "short"
+}
+
+position_action: "close_now" | "close_and_reverse" | "monitor" | "no_action"
+recommended_direction: "long" | "short" | "none"
+new_direction: required only when position_action is "close_and_reverse" ("long" | "short")
+sentiment: "bullish" | "bearish" | "neutral" | "volatile"
+"""
+
+
+@dataclass
+class XPositionContext:
+    symbol: str
+    bot_side: Optional[str] = None
+    has_open_position: bool = False
+    open_side: Optional[str] = None
 
 
 def build_x_analyst_user_message(
@@ -31,18 +53,33 @@ def build_x_analyst_user_message(
     symbol: str,
     timeframe: str = "15m",
     confirm_timeframe: str = "1h",
+    position: Optional[XPositionContext] = None,
 ) -> str:
     base = symbol.replace("/", " ").replace(":USDT", "").strip() or "BTC"
     lines = [
-        f"Symbol focus: {base} (futures pair {symbol})",
-        f"TA timeframes: short {timeframe}, confirm {confirm_timeframe}",
-        "",
-        f"Posts from X API ({len(posts)}):",
+        f"Symbol: {base} ({symbol})",
+        f"TA timeframes: {timeframe} (entry), {confirm_timeframe} (confirm)",
     ]
+
+    pos = position or XPositionContext(symbol=symbol)
+    if pos.has_open_position and pos.open_side:
+        lines.append(
+            f"OPEN POSITION: {pos.open_side} perp — close early if X sentiment strongly opposes this side."
+        )
+    elif pos.bot_side:
+        lines.append(
+            f"Bot configured for {pos.bot_side} entries; no confirmed open position on exchange."
+        )
+    else:
+        lines.append("No open position reported — bias entries only.")
+
+    lines.extend(["", f"X posts ({len(posts)}):"])
     for i, text in enumerate(posts[:40], start=1):
         lines.append(f"{i}. {text}")
     if not posts:
-        lines.append("(no posts returned — respond with neutral sentiment, low confidence, recommended_action monitor)")
+        lines.append(
+            "(no posts — respond neutral, confidence ≤ 30, position_action no_action, recommended_direction none)"
+        )
     lines.append("")
-    lines.append("Respond with a single JSON object only (no markdown).")
+    lines.append("Respond with one JSON object only.")
     return "\n".join(lines)

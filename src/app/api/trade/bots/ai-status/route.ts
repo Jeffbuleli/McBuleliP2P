@@ -46,6 +46,9 @@ export async function GET(req: Request) {
     symbol: sig?.symbol ?? null,
     sentimentScore: sig?.sentiment_score ?? null,
     xInsight,
+    xPositionAction: sig?.x_position_action ?? null,
+    xNewDirection: sig?.x_new_direction ?? null,
+    xSentiment: sig?.x_sentiment ?? null,
     reasons: reasons.slice(0, 6),
   });
 }

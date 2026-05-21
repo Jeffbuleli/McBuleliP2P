@@ -119,7 +119,7 @@ Python worker (`services/mcbuleli-ai-trading`):
 | Fetch posts | `TWITTER_ENABLED=1`, `TWITTER_BEARER_TOKEN` |
 | Structured analysis | `X_LLM_ENABLED=1`, `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
 
-The system prompt lives in `mcbuleli_ai/data_layer/x_analyst_prompt.py` (coins, sentiment, signals, confidence, recommended_action, reasoning). Output is blended into `sentiment_score` before TA combination. Audit logs include `news_x_llm` and `news_x_posts`.
+The system prompt lives in `mcbuleli_ai/data_layer/x_analyst_prompt.py`. The model returns `position_action` (`close_now` ≥75% conf, `close_and_reverse` ≥85%), `sentiment`, `recommended_direction`, and optional `new_direction`. McBuleli passes open-position context via `GET /api/internal/bots/ai-instances` (`hasOpenPosition`, `openSide`). The futures engine executes `futures_ai_x_close` / `futures_ai_x_reverse_open` when X sentiment strongly opposes the open side.
 
 ## Presets (Day / Swing)
 

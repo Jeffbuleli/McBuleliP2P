@@ -66,6 +66,9 @@ class SentimentResult:
     x_sentiment: Optional[str] = None
     x_recommended_action: Optional[str] = None
     x_confidence: Optional[float] = None
+    x_position_action: Optional[str] = None
+    x_new_direction: Optional[str] = None
+    x_reason: Optional[str] = None
 
 
 class SentimentAnalyzer:

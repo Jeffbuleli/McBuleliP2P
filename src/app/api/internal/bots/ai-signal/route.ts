@@ -20,6 +20,12 @@ const bodySchema = z.object({
     sentiment_score: z.number().optional(),
     reasons: z.array(z.string()).optional(),
     ts: z.string().optional(),
+    x_position_action: z
+      .enum(["close_now", "close_and_reverse", "monitor", "no_action"])
+      .optional(),
+    x_new_direction: z.enum(["LONG", "SHORT"]).optional(),
+    x_sentiment: z.string().optional(),
+    x_reason: z.string().optional(),
   }),
 });
 
@@ -66,6 +72,10 @@ export async function POST(req: Request) {
     sentiment_score: signal.sentiment_score ?? 0,
     reasons: signal.reasons ?? [],
     ts: signal.ts ?? new Date().toISOString(),
+    x_position_action: signal.x_position_action,
+    x_new_direction: signal.x_new_direction,
+    x_sentiment: signal.x_sentiment,
+    x_reason: signal.x_reason,
   });
 
   return NextResponse.json({

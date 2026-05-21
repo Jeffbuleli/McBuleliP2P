@@ -49,7 +49,11 @@ import {
 } from "@/lib/bot-futures-trailing";
 import { unrealizedProfitPct } from "@/lib/bot-futures-smart-exit";
 import { runFuturesSmartExitCheck } from "@/lib/bot-futures-smart-exit";
-import { getAiSignal, runAiAssistGate } from "@/lib/bot-ai-signal";
+import {
+  evaluateAiPositionExit,
+  getAiSignal,
+  runAiAssistGate,
+} from "@/lib/bot-ai-signal";
 
 function formatFuturesQty(qty: number): string {
   if (qty >= 1) return qty.toFixed(3);
@@ -138,6 +142,129 @@ export async function tickFuturesUmInstance(args: {
     const onOther = findOtherFuturesOpen(openSnaps, cfg.symbol);
 
     if (onConfig) {
+      if (cfg.aiAssistMode) {
+        const aiSig = await getAiSignal(
+          args.instanceId,
+          cfg.aiSignalMaxAgeMs ?? 120_000,
+        );
+        const xExit = evaluateAiPositionExit({
+          positionSide: cfg.side,
+          signal: aiSig,
+          aiAssistMode: true,
+        });
+        if (xExit.exit) {
+          const closeSide = onConfig.amt > 0 ? "SELL" : "BUY";
+          const order = await futuresSignedPost({
+            environment: env,
+            creds,
+            kind: futuresKind,
+            pathKey: "order",
+            params: {
+              symbol: cfg.symbol,
+              side: closeSide,
+              type: "MARKET",
+              quantity: formatFuturesQty(Math.abs(onConfig.amt)),
+              reduceOnly: "true",
+            },
+          });
+          await markBotInstanceSuccess(args.instanceId);
+          await appendBotExecutionLog({
+            instanceId: args.instanceId,
+            userId: args.userId,
+            planId: args.planId,
+            action: "futures_ai_x_close",
+            detail: {
+              symbol: cfg.symbol,
+              kind: xExit.kind,
+              reason: xExit.reason,
+              ai: aiSig
+                ? {
+                    x_position_action: aiSig.x_position_action,
+                    x_sentiment: aiSig.x_sentiment,
+                    confidence: aiSig.confidence,
+                    x_new_direction: aiSig.x_new_direction,
+                  }
+                : null,
+              order,
+            },
+          });
+
+          if (xExit.kind === "close_and_reverse" && xExit.reverseTo) {
+            const reverseSide = xExit.reverseTo;
+            const smart = {
+              smartMode: cfg.smartMode,
+              minSignalScore: cfg.minSignalScore,
+              timeframe: cfg.timeframe,
+            };
+            const intent = reverseSide === "LONG" ? "long" : "short";
+            const useMultiTf =
+              cfg.multiTfGateMode &&
+              cfg.confirmTimeframe &&
+              isHigherTimeframe(cfg.timeframe, cfg.confirmTimeframe);
+            const gate = useMultiTf
+              ? await runMultiTfSmartGate({
+                  environment: env,
+                  symbol: cfg.symbol,
+                  market: "futures",
+                  smart,
+                  intent,
+                  confirmTimeframe: cfg.confirmTimeframe!,
+                })
+              : await runSmartGate({
+                  environment: env,
+                  symbol: cfg.symbol,
+                  market: "futures",
+                  smart,
+                  intent,
+                });
+            const aiGate = runAiAssistGate({
+              botSide: reverseSide,
+              minAiConfidence: cfg.minAiConfidence,
+              signal: aiSig,
+              aiAssistMode: true,
+              allowXReverse: true,
+            });
+            if (gate.ok && aiGate.ok) {
+              await futuresSignedPost({
+                environment: env,
+                creds,
+                kind: futuresKind,
+                pathKey: "leverage",
+                params: {
+                  symbol: cfg.symbol,
+                  leverage: String(cfg.leverage),
+                },
+              });
+              const openOrderSide = reverseSide === "LONG" ? "BUY" : "SELL";
+              const revOrder = await futuresSignedPost({
+                environment: env,
+                creds,
+                kind: futuresKind,
+                pathKey: "order",
+                params: {
+                  symbol: cfg.symbol,
+                  side: openOrderSide,
+                  type: "MARKET",
+                  quantity: qtyFromMargin(margin, cfg.leverage, mark),
+                },
+              });
+              await appendBotExecutionLog({
+                instanceId: args.instanceId,
+                userId: args.userId,
+                planId: args.planId,
+                action: "futures_ai_x_reverse_open",
+                detail: {
+                  symbol: cfg.symbol,
+                  side: reverseSide,
+                  order: revOrder,
+                },
+              });
+            }
+          }
+          return { ran: true };
+        }
+      }
+
       const breakevenLatched = await hasRecentExecutionLog(
         args.instanceId,
         "futures_breakeven_armed",

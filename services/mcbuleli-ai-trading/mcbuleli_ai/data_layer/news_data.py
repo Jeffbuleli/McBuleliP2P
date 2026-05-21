@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import feedparser
 
 from mcbuleli_ai.config.settings import Settings
 from mcbuleli_ai.data_layer.sentiment_analyzer import SentimentAnalyzer, SentimentResult
+from mcbuleli_ai.data_layer.x_analyst_prompt import XPositionContext
 from mcbuleli_ai.data_layer.x_llm_analyzer import XLLMAnalyzer
 from mcbuleli_ai.data_layer.x_twitter import XTwitterClient
 from mcbuleli_ai.utils.symbols import normalize_binance_symbol
@@ -32,6 +33,10 @@ class NewsDataService:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
         self._analyzer = SentimentAnalyzer()
+        self._position_ctx: Optional[XPositionContext] = None
+
+    def set_position_context(self, ctx: Optional[XPositionContext]) -> None:
+        self._position_ctx = ctx
 
     def fetch_all(self) -> NewsBundle:
         """RSS + optional X/Twitter recent search (+ optional LLM analyst)."""
@@ -88,7 +93,11 @@ class NewsDataService:
             )
 
         symbol = normalize_binance_symbol(self._settings.symbol)
-        analysis = llm.analyze_posts(x_posts, symbol=symbol)
+        analysis = llm.analyze_posts(
+            x_posts,
+            symbol=symbol,
+            position=self._position_ctx,
+        )
         if not analysis:
             return SentimentResult(
                 score=base.score,
@@ -104,9 +113,8 @@ class NewsDataService:
         llm_score = analysis.sentiment_score()
         blended = (1.0 - w) * base.score + w * llm_score
         volatile = base.volatility_flag or analysis.sentiment == "volatile"
-        avoid = "avoid" in analysis.recommended_action.lower()
-        if avoid:
-            blended *= 0.65
+        if analysis.position_action in ("close_now", "close_and_reverse"):
+            blended = analysis.sentiment_score()
             volatile = True
 
         themes = list(base.top_themes)
@@ -125,8 +133,11 @@ class NewsDataService:
             x_post_count=len(x_posts),
             x_llm_used=True,
             x_sentiment=analysis.sentiment,
-            x_recommended_action=analysis.recommended_action,
+            x_recommended_action=analysis.recommended_direction,
             x_confidence=analysis.confidence,
+            x_position_action=analysis.position_action,
+            x_new_direction=analysis.new_direction,
+            x_reason=analysis.reason,
         )
 
     def fetch_rss_headlines(self) -> NewsBundle:

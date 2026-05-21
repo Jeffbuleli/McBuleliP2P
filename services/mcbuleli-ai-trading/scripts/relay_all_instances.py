@@ -67,7 +67,13 @@ def relay_all_once(
         iid = inst["instanceId"]
         sym = inst.get("symbol") or settings.symbol
         logger.info("relay %s %s (%s)", iid, sym, inst.get("billing"))
-        record = engine.tick(symbol=sym, instance_id=iid)
+        record = engine.tick(
+            symbol=sym,
+            instance_id=iid,
+            bot_side=inst.get("side"),
+            has_open_position=bool(inst.get("hasOpenPosition")),
+            open_side=inst.get("openSide"),
+        )
         results.append(
             {
                 "instanceId": iid,

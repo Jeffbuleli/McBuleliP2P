@@ -68,11 +68,23 @@ class TradingEngine:
         *,
         symbol: Optional[str] = None,
         instance_id: Optional[str] = None,
+        bot_side: Optional[str] = None,
+        has_open_position: bool = False,
+        open_side: Optional[str] = None,
     ) -> Dict[str, Any]:
+        from mcbuleli_ai.data_layer.x_analyst_prompt import XPositionContext
         from mcbuleli_ai.utils.symbols import to_ccxt_futures_symbol
 
         ts = utc_now_iso()
         sym = to_ccxt_futures_symbol(symbol or self._settings.symbol)
+        self._news.set_position_context(
+            XPositionContext(
+                symbol=sym,
+                bot_side=(bot_side or "").upper() or None,
+                has_open_position=has_open_position,
+                open_side=(open_side or "").upper() or None,
+            )
+        )
         market = self._market.refresh(sym, self._settings.timeframe)
         confirm = self._market.refresh(sym, self._settings.confirm_timeframe)
         news = self._news.fetch_all()
