@@ -8,9 +8,27 @@ from typing import Dict, List, Optional, Tuple
 import ccxt
 
 from mcbuleli_ai.ai_layer.indicators import OhlcvCandle, compute_indicators
-from mcbuleli_ai.config.settings import Settings
+from mcbuleli_ai.config.settings import RunMode, Settings
 
 logger = logging.getLogger(__name__)
+
+
+def _exchange_uses_auth(settings: Settings) -> bool:
+    """SIGNAL_ONLY/PAPER: public OHLCV only — user keys are for McBuleli app, not this worker."""
+    if settings.mode != RunMode.LIVE:
+        return False
+    return bool(settings.binance_api_key.strip() and settings.binance_api_secret.strip())
+
+
+def _build_exchange(settings: Settings, *, authenticated: bool) -> ccxt.binanceusdm:
+    opts: Dict[str, object] = {"enableRateLimit": True}
+    if authenticated:
+        opts["apiKey"] = settings.binance_api_key.strip()
+        opts["secret"] = settings.binance_api_secret.strip()
+    ex = ccxt.binanceusdm(opts)
+    if settings.binance_testnet:
+        ex.set_sandbox_mode(True)
+    return ex
 
 
 @dataclass
@@ -31,13 +49,7 @@ class MarketDataService:
         self._settings = settings
         self._cache: Dict[str, Tuple[float, MarketSnapshot]] = {}
         self._cache_ttl = 30.0
-        opts: Dict[str, object] = {"enableRateLimit": True}
-        if settings.binance_api_key:
-            opts["apiKey"] = settings.binance_api_key
-            opts["secret"] = settings.binance_api_secret
-        self._exchange = ccxt.binanceusdm(opts)
-        if settings.binance_testnet:
-            self._exchange.set_sandbox_mode(True)
+        self._exchange = _build_exchange(settings, authenticated=_exchange_uses_auth(settings))
 
     def _cache_key(self, symbol: str, timeframe: str) -> str:
         return f"{symbol}:{timeframe}"
@@ -94,27 +106,28 @@ class MarketDataService:
             return cached[1]
 
         try:
-            candles = self.fetch_ohlcv(symbol, timeframe)
-            indicators, price = compute_indicators(candles)
-            imbalance = self.fetch_order_book_imbalance(symbol)
-            funding = self.fetch_funding_rate(symbol)
-            ticker = self._exchange.fetch_ticker(symbol)
-            vol = ticker.get("quoteVolume")
-            snap = MarketSnapshot(
-                symbol=symbol,
-                timeframe=timeframe,
-                candles=candles,
-                price=price,
-                volume_24h=float(vol) if vol is not None else None,
-                funding_rate=funding,
-                order_book_imbalance=imbalance,
-                indicators=indicators,
-                status="ok",
-            )
+            snap = self._refresh_once(symbol, timeframe)
             self._cache[key] = (now, snap)
             return snap
         except Exception as e:
-            logger.error("market_data_degraded: %s", e)
+            err = str(e)
+            if _exchange_uses_auth(self._settings) and (
+                "-2015" in err or "Invalid API-key" in err
+            ):
+                logger.warning(
+                    "market_data_auth_failed_retry_public: %s", e
+                )
+                self._exchange = _build_exchange(
+                    self._settings, authenticated=False
+                )
+                try:
+                    snap = self._refresh_once(symbol, timeframe)
+                    self._cache[key] = (now, snap)
+                    return snap
+                except Exception as e2:
+                    logger.error("market_data_degraded: %s", e2)
+            else:
+                logger.error("market_data_degraded: %s", e)
             return MarketSnapshot(
                 symbol=symbol,
                 timeframe=timeframe,
@@ -126,3 +139,22 @@ class MarketDataService:
                 indicators=None,
                 status="degraded",
             )
+
+    def _refresh_once(self, symbol: str, timeframe: str) -> MarketSnapshot:
+        candles = self.fetch_ohlcv(symbol, timeframe)
+        indicators, price = compute_indicators(candles)
+        imbalance = self.fetch_order_book_imbalance(symbol)
+        funding = self.fetch_funding_rate(symbol)
+        ticker = self._exchange.fetch_ticker(symbol)
+        vol = ticker.get("quoteVolume")
+        return MarketSnapshot(
+            symbol=symbol,
+            timeframe=timeframe,
+            candles=candles,
+            price=price,
+            volume_24h=float(vol) if vol is not None else None,
+            funding_rate=funding,
+            order_book_imbalance=imbalance,
+            indicators=indicators,
+            status="ok",
+        )

@@ -55,6 +55,8 @@ Do **not** put `PORT`, `MODE`, or OpenAI keys on this job. Logs must show JSON l
 
 Not needed on Python cron: `CRON_SECRET` (use `MCBULELI_CRON_SECRET`), `PORT`, `INTERVAL_SEC`.
 
+**Do not set** `BINANCE_API_KEY` / `BINANCE_API_SECRET` on `mcbuleli-ai-relay`. In `SIGNAL_ONLY`, OHLCV is **public**; wrong or spot-only keys cause Binance `-2015` and `market_data_degraded`. Trading keys stay in the McBuleli app per bot.
+
 ### HOLD + REJECTED in Python logs (normal)
 
 `tick BTCUSDT HOLD conf=0 risk=REJECTED` with `bridge.ok: true` means:

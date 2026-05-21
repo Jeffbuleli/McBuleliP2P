@@ -205,6 +205,8 @@ class SignalEngine:
         min_edge: int = 20,
     ) -> TradingSignal:
         if market.status != "ok" or market.indicators is None:
+            _, sent_reasons = apply_sentiment_adjustment(0, news.sentiment.score, news)
+            reasons = ["market_data_degraded"] + sent_reasons
             return TradingSignal(
                 version=1,
                 symbol=normalize_binance_symbol(market.symbol),
@@ -216,7 +218,7 @@ class SignalEngine:
                 technical_score=0,
                 combined_score=0,
                 sentiment_score=news.sentiment.score,
-                reasons=["market_data_degraded"],
+                reasons=reasons[:12],
                 ts=utc_now_iso(),
             )
 
