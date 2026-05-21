@@ -26,8 +26,24 @@ const res = await fetch(url, {
   },
 });
 const body = await res.text();
+const trimmed = body.trim();
 if (!res.ok) {
-  console.error("[cron-bots-tick] HTTP", res.status, body.slice(0, 500));
+  console.error("[cron-bots-tick] HTTP", res.status, trimmed.slice(0, 500));
   process.exit(1);
 }
-console.log(body);
+if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+  console.error(
+    "[cron-bots-tick] Expected JSON from POST /api/internal/bots/tick but got HTML.",
+    "Check MCBULELI_API_URL (https://www.mcbuleli.online) and CRON_SECRET on the Web service.",
+    trimmed.slice(0, 200),
+  );
+  process.exit(1);
+}
+let json;
+try {
+  json = JSON.parse(trimmed);
+} catch {
+  console.error("[cron-bots-tick] Invalid JSON:", trimmed.slice(0, 300));
+  process.exit(1);
+}
+console.log(JSON.stringify(json));

@@ -29,14 +29,22 @@ services:
     envVars:
       - key: MODE
         value: SIGNAL_ONLY
-      - key: INTERVAL_SEC
-        value: "60"
       - key: MCBULELI_API_URL
         sync: false
       - key: MCBULELI_CRON_SECRET
         sync: false
       - key: MCBULELI_INSTANCE_ID
         value: ""
+      - key: TWITTER_ENABLED
+        value: "1"
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: X_LLM_ENABLED
+        value: "1"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SIGNAL_MIN_EDGE
+        value: "15"
 
   # Alternative: continuous worker (uncomment and disable cron above if preferred).
   # - type: worker
