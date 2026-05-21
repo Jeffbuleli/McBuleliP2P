@@ -9,8 +9,8 @@ import feedparser
 
 from mcbuleli_ai.config.settings import Settings
 from mcbuleli_ai.data_layer.sentiment_analyzer import SentimentAnalyzer, SentimentResult
+from mcbuleli_ai.data_layer.market_data import MarketSnapshot
 from mcbuleli_ai.data_layer.x_analyst_prompt import XPositionContext
-from mcbuleli_ai.data_layer.x_llm_analyzer import XLLMAnalyzer
 from mcbuleli_ai.data_layer.x_twitter import XTwitterClient
 from mcbuleli_ai.utils.symbols import normalize_binance_symbol
 
@@ -34,9 +34,19 @@ class NewsDataService:
         self._settings = settings
         self._analyzer = SentimentAnalyzer()
         self._position_ctx: Optional[XPositionContext] = None
+        self._market_entry: Optional[MarketSnapshot] = None
+        self._market_confirm: Optional[MarketSnapshot] = None
 
     def set_position_context(self, ctx: Optional[XPositionContext]) -> None:
         self._position_ctx = ctx
+
+    def set_market_context(
+        self,
+        entry: Optional[MarketSnapshot],
+        confirm: Optional[MarketSnapshot] = None,
+    ) -> None:
+        self._market_entry = entry
+        self._market_confirm = confirm
 
     def fetch_all(self) -> NewsBundle:
         """RSS + optional X/Twitter recent search (+ optional LLM analyst)."""
@@ -71,14 +81,20 @@ class NewsDataService:
 
         headlines = headlines[:max_n]
         sentiment = self._analyzer.analyze_headlines(headlines)
-        sentiment = self._maybe_blend_x_llm(sentiment, x_posts)
+        bundle = NewsBundle(headlines=headlines, sources=sources, sentiment=sentiment)
+        sentiment = self._maybe_blend_x_llm(sentiment, x_posts, bundle)
         return NewsBundle(headlines=headlines, sources=sources, sentiment=sentiment)
 
     def _maybe_blend_x_llm(
-        self, base: SentimentResult, x_posts: List[str]
+        self,
+        base: SentimentResult,
+        x_posts: List[str],
+        news_bundle: NewsBundle,
     ) -> SentimentResult:
         if not x_posts:
             return base
+
+        from mcbuleli_ai.data_layer.x_llm_analyzer import XLLMAnalyzer
 
         llm = XLLMAnalyzer(self._settings)
         if not llm.is_configured():
@@ -97,6 +113,9 @@ class NewsDataService:
             x_posts,
             symbol=symbol,
             position=self._position_ctx,
+            market_entry=self._market_entry,
+            market_confirm=self._market_confirm,
+            news=news_bundle,
         )
         if not analysis:
             return SentimentResult(

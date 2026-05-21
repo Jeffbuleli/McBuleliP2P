@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import json
 import logging
-import re
 from dataclasses import dataclass
 from typing import List, Optional
 
-import httpx
 from pydantic import BaseModel, Field, field_validator
 
 from mcbuleli_ai.config.settings import Settings
+from mcbuleli_ai.data_layer.market_analysis_context import build_market_context_for_llm
+from mcbuleli_ai.data_layer.market_data import MarketSnapshot
+from mcbuleli_ai.data_layer.news_data import NewsBundle
+from mcbuleli_ai.data_layer.openai_client import openai_json_completion
 from mcbuleli_ai.data_layer.x_analyst_prompt import (
     XPositionContext,
     X_ANALYST_SYSTEM_PROMPT,
@@ -28,6 +29,7 @@ class XAnalystJson(BaseModel):
     sentiment: str = "neutral"
     confidence: float = 0.0
     signals: List[str] = Field(default_factory=list)
+    ta_alignment: str = "mixed"
     position_action: str = "no_action"
     reason: str = ""
     recommended_direction: str = "none"
@@ -57,7 +59,16 @@ class XAnalystJson(BaseModel):
             n = float(v)
         except (TypeError, ValueError):
             return 0.0
-        return max(0.0, min(100.0, n))
+        n = max(0.0, min(100.0, n))
+        return n
+
+    @field_validator("ta_alignment")
+    @classmethod
+    def normalize_ta_alignment(cls, v: str) -> str:
+        s = (v or "mixed").strip().lower()
+        if s in ("aligned", "mixed", "against_ta", "against"):
+            return "against_ta" if "against" in s else s
+        return "mixed"
 
     def resolved_position_action(self) -> str:
         raw = (
@@ -77,7 +88,11 @@ class XAnalystJson(BaseModel):
         return "no_action"
 
     def resolved_reason(self) -> str:
-        return (self.reason or self.reasoning or "").strip()[:500]
+        base = (self.reason or self.reasoning or "").strip()[:500]
+        align = self.ta_alignment
+        if align and align != "mixed":
+            return f"[TA {align}] {base}"[:500]
+        return base
 
     def resolved_new_direction(self) -> Optional[str]:
         d = (self.new_direction or self.recommended_direction or "").strip().lower()
@@ -96,14 +111,19 @@ class XAnalystResult:
     reason: str
     recommended_direction: Optional[str]
     new_direction: Optional[str]
+    ta_alignment: str = "mixed"
 
     def sentiment_score(self) -> float:
         base = {
-            "bullish": 0.38,
-            "bearish": -0.38,
+            "bullish": 0.42,
+            "bearish": -0.42,
             "neutral": 0.0,
-            "volatile": -0.12,
+            "volatile": -0.14,
         }.get(self.sentiment, 0.0)
+        if self.ta_alignment == "aligned":
+            base *= 1.12
+        elif self.ta_alignment == "against_ta":
+            base *= 0.55
         if self.position_action == "close_and_reverse":
             base *= 1.15
         elif self.position_action == "close_now":
@@ -112,7 +132,6 @@ class XAnalystResult:
         return max(-1.0, min(1.0, base * (0.35 + 0.65 * weight)))
 
     def entry_action_hint(self) -> Optional[str]:
-        """LONG | SHORT | None — bias for combined TA signal."""
         if self.position_action == "close_and_reverse" and self.new_direction:
             return self.new_direction
         d = (self.recommended_direction or "").lower()
@@ -120,9 +139,11 @@ class XAnalystResult:
             return "LONG"
         if d == "short":
             return "SHORT"
-        if self.sentiment == "bullish" and self.confidence >= 60:
+        if self.ta_alignment == "against_ta":
+            return None
+        if self.sentiment == "bullish" and self.confidence >= 58:
             return "LONG"
-        if self.sentiment == "bearish" and self.confidence >= 60:
+        if self.sentiment == "bearish" and self.confidence >= 58:
             return "SHORT"
         return None
 
@@ -136,6 +157,9 @@ class XAnalystResult:
 
 
 def _extract_json_object(raw: str) -> Optional[dict]:
+    import json
+    import re
+
     text = (raw or "").strip()
     if not text:
         return None
@@ -172,9 +196,20 @@ class XLLMAnalyzer:
         *,
         symbol: str,
         position: Optional[XPositionContext] = None,
+        market_entry: Optional[MarketSnapshot] = None,
+        market_confirm: Optional[MarketSnapshot] = None,
+        news: Optional[NewsBundle] = None,
     ) -> Optional[XAnalystResult]:
         if not self.is_configured() or not posts:
             return None
+
+        market_ctx = None
+        if market_entry and market_entry.status == "ok":
+            market_ctx = build_market_context_for_llm(
+                market_entry,
+                market_confirm,
+                news=news,
+            )
 
         user_msg = build_x_analyst_user_message(
             posts,
@@ -182,42 +217,19 @@ class XLLMAnalyzer:
             timeframe=self._settings.timeframe,
             confirm_timeframe=self._settings.confirm_timeframe,
             position=position,
+            market_context=market_ctx,
         )
-        base = self._settings.openai_base_url.rstrip("/")
-        url = f"{base}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self._settings.openai_api_key.strip()}",
-            "Content-Type": "application/json",
-        }
-        payload = {
-            "model": self._settings.openai_model,
-            "temperature": 0.15,
-            "messages": [
-                {"role": "system", "content": X_ANALYST_SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
-            "response_format": {"type": "json_object"},
-        }
 
-        try:
-            with httpx.Client(timeout=45.0) as client:
-                res = client.post(url, headers=headers, json=payload)
-                if res.status_code >= 400:
-                    logger.warning(
-                        "x_llm_http_error status=%s body=%s",
-                        res.status_code,
-                        res.text[:200],
-                    )
-                    return None
-                data = res.json()
-        except Exception as e:
-            logger.warning("x_llm_request_failed: %s", e)
-            return None
-
-        try:
-            content = data["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError):
-            logger.warning("x_llm_bad_response_shape")
+        content = openai_json_completion(
+            api_key=self._settings.openai_api_key,
+            base_url=self._settings.openai_base_url,
+            model=self._settings.openai_model,
+            system=X_ANALYST_SYSTEM_PROMPT,
+            user=user_msg,
+            temperature=self._settings.openai_temperature,
+            timeout=self._settings.openai_timeout_sec,
+        )
+        if not content:
             return None
 
         parsed = _extract_json_object(content)
@@ -237,13 +249,20 @@ class XLLMAnalyzer:
         if rec not in ("long", "short", "none"):
             rec = "none"
 
+        conf = model.confidence
+        if model.ta_alignment == "against_ta":
+            conf = min(conf, 45)
+        elif model.ta_alignment == "mixed":
+            conf = min(conf, 65)
+
         return XAnalystResult(
             coins=[c.strip().upper() for c in model.coins if str(c).strip()][:12],
             sentiment=model.sentiment,
             signals=[s.strip() for s in model.signals if str(s).strip()][:8],
-            confidence=model.confidence,
+            confidence=conf,
             position_action=pos_action,
             reason=model.resolved_reason(),
             recommended_direction=rec if rec != "none" else None,
             new_direction=new_dir,
+            ta_alignment=model.ta_alignment,
         )

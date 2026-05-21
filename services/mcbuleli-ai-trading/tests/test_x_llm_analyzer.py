@@ -38,6 +38,19 @@ def test_x_analyst_legacy_action_alias():
     assert m.resolved_position_action() == "close_now"
 
 
+def test_ta_alignment_against_caps_in_model():
+    m = XAnalystJson.model_validate(
+        {
+            "sentiment": "bullish",
+            "confidence": 90,
+            "ta_alignment": "against_ta",
+            "reason": "X hype vs bearish structure",
+        }
+    )
+    assert m.ta_alignment == "against_ta"
+    assert "against_ta" in m.resolved_reason()
+
+
 def test_opposes_long_on_bearish():
     r = XAnalystResult(
         coins=["BTC"],

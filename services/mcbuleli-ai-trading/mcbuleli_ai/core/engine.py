@@ -87,6 +87,7 @@ class TradingEngine:
         )
         market = self._market.refresh(sym, self._settings.timeframe)
         confirm = self._market.refresh(sym, self._settings.confirm_timeframe)
+        self._news.set_market_context(market, confirm)
         news = self._news.fetch_all()
 
         signal = self._signal_engine.run(
@@ -139,6 +140,7 @@ class TradingEngine:
             "news_x_enabled": self._settings.twitter_enabled,
             "news_x_llm": news.sentiment.x_llm_used,
             "news_x_posts": news.sentiment.x_post_count,
+            "openai_model": self._settings.openai_model,
             "analysis": _analysis_summary(
                 signal,
                 regime.regime.value,

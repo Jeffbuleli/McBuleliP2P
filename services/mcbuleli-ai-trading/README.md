@@ -82,20 +82,25 @@ Uses API v2 `search/recent` (public posts). API Key / Secret are stored for futu
 
 ### X → LLM analyst (structured signals)
 
-When `X_LLM_ENABLED=1` and `OPENAI_API_KEY` is set, posts from X are analyzed with the **crypto market analyst** system prompt (`mcbuleli_ai/data_layer/x_analyst_prompt.py`). The model returns JSON:
+When `X_LLM_ENABLED=1` and `OPENAI_API_KEY` is set, posts from X are analyzed with the **crypto market analyst** system prompt (`mcbuleli_ai/data_layer/x_analyst_prompt.py`). The model receives a **full TA context block** (RSI, EMA, Ichimoku, MACD, Fib, funding, MTF, regime) plus tweets, and returns JSON:
 
-`coins`, `sentiment`, `signals`, `confidence`, `recommended_action`, `reasoning`
+`coins`, `sentiment`, `signals`, `confidence`, `ta_alignment`, `position_action`, `reason`, `recommended_direction`
 
-That output is blended with VADER/RSS sentiment (`X_LLM_BLEND_WEIGHT`, default `0.45`) and appears in signal `reasons` (e.g. `X analyst: bullish · long bias · conf 72`).
+Default model is **`gpt-5.5`** (OpenAI **Responses API**). Older `gpt-4*` models use Chat Completions automatically.
+
+That output is blended with VADER/RSS sentiment (`X_LLM_BLEND_WEIGHT`, default `0.55`) and appears in signal `reasons` (e.g. `X analyst: bullish · long bias · conf 72`).
 
 Works with any OpenAI-compatible endpoint (`OPENAI_BASE_URL`).
+
+See also: [`docs/market-analysis-pipeline.md`](../../docs/market-analysis-pipeline.md) (full multi-stage analysis).
 
 ```env
 TWITTER_ENABLED=1
 TWITTER_BEARER_TOKEN=...
 X_LLM_ENABLED=1
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-5.5
+X_LLM_BLEND_WEIGHT=0.55
 ```
 
 ## Understanding HOLD + REJECTED

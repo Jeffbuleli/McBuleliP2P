@@ -43,8 +43,12 @@ services:
         value: "1"
       - key: OPENAI_API_KEY
         sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.5
       - key: SIGNAL_MIN_EDGE
         value: "15"
+      - key: X_LLM_BLEND_WEIGHT
+        value: "0.55"
 
   # Alternative: continuous worker (uncomment and disable cron above if preferred).
   # - type: worker

@@ -57,11 +57,14 @@ class Settings(BaseSettings):
     x_llm_enabled: bool = False
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-4o-mini"
-    x_llm_blend_weight: float = 0.45
+    # GPT-5.x uses OpenAI Responses API when available (see openai_client.py)
+    openai_model: str = "gpt-5.5"
+    openai_temperature: float = 0.1
+    openai_timeout_sec: float = 90.0
+    x_llm_blend_weight: float = 0.55
 
     # Signal: |combined_score| must exceed this for LONG/SHORT (else HOLD)
-    signal_min_edge: int = 20
+    signal_min_edge: int = 15
 
     mcbuleli_api_url: str = ""
     mcbuleli_cron_secret: str = ""

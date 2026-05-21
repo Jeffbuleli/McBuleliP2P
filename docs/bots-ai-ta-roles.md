@@ -1,5 +1,7 @@
 # Bots — rôles TA, IA et exécution (sans conflit)
 
+Pipeline détaillé (indicateurs, GPT-5.5, scores) : [market-analysis-pipeline.md](./market-analysis-pipeline.md).
+
 ## Qui fait quoi
 
 | Couche | Où | Rôle | Ne fait pas |
