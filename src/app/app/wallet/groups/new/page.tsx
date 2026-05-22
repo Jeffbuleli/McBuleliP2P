@@ -99,6 +99,9 @@ export default function AvecCreatePage() {
     if (!Number.isFinite(parsed.max) || parsed.max < parsed.min) return "group_invalid_members";
     if (!Number.isFinite(parsed.share) || parsed.share <= 0) return "group_invalid_contribution";
     if (!Number.isFinite(parsed.cd) || parsed.cd < 7 || parsed.cd > 365) return "group_invalid_cycle";
+    if (!Number.isFinite(parsed.sf) || parsed.sf < 0) return "group_invalid_social_fund";
+    const maxSf = parsed.share * (Number.isFinite(parsed.ms) && parsed.ms > 0 ? parsed.ms : 5);
+    if (parsed.sf > maxSf) return "group_social_fund_too_high";
     return null;
   }
 
@@ -291,6 +294,9 @@ export default function AvecCreatePage() {
                 inputMode="decimal"
                 className={avecCls.input}
               />
+              <span className="text-[10px] text-[color:var(--fd-muted)]">
+                {t("group_field_social_fund_hint")}
+              </span>
             </label>
             <label className="col-span-2 flex flex-col gap-1">
               <span className={avecCls.sectionTitle}>{t("group_field_rules")}</span>

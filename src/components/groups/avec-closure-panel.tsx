@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecIconClosure, AvecIconSolidarity } from "@/components/groups/avec-icons";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 import type { ClosureSnapshot } from "@/lib/avec/group-cycle-closure";
@@ -21,6 +22,36 @@ type ClosureState = {
     initiatorDisplay: string;
   } | null;
 };
+
+function ClosurePills() {
+  const { t } = useI18n();
+  return (
+    <div className="mb-3 flex flex-wrap gap-1.5">
+      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold text-violet-900">
+        2/3
+      </span>
+      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
+        <AvecIconSolidarity className="h-3 w-3" />
+        {t("avec_closure_pill_social")}
+      </span>
+      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-900">
+        {t("avec_closure_pill_shares")}
+      </span>
+    </div>
+  );
+}
+
+function ApprovalBar({ count, required }: { count: number; required: number }) {
+  const pct = required > 0 ? Math.min(100, (count / required) * 100) : 0;
+  return (
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-violet-200/80">
+      <div
+        className="h-full rounded-full bg-violet-700 transition-all"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
 
 export function AvecClosurePanel({
   groupId,
@@ -125,23 +156,28 @@ export function AvecClosurePanel({
 
   const snap = state?.pending?.snapshot ?? preview;
   const status = state?.cycleStatus ?? "active";
+  const statusLabel =
+    status === "closed"
+      ? t("group_closure_status_closed")
+      : status === "closing"
+        ? t("group_closure_status_closing")
+        : t("group_closure_status_active");
 
   return (
     <div className={avecCls.section}>
-      <p className={avecCls.sectionTitle}>{t("avec_closure_title")}</p>
-      <p className="mb-2 text-[10px] text-[color:var(--fd-muted)]">
-        {t("avec_closure_rule")}
-      </p>
+      <div className="mb-3 flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-900">
+          <AvecIconClosure className="h-6 w-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className={avecCls.sectionTitle}>{t("avec_closure_title")}</p>
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-900">
+            {statusLabel} · #{state?.cycleNumber ?? "—"}
+          </p>
+        </div>
+      </div>
 
-      <p className="mb-2 text-xs font-semibold text-violet-900">
-        {t("group_closure_status_label")}:{" "}
-        {status === "closed"
-          ? t("group_closure_status_closed")
-          : status === "closing"
-            ? t("group_closure_status_closing")
-            : t("group_closure_status_active")}
-        {state ? ` · ${t("group_closure_cycle")} #${state.cycleNumber}` : null}
-      </p>
+      <ClosurePills />
 
       {status === "closed" && isAdmin ? (
         <button
@@ -159,19 +195,26 @@ export function AvecClosurePanel({
           <p className="text-[10px] font-bold uppercase text-violet-900">
             {t("group_closure_pending_title")}
           </p>
-          <p className="mt-1 text-sm font-bold">
-            {state.pending.distributableUsdt.toFixed(2)} USDT ·{" "}
+          <p className="mt-1 text-lg font-black tabular-nums text-violet-950">
+            {state.pending.distributableUsdt.toFixed(2)}{" "}
+            <span className="text-sm font-bold">USDT</span>
+          </p>
+          <p className="text-[10px] font-semibold text-violet-800">
             {t("group_closure_approvals_progress", {
               count: state.pending.approvalCount,
               required: state.pending.requiredApprovals,
             })}
           </p>
+          <ApprovalBar
+            count={state.pending.approvalCount}
+            required={state.pending.requiredApprovals}
+          />
           {state.canManage && !state.pending.myApproved ? (
             <button
               type="button"
               disabled={busy}
               onClick={() => void approve(state.pending!.id)}
-              className={`${avecCls.btnPrimary} mt-2`}
+              className={`${avecCls.btnPrimary} mt-3`}
             >
               {t("group_closure_approve_btn")}
             </button>
@@ -189,29 +232,25 @@ export function AvecClosurePanel({
       ) : null}
 
       {snap && snap.members.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-[color:var(--fd-border)]">
-          <table className="w-full text-[10px]">
-            <thead>
-              <tr className="border-b border-[color:var(--fd-border)] bg-[color:var(--fd-card)]">
-                <th className="px-2 py-1.5 text-left">{t("group_closure_member")}</th>
-                <th className="px-2 py-1.5 text-right">{t("group_closure_shares")}</th>
-                <th className="px-2 py-1.5 text-right">{t("group_closure_payout")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {snap.members.map((m) => (
-                <tr key={m.userId} className="border-b border-[color:var(--fd-border)]/60">
-                  <td className="px-2 py-1.5 font-medium">{m.displayName}</td>
-                  <td className="px-2 py-1.5 text-right">{m.sharesTotal}</td>
-                  <td className="px-2 py-1.5 text-right font-bold">
-                    {m.payoutUsdt.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="px-2 py-1.5 text-[10px] text-[color:var(--fd-muted)]">
-            {t("group_closure_final_share")}: {snap.finalShareValueUsdt.toFixed(4)} USDT
+        <div className="space-y-1.5">
+          {snap.members.map((m) => (
+            <div
+              key={m.userId}
+              className="flex items-center justify-between gap-2 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold">{m.displayName}</p>
+                <p className="text-[10px] text-[color:var(--fd-muted)]">
+                  {m.sharesTotal} {t("group_closure_shares_short")}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-black tabular-nums text-[color:var(--fd-primary)]">
+                {m.payoutUsdt.toFixed(2)}
+              </p>
+            </div>
+          ))}
+          <p className="text-center text-[10px] font-semibold text-[color:var(--fd-muted)]">
+            {snap.finalShareValueUsdt.toFixed(4)} USDT / {t("group_closure_shares_short")}
           </p>
         </div>
       ) : null}
@@ -221,7 +260,7 @@ export function AvecClosurePanel({
           href={`/api/groups/${groupId}/closure/report`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-block text-xs font-bold text-violet-800 underline"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-800 underline"
         >
           {t("group_closure_report_link")}
         </a>

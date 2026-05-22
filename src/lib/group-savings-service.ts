@@ -21,6 +21,7 @@ import {
 } from "@/lib/group-savings-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { debitUserAsset } from "@/lib/wallet-move-assets";
+import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
 import { insertGroupActivitySystemMessage } from "@/lib/group-savings-messaging";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
@@ -60,6 +61,12 @@ export async function createGroup(args: {
   );
   const meetingDays = Math.max(1, Math.floor(args.meetingIntervalDays ?? 7));
   const socialFund = Math.max(0, args.socialFundUsdt ?? 0);
+  const socialErr = validateSocialFundPerMeeting(
+    socialFund,
+    args.contributionAmountUsdt,
+    maxShares,
+  );
+  if (socialErr) return { ok: false, message: socialErr };
   if (!args.name || args.name.trim().length < 2) {
     return { ok: false, message: "group_invalid_name" };
   }
@@ -599,6 +606,12 @@ export async function contributeToGroup(args: {
   }
 
   const socialPerMeeting = Math.max(0, numFromNumeric(g.socialFundUsdt?.toString()));
+  if (
+    validateSocialFundPerMeeting(socialPerMeeting, shareValue, maxShares) ===
+    "group_social_fund_too_high"
+  ) {
+    return { ok: false as const, message: "group_social_fund_misconfigured" };
+  }
   const totalDue = amt + socialPerMeeting;
   const amtStr = fmtWalletAmount(amt);
   const socialStr = socialPerMeeting > 0 ? fmtWalletAmount(socialPerMeeting) : null;

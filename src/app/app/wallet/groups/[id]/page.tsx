@@ -310,13 +310,16 @@ export default function AvecDashboardPage() {
         {tab === "meeting" &&
           (groupActive && cycleActive ? (
             <AvecMeetingPanel
+              groupId={id}
               shareValue={shareValue}
               socialFundPerMeeting={socialFundPerMeeting}
               maxShares={maxShares}
               canContribute={!!canContribute}
+              canFixSocial={!!canAdmin}
               busy={busy}
               paySuccess={payOk}
               onPay={payShares}
+              onSocialFixed={() => void load()}
             />
           ) : !groupActive ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
