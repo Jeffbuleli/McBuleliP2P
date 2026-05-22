@@ -7,6 +7,7 @@ import { AvecListMark } from "@/components/groups/avec-icons";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 
 type Row = {
   groupId: string;
@@ -102,6 +103,7 @@ export default function AvecHubPage() {
           ))}
         </ul>
       )}
+      <McBuleliPoweredFooter />
     </div>
   );
 }

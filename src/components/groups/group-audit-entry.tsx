@@ -16,6 +16,8 @@ const AUDIT_ACTION_KEYS: Record<string, keyof Messages> = {
   subscription_paid: "group_audit_subscription_paid",
   subscription_failed_insufficient_balance: "group_audit_subscription_failed",
   ops_rejected_group: "group_audit_ops_rejected",
+  member_revoked: "group_audit_member_revoked",
+  member_role_updated: "group_audit_member_role_updated",
 };
 
 export function groupAuditLabel(

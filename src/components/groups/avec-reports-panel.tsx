@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { groupAuditLabel } from "@/components/groups/group-audit-entry";
 import { avecCls } from "@/components/groups/avec-ui";
+import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
 
 type LedgerRow = {
   id: string;
@@ -48,6 +49,7 @@ export function AvecReportsPanel({ groupId }: { groupId: string }) {
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
   const showAudit = role === "admin" || role === "co_admin";
+  const ledgerPag = useListPagination(ledger, 10);
 
   return (
     <div className="space-y-3">
@@ -57,24 +59,34 @@ export function AvecReportsPanel({ groupId }: { groupId: string }) {
         {ledger.length === 0 ? (
           <p className="text-xs text-[color:var(--fd-muted)]">{t("group_dash_ledger_empty")}</p>
         ) : (
-          <ul className="space-y-2">
-            {ledger.map((x) => (
-              <li
-                key={x.id}
-                className="flex justify-between gap-2 border-b border-[color:var(--fd-border)] pb-2 last:border-0"
-              >
-                <div>
-                  <p className="text-xs font-semibold text-[color:var(--fd-text)]">{x.entryType}</p>
-                  <p className="text-[10px] text-[color:var(--fd-muted)]">
-                    {new Date(x.createdAt).toLocaleString(loc)}
+          <>
+            <ul className="space-y-2">
+              {ledgerPag.slice.map((x) => (
+                <li
+                  key={x.id}
+                  className="flex justify-between gap-2 border-b border-[color:var(--fd-border)] pb-2 last:border-0"
+                >
+                  <div>
+                    <p className="text-xs font-semibold text-[color:var(--fd-text)]">{x.entryType}</p>
+                    <p className="text-[10px] text-[color:var(--fd-muted)]">
+                      {new Date(x.createdAt).toLocaleString(loc)}
+                    </p>
+                  </div>
+                  <p className="font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
+                    {Number(x.amount).toFixed(2)} USDT
                   </p>
-                </div>
-                <p className="font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
-                  {Number(x.amount).toFixed(2)} USDT
-                </p>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+            <ListPagination
+              page={ledgerPag.page}
+              pageSize={ledgerPag.pageSize}
+              totalPages={ledgerPag.totalPages}
+              total={ledgerPag.total}
+              onPageChange={ledgerPag.setPage}
+              onPageSizeChange={ledgerPag.setPageSize}
+            />
+          </>
         )}
       </div>
 

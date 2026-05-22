@@ -866,6 +866,8 @@ export const groupSavingsGroups = pgTable(
     }),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     rejectionReason: text("rejection_reason"),
+    /** Shareable join code (generated when group is active). */
+    inviteCode: varchar("invite_code", { length: 16 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -874,6 +876,7 @@ export const groupSavingsGroups = pgTable(
       .notNull(),
   },
   (t) => [
+    uniqueIndex("group_savings_groups_invite_code_uidx").on(t.inviteCode),
     index("group_savings_groups_creator_idx").on(t.createdByUserId),
     index("group_savings_groups_status_idx").on(t.status),
     index("group_savings_groups_next_billing_idx").on(t.nextBillingAt),
@@ -980,6 +983,7 @@ export const groupMessages = pgTable(
     body: text("body").notNull(),
     messageType: varchar("message_type", { length: 16 }).notNull().default("chat"),
     attachmentUrl: text("attachment_url"),
+    attachmentExpiresAt: timestamp("attachment_expires_at", { withTimezone: true }),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

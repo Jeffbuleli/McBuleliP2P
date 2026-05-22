@@ -26,8 +26,10 @@ export function AppShell({
     pathname.startsWith("/app/withdraw");
   const onP2p = pathname.startsWith("/app/p2p");
   const onSupport = pathname.startsWith("/app/support");
-  const onAvecGroupDetail =
-    /^\/app\/wallet\/groups\/(?!new$)[^/]+(\/settings)?$/.test(pathname);
+  const onAvecGroupFlow =
+    pathname.startsWith("/app/wallet/groups/") &&
+    pathname !== "/app/wallet/groups" &&
+    !pathname.endsWith("/new");
   const hideTopBarForFlow =
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw") ||
@@ -35,7 +37,7 @@ export function AppShell({
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support") ||
-    onAvecGroupDetail;
+    onAvecGroupFlow;
   const showTopBar = !onProfile && !hideTopBarForFlow;
   const lightMainBg = onProfile || onWalletFlow || onHome || onP2p || onSupport;
 

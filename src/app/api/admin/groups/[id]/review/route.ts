@@ -15,6 +15,7 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
+import { ensureGroupInviteCode } from "@/lib/group-invite";
 
 const bodyZ = z.object({
   decision: z.enum(["approve", "reject"]),
@@ -71,6 +72,7 @@ export async function PATCH(
       kind: "group_ops_approved",
       payload: { groupId: id, groupName: g.name },
     });
+    await ensureGroupInviteCode(id);
     await writePlatformAdminAudit({
       actorUserId: me?.id ?? null,
       action: PlatformAdminAuditAction.GROUP_REVIEW,

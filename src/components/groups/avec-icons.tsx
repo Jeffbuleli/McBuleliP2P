@@ -109,6 +109,43 @@ export function AvecIconTreasury({ className }: { className?: string }) {
   );
 }
 
+export function AvecIconView({ className }: { className?: string }) {
+  const s = base({ size: 20, className });
+  return (
+    <svg {...s}>
+      <rect x="6" y="22" width="6" height="14" rx="1" fill="currentColor" opacity="0.35" />
+      <rect x="14" y="14" width="6" height="22" rx="1" fill="currentColor" opacity="0.55" />
+      <rect x="22" y="8" width="6" height="28" rx="1" fill="currentColor" />
+      <path d="M8 10h20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  );
+}
+
+export function AvecIconDialogue({ className }: { className?: string }) {
+  const s = base({ size: 20, className });
+  return (
+    <svg {...s}>
+      <path
+        d="M8 10h24v14a3 3 0 01-3 3H14l-6 4v-4H11a3 3 0 01-3-3V10z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path d="M14 16h12M14 20h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function AvecIconReport({ className }: { className?: string }) {
+  const s = base({ size: 20, className });
+  return (
+    <svg {...s}>
+      <rect x="10" y="6" width="20" height="28" rx="2" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M14 14h12M14 20h12M14 26h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function AvecListMark({ className }: { className?: string }) {
   return (
     <span

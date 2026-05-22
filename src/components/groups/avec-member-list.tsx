@@ -9,6 +9,7 @@ export type AvecMemberRow = {
   userId: string;
   email: string;
   displayName?: string | null;
+  avatarUrl?: string | null;
   role: string;
   status: string;
   savedUsdt?: number;

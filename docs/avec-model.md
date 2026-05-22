@@ -36,11 +36,19 @@ Groups **created by a `super_admin`** user:
 
 ## In-app experience
 
-- **Top bar**: McBuleli brand (left) · notifications · AVEC logo + name (right).
-- **Chat**: member messaging inside the group (`group_messages`).
-- **Reports**: McBuleli ledger entries = on-platform USDT proof; audit for managers.
-- **Payouts**: managers send USDT rewards from treasury to member McBuleli wallets.
-- **Profile** (admin): name, logo, address, phone, email, description.
+Six tabs (see `docs/avec-menus.md`):
+
+| Tab | Role |
+|-----|------|
+| **Vue** | Statistical overview — treasury, cycle gauge, contribution bars, top savers, alerts |
+| **Réunion** | Buy 1–5 shares per meeting (USDT wallet → group treasury) |
+| **Membres** | Approved list, pending approvals, roles |
+| **Caisse** | Manager payouts from treasury |
+| **Dialogue** | Group chat & proofs |
+| **Rapports** | Ledger, proofs, audit (managers) |
+
+- **Top bar**: AVEC name + country (left) · logo (center) · member nickname (right). No duplicate McBuleli header on group pages.
+- **Profile** (admin): name, logo, address, phone, email, description — `/groups/[id]/settings`.
 
 ## APIs
 

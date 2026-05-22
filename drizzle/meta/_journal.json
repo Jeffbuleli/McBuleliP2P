@@ -190,6 +190,13 @@
       "when": 1780600000000,
       "tag": "0031_avec_approved_to_active",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1780700000000,
+      "tag": "0032_avec_invite_chat",
+      "breakpoints": true
     }
   ]
 }

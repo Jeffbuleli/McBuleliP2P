@@ -251,6 +251,7 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       status: groupSavingsMemberships.status,
       email: users.email,
       displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
     })
     .from(groupSavingsMemberships)
     .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
@@ -454,6 +455,99 @@ export async function setCoAdmins(args: {
     actorUserId: args.actorUserId,
     action: "co_admins_updated",
     after: { coAdmins: ids },
+  });
+  return { ok: true as const };
+}
+
+export async function revokeMember(args: {
+  groupId: string;
+  actorUserId: string;
+  targetUserId: string;
+}) {
+  const db = getDb();
+  const actor = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.actorUserId });
+  if (!hasRole(actor, ["admin"])) return { ok: false as const, message: "group_forbidden" };
+  if (args.actorUserId === args.targetUserId) {
+    return { ok: false as const, message: "group_cannot_revoke_self" };
+  }
+
+  const [m] = await db
+    .select()
+    .from(groupSavingsMemberships)
+    .where(
+      and(
+        eq(groupSavingsMemberships.groupId, args.groupId),
+        eq(groupSavingsMemberships.userId, args.targetUserId),
+      ),
+    )
+    .limit(1);
+  if (!m || m.status !== "approved") {
+    return { ok: false as const, message: "member_not_found" };
+  }
+  if (m.role === "admin") return { ok: false as const, message: "group_cannot_revoke_admin" };
+
+  await db
+    .update(groupSavingsMemberships)
+    .set({ status: "revoked", role: "member", updatedAt: new Date() })
+    .where(eq(groupSavingsMemberships.id, m.id));
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "member_revoked",
+    before: { userId: args.targetUserId, status: m.status },
+    after: { status: "revoked" },
+  });
+  return { ok: true as const };
+}
+
+export async function setMemberRole(args: {
+  groupId: string;
+  actorUserId: string;
+  targetUserId: string;
+  role: "member" | "co_admin";
+}) {
+  const db = getDb();
+  const actor = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.actorUserId });
+  if (!hasRole(actor, ["admin"])) return { ok: false as const, message: "group_forbidden" };
+
+  const [m] = await db
+    .select()
+    .from(groupSavingsMemberships)
+    .where(
+      and(
+        eq(groupSavingsMemberships.groupId, args.groupId),
+        eq(groupSavingsMemberships.userId, args.targetUserId),
+      ),
+    )
+    .limit(1);
+  if (!m || m.status !== "approved") {
+    return { ok: false as const, message: "member_not_found" };
+  }
+  if (m.role === "admin") return { ok: false as const, message: "group_cannot_change_admin" };
+
+  const coCount = await db
+    .select({ id: groupSavingsMemberships.id })
+    .from(groupSavingsMemberships)
+    .where(
+      and(
+        eq(groupSavingsMemberships.groupId, args.groupId),
+        eq(groupSavingsMemberships.role, "co_admin"),
+        eq(groupSavingsMemberships.status, "approved"),
+      ),
+    );
+  if (args.role === "co_admin" && m.role !== "co_admin" && coCount.length >= 3) {
+    return { ok: false as const, message: "group_invalid_coadmins" };
+  }
+
+  await db
+    .update(groupSavingsMemberships)
+    .set({ role: args.role, updatedAt: new Date() })
+    .where(eq(groupSavingsMemberships.id, m.id));
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "member_role_updated",
+    after: { userId: args.targetUserId, role: args.role },
   });
   return { ok: true as const };
 }

@@ -9,6 +9,7 @@ import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { clientErrorText } from "@/lib/client-error-text";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import type { Messages } from "@/i18n/messages";
 
@@ -368,6 +369,7 @@ export default function GroupSettingsPage() {
           </>
         )}
       </div>
+      <McBuleliPoweredFooter />
     </div>
   );
 }

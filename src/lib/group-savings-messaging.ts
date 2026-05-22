@@ -2,8 +2,37 @@ import { desc, eq } from "drizzle-orm";
 import { getDb, groupMessages, users } from "@/db";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import { p2pDisplayName } from "@/lib/p2p-display";
 
 export type GroupMessageType = "chat" | "system" | "proof";
+
+export type MessageReaction = { userId: string; emoji: string };
+
+const IMAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const REACTION_EMOJIS = new Set(["👍", "❤️", "😂", "🎉", "👏"]);
+
+function parseReactions(meta: Record<string, unknown> | null): MessageReaction[] {
+  if (!meta || !Array.isArray(meta.reactions)) return [];
+  const out: MessageReaction[] = [];
+  for (const r of meta.reactions) {
+    if (r && typeof r === "object" && "userId" in r && "emoji" in r) {
+      const userId = String((r as MessageReaction).userId);
+      const emoji = String((r as MessageReaction).emoji);
+      if (userId && REACTION_EMOJIS.has(emoji)) out.push({ userId, emoji });
+    }
+  }
+  return out;
+}
+
+function attachmentVisible(
+  url: string | null,
+  expiresAt: Date | null,
+): string | null {
+  if (!url) return null;
+  if (!expiresAt) return url;
+  if (expiresAt.getTime() < Date.now()) return null;
+  return url;
+}
 
 export async function listGroupMessages(args: {
   groupId: string;
@@ -16,9 +45,13 @@ export async function listGroupMessages(args: {
         id: string;
         senderUserId: string;
         senderEmail: string;
+        senderDisplayName: string;
+        senderAvatarUrl: string | null;
         body: string;
         messageType: string;
         attachmentUrl: string | null;
+        attachmentExpiresAt: string | null;
+        reactions: MessageReaction[];
         createdAt: string;
       }[];
     }
@@ -36,9 +69,14 @@ export async function listGroupMessages(args: {
       id: groupMessages.id,
       senderUserId: groupMessages.senderUserId,
       senderEmail: users.email,
+      senderDisplayName: users.displayName,
+      senderAvatarUrl: users.avatarUrl,
+      senderPiUsername: users.piUsername,
       body: groupMessages.body,
       messageType: groupMessages.messageType,
       attachmentUrl: groupMessages.attachmentUrl,
+      attachmentExpiresAt: groupMessages.attachmentExpiresAt,
+      meta: groupMessages.meta,
       createdAt: groupMessages.createdAt,
     })
     .from(groupMessages)
@@ -54,9 +92,20 @@ export async function listGroupMessages(args: {
         id: r.id,
         senderUserId: r.senderUserId,
         senderEmail: r.senderEmail,
+        senderDisplayName: p2pDisplayName({
+          email: r.senderEmail,
+          displayName: r.senderDisplayName,
+          avatarUrl: r.senderAvatarUrl,
+          piUsername: r.senderPiUsername,
+        }),
+        senderAvatarUrl: r.senderAvatarUrl,
         body: r.body,
         messageType: r.messageType,
-        attachmentUrl: r.attachmentUrl,
+        attachmentUrl: attachmentVisible(r.attachmentUrl, r.attachmentExpiresAt),
+        attachmentExpiresAt: r.attachmentExpiresAt
+          ? r.attachmentExpiresAt.toISOString()
+          : null,
+        reactions: parseReactions(r.meta as Record<string, unknown> | null),
         createdAt: r.createdAt.toISOString(),
       }))
       .reverse(),
@@ -69,6 +118,7 @@ export async function sendGroupMessage(args: {
   body: string;
   messageType?: GroupMessageType;
   attachmentUrl?: string | null;
+  mentionUserIds?: string[];
 }): Promise<{ ok: true; messageId: string } | { ok: false; message: string }> {
   const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
   if (!m || m.status !== "approved") {
@@ -84,6 +134,10 @@ export async function sendGroupMessage(args: {
   }
 
   const messageType = args.messageType ?? "chat";
+  const attachmentExpiresAt = args.attachmentUrl
+    ? new Date(Date.now() + IMAGE_TTL_MS)
+    : null;
+
   const db = getDb();
   const [row] = await db
     .insert(groupMessages)
@@ -93,7 +147,11 @@ export async function sendGroupMessage(args: {
       body: body || "—",
       messageType,
       attachmentUrl: args.attachmentUrl ?? null,
-      meta: null,
+      attachmentExpiresAt,
+      meta:
+        args.mentionUserIds && args.mentionUserIds.length > 0
+          ? { mentions: args.mentionUserIds, reactions: [] }
+          : { reactions: [] },
     })
     .returning({ id: groupMessages.id });
 
@@ -119,6 +177,47 @@ export async function sendGroupMessage(args: {
   });
 
   return { ok: true, messageId: row.id };
+}
+
+export async function toggleGroupMessageReaction(args: {
+  groupId: string;
+  userId: string;
+  messageId: string;
+  emoji: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!m || m.status !== "approved") {
+    return { ok: false, message: "group_forbidden" };
+  }
+  if (!REACTION_EMOJIS.has(args.emoji)) {
+    return { ok: false, message: "group_invalid_body" };
+  }
+
+  const db = getDb();
+  const [msg] = await db
+    .select({ id: groupMessages.id, meta: groupMessages.meta })
+    .from(groupMessages)
+    .where(eq(groupMessages.id, args.messageId))
+    .limit(1);
+  if (!msg) return { ok: false, message: "group_not_found" };
+
+  const meta = (msg.meta as Record<string, unknown> | null) ?? {};
+  let reactions = parseReactions(meta);
+  const idx = reactions.findIndex((r) => r.userId === args.userId);
+  if (idx >= 0 && reactions[idx]!.emoji === args.emoji) {
+    reactions = reactions.filter((_, i) => i !== idx);
+  } else if (idx >= 0) {
+    reactions[idx] = { userId: args.userId, emoji: args.emoji };
+  } else {
+    reactions.push({ userId: args.userId, emoji: args.emoji });
+  }
+
+  await db
+    .update(groupMessages)
+    .set({ meta: { ...meta, reactions } })
+    .where(eq(groupMessages.id, args.messageId));
+
+  return { ok: true };
 }
 
 export async function insertGroupActivitySystemMessage(args: {
