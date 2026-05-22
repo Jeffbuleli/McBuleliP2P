@@ -7,6 +7,7 @@ import { getDb, users } from "@/db";
 import { findReferrerByCode } from "@/lib/referral-service";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
+import { isDisplayNameTaken } from "@/lib/display-name-uniqueness";
 import { registerSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
@@ -44,6 +45,10 @@ export async function POST(req: Request) {
         { message: "This email is already registered. Try logging in." },
         { status: 409 },
       );
+    }
+
+    if (await isDisplayNameTaken(displayName)) {
+      return NextResponse.json({ error: "profile_pseudo_taken" }, { status: 409 });
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const role = isSuperAdminEmail(email)

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 import { P2P_COUNTRY_CODES } from "@/lib/p2p-config";
+import { isDisplayNameTaken } from "@/lib/display-name-uniqueness";
 import { getSessionUserId } from "@/lib/session";
 
 const patchZ = z.object({
@@ -60,6 +61,10 @@ export async function PATCH(req: Request) {
 
   if (!Object.keys(patch).length) {
     return NextResponse.json({ error: "profile_invalid_input" }, { status: 400 });
+  }
+
+  if (patch.displayName && (await isDisplayNameTaken(patch.displayName, userId))) {
+    return NextResponse.json({ error: "profile_pseudo_taken" }, { status: 409 });
   }
 
   const db = getDb();

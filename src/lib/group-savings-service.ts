@@ -234,12 +234,23 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
   }
 
   const balance = await getGroupUsdtBalance(args.groupId);
+  const [viewer] = await db
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+      piUsername: users.piUsername,
+    })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+
   const members = await db
     .select({
       userId: groupSavingsMemberships.userId,
       role: groupSavingsMemberships.role,
       status: groupSavingsMemberships.status,
       email: users.email,
+      displayName: users.displayName,
     })
     .from(groupSavingsMemberships)
     .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
@@ -276,6 +287,11 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       balanceUsdt: balance,
       createdAt: g.createdAt.toISOString(),
       me: { role: m.role, status: m.status },
+    },
+    viewer: {
+      email: viewer?.email ?? "",
+      displayName: viewer?.displayName ?? null,
+      piUsername: viewer?.piUsername ?? null,
     },
     members: members.map((m) => {
       const s = statsByUser.get(m.userId);

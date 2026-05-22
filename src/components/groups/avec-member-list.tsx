@@ -3,9 +3,12 @@
 import { adminCls } from "@/components/admin/admin-ui";
 import { useI18n } from "@/components/i18n-provider";
 
+import { p2pDisplayName } from "@/lib/p2p-display";
+
 export type AvecMemberRow = {
   userId: string;
   email: string;
+  displayName?: string | null;
   role: string;
   status: string;
   savedUsdt?: number;
@@ -52,7 +55,12 @@ export function AvecMemberList({
                 <tr key={m.userId}>
                   <td>
                     <p className="truncate text-xs font-semibold text-[color:var(--fd-text)]">
-                      {m.email}
+                      {p2pDisplayName({
+                        email: m.email,
+                        displayName: m.displayName ?? null,
+                        avatarUrl: null,
+                        piUsername: null,
+                      })}
                     </p>
                   </td>
                   <td>
@@ -82,7 +90,14 @@ export function AvecMemberList({
                 key={m.userId}
                 className="flex items-center justify-between gap-2 rounded-xl border border-[color:var(--fd-border)] px-3 py-2"
               >
-                <span className="min-w-0 truncate text-xs font-medium">{m.email}</span>
+                <span className="min-w-0 truncate text-xs font-medium">
+                  {p2pDisplayName({
+                    email: m.email,
+                    displayName: m.displayName ?? null,
+                    avatarUrl: null,
+                    piUsername: null,
+                  })}
+                </span>
                 <div className="flex gap-1.5">
                   <button
                     type="button"

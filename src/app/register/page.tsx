@@ -78,7 +78,12 @@ function RegisterForm() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(formatAuthClientError(data));
+        const errObj = data as { error?: string };
+        if (errObj.error === "profile_pseudo_taken") {
+          setError(t("profile_pseudo_taken"));
+        } else {
+          setError(formatAuthClientError(data));
+        }
         setLoading(false);
         return;
       }

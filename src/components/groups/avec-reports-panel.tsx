@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { groupAuditLabel } from "@/components/groups/group-audit-entry";
 import { avecCls } from "@/components/groups/avec-ui";
 
 type LedgerRow = {
@@ -101,7 +102,9 @@ export function AvecReportsPanel({ groupId }: { groupId: string }) {
           <ul className="max-h-48 space-y-1 overflow-y-auto">
             {audit.map((a) => (
               <li key={a.id} className="text-[10px] text-[color:var(--fd-muted)]">
-                <span className="font-semibold text-[color:var(--fd-primary)]">{a.action}</span>
+                <span className="font-semibold text-[color:var(--fd-primary)]">
+                  {groupAuditLabel(t, a.action)}
+                </span>
                 {" · "}
                 {new Date(a.createdAt).toLocaleString(loc)}
               </li>

@@ -6,6 +6,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { ProfileAvatarEditor } from "@/components/profile/profile-avatar-editor";
 import { P2P_COUNTRY_CODES } from "@/lib/p2p-config";
 import { countryLabel } from "@/lib/country-label";
+import { clientErrorText } from "@/lib/client-error-text";
 
 export function ProfilePersonalInfo({
   initialEmail,
@@ -47,7 +48,9 @@ export function ProfilePersonalInfo({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(typeof data.error === "string" ? data.error : "profile_invalid_input");
+        setErr(
+          typeof data.error === "string" ? data.error : "profile_invalid_input",
+        );
         return;
       }
       setOk(true);
@@ -94,7 +97,9 @@ export function ProfilePersonalInfo({
       </label>
 
       {err ? (
-        <p className="mt-2 text-xs font-semibold text-rose-700">{err}</p>
+        <p className="mt-2 text-xs font-semibold text-rose-700">
+          {clientErrorText(t, err)}
+        </p>
       ) : ok ? (
         <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">{t("profile_saved")}</p>
       ) : null}

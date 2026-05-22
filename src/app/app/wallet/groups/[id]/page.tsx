@@ -16,7 +16,6 @@ import { AvecTopBar } from "@/components/groups/avec-top-bar";
 import { AvecKpi, avecCls } from "@/components/groups/avec-ui";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
-import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type Dashboard = {
@@ -40,6 +39,11 @@ type Dashboard = {
     meetingIntervalDays: number;
     maxMembers: number;
     me: { role: string; status: string };
+  };
+  viewer: {
+    email: string;
+    displayName: string | null;
+    piUsername: string | null;
   };
   members: AvecMemberRow[];
   memberCount: number;
@@ -164,7 +168,14 @@ export default function AvecDashboardPage() {
 
   return (
     <div className="pb-10">
-      <AvecTopBar groupName={g.name} groupLogoUrl={g.logoUrl} />
+      <AvecTopBar
+        groupName={g.name}
+        groupLogoUrl={g.logoUrl}
+        countryCode={g.countryCode}
+        memberEmail={data.viewer.email}
+        memberDisplayName={data.viewer.displayName}
+        memberPiUsername={data.viewer.piUsername}
+      />
 
       <div className="space-y-3 px-1">
         {g.status === "pending" || showCreateProgress ? (
@@ -176,13 +187,9 @@ export default function AvecDashboardPage() {
           </p>
         ) : null}
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[10px] font-extrabold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              AVEC
-              {g.countryCode ? ` · ${countryLabel(locale, g.countryCode)}` : ""}
-            </p>
+          <div className="min-w-0 flex-1">
             {g.publicDescription ? (
-              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{g.publicDescription}</p>
+              <p className="text-xs text-[color:var(--fd-muted)]">{g.publicDescription}</p>
             ) : null}
             {(g.address || g.contactPhone || g.contactEmail) && (
               <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
@@ -190,7 +197,7 @@ export default function AvecDashboardPage() {
               </p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-1">
             <GroupStatusBadge status={g.status} />
             {canAdmin ? (
               <Link href={`/app/wallet/groups/${g.id}/settings`} className={avecCls.btnGhost}>

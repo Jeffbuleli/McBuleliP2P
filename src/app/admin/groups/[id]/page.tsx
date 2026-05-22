@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import { apiErrorText } from "@/lib/api-error-text";
+import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { adminCls, AdminBackLink } from "@/components/admin/admin-ui";
 import type { Messages } from "@/i18n/messages";
@@ -267,12 +268,12 @@ export default function AdminGroupDetailPage() {
           ) : (
             <ul className="mt-3 space-y-2">
               {audit.map((x: any) => (
-                <li key={x.id} className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
-                  <p className="text-xs font-semibold text-[color:var(--fd-text)]">{x.action}</p>
-                  <p className={`mt-1 text-[11px] ${adminCls.muted}`}>
-                    {new Date(x.createdAt).toLocaleString()}
-                  </p>
-                </li>
+                <GroupAuditEntry
+                  key={x.id}
+                  action={x.action}
+                  createdAt={x.createdAt}
+                  locale={locale}
+                />
               ))}
             </ul>
           )}

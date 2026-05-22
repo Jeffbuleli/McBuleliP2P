@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecProfileForm } from "@/components/groups/avec-profile-form";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
+import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
-import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
+import { p2pDisplayName } from "@/lib/p2p-display";
+import type { Messages } from "@/i18n/messages";
 
 type MemberRow = {
   userId: string;
   role: string;
   status: string;
   email: string;
+  displayName?: string | null;
 };
 
 type Dashboard = {
@@ -35,8 +37,26 @@ type Dashboard = {
     nextBillingAt: string | null;
     me: { role: string; status: string };
   };
+  viewer: {
+    email: string;
+    displayName: string | null;
+    piUsername: string | null;
+  };
   members: MemberRow[];
 };
+
+function subscriptionLabel(
+  t: (k: keyof Messages) => string,
+  status: string,
+): string {
+  const map: Record<string, keyof Messages> = {
+    active: "admin_subscription_state_active",
+    overdue: "admin_subscription_state_overdue",
+    suspended: "admin_subscription_state_suspended",
+  };
+  const key = map[status?.toLowerCase?.() ?? ""];
+  return key ? t(key) : status;
+}
 
 export default function GroupSettingsPage() {
   const { t, locale } = useI18n();
@@ -58,6 +78,7 @@ export default function GroupSettingsPage() {
   );
 
   async function load() {
+    if (!id) return;
     setErr(null);
     const [rDash, rInv, rAudit] = await Promise.all([
       fetch(`/api/groups/${id}`, { cache: "no-store" }),
@@ -118,20 +139,12 @@ export default function GroupSettingsPage() {
     }
   }
 
-  if (!data) {
+  if (!id || !data) {
     return (
       <div className="space-y-3 pb-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-stone-900 dark:text-stone-50">
-            {t("group_settings_title")}
-          </h1>
-          <Link
-            href={`/app/wallet/groups/${id}`}
-            className="text-xs font-semibold text-emerald-700 underline dark:text-emerald-400"
-          >
-            {t("group_back")}
-          </Link>
-        </div>
+        <h1 className="text-lg font-bold text-stone-900 dark:text-stone-50">
+          {t("group_settings_title")}
+        </h1>
         {err ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
             {clientErrorText(t, err)}
@@ -152,7 +165,27 @@ export default function GroupSettingsPage() {
 
   return (
     <div className="space-y-4 pb-10">
-      <AvecTopBar groupName={g.name} groupLogoUrl={g.logoUrl ?? null} />
+      <AvecTopBar
+        groupName={g.name}
+        groupLogoUrl={g.logoUrl ?? null}
+        countryCode={g.countryCode}
+        memberEmail={data.viewer.email}
+        memberDisplayName={data.viewer.displayName}
+        memberPiUsername={data.viewer.piUsername}
+        backHref={`/app/wallet/groups/${id}`}
+      />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <GroupStatusBadge status={g.status} />
+        <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[10px] font-semibold text-stone-700 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-200">
+          {subscriptionLabel(t, g.subscriptionStatus)}
+        </span>
+        <span className="text-xs text-stone-500">
+          {t("group_dash_next_billing")}:{" "}
+          {g.nextBillingAt ? new Date(g.nextBillingAt).toLocaleDateString() : "—"}
+        </span>
+      </div>
+
       {canAdmin ? (
         <AvecProfileForm
           groupId={id}
@@ -167,30 +200,6 @@ export default function GroupSettingsPage() {
           onSaved={() => void load()}
         />
       ) : null}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-            {g.type}
-            {g.countryCode ? ` · ${countryLabel(locale, g.countryCode)}` : ""}
-          </p>
-          <h1 className="mt-1 truncate text-lg font-bold text-stone-900 dark:text-stone-50">
-            {g.name}
-          </h1>
-          <p className="mt-1 text-xs text-stone-500">
-            {t("group_dash_subscription")}: {g.subscriptionStatus} · {t("group_dash_next_billing")}:{" "}
-            {g.nextBillingAt ? new Date(g.nextBillingAt).toLocaleDateString() : "—"}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <GroupStatusBadge status={g.status} />
-          <Link
-            href={`/app/wallet/groups/${id}`}
-            className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-semibold dark:border-stone-600"
-          >
-            {t("group_back")}
-          </Link>
-        </div>
-      </div>
 
       {err ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
@@ -253,8 +262,8 @@ export default function GroupSettingsPage() {
                   <span
                     className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                       x.status === "paid"
-                        ? "bg-emerald-600/15 text-emerald-300 ring-1 ring-emerald-500/20"
-                        : "bg-rose-600/15 text-rose-200 ring-1 ring-rose-500/20"
+                        ? "bg-emerald-600/15 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300"
+                        : "bg-rose-600/15 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300"
                     }`}
                   >
                     {x.status === "paid" ? t("group_invoice_paid") : t("group_invoice_failed")}
@@ -272,7 +281,7 @@ export default function GroupSettingsPage() {
                   {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
                 </p>
                 {x.failureReason ? (
-                  <p className="mt-1 text-[11px] text-rose-400">{x.failureReason}</p>
+                  <p className="mt-1 text-[11px] text-rose-500">{x.failureReason}</p>
                 ) : null}
               </li>
             ))}
@@ -291,17 +300,12 @@ export default function GroupSettingsPage() {
         ) : (
           <ul className="mt-3 space-y-2">
             {audit.map((x: any) => (
-              <li
+              <GroupAuditEntry
                 key={x.id}
-                className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
-              >
-                <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                  {x.action}
-                </p>
-                <p className="mt-1 text-[11px] text-stone-500">
-                  {new Date(x.createdAt).toLocaleString()}
-                </p>
-              </li>
+                action={x.action}
+                createdAt={x.createdAt}
+                locale={locale}
+              />
             ))}
           </ul>
         )}
@@ -317,27 +321,41 @@ export default function GroupSettingsPage() {
           <>
             <p className="mt-2 text-xs text-stone-500">{t("group_settings_coadmins_note")}</p>
             <div className="mt-3 space-y-2">
-              {approvedMembers.map((m) => (
-                <label
-                  key={m.userId}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950"
-                >
-                  <span className="min-w-0 truncate text-stone-800 dark:text-stone-200">
-                    {m.email}
-                    {m.role === "admin" ? (
-                      <span className="ml-2 text-[11px] text-stone-500">(admin)</span>
-                    ) : null}
-                  </span>
-                  <input
-                    type="checkbox"
-                    disabled={busy || m.role === "admin"}
-                    checked={Boolean(selected[m.userId])}
-                    onChange={(e) =>
-                      setSelected((s) => ({ ...s, [m.userId]: e.target.checked }))
-                    }
-                  />
-                </label>
-              ))}
+              {approvedMembers.map((m) => {
+                const label = p2pDisplayName({
+                  email: m.email,
+                  displayName: m.displayName ?? null,
+                  avatarUrl: null,
+                  piUsername: null,
+                });
+                return (
+                  <label
+                    key={m.userId}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950"
+                  >
+                    <span className="min-w-0 truncate text-stone-800 dark:text-stone-200">
+                      {label}
+                      {m.role === "admin" ? (
+                        <span className="ml-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                          · {t("group_settings_role_admin")}
+                        </span>
+                      ) : m.role === "co_admin" ? (
+                        <span className="ml-2 text-[11px] text-stone-500">
+                          · {t("group_settings_role_coadmin")}
+                        </span>
+                      ) : null}
+                    </span>
+                    <input
+                      type="checkbox"
+                      disabled={busy || m.role === "admin"}
+                      checked={Boolean(selected[m.userId])}
+                      onChange={(e) =>
+                        setSelected((s) => ({ ...s, [m.userId]: e.target.checked }))
+                      }
+                    />
+                  </label>
+                );
+              })}
             </div>
             <button
               type="button"
@@ -353,4 +371,3 @@ export default function GroupSettingsPage() {
     </div>
   );
 }
-
