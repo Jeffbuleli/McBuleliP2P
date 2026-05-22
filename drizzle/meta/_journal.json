@@ -169,6 +169,20 @@
       "when": 1779800000001,
       "tag": "0026_bot_credentials_futures_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780400000000,
+      "tag": "0029_avec_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780500000000,
+      "tag": "0030_avec_comms",
+      "breakpoints": true
     }
   ]
 }

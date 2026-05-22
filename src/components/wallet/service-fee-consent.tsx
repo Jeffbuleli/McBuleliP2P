@@ -18,6 +18,7 @@ export function ServiceFeeConsent({
   waived,
   checked,
   onCheckedChange,
+  compact,
 }: {
   lines: ServiceFeeLine[];
   totalLabel: string;
@@ -27,46 +28,62 @@ export function ServiceFeeConsent({
   waived?: boolean;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
+  compact?: boolean;
 }) {
   const { t } = useI18n();
+  const total = waived ? t("service_fee_waived_test") : `${totalAmount} ${totalAsset}`;
 
-  return (
-    <div className="fd-card space-y-3 p-4">
-      <h3 className="text-sm font-bold text-[color:var(--fd-text)]">{t("service_fee_title")}</h3>
-      <div className="divide-y divide-[color:var(--fd-border)] rounded-xl border border-[color:var(--fd-border)]">
-        {lines.map((row) => (
-          <div
-            key={row.label}
-            className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm"
-          >
-            <span className="text-[color:var(--fd-muted)]">{row.label}</span>
-            <span className="shrink-0 font-semibold tabular-nums text-[color:var(--fd-text)]">
-              {row.amount}
-              {row.asset ? ` ${row.asset}` : ""}
-            </span>
-          </div>
-        ))}
-        <div className="flex items-center justify-between gap-3 bg-stone-50/80 px-3 py-2.5 text-sm">
-          <span className="font-semibold text-[color:var(--fd-text)]">{totalLabel}</span>
-          <span className="shrink-0 font-bold tabular-nums text-[color:var(--fd-primary)]">
-            {waived ? t("service_fee_waived_test") : `${totalAmount} ${totalAsset}`}
-          </span>
-        </div>
-      </div>
-      {note ? <p className="text-[10px] leading-snug text-[color:var(--fd-muted)]">{note}</p> : null}
-      {waived ? (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-900">
-          {t("service_fee_waived_test")}
-        </p>
-      ) : null}
-      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[color:var(--fd-border)] p-3">
+  if (compact) {
+    return (
+      <label className="fd-card flex cursor-pointer items-start gap-2.5 p-3">
         <input
           type="checkbox"
           checked={checked}
           onChange={(e) => onCheckedChange(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-[color:var(--fd-border)] text-[color:var(--fd-primary)]"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-[color:var(--fd-border)]"
         />
-        <span className="text-xs leading-snug text-[color:var(--fd-text)]">
+        <span className="min-w-0 text-[11px] leading-snug text-[color:var(--fd-text)]">
+          <span className="font-bold tabular-nums text-[color:var(--fd-primary)]">{total}</span>
+          {" · "}
+          {t("service_fee_checkbox")}
+        </span>
+      </label>
+    );
+  }
+
+  return (
+    <div className="fd-card space-y-2 p-3">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-semibold text-[color:var(--fd-text)]">{totalLabel}</span>
+        <span className="font-bold tabular-nums text-[color:var(--fd-primary)]">{total}</span>
+      </div>
+      {lines.length > 1 ? (
+        <ul className="space-y-0.5 text-[10px] text-[color:var(--fd-muted)]">
+          {lines.map((row) => (
+            <li key={row.label} className="flex justify-between gap-2">
+              <span>{row.label}</span>
+              <span className="tabular-nums">
+                {row.amount}
+                {row.asset ? ` ${row.asset}` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : lines[0] ? (
+        <p className="text-[10px] text-[color:var(--fd-muted)]">
+          {lines[0].label}: {lines[0].amount}
+          {lines[0].asset ? ` ${lines[0].asset}` : ""}
+        </p>
+      ) : null}
+      {note ? <p className="text-[10px] text-[color:var(--fd-muted)]">{note}</p> : null}
+      <label className="flex cursor-pointer items-start gap-2 border-t border-[color:var(--fd-border)] pt-2">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onCheckedChange(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded"
+        />
+        <span className="text-[11px] leading-snug text-[color:var(--fd-text)]">
           {t("service_fee_checkbox")}
         </span>
       </label>

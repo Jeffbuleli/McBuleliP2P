@@ -447,6 +447,7 @@ export default function P2pNewAdPage() {
 
       {listingFee > 0 ? (
         <ServiceFeeConsent
+          compact
           lines={[
             {
               label: t("service_fee_p2p_listing"),
@@ -457,7 +458,6 @@ export default function P2pNewAdPage() {
           totalLabel={t("service_fee_total")}
           totalAmount={String(listingFee)}
           totalAsset={listingFeeAsset}
-          note={t("service_fee_p2p_note_wallet")}
           checked={listingFeeAuthorized}
           onCheckedChange={setListingFeeAuthorized}
         />

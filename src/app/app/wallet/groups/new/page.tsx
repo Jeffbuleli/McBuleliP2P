@@ -200,11 +200,9 @@ export default function AvecCreatePage() {
             <div className="text-[color:var(--fd-primary)]">
               <AvecHeroIllustration />
             </div>
-            <ul className="min-w-0 flex-1 space-y-1 text-[11px] leading-snug text-[color:var(--fd-muted)]">
-              <li>{t("avec_principle_1")}</li>
-              <li>{t("avec_principle_2")}</li>
-              <li>{t("avec_principle_3")}</li>
-            </ul>
+            <p className="min-w-0 flex-1 text-[11px] leading-snug text-[color:var(--fd-muted)]">
+              {t("avec_create_hint")}
+            </p>
           </div>
 
           <div className={`${avecCls.section} grid grid-cols-2 gap-2`}>
@@ -306,16 +304,17 @@ export default function AvecCreatePage() {
           </div>
 
           <ServiceFeeConsent
+            compact={!feeWaived}
             lines={[
               {
                 label: t("service_fee_line_mcbuleli"),
                 amount: String(GROUP_SUBSCRIPTION_FEE_USDT),
-                asset: "USDT",
+                asset: "USDT/mo",
               },
             ]}
             totalLabel={t("service_fee_total")}
             totalAmount={String(GROUP_SUBSCRIPTION_FEE_USDT)}
-            note={t("service_fee_note_treasury")}
+            note={feeWaived ? undefined : t("service_fee_note_treasury")}
             waived={feeWaived}
             checked={feeChecked}
             onCheckedChange={setFeeChecked}

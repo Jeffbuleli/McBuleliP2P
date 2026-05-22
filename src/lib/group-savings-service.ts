@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   getDb,
@@ -116,13 +116,16 @@ export async function createGroup(args: {
   try {
     groupId = await db.transaction(async (tx) => {
       let g: { id: string } | undefined;
+      await tx.execute(sql`SAVEPOINT group_create_insert`);
       try {
         [g] = await tx
           .insert(groupSavingsGroups)
           .values(extendedValues)
           .returning({ id: groupSavingsGroups.id });
+        await tx.execute(sql`RELEASE SAVEPOINT group_create_insert`);
       } catch (e) {
         if (!isPgMissingColumn(e)) throw e;
+        await tx.execute(sql`ROLLBACK TO SAVEPOINT group_create_insert`);
         [g] = await tx
           .insert(groupSavingsGroups)
           .values(baseValues)
