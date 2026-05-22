@@ -33,22 +33,18 @@ export default function AdminGroupDetailPage({
   const [invoices, setInvoices] = useState<any[] | null>(null);
   const [audit, setAudit] = useState<any[] | null>(null);
 
-  const canReview = useMemo(
-    () => row?.status === "pending" || row?.status === "approved",
-    [row?.status],
-  );
+  const canReview = useMemo(() => row?.status === "pending", [row?.status]);
 
   async function load() {
     setErr(null);
-    const res = await fetch(`/api/admin/groups?status=all`, { cache: "no-store" });
+    const res = await fetch(`/api/admin/groups/${id}`, { cache: "no-store" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr(data.message ?? "…");
+      setErr(typeof data.message === "string" ? data.message : "admin_load_failed");
       setRow(null);
       return;
     }
-    const found = (data.groups as Group[]).find((g) => g.id === id) ?? null;
-    setRow(found);
+    setRow((data.group as Group) ?? null);
     const [rInv, rAud] = await Promise.all([
       fetch(`/api/admin/groups/${id}/subscription?limit=24`, { cache: "no-store" }),
       fetch(`/api/admin/groups/${id}/audit?limit=80`, { cache: "no-store" }),
@@ -114,7 +110,11 @@ export default function AdminGroupDetailPage({
           <h2 className={adminCls.h1}>{t("admin_group")}</h2>
           <AdminBackLink href="/admin/groups">{t("admin_back")}</AdminBackLink>
         </div>
-        {err ? <p className={adminCls.error}>{err}</p> : <p className={adminCls.muted}>…</p>}
+        {err ? (
+          <p className={adminCls.error}>{err}</p>
+        ) : (
+          <p className={adminCls.muted}>…</p>
+        )}
       </div>
     );
   }

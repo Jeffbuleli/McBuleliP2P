@@ -76,7 +76,7 @@ function splitUrls(text: string, nextKey: () => number): ReactNode[] {
           href,
           target: "_blank",
           rel: "noopener noreferrer",
-          className: "underline break-all",
+          className: "font-medium text-sky-800 underline break-all",
         },
         href,
       ),

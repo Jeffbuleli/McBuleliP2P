@@ -254,6 +254,18 @@ function notifMeta(
         pill: { variant: "success", label: t("status_ui_success") },
       };
     }
+    case "group_ops_approved": {
+      const gid = str("groupId");
+      const name = str("groupName");
+      return {
+        title: t("notif_group_ops_approved_title"),
+        body: name
+          ? t("notif_group_ops_approved_body", { name })
+          : t("notif_group_ops_approved_body_short"),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
     default:
       return {
         title: row.kind,

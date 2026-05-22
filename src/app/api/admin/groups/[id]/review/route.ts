@@ -13,6 +13,7 @@ import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
+import { createUserNotification } from "@/lib/notifications-service";
 
 const bodyZ = z.object({
   decision: z.enum(["approve", "reject"]),
@@ -52,7 +53,8 @@ export async function PATCH(
     await db
       .update(groupSavingsGroups)
       .set({
-        status: "approved",
+        status: "active",
+        subscriptionStatus: "active",
         reviewedByUserId: me?.id ?? null,
         reviewedAt: now,
         rejectionReason: null,
@@ -65,7 +67,12 @@ export async function PATCH(
       actorUserId: me?.id ?? null,
       action: "ops_approved_group",
       before: { status: g.status },
-      after: { status: "approved" },
+      after: { status: "active", subscriptionStatus: "active" },
+    });
+    await createUserNotification({
+      userId: g.createdByUserId,
+      kind: "group_ops_approved",
+      payload: { groupId: id, groupName: g.name },
     });
     await writePlatformAdminAudit({
       actorUserId: me?.id ?? null,

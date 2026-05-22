@@ -21,8 +21,11 @@ export function groupCreationProgressSteps(status: string): TxStep[] {
     "group_step_ops",
     "group_step_active",
   ];
-  if (status === "active" || status === "approved") {
+  if (status === "active") {
     return withStates(labels, labels.length);
+  }
+  if (status === "approved") {
+    return withStates(labels, 2);
   }
   if (status === "rejected" || status === "suspended" || status === "closed") {
     return withStates(labels, 1, true);

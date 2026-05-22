@@ -77,7 +77,7 @@ export function SupportMessageRow({
   return (
     <li>
       <article
-        className={`fd-card flex gap-3 p-3 ${
+        className={`fd-card flex gap-3 p-3 text-[color:var(--fd-text)] ${
           m.own ? "ring-1 ring-[color:var(--fd-primary)]/25" : ""
         }`}
       >

@@ -25,6 +25,7 @@ export type NotificationKind =
   | "group_payout"
   | "group_member_pending"
   | "group_member_approved"
+  | "group_ops_approved"
   | "admin_deposit_order"
   | "admin_deposit_review"
   | "admin_withdrawal_order";

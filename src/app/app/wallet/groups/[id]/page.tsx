@@ -62,7 +62,8 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
   const canModerate =
     me?.status === "approved" && (me.role === "admin" || me.role === "co_admin");
   const canAdmin = me?.status === "approved" && me.role === "admin";
-  const canContribute = me?.status === "approved";
+  const groupActive = data?.group.status === "active";
+  const canContribute = me?.status === "approved" && groupActive;
   const shareValue = data ? Number(data.group.contributionAmountUsdt) : 0;
   const meetingTotal = shareValue * shares;
   const maxShares = data?.group.maxSharesPerMeeting ?? 5;
@@ -235,7 +236,8 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
           ))}
         </div>
 
-        {tab === "overview" && (
+        {tab === "overview" ? (
+          groupActive ? (
           <div className={avecCls.section}>
             <p className="text-sm font-bold text-[color:var(--fd-text)]">{t("avec_buy_shares")}</p>
             <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
@@ -270,7 +272,12 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
               </button>
             </div>
           </div>
-        )}
+          ) : (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t("group_create_pending_note")}
+          </p>
+          )
+        ) : null}
 
         {tab === "members" && (
           <div className={avecCls.section}>
@@ -284,7 +291,10 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
         )}
 
         {tab === "chat" && (
-          <AvecChatroom groupId={id} canPost={canContribute} />
+          <AvecChatroom
+            groupId={id}
+            canPost={me?.status === "approved" && (groupActive || canAdmin)}
+          />
         )}
 
         {tab === "reports" && <AvecReportsPanel groupId={id} />}

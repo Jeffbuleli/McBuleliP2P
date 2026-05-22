@@ -14,7 +14,7 @@ export function SupportMessageBody({
   const nodes = parseSupportMarkup(body, mentionHandles);
   return (
     <p
-      className={`whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere] ${className}`}
+      className={`whitespace-pre-wrap break-words text-sm leading-relaxed text-[color:var(--fd-text)] [overflow-wrap:anywhere] ${className}`}
     >
       {nodes}
     </p>

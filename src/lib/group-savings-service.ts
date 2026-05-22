@@ -207,6 +207,15 @@ export async function listMyGroups(args: { userId: string }) {
 }
 
 export async function getGroupDashboard(args: { groupId: string; userId: string }) {
+  try {
+    return await getGroupDashboardInner(args);
+  } catch (err) {
+    console.error("[getGroupDashboard]", err);
+    return { ok: false as const, message: "group_dashboard_failed" };
+  }
+}
+
+async function getGroupDashboardInner(args: { groupId: string; userId: string }) {
   const db = getDb();
   const [g] = await db
     .select()
@@ -221,7 +230,11 @@ export async function getGroupDashboard(args: { groupId: string; userId: string 
     return { ok: false as const, message: "group_forbidden" };
   }
 
-  await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
+  try {
+    await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
+  } catch (err) {
+    console.warn("[getGroupDashboard] billing", err);
+  }
 
   const balance = await getGroupUsdtBalance(args.groupId);
   const members = await db
