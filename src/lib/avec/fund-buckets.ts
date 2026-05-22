@@ -1,5 +1,5 @@
-import { eq, sql } from "drizzle-orm";
-import { getDb, groupWalletLedgerEntries } from "@/db";
+import { and, eq, sql } from "drizzle-orm";
+import { getDb, groupAvecLoans, groupWalletLedgerEntries } from "@/db";
 import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
 import { numFromNumeric } from "@/lib/wallet-types";
@@ -29,7 +29,9 @@ export function ledgerBucket(
   if (
     entryType === "group_contribution_in" ||
     entryType === "group_payout_out" ||
-    entryType === "group_payout_in"
+    entryType === "group_payout_in" ||
+    entryType === "group_loan_disburse_out" ||
+    entryType === "group_loan_repay_in"
   ) {
     return "savings";
   }
@@ -65,7 +67,7 @@ export async function getGroupFundSummary(
   const stats = await getMemberContributionStats(groupId);
   const totalShares = stats.reduce((s, m) => s + m.sharesTotal, 0);
   const totalUsdt = await getGroupUsdtBalance(groupId);
-  const lentUsdt = 0;
+  const lentUsdt = await getGroupLentUsdt(groupId);
   const availableUsdt = Math.max(0, savingsUsdt - lentUsdt);
 
   return {
@@ -82,4 +84,19 @@ export async function getGroupFundSummary(
 
 export function fundBucketMeta(bucket: FundBucket): { bucket: FundBucket } {
   return { bucket };
+}
+
+/** Outstanding AVEC internal loans (savings fund locked). */
+export async function getGroupLentUsdt(groupId: string): Promise<number> {
+  const db = getDb();
+  const rows = await db
+    .select({ s: sql<string>`coalesce(sum(${groupAvecLoans.outstandingUsdt}), 0)` })
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.groupId, groupId),
+        eq(groupAvecLoans.status, "disbursed"),
+      ),
+    );
+  return numFromNumeric(rows[0]?.s?.toString() ?? "0");
 }

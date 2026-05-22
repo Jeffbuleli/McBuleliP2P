@@ -1022,6 +1022,57 @@ export const groupPayoutRequests = pgTable(
   ],
 );
 
+export const groupAvecLoans = pgTable(
+  "group_avec_loans",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    borrowerUserId: uuid("borrower_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    initiatedByUserId: uuid("initiated_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    principalUsdt: numeric("principal_usdt", { precision: 36, scale: 18 }).notNull(),
+    outstandingUsdt: numeric("outstanding_usdt", { precision: 36, scale: 18 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    requiredApprovals: integer("required_approvals").notNull(),
+    batchId: uuid("batch_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    disbursedAt: timestamp("disbursed_at", { withTimezone: true }),
+  },
+  (t) => [index("group_avec_loans_group_status_idx").on(t.groupId, t.status)],
+);
+
+export const groupAvecLoanApprovals = pgTable(
+  "group_avec_loan_approvals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    loanId: uuid("loan_id")
+      .notNull()
+      .references(() => groupAvecLoans.id, { onDelete: "cascade" }),
+    approverUserId: uuid("approver_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_avec_loan_approvals_loan_approver_uidx").on(
+      t.loanId,
+      t.approverUserId,
+    ),
+  ],
+);
+
 export const groupPayoutApprovals = pgTable(
   "group_payout_approvals",
   {

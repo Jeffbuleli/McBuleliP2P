@@ -22,6 +22,7 @@ import { p2pDisplayName } from "@/lib/p2p-display";
 import { AvecMeetingPanel } from "@/components/groups/avec-meeting-panel";
 import { AvecOverviewPanel } from "@/components/groups/avec-overview-panel";
 import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
+import { AvecLoansPanel } from "@/components/groups/avec-loans-panel";
 import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
@@ -342,6 +343,15 @@ export default function AvecDashboardPage() {
         {tab === "treasury" && (
           <div className="space-y-3">
             <AvecTreasuryFunds groupId={id} onRefreshKey={fundsRefresh} />
+            <AvecLoansPanel
+              groupId={id}
+              members={data.members}
+              myUserId={myUserId}
+              onDone={() => {
+                setFundsRefresh((n) => n + 1);
+                void load();
+              }}
+            />
             {canModerate ? (
               <AvecPayoutPanel
                 groupId={id}

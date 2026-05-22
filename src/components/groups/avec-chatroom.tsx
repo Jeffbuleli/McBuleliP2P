@@ -7,6 +7,10 @@ import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 import { AVATAR_MAX_BYTES } from "@/lib/avatar-image";
 import {
+  AvecLoanDecisionMessage,
+  parseLoanMeta,
+} from "@/components/groups/avec-loan-decision-message";
+import {
   AvecPayoutDecisionMessage,
   parsePayoutMeta,
 } from "@/components/groups/avec-payout-decision-message";
@@ -205,6 +209,17 @@ export function AvecChatroom({
                 <div key={m.id} className="flex justify-center py-1">
                   <AvecPayoutDecisionMessage
                     meta={parsePayoutMeta(m.meta ?? null)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                  />
+                </div>
+              );
+            }
+            if (m.messageType === "loan_decision") {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecLoanDecisionMessage
+                    meta={parseLoanMeta(m.meta ?? null)}
                     createdAt={m.createdAt}
                     locale={locale}
                   />
