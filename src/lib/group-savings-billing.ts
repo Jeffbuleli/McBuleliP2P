@@ -10,6 +10,7 @@ import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
 import { groupHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { GROUP_SUBSCRIPTION_FEE_USDT } from "@/lib/group-savings-types";
+import { fundBucketMeta } from "@/lib/avec/fund-buckets";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 
 function periodYYYYMM(d: Date): string {
@@ -198,7 +199,7 @@ export async function processGroupSubscriptionBilling(args: {
           entryType: "group_subscription_fee",
           asset: "USDT",
           amount: `-${fmtWalletAmount(GROUP_SUBSCRIPTION_FEE_USDT)}`,
-          meta: { period },
+          meta: { period, ...fundBucketMeta("admin") },
         })
         .returning({ id: groupWalletLedgerEntries.id });
 

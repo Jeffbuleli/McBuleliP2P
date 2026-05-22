@@ -30,6 +30,7 @@ const ENTRY_LABEL_KEYS: Record<string, keyof Messages> = {
   loan_repay: "wallet_entry_loan_repay",
   group_contribution_in: "wallet_entry_group_contribution_in",
   group_contribution_out: "wallet_entry_group_contribution_out",
+  group_social_contribution_in: "wallet_entry_group_social_contribution_in",
   group_payout_out: "wallet_entry_group_payout_out",
   group_payout_in: "wallet_entry_group_payout_in",
   group_subscription_fee: "wallet_entry_group_subscription_fee",

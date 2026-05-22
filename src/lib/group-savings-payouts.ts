@@ -11,7 +11,7 @@ import {
 } from "@/db";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
-import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
+import { getGroupFundSummary } from "@/lib/avec/fund-buckets";
 import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 import { insertGroupPayoutDecisionMessage } from "@/lib/group-savings-messaging";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
@@ -19,6 +19,7 @@ import { createUserNotification } from "@/lib/notifications-service";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { debitUserAsset, creditUserAsset } from "@/lib/wallet-move-assets";
+import { fundBucketMeta } from "@/lib/avec/fund-buckets";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 
 export type PayoutApprover = { userId: string; displayName: string };
@@ -115,8 +116,8 @@ async function tryExecuteRequest(args: {
     }
 
     const amountUsdt = Number(req.amountUsdt);
-    const bal = await getGroupUsdtBalance(args.groupId);
-    if (bal + 1e-18 < amountUsdt) {
+    const funds = await getGroupFundSummary(args.groupId);
+    if (funds.availableUsdt + 1e-18 < amountUsdt) {
       return { ok: false, message: "group_insufficient_balance" };
     }
 
@@ -129,7 +130,7 @@ async function tryExecuteRequest(args: {
       entryType: "group_payout_out",
       asset: "USDT",
       amount: `-${amtStr}`,
-      meta: { toUserId: req.toUserId, requestId: req.id },
+      meta: { toUserId: req.toUserId, requestId: req.id, ...fundBucketMeta("savings") },
     });
     await creditUserAsset(tx, req.toUserId, "USDT", amtStr);
     await insertWalletLedgerLines(tx, [
@@ -271,8 +272,8 @@ export async function proposeGroupPayout(args: {
     return { ok: false, message: "group_suspended" };
   }
 
-  const bal = await getGroupUsdtBalance(args.groupId);
-  if (bal + 1e-18 < args.amountUsdt) {
+  const funds = await getGroupFundSummary(args.groupId);
+  if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
     return { ok: false, message: "group_insufficient_balance" };
   }
 

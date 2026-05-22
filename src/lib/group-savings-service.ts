@@ -26,6 +26,7 @@ import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
 import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { fetchGroupById } from "@/lib/group-savings-read";
+import { fundBucketMeta } from "@/lib/avec/fund-buckets";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
 function isPgMissingColumn(err: unknown): boolean {
@@ -588,7 +589,10 @@ export async function contributeToGroup(args: {
     return { ok: false as const, message: "group_invalid_amount" };
   }
 
+  const socialPerMeeting = Math.max(0, numFromNumeric(g.socialFundUsdt?.toString()));
+  const totalDue = amt + socialPerMeeting;
   const amtStr = fmtWalletAmount(amt);
+  const socialStr = socialPerMeeting > 0 ? fmtWalletAmount(socialPerMeeting) : null;
   const batchId = randomUUID();
 
   try {
@@ -599,9 +603,9 @@ export async function contributeToGroup(args: {
         .where(eq(users.id, args.userId))
         .limit(1);
       const bal = numFromNumeric(u?.bal?.toString());
-      if (bal + 1e-18 < amt) throw new Error("insufficient");
+      if (bal + 1e-18 < totalDue) throw new Error("insufficient");
 
-      await debitUserAsset(tx, args.userId, "USDT", amtStr);
+      await debitUserAsset(tx, args.userId, "USDT", fmtWalletAmount(totalDue));
       await tx.insert(groupWalletLedgerEntries).values({
         batchId,
         groupId: args.groupId,
@@ -610,16 +614,30 @@ export async function contributeToGroup(args: {
         amount: amtStr,
         meta: {
           userId: args.userId,
+          ...fundBucketMeta("savings"),
           ...(shares != null ? { shares } : {}),
         },
       });
+      if (socialStr && socialPerMeeting > 0) {
+        await tx.insert(groupWalletLedgerEntries).values({
+          batchId,
+          groupId: args.groupId,
+          entryType: "group_social_contribution_in",
+          asset: "USDT",
+          amount: socialStr,
+          meta: {
+            userId: args.userId,
+            ...fundBucketMeta("social"),
+          },
+        });
+      }
       await insertWalletLedgerLines(tx, [
         {
           batchId,
           userId: args.userId,
           entryType: "group_contribution_out",
           asset: "USDT",
-          amount: `-${amtStr}`,
+          amount: `-${fmtWalletAmount(totalDue)}`,
           meta: { groupId: args.groupId },
         },
       ]);
@@ -643,10 +661,12 @@ export async function contributeToGroup(args: {
     .where(eq(users.id, args.userId))
     .limit(1);
   const partsLabel = shares != null ? ` · ${shares} parts` : "";
+  const socialLabel =
+    socialPerMeeting > 0 ? ` · social ${socialPerMeeting.toFixed(2)} USDT` : "";
   await insertGroupActivitySystemMessage({
     groupId: args.groupId,
     actorUserId: args.userId,
-    body: `${u?.email ?? "Member"} → ${amt.toFixed(2)} USDT${partsLabel}`,
+    body: `${u?.email ?? "Member"} → ${amt.toFixed(2)} USDT${partsLabel}${socialLabel}`,
   });
   await notifyGroupMembers({
     groupId: args.groupId,

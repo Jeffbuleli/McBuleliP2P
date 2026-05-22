@@ -7,6 +7,7 @@ import { avecCls } from "@/components/groups/avec-ui";
 
 export function AvecMeetingPanel({
   shareValue,
+  socialFundPerMeeting = 0,
   maxShares,
   canContribute,
   busy,
@@ -14,6 +15,7 @@ export function AvecMeetingPanel({
   paySuccess = false,
 }: {
   shareValue: number;
+  socialFundPerMeeting?: number;
   maxShares: number;
   canContribute: boolean;
   busy: boolean;
@@ -23,7 +25,8 @@ export function AvecMeetingPanel({
   const { t } = useI18n();
   const [shares, setShares] = useState(1);
   const [justPaid, setJustPaid] = useState(false);
-  const meetingTotal = shareValue * shares;
+  const sharesTotal = shareValue * shares;
+  const meetingTotal = sharesTotal + socialFundPerMeeting;
 
   async function pay() {
     setJustPaid(false);
@@ -70,6 +73,11 @@ export function AvecMeetingPanel({
               {meetingTotal.toFixed(2)}
               <span className="ml-1 text-sm font-bold">USDT</span>
             </p>
+            {socialFundPerMeeting > 0 ? (
+              <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
+                {t("avec_meeting_social_line", { amount: socialFundPerMeeting.toFixed(2) })}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"

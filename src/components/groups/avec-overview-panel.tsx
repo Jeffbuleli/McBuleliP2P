@@ -67,12 +67,18 @@ export function AvecOverviewPanel({
 }) {
   const { t } = useI18n();
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
+  const [availableUsdt, setAvailableUsdt] = useState<number | null>(null);
 
   useEffect(() => {
-    void fetch(`/api/groups/${groupId}/activity`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        if (j.ledger) setLedger(j.ledger as LedgerRow[]);
+    void Promise.all([
+      fetch(`/api/groups/${groupId}/activity`, { cache: "no-store" }),
+      fetch(`/api/groups/${groupId}/funds`, { cache: "no-store" }),
+    ])
+      .then(async ([a, f]) => {
+        const aj = await a.json().catch(() => ({}));
+        if (aj.ledger) setLedger(aj.ledger as LedgerRow[]);
+        const fj = await f.json().catch(() => ({}));
+        if (fj.funds) setAvailableUsdt((fj.funds as { availableUsdt: number }).availableUsdt);
       })
       .catch(() => {});
   }, [groupId]);
@@ -120,6 +126,11 @@ export function AvecOverviewPanel({
             <p className="text-[10px] text-[color:var(--fd-muted)]">
               {t("avec_vue_saved_members", { amount: totalSaved.toFixed(0) })}
             </p>
+            {availableUsdt != null ? (
+              <p className="mt-0.5 text-[10px] font-semibold text-[color:var(--fd-primary)]">
+                {t("avec_fund_available")}: {availableUsdt.toFixed(0)} USDT
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

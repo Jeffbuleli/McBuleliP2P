@@ -22,6 +22,7 @@ import { p2pDisplayName } from "@/lib/p2p-display";
 import { AvecMeetingPanel } from "@/components/groups/avec-meeting-panel";
 import { AvecOverviewPanel } from "@/components/groups/avec-overview-panel";
 import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
+import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
@@ -74,6 +75,7 @@ export default function AvecDashboardPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [payOk, setPayOk] = useState(false);
+  const [fundsRefresh, setFundsRefresh] = useState(0);
   const [tab, setTab] = useState<Tab>("vue");
   const [myUserId, setMyUserId] = useState<string | undefined>();
 
@@ -84,6 +86,7 @@ export default function AvecDashboardPage() {
   const groupActive = data?.group.status === "active";
   const canContribute = me?.status === "approved" && groupActive;
   const shareValue = data ? Number(data.group.contributionAmountUsdt) : 0;
+  const socialFundPerMeeting = data ? Number(data.group.socialFundUsdt) : 0;
   const maxShares = data?.group.maxSharesPerMeeting ?? 5;
 
   const pendingCount = useMemo(
@@ -155,6 +158,7 @@ export default function AvecDashboardPage() {
         return false;
       }
       setPayOk(true);
+      setFundsRefresh((n) => n + 1);
       await load();
       return true;
     } finally {
@@ -300,6 +304,7 @@ export default function AvecDashboardPage() {
           (groupActive ? (
             <AvecMeetingPanel
               shareValue={shareValue}
+              socialFundPerMeeting={socialFundPerMeeting}
               maxShares={maxShares}
               canContribute={!!canContribute}
               busy={busy}
@@ -336,18 +341,18 @@ export default function AvecDashboardPage() {
 
         {tab === "treasury" && (
           <div className="space-y-3">
+            <AvecTreasuryFunds groupId={id} onRefreshKey={fundsRefresh} />
             {canModerate ? (
               <AvecPayoutPanel
                 groupId={id}
                 members={data.members}
                 myUserId={myUserId}
-                onDone={() => void load()}
+                onDone={() => {
+                  setFundsRefresh((n) => n + 1);
+                  void load();
+                }}
               />
-            ) : (
-              <p className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-4 text-center text-xs text-[color:var(--fd-muted)]">
-                {t("avec_treasury_managers_only")}
-              </p>
-            )}
+            ) : null}
           </div>
         )}
       </div>
