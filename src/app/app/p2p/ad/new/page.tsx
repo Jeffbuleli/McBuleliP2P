@@ -17,6 +17,7 @@ import {
   FlowTextarea,
   P2pFlowShell,
 } from "@/components/p2p/p2p-flow-ui";
+import { ServiceFeeConsent } from "@/components/wallet/service-fee-consent";
 import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
@@ -82,6 +83,7 @@ export default function P2pNewAdPage() {
   const [terms, setTerms] = useState("");
   const [country, setCountry] = useState("CD");
   const [err, setErr] = useState<string | null>(null);
+  const [listingFeeAuthorized, setListingFeeAuthorized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [balUsdt, setBalUsdt] = useState<number | null>(null);
   const [balPi, setBalPi] = useState<number | null>(null);
@@ -258,6 +260,11 @@ export default function P2pNewAdPage() {
         }
       }
 
+      if (listingFee > 0 && !listingFeeAuthorized) {
+        setErr("group_fee_consent_required");
+        return;
+      }
+
       const res = await fetch("/api/p2p/ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -272,6 +279,7 @@ export default function P2pNewAdPage() {
           paymentMethodCodes: cryptoQuote ? undefined : codes,
           terms: terms.trim() || undefined,
           countryCode: country === "OTHER" ? undefined : country,
+          listingFeeAuthorized: listingFee > 0 ? true : undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -288,6 +296,7 @@ export default function P2pNewAdPage() {
 
   const publishDisabled =
     loading ||
+    (listingFee > 0 && !listingFeeAuthorized) ||
     (sellNeedHint != null && !sellNeedHint.ok) ||
     (!cryptoQuote &&
       (paymentDefs.length > 0
@@ -435,6 +444,24 @@ export default function P2pNewAdPage() {
           ))}
         </FlowSelect>
       </FlowSection>
+
+      {listingFee > 0 ? (
+        <ServiceFeeConsent
+          lines={[
+            {
+              label: t("service_fee_p2p_listing"),
+              amount: String(listingFee),
+              asset: listingFeeAsset,
+            },
+          ]}
+          totalLabel={t("service_fee_total")}
+          totalAmount={String(listingFee)}
+          totalAsset={listingFeeAsset}
+          note={t("service_fee_p2p_note_wallet")}
+          checked={listingFeeAuthorized}
+          onCheckedChange={setListingFeeAuthorized}
+        />
+      ) : null}
 
       {errMsg ? <FlowError>{errMsg}</FlowError> : null}
 

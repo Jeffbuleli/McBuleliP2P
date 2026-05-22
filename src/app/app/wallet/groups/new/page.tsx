@@ -1,21 +1,56 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AvecHeroIllustration } from "@/components/groups/avec-icons";
 import { avecCls } from "@/components/groups/avec-ui";
 import { useI18n } from "@/components/i18n-provider";
+import { ServiceFeeConsent } from "@/components/wallet/service-fee-consent";
+import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { APP_COUNTRY_CODES } from "@/lib/country-codes";
 import { countryLabel } from "@/lib/country-label";
+import { clientErrorText } from "@/lib/client-error-text";
+import { groupCreationProgressSteps } from "@/lib/group-create-progress";
 import {
   AVEC_DEFAULT_CYCLE_DAYS,
   AVEC_DEFAULT_MAX_MEMBERS,
   AVEC_DEFAULT_MIN_MEMBERS,
   AVEC_DEFAULT_SHARE_VALUE_USDT,
   AVEC_MAX_SHARES_PER_MEETING,
+  GROUP_SUBSCRIPTION_FEE_USDT,
 } from "@/lib/group-savings-types";
-import { clientErrorText } from "@/lib/client-error-text";
+
+const FETCH_TIMEOUT_MS = 45_000;
+
+async function fetchJsonWithTimeout(
+  url: string,
+  init: RequestInit,
+  ms: number,
+): Promise<{ res: Response; body: Record<string, unknown> }> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    const text = await res.text();
+    let body: Record<string, unknown> = {};
+    if (text) {
+      try {
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        body = { error: "group_create_failed" };
+      }
+    }
+    return { res, body };
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      return { res: new Response(null, { status: 408 }), body: { error: "group_create_timeout" } };
+    }
+    return { res: new Response(null, { status: 0 }), body: { error: "group_create_failed" } };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export default function AvecCreatePage() {
   const { t, locale } = useI18n();
@@ -32,6 +67,10 @@ export default function AvecCreatePage() {
   const [rules, setRules] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [feeChecked, setFeeChecked] = useState(false);
+  const [feeWaived, setFeeWaived] = useState(false);
+  const [createdGroupId, setCreatedGroupId] = useState<string | null>(null);
+  const [createdStatus, setCreatedStatus] = useState<string | null>(null);
 
   const parsed = useMemo(() => {
     const min = Number(minMembers);
@@ -43,6 +82,15 @@ export default function AvecCreatePage() {
     const sf = Number(socialFund.replace(",", "."));
     return { min, max, share, cd, md, ms, sf };
   }, [minMembers, maxMembers, shareValue, cycleDays, meetingDays, maxShares, socialFund]);
+
+  useEffect(() => {
+    void fetch("/api/groups/fee-preview", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { feeWaived?: boolean }) => {
+        if (j.feeWaived) setFeeWaived(true);
+      })
+      .catch(() => {});
+  }, []);
 
   function validateClient(): string | null {
     const n = name.trim();
@@ -60,35 +108,73 @@ export default function AvecCreatePage() {
       setErr(clientErr);
       return;
     }
+    if (!feeWaived && !feeChecked) {
+      setErr("group_fee_consent_required");
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/groups", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          countryCode: countryCode.trim() || null,
-          minMembers: parsed.min,
-          maxMembers: parsed.max,
-          contributionAmountUsdt: parsed.share,
-          cycleDurationDays: parsed.cd,
-          maxSharesPerMeeting: parsed.ms,
-          meetingIntervalDays: parsed.md,
-          socialFundUsdt: parsed.sf,
-          paymentRules: rules.trim() || null,
-        }),
-      });
-      const j = (await res.json()) as { error?: string; groupId?: string };
+      const { res, body } = await fetchJsonWithTimeout(
+        "/api/groups",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.trim(),
+            countryCode: countryCode.trim() || null,
+            minMembers: parsed.min,
+            maxMembers: parsed.max,
+            contributionAmountUsdt: parsed.share,
+            cycleDurationDays: parsed.cd,
+            maxSharesPerMeeting: parsed.ms,
+            meetingIntervalDays: parsed.md,
+            socialFundUsdt: parsed.sf,
+            paymentRules: rules.trim() || null,
+            feeConsentAuthorized: true,
+          }),
+        },
+        FETCH_TIMEOUT_MS,
+      );
       if (!res.ok) {
-        setErr(j.error ?? "error");
+        setErr(typeof body.error === "string" ? body.error : "group_create_failed");
         return;
       }
-      router.replace(`/app/wallet/groups/${j.groupId}`);
-      router.refresh();
+      const groupId = typeof body.groupId === "string" ? body.groupId : null;
+      if (!groupId) {
+        setErr("group_create_failed");
+        return;
+      }
+      const status = typeof body.status === "string" ? body.status : "pending";
+      if (body.feeWaived === true) setFeeWaived(true);
+      setCreatedGroupId(groupId);
+      setCreatedStatus(status);
+      if (status === "active") {
+        router.replace(`/app/wallet/groups/${groupId}`);
+        router.refresh();
+      }
     } finally {
       setBusy(false);
     }
+  }
+
+  const progressSteps = groupCreationProgressSteps(createdStatus ?? "pending");
+
+  if (createdGroupId && createdStatus !== "active") {
+    return (
+      <div className="space-y-4 pb-10">
+        <WalletSubpageHeader title={t("group_create_progress_title")} />
+        <TransactionStepper steps={progressSteps} />
+        <p className="text-center text-sm text-[color:var(--fd-muted)]">{t("group_create_pending_note")}</p>
+        <button
+          type="button"
+          className={avecCls.btnPrimary}
+          onClick={() => router.replace(`/app/wallet/groups/${createdGroupId}?created=1`)}
+        >
+          {t("group_create_view_avec")}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -101,125 +187,150 @@ export default function AvecCreatePage() {
         </p>
       ) : null}
 
-      <div className={avecCls.hero}>
-        <div className="text-[color:var(--fd-primary)]">
-          <AvecHeroIllustration />
+      {busy ? (
+        <div className="space-y-3">
+          <TransactionStepper steps={groupCreationProgressSteps("pending")} />
+          <p className="text-center text-xs text-[color:var(--fd-muted)]">{t("group_create_submitting")}</p>
         </div>
-        <ul className="min-w-0 flex-1 space-y-1 text-[11px] leading-snug text-[color:var(--fd-muted)]">
-          <li>{t("avec_principle_1")}</li>
-          <li>{t("avec_principle_2")}</li>
-          <li>{t("avec_principle_3")}</li>
-        </ul>
-      </div>
+      ) : null}
 
-      <div className={`${avecCls.section} grid grid-cols-2 gap-2`}>
-        <label className="col-span-2 flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_name")}</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t("group_field_name_ph")}
-            className={avecCls.input}
+      {!busy ? (
+        <>
+          <div className={avecCls.hero}>
+            <div className="text-[color:var(--fd-primary)]">
+              <AvecHeroIllustration />
+            </div>
+            <ul className="min-w-0 flex-1 space-y-1 text-[11px] leading-snug text-[color:var(--fd-muted)]">
+              <li>{t("avec_principle_1")}</li>
+              <li>{t("avec_principle_2")}</li>
+              <li>{t("avec_principle_3")}</li>
+            </ul>
+          </div>
+
+          <div className={`${avecCls.section} grid grid-cols-2 gap-2`}>
+            <label className="col-span-2 flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_name")}</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("group_field_name_ph")}
+                className={avecCls.input}
+              />
+            </label>
+            <label className="col-span-2 flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_country")}</span>
+              <select
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className={avecCls.input}
+              >
+                {APP_COUNTRY_CODES.map((c) => (
+                  <option key={c} value={c}>
+                    {countryLabel(locale, c)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_min_members")}</span>
+              <input
+                value={minMembers}
+                onChange={(e) => setMinMembers(e.target.value)}
+                inputMode="numeric"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_max_members")}</span>
+              <input
+                value={maxMembers}
+                onChange={(e) => setMaxMembers(e.target.value)}
+                inputMode="numeric"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_share_value")}</span>
+              <input
+                value={shareValue}
+                onChange={(e) => setShareValue(e.target.value)}
+                inputMode="decimal"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_cycle_days")}</span>
+              <input
+                value={cycleDays}
+                onChange={(e) => setCycleDays(e.target.value)}
+                inputMode="numeric"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_meeting_days")}</span>
+              <input
+                value={meetingDays}
+                onChange={(e) => setMeetingDays(e.target.value)}
+                inputMode="numeric"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_max_shares")}</span>
+              <input
+                value={maxShares}
+                onChange={(e) => setMaxShares(e.target.value)}
+                inputMode="numeric"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="col-span-2 flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_social_fund")}</span>
+              <input
+                value={socialFund}
+                onChange={(e) => setSocialFund(e.target.value)}
+                inputMode="decimal"
+                className={avecCls.input}
+              />
+            </label>
+            <label className="col-span-2 flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_rules")}</span>
+              <textarea
+                value={rules}
+                onChange={(e) => setRules(e.target.value)}
+                placeholder={t("group_field_rules_ph")}
+                className={`${avecCls.input} min-h-[72px]`}
+              />
+            </label>
+          </div>
+
+          <ServiceFeeConsent
+            lines={[
+              {
+                label: t("service_fee_line_mcbuleli"),
+                amount: String(GROUP_SUBSCRIPTION_FEE_USDT),
+                asset: "USDT",
+              },
+            ]}
+            totalLabel={t("service_fee_total")}
+            totalAmount={String(GROUP_SUBSCRIPTION_FEE_USDT)}
+            note={t("service_fee_note_treasury")}
+            waived={feeWaived}
+            checked={feeChecked}
+            onCheckedChange={setFeeChecked}
           />
-        </label>
-        <label className="col-span-2 flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_country")}</span>
-          <select
-            value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value)}
-            className={avecCls.input}
+
+          <button
+            type="button"
+            disabled={busy || name.trim().length < 2 || (!feeWaived && !feeChecked)}
+            onClick={() => void submit()}
+            className={avecCls.btnPrimary}
           >
-            {APP_COUNTRY_CODES.map((c) => (
-              <option key={c} value={c}>
-                {countryLabel(locale, c)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_min_members")}</span>
-          <input
-            value={minMembers}
-            onChange={(e) => setMinMembers(e.target.value)}
-            inputMode="numeric"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_max_members")}</span>
-          <input
-            value={maxMembers}
-            onChange={(e) => setMaxMembers(e.target.value)}
-            inputMode="numeric"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_share_value")}</span>
-          <input
-            value={shareValue}
-            onChange={(e) => setShareValue(e.target.value)}
-            inputMode="decimal"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_cycle_days")}</span>
-          <input
-            value={cycleDays}
-            onChange={(e) => setCycleDays(e.target.value)}
-            inputMode="numeric"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_meeting_days")}</span>
-          <input
-            value={meetingDays}
-            onChange={(e) => setMeetingDays(e.target.value)}
-            inputMode="numeric"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_max_shares")}</span>
-          <input
-            value={maxShares}
-            onChange={(e) => setMaxShares(e.target.value)}
-            inputMode="numeric"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="col-span-2 flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_social_fund")}</span>
-          <input
-            value={socialFund}
-            onChange={(e) => setSocialFund(e.target.value)}
-            inputMode="decimal"
-            className={avecCls.input}
-          />
-        </label>
-        <label className="col-span-2 flex flex-col gap-1">
-          <span className={avecCls.sectionTitle}>{t("group_field_rules")}</span>
-          <textarea
-            value={rules}
-            onChange={(e) => setRules(e.target.value)}
-            placeholder={t("group_field_rules_ph")}
-            className={`${avecCls.input} min-h-[72px]`}
-          />
-        </label>
-      </div>
-
-      <p className="text-center text-[10px] text-[color:var(--fd-muted)]">{t("group_new_fee_note")}</p>
-
-      <button
-        type="button"
-        disabled={busy || name.trim().length < 2}
-        onClick={() => void submit()}
-        className={avecCls.btnPrimary}
-      >
-        {t("group_new_submit")}
-      </button>
+            {busy ? t("group_create_submitting") : t("group_new_submit")}
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }

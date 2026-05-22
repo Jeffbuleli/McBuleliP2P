@@ -27,6 +27,11 @@ import { createUserNotification } from "@/lib/notifications-service";
 import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
+function isPgMissingColumn(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /column .* does not exist|42703/.test(msg);
+}
+
 export async function createGroup(args: {
   userId: string;
   type?: GroupSavingsType;
@@ -40,7 +45,11 @@ export async function createGroup(args: {
   meetingIntervalDays?: number;
   socialFundUsdt?: number;
   paymentRules?: string | null;
-}): Promise<{ ok: true; groupId: string } | { ok: false; message: string }> {
+  feeConsentAuthorized?: boolean;
+}): Promise<
+  | { ok: true; groupId: string; status: string; feeWaived: boolean }
+  | { ok: false; message: string }
+> {
   const db = getDb();
   const type: GroupSavingsType = "avec";
   const maxShares = Math.min(
@@ -71,46 +80,75 @@ export async function createGroup(args: {
   if (!Number.isFinite(args.cycleDurationDays) || args.cycleDurationDays < 1) {
     return { ok: false, message: "group_invalid_cycle" };
   }
+  if (!args.feeConsentAuthorized) {
+    return { ok: false, message: "group_fee_consent_required" };
+  }
 
   const superAdminTest = await userHasAvecSubscriptionWaiver(args.userId);
   const now = new Date();
+  const status = superAdminTest ? "active" : "pending";
 
-  const id = await db.transaction(async (tx) => {
-    const [g] = await tx
-      .insert(groupSavingsGroups)
-      .values({
-        type,
-        name: args.name.trim(),
-        countryCode: args.countryCode?.trim() || null,
-        minMembers: Math.floor(args.minMembers),
-        maxMembers: Math.floor(args.maxMembers),
-        contributionAmountUsdt: fmtWalletAmount(args.contributionAmountUsdt),
-        cycleDurationDays: Math.floor(args.cycleDurationDays),
-        maxSharesPerMeeting: maxShares,
-        meetingIntervalDays: meetingDays,
-        socialFundUsdt: fmtWalletAmount(socialFund),
-        paymentRules: args.paymentRules ?? null,
-        status: superAdminTest ? "active" : "pending",
-        subscriptionStatus: superAdminTest ? "active" : "overdue",
-        nextBillingAt: superAdminTest ? null : undefined,
-        reviewedByUserId: superAdminTest ? args.userId : null,
-        reviewedAt: superAdminTest ? now : null,
-        createdByUserId: args.userId,
-      })
-      .returning({ id: groupSavingsGroups.id });
+  const baseValues = {
+    type,
+    name: args.name.trim(),
+    countryCode: args.countryCode?.trim() || null,
+    minMembers: Math.floor(args.minMembers),
+    maxMembers: Math.floor(args.maxMembers),
+    contributionAmountUsdt: fmtWalletAmount(args.contributionAmountUsdt),
+    cycleDurationDays: Math.floor(args.cycleDurationDays),
+    paymentRules: args.paymentRules ?? null,
+    status,
+    subscriptionStatus: superAdminTest ? ("active" as const) : ("overdue" as const),
+    nextBillingAt: superAdminTest ? null : undefined,
+    reviewedByUserId: superAdminTest ? args.userId : null,
+    reviewedAt: superAdminTest ? now : null,
+    createdByUserId: args.userId,
+  };
 
-    if (!g?.id) throw new Error("insert");
+  const extendedValues = {
+    ...baseValues,
+    maxSharesPerMeeting: maxShares,
+    meetingIntervalDays: meetingDays,
+    socialFundUsdt: fmtWalletAmount(socialFund),
+  };
 
-    await tx.insert(groupSavingsMemberships).values({
-      groupId: g.id,
-      userId: args.userId,
-      role: "admin",
-      status: "approved",
-      approvedByUserId: args.userId,
+  let groupId: string;
+  try {
+    groupId = await db.transaction(async (tx) => {
+      let g: { id: string } | undefined;
+      try {
+        [g] = await tx
+          .insert(groupSavingsGroups)
+          .values(extendedValues)
+          .returning({ id: groupSavingsGroups.id });
+      } catch (e) {
+        if (!isPgMissingColumn(e)) throw e;
+        [g] = await tx
+          .insert(groupSavingsGroups)
+          .values(baseValues)
+          .returning({ id: groupSavingsGroups.id });
+      }
+
+      if (!g?.id) throw new Error("group_insert_failed");
+
+      await tx.insert(groupSavingsMemberships).values({
+        groupId: g.id,
+        userId: args.userId,
+        role: "admin",
+        status: "approved",
+        approvedByUserId: args.userId,
+      });
+
+      return g.id;
     });
+  } catch (err) {
+    console.error("[createGroup]", err);
+    return { ok: false, message: "group_create_failed" };
+  }
 
+  try {
     await writeGroupAudit({
-      groupId: g.id,
+      groupId,
       actorUserId: args.userId,
       action: "group_created",
       before: null,
@@ -120,16 +158,17 @@ export async function createGroup(args: {
         maxSharesPerMeeting: maxShares,
         meetingIntervalDays: meetingDays,
         subscriptionFeeUsdt: GROUP_SUBSCRIPTION_FEE_USDT,
+        feeConsentAuthorized: true,
         ...(superAdminTest
           ? { opsBypass: true, subscriptionWaived: true, status: "active" }
           : {}),
       },
     });
+  } catch (err) {
+    console.warn("[createGroup] audit", err);
+  }
 
-    return g.id;
-  });
-
-  return { ok: true, groupId: id };
+  return { ok: true, groupId, status, feeWaived: superAdminTest };
 }
 
 export async function listMyGroups(args: { userId: string }) {

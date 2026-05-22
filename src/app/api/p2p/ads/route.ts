@@ -8,6 +8,7 @@ import {
   type P2pSide,
 } from "@/lib/p2p-config";
 import { createAd, listUserAds } from "@/lib/p2p-service";
+import { p2pListingFeeAmount } from "@/lib/p2p-config";
 
 const createZ = z.object({
   side: z.enum(["sell", "buy"]),
@@ -21,6 +22,7 @@ const createZ = z.object({
   reserveAmountCrypto: z.string().min(1).optional(),
   terms: z.string().optional(),
   countryCode: z.enum(P2P_COUNTRY_CODES).optional(),
+  listingFeeAuthorized: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -49,6 +51,9 @@ export async function POST(req: Request) {
   const cc = d.countryCode?.toUpperCase();
   if (cc && !(P2P_COUNTRY_CODES as readonly string[]).includes(cc)) {
     return NextResponse.json({ error: "p2p_invalid_limits" }, { status: 400 });
+  }
+  if (p2pListingFeeAmount() > 0 && d.listingFeeAuthorized !== true) {
+    return NextResponse.json({ error: "group_fee_consent_required" }, { status: 400 });
   }
   const r = await createAd({
     userId,

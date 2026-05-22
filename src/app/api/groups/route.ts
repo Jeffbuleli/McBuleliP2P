@@ -27,6 +27,9 @@ const bodyZ = z.object({
   meetingIntervalDays: z.coerce.number().int().min(1).max(30).optional(),
   socialFundUsdt: z.coerce.number().min(0).optional(),
   paymentRules: z.string().max(2000).optional().nullable(),
+  feeConsentAuthorized: z
+    .boolean()
+    .refine((v) => v === true, { message: "group_fee_consent_required" }),
 });
 
 function validationErrorCode(err: z.ZodError): string {
@@ -58,7 +61,17 @@ export async function POST(req: Request) {
   if (parsed.data.maxMembers < parsed.data.minMembers) {
     return NextResponse.json({ error: "group_invalid_members" }, { status: 400 });
   }
-  const r = await createGroup({ userId, type: "avec", ...parsed.data });
-  if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
-  return NextResponse.json({ ok: true, groupId: r.groupId });
+  try {
+    const r = await createGroup({ userId, type: "avec", ...parsed.data });
+    if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
+    return NextResponse.json({
+      ok: true,
+      groupId: r.groupId,
+      status: r.status,
+      feeWaived: r.feeWaived,
+    });
+  } catch (err) {
+    console.error("[POST /api/groups]", err);
+    return NextResponse.json({ error: "group_create_failed" }, { status: 500 });
+  }
 }

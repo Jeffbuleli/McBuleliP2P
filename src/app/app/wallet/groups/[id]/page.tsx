@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { TransactionStepper } from "@/components/wallet/transaction-progress";
+import { groupCreationProgressSteps } from "@/lib/group-create-progress";
 import { AvecChatroom } from "@/components/groups/avec-chatroom";
 import { AvecIconMembers, AvecIconShares, AvecIconTreasury } from "@/components/groups/avec-icons";
 import { AvecMemberList, type AvecMemberRow } from "@/components/groups/avec-member-list";
@@ -46,6 +49,8 @@ type Tab = "overview" | "members" | "chat" | "reports" | "treasury";
 
 export default function AvecDashboardPage({ params }: { params: { id: string } }) {
   const { t, locale } = useI18n();
+  const searchParams = useSearchParams();
+  const showCreateProgress = searchParams.get("created") === "1";
   const id = params.id;
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -155,6 +160,14 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
       <AvecTopBar groupName={g.name} groupLogoUrl={g.logoUrl} />
 
       <div className="space-y-3 px-1">
+        {g.status === "pending" || showCreateProgress ? (
+          <TransactionStepper steps={groupCreationProgressSteps(g.status)} />
+        ) : null}
+        {g.status === "pending" ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t("group_create_pending_note")}
+          </p>
+        ) : null}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] font-extrabold uppercase tracking-wide text-[color:var(--fd-muted)]">

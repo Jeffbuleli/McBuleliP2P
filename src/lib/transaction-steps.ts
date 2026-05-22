@@ -19,7 +19,10 @@ export type TxStep = {
     | "p2p_step_release_short"
     | "p2p_step_done_short"
     | "p2p_step_pay_wallet_short"
-    | "p2p_step_settled_short";
+    | "p2p_step_settled_short"
+    | "group_step_submitted"
+    | "group_step_ops"
+    | "group_step_active";
   state: StepState;
 };
 
