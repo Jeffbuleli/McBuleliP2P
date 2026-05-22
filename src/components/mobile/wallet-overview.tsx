@@ -60,7 +60,7 @@ export type ServicePromoDTO = {
   cta: string;
   metaLine: string;
   tone: "emerald" | "amber";
-  icon: "staking" | "pool" | "likelimba" | "avec" | "loans";
+  icon: "staking" | "pool" | "avec" | "loans";
 };
 
 function mask() {

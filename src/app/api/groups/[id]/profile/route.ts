@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
-import { contributeToGroup } from "@/lib/group-savings-service";
+import { updateGroupProfile } from "@/lib/group-savings-profile";
 
-const bodyZ = z
-  .object({
-    amountUsdt: z.number().positive().optional(),
-    shares: z.number().int().min(1).max(5).optional(),
-  })
-  .refine((b) => b.amountUsdt != null || b.shares != null, {
-    message: "group_invalid_amount",
-  });
+const bodyZ = z.object({
+  name: z.string().min(2).max(96).optional(),
+  logoUrl: z.string().max(600_000).nullable().optional(),
+  address: z.string().max(500).nullable().optional(),
+  contactPhone: z.string().max(32).nullable().optional(),
+  contactEmail: z.string().max(128).nullable().optional(),
+  publicDescription: z.string().max(2000).nullable().optional(),
+});
 
-export async function POST(
+export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
@@ -24,13 +24,11 @@ export async function POST(
   if (!parsed.success) {
     return NextResponse.json({ error: "group_invalid_body" }, { status: 400 });
   }
-  const r = await contributeToGroup({
+  const r = await updateGroupProfile({
     groupId: id,
-    userId,
-    amountUsdt: parsed.data.amountUsdt,
-    shares: parsed.data.shares,
+    actorUserId: userId,
+    ...parsed.data,
   });
   if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
-

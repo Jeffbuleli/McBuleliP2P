@@ -20,6 +20,11 @@ export type NotificationKind =
   | "p2p_order_message"
   | "p2p_order_support_message"
   | "support_message"
+  | "group_message"
+  | "group_contribution"
+  | "group_payout"
+  | "group_member_pending"
+  | "group_member_approved"
   | "admin_deposit_order"
   | "admin_deposit_review"
   | "admin_withdrawal_order";

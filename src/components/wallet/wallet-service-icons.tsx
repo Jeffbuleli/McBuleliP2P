@@ -42,6 +42,23 @@ export function WalletIconGroup({ className = S }: { className?: string }) {
   );
 }
 
+export function WalletIconAvec({ className = S }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" opacity="0.35" />
+      <circle cx="12" cy="7" r="2" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="7" cy="15" r="2" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="17" cy="15" r="2" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M10 13h4v5h-4v-5z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function WalletIconLoans({ className = S }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>

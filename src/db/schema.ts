@@ -824,7 +824,7 @@ export const tradeSimpleOptions = pgTable(
   ],
 );
 
-/** LIKELEMBA / AVEC — governed group savings with subscription billing (USDT). */
+/** AVEC — governed village savings & credit (USDT treasury + Ops approval). */
 export const groupSavingsGroups = pgTable(
   "group_savings_groups",
   {
@@ -832,14 +832,27 @@ export const groupSavingsGroups = pgTable(
     type: varchar("type", { length: 16 }).notNull(),
     name: varchar("name", { length: 96 }).notNull(),
     countryCode: varchar("country_code", { length: 8 }),
-    minMembers: integer("min_members").notNull().default(2),
-    maxMembers: integer("max_members").notNull().default(30),
+    minMembers: integer("min_members").notNull().default(15),
+    maxMembers: integer("max_members").notNull().default(25),
     contributionAmountUsdt: numeric("contribution_amount_usdt", {
       precision: 36,
       scale: 18,
     }).notNull(),
     cycleDurationDays: integer("cycle_duration_days").notNull(),
+    maxSharesPerMeeting: integer("max_shares_per_meeting").notNull().default(5),
+    meetingIntervalDays: integer("meeting_interval_days").notNull().default(7),
+    socialFundUsdt: numeric("social_fund_usdt", {
+      precision: 36,
+      scale: 18,
+    })
+      .notNull()
+      .default("0"),
     paymentRules: text("payment_rules"),
+    logoUrl: text("logo_url"),
+    address: text("address"),
+    contactPhone: varchar("contact_phone", { length: 32 }),
+    contactEmail: varchar("contact_email", { length: 128 }),
+    publicDescription: text("public_description"),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
     subscriptionStatus: varchar("subscription_status", { length: 16 })
       .notNull()
@@ -952,6 +965,27 @@ export const groupSubscriptionInvoices = pgTable(
     ),
     index("group_subscription_invoices_status_idx").on(t.status),
   ],
+);
+
+export const groupMessages = pgTable(
+  "group_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    senderUserId: uuid("sender_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    messageType: varchar("message_type", { length: 16 }).notNull().default("chat"),
+    attachmentUrl: text("attachment_url"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("group_messages_group_created_idx").on(t.groupId, t.createdAt)],
 );
 
 export const groupAuditLog = pgTable(

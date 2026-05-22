@@ -209,6 +209,51 @@ function notifMeta(
           : "/admin/withdrawals",
         pill: { variant: "pending", label: t("status_ui_pending") },
       };
+    case "group_message": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_message_title"),
+        body: t("notif_group_message_body", { preview: str("preview") || "—" }),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
+    }
+    case "group_contribution": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_contribution_title"),
+        body: t("notif_group_contribution_body", { amount, asset: asset || "USDT" }),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
+    case "group_payout": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_payout_title"),
+        body: t("notif_group_payout_body", { amount, asset: asset || "USDT" }),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
+    case "group_member_pending": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_member_pending_title"),
+        body: t("notif_group_member_pending_body"),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    }
+    case "group_member_approved": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_member_approved_title"),
+        body: t("notif_group_member_approved_body"),
+        href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
     default:
       return {
         title: row.kind,

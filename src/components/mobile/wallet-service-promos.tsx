@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ServicePromoDTO, StakingPromoDTO } from "@/components/mobile/wallet-overview";
 import {
-  WalletIconGroup,
+  WalletIconAvec,
   WalletIconLoans,
   WalletIconPool,
   WalletIconStaking,
@@ -23,16 +23,10 @@ function PromoIcon({ icon }: { icon: ServicePromoDTO["icon"] | "staking" }) {
           <WalletIconPool />
         </span>
       );
-    case "likelimba":
-      return (
-        <span className={`${cls} bg-gradient-to-br from-emerald-200 to-teal-200 text-teal-900`} aria-hidden>
-          <WalletIconGroup />
-        </span>
-      );
     case "avec":
       return (
         <span className={`${cls} bg-gradient-to-br from-amber-200 to-orange-200 text-orange-900`} aria-hidden>
-          <WalletIconGroup />
+          <WalletIconAvec />
         </span>
       );
     case "loans":

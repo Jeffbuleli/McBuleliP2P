@@ -13,29 +13,42 @@ import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
 import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import {
+  AVEC_MAX_SHARES_PER_MEETING,
   GROUP_SUBSCRIPTION_FEE_USDT,
   type GroupSavingsType,
 } from "@/lib/group-savings-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { debitUserAsset, creditUserAsset } from "@/lib/wallet-move-assets";
+import { insertGroupActivitySystemMessage } from "@/lib/group-savings-messaging";
+import { notifyGroupMembers } from "@/lib/group-savings-notifications";
+import { createUserNotification } from "@/lib/notifications-service";
+import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
 export async function createGroup(args: {
   userId: string;
-  type: GroupSavingsType;
+  type?: GroupSavingsType;
   name: string;
   countryCode?: string | null;
   minMembers: number;
   maxMembers: number;
   contributionAmountUsdt: number;
   cycleDurationDays: number;
+  maxSharesPerMeeting?: number;
+  meetingIntervalDays?: number;
+  socialFundUsdt?: number;
   paymentRules?: string | null;
 }): Promise<{ ok: true; groupId: string } | { ok: false; message: string }> {
   const db = getDb();
-  if (!(args.type === "likelimba" || args.type === "avec")) {
-    return { ok: false, message: "group_invalid_type" };
-  }
+  const type: GroupSavingsType = "avec";
+  const maxShares = Math.min(
+    AVEC_MAX_SHARES_PER_MEETING,
+    Math.max(1, Math.floor(args.maxSharesPerMeeting ?? AVEC_MAX_SHARES_PER_MEETING)),
+  );
+  const meetingDays = Math.max(1, Math.floor(args.meetingIntervalDays ?? 7));
+  const socialFund = Math.max(0, args.socialFundUsdt ?? 0);
   if (!args.name || args.name.trim().length < 2) {
     return { ok: false, message: "group_invalid_name" };
   }
@@ -59,20 +72,29 @@ export async function createGroup(args: {
     return { ok: false, message: "group_invalid_cycle" };
   }
 
+  const superAdminTest = await userHasAvecSubscriptionWaiver(args.userId);
+  const now = new Date();
+
   const id = await db.transaction(async (tx) => {
     const [g] = await tx
       .insert(groupSavingsGroups)
       .values({
-        type: args.type,
+        type,
         name: args.name.trim(),
         countryCode: args.countryCode?.trim() || null,
         minMembers: Math.floor(args.minMembers),
         maxMembers: Math.floor(args.maxMembers),
         contributionAmountUsdt: fmtWalletAmount(args.contributionAmountUsdt),
         cycleDurationDays: Math.floor(args.cycleDurationDays),
+        maxSharesPerMeeting: maxShares,
+        meetingIntervalDays: meetingDays,
+        socialFundUsdt: fmtWalletAmount(socialFund),
         paymentRules: args.paymentRules ?? null,
-        status: "pending",
-        subscriptionStatus: "overdue",
+        status: superAdminTest ? "active" : "pending",
+        subscriptionStatus: superAdminTest ? "active" : "overdue",
+        nextBillingAt: superAdminTest ? null : undefined,
+        reviewedByUserId: superAdminTest ? args.userId : null,
+        reviewedAt: superAdminTest ? now : null,
         createdByUserId: args.userId,
       })
       .returning({ id: groupSavingsGroups.id });
@@ -93,9 +115,14 @@ export async function createGroup(args: {
       action: "group_created",
       before: null,
       after: {
-        type: args.type,
+        type,
         name: args.name.trim(),
+        maxSharesPerMeeting: maxShares,
+        meetingIntervalDays: meetingDays,
         subscriptionFeeUsdt: GROUP_SUBSCRIPTION_FEE_USDT,
+        ...(superAdminTest
+          ? { opsBypass: true, subscriptionWaived: true, status: "active" }
+          : {}),
       },
     });
 
@@ -168,6 +195,9 @@ export async function getGroupDashboard(args: { groupId: string; userId: string 
     .orderBy(desc(groupSavingsMemberships.createdAt))
     .limit(200);
 
+  const stats = await getMemberContributionStats(args.groupId);
+  const statsByUser = new Map(stats.map((s) => [s.userId, s]));
+
   return {
     ok: true as const,
     group: {
@@ -179,7 +209,15 @@ export async function getGroupDashboard(args: { groupId: string; userId: string 
       maxMembers: g.maxMembers,
       contributionAmountUsdt: g.contributionAmountUsdt?.toString() ?? "0",
       cycleDurationDays: g.cycleDurationDays,
+      maxSharesPerMeeting: g.maxSharesPerMeeting ?? AVEC_MAX_SHARES_PER_MEETING,
+      meetingIntervalDays: g.meetingIntervalDays ?? 7,
+      socialFundUsdt: g.socialFundUsdt?.toString() ?? "0",
       paymentRules: g.paymentRules,
+      logoUrl: g.logoUrl ?? null,
+      address: g.address ?? null,
+      contactPhone: g.contactPhone ?? null,
+      contactEmail: g.contactEmail ?? null,
+      publicDescription: g.publicDescription ?? null,
       status: g.status,
       subscriptionStatus: g.subscriptionStatus,
       nextBillingAt: g.nextBillingAt ? g.nextBillingAt.toISOString() : null,
@@ -187,7 +225,16 @@ export async function getGroupDashboard(args: { groupId: string; userId: string 
       createdAt: g.createdAt.toISOString(),
       me: { role: m.role, status: m.status },
     },
-    members,
+    members: members.map((m) => {
+      const s = statsByUser.get(m.userId);
+      return {
+        ...m,
+        savedUsdt: s?.totalUsdt ?? 0,
+        meetingsPaid: s?.meetingCount ?? 0,
+        sharesTotal: s?.sharesTotal ?? 0,
+      };
+    }),
+    memberCount: members.filter((m) => m.status === "approved").length,
   };
 }
 
@@ -217,6 +264,13 @@ export async function requestJoinGroup(args: { groupId: string; userId: string }
     groupId: args.groupId,
     actorUserId: args.userId,
     action: "member_requested_join",
+  });
+  await notifyGroupMembers({
+    groupId: args.groupId,
+    kind: "group_member_pending",
+    excludeUserId: args.userId,
+    onlyRoles: ["admin", "co_admin"],
+    payload: { groupId: args.groupId, userId: args.userId },
   });
   return { ok: true as const };
 }
@@ -268,6 +322,13 @@ export async function reviewMember(args: {
     before: { userId: args.targetUserId, status: m.status },
     after: { userId: args.targetUserId, status: next },
   });
+  if (args.accept) {
+    await createUserNotification({
+      userId: args.targetUserId,
+      kind: "group_member_approved",
+      payload: { groupId: args.groupId, groupName: g.name },
+    });
+  }
   return { ok: true as const };
 }
 
@@ -332,14 +393,12 @@ export async function setCoAdmins(args: {
 export async function contributeToGroup(args: {
   groupId: string;
   userId: string;
-  amountUsdt: number;
+  amountUsdt?: number;
+  shares?: number;
 }) {
   const db = getDb();
   const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
   if (!m || m.status !== "approved") return { ok: false as const, message: "group_forbidden" };
-  if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
-    return { ok: false as const, message: "group_invalid_amount" };
-  }
 
   const [g] = await db
     .select()
@@ -350,7 +409,23 @@ export async function contributeToGroup(args: {
   if (g.status === "suspended") return { ok: false as const, message: "group_suspended" };
   if (g.status !== "active" && g.status !== "approved") return { ok: false as const, message: "group_closed" };
 
-  const amt = args.amountUsdt;
+  const shareValue = numFromNumeric(g.contributionAmountUsdt?.toString());
+  const maxShares = g.maxSharesPerMeeting ?? AVEC_MAX_SHARES_PER_MEETING;
+  let shares: number | undefined;
+  let amt: number;
+
+  if (args.shares != null) {
+    shares = Math.floor(args.shares);
+    if (!Number.isFinite(shares) || shares < 1 || shares > maxShares) {
+      return { ok: false as const, message: "group_invalid_shares" };
+    }
+    amt = shares * shareValue;
+  } else if (args.amountUsdt != null && Number.isFinite(args.amountUsdt) && args.amountUsdt > 0) {
+    amt = args.amountUsdt;
+  } else {
+    return { ok: false as const, message: "group_invalid_amount" };
+  }
+
   const amtStr = fmtWalletAmount(amt);
   const batchId = randomUUID();
 
@@ -371,7 +446,10 @@ export async function contributeToGroup(args: {
         entryType: "group_contribution_in",
         asset: "USDT",
         amount: amtStr,
-        meta: { userId: args.userId },
+        meta: {
+          userId: args.userId,
+          ...(shares != null ? { shares } : {}),
+        },
       });
       await insertWalletLedgerLines(tx, [
         {
@@ -394,7 +472,30 @@ export async function contributeToGroup(args: {
     groupId: args.groupId,
     actorUserId: args.userId,
     action: "contribution_made",
-    after: { amountUsdt: amt },
+    after: { amountUsdt: amt, ...(shares != null ? { shares } : {}) },
+  });
+
+  const [u] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  const partsLabel = shares != null ? ` · ${shares} parts` : "";
+  await insertGroupActivitySystemMessage({
+    groupId: args.groupId,
+    actorUserId: args.userId,
+    body: `${u?.email ?? "Member"} → ${amt.toFixed(2)} USDT${partsLabel}`,
+  });
+  await notifyGroupMembers({
+    groupId: args.groupId,
+    kind: "group_contribution",
+    excludeUserId: args.userId,
+    payload: {
+      groupId: args.groupId,
+      amount: amt.toFixed(2),
+      asset: "USDT",
+      shares: shares ?? null,
+    },
   });
 
   await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
@@ -461,6 +562,31 @@ export async function payoutFromGroup(args: {
     actorUserId: args.actorUserId,
     action: "payout_sent",
     after: { toUserId: args.toUserId, amountUsdt: args.amountUsdt },
+  });
+
+  await insertGroupActivitySystemMessage({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    body: `Payout ${args.amountUsdt.toFixed(2)} USDT → member`,
+  });
+  await createUserNotification({
+    userId: args.toUserId,
+    kind: "group_payout",
+    payload: {
+      groupId: args.groupId,
+      amount: args.amountUsdt.toFixed(2),
+      asset: "USDT",
+    },
+  });
+  await notifyGroupMembers({
+    groupId: args.groupId,
+    kind: "group_payout",
+    excludeUserId: args.toUserId,
+    payload: {
+      groupId: args.groupId,
+      amount: args.amountUsdt.toFixed(2),
+      asset: "USDT",
+    },
   });
 
   return { ok: true as const };

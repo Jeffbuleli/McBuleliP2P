@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecProfileForm } from "@/components/groups/avec-profile-form";
+import { AvecTopBar } from "@/components/groups/avec-top-bar";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { countryLabel } from "@/lib/country-label";
@@ -21,6 +23,11 @@ type Dashboard = {
     id: string;
     type: string;
     name: string;
+    logoUrl?: string | null;
+    address?: string | null;
+    contactPhone?: string | null;
+    contactEmail?: string | null;
+    publicDescription?: string | null;
     countryCode?: string | null;
     status: string;
     subscriptionStatus: string;
@@ -143,6 +150,21 @@ export default function GroupSettingsPage({ params }: { params: { id: string } }
 
   return (
     <div className="space-y-4 pb-10">
+      <AvecTopBar groupName={g.name} groupLogoUrl={g.logoUrl ?? null} />
+      {canAdmin ? (
+        <AvecProfileForm
+          groupId={id}
+          initial={{
+            name: g.name,
+            logoUrl: g.logoUrl ?? null,
+            address: g.address ?? null,
+            contactPhone: g.contactPhone ?? null,
+            contactEmail: g.contactEmail ?? null,
+            publicDescription: g.publicDescription ?? null,
+          }}
+          onSaved={() => void load()}
+        />
+      ) : null}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">

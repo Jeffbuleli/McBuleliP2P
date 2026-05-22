@@ -120,16 +120,7 @@ export default async function WalletPage() {
       icon: "pool",
     },
     {
-      href: "/app/wallet/groups?type=likelimba",
-      title: d.group_like_title,
-      tagline: d.group_like_tagline,
-      cta: d.group_like_cta,
-      metaLine: interpolate(d.group_like_meta, { total: 0, active: 0, overdue: 0 }),
-      tone: "emerald",
-      icon: "likelimba",
-    },
-    {
-      href: "/app/wallet/groups?type=avec",
+      href: "/app/wallet/groups",
       title: d.group_avec_title,
       tagline: d.group_avec_tagline,
       cta: d.group_avec_cta,
@@ -176,25 +167,23 @@ export default async function WalletPage() {
       return { total: xs.length, active, pending, suspended, overdue };
     };
 
-    const cLike = counts("likelimba");
-    const cAvec = counts("avec");
+    const allGroups = mine.filter(
+      (m) => m.type === "avec" || m.type === "likelimba",
+    );
+    const active = allGroups.filter((m) => m.gStatus === "active").length;
+    const overdue = allGroups.filter((m) => m.subStatus !== "active").length;
 
-    groupPromos[1] = {
-      ...groupPromos[1]!,
-      metaLine: interpolate(d.group_like_meta, {
-        total: cLike.total,
-        active: cLike.active,
-        overdue: cLike.overdue,
-      }),
-    };
-    groupPromos[2] = {
-      ...groupPromos[2]!,
-      metaLine: interpolate(d.group_avec_meta, {
-        total: cAvec.total,
-        active: cAvec.active,
-        overdue: cAvec.overdue,
-      }),
-    };
+    const avecIdx = groupPromos.findIndex((p) => p.icon === "avec");
+    if (avecIdx >= 0) {
+      groupPromos[avecIdx] = {
+        ...groupPromos[avecIdx]!,
+        metaLine: interpolate(d.group_avec_meta, {
+          total: allGroups.length,
+          active,
+          overdue,
+        }),
+      };
+    }
   } catch {
     // If DB is unavailable in a build context, keep wallet usable.
   }

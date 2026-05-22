@@ -8,6 +8,7 @@ import {
 } from "@/db";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
+import { groupHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { GROUP_SUBSCRIPTION_FEE_USDT } from "@/lib/group-savings-types";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 
@@ -57,6 +58,25 @@ export async function processGroupSubscriptionBilling(args: {
     return { ok: true, status: "skipped" };
   }
   if (g.status === "pending" || g.status === "rejected") {
+    return { ok: true, status: "skipped" };
+  }
+
+  if (await groupHasAvecSubscriptionWaiver(args.groupId)) {
+    const now = args.now ?? new Date();
+    if (
+      g.subscriptionStatus !== "active" ||
+      g.status === "suspended" ||
+      g.status === "approved"
+    ) {
+      await db
+        .update(groupSavingsGroups)
+        .set({
+          subscriptionStatus: "active",
+          status: g.status === "suspended" || g.status === "approved" ? "active" : g.status,
+          updatedAt: now,
+        })
+        .where(eq(groupSavingsGroups.id, args.groupId));
+    }
     return { ok: true, status: "skipped" };
   }
 
