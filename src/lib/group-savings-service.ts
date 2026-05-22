@@ -20,7 +20,7 @@ import {
   type GroupSavingsType,
 } from "@/lib/group-savings-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
-import { debitUserAsset, creditUserAsset } from "@/lib/wallet-move-assets";
+import { debitUserAsset } from "@/lib/wallet-move-assets";
 import { insertGroupActivitySystemMessage } from "@/lib/group-savings-messaging";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
@@ -664,95 +664,12 @@ export async function contributeToGroup(args: {
   return { ok: true as const };
 }
 
-export async function payoutFromGroup(args: {
-  groupId: string;
-  actorUserId: string;
-  toUserId: string;
-  amountUsdt: number;
-}) {
-  const db = getDb();
-  const actor = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.actorUserId });
-  if (!hasRole(actor, ["admin", "co_admin"])) return { ok: false as const, message: "group_forbidden" };
-
-  if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
-    return { ok: false as const, message: "group_invalid_amount" };
-  }
-
-  const [g] = await db
-    .select()
-    .from(groupSavingsGroups)
-    .where(eq(groupSavingsGroups.id, args.groupId))
-    .limit(1);
-  if (!g) return { ok: false as const, message: "group_not_found" };
-  await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
-  if (g.status !== "active" || g.subscriptionStatus !== "active") {
-    return { ok: false as const, message: "group_suspended" };
-  }
-
-  const bal = await getGroupUsdtBalance(args.groupId);
-  if (bal + 1e-18 < args.amountUsdt) {
-    return { ok: false as const, message: "group_insufficient_balance" };
-  }
-
-  const amtStr = fmtWalletAmount(args.amountUsdt);
-  const batchId = randomUUID();
-
-  await db.transaction(async (tx) => {
-    await tx.insert(groupWalletLedgerEntries).values({
-      batchId,
-      groupId: args.groupId,
-      entryType: "group_payout_out",
-      asset: "USDT",
-      amount: `-${amtStr}`,
-      meta: { toUserId: args.toUserId, by: args.actorUserId },
-    });
-    await creditUserAsset(tx, args.toUserId, "USDT", amtStr);
-    await insertWalletLedgerLines(tx, [
-      {
-        batchId,
-        userId: args.toUserId,
-        entryType: "group_payout_in",
-        asset: "USDT",
-        amount: amtStr,
-        meta: { groupId: args.groupId },
-      },
-    ]);
-  });
-
-  await writeGroupAudit({
-    groupId: args.groupId,
-    actorUserId: args.actorUserId,
-    action: "payout_sent",
-    after: { toUserId: args.toUserId, amountUsdt: args.amountUsdt },
-  });
-
-  await insertGroupActivitySystemMessage({
-    groupId: args.groupId,
-    actorUserId: args.actorUserId,
-    body: `Payout ${args.amountUsdt.toFixed(2)} USDT → member`,
-  });
-  await createUserNotification({
-    userId: args.toUserId,
-    kind: "group_payout",
-    payload: {
-      groupId: args.groupId,
-      amount: args.amountUsdt.toFixed(2),
-      asset: "USDT",
-    },
-  });
-  await notifyGroupMembers({
-    groupId: args.groupId,
-    kind: "group_payout",
-    excludeUserId: args.toUserId,
-    payload: {
-      groupId: args.groupId,
-      amount: args.amountUsdt.toFixed(2),
-      asset: "USDT",
-    },
-  });
-
-  return { ok: true as const };
-}
+export {
+  proposeGroupPayout,
+  approveGroupPayout,
+  listPendingGroupPayouts,
+  payoutFromGroup,
+} from "@/lib/group-savings-payouts";
 
 export async function listGroupLedger(args: { groupId: string; userId: string; limit?: number }) {
   const db = getDb();

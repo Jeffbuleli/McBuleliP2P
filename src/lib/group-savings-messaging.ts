@@ -4,7 +4,18 @@ import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 import { p2pDisplayName } from "@/lib/p2p-display";
 
-export type GroupMessageType = "chat" | "system" | "proof";
+export type GroupMessageType = "chat" | "system" | "proof" | "payout_decision";
+
+export type PayoutDecisionMeta = {
+  requestId: string;
+  amountUsdt: number;
+  beneficiaryUserId: string;
+  beneficiaryDisplay: string;
+  initiatedByUserId: string;
+  initiatedByDisplay: string;
+  approvers: { userId: string; displayName: string }[];
+  executedAt: string;
+};
 
 export type MessageReaction = { userId: string; emoji: string };
 
@@ -52,6 +63,7 @@ export async function listGroupMessages(args: {
         attachmentUrl: string | null;
         attachmentExpiresAt: string | null;
         reactions: MessageReaction[];
+        meta: Record<string, unknown> | null;
         createdAt: string;
       }[];
     }
@@ -106,6 +118,7 @@ export async function listGroupMessages(args: {
           ? r.attachmentExpiresAt.toISOString()
           : null,
         reactions: parseReactions(r.meta as Record<string, unknown> | null),
+        meta: (r.meta as Record<string, unknown> | null) ?? null,
         createdAt: r.createdAt.toISOString(),
       }))
       .reverse(),
@@ -233,6 +246,49 @@ export async function insertGroupActivitySystemMessage(args: {
       body: args.body.slice(0, 4000),
       messageType: "system",
       attachmentUrl: null,
+    });
+  } catch {
+    // Migration may not be applied yet.
+  }
+}
+
+export async function insertGroupPayoutDecisionMessage(args: {
+  groupId: string;
+  actorUserId: string;
+  meta: PayoutDecisionMeta;
+}): Promise<void> {
+  try {
+    const db = getDb();
+    const m = args.meta;
+    const approverLine = m.approvers.map((a) => a.displayName).join(", ");
+    const body = [
+      "PAYOUT_EXECUTED",
+      m.amountUsdt.toFixed(2),
+      m.beneficiaryDisplay,
+      m.initiatedByDisplay,
+      approverLine,
+      m.executedAt,
+    ].join("|");
+
+    await db.insert(groupMessages).values({
+      groupId: args.groupId,
+      senderUserId: args.actorUserId,
+      body: body.slice(0, 4000),
+      messageType: "payout_decision",
+      attachmentUrl: null,
+      meta: m as unknown as Record<string, unknown>,
+    });
+
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      payload: {
+        groupId: args.groupId,
+        messageId: "",
+        preview: body.slice(0, 80),
+        senderEmail: "",
+        messageType: "payout_decision",
+      },
     });
   } catch {
     // Migration may not be applied yet.

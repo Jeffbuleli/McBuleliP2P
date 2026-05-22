@@ -4,14 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecProfileForm } from "@/components/groups/avec-profile-form";
+import { AvecSettingsSections } from "@/components/groups/avec-settings-sections";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
-import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { clientErrorText } from "@/lib/client-error-text";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
-import { p2pDisplayName } from "@/lib/p2p-display";
-import type { Messages } from "@/i18n/messages";
 
 type MemberRow = {
   userId: string;
@@ -46,19 +44,6 @@ type Dashboard = {
   members: MemberRow[];
 };
 
-function subscriptionLabel(
-  t: (k: keyof Messages) => string,
-  status: string,
-): string {
-  const map: Record<string, keyof Messages> = {
-    active: "admin_subscription_state_active",
-    overdue: "admin_subscription_state_overdue",
-    suspended: "admin_subscription_state_suspended",
-  };
-  const key = map[status?.toLowerCase?.() ?? ""];
-  return key ? t(key) : status;
-}
-
 export default function GroupSettingsPage() {
   const { t, locale } = useI18n();
   const routeParams = useParams();
@@ -83,8 +68,8 @@ export default function GroupSettingsPage() {
     setErr(null);
     const [rDash, rInv, rAudit] = await Promise.all([
       fetch(`/api/groups/${id}`, { cache: "no-store" }),
-      fetch(`/api/groups/${id}/subscription?limit=24`, { cache: "no-store" }),
-      fetch(`/api/groups/${id}/audit?limit=60`, { cache: "no-store" }),
+      fetch(`/api/groups/${id}/subscription?limit=48`, { cache: "no-store" }),
+      fetch(`/api/groups/${id}/audit?limit=100`, { cache: "no-store" }),
     ]);
     const j = await rDash.json().catch(() => ({}));
     if (!rDash.ok) {
@@ -97,9 +82,9 @@ export default function GroupSettingsPage() {
     const d = j as Dashboard;
     setData(d);
     const inv = await rInv.json().catch(() => ({}));
-    setInvoices((inv as any).invoices ?? []);
+    setInvoices((inv as { invoices?: unknown[] }).invoices ?? []);
     const aud = await rAudit.json().catch(() => ({}));
-    setAudit((aud as any).audit ?? []);
+    setAudit((aud as { audit?: unknown[] }).audit ?? []);
 
     const init: Record<string, boolean> = {};
     for (const m of d.members) {
@@ -131,7 +116,7 @@ export default function GroupSettingsPage() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(j.error ?? "group_action_failed");
+        setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
       await load();
@@ -142,16 +127,16 @@ export default function GroupSettingsPage() {
 
   if (!id || !data) {
     return (
-      <div className="space-y-3 pb-10">
-        <h1 className="text-lg font-bold text-stone-900 dark:text-stone-50">
+      <div className="space-y-3 px-1 pb-10">
+        <h1 className="text-lg font-bold text-[color:var(--fd-text)]">
           {t("group_settings_title")}
         </h1>
         {err ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {clientErrorText(t, err)}
           </p>
         ) : (
-          <p className="text-stone-500">…</p>
+          <p className="text-[color:var(--fd-muted)]">…</p>
         )}
       </div>
     );
@@ -164,8 +149,26 @@ export default function GroupSettingsPage() {
   const showOverdue = g.subscriptionStatus === "overdue" && g.status !== "suspended";
   const showSuspended = g.status === "suspended";
 
+  const reminderBlock =
+    showSuspended ? (
+      <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+        <p className="font-bold">{t("group_reminder_suspended")}</p>
+        <p className="mt-1 opacity-90">{t("group_reminder_suspended_body")}</p>
+      </div>
+    ) : showOverdue ? (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="font-bold">{t("group_reminder_overdue")}</p>
+        <p className="mt-1 opacity-90">{t("group_reminder_overdue_body")}</p>
+      </div>
+    ) : showDueSoon ? (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+        <p className="font-bold">{t("group_reminder_due_soon")}</p>
+        <p className="mt-1 opacity-90">{t("group_reminder_due_soon_body")}</p>
+      </div>
+    ) : null;
+
   return (
-    <div className="space-y-4 pb-10">
+    <div className="space-y-3 px-1 pb-10">
       <AvecTopBar
         groupName={g.name}
         groupLogoUrl={g.logoUrl ?? null}
@@ -178,13 +181,9 @@ export default function GroupSettingsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <GroupStatusBadge status={g.status} />
-        <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[10px] font-semibold text-stone-700 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-200">
-          {subscriptionLabel(t, g.subscriptionStatus)}
-        </span>
-        <span className="text-xs text-stone-500">
-          {t("group_dash_next_billing")}:{" "}
-          {g.nextBillingAt ? new Date(g.nextBillingAt).toLocaleDateString() : "—"}
-        </span>
+        <h1 className="text-base font-bold text-[color:var(--fd-text)]">
+          {t("group_settings_title")}
+        </h1>
       </div>
 
       {canAdmin ? (
@@ -203,172 +202,26 @@ export default function GroupSettingsPage() {
       ) : null}
 
       {err ? (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {clientErrorText(t, err)}
         </p>
       ) : null}
 
-      {showSuspended ? (
-        <div className="rounded-2xl border border-rose-900/30 bg-rose-950/40 p-4">
-          <p className="text-sm font-bold text-rose-200">{t("group_reminder_suspended")}</p>
-          <p className="mt-1 text-xs leading-relaxed text-rose-200/80">
-            {t("group_reminder_suspended_body")}
-          </p>
-        </div>
-      ) : showOverdue ? (
-        <div className="rounded-2xl border border-amber-900/30 bg-amber-950/30 p-4">
-          <p className="text-sm font-bold text-amber-100">{t("group_reminder_overdue")}</p>
-          <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
-            {t("group_reminder_overdue_body")}
-          </p>
-        </div>
-      ) : showDueSoon ? (
-        <div className="rounded-2xl border border-emerald-900/30 bg-emerald-950/25 p-4">
-          <p className="text-sm font-bold text-emerald-100">{t("group_reminder_due_soon")}</p>
-          <p className="mt-1 text-xs leading-relaxed text-emerald-100/80">
-            {t("group_reminder_due_soon_body")}
-          </p>
-        </div>
-      ) : null}
+      <AvecSettingsSections
+        locale={locale}
+        subscriptionStatus={g.subscriptionStatus}
+        nextBillingAt={g.nextBillingAt}
+        invoices={invoices}
+        audit={audit}
+        approvedMembers={approvedMembers}
+        canAdmin={!!canAdmin}
+        busy={busy}
+        selected={selected}
+        onSelectedChange={setSelected}
+        onSaveCoAdmins={() => void saveCoAdmins()}
+        reminderBlock={reminderBlock}
+      />
 
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("group_settings_subscription")}
-        </h2>
-        <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
-          {t("group_settings_subscription_note")}
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("group_settings_payment_history")}
-        </h2>
-        {invoices === null ? (
-          <p className="text-stone-500">…</p>
-        ) : invoices.length === 0 ? (
-          <p className="mt-2 text-sm text-stone-500">—</p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {invoices.map((x: any) => (
-              <li
-                key={x.id}
-                className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 dark:border-stone-700 dark:bg-stone-950"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                    {t("group_invoice_period")}:{" "}
-                    <span className="font-mono">{x.period}</span>
-                  </p>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                      x.status === "paid"
-                        ? "bg-emerald-600/15 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300"
-                        : "bg-rose-600/15 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300"
-                    }`}
-                  >
-                    {x.status === "paid" ? t("group_invoice_paid") : t("group_invoice_failed")}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-stone-500">
-                  {t("group_invoice_amount")}:{" "}
-                  <span className="font-mono">{Number(x.amountUsdt).toFixed(2)}</span> USDT
-                </p>
-                <p className="mt-1 text-[11px] text-stone-500">
-                  {t("group_invoice_attempted")}:{" "}
-                  {x.attemptedAt ? new Date(x.attemptedAt).toLocaleString() : "—"}
-                  {" · "}
-                  {t("group_invoice_paid_at")}:{" "}
-                  {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
-                </p>
-                {x.failureReason ? (
-                  <p className="mt-1 text-[11px] text-rose-500">{x.failureReason}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("group_settings_audit_log")}
-        </h2>
-        {audit === null ? (
-          <p className="text-stone-500">…</p>
-        ) : audit.length === 0 ? (
-          <p className="mt-2 text-sm text-stone-500">—</p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {audit.map((x: any) => (
-              <GroupAuditEntry
-                key={x.id}
-                action={x.action}
-                createdAt={x.createdAt}
-                locale={locale}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">
-          {t("group_settings_admin_panel")}
-        </h2>
-        {!canAdmin ? (
-          <p className="mt-2 text-sm text-stone-500">{t("group_settings_admin_only")}</p>
-        ) : (
-          <>
-            <p className="mt-2 text-xs text-stone-500">{t("group_settings_coadmins_note")}</p>
-            <div className="mt-3 space-y-2">
-              {approvedMembers.map((m) => {
-                const label = p2pDisplayName({
-                  email: m.email,
-                  displayName: m.displayName ?? null,
-                  avatarUrl: null,
-                  piUsername: null,
-                });
-                return (
-                  <label
-                    key={m.userId}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950"
-                  >
-                    <span className="min-w-0 truncate text-stone-800 dark:text-stone-200">
-                      {label}
-                      {m.role === "admin" ? (
-                        <span className="ml-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                          · {t("group_settings_role_admin")}
-                        </span>
-                      ) : m.role === "co_admin" ? (
-                        <span className="ml-2 text-[11px] text-stone-500">
-                          · {t("group_settings_role_coadmin")}
-                        </span>
-                      ) : null}
-                    </span>
-                    <input
-                      type="checkbox"
-                      disabled={busy || m.role === "admin"}
-                      checked={Boolean(selected[m.userId])}
-                      onChange={(e) =>
-                        setSelected((s) => ({ ...s, [m.userId]: e.target.checked }))
-                      }
-                    />
-                  </label>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void saveCoAdmins()}
-              className="mt-4 w-full rounded-xl bg-stone-900 py-3 text-sm font-bold text-white disabled:opacity-50 dark:bg-stone-50 dark:text-stone-950"
-            >
-              {t("group_settings_save")}
-            </button>
-          </>
-        )}
-      </div>
       <McBuleliPoweredFooter />
     </div>
   );

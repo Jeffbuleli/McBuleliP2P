@@ -6,6 +6,10 @@ import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 import { AVATAR_MAX_BYTES } from "@/lib/avatar-image";
+import {
+  AvecPayoutDecisionMessage,
+  parsePayoutMeta,
+} from "@/components/groups/avec-payout-decision-message";
 
 type Reaction = { userId: string; emoji: string };
 
@@ -20,6 +24,7 @@ type Msg = {
   attachmentUrl: string | null;
   attachmentExpiresAt: string | null;
   reactions: Reaction[];
+  meta?: Record<string, unknown> | null;
   createdAt: string;
 };
 
@@ -194,6 +199,18 @@ export function AvecChatroom({
           messages.map((m) => {
             const mine = myUserId && m.senderUserId === myUserId;
             const system = m.messageType === "system";
+            const payoutDecision = m.messageType === "payout_decision";
+            if (payoutDecision) {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecPayoutDecisionMessage
+                    meta={parsePayoutMeta(m.meta ?? null)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                  />
+                </div>
+              );
+            }
             return (
               <div
                 key={m.id}

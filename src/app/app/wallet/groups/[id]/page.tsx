@@ -340,6 +340,7 @@ export default function AvecDashboardPage() {
               <AvecPayoutPanel
                 groupId={id}
                 members={data.members}
+                myUserId={myUserId}
                 onDone={() => void load()}
               />
             ) : (

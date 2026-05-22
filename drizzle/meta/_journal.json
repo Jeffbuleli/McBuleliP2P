@@ -197,6 +197,13 @@
       "when": 1780700000000,
       "tag": "0032_avec_invite_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1780800000000,
+      "tag": "0033_group_payout_approvals",
+      "breakpoints": true
     }
   ]
 }

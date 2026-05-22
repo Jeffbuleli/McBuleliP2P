@@ -992,6 +992,58 @@ export const groupMessages = pgTable(
   (t) => [index("group_messages_group_created_idx").on(t.groupId, t.createdAt)],
 );
 
+export const groupPayoutRequests = pgTable(
+  "group_payout_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    initiatedByUserId: uuid("initiated_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    toUserId: uuid("to_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    requiredApprovals: integer("required_approvals").notNull(),
+    batchId: uuid("batch_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    executedAt: timestamp("executed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("group_payout_requests_group_status_idx").on(t.groupId, t.status),
+  ],
+);
+
+export const groupPayoutApprovals = pgTable(
+  "group_payout_approvals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => groupPayoutRequests.id, { onDelete: "cascade" }),
+    approverUserId: uuid("approver_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_payout_approvals_request_approver_uidx").on(
+      t.requestId,
+      t.approverUserId,
+    ),
+  ],
+);
+
 export const groupAuditLog = pgTable(
   "group_audit_log",
   {

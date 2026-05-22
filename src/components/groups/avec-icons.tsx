@@ -146,6 +146,37 @@ export function AvecIconReport({ className }: { className?: string }) {
   );
 }
 
+/** Hands / community — solidarity (Africa & RDC context) */
+export function AvecIconSolidarity({ className }: { className?: string }) {
+  const s = base({ size: 20, className });
+  return (
+    <svg {...s}>
+      <path
+        d="M14 20c-2-3-1-7 3-9 2 4 5 5 7 5s5-1 7-5c4 2 5 6 3 9"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 28h24"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+      <circle cx="24" cy="12" r="4" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M8 32l4-6M40 32l-4-6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+    </svg>
+  );
+}
+
 export function AvecListMark({ className }: { className?: string }) {
   return (
     <span

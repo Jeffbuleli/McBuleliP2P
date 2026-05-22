@@ -9,6 +9,7 @@ import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
 import { groupRoleLabel } from "@/lib/group-role-label";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
+import { AvecHelpSheet, AvecHelpTrigger } from "@/components/groups/avec-help-sheet";
 
 type Row = {
   groupId: string;
@@ -26,6 +27,7 @@ export default function AvecHubPage() {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     setErr(null);
@@ -48,6 +50,7 @@ export default function AvecHubPage() {
       <WalletSubpageHeader
         title={t("group_hub_title")}
         subtitle={t("group_hub_sub")}
+        badge={<AvecHelpTrigger onClick={() => setHelpOpen(true)} />}
         action={
           <Link
             href="/app/wallet/groups/new"
@@ -105,6 +108,7 @@ export default function AvecHubPage() {
         </ul>
       )}
       <McBuleliPoweredFooter />
+      <AvecHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
