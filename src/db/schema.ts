@@ -868,6 +868,11 @@ export const groupSavingsGroups = pgTable(
     rejectionReason: text("rejection_reason"),
     /** Shareable join code (generated when group is active). */
     inviteCode: varchar("invite_code", { length: 16 }),
+    /** AVEC cycle: active | closing | closed */
+    cycleStatus: varchar("cycle_status", { length: 16 }).notNull().default("active"),
+    cycleNumber: integer("cycle_number").notNull().default(1),
+    cycleStartedAt: timestamp("cycle_started_at", { withTimezone: true }),
+    cycleClosedAt: timestamp("cycle_closed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1068,6 +1073,60 @@ export const groupAvecLoanApprovals = pgTable(
   (t) => [
     uniqueIndex("group_avec_loan_approvals_loan_approver_uidx").on(
       t.loanId,
+      t.approverUserId,
+    ),
+  ],
+);
+
+export const groupCycleClosureRequests = pgTable(
+  "group_cycle_closure_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    initiatedByUserId: uuid("initiated_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cycleNumber: integer("cycle_number").notNull(),
+    distributableUsdt: numeric("distributable_usdt", {
+      precision: 36,
+      scale: 18,
+    }).notNull(),
+    snapshot: jsonb("snapshot").$type<Record<string, unknown>>().notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    requiredApprovals: integer("required_approvals").notNull(),
+    batchId: uuid("batch_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    executedAt: timestamp("executed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("group_cycle_closure_requests_group_status_idx").on(t.groupId, t.status),
+  ],
+);
+
+export const groupCycleClosureApprovals = pgTable(
+  "group_cycle_closure_approvals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => groupCycleClosureRequests.id, { onDelete: "cascade" }),
+    approverUserId: uuid("approver_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_cycle_closure_approvals_request_approver_uidx").on(
+      t.requestId,
       t.approverUserId,
     ),
   ],

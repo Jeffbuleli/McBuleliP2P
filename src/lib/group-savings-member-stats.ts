@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { getDb, groupWalletLedgerEntries } from "@/db";
 import { numFromNumeric } from "@/lib/wallet-types";
 
@@ -11,9 +11,11 @@ export type MemberContributionStat = {
 
 /**
  * Aggregate member savings from group treasury ledger (contribution entries).
+ * When `since` is set, only contributions on or after that timestamp count (current cycle).
  */
 export async function getMemberContributionStats(
   groupId: string,
+  since?: Date,
 ): Promise<MemberContributionStat[]> {
   const db = getDb();
   const rows = await db
@@ -28,6 +30,7 @@ export async function getMemberContributionStats(
       and(
         eq(groupWalletLedgerEntries.groupId, groupId),
         eq(groupWalletLedgerEntries.entryType, "group_contribution_in"),
+        since ? gte(groupWalletLedgerEntries.createdAt, since) : undefined,
       ),
     )
     .groupBy(sql`(${groupWalletLedgerEntries.meta}->>'userId')`);

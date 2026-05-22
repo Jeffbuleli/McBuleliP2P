@@ -67,6 +67,9 @@ async function assertGroupActive(groupId: string) {
   if (g.status !== "active" || g.subscriptionStatus !== "active") {
     return { ok: false as const, message: "group_suspended" };
   }
+  if ((g.cycleStatus ?? "active") !== "active") {
+    return { ok: false as const, message: "group_cycle_not_active" };
+  }
   return { ok: true as const, group: g };
 }
 

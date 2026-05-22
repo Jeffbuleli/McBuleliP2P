@@ -271,6 +271,9 @@ export async function proposeGroupPayout(args: {
   if (g.status !== "active" || g.subscriptionStatus !== "active") {
     return { ok: false, message: "group_suspended" };
   }
+  if ((g.cycleStatus ?? "active") !== "active") {
+    return { ok: false, message: "group_cycle_not_active" };
+  }
 
   const funds = await getGroupFundSummary(args.groupId);
   if (funds.availableUsdt + 1e-18 < args.amountUsdt) {

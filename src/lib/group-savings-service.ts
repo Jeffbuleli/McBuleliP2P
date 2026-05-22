@@ -260,7 +260,9 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
     .orderBy(desc(groupSavingsMemberships.createdAt))
     .limit(200);
 
-  const stats = await getMemberContributionStats(args.groupId);
+  const cycleStarted =
+    g.cycleStartedAt ?? g.createdAt;
+  const stats = await getMemberContributionStats(args.groupId, cycleStarted);
   const statsByUser = new Map(stats.map((s) => [s.userId, s]));
 
   return {
@@ -288,6 +290,10 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       nextBillingAt: g.nextBillingAt ? g.nextBillingAt.toISOString() : null,
       balanceUsdt: balance,
       createdAt: g.createdAt.toISOString(),
+      cycleStatus: g.cycleStatus ?? "active",
+      cycleNumber: g.cycleNumber ?? 1,
+      cycleStartedAt: cycleStarted.toISOString(),
+      cycleClosedAt: g.cycleClosedAt?.toISOString() ?? null,
       me: { role: m.role, status: m.status },
     },
     viewer: {
@@ -571,6 +577,9 @@ export async function contributeToGroup(args: {
   if (!g) return { ok: false as const, message: "group_not_found" };
   if (g.status === "suspended") return { ok: false as const, message: "group_suspended" };
   if (g.status !== "active" && g.status !== "approved") return { ok: false as const, message: "group_closed" };
+  if ((g.cycleStatus ?? "active") !== "active") {
+    return { ok: false as const, message: "group_cycle_not_active" };
+  }
 
   const shareValue = numFromNumeric(g.contributionAmountUsdt?.toString());
   const maxShares = g.maxSharesPerMeeting ?? AVEC_MAX_SHARES_PER_MEETING;

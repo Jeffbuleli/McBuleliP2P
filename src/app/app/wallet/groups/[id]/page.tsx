@@ -23,6 +23,7 @@ import { AvecMeetingPanel } from "@/components/groups/avec-meeting-panel";
 import { AvecOverviewPanel } from "@/components/groups/avec-overview-panel";
 import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
 import { AvecLoansPanel } from "@/components/groups/avec-loans-panel";
+import { AvecClosurePanel } from "@/components/groups/avec-closure-panel";
 import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
@@ -53,6 +54,10 @@ type Dashboard = {
     socialFundUsdt: string;
     maxMembers: number;
     createdAt: string;
+    cycleStatus?: string;
+    cycleNumber?: number;
+    cycleStartedAt?: string;
+    cycleClosedAt?: string | null;
     me: { role: string; status: string };
   };
   viewer: {
@@ -85,7 +90,8 @@ export default function AvecDashboardPage() {
     me?.status === "approved" && (me.role === "admin" || me.role === "co_admin");
   const canAdmin = me?.status === "approved" && me.role === "admin";
   const groupActive = data?.group.status === "active";
-  const canContribute = me?.status === "approved" && groupActive;
+  const cycleActive = (data?.group.cycleStatus ?? "active") === "active";
+  const canContribute = me?.status === "approved" && groupActive && cycleActive;
   const shareValue = data ? Number(data.group.contributionAmountUsdt) : 0;
   const socialFundPerMeeting = data ? Number(data.group.socialFundUsdt) : 0;
   const maxShares = data?.group.maxSharesPerMeeting ?? 5;
@@ -302,7 +308,7 @@ export default function AvecDashboardPage() {
           ))}
 
         {tab === "meeting" &&
-          (groupActive ? (
+          (groupActive && cycleActive ? (
             <AvecMeetingPanel
               shareValue={shareValue}
               socialFundPerMeeting={socialFundPerMeeting}
@@ -312,9 +318,13 @@ export default function AvecDashboardPage() {
               paySuccess={payOk}
               onPay={payShares}
             />
-          ) : (
+          ) : !groupActive ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
               {t("group_create_pending_note")}
+            </p>
+          ) : (
+            <p className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
+              {t("group_cycle_closed_note")}
             </p>
           ))}
 
@@ -353,15 +363,25 @@ export default function AvecDashboardPage() {
               }}
             />
             {canModerate ? (
-              <AvecPayoutPanel
-                groupId={id}
-                members={data.members}
-                myUserId={myUserId}
-                onDone={() => {
-                  setFundsRefresh((n) => n + 1);
-                  void load();
-                }}
-              />
+              <>
+                <AvecClosurePanel
+                  groupId={id}
+                  isAdmin={!!canAdmin}
+                  onDone={() => {
+                    setFundsRefresh((n) => n + 1);
+                    void load();
+                  }}
+                />
+                <AvecPayoutPanel
+                  groupId={id}
+                  members={data.members}
+                  myUserId={myUserId}
+                  onDone={() => {
+                    setFundsRefresh((n) => n + 1);
+                    void load();
+                  }}
+                />
+              </>
             ) : null}
           </div>
         )}

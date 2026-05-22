@@ -331,7 +331,7 @@ gantt
 | **P0** | Parts · cycles · audit · 2/3 | — |
 | **P1** ✓ | `meta.bucket` · UI Caisse 3 fonds · liquidité · solidarité/réunion | Fonds mélangés |
 | **P2** ✓ | Prêts internes · 3× épargne · 2/3 · remboursement · « Prêté » live | Crédit informel |
-| **P3** | Clôture · distribution · PDF | Partage manuel |
+| **P3** ✓ | Clôture 2/3 · distribution parts · rapport HTML/PDF · nouveau cycle | Partage manuel |
 
 ---
 

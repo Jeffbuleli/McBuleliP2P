@@ -31,7 +31,9 @@ export function ledgerBucket(
     entryType === "group_payout_out" ||
     entryType === "group_payout_in" ||
     entryType === "group_loan_disburse_out" ||
-    entryType === "group_loan_repay_in"
+    entryType === "group_loan_repay_in" ||
+    entryType === "group_cycle_distribution_out" ||
+    entryType === "group_cycle_distribution_in"
   ) {
     return "savings";
   }

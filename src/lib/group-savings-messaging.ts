@@ -9,7 +9,8 @@ export type GroupMessageType =
   | "system"
   | "proof"
   | "payout_decision"
-  | "loan_decision";
+  | "loan_decision"
+  | "closure_decision";
 
 export type PayoutDecisionMeta = {
   requestId: string;
@@ -32,6 +33,18 @@ export type LoanDecisionMeta = {
   approvers: { userId: string; displayName: string }[];
   executedAt: string;
   kind: "disbursed";
+};
+
+export type ClosureDecisionMeta = {
+  requestId: string;
+  cycleNumber: number;
+  distributableUsdt: number;
+  finalShareValueUsdt: number;
+  totalShares: number;
+  initiatedByUserId: string;
+  initiatedByDisplay: string;
+  approvers: { userId: string; displayName: string }[];
+  executedAt: string;
 };
 
 export type MessageReaction = { userId: string; emoji: string };
@@ -347,6 +360,49 @@ export async function insertGroupLoanDecisionMessage(args: {
         preview: body.slice(0, 80),
         senderEmail: "",
         messageType: "loan_decision",
+      },
+    });
+  } catch {
+    // Migration may not be applied yet.
+  }
+}
+
+export async function insertGroupClosureDecisionMessage(args: {
+  groupId: string;
+  actorUserId: string;
+  meta: ClosureDecisionMeta;
+}): Promise<void> {
+  try {
+    const db = getDb();
+    const m = args.meta;
+    const body = [
+      "CYCLE_CLOSED",
+      String(m.cycleNumber),
+      m.distributableUsdt.toFixed(2),
+      m.finalShareValueUsdt.toFixed(4),
+      m.initiatedByDisplay,
+      m.approvers.map((a) => a.displayName).join(", "),
+      m.executedAt,
+    ].join("|");
+
+    await db.insert(groupMessages).values({
+      groupId: args.groupId,
+      senderUserId: args.actorUserId,
+      body: body.slice(0, 4000),
+      messageType: "closure_decision",
+      attachmentUrl: null,
+      meta: m as unknown as Record<string, unknown>,
+    });
+
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      payload: {
+        groupId: args.groupId,
+        messageId: "",
+        preview: body.slice(0, 80),
+        senderEmail: "",
+        messageType: "closure_decision",
       },
     });
   } catch {

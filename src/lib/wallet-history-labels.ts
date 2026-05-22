@@ -37,6 +37,8 @@ const ENTRY_LABEL_KEYS: Record<string, keyof Messages> = {
   group_loan_repay_out: "wallet_entry_group_loan_repay_out",
   group_payout_out: "wallet_entry_group_payout_out",
   group_payout_in: "wallet_entry_group_payout_in",
+  group_cycle_distribution_in: "wallet_entry_group_cycle_distribution_in",
+  group_cycle_distribution_out: "wallet_entry_group_cycle_distribution_out",
   group_subscription_fee: "wallet_entry_group_subscription_fee",
   trade_futures_open: "wallet_entry_trade_futures_open",
   trade_futures_close: "wallet_entry_trade_futures_close",

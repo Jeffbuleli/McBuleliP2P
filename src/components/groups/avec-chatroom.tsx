@@ -10,6 +10,7 @@ import {
   AvecLoanDecisionMessage,
   parseLoanMeta,
 } from "@/components/groups/avec-loan-decision-message";
+import { AvecClosureDecisionMessage } from "@/components/groups/avec-closure-decision-message";
 import {
   AvecPayoutDecisionMessage,
   parsePayoutMeta,
@@ -223,6 +224,13 @@ export function AvecChatroom({
                     createdAt={m.createdAt}
                     locale={locale}
                   />
+                </div>
+              );
+            }
+            if (m.messageType === "closure_decision") {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecClosureDecisionMessage meta={m.meta ?? null} />
                 </div>
               );
             }

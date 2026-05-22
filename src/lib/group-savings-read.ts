@@ -36,6 +36,10 @@ export type GroupSavingsRow = {
   reviewedByUserId: string | null;
   reviewedAt: Date | null;
   rejectionReason: string | null;
+  cycleStatus: string;
+  cycleNumber: number;
+  cycleStartedAt: Date | null;
+  cycleClosedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -70,6 +74,10 @@ function normalizeBase(row: {
     contactPhone: null,
     contactEmail: null,
     publicDescription: null,
+    cycleStatus: "active",
+    cycleNumber: 1,
+    cycleStartedAt: row.createdAt,
+    cycleClosedAt: null,
   };
 }
 
@@ -108,6 +116,10 @@ export async function fetchGroupById(groupId: string): Promise<GroupSavingsRow |
       reviewedByUserId: g.reviewedByUserId,
       reviewedAt: g.reviewedAt,
       rejectionReason: g.rejectionReason,
+      cycleStatus: g.cycleStatus ?? "active",
+      cycleNumber: g.cycleNumber ?? 1,
+      cycleStartedAt: g.cycleStartedAt ?? g.createdAt,
+      cycleClosedAt: g.cycleClosedAt ?? null,
       createdAt: g.createdAt,
       updatedAt: g.updatedAt,
     };
@@ -137,6 +149,13 @@ export async function fetchGroupById(groupId: string): Promise<GroupSavingsRow |
       .from(groupSavingsGroups)
       .where(eq(groupSavingsGroups.id, groupId))
       .limit(1);
-    return g ? normalizeBase(g) : null;
+    if (!g) return null;
+    return {
+      ...normalizeBase(g),
+      cycleStatus: "active",
+      cycleNumber: 1,
+      cycleStartedAt: g.createdAt,
+      cycleClosedAt: null,
+    };
   }
 }
