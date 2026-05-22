@@ -44,7 +44,22 @@ export default function AvecCreatePage() {
     return { min, max, share, cd, md, ms, sf };
   }, [minMembers, maxMembers, shareValue, cycleDays, meetingDays, maxShares, socialFund]);
 
+  function validateClient(): string | null {
+    const n = name.trim();
+    if (n.length < 2) return "group_invalid_name";
+    if (!Number.isFinite(parsed.min) || parsed.min < 2) return "group_invalid_members";
+    if (!Number.isFinite(parsed.max) || parsed.max < parsed.min) return "group_invalid_members";
+    if (!Number.isFinite(parsed.share) || parsed.share <= 0) return "group_invalid_contribution";
+    if (!Number.isFinite(parsed.cd) || parsed.cd < 7 || parsed.cd > 365) return "group_invalid_cycle";
+    return null;
+  }
+
   async function submit() {
+    const clientErr = validateClient();
+    if (clientErr) {
+      setErr(clientErr);
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -52,7 +67,7 @@ export default function AvecCreatePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           countryCode: countryCode.trim() || null,
           minMembers: parsed.min,
           maxMembers: parsed.max,
@@ -197,7 +212,12 @@ export default function AvecCreatePage() {
 
       <p className="text-center text-[10px] text-[color:var(--fd-muted)]">{t("group_new_fee_note")}</p>
 
-      <button type="button" disabled={busy} onClick={() => void submit()} className={avecCls.btnPrimary}>
+      <button
+        type="button"
+        disabled={busy || name.trim().length < 2}
+        onClick={() => void submit()}
+        className={avecCls.btnPrimary}
+      >
         {t("group_new_submit")}
       </button>
     </div>
