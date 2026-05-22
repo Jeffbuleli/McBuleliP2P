@@ -443,6 +443,82 @@ export async function approveGroupPayout(args: {
   };
 }
 
+export async function rejectGroupPayout(args: {
+  groupId: string;
+  requestId: string;
+  actorUserId: string;
+  reason: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!hasRole(actor, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const reason = args.reason?.trim() ?? "";
+  if (reason.length < 3) {
+    return { ok: false, message: "group_reject_reason_required" };
+  }
+
+  const db = getDb();
+  const [req] = await db
+    .select()
+    .from(groupPayoutRequests)
+    .where(
+      and(
+        eq(groupPayoutRequests.id, args.requestId),
+        eq(groupPayoutRequests.groupId, args.groupId),
+        eq(groupPayoutRequests.status, "pending"),
+      ),
+    )
+    .limit(1);
+  if (!req) return { ok: false, message: "group_payout_not_found" };
+
+  const now = new Date();
+  await db
+    .update(groupPayoutRequests)
+    .set({
+      status: "rejected",
+      rejectionReason: reason.slice(0, 500),
+      updatedAt: now,
+    })
+    .where(eq(groupPayoutRequests.id, args.requestId));
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "payout_rejected",
+    after: { requestId: args.requestId, reason },
+  });
+
+  const beneficiaryDisplay = await userDisplayName(req.toUserId);
+  const preview = `PAYOUT_REJECTED|${Number(req.amountUsdt).toFixed(2)}|${beneficiaryDisplay}|${reason}`;
+  try {
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      payload: {
+        groupId: args.groupId,
+        messageId: req.id,
+        preview,
+        senderEmail: "",
+        messageType: "system",
+      },
+    });
+    await createUserNotification({
+      userId: req.toUserId,
+      kind: "group_message",
+      payload: { groupId: args.groupId, preview, messageType: "system" },
+    });
+  } catch {
+    // optional
+  }
+
+  return { ok: true };
+}
+
 export async function listPendingGroupPayouts(args: {
   groupId: string;
   userId: string;

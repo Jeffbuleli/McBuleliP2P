@@ -9,6 +9,13 @@ import {
   groupWalletLedgerEntries,
   users,
 } from "@/db";
+import {
+  allocateLoanRepayment,
+  AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH,
+  AVEC_DEFAULT_LOAN_PENALTY_PCT,
+  AVEC_DEFAULT_LOAN_TERM_DAYS,
+  computeLoanCharges,
+} from "@/lib/avec/loan-terms";
 import { getGroupFundSummary, fundBucketMeta } from "@/lib/avec/fund-buckets";
 import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
@@ -261,7 +268,7 @@ export async function proposeGroupLoan(args: {
     .where(
       and(
         eq(groupAvecLoans.groupId, args.groupId),
-        eq(groupAvecLoans.status, "pending"),
+        inArray(groupAvecLoans.status, ["pending", "requested"]),
       ),
     )
     .limit(1);
@@ -283,6 +290,9 @@ export async function proposeGroupLoan(args: {
       outstandingUsdt: amtStr,
       status: "pending",
       requiredApprovals: required,
+      interestRatePctMonth: String(AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH),
+      penaltyRatePct: String(AVEC_DEFAULT_LOAN_PENALTY_PCT),
+      loanTermDays: AVEC_DEFAULT_LOAN_TERM_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
 
@@ -301,6 +311,239 @@ export async function proposeGroupLoan(args: {
   });
 
   return { ok: true, loanId: row.id, requiredApprovals: required };
+}
+
+/** Member (non-manager) requests a loan for themselves — managers must accept then approve 2/3. */
+export async function requestMemberLoan(args: {
+  groupId: string;
+  actorUserId: string;
+  amountUsdt: number;
+}): Promise<{ ok: true; loanId: string } | { ok: false; message: string }> {
+  const m = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!m || m.status !== "approved") {
+    return { ok: false, message: "group_forbidden" };
+  }
+  if (hasRole(m, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_loan_use_manager_propose" };
+  }
+  if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
+    return { ok: false, message: "group_invalid_amount" };
+  }
+
+  const gCheck = await assertGroupActive(args.groupId);
+  if (!gCheck.ok) return gCheck;
+
+  const saved = await memberSavedUsdt(args.groupId, args.actorUserId);
+  const maxLoan = saved * AVEC_MAX_LOAN_SAVINGS_MULTIPLIER;
+  if (args.amountUsdt > maxLoan + 1e-18) {
+    return { ok: false, message: "group_loan_exceeds_limit" };
+  }
+
+  const db = getDb();
+  const open = await db
+    .select({ id: groupAvecLoans.id })
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.groupId, args.groupId),
+        eq(groupAvecLoans.borrowerUserId, args.actorUserId),
+        inArray(groupAvecLoans.status, ["requested", "pending", "disbursed"]),
+      ),
+    )
+    .limit(1);
+  if (open.length > 0) {
+    return { ok: false, message: "group_loan_pending_exists" };
+  }
+
+  const amtStr = fmtWalletAmount(args.amountUsdt);
+  const [row] = await db
+    .insert(groupAvecLoans)
+    .values({
+      groupId: args.groupId,
+      borrowerUserId: args.actorUserId,
+      initiatedByUserId: args.actorUserId,
+      principalUsdt: amtStr,
+      outstandingUsdt: amtStr,
+      status: "requested",
+      requiredApprovals: 0,
+      interestRatePctMonth: String(AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH),
+      penaltyRatePct: String(AVEC_DEFAULT_LOAN_PENALTY_PCT),
+      loanTermDays: AVEC_DEFAULT_LOAN_TERM_DAYS,
+    })
+    .returning({ id: groupAvecLoans.id });
+
+  if (!row?.id) return { ok: false, message: "group_action_failed" };
+
+  const borrowerDisplay = await userDisplayName(args.actorUserId);
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "loan_requested",
+    after: { loanId: row.id, amountUsdt: args.amountUsdt },
+  });
+
+  try {
+    const { notifyGroupMembers } = await import("@/lib/group-savings-notifications");
+    const preview = `LOAN_REQUESTED|${args.amountUsdt.toFixed(2)}|${borrowerDisplay}`;
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      payload: {
+        groupId: args.groupId,
+        messageId: row.id,
+        preview,
+        senderEmail: "",
+        messageType: "system",
+      },
+    });
+  } catch {
+    // optional
+  }
+
+  return { ok: true, loanId: row.id };
+}
+
+/** Manager accepts a member request → enters 2/3 approval queue. */
+export async function acceptMemberLoanRequest(args: {
+  groupId: string;
+  loanId: string;
+  actorUserId: string;
+}): Promise<
+  | { ok: true; requiredApprovals: number }
+  | { ok: false; message: string }
+> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!hasRole(actor, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const db = getDb();
+  const [loan] = await db
+    .select()
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.id, args.loanId),
+        eq(groupAvecLoans.groupId, args.groupId),
+        eq(groupAvecLoans.status, "requested"),
+      ),
+    )
+    .limit(1);
+  if (!loan) return { ok: false, message: "group_loan_not_found" };
+
+  const funds = await getGroupFundSummary(args.groupId);
+  const amountUsdt = Number(loan.principalUsdt);
+  if (funds.availableUsdt + 1e-18 < amountUsdt) {
+    return { ok: false, message: "group_insufficient_balance" };
+  }
+
+  const managers = await listGroupManagers(args.groupId);
+  const required = payoutRequiredApprovals(managers.length);
+  const now = new Date();
+
+  await db
+    .update(groupAvecLoans)
+    .set({
+      status: "pending",
+      requiredApprovals: required,
+      initiatedByUserId: args.actorUserId,
+      updatedAt: now,
+    })
+    .where(eq(groupAvecLoans.id, args.loanId));
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "loan_request_accepted",
+    after: { loanId: args.loanId, requiredApprovals: required },
+  });
+
+  return { ok: true, requiredApprovals: required };
+}
+
+export async function rejectGroupLoan(args: {
+  groupId: string;
+  loanId: string;
+  actorUserId: string;
+  reason: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!hasRole(actor, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const reason = args.reason?.trim() ?? "";
+  if (reason.length < 3) {
+    return { ok: false, message: "group_reject_reason_required" };
+  }
+
+  const db = getDb();
+  const [loan] = await db
+    .select()
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.id, args.loanId),
+        eq(groupAvecLoans.groupId, args.groupId),
+        inArray(groupAvecLoans.status, ["requested", "pending"]),
+      ),
+    )
+    .limit(1);
+  if (!loan) return { ok: false, message: "group_loan_not_found" };
+
+  const now = new Date();
+  await db
+    .update(groupAvecLoans)
+    .set({
+      status: "rejected",
+      rejectionReason: reason.slice(0, 500),
+      updatedAt: now,
+    })
+    .where(eq(groupAvecLoans.id, args.loanId));
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "loan_rejected",
+    after: { loanId: args.loanId, reason },
+  });
+
+  const borrowerDisplay = await userDisplayName(loan.borrowerUserId);
+  const preview = `LOAN_REJECTED|${Number(loan.principalUsdt).toFixed(2)}|${borrowerDisplay}|${reason}`;
+  try {
+    const { notifyGroupMembers } = await import("@/lib/group-savings-notifications");
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      excludeUserId: args.actorUserId,
+      payload: {
+        groupId: args.groupId,
+        messageId: loan.id,
+        preview,
+        senderEmail: "",
+        messageType: "system",
+      },
+    });
+    const { createUserNotification } = await import("@/lib/notifications-service");
+    await createUserNotification({
+      userId: loan.borrowerUserId,
+      kind: "group_message",
+      payload: { groupId: args.groupId, preview, messageType: "system" },
+    });
+  } catch {
+    // optional
+  }
+
+  return { ok: true };
 }
 
 export async function approveGroupLoan(args: {
@@ -418,8 +661,11 @@ export async function repayGroupLoan(args: {
     return { ok: false, message: "group_forbidden" };
   }
 
-  const outstanding = Number(loan.outstandingUsdt);
-  const pay = Math.min(args.amountUsdt, outstanding);
+  const charges = computeLoanCharges(loan);
+  const alloc = allocateLoanRepayment(args.amountUsdt, charges);
+  const pay = alloc.total;
+  if (pay <= 0) return { ok: false, message: "group_loan_nothing_to_repay" };
+
   const payStr = fmtWalletAmount(pay);
   const batchId = randomUUID();
 
@@ -442,7 +688,13 @@ export async function repayGroupLoan(args: {
             entryType: "group_loan_repay_out",
             asset: "USDT",
             amount: `-${payStr}`,
-            meta: { groupId: args.groupId, loanId: loan.id },
+            meta: {
+              groupId: args.groupId,
+              loanId: loan.id,
+              penaltyUsdt: alloc.toPenalty,
+              interestUsdt: alloc.toInterest,
+              principalUsdt: alloc.toPrincipal,
+            },
           },
         ]);
       }
@@ -457,11 +709,14 @@ export async function repayGroupLoan(args: {
           loanId: loan.id,
           borrowerUserId: loan.borrowerUserId,
           by: args.actorUserId,
+          penaltyUsdt: alloc.toPenalty,
+          interestUsdt: alloc.toInterest,
+          principalUsdt: alloc.toPrincipal,
           ...fundBucketMeta("savings"),
         },
       });
 
-      const newOut = outstanding - pay;
+      const newOut = charges.principalOutstandingUsdt - alloc.toPrincipal;
       const now = new Date();
       await tx
         .update(groupAvecLoans)
@@ -482,10 +737,16 @@ export async function repayGroupLoan(args: {
     groupId: args.groupId,
     actorUserId: args.actorUserId,
     action: "loan_repaid",
-    after: { loanId: args.loanId, amountUsdt: pay },
+    after: {
+      loanId: args.loanId,
+      amountUsdt: pay,
+      penaltyUsdt: alloc.toPenalty,
+      interestUsdt: alloc.toInterest,
+      principalUsdt: alloc.toPrincipal,
+    },
   });
 
-  const fullyRepaid = pay >= outstanding - 1e-12;
+  const fullyRepaid = alloc.toPrincipal >= charges.principalOutstandingUsdt - 1e-12;
   return { ok: true, repaid: fullyRepaid };
 }
 
@@ -495,10 +756,13 @@ export async function listGroupLoans(args: {
 }): Promise<
   | {
       ok: true;
+      requested: Awaited<ReturnType<typeof mapRequestedLoan>>[];
       pending: Awaited<ReturnType<typeof mapPendingLoan>>[];
       active: Awaited<ReturnType<typeof mapActiveLoan>>[];
+      history: Awaited<ReturnType<typeof mapHistoryLoan>>[];
       canManage: boolean;
       maxLoanMultiplier: number;
+      myMaxLoanUsdt: number;
     }
   | { ok: false; message: string }
 > {
@@ -508,6 +772,20 @@ export async function listGroupLoans(args: {
   }
 
   const db = getDb();
+  const canManage = hasRole(m, ["admin", "co_admin"]);
+
+  const requestedRows = await db
+    .select()
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.groupId, args.groupId),
+        eq(groupAvecLoans.status, "requested"),
+      ),
+    )
+    .orderBy(desc(groupAvecLoans.createdAt))
+    .limit(10);
+
   const pendingRows = await db
     .select()
     .from(groupAvecLoans)
@@ -532,15 +810,42 @@ export async function listGroupLoans(args: {
     .orderBy(desc(groupAvecLoans.disbursedAt))
     .limit(20);
 
+  const historyRows = await db
+    .select()
+    .from(groupAvecLoans)
+    .where(
+      and(
+        eq(groupAvecLoans.groupId, args.groupId),
+        inArray(groupAvecLoans.status, ["repaid", "rejected"]),
+      ),
+    )
+    .orderBy(desc(groupAvecLoans.updatedAt))
+    .limit(30);
+
+  const mySaved = await memberSavedUsdt(args.groupId, args.userId);
+
+  const requested = await Promise.all(
+    requestedRows
+      .filter((r) => canManage || r.borrowerUserId === args.userId)
+      .map((r) => mapRequestedLoan(r)),
+  );
   const pending = await Promise.all(pendingRows.map((r) => mapPendingLoan(r, args.userId)));
   const active = await Promise.all(activeRows.map((r) => mapActiveLoan(r)));
+  const history = await Promise.all(
+    historyRows
+      .filter((r) => canManage || r.borrowerUserId === args.userId)
+      .map((r) => mapHistoryLoan(r)),
+  );
 
   return {
     ok: true,
+    requested,
     pending,
     active,
-    canManage: hasRole(m, ["admin", "co_admin"]),
+    history,
+    canManage,
     maxLoanMultiplier: AVEC_MAX_LOAN_SAVINGS_MULTIPLIER,
+    myMaxLoanUsdt: mySaved * AVEC_MAX_LOAN_SAVINGS_MULTIPLIER,
   };
 }
 
@@ -596,13 +901,50 @@ async function mapPendingLoan(
   };
 }
 
+async function mapRequestedLoan(r: typeof groupAvecLoans.$inferSelect) {
+  const saved = await memberSavedUsdt(r.groupId, r.borrowerUserId);
+  return {
+    id: r.id,
+    borrowerUserId: r.borrowerUserId,
+    borrowerDisplay: await userDisplayName(r.borrowerUserId),
+    amountUsdt: Number(r.principalUsdt),
+    maxAllowedUsdt: saved * AVEC_MAX_LOAN_SAVINGS_MULTIPLIER,
+    memberSavedUsdt: saved,
+    createdAt: r.createdAt.toISOString(),
+    isMemberRequest: r.initiatedByUserId === r.borrowerUserId,
+  };
+}
+
 async function mapActiveLoan(r: typeof groupAvecLoans.$inferSelect) {
+  const charges = computeLoanCharges(r);
   return {
     id: r.id,
     borrowerUserId: r.borrowerUserId,
     borrowerDisplay: await userDisplayName(r.borrowerUserId),
     principalUsdt: Number(r.principalUsdt),
-    outstandingUsdt: Number(r.outstandingUsdt),
+    outstandingUsdt: charges.principalOutstandingUsdt,
+    interestAccruedUsdt: charges.interestAccruedUsdt,
+    penaltyUsdt: charges.penaltyUsdt,
+    totalDueUsdt: charges.totalDueUsdt,
+    isOverdue: charges.isOverdue,
+    interestRatePctMonth: charges.interestRatePctMonth,
+    penaltyRatePct: charges.penaltyRatePct,
+    loanTermDays: charges.loanTermDays,
     disbursedAt: r.disbursedAt?.toISOString() ?? null,
+  };
+}
+
+async function mapHistoryLoan(r: typeof groupAvecLoans.$inferSelect) {
+  return {
+    id: r.id,
+    borrowerUserId: r.borrowerUserId,
+    borrowerDisplay: await userDisplayName(r.borrowerUserId),
+    principalUsdt: Number(r.principalUsdt),
+    status: r.status,
+    rejectionReason: r.rejectionReason ?? null,
+    disbursedAt: r.disbursedAt?.toISOString() ?? null,
+    updatedAt: r.updatedAt.toISOString(),
+    interestRatePctMonth: numFromNumeric(r.interestRatePctMonth?.toString() ?? "2"),
+    penaltyRatePct: numFromNumeric(r.penaltyRatePct?.toString() ?? "5"),
   };
 }

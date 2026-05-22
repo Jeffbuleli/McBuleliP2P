@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { listGroupLoans, proposeGroupLoan } from "@/lib/avec/group-loans";
+import {
+  listGroupLoans,
+  proposeGroupLoan,
+  requestMemberLoan,
+} from "@/lib/avec/group-loans";
 import { getSessionUserId } from "@/lib/session";
 
-const bodyZ = z.object({
-  borrowerUserId: z.string().uuid(),
-  amountUsdt: z.number().positive(),
-});
+const bodyZ = z.union([
+  z.object({ amountUsdt: z.number().positive() }),
+  z.object({
+    borrowerUserId: z.string().uuid(),
+    amountUsdt: z.number().positive(),
+  }),
+]);
 
 export async function GET(
   _req: Request,
@@ -32,12 +39,19 @@ export async function POST(
   if (!parsed.success) {
     return NextResponse.json({ error: "group_invalid_body" }, { status: 400 });
   }
-  const r = await proposeGroupLoan({
-    groupId: id,
-    actorUserId,
-    borrowerUserId: parsed.data.borrowerUserId,
-    amountUsdt: parsed.data.amountUsdt,
-  });
+  const r =
+    "borrowerUserId" in parsed.data
+      ? await proposeGroupLoan({
+          groupId: id,
+          actorUserId,
+          borrowerUserId: parsed.data.borrowerUserId,
+          amountUsdt: parsed.data.amountUsdt,
+        })
+      : await requestMemberLoan({
+          groupId: id,
+          actorUserId,
+          amountUsdt: parsed.data.amountUsdt,
+        });
   if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
   return NextResponse.json(r);
 }

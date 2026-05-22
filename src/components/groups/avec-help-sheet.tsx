@@ -138,6 +138,18 @@ export function AvecHelpSheet({
             title={t("avec_help_platform_title")}
             body={t("avec_help_platform_body")}
           />
+          <HelpSection
+            icon={<AvecIconTreasury className="h-6 w-6" />}
+            title={t("avec_help_updates_title")}
+            body={t("avec_help_updates_intro")}
+            bullets={[
+              t("avec_help_updates_1"),
+              t("avec_help_updates_2"),
+              t("avec_help_updates_3"),
+              t("avec_help_updates_4"),
+              t("avec_help_updates_5"),
+            ]}
+          />
         </div>
 
         <div className="border-t border-[color:var(--fd-border)] px-3 pb-2 pt-1">

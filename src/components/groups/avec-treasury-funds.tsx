@@ -21,12 +21,32 @@ function FundRow({
   value,
   hint,
   accent,
+  compact,
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: boolean;
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <div
+        className={`rounded-xl border px-2.5 py-2 ${
+          accent
+            ? "border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)]/40"
+            : "border-[color:var(--fd-border)] bg-[color:var(--fd-card)]"
+        }`}
+      >
+        <p className="truncate text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {label}
+        </p>
+        <p className="mt-0.5 truncate font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
+          {value}
+        </p>
+      </div>
+    );
+  }
   return (
     <div
       className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 ${
@@ -100,11 +120,12 @@ export function AvecTreasuryFunds({
           <FundRow label={t("avec_fund_admin")} value={fmt(funds.adminUsdt)} />
           <div className="grid grid-cols-2 gap-2 pt-1">
             <FundRow
-              label={t("avec_fund_available")}
+              compact
+              label={t("avec_fund_avail_short")}
               value={fmt(funds.availableUsdt)}
               accent
             />
-            <FundRow label={t("avec_fund_lent")} value={fmt(funds.lentUsdt)} />
+            <FundRow compact label={t("avec_fund_lent_short")} value={fmt(funds.lentUsdt)} />
           </div>
         </div>
       ) : (

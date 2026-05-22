@@ -40,6 +40,8 @@ export function AvecPayoutPanel({
   const [pending, setPending] = useState<PendingPayout[]>([]);
   const [requiredApprovals, setRequiredApprovals] = useState(2);
   const [canManage, setCanManage] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showReject, setShowReject] = useState(false);
 
   const approved = members.filter((m) => m.status === "approved");
   const loc = locale === "fr" ? "fr-FR" : "en-US";
@@ -80,6 +82,29 @@ export function AvecPayoutPanel({
       }
       setInfo(t("group_payout_proposed"));
       setAmount("");
+      await loadPending();
+      onDone();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reject(requestId: string, reason: string) {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/payouts/${requestId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      setInfo(t("group_payout_rejected_ok"));
+      setPending([]);
       await loadPending();
       onDone();
     } finally {
@@ -153,19 +178,50 @@ export function AvecPayoutPanel({
             <p className="mt-1 text-[9px] text-[color:var(--fd-muted)]">
               {new Date(active.createdAt).toLocaleString(loc)}
             </p>
-            {canManage && !active.myApproved ? (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void approve(active.id)}
-                className={`${avecCls.btnPrimary} mt-3`}
-              >
-                {t("group_payout_approve_btn")}
-              </button>
-            ) : active.myApproved ? (
-              <p className="mt-2 text-xs font-semibold text-emerald-800">
-                {t("group_payout_you_approved")}
-              </p>
+            {canManage ? (
+              <div className="mt-3 space-y-2">
+                {!active.myApproved ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void approve(active.id)}
+                    className={avecCls.btnPrimary}
+                  >
+                    {t("group_payout_approve_btn")}
+                  </button>
+                ) : (
+                  <p className="text-xs font-semibold text-emerald-800">
+                    {t("group_payout_you_approved")}
+                  </p>
+                )}
+                {!showReject ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setShowReject(true)}
+                    className="text-[10px] font-bold text-rose-700 underline"
+                  >
+                    {t("group_reject_btn")}
+                  </button>
+                ) : (
+                  <>
+                    <input
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder={t("group_reject_reason_placeholder")}
+                      className={`${avecCls.input} !py-1.5 text-xs`}
+                    />
+                    <button
+                      type="button"
+                      disabled={busy || rejectReason.trim().length < 3}
+                      onClick={() => void reject(active.id, rejectReason.trim())}
+                      className="w-full rounded-lg bg-rose-700 py-2 text-xs font-bold text-white"
+                    >
+                      {t("group_reject_confirm")}
+                    </button>
+                  </>
+                )}
+              </div>
             ) : null}
           </div>
         ) : canManage ? (

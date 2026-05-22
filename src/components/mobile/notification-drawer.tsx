@@ -7,6 +7,7 @@ import type { Messages } from "@/i18n/messages";
 import { useI18n } from "@/components/i18n-provider";
 import { IconBell, IconClose, NotifKindIcon } from "@/components/icons/flow-icons";
 import { StatusPill } from "@/components/wallet/transaction-progress";
+import { formatGroupMessagePreview } from "@/lib/group-message-preview";
 
 type Row = {
   id: string;
@@ -211,9 +212,17 @@ function notifMeta(
       };
     case "group_message": {
       const gid = str("groupId");
+      const human = str("humanPreview");
+      const preview = human
+        ? human
+        : formatGroupMessagePreview(
+            t,
+            str("preview") || "",
+            str("messageType"),
+          );
       return {
         title: t("notif_group_message_title"),
-        body: t("notif_group_message_body", { preview: str("preview") || "—" }),
+        body: t("notif_group_message_body", { preview: preview || "—" }),
         href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
         pill: { variant: "processing", label: t("status_ui_processing") },
       };

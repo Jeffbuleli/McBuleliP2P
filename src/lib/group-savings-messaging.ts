@@ -318,6 +318,7 @@ export async function insertGroupPayoutDecisionMessage(args: {
         preview: body.slice(0, 80),
         senderEmail: "",
         messageType: "payout_decision",
+        humanPreview: `Payout ${m.amountUsdt.toFixed(2)} USDT → ${m.beneficiaryDisplay}`,
       },
     });
   } catch {
@@ -360,6 +361,7 @@ export async function insertGroupLoanDecisionMessage(args: {
         preview: body.slice(0, 80),
         senderEmail: "",
         messageType: "loan_decision",
+        humanPreview: `Loan ${m.amountUsdt.toFixed(2)} USDT → ${m.borrowerDisplay}`,
       },
     });
   } catch {

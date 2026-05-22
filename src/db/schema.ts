@@ -1013,6 +1013,7 @@ export const groupPayoutRequests = pgTable(
     amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
     requiredApprovals: integer("required_approvals").notNull(),
+    rejectionReason: text("rejection_reason"),
     batchId: uuid("batch_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -1044,6 +1045,17 @@ export const groupAvecLoans = pgTable(
     outstandingUsdt: numeric("outstanding_usdt", { precision: 36, scale: 18 }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
     requiredApprovals: integer("required_approvals").notNull(),
+    interestRatePctMonth: numeric("interest_rate_pct_month", {
+      precision: 8,
+      scale: 4,
+    })
+      .notNull()
+      .default("2"),
+    penaltyRatePct: numeric("penalty_rate_pct", { precision: 8, scale: 4 })
+      .notNull()
+      .default("5"),
+    loanTermDays: integer("loan_term_days").notNull().default(90),
+    rejectionReason: text("rejection_reason"),
     batchId: uuid("batch_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

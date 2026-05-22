@@ -176,7 +176,7 @@ async function assertCanClose(groupId: string): Promise<
     .where(
       and(
         eq(groupAvecLoans.groupId, groupId),
-        eq(groupAvecLoans.status, "pending"),
+        inArray(groupAvecLoans.status, ["pending", "requested"]),
       ),
     )
     .limit(1);

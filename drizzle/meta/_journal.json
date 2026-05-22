@@ -218,6 +218,13 @@
       "when": 1781000000000,
       "tag": "0035_group_cycle_closure",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1781100000000,
+      "tag": "0036_avec_loan_requests_reject",
+      "breakpoints": true
     }
   ]
 }
