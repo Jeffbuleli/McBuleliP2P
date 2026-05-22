@@ -7,6 +7,7 @@ import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { adminCls } from "@/components/admin/admin-ui";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { clientErrorText } from "@/lib/client-error-text";
+import { groupRoleLabel } from "@/lib/group-role-label";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
 
 export function AvecMembersPanel({
@@ -58,7 +59,7 @@ export function AvecMembersPanel({
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr((j as { error?: string }).error ?? "…");
+      setErr((j as { error?: string }).error ?? "group_action_failed");
       return;
     }
     onRefresh();
@@ -71,7 +72,7 @@ export function AvecMembersPanel({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setErr("…");
+      setErr("group_action_failed");
     }
   }
 
@@ -210,7 +211,7 @@ export function AvecMembersPanel({
                         <option value="co_admin">{t("group_settings_role_coadmin")}</option>
                       </select>
                     ) : (
-                      <span className={adminCls.roleBadge}>{m.role}</span>
+                      <span className={adminCls.roleBadge}>{groupRoleLabel(t, m.role)}</span>
                     )}
                   </td>
                   <td className="text-right font-mono text-xs tabular-nums">

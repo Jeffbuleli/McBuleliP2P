@@ -68,7 +68,7 @@ export function AvecProfileForm({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr((j as { error?: string }).error ?? "…");
+        setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
       onSaved();

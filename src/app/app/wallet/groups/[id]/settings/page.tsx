@@ -88,7 +88,7 @@ export default function GroupSettingsPage() {
     ]);
     const j = await rDash.json().catch(() => ({}));
     if (!rDash.ok) {
-      setErr((j as any).error ?? "…");
+      setErr((j as { error?: string }).error ?? "group_dashboard_failed");
       setData(null);
       setInvoices([]);
       setAudit([]);
@@ -131,7 +131,7 @@ export default function GroupSettingsPage() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(j.error ?? "…");
+        setErr(j.error ?? "group_action_failed");
         return;
       }
       await load();

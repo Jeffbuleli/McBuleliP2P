@@ -73,6 +73,7 @@ export default function AvecDashboardPage() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [payOk, setPayOk] = useState(false);
   const [tab, setTab] = useState<Tab>("vue");
   const [myUserId, setMyUserId] = useState<string | undefined>();
 
@@ -100,7 +101,7 @@ export default function AvecDashboardPage() {
     const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr((j as { error?: string }).error ?? "…");
+      setErr((j as { error?: string }).error ?? "group_dashboard_failed");
       setData(null);
       return;
     }
@@ -138,9 +139,10 @@ export default function AvecDashboardPage() {
     [data?.members],
   );
 
-  async function payShares(shares: number) {
+  async function payShares(shares: number): Promise<boolean> {
     setBusy(true);
     setErr(null);
+    setPayOk(false);
     try {
       const res = await fetch(`/api/groups/${id}/contributions`, {
         method: "POST",
@@ -149,10 +151,12 @@ export default function AvecDashboardPage() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr((j as { error?: string }).error ?? "…");
-        return;
+        setErr((j as { error?: string }).error ?? "group_contribution_failed");
+        return false;
       }
+      setPayOk(true);
       await load();
+      return true;
     } finally {
       setBusy(false);
     }
@@ -230,6 +234,15 @@ export default function AvecDashboardPage() {
 
         <AvecRoleStrip role={me?.role ?? "member"} status={me?.status ?? "pending"} />
 
+        {payOk && !err ? (
+          <p
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900"
+            role="status"
+          >
+            <span aria-hidden>✓</span>
+            {t("group_contribution_success")}
+          </p>
+        ) : null}
         {err ? (
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {clientErrorText(t, err)}
@@ -251,7 +264,10 @@ export default function AvecDashboardPage() {
             <button
               key={x.id}
               type="button"
-              onClick={() => setTab(x.id)}
+              onClick={() => {
+                if (x.id !== "meeting") setPayOk(false);
+                setTab(x.id);
+              }}
               className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[9px] font-bold uppercase tracking-wide transition ${
                 tab === x.id
                   ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
@@ -287,8 +303,8 @@ export default function AvecDashboardPage() {
               maxShares={maxShares}
               canContribute={!!canContribute}
               busy={busy}
+              paySuccess={payOk}
               onPay={payShares}
-              onError={(k) => setErr(k)}
             />
           ) : (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">

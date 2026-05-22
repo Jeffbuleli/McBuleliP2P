@@ -20,6 +20,7 @@ export function AvecPayoutPanel({
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
 
   const approved = members.filter((m) => m.status === "approved");
 
@@ -28,6 +29,7 @@ export function AvecPayoutPanel({
     if (!toUserId || !Number.isFinite(n) || n <= 0) return;
     setBusy(true);
     setErr(null);
+    setOk(false);
     try {
       const res = await fetch(`/api/groups/${groupId}/payouts`, {
         method: "POST",
@@ -36,9 +38,10 @@ export function AvecPayoutPanel({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr((j as { error?: string }).error ?? "…");
+        setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
+      setOk(true);
       setAmount("");
       onDone();
     } finally {
@@ -69,6 +72,12 @@ export function AvecPayoutPanel({
         placeholder="USDT"
         className={avecCls.input}
       />
+      {ok ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-800" role="status">
+          <span aria-hidden>✓</span>
+          {t("group_payout_success")}
+        </p>
+      ) : null}
       {err ? (
         <p className="mt-2 text-xs text-rose-700">{clientErrorText(t, err)}</p>
       ) : null}

@@ -11,26 +11,27 @@ export function AvecMeetingPanel({
   canContribute,
   busy,
   onPay,
-  onError,
+  paySuccess = false,
 }: {
   shareValue: number;
   maxShares: number;
   canContribute: boolean;
   busy: boolean;
-  onPay: (shares: number) => Promise<void>;
-  onError: (key: string) => void;
+  onPay: (shares: number) => Promise<boolean>;
+  paySuccess?: boolean;
 }) {
   const { t } = useI18n();
   const [shares, setShares] = useState(1);
+  const [justPaid, setJustPaid] = useState(false);
   const meetingTotal = shareValue * shares;
 
   async function pay() {
-    try {
-      await onPay(shares);
-    } catch {
-      onError("group_contribution_failed");
-    }
+    setJustPaid(false);
+    const ok = await onPay(shares);
+    if (ok) setJustPaid(true);
   }
+
+  const showPaid = paySuccess || justPaid;
 
   return (
     <div className="space-y-3">
@@ -82,6 +83,15 @@ export function AvecMeetingPanel({
         <p className="mt-2 text-center text-[10px] text-[color:var(--fd-muted)]">
           {t("avec_wallet_debit")}
         </p>
+        {showPaid ? (
+          <p
+            className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-xs font-semibold text-emerald-900"
+            role="status"
+          >
+            <span aria-hidden>✓</span>
+            {t("group_contribution_success")}
+          </p>
+        ) : null}
       </div>
     </div>
   );

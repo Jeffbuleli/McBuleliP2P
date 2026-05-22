@@ -23,6 +23,10 @@ function isKnownKey(key: string): boolean {
     key.startsWith("admin_") ||
     key.startsWith("wallet_") ||
     key.startsWith("p2p_") ||
-    key.startsWith("deposit_")
+    key.startsWith("deposit_") ||
+    key.startsWith("trade_") ||
+    key.startsWith("member_") ||
+    key.startsWith("avatar_") ||
+    key.startsWith("avec_")
   );
 }

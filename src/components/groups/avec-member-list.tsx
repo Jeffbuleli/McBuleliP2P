@@ -1,6 +1,7 @@
 "use client";
 
 import { adminCls } from "@/components/admin/admin-ui";
+import { groupRoleLabel } from "@/lib/group-role-label";
 import { useI18n } from "@/components/i18n-provider";
 
 import { p2pDisplayName } from "@/lib/p2p-display";
@@ -65,7 +66,7 @@ export function AvecMemberList({
                     </p>
                   </td>
                   <td>
-                    <span className={adminCls.roleBadge}>{m.role}</span>
+                    <span className={adminCls.roleBadge}>{groupRoleLabel(t, m.role)}</span>
                   </td>
                   <td className="text-right font-mono text-xs tabular-nums">
                     {(m.savedUsdt ?? 0).toFixed(2)}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { groupAuditLabel } from "@/components/groups/group-audit-entry";
 import { avecCls } from "@/components/groups/avec-ui";
+import { walletEntryLabel } from "@/lib/wallet-history-labels";
 import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
 
 type LedgerRow = {
@@ -67,7 +68,9 @@ export function AvecReportsPanel({ groupId }: { groupId: string }) {
                   className="flex justify-between gap-2 border-b border-[color:var(--fd-border)] pb-2 last:border-0"
                 >
                   <div>
-                    <p className="text-xs font-semibold text-[color:var(--fd-text)]">{x.entryType}</p>
+                    <p className="text-xs font-semibold text-[color:var(--fd-text)]">
+                      {walletEntryLabel(t, x.entryType)}
+                    </p>
                     <p className="text-[10px] text-[color:var(--fd-muted)]">
                       {new Date(x.createdAt).toLocaleString(loc)}
                     </p>

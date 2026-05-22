@@ -7,6 +7,7 @@ import { AvecListMark } from "@/components/groups/avec-icons";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { clientErrorText } from "@/lib/client-error-text";
+import { groupRoleLabel } from "@/lib/group-role-label";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 
 type Row = {
@@ -32,7 +33,7 @@ export default function AvecHubPage() {
       const res = await fetch("/api/groups/mine", { cache: "no-store" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.error ?? "…");
+        setErr(data.error ?? "group_dashboard_failed");
         setRows([]);
         return;
       }
@@ -90,7 +91,7 @@ export default function AvecHubPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">{r.name}</p>
                     <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
-                      {r.role}
+                      {groupRoleLabel(t, r.role)}
                       {r.nextBillingAt
                         ? ` · ${new Date(r.nextBillingAt).toLocaleDateString(loc)}`
                         : ""}

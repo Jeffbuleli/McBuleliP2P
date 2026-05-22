@@ -78,7 +78,7 @@ export function AvecChatroom({
     const res = await fetch(`/api/groups/${groupId}/messages`, { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr((j as { error?: string }).error ?? "…");
+      setErr((j as { error?: string }).error ?? "group_action_failed");
       return;
     }
     setMessages((j.messages ?? []) as Msg[]);
@@ -161,7 +161,7 @@ export function AvecChatroom({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr((j as { error?: string }).error ?? "…");
+        setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
       setDraft("");
