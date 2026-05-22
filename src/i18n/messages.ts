@@ -2077,6 +2077,9 @@ export const en = {
   admin_group: "Group",
   admin_groups_lifecycle_approved_active: "Approved or active",
   admin_groups_sub_any: "Any subscription",
+  admin_groups_open_hint: "Tap a row or group name to review and approve.",
+  admin_groups_review_pending:
+    "This AVEC is awaiting ops approval. Approve to activate it for members, or reject with a reason.",
   admin_subscription_state_active: "Active",
   admin_subscription_state_overdue: "Overdue",
   admin_subscription_state_suspended: "Suspended",
@@ -4380,6 +4383,10 @@ export const fr: Messages = {
   admin_group: "Groupe",
   admin_groups_lifecycle_approved_active: "Approuvés ou actifs",
   admin_groups_sub_any: "Tous abonnements",
+  admin_groups_open_hint:
+    "Appuyez sur une ligne ou le nom du groupe pour examiner et approuver.",
+  admin_groups_review_pending:
+    "Cette AVEC attend la validation ops. Approuvez pour l’activer pour les membres, ou rejetez avec un motif.",
   admin_subscription_state_active: "Actif",
   admin_subscription_state_overdue: "En retard",
   admin_subscription_state_suspended: "Suspendu",

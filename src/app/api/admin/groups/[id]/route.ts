@@ -20,8 +20,9 @@ export async function GET(
   }
 
   try {
-    const { id } = await ctx.params;
-    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    const { id: rawId } = await ctx.params;
+    const id = typeof rawId === "string" ? rawId.trim() : "";
+    if (!id) {
       return NextResponse.json({ error: "admin_not_found" }, { status: 404 });
     }
 

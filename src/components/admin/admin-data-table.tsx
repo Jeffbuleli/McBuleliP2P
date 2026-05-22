@@ -28,6 +28,7 @@ export function AdminDataTable<T>({
   initialSortDir = "asc",
   toolbar,
   rowClassName,
+  onRowClick,
 }: {
   rows: T[];
   columns: AdminTableColumn<T>[];
@@ -39,6 +40,7 @@ export function AdminDataTable<T>({
   initialSortDir?: SortDir;
   toolbar?: ReactNode;
   rowClassName?: (row: T) => string | undefined;
+  onRowClick?: (row: T) => void;
 }) {
   const { t } = useI18n();
   const [page, setPage] = useState(0);
@@ -142,7 +144,23 @@ export function AdminDataTable<T>({
             </thead>
             <tbody>
               {slice.map((row) => (
-                <tr key={rowKey(row)} className={rowClassName?.(row)}>
+                <tr
+                  key={rowKey(row)}
+                  className={rowClassName?.(row)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick(row);
+                          }
+                        }
+                      : undefined
+                  }
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                >
                   {columns.map((col) => (
                     <td
                       key={col.id}

@@ -5,7 +5,9 @@ import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import { apiErrorText } from "@/lib/api-error-text";
+import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { adminCls, AdminBackLink } from "@/components/admin/admin-ui";
+import type { Messages } from "@/i18n/messages";
 
 type Group = {
   id: string;
@@ -21,13 +23,28 @@ type Group = {
   createdByEmail: string;
 };
 
-export default function AdminGroupDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+function formatUsdt(v: string): string {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toFixed(2) : v;
+}
+
+function subscriptionLabel(
+  t: (k: keyof Messages) => string,
+  status: string,
+): string {
+  const map: Record<string, keyof Messages> = {
+    active: "admin_subscription_state_active",
+    overdue: "admin_subscription_state_overdue",
+    suspended: "admin_subscription_state_suspended",
+  };
+  const key = map[status?.toLowerCase?.() ?? ""];
+  return key ? t(key) : status;
+}
+
+export default function AdminGroupDetailPage() {
   const { t, locale } = useI18n();
-  const id = params.id;
+  const routeParams = useParams();
+  const id = typeof routeParams.id === "string" ? routeParams.id.trim() : "";
   const [row, setRow] = useState<Group | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,11 +55,7 @@ export default function AdminGroupDetailPage({
   const canReview = useMemo(() => row?.status === "pending", [row?.status]);
 
   async function load() {
-    if (!id) {
-      setErr(t("admin_not_found"));
-      setRow(null);
-      return;
-    }
+    if (!id) return;
     setErr(null);
     const res = await fetch(`/api/admin/groups/${id}`, { cache: "no-store" });
     const data = (await res.json().catch(() => ({}))) as {
@@ -51,11 +64,23 @@ export default function AdminGroupDetailPage({
       group?: Group;
     };
     if (!res.ok) {
-      setErr(apiErrorText(t, data, "admin_load_failed"));
+      setErr(
+        apiErrorText(
+          t,
+          data,
+          res.status === 404 ? "admin_not_found" : "admin_load_failed",
+        ),
+      );
       setRow(null);
       return;
     }
-    setRow((data.group as Group) ?? null);
+    const group = data.group ?? null;
+    if (!group?.id) {
+      setErr(t("admin_not_found"));
+      setRow(null);
+      return;
+    }
+    setRow(group);
     const [rInv, rAud] = await Promise.all([
       fetch(`/api/admin/groups/${id}/subscription?limit=24`, { cache: "no-store" }),
       fetch(`/api/admin/groups/${id}/audit?limit=80`, { cache: "no-store" }),
@@ -114,7 +139,7 @@ export default function AdminGroupDetailPage({
     }
   }
 
-  if (!row) {
+  if (!id || !row) {
     return (
       <div className={adminCls.page}>
         <div className="mb-4 flex items-center justify-between">
@@ -143,14 +168,21 @@ export default function AdminGroupDetailPage({
 
       {err ? <p className={adminCls.error}>{err}</p> : null}
 
+      {canReview ? (
+        <div className="mb-4 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          {t("admin_groups_review_pending")}
+        </div>
+      ) : null}
+
       <div className={adminCls.card}>
-        <p className="text-sm text-[color:var(--fd-text)]">
-          {t("admin_status")}: <span className="font-mono">{row.status}</span> ·{" "}
-          {t("admin_subscription")}:{" "}
-          <span className="font-mono">{row.subscriptionStatus}</span>
-        </p>
-        <p className={`mt-1 text-sm ${adminCls.muted}`}>
-          {row.contributionAmountUsdt} USDT · {row.cycleDurationDays}d ·{" "}
+        <div className="flex flex-wrap items-center gap-2">
+          <GroupStatusBadge status={row.status} />
+          <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[10px] font-semibold text-stone-700 ring-1 ring-stone-200">
+            {subscriptionLabel(t, row.subscriptionStatus)}
+          </span>
+        </div>
+        <p className={`mt-2 text-sm ${adminCls.muted}`}>
+          {formatUsdt(row.contributionAmountUsdt)} USDT · {row.cycleDurationDays}d ·{" "}
           {row.countryCode ? countryLabel(locale, row.countryCode) : "—"}
         </p>
         <p className={`mt-1 text-xs ${adminCls.muted}`}>
@@ -159,17 +191,9 @@ export default function AdminGroupDetailPage({
         </p>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={runBilling}
-          className={adminCls.btnSecondary}
-        >
-          {t("admin_run_billing")}
-        </button>
+      <div className="mt-4 flex flex-col gap-2">
         {canReview ? (
-          <>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
             <button
               type="button"
               disabled={busy}
@@ -194,8 +218,16 @@ export default function AdminGroupDetailPage({
                 {t("admin_reject")}
               </button>
             </div>
-          </>
+          </div>
         ) : null}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={runBilling}
+          className={`${adminCls.btnSecondary} self-start`}
+        >
+          {t("admin_run_billing")}
+        </button>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">

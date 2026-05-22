@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
 import { apiErrorText } from "@/lib/api-error-text";
@@ -10,8 +10,10 @@ import {
   AdminDataTable,
   type AdminTableColumn,
 } from "@/components/admin/admin-data-table";
+import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { AdminSnapshotRow } from "@/components/admin/admin-snapshot-row";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
+import type { Messages } from "@/i18n/messages";
 
 type Row = {
   id: string;
@@ -26,8 +28,27 @@ type Row = {
   createdByEmail: string;
 };
 
+function formatUsdt(v: string): string {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toFixed(2) : v;
+}
+
+function subscriptionLabel(
+  t: (k: keyof Messages) => string,
+  status: string,
+): string {
+  const map: Record<string, keyof Messages> = {
+    active: "admin_subscription_state_active",
+    overdue: "admin_subscription_state_overdue",
+    suspended: "admin_subscription_state_suspended",
+  };
+  const key = map[status?.toLowerCase?.() ?? ""];
+  return key ? t(key) : status;
+}
+
 function AdminGroupsContent() {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const sp = useSearchParams();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -64,6 +85,7 @@ function AdminGroupsContent() {
       cell: (r) => (
         <Link
           href={`/admin/groups/${r.id}`}
+          onClick={(e) => e.stopPropagation()}
           className="font-medium text-[color:var(--fd-primary)] hover:underline"
         >
           <span className="mr-1 rounded bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[10px] font-bold uppercase">
@@ -88,9 +110,12 @@ function AdminGroupsContent() {
       sortable: true,
       sortValue: (r) => `${r.status}:${r.subscriptionStatus}`,
       cell: (r) => (
-        <span className="text-xs font-medium text-[color:var(--fd-primary)]">
-          {r.status} · {r.subscriptionStatus}
-        </span>
+        <div className="flex flex-wrap items-center gap-1">
+          <GroupStatusBadge status={r.status} />
+          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-700 ring-1 ring-stone-200">
+            {subscriptionLabel(t, r.subscriptionStatus)}
+          </span>
+        </div>
       ),
     },
     {
@@ -100,7 +125,7 @@ function AdminGroupsContent() {
       sortValue: (r) => Number(r.contributionAmountUsdt) || 0,
       cell: (r) => (
         <span className="font-mono text-xs text-[color:var(--fd-muted)]">
-          {r.contributionAmountUsdt} · {r.cycleDurationDays}d
+          {formatUsdt(r.contributionAmountUsdt)} USDT · {r.cycleDurationDays}d
           {r.countryCode ? ` · ${countryLabel(locale, r.countryCode)}` : ""}
         </span>
       ),
@@ -173,7 +198,12 @@ function AdminGroupsContent() {
         initialSortId="when"
         initialSortDir="desc"
         totalLabel={t("admin_table_total", { count: rows.length })}
+        rowClassName={() => "cursor-pointer hover:bg-[color:var(--fd-mint)]/40"}
+        onRowClick={(r) => router.push(`/admin/groups/${r.id}`)}
       />
+      <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+        {t("admin_groups_open_hint")}
+      </p>
     </div>
   );
 }
