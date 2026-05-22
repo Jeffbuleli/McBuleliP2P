@@ -109,35 +109,30 @@ export default async function WalletPage() {
     riskShort: d.staking_risk_short,
   };
 
-  const groupPromos: ServicePromoDTO[] = [
-    {
-      href: "/app/wallet/pool",
-      title: d.pool_title,
-      tagline: d.pool_tagline,
-      cta: d.pool_cta,
-      metaLine: d.pool_meta_line,
-      tone: "emerald",
-      icon: "pool",
-    },
-    {
-      href: "/app/wallet/groups",
-      title: d.group_avec_title,
-      tagline: d.group_avec_tagline,
-      cta: d.group_avec_cta,
-      metaLine: interpolate(d.group_avec_meta, { total: 0, active: 0, overdue: 0 }),
-      tone: "amber",
-      icon: "avec",
-    },
-    {
-      href: "/app/wallet/loans",
-      title: d.loans_title,
-      tagline: d.loans_tagline,
-      cta: d.loans_cta,
-      metaLine: d.loans_meta_line,
-      tone: "amber",
-      icon: "loans",
-    },
-  ];
+  const poolPromo: ServicePromoDTO = {
+    href: "/app/wallet/pool",
+    title: d.pool_title,
+    tagline: d.pool_tagline,
+    cta: d.pool_cta,
+    metaLine: d.pool_meta_line,
+    tone: "emerald",
+    icon: "pool",
+  };
+
+  let avecGroupsTotal = 0;
+  let avecGroupsActive = 0;
+  let avecGroupsOverdue = 0;
+  const avecPromoBase = {
+    href: "/app/wallet/groups",
+    title: d.group_avec_title,
+    tagline: d.group_avec_tagline,
+    cta: d.group_avec_cta,
+    metaLine: interpolate(d.group_avec_meta, { total: 0, active: 0, overdue: 0 }),
+    tone: "amber" as const,
+    icon: "avec" as const,
+    rightPrimary: "0",
+    rightSecondary: d.group_avec_tagline,
+  };
   try {
     const db = getDb();
     const memberships = await db
@@ -173,17 +168,9 @@ export default async function WalletPage() {
     const active = allGroups.filter((m) => m.gStatus === "active").length;
     const overdue = allGroups.filter((m) => m.subStatus !== "active").length;
 
-    const avecIdx = groupPromos.findIndex((p) => p.icon === "avec");
-    if (avecIdx >= 0) {
-      groupPromos[avecIdx] = {
-        ...groupPromos[avecIdx]!,
-        metaLine: interpolate(d.group_avec_meta, {
-          total: allGroups.length,
-          active,
-          overdue,
-        }),
-      };
-    }
+    avecGroupsTotal = allGroups.length;
+    avecGroupsActive = active;
+    avecGroupsOverdue = overdue;
   } catch {
     // If DB is unavailable in a build context, keep wallet usable.
   }
@@ -218,7 +205,17 @@ export default async function WalletPage() {
       />
       <WalletServicePromos
         stakingPromo={stakingPromo}
-        servicePromos={groupPromos}
+        poolPromo={poolPromo}
+        avecPromo={{
+          ...avecPromoBase,
+          metaLine: interpolate(d.group_avec_meta, {
+            total: avecGroupsTotal,
+            active: avecGroupsActive,
+            overdue: avecGroupsOverdue,
+          }),
+          rightPrimary: String(avecGroupsTotal),
+          rightSecondary: d.group_avec_tagline,
+        }}
       />
     </>
   );
