@@ -63,6 +63,72 @@ const JOURNAL_PATH = path.join(MIGRATIONS_DIR, "meta", "_journal.json");
 const SCHEMA = "drizzle";
 const TABLE = "__drizzle_migrations";
 
+const CONNECT_TIMEOUT_SEC = Number(process.env.DB_CONNECT_TIMEOUT_SEC || 90);
+const CONNECT_RETRIES = Number(process.env.DB_CONNECT_RETRIES || 4);
+const CONNECT_RETRY_DELAY_MS = Number(process.env.DB_CONNECT_RETRY_DELAY_MS || 5000);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function connectionHint(err) {
+  const host =
+    (() => {
+      try {
+        return new URL(process.env.DATABASE_URL.replace(/^postgres:/, "postgresql:"))
+          .hostname;
+      } catch {
+        return "(unknown host)";
+      }
+    })() || "(unknown)";
+  return [
+    "",
+    "[drizzle-migrate-batched] Could not reach PostgreSQL (CONNECT_TIMEOUT).",
+    `  Host: ${host}`,
+    "",
+    "Checklist:",
+    "  1. Render Dashboard → your Postgres → Status must be Available (free tier may be waking up — wait 1–2 min, retry).",
+    "  2. Use the **External** Database URL in .env.render (not Internal — Internal only works from Render services).",
+    "  3. Render → Postgres → Networking / Access → allow your IP or 0.0.0.0/0 for migrations from your Mac.",
+    "  4. Test: npm run db:ping:render",
+    "  5. VPN / firewall / corporate network often blocks port 5432 — try another network or hotspot.",
+    "",
+    `Retries used: ${CONNECT_RETRIES}, timeout per attempt: ${CONNECT_TIMEOUT_SEC}s`,
+    err?.message ? `  Error: ${err.message}` : "",
+    "",
+  ].join("\n");
+}
+
+async function connectWithRetry(postgres) {
+  let lastErr;
+  for (let attempt = 1; attempt <= CONNECT_RETRIES; attempt += 1) {
+    const sql = postgres(process.env.DATABASE_URL, {
+      max: 1,
+      ssl: { rejectUnauthorized: false },
+      connect_timeout: CONNECT_TIMEOUT_SEC,
+      idle_timeout: 20,
+    });
+    try {
+      await sql`select 1 as ok`;
+      if (attempt > 1) {
+        console.log(`[drizzle-migrate-batched] Connected on attempt ${attempt}.`);
+      }
+      return sql;
+    } catch (e) {
+      lastErr = e;
+      await sql.end({ timeout: 1 }).catch(() => {});
+      if (attempt < CONNECT_RETRIES) {
+        console.warn(
+          `[drizzle-migrate-batched] Connect attempt ${attempt}/${CONNECT_RETRIES} failed — retry in ${CONNECT_RETRY_DELAY_MS / 1000}s…`,
+        );
+        await sleep(CONNECT_RETRY_DELAY_MS);
+      }
+    }
+  }
+  console.error(connectionHint(lastErr));
+  throw lastErr;
+}
+
 async function main() {
   const postgresPkg = path.join(process.cwd(), "node_modules", "postgres");
   if (!fs.existsSync(postgresPkg)) {
@@ -72,10 +138,7 @@ async function main() {
     process.exit(1);
   }
   const postgres = (await import("postgres")).default;
-  const sql = postgres(process.env.DATABASE_URL, {
-    max: 1,
-    ssl: "require",
-  });
+  const sql = await connectWithRetry(postgres);
   const migTable = `"${SCHEMA}"."${TABLE}"`;
 
   try {

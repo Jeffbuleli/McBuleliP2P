@@ -12,6 +12,7 @@
     "db:push:remote": "./node_modules/.bin/drizzle-kit push --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
     "db:push:render": "node scripts/drizzle-push-render.cjs",
     "db:migrate:render": "node scripts/drizzle-migrate-batched.cjs",
+    "db:ping:render": "node scripts/db-ping-render.cjs",
     "predb:migrate:render": "node -e \"const fs=require('fs');const p=require('path').join(process.cwd(),'package.json');if(!fs.existsSync(p)||JSON.parse(fs.readFileSync(p,'utf8')).name!=='mcbuleli-p2p'){console.error('\\nRun from repo root: cd path/to/McBuleliP2P && npm run db:migrate:render\\n');process.exit(1)}\"",
     "db:migrate:render:kit": "node scripts/drizzle-migrate-render.cjs",
     "db:studio": "node --env-file=.env ./node_modules/.bin/drizzle-kit studio --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
