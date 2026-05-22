@@ -13,7 +13,10 @@ import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
 import { getGroupFundSummary } from "@/lib/avec/fund-buckets";
 import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
-import { insertGroupPayoutDecisionMessage } from "@/lib/group-savings-messaging";
+import {
+  insertGroupPayoutDecisionMessage,
+  insertGroupPayoutPendingMessage,
+} from "@/lib/group-savings-messaging";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
 import { p2pDisplayName } from "@/lib/p2p-display";
@@ -341,13 +344,19 @@ export async function proposeGroupPayout(args: {
   });
 
   try {
-    const { insertGroupActivitySystemMessage } = await import(
-      "@/lib/group-savings-messaging"
-    );
-    await insertGroupActivitySystemMessage({
+    await insertGroupPayoutPendingMessage({
       groupId: args.groupId,
       actorUserId: args.actorUserId,
-      body: `PAYOUT_PENDING:${row.id}:${args.amountUsdt}:${beneficiaryDisplay}:${initiatorDisplay}:${required}:0`,
+      meta: {
+        requestId: row.id,
+        amountUsdt: args.amountUsdt,
+        beneficiaryUserId: args.toUserId,
+        beneficiaryDisplay,
+        initiatedByUserId: args.actorUserId,
+        initiatedByDisplay: initiatorDisplay,
+        requiredApprovals: required,
+        approvalCount: 0,
+      },
     });
   } catch {
     // messages table optional

@@ -9,6 +9,26 @@ export function formatGroupMessagePreview(
   const raw = preview?.trim() ?? "";
   if (!raw) return "—";
 
+  if (
+    raw.startsWith("PAYOUT_PENDING") ||
+    messageType === "payout_pending"
+  ) {
+    const sep = raw.includes("|") ? "|" : ":";
+    const p = raw.startsWith("PAYOUT_PENDING") ? raw.split(sep) : [];
+    const amount = p[2] ?? "";
+    const beneficiary = p[3] ?? "";
+    const count = p[6] ?? "0";
+    const required = p[5] ?? "2";
+    if (amount && beneficiary) {
+      return t("notif_avec_payout_pending", {
+        amount,
+        name: beneficiary,
+        count,
+        required,
+      });
+    }
+  }
+
   if (raw.startsWith("PAYOUT_EXECUTED|") || messageType === "payout_decision") {
     const p = raw.startsWith("PAYOUT_EXECUTED|") ? raw.split("|") : [];
     const amount = p[1] ?? "";

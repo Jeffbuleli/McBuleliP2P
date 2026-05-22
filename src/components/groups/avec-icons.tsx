@@ -93,6 +93,29 @@ export function AvecIconMembers({ className }: { className?: string }) {
   );
 }
 
+/** Loan / credit — hand + coin */
+export function AvecIconLoan({ className }: { className?: string }) {
+  const s = base({ size: 20, className });
+  return (
+    <svg {...s}>
+      <circle cx="30" cy="14" r="6" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M30 11v6M27 14h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M10 22c0-6 4-10 10-10"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 28h16l-2 8H10l-2-8z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function AvecIconTreasury({ className }: { className?: string }) {
   const s = base({ size: 20, className });
   return (

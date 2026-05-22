@@ -11,9 +11,9 @@ import {
 } from "@/db";
 import {
   allocateLoanRepayment,
-  AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH,
-  AVEC_DEFAULT_LOAN_PENALTY_PCT,
-  AVEC_DEFAULT_LOAN_TERM_DAYS,
+  AVEC_LOAN_INTEREST_PCT_TOTAL,
+  AVEC_LOAN_MAX_DAYS,
+  AVEC_LOAN_PENALTY_PCT,
   computeLoanCharges,
 } from "@/lib/avec/loan-terms";
 import { getGroupFundSummary, fundBucketMeta } from "@/lib/avec/fund-buckets";
@@ -290,9 +290,9 @@ export async function proposeGroupLoan(args: {
       outstandingUsdt: amtStr,
       status: "pending",
       requiredApprovals: required,
-      interestRatePctMonth: String(AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH),
-      penaltyRatePct: String(AVEC_DEFAULT_LOAN_PENALTY_PCT),
-      loanTermDays: AVEC_DEFAULT_LOAN_TERM_DAYS,
+      interestRatePctMonth: String(AVEC_LOAN_INTEREST_PCT_TOTAL),
+      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
 
@@ -325,9 +325,6 @@ export async function requestMemberLoan(args: {
   });
   if (!m || m.status !== "approved") {
     return { ok: false, message: "group_forbidden" };
-  }
-  if (hasRole(m, ["admin", "co_admin"])) {
-    return { ok: false, message: "group_loan_use_manager_propose" };
   }
   if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
     return { ok: false, message: "group_invalid_amount" };
@@ -369,9 +366,9 @@ export async function requestMemberLoan(args: {
       outstandingUsdt: amtStr,
       status: "requested",
       requiredApprovals: 0,
-      interestRatePctMonth: String(AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH),
-      penaltyRatePct: String(AVEC_DEFAULT_LOAN_PENALTY_PCT),
-      loanTermDays: AVEC_DEFAULT_LOAN_TERM_DAYS,
+      interestRatePctMonth: String(AVEC_LOAN_INTEREST_PCT_TOTAL),
+      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
 
@@ -927,9 +924,7 @@ async function mapActiveLoan(r: typeof groupAvecLoans.$inferSelect) {
     penaltyUsdt: charges.penaltyUsdt,
     totalDueUsdt: charges.totalDueUsdt,
     isOverdue: charges.isOverdue,
-    interestRatePctMonth: charges.interestRatePctMonth,
-    penaltyRatePct: charges.penaltyRatePct,
-    loanTermDays: charges.loanTermDays,
+    daysUntilPenalty: charges.daysUntilPenalty,
     disbursedAt: r.disbursedAt?.toISOString() ?? null,
   };
 }

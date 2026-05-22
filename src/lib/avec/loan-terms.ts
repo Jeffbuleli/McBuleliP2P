@@ -1,8 +1,20 @@
 import { numFromNumeric } from "@/lib/wallet-types";
 
-export const AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH = 2;
-export const AVEC_DEFAULT_LOAN_PENALTY_PCT = 5;
-export const AVEC_DEFAULT_LOAN_TERM_DAYS = 90;
+/** 10 % interest accrued linearly over the first 30 days. */
+export const AVEC_LOAN_INTEREST_PCT_TOTAL = 10;
+export const AVEC_LOAN_INTEREST_PERIOD_DAYS = 30;
+
+/** 20 % penalty if still outstanding 7+ days after the 30-day interest period. */
+export const AVEC_LOAN_PENALTY_PCT = 20;
+export const AVEC_LOAN_PENALTY_DAYS_LATE = 7;
+
+/** Maximum loan duration (days from disbursement). */
+export const AVEC_LOAN_MAX_DAYS = 90;
+
+/** @deprecated use AVEC_LOAN_INTEREST_PCT_TOTAL — kept for DB column compatibility */
+export const AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH = AVEC_LOAN_INTEREST_PCT_TOTAL;
+export const AVEC_DEFAULT_LOAN_PENALTY_PCT = AVEC_LOAN_PENALTY_PCT;
+export const AVEC_DEFAULT_LOAN_TERM_DAYS = AVEC_LOAN_MAX_DAYS;
 
 export type LoanChargeBreakdown = {
   principalOutstandingUsdt: number;
@@ -10,10 +22,12 @@ export type LoanChargeBreakdown = {
   penaltyUsdt: number;
   totalDueUsdt: number;
   daysSinceDisburse: number;
+  daysUntilPenalty: number;
   isOverdue: boolean;
-  interestRatePctMonth: number;
-  penaltyRatePct: number;
-  loanTermDays: number;
+  interestPctTotal: number;
+  penaltyPct: number;
+  interestPeriodDays: number;
+  maxDays: number;
 };
 
 export function computeLoanCharges(loan: {
@@ -24,15 +38,10 @@ export function computeLoanCharges(loan: {
   loanTermDays?: number | null;
 }): LoanChargeBreakdown {
   const principalOutstandingUsdt = numFromNumeric(loan.outstandingUsdt?.toString() ?? "0");
-  const interestRatePctMonth =
-    loan.interestRatePctMonth != null
-      ? numFromNumeric(String(loan.interestRatePctMonth))
-      : AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH;
-  const penaltyRatePct =
-    loan.penaltyRatePct != null
-      ? numFromNumeric(String(loan.penaltyRatePct))
-      : AVEC_DEFAULT_LOAN_PENALTY_PCT;
-  const loanTermDays = loan.loanTermDays ?? AVEC_DEFAULT_LOAN_TERM_DAYS;
+  const interestPctTotal = AVEC_LOAN_INTEREST_PCT_TOTAL;
+  const penaltyPct = AVEC_LOAN_PENALTY_PCT;
+  const maxDays = AVEC_LOAN_MAX_DAYS;
+  const interestPeriodDays = AVEC_LOAN_INTEREST_PERIOD_DAYS;
 
   if (principalOutstandingUsdt <= 0 || !loan.disbursedAt) {
     return {
@@ -41,10 +50,12 @@ export function computeLoanCharges(loan: {
       penaltyUsdt: 0,
       totalDueUsdt: principalOutstandingUsdt,
       daysSinceDisburse: 0,
+      daysUntilPenalty: interestPeriodDays + AVEC_LOAN_PENALTY_DAYS_LATE,
       isOverdue: false,
-      interestRatePctMonth,
-      penaltyRatePct,
-      loanTermDays,
+      interestPctTotal,
+      penaltyPct,
+      interestPeriodDays,
+      maxDays,
     };
   }
 
@@ -52,13 +63,22 @@ export function computeLoanCharges(loan: {
     0,
     (Date.now() - loan.disbursedAt.getTime()) / 86400000,
   );
-  const months = daysSinceDisburse / 30;
+  const interestDays = Math.min(daysSinceDisburse, interestPeriodDays);
   const interestAccruedUsdt =
-    principalOutstandingUsdt * (interestRatePctMonth / 100) * months;
-  const isOverdue = daysSinceDisburse > loanTermDays;
+    principalOutstandingUsdt *
+    (interestPctTotal / 100) *
+    (interestDays / interestPeriodDays);
+
+  const daysAfterInterestPeriod = Math.max(0, daysSinceDisburse - interestPeriodDays);
+  const daysUntilPenalty = Math.max(
+    0,
+    AVEC_LOAN_PENALTY_DAYS_LATE - daysAfterInterestPeriod,
+  );
+  const isOverdue = daysAfterInterestPeriod >= AVEC_LOAN_PENALTY_DAYS_LATE;
   const penaltyUsdt = isOverdue
-    ? principalOutstandingUsdt * (penaltyRatePct / 100)
+    ? principalOutstandingUsdt * (penaltyPct / 100)
     : 0;
+
   const totalDueUsdt = principalOutstandingUsdt + interestAccruedUsdt + penaltyUsdt;
 
   return {
@@ -67,10 +87,12 @@ export function computeLoanCharges(loan: {
     penaltyUsdt,
     totalDueUsdt,
     daysSinceDisburse,
+    daysUntilPenalty,
     isOverdue,
-    interestRatePctMonth,
-    penaltyRatePct,
-    loanTermDays,
+    interestPctTotal,
+    penaltyPct,
+    interestPeriodDays,
+    maxDays,
   };
 }
 

@@ -8,9 +8,21 @@ export type GroupMessageType =
   | "chat"
   | "system"
   | "proof"
+  | "payout_pending"
   | "payout_decision"
   | "loan_decision"
   | "closure_decision";
+
+export type PayoutPendingMeta = {
+  requestId: string;
+  amountUsdt: number;
+  beneficiaryUserId: string;
+  beneficiaryDisplay: string;
+  initiatedByUserId: string;
+  initiatedByDisplay: string;
+  requiredApprovals: number;
+  approvalCount: number;
+};
 
 export type PayoutDecisionMeta = {
   requestId: string;
@@ -276,6 +288,50 @@ export async function insertGroupActivitySystemMessage(args: {
       body: args.body.slice(0, 4000),
       messageType: "system",
       attachmentUrl: null,
+    });
+  } catch {
+    // Migration may not be applied yet.
+  }
+}
+
+export async function insertGroupPayoutPendingMessage(args: {
+  groupId: string;
+  actorUserId: string;
+  meta: PayoutPendingMeta;
+}): Promise<void> {
+  try {
+    const db = getDb();
+    const m = args.meta;
+    const body = [
+      "PAYOUT_PENDING",
+      m.requestId,
+      m.amountUsdt.toFixed(2),
+      m.beneficiaryDisplay,
+      m.initiatedByDisplay,
+      String(m.requiredApprovals),
+      String(m.approvalCount),
+    ].join("|");
+
+    await db.insert(groupMessages).values({
+      groupId: args.groupId,
+      senderUserId: args.actorUserId,
+      body: body.slice(0, 4000),
+      messageType: "payout_pending",
+      attachmentUrl: null,
+      meta: m as unknown as Record<string, unknown>,
+    });
+
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_message",
+      payload: {
+        groupId: args.groupId,
+        messageId: m.requestId,
+        preview: body.slice(0, 80),
+        senderEmail: "",
+        messageType: "payout_pending",
+        humanPreview: `Payout pending ${m.amountUsdt.toFixed(2)} USDT → ${m.beneficiaryDisplay}`,
+      },
     });
   } catch {
     // Migration may not be applied yet.

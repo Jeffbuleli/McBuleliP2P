@@ -12,6 +12,10 @@ import {
 } from "@/components/groups/avec-loan-decision-message";
 import { AvecClosureDecisionMessage } from "@/components/groups/avec-closure-decision-message";
 import {
+  AvecPayoutPendingMessage,
+  parsePayoutPendingMeta,
+} from "@/components/groups/avec-payout-pending-message";
+import {
   AvecPayoutDecisionMessage,
   parsePayoutMeta,
 } from "@/components/groups/avec-payout-decision-message";
@@ -204,6 +208,20 @@ export function AvecChatroom({
           messages.map((m) => {
             const mine = myUserId && m.senderUserId === myUserId;
             const system = m.messageType === "system";
+            const payoutPending =
+              m.messageType === "payout_pending" ||
+              (m.messageType === "system" && m.body.startsWith("PAYOUT_PENDING"));
+            if (payoutPending) {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecPayoutPendingMessage
+                    meta={parsePayoutPendingMeta(m.meta ?? null, m.body)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                  />
+                </div>
+              );
+            }
             const payoutDecision = m.messageType === "payout_decision";
             if (payoutDecision) {
               return (
