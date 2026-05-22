@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecProfileForm } from "@/components/groups/avec-profile-form";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
@@ -37,9 +38,10 @@ type Dashboard = {
   members: MemberRow[];
 };
 
-export default function GroupSettingsPage({ params }: { params: { id: string } }) {
+export default function GroupSettingsPage() {
   const { t, locale } = useI18n();
-  const id = params.id;
+  const routeParams = useParams();
+  const id = typeof routeParams.id === "string" ? routeParams.id : "";
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

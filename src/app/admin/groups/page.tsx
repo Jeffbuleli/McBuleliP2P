@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
+import { apiErrorText } from "@/lib/api-error-text";
 import {
   AdminDataTable,
   type AdminTableColumn,
@@ -46,7 +47,7 @@ function AdminGroupsContent() {
       const res = await fetch(`/api/admin/groups?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "…");
+        setErr(apiErrorText(t, data as { error?: string; message?: string }, "admin_load_failed"));
         setRows([]);
         return;
       }

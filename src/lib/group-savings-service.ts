@@ -25,6 +25,7 @@ import { insertGroupActivitySystemMessage } from "@/lib/group-savings-messaging"
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
 import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
+import { fetchGroupById } from "@/lib/group-savings-read";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
 function isPgMissingColumn(err: unknown): boolean {
@@ -217,11 +218,7 @@ export async function getGroupDashboard(args: { groupId: string; userId: string 
 
 async function getGroupDashboardInner(args: { groupId: string; userId: string }) {
   const db = getDb();
-  const [g] = await db
-    .select()
-    .from(groupSavingsGroups)
-    .where(eq(groupSavingsGroups.id, args.groupId))
-    .limit(1);
+  const g = await fetchGroupById(args.groupId);
   if (!g) return { ok: false as const, message: "group_not_found" };
 
   // Member can view even if subscription overdue, but actions are gated elsewhere.

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { getDb, groupSavingsGroups, users } from "@/db";
+import { getDb, users } from "@/db";
+import { fetchGroupById } from "@/lib/group-savings-read";
 import { requireStaffScope, StaffAuthError } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -13,48 +14,51 @@ export async function GET(
     await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
-      return NextResponse.json({ message: e.message }, { status: 403 });
+      return NextResponse.json({ error: "admin_forbidden" }, { status: 403 });
     }
     throw e;
   }
 
-  const { id } = await ctx.params;
-  const db = getDb();
-  const [row] = await db
-    .select({
-      id: groupSavingsGroups.id,
-      type: groupSavingsGroups.type,
-      name: groupSavingsGroups.name,
-      status: groupSavingsGroups.status,
-      subscriptionStatus: groupSavingsGroups.subscriptionStatus,
-      contributionAmountUsdt: groupSavingsGroups.contributionAmountUsdt,
-      cycleDurationDays: groupSavingsGroups.cycleDurationDays,
-      maxSharesPerMeeting: groupSavingsGroups.maxSharesPerMeeting,
-      meetingIntervalDays: groupSavingsGroups.meetingIntervalDays,
-      socialFundUsdt: groupSavingsGroups.socialFundUsdt,
-      countryCode: groupSavingsGroups.countryCode,
-      nextBillingAt: groupSavingsGroups.nextBillingAt,
-      createdAt: groupSavingsGroups.createdAt,
-      createdByUserId: groupSavingsGroups.createdByUserId,
-      createdByEmail: users.email,
-      rejectionReason: groupSavingsGroups.rejectionReason,
-    })
-    .from(groupSavingsGroups)
-    .innerJoin(users, eq(groupSavingsGroups.createdByUserId, users.id))
-    .where(eq(groupSavingsGroups.id, id))
-    .limit(1);
+  try {
+    const { id } = await ctx.params;
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+      return NextResponse.json({ error: "admin_not_found" }, { status: 404 });
+    }
 
-  if (!row) {
-    return NextResponse.json({ message: "Not found" }, { status: 404 });
+    const g = await fetchGroupById(id);
+    if (!g) {
+      return NextResponse.json({ error: "admin_not_found" }, { status: 404 });
+    }
+
+    const db = getDb();
+    const [creator] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, g.createdByUserId))
+      .limit(1);
+
+    return NextResponse.json({
+      group: {
+        id: g.id,
+        type: g.type,
+        name: g.name,
+        status: g.status,
+        subscriptionStatus: g.subscriptionStatus,
+        contributionAmountUsdt: g.contributionAmountUsdt?.toString() ?? "0",
+        cycleDurationDays: g.cycleDurationDays,
+        maxSharesPerMeeting: g.maxSharesPerMeeting,
+        meetingIntervalDays: g.meetingIntervalDays,
+        socialFundUsdt: g.socialFundUsdt?.toString() ?? "0",
+        countryCode: g.countryCode,
+        nextBillingAt: g.nextBillingAt ? g.nextBillingAt.toISOString() : null,
+        createdAt: g.createdAt.toISOString(),
+        createdByUserId: g.createdByUserId,
+        createdByEmail: creator?.email ?? "—",
+        rejectionReason: g.rejectionReason,
+      },
+    });
+  } catch (err) {
+    console.error("[GET /api/admin/groups/:id]", err);
+    return NextResponse.json({ error: "admin_load_failed" }, { status: 500 });
   }
-
-  return NextResponse.json({
-    group: {
-      ...row,
-      contributionAmountUsdt: row.contributionAmountUsdt?.toString() ?? "0",
-      socialFundUsdt: row.socialFundUsdt?.toString() ?? "0",
-      nextBillingAt: row.nextBillingAt ? row.nextBillingAt.toISOString() : null,
-      createdAt: row.createdAt.toISOString(),
-    },
-  });
 }

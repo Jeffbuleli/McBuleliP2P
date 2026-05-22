@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
-      return NextResponse.json({ message: e.message }, { status: 403 });
+      return NextResponse.json({ error: "admin_forbidden" }, { status: 403 });
     }
     throw e;
   }

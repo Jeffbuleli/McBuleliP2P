@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
@@ -47,11 +47,12 @@ type Dashboard = {
 
 type Tab = "overview" | "members" | "chat" | "reports" | "treasury";
 
-export default function AvecDashboardPage({ params }: { params: { id: string } }) {
+export default function AvecDashboardPage() {
   const { t, locale } = useI18n();
+  const routeParams = useParams();
   const searchParams = useSearchParams();
   const showCreateProgress = searchParams.get("created") === "1";
-  const id = params.id;
+  const id = typeof routeParams.id === "string" ? routeParams.id : "";
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -69,6 +70,11 @@ export default function AvecDashboardPage({ params }: { params: { id: string } }
   const maxShares = data?.group.maxSharesPerMeeting ?? 5;
 
   async function load() {
+    if (!id) {
+      setErr(t("group_not_found"));
+      setData(null);
+      return;
+    }
     setErr(null);
     const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
     const j = await res.json().catch(() => ({}));

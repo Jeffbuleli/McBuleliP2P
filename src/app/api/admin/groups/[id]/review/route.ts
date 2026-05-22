@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { getDb, groupSavingsGroups } from "@/db";
+import { fetchGroupById } from "@/lib/group-savings-read";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { nextBillingAtFixedDay } from "@/lib/group-savings-billing";
 import {
@@ -28,7 +29,7 @@ export async function PATCH(
     await requireStaffScope("groups");
   } catch (e) {
     if (e instanceof StaffAuthError) {
-      return NextResponse.json({ message: e.message }, { status: 403 });
+      return NextResponse.json({ error: "admin_forbidden" }, { status: 403 });
     }
     throw e;
   }
@@ -37,16 +38,12 @@ export async function PATCH(
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ message: "Invalid body" }, { status: 400 });
+    return NextResponse.json({ error: "admin_invalid_body" }, { status: 400 });
   }
   const { id } = await ctx.params;
   const db = getDb();
-  const [g] = await db
-    .select()
-    .from(groupSavingsGroups)
-    .where(eq(groupSavingsGroups.id, id))
-    .limit(1);
-  if (!g) return NextResponse.json({ message: "Not found" }, { status: 404 });
+  const g = await fetchGroupById(id);
+  if (!g) return NextResponse.json({ error: "admin_not_found" }, { status: 404 });
 
   const now = new Date();
   if (parsed.data.decision === "approve") {

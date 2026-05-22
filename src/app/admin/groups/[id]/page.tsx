@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { countryLabel } from "@/lib/country-label";
+import { apiErrorText } from "@/lib/api-error-text";
 import { adminCls, AdminBackLink } from "@/components/admin/admin-ui";
 
 type Group = {
@@ -36,11 +38,20 @@ export default function AdminGroupDetailPage({
   const canReview = useMemo(() => row?.status === "pending", [row?.status]);
 
   async function load() {
+    if (!id) {
+      setErr(t("admin_not_found"));
+      setRow(null);
+      return;
+    }
     setErr(null);
     const res = await fetch(`/api/admin/groups/${id}`, { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      message?: string;
+      group?: Group;
+    };
     if (!res.ok) {
-      setErr(typeof data.message === "string" ? data.message : "admin_load_failed");
+      setErr(apiErrorText(t, data, "admin_load_failed"));
       setRow(null);
       return;
     }
@@ -74,7 +85,7 @@ export default function AdminGroupDetailPage({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "…");
+        setErr(apiErrorText(t, data as { error?: string; message?: string }, "admin_load_failed"));
         return;
       }
       await load();
@@ -94,7 +105,7 @@ export default function AdminGroupDetailPage({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "…");
+        setErr(apiErrorText(t, data as { error?: string; message?: string }, "admin_load_failed"));
         return;
       }
       await load();
@@ -110,9 +121,7 @@ export default function AdminGroupDetailPage({
           <h2 className={adminCls.h1}>{t("admin_group")}</h2>
           <AdminBackLink href="/admin/groups">{t("admin_back")}</AdminBackLink>
         </div>
-        {err ? (
-          <p className={adminCls.error}>{err}</p>
-        ) : (
+        {err ? <p className={adminCls.error}>{err}</p> : (
           <p className={adminCls.muted}>…</p>
         )}
       </div>

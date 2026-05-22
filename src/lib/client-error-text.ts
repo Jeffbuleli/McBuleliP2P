@@ -14,7 +14,8 @@ export function clientErrorText(
     key.startsWith("pool_") ||
     key.startsWith("loan_") ||
     key.startsWith("loans_") ||
-    key.startsWith("group_")
+    key.startsWith("group_") ||
+    key.startsWith("admin_")
   ) {
     return t(key as keyof Messages);
   }
