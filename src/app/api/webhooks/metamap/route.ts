@@ -5,6 +5,7 @@ import {
   setUserKycPending,
   type MetamapVerificationOutcome,
 } from "@/lib/kyc-service";
+import { rejectionNoteFromWebhookBody } from "@/lib/metamap/signals";
 import { metamapWebhookSecret } from "@/lib/metamap/config";
 import { verifyMetamapWebhookSignature } from "@/lib/metamap/webhook-verify";
 
@@ -70,14 +71,18 @@ export async function POST(req: Request) {
 
   if (eventName === "verification_completed" || eventName === "verification_updated") {
     const outcome = parseOutcome(body);
-    await applyKycFromMetamap({
+    const rejectionNote =
+      outcome === "rejected"
+        ? (rejectionNoteFromWebhookBody(body as Record<string, unknown>) ??
+          "Verification rejected by MetaMap")
+        : null;
+    const status = await applyKycFromMetamap({
       userId,
       outcome,
       metamapVerificationId: verificationIdFromResource(body.resource),
-      rejectionNote:
-        outcome === "rejected" ? "Verification rejected by MetaMap" : null,
+      rejectionNote,
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, status });
   }
 
   return NextResponse.json({ ok: true, ignored: eventName });

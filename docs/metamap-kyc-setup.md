@@ -74,7 +74,7 @@ npm run db:migrate:render
 1. Profile → **Verify identity** (`/app/profile/kyc`)
 2. Progress: Prepare → ID → Face → Review
 3. MetaMap SDK button (`metadata.userId`, `metadata.countryCode` link the McBuleli user)
-4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending. If MetaMap rejects in their dashboard, the app may still show “pending” until webhooks (paid) or manual admin update — user can tap **Verify** again from the pending screen.
+4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending. Non-sanctions rejections reset to **`none`** so the user can retry. If MetaMap already verified the user (duplicate), the SDK triggers **`already_verified`** → McBuleli sets **`approved`**. Sanctions rejections stay **`rejected`** with no retry.
 5. **Full:** webhook sets `approved` | `manual_review` | `rejected` + in-app notifications
 6. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
 

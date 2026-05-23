@@ -86,6 +86,7 @@ export const en = {
   profile_header_country: "Region",
   profile_header_country_val: "—",
   profile_kyc_pending: "Verification: standard",
+  profile_kyc_rejected: "KYC: not approved",
   profile_kyc_badge_off: "KYC: off (regional)",
   profile_kyc_ok: "KYC: verified",
   kyc_badge_label: "Identity verified",
@@ -109,6 +110,7 @@ export const en = {
   kyc_rejected_banner: "Not approved — try again",
   kyc_pending_retry_hint: "If MetaMap rejected you, tap Verify to try again",
   kyc_rejected_hint: "Use a clear photo of your ID (front + back) in good light",
+  kyc_sanctions_blocked: "Verification blocked — contact support",
   kyc_metamap_hint: "Use your phone camera in good light",
   kyc_metamap_not_configured: "MetaMap is not configured (contact support)",
   kyc_started_toast: "Verification started",
@@ -258,6 +260,8 @@ export const en = {
   profile_link_pi_done: "Pi linked.",
   pi_uid_already_linked: "This Pi account is already linked to another user.",
   auth_pi_failed: "Pi sign-in failed. Please try again.",
+  auth_pi_browser_required:
+    "Open https://mcbuleli.org/login in Pi Browser, then tap “Continue with Pi”.",
   auth_pi_timeout:
     "Pi sign-in took too long. Use email and password below, or open this page in Pi Browser and tap “Continue with Pi”.",
   pi_pay_section_title: "Pi payments",
@@ -2666,6 +2670,7 @@ export const fr: Messages = {
   profile_header_country: "Région",
   profile_header_country_val: "—",
   profile_kyc_pending: "Vérification : standard",
+  profile_kyc_rejected: "KYC : non approuvé",
   profile_kyc_badge_off: "KYC : désactivé (régional)",
   profile_kyc_ok: "KYC : vérifié",
   kyc_badge_label: "Identité vérifiée",
@@ -2689,6 +2694,7 @@ export const fr: Messages = {
   kyc_rejected_banner: "Non approuvé — réessayez",
   kyc_pending_retry_hint: "Si MetaMap a refusé, appuyez sur Vérifier pour réessayer",
   kyc_rejected_hint: "Photo nette de la pièce (recto + verso), bonne lumière",
+  kyc_sanctions_blocked: "Vérification bloquée — contactez le support",
   kyc_metamap_hint: "Utilisez la caméra du téléphone, bonne lumière",
   kyc_metamap_not_configured: "MetaMap non configuré (contactez le support)",
   kyc_started_toast: "Vérification démarrée",
@@ -2840,6 +2846,8 @@ export const fr: Messages = {
   profile_link_pi_done: "Pi lié.",
   pi_uid_already_linked: "Ce compte Pi est déjà lié à un autre utilisateur.",
   auth_pi_failed: "Connexion Pi impossible. Réessayez.",
+  auth_pi_browser_required:
+    "Ouvrez https://mcbuleli.org/login dans Pi Browser, puis « Continuer avec Pi ».",
   auth_pi_timeout:
     "La connexion Pi a expiré. Utilisez e-mail et mot de passe ci‑dessous, ou ouvrez cette page dans Pi Browser puis « Continuer avec Pi ».",
   pi_pay_section_title: "Paiements Pi",

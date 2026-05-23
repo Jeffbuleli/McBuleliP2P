@@ -13,7 +13,7 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
-import { paymentIdFromPiSdk, piInit } from "@/lib/pi-browser";
+import { paymentIdFromPiSdk, piInit, resolvePiSdkSandbox, isPiBrowser } from "@/lib/pi-browser";
 
 const PI_AUTH_TIMEOUT_MS = 55_000;
 
@@ -96,6 +96,10 @@ export default function LoginPage() {
     setError(null);
     setPiBusy(true);
     try {
+      if (typeof window !== "undefined" && !window.Pi && !isPiBrowser()) {
+        setError(t("auth_pi_browser_required"));
+        return;
+      }
       const Pi = await piInit();
       const authRes = (await piAuthenticateWithTimeout(
         Pi,
@@ -107,7 +111,10 @@ export default function LoginPage() {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ payment }),
+              body: JSON.stringify({
+                payment,
+                sandbox: resolvePiSdkSandbox(),
+              }),
               credentials: "same-origin",
             },
             45_000,

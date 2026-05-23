@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
-import { setUserKycPending } from "@/lib/kyc-service";
+import {
+  approveKycFromMetamapDuplicate,
+  getUserKycRow,
+  resetUserKycForRetry,
+  setUserKycPending,
+} from "@/lib/kyc-service";
+import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
+import { isKycApproved } from "@/lib/kyc-policy";
 
 const bodyZ = z.object({
-  event: z.enum(["started", "finished", "exited"]),
+  event: z.enum(["started", "finished", "exited", "already_verified"]),
   identityId: z.string().optional(),
   verificationId: z.string().optional(),
 });
@@ -21,11 +28,52 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "kyc_invalid_body" }, { status: 400 });
   }
 
-  if (parsed.data.event === "started" || parsed.data.event === "finished") {
+  const row = await getUserKycRow(userId);
+  if (
+    row &&
+    isKycSanctionsRejection(row.kycRejectionNote) &&
+    row.kycStatus === "rejected"
+  ) {
+    return NextResponse.json({ error: "kyc_sanctions_blocked" }, { status: 403 });
+  }
+
+  const { event, identityId, verificationId } = parsed.data;
+
+  if (event === "already_verified") {
+    if (isKycApproved(row?.kycStatus)) {
+      return NextResponse.json({ ok: true, status: "approved" });
+    }
+    const hadAttempt =
+      row?.kycStatus === "pending" ||
+      row?.kycStatus === "none" ||
+      Boolean(row?.metamapIdentityId || row?.metamapVerificationId);
+    if (!hadAttempt) {
+      return NextResponse.json({ error: "kyc_no_prior_attempt" }, { status: 400 });
+    }
+    const status = await approveKycFromMetamapDuplicate({
+      userId,
+      metamapIdentityId: identityId ?? row?.metamapIdentityId ?? null,
+      metamapVerificationId: verificationId ?? row?.metamapVerificationId ?? null,
+    });
+    return NextResponse.json({ ok: true, status });
+  }
+
+  if (event === "started") {
+    if (row?.kycStatus === "none" || row?.kycStatus === "rejected") {
+      await resetUserKycForRetry(userId);
+    }
     await setUserKycPending({
       userId,
-      metamapIdentityId: parsed.data.identityId ?? null,
-      metamapVerificationId: parsed.data.verificationId ?? null,
+      metamapIdentityId: identityId ?? null,
+      metamapVerificationId: verificationId ?? null,
+    });
+  }
+
+  if (event === "finished") {
+    await setUserKycPending({
+      userId,
+      metamapIdentityId: identityId ?? null,
+      metamapVerificationId: verificationId ?? null,
     });
   }
 

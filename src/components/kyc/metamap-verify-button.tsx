@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
 import { loadMetamapSdk, METAMAP_ERROR_SCREENS } from "@/lib/metamap/load-sdk";
+import { isMetamapAlreadyVerifiedSignal } from "@/lib/metamap/signals";
 
 export function MetamapVerifyButton({
   clientId,
@@ -16,6 +17,7 @@ export function MetamapVerifyButton({
   onFinished,
   onExited,
   onError,
+  onAlreadyVerified,
 }: {
   clientId: string;
   flowId: string;
@@ -27,11 +29,12 @@ export function MetamapVerifyButton({
   onFinished?: (detail: { identityId?: string; verificationId?: string }) => void;
   onExited?: () => void;
   onError?: (screen?: string) => void;
+  onAlreadyVerified?: (detail: { identityId?: string; verificationId?: string }) => void;
 }) {
   const { t } = useI18n();
   const verificationRef = useRef<MetamapVerificationInstance | null>(null);
-  const callbacksRef = useRef({ onStarted, onFinished, onExited, onError });
-  callbacksRef.current = { onStarted, onFinished, onExited, onError };
+  const callbacksRef = useRef({ onStarted, onFinished, onExited, onError, onAlreadyVerified });
+  callbacksRef.current = { onStarted, onFinished, onExited, onError, onAlreadyVerified };
   const [ready, setReady] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -53,7 +56,13 @@ export function MetamapVerifyButton({
       callbacksRef.current.onExited?.();
     };
     const onScreen = (ev: MetamapSdkEvent) => {
-      const screen = ev.detail?.screen;
+      const detail = ev.detail ?? {};
+      if (isMetamapAlreadyVerifiedSignal(detail)) {
+        setStarting(false);
+        callbacksRef.current.onAlreadyVerified?.(detail);
+        return;
+      }
+      const screen = detail.screen;
       if (screen && METAMAP_ERROR_SCREENS.has(screen)) {
         setStarting(false);
         callbacksRef.current.onError?.(screen);

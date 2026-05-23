@@ -108,6 +108,13 @@ export function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
  * Explicit env wins: `NEXT_PUBLIC_PI_SANDBOX=0` forces production init even on
  * sandbox host (rare); `1` forces sandbox everywhere (e.g. prod domain + testnet).
  */
+/** True when running inside Pi Browser (Pi SDK available). */
+export function isPiBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes("pibrowser") || ua.includes("pi browser");
+}
+
 export function resolvePiSdkSandbox(): boolean {
   if (process.env.NEXT_PUBLIC_PI_SANDBOX === "0") {
     return false;

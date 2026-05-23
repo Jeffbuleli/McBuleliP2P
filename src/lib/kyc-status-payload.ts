@@ -5,6 +5,7 @@ import {
   kycRequiredCountries,
   isKycApproved,
 } from "@/lib/kyc-policy";
+import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
 import {
   metamapClientId,
   metamapConfigured,
@@ -20,6 +21,8 @@ export type KycStatusPayload = {
   countryCode: string | null;
   kycUpdatedAt: string | null;
   rejectionNote: string | null;
+  sanctionsBlocked: boolean;
+  canRetryKyc: boolean;
   metamapIdentityId: string | null;
   metamapVerificationId: string | null;
   metamap: {
@@ -45,16 +48,28 @@ export function buildKycStatusPayload(args: {
   const enabled = kycEnabled();
   const inCorridorCountry = corridorCountry(args.countryCode);
   const corridor = enabled && inCorridorCountry;
+  const kycStatus = args.kycStatus ?? "none";
+  const approved = isKycApproved(kycStatus);
+  const rejectionNote = args.kycRejectionNote ?? null;
+  const sanctionsBlocked =
+    kycStatus === "rejected" && isKycSanctionsRejection(rejectionNote);
+  const canRetryKyc =
+    corridor &&
+    !approved &&
+    !sanctionsBlocked &&
+    kycStatus !== "manual_review";
 
   return {
     enabled,
     corridor,
     inCorridorCountry,
-    kycStatus: args.kycStatus ?? "none",
-    approved: isKycApproved(args.kycStatus),
+    kycStatus,
+    approved,
     countryCode: args.countryCode ?? null,
     kycUpdatedAt: args.kycUpdatedAt?.toISOString() ?? null,
-    rejectionNote: args.kycRejectionNote ?? null,
+    rejectionNote,
+    sanctionsBlocked,
+    canRetryKyc,
     metamapIdentityId: args.metamapIdentityId ?? null,
     metamapVerificationId: args.metamapVerificationId ?? null,
     metamap: {

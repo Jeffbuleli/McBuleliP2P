@@ -17,7 +17,7 @@ import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
 
 async function syncKyc(
-  event: "started" | "finished" | "exited",
+  event: "started" | "finished" | "exited" | "already_verified",
   detail?: { identityId?: string; verificationId?: string },
 ) {
   await fetch("/api/kyc/sync", {
@@ -159,16 +159,12 @@ export function KycFlowPanel({
     [activeIdx, status, t],
   );
 
-  const canVerify =
-    data?.inCorridorCountry &&
-    data.metamap.configured &&
-    data.metamap.clientId &&
-    data.metamap.flowId &&
-    !data.approved &&
-    status !== "manual_review";
+  const canShowVerify =
+    Boolean(data?.canRetryKyc) &&
+    Boolean(data?.metamap.configured && data.metamap.clientId && data.metamap.flowId);
 
   const resumeVerification =
-    (status === "rejected" || status === "pending") &&
+    status === "pending" &&
     Boolean(data?.metamapIdentityId && data?.metamapVerificationId);
 
   const lang = locale === "fr" ? "fr" : "en";
@@ -178,6 +174,32 @@ export function KycFlowPanel({
     if (cc && cc !== "OTHER") m.countryCode = cc;
     return m;
   }, [userId, lang, data?.countryCode]);
+
+  const verifyHandlers = {
+    onStarted: async (d: { identityId?: string; verificationId?: string }) => {
+      setSdkError(null);
+      setBusy(true);
+      await syncKyc("started", d);
+      await load();
+      setBusy(false);
+    },
+    onFinished: async (d: { identityId?: string; verificationId?: string }) => {
+      setSdkError(null);
+      setBusy(true);
+      await syncKyc("finished", d);
+      await load();
+      setBusy(false);
+    },
+    onAlreadyVerified: async (d: { identityId?: string; verificationId?: string }) => {
+      setSdkError(null);
+      setBusy(true);
+      await syncKyc("already_verified", d);
+      await load();
+      setBusy(false);
+    },
+    onExited: () => void syncKyc("exited"),
+    onError: (screen?: string) => setSdkError(screen ?? "commonError"),
+  };
 
   if (!data) {
     return (
@@ -236,12 +258,25 @@ export function KycFlowPanel({
         <StatusBox tone="ok">
           <KycIllustrationShield className="h-14 w-14 text-emerald-700" />
         </StatusBox>
-      ) : status === "pending" || status === "manual_review" ? (
+      ) : data.sanctionsBlocked ? (
+        <>
+          <StatusBox tone="reject">
+            <KycIllustrationError className="h-14 w-14 text-rose-700" />
+          </StatusBox>
+          <p className="mt-3 text-center text-[10px] text-rose-700">
+            {data.rejectionNote ?? t("kyc_sanctions_blocked")}
+          </p>
+        </>
+      ) : status === "manual_review" ? (
+        <StatusBox tone="pending">
+          <KycIllustrationReview className="h-14 w-14 text-amber-800" />
+        </StatusBox>
+      ) : status === "pending" ? (
         <>
           <StatusBox tone="pending">
             <KycIllustrationReview className="h-14 w-14 text-amber-800" />
           </StatusBox>
-          {canVerify && status === "pending" ? (
+          {canShowVerify ? (
             <div className="mt-4 space-y-2">
               <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
                 {t("kyc_pending_retry_hint")}
@@ -253,66 +288,12 @@ export function KycFlowPanel({
                 language={lang}
                 identityId={resumeVerification ? data.metamapIdentityId : undefined}
                 verificationId={resumeVerification ? data.metamapVerificationId : undefined}
-                onStarted={async (d) => {
-                  setSdkError(null);
-                  setBusy(true);
-                  await syncKyc("started", d);
-                  await load();
-                  setBusy(false);
-                }}
-                onFinished={async (d) => {
-                  setSdkError(null);
-                  setBusy(true);
-                  await syncKyc("finished", d);
-                  await load();
-                  setBusy(false);
-                }}
-                onExited={() => void syncKyc("exited")}
-                onError={(screen) => setSdkError(screen ?? "commonError")}
+                {...verifyHandlers}
               />
             </div>
           ) : null}
         </>
-      ) : status === "rejected" ? (
-        <>
-          <StatusBox tone="reject">
-            <KycIllustrationId className="h-14 w-14 text-rose-700" />
-          </StatusBox>
-          {data.rejectionNote ? (
-            <p className="mt-3 text-center text-[10px] text-rose-700">{data.rejectionNote}</p>
-          ) : (
-            <p className="mt-3 text-center text-[10px] text-zinc-500">{t("kyc_rejected_hint")}</p>
-          )}
-          {canVerify ? (
-            <div className="mt-4">
-              <MetamapVerifyButton
-                clientId={data.metamap.clientId!}
-                flowId={data.metamap.flowId!}
-                metadata={metadata}
-                language={lang}
-                identityId={resumeVerification ? data.metamapIdentityId : undefined}
-                verificationId={resumeVerification ? data.metamapVerificationId : undefined}
-                onStarted={async (d) => {
-                  setSdkError(null);
-                  setBusy(true);
-                  await syncKyc("started", d);
-                  await load();
-                  setBusy(false);
-                }}
-                onFinished={async (d) => {
-                  setSdkError(null);
-                  setBusy(true);
-                  await syncKyc("finished", d);
-                  await load();
-                  setBusy(false);
-                }}
-                onExited={() => void syncKyc("exited")}
-                onError={(screen) => setSdkError(screen ?? "commonError")}
-              />
-            </div>
-          ) : null}
-        </>
-      ) : canVerify ? (
+      ) : canShowVerify ? (
         <div className="mt-5 space-y-3">
           {sdkError ? (
             <StatusBox tone="reject">
@@ -324,22 +305,7 @@ export function KycFlowPanel({
             flowId={data.metamap.flowId!}
             metadata={metadata}
             language={lang}
-            onStarted={async (d) => {
-              setSdkError(null);
-              setBusy(true);
-              await syncKyc("started", d);
-              await load();
-              setBusy(false);
-            }}
-            onFinished={async (d) => {
-              setSdkError(null);
-              setBusy(true);
-              await syncKyc("finished", d);
-              await load();
-              setBusy(false);
-            }}
-            onExited={() => void syncKyc("exited")}
-            onError={(screen) => setSdkError(screen ?? "commonError")}
+            {...verifyHandlers}
           />
           {sdkError === "ipRestrictions" ? (
             <p className="text-center text-[10px] text-[color:var(--fd-muted)]">

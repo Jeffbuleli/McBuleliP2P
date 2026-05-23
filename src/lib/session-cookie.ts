@@ -9,7 +9,15 @@ export function getSessionCookieWriteOptions(maxAgeSeconds: number) {
   const production = process.env.NODE_ENV === "production";
   const raw = process.env.SESSION_COOKIE_SAMESITE?.trim().toLowerCase();
   const sameSite: "lax" | "strict" | "none" =
-    raw === "none" ? "none" : raw === "strict" ? "strict" : "lax";
+    raw === "none"
+      ? "none"
+      : raw === "strict"
+        ? "strict"
+        : raw === "lax"
+          ? "lax"
+          : production
+            ? "none"
+            : "lax";
   const secure = production || sameSite === "none";
   return {
     httpOnly: true as const,
@@ -25,7 +33,15 @@ export function getSessionCookieClearOptions() {
   const production = process.env.NODE_ENV === "production";
   const raw = process.env.SESSION_COOKIE_SAMESITE?.trim().toLowerCase();
   const sameSite: "lax" | "strict" | "none" =
-    raw === "none" ? "none" : raw === "strict" ? "strict" : "lax";
+    raw === "none"
+      ? "none"
+      : raw === "strict"
+        ? "strict"
+        : raw === "lax"
+          ? "lax"
+          : production
+            ? "none"
+            : "lax";
   const secure = production || sameSite === "none";
   return {
     httpOnly: true as const,
