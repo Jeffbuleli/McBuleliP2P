@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { getKycStatusPayload } from "@/lib/kyc-status-payload";
-import { tryRefreshKycIfPending } from "@/lib/metamap/try-refresh-pending";
+import { tryRefreshKycIfPending } from "@/lib/didit/try-refresh-pending";
 
 export const dynamic = "force-dynamic";
 

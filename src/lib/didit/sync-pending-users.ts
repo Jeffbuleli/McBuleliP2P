@@ -1,7 +1,7 @@
 import { and, eq, isNotNull, or } from "drizzle-orm";
 import { getDb, users } from "@/db";
-import { metamapApiConfigured } from "@/lib/metamap/api";
-import { refreshUserKycFromMetamap } from "@/lib/metamap/refresh-user-kyc";
+import { diditApiConfigured } from "@/lib/didit/api";
+import { refreshUserKycFromDidit } from "@/lib/didit/refresh-user-kyc";
 
 const BATCH_LIMIT = 80;
 
@@ -12,9 +12,9 @@ export type SyncPendingKycResult = {
   skipped: boolean;
 };
 
-/** Cron: refresh all users stuck in pending/manual_review with a MetaMap verification id. */
-export async function syncPendingUsersKycFromMetamap(): Promise<SyncPendingKycResult> {
-  if (!metamapApiConfigured()) {
+/** Cron: refresh users stuck in pending/manual_review with a Didit session id. */
+export async function syncPendingUsersKycFromDidit(): Promise<SyncPendingKycResult> {
+  if (!diditApiConfigured()) {
     return { scanned: 0, updated: 0, errors: 0, skipped: true };
   }
 
@@ -24,7 +24,7 @@ export async function syncPendingUsersKycFromMetamap(): Promise<SyncPendingKycRe
     .from(users)
     .where(
       and(
-        isNotNull(users.metamapVerificationId),
+        isNotNull(users.diditSessionId),
         or(
           eq(users.kycStatus, "pending"),
           eq(users.kycStatus, "manual_review"),
@@ -37,7 +37,7 @@ export async function syncPendingUsersKycFromMetamap(): Promise<SyncPendingKycRe
   let errors = 0;
 
   for (const row of rows) {
-    const result = await refreshUserKycFromMetamap(row.id);
+    const result = await refreshUserKycFromDidit(row.id);
     if (!result.ok) {
       errors += 1;
       continue;

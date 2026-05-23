@@ -2,7 +2,7 @@
 /**
  * Render Cron — POST /api/internal/kyc/sync-pending
  * Env: MCBULELI_API_URL (or APP_URL), CRON_SECRET (or MCBULELI_CRON_SECRET).
- * Requires METAMAP_CLIENT_SECRET on the web service.
+ * Requires DIDIT_API_KEY on the web service.
  */
 const base = (
   process.env.MCBULELI_API_URL ??

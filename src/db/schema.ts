@@ -29,6 +29,8 @@ export const users = pgTable("users", {
   kycStatus: varchar("kyc_status", { length: 16 }).notNull().default("none"),
   kycUpdatedAt: timestamp("kyc_updated_at", { withTimezone: true }),
   kycRejectionNote: text("kyc_rejection_note"),
+  /** Didit verification session UUID — https://docs.didit.me/ */
+  diditSessionId: varchar("didit_session_id", { length: 128 }),
   metamapIdentityId: varchar("metamap_identity_id", { length: 128 }),
   metamapVerificationId: varchar("metamap_verification_id", { length: 128 }),
   balance: numeric("balance", { precision: 36, scale: 18 })

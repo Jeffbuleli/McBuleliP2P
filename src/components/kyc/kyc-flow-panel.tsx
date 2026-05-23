@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { DiditVerifyButton } from "@/components/kyc/didit-verify-button";
 import {
   KycIllustrationError,
   KycIllustrationFace,
@@ -14,11 +15,10 @@ import {
   type KycProgressStep,
 } from "@/components/kyc/kyc-progress";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
-import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
 import {
   fetchKycStatus,
-  refreshKycFromMetamap,
+  refreshKycFromDidit,
   syncKycEvent,
 } from "@/lib/kyc-client-sync";
 
@@ -79,20 +79,19 @@ function StatusBox({
 }
 
 export function KycFlowPanel({
-  userId,
   initialData,
   autoStartSdk = false,
 }: {
   userId: string;
   initialData?: KycStatusPayload | null;
-  /** Launch MetaMap SDK immediately (e.g. /app/profile/kyc?start=1). */
+  /** Launch Didit SDK immediately (e.g. /app/profile/kyc?start=1). */
   autoStartSdk?: boolean;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [data, setData] = useState<KycStatusPayload | null>(initialData ?? null);
   const [busy, setBusy] = useState(false);
   const [loadErr, setLoadErr] = useState(false);
-  const [sdkError, setSdkError] = useState<string | null>(null);
+  const [sdkError, setSdkError] = useState(false);
   const autoRefreshed = useRef(false);
 
   const load = useCallback(async () => {
@@ -105,10 +104,10 @@ export function KycFlowPanel({
     setLoadErr(true);
   }, []);
 
-  const refreshFromMetamap = useCallback(async () => {
+  const refreshFromDidit = useCallback(async () => {
     setBusy(true);
     try {
-      const payload = await refreshKycFromMetamap();
+      const payload = await refreshKycFromDidit();
       if (payload) setData(payload);
       else await load();
     } finally {
@@ -133,8 +132,8 @@ export function KycFlowPanel({
     if (!data?.canRefreshStatus || autoRefreshed.current) return;
     if (data.kycStatus !== "pending" && data.kycStatus !== "manual_review") return;
     autoRefreshed.current = true;
-    void refreshFromMetamap();
-  }, [data?.canRefreshStatus, data?.kycStatus, refreshFromMetamap]);
+    void refreshFromDidit();
+  }, [data?.canRefreshStatus, data?.kycStatus, refreshFromDidit]);
 
   const status = data?.kycStatus ?? "none";
   const activeIdx =
@@ -177,47 +176,27 @@ export function KycFlowPanel({
   );
 
   const canShowVerify =
-    Boolean(data?.canRetryKyc) &&
-    Boolean(data?.metamap.configured && data.metamap.clientId && data.metamap.flowId);
-
-  const resumeVerification =
-    status === "pending" &&
-    Boolean(data?.metamapIdentityId && data?.metamapVerificationId);
-
-  const lang = locale === "fr" ? "fr" : "en";
-  const metadata = useMemo(() => {
-    const m: Record<string, string> = { userId, fixedLanguage: lang };
-    const cc = data?.countryCode?.trim().toUpperCase();
-    if (cc && cc !== "OTHER") m.countryCode = cc;
-    return m;
-  }, [userId, lang, data?.countryCode]);
+    Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
 
   const verifyHandlers = {
-    onStarted: async (d: { identityId?: string; verificationId?: string }) => {
-      setSdkError(null);
+    onStarted: async (d: { sessionId?: string }) => {
+      setSdkError(false);
       setBusy(true);
       await syncKycEvent("started", d);
       await load();
       setBusy(false);
     },
-    onFinished: async (d: { identityId?: string; verificationId?: string }) => {
-      setSdkError(null);
+    onFinished: async (d: { sessionId?: string }) => {
+      setSdkError(false);
       setBusy(true);
       await syncKycEvent("finished", d);
-      const refreshed = await refreshKycFromMetamap();
+      const refreshed = await refreshKycFromDidit();
       if (refreshed) setData(refreshed);
       else await load();
       setBusy(false);
     },
-    onAlreadyVerified: async (d: { identityId?: string; verificationId?: string }) => {
-      setSdkError(null);
-      setBusy(true);
-      await syncKycEvent("already_verified", d);
-      await load();
-      setBusy(false);
-    },
-    onExited: () => void syncKycEvent("exited"),
-    onError: (screen?: string) => setSdkError(screen ?? "commonError"),
+    onCancelled: () => void syncKycEvent("cancelled"),
+    onError: () => setSdkError(true),
   };
 
   if (!data) {
@@ -267,7 +246,7 @@ export function KycFlowPanel({
     <div className="fd-card overflow-hidden p-5">
       <div className="mb-4 flex justify-center">
         <span className="flex h-28 w-28 items-center justify-center rounded-[1.75rem] bg-[color:var(--fd-mint)]/50">
-          {heroIllustration(status, activeIdx, Boolean(sdkError))}
+          {heroIllustration(status, activeIdx, sdkError)}
         </span>
       </div>
 
@@ -303,7 +282,7 @@ export function KycFlowPanel({
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => void refreshFromMetamap()}
+                onClick={() => void refreshFromDidit()}
                 className="rounded-full border border-[color:var(--fd-border)] bg-white px-4 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
               >
                 {busy ? "…" : t("kyc_refresh_status")}
@@ -315,16 +294,7 @@ export function KycFlowPanel({
               <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
                 {t("kyc_pending_retry_hint")}
               </p>
-              <MetamapVerifyButton
-                clientId={data.metamap.clientId!}
-                flowId={data.metamap.flowId!}
-                metadata={metadata}
-                language={lang}
-                autoStart={autoStartSdk}
-                identityId={resumeVerification ? data.metamapIdentityId : undefined}
-                verificationId={resumeVerification ? data.metamapVerificationId : undefined}
-                {...verifyHandlers}
-              />
+              <DiditVerifyButton autoStart={false} {...verifyHandlers} />
             </div>
           ) : null}
         </>
@@ -335,19 +305,11 @@ export function KycFlowPanel({
               <KycIllustrationError className="h-12 w-12 text-rose-600" />
             </StatusBox>
           ) : null}
-          <MetamapVerifyButton
-            clientId={data.metamap.clientId!}
-            flowId={data.metamap.flowId!}
-            metadata={metadata}
-            language={lang}
-            autoStart={autoStartSdk}
-            {...verifyHandlers}
-          />
-          {sdkError === "ipRestrictions" ? (
-            <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
-              {t("kyc_sdk_domain_hint")}
-            </p>
-          ) : sdkError ? (
+          <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+            {t("kyc_didit_hint")}
+          </p>
+          <DiditVerifyButton autoStart={autoStartSdk} {...verifyHandlers} />
+          {sdkError ? (
             <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
               {t("kyc_sdk_error")}
             </p>
@@ -355,7 +317,7 @@ export function KycFlowPanel({
         </div>
       ) : (
         <p className="mt-4 text-center text-[10px] text-rose-700">
-          {t("kyc_metamap_not_configured")}
+          {t("kyc_didit_not_configured")}
         </p>
       )}
 

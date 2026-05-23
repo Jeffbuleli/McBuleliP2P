@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
-import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
+import { DiditVerifyButton } from "@/components/kyc/didit-verify-button";
 import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
 import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import {
   fetchKycStatus,
-  refreshKycFromMetamap,
+  refreshKycFromDidit,
   syncKycEvent,
 } from "@/lib/kyc-client-sync";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
@@ -22,13 +22,12 @@ function kycPillClass(status: string): string {
 }
 
 export function ProfileSettingsKycPanel({
-  userId,
   initialStatus,
 }: {
   userId: string;
   initialStatus: string | null | undefined;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [data, setData] = useState<KycStatusPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const autoRefreshed = useRef(false);
@@ -41,7 +40,7 @@ export function ProfileSettingsKycPanel({
   const refreshStatus = useCallback(async () => {
     setBusy(true);
     try {
-      const payload = await refreshKycFromMetamap();
+      const payload = await refreshKycFromDidit();
       if (payload) setData(payload);
       else await load();
     } finally {
@@ -71,55 +70,26 @@ export function ProfileSettingsKycPanel({
 
   const status = data?.kycStatus ?? initialStatus ?? "none";
   const label = profileKycBadgeText(t, status);
-  const lang = locale === "fr" ? "fr" : "en";
-
-  const metadata = useMemo(() => {
-    const m: Record<string, string> = { userId, fixedLanguage: lang };
-    const cc = data?.countryCode?.trim().toUpperCase();
-    if (cc && cc !== "OTHER") m.countryCode = cc;
-    return m;
-  }, [userId, lang, data?.countryCode]);
 
   const canShowVerify =
-    Boolean(data?.canRetryKyc) &&
-    Boolean(data?.metamap.configured && data.metamap.clientId && data.metamap.flowId);
-
-  const resumeVerification =
-    status === "pending" &&
-    Boolean(data?.metamapIdentityId && data?.metamapVerificationId);
+    Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
 
   const verifyHandlers = {
-    onStarted: async (d: { identityId?: string; verificationId?: string }) => {
+    onStarted: async (d: { sessionId?: string }) => {
       setBusy(true);
       await syncKycEvent("started", d);
       await load();
       setBusy(false);
     },
-    onFinished: async (d: { identityId?: string; verificationId?: string }) => {
+    onFinished: async (d: { sessionId?: string }) => {
       setBusy(true);
       await syncKycEvent("finished", d);
-      const refreshed = await refreshKycFromMetamap();
+      const refreshed = await refreshKycFromDidit();
       if (refreshed) setData(refreshed);
       else await load();
       setBusy(false);
     },
-    onAlreadyVerified: async (d: { identityId?: string; verificationId?: string }) => {
-      setBusy(true);
-      await syncKycEvent("already_verified", d);
-      await load();
-      setBusy(false);
-    },
-    onExited: () => void syncKycEvent("exited"),
-  };
-
-  const confirmValidatedOnMetamap = async () => {
-    setBusy(true);
-    await syncKycEvent("already_verified", {
-      identityId: data?.metamapIdentityId ?? undefined,
-      verificationId: data?.metamapVerificationId ?? undefined,
-    });
-    await load();
-    setBusy(false);
+    onCancelled: () => void syncKycEvent("cancelled"),
   };
 
   return (
@@ -149,42 +119,21 @@ export function ProfileSettingsKycPanel({
               <p className="text-[10px] text-[color:var(--fd-muted)]">
                 {t("profile_settings_kyc_verify_hint")}
               </p>
-              <MetamapVerifyButton
-                clientId={data!.metamap.clientId!}
-                flowId={data!.metamap.flowId!}
-                metadata={metadata}
-                language={lang}
-                identityId={resumeVerification ? data!.metamapIdentityId : undefined}
-                verificationId={
-                  resumeVerification ? data!.metamapVerificationId : undefined
-                }
-                {...verifyHandlers}
-              />
+              <DiditVerifyButton {...verifyHandlers} />
             </div>
           ) : null}
 
           {status === "pending" || status === "manual_review" ? (
-            <div className="flex flex-col gap-2">
-              {data?.canRefreshStatus ? (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void refreshStatus()}
-                  className="rounded-full border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
-                >
-                  {busy ? "…" : t("kyc_refresh_status")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void confirmValidatedOnMetamap()}
-                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-800 disabled:opacity-50"
-                >
-                  {busy ? "…" : t("kyc_confirm_metamap_validated")}
-                </button>
-              )}
-            </div>
+            data?.canRefreshStatus ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void refreshStatus()}
+                className="rounded-full border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
+              >
+                {busy ? "…" : t("kyc_refresh_status")}
+              </button>
+            ) : null
           ) : null}
         </div>
       </div>

@@ -6,12 +6,8 @@ import {
   isKycApproved,
 } from "@/lib/kyc-policy";
 import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
-import {
-  metamapClientId,
-  metamapConfigured,
-  metamapFlowId,
-} from "@/lib/metamap/config";
-import { metamapApiConfigured } from "@/lib/metamap/api";
+import { diditConfigured } from "@/lib/didit/config";
+import { diditApiConfigured } from "@/lib/didit/api";
 
 export type KycStatusPayload = {
   enabled: boolean;
@@ -25,12 +21,9 @@ export type KycStatusPayload = {
   sanctionsBlocked: boolean;
   canRetryKyc: boolean;
   canRefreshStatus: boolean;
-  metamapIdentityId: string | null;
-  metamapVerificationId: string | null;
-  metamap: {
+  diditSessionId: string | null;
+  didit: {
     configured: boolean;
-    clientId: string | null;
-    flowId: string | null;
   };
 };
 
@@ -44,8 +37,7 @@ export function buildKycStatusPayload(args: {
   kycStatus: string | null | undefined;
   kycUpdatedAt?: Date | null;
   kycRejectionNote?: string | null;
-  metamapIdentityId?: string | null;
-  metamapVerificationId?: string | null;
+  diditSessionId?: string | null;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = corridorCountry(args.countryCode);
@@ -61,11 +53,11 @@ export function buildKycStatusPayload(args: {
     !sanctionsBlocked &&
     kycStatus !== "manual_review";
 
-  const hasVerificationId = Boolean(args.metamapVerificationId?.trim());
+  const hasSessionId = Boolean(args.diditSessionId?.trim());
   const canRefreshStatus =
-    metamapApiConfigured() &&
+    diditApiConfigured() &&
     !approved &&
-    hasVerificationId &&
+    hasSessionId &&
     (kycStatus === "pending" || kycStatus === "manual_review");
 
   return {
@@ -80,12 +72,9 @@ export function buildKycStatusPayload(args: {
     sanctionsBlocked,
     canRetryKyc,
     canRefreshStatus,
-    metamapIdentityId: args.metamapIdentityId ?? null,
-    metamapVerificationId: args.metamapVerificationId ?? null,
-    metamap: {
-      configured: metamapConfigured(),
-      clientId: metamapClientId() || null,
-      flowId: metamapFlowId() || null,
+    diditSessionId: args.diditSessionId ?? null,
+    didit: {
+      configured: diditConfigured(),
     },
   };
 }
@@ -100,8 +89,7 @@ export async function getKycStatusPayload(
         countryCode: string | null;
         kycUpdatedAt: Date | null;
         kycRejectionNote?: string | null;
-        metamapIdentityId?: string | null;
-        metamapVerificationId?: string | null;
+        diditSessionId?: string | null;
       }
     | undefined;
 
@@ -112,8 +100,7 @@ export async function getKycStatusPayload(
         countryCode: users.countryCode,
         kycUpdatedAt: users.kycUpdatedAt,
         kycRejectionNote: users.kycRejectionNote,
-        metamapIdentityId: users.metamapIdentityId,
-        metamapVerificationId: users.metamapVerificationId,
+        diditSessionId: users.diditSessionId,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -138,7 +125,6 @@ export async function getKycStatusPayload(
     kycStatus: row.kycStatus,
     kycUpdatedAt: row.kycUpdatedAt,
     kycRejectionNote: row.kycRejectionNote,
-    metamapIdentityId: row.metamapIdentityId,
-    metamapVerificationId: row.metamapVerificationId,
+    diditSessionId: row.diditSessionId,
   });
 }

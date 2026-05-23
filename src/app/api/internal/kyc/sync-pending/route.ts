@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCronSecret } from "@/lib/pool-env";
-import { syncPendingUsersKycFromMetamap } from "@/lib/metamap/sync-pending-users";
+import { syncPendingUsersKycFromDidit } from "@/lib/didit/sync-pending-users";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const out = await syncPendingUsersKycFromMetamap();
+  const out = await syncPendingUsersKycFromDidit();
   return NextResponse.json({ ok: true, ...out });
 }

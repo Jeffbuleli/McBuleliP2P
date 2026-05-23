@@ -4,18 +4,24 @@ import { createUserNotification } from "@/lib/notifications-service";
 import type { KycStatus } from "@/lib/kyc-policy";
 import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
 
-export type MetamapVerificationOutcome = "verified" | "reviewNeeded" | "rejected" | "unknown";
+export type KycVerificationOutcome =
+  | "verified"
+  | "reviewNeeded"
+  | "rejected"
+  | "unknown"
+  | "abandoned";
 
-export function mapMetamapOutcomeToKycStatus(
-  outcome: MetamapVerificationOutcome,
+export function mapVerificationOutcomeToKycStatus(
+  outcome: KycVerificationOutcome,
 ): KycStatus {
   if (outcome === "verified") return "approved";
   if (outcome === "reviewNeeded") return "manual_review";
   if (outcome === "rejected") return "rejected";
+  if (outcome === "abandoned") return "none";
   return "pending";
 }
 
-/** Reset to initial state so the user can start MetaMap again (non-sanctions). */
+/** Reset to initial state so the user can start verification again (non-sanctions). */
 export async function resetUserKycForRetry(userId: string): Promise<void> {
   const db = getDb();
   await db
@@ -24,14 +30,14 @@ export async function resetUserKycForRetry(userId: string): Promise<void> {
       kycStatus: "none",
       kycUpdatedAt: new Date(),
       kycRejectionNote: null,
+      diditSessionId: null,
     })
     .where(eq(users.id, userId));
 }
 
 export async function setUserKycPending(args: {
   userId: string;
-  metamapIdentityId?: string | null;
-  metamapVerificationId?: string | null;
+  diditSessionId?: string | null;
 }): Promise<void> {
   const db = getDb();
   await db
@@ -40,11 +46,8 @@ export async function setUserKycPending(args: {
       kycStatus: "pending",
       kycUpdatedAt: new Date(),
       kycRejectionNote: null,
-      ...(args.metamapIdentityId != null
-        ? { metamapIdentityId: args.metamapIdentityId }
-        : {}),
-      ...(args.metamapVerificationId != null
-        ? { metamapVerificationId: args.metamapVerificationId }
+      ...(args.diditSessionId != null
+        ? { diditSessionId: args.diditSessionId }
         : {}),
     })
     .where(eq(users.id, args.userId));
@@ -56,34 +59,34 @@ export async function setUserKycPending(args: {
   });
 }
 
-export async function applyKycFromMetamap(args: {
+export async function applyKycFromProvider(args: {
   userId: string;
-  outcome: MetamapVerificationOutcome;
-  metamapIdentityId?: string | null;
-  metamapVerificationId?: string | null;
+  outcome: KycVerificationOutcome;
+  diditSessionId?: string | null;
   rejectionNote?: string | null;
 }): Promise<KycStatus> {
   const note = args.rejectionNote?.slice(0, 500) ?? null;
+
+  if (args.outcome === "abandoned") {
+    await resetUserKycForRetry(args.userId);
+    return "none";
+  }
 
   if (args.outcome === "rejected" && !isKycSanctionsRejection(note)) {
     await resetUserKycForRetry(args.userId);
     return "none";
   }
 
-  const status = mapMetamapOutcomeToKycStatus(args.outcome);
+  const status = mapVerificationOutcomeToKycStatus(args.outcome);
   const db = getDb();
   await db
     .update(users)
     .set({
       kycStatus: status,
       kycUpdatedAt: new Date(),
-      kycRejectionNote:
-        status === "rejected" ? note : null,
-      ...(args.metamapIdentityId != null
-        ? { metamapIdentityId: args.metamapIdentityId }
-        : {}),
-      ...(args.metamapVerificationId != null
-        ? { metamapVerificationId: args.metamapVerificationId }
+      kycRejectionNote: status === "rejected" ? note : null,
+      ...(args.diditSessionId != null
+        ? { diditSessionId: args.diditSessionId }
         : {}),
     })
     .where(eq(users.id, args.userId));
@@ -106,29 +109,13 @@ export async function applyKycFromMetamap(args: {
   return status;
 }
 
-/** MetaMap duplicate / already-verified — sync McBuleli when webhook was missed. */
-export async function approveKycFromMetamapDuplicate(args: {
-  userId: string;
-  metamapIdentityId?: string | null;
-  metamapVerificationId?: string | null;
-}): Promise<KycStatus> {
-  return applyKycFromMetamap({
-    userId: args.userId,
-    outcome: "verified",
-    metamapIdentityId: args.metamapIdentityId,
-    metamapVerificationId: args.metamapVerificationId,
-    rejectionNote: null,
-  });
-}
-
 export async function getUserKycRow(userId: string) {
   const db = getDb();
   const [row] = await db
     .select({
       kycStatus: users.kycStatus,
       kycRejectionNote: users.kycRejectionNote,
-      metamapIdentityId: users.metamapIdentityId,
-      metamapVerificationId: users.metamapVerificationId,
+      diditSessionId: users.diditSessionId,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -136,11 +123,12 @@ export async function getUserKycRow(userId: string) {
   return row ?? null;
 }
 
-export async function resolveUserIdFromMetamapMetadata(
-  metadata: Record<string, unknown> | null | undefined,
+/** Didit vendor_data — McBuleli user UUID. */
+export async function resolveUserIdFromVendorData(
+  vendorData: string | null | undefined,
 ): Promise<string | null> {
-  const raw = metadata?.userId ?? metadata?.user_id;
-  if (typeof raw !== "string" || raw.length < 8) return null;
+  const raw = vendorData?.trim();
+  if (!raw || raw.length < 8) return null;
   const db = getDb();
   const [u] = await db
     .select({ id: users.id })
@@ -150,30 +138,16 @@ export async function resolveUserIdFromMetamapMetadata(
   return u?.id ?? null;
 }
 
-export async function resolveUserIdByMetamapVerificationId(
-  verificationId: string,
+export async function resolveUserIdByDiditSessionId(
+  sessionId: string,
 ): Promise<string | null> {
-  const id = verificationId.trim();
+  const id = sessionId.trim();
   if (!id) return null;
   const db = getDb();
   const [u] = await db
     .select({ id: users.id })
     .from(users)
-    .where(eq(users.metamapVerificationId, id))
-    .limit(1);
-  return u?.id ?? null;
-}
-
-export async function resolveUserIdByMetamapIdentityId(
-  identityId: string,
-): Promise<string | null> {
-  const id = identityId.trim();
-  if (!id) return null;
-  const db = getDb();
-  const [u] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.metamapIdentityId, id))
+    .where(eq(users.diditSessionId, id))
     .limit(1);
   return u?.id ?? null;
 }

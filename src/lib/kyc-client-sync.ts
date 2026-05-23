@@ -10,8 +10,8 @@ export async function fetchKycStatus(): Promise<KycStatusPayload | null> {
 }
 
 export async function syncKycEvent(
-  event: "started" | "finished" | "exited" | "already_verified",
-  detail?: { identityId?: string; verificationId?: string },
+  event: "started" | "finished" | "cancelled",
+  detail?: { sessionId?: string },
 ): Promise<void> {
   await fetch("/api/kyc/sync", {
     method: "POST",
@@ -19,13 +19,12 @@ export async function syncKycEvent(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       event,
-      identityId: detail?.identityId,
-      verificationId: detail?.verificationId,
+      sessionId: detail?.sessionId,
     }),
   });
 }
 
-export async function refreshKycFromMetamap(): Promise<KycStatusPayload | null> {
+export async function refreshKycFromDidit(): Promise<KycStatusPayload | null> {
   const res = await fetch("/api/kyc/refresh", {
     method: "POST",
     credentials: "include",

@@ -1,4 +1,4 @@
-/** MetaMap / compliance rejection that must block KYC retry. */
+/** AML / sanctions rejection that must block KYC retry. */
 export function isKycSanctionsRejection(note: string | null | undefined): boolean {
   if (!note?.trim()) return false;
   const n = note.toLowerCase();
