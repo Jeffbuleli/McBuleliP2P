@@ -12,6 +12,10 @@ type MetamapVerificationConfig = {
   metadata?: Record<string, string>;
   language?: string;
   color?: string;
+  /** Resume an existing identity (required with verificationId). */
+  identityId?: string;
+  /** Continue a previous verification attempt. */
+  verificationId?: string;
 };
 
 interface MetamapVerificationInstance {

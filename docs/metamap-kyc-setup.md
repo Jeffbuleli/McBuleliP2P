@@ -18,10 +18,28 @@ Partner: [MetaMap](https://docs.metamap.com/). McBuleli uses the **Web SDK** (bu
 ## 1. MetaMap Dashboard
 
 1. Account: [dashboard.metamap.com](https://dashboard.metamap.com).
-2. Create a **Workflow** for corridor countries (CD, RW, etc.): document + liveness (+ AML when available).
-3. Copy **Client ID** and **Flow ID** (flow → **Integration** tab).
-4. **Redirection / allowed domains (required):** add **`https://mcbuleli.org`** in [Redirection settings](https://docs.metamap.com/docs/redirection-settings). Without this, the SDK shows *“Something went wrong”* (`commonError` / `ipRestrictions`).
-5. **Webhooks (Full plan only):** URL `https://mcbuleli.org/api/webhooks/metamap` — see secret section below.
+2. Create a **Workflow** for corridor countries (CD, RW, etc.) — **not** the generic “Default flow”.
+3. In the workflow builder, drag merits in this order:
+   - **Document Verification** first ([docs](https://docs.metamap.com/docs/document-verification)) — ID upload + OCR (name, DOB, document number).
+   - **Biometric Verification** second — selfie / liveness + facematch against the ID photo.
+4. Configure Document Verification for **Congo-Kinshasa (CD)**: enable **Carte d’électeur** and/or **Carte d’identité** as accepted documents.
+5. Review **sanctions / watchlist** settings if CD verifications show *“region under sanctions”* — contact MetaMap support if legitimate users are blocked.
+6. **Save and Publish** the workflow, then copy **Client ID** and **Flow ID** (flow → **Integration** tab). Put the Flow ID in `NEXT_PUBLIC_METAMAP_FLOW_ID` on Render.
+7. **Redirection / allowed domains (required):** add **`https://mcbuleli.org`** in [Redirection settings](https://docs.metamap.com/docs/redirection-settings). Without this, the SDK shows *“Something went wrong”* (`commonError` / `ipRestrictions`).
+8. **Webhooks (Full plan only):** URL `https://mcbuleli.org/api/webhooks/metamap` — see secret section below.
+
+### Why “Rejected / Name not found” even after the SDK finishes?
+
+The SDK finishing (“Merci, information reçue”) only means **data was submitted**. MetaMap then runs backend checks:
+
+| Dashboard signal | Meaning |
+|------------------|---------|
+| **Name not found** | Document OCR failed — blurry photo, wrong doc type, or unreadable fields |
+| **Document Verification ⚠️** | Document step failed or incomplete in the workflow |
+| **Region under sanctions** | Watchlist / sanctions rule on the user’s country or IP |
+| Flow = **Default flow** | Wrong workflow — create a dedicated flow with Document Verification first |
+
+McBuleli sends `metadata.userId` + `metadata.countryCode` (from profile). On retry, stored `identityId` / `verificationId` are passed to resume the verification ([Web configuration](https://docs.metamap.com/docs/web-configuration)).
 
 ### Where is `METAMAP_WEBHOOK_SECRET`? (Full plan)
 
@@ -55,8 +73,8 @@ npm run db:migrate:render
 
 1. Profile → **Verify identity** (`/app/profile/kyc`)
 2. Progress: Prepare → ID → Face → Review
-3. MetaMap SDK button (`metadata.userId` links the McBuleli user)
-4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending, then manual review in MetaMap dashboard or upgrade + webhooks later
+3. MetaMap SDK button (`metadata.userId`, `metadata.countryCode` link the McBuleli user)
+4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending. If MetaMap rejects in their dashboard, the app may still show “pending” until webhooks (paid) or manual admin update — user can tap **Verify** again from the pending screen.
 5. **Full:** webhook sets `approved` | `manual_review` | `rejected` + in-app notifications
 6. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
 
@@ -83,10 +101,15 @@ npm run db:migrate:render
 |-------|-----|
 | Login: “Database tables are missing” | `npm run db:push:render` with production `DATABASE_URL` |
 | Blank KYC page | Migration 0037, country in profile, `KYC_ENABLED`, MetaMap `NEXT_PUBLIC_*` |
-| SDK works, status stuck | FREE plan: rely on `/api/kyc/sync`; or upgrade + webhook |
+| SDK works, status stuck on pending | FREE plan: MetaMap may have rejected — check dashboard; user can retry from KYC page; upgrade + webhook for auto sync |
+| Rejected: “Name not found” | Retake ID photos (recto + verso), good light, match profile country CD |
+| Rejected: “Region under sanctions” | MetaMap dashboard sanctions/watchlist — contact MetaMap support for CD corridor |
+| Wrong flow / missing document step | Use dedicated workflow with **Document Verification** before Biometric, not “Default flow” |
 
 ## References
 
+- [Document Verification](https://docs.metamap.com/docs/document-verification)
+- [Web configuration (identityId / verificationId resume)](https://docs.metamap.com/docs/web-configuration)
 - [Web quick start](https://docs.metamap.com/docs/web-quick-start)
 - [Webhook specifications](https://docs.metamap.com/docs/webhook-specifications)
 - [Configure webhook URL](https://docs.metamap.com/docs/configure-your-webhook-url)

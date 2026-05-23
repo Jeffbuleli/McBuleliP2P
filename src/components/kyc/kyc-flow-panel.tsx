@@ -165,11 +165,19 @@ export function KycFlowPanel({
     data.metamap.clientId &&
     data.metamap.flowId &&
     !data.approved &&
-    status !== "pending" &&
     status !== "manual_review";
 
+  const resumeVerification =
+    (status === "rejected" || status === "pending") &&
+    Boolean(data?.metamapIdentityId && data?.metamapVerificationId);
+
   const lang = locale === "fr" ? "fr" : "en";
-  const metadata = useMemo(() => ({ userId, fixedLanguage: lang }), [userId, lang]);
+  const metadata = useMemo(() => {
+    const m: Record<string, string> = { userId, fixedLanguage: lang };
+    const cc = data?.countryCode?.trim().toUpperCase();
+    if (cc && cc !== "OTHER") m.countryCode = cc;
+    return m;
+  }, [userId, lang, data?.countryCode]);
 
   if (!data) {
     return (
@@ -229,13 +237,81 @@ export function KycFlowPanel({
           <KycIllustrationShield className="h-14 w-14 text-emerald-700" />
         </StatusBox>
       ) : status === "pending" || status === "manual_review" ? (
-        <StatusBox tone="pending">
-          <KycIllustrationReview className="h-14 w-14 text-amber-800" />
-        </StatusBox>
+        <>
+          <StatusBox tone="pending">
+            <KycIllustrationReview className="h-14 w-14 text-amber-800" />
+          </StatusBox>
+          {canVerify && status === "pending" ? (
+            <div className="mt-4 space-y-2">
+              <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+                {t("kyc_pending_retry_hint")}
+              </p>
+              <MetamapVerifyButton
+                clientId={data.metamap.clientId!}
+                flowId={data.metamap.flowId!}
+                metadata={metadata}
+                language={lang}
+                identityId={resumeVerification ? data.metamapIdentityId : undefined}
+                verificationId={resumeVerification ? data.metamapVerificationId : undefined}
+                onStarted={async (d) => {
+                  setSdkError(null);
+                  setBusy(true);
+                  await syncKyc("started", d);
+                  await load();
+                  setBusy(false);
+                }}
+                onFinished={async (d) => {
+                  setSdkError(null);
+                  setBusy(true);
+                  await syncKyc("finished", d);
+                  await load();
+                  setBusy(false);
+                }}
+                onExited={() => void syncKyc("exited")}
+                onError={(screen) => setSdkError(screen ?? "commonError")}
+              />
+            </div>
+          ) : null}
+        </>
       ) : status === "rejected" ? (
-        <StatusBox tone="reject">
-          <KycIllustrationId className="h-14 w-14 text-rose-700" />
-        </StatusBox>
+        <>
+          <StatusBox tone="reject">
+            <KycIllustrationId className="h-14 w-14 text-rose-700" />
+          </StatusBox>
+          {data.rejectionNote ? (
+            <p className="mt-3 text-center text-[10px] text-rose-700">{data.rejectionNote}</p>
+          ) : (
+            <p className="mt-3 text-center text-[10px] text-zinc-500">{t("kyc_rejected_hint")}</p>
+          )}
+          {canVerify ? (
+            <div className="mt-4">
+              <MetamapVerifyButton
+                clientId={data.metamap.clientId!}
+                flowId={data.metamap.flowId!}
+                metadata={metadata}
+                language={lang}
+                identityId={resumeVerification ? data.metamapIdentityId : undefined}
+                verificationId={resumeVerification ? data.metamapVerificationId : undefined}
+                onStarted={async (d) => {
+                  setSdkError(null);
+                  setBusy(true);
+                  await syncKyc("started", d);
+                  await load();
+                  setBusy(false);
+                }}
+                onFinished={async (d) => {
+                  setSdkError(null);
+                  setBusy(true);
+                  await syncKyc("finished", d);
+                  await load();
+                  setBusy(false);
+                }}
+                onExited={() => void syncKyc("exited")}
+                onError={(screen) => setSdkError(screen ?? "commonError")}
+              />
+            </div>
+          ) : null}
+        </>
       ) : canVerify ? (
         <div className="mt-5 space-y-3">
           {sdkError ? (

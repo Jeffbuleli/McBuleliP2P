@@ -20,6 +20,8 @@ export type KycStatusPayload = {
   countryCode: string | null;
   kycUpdatedAt: string | null;
   rejectionNote: string | null;
+  metamapIdentityId: string | null;
+  metamapVerificationId: string | null;
   metamap: {
     configured: boolean;
     clientId: string | null;
@@ -37,6 +39,8 @@ export function buildKycStatusPayload(args: {
   kycStatus: string | null | undefined;
   kycUpdatedAt?: Date | null;
   kycRejectionNote?: string | null;
+  metamapIdentityId?: string | null;
+  metamapVerificationId?: string | null;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = corridorCountry(args.countryCode);
@@ -51,6 +55,8 @@ export function buildKycStatusPayload(args: {
     countryCode: args.countryCode ?? null,
     kycUpdatedAt: args.kycUpdatedAt?.toISOString() ?? null,
     rejectionNote: args.kycRejectionNote ?? null,
+    metamapIdentityId: args.metamapIdentityId ?? null,
+    metamapVerificationId: args.metamapVerificationId ?? null,
     metamap: {
       configured: metamapConfigured(),
       clientId: metamapClientId() || null,
@@ -69,6 +75,8 @@ export async function getKycStatusPayload(
         countryCode: string | null;
         kycUpdatedAt: Date | null;
         kycRejectionNote?: string | null;
+        metamapIdentityId?: string | null;
+        metamapVerificationId?: string | null;
       }
     | undefined;
 
@@ -79,12 +87,14 @@ export async function getKycStatusPayload(
         countryCode: users.countryCode,
         kycUpdatedAt: users.kycUpdatedAt,
         kycRejectionNote: users.kycRejectionNote,
+        metamapIdentityId: users.metamapIdentityId,
+        metamapVerificationId: users.metamapVerificationId,
       })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
   } catch (err) {
-    console.warn("[getKycStatusPayload] retry without kycRejectionNote", err);
+    console.warn("[getKycStatusPayload] retry without optional kyc columns", err);
     [row] = await db
       .select({
         kycStatus: users.kycStatus,
@@ -103,5 +113,7 @@ export async function getKycStatusPayload(
     kycStatus: row.kycStatus,
     kycUpdatedAt: row.kycUpdatedAt,
     kycRejectionNote: row.kycRejectionNote,
+    metamapIdentityId: row.metamapIdentityId,
+    metamapVerificationId: row.metamapVerificationId,
   });
 }

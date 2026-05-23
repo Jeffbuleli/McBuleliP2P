@@ -10,6 +10,8 @@ export function MetamapVerifyButton({
   flowId,
   metadata,
   language,
+  identityId,
+  verificationId,
   onStarted,
   onFinished,
   onExited,
@@ -19,6 +21,8 @@ export function MetamapVerifyButton({
   flowId: string;
   metadata: Record<string, string>;
   language?: string;
+  identityId?: string | null;
+  verificationId?: string | null;
   onStarted?: (detail: { identityId?: string; verificationId?: string }) => void;
   onFinished?: (detail: { identityId?: string; verificationId?: string }) => void;
   onExited?: () => void;
@@ -70,6 +74,8 @@ export function MetamapVerifyButton({
           metadata,
           language: language ?? "fr",
           color: "#305f33",
+          ...(identityId ? { identityId } : {}),
+          ...(identityId && verificationId ? { verificationId } : {}),
         });
         instance.on("metamap:userStartedSdk", onStart);
         instance.on("metamap:userFinishedSdk", onFinish);
@@ -92,7 +98,7 @@ export function MetamapVerifyButton({
       }
       verificationRef.current = null;
     };
-  }, [clientId, flowId, metadata, language]);
+  }, [clientId, flowId, metadata, language, identityId, verificationId]);
 
   const start = useCallback(() => {
     if (!verificationRef.current) return;
