@@ -51,10 +51,11 @@ export function diditKycActiveStepIndex(args: {
   if (kyc === "manual_review") return 3;
 
   if (kyc === "pending") {
-    if (d === "In Progress" || d === "Resubmitted") return 2;
     if (d === "In Review") return 3;
-    if (args.hasSession) return 3;
-    return 1;
+    if (d === "In Progress") return 2;
+    if (d === "Resubmitted") return 1;
+    if (args.hasSession) return 1;
+    return 0;
   }
 
   if (kyc === "rejected" || kyc === "none") return 0;

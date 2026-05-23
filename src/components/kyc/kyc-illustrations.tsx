@@ -270,7 +270,23 @@ export function KycHeroError({ className }: { className?: string }) {
   );
 }
 
-/** Step icon — begin verification */
+/** Step 0 — profile / personal details (inside verification flow) */
+export function KycIconProfile({ className }: { className?: string }) {
+  const s = stepBase({ size: 24, className });
+  return (
+    <svg {...s}>
+      <circle cx="24" cy="18" r="7" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M12 38c0-6 5-10 12-10s12 4 12 10"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Open verification (CTA) */
 export function KycIconLaunch({ className }: { className?: string }) {
   const s = stepBase({ size: 24, className });
   return (
@@ -353,6 +369,7 @@ export function kycUiPhase(args: {
   sdkError: boolean;
   sanctionsBlocked: boolean;
   diditSessionStatus?: string | null;
+  hasSession?: boolean;
 }): KycUiPhase {
   if (args.sdkError) return "error";
   if (args.sanctionsBlocked) return "blocked";
@@ -360,8 +377,15 @@ export function kycUiPhase(args: {
   if (args.status === "manual_review") return "review";
   if (args.status === "pending") {
     const d = args.diditSessionStatus?.trim();
-    if (d === "In Progress" || d === "Resubmitted") return "in_sdk";
     if (d === "In Review") return "review";
+    if (
+      d === "In Progress" ||
+      d === "Resubmitted" ||
+      d === "Not Started" ||
+      (args.hasSession && !d)
+    ) {
+      return "in_sdk";
+    }
     return "waiting";
   }
   return "start";
@@ -396,6 +420,8 @@ export function KycHeroScene({
     if (activeStepIndex >= 2) Hero = KycHeroSelfie;
     else if (activeStepIndex >= 1) Hero = KycHeroIdDoc;
     else Hero = KycHeroLaunch;
+  } else if (phase === "start" && activeStepIndex === 0) {
+    Hero = KycHeroLaunch;
   }
 
   return (

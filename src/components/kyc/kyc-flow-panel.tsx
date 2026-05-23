@@ -8,7 +8,7 @@ import {
   KycHeroScene,
   KycIconFace,
   KycIconId,
-  KycIconLaunch,
+  KycIconProfile,
   KycIconReview,
   kycUiPhase,
   type KycUiPhase,
@@ -35,8 +35,7 @@ function statusHeadline(
 ): string | null {
   if (phase === "in_sdk" && activeStepLabel) return activeStepLabel;
   if (phase === "success") return t("kyc_state_verified");
-  if (phase === "waiting") return t("kyc_state_pending");
-  if (phase === "review") return t("kyc_state_review");
+  if (phase === "waiting" || phase === "review") return t("kyc_state_pending");
   if (phase === "blocked") return t("kyc_state_blocked");
   if (phase === "error") return t("kyc_state_error");
   if (phase === "start") return t("kyc_state_start");
@@ -108,6 +107,7 @@ export function KycFlowPanel({
     sdkError,
     sanctionsBlocked: Boolean(data?.sanctionsBlocked),
     diditSessionStatus: data?.diditSessionStatus,
+    hasSession,
   });
 
   const activeIdx = Math.min(
@@ -122,9 +122,9 @@ export function KycFlowPanel({
   const steps: KycProgressStep[] = useMemo(
     () => [
       {
-        id: "launch",
-        label: t("kyc_step_launch"),
-        icon: <KycIconLaunch className="h-6 w-6" />,
+        id: "profile",
+        label: t("kyc_step_profile"),
+        icon: <KycIconProfile className="h-6 w-6" />,
         state: diditKycStepState(0, activeIdx, status, diditStatus),
       },
       {
@@ -149,20 +149,19 @@ export function KycFlowPanel({
     [activeIdx, diditStatus, status, t],
   );
 
-  const activeStepLabel =
-    steps.find((s) => s.state === "active")?.label ??
-    (phase === "waiting" || phase === "review"
-      ? steps[3]?.label ?? null
-      : null);
-
+  const activeStepLabel = steps.find((s) => s.state === "active")?.label ?? null;
   const headline = statusHeadline(t, phase, activeStepLabel);
 
   const canShowVerify = Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
-  const showVerify =
-    canShowVerify && (phase === "start" || phase === "error");
-  const showRefresh =
-    Boolean(data?.canRefreshStatus) &&
-    (phase === "waiting" || phase === "review");
+  const awaitingDecision =
+    phase === "waiting" ||
+    phase === "review" ||
+    diditStatus === "In Review";
+
+  const showVerify = canShowVerify && (phase === "start" || phase === "error");
+  const showContinue =
+    canShowVerify && !showVerify && !awaitingDecision && (phase === "in_sdk" || status === "pending");
+  const showRefresh = Boolean(data?.canRefreshStatus) && awaitingDecision;
 
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string; sessionStatus?: string }) => {
@@ -265,6 +264,10 @@ export function KycFlowPanel({
         <div className="mt-6 flex flex-col items-center gap-3">
           {showVerify ? (
             <DiditVerifyButton autoStart={autoStartSdk && phase === "start"} {...verifyHandlers} />
+          ) : null}
+
+          {showContinue ? (
+            <DiditVerifyButton variant="continue" {...verifyHandlers} />
           ) : null}
 
           {showRefresh ? (

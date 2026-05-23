@@ -11,12 +11,15 @@ export type DiditCompleteDetail = {
 
 export function DiditVerifyButton({
   autoStart,
+  variant = "verify",
   onStarted,
   onFinished,
   onCancelled,
   onError,
 }: {
   autoStart?: boolean;
+  /** verify = first start · continue = resume in-progress session */
+  variant?: "verify" | "continue";
   onStarted?: (detail: DiditCompleteDetail) => void;
   onFinished?: (detail: DiditCompleteDetail) => void;
   onCancelled?: () => void;
@@ -89,7 +92,9 @@ export function DiditVerifyButton({
       className="flex w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--fd-primary)] px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-[color:var(--fd-primary)]/20 transition active:scale-[0.98] disabled:opacity-60"
     >
       <KycIconLaunch className="h-5 w-5 shrink-0 text-white" />
-      <span>{starting ? "…" : t("kyc_verify_cta")}</span>
+      <span>
+        {starting ? "…" : variant === "continue" ? t("kyc_continue_cta") : t("kyc_verify_cta")}
+      </span>
     </button>
   );
 }
