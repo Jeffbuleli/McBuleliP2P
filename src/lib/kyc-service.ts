@@ -123,19 +123,27 @@ export async function getUserKycRow(userId: string) {
   return row ?? null;
 }
 
-/** Didit vendor_data — McBuleli user UUID. */
+const MCBULELI_USER_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Didit vendor_data — McBuleli user UUID. Non-UUID values are ignored (Didit console fixtures). */
 export async function resolveUserIdFromVendorData(
   vendorData: string | null | undefined,
 ): Promise<string | null> {
   const raw = vendorData?.trim();
-  if (!raw || raw.length < 8) return null;
-  const db = getDb();
-  const [u] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, raw))
-    .limit(1);
-  return u?.id ?? null;
+  if (!raw || !MCBULELI_USER_ID_RE.test(raw)) return null;
+  try {
+    const db = getDb();
+    const [u] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, raw))
+      .limit(1);
+    return u?.id ?? null;
+  } catch (err) {
+    console.warn("[kyc] resolveUserIdFromVendorData failed", { raw, err });
+    return null;
+  }
 }
 
 export async function resolveUserIdByDiditSessionId(
@@ -143,11 +151,16 @@ export async function resolveUserIdByDiditSessionId(
 ): Promise<string | null> {
   const id = sessionId.trim();
   if (!id) return null;
-  const db = getDb();
-  const [u] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.diditSessionId, id))
-    .limit(1);
-  return u?.id ?? null;
+  try {
+    const db = getDb();
+    const [u] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.diditSessionId, id))
+      .limit(1);
+    return u?.id ?? null;
+  } catch (err) {
+    console.warn("[kyc] resolveUserIdByDiditSessionId failed", { id, err });
+    return null;
+  }
 }

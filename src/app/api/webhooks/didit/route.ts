@@ -28,103 +28,108 @@ function outcomeFromEntityStatus(status: string | undefined): KycVerificationOut
 }
 
 export async function POST(req: Request) {
-  const rawBody = await req.text();
-  let body: DiditWebhookPayload;
   try {
-    body = JSON.parse(rawBody) as DiditWebhookPayload;
-  } catch {
-    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
-  }
+    const rawBody = await req.text();
+    let body: DiditWebhookPayload;
+    try {
+      body = JSON.parse(rawBody) as DiditWebhookPayload;
+    } catch {
+      return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+    }
 
-  const secret = diditWebhookSecret();
-  const verified = verifyDiditWebhookRequest({
-    body: body as Record<string, unknown>,
-    rawBody,
-    headers: req.headers,
-    secret,
-  });
-
-  if (!verified) {
-    console.warn("[didit webhook] invalid_signature", {
-      hasSecret: Boolean(secret),
-      isTest: isDiditTestWebhook(req.headers),
-      hasV2: Boolean(req.headers.get("x-signature-v2")),
-      hasRaw: Boolean(req.headers.get("x-signature")),
-      hasSimple: Boolean(req.headers.get("x-signature-simple")),
-      webhookType: body.webhook_type,
+    const secret = diditWebhookSecret();
+    const verified = verifyDiditWebhookRequest({
+      body: body as Record<string, unknown>,
+      rawBody,
+      headers: req.headers,
+      secret,
     });
-    return NextResponse.json(
-      {
-        error: "invalid_signature",
-        hint:
-          "Use the webhook destination secret_shared_key (not DIDIT_API_KEY). Console tests send X-Didit-Test-Webhook: true and are accepted after deploy.",
-      },
-      { status: 401 },
-    );
-  }
 
-  const webhookType = body.webhook_type ?? "";
-  const userId = await resolveDiditWebhookUserId(body);
-  const sessionId =
-    typeof body.session_id === "string" ? body.session_id.trim() : null;
-
-  if (webhookType === "status.updated" || webhookType === "data.updated") {
-    if (!userId) {
-      console.warn("[didit webhook] no_user", {
-        webhookType,
-        sessionId,
-        vendorData: body.vendor_data,
+    if (!verified) {
+      console.warn("[didit webhook] invalid_signature", {
+        hasSecret: Boolean(secret),
+        isTest: isDiditTestWebhook(req.headers),
+        hasV2: Boolean(req.headers.get("x-signature-v2")),
+        hasRaw: Boolean(req.headers.get("x-signature")),
+        hasSimple: Boolean(req.headers.get("x-signature-simple")),
+        webhookType: body.webhook_type,
       });
-      return NextResponse.json({ ok: true, skipped: "no_user" });
+      return NextResponse.json(
+        {
+          error: "invalid_signature",
+          hint:
+            "Use the webhook destination secret_shared_key (not DIDIT_API_KEY). Console tests send X-Didit-Test-Webhook: true and are accepted after deploy.",
+        },
+        { status: 401 },
+      );
     }
 
-    const status = body.status ?? "";
-    if (
-      status === "In Progress" ||
-      status === "Not Started" ||
-      status === "Resubmitted"
-    ) {
-      await setUserKycPending({
-        userId,
-        diditSessionId: sessionId,
-      });
-      return NextResponse.json({ ok: true, status: "pending" });
-    }
+    const webhookType = body.webhook_type ?? "";
+    const userId = await resolveDiditWebhookUserId(body);
+    const sessionId =
+      typeof body.session_id === "string" ? body.session_id.trim() : null;
 
-    const outcome = parseDiditSessionStatus(status);
-    const rejectionNote =
-      outcome === "rejected"
-        ? rejectionNoteFromDiditDecision(body.decision)
-        : null;
+    if (webhookType === "status.updated" || webhookType === "data.updated") {
+      if (!userId) {
+        console.warn("[didit webhook] no_user", {
+          webhookType,
+          sessionId,
+          vendorData: body.vendor_data,
+        });
+        return NextResponse.json({ ok: true, skipped: "no_user" });
+      }
 
-    const kycStatus = await applyKycFromProvider({
-      userId,
-      outcome,
-      diditSessionId: sessionId,
-      rejectionNote,
-    });
-    return NextResponse.json({ ok: true, status: kycStatus });
-  }
+      const status = body.status ?? "";
+      if (
+        status === "In Progress" ||
+        status === "Not Started" ||
+        status === "Resubmitted"
+      ) {
+        await setUserKycPending({
+          userId,
+          diditSessionId: sessionId,
+        });
+        return NextResponse.json({ ok: true, status: "pending" });
+      }
 
-  if (webhookType === "user.status.updated") {
-    if (!userId) {
-      return NextResponse.json({ ok: true, skipped: "no_user" });
-    }
-    const outcome = outcomeFromEntityStatus(body.status);
-    if (outcome === "unknown") {
-      return NextResponse.json({ ok: true, ignored: body.status });
-    }
-    const kycStatus = await applyKycFromProvider({
-      userId,
-      outcome,
-      diditSessionId: sessionId,
-      rejectionNote:
+      const outcome = parseDiditSessionStatus(status);
+      const rejectionNote =
         outcome === "rejected"
           ? rejectionNoteFromDiditDecision(body.decision)
-          : null,
-    });
-    return NextResponse.json({ ok: true, status: kycStatus });
-  }
+          : null;
 
-  return NextResponse.json({ ok: true, ignored: webhookType });
+      const kycStatus = await applyKycFromProvider({
+        userId,
+        outcome,
+        diditSessionId: sessionId,
+        rejectionNote,
+      });
+      return NextResponse.json({ ok: true, status: kycStatus });
+    }
+
+    if (webhookType === "user.status.updated") {
+      if (!userId) {
+        return NextResponse.json({ ok: true, skipped: "no_user" });
+      }
+      const outcome = outcomeFromEntityStatus(body.status);
+      if (outcome === "unknown") {
+        return NextResponse.json({ ok: true, ignored: body.status });
+      }
+      const kycStatus = await applyKycFromProvider({
+        userId,
+        outcome,
+        diditSessionId: sessionId,
+        rejectionNote:
+          outcome === "rejected"
+            ? rejectionNoteFromDiditDecision(body.decision)
+            : null,
+      });
+      return NextResponse.json({ ok: true, status: kycStatus });
+    }
+
+    return NextResponse.json({ ok: true, ignored: webhookType });
+  } catch (err) {
+    console.error("[didit webhook] unhandled", err);
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
+  }
 }
