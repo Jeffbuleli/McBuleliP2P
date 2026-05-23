@@ -11,6 +11,7 @@ import {
 } from "@/lib/referral-config";
 import { cdfPerOneUsd } from "@/lib/fx";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
+import { getAppAbsoluteUrl } from "@/lib/app-url";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -237,6 +238,7 @@ export async function tryAwardReferralFromCryptoDeposit(args: {
 export async function getReferralSnapshot(userId: string): Promise<{
   code: string;
   linkPath: string;
+  inviteLinkFull: string;
   referralBalanceUsdt: number;
   inviteCount: number;
   totalEarnedUsdt: number;
@@ -261,9 +263,11 @@ export async function getReferralSnapshot(userId: string): Promise<{
 
   const totalEarnedUsdt = numFromNumeric(agg?.sum ?? "0");
 
+  const linkPath = `/register?ref=${encodeURIComponent(code)}`;
   return {
     code,
-    linkPath: `/register?ref=${encodeURIComponent(code)}`,
+    linkPath,
+    inviteLinkFull: getAppAbsoluteUrl(linkPath),
     referralBalanceUsdt: bal,
     inviteCount: agg?.c ?? 0,
     totalEarnedUsdt,

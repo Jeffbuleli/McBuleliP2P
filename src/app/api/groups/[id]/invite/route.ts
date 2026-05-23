@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
+import { getAppAbsoluteUrl, getAppOrigin } from "@/lib/app-url";
 import { ensureGroupInviteCode } from "@/lib/group-invite";
 import { getMyMembershipOrNull, hasRole } from "@/lib/group-savings-permissions";
 
@@ -16,12 +17,11 @@ export async function GET(
   }
   const code = await ensureGroupInviteCode(id);
   if (!code) return NextResponse.json({ error: "group_invite_unavailable" }, { status: 400 });
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
   const path = `/app/wallet/groups/join?code=${encodeURIComponent(code)}`;
   return NextResponse.json({
     inviteCode: code,
     invitePath: path,
-    inviteUrl: origin ? `${origin}${path}` : path,
+    inviteUrl: getAppAbsoluteUrl(path),
+    appOrigin: getAppOrigin() || null,
   });
 }

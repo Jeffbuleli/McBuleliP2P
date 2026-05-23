@@ -119,7 +119,7 @@ Configure:
 
 ```env
 MODE=SIGNAL_ONLY
-MCBULELI_API_URL=https://www.mcbuleli.online
+MCBULELI_API_URL=https://mcbuleli.org
 MCBULELI_CRON_SECRET=...
 # One bot (shown in McBuleli UI when AI assist is on):
 MCBULELI_INSTANCE_ID=...
@@ -140,7 +140,7 @@ Node stores signals via `POST /api/internal/bots/ai-signal` (`x-cron-secret`). W
    - **Schedule:** every minute (`*/1 * * * *`)
 3. Environment (same values as McBuleli Web):
    - `MODE=SIGNAL_ONLY`
-   - `MCBULELI_API_URL=https://www.mcbuleli.online`
+   - `MCBULELI_API_URL=https://mcbuleli.org`
    - `MCBULELI_CRON_SECRET` = Render Web `CRON_SECRET`
    - `MCBULELI_INSTANCE_ID` = empty (fan-out to all AI-assist bots)
    - `INTERVAL_SEC=60`

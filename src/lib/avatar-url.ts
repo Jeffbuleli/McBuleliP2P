@@ -1,3 +1,5 @@
+import { getAppOrigin } from "@/lib/app-url";
+
 /** Avatar sources we can render in <img> (DB may store data URLs on serverless). */
 export function isDisplayableAvatarUrl(
   url: string | null | undefined,
@@ -15,10 +17,7 @@ export function resolveAvatarSrc(url: string | null | undefined): string | null 
   if (!isDisplayableAvatarUrl(url)) return null;
   if (url.startsWith("data:image/")) return url;
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  const base =
-    typeof process !== "undefined" && process.env.NEXT_PUBLIC_APP_URL
-      ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
-      : "";
+  const base = typeof process !== "undefined" ? getAppOrigin() : "";
   const normalized = url.startsWith("/") ? url : `/${url}`;
   return base ? `${base}${normalized}` : normalized;
 }

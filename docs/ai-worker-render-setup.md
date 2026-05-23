@@ -34,7 +34,7 @@ Or import `render.yaml` from the repo root.
 
 | Variable | Value |
 |----------|--------|
-| `MCBULELI_API_URL` | `https://www.mcbuleli.online` |
+| `MCBULELI_API_URL` | `https://mcbuleli.org` |
 | `CRON_SECRET` | **Same** as Web `CRON_SECRET` (min 12 chars) |
 
 Do **not** put `PORT`, `MODE`, or OpenAI keys on this job. Logs must show JSON like `{"ok":true,"instances":1,...}` — **not** HTML.
@@ -44,7 +44,7 @@ Do **not** put `PORT`, `MODE`, or OpenAI keys on this job. Logs must show JSON l
 | Variable | Value |
 |----------|--------|
 | `MODE` | `SIGNAL_ONLY` (**required**) |
-| `MCBULELI_API_URL` | `https://www.mcbuleli.online` |
+| `MCBULELI_API_URL` | `https://mcbuleli.org` |
 | `MCBULELI_CRON_SECRET` | **Same** as Web `CRON_SECRET` |
 | `MCBULELI_INSTANCE_ID` | **Empty** = all active futures bots with AI |
 | `TWITTER_ENABLED` | `1` |
@@ -71,7 +71,7 @@ To see LONG/SHORT, wait for a stronger move or set `SIGNAL_MIN_EDGE=15` and enab
 
 ```bash
 curl -s -H "x-cron-secret: YOUR_CRON_SECRET" \
-  "https://www.mcbuleli.online/api/internal/bots/ai-instances"
+  "https://mcbuleli.org/api/internal/bots/ai-instances"
 ```
 
 Expect `instances: [...]` when a Futures bot is **Started** (active).

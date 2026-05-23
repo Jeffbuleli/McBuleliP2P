@@ -7,18 +7,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalLangSwitch } from "@/components/conditional-lang-switch";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { PwaInstallBanner } from "@/components/pwa/install-banner";
+import { getAppOrigin } from "@/lib/app-url";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 /** Canonical URL for OG/Twitter links (WhatsApp requires absolute image URLs). */
-const metadataBaseUrl =
-  appUrl ??
-  process.env.RENDER_EXTERNAL_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+const metadataBaseUrl = getAppOrigin() || undefined;
 
 const desc =
   "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.";

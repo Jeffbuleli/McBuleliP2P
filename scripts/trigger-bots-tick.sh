@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 # Trigger one bot cron pass (same as Render Cron Job should call every ~5 min).
-# Usage: CRON_SECRET=... APP_URL=https://www.mcbuleli.online ./scripts/trigger-bots-tick.sh
+# Usage: CRON_SECRET=... APP_URL=https://mcbuleli.org ./scripts/trigger-bots-tick.sh
 
 set -e
-APP_URL="${APP_URL:-https://www.mcbuleli.online}"
+APP_URL="${APP_URL:-https://mcbuleli.org}"
 if [ -z "$CRON_SECRET" ]; then
   echo "Set CRON_SECRET (min 12 chars, same as Render env)." >&2
   exit 1

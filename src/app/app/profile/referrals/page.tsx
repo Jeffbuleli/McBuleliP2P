@@ -15,16 +15,6 @@ export default async function ProfileReferralsPage() {
     ? await getReferralSnapshot(sessionUser.id).catch(() => null)
     : null;
 
-  const origin =
-    typeof process.env.NEXT_PUBLIC_APP_URL === "string"
-      ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
-      : "";
-  const inviteLinkFull = referral
-    ? origin
-      ? `${origin}${referral.linkPath}`
-      : referral.linkPath
-    : "";
-
   return (
     <>
       <ProfileSubpageHeader
@@ -36,7 +26,7 @@ export default async function ProfileReferralsPage() {
           referral={{
             code: referral.code,
             linkPath: referral.linkPath,
-            inviteLinkFull,
+            inviteLinkFull: referral.inviteLinkFull,
             referralBalanceUsdt: referral.referralBalanceUsdt,
             inviteCount: referral.inviteCount,
             totalEarnedUsdt: referral.totalEarnedUsdt,

@@ -112,7 +112,8 @@ export const en = {
   profile_referral_earned: "Total earned (USDT)",
   profile_referral_note:
     "Share your link. Rewards credit here in USDT when the invitee’s first qualifying deposit meets the rules above.",
-  profile_referral_url_env_hint: "Set NEXT_PUBLIC_APP_URL for a full https invite link in production.",
+  profile_referral_url_env_hint:
+    "Invite links use https://mcbuleli.org in production (override with NEXT_PUBLIC_APP_URL if needed).",
   profile_stats_heading: "Trading profile",
   profile_stat_trades: "Completed P2P trades",
   profile_stat_completion: "Completion (all orders)",
@@ -1922,7 +1923,7 @@ export const en = {
   bots_wizard_step2_live:
     "Enable Reading + Spot & Margin. For futures with Portfolio Margin, enable Portfolio Margin trading (no separate Futures checkbox needed). Disable Withdrawals.",
   bots_wizard_step3_live:
-    "If IP-restricted: add Render outbound IPs (Dashboard → your Web Service → Connect → Outbound). Not the IPs from www.mcbuleli.online DNS.",
+    "If IP-restricted: add Render outbound IPs (Dashboard → your Web Service → Connect → Outbound). Not the IPs from mcbuleli.org DNS.",
   bots_wizard_step4_live: "Paste key + secret below — we validate Spot and Futures (PM uses papi.binance.com).",
   bots_live_keys_ready_banner: "Live API keys are connected and validated.",
   bots_keys_revoke: "Revoke keys",
@@ -2646,7 +2647,7 @@ export const fr: Messages = {
   profile_referral_note:
     "Partagez le lien. La récompense est créditée ici en USDT lorsque le 1er dépôt qualifiant respecte les règles ci-dessus.",
   profile_referral_url_env_hint:
-    "Définissez NEXT_PUBLIC_APP_URL pour un lien d’invitation https complet en production.",
+    "Les liens d’invitation utilisent https://mcbuleli.org en production (NEXT_PUBLIC_APP_URL pour surcharger).",
   profile_stats_heading: "Profil de trading",
   profile_stat_trades: "Trades P2P terminés",
   profile_stat_completion: "Taux de complétion (tous ordres)",
@@ -4473,7 +4474,7 @@ export const fr: Messages = {
   bots_wizard_step2_live:
     "Activer Lecture + Spot & Marge. Pour les futures en Portfolio Margin, activer le trading PM (pas de case Futures séparée). Désactiver les retraits.",
   bots_wizard_step3_live:
-    "Si IP restreintes : ajoutez les IP sortantes Render (Dashboard → service Web → Connect → Outbound). Pas les IP DNS de www.mcbuleli.online.",
+    "Si IP restreintes : ajoutez les IP sortantes Render (Dashboard → service Web → Connect → Outbound). Pas les IP DNS de mcbuleli.org.",
   bots_wizard_step4_live:
     "Collez clé + secret — nous validons Spot et Futures (le PM utilise papi.binance.com).",
   bots_live_keys_ready_banner: "Clés API live connectées et validées.",

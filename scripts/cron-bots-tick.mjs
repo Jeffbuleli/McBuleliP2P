@@ -6,7 +6,7 @@
 const base = (
   process.env.MCBULELI_API_URL ??
   process.env.APP_URL ??
-  "https://www.mcbuleli.online"
+  "https://mcbuleli.org"
 ).replace(/\/$/, "");
 const secret = (
   process.env.CRON_SECRET ?? process.env.MCBULELI_CRON_SECRET ?? ""
@@ -34,7 +34,7 @@ if (!res.ok) {
 if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
   console.error(
     "[cron-bots-tick] Expected JSON from POST /api/internal/bots/tick but got HTML.",
-    "Check MCBULELI_API_URL (https://www.mcbuleli.online) and CRON_SECRET on the Web service.",
+    "Check MCBULELI_API_URL (https://mcbuleli.org) and CRON_SECRET on the Web service.",
     trimmed.slice(0, 200),
   );
   process.exit(1);
