@@ -41,5 +41,5 @@ export function rejectionNoteFromDiditDecision(
   if (!decision) return null;
   const parts = collectWarnings(decision);
   if (parts.length) return parts.slice(0, 5).join("; ").slice(0, 500);
-  return "Verification declined by Didit";
+  return "Verification declined";
 }

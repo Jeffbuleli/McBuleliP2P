@@ -36,9 +36,13 @@ export async function POST() {
       return NextResponse.json({ error: "didit_no_url" }, { status: 502 });
     }
 
+    const sessionStatus =
+      typeof session.status === "string" ? session.status : "Not Started";
+
     await setUserKycPending({
       userId,
       diditSessionId: sessionId,
+      diditSessionStatus: sessionStatus,
     });
 
     return NextResponse.json({

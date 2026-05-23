@@ -28,7 +28,75 @@ function stepBase({ size = 24, className = "", ...rest }: P) {
   };
 }
 
-/** Fresh start — ID + shield, layered depth */
+/** Step 0 — tap to begin */
+export function KycHeroLaunch({ className }: { className?: string }) {
+  const s = base({ size: 112, className });
+  return (
+    <svg {...s}>
+      <circle cx="48" cy="48" r="38" stroke="currentColor" strokeWidth="1.25" opacity="0.12" />
+      <rect x="30" y="18" width="36" height="58" rx="8" stroke="currentColor" strokeWidth="2" />
+      <circle cx="48" cy="72" r="3" fill="currentColor" opacity="0.35" />
+      <path
+        d="M42 38h12l-6 10 6-10z"
+        fill="currentColor"
+        opacity="0.18"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M48 8v6M48 82v6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.2"
+      />
+    </svg>
+  );
+}
+
+/** Step 1 — national ID / voter card */
+export function KycHeroIdDoc({ className }: { className?: string }) {
+  const s = base({ size: 112, className });
+  return (
+    <svg {...s}>
+      <circle cx="48" cy="48" r="38" stroke="currentColor" strokeWidth="1.25" opacity="0.12" />
+      <rect x="24" y="22" width="48" height="52" rx="6" stroke="currentColor" strokeWidth="2" />
+      <rect x="30" y="28" width="16" height="12" rx="2" fill="currentColor" opacity="0.14" />
+      <circle cx="58" cy="34" r="7" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M30 48h36M30 56h26M30 64h18" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" opacity="0.45" />
+      <path
+        d="M18 32l6 6M78 64l6 6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.25"
+      />
+    </svg>
+  );
+}
+
+/** Step 2 — selfie / liveness */
+export function KycHeroSelfie({ className }: { className?: string }) {
+  const s = base({ size: 112, className });
+  return (
+    <svg {...s}>
+      <circle cx="48" cy="48" r="38" stroke="currentColor" strokeWidth="1.25" opacity="0.12" />
+      <path
+        d="M28 28h40v40H28z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        opacity="0.35"
+      />
+      <circle cx="48" cy="44" r="14" stroke="currentColor" strokeWidth="2" />
+      <path d="M34 62c3 6 8 9 14 9s11-3 14-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 44h6M70 44h6M20 32h6M70 32h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+    </svg>
+  );
+}
+
+/** Fresh start — ID + shield */
 export function KycHeroStart({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -202,6 +270,25 @@ export function KycHeroError({ className }: { className?: string }) {
   );
 }
 
+/** Step icon — begin verification */
+export function KycIconLaunch({ className }: { className?: string }) {
+  const s = stepBase({ size: 24, className });
+  return (
+    <svg {...s}>
+      <rect x="14" y="10" width="20" height="28" rx="5" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M20 34h8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path
+        d="M22 16l6 4-6 4v-8z"
+        fill="currentColor"
+        opacity="0.2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function KycIconShield({ className }: { className?: string }) {
   const s = stepBase({ size: 24, className });
   return (
@@ -254,6 +341,7 @@ export function KycIconReview({ className }: { className?: string }) {
 
 export type KycUiPhase =
   | "start"
+  | "in_sdk"
   | "waiting"
   | "review"
   | "success"
@@ -264,16 +352,31 @@ export function kycUiPhase(args: {
   status: string;
   sdkError: boolean;
   sanctionsBlocked: boolean;
+  diditSessionStatus?: string | null;
 }): KycUiPhase {
   if (args.sdkError) return "error";
   if (args.sanctionsBlocked) return "blocked";
   if (args.status === "approved") return "success";
   if (args.status === "manual_review") return "review";
-  if (args.status === "pending") return "waiting";
+  if (args.status === "pending") {
+    const d = args.diditSessionStatus?.trim();
+    if (d === "In Progress" || d === "Resubmitted") return "in_sdk";
+    if (d === "In Review") return "review";
+    return "waiting";
+  }
   return "start";
 }
 
-export function KycHeroScene({ phase, className }: { phase: KycUiPhase; className?: string }) {
+export function KycHeroScene({
+  phase,
+  activeStepIndex = 0,
+  className,
+}: {
+  phase: KycUiPhase;
+  /** 0 launch · 1 ID · 2 selfie · 3 decision */
+  activeStepIndex?: number;
+  className?: string;
+}) {
   const tone =
     phase === "success"
       ? "text-emerald-700"
@@ -283,18 +386,17 @@ export function KycHeroScene({ phase, className }: { phase: KycUiPhase; classNam
           ? "text-amber-800"
           : "text-[color:var(--fd-primary)]";
 
-  const Hero =
-    phase === "success"
-      ? KycHeroSuccess
-      : phase === "blocked"
-        ? KycHeroBlocked
-        : phase === "error"
-          ? KycHeroError
-          : phase === "waiting"
-            ? KycHeroWaiting
-            : phase === "review"
-              ? KycHeroReview
-              : KycHeroStart;
+  let Hero = KycHeroStart;
+  if (phase === "success") Hero = KycHeroSuccess;
+  else if (phase === "blocked") Hero = KycHeroBlocked;
+  else if (phase === "error") Hero = KycHeroError;
+  else if (phase === "waiting") Hero = KycHeroWaiting;
+  else if (phase === "review") Hero = KycHeroReview;
+  else if (phase === "in_sdk") {
+    if (activeStepIndex >= 2) Hero = KycHeroSelfie;
+    else if (activeStepIndex >= 1) Hero = KycHeroIdDoc;
+    else Hero = KycHeroLaunch;
+  }
 
   return (
     <div className={`relative flex items-center justify-center ${className ?? ""}`}>
@@ -305,7 +407,7 @@ export function KycHeroScene({ phase, className }: { phase: KycUiPhase; classNam
 }
 
 function PulseRing({ phase }: { phase: KycUiPhase }) {
-  if (phase !== "waiting" && phase !== "review") return null;
+  if (phase !== "waiting" && phase !== "review" && phase !== "in_sdk") return null;
   return (
     <span
       className="pointer-events-none absolute inset-4 rounded-[2rem] border border-amber-700/15"

@@ -13,6 +13,7 @@ import { refreshUserKycFromDidit } from "@/lib/didit/refresh-user-kyc";
 const bodyZ = z.object({
   event: z.enum(["started", "finished", "cancelled"]),
   sessionId: z.string().optional(),
+  sessionStatus: z.string().optional(),
 });
 
 /** Client callback after Didit SDK events — sets pending until webhook confirms. */
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "kyc_sanctions_blocked" }, { status: 403 });
   }
 
-  const { event, sessionId } = parsed.data;
+  const { event, sessionId, sessionStatus } = parsed.data;
   const sid = sessionId ?? row?.diditSessionId ?? null;
 
   if (event === "started") {
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
     await setUserKycPending({
       userId,
       diditSessionId: sid,
+      diditSessionStatus: sessionStatus ?? "In Progress",
     });
   }
 
@@ -53,6 +55,7 @@ export async function POST(req: Request) {
     await setUserKycPending({
       userId,
       diditSessionId: sid,
+      diditSessionStatus: sessionStatus ?? "In Review",
     });
     if (diditApiConfigured()) {
       try {

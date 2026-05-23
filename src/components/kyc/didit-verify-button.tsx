@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { KycIconShield } from "@/components/kyc/kyc-illustrations";
+import { KycIconLaunch } from "@/components/kyc/kyc-illustrations";
 
-type DiditCompleteDetail = {
+export type DiditCompleteDetail = {
   sessionId?: string;
-  status?: string;
+  sessionStatus?: string;
 };
 
 export function DiditVerifyButton({
@@ -44,7 +44,10 @@ export function DiditVerifyButton({
       }
 
       const sessionId = json.sessionId;
-      callbacksRef.current.onStarted?.({ sessionId });
+      callbacksRef.current.onStarted?.({
+        sessionId,
+        sessionStatus: "In Progress",
+      });
 
       const { DiditSdk } = await import("@didit-protocol/sdk-web");
       DiditSdk.shared.onComplete = (result) => {
@@ -52,7 +55,7 @@ export function DiditVerifyButton({
         if (result.type === "completed") {
           callbacksRef.current.onFinished?.({
             sessionId: result.session?.sessionId ?? sessionId,
-            status: result.session?.status,
+            sessionStatus: result.session?.status ?? "In Review",
           });
         } else if (result.type === "cancelled") {
           callbacksRef.current.onCancelled?.();
@@ -85,7 +88,7 @@ export function DiditVerifyButton({
       onClick={() => void start()}
       className="flex w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--fd-primary)] px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-[color:var(--fd-primary)]/20 transition active:scale-[0.98] disabled:opacity-60"
     >
-      <KycIconShield className="h-5 w-5 shrink-0 text-white" />
+      <KycIconLaunch className="h-5 w-5 shrink-0 text-white" />
       <span>{starting ? "…" : t("kyc_verify_cta")}</span>
     </button>
   );

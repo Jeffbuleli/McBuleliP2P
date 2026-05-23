@@ -11,7 +11,7 @@ export async function fetchKycStatus(): Promise<KycStatusPayload | null> {
 
 export async function syncKycEvent(
   event: "started" | "finished" | "cancelled",
-  detail?: { sessionId?: string },
+  detail?: { sessionId?: string; sessionStatus?: string },
 ): Promise<void> {
   await fetch("/api/kyc/sync", {
     method: "POST",
@@ -20,6 +20,7 @@ export async function syncKycEvent(
     body: JSON.stringify({
       event,
       sessionId: detail?.sessionId,
+      sessionStatus: detail?.sessionStatus,
     }),
   });
 }

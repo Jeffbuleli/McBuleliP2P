@@ -22,6 +22,8 @@ export type KycStatusPayload = {
   canRetryKyc: boolean;
   canRefreshStatus: boolean;
   diditSessionId: string | null;
+  /** Didit session status when a session exists (In Progress, In Review, …). */
+  diditSessionStatus: string | null;
   didit: {
     configured: boolean;
   };
@@ -38,6 +40,7 @@ export function buildKycStatusPayload(args: {
   kycUpdatedAt?: Date | null;
   kycRejectionNote?: string | null;
   diditSessionId?: string | null;
+  diditSessionStatus?: string | null;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = corridorCountry(args.countryCode);
@@ -73,6 +76,7 @@ export function buildKycStatusPayload(args: {
     canRetryKyc,
     canRefreshStatus,
     diditSessionId: args.diditSessionId ?? null,
+    diditSessionStatus: args.diditSessionStatus?.trim() || null,
     didit: {
       configured: diditConfigured(),
     },
@@ -90,6 +94,7 @@ export async function getKycStatusPayload(
         kycUpdatedAt: Date | null;
         kycRejectionNote?: string | null;
         diditSessionId?: string | null;
+        diditSessionStatus?: string | null;
       }
     | undefined;
 
@@ -101,6 +106,7 @@ export async function getKycStatusPayload(
         kycUpdatedAt: users.kycUpdatedAt,
         kycRejectionNote: users.kycRejectionNote,
         diditSessionId: users.diditSessionId,
+        diditSessionStatus: users.diditSessionStatus,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -126,5 +132,6 @@ export async function getKycStatusPayload(
     kycUpdatedAt: row.kycUpdatedAt,
     kycRejectionNote: row.kycRejectionNote,
     diditSessionId: row.diditSessionId,
+    diditSessionStatus: row.diditSessionStatus,
   });
 }

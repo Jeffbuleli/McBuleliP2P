@@ -88,6 +88,7 @@ export async function POST(req: Request) {
         await setUserKycPending({
           userId,
           diditSessionId: sessionId,
+          diditSessionStatus: status || "In Progress",
         });
         return NextResponse.json({ ok: true, status: "pending" });
       }
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
         userId,
         outcome,
         diditSessionId: sessionId,
+        diditSessionStatus: status || null,
         rejectionNote,
       });
       return NextResponse.json({ ok: true, status: kycStatus });
@@ -119,6 +121,7 @@ export async function POST(req: Request) {
         userId,
         outcome,
         diditSessionId: sessionId,
+        diditSessionStatus: body.status ?? null,
         rejectionNote:
           outcome === "rejected"
             ? rejectionNoteFromDiditDecision(body.decision)

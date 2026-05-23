@@ -31,6 +31,7 @@ export async function resetUserKycForRetry(userId: string): Promise<void> {
       kycUpdatedAt: new Date(),
       kycRejectionNote: null,
       diditSessionId: null,
+      diditSessionStatus: null,
     })
     .where(eq(users.id, userId));
 }
@@ -38,6 +39,7 @@ export async function resetUserKycForRetry(userId: string): Promise<void> {
 export async function setUserKycPending(args: {
   userId: string;
   diditSessionId?: string | null;
+  diditSessionStatus?: string | null;
 }): Promise<void> {
   const db = getDb();
   await db
@@ -48,6 +50,9 @@ export async function setUserKycPending(args: {
       kycRejectionNote: null,
       ...(args.diditSessionId != null
         ? { diditSessionId: args.diditSessionId }
+        : {}),
+      ...(args.diditSessionStatus != null
+        ? { diditSessionStatus: args.diditSessionStatus }
         : {}),
     })
     .where(eq(users.id, args.userId));
@@ -63,6 +68,7 @@ export async function applyKycFromProvider(args: {
   userId: string;
   outcome: KycVerificationOutcome;
   diditSessionId?: string | null;
+  diditSessionStatus?: string | null;
   rejectionNote?: string | null;
 }): Promise<KycStatus> {
   const note = args.rejectionNote?.slice(0, 500) ?? null;
@@ -87,6 +93,9 @@ export async function applyKycFromProvider(args: {
       kycRejectionNote: status === "rejected" ? note : null,
       ...(args.diditSessionId != null
         ? { diditSessionId: args.diditSessionId }
+        : {}),
+      ...(args.diditSessionStatus != null
+        ? { diditSessionStatus: args.diditSessionStatus }
         : {}),
     })
     .where(eq(users.id, args.userId));
@@ -116,6 +125,7 @@ export async function getUserKycRow(userId: string) {
       kycStatus: users.kycStatus,
       kycRejectionNote: users.kycRejectionNote,
       diditSessionId: users.diditSessionId,
+      diditSessionStatus: users.diditSessionStatus,
     })
     .from(users)
     .where(eq(users.id, userId))

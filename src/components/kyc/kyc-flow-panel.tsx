@@ -8,13 +8,18 @@ import {
   KycHeroScene,
   KycIconFace,
   KycIconId,
+  KycIconLaunch,
   KycIconReview,
-  KycIconShield,
   kycUiPhase,
   type KycUiPhase,
 } from "@/components/kyc/kyc-illustrations";
 import { KycIllustrationError, KycProgressBar, type KycProgressStep } from "@/components/kyc/kyc-progress";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
+import {
+  diditKycActiveStepIndex,
+  diditKycStepState,
+  normalizeDiditSessionStatus,
+} from "@/lib/didit/session-status";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
 import {
   fetchKycStatus,
@@ -23,31 +28,19 @@ import {
 } from "@/lib/kyc-client-sync";
 import type { Messages } from "@/i18n/messages";
 
-function stepState(
-  idx: number,
-  activeIdx: number,
+function statusHeadline(
+  t: (k: keyof Messages) => string,
   phase: KycUiPhase,
-): KycProgressStep["state"] {
-  if (phase === "success") return "done";
-  if (idx < activeIdx) return "done";
-  if (idx === activeIdx) return "active";
-  return "upcoming";
-}
-
-function progressActiveIndex(phase: KycUiPhase): number {
-  if (phase === "success") return 4;
-  if (phase === "waiting" || phase === "review") return 3;
-  if (phase === "start" || phase === "error") return 0;
-  return 0;
-}
-
-function statusHeadline(t: (k: keyof Messages) => string, phase: KycUiPhase): string {
+  activeStepLabel: string | null,
+): string | null {
+  if (phase === "in_sdk" && activeStepLabel) return activeStepLabel;
   if (phase === "success") return t("kyc_state_verified");
   if (phase === "waiting") return t("kyc_state_pending");
   if (phase === "review") return t("kyc_state_review");
   if (phase === "blocked") return t("kyc_state_blocked");
   if (phase === "error") return t("kyc_state_error");
-  return t("kyc_state_start");
+  if (phase === "start") return t("kyc_state_start");
+  return null;
 }
 
 export function KycFlowPanel({
@@ -107,58 +100,79 @@ export function KycFlowPanel({
   }, [data?.canRefreshStatus, data?.kycStatus, refreshFromDidit]);
 
   const status = data?.kycStatus ?? "none";
+  const diditStatus = normalizeDiditSessionStatus(data?.diditSessionStatus);
+  const hasSession = Boolean(data?.diditSessionId?.trim());
+
   const phase = kycUiPhase({
     status,
     sdkError,
     sanctionsBlocked: Boolean(data?.sanctionsBlocked),
+    diditSessionStatus: data?.diditSessionStatus,
   });
-  const activeIdx = progressActiveIndex(phase);
+
+  const activeIdx = Math.min(
+    3,
+    diditKycActiveStepIndex({
+      kycStatus: status,
+      diditSessionStatus: diditStatus,
+      hasSession,
+    }),
+  );
 
   const steps: KycProgressStep[] = useMemo(
     () => [
       {
-        id: "prep",
-        label: t("kyc_step_prep"),
-        icon: <KycIconShield className="h-6 w-6" />,
-        state: stepState(0, activeIdx, phase),
+        id: "launch",
+        label: t("kyc_step_launch"),
+        icon: <KycIconLaunch className="h-6 w-6" />,
+        state: diditKycStepState(0, activeIdx, status, diditStatus),
       },
       {
         id: "id",
         label: t("kyc_step_id"),
         icon: <KycIconId className="h-6 w-6" />,
-        state: stepState(1, activeIdx, phase),
+        state: diditKycStepState(1, activeIdx, status, diditStatus),
       },
       {
-        id: "face",
-        label: t("kyc_step_face"),
+        id: "liveness",
+        label: t("kyc_step_liveness"),
         icon: <KycIconFace className="h-6 w-6" />,
-        state: stepState(2, activeIdx, phase),
+        state: diditKycStepState(2, activeIdx, status, diditStatus),
       },
       {
-        id: "review",
-        label: t("kyc_step_review"),
+        id: "decision",
+        label: t("kyc_step_decision"),
         icon: <KycIconReview className="h-6 w-6" />,
-        state: stepState(3, activeIdx, phase),
+        state: diditKycStepState(3, activeIdx, status, diditStatus),
       },
     ],
-    [activeIdx, phase, t],
+    [activeIdx, diditStatus, status, t],
   );
 
+  const activeStepLabel =
+    steps.find((s) => s.state === "active")?.label ??
+    (phase === "waiting" || phase === "review"
+      ? steps[3]?.label ?? null
+      : null);
+
+  const headline = statusHeadline(t, phase, activeStepLabel);
+
   const canShowVerify = Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
-  const showVerify = canShowVerify && (phase === "start" || phase === "error");
+  const showVerify =
+    canShowVerify && (phase === "start" || phase === "error");
   const showRefresh =
     Boolean(data?.canRefreshStatus) &&
     (phase === "waiting" || phase === "review");
 
   const verifyHandlers = {
-    onStarted: async (d: { sessionId?: string }) => {
+    onStarted: async (d: { sessionId?: string; sessionStatus?: string }) => {
       setSdkError(false);
       setBusy(true);
       await syncKycEvent("started", d);
       await load();
       setBusy(false);
     },
-    onFinished: async (d: { sessionId?: string }) => {
+    onFinished: async (d: { sessionId?: string; sessionStatus?: string }) => {
       setSdkError(false);
       setBusy(true);
       await syncKycEvent("finished", d);
@@ -229,13 +243,15 @@ export function KycFlowPanel({
 
   return (
     <div className="fd-card overflow-hidden">
-      <div
-        className={`bg-gradient-to-b ${heroBg} px-6 pb-2 pt-8`}
-      >
-        <KycHeroScene phase={phase} className="mx-auto" />
-        <p className="mt-4 text-center text-base font-bold tracking-tight text-[color:var(--fd-text)]">
-          {statusHeadline(t, phase)}
-        </p>
+      <div className={`bg-gradient-to-b ${heroBg} px-6 pb-2 pt-8`}>
+        <KycHeroScene phase={phase} activeStepIndex={activeIdx} className="mx-auto" />
+        {headline ? (
+          <p className="mt-4 text-center text-sm font-bold tracking-tight text-[color:var(--fd-text)]">
+            {headline}
+          </p>
+        ) : (
+          <div className="mt-4 h-5" aria-hidden />
+        )}
         {phase === "blocked" && data.rejectionNote ? (
           <p className="mt-1 line-clamp-2 text-center text-[10px] text-rose-700/90">
             {data.rejectionNote}
@@ -244,7 +260,7 @@ export function KycFlowPanel({
       </div>
 
       <div className="px-5 pb-6 pt-2">
-        <KycProgressBar steps={steps} hideLabels />
+        <KycProgressBar steps={steps} labelActiveOnly />
 
         <div className="mt-6 flex flex-col items-center gap-3">
           {showVerify ? (
@@ -263,7 +279,7 @@ export function KycFlowPanel({
           ) : null}
 
           {!data.didit.configured && phase === "start" ? (
-            <p className="text-center text-[10px] text-rose-700">{t("kyc_didit_not_configured")}</p>
+            <p className="text-center text-[10px] text-rose-700">{t("kyc_not_configured")}</p>
           ) : null}
         </div>
       </div>

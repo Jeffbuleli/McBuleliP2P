@@ -38,10 +38,14 @@ export async function refreshUserKycFromDidit(
   }
 
   const outcome = outcomeFromDiditResource(body);
+  const diditStatus =
+    typeof body.status === "string" ? body.status : null;
+
   const status = await applyKycFromProvider({
     userId,
     outcome,
     diditSessionId: sessionId,
+    diditSessionStatus: diditStatus,
     rejectionNote: rejectionNoteFromDiditResource(body, outcome),
   });
 

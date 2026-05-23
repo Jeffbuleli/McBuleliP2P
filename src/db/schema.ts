@@ -31,8 +31,8 @@ export const users = pgTable("users", {
   kycRejectionNote: text("kyc_rejection_note"),
   /** Didit verification session UUID — https://docs.didit.me/ */
   diditSessionId: varchar("didit_session_id", { length: 128 }),
-  metamapIdentityId: varchar("metamap_identity_id", { length: 128 }),
-  metamapVerificationId: varchar("metamap_verification_id", { length: 128 }),
+  /** Didit session status (Not Started, In Progress, Approved, …). */
+  diditSessionStatus: varchar("didit_session_status", { length: 32 }),
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
