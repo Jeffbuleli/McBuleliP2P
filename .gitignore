@@ -55,3 +55,9 @@ services/mcbuleli-ai-trading/.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+*.png
+
+# Local uploads (do not commit)
+ID NAT.png
+RCCM1.png
+RCCM2.png
