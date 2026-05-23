@@ -103,7 +103,8 @@ npm run db:migrate:render
 | Login: “Database tables are missing” | `npm run db:push:render` with production `DATABASE_URL` |
 | Blank KYC page | Migration 0037, country in profile, `KYC_ENABLED`, MetaMap `NEXT_PUBLIC_*` |
 | SDK works, status stuck on pending | Set `METAMAP_CLIENT_SECRET` on Render → user taps **Actualiser le statut** or reopens KYC page; or enable webhook |
-| MetaMap shows Verified, app still pending | Same — `METAMAP_CLIENT_SECRET` + `/api/kyc/refresh` syncs `identityStatus` from MetaMap API |
+| MetaMap shows Verified, app still pending | Tap **Validé sur MetaMap — synchroniser** (no API yet), or set `METAMAP_CLIENT_SECRET` + refresh, or configure **webhook** (works before 300 KYC API quota) |
+| Settings **Vérifier** | Opens **MetaMap SDK** inline (not only a link). Configure webhook: `https://mcbuleli.org/api/webhooks/metamap` |
 | Rejected: “Name not found” | Retake ID photos (recto + verso), good light, match profile country CD |
 | Rejected: “Region under sanctions” | MetaMap dashboard sanctions/watchlist — contact MetaMap support for CD corridor |
 | Wrong flow / missing document step | Use dedicated workflow with **Document Verification** before Biometric, not “Default flow” |

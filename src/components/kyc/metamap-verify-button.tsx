@@ -18,6 +18,7 @@ export function MetamapVerifyButton({
   onExited,
   onError,
   onAlreadyVerified,
+  autoStart,
 }: {
   clientId: string;
   flowId: string;
@@ -30,6 +31,8 @@ export function MetamapVerifyButton({
   onExited?: () => void;
   onError?: (screen?: string) => void;
   onAlreadyVerified?: (detail: { identityId?: string; verificationId?: string }) => void;
+  /** Open MetaMap SDK as soon as the button is ready (e.g. ?start=1 on KYC page). */
+  autoStart?: boolean;
 }) {
   const { t } = useI18n();
   const verificationRef = useRef<MetamapVerificationInstance | null>(null);
@@ -119,6 +122,13 @@ export function MetamapVerifyButton({
       callbacksRef.current.onError?.("commonError");
     }
   }, []);
+
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoStart || !ready || autoStarted.current) return;
+    autoStarted.current = true;
+    start();
+  }, [autoStart, ready, start]);
 
   if (loadFailed) {
     return (

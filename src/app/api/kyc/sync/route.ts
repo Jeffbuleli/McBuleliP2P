@@ -48,7 +48,12 @@ export async function POST(req: Request) {
     const hadAttempt =
       row?.kycStatus === "pending" ||
       row?.kycStatus === "none" ||
-      Boolean(row?.metamapIdentityId || row?.metamapVerificationId);
+      Boolean(
+        row?.metamapIdentityId ||
+          row?.metamapVerificationId ||
+          identityId ||
+          verificationId,
+      );
     if (!hadAttempt) {
       return NextResponse.json({ error: "kyc_no_prior_attempt" }, { status: 400 });
     }

@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { ProfileSubpageHeader } from "@/components/profile/profile-subpage-header";
-import { KycFlowPanel } from "@/components/kyc/kyc-flow-panel";
+import { KycPageClient } from "@/components/kyc/kyc-page-client";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getKycStatusPayload } from "@/lib/kyc-status-payload";
@@ -18,7 +19,9 @@ export default async function ProfileKycPage() {
   return (
     <>
       <ProfileSubpageHeader title={d.kyc_page_title} />
-      <KycFlowPanel userId={user.id} initialData={initialData} />
+      <Suspense fallback={null}>
+        <KycPageClient userId={user.id} initialData={initialData} />
+      </Suspense>
     </>
   );
 }

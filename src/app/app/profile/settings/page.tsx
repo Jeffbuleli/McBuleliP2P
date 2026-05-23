@@ -1,6 +1,6 @@
 import { LangSwitch } from "@/components/lang-switch";
 import { ProfilePersonalInfo } from "@/components/profile/profile-personal-info";
-import { ProfileSettingsKyc } from "@/components/profile/profile-settings-kyc";
+import { ProfileSettingsKycPanel } from "@/components/profile/profile-settings-kyc-panel";
 import { getProfileDashboard } from "@/lib/profile-stats";
 import { ProfileSubpageHeader } from "@/components/profile/profile-subpage-header";
 import { profileChipClass } from "@/components/profile/profile-vibrant-styles";
@@ -27,7 +27,12 @@ export default async function ProfileSettingsPage() {
       <div className="space-y-3">
         <ProfilePersonalInfo initialEmail={sessionUser?.email ?? ""} />
 
-        {dash ? <ProfileSettingsKyc kycStatus={dash.kycStatus} locale={locale} /> : null}
+        {sessionUser ? (
+          <ProfileSettingsKycPanel
+            userId={sessionUser.id}
+            initialStatus={dash?.kycStatus}
+          />
+        ) : null}
 
         <section className="fd-card flex items-start gap-3 p-4">
           <span className={`${profileChipClass.forest} flex h-10 w-10 shrink-0 items-center justify-center`}>

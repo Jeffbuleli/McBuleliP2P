@@ -15,22 +15,11 @@ import {
 } from "@/components/kyc/kyc-progress";
 import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
-
-async function syncKyc(
-  event: "started" | "finished" | "exited" | "already_verified",
-  detail?: { identityId?: string; verificationId?: string },
-) {
-  await fetch("/api/kyc/sync", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      event,
-      identityId: detail?.identityId,
-      verificationId: detail?.verificationId,
-    }),
-  });
-}
+import {
+  fetchKycStatus,
+  refreshKycFromMetamap,
+  syncKycEvent,
+} from "@/lib/kyc-client-sync";
 
 function stepState(
   idx: number,
@@ -91,9 +80,12 @@ function StatusBox({
 export function KycFlowPanel({
   userId,
   initialData,
+  autoStartSdk = false,
 }: {
   userId: string;
   initialData?: KycStatusPayload | null;
+  /** Launch MetaMap SDK immediately (e.g. /app/profile/kyc?start=1). */
+  autoStartSdk?: boolean;
 }) {
   const { t, locale } = useI18n();
   const [data, setData] = useState<KycStatusPayload | null>(initialData ?? null);
@@ -104,13 +96,9 @@ export function KycFlowPanel({
 
   const load = useCallback(async () => {
     setLoadErr(false);
-    const res = await fetch("/api/kyc/status", {
-      cache: "no-store",
-      credentials: "include",
-    });
-    const j = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setData(j as KycStatusPayload);
+    const payload = await fetchKycStatus();
+    if (payload) {
+      setData(payload);
       return;
     }
     setLoadErr(true);
@@ -119,15 +107,8 @@ export function KycFlowPanel({
   const refreshFromMetamap = useCallback(async () => {
     setBusy(true);
     try {
-      const res = await fetch("/api/kyc/refresh", {
-        method: "POST",
-        credentials: "include",
-      });
-      const j = (await res.json().catch(() => ({}))) as {
-        kyc?: KycStatusPayload;
-        error?: string;
-      };
-      if (j.kyc) setData(j.kyc);
+      const payload = await refreshKycFromMetamap();
+      if (payload) setData(payload);
       else await load();
     } finally {
       setBusy(false);
@@ -205,25 +186,27 @@ export function KycFlowPanel({
     onStarted: async (d: { identityId?: string; verificationId?: string }) => {
       setSdkError(null);
       setBusy(true);
-      await syncKyc("started", d);
+      await syncKycEvent("started", d);
       await load();
       setBusy(false);
     },
     onFinished: async (d: { identityId?: string; verificationId?: string }) => {
       setSdkError(null);
       setBusy(true);
-      await syncKyc("finished", d);
-      await load();
+      await syncKycEvent("finished", d);
+      const refreshed = await refreshKycFromMetamap();
+      if (refreshed) setData(refreshed);
+      else await load();
       setBusy(false);
     },
     onAlreadyVerified: async (d: { identityId?: string; verificationId?: string }) => {
       setSdkError(null);
       setBusy(true);
-      await syncKyc("already_verified", d);
+      await syncKycEvent("already_verified", d);
       await load();
       setBusy(false);
     },
-    onExited: () => void syncKyc("exited"),
+    onExited: () => void syncKycEvent("exited"),
     onError: (screen?: string) => setSdkError(screen ?? "commonError"),
   };
 
@@ -327,6 +310,7 @@ export function KycFlowPanel({
                 flowId={data.metamap.flowId!}
                 metadata={metadata}
                 language={lang}
+                autoStart={autoStartSdk}
                 identityId={resumeVerification ? data.metamapIdentityId : undefined}
                 verificationId={resumeVerification ? data.metamapVerificationId : undefined}
                 {...verifyHandlers}
@@ -346,6 +330,7 @@ export function KycFlowPanel({
             flowId={data.metamap.flowId!}
             metadata={metadata}
             language={lang}
+            autoStart={autoStartSdk}
             {...verifyHandlers}
           />
           {sdkError === "ipRestrictions" ? (
