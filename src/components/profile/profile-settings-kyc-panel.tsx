@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import { DiditVerifyButton } from "@/components/kyc/didit-verify-button";
-import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
+import { KycIconShield } from "@/components/kyc/kyc-illustrations";
 import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import {
   fetchKycStatus,
@@ -96,7 +96,7 @@ export function ProfileSettingsKycPanel({
     <section className="fd-card p-4">
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-          <KycIllustrationShield className="h-5 w-5" />
+          <KycIconShield className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1 space-y-3">
           <div>
@@ -114,13 +114,9 @@ export function ProfileSettingsKycPanel({
             </div>
           </div>
 
-          {status === "approved" ? null : canShowVerify ? (
-            <div className="space-y-2">
-              <p className="text-[10px] text-[color:var(--fd-muted)]">
-                {t("profile_settings_kyc_verify_hint")}
-              </p>
-              <DiditVerifyButton {...verifyHandlers} />
-            </div>
+          {status === "approved" ? null : canShowVerify &&
+            (status === "none" || status === "rejected") ? (
+            <DiditVerifyButton {...verifyHandlers} />
           ) : null}
 
           {status === "pending" || status === "manual_review" ? (

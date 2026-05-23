@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
+import { KycIconShield } from "@/components/kyc/kyc-illustrations";
 
 type DiditCompleteDetail = {
   sessionId?: string;
@@ -16,7 +16,6 @@ export function DiditVerifyButton({
   onCancelled,
   onError,
 }: {
-  /** Open Didit SDK as soon as ready (e.g. ?start=1 on KYC page). */
   autoStart?: boolean;
   onStarted?: (detail: DiditCompleteDetail) => void;
   onFinished?: (detail: DiditCompleteDetail) => void;
@@ -84,9 +83,9 @@ export function DiditVerifyButton({
       type="button"
       disabled={starting}
       onClick={() => void start()}
-      className="flex w-full max-w-sm items-center justify-center gap-2 rounded-2xl bg-[color:var(--fd-primary)] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/25 transition active:scale-[0.99] disabled:opacity-60"
+      className="flex w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--fd-primary)] px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-[color:var(--fd-primary)]/20 transition active:scale-[0.98] disabled:opacity-60"
     >
-      <KycIllustrationShield className="h-5 w-5 shrink-0 text-white" />
+      <KycIconShield className="h-5 w-5 shrink-0 text-white" />
       <span>{starting ? "…" : t("kyc_verify_cta")}</span>
     </button>
   );

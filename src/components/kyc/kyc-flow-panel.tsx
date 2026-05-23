@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { DiditVerifyButton } from "@/components/kyc/didit-verify-button";
 import {
-  KycIllustrationError,
-  KycIllustrationFace,
-  KycIllustrationId,
-  KycIllustrationReview,
-  KycIllustrationShield,
-  KycProgressBar,
-  type KycProgressStep,
-} from "@/components/kyc/kyc-progress";
+  KycHeroScene,
+  KycIconFace,
+  KycIconId,
+  KycIconReview,
+  KycIconShield,
+  kycUiPhase,
+  type KycUiPhase,
+} from "@/components/kyc/kyc-illustrations";
+import { KycIllustrationError, KycProgressBar, type KycProgressStep } from "@/components/kyc/kyc-progress";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
 import {
@@ -25,57 +25,28 @@ import {
 function stepState(
   idx: number,
   activeIdx: number,
-  status: string,
+  phase: KycUiPhase,
 ): KycProgressStep["state"] {
-  if (status === "approved" && idx <= 3) return "done";
+  if (phase === "success") return "done";
   if (idx < activeIdx) return "done";
   if (idx === activeIdx) return "active";
   return "upcoming";
 }
 
-function heroIllustration(status: string, activeIdx: number, sdkError: boolean) {
-  if (sdkError) {
-    return <KycIllustrationError className="h-16 w-16 text-rose-600" />;
-  }
-  if (status === "approved") {
-    return <KycIllustrationShield className="h-16 w-16 text-emerald-700" />;
-  }
-  if (status === "pending" || status === "manual_review") {
-    return <KycIllustrationReview className="h-16 w-16 text-amber-800" />;
-  }
-  if (status === "rejected") {
-    return <KycIllustrationId className="h-16 w-16 text-rose-700" />;
-  }
-  if (activeIdx >= 3) {
-    return <KycIllustrationReview className="h-16 w-16 text-[color:var(--fd-primary)]" />;
-  }
-  if (activeIdx >= 2) {
-    return <KycIllustrationFace className="h-16 w-16 text-[color:var(--fd-primary)]" />;
-  }
-  if (activeIdx >= 1) {
-    return <KycIllustrationId className="h-16 w-16 text-[color:var(--fd-primary)]" />;
-  }
-  return <KycIllustrationShield className="h-16 w-16 text-[color:var(--fd-primary)]" />;
+function progressActiveIndex(phase: KycUiPhase): number {
+  if (phase === "success") return 4;
+  if (phase === "waiting" || phase === "review") return 3;
+  if (phase === "start" || phase === "error") return 0;
+  return 0;
 }
 
-function StatusBox({
-  children,
-  tone,
-}: {
-  children: ReactNode;
-  tone: "ok" | "pending" | "reject";
-}) {
-  const cls =
-    tone === "ok"
-      ? "border-emerald-200 bg-emerald-50"
-      : tone === "pending"
-        ? "border-amber-200 bg-amber-50"
-        : "border-rose-200 bg-rose-50";
-  return (
-    <div className={`mt-5 flex justify-center rounded-2xl border px-4 py-4 ${cls}`}>
-      {children}
-    </div>
-  );
+function statusHeadline(t: (k: string) => string, phase: KycUiPhase): string {
+  if (phase === "success") return t("kyc_state_verified");
+  if (phase === "waiting") return t("kyc_state_pending");
+  if (phase === "review") return t("kyc_state_review");
+  if (phase === "blocked") return t("kyc_state_blocked");
+  if (phase === "error") return t("kyc_state_error");
+  return t("kyc_state_start");
 }
 
 export function KycFlowPanel({
@@ -84,7 +55,6 @@ export function KycFlowPanel({
 }: {
   userId: string;
   initialData?: KycStatusPayload | null;
-  /** Launch Didit SDK immediately (e.g. /app/profile/kyc?start=1). */
   autoStartSdk?: boolean;
 }) {
   const { t } = useI18n();
@@ -136,47 +106,48 @@ export function KycFlowPanel({
   }, [data?.canRefreshStatus, data?.kycStatus, refreshFromDidit]);
 
   const status = data?.kycStatus ?? "none";
-  const activeIdx =
-    status === "approved"
-      ? 4
-      : status === "pending" || status === "manual_review"
-        ? 3
-        : status === "rejected"
-          ? 1
-          : 1;
+  const phase = kycUiPhase({
+    status,
+    sdkError,
+    sanctionsBlocked: Boolean(data?.sanctionsBlocked),
+  });
+  const activeIdx = progressActiveIndex(phase);
 
   const steps: KycProgressStep[] = useMemo(
     () => [
       {
         id: "prep",
         label: t("kyc_step_prep"),
-        icon: <KycIllustrationShield className="h-7 w-7" />,
-        state: stepState(0, activeIdx, status),
+        icon: <KycIconShield className="h-6 w-6" />,
+        state: stepState(0, activeIdx, phase),
       },
       {
         id: "id",
         label: t("kyc_step_id"),
-        icon: <KycIllustrationId className="h-7 w-7" />,
-        state: stepState(1, activeIdx, status),
+        icon: <KycIconId className="h-6 w-6" />,
+        state: stepState(1, activeIdx, phase),
       },
       {
         id: "face",
         label: t("kyc_step_face"),
-        icon: <KycIllustrationFace className="h-7 w-7" />,
-        state: stepState(2, activeIdx, status),
+        icon: <KycIconFace className="h-6 w-6" />,
+        state: stepState(2, activeIdx, phase),
       },
       {
         id: "review",
         label: t("kyc_step_review"),
-        icon: <KycIllustrationReview className="h-7 w-7" />,
-        state: stepState(3, activeIdx, status),
+        icon: <KycIconReview className="h-6 w-6" />,
+        state: stepState(3, activeIdx, phase),
       },
     ],
-    [activeIdx, status, t],
+    [activeIdx, phase, t],
   );
 
-  const canShowVerify =
-    Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
+  const canShowVerify = Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
+  const showVerify = canShowVerify && (phase === "start" || phase === "error");
+  const showRefresh =
+    Boolean(data?.canRefreshStatus) &&
+    (phase === "waiting" || phase === "review");
 
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string }) => {
@@ -201,20 +172,20 @@ export function KycFlowPanel({
 
   if (!data) {
     return (
-      <div className="fd-card p-5 text-center">
+      <div className="fd-card flex min-h-[280px] flex-col items-center justify-center p-8">
         {loadErr ? (
           <>
-            <KycIllustrationError className="mx-auto h-12 w-12 text-rose-500" />
+            <KycIllustrationError className="h-16 w-16 text-rose-500" />
             <button
               type="button"
               onClick={() => void load()}
-              className="mt-3 rounded-full bg-[color:var(--fd-primary)] px-4 py-2 text-xs font-bold text-white"
+              className="mt-4 rounded-full bg-[color:var(--fd-primary)] px-5 py-2.5 text-xs font-bold text-white"
             >
               {t("kyc_retry")}
             </button>
           </>
         ) : (
-          <p className="text-sm text-[color:var(--fd-muted)]">…</p>
+          <div className="h-28 w-28 animate-pulse rounded-[2rem] bg-[color:var(--fd-mint)]/40" />
         )}
       </div>
     );
@@ -222,19 +193,23 @@ export function KycFlowPanel({
 
   if (!data.enabled) {
     return (
-      <div className="fd-card p-5 text-center">
-        <KycIllustrationShield className="mx-auto h-16 w-16 text-[color:var(--fd-muted)]" />
+      <div className="fd-card flex min-h-[240px] flex-col items-center justify-center p-8">
+        <KycHeroScene phase="start" />
+        <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">{t("kyc_off_title")}</p>
       </div>
     );
   }
 
   if (!data.inCorridorCountry) {
     return (
-      <div className="fd-card p-5 text-center">
-        <KycIllustrationShield className="mx-auto h-16 w-16 text-[color:var(--fd-muted)]" />
+      <div className="fd-card flex min-h-[240px] flex-col items-center justify-center p-8">
+        <KycHeroScene phase="start" />
+        <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">
+          {t("kyc_not_required_country")}
+        </p>
         <Link
           href="/app/profile/settings"
-          className="mt-3 inline-flex items-center justify-center rounded-full bg-[color:var(--fd-mint)] px-3 py-1.5 text-[10px] font-bold text-[color:var(--fd-primary)]"
+          className="mt-3 rounded-full bg-[color:var(--fd-mint)] px-4 py-2 text-[10px] font-bold text-[color:var(--fd-primary)]"
         >
           {t("kyc_set_country")}
         </Link>
@@ -242,88 +217,55 @@ export function KycFlowPanel({
     );
   }
 
+  const heroBg =
+    phase === "success"
+      ? "from-emerald-50 to-white"
+      : phase === "blocked" || phase === "error"
+        ? "from-rose-50/80 to-white"
+        : phase === "waiting" || phase === "review"
+          ? "from-amber-50/70 to-white"
+          : "from-[color:var(--fd-mint)]/35 to-white";
+
   return (
-    <div className="fd-card overflow-hidden p-5">
-      <div className="mb-4 flex justify-center">
-        <span className="flex h-28 w-28 items-center justify-center rounded-[1.75rem] bg-[color:var(--fd-mint)]/50">
-          {heroIllustration(status, activeIdx, sdkError)}
-        </span>
+    <div className="fd-card overflow-hidden">
+      <div
+        className={`bg-gradient-to-b ${heroBg} px-6 pb-2 pt-8`}
+      >
+        <KycHeroScene phase={phase} className="mx-auto" />
+        <p className="mt-4 text-center text-base font-bold tracking-tight text-[color:var(--fd-text)]">
+          {statusHeadline(t, phase)}
+        </p>
+        {phase === "blocked" && data.rejectionNote ? (
+          <p className="mt-1 line-clamp-2 text-center text-[10px] text-rose-700/90">
+            {data.rejectionNote}
+          </p>
+        ) : null}
       </div>
 
-      <KycProgressBar steps={steps} hideLabels />
+      <div className="px-5 pb-6 pt-2">
+        <KycProgressBar steps={steps} hideLabels />
 
-      {data.approved ? (
-        <StatusBox tone="ok">
-          <KycIllustrationShield className="h-14 w-14 text-emerald-700" />
-        </StatusBox>
-      ) : data.sanctionsBlocked ? (
-        <>
-          <StatusBox tone="reject">
-            <KycIllustrationError className="h-14 w-14 text-rose-700" />
-          </StatusBox>
-          <p className="mt-3 text-center text-[10px] text-rose-700">
-            {data.rejectionNote ?? t("kyc_sanctions_blocked")}
-          </p>
-        </>
-      ) : status === "manual_review" ? (
-        <StatusBox tone="pending">
-          <KycIllustrationReview className="h-14 w-14 text-amber-800" />
-        </StatusBox>
-      ) : status === "pending" ? (
-        <>
-          <StatusBox tone="pending">
-            <KycIllustrationReview className="h-14 w-14 text-amber-800" />
-          </StatusBox>
-          {data.canRefreshStatus ? (
-            <div className="mt-3 flex flex-col items-center gap-2">
-              <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
-                {t("kyc_refresh_hint")}
-              </p>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void refreshFromDidit()}
-                className="rounded-full border border-[color:var(--fd-border)] bg-white px-4 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
-              >
-                {busy ? "…" : t("kyc_refresh_status")}
-              </button>
-            </div>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          {showVerify ? (
+            <DiditVerifyButton autoStart={autoStartSdk && phase === "start"} {...verifyHandlers} />
           ) : null}
-          {canShowVerify ? (
-            <div className="mt-4 space-y-2">
-              <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
-                {t("kyc_pending_retry_hint")}
-              </p>
-              <DiditVerifyButton autoStart={false} {...verifyHandlers} />
-            </div>
+
+          {showRefresh ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void refreshFromDidit()}
+              className="rounded-full border border-[color:var(--fd-border)] bg-white px-5 py-2.5 text-[11px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
+            >
+              {busy ? "…" : t("kyc_refresh_status")}
+            </button>
           ) : null}
-        </>
-      ) : canShowVerify ? (
-        <div className="mt-5 space-y-3">
-          {sdkError ? (
-            <StatusBox tone="reject">
-              <KycIllustrationError className="h-12 w-12 text-rose-600" />
-            </StatusBox>
-          ) : null}
-          <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
-            {t("kyc_didit_hint")}
-          </p>
-          <DiditVerifyButton autoStart={autoStartSdk} {...verifyHandlers} />
-          {sdkError ? (
-            <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
-              {t("kyc_sdk_error")}
-            </p>
+
+          {!data.didit.configured && phase === "start" ? (
+            <p className="text-center text-[10px] text-rose-700">{t("kyc_didit_not_configured")}</p>
           ) : null}
         </div>
-      ) : (
-        <p className="mt-4 text-center text-[10px] text-rose-700">
-          {t("kyc_didit_not_configured")}
-        </p>
-      )}
-
-      {busy ? (
-        <p className="mt-3 text-center text-[10px] text-[color:var(--fd-muted)]">…</p>
-      ) : null}
+      </div>
     </div>
   );
 }

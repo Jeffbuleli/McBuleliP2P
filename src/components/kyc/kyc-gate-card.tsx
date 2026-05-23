@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
-import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
+import { KycIconShield } from "@/components/kyc/kyc-illustrations";
 
 export function KycGateCard({ compact }: { compact?: boolean }) {
   const { t } = useI18n();
@@ -15,7 +15,7 @@ export function KycGateCard({ compact }: { compact?: boolean }) {
     >
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-900">
-          <KycIllustrationShield className="h-6 w-6" />
+          <KycIconShield className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-amber-950">{t("kyc_gate_title")}</p>
