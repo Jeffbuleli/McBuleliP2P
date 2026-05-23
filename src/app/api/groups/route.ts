@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { createGroup } from "@/lib/group-savings-service";
 import { isAppCountryCode } from "@/lib/country-codes";
 import { AVEC_MAX_SHARES_PER_MEETING } from "@/lib/group-savings-types";
@@ -49,6 +50,10 @@ export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const kyc = await checkKycGate(userId, "groups");
+  if (!kyc.ok) {
+    return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);

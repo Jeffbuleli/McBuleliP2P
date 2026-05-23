@@ -17,6 +17,7 @@ const I18N_PREFIXES = [
   "member_",
   "avatar_",
   "avec_",
+  "kyc_",
 ] as const;
 
 const PLAIN_MESSAGE_MAP: Record<string, keyof Messages> = {

@@ -12,11 +12,8 @@ import {
   parseNetWithdrawal,
   parseNetWithdrawalPi,
 } from "@/lib/withdraw-fees";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
-import {
-  isKycApproved,
-  requiresKycForLargeWithdrawal,
-} from "@/lib/kyc-policy";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -85,32 +82,9 @@ export async function POST(req: Request) {
     );
   }
 
-  // KYC is currently "paused" (feature-flagged off). If enabled later, we only
-  // require KYC for large withdrawals in selected partner corridors.
-  const [me] = await db
-    .select({
-      countryCode: users.countryCode,
-      kycStatus: users.kycStatus,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  if (
-    body.asset === "USDT" &&
-    requiresKycForLargeWithdrawal({
-      userCountryCode: me?.countryCode ?? null,
-      netAmountUsdt: Number(net),
-    }) &&
-    !isKycApproved(me?.kycStatus)
-  ) {
-    return NextResponse.json(
-      {
-        message:
-          "KYC is required for large withdrawals in your country. Please contact support.",
-      },
-      { status: 403 },
-    );
+  const kyc = await checkKycGate(userId, "withdraw");
+  if (!kyc.ok) {
+    return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
 
   const networkCex =

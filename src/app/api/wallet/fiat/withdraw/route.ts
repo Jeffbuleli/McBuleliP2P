@@ -17,6 +17,7 @@ import {
   isPawapaySupportedCurrency,
   isPawapaySupportedForCountry,
 } from "@/lib/pawapay/availability";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
 const bodyZ = z.object({
@@ -77,6 +78,10 @@ export async function POST(req: Request) {
   }
   if (isFiatDepositWithdrawPaused()) {
     return NextResponse.json({ error: "wallet_fiat_paused" }, { status: 503 });
+  }
+  const kyc = await checkKycGate(userId, "deposit_fiat");
+  if (!kyc.ok) {
+    return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
   if (!hasPawapayKeys()) {
     return NextResponse.json({ error: "wallet_pawapay_unconfigured" }, { status: 503 });

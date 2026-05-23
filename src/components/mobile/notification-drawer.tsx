@@ -275,6 +275,34 @@ function notifMeta(
         pill: { variant: "success", label: t("status_ui_success") },
       };
     }
+    case "kyc_pending":
+      return {
+        title: t("notif_kyc_pending_title"),
+        body: t("notif_kyc_pending_body"),
+        href: "/app/profile/kyc",
+        pill: { variant: "pending", label: t("profile_kyc_pending") },
+      };
+    case "kyc_approved":
+      return {
+        title: t("notif_kyc_approved_title"),
+        body: t("notif_kyc_approved_body"),
+        href: "/app/profile/kyc",
+        pill: { variant: "success", label: t("profile_kyc_ok") },
+      };
+    case "kyc_rejected":
+      return {
+        title: t("notif_kyc_rejected_title"),
+        body: t("notif_kyc_rejected_body"),
+        href: "/app/profile/kyc",
+        pill: { variant: "failed", label: t("kyc_rejected_banner") },
+      };
+    case "kyc_manual_review":
+      return {
+        title: t("notif_kyc_manual_review_title"),
+        body: t("notif_kyc_manual_review_body"),
+        href: "/app/profile/kyc",
+        pill: { variant: "pending", label: t("profile_kyc_pending") },
+      };
     default:
       return {
         title: row.kind,

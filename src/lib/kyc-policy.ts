@@ -1,5 +1,15 @@
 type KycStatus = "none" | "pending" | "approved" | "rejected" | "manual_review";
 
+export type KycGatedFeature =
+  | "withdraw"
+  | "deposit_fiat"
+  | "wallet_transfer"
+  | "p2p_trade"
+  | "p2p_ad"
+  | "groups"
+  | "trade_live"
+  | "trade_bots";
+
 function csvUpper(s: string | undefined): string[] {
   return (s ?? "")
     .split(",")
@@ -14,7 +24,7 @@ export function kycEnabled(): boolean {
 
 export function kycRequiredCountries(): string[] {
   const v =
-    process.env.KYC_REQUIRED_COUNTRIES ?? "CD,RW,TZ,BI,UG,KE,CG";
+    process.env.KYC_REQUIRED_COUNTRIES ?? "CD,RW,TZ,BI,UG,KE,CG,CM,NG,GH,SN,CI";
   return csvUpper(v);
 }
 
@@ -27,6 +37,17 @@ export function isKycApproved(status: string | null | undefined): boolean {
   return (status ?? "none") === "approved";
 }
 
+export function kycRequiredForFeature(
+  _feature: KycGatedFeature,
+  userCountryCode?: string | null,
+): boolean {
+  if (!kycEnabled()) return false;
+  const cc = (userCountryCode ?? "").trim().toUpperCase();
+  if (!cc || cc === "OTHER") return false;
+  return kycRequiredCountries().includes(cc);
+}
+
+/** @deprecated Use full KYC gate via checkKycGate when KYC_ENABLED */
 export function requiresKycForLargeWithdrawal(args: {
   userCountryCode?: string | null;
   netAmountUsdt: number;
@@ -39,4 +60,3 @@ export function requiresKycForLargeWithdrawal(args: {
 }
 
 export type { KycStatus };
-

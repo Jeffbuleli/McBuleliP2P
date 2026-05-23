@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { openFuturesPosition } from "@/lib/trade-futures-service";
 
 const bodyZ = z.object({
@@ -22,6 +23,12 @@ export async function POST(req: Request) {
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "trade_invalid_body" }, { status: 400 });
+  }
+  if (parsed.data.mode === "live") {
+    const kyc = await checkKycGate(userId, "trade_live");
+    if (!kyc.ok) {
+      return NextResponse.json({ error: kyc.error }, { status: 403 });
+    }
   }
   const r = await openFuturesPosition({
     userId,

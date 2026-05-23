@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { createOrder, listUserOrders } from "@/lib/p2p-service";
 
 const postZ = z.object({
@@ -22,6 +23,10 @@ export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const kyc = await checkKycGate(userId, "p2p_trade");
+  if (!kyc.ok) {
+    return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
   const json = await req.json().catch(() => null);
   const parsed = postZ.safeParse(json);

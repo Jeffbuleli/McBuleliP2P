@@ -9,7 +9,7 @@ type Tile = {
   href: string;
   labelKey: keyof Messages;
   tone: ProfileChipTone;
-  icon: "wallet" | "payments" | "invite" | "settings" | "pi" | "admin";
+  icon: "wallet" | "payments" | "invite" | "settings" | "pi" | "admin" | "kyc";
 };
 
 const TILES: Tile[] = [
@@ -25,6 +25,12 @@ const TILES: Tile[] = [
     labelKey: "profile_tile_invite",
     tone: "amber",
     icon: "invite",
+  },
+  {
+    href: "/app/profile/kyc",
+    labelKey: "profile_tile_kyc",
+    tone: "forest",
+    icon: "kyc",
   },
   {
     href: "/app/profile/settings",
@@ -81,6 +87,18 @@ function TileIcon({ icon }: { icon: Tile["icon"] }) {
         <span className="text-lg font-bold leading-none" aria-hidden>
           π
         </span>
+      );
+    case "kyc":
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M12 3L4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3z"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
       );
     case "admin":
       return (

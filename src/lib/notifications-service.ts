@@ -28,7 +28,11 @@ export type NotificationKind =
   | "group_ops_approved"
   | "admin_deposit_order"
   | "admin_deposit_review"
-  | "admin_withdrawal_order";
+  | "admin_withdrawal_order"
+  | "kyc_pending"
+  | "kyc_approved"
+  | "kyc_rejected"
+  | "kyc_manual_review";
 
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;
