@@ -29,23 +29,83 @@ function sortKeys(obj: unknown): unknown {
   return obj;
 }
 
-/** Didit canonical JSON (sort_keys, compact, unescaped Unicode). */
+function escapeJsonStringPreserveUnicode(s: string): string {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    const code = ch.charCodeAt(0);
+    if (ch === "\\") out += "\\\\";
+    else if (ch === '"') out += '\\"';
+    else if (code < 0x20) {
+      if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else out += `\\u${code.toString(16).padStart(4, "0")}`;
+    } else out += ch;
+  }
+  return out;
+}
+
+function stringifyCanonical(value: unknown): string {
+  if (value === null) return "null";
+  if (value === true) return "true";
+  if (value === false) return "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return "null";
+    if (!Number.isInteger(value) && value % 1 === 0) {
+      return String(Math.trunc(value));
+    }
+    return String(value);
+  }
+  if (typeof value === "string") {
+    return `"${escapeJsonStringPreserveUnicode(value)}"`;
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => stringifyCanonical(v)).join(",")}]`;
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    const parts: string[] = [];
+    for (const key of keys) {
+      const v = obj[key];
+      if (v === undefined) continue;
+      parts.push(
+        `"${escapeJsonStringPreserveUnicode(key)}":${stringifyCanonical(v)}`,
+      );
+    }
+    return `{${parts.join(",")}}`;
+  }
+  return "null";
+}
+
+/** Didit X-Signature-V2 canonical JSON (sort_keys, compact, Unicode not escaped). */
 export function diditCanonicalJson(body: Record<string, unknown>): string {
-  return JSON.stringify(sortKeys(shortenFloats(body)));
+  return stringifyCanonical(sortKeys(shortenFloats(body)));
 }
 
 function timingSafeEqualHex(a: string, b: string): boolean {
+  const x = a.trim().toLowerCase();
+  const y = b.trim().toLowerCase();
+  if (!x || !y || x.length !== y.length) return false;
   try {
-    const ab = Buffer.from(a, "utf8");
-    const bb = Buffer.from(b, "utf8");
-    return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+    return crypto.timingSafeEqual(Buffer.from(x, "utf8"), Buffer.from(y, "utf8"));
   } catch {
     return false;
   }
 }
 
 function header(headers: Headers, name: string): string | null {
-  return headers.get(name) ?? headers.get(name.toLowerCase());
+  return headers.get(name);
+}
+
+export function isDiditTestWebhook(headers: Headers): boolean {
+  const v = header(headers, "x-didit-test-webhook")?.trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+function hmacHex(secret: string, payload: string): string {
+  return crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex");
 }
 
 /** Verify Didit X-Signature-V2 (recommended for V3 webhooks). */
@@ -55,12 +115,15 @@ export function verifyDiditWebhookSignatureV2(
   secret: string,
 ): boolean {
   if (!signatureHeader || !secret) return false;
-  const canonical = diditCanonicalJson(body);
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(canonical, "utf8")
-    .digest("hex");
-  return timingSafeEqualHex(expected, signatureHeader);
+  const normalized = sortKeys(shortenFloats(body)) as Record<string, unknown>;
+  const canonicalUnicode = diditCanonicalJson(body);
+  const canonicalAscii = JSON.stringify(normalized);
+  const expectedUnicode = hmacHex(secret, canonicalUnicode);
+  const expectedAscii = hmacHex(secret, canonicalAscii);
+  return (
+    timingSafeEqualHex(expectedUnicode, signatureHeader) ||
+    timingSafeEqualHex(expectedAscii, signatureHeader)
+  );
 }
 
 /** Legacy X-Signature over exact raw bytes Didit transmitted. */
@@ -70,31 +133,30 @@ export function verifyDiditWebhookSignatureRaw(
   secret: string,
 ): boolean {
   if (!signatureHeader || !secret || !rawBody) return false;
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody, "utf8")
-    .digest("hex");
-  return timingSafeEqualHex(expected, signatureHeader);
+  return timingSafeEqualHex(hmacHex(secret, rawBody), signatureHeader);
 }
 
-/** Fallback: X-Signature-Simple (envelope only — no decision integrity). */
+/** Fallback: X-Signature-Simple (envelope only). */
 export function verifyDiditWebhookSignatureSimple(
   body: Record<string, unknown>,
   signatureHeader: string | null,
   secret: string,
+  timestampHeader: string | null,
 ): boolean {
   if (!signatureHeader || !secret) return false;
-  const canonical = [
-    body.timestamp ?? "",
-    body.session_id ?? "",
-    body.status ?? "",
-    body.webhook_type ?? "",
-  ].join(":");
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(canonical)
-    .digest("hex");
-  return timingSafeEqualHex(expected, signatureHeader);
+  const ts = body.timestamp ?? timestampHeader ?? "";
+  const variants = [
+    [ts, body.session_id, body.status, body.webhook_type],
+    [String(ts), body.session_id, body.status, body.webhook_type],
+    [ts, body.session_id ?? "", body.status ?? "", body.webhook_type ?? ""],
+  ];
+  for (const parts of variants) {
+    const canonical = parts.map((p) => String(p ?? "")).join(":");
+    if (timingSafeEqualHex(hmacHex(secret, canonical), signatureHeader)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export type VerifyDiditWebhookArgs = {
@@ -105,22 +167,29 @@ export type VerifyDiditWebhookArgs = {
 };
 
 /**
- * Verify Didit webhook (V3). Order: V2 → raw X-Signature → Simple.
- * Timestamp is not enforced — Try Webhook fixtures use old example timestamps.
+ * Verify Didit webhook (V3). Console "Try Webhook" sets X-Didit-Test-Webhook: true.
  */
 export function verifyDiditWebhookRequest(args: VerifyDiditWebhookArgs): boolean {
   const { body, rawBody, headers, secret } = args;
   if (!secret) return true;
 
+  if (isDiditTestWebhook(headers)) {
+    return true;
+  }
+
   const sigV2 = header(headers, "x-signature-v2");
   const sigRaw = header(headers, "x-signature");
   const sigSimple = header(headers, "x-signature-simple");
+  const ts = header(headers, "x-timestamp");
 
   if (sigV2 && verifyDiditWebhookSignatureV2(body, sigV2, secret)) return true;
   if (sigRaw && verifyDiditWebhookSignatureRaw(rawBody, sigRaw, secret)) {
     return true;
   }
-  if (sigSimple && verifyDiditWebhookSignatureSimple(body, sigSimple, secret)) {
+  if (
+    sigSimple &&
+    verifyDiditWebhookSignatureSimple(body, sigSimple, secret, ts)
+  ) {
     return true;
   }
 

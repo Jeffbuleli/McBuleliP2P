@@ -16,7 +16,8 @@ Partner: [Didit](https://docs.didit.me/). McBuleli uses the **Sessions API** + *
    - Version: **V3**
    - Events: `status.updated`, `user.status.updated` (optional: `data.updated`)
    - Copy **secret_shared_key** → `DIDIT_WEBHOOK_SECRET` on Render (exact match, no quotes)
-6. **Try Webhook** in console — expect **200**. Test payloads use `vendor_data: "your-vendor-reference-id"` → McBuleli returns `{ ok: true, skipped: "no_user" }` (normal). Real sessions send your user UUID as `vendor_data`.
+6. **Try Webhook** — avec `X-Didit-Test-Webhook: true`, McBuleli répond **200** (signature console non bloquante). Réponse typique : `{ "ok": true, "skipped": "no_user" }` car `vendor_data` d’exemple n’est pas un UUID utilisateur.
+7. **Production** : `vendor_data` = UUID McBuleli (envoyé à la création de session). Vérifiez que `DIDIT_WEBHOOK_SECRET` = **secret_shared_key** de la destination (≠ `DIDIT_API_KEY`).
 
 ### RDC — carte d'électeur (2022–2023)
 

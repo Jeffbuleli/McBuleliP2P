@@ -8,7 +8,7 @@ import { diditWebhookSecret } from "@/lib/didit/config";
 import { rejectionNoteFromDiditDecision } from "@/lib/didit/decision-notes";
 import { parseDiditSessionStatus } from "@/lib/didit/parse-outcome";
 import { resolveDiditWebhookUserId } from "@/lib/didit/resolve-webhook-user";
-import { verifyDiditWebhookRequest } from "@/lib/didit/webhook-verify";
+import { verifyDiditWebhookRequest, isDiditTestWebhook } from "@/lib/didit/webhook-verify";
 
 type DiditWebhookPayload = {
   webhook_type?: string;
@@ -47,12 +47,20 @@ export async function POST(req: Request) {
   if (!verified) {
     console.warn("[didit webhook] invalid_signature", {
       hasSecret: Boolean(secret),
+      isTest: isDiditTestWebhook(req.headers),
       hasV2: Boolean(req.headers.get("x-signature-v2")),
       hasRaw: Boolean(req.headers.get("x-signature")),
       hasSimple: Boolean(req.headers.get("x-signature-simple")),
       webhookType: body.webhook_type,
     });
-    return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
+    return NextResponse.json(
+      {
+        error: "invalid_signature",
+        hint:
+          "Use the webhook destination secret_shared_key (not DIDIT_API_KEY). Console tests send X-Didit-Test-Webhook: true and are accepted after deploy.",
+      },
+      { status: 401 },
+    );
   }
 
   const webhookType = body.webhook_type ?? "";
