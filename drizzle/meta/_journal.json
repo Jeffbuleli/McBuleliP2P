@@ -225,6 +225,20 @@
       "when": 1781100000000,
       "tag": "0036_avec_loan_requests_reject",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1781200000000,
+      "tag": "0037_metamap_kyc",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1781300000000,
+      "tag": "0038_didit_kyc",
+      "breakpoints": true
     }
   ]
 }

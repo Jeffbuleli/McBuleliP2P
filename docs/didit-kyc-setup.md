@@ -36,10 +36,18 @@ DIDIT_WORKFLOW_ID=...
 DIDIT_WEBHOOK_SECRET=...
 ```
 
-Run migration **0038** on Postgres:
+Run migrations **0037** + **0038** on Postgres (required — without `didit_session_id` the KYC page returns 500):
 
 ```bash
+# From repo root, with Render External DATABASE_URL in .env.render
 npm run db:migrate:render
+```
+
+Or run once in Render Postgres **Shell** / SQL console:
+
+```sql
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "kyc_rejection_note" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "didit_session_id" varchar(128);
 ```
 
 ## 3. User flow
