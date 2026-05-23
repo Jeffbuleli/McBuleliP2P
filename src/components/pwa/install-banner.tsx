@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import { canonicalAppHostname } from "@/lib/app-url";
 
 const STORAGE_UNTIL = "mb_pwa_install_dismiss_until";
 const DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -52,6 +53,14 @@ export function PwaInstallBanner() {
   useEffect(() => {
     if (isStandalone()) return;
     if (dismissed()) return;
+
+    const host = window.location.hostname.toLowerCase();
+    const canonical = canonicalAppHostname();
+    if (host !== canonical) {
+      const dest = `https://${canonical}${window.location.pathname}${window.location.search}`;
+      window.location.replace(dest);
+      return;
+    }
 
     setIos(isIos());
 

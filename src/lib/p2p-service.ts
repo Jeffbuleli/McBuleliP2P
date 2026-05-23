@@ -34,6 +34,7 @@ import {
 } from "@/lib/p2p-config";
 import { fmtWalletAmount, numFromNumeric, type WalletAsset } from "@/lib/wallet-types";
 import { maskTraderEmail, p2pDisplayName } from "@/lib/p2p-display";
+import { isKycApproved } from "@/lib/kyc-policy";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 import {
   adMatchesPaymentKind,
@@ -632,6 +633,7 @@ export async function listMarketAds(filters: {
         displayName: users.displayName,
         avatarUrl: users.avatarUrl,
         piUsername: users.piUsername,
+        kycStatus: users.kycStatus,
       },
     })
     .from(p2pAds)
@@ -658,6 +660,7 @@ export async function listMarketAds(filters: {
     createdAt: ad.createdAt.toISOString(),
     makerName: p2pDisplayName(u),
     makerAvatarUrl: u.avatarUrl ?? null,
+    makerKycApproved: isKycApproved(u.kycStatus),
     makerRating: rep.get(ad.userId) ?? null,
     makerTradeCount: trades.get(ad.userId) ?? 0,
     boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
@@ -748,6 +751,7 @@ export async function getAdForTaker(args: {
         countryCode: string | null;
         makerName: string;
         makerAvatarUrl: string | null;
+        makerKycApproved: boolean;
         makerRating: { avg: number; count: number } | null;
         makerTradeCount: number;
         reserveTotalCrypto: string | null;
@@ -766,6 +770,7 @@ export async function getAdForTaker(args: {
         displayName: users.displayName,
         avatarUrl: users.avatarUrl,
         piUsername: users.piUsername,
+        kycStatus: users.kycStatus,
       },
     })
     .from(p2pAds)
@@ -809,6 +814,7 @@ export async function getAdForTaker(args: {
       countryCode: row.ad.countryCode,
       makerName: p2pDisplayName(row.u),
       makerAvatarUrl: row.u.avatarUrl ?? null,
+      makerKycApproved: isKycApproved(row.u.kycStatus),
       makerRating: rep.get(row.ad.userId) ?? null,
       makerTradeCount: trades.get(row.ad.userId) ?? 0,
       reserveTotalCrypto: row.ad.reserveTotalCrypto?.toString() ?? null,

@@ -7,11 +7,9 @@ export async function GET() {
     ok: true,
     /**
      * Render sets RENDER_GIT_COMMIT for builds from GitHub.
-     * (Other hosts may set VERCEL_GIT_COMMIT_SHA, etc.)
      */
     gitCommit:
       process.env.RENDER_GIT_COMMIT ??
-      process.env.VERCEL_GIT_COMMIT_SHA ??
       process.env.GIT_COMMIT ??
       null,
     builtAt: process.env.BUILT_AT ?? null,

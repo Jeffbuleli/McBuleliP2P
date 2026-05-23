@@ -5,6 +5,7 @@ import { groupRoleLabel } from "@/lib/group-role-label";
 import { useI18n } from "@/components/i18n-provider";
 
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 export type AvecMemberRow = {
   userId: string;
@@ -13,6 +14,7 @@ export type AvecMemberRow = {
   avatarUrl?: string | null;
   role: string;
   status: string;
+  kycApproved?: boolean;
   savedUsdt?: number;
   meetingsPaid?: number;
   sharesTotal?: number;
@@ -56,13 +58,16 @@ export function AvecMemberList({
               approved.map((m) => (
                 <tr key={m.userId}>
                   <td>
-                    <p className="truncate text-xs font-semibold text-[color:var(--fd-text)]">
-                      {p2pDisplayName({
-                        email: m.email,
-                        displayName: m.displayName ?? null,
-                        avatarUrl: null,
-                        piUsername: null,
-                      })}
+                    <p className="flex min-w-0 items-center gap-1 truncate text-xs font-semibold text-[color:var(--fd-text)]">
+                      <span className="truncate">
+                        {p2pDisplayName({
+                          email: m.email,
+                          displayName: m.displayName ?? null,
+                          avatarUrl: null,
+                          piUsername: null,
+                        })}
+                      </span>
+                      {m.kycApproved ? <KycVerifiedBadge compact /> : null}
                     </p>
                   </td>
                   <td>

@@ -46,7 +46,7 @@ export function friendlyAuthError(error: unknown): string {
     return [
       "Database tables are missing for the DATABASE_URL your server uses.",
       "Local: from the project folder run npm run db:push (loads .env).",
-      "Deployed (e.g. Vercel): copy DATABASE_URL from the host dashboard and run once:",
+      "Deployed (Render): copy DATABASE_URL from the Render dashboard and run once:",
       'DATABASE_URL="…" npx drizzle-kit push — that URL must match production.',
     ].join(" ");
   }

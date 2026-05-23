@@ -8,6 +8,7 @@ import { adminCls } from "@/components/admin/admin-ui";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { clientErrorText } from "@/lib/client-error-text";
 import { groupRoleLabel } from "@/lib/group-role-label";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
 
 export function AvecMembersPanel({
@@ -133,6 +134,7 @@ export function AvecMembersPanel({
                     piUsername: null,
                   })}
                 </span>
+                {m.kycApproved ? <KycVerifiedBadge compact /> : null}
               </div>
               <div className="flex gap-1">
                 <button
@@ -184,13 +186,14 @@ export function AvecMembersPanel({
                         avatarUrl={m.avatarUrl ?? null}
                         sizeClass="h-7 w-7"
                       />
-                      <span className="truncate text-xs font-semibold">
+                      <span className="flex min-w-0 items-center gap-1 truncate text-xs font-semibold">
                         {p2pDisplayName({
                           email: m.email,
                           displayName: m.displayName ?? null,
                           avatarUrl: m.avatarUrl ?? null,
                           piUsername: null,
                         })}
+                        {m.kycApproved ? <KycVerifiedBadge compact /> : null}
                       </span>
                     </div>
                   </td>

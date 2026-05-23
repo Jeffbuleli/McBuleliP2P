@@ -19,6 +19,7 @@ import {
   AvecPayoutDecisionMessage,
   parsePayoutMeta,
 } from "@/components/groups/avec-payout-decision-message";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 type Reaction = { userId: string; emoji: string };
 
@@ -28,6 +29,7 @@ type Msg = {
   senderEmail: string;
   senderDisplayName: string;
   senderAvatarUrl: string | null;
+  senderKycApproved?: boolean;
   body: string;
   messageType: string;
   attachmentUrl: string | null;
@@ -275,7 +277,10 @@ export function AvecChatroom({
                     }`}
                   >
                     {!system && !mine ? (
-                      <p className="mb-0.5 text-[9px] font-bold opacity-80">{m.senderDisplayName}</p>
+                      <p className="mb-0.5 flex items-center gap-1 text-[9px] font-bold opacity-80">
+                        <span className="truncate">{m.senderDisplayName}</span>
+                        {m.senderKycApproved ? <KycVerifiedBadge compact /> : null}
+                      </p>
                     ) : null}
                     <p className="whitespace-pre-wrap break-words">{renderBody(m.body, labels)}</p>
                     {m.attachmentUrl ? (

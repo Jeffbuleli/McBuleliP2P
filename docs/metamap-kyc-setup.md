@@ -1,33 +1,51 @@
 # MetaMap KYC — setup checklist (McBuleli)
 
-Partner: [MetaMap](https://docs.metamap.com/). Flow: document + liveness via Web SDK; status via webhooks.
+Partner: [MetaMap](https://docs.metamap.com/). McBuleli uses the **Web SDK** (button + liveness). Server webhooks are optional until you upgrade from the free plan.
 
-## 1. MetaMap Dashboard (your side)
+## 0. Plan MetaMap FREE vs Full
 
-1. Create account at [dashboard.metamap.com](https://dashboard.metamap.com).
-2. Create a **Workflow (metamap)** for your corridor countries (CD, RW, etc.):
-   - Document verification
-   - Biometric / liveness
-   - Watchlist (AML) — recommended
-3. Copy **Client ID** and **Flow ID** from the workflow.
-4. **Integrations → Webhooks**:
-   - URL: `https://mcbuleli.org/api/webhooks/metamap`
-   - Generate **Webhook secret** (≥16 chars, upper+lower+digit)
-   - Whitelist redirect domain: `https://mcbuleli.org` ([redirection settings](https://docs.metamap.com/docs/redirection-settings))
-5. If your infra filters IPs, allow MetaMap webhook senders:
-   - `52.55.16.54`, `52.5.135.13`, `18.209.133.212`, `52.7.73.154`
+| | **FREE** (your current plan) | **Full / paid** (after tests) |
+|---|------------------------------|-------------------------------|
+| Web SDK (Client ID + Flow ID) | ✅ | ✅ |
+| REST API server-to-server | ❌ | ✅ |
+| Webhooks (`verification_completed`) | ❌ or limited | ✅ |
+| `METAMAP_WEBHOOK_SECRET` | Not required on FREE | Set when webhooks are enabled |
 
-## 2. McBuleli env (Vercel / Render)
+**On FREE:** users verify via the SDK on `/app/profile/kyc`. Status is updated through **`POST /api/kyc/sync`** when the user finishes the flow (started / finished / exited). You can enable **`KYC_ENABLED=true`** and MetaMap public env vars without webhooks.
+
+**After upgrade:** add webhook URL + secret for automatic status updates without relying only on the client.
+
+## 1. MetaMap Dashboard
+
+1. Account: [dashboard.metamap.com](https://dashboard.metamap.com).
+2. Create a **Workflow** for corridor countries (CD, RW, etc.): document + liveness (+ AML when available).
+3. Copy **Client ID** and **Flow ID** (flow → **Integration** tab).
+4. **Redirection / allowed domains:** `https://mcbuleli.org` ([redirection settings](https://docs.metamap.com/docs/redirection-settings)).
+5. **Webhooks (Full plan only):** URL `https://mcbuleli.org/api/webhooks/metamap` — see secret section below.
+
+### Where is `METAMAP_WEBHOOK_SECRET`? (Full plan)
+
+The secret is **not** a separate menu item. It appears when you save a webhook on the flow:
+
+1. Open your **Workflow / Flow** → **Integration** → **Webhooks**
+2. URL: `https://mcbuleli.org/api/webhooks/metamap`
+3. After save: copy **Signing secret** / **Webhook secret** (shown once)
+
+If you cannot find it (FREE plan): leave `METAMAP_WEBHOOK_SECRET` **empty**. McBuleli skips signature checks when unset.
+
+## 2. McBuleli env (Render)
 
 ```env
 KYC_ENABLED=true
 KYC_REQUIRED_COUNTRIES=CD,RW,TZ,BI,UG,KE,CG,CM,NG,GH,SN,CI
+NEXT_PUBLIC_APP_URL=https://mcbuleli.org
 NEXT_PUBLIC_METAMAP_CLIENT_ID=...
 NEXT_PUBLIC_METAMAP_FLOW_ID=...
+# After Full plan + webhook configured:
 METAMAP_WEBHOOK_SECRET=...
 ```
 
-Run migration **0037** on Postgres:
+Migration **0037** on Postgres:
 
 ```bash
 npm run db:migrate:render
@@ -36,30 +54,36 @@ npm run db:migrate:render
 ## 3. User flow
 
 1. Profile → **Verify identity** (`/app/profile/kyc`)
-2. Progress bar: Prepare → ID → Face → Review
-3. MetaMap button opens SDK (metadata `userId` links webhook → McBuleli user)
-4. Webhook `verification_completed` sets `kyc_status`: `approved` | `manual_review` | `rejected`
-5. In-app notification on each status change
+2. Progress: Prepare → ID → Face → Review
+3. MetaMap SDK button (`metadata.userId` links the McBuleli user)
+4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending, then manual review in MetaMap dashboard or upgrade + webhooks later
+5. **Full:** webhook sets `approved` | `manual_review` | `rejected` + in-app notifications
+6. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
 
-## 4. Gated services (when `KYC_ENABLED` + corridor country)
+## 4. Gated services (`KYC_ENABLED` + corridor country)
 
-| Service | API gate |
-|---------|----------|
-| Withdraw (USDT/PI) | `POST /api/withdrawals` |
-| Wallet transfer | `POST /api/wallet/transfer` |
-| Mobile money | `POST /api/wallet/fiat/deposit`, `withdraw` |
+| Service | API |
+|---------|-----|
+| Withdraw | `POST /api/withdrawals` |
+| Transfer | `POST /api/wallet/transfer` |
+| Mobile money | fiat deposit / withdraw |
 | P2P trade | `POST /api/p2p/orders` |
-| AVEC create/join/contribute | `POST /api/groups`, `join`, `contributions` |
-| Live trade | `POST /api/trade/live-enable`, `futures/open` (live mode) |
+| AVEC | groups create / join / contribute |
+| Live trade | live-enable, futures open |
 
-Demo trading and wallet **view** remain available before KYC.
+## 5. Domain & PWA (mcbuleli.org)
 
-## 5. Testing
+- Canonical site: **`https://mcbuleli.org`**
+- **`mcbuleli.online`** and **`www.*`** redirect to `.org` (one home-screen app, one icon set).
+- If two McBuleli icons exist on the phone: remove the old shortcut, reinstall from **mcbuleli.org** only.
 
-1. Set `KYC_ENABLED=true` on staging with test MetaMap flow.
-2. User with country **CD** → open `/app/profile/kyc` → complete MetaMap.
-3. Confirm webhook in MetaMap dashboard logs → user `kyc_status` = `approved`.
-4. Retry withdraw — should succeed.
+## 6. Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Login: “Database tables are missing” | `npm run db:push:render` with production `DATABASE_URL` |
+| Blank KYC page | Migration 0037, country in profile, `KYC_ENABLED`, MetaMap `NEXT_PUBLIC_*` |
+| SDK works, status stuck | FREE plan: rely on `/api/kyc/sync`; or upgrade + webhook |
 
 ## References
 

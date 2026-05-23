@@ -3,6 +3,7 @@ import { getDb, groupMessages, users } from "@/db";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { isKycApproved } from "@/lib/kyc-policy";
 
 export type GroupMessageType =
   | "chat"
@@ -100,6 +101,7 @@ export async function listGroupMessages(args: {
         senderEmail: string;
         senderDisplayName: string;
         senderAvatarUrl: string | null;
+        senderKycApproved: boolean;
         body: string;
         messageType: string;
         attachmentUrl: string | null;
@@ -126,6 +128,7 @@ export async function listGroupMessages(args: {
       senderDisplayName: users.displayName,
       senderAvatarUrl: users.avatarUrl,
       senderPiUsername: users.piUsername,
+      senderKycStatus: users.kycStatus,
       body: groupMessages.body,
       messageType: groupMessages.messageType,
       attachmentUrl: groupMessages.attachmentUrl,
@@ -153,6 +156,7 @@ export async function listGroupMessages(args: {
           piUsername: r.senderPiUsername,
         }),
         senderAvatarUrl: r.senderAvatarUrl,
+        senderKycApproved: isKycApproved(r.senderKycStatus),
         body: r.body,
         messageType: r.messageType,
         attachmentUrl: attachmentVisible(r.attachmentUrl, r.attachmentExpiresAt),

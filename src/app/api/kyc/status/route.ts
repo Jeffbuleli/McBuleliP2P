@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import {
-  kycEnabled,
-  kycRequiredCountries,
-  isKycApproved,
-} from "@/lib/kyc-policy";
-import { metamapClientId, metamapConfigured, metamapFlowId } from "@/lib/metamap/config";
+import { getKycStatusPayload } from "@/lib/kyc-status-payload";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -15,34 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
-  const [u] = await db
-    .select({
-      kycStatus: users.kycStatus,
-      countryCode: users.countryCode,
-      kycUpdatedAt: users.kycUpdatedAt,
-      kycRejectionNote: users.kycRejectionNote,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const payload = await getKycStatusPayload(userId);
+  if (!payload) {
+    return NextResponse.json({ error: "user_not_found" }, { status: 404 });
+  }
 
-  const cc = (u?.countryCode ?? "").trim().toUpperCase();
-  const enabled = kycEnabled();
-  const corridor = enabled && cc && cc !== "OTHER" && kycRequiredCountries().includes(cc);
-
-  return NextResponse.json({
-    enabled,
-    corridor,
-    kycStatus: u?.kycStatus ?? "none",
-    approved: isKycApproved(u?.kycStatus),
-    countryCode: u?.countryCode ?? null,
-    kycUpdatedAt: u?.kycUpdatedAt?.toISOString() ?? null,
-    rejectionNote: u?.kycRejectionNote ?? null,
-    metamap: {
-      configured: metamapConfigured(),
-      clientId: metamapClientId() || null,
-      flowId: metamapFlowId() || null,
-    },
-  });
+  return NextResponse.json(payload);
 }

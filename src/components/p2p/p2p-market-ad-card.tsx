@@ -10,6 +10,7 @@ import { interpolate } from "@/i18n/messages";
 import { countryLabel } from "@/lib/country-label";
 import type { P2pMarketView } from "@/lib/p2p-market-view";
 import { P2pIconEscrow, P2pIconStar } from "@/components/p2p/p2p-icons";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 export type P2pMarketAd = {
   id: string;
@@ -24,6 +25,7 @@ export type P2pMarketAd = {
   countryCode: string | null;
   makerName: string;
   makerAvatarUrl?: string | null;
+  makerKycApproved?: boolean;
   makerRating: { avg: number; count: number } | null;
   makerTradeCount?: number;
   reserveRemainingCrypto?: string | null;
@@ -167,7 +169,10 @@ export function P2pMarketAdCard({
               variant="profile"
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-[color:var(--fd-text)]">{ad.makerName}</p>
+              <p className="flex min-w-0 items-center gap-1 truncate text-xs font-bold text-[color:var(--fd-text)]">
+                <span className="truncate">{ad.makerName}</span>
+                {ad.makerKycApproved ? <KycVerifiedBadge compact /> : null}
+              </p>
               <p className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] font-semibold text-[color:var(--fd-muted)]">
                 {rating && rating.count > 0 ? (
                   <span className="inline-flex items-center gap-0.5 text-amber-600">

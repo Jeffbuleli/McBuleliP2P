@@ -64,6 +64,7 @@ type Dashboard = {
     email: string;
     displayName: string | null;
     piUsername: string | null;
+    kycApproved?: boolean;
   };
   members: AvecMemberRow[];
   memberCount: number;
@@ -215,6 +216,7 @@ export default function AvecDashboardPage() {
         memberEmail={data.viewer.email}
         memberDisplayName={data.viewer.displayName}
         memberPiUsername={data.viewer.piUsername}
+        memberKycApproved={data.viewer.kycApproved}
       />
 
       <div className="space-y-3 px-1">

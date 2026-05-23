@@ -37,7 +37,7 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 
 ## Deploy
 
-Set **`DATABASE_URL`**, **`JWT_SECRET`**, **`SUPER_ADMIN_EMAILS`**, **`BINANCE_*`** on Vercel / Render. Run **`npm run db:push`** on production DB once.
+Set **`DATABASE_URL`**, **`JWT_SECRET`**, **`SUPER_ADMIN_EMAILS`**, **`BINANCE_*`** on Render. Run **`npm run db:push:render`** (or `db:push`) on production DB once.
 
 ## License
 

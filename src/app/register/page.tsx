@@ -5,6 +5,7 @@ import { Suspense, useMemo, useState } from "react";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
+import { countryLabel } from "@/lib/country-label";
 import {
   AuthMarketingShell,
   AuthPageFooter,
@@ -165,7 +166,7 @@ function RegisterForm() {
               <option value="">{t("register_country_ph")}</option>
               {countries.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {locale === "fr" ? c.fr : c.en}
+                  {countryLabel(locale, c.code)}
                 </option>
               ))}
             </select>

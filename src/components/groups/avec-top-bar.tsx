@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import { countryShortLabel } from "@/lib/country-label";
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 export function AvecTopBar({
   groupName,
@@ -13,6 +14,7 @@ export function AvecTopBar({
   memberEmail,
   memberDisplayName,
   memberPiUsername,
+  memberKycApproved,
   backHref,
 }: {
   groupName: string;
@@ -21,6 +23,7 @@ export function AvecTopBar({
   memberEmail: string;
   memberDisplayName?: string | null;
   memberPiUsername?: string | null;
+  memberKycApproved?: boolean;
   backHref?: string;
 }) {
   const { t, locale } = useI18n();
@@ -59,8 +62,9 @@ export function AvecTopBar({
       </div>
 
       <div className="flex min-w-0 flex-col items-end justify-self-end gap-1">
-        <p className="max-w-[9rem] truncate text-right text-xs font-bold text-[color:var(--fd-text)]">
-          {pseudo}
+        <p className="flex max-w-[9rem] items-center justify-end gap-1 truncate text-right text-xs font-bold text-[color:var(--fd-text)]">
+          <span className="truncate">{pseudo}</span>
+          {memberKycApproved ? <KycVerifiedBadge compact /> : null}
         </p>
         <Link
           href={backHref ?? "/app/wallet/groups"}

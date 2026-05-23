@@ -1,0 +1,107 @@
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
+import {
+  kycEnabled,
+  kycRequiredCountries,
+  isKycApproved,
+} from "@/lib/kyc-policy";
+import {
+  metamapClientId,
+  metamapConfigured,
+  metamapFlowId,
+} from "@/lib/metamap/config";
+
+export type KycStatusPayload = {
+  enabled: boolean;
+  corridor: boolean;
+  inCorridorCountry: boolean;
+  kycStatus: string;
+  approved: boolean;
+  countryCode: string | null;
+  kycUpdatedAt: string | null;
+  rejectionNote: string | null;
+  metamap: {
+    configured: boolean;
+    clientId: string | null;
+    flowId: string | null;
+  };
+};
+
+function corridorCountry(countryCode: string | null | undefined): boolean {
+  const cc = (countryCode ?? "").trim().toUpperCase();
+  return Boolean(cc && cc !== "OTHER" && kycRequiredCountries().includes(cc));
+}
+
+export function buildKycStatusPayload(args: {
+  countryCode: string | null | undefined;
+  kycStatus: string | null | undefined;
+  kycUpdatedAt?: Date | null;
+  kycRejectionNote?: string | null;
+}): KycStatusPayload {
+  const enabled = kycEnabled();
+  const inCorridorCountry = corridorCountry(args.countryCode);
+  const corridor = enabled && inCorridorCountry;
+
+  return {
+    enabled,
+    corridor,
+    inCorridorCountry,
+    kycStatus: args.kycStatus ?? "none",
+    approved: isKycApproved(args.kycStatus),
+    countryCode: args.countryCode ?? null,
+    kycUpdatedAt: args.kycUpdatedAt?.toISOString() ?? null,
+    rejectionNote: args.kycRejectionNote ?? null,
+    metamap: {
+      configured: metamapConfigured(),
+      clientId: metamapClientId() || null,
+      flowId: metamapFlowId() || null,
+    },
+  };
+}
+
+export async function getKycStatusPayload(
+  userId: string,
+): Promise<KycStatusPayload | null> {
+  const db = getDb();
+  let row:
+    | {
+        kycStatus: string;
+        countryCode: string | null;
+        kycUpdatedAt: Date | null;
+        kycRejectionNote?: string | null;
+      }
+    | undefined;
+
+  try {
+    [row] = await db
+      .select({
+        kycStatus: users.kycStatus,
+        countryCode: users.countryCode,
+        kycUpdatedAt: users.kycUpdatedAt,
+        kycRejectionNote: users.kycRejectionNote,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+  } catch (err) {
+    console.warn("[getKycStatusPayload] retry without kycRejectionNote", err);
+    [row] = await db
+      .select({
+        kycStatus: users.kycStatus,
+        countryCode: users.countryCode,
+        kycUpdatedAt: users.kycUpdatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+  }
+
+  if (!row) return null;
+
+  return buildKycStatusPayload({
+    countryCode: row.countryCode,
+    kycStatus: row.kycStatus,
+    kycUpdatedAt: row.kycUpdatedAt,
+    kycRejectionNote: row.kycRejectionNote,
+  });
+}

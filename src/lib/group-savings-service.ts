@@ -23,6 +23,7 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { debitUserAsset } from "@/lib/wallet-move-assets";
 import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
 import { insertGroupActivitySystemMessage } from "@/lib/group-savings-messaging";
+import { isKycApproved } from "@/lib/kyc-policy";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
 import { createUserNotification } from "@/lib/notifications-service";
 import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
@@ -247,6 +248,7 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       email: users.email,
       displayName: users.displayName,
       piUsername: users.piUsername,
+      kycStatus: users.kycStatus,
     })
     .from(users)
     .where(eq(users.id, args.userId))
@@ -260,6 +262,7 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       email: users.email,
       displayName: users.displayName,
       avatarUrl: users.avatarUrl,
+      kycStatus: users.kycStatus,
     })
     .from(groupSavingsMemberships)
     .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
@@ -307,11 +310,13 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       email: viewer?.email ?? "",
       displayName: viewer?.displayName ?? null,
       piUsername: viewer?.piUsername ?? null,
+      kycApproved: isKycApproved(viewer?.kycStatus),
     },
     members: members.map((m) => {
       const s = statsByUser.get(m.userId);
       return {
         ...m,
+        kycApproved: isKycApproved(m.kycStatus),
         savedUsdt: s?.totalUsdt ?? 0,
         meetingsPaid: s?.meetingCount ?? 0,
         sharesTotal: s?.sharesTotal ?? 0,

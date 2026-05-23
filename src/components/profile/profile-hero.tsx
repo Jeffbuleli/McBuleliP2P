@@ -6,7 +6,9 @@ import { countryLabel } from "@/lib/country-label";
 import type { Locale } from "@/i18n/locale";
 import { getDictionary } from "@/i18n/messages";
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { isKycApproved } from "@/lib/kyc-policy";
 import type { ProfileDashboard } from "@/lib/profile-stats";
+import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 function EditPencilLink({ href, label }: { href: string; label: string }) {
   return (
@@ -55,8 +57,9 @@ export function ProfileHero({
           variant="compact"
         />
 
-        <h1 className="mt-3 inline-flex max-w-full items-center justify-center gap-0.5 text-xl font-bold tracking-tight text-[#1c1917]">
+        <h1 className="mt-3 inline-flex max-w-full items-center justify-center gap-1 text-xl font-bold tracking-tight text-[#1c1917]">
           <span className="truncate">{displayName}</span>
+          {isKycApproved(dash.kycStatus) ? <KycVerifiedBadge /> : null}
           <EditPencilLink href="/app/profile/settings#pseudo" label={d.profile_edit_pseudo} />
         </h1>
 

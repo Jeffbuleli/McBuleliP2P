@@ -17,7 +17,7 @@ export function getPgClient(): ReturnType<typeof postgres> {
   const g = globalThis as unknown as { __mcbuleli_pg?: ReturnType<typeof postgres> };
   if (!g.__mcbuleli_pg) {
     g.__mcbuleli_pg = postgres(connectionStringOrThrow(), {
-      max: process.env.VERCEL ? 1 : 10,
+      max: process.env.RENDER ? 3 : 10,
       prepare: false,
     });
   }

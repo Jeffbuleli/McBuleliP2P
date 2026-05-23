@@ -40,6 +40,7 @@ type Dashboard = {
     email: string;
     displayName: string | null;
     piUsername: string | null;
+    kycApproved?: boolean;
   };
   members: MemberRow[];
 };
@@ -176,6 +177,7 @@ export default function GroupSettingsPage() {
         memberEmail={data.viewer.email}
         memberDisplayName={data.viewer.displayName}
         memberPiUsername={data.viewer.piUsername}
+        memberKycApproved={data.viewer.kycApproved}
         backHref={`/app/wallet/groups/${id}`}
       />
 

@@ -75,7 +75,7 @@ export function KycProgressBar({ steps }: { steps: KycProgressStep[] }) {
         {steps.map((step) => (
           <div key={step.id} className="flex flex-col items-center gap-1.5 text-center">
             <span
-              className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-colors ${
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
                 step.state === "done"
                   ? "bg-emerald-100 text-emerald-800"
                   : step.state === "active"
