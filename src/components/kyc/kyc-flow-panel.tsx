@@ -21,6 +21,7 @@ import {
   refreshKycFromDidit,
   syncKycEvent,
 } from "@/lib/kyc-client-sync";
+import type { Messages } from "@/i18n/messages";
 
 function stepState(
   idx: number,
@@ -40,7 +41,7 @@ function progressActiveIndex(phase: KycUiPhase): number {
   return 0;
 }
 
-function statusHeadline(t: (k: string) => string, phase: KycUiPhase): string {
+function statusHeadline(t: (k: keyof Messages) => string, phase: KycUiPhase): string {
   if (phase === "success") return t("kyc_state_verified");
   if (phase === "waiting") return t("kyc_state_pending");
   if (phase === "review") return t("kyc_state_review");
