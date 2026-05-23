@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server";
 import {
   applyKycFromMetamap,
-  resolveUserIdFromMetamapMetadata,
   setUserKycPending,
 } from "@/lib/kyc-service";
 import { parseMetamapIdentityStatus } from "@/lib/metamap/parse-outcome";
 import { rejectionNoteFromWebhookBody } from "@/lib/metamap/signals";
 import { metamapWebhookSecret } from "@/lib/metamap/config";
 import { verifyMetamapWebhookSignature } from "@/lib/metamap/webhook-verify";
+import { resolveMetamapWebhookUserId } from "@/lib/metamap/resolve-webhook-user";
+import { parseMetamapResourceIds } from "@/lib/metamap/resource-ids";
 
 type WebhookPayload = {
   eventName?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: unknown;
   identityStatus?: string;
   status?: string;
   resource?: string;
 };
-
-function verificationIdFromResource(resource: string | undefined): string | null {
-  if (!resource || typeof resource !== "string") return null;
-  const parts = resource.split("/").filter(Boolean);
-  return parts[parts.length - 1] ?? null;
-}
 
 export async function POST(req: Request) {
   const raw = await req.text();
@@ -42,15 +37,23 @@ export async function POST(req: Request) {
   }
 
   const eventName = body.eventName ?? "";
-  const userId = await resolveUserIdFromMetamapMetadata(body.metadata);
+  const userId = await resolveMetamapWebhookUserId(body);
+  const { identityId, verificationId } = parseMetamapResourceIds(body.resource);
+
   if (!userId) {
+    console.warn("[metamap webhook] no_user", {
+      eventName,
+      resource: body.resource,
+      verificationId,
+    });
     return NextResponse.json({ ok: true, skipped: "no_user" });
   }
 
   if (eventName === "verification_started") {
     await setUserKycPending({
       userId,
-      metamapVerificationId: verificationIdFromResource(body.resource),
+      metamapIdentityId: identityId,
+      metamapVerificationId: verificationId,
     });
     return NextResponse.json({ ok: true });
   }
@@ -65,7 +68,8 @@ export async function POST(req: Request) {
     const status = await applyKycFromMetamap({
       userId,
       outcome,
-      metamapVerificationId: verificationIdFromResource(body.resource),
+      metamapIdentityId: identityId,
+      metamapVerificationId: verificationId,
       rejectionNote,
     });
     return NextResponse.json({ ok: true, status });

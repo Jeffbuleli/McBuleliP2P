@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
 import { loadMetamapSdk, METAMAP_ERROR_SCREENS } from "@/lib/metamap/load-sdk";
+import { normalizeMetamapSdkDetail } from "@/lib/metamap/sdk-detail";
 import { isMetamapAlreadyVerifiedSignal } from "@/lib/metamap/signals";
 
 export function MetamapVerifyButton({
@@ -46,13 +47,16 @@ export function MetamapVerifyButton({
     let cancelled = false;
     let instance: MetamapVerificationInstance | null = null;
 
+    const normalize = (detail: MetamapSdkDetail | null | undefined) =>
+      normalizeMetamapSdkDetail(detail as Record<string, unknown> | undefined);
+
     const onStart = (ev: MetamapSdkEvent) => {
       setStarting(false);
-      callbacksRef.current.onStarted?.(ev.detail ?? {});
+      callbacksRef.current.onStarted?.(normalize(ev.detail));
     };
     const onFinish = (ev: MetamapSdkEvent) => {
       setStarting(false);
-      callbacksRef.current.onFinished?.(ev.detail ?? {});
+      callbacksRef.current.onFinished?.(normalize(ev.detail));
     };
     const onExit = () => {
       setStarting(false);
@@ -62,7 +66,7 @@ export function MetamapVerifyButton({
       const detail = ev.detail ?? {};
       if (isMetamapAlreadyVerifiedSignal(detail)) {
         setStarting(false);
-        callbacksRef.current.onAlreadyVerified?.(detail);
+        callbacksRef.current.onAlreadyVerified?.(normalize(detail));
         return;
       }
       const screen = detail.screen;

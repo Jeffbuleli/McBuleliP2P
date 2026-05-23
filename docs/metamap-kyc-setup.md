@@ -76,8 +76,9 @@ npm run db:migrate:render
 2. Progress: Prepare → ID → Face → Review
 3. MetaMap SDK button (`metadata.userId`, `metadata.countryCode` link the McBuleli user)
 4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending, then **`POST /api/kyc/refresh`** polls MetaMap if `METAMAP_CLIENT_SECRET` is set (auto on KYC page). Non-sanctions rejections reset to **`none`**. Duplicate / already verified → **`already_verified`** → **`approved`**. Sanctions → **`rejected`**, no retry.
-5. **Full:** webhook sets `approved` | `manual_review` | `rejected` + in-app notifications
-6. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
+5. **Full / webhooks:** `POST /api/webhooks/metamap` sets `approved` | `manual_review` | `rejected` + in-app notifications (user resolved via metadata **or** stored `metamap_verification_id`)
+6. **Background sync:** `GET /api/kyc/status` auto-polls MetaMap when `METAMAP_CLIENT_SECRET` is set; optional Render cron `mcbuleli-kyc-sync` (`scripts/cron-kyc-sync-pending.mjs`, every 10 min) calls `POST /api/internal/kyc/sync-pending`
+7. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
 
 ## 4. Gated services (`KYC_ENABLED` + corridor country)
 
@@ -103,7 +104,8 @@ npm run db:migrate:render
 | Login: “Database tables are missing” | `npm run db:push:render` with production `DATABASE_URL` |
 | Blank KYC page | Migration 0037, country in profile, `KYC_ENABLED`, MetaMap `NEXT_PUBLIC_*` |
 | SDK works, status stuck on pending | Set `METAMAP_CLIENT_SECRET` on Render → user taps **Actualiser le statut** or reopens KYC page; or enable webhook |
-| MetaMap shows Verified, app still pending | Tap **Validé sur MetaMap — synchroniser** (no API yet), or set `METAMAP_CLIENT_SECRET` + refresh, or configure **webhook** (works before 300 KYC API quota) |
+| MetaMap shows Verified, app still pending | Configure **webhook** (below) — McBuleli matches users by `metamap_verification_id` even if MetaMap omits `metadata.userId`. Or set `METAMAP_CLIENT_SECRET` + cron `mcbuleli-kyc-sync` / user **Actualiser**. Without webhook or API: **Validé sur MetaMap — synchroniser** |
+| Webhook returns but app unchanged | Dashboard → Webhooks on your **workflow** (not Default flow): `https://mcbuleli.org/api/webhooks/metamap`, events `verification_completed` + `verification_updated`. Check Render logs for `[metamap webhook] no_user` |
 | Settings **Vérifier** | Opens **MetaMap SDK** inline (not only a link). Configure webhook: `https://mcbuleli.org/api/webhooks/metamap` |
 | Rejected: “Name not found” | Retake ID photos (recto + verso), good light, match profile country CD |
 | Rejected: “Region under sanctions” | MetaMap dashboard sanctions/watchlist — contact MetaMap support for CD corridor |

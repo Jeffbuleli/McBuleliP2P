@@ -6,8 +6,15 @@ export function parseMetamapIdentityStatus(
   status?: string | null | undefined,
 ): MetamapVerificationOutcome {
   const s = (identityStatus ?? status ?? "").toString().toLowerCase();
-  if (s === "verified") return "verified";
-  if (s === "reviewneeded" || s === "review_needed") return "reviewNeeded";
-  if (s === "rejected") return "rejected";
+  const compact = s.replace(/[^a-z0-9]/g, "");
+  if (s === "verified" || compact === "verified") return "verified";
+  if (
+    s === "reviewneeded" ||
+    s === "review_needed" ||
+    compact === "reviewneeded"
+  ) {
+    return "reviewNeeded";
+  }
+  if (s === "rejected" || compact === "rejected") return "rejected";
   return "unknown";
 }

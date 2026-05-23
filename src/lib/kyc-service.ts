@@ -149,3 +149,31 @@ export async function resolveUserIdFromMetamapMetadata(
     .limit(1);
   return u?.id ?? null;
 }
+
+export async function resolveUserIdByMetamapVerificationId(
+  verificationId: string,
+): Promise<string | null> {
+  const id = verificationId.trim();
+  if (!id) return null;
+  const db = getDb();
+  const [u] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.metamapVerificationId, id))
+    .limit(1);
+  return u?.id ?? null;
+}
+
+export async function resolveUserIdByMetamapIdentityId(
+  identityId: string,
+): Promise<string | null> {
+  const id = identityId.trim();
+  if (!id) return null;
+  const db = getDb();
+  const [u] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.metamapIdentityId, id))
+    .limit(1);
+  return u?.id ?? null;
+}

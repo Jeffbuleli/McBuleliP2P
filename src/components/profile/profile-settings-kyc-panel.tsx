@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
 import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
 import { profileKycBadgeText } from "@/lib/profile-kyc-label";
@@ -51,6 +52,15 @@ export function ProfileSettingsKycPanel({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const onChanged = (ev: Event) => {
+      const detail = (ev as CustomEvent<KycStatusPayload>).detail;
+      if (detail) setData(detail);
+    };
+    window.addEventListener(KYC_STATUS_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(KYC_STATUS_CHANGED_EVENT, onChanged);
+  }, []);
 
   useEffect(() => {
     if (!data?.canRefreshStatus || autoRefreshed.current) return;

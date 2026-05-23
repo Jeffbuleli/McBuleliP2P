@@ -13,6 +13,7 @@ import {
   KycProgressBar,
   type KycProgressStep,
 } from "@/components/kyc/kyc-progress";
+import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import { MetamapVerifyButton } from "@/components/kyc/metamap-verify-button";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
 import {
@@ -118,6 +119,15 @@ export function KycFlowPanel({
   useEffect(() => {
     if (!initialData) void load();
   }, [initialData, load]);
+
+  useEffect(() => {
+    const onChanged = (ev: Event) => {
+      const detail = (ev as CustomEvent<KycStatusPayload>).detail;
+      if (detail) setData(detail);
+    };
+    window.addEventListener(KYC_STATUS_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(KYC_STATUS_CHANGED_EVENT, onChanged);
+  }, []);
 
   useEffect(() => {
     if (!data?.canRefreshStatus || autoRefreshed.current) return;

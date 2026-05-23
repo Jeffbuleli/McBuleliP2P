@@ -4,6 +4,20 @@
 
 services:
   - type: cron
+    name: mcbuleli-kyc-sync
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/10 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-kyc-sync-pending.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
     name: mcbuleli-bots-tick
     runtime: node
     region: oregon
