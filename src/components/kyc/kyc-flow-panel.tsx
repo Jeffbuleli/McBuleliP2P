@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   KycIllustrationError,
@@ -100,6 +100,7 @@ export function KycFlowPanel({
   const [busy, setBusy] = useState(false);
   const [loadErr, setLoadErr] = useState(false);
   const [sdkError, setSdkError] = useState<string | null>(null);
+  const autoRefreshed = useRef(false);
 
   const load = useCallback(async () => {
     setLoadErr(false);
@@ -115,9 +116,34 @@ export function KycFlowPanel({
     setLoadErr(true);
   }, []);
 
+  const refreshFromMetamap = useCallback(async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/kyc/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        kyc?: KycStatusPayload;
+        error?: string;
+      };
+      if (j.kyc) setData(j.kyc);
+      else await load();
+    } finally {
+      setBusy(false);
+    }
+  }, [load]);
+
   useEffect(() => {
     if (!initialData) void load();
   }, [initialData, load]);
+
+  useEffect(() => {
+    if (!data?.canRefreshStatus || autoRefreshed.current) return;
+    if (data.kycStatus !== "pending" && data.kycStatus !== "manual_review") return;
+    autoRefreshed.current = true;
+    void refreshFromMetamap();
+  }, [data?.canRefreshStatus, data?.kycStatus, refreshFromMetamap]);
 
   const status = data?.kycStatus ?? "none";
   const activeIdx =
@@ -276,6 +302,21 @@ export function KycFlowPanel({
           <StatusBox tone="pending">
             <KycIllustrationReview className="h-14 w-14 text-amber-800" />
           </StatusBox>
+          {data.canRefreshStatus ? (
+            <div className="mt-3 flex flex-col items-center gap-2">
+              <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+                {t("kyc_refresh_hint")}
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void refreshFromMetamap()}
+                className="rounded-full border border-[color:var(--fd-border)] bg-white px-4 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
+              >
+                {busy ? "…" : t("kyc_refresh_status")}
+              </button>
+            </div>
+          ) : null}
           {canShowVerify ? (
             <div className="mt-4 space-y-2">
               <p className="text-center text-[10px] text-[color:var(--fd-muted)]">

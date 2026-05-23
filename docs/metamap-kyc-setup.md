@@ -59,6 +59,7 @@ KYC_REQUIRED_COUNTRIES=CD,RW,TZ,BI,UG,KE,CG,CM,NG,GH,SN,CI
 NEXT_PUBLIC_APP_URL=https://mcbuleli.org
 NEXT_PUBLIC_METAMAP_CLIENT_ID=...
 NEXT_PUBLIC_METAMAP_FLOW_ID=...
+METAMAP_CLIENT_SECRET=...
 # After Full plan + webhook configured:
 METAMAP_WEBHOOK_SECRET=...
 ```
@@ -74,7 +75,7 @@ npm run db:migrate:render
 1. Profile → **Verify identity** (`/app/profile/kyc`)
 2. Progress: Prepare → ID → Face → Review
 3. MetaMap SDK button (`metadata.userId`, `metadata.countryCode` link the McBuleli user)
-4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending. Non-sanctions rejections reset to **`none`** so the user can retry. If MetaMap already verified the user (duplicate), the SDK triggers **`already_verified`** → McBuleli sets **`approved`**. Sanctions rejections stay **`rejected`** with no retry.
+4. **FREE:** `POST /api/kyc/sync` on finish → `kyc_status` pending, then **`POST /api/kyc/refresh`** polls MetaMap if `METAMAP_CLIENT_SECRET` is set (auto on KYC page). Non-sanctions rejections reset to **`none`**. Duplicate / already verified → **`already_verified`** → **`approved`**. Sanctions → **`rejected`**, no retry.
 5. **Full:** webhook sets `approved` | `manual_review` | `rejected` + in-app notifications
 6. **KYC verified** badge on Profile, P2P, AVEC members, chatroom, top bar
 
@@ -101,7 +102,8 @@ npm run db:migrate:render
 |-------|-----|
 | Login: “Database tables are missing” | `npm run db:push:render` with production `DATABASE_URL` |
 | Blank KYC page | Migration 0037, country in profile, `KYC_ENABLED`, MetaMap `NEXT_PUBLIC_*` |
-| SDK works, status stuck on pending | FREE plan: MetaMap may have rejected — check dashboard; user can retry from KYC page; upgrade + webhook for auto sync |
+| SDK works, status stuck on pending | Set `METAMAP_CLIENT_SECRET` on Render → user taps **Actualiser le statut** or reopens KYC page; or enable webhook |
+| MetaMap shows Verified, app still pending | Same — `METAMAP_CLIENT_SECRET` + `/api/kyc/refresh` syncs `identityStatus` from MetaMap API |
 | Rejected: “Name not found” | Retake ID photos (recto + verso), good light, match profile country CD |
 | Rejected: “Region under sanctions” | MetaMap dashboard sanctions/watchlist — contact MetaMap support for CD corridor |
 | Wrong flow / missing document step | Use dedicated workflow with **Document Verification** before Biometric, not “Default flow” |

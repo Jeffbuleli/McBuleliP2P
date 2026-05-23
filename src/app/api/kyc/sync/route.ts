@@ -9,6 +9,8 @@ import {
 } from "@/lib/kyc-service";
 import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
 import { isKycApproved } from "@/lib/kyc-policy";
+import { metamapApiConfigured } from "@/lib/metamap/api";
+import { refreshUserKycFromMetamap } from "@/lib/metamap/refresh-user-kyc";
 
 const bodyZ = z.object({
   event: z.enum(["started", "finished", "exited", "already_verified"]),
@@ -70,11 +72,19 @@ export async function POST(req: Request) {
   }
 
   if (event === "finished") {
+    const vid = verificationId ?? row?.metamapVerificationId ?? null;
     await setUserKycPending({
       userId,
       metamapIdentityId: identityId ?? null,
-      metamapVerificationId: verificationId ?? null,
+      metamapVerificationId: vid,
     });
+    if (metamapApiConfigured() && vid) {
+      try {
+        await refreshUserKycFromMetamap(userId);
+      } catch (err) {
+        console.warn("[kyc/sync] MetaMap refresh after finish failed", err);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -3,8 +3,8 @@ import {
   applyKycFromMetamap,
   resolveUserIdFromMetamapMetadata,
   setUserKycPending,
-  type MetamapVerificationOutcome,
 } from "@/lib/kyc-service";
+import { parseMetamapIdentityStatus } from "@/lib/metamap/parse-outcome";
 import { rejectionNoteFromWebhookBody } from "@/lib/metamap/signals";
 import { metamapWebhookSecret } from "@/lib/metamap/config";
 import { verifyMetamapWebhookSignature } from "@/lib/metamap/webhook-verify";
@@ -16,20 +16,6 @@ type WebhookPayload = {
   status?: string;
   resource?: string;
 };
-
-function parseOutcome(body: WebhookPayload): MetamapVerificationOutcome {
-  const s = (
-    body.identityStatus ??
-    body.status ??
-    ""
-  )
-    .toString()
-    .toLowerCase();
-  if (s === "verified") return "verified";
-  if (s === "reviewneeded" || s === "review_needed") return "reviewNeeded";
-  if (s === "rejected") return "rejected";
-  return "unknown";
-}
 
 function verificationIdFromResource(resource: string | undefined): string | null {
   if (!resource || typeof resource !== "string") return null;
@@ -70,7 +56,7 @@ export async function POST(req: Request) {
   }
 
   if (eventName === "verification_completed" || eventName === "verification_updated") {
-    const outcome = parseOutcome(body);
+    const outcome = parseMetamapIdentityStatus(body.identityStatus, body.status);
     const rejectionNote =
       outcome === "rejected"
         ? (rejectionNoteFromWebhookBody(body as Record<string, unknown>) ??

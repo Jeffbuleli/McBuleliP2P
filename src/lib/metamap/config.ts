@@ -20,6 +20,11 @@ export function metamapWebhookSecret(): string {
   return process.env.METAMAP_WEBHOOK_SECRET?.trim() ?? "";
 }
 
+/** Server-only — MetaMap REST API (poll verification status). Dashboard → Integration. */
+export function metamapClientSecret(): string {
+  return process.env.METAMAP_CLIENT_SECRET?.trim() ?? "";
+}
+
 export function metamapConfigured(): boolean {
   return Boolean(metamapClientId() && metamapFlowId());
 }

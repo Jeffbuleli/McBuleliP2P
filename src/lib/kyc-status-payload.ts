@@ -11,6 +11,7 @@ import {
   metamapConfigured,
   metamapFlowId,
 } from "@/lib/metamap/config";
+import { metamapApiConfigured } from "@/lib/metamap/api";
 
 export type KycStatusPayload = {
   enabled: boolean;
@@ -23,6 +24,7 @@ export type KycStatusPayload = {
   rejectionNote: string | null;
   sanctionsBlocked: boolean;
   canRetryKyc: boolean;
+  canRefreshStatus: boolean;
   metamapIdentityId: string | null;
   metamapVerificationId: string | null;
   metamap: {
@@ -59,6 +61,13 @@ export function buildKycStatusPayload(args: {
     !sanctionsBlocked &&
     kycStatus !== "manual_review";
 
+  const hasVerificationId = Boolean(args.metamapVerificationId?.trim());
+  const canRefreshStatus =
+    metamapApiConfigured() &&
+    !approved &&
+    hasVerificationId &&
+    (kycStatus === "pending" || kycStatus === "manual_review");
+
   return {
     enabled,
     corridor,
@@ -70,6 +79,7 @@ export function buildKycStatusPayload(args: {
     rejectionNote,
     sanctionsBlocked,
     canRetryKyc,
+    canRefreshStatus,
     metamapIdentityId: args.metamapIdentityId ?? null,
     metamapVerificationId: args.metamapVerificationId ?? null,
     metamap: {
