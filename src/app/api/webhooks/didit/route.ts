@@ -28,15 +28,30 @@ function outcomeFromEntityStatus(status: string | undefined): KycVerificationOut
 }
 
 export async function POST(req: Request) {
+  const rawBody = await req.text();
   let body: DiditWebhookPayload;
   try {
-    body = (await req.json()) as DiditWebhookPayload;
+    body = JSON.parse(rawBody) as DiditWebhookPayload;
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
   const secret = diditWebhookSecret();
-  if (!verifyDiditWebhookRequest(body as Record<string, unknown>, req.headers, secret)) {
+  const verified = verifyDiditWebhookRequest({
+    body: body as Record<string, unknown>,
+    rawBody,
+    headers: req.headers,
+    secret,
+  });
+
+  if (!verified) {
+    console.warn("[didit webhook] invalid_signature", {
+      hasSecret: Boolean(secret),
+      hasV2: Boolean(req.headers.get("x-signature-v2")),
+      hasRaw: Boolean(req.headers.get("x-signature")),
+      hasSimple: Boolean(req.headers.get("x-signature-simple")),
+      webhookType: body.webhook_type,
+    });
     return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
   }
 
@@ -45,10 +60,7 @@ export async function POST(req: Request) {
   const sessionId =
     typeof body.session_id === "string" ? body.session_id.trim() : null;
 
-  if (
-    webhookType === "status.updated" ||
-    webhookType === "data.updated"
-  ) {
+  if (webhookType === "status.updated" || webhookType === "data.updated") {
     if (!userId) {
       console.warn("[didit webhook] no_user", {
         webhookType,
@@ -86,7 +98,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, status: kycStatus });
   }
 
-  if (webhookType === "user.status.updated" && userId) {
+  if (webhookType === "user.status.updated") {
+    if (!userId) {
+      return NextResponse.json({ ok: true, skipped: "no_user" });
+    }
     const outcome = outcomeFromEntityStatus(body.status);
     if (outcome === "unknown") {
       return NextResponse.json({ ok: true, ignored: body.status });

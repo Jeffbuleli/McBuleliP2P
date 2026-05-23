@@ -11,11 +11,12 @@ Partner: [Didit](https://docs.didit.me/). McBuleli uses the **Sessions API** + *
    - Optional: **AML Screening** for sanctions/watchlist
 3. **Publish** the workflow and copy **Workflow ID** → `DIDIT_WORKFLOW_ID`
 4. **API & Webhooks** → copy **API key** → `DIDIT_API_KEY`
-5. **Webhook destination:**
+5. **Webhook destination** (V3):
    - URL: `https://mcbuleli.org/api/webhooks/didit`
+   - Version: **V3**
    - Events: `status.updated`, `user.status.updated` (optional: `data.updated`)
-   - Copy **secret_shared_key** → `DIDIT_WEBHOOK_SECRET`
-6. Test with **Try Webhook** in the console before going live.
+   - Copy **secret_shared_key** → `DIDIT_WEBHOOK_SECRET` on Render (exact match, no quotes)
+6. **Try Webhook** in console — expect **200**. Test payloads use `vendor_data: "your-vendor-reference-id"` → McBuleli returns `{ ok: true, skipped: "no_user" }` (normal). Real sessions send your user UUID as `vendor_data`.
 
 ### RDC — carte d'électeur (2022–2023)
 
