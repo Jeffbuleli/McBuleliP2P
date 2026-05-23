@@ -20,7 +20,7 @@ Partner: [MetaMap](https://docs.metamap.com/). McBuleli uses the **Web SDK** (bu
 1. Account: [dashboard.metamap.com](https://dashboard.metamap.com).
 2. Create a **Workflow** for corridor countries (CD, RW, etc.): document + liveness (+ AML when available).
 3. Copy **Client ID** and **Flow ID** (flow → **Integration** tab).
-4. **Redirection / allowed domains:** `https://mcbuleli.org` ([redirection settings](https://docs.metamap.com/docs/redirection-settings)).
+4. **Redirection / allowed domains (required):** add **`https://mcbuleli.org`** in [Redirection settings](https://docs.metamap.com/docs/redirection-settings). Without this, the SDK shows *“Something went wrong”* (`commonError` / `ipRestrictions`).
 5. **Webhooks (Full plan only):** URL `https://mcbuleli.org/api/webhooks/metamap` — see secret section below.
 
 ### Where is `METAMAP_WEBHOOK_SECRET`? (Full plan)

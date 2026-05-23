@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
+import { KycIllustrationShield } from "@/components/kyc/kyc-progress";
+import { loadMetamapSdk, METAMAP_ERROR_SCREENS } from "@/lib/metamap/load-sdk";
 
 export function MetamapVerifyButton({
   clientId,
@@ -11,6 +13,7 @@ export function MetamapVerifyButton({
   onStarted,
   onFinished,
   onExited,
+  onError,
 }: {
   clientId: string;
   flowId: string;
@@ -19,55 +22,104 @@ export function MetamapVerifyButton({
   onStarted?: (detail: { identityId?: string; verificationId?: string }) => void;
   onFinished?: (detail: { identityId?: string; verificationId?: string }) => void;
   onExited?: () => void;
+  onError?: (screen?: string) => void;
 }) {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const callbacksRef = useRef({ onStarted, onFinished, onExited });
-  callbacksRef.current = { onStarted, onFinished, onExited };
+  const { t } = useI18n();
+  const verificationRef = useRef<MetamapVerificationInstance | null>(null);
+  const callbacksRef = useRef({ onStarted, onFinished, onExited, onError });
+  callbacksRef.current = { onStarted, onFinished, onExited, onError };
+  const [ready, setReady] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-    host.replaceChildren();
-    const btn = document.createElement("metamap-button");
-    btn.setAttribute("clientid", clientId);
-    btn.setAttribute("flowid", flowId);
-    btn.setAttribute("metadata", JSON.stringify(metadata));
-    btn.setAttribute("color", "#305f33");
-    btn.setAttribute("language", language ?? "fr");
-    host.appendChild(btn);
+    let cancelled = false;
+    let instance: MetamapVerificationInstance | null = null;
 
-    const onStart = (e: Event) => {
-      const detail = (e as CustomEvent).detail as {
-        identityId?: string;
-        verificationId?: string;
-      };
-      callbacksRef.current.onStarted?.(detail);
+    const onStart = (ev: MetamapSdkEvent) => {
+      setStarting(false);
+      callbacksRef.current.onStarted?.(ev.detail ?? {});
     };
-    const onFinish = (e: Event) => {
-      const detail = (e as CustomEvent).detail as {
-        identityId?: string;
-        verificationId?: string;
-      };
-      callbacksRef.current.onFinished?.(detail);
+    const onFinish = (ev: MetamapSdkEvent) => {
+      setStarting(false);
+      callbacksRef.current.onFinished?.(ev.detail ?? {});
     };
-    const onExit = () => callbacksRef.current.onExited?.();
+    const onExit = () => {
+      setStarting(false);
+      callbacksRef.current.onExited?.();
+    };
+    const onScreen = (ev: MetamapSdkEvent) => {
+      const screen = ev.detail?.screen;
+      if (screen && METAMAP_ERROR_SCREENS.has(screen)) {
+        setStarting(false);
+        callbacksRef.current.onError?.(screen);
+      }
+    };
 
-    btn.addEventListener("metamap:userStartedSdk", onStart);
-    btn.addEventListener("metamap:userFinishedSdk", onFinish);
-    btn.addEventListener("metamap:exitedSdk", onExit);
+    setReady(false);
+    setLoadFailed(false);
+
+    void loadMetamapSdk()
+      .then(() => {
+        if (cancelled || !window.MetamapVerification) {
+          throw new Error("metamap_class_missing");
+        }
+        instance = new window.MetamapVerification({
+          clientId,
+          flowId,
+          metadata,
+          language: language ?? "fr",
+          color: "#305f33",
+        });
+        instance.on("metamap:userStartedSdk", onStart);
+        instance.on("metamap:userFinishedSdk", onFinish);
+        instance.on("metamap:exitedSdk", onExit);
+        instance.on("metamap:screen", onScreen);
+        verificationRef.current = instance;
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      });
 
     return () => {
-      btn.removeEventListener("metamap:userStartedSdk", onStart);
-      btn.removeEventListener("metamap:userFinishedSdk", onFinish);
-      btn.removeEventListener("metamap:exitedSdk", onExit);
-      host.replaceChildren();
+      cancelled = true;
+      if (instance) {
+        instance.off("metamap:userStartedSdk", onStart);
+        instance.off("metamap:userFinishedSdk", onFinish);
+        instance.off("metamap:exitedSdk", onExit);
+        instance.off("metamap:screen", onScreen);
+      }
+      verificationRef.current = null;
     };
   }, [clientId, flowId, metadata, language]);
 
+  const start = useCallback(() => {
+    if (!verificationRef.current) return;
+    setStarting(true);
+    try {
+      verificationRef.current.start();
+    } catch {
+      setStarting(false);
+      callbacksRef.current.onError?.("commonError");
+    }
+  }, []);
+
+  if (loadFailed) {
+    return (
+      <p className="text-center text-[10px] text-rose-700">{t("kyc_sdk_load_failed")}</p>
+    );
+  }
+
   return (
-    <>
-      <Script src="https://web-button.metamap.com/button.js" strategy="lazyOnload" />
-      <div ref={hostRef} className="metamap-host flex w-full max-w-sm justify-center" />
-    </>
+    <button
+      type="button"
+      disabled={!ready || starting}
+      onClick={start}
+      className="flex w-full max-w-sm items-center justify-center gap-2 rounded-2xl bg-[color:var(--fd-primary)] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/25 transition active:scale-[0.99] disabled:opacity-60"
+    >
+      <KycIllustrationShield className="h-5 w-5 shrink-0 text-white" />
+      <span>{starting ? "…" : ready ? t("kyc_verify_cta") : "…"}</span>
+    </button>
   );
 }

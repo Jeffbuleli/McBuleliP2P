@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
+  KycIllustrationError,
   KycIllustrationFace,
   KycIllustrationId,
   KycIllustrationReview,
@@ -41,28 +43,50 @@ function stepState(
   return "upcoming";
 }
 
-function activeIllustration(status: string, activeIdx: number) {
+function heroIllustration(status: string, activeIdx: number, sdkError: boolean) {
+  if (sdkError) {
+    return <KycIllustrationError className="h-16 w-16 text-rose-600" />;
+  }
   if (status === "approved") {
-    return <KycIllustrationShield className="h-20 w-20 text-emerald-700" />;
+    return <KycIllustrationShield className="h-16 w-16 text-emerald-700" />;
   }
   if (status === "pending" || status === "manual_review") {
-    return <KycIllustrationReview className="h-20 w-20 text-amber-800" />;
+    return <KycIllustrationReview className="h-16 w-16 text-amber-800" />;
   }
   if (status === "rejected") {
-    return <KycIllustrationId className="h-20 w-20 text-rose-700" />;
+    return <KycIllustrationId className="h-16 w-16 text-rose-700" />;
   }
   if (activeIdx >= 3) {
-    return <KycIllustrationReview className="h-20 w-20 text-[color:var(--fd-primary)]" />;
+    return <KycIllustrationReview className="h-16 w-16 text-[color:var(--fd-primary)]" />;
   }
   if (activeIdx >= 2) {
-    return <KycIllustrationFace className="h-20 w-20 text-[color:var(--fd-primary)]" />;
+    return <KycIllustrationFace className="h-16 w-16 text-[color:var(--fd-primary)]" />;
   }
   if (activeIdx >= 1) {
-    return <KycIllustrationId className="h-20 w-20 text-[color:var(--fd-primary)]" />;
+    return <KycIllustrationId className="h-16 w-16 text-[color:var(--fd-primary)]" />;
   }
-  return <KycIllustrationShield className="h-20 w-20 text-[color:var(--fd-primary)]" />;
+  return <KycIllustrationShield className="h-16 w-16 text-[color:var(--fd-primary)]" />;
 }
 
+function StatusBox({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: "ok" | "pending" | "reject";
+}) {
+  const cls =
+    tone === "ok"
+      ? "border-emerald-200 bg-emerald-50"
+      : tone === "pending"
+        ? "border-amber-200 bg-amber-50"
+        : "border-rose-200 bg-rose-50";
+  return (
+    <div className={`mt-5 flex justify-center rounded-2xl border px-4 py-4 ${cls}`}>
+      {children}
+    </div>
+  );
+}
 
 export function KycFlowPanel({
   userId,
@@ -75,6 +99,7 @@ export function KycFlowPanel({
   const [data, setData] = useState<KycStatusPayload | null>(initialData ?? null);
   const [busy, setBusy] = useState(false);
   const [loadErr, setLoadErr] = useState(false);
+  const [sdkError, setSdkError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadErr(false);
@@ -144,13 +169,14 @@ export function KycFlowPanel({
     status !== "manual_review";
 
   const lang = locale === "fr" ? "fr" : "en";
+  const metadata = useMemo(() => ({ userId, fixedLanguage: lang }), [userId, lang]);
 
   if (!data) {
     return (
       <div className="fd-card p-5 text-center">
         {loadErr ? (
           <>
-            <KycIllustrationShield className="mx-auto h-12 w-12 text-rose-500" />
+            <KycIllustrationError className="mx-auto h-12 w-12 text-rose-500" />
             <button
               type="button"
               onClick={() => void load()}
@@ -191,46 +217,63 @@ export function KycFlowPanel({
   return (
     <div className="fd-card overflow-hidden p-5">
       <div className="mb-4 flex justify-center">
-        <span className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[color:var(--fd-mint)]/60">
-          {activeIllustration(status, activeIdx)}
+        <span className="flex h-28 w-28 items-center justify-center rounded-[1.75rem] bg-[color:var(--fd-mint)]/50">
+          {heroIllustration(status, activeIdx, Boolean(sdkError))}
         </span>
       </div>
 
-      <KycProgressBar steps={steps} />
+      <KycProgressBar steps={steps} hideLabels />
 
       {data.approved ? (
-        <div className="mt-5 flex justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+        <StatusBox tone="ok">
           <KycIllustrationShield className="h-14 w-14 text-emerald-700" />
-        </div>
+        </StatusBox>
       ) : status === "pending" || status === "manual_review" ? (
-        <div className="mt-5 flex justify-center rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+        <StatusBox tone="pending">
           <KycIllustrationReview className="h-14 w-14 text-amber-800" />
-        </div>
+        </StatusBox>
       ) : status === "rejected" ? (
-        <div className="mt-5 flex justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
+        <StatusBox tone="reject">
           <KycIllustrationId className="h-14 w-14 text-rose-700" />
-        </div>
+        </StatusBox>
       ) : canVerify ? (
-        <div className="mt-5 flex flex-col items-center gap-2">
+        <div className="mt-5 space-y-3">
+          {sdkError ? (
+            <StatusBox tone="reject">
+              <KycIllustrationError className="h-12 w-12 text-rose-600" />
+            </StatusBox>
+          ) : null}
           <MetamapVerifyButton
             clientId={data.metamap.clientId!}
             flowId={data.metamap.flowId!}
-            metadata={{ userId, fixedLanguage: lang }}
+            metadata={metadata}
             language={lang}
             onStarted={async (d) => {
+              setSdkError(null);
               setBusy(true);
               await syncKyc("started", d);
               await load();
               setBusy(false);
             }}
             onFinished={async (d) => {
+              setSdkError(null);
               setBusy(true);
               await syncKyc("finished", d);
               await load();
               setBusy(false);
             }}
             onExited={() => void syncKyc("exited")}
+            onError={(screen) => setSdkError(screen ?? "commonError")}
           />
+          {sdkError === "ipRestrictions" ? (
+            <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+              {t("kyc_sdk_domain_hint")}
+            </p>
+          ) : sdkError ? (
+            <p className="text-center text-[10px] text-[color:var(--fd-muted)]">
+              {t("kyc_sdk_error")}
+            </p>
+          ) : null}
         </div>
       ) : (
         <p className="mt-4 text-center text-[10px] text-rose-700">

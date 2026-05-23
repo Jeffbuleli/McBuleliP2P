@@ -56,7 +56,17 @@ export function KycIllustrationReview({ className }: { className?: string }) {
   );
 }
 
-export function KycProgressBar({ steps }: { steps: KycProgressStep[] }) {
+export function KycIllustrationError({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden>
+      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="1.75" opacity="0.35" />
+      <path d="M24 16v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="24" cy="32" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function KycProgressBar({ steps, hideLabels }: { steps: KycProgressStep[]; hideLabels?: boolean }) {
   const activeIdx = steps.findIndex((s) => s.state === "active");
   const doneCount = steps.filter((s) => s.state === "done").length;
   const progressIdx = activeIdx >= 0 ? activeIdx : doneCount;
@@ -82,16 +92,20 @@ export function KycProgressBar({ steps }: { steps: KycProgressStep[] }) {
                     ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-2 ring-[color:var(--fd-primary)]/30"
                     : "bg-stone-100 text-stone-400"
               }`}
+              title={step.label}
+              aria-label={step.label}
             >
               {step.icon}
             </span>
-            <span
-              className={`max-w-[4.5rem] text-[9px] font-bold leading-tight ${
-                step.state === "active" ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-muted)]"
-              }`}
-            >
-              {step.label}
-            </span>
+            {hideLabels ? null : (
+              <span
+                className={`max-w-[4.5rem] text-[9px] font-bold leading-tight ${
+                  step.state === "active" ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-muted)]"
+                }`}
+              >
+                {step.label}
+              </span>
+            )}
           </div>
         ))}
       </div>
