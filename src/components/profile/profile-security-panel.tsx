@@ -494,7 +494,7 @@ export function ProfileSecurityPanel() {
         <h3 className="text-sm font-bold text-[color:var(--fd-text)]">{t("sec_recovery_title")}</h3>
         <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{t("sec_recovery_hint")}</p>
         <Link
-          href="/app/account/recovery"
+          href="/account/recovery"
           className="mt-3 inline-flex rounded-xl border border-[color:var(--fd-border)] px-4 py-2 text-xs font-semibold"
         >
           {t("sec_recovery_open")}
