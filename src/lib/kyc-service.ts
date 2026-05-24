@@ -41,6 +41,9 @@ export async function setUserKycPending(args: {
   diditSessionId?: string | null;
   diditSessionStatus?: string | null;
 }): Promise<void> {
+  const before = await getUserKycRow(args.userId);
+  const wasPending = before?.kycStatus === "pending";
+
   const db = getDb();
   await db
     .update(users)
@@ -57,11 +60,13 @@ export async function setUserKycPending(args: {
     })
     .where(eq(users.id, args.userId));
 
-  await createUserNotification({
-    userId: args.userId,
-    kind: "kyc_pending",
-    payload: {},
-  });
+  if (!wasPending) {
+    await createUserNotification({
+      userId: args.userId,
+      kind: "kyc_pending",
+      payload: args.diditSessionId ? { sessionId: args.diditSessionId } : {},
+    });
+  }
 }
 
 export async function applyKycFromProvider(args: {
@@ -92,6 +97,9 @@ export async function applyKycFromProvider(args: {
   }
 
   const status = mapVerificationOutcomeToKycStatus(args.outcome);
+  const before = await getUserKycRow(args.userId);
+  const previousStatus = before?.kycStatus ?? "none";
+
   const db = getDb();
   await db
     .update(users)
@@ -109,20 +117,22 @@ export async function applyKycFromProvider(args: {
     })
     .where(eq(users.id, args.userId));
 
-  const kind =
-    status === "approved"
-      ? "kyc_approved"
-      : status === "rejected"
-        ? "kyc_rejected"
-        : status === "manual_review"
-          ? "kyc_manual_review"
-          : "kyc_pending";
+  if (previousStatus !== status) {
+    const kind =
+      status === "approved"
+        ? "kyc_approved"
+        : status === "rejected"
+          ? "kyc_rejected"
+          : status === "manual_review"
+            ? "kyc_manual_review"
+            : "kyc_pending";
 
-  await createUserNotification({
-    userId: args.userId,
-    kind,
-    payload: note ? { note } : {},
-  });
+    await createUserNotification({
+      userId: args.userId,
+      kind,
+      payload: note ? { note } : {},
+    });
+  }
 
   return status;
 }

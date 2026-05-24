@@ -17,7 +17,8 @@
     "db:migrate:render:kit": "node scripts/drizzle-migrate-render.cjs",
     "db:studio": "node --env-file=.env ./node_modules/.bin/drizzle-kit studio --dialect=postgresql --schema=./src/db/schema.ts --url=\"$DATABASE_URL\"",
     "verify:binance": "node --env-file=.env scripts/verify-binance.mjs",
-    "icons:pwa": "node scripts/generate-pwa-icons.mjs"
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs",
+    "admin:user": "node scripts/admin-user-account.cjs"
   },
   "dependencies": {
     "@didit-protocol/sdk-web": "^0.2.1",

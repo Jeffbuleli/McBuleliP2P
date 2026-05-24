@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { getDb, userNotifications } from "@/db";
 
 export type NotificationKind =
@@ -34,6 +34,16 @@ export type NotificationKind =
   | "kyc_rejected"
   | "kyc_manual_review";
 
+const KYC_NOTIFICATION_KINDS = new Set<NotificationKind>([
+  "kyc_pending",
+  "kyc_approved",
+  "kyc_rejected",
+  "kyc_manual_review",
+]);
+
+/** Same KYC kind within this window → skip insert (cron/poll/webhook retries). */
+const KYC_NOTIFICATION_DEDUPE_MS = 60 * 60 * 1000;
+
 function isMissingRelationError(e: unknown): boolean {
   const anyE = e as { code?: unknown; cause?: unknown } | null;
   if (!anyE) return false;
@@ -49,6 +59,23 @@ export async function createUserNotification(args: {
 }): Promise<void> {
   try {
     const db = getDb();
+
+    if (KYC_NOTIFICATION_KINDS.has(args.kind)) {
+      const since = new Date(Date.now() - KYC_NOTIFICATION_DEDUPE_MS);
+      const [recent] = await db
+        .select({ id: userNotifications.id })
+        .from(userNotifications)
+        .where(
+          and(
+            eq(userNotifications.userId, args.userId),
+            eq(userNotifications.kind, args.kind),
+            gte(userNotifications.createdAt, since),
+          ),
+        )
+        .limit(1);
+      if (recent) return;
+    }
+
     await db.insert(userNotifications).values({
       userId: args.userId,
       kind: args.kind,

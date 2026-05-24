@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 /** Cold DB / bcrypt — generous timeout so Neon can wake on first login. */
 export const maxDuration = 60;
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(sql`lower(${users.email}) = lower(${email})`)
       .limit(1);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     let sessionUser = user;
-    if (isSuperAdminEmail(email) && user.role !== UserRole.SUPER_ADMIN) {
+    if (isSuperAdminEmail(user.email) && user.role !== UserRole.SUPER_ADMIN) {
       const [up] = await db
         .update(users)
         .set({ role: UserRole.SUPER_ADMIN })
