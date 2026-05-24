@@ -32,7 +32,7 @@ export function KycStatusPoller() {
         payload.corridor &&
         (payload.kycStatus === "pending" ||
           payload.kycStatus === "manual_review");
-      schedule(active ? 30_000 : 120_000);
+      schedule(active ? 10_000 : 120_000);
     };
 
     void tick();

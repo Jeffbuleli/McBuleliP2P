@@ -19,6 +19,7 @@ import {
   diditKycStepState,
   isAwaitingDiditDecision,
   isDiditSdkActive,
+  isDiditSessionResumableForUi,
   normalizeDiditSessionStatus,
 } from "@/lib/didit/session-status";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
@@ -106,7 +107,11 @@ export function KycFlowPanel({
   const awaitingDecision = isAwaitingDiditDecision({
     kycStatus: status,
     diditSessionStatus: diditStatus,
+    hasSession,
   });
+
+  const sessionResumable =
+    hasSession && status === "pending" && isDiditSessionResumableForUi(diditStatus);
 
   const phase = kycUiPhase({
     status,
@@ -116,6 +121,17 @@ export function KycFlowPanel({
     hasSession,
     awaitingDecision,
   });
+
+  useEffect(() => {
+    if (!data?.canRefreshStatus) return;
+    if (status !== "pending" && status !== "manual_review") return;
+    if (phase !== "waiting" && phase !== "review") return;
+
+    const id = window.setInterval(() => {
+      void refreshFromDidit();
+    }, 15_000);
+    return () => window.clearInterval(id);
+  }, [data?.canRefreshStatus, phase, refreshFromDidit, status]);
 
   const activeIdx = Math.min(
     2,
@@ -160,10 +176,16 @@ export function KycFlowPanel({
     hasSession,
   });
 
-  const showVerify = canShowVerify && (phase === "start" || phase === "error");
-  const showContinue = canShowVerify && !showVerify && sdkActive && !awaitingDecision;
+  const showVerify =
+    canShowVerify &&
+    (phase === "start" ||
+      phase === "error" ||
+      (phase === "waiting" && !hasSession && !sessionResumable));
+  const showContinue =
+    canShowVerify && !showVerify && (sdkActive || sessionResumable) && !awaitingDecision;
   const showRefresh =
-    Boolean(data?.canRefreshStatus) && (awaitingDecision || phase === "review");
+    Boolean(data?.canRefreshStatus) &&
+    (awaitingDecision || phase === "review" || phase === "waiting");
 
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string; sessionStatus?: string }) => {

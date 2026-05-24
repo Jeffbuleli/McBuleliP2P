@@ -49,9 +49,7 @@ export async function POST(req: Request) {
       diditSessionId: sid,
       diditSessionStatus: sessionStatus ?? "In Progress",
     });
-  }
-
-  if (event === "cancelled") {
+  } else if (event === "cancelled") {
     if (row?.kycStatus === "pending") {
       await setUserKycPending({
         userId,

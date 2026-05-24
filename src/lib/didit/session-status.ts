@@ -50,10 +50,10 @@ export function diditKycActiveStepIndex(args: {
   if (kyc === "manual_review") return 2;
 
   if (kyc === "pending") {
-    if (d === "In Progress" || d === "Resubmitted") return 1;
+    if (d === "In Progress" || d === "Resubmitted" || d === "Awaiting User") return 1;
     if (d === "In Review") return 2;
-    if (args.hasSession) return 2;
     if (d === "Not Started") return 0;
+    if (args.hasSession) return 0;
     return 0;
   }
 
@@ -88,12 +88,25 @@ export function diditKycStepState(
 export function isAwaitingDiditDecision(args: {
   kycStatus: string;
   diditSessionStatus: DiditSessionStatus | null;
+  hasSession?: boolean;
 }): boolean {
   if (args.kycStatus === "manual_review") return true;
+  if (args.kycStatus !== "pending") return false;
   const d = args.diditSessionStatus;
+  if (d === "In Review") return true;
+  if (d === "Approved" || d === "Declined") return true;
+  return false;
+}
+
+export function isDiditSessionResumableForUi(
+  diditSessionStatus: DiditSessionStatus | null,
+): boolean {
   return (
-    args.kycStatus === "pending" &&
-    (d === "In Review" || d === "Approved" || d === "Declined" || !d)
+    diditSessionStatus === "Not Started" ||
+    diditSessionStatus === "In Progress" ||
+    diditSessionStatus === "Resubmitted" ||
+    diditSessionStatus === "Awaiting User" ||
+    diditSessionStatus === null
   );
 }
 
@@ -103,12 +116,6 @@ export function isDiditSdkActive(args: {
   hasSession: boolean;
 }): boolean {
   if (args.kycStatus !== "pending") return false;
-  const d = args.diditSessionStatus;
-  return (
-    d === "In Progress" ||
-    d === "Resubmitted" ||
-    d === "Awaiting User" ||
-    d === "Not Started" ||
-    (args.hasSession && !isAwaitingDiditDecision({ kycStatus: args.kycStatus, diditSessionStatus: d }))
-  );
+  if (!args.hasSession) return false;
+  return isDiditSessionResumableForUi(args.diditSessionStatus);
 }
