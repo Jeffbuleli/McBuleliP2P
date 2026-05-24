@@ -56,6 +56,8 @@ export default function AdminKycPage() {
   const [status, setStatus] = useState("all");
   const [helpOnly, setHelpOnly] = useState(false);
   const [q, setQ] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
@@ -84,12 +86,35 @@ export default function AdminKycPage() {
   const helpLabel = useCallback(
     (tier: AdminKycHelpTier) => {
       if (tier === "review") return t("admin_kyc_help_review");
+      if (tier === "legacy") return t("admin_kyc_help_legacy");
       if (tier === "stuck") return t("admin_kyc_help_stuck");
       if (tier === "retry") return t("admin_kyc_help_retry");
       return t("admin_kyc_help_none");
     },
     [t],
   );
+
+  async function resetStale() {
+    setResetting(true);
+    setResetMsg(null);
+    try {
+      const res = await fetch("/api/admin/kyc/reset-stale", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setResetMsg(data.message ?? "—");
+        return;
+      }
+      setResetMsg(
+        t("admin_kyc_reset_stale_done", {
+          reset: data.reset ?? 0,
+          scanned: data.scanned ?? 0,
+        }),
+      );
+      await load();
+    } finally {
+      setResetting(false);
+    }
+  }
 
   const columns = useMemo((): AdminTableColumn<Row>[] => {
     return [
@@ -202,18 +227,33 @@ export default function AdminKycPage() {
         title={t("admin_kyc_title")}
         subtitle={t("admin_kyc_sub")}
         action={
-          <a
-            href={DIDIT_CONSOLE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={adminCls.btnPrimary}
-          >
-            {t("admin_kyc_didit_console")}
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={resetting}
+              onClick={() => void resetStale()}
+              className={adminCls.btnSecondary}
+            >
+              {resetting ? "…" : t("admin_kyc_reset_stale")}
+            </button>
+            <a
+              href={DIDIT_CONSOLE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={adminCls.btnPrimary}
+            >
+              {t("admin_kyc_didit_console")}
+            </a>
+          </div>
         }
       />
 
       {err ? <p className={adminCls.error}>{err}</p> : null}
+      {resetMsg ? (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          {resetMsg}
+        </p>
+      ) : null}
 
       <AdminSnapshotRow
         items={[
@@ -271,7 +311,9 @@ export default function AdminKycPage() {
           </div>
         }
         rowClassName={(r) =>
-          r.helpTier !== "none" ? "bg-amber-50/60" : undefined
+          r.helpTier === "legacy" || r.helpTier === "stuck"
+            ? "bg-amber-50/60"
+            : undefined
         }
       />
     </div>

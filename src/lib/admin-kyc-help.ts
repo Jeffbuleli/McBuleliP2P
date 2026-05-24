@@ -1,17 +1,22 @@
 import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
 
-export type AdminKycHelpTier = "none" | "review" | "stuck" | "retry";
+import {
+  isKycPendingStale,
+  KYC_IN_FLIGHT_DIDIT,
+} from "@/lib/kyc-stale-pending";
 
-const STUCK_MS = 48 * 60 * 60 * 1000;
+export type AdminKycHelpTier = "none" | "review" | "stuck" | "retry" | "legacy";
 
 export function adminKycHelpTier(args: {
   kycStatus: string;
   kycUpdatedAt: Date | string | null;
   diditSessionStatus: string | null;
+  diditSessionId: string | null;
   kycRejectionNote: string | null;
 }): AdminKycHelpTier {
   const status = (args.kycStatus ?? "none").toLowerCase();
   const didit = (args.diditSessionStatus ?? "").trim();
+  const hasSession = Boolean(args.diditSessionId?.trim());
 
   if (status === "manual_review" || didit === "In Review") return "review";
   if (status === "rejected") {
@@ -19,15 +24,9 @@ export function adminKycHelpTier(args: {
     return "retry";
   }
   if (status === "pending") {
-    const at = args.kycUpdatedAt ? new Date(args.kycUpdatedAt).getTime() : 0;
-    if (at && Date.now() - at > STUCK_MS) return "stuck";
-    if (
-      didit === "Awaiting User" ||
-      didit === "Resubmitted" ||
-      didit === "Not Started"
-    ) {
-      return "stuck";
-    }
+    if (!hasSession) return "legacy";
+    if (isKycPendingStale(args.kycUpdatedAt)) return "stuck";
+    if (KYC_IN_FLIGHT_DIDIT.has(didit)) return "stuck";
   }
   return "none";
 }

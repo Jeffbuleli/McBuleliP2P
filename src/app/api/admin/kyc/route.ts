@@ -62,6 +62,7 @@ export async function GET(req: Request) {
       kycStatus: r.kycStatus,
       kycUpdatedAt: r.kycUpdatedAt,
       diditSessionStatus: r.diditSessionStatus,
+      diditSessionId: r.diditSessionId,
       kycRejectionNote: r.kycRejectionNote,
     });
     return {
