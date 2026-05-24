@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 import { SupportMessageRow } from "@/components/support/support-message-row";
 import type { SupportMessageDto, SupportParticipant } from "@/lib/support-service";
 import { wrapSelection } from "@/lib/support-rich-text";
@@ -287,8 +288,8 @@ export function SupportChatroom({
               />
             </svg>
           </Link>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
-            <SupportHeadsetIcon className="h-5 w-5" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white shadow-md shadow-[color:var(--fd-primary)]/25">
+            <SupportAgentIcon className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-extrabold text-[color:var(--fd-text)]">
@@ -468,10 +469,5 @@ function FormatBtn({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-export function SupportHeadsetIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2a4 4 0 00-4 4v2.5a4 4 0 008 0V6a4 4 0 00-4-4zm-6 8.5A6 6 0 0112 5a6 6 0 016 5.5V14a2 2 0 01-2 2h-1v3.5a1.5 1.5 0 11-3 0V16h-2v3.5a1.5 1.5 0 11-3 0V16H8a2 2 0 01-2-2v-3.5zM9 14h6v2H9v-2z" />
-    </svg>
-  );
-}
+/** @deprecated Use SupportAgentIcon from @/components/icons/support-agent-icon */
+export { SupportAgentIcon as SupportHeadsetIcon } from "@/components/icons/support-agent-icon";

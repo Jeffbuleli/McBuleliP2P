@@ -1,5 +1,7 @@
 /** Lightweight SVG icons — single stroke style, Lucide-like */
 
+import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
+
 export function IconP2P({ className }: { className?: string }) {
   return (
     <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -168,9 +170,31 @@ export function IconBot({ className }: { className?: string }) {
 }
 
 export function IconHeadset({ className }: { className?: string }) {
+  return <SupportAgentIcon className={className} />;
+}
+
+export function IconKyc({ className }: { className?: string }) {
   return (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2a4 4 0 00-4 4v2.5a4 4 0 008 0V6a4 4 0 00-4-4zm-6 8.5A6 6 0 0112 5a6 6 0 016 5.5V14a2 2 0 01-2 2h-1v3.5a1.5 1.5 0 11-3 0V16h-2v3.5a1.5 1.5 0 11-3 0V16H8a2 2 0 01-2-2v-3.5z" />
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M16 17l2 2 4-4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconOptions({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 8v4l2.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 }

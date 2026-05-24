@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
-import { SupportHeadsetIcon } from "@/components/support/support-chatroom";
+import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 import { useUnreadCountsContext } from "@/components/mobile/unread-counts-provider";
 
 function TopBarCountBadge({ count }: { count: number }) {
@@ -112,7 +112,7 @@ export function AppTopBar({
             aria-label={t("support_open_chat")}
             title={t("support_title")}
           >
-            <SupportHeadsetIcon className="h-5 w-5" />
+            <SupportAgentIcon className="h-5 w-5" />
           </TopBarActionButton>
 
           <TopBarActionButton
