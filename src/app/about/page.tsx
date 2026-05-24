@@ -1,22 +1,16 @@
-import Link from "next/link";
+import { LegalBulletList, LegalPageShell } from "@/components/legal/legal-page-shell";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 
 export default async function AboutPage() {
   const locale = await getLocale();
   const d = getDictionary(locale);
+
   return (
-    <div className="mx-auto max-w-lg px-4 py-12">
-      <Link
-        href="/"
-        className="text-sm font-semibold text-emerald-400 hover:underline"
-      >
-        ← {d.brand}
-      </Link>
-      <h1 className="mt-6 text-2xl font-bold text-stone-50">
-        {d.legal_about_title}
-      </h1>
-      <p className="mt-4 text-pretty text-stone-400">{d.legal_about_body}</p>
-    </div>
+    <LegalPageShell titleKey="legal_about_title" leadKey="legal_about_lead">
+      <LegalBulletList
+        items={[d.legal_about_1, d.legal_about_2, d.legal_about_3, d.legal_about_4]}
+      />
+    </LegalPageShell>
   );
 }

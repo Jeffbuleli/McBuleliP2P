@@ -21,11 +21,6 @@ import {
   IconUsers,
   IconWallet,
 } from "@/components/landing/landing-icons";
-import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
-
-const SUPPORT_EMAIL = "hi@mcbuleli.org";
-const SUPPORT_WA = "https://wa.me/mcbuleli";
-const SUPPORT_X = "https://x.com/McBuleli";
 
 function ServiceTile({
   icon: Icon,
@@ -223,28 +218,17 @@ export async function HomeLanding() {
           </div>
         </section>
 
-        <section className="fd-card flex flex-col items-center gap-3 rounded-2xl p-5 text-center sm:flex-row sm:text-left">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] text-white shadow-lg shadow-[color:var(--fd-primary)]/25">
-            <SupportAgentIcon className="h-8 w-8" />
+        <section className="fd-card flex flex-col items-center gap-3 rounded-2xl p-5 text-center">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/15">
+            <IconHeadset className="h-5 w-5" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div>
             <p className="text-sm font-extrabold text-[color:var(--fd-text)]">{d.landing_support_cta}</p>
             <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{d.landing_support_sub}</p>
-            <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs font-semibold text-[color:var(--fd-primary)] sm:justify-start">
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:underline">
-                {SUPPORT_EMAIL}
-              </a>
-              <a href={SUPPORT_WA} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                WhatsApp
-              </a>
-              <a href={SUPPORT_X} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                @McBuleli
-              </a>
-            </div>
           </div>
           <Link
             href="/contact"
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] px-4 text-xs font-bold text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/20"
+            className="inline-flex min-h-[44px] w-full max-w-xs items-center justify-center rounded-xl bg-[color:var(--fd-mint)] px-4 text-xs font-bold text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/20 active:scale-[0.99]"
           >
             {d.landing_footer_contact}
           </Link>

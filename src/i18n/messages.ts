@@ -83,7 +83,7 @@ export const en = {
   landing_presentation_sub:
     "Crypto and mobile money with escrow P2P, trading tools and group savings.",
   landing_support_cta: "Questions? Talk to us",
-  landing_support_sub: "Email, WhatsApp or X — we're here to help.",
+  landing_support_sub: "Tap Contact for email, WhatsApp and X.",
   landing_cta_market: "Live prices",
   landing_stat_1_t: "24/7",
   landing_stat_1_d: "",
@@ -265,17 +265,32 @@ export const en = {
   profile_ops_badge_ok: "Clear",
   profile_link_password: "Password is managed at login — contact support to recover.",
   legal_about_title: "About McBuleli",
-  legal_about_body:
-    "McBuleli provides custodial wallet services and a peer-to-peer marketplace for crypto and fiat settlement flows in supported regions.",
+  legal_about_lead: "Africa-first fintech — wallet, P2P and savings on mcbuleli.org.",
+  legal_about_1:
+    "Headquartered in the Democratic Republic of Congo, serving users across Africa.",
+  legal_about_2:
+    "Vision: make crypto and mobile money accessible with escrow security and simple UX.",
+  legal_about_3:
+    "Custodial wallet, P2P marketplace, trading tools, group savings (AVEC), staking and KYC.",
+  legal_about_4: "Support in-app, by email, WhatsApp and X.",
   legal_contact_title: "Contact",
-  legal_contact_body:
-    "For support, use the in-app flows or the email associated with your account.",
+  legal_contact_lead: "Reach our team — same channels as account recovery.",
   legal_terms_title: "Terms of use",
-  legal_terms_body:
-    "Use of McBuleli is subject to applicable laws and our operational policies. Trading involves risk.",
+  legal_terms_lead: "By using McBuleli you agree to the following.",
+  legal_terms_1: "You must be of legal age and provide accurate account information.",
+  legal_terms_2:
+    "McBuleli is a custodial platform — you do not hold private keys on-device.",
+  legal_terms_3:
+    "P2P trades use escrow; release funds only after fiat payment is confirmed.",
+  legal_terms_4: "Crypto and trading involve risk; we do not provide financial advice.",
+  legal_terms_5: "We may suspend accounts for fraud, abuse or legal requirements.",
   legal_privacy_title: "Privacy",
-  legal_privacy_body:
-    "We process account and transaction data to operate the platform and comply with obligations.",
+  legal_privacy_lead: "How we handle your data — short version.",
+  legal_privacy_1: "We collect account, KYC, transaction and security logs to run the service.",
+  legal_privacy_2: "Data is used for operations, fraud prevention and legal compliance.",
+  legal_privacy_3: "We do not sell your personal data to third parties.",
+  legal_privacy_4: "Retention follows operational and legal needs; KYC per regulations.",
+  legal_privacy_5: "Privacy requests: hi@mcbuleli.org",
   login_title: "Welcome",
   login_sub: "Sign in",
   login_forgot: "Forgot password?",
@@ -2791,7 +2806,7 @@ export const fr: Messages = {
   landing_presentation_sub:
     "Crypto et mobile money : P2P sous séquestre, trading et épargne de groupe.",
   landing_support_cta: "Une question ? Écrivez-nous",
-  landing_support_sub: "E-mail, WhatsApp ou X — nous sommes là.",
+  landing_support_sub: "Appuyez sur Contact pour e-mail, WhatsApp et X.",
   landing_cta_market: "Cours en direct",
   landing_stat_1_t: "24/7",
   landing_stat_1_d: "",
@@ -2974,17 +2989,33 @@ export const fr: Messages = {
   profile_ops_badge_ok: "OK",
   profile_link_password: "Mot de passe géré à la connexion — contactez le support pour récupération.",
   legal_about_title: "À propos de McBuleli",
-  legal_about_body:
-    "McBuleli propose un portefeuille custodial et une place de marché P2P pour les flux crypto et fiat dans les régions prises en charge.",
+  legal_about_lead: "Fintech Afrique — portefeuille, P2P et épargne sur mcbuleli.org.",
+  legal_about_1:
+    "Basé en République Démocratique du Congo, au service de l’Afrique.",
+  legal_about_2:
+    "Vision : rendre crypto et mobile money accessibles avec séquestre et simplicité.",
+  legal_about_3:
+    "Portefeuille custodial, P2P, trading, épargne de groupe (AVEC), staking et KYC.",
+  legal_about_4: "Support in-app, e-mail, WhatsApp et X.",
   legal_contact_title: "Contact",
-  legal_contact_body:
-    "Pour l’assistance, utilisez les parcours dans l’app ou l’e-mail lié au compte.",
+  legal_contact_lead: "Contactez l’équipe — mêmes canaux que la récupération de compte.",
   legal_terms_title: "Conditions d’utilisation",
-  legal_terms_body:
-    "L’utilisation de McBuleli est soumise aux lois applicables et à nos règles. Le trading comporte des risques.",
+  legal_terms_lead: "En utilisant McBuleli, vous acceptez ce qui suit.",
+  legal_terms_1: "Majorité légale et informations de compte exactes requises.",
+  legal_terms_2:
+    "Plateforme custodiale — vous ne détenez pas les clés privées sur l’appareil.",
+  legal_terms_3:
+    "P2P sous séquestre ; libérez les fonds seulement après réception du fiat.",
+  legal_terms_4: "Crypto et trading = risque ; pas de conseil financier.",
+  legal_terms_5: "Suspension possible en cas de fraude, abus ou obligation légale.",
   legal_privacy_title: "Confidentialité",
-  legal_privacy_body:
-    "Nous traitons les données de compte et de transaction pour faire fonctionner la plateforme et respecter nos obligations.",
+  legal_privacy_lead: "Traitement des données — version courte.",
+  legal_privacy_1:
+    "Données compte, KYC, transactions et logs sécurité pour faire tourner le service.",
+  legal_privacy_2: "Usage : exploitation, anti-fraude et conformité légale.",
+  legal_privacy_3: "Nous ne vendons pas vos données personnelles.",
+  legal_privacy_4: "Conservation selon besoins opérationnels et légaux ; KYC réglementé.",
+  legal_privacy_5: "Demandes confidentialité : hi@mcbuleli.org",
   login_title: "Bonjour",
   login_sub: "Connexion",
   login_forgot: "Mot de passe oublié ?",
