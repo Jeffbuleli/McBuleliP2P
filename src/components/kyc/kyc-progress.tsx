@@ -59,7 +59,10 @@ export function KycProgressBar({
           style={{ width: `${Math.max(pct, steps[0]?.state === "done" ? 10 : 6)}%` }}
         />
       </div>
-      <div className="grid grid-cols-4 gap-1.5">
+      <div
+        className="grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
+      >
         {steps.map((step) => (
           <div key={step.id} className="flex flex-col items-center gap-2 text-center">
             <span

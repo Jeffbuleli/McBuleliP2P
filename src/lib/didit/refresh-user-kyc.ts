@@ -1,21 +1,17 @@
-import {
-  applyKycFromProvider,
-  getUserKycRow,
-  type KycVerificationOutcome,
-} from "@/lib/kyc-service";
+import { getUserKycRow, type KycVerificationOutcome } from "@/lib/kyc-service";
 import type { KycStatus } from "@/lib/kyc-policy";
 import {
   diditApiConfigured,
   fetchDiditSessionDecision,
-  outcomeFromDiditResource,
-  rejectionNoteFromDiditResource,
 } from "@/lib/didit/api";
+import { applyDiditDecision } from "@/lib/didit/apply-decision";
+import { parseDiditSessionStatus } from "@/lib/didit/parse-outcome";
 
 export type RefreshUserKycResult =
   | { ok: true; status: KycStatus; outcome: KycVerificationOutcome }
   | { ok: false; error: string };
 
-/** Pull latest Didit session decision into McBuleli. */
+/** Pull latest Didit session decision into McBuleli (status + OCR). */
 export async function refreshUserKycFromDidit(
   userId: string,
 ): Promise<RefreshUserKycResult> {
@@ -29,25 +25,23 @@ export async function refreshUserKycFromDidit(
     return { ok: false, error: "no_session_id" };
   }
 
-  let body;
+  let body: Record<string, unknown>;
   try {
-    body = await fetchDiditSessionDecision(sessionId);
+    body = (await fetchDiditSessionDecision(sessionId)) as Record<string, unknown>;
   } catch (e) {
     const msg = e instanceof Error ? e.message : "didit_fetch_failed";
     return { ok: false, error: msg };
   }
 
-  const outcome = outcomeFromDiditResource(body);
-  const diditStatus =
-    typeof body.status === "string" ? body.status : null;
-
-  const status = await applyKycFromProvider({
+  const diditStatus = typeof body.status === "string" ? body.status : null;
+  const status = await applyDiditDecision({
     userId,
-    outcome,
-    diditSessionId: sessionId,
-    diditSessionStatus: diditStatus,
-    rejectionNote: rejectionNoteFromDiditResource(body, outcome),
+    sessionId,
+    diditStatus,
+    resource: body,
+    source: "api_poll",
   });
 
+  const outcome = parseDiditSessionStatus(diditStatus);
   return { ok: true, status, outcome };
 }

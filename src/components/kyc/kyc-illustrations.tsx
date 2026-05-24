@@ -370,6 +370,7 @@ export function kycUiPhase(args: {
   sanctionsBlocked: boolean;
   diditSessionStatus?: string | null;
   hasSession?: boolean;
+  awaitingDecision?: boolean;
 }): KycUiPhase {
   if (args.sdkError) return "error";
   if (args.sanctionsBlocked) return "blocked";
@@ -378,9 +379,11 @@ export function kycUiPhase(args: {
   if (args.status === "pending") {
     const d = args.diditSessionStatus?.trim();
     if (d === "In Review") return "review";
+    if (args.awaitingDecision) return "waiting";
     if (
       d === "In Progress" ||
       d === "Resubmitted" ||
+      d === "Awaiting User" ||
       d === "Not Started" ||
       (args.hasSession && !d)
     ) {
@@ -397,7 +400,7 @@ export function KycHeroScene({
   className,
 }: {
   phase: KycUiPhase;
-  /** 0 launch · 1 ID · 2 selfie · 3 decision */
+  /** 0 ID · 1 selfie · 2 decision */
   activeStepIndex?: number;
   className?: string;
 }) {
@@ -417,9 +420,8 @@ export function KycHeroScene({
   else if (phase === "waiting") Hero = KycHeroWaiting;
   else if (phase === "review") Hero = KycHeroReview;
   else if (phase === "in_sdk") {
-    if (activeStepIndex >= 2) Hero = KycHeroSelfie;
-    else if (activeStepIndex >= 1) Hero = KycHeroIdDoc;
-    else Hero = KycHeroLaunch;
+    if (activeStepIndex >= 1) Hero = KycHeroSelfie;
+    else Hero = KycHeroIdDoc;
   } else if (phase === "start" && activeStepIndex === 0) {
     Hero = KycHeroLaunch;
   }

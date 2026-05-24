@@ -59,6 +59,26 @@ export async function createDiditSession(args: {
   return (await res.json()) as DiditSessionResource;
 }
 
+export async function fetchDiditSession(
+  sessionId: string,
+): Promise<DiditSessionResource> {
+  const apiKey = diditApiKey();
+  if (!apiKey) throw new Error("didit_api_not_configured");
+
+  const res = await fetch(`${API_BASE}/session/${sessionId}/`, {
+    method: "GET",
+    headers: { "x-api-key": apiKey },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`didit_session_${res.status}:${detail.slice(0, 200)}`);
+  }
+
+  return (await res.json()) as DiditSessionResource;
+}
+
 export async function fetchDiditSessionDecision(
   sessionId: string,
 ): Promise<DiditSessionResource> {

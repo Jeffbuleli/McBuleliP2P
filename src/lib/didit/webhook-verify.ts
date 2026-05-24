@@ -104,6 +104,22 @@ export function isDiditTestWebhook(headers: Headers): boolean {
   return v === "true" || v === "1" || v === "yes";
 }
 
+const WEBHOOK_MAX_AGE_SEC = 300;
+
+/** Reject replayed webhooks (X-Timestamp must be within 300s). */
+export function isDiditWebhookTimestampFresh(
+  headers: Headers,
+  body?: Record<string, unknown>,
+): boolean {
+  const raw =
+    header(headers, "x-timestamp") ??
+    (body?.timestamp != null ? String(body.timestamp) : null);
+  const ts = Number(raw);
+  if (!Number.isFinite(ts) || ts <= 0) return false;
+  const nowSec = Date.now() / 1000;
+  return Math.abs(nowSec - ts) <= WEBHOOK_MAX_AGE_SEC;
+}
+
 function hmacHex(secret: string, payload: string): string {
   return crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex");
 }
@@ -175,6 +191,10 @@ export function verifyDiditWebhookRequest(args: VerifyDiditWebhookArgs): boolean
 
   if (isDiditTestWebhook(headers)) {
     return true;
+  }
+
+  if (!isDiditWebhookTimestampFresh(headers, body)) {
+    return false;
   }
 
   const sigV2 = header(headers, "x-signature-v2");

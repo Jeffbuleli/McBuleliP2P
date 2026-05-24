@@ -8,7 +8,6 @@ import {
   KycHeroScene,
   KycIconFace,
   KycIconId,
-  KycIconProfile,
   KycIconReview,
   kycUiPhase,
   type KycUiPhase,
@@ -18,6 +17,8 @@ import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import {
   diditKycActiveStepIndex,
   diditKycStepState,
+  isAwaitingDiditDecision,
+  isDiditSdkActive,
   normalizeDiditSessionStatus,
 } from "@/lib/didit/session-status";
 import type { KycStatusPayload } from "@/lib/kyc-status-payload";
@@ -102,16 +103,22 @@ export function KycFlowPanel({
   const diditStatus = normalizeDiditSessionStatus(data?.diditSessionStatus);
   const hasSession = Boolean(data?.diditSessionId?.trim());
 
+  const awaitingDecision = isAwaitingDiditDecision({
+    kycStatus: status,
+    diditSessionStatus: diditStatus,
+  });
+
   const phase = kycUiPhase({
     status,
     sdkError,
     sanctionsBlocked: Boolean(data?.sanctionsBlocked),
     diditSessionStatus: data?.diditSessionStatus,
     hasSession,
+    awaitingDecision,
   });
 
   const activeIdx = Math.min(
-    3,
+    2,
     diditKycActiveStepIndex({
       kycStatus: status,
       diditSessionStatus: diditStatus,
@@ -122,28 +129,22 @@ export function KycFlowPanel({
   const steps: KycProgressStep[] = useMemo(
     () => [
       {
-        id: "profile",
-        label: t("kyc_step_profile"),
-        icon: <KycIconProfile className="h-6 w-6" />,
-        state: diditKycStepState(0, activeIdx, status, diditStatus),
-      },
-      {
         id: "id",
         label: t("kyc_step_id"),
         icon: <KycIconId className="h-6 w-6" />,
-        state: diditKycStepState(1, activeIdx, status, diditStatus),
+        state: diditKycStepState(0, activeIdx, status, diditStatus),
       },
       {
         id: "liveness",
         label: t("kyc_step_liveness"),
         icon: <KycIconFace className="h-6 w-6" />,
-        state: diditKycStepState(2, activeIdx, status, diditStatus),
+        state: diditKycStepState(1, activeIdx, status, diditStatus),
       },
       {
         id: "decision",
         label: t("kyc_step_decision"),
         icon: <KycIconReview className="h-6 w-6" />,
-        state: diditKycStepState(3, activeIdx, status, diditStatus),
+        state: diditKycStepState(2, activeIdx, status, diditStatus),
       },
     ],
     [activeIdx, diditStatus, status, t],
@@ -153,15 +154,16 @@ export function KycFlowPanel({
   const headline = statusHeadline(t, phase, activeStepLabel);
 
   const canShowVerify = Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
-  const awaitingDecision =
-    phase === "waiting" ||
-    phase === "review" ||
-    diditStatus === "In Review";
+  const sdkActive = isDiditSdkActive({
+    kycStatus: status,
+    diditSessionStatus: diditStatus,
+    hasSession,
+  });
 
   const showVerify = canShowVerify && (phase === "start" || phase === "error");
-  const showContinue =
-    canShowVerify && !showVerify && !awaitingDecision && (phase === "in_sdk" || status === "pending");
-  const showRefresh = Boolean(data?.canRefreshStatus) && awaitingDecision;
+  const showContinue = canShowVerify && !showVerify && sdkActive && !awaitingDecision;
+  const showRefresh =
+    Boolean(data?.canRefreshStatus) && (awaitingDecision || phase === "review");
 
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string; sessionStatus?: string }) => {
@@ -180,7 +182,10 @@ export function KycFlowPanel({
       else await load();
       setBusy(false);
     },
-    onCancelled: () => void syncKycEvent("cancelled"),
+    onCancelled: async () => {
+      await syncKycEvent("cancelled");
+      await load();
+    },
     onError: () => setSdkError(true),
   };
 

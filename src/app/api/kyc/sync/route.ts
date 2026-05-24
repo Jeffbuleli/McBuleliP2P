@@ -51,6 +51,16 @@ export async function POST(req: Request) {
     });
   }
 
+  if (event === "cancelled") {
+    if (row?.kycStatus === "pending") {
+      await setUserKycPending({
+        userId,
+        diditSessionId: sid,
+        diditSessionStatus: "Abandoned",
+      });
+    }
+  }
+
   if (event === "finished" && sid) {
     await setUserKycPending({
       userId,

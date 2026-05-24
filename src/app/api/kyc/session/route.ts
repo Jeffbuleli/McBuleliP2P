@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { createDiditSession, diditApiConfigured } from "@/lib/didit/api";
+import {
+  createDiditSession,
+  diditApiConfigured,
+  fetchDiditSession,
+} from "@/lib/didit/api";
 import { setUserKycPending } from "@/lib/kyc-service";
+import {
+  getStoredVerificationUrl,
+  isDiditSessionResumable,
+  recordKycSessionCreated,
+} from "@/lib/didit/kyc-session-store";
 import { getDb, users } from "@/db";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-/** Create a Didit KYC session and return the hosted verification URL. */
+/** Create or resume a Didit KYC session; return SDK url only when session is READY. */
 export async function POST() {
   const userId = await getSessionUserId();
   if (!userId) {
@@ -19,10 +28,40 @@ export async function POST() {
 
   const db = getDb();
   const [u] = await db
-    .select({ countryCode: users.countryCode })
+    .select({
+      countryCode: users.countryCode,
+      kycStatus: users.kycStatus,
+      diditSessionId: users.diditSessionId,
+      diditSessionStatus: users.diditSessionStatus,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+
+  const existingId = u?.diditSessionId?.trim();
+  if (
+    existingId &&
+    u?.kycStatus === "pending" &&
+    isDiditSessionResumable(u.diditSessionStatus)
+  ) {
+    let url = await getStoredVerificationUrl(existingId);
+    if (!url) {
+      try {
+        const existing = await fetchDiditSession(existingId);
+        url = typeof existing.url === "string" ? existing.url : null;
+      } catch (err) {
+        console.warn("[kyc/session] resume fetch failed", existingId, err);
+      }
+    }
+    if (url) {
+      return NextResponse.json({
+        ok: true,
+        sessionId: existingId,
+        url,
+        resumed: true,
+      });
+    }
+  }
 
   try {
     const session = await createDiditSession({
@@ -32,12 +71,23 @@ export async function POST() {
     const sessionId =
       typeof session.session_id === "string" ? session.session_id : null;
     const url = typeof session.url === "string" ? session.url : null;
-    if (!url) {
+    if (!url || !sessionId) {
       return NextResponse.json({ error: "didit_no_url" }, { status: 502 });
     }
 
     const sessionStatus =
       typeof session.status === "string" ? session.status : "Not Started";
+
+    try {
+      await recordKycSessionCreated({
+        userId,
+        diditSessionId: sessionId,
+        status: sessionStatus,
+        verificationUrl: url,
+      });
+    } catch (err) {
+      console.warn("[kyc/session] kyc_sessions insert skipped", err);
+    }
 
     await setUserKycPending({
       userId,
@@ -49,6 +99,7 @@ export async function POST() {
       ok: true,
       sessionId,
       url,
+      resumed: false,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "didit_create_failed";

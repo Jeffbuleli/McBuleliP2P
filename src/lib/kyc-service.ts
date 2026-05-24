@@ -70,6 +70,14 @@ export async function applyKycFromProvider(args: {
   diditSessionId?: string | null;
   diditSessionStatus?: string | null;
   rejectionNote?: string | null;
+  ocrPatch?: {
+    legalFirstName?: string;
+    legalLastName?: string;
+    birthDate?: string;
+    documentNumber?: string;
+    documentType?: string;
+    documentCountry?: string;
+  } | null;
 }): Promise<KycStatus> {
   const note = args.rejectionNote?.slice(0, 500) ?? null;
 
@@ -97,6 +105,7 @@ export async function applyKycFromProvider(args: {
       ...(args.diditSessionStatus != null
         ? { diditSessionStatus: args.diditSessionStatus }
         : {}),
+      ...(args.ocrPatch ?? {}),
     })
     .where(eq(users.id, args.userId));
 

@@ -1,8 +1,25 @@
-/** Didit session statuses — https://docs.didit.me/integration/verification-statuses */
+/** McBuleli KYC UI steps — OCR in SDK (no manual profile form). */
 
-export const DIDIT_SESSION_STATUSES = [
+export type KycUiStepId = "id" | "liveness" | "decision";
+
+export const KYC_UI_STEPS: KycUiStepId[] = ["id", "liveness", "decision"];
+
+export type DiditSessionStatus =
+  | "Not Started"
+  | "In Progress"
+  | "Awaiting User"
+  | "In Review"
+  | "Approved"
+  | "Declined"
+  | "Resubmitted"
+  | "Expired"
+  | "Abandoned"
+  | "Kyc Expired";
+
+const KNOWN = new Set<string>([
   "Not Started",
   "In Progress",
+  "Awaiting User",
   "In Review",
   "Approved",
   "Declined",
@@ -10,34 +27,17 @@ export const DIDIT_SESSION_STATUSES = [
   "Expired",
   "Abandoned",
   "Kyc Expired",
-] as const;
-
-export type DiditSessionStatus = (typeof DIDIT_SESSION_STATUSES)[number];
+]);
 
 export function normalizeDiditSessionStatus(
   raw: string | null | undefined,
 ): DiditSessionStatus | null {
   const s = raw?.trim();
-  if (!s) return null;
-  if ((DIDIT_SESSION_STATUSES as readonly string[]).includes(s)) {
-    return s as DiditSessionStatus;
-  }
-  return null;
+  if (!s || !KNOWN.has(s)) return null;
+  return s as DiditSessionStatus;
 }
 
-/** McBuleli progress rail (4 steps) aligned to Didit SDK workflow. */
-export type DiditKycProgressStepId = "launch" | "id" | "liveness" | "decision";
-
-export const DIDIT_KYC_PROGRESS_STEPS: DiditKycProgressStepId[] = [
-  "launch",
-  "id",
-  "liveness",
-  "decision",
-];
-
-/**
- * Active step index (0–3). Does not mark ID/liveness as done until Didit reports In Progress+.
- */
+/** Active step index 0=id, 1=selfie, 2=decision; 3=all done. */
 export function diditKycActiveStepIndex(args: {
   kycStatus: string;
   diditSessionStatus: DiditSessionStatus | null;
@@ -46,19 +46,16 @@ export function diditKycActiveStepIndex(args: {
   const kyc = args.kycStatus;
   const d = args.diditSessionStatus;
 
-  if (kyc === "approved") return 4;
-
-  if (kyc === "manual_review") return 3;
+  if (kyc === "approved") return 3;
+  if (kyc === "manual_review") return 2;
 
   if (kyc === "pending") {
-    if (d === "In Review") return 3;
-    if (d === "In Progress") return 2;
-    if (d === "Resubmitted") return 1;
-    if (args.hasSession) return 1;
+    if (d === "In Progress" || d === "Resubmitted") return 1;
+    if (d === "In Review") return 2;
+    if (args.hasSession) return 2;
+    if (d === "Not Started") return 0;
     return 0;
   }
-
-  if (kyc === "rejected" || kyc === "none") return 0;
 
   return 0;
 }
@@ -73,16 +70,45 @@ export function diditKycStepState(
 
   if (
     kycStatus === "pending" &&
-    activeIndex === 3 &&
+    activeIndex === 2 &&
     diditSessionStatus !== "In Progress" &&
-    diditSessionStatus !== "Resubmitted"
+    diditSessionStatus !== "Resubmitted" &&
+    diditSessionStatus !== "Awaiting User"
   ) {
-    if (stepIndex === 0) return "done";
-    if (stepIndex === 3) return "active";
+    if (stepIndex < 2) return "done";
+    if (stepIndex === 2) return "active";
     return "upcoming";
   }
 
   if (stepIndex < activeIndex) return "done";
   if (stepIndex === activeIndex) return "active";
   return "upcoming";
+}
+
+export function isAwaitingDiditDecision(args: {
+  kycStatus: string;
+  diditSessionStatus: DiditSessionStatus | null;
+}): boolean {
+  if (args.kycStatus === "manual_review") return true;
+  const d = args.diditSessionStatus;
+  return (
+    args.kycStatus === "pending" &&
+    (d === "In Review" || d === "Approved" || d === "Declined" || !d)
+  );
+}
+
+export function isDiditSdkActive(args: {
+  kycStatus: string;
+  diditSessionStatus: DiditSessionStatus | null;
+  hasSession: boolean;
+}): boolean {
+  if (args.kycStatus !== "pending") return false;
+  const d = args.diditSessionStatus;
+  return (
+    d === "In Progress" ||
+    d === "Resubmitted" ||
+    d === "Awaiting User" ||
+    d === "Not Started" ||
+    (args.hasSession && !isAwaitingDiditDecision({ kycStatus: args.kycStatus, diditSessionStatus: d }))
+  );
 }

@@ -246,6 +246,20 @@
       "when": 1781400000000,
       "tag": "0039_didit_session_status_drop_metamap",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1781500000000,
+      "tag": "0040_kyc_ocr_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1781600000000,
+      "tag": "0041_didit_webhook_events",
+      "breakpoints": true
     }
   ]
 }

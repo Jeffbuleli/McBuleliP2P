@@ -5,6 +5,7 @@ import {
   varchar,
   text,
   timestamp,
+  date,
   numeric,
   integer,
   jsonb,
@@ -33,6 +34,13 @@ export const users = pgTable("users", {
   diditSessionId: varchar("didit_session_id", { length: 128 }),
   /** Didit session status (Not Started, In Progress, Approved, …). */
   diditSessionStatus: varchar("didit_session_status", { length: 32 }),
+  /** Legal identity from Didit OCR (≠ displayName pseudo). */
+  legalFirstName: varchar("legal_first_name", { length: 128 }),
+  legalLastName: varchar("legal_last_name", { length: 128 }),
+  birthDate: date("birth_date"),
+  documentNumber: varchar("document_number", { length: 64 }),
+  documentType: varchar("document_type", { length: 32 }),
+  documentCountry: varchar("document_country", { length: 8 }),
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
@@ -1551,3 +1559,60 @@ export const supportMessageReads = pgTable(
     index("support_message_reads_user_idx").on(t.userId),
   ],
 );
+
+export const kycSessions = pgTable(
+  "kyc_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    diditSessionId: varchar("didit_session_id", { length: 128 }).notNull(),
+    status: varchar("status", { length: 32 }).notNull().default("Not Started"),
+    workflowId: varchar("workflow_id", { length: 64 }),
+    verificationUrl: text("verification_url"),
+    rawDecision: jsonb("raw_decision"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("kyc_sessions_didit_session_id_unique").on(t.diditSessionId),
+    index("kyc_sessions_user_id_idx").on(t.userId),
+  ],
+);
+
+export const kycResults = pgTable(
+  "kyc_results",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => kycSessions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    outcome: varchar("outcome", { length: 16 }).notNull(),
+    firstName: varchar("first_name", { length: 128 }),
+    lastName: varchar("last_name", { length: 128 }),
+    birthDate: date("birth_date"),
+    documentNumber: varchar("document_number", { length: 64 }),
+    documentType: varchar("document_type", { length: 32 }),
+    documentCountry: varchar("document_country", { length: 8 }),
+    rejectionReason: text("rejection_reason"),
+    source: varchar("source", { length: 16 }).notNull().default("webhook"),
+    decidedAt: timestamp("decided_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("kyc_results_user_id_idx").on(t.userId)],
+);
+
+/** Didit webhook idempotency — dedupe on event_id (V3). */
+export const diditWebhookEvents = pgTable("didit_webhook_events", {
+  eventId: varchar("event_id", { length: 64 }).primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
