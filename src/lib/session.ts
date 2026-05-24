@@ -1,12 +1,22 @@
 import { cookies } from "next/headers";
-import { sessionCookieName, verifySessionToken } from "./jwt";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
+import { sessionCookieName, verifySessionTokenFull } from "./jwt";
 
 export async function getSessionUserId(): Promise<string | null> {
   const jar = await cookies();
   const raw = jar.get(sessionCookieName())?.value;
   if (!raw) return null;
   try {
-    return await verifySessionToken(raw);
+    const { userId, sessionVersion } = await verifySessionTokenFull(raw);
+    const db = getDb();
+    const [row] = await db
+      .select({ sessionVersion: users.sessionVersion })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!row || row.sessionVersion !== sessionVersion) return null;
+    return userId;
   } catch {
     return null;
   }

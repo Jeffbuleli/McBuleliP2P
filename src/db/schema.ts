@@ -12,6 +12,7 @@ import {
   uniqueIndex,
   index,
   boolean,
+  bigint,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -91,6 +92,16 @@ export const users = pgTable("users", {
    * Cleared when role is not `agent`.
    */
   staffScopes: jsonb("staff_scopes").$type<string[] | null>(),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  pendingEmail: varchar("pending_email", { length: 255 }),
+  sessionVersion: integer("session_version").notNull().default(0),
+  totpSecretEnc: text("totp_secret_enc"),
+  totpEnabledAt: timestamp("totp_enabled_at", { withTimezone: true }),
+  recoveryWaChatId: varchar("recovery_wa_chat_id", { length: 64 }),
+  recoveryWaPhone: varchar("recovery_wa_phone", { length: 32 }),
+  waVerifiedAt: timestamp("wa_verified_at", { withTimezone: true }),
+  /** Reference selfie URL from KYC for Didit biometric re-auth. */
+  kycPortraitUrl: text("kyc_portrait_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1616,3 +1627,80 @@ export const diditWebhookEvents = pgTable("didit_webhook_events", {
     .notNull()
     .defaultNow(),
 });
+
+export const authChallenges = pgTable(
+  "auth_challenges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    purpose: varchar("purpose", { length: 32 }).notNull(),
+    codeHash: varchar("code_hash", { length: 128 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("auth_challenges_user_purpose_idx").on(t.userId, t.purpose),
+    index("auth_challenges_expires_idx").on(t.expiresAt),
+  ],
+);
+
+export const userTotpBackupCodes = pgTable(
+  "user_totp_backup_codes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: varchar("code_hash", { length: 128 }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("user_totp_backup_codes_user_idx").on(t.userId)],
+);
+
+export const userPasskeys = pgTable(
+  "user_passkeys",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    credentialId: text("credential_id").notNull(),
+    publicKey: text("public_key").notNull(),
+    counter: bigint("counter", { mode: "number" }).notNull().default(0),
+    deviceName: varchar("device_name", { length: 64 }),
+    transports: jsonb("transports").$type<string[] | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("user_passkeys_credential_id_unique").on(t.credentialId),
+    index("user_passkeys_user_idx").on(t.userId),
+  ],
+);
+
+export const waInboundEvents = pgTable(
+  "wa_inbound_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    chatId: varchar("chat_id", { length: 64 }),
+    phone: varchar("phone", { length: 32 }),
+    body: text("body"),
+    matchedUserId: uuid("matched_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    matchedChallengeId: uuid("matched_challenge_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("wa_inbound_events_created_idx").on(t.createdAt)],
+);

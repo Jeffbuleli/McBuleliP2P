@@ -35,7 +35,17 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const parsed = withdrawalSchema.safeParse(await req.json());
+
+  const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  const totpCode = typeof raw?.totpCode === "string" ? raw.totpCode : null;
+
+  const { assertStepUp } = await import("@/lib/auth/step-up");
+  const step = await assertStepUp({ userId, totpCode });
+  if (!step.ok) {
+    return NextResponse.json({ error: step.error }, { status: 403 });
+  }
+
+  const parsed = withdrawalSchema.safeParse(raw);
   if (!parsed.success) {
     const flat = parsed.error.flatten();
     const first =

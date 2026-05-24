@@ -49,6 +49,9 @@ services/mcbuleli-ai-trading/.pytest_cache/
 services/mcbuleli-ai-trading/logs/*.jsonl
 services/mcbuleli-ai-trading/.env
 
+# Local OpenWA clone (self-hosted gateway — deploy separately)
+/OpenWA/
+
 # vercel
 .vercel
 

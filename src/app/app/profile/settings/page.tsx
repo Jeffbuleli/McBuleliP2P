@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LangSwitch } from "@/components/lang-switch";
 import { ProfilePersonalInfo } from "@/components/profile/profile-personal-info";
 import { ProfileSettingsKycPanel } from "@/components/profile/profile-settings-kyc-panel";
@@ -51,17 +52,13 @@ export default async function ProfileSettingsPage() {
 
         <section className="fd-card p-4">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{d.profile_security_heading}</p>
-          <ul className="mt-3 space-y-2">
-            <li className="flex items-center justify-between gap-2 rounded-xl bg-stone-50 px-3 py-2">
-              <span className="text-xs text-[color:var(--fd-muted)]">{d.profile_sec_email}</span>
-              <span className="fd-pill-ok text-[10px]">{d.profile_sec_email_ok}</span>
-            </li>
-            {sessionUser?.email ? (
-              <li className="truncate px-1 text-xs font-medium text-[color:var(--fd-text)]">
-                {sessionUser.email}
-              </li>
-            ) : null}
-          </ul>
+          <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{d.profile_secure_cta}</p>
+          <Link
+            href="/app/profile/security"
+            className="mt-3 inline-flex rounded-xl bg-[color:var(--fd-primary)] px-4 py-2 text-xs font-semibold text-white"
+          >
+            {d.profile_sec_manage}
+          </Link>
         </section>
       </div>
     </>

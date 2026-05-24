@@ -50,7 +50,10 @@ export async function POST(req: Request) {
       if (up) sessionUser = up;
     }
 
-    const token = await signSessionToken(sessionUser.id);
+    const token = await signSessionToken(
+      sessionUser.id,
+      sessionUser.sessionVersion ?? 0,
+    );
     const res = NextResponse.json({
       user: {
         id: sessionUser.id,

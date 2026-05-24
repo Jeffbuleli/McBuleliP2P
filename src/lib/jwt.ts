@@ -7,21 +7,34 @@ export function sessionCookieName() {
   return COOKIE_NAME;
 }
 
-export async function signSessionToken(userId: string) {
+export async function signSessionToken(userId: string, sessionVersion = 0) {
   const secret = new TextEncoder().encode(getJwtSecret());
-  return new SignJWT({ sub: userId })
+  return new SignJWT({ sub: userId, sv: sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
     .sign(secret);
 }
 
-export async function verifySessionToken(token: string) {
+export type VerifiedSession = {
+  userId: string;
+  sessionVersion: number;
+};
+
+export async function verifySessionToken(token: string): Promise<string> {
+  const v = await verifySessionTokenFull(token);
+  return v.userId;
+}
+
+export async function verifySessionTokenFull(
+  token: string,
+): Promise<VerifiedSession> {
   const secret = new TextEncoder().encode(getJwtSecret());
   const { payload } = await jwtVerify(token, secret);
   const sub = payload.sub;
   if (!sub || typeof sub !== "string") {
     throw new Error("Invalid session");
   }
-  return sub;
+  const sv = typeof payload.sv === "number" ? payload.sv : 0;
+  return { userId: sub, sessionVersion: sv };
 }
