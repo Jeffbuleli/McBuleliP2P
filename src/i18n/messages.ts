@@ -15,6 +15,10 @@ export const en = {
     'Use your browser menu (⋮) and choose “Install app” or “Add to Home screen”.',
   pwa_install_cta: "Install",
   pwa_install_later: "Later",
+  pwa_open_in_app_title: "Open in McBuleli app",
+  pwa_open_in_app_body:
+    "You already installed McBuleli on this device. Open the app for the same session and faster access.",
+  pwa_open_in_app_cta: "Open app",
   home_title: "Buy and sell crypto with mobile money in Africa",
   home_sub:
     "Trade with others while we keep funds safe, plus a wallet stored securely on our side.",
@@ -2692,6 +2696,10 @@ export const fr: Messages = {
     'Ouvrez le menu du navigateur (⋮) et choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
   pwa_install_cta: "Installer",
   pwa_install_later: "Plus tard",
+  pwa_open_in_app_title: "Ouvrir l’app McBuleli",
+  pwa_open_in_app_body:
+    "McBuleli est déjà installé sur cet appareil. Ouvrez l’application pour la même session et un accès plus rapide.",
+  pwa_open_in_app_cta: "Ouvrir l’app",
   home_title: "Achetez et vendez des cryptos avec le mobile money en Afrique",
   home_sub:
     "Échangez entre particuliers avec protection des fonds, et un portefeuille gardé en sécurité chez nous.",

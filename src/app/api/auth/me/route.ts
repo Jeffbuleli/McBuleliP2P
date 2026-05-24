@@ -8,6 +8,7 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ user: null });
   }
+  reconcileKycIfNeeded(userId);
   const db = getDb();
   const [u] = await db
     .select({
@@ -28,4 +29,10 @@ export async function GET() {
     return NextResponse.json({ user: null });
   }
   return NextResponse.json({ user: u });
+}
+
+function reconcileKycIfNeeded(userId: string) {
+  void import("@/lib/didit/try-refresh-pending")
+    .then(({ tryRefreshKycIfPending }) => tryRefreshKycIfPending(userId))
+    .catch((err) => console.warn("[auth/me] kyc reconcile", err));
 }

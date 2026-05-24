@@ -8,6 +8,10 @@ import { DiditVerifyButton } from "@/components/kyc/didit-verify-button";
 import { KycIconShield } from "@/components/kyc/kyc-illustrations";
 import { profileKycBadgeText } from "@/lib/profile-kyc-label";
 import {
+  isDiditSessionResumableForUi,
+  normalizeDiditSessionStatus,
+} from "@/lib/didit/session-status";
+import {
   fetchKycStatus,
   refreshKycFromDidit,
   syncKycEvent,
@@ -69,10 +73,21 @@ export function ProfileSettingsKycPanel({
   }, [data?.canRefreshStatus, data?.kycStatus, refreshStatus]);
 
   const status = data?.kycStatus ?? initialStatus ?? "none";
+  const diditStatus = normalizeDiditSessionStatus(data?.diditSessionStatus);
+  const hasSession = Boolean(data?.diditSessionId?.trim());
   const label = profileKycBadgeText(t, status);
 
   const canShowVerify =
     Boolean(data?.canRetryKyc) && Boolean(data?.didit.configured);
+
+  const sessionResumable =
+    hasSession &&
+    status === "pending" &&
+    isDiditSessionResumableForUi(diditStatus);
+
+  const showRefreshBtn =
+    Boolean(data?.canRefreshStatus) &&
+    (status === "manual_review" || diditStatus === "In Review");
 
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string }) => {
@@ -119,17 +134,19 @@ export function ProfileSettingsKycPanel({
             <DiditVerifyButton {...verifyHandlers} />
           ) : null}
 
-          {status === "pending" || status === "manual_review" ? (
-            data?.canRefreshStatus ? (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void refreshStatus()}
-                className="rounded-full border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
-              >
-                {busy ? "…" : t("kyc_refresh_status")}
-              </button>
-            ) : null
+          {status === "approved" ? null : canShowVerify && sessionResumable ? (
+            <DiditVerifyButton variant="continue" {...verifyHandlers} />
+          ) : null}
+
+          {showRefreshBtn ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void refreshStatus()}
+              className="rounded-full border border-[color:var(--fd-border)] bg-white px-3 py-2 text-[10px] font-bold text-[color:var(--fd-primary)] disabled:opacity-50"
+            >
+              {busy ? "…" : t("kyc_refresh_status")}
+            </button>
           ) : null}
         </div>
       </div>

@@ -132,6 +132,7 @@ export async function getUserKycRow(userId: string) {
   const [row] = await db
     .select({
       kycStatus: users.kycStatus,
+      kycUpdatedAt: users.kycUpdatedAt,
       kycRejectionNote: users.kycRejectionNote,
       diditSessionId: users.diditSessionId,
       diditSessionStatus: users.diditSessionStatus,

@@ -92,10 +92,7 @@ export function isAwaitingDiditDecision(args: {
 }): boolean {
   if (args.kycStatus === "manual_review") return true;
   if (args.kycStatus !== "pending") return false;
-  const d = args.diditSessionStatus;
-  if (d === "In Review") return true;
-  if (d === "Approved" || d === "Declined") return true;
-  return false;
+  return args.diditSessionStatus === "In Review";
 }
 
 export function isDiditSessionResumableForUi(

@@ -3,42 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
-import { canonicalAppHostname } from "@/lib/app-url";
+import {
+  dismissInstallPrompt,
+  hasInstalledRelatedWebApp,
+  installDismissed,
+  isIosDevice,
+  isMobileUa,
+  isStandaloneDisplay,
+  markSessionPrompted,
+  shouldRedirectToCanonical,
+  wasPromptedThisSession,
+} from "@/lib/pwa/install-state";
 
-const STORAGE_UNTIL = "mb_pwa_install_dismiss_until";
-const DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
-
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  const nav = window.navigator as Navigator & { standalone?: boolean };
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    nav.standalone === true
-  );
-}
-
-function dismissed(): boolean {
-  try {
-    const until = localStorage.getItem(STORAGE_UNTIL);
-    if (!until) return false;
-    return Date.now() < Number(until);
-  } catch {
-    return false;
-  }
-}
-
-function isIos(): boolean {
-  if (typeof window === "undefined") return false;
-  const ua = window.navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-
-function isMobileUa(): boolean {
-  if (typeof window === "undefined") return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    window.navigator.userAgent,
-  );
-}
+const PROMPT_DELAY_MS = 2200;
+const NAV_PROMPT_DELAY_MS = 1200;
 
 export function PwaInstallBanner() {
   const pathname = usePathname();
@@ -46,61 +24,95 @@ export function PwaInstallBanner() {
   const [open, setOpen] = useState(false);
   const [ios, setIos] = useState(false);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  /** True when showing generic “use browser menu” (no install prompt API). */
   const [fallback, setFallback] = useState(false);
+  const [installedRelated, setInstalledRelated] = useState(false);
   const bipReceived = useRef(false);
+  const navCount = useRef(0);
 
   useEffect(() => {
-    if (isStandalone()) return;
-    if (dismissed()) return;
+    if (isStandaloneDisplay()) return;
 
-    const host = window.location.hostname.toLowerCase();
-    const canonical = canonicalAppHostname();
-    if (host !== canonical) {
-      const dest = `https://${canonical}${window.location.pathname}${window.location.search}`;
-      window.location.replace(dest);
+    const redirect = shouldRedirectToCanonical();
+    if (redirect) {
+      window.location.replace(redirect);
       return;
     }
 
-    setIos(isIos());
+    setIos(isIosDevice());
+    void hasInstalledRelatedWebApp().then(setInstalledRelated);
 
     const onBip = (e: Event) => {
       e.preventDefault();
       bipReceived.current = true;
       setDeferred(e as BeforeInstallPromptEvent);
       setFallback(false);
-      setOpen(true);
+      if (!installDismissed()) setOpen(true);
     };
 
     window.addEventListener("beforeinstallprompt", onBip);
-
-    // iOS Safari: no beforeinstallprompt — suggest Add to Home Screen after a short delay.
-    let iosTmo: ReturnType<typeof setTimeout> | undefined;
-    if (isIos() && isMobileUa()) {
-      iosTmo = setTimeout(() => {
-        if (isStandalone() || dismissed()) return;
-        setFallback(true);
-        setOpen(true);
-      }, 2800);
-    }
-
-    // Chromium without prompt yet: gentle reminder (browser menu).
-    let androidTmo: ReturnType<typeof setTimeout> | undefined;
-    if (!isIos() && isMobileUa()) {
-      androidTmo = setTimeout(() => {
-        if (isStandalone() || dismissed()) return;
-        if (bipReceived.current) return;
-        setFallback(true);
-        setOpen(true);
-      }, 6500);
-    }
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBip);
-      if (iosTmo) clearTimeout(iosTmo);
-      if (androidTmo) clearTimeout(androidTmo);
-    };
+    return () => window.removeEventListener("beforeinstallprompt", onBip);
   }, []);
+
+  useEffect(() => {
+    if (isStandaloneDisplay()) {
+      setOpen(false);
+      return;
+    }
+
+    navCount.current += 1;
+    const delay =
+      navCount.current === 1 && !wasPromptedThisSession()
+        ? PROMPT_DELAY_MS
+        : NAV_PROMPT_DELAY_MS;
+
+    const id = window.setTimeout(() => {
+      if (isStandaloneDisplay()) return;
+
+      void hasInstalledRelatedWebApp().then((installed) => {
+        setInstalledRelated(installed);
+        if (installed) {
+          setOpen(true);
+          return;
+        }
+        if (installDismissed()) return;
+
+        if (deferred) {
+          setOpen(true);
+          markSessionPrompted();
+          return;
+        }
+        if (isIosDevice() && isMobileUa()) {
+          setFallback(true);
+          setOpen(true);
+          markSessionPrompted();
+          return;
+        }
+        if (!isIosDevice() && isMobileUa() && !bipReceived.current) {
+          setFallback(true);
+          setOpen(true);
+          markSessionPrompted();
+        }
+      });
+    }, delay);
+
+    return () => window.clearTimeout(id);
+  }, [pathname, deferred]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || isStandaloneDisplay()) return;
+      void hasInstalledRelatedWebApp().then((installed) => {
+        setInstalledRelated(installed);
+        if (installed) {
+          setOpen(true);
+        } else if (!installDismissed() && (deferred || (isIosDevice() && isMobileUa()))) {
+          setOpen(true);
+        }
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [deferred]);
 
   async function onInstall() {
     if (!deferred) return;
@@ -110,18 +122,20 @@ export function PwaInstallBanner() {
   }
 
   function onDismiss() {
-    try {
-      localStorage.setItem(STORAGE_UNTIL, String(Date.now() + DISMISS_MS));
-    } catch {
-      // ignore
-    }
+    dismissInstallPrompt();
     setOpen(false);
+  }
+
+  function onOpenInApp() {
+    window.location.href = `${window.location.pathname}${window.location.search}`;
   }
 
   if (!open) return null;
 
-  const body =
-    ios || (fallback && !deferred)
+  const showOpenInApp = installedRelated && !isStandaloneDisplay();
+  const body = showOpenInApp
+    ? t("pwa_open_in_app_body")
+    : ios || (fallback && !deferred)
       ? ios
         ? t("pwa_install_ios_body")
         : t("pwa_install_fallback_body")
@@ -136,16 +150,27 @@ export function PwaInstallBanner() {
     <div
       className={`fixed inset-x-0 z-[60] px-3 pt-2 ${dockBottom}`}
       role="dialog"
-      aria-label={t("pwa_install_title")}
+      aria-label={showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
     >
       <div className="mx-auto max-w-lg rounded-2xl border border-emerald-800/40 bg-stone-950/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-md">
-        <p className="text-sm font-bold text-stone-50">{t("pwa_install_title")}</p>
+        <p className="text-sm font-bold text-stone-50">
+          {showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
+        </p>
         <p className="mt-1 text-xs leading-relaxed text-stone-400">{body}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {!ios && deferred ? (
+          {showOpenInApp ? (
             <button
               type="button"
-              onClick={onInstall}
+              onClick={onOpenInApp}
+              className="min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 text-sm font-semibold text-white active:scale-[0.99]"
+            >
+              {t("pwa_open_in_app_cta")}
+            </button>
+          ) : null}
+          {!showOpenInApp && !ios && deferred ? (
+            <button
+              type="button"
+              onClick={() => void onInstall()}
               className="min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 text-sm font-semibold text-white active:scale-[0.99]"
             >
               {t("pwa_install_cta")}
