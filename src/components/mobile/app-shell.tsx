@@ -6,6 +6,7 @@ import { AppBottomNav } from "@/components/mobile/app-bottom-nav";
 import { AppTopBar } from "@/components/mobile/app-top-bar";
 import { OfflineOverlay } from "@/components/mobile/offline-overlay";
 import { UnreadCountsProvider } from "@/components/mobile/unread-counts-provider";
+import { KycPostLoginSheet } from "@/components/kyc/kyc-post-login-sheet";
 import { KycStatusPoller } from "@/components/kyc/kyc-status-poller";
 import { AppIconBadgeSync } from "@/components/pwa/app-icon-badge-sync";
 
@@ -62,6 +63,7 @@ export function AppShell({
       <AppBottomNav />
       <AppIconBadgeSync />
       <KycStatusPoller />
+      <KycPostLoginSheet />
       <OfflineOverlay />
     </div>
     </UnreadCountsProvider>

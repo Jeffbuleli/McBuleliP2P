@@ -107,6 +107,9 @@ export default async function AdminLayout({
               <AdminNavLink href="/admin/users" variant="team" icon="users">
                 {d.admin_nav_users}
               </AdminNavLink>
+              <AdminNavLink href="/admin/kyc" variant="support" icon="kyc">
+                {d.admin_nav_kyc}
+              </AdminNavLink>
               <AdminNavLink href="/admin/finance" variant="money" icon="finance">
                 {d.admin_nav_finance}
               </AdminNavLink>

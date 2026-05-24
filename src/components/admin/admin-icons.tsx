@@ -56,7 +56,8 @@ export type AdminNavIconKey =
   | "finance"
   | "bots"
   | "audit"
-  | "pi";
+  | "pi"
+  | "kyc";
 
 export function AdminNavIcon({ name, size = 20 }: { name: AdminNavIconKey; size?: number }) {
   const s = b({ size });
@@ -147,6 +148,18 @@ export function AdminNavIcon({ name, size = 20 }: { name: AdminNavIconKey; size?
         <svg {...s}>
           <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
           <path d="M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case "kyc":
+      return (
+        <svg {...s}>
+          <path
+            d="M12 3L4 7v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V7L12 3z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     default:
