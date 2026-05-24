@@ -59,6 +59,9 @@ services/mcbuleli-ai-trading/.env
 *.tsbuildinfo
 next-env.d.ts
 *.png
+!public/**/*.png
+!/src/app/icon.png
+!/src/app/apple-icon.png
 
 # Local uploads (do not commit)
 ID NAT.png

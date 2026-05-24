@@ -3,7 +3,8 @@
  * Run: npm run icons:pwa
  */
 import sharp from "sharp";
-import { mkdir } from "node:fs/promises";
+import toIco from "to-ico";
+import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const logo = path.join(root, "public/brand/logo.png");
 const iconsDir = path.join(root, "public/icons");
+const appDir = path.join(root, "src/app");
 
 const TILE_BG = { r: 244, g: 246, b: 245, alpha: 1 };
 
@@ -34,8 +36,27 @@ async function writeAppIcon(outPath, size, logoScale = 0.82) {
     .toFile(outPath);
 }
 
+async function writeFaviconIco(outPath) {
+  const sizes = [16, 32, 48];
+  const pngBuffers = [];
+  const tmpPaths = [];
+  for (const size of sizes) {
+    const tmp = path.join(iconsDir, `_fav-${size}.png`);
+    tmpPaths.push(tmp);
+    await writeAppIcon(tmp, size, 0.9);
+    pngBuffers.push(await readFile(tmp));
+  }
+  const ico = await toIco(pngBuffers);
+  await writeFile(outPath, ico);
+  for (const tmp of tmpPaths) {
+    await unlink(tmp).catch(() => {});
+  }
+  console.log("wrote", outPath);
+}
+
 async function main() {
   await mkdir(iconsDir, { recursive: true });
+  await mkdir(appDir, { recursive: true });
   const sizes = [
     { file: "icon-96.png", size: 96 },
     { file: "icon-144.png", size: 144 },
@@ -56,6 +77,14 @@ async function main() {
     await writeAppIcon(out, size, 0.58);
     console.log("wrote", out);
   }
+
+  await writeAppIcon(path.join(appDir, "icon.png"), 32, 0.88);
+  console.log("wrote", path.join(appDir, "icon.png"), "32x32");
+  await writeAppIcon(path.join(appDir, "apple-icon.png"), 180, 0.82);
+  console.log("wrote", path.join(appDir, "apple-icon.png"), "180x180");
+
+  await writeFaviconIco(path.join(appDir, "favicon.ico"));
+  await writeFaviconIco(path.join(root, "public/favicon.ico"));
 }
 
 main().catch((e) => {

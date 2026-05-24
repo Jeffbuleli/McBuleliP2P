@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalLangSwitch } from "@/components/conditional-lang-switch";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { PwaInstallBanner } from "@/components/pwa/install-banner";
-import { getAppOrigin } from "@/lib/app-url";
+import { CANONICAL_PRODUCTION_ORIGIN, getMetadataOrigin } from "@/lib/app-url";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,10 +15,12 @@ const inter = Inter({
 });
 
 /** Canonical URL for OG/Twitter links (WhatsApp requires absolute image URLs). */
-const metadataBaseUrl = getAppOrigin() || undefined;
+const metadataBaseUrl = getMetadataOrigin() || undefined;
 
 const desc =
   "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.";
+
+const ogImageAlt = "McBuleli — crypto P2P & mobile money";
 
 export const metadata: Metadata = {
   ...(metadataBaseUrl ? { metadataBase: new URL(metadataBaseUrl) } : {}),
@@ -33,18 +35,28 @@ export const metadata: Metadata = {
     siteName: "McBuleli",
     title: "McBuleli",
     description: desc,
+    url: CANONICAL_PRODUCTION_ORIGIN,
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: ogImageAlt,
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "McBuleli",
     description: desc,
+    images: [{ url: "/opengraph-image", alt: ogImageAlt }],
   },
   icons: {
     icon: [
-      { url: "/icons/icon-144.png", type: "image/png", sizes: "144x144" },
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/icons/icon-256.png", type: "image/png", sizes: "256x256" },
-      { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
     shortcut: "/icons/icon-192.png",
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
