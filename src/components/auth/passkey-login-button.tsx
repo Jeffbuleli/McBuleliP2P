@@ -4,6 +4,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { clientErrorText } from "@/lib/client-error-text";
+import { passkeyClientErrorText } from "@/lib/passkey-client-error";
 
 function PasskeyIcon({ className }: { className?: string }) {
   return (
@@ -69,8 +70,7 @@ export function PasskeyLoginButton({
       }
       window.location.replace("/app");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : null;
-      setErr(msg ? `${t("auth_passkey_failed")}: ${msg}` : t("auth_passkey_failed"));
+      setErr(passkeyClientErrorText(t, e));
     } finally {
       setBusy(false);
     }
