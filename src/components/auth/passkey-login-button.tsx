@@ -5,12 +5,33 @@ import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { clientErrorText } from "@/lib/client-error-text";
 
+function PasskeyIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      <path d="M7 11v1a5 5 0 0 0 10 0v-1" />
+      <rect x="3" y="11" width="18" height="10" rx="2.5" />
+    </svg>
+  );
+}
+
 export function PasskeyLoginButton({
   email,
   className,
+  polished = false,
 }: {
   email?: string;
   className?: string;
+  polished?: boolean;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
@@ -55,18 +76,24 @@ export function PasskeyLoginButton({
     }
   }
 
+  const defaultPolishedClass =
+    "group mt-3 flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border-2 border-[color:var(--fd-primary)]/25 bg-gradient-to-r from-white to-[color:var(--fd-mint)] px-4 text-sm font-bold text-[color:var(--fd-primary)] shadow-md shadow-[color:var(--fd-primary)]/10 transition active:scale-[0.99] disabled:opacity-60";
+
   return (
     <div className="space-y-2">
       <button
         type="button"
         onClick={() => void onClick()}
         disabled={busy}
-        className={
-          className ??
-          "inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
-        }
+        className={className ?? (polished ? defaultPolishedClass : undefined) ??
+          "inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"}
       >
-        {busy ? t("auth_passkey_signing") : t("auth_passkey_login")}
+        <PasskeyIcon
+          className={`h-5 w-5 shrink-0 ${polished ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-muted)]"}`}
+        />
+        <span className={polished ? "tracking-[0.12em]" : undefined}>
+          {busy ? t("auth_passkey_signing") : t("auth_passkey_login")}
+        </span>
       </button>
       {err ? (
         <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">

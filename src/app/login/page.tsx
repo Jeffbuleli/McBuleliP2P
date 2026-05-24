@@ -272,42 +272,8 @@ export default function LoginPage() {
           />
         </button>
 
-        <PasskeyLoginButton email={email} className="mt-3 flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-white px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60" />
+        <PasskeyLoginButton email={email} polished />
 
-        <div className="mt-6 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
-            {t("login_recovery_heading")}
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-[color:var(--fd-muted)]">
-            {t("login_recovery_hint")}
-          </p>
-          <ul className="mt-3 space-y-2 text-sm font-semibold">
-            <li>
-              <Link
-                href="/forgot-password"
-                className="text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
-              >
-                {t("login_recovery_email")}
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/account/recovery"
-                className="text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
-              >
-                {t("login_recovery_wa")}
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                className="text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
-              >
-                {t("login_recovery_support")}
-              </Link>
-            </li>
-          </ul>
-        </div>
       </div>
     </AuthMarketingShell>
   );

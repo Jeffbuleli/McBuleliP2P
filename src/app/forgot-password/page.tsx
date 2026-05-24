@@ -9,6 +9,7 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { useI18n } from "@/components/i18n-provider";
+import { AuthRecoveryAlternatives } from "@/components/auth/auth-recovery-alternatives";
 import { clientErrorText } from "@/lib/client-error-text";
 
 export default function ForgotPasswordPage() {
@@ -71,14 +72,18 @@ export default function ForgotPasswordPage() {
             >
               {loading ? t("forgot_sending") : t("forgot_submit")}
             </button>
+            <AuthRecoveryAlternatives />
           </form>
         ) : (
-          <Link
-            href="/login"
-            className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-5 text-sm font-semibold text-[color:var(--fd-text)]"
-          >
-            {t("forgot_back_login")}
-          </Link>
+          <>
+            <Link
+              href="/login"
+              className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-5 text-sm font-semibold text-[color:var(--fd-text)]"
+            >
+              {t("forgot_back_login")}
+            </Link>
+            <AuthRecoveryAlternatives />
+          </>
         )}
       </div>
     </AuthMarketingShell>
