@@ -18,7 +18,7 @@ export default async function ProfileKycPage() {
 
   return (
     <>
-      <ProfileSubpageHeader title={d.kyc_page_title} />
+      <ProfileSubpageHeader title={d.kyc_page_title} subtitle={d.kyc_page_sub} />
       <Suspense fallback={null}>
         <KycPageClient userId={user.id} initialData={initialData} />
       </Suspense>

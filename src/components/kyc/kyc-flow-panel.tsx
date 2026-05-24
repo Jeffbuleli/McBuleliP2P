@@ -13,6 +13,10 @@ import {
   type KycUiPhase,
 } from "@/components/kyc/kyc-illustrations";
 import { KycIllustrationError, KycProgressBar, type KycProgressStep } from "@/components/kyc/kyc-progress";
+import {
+  KycProcessBrandFooter,
+  KycProcessBrandHeader,
+} from "@/components/kyc/kyc-process-brand";
 import { KYC_STATUS_CHANGED_EVENT } from "@/components/kyc/kyc-status-poller";
 import {
   diditKycActiveStepIndex,
@@ -42,6 +46,22 @@ function statusHeadline(
   if (phase === "error") return t("kyc_state_error");
   if (phase === "start") return t("kyc_state_start");
   return null;
+}
+
+function KycProcessShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`fd-card overflow-hidden ${className ?? ""}`}>
+      <KycProcessBrandHeader />
+      {children}
+      <KycProcessBrandFooter />
+    </div>
+  );
 }
 
 export function KycFlowPanel({
@@ -213,7 +233,8 @@ export function KycFlowPanel({
 
   if (!data) {
     return (
-      <div className="fd-card flex min-h-[280px] flex-col items-center justify-center p-8">
+      <KycProcessShell className="min-h-[280px]">
+        <div className="flex flex-col items-center justify-center p-8">
         {loadErr ? (
           <>
             <KycIllustrationError className="h-16 w-16 text-rose-500" />
@@ -228,22 +249,26 @@ export function KycFlowPanel({
         ) : (
           <div className="h-28 w-28 animate-pulse rounded-[2rem] bg-[color:var(--fd-mint)]/40" />
         )}
-      </div>
+        </div>
+      </KycProcessShell>
     );
   }
 
   if (!data.enabled) {
     return (
-      <div className="fd-card flex min-h-[240px] flex-col items-center justify-center p-8">
+      <KycProcessShell className="min-h-[240px]">
+        <div className="flex flex-col items-center justify-center p-8">
         <KycHeroScene phase="start" />
         <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">{t("kyc_off_title")}</p>
-      </div>
+        </div>
+      </KycProcessShell>
     );
   }
 
   if (!data.inCorridorCountry) {
     return (
-      <div className="fd-card flex min-h-[240px] flex-col items-center justify-center p-8">
+      <KycProcessShell className="min-h-[240px]">
+        <div className="flex flex-col items-center justify-center p-8">
         <KycHeroScene phase="start" />
         <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">
           {t("kyc_not_required_country")}
@@ -254,7 +279,8 @@ export function KycFlowPanel({
         >
           {t("kyc_set_country")}
         </Link>
-      </div>
+        </div>
+      </KycProcessShell>
     );
   }
 
@@ -268,7 +294,7 @@ export function KycFlowPanel({
           : "from-[color:var(--fd-mint)]/35 to-white";
 
   return (
-    <div className="fd-card overflow-hidden">
+    <KycProcessShell>
       <div className={`bg-gradient-to-b ${heroBg} px-6 pb-2 pt-8`}>
         <KycHeroScene phase={phase} activeStepIndex={activeIdx} className="mx-auto" />
         {headline ? (
@@ -313,6 +339,6 @@ export function KycFlowPanel({
           ) : null}
         </div>
       </div>
-    </div>
+    </KycProcessShell>
   );
 }
