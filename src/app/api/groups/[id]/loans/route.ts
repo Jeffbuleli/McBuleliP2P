@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  listGroupLoans,
-  proposeGroupLoan,
-  requestMemberLoan,
-} from "@/lib/avec/group-loans";
+import { listGroupLoans, requestMemberLoan } from "@/lib/avec/group-loans";
+import { proposeGroupLoanWithGovernance } from "@/lib/avec/governance/loan-bridge";
 import { getSessionUserId } from "@/lib/session";
 
 const bodyZ = z.union([
@@ -41,7 +38,7 @@ export async function POST(
   }
   const r =
     "borrowerUserId" in parsed.data
-      ? await proposeGroupLoan({
+      ? await proposeGroupLoanWithGovernance({
           groupId: id,
           actorUserId,
           borrowerUserId: parsed.data.borrowerUserId,

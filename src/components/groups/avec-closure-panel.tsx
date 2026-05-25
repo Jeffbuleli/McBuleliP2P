@@ -21,6 +21,13 @@ type ClosureState = {
     snapshot: ClosureSnapshot;
     initiatorDisplay: string;
   } | null;
+  collectiveVote: {
+    proposalId: string;
+    voteClosesAt: string;
+    snapshot: ClosureSnapshot;
+    distributableUsdt: number;
+    cycleNumber: number;
+  } | null;
 };
 
 function ClosurePills() {
@@ -28,7 +35,7 @@ function ClosurePills() {
   return (
     <div className="mb-3 flex flex-wrap gap-1.5">
       <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold text-violet-900">
-        2/3
+        {t("group_gov_collective_badge")}
       </span>
       <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
         <AvecIconSolidarity className="h-3 w-3" />
@@ -104,7 +111,11 @@ export function AvecClosurePanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
-      setInfo(t("group_closure_proposed"));
+      if ((j as { governance?: boolean }).governance) {
+        setInfo(t("group_gov_closure_vote_started"));
+      } else {
+        setInfo(t("group_closure_proposed"));
+      }
       await load();
       onDone();
     } finally {
@@ -154,7 +165,10 @@ export function AvecClosurePanel({
     }
   }
 
-  const snap = state?.pending?.snapshot ?? preview;
+  const snap =
+    state?.collectiveVote?.snapshot ??
+    state?.pending?.snapshot ??
+    preview;
   const status = state?.cycleStatus ?? "active";
   const statusLabel =
     status === "closed"
@@ -190,7 +204,22 @@ export function AvecClosurePanel({
         </button>
       ) : null}
 
-      {state?.pending ? (
+      {state?.collectiveVote ? (
+        <div className="mb-3 rounded-2xl border-2 border-violet-200/80 bg-violet-50/60 p-3">
+          <p className="text-[10px] font-bold uppercase text-violet-900">
+            {t("group_gov_closure_vote_open")}
+          </p>
+          <p className="mt-1 text-lg font-black tabular-nums text-violet-950">
+            {state.collectiveVote.distributableUsdt.toFixed(2)}{" "}
+            <span className="text-sm font-bold">USDT</span>
+          </p>
+          <p className="text-[10px] font-semibold text-violet-800">
+            {t("group_gov_vote_closes_at")}:{" "}
+            {new Date(state.collectiveVote.voteClosesAt).toLocaleString()}
+          </p>
+          <p className="mt-2 text-[10px] text-violet-900">{t("group_gov_vote_in_dialogue")}</p>
+        </div>
+      ) : state?.pending ? (
         <div className="mb-3 rounded-2xl border-2 border-violet-200/80 bg-violet-50/60 p-3">
           <p className="text-[10px] font-bold uppercase text-violet-900">
             {t("group_closure_pending_title")}

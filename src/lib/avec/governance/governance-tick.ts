@@ -7,8 +7,13 @@ import {
 } from "@/db";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { executeGovernancePayout } from "@/lib/group-savings-payouts";
+import { applyCoAdminsToGroup } from "@/lib/avec/governance/apply-co-admins";
 import { closeProposalVote } from "@/lib/avec/governance/vote-engine";
 import { mergeGroupPaymentRules } from "@/lib/avec/governance/rules";
+import { executeClosureFromGovernance } from "@/lib/avec/group-cycle-closure";
+import type { ClosureSnapshot } from "@/lib/avec/group-cycle-closure";
+import { applyGroupSocialFundFromGovernance } from "@/lib/group-savings-meeting-params";
+import { executeLoanFromGovernance } from "@/lib/avec/group-loans";
 import type { ProposalType } from "@/lib/avec/governance/types";
 
 async function executePassedProposal(args: {
@@ -93,6 +98,65 @@ async function executePassedProposal(args: {
       action: "gov_interest_rate_changed",
       after: { proposalId: p.id, interestRatePctTotal: rate },
     });
+  } else if (type === "set_co_admins") {
+    const ids = Array.isArray(payload.coAdminUserIds)
+      ? (payload.coAdminUserIds as unknown[]).map(String).slice(0, 3)
+      : [];
+    const applied = await applyCoAdminsToGroup({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      coAdminUserIds: ids,
+      proposalId: p.id,
+    });
+    if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "change_social_fund") {
+    const socialFundUsdt = Number(payload.socialFundUsdt);
+    if (!Number.isFinite(socialFundUsdt)) {
+      return { ok: false, message: "invalid_payload" };
+    }
+    const applied = await applyGroupSocialFundFromGovernance({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      socialFundUsdt,
+      proposalId: p.id,
+    });
+    if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "cycle_closure") {
+    const snapshot = payload.snapshot as ClosureSnapshot | undefined;
+    const cycleNumber = Number(payload.cycleNumber);
+    const distributableUsdt = Number(
+      payload.distributableUsdt ?? p.financialImpactUsdt ?? 0,
+    );
+    if (!snapshot || !Number.isFinite(cycleNumber) || distributableUsdt <= 0) {
+      return { ok: false, message: "invalid_payload" };
+    }
+    const exec = await executeClosureFromGovernance({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      snapshot,
+      cycleNumber,
+      distributableUsdt,
+      proposalId: p.id,
+    });
+    if (!exec.ok) return { ok: false, message: exec.message };
+    if (!exec.executed) return { ok: false, message: "closure_not_executed" };
+  } else if (type === "loan_critical") {
+    const borrowerUserId = String(
+      payload.borrowerUserId ?? p.beneficiaryUserId ?? "",
+    );
+    const amountUsdt = Number(payload.amountUsdt ?? p.financialImpactUsdt ?? 0);
+    if (!borrowerUserId || !Number.isFinite(amountUsdt) || amountUsdt <= 0) {
+      return { ok: false, message: "invalid_payload" };
+    }
+    const exec = await executeLoanFromGovernance({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      borrowerUserId,
+      amountUsdt,
+      proposalId: p.id,
+    });
+    if (!exec.ok) return { ok: false, message: exec.message };
+    if (!exec.executed) return { ok: false, message: "loan_not_disbursed" };
   } else {
     return { ok: false, message: "unknown_type" };
   }

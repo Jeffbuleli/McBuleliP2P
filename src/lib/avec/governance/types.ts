@@ -3,7 +3,11 @@ export type GovernanceMode = "legacy" | "hybrid" | "full";
 export type ProposalType =
   | "revoke_admin"
   | "payout_critical"
-  | "change_interest_rate";
+  | "change_interest_rate"
+  | "set_co_admins"
+  | "change_social_fund"
+  | "cycle_closure"
+  | "loan_critical";
 
 export type ProposalStatus =
   | "voting"

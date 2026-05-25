@@ -32,6 +32,14 @@ export function proposalTypeLabel(type: ProposalType): string {
       return "Revoke admin";
     case "change_interest_rate":
       return "Change interest rate";
+    case "set_co_admins":
+      return "Change co-admins";
+    case "change_social_fund":
+      return "Change social fund";
+    case "cycle_closure":
+      return "Cycle closure";
+    case "loan_critical":
+      return "Critical loan";
     default:
       return type;
   }

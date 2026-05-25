@@ -199,20 +199,9 @@ export function AvecMembersPanel({
                   </td>
                   <td>
                     {canAdmin && m.role !== "admin" ? (
-                      <select
-                        value={m.role === "co_admin" ? "co_admin" : "member"}
-                        disabled={busy}
-                        onChange={(e) =>
-                          void memberAction(m.userId, {
-                            action: "role",
-                            role: e.target.value as "member" | "co_admin",
-                          })
-                        }
-                        className="rounded border border-[color:var(--fd-border)] px-1 py-0.5 text-[10px]"
-                      >
-                        <option value="member">{t("group_settings_role_member")}</option>
-                        <option value="co_admin">{t("group_settings_role_coadmin")}</option>
-                      </select>
+                      <span className="text-[10px] text-[color:var(--fd-muted)]" title={t("group_gov_collective_required")}>
+                        {groupRoleLabel(t, m.role)}
+                      </span>
                     ) : (
                       <span className={adminCls.roleBadge}>{groupRoleLabel(t, m.role)}</span>
                     )}

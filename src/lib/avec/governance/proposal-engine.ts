@@ -12,12 +12,17 @@ import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
 import { getGroupFundSummary } from "@/lib/avec/fund-buckets";
 import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
 import {
   DEFAULT_GOVERNANCE_RULES,
-  executionDelayHours,
   requiredParticipants,
   voteDurationHours,
+  voteMajorityPct,
+  voteQuorumPct,
 } from "@/lib/avec/governance/rules";
+import type { ClosureSnapshot } from "@/lib/avec/group-cycle-closure";
+import { AVEC_MAX_SHARES_PER_MEETING } from "@/lib/group-savings-types";
+import { numFromNumeric } from "@/lib/wallet-types";
 import { insertGovernanceVoteMessage } from "@/lib/avec/governance/governance-messaging";
 import type {
   GovernanceVoteMeta,
@@ -256,8 +261,8 @@ export async function createPayoutCriticalProposal(args: {
         toUserId: args.toUserId,
         amountUsdt: args.amountUsdt,
       },
-      requiredQuorumPct: DEFAULT_GOVERNANCE_RULES.criticalQuorumPct,
-      requiredMajorityPct: DEFAULT_GOVERNANCE_RULES.criticalMajorityPct,
+      requiredQuorumPct: voteQuorumPct("payout_critical"),
+      requiredMajorityPct: voteMajorityPct("payout_critical"),
       voteOpensAt: new Date(),
       voteClosesAt: new Date(
         Date.now() + voteDurationHours("payout_critical") * 3600000,
@@ -296,10 +301,16 @@ export async function createPayoutCriticalProposal(args: {
   };
 }
 
+type MemberProposalType =
+  | "revoke_admin"
+  | "change_interest_rate"
+  | "set_co_admins"
+  | "change_social_fund";
+
 export async function createMemberProposal(args: {
   groupId: string;
   authorUserId: string;
-  type: "revoke_admin" | "change_interest_rate";
+  type: MemberProposalType;
   title?: string;
   justification: string;
   payload: Record<string, unknown>;
@@ -312,6 +323,11 @@ export async function createMemberProposal(args: {
     userId: args.authorUserId,
   });
   if (!m || m.status !== "approved") {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const adminOnly: MemberProposalType[] = ["set_co_admins", "change_social_fund"];
+  if (adminOnly.includes(args.type) && !hasRole(m, ["admin"])) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -328,6 +344,8 @@ export async function createMemberProposal(args: {
   }
 
   const db = getDb();
+  let title = args.title?.trim() ?? "";
+  let financialImpactUsdt: string | undefined;
 
   if (args.type === "revoke_admin") {
     const targetUserId = String(args.payload.targetUserId ?? "");
@@ -349,20 +367,44 @@ export async function createMemberProposal(args: {
     if (targetUserId === args.authorUserId) {
       return { ok: false, message: "group_gov_cannot_revoke_self" };
     }
-  }
-
-  if (args.type === "change_interest_rate") {
+    if (!title) title = "Revoke administrator";
+  } else if (args.type === "change_interest_rate") {
     const rate = Number(args.payload.interestRatePctTotal);
     if (!Number.isFinite(rate) || rate < 1 || rate > 30) {
       return { ok: false, message: "group_gov_invalid_interest_rate" };
     }
+    if (!title) title = `Loan interest → ${rate}%`;
+  } else if (args.type === "set_co_admins") {
+    const ids = Array.isArray(args.payload.coAdminUserIds)
+      ? (args.payload.coAdminUserIds as unknown[]).map(String).slice(0, 3)
+      : [];
+    if (ids.length > 0) {
+      const members = await db
+        .select({ status: groupSavingsMemberships.status })
+        .from(groupSavingsMemberships)
+        .where(
+          and(
+            eq(groupSavingsMemberships.groupId, args.groupId),
+            inArray(groupSavingsMemberships.userId, ids),
+          ),
+        );
+      if (members.some((x) => x.status !== "approved")) {
+        return { ok: false, message: "group_invalid_coadmins" };
+      }
+    }
+    if (!title) title = "Update co-administrators";
+  } else if (args.type === "change_social_fund") {
+    const socialFundUsdt = Number(args.payload.socialFundUsdt);
+    if (!Number.isFinite(socialFundUsdt) || socialFundUsdt < 0) {
+      return { ok: false, message: "group_gov_invalid_payload" };
+    }
+    const shareValue = numFromNumeric(gCheck.group.contributionAmountUsdt?.toString());
+    const maxShares = gCheck.group.maxSharesPerMeeting ?? AVEC_MAX_SHARES_PER_MEETING;
+    const err = validateSocialFundPerMeeting(socialFundUsdt, shareValue, maxShares);
+    if (err) return { ok: false, message: err };
+    financialImpactUsdt = fmtWalletAmount(socialFundUsdt);
+    if (!title) title = `Social fund → ${socialFundUsdt.toFixed(2)} USDT/meeting`;
   }
-
-  const title =
-    args.title?.trim() ||
-    (args.type === "revoke_admin"
-      ? "Revoke administrator"
-      : "Change loan interest rate");
 
   const [row] = await db
     .insert(groupProposals)
@@ -375,8 +417,9 @@ export async function createMemberProposal(args: {
       title,
       justification,
       payload: args.payload,
-      requiredQuorumPct: DEFAULT_GOVERNANCE_RULES.criticalQuorumPct,
-      requiredMajorityPct: DEFAULT_GOVERNANCE_RULES.criticalMajorityPct,
+      financialImpactUsdt,
+      requiredQuorumPct: voteQuorumPct(args.type),
+      requiredMajorityPct: voteMajorityPct(args.type),
       voteOpensAt: new Date(),
       voteClosesAt: new Date(
         Date.now() + voteDurationHours(args.type) * 3600000,
@@ -401,6 +444,171 @@ export async function createMemberProposal(args: {
     groupId: args.groupId,
     authorUserId: args.authorUserId,
     type: args.type,
+  });
+
+  return {
+    ok: true,
+    proposalId: row.id,
+    voteClosesAt: row.voteClosesAt?.toISOString() ?? "",
+  };
+}
+
+export async function createCycleClosureProposal(args: {
+  groupId: string;
+  actorUserId: string;
+}): Promise<
+  | {
+      ok: true;
+      proposalId: string;
+      voteClosesAt: string;
+      snapshot: ClosureSnapshot;
+    }
+  | { ok: false; message: string }
+> {
+  const { prepareCycleClosureSnapshot } = await import("@/lib/avec/group-cycle-closure");
+  const prep = await prepareCycleClosureSnapshot({ groupId: args.groupId });
+  if (!prep.ok) return prep;
+
+  const gCheck = await assertGroupReady(args.groupId);
+  if (!gCheck.ok) return gCheck;
+
+  if (await hasOpenGovernanceVote(args.groupId)) {
+    return { ok: false, message: "group_gov_proposal_open" };
+  }
+
+  const { snapshot, cycleNumber, distributableUsdt } = prep;
+  const title = `Close cycle #${cycleNumber} · ${distributableUsdt.toFixed(2)} USDT`;
+  const justification = `Collective approval to close cycle #${cycleNumber} and distribute ${distributableUsdt.toFixed(2)} USDT.`;
+
+  const db = getDb();
+  const [row] = await db
+    .insert(groupProposals)
+    .values({
+      groupId: args.groupId,
+      authorUserId: args.actorUserId,
+      type: "cycle_closure",
+      riskTier: "C",
+      status: "voting",
+      title,
+      justification,
+      financialImpactUsdt: fmtWalletAmount(distributableUsdt),
+      payload: { snapshot, cycleNumber, distributableUsdt },
+      requiredQuorumPct: voteQuorumPct("cycle_closure"),
+      requiredMajorityPct: voteMajorityPct("cycle_closure"),
+      voteOpensAt: new Date(),
+      voteClosesAt: new Date(
+        Date.now() + voteDurationHours("cycle_closure") * 3600000,
+      ),
+    })
+    .returning({
+      id: groupProposals.id,
+      voteClosesAt: groupProposals.voteClosesAt,
+    });
+
+  if (!row?.id) return { ok: false, message: "group_action_failed" };
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "gov_proposal_created",
+    after: { proposalId: row.id, type: "cycle_closure", cycleNumber },
+  });
+
+  await openProposalVote({
+    proposalId: row.id,
+    groupId: args.groupId,
+    authorUserId: args.actorUserId,
+    type: "cycle_closure",
+  });
+
+  return {
+    ok: true,
+    proposalId: row.id,
+    voteClosesAt: row.voteClosesAt?.toISOString() ?? "",
+    snapshot,
+  };
+}
+
+export async function createLoanCriticalProposal(args: {
+  groupId: string;
+  authorUserId: string;
+  borrowerUserId: string;
+  amountUsdt: number;
+}): Promise<
+  | { ok: true; proposalId: string; voteClosesAt: string }
+  | { ok: false; message: string }
+> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.authorUserId,
+  });
+  if (!hasRole(actor, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const gCheck = await assertGroupReady(args.groupId);
+  if (!gCheck.ok) return gCheck;
+
+  if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
+    return { ok: false, message: "group_invalid_amount" };
+  }
+
+  if (await hasOpenGovernanceVote(args.groupId)) {
+    return { ok: false, message: "group_gov_proposal_open" };
+  }
+
+  const beneficiaryDisplay = await userDisplayName(args.borrowerUserId);
+  const title = `Loan ${args.amountUsdt.toFixed(2)} USDT → ${beneficiaryDisplay}`;
+  const justification = `Collective approval for an internal loan of ${args.amountUsdt.toFixed(2)} USDT.`;
+
+  const db = getDb();
+  const [row] = await db
+    .insert(groupProposals)
+    .values({
+      groupId: args.groupId,
+      authorUserId: args.authorUserId,
+      type: "loan_critical",
+      riskTier: "C",
+      status: "voting",
+      title,
+      justification,
+      financialImpactUsdt: fmtWalletAmount(args.amountUsdt),
+      beneficiaryUserId: args.borrowerUserId,
+      payload: {
+        borrowerUserId: args.borrowerUserId,
+        amountUsdt: args.amountUsdt,
+      },
+      requiredQuorumPct: voteQuorumPct("loan_critical"),
+      requiredMajorityPct: voteMajorityPct("loan_critical"),
+      voteOpensAt: new Date(),
+      voteClosesAt: new Date(
+        Date.now() + voteDurationHours("loan_critical") * 3600000,
+      ),
+    })
+    .returning({
+      id: groupProposals.id,
+      voteClosesAt: groupProposals.voteClosesAt,
+    });
+
+  if (!row?.id) return { ok: false, message: "group_action_failed" };
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.authorUserId,
+    action: "gov_proposal_created",
+    after: {
+      proposalId: row.id,
+      type: "loan_critical",
+      amountUsdt: args.amountUsdt,
+      borrowerUserId: args.borrowerUserId,
+    },
+  });
+
+  await openProposalVote({
+    proposalId: row.id,
+    groupId: args.groupId,
+    authorUserId: args.authorUserId,
+    type: "loan_critical",
   });
 
   return {

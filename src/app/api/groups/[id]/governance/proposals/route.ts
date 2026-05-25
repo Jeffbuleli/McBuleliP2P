@@ -19,6 +19,20 @@ const createZ = z.discriminatedUnion("type", [
     justification: z.string().min(10).max(2000),
     payload: z.object({ interestRatePctTotal: z.number().min(1).max(30) }),
   }),
+  z.object({
+    type: z.literal("set_co_admins"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      coAdminUserIds: z.array(z.string().uuid()).max(3),
+    }),
+  }),
+  z.object({
+    type: z.literal("change_social_fund"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({ socialFundUsdt: z.number().min(0) }),
+  }),
 ]);
 
 export async function GET(

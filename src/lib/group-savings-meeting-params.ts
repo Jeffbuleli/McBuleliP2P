@@ -1,24 +1,19 @@
 import { eq } from "drizzle-orm";
 import { getDb, groupSavingsGroups } from "@/db";
 import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
+import { govCollectiveRequired } from "@/lib/avec/governance/enforcement";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import { AVEC_MAX_SHARES_PER_MEETING } from "@/lib/group-savings-types";
 
-export async function updateGroupMeetingParams(args: {
+/** Apply social fund after a passed collective vote (no manager shortcut). */
+export async function applyGroupSocialFundFromGovernance(args: {
   groupId: string;
   actorUserId: string;
   socialFundUsdt: number;
+  proposalId?: string;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
-  const actor = await getMyMembershipOrNull({
-    groupId: args.groupId,
-    userId: args.actorUserId,
-  });
-  if (!hasRole(actor, ["admin"])) {
-    return { ok: false, message: "group_forbidden" };
-  }
-
   const db = getDb();
   const [g] = await db
     .select()
@@ -41,9 +36,24 @@ export async function updateGroupMeetingParams(args: {
   await writeGroupAudit({
     groupId: args.groupId,
     actorUserId: args.actorUserId,
-    action: "group_meeting_params_updated",
-    after: { socialFundUsdt: args.socialFundUsdt },
+    action: "gov_social_fund_changed",
+    after: { socialFundUsdt: args.socialFundUsdt, proposalId: args.proposalId },
   });
 
   return { ok: true };
+}
+
+export async function updateGroupMeetingParams(args: {
+  groupId: string;
+  actorUserId: string;
+  socialFundUsdt: number;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!hasRole(actor, ["admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+  return govCollectiveRequired();
 }

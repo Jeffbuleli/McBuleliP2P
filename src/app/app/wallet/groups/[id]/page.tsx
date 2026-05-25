@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { groupCreationProgressSteps } from "@/lib/group-create-progress";
@@ -31,6 +31,10 @@ import { AvecTopBar } from "@/components/groups/avec-top-bar";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { clientErrorText } from "@/lib/client-error-text";
+import {
+  getDialogueReadAt,
+  markDialogueRead,
+} from "@/lib/avec/dialogue-read-state";
 
 type Dashboard = {
   ok: true;
@@ -85,6 +89,7 @@ export default function AvecDashboardPage() {
   const [fundsRefresh, setFundsRefresh] = useState(0);
   const [tab, setTab] = useState<Tab>("vue");
   const [myUserId, setMyUserId] = useState<string | undefined>();
+  const [dialogueUnread, setDialogueUnread] = useState(false);
 
   const me = data?.group.me;
   const canModerate =
@@ -132,6 +137,38 @@ export default function AvecDashboardPage() {
       .catch(() => {});
   }, []);
 
+  const checkDialogueUnread = useCallback(async () => {
+    if (!id) return;
+    const res = await fetch(`/api/groups/${id}/messages`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    const msgs = (j.messages ?? []) as { createdAt: string; senderUserId: string }[];
+    if (msgs.length === 0) {
+      setDialogueUnread(false);
+      return;
+    }
+    const latest = msgs[msgs.length - 1];
+    const readAt = getDialogueReadAt(id);
+    const latestTs = new Date(latest.createdAt).getTime();
+    setDialogueUnread(
+      latestTs > readAt && latest.senderUserId !== myUserId,
+    );
+  }, [id, myUserId]);
+
+  useEffect(() => {
+    if (!id || tab === "dialogue") return;
+    void checkDialogueUnread();
+    const tmr = setInterval(() => void checkDialogueUnread(), 12000);
+    return () => clearInterval(tmr);
+  }, [id, tab, checkDialogueUnread]);
+
+  useEffect(() => {
+    if (tab === "dialogue" && id) {
+      markDialogueRead(id);
+      setDialogueUnread(false);
+    }
+  }, [tab, id]);
+
   const mentionMembers = useMemo(
     () =>
       (data?.members ?? [])
@@ -174,12 +211,17 @@ export default function AvecDashboardPage() {
     }
   }
 
-  const tabs: { id: Tab; label: string; icon: ReactNode }[] = [
+  const tabs: { id: Tab; label: string; icon: ReactNode; dot?: "brown" | "violet" }[] = [
     { id: "vue", label: t("avec_tab_vue"), icon: <AvecIconView className="h-4 w-4" /> },
     { id: "meeting", label: t("avec_tab_meeting"), icon: <AvecIconShares className="h-4 w-4" /> },
     { id: "members", label: t("avec_tab_members"), icon: <AvecIconMembers className="h-4 w-4" /> },
     { id: "treasury", label: t("avec_tab_treasury"), icon: <AvecIconTreasury className="h-4 w-4" /> },
-    { id: "dialogue", label: t("avec_tab_dialogue"), icon: <AvecIconDialogue className="h-4 w-4" /> },
+    {
+      id: "dialogue",
+      label: t("avec_tab_dialogue"),
+      icon: <AvecIconDialogue className="h-4 w-4" />,
+      dot: dialogueUnread ? "brown" : undefined,
+    },
     { id: "reports", label: t("avec_tab_reports"), icon: <AvecIconReport className="h-4 w-4" /> },
   ];
 
@@ -281,12 +323,20 @@ export default function AvecDashboardPage() {
                 if (x.id !== "meeting") setPayOk(false);
                 setTab(x.id);
               }}
-              className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[9px] font-bold uppercase tracking-wide transition ${
+              className={`relative flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[9px] font-bold uppercase tracking-wide transition ${
                 tab === x.id
                   ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
                   : "text-[color:var(--fd-muted)]"
               }`}
             >
+              {x.dot ? (
+                <span
+                  className={`absolute right-1 top-1 h-2 w-2 rounded-full ${
+                    x.dot === "brown" ? "bg-amber-800" : "bg-violet-600"
+                  }`}
+                  aria-hidden
+                />
+              ) : null}
               {x.icon}
               <span className="max-w-[4.5rem] truncate">{x.label}</span>
             </button>
@@ -301,6 +351,8 @@ export default function AvecDashboardPage() {
               memberCount={data.memberCount}
               members={data.members}
               pendingCount={pendingCount}
+              myUserId={myUserId}
+              canModerate={!!canModerate}
               onNavigate={(t) => setTab(t)}
             />
           ) : (

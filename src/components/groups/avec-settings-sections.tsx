@@ -3,7 +3,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
-import { AvecGovernancePanel } from "@/components/groups/avec-governance-panel";
 import { avecCls } from "@/components/groups/avec-ui";
 import { groupRoleLabel } from "@/lib/group-role-label";
 import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
@@ -32,37 +31,29 @@ function subscriptionLabel(t: (k: keyof Messages) => string, status: string): st
 
 export function AvecSettingsSections({
   locale,
-  groupId,
-  governanceMode,
   subscriptionStatus,
   nextBillingAt,
   invoices,
   audit,
   approvedMembers,
   canAdmin,
-  canPropose,
   busy,
   selected,
   onSelectedChange,
   onSaveCoAdmins,
-  onGovernanceRefresh,
   reminderBlock,
 }: {
   locale: string;
-  groupId: string;
-  governanceMode: string;
   subscriptionStatus: string;
   nextBillingAt: string | null;
   invoices: any[] | null;
   audit: any[] | null;
   approvedMembers: MemberRow[];
   canAdmin: boolean;
-  canPropose: boolean;
   busy: boolean;
   selected: Record<string, boolean>;
   onSelectedChange: (next: Record<string, boolean>) => void;
   onSaveCoAdmins: () => void;
-  onGovernanceRefresh: () => void;
   reminderBlock: ReactNode;
 }) {
   const { t } = useI18n();
@@ -93,8 +84,8 @@ export function AvecSettingsSections({
   const tabs: { id: Tab; label: string }[] = [
     { id: "subscription", label: t("group_settings_subscription") },
     { id: "billing", label: t("group_settings_payment_history") },
-    ...(canAdmin || canPropose
-      ? [{ id: "governance" as Tab, label: t("group_settings_governance_tab") }]
+    ...(canAdmin
+      ? [{ id: "governance" as Tab, label: t("group_settings_admin_panel") }]
       : []),
     { id: "audit", label: t("group_settings_audit_log") },
   ];
@@ -106,11 +97,6 @@ export function AvecSettingsSections({
       (a, b) => order(a.role) - order(b.role) || a.email.localeCompare(b.email),
     );
   }, [approvedMembers]);
-
-  const adminMembers = useMemo(
-    () => approvedMembers.filter((m) => m.role === "admin" || m.role === "co_admin"),
-    [approvedMembers],
-  );
 
   return (
     <div className="space-y-3">
@@ -208,19 +194,8 @@ export function AvecSettingsSections({
       ) : null}
 
       {tab === "governance" ? (
-        <div className="space-y-4">
-          <AvecGovernancePanel
-            groupId={groupId}
-            governanceMode={governanceMode}
-            canAdmin={canAdmin}
-            canPropose={canPropose}
-            adminMembers={adminMembers}
-            busy={busy}
-            onModeSaved={onGovernanceRefresh}
-            onProposalCreated={onGovernanceRefresh}
-          />
-          <div className={avecCls.section}>
-            <p className={avecCls.sectionTitle}>{t("group_settings_coadmins_title")}</p>
+        <div className={avecCls.section}>
+          <p className={avecCls.sectionTitle}>{t("group_settings_coadmins_title")}</p>
           {!canAdmin ? (
             <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
               {t("group_settings_admin_only")}
@@ -229,6 +204,9 @@ export function AvecSettingsSections({
             <>
               <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
                 {t("group_settings_coadmins_note")}
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-[color:var(--fd-primary)]">
+                {t("group_gov_collective_required_hint")}
               </p>
               <ul className="mt-3 max-h-[40vh] space-y-1.5 overflow-y-auto">
                 {sortedMembers.map((m) => {
@@ -276,7 +254,6 @@ export function AvecSettingsSections({
               </button>
             </>
           )}
-          </div>
         </div>
       ) : null}
 

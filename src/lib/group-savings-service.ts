@@ -421,62 +421,13 @@ export async function reviewMember(args: {
   return { ok: true as const };
 }
 
-export async function setCoAdmins(args: {
+export async function setCoAdmins(_args: {
   groupId: string;
   actorUserId: string;
   coAdminUserIds: string[];
 }) {
-  const db = getDb();
-  const actor = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.actorUserId });
-  if (!hasRole(actor, ["admin"])) return { ok: false as const, message: "group_forbidden" };
-
-  const ids = Array.from(new Set(args.coAdminUserIds)).slice(0, 3);
-
-  // Ensure targets are approved members.
-  const members = await db
-    .select()
-    .from(groupSavingsMemberships)
-    .where(
-      and(
-        eq(groupSavingsMemberships.groupId, args.groupId),
-        inArray(groupSavingsMemberships.userId, ids),
-      ),
-    );
-  if (members.some((m) => m.status !== "approved")) {
-    return { ok: false as const, message: "group_invalid_coadmins" };
-  }
-
-  await db.transaction(async (tx) => {
-    // Reset all co_admin back to member first (admin stays admin).
-    await tx
-      .update(groupSavingsMemberships)
-      .set({ role: "member", updatedAt: new Date() })
-      .where(
-        and(
-          eq(groupSavingsMemberships.groupId, args.groupId),
-          eq(groupSavingsMemberships.role, "co_admin"),
-        ),
-      );
-
-    // Promote selected to co_admin (but not the admin themself).
-    for (const uid of ids) {
-      const row = members.find((m) => m.userId === uid);
-      if (!row) continue;
-      if (row.role === "admin") continue;
-      await tx
-        .update(groupSavingsMemberships)
-        .set({ role: "co_admin", updatedAt: new Date() })
-        .where(eq(groupSavingsMemberships.id, row.id));
-    }
-  });
-
-  await writeGroupAudit({
-    groupId: args.groupId,
-    actorUserId: args.actorUserId,
-    action: "co_admins_updated",
-    after: { coAdmins: ids },
-  });
-  return { ok: true as const };
+  const { govCollectiveRequired } = await import("@/lib/avec/governance/enforcement");
+  return govCollectiveRequired();
 }
 
 export async function revokeMember(args: {
@@ -526,6 +477,11 @@ export async function setMemberRole(args: {
   targetUserId: string;
   role: "member" | "co_admin";
 }) {
+  if (args.role === "co_admin") {
+    const { govCollectiveRequired } = await import("@/lib/avec/governance/enforcement");
+    return govCollectiveRequired();
+  }
+
   const db = getDb();
   const actor = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.actorUserId });
   if (!hasRole(actor, ["admin"])) return { ok: false as const, message: "group_forbidden" };
@@ -544,19 +500,9 @@ export async function setMemberRole(args: {
     return { ok: false as const, message: "member_not_found" };
   }
   if (m.role === "admin") return { ok: false as const, message: "group_cannot_change_admin" };
-
-  const coCount = await db
-    .select({ id: groupSavingsMemberships.id })
-    .from(groupSavingsMemberships)
-    .where(
-      and(
-        eq(groupSavingsMemberships.groupId, args.groupId),
-        eq(groupSavingsMemberships.role, "co_admin"),
-        eq(groupSavingsMemberships.status, "approved"),
-      ),
-    );
-  if (args.role === "co_admin" && m.role !== "co_admin" && coCount.length >= 3) {
-    return { ok: false as const, message: "group_invalid_coadmins" };
+  if (m.role === "co_admin") {
+    const { govCollectiveRequired } = await import("@/lib/avec/governance/enforcement");
+    return govCollectiveRequired();
   }
 
   await db

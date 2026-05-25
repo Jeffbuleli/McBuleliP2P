@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconShares, AvecIconSolidarity } from "@/components/groups/avec-icons";
+import { IlluMeeting } from "@/components/groups/avec-illustrations";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
@@ -62,10 +63,16 @@ export function AvecMeetingPanel({
     setFixBusy(true);
     setFixErr(null);
     try {
-      const res = await fetch(`/api/groups/${groupId}/meeting-params`, {
-        method: "PATCH",
+      const res = await fetch(`/api/groups/${groupId}/governance/proposals`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ socialFundUsdt: n }),
+        body: JSON.stringify({
+          type: "change_social_fund",
+          justification: t("group_gov_social_fund_justification", {
+            amount: n.toFixed(2),
+          }),
+          payload: { socialFundUsdt: n },
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -82,15 +89,20 @@ export function AvecMeetingPanel({
 
   return (
     <div className="space-y-3">
-      <div className={`${avecCls.section} flex items-start gap-3`}>
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-          <AvecIconShares className="h-6 w-6" />
+      <div className={`${avecCls.section} relative overflow-hidden`}>
+        <span className="absolute -right-1 top-0 text-[color:var(--fd-primary)] opacity-[0.14]">
+          <IlluMeeting className="h-20 w-24" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-[color:var(--fd-text)]">{t("avec_tab_meeting")}</p>
-          <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--fd-muted)]">
-            {t("avec_meeting_hint_short")}
-          </p>
+        <div className="relative flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+            <AvecIconShares className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-[color:var(--fd-text)]">{t("avec_tab_meeting")}</p>
+            <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--fd-muted)]">
+              {t("avec_meeting_hint_short")}
+            </p>
+          </div>
         </div>
       </div>
 

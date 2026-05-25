@@ -1,13 +1,6 @@
-import {
-  getDb,
-  groupSavingsGroups,
-} from "@/db";
-import { eq } from "drizzle-orm";
-import {
-  proposeGroupPayout,
-} from "@/lib/group-savings-payouts";
+import { proposeGroupPayout } from "@/lib/group-savings-payouts";
 import { createPayoutCriticalProposal } from "@/lib/avec/governance/proposal-engine";
-import { requiresGovernancePayout } from "@/lib/avec/governance/rules";
+import { requiresCollectivePayout } from "@/lib/avec/governance/rules";
 
 export async function proposeGroupPayoutWithGovernance(args: {
   groupId: string;
@@ -25,20 +18,7 @@ export async function proposeGroupPayoutWithGovernance(args: {
   | { ok: true; governance: true; proposalId: string; voteClosesAt: string }
   | { ok: false; message: string }
 > {
-  const db = getDb();
-  const [g] = await db
-    .select({ governanceMode: groupSavingsGroups.governanceMode })
-    .from(groupSavingsGroups)
-    .where(eq(groupSavingsGroups.id, args.groupId))
-    .limit(1);
-
-  const mode = g?.governanceMode ?? "legacy";
-  if (
-    requiresGovernancePayout({
-      governanceMode: mode,
-      amountUsdt: args.amountUsdt,
-    })
-  ) {
+  if (requiresCollectivePayout(args.amountUsdt)) {
     const gov = await createPayoutCriticalProposal({
       groupId: args.groupId,
       authorUserId: args.actorUserId,

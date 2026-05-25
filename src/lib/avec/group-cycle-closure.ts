@@ -6,6 +6,7 @@ import {
   groupCycleClosureApprovals,
   groupCycleClosureRequests,
   groupPayoutRequests,
+  groupProposals,
   groupSavingsGroups,
   groupWalletLedgerEntries,
   users,
@@ -208,6 +209,21 @@ async function assertCanClose(groupId: string): Promise<
     return { ok: false, message: "group_closure_pending_exists" };
   }
 
+  const govClosure = await db
+    .select({ id: groupProposals.id })
+    .from(groupProposals)
+    .where(
+      and(
+        eq(groupProposals.groupId, groupId),
+        eq(groupProposals.type, "cycle_closure"),
+        eq(groupProposals.status, "voting"),
+      ),
+    )
+    .limit(1);
+  if (govClosure.length > 0) {
+    return { ok: false, message: "group_gov_proposal_open" };
+  }
+
   return {
     ok: true,
     group: g,
@@ -377,27 +393,17 @@ async function tryExecuteClosure(args: {
   });
 }
 
-export async function proposeCycleClosure(args: {
+export async function prepareCycleClosureSnapshot(args: {
   groupId: string;
-  actorUserId: string;
 }): Promise<
   | {
       ok: true;
-      requestId: string;
-      requiredApprovals: number;
-      approvalCount: number;
       snapshot: ClosureSnapshot;
+      cycleNumber: number;
+      distributableUsdt: number;
     }
   | { ok: false; message: string }
 > {
-  const actor = await getMyMembershipOrNull({
-    groupId: args.groupId,
-    userId: args.actorUserId,
-  });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
-    return { ok: false, message: "group_forbidden" };
-  }
-
   const check = await assertCanClose(args.groupId);
   if (!check.ok) return check;
 
@@ -419,43 +425,83 @@ export async function proposeCycleClosure(args: {
     displayNames,
   });
   if (!built.ok) return built;
-  const snapshot = built.snapshot;
 
-  const managers = await listGroupManagers(args.groupId);
-  const requiredApprovals = payoutRequiredApprovals(managers.length);
+  return {
+    ok: true,
+    snapshot: built.snapshot,
+    cycleNumber: g.cycleNumber ?? 1,
+    distributableUsdt: built.snapshot.distributableUsdt,
+  };
+}
+
+/** Execute cycle closure after collective vote (no 2/3 manager queue). */
+export async function executeClosureFromGovernance(args: {
+  groupId: string;
+  actorUserId: string;
+  snapshot: ClosureSnapshot;
+  cycleNumber: number;
+  distributableUsdt: number;
+  proposalId?: string;
+}): Promise<{ ok: true; executed: boolean } | { ok: false; message: string }> {
   const db = getDb();
-
   const [row] = await db
     .insert(groupCycleClosureRequests)
     .values({
       groupId: args.groupId,
       initiatedByUserId: args.actorUserId,
-      cycleNumber: g.cycleNumber ?? 1,
-      distributableUsdt: fmtWalletAmount(snapshot.distributableUsdt),
-      snapshot: snapshot as unknown as Record<string, unknown>,
+      cycleNumber: args.cycleNumber,
+      distributableUsdt: fmtWalletAmount(args.distributableUsdt),
+      snapshot: args.snapshot as unknown as Record<string, unknown>,
       status: "pending",
-      requiredApprovals,
+      requiredApprovals: 0,
     })
     .returning({ id: groupCycleClosureRequests.id });
+
+  if (!row?.id) return { ok: false, message: "group_action_failed" };
 
   await writeGroupAudit({
     groupId: args.groupId,
     actorUserId: args.actorUserId,
-    action: "cycle_closure_proposed",
-    after: {
-      requestId: row.id,
-      cycleNumber: snapshot.cycleNumber,
-      distributableUsdt: snapshot.distributableUsdt,
-    },
+    action: "gov_cycle_closure_executing",
+    after: { requestId: row.id, proposalId: args.proposalId },
   });
 
-  return {
-    ok: true,
+  const exec = await tryExecuteClosure({
     requestId: row.id,
-    requiredApprovals,
-    approvalCount: 0,
-    snapshot,
-  };
+    groupId: args.groupId,
+    lastApproverUserId: args.actorUserId,
+  });
+  if (!exec.ok) return exec;
+  return { ok: true, executed: exec.executed };
+}
+
+export async function proposeCycleClosure(args: {
+  groupId: string;
+  actorUserId: string;
+}): Promise<
+  | {
+      ok: true;
+      governance: true;
+      proposalId: string;
+      voteClosesAt: string;
+      snapshot: ClosureSnapshot;
+    }
+  | { ok: false; message: string }
+> {
+  const actor = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!hasRole(actor, ["admin", "co_admin"])) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const { createCycleClosureProposal } = await import(
+    "@/lib/avec/governance/proposal-engine"
+  );
+  const r = await createCycleClosureProposal(args);
+  if (!r.ok) return r;
+  return { ...r, governance: true as const };
 }
 
 export async function approveCycleClosure(args: {
@@ -559,6 +605,13 @@ export async function listCycleClosureState(args: {
     snapshot: ClosureSnapshot;
     initiatorDisplay: string;
   } | null;
+  collectiveVote: {
+    proposalId: string;
+    voteClosesAt: string;
+    snapshot: ClosureSnapshot;
+    distributableUsdt: number;
+    cycleNumber: number;
+  } | null;
   lastExecuted: {
     id: string;
     cycleNumber: number;
@@ -633,6 +686,36 @@ export async function listCycleClosureState(args: {
       }
     : null;
 
+  const [govRow] = await db
+    .select()
+    .from(groupProposals)
+    .where(
+      and(
+        eq(groupProposals.groupId, args.groupId),
+        eq(groupProposals.type, "cycle_closure"),
+        eq(groupProposals.status, "voting"),
+      ),
+    )
+    .orderBy(desc(groupProposals.createdAt))
+    .limit(1);
+
+  let collectiveVote = null;
+  if (govRow) {
+    const payload = (govRow.payload ?? {}) as Record<string, unknown>;
+    const snapshot = payload.snapshot as ClosureSnapshot | undefined;
+    if (snapshot) {
+      collectiveVote = {
+        proposalId: govRow.id,
+        voteClosesAt: govRow.voteClosesAt?.toISOString() ?? "",
+        snapshot,
+        distributableUsdt: Number(
+          payload.distributableUsdt ?? govRow.financialImpactUsdt ?? 0,
+        ),
+        cycleNumber: Number(payload.cycleNumber ?? snapshot.cycleNumber),
+      };
+    }
+  }
+
   return {
     ok: true,
     canManage,
@@ -641,6 +724,7 @@ export async function listCycleClosureState(args: {
     cycleStartedAt: started,
     cycleClosedAt: g?.cycleClosedAt?.toISOString() ?? null,
     pending,
+    collectiveVote,
     lastExecuted,
   };
 }

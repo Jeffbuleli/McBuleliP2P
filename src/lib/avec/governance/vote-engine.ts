@@ -145,7 +145,7 @@ export async function closeProposalVote(args: {
   });
 
   const now = new Date();
-  const delayH = executionDelayHours(p.type as "payout_critical" | "revoke_admin" | "change_interest_rate");
+  const delayH = executionDelayHours(p.type as import("@/lib/avec/governance/types").ProposalType);
   const executionScheduledAt =
     result === "passed" && delayH > 0
       ? new Date(now.getTime() + delayH * 3600000)

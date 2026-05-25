@@ -2,28 +2,56 @@ import type { GovernanceMode, ProposalType } from "@/lib/avec/governance/types";
 
 export const DEFAULT_GOVERNANCE_RULES = {
   criticalWithdrawalUsdt: 500,
+  /** Loans at or above this amount require a member vote (not 2/3 managers alone). */
+  criticalLoanUsdt: 100,
   criticalQuorumPct: 70,
   criticalMajorityPct: 60,
+  ultraCriticalQuorumPct: 80,
+  ultraCriticalMajorityPct: 66,
   payoutCriticalVoteHours: 48,
   policyVoteHours: 72,
+  cycleClosureVoteHours: 96,
   criticalWithdrawalExecutionDelayHours: 24,
 } as const;
 
+export function getGroupLoanInterestPct(paymentRules: string | null | undefined): number {
+  const rules = parseGroupPaymentRules(paymentRules);
+  const rate = Number(rules.loanInterestPctTotal);
+  if (Number.isFinite(rate) && rate >= 1 && rate <= 30) return rate;
+  return 10;
+}
+
+export function requiresCollectiveLoan(amountUsdt: number): boolean {
+  return amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalLoanUsdt;
+}
+
+/** McBuleli AVEC — single platform model: large payouts → collective vote. */
+export function requiresCollectivePayout(amountUsdt: number): boolean {
+  return amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt;
+}
+
+/** @deprecated Use requiresCollectivePayout — governance_mode is ignored. */
 export function requiresGovernancePayout(args: {
-  governanceMode: GovernanceMode | string | null | undefined;
+  governanceMode?: GovernanceMode | string | null;
   amountUsdt: number;
 }): boolean {
-  const mode = args.governanceMode ?? "legacy";
-  if (mode === "legacy") return false;
-  if (mode === "full") return true;
-  return args.amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt;
+  return requiresCollectivePayout(args.amountUsdt);
 }
 
 export function voteDurationHours(type: ProposalType): number {
-  if (type === "payout_critical") {
-    return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
-  }
+  if (type === "payout_critical") return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
+  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.cycleClosureVoteHours;
   return DEFAULT_GOVERNANCE_RULES.policyVoteHours;
+}
+
+export function voteQuorumPct(type: ProposalType): number {
+  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalQuorumPct;
+  return DEFAULT_GOVERNANCE_RULES.criticalQuorumPct;
+}
+
+export function voteMajorityPct(type: ProposalType): number {
+  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalMajorityPct;
+  return DEFAULT_GOVERNANCE_RULES.criticalMajorityPct;
 }
 
 export function executionDelayHours(type: ProposalType): number {

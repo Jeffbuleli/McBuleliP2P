@@ -9,9 +9,9 @@ import {
   groupWalletLedgerEntries,
   users,
 } from "@/db";
+import { getGroupLoanInterestPct } from "@/lib/avec/governance/rules";
 import {
   allocateLoanRepayment,
-  AVEC_LOAN_INTEREST_PCT_TOTAL,
   AVEC_LOAN_MAX_DAYS,
   AVEC_LOAN_PENALTY_PCT,
   computeLoanCharges,
@@ -279,6 +279,7 @@ export async function proposeGroupLoan(args: {
   const managers = await listGroupManagers(args.groupId);
   const required = payoutRequiredApprovals(managers.length);
   const amtStr = fmtWalletAmount(args.amountUsdt);
+  const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
 
   const [row] = await db
     .insert(groupAvecLoans)
@@ -290,7 +291,7 @@ export async function proposeGroupLoan(args: {
       outstandingUsdt: amtStr,
       status: "pending",
       requiredApprovals: required,
-      interestRatePctMonth: String(AVEC_LOAN_INTEREST_PCT_TOTAL),
+      interestRatePctMonth: String(interestPct),
       penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
       loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
@@ -311,6 +312,66 @@ export async function proposeGroupLoan(args: {
   });
 
   return { ok: true, loanId: row.id, requiredApprovals: required };
+}
+
+/** Disburse a loan after collective vote (requiredApprovals = 0). */
+export async function executeLoanFromGovernance(args: {
+  groupId: string;
+  actorUserId: string;
+  borrowerUserId: string;
+  amountUsdt: number;
+  proposalId?: string;
+}): Promise<{ ok: true; executed: boolean } | { ok: false; message: string }> {
+  const gCheck = await assertGroupActive(args.groupId);
+  if (!gCheck.ok) return gCheck;
+
+  const saved = await memberSavedUsdt(args.groupId, args.borrowerUserId);
+  const maxLoan = saved * AVEC_MAX_LOAN_SAVINGS_MULTIPLIER;
+  if (args.amountUsdt > maxLoan + 1e-18) {
+    return { ok: false, message: "group_loan_exceeds_limit" };
+  }
+
+  const funds = await getGroupFundSummary(args.groupId);
+  if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
+    return { ok: false, message: "group_insufficient_balance" };
+  }
+
+  const db = getDb();
+  const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
+  const amtStr = fmtWalletAmount(args.amountUsdt);
+
+  const [row] = await db
+    .insert(groupAvecLoans)
+    .values({
+      groupId: args.groupId,
+      borrowerUserId: args.borrowerUserId,
+      initiatedByUserId: args.actorUserId,
+      principalUsdt: amtStr,
+      outstandingUsdt: amtStr,
+      status: "pending",
+      requiredApprovals: 0,
+      interestRatePctMonth: String(interestPct),
+      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      loanTermDays: AVEC_LOAN_MAX_DAYS,
+    })
+    .returning({ id: groupAvecLoans.id });
+
+  if (!row?.id) return { ok: false, message: "group_action_failed" };
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "gov_loan_executing",
+    after: { loanId: row.id, proposalId: args.proposalId },
+  });
+
+  const exec = await tryDisburseLoan({
+    loanId: row.id,
+    groupId: args.groupId,
+    lastApproverUserId: args.actorUserId,
+  });
+  if (!exec.ok) return exec;
+  return { ok: true, executed: exec.executed };
 }
 
 /** Member (non-manager) requests a loan for themselves — managers must accept then approve 2/3. */
@@ -356,6 +417,7 @@ export async function requestMemberLoan(args: {
   }
 
   const amtStr = fmtWalletAmount(args.amountUsdt);
+  const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
   const [row] = await db
     .insert(groupAvecLoans)
     .values({
@@ -366,7 +428,7 @@ export async function requestMemberLoan(args: {
       outstandingUsdt: amtStr,
       status: "requested",
       requiredApprovals: 0,
-      interestRatePctMonth: String(AVEC_LOAN_INTEREST_PCT_TOTAL),
+      interestRatePctMonth: String(interestPct),
       penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
       loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
