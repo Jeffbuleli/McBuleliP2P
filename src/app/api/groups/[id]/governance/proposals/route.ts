@@ -14,6 +14,22 @@ const createZ = z.discriminatedUnion("type", [
     payload: z.object({ targetUserId: z.string().uuid() }),
   }),
   z.object({
+    type: z.literal("revoke_member"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({ targetUserId: z.string().uuid() }),
+  }),
+  z.object({
+    type: z.literal("transfer_fund_bucket"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      fromBucket: z.enum(["penalties", "interest"]),
+      toBucket: z.enum(["social", "reserve", "savings"]),
+      amountUsdt: z.number().positive().max(1_000_000),
+    }),
+  }),
+  z.object({
     type: z.literal("change_interest_rate"),
     title: z.string().max(200).optional(),
     justification: z.string().min(10).max(2000),

@@ -22,6 +22,10 @@ import {
   syncSocialAidRequestAfterVote,
 } from "@/lib/avec/social-fund-aid";
 import type { ProposalType } from "@/lib/avec/governance/types";
+import {
+  executeBucketTransfer,
+  type FundBucket,
+} from "@/lib/avec/fund-buckets";
 
 async function executePassedProposal(args: {
   proposalId: string;
@@ -80,6 +84,51 @@ async function executePassedProposal(args: {
       actorUserId: p.authorUserId,
       action: "gov_admin_revoked",
       after: { proposalId: p.id, targetUserId },
+    });
+  } else if (type === "revoke_member") {
+    const targetUserId = String(payload.targetUserId ?? "");
+    if (!targetUserId) return { ok: false, message: "invalid_payload" };
+    await db
+      .update(groupSavingsMemberships)
+      .set({
+        status: "revoked",
+        role: "member",
+        granularRoles: [],
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          eq(groupSavingsMemberships.userId, targetUserId),
+          eq(groupSavingsMemberships.status, "approved"),
+        ),
+      );
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_member_revoked",
+      after: { proposalId: p.id, targetUserId },
+    });
+  } else if (type === "transfer_fund_bucket") {
+    const exec = await executeBucketTransfer({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      fromBucket: String(payload.fromBucket ?? "") as FundBucket,
+      toBucket: String(payload.toBucket ?? "") as FundBucket,
+      amountUsdt: Number(payload.amountUsdt),
+      proposalId: p.id,
+    });
+    if (!exec.ok) return { ok: false, message: exec.message };
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_bucket_transfer",
+      after: {
+        proposalId: p.id,
+        fromBucket: payload.fromBucket,
+        toBucket: payload.toBucket,
+        amountUsdt: payload.amountUsdt,
+      },
     });
   } else if (type === "change_interest_rate") {
     const rate = Number(payload.interestRatePctTotal);

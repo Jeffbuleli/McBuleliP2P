@@ -1,5 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { getDb, groupAvecLoans, groupWalletLedgerEntries } from "@/db";
+
+const TRANSFER_FROM_BUCKETS: FundBucket[] = ["penalties", "interest"];
+const TRANSFER_TO_BUCKETS: FundBucket[] = ["social", "reserve", "savings"];
 import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
@@ -53,6 +57,19 @@ export function ledgerBucket(
   if (entryType === "group_loan_repay_penalty_in") return "penalties";
   if (entryType === "group_loan_repay_interest_in") return "interest";
   if (entryType === "group_reserve_in") return "reserve";
+  if (entryType === "group_bucket_transfer_out" || entryType === "group_bucket_transfer_in") {
+    const b = meta?.bucket;
+    if (
+      b === "savings" ||
+      b === "social" ||
+      b === "admin" ||
+      b === "penalties" ||
+      b === "interest" ||
+      b === "reserve"
+    ) {
+      return b;
+    }
+  }
   if (
     entryType === "group_contribution_in" ||
     entryType === "group_payout_out" ||
@@ -123,6 +140,95 @@ export async function getGroupFundSummary(
 
 export function fundBucketMeta(bucket: FundBucket): { bucket: FundBucket } {
   return { bucket };
+}
+
+function bucketBalance(summary: GroupFundSummary, bucket: FundBucket): number {
+  if (bucket === "social") return summary.socialUsdt;
+  if (bucket === "admin") return summary.adminUsdt;
+  if (bucket === "penalties") return summary.penaltiesUsdt;
+  if (bucket === "interest") return summary.interestUsdt;
+  if (bucket === "reserve") return summary.reserveUsdt;
+  return summary.savingsUsdt;
+}
+
+export async function validateBucketTransfer(args: {
+  groupId: string;
+  fromBucket: string;
+  toBucket: string;
+  amountUsdt: number;
+}): Promise<
+  | { ok: true; fromBucket: FundBucket; toBucket: FundBucket; amountUsdt: number }
+  | { ok: false; message: string }
+> {
+  const from = args.fromBucket as FundBucket;
+  const to = args.toBucket as FundBucket;
+  if (!TRANSFER_FROM_BUCKETS.includes(from)) {
+    return { ok: false, message: "group_gov_invalid_bucket_from" };
+  }
+  if (!TRANSFER_TO_BUCKETS.includes(to)) {
+    return { ok: false, message: "group_gov_invalid_bucket_to" };
+  }
+  if (from === to) return { ok: false, message: "group_gov_invalid_bucket_transfer" };
+  if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
+    return { ok: false, message: "group_invalid_amount" };
+  }
+  const funds = await getGroupFundSummary(args.groupId);
+  const available = bucketBalance(funds, from);
+  if (args.amountUsdt > available + 1e-9) {
+    return { ok: false, message: "group_gov_bucket_insufficient" };
+  }
+  return { ok: true, fromBucket: from, toBucket: to, amountUsdt: args.amountUsdt };
+}
+
+export async function executeBucketTransfer(args: {
+  groupId: string;
+  actorUserId: string;
+  fromBucket: FundBucket;
+  toBucket: FundBucket;
+  amountUsdt: number;
+  proposalId: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const check = await validateBucketTransfer({
+    groupId: args.groupId,
+    fromBucket: args.fromBucket,
+    toBucket: args.toBucket,
+    amountUsdt: args.amountUsdt,
+  });
+  if (!check.ok) return check;
+
+  const db = getDb();
+  const batchId = randomUUID();
+  const amt = fmtWalletAmount(check.amountUsdt);
+  const baseMeta = { proposalId: args.proposalId, by: args.actorUserId };
+
+  await db.insert(groupWalletLedgerEntries).values([
+    {
+      batchId,
+      groupId: args.groupId,
+      entryType: "group_bucket_transfer_out",
+      asset: "USDT",
+      amount: `-${amt}`,
+      meta: {
+        ...baseMeta,
+        ...fundBucketMeta(check.fromBucket),
+        counterBucket: check.toBucket,
+      },
+    },
+    {
+      batchId,
+      groupId: args.groupId,
+      entryType: "group_bucket_transfer_in",
+      asset: "USDT",
+      amount: amt,
+      meta: {
+        ...baseMeta,
+        ...fundBucketMeta(check.toBucket),
+        counterBucket: check.fromBucket,
+      },
+    },
+  ]);
+
+  return { ok: true };
 }
 
 /** Split loan repayment into bucket-specific group ledger lines. */

@@ -49,9 +49,31 @@ export function AvecMembersPanel({
     void loadInvite();
   }, [loadInvite]);
 
+  async function proposeRevokeMember(userId: string) {
+    const justification = window.prompt(t("group_gov_revoke_member_prompt"));
+    if (!justification || justification.trim().length < 10) return;
+    setErr(null);
+    const res = await fetch(`/api/groups/${groupId}/governance/proposals`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "revoke_member",
+        justification: justification.trim(),
+        payload: { targetUserId: userId },
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr((j as { error?: string }).error ?? "group_action_failed");
+      return;
+    }
+    onRefresh();
+    window.alert(t("group_gov_proposal_submitted"));
+  }
+
   async function memberAction(
     userId: string,
-    body: { action: "review"; accept: boolean } | { action: "revoke" } | { action: "role"; role: "member" | "co_admin" },
+    body: { action: "review"; accept: boolean } | { action: "role"; role: "member" | "co_admin" },
   ) {
     setErr(null);
     const res = await fetch(`/api/groups/${groupId}/members/${userId}`, {
@@ -231,10 +253,10 @@ export function AvecMembersPanel({
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => void memberAction(m.userId, { action: "revoke" })}
+                          onClick={() => void proposeRevokeMember(m.userId)}
                           className="text-[10px] font-bold text-rose-600"
                         >
-                          {t("avec_member_revoke")}
+                          {t("avec_member_propose_revoke")}
                         </button>
                       ) : null}
                     </td>

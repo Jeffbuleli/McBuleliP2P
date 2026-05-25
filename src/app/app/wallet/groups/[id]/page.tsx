@@ -25,6 +25,7 @@ import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
 import { AvecLoansPanel } from "@/components/groups/avec-loans-panel";
 import { AvecClosurePanel } from "@/components/groups/avec-closure-panel";
 import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
+import { AvecBucketTransferGovernance } from "@/components/groups/avec-bucket-transfer-governance";
 import { AvecSocialAidPanel } from "@/components/groups/avec-social-aid-panel";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
@@ -96,6 +97,10 @@ export default function AvecDashboardPage() {
   const [tab, setTab] = useState<Tab>("vue");
   const [myUserId, setMyUserId] = useState<string | undefined>();
   const [dialogueUnread, setDialogueUnread] = useState(false);
+  const [treasuryFunds, setTreasuryFunds] = useState<{
+    penaltiesUsdt: number;
+    interestUsdt: number;
+  } | null>(null);
 
   const me = data?.group.me;
   const canModerateMembership = me ? canModerateGroupMembership(me) : false;
@@ -133,6 +138,22 @@ export default function AvecDashboardPage() {
   useEffect(() => {
     void load();
   }, [id]);
+
+  useEffect(() => {
+    if (!id || tab !== "treasury") return;
+    void fetch(`/api/groups/${id}/funds`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((j) => {
+        const f = (j as { funds?: { penaltiesUsdt?: number; interestUsdt?: number } }).funds;
+        if (f) {
+          setTreasuryFunds({
+            penaltiesUsdt: Number(f.penaltiesUsdt ?? 0),
+            interestUsdt: Number(f.interestUsdt ?? 0),
+          });
+        }
+      })
+      .catch(() => setTreasuryFunds(null));
+  }, [id, tab, fundsRefresh]);
 
   useEffect(() => {
     void fetch("/api/auth/me", { cache: "no-store" })
@@ -417,6 +438,15 @@ export default function AvecDashboardPage() {
         {tab === "treasury" && (
           <div className="space-y-3">
             <AvecTreasuryFunds groupId={id} onRefreshKey={fundsRefresh} />
+            {canAdmin && treasuryFunds ? (
+              <AvecBucketTransferGovernance
+                groupId={id}
+                penaltiesUsdt={treasuryFunds.penaltiesUsdt}
+                interestUsdt={treasuryFunds.interestUsdt}
+                canPropose={!!canAdmin}
+                onDone={() => setFundsRefresh((n) => n + 1)}
+              />
+            ) : null}
             <AvecSocialAidPanel
               groupId={id}
               myUserId={myUserId}

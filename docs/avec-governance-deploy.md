@@ -122,6 +122,17 @@ Pas de migration SQL.
 
 Test : attribuer rôle secrétaire → vote → publier un PV ; masquer un message hors sujet.
 
+### Sprint 7 (exclusion membre + transfert poches)
+
+Pas de migration SQL.
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Exclusion membre** | Plus de révocation directe — vote `revoke_member` 72 h (admin propose) |
+| **Transfert poches** | Vote `transfer_fund_bucket` : pénalités/intérêts → solidarité, réserve ou épargne |
+
+UI : **Membres** → « Proposer exclusion » · **Trésorerie** → bloc transfert (si pénalités/intérêts &gt; 0).
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -174,6 +185,8 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **Taux intérêt / pénalité** prêts | Vote membres (72 h) |
 | **Rôles fonctionnels** (trésorier, crédit, …) | Vote membres (72 h) |
 | **PV de réunion** (secrétaire / gestionnaires) | Publication Dialogue |
+| **Exclusion d’un membre** | Vote membres (72 h) |
+| **Transfert pénalités / intérêts** | Vote membres (72 h) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

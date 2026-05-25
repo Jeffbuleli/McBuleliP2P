@@ -2,6 +2,8 @@ export type GovernanceMode = "legacy" | "hybrid" | "full";
 
 export type ProposalType =
   | "revoke_admin"
+  | "revoke_member"
+  | "transfer_fund_bucket"
   | "payout_critical"
   | "payout_medium"
   | "change_interest_rate"

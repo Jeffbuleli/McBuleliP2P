@@ -407,6 +407,8 @@ export async function createPayoutCriticalProposal(args: {
 
 type MemberProposalType =
   | "revoke_admin"
+  | "revoke_member"
+  | "transfer_fund_bucket"
   | "change_interest_rate"
   | "change_penalty_rate"
   | "set_co_admins"
@@ -438,6 +440,8 @@ export async function createMemberProposal(args: {
     "set_committee",
     "set_granular_roles",
     "change_social_fund",
+    "revoke_member",
+    "transfer_fund_bucket",
   ];
   if (adminOnly.includes(args.type) && !canProposeGovernancePolicy(m)) {
     return { ok: false, message: "group_forbidden" };
@@ -480,6 +484,42 @@ export async function createMemberProposal(args: {
       return { ok: false, message: "group_gov_cannot_revoke_self" };
     }
     if (!title) title = "Revoke administrator";
+  } else if (args.type === "revoke_member") {
+    const targetUserId = String(args.payload.targetUserId ?? "");
+    if (!targetUserId) return { ok: false, message: "group_gov_invalid_payload" };
+    const [target] = await db
+      .select({ role: groupSavingsMemberships.role, status: groupSavingsMemberships.status })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          eq(groupSavingsMemberships.userId, targetUserId),
+        ),
+      )
+      .limit(1);
+    if (!target || target.status !== "approved") {
+      return { ok: false, message: "group_gov_target_not_member" };
+    }
+    if (target.role === "admin") {
+      return { ok: false, message: "group_gov_cannot_revoke_admin_via_member" };
+    }
+    if (targetUserId === args.authorUserId) {
+      return { ok: false, message: "group_gov_cannot_revoke_self" };
+    }
+    if (!title) title = "Exclude member from group";
+  } else if (args.type === "transfer_fund_bucket") {
+    const { validateBucketTransfer } = await import("@/lib/avec/fund-buckets");
+    const check = await validateBucketTransfer({
+      groupId: args.groupId,
+      fromBucket: String(args.payload.fromBucket ?? ""),
+      toBucket: String(args.payload.toBucket ?? ""),
+      amountUsdt: Number(args.payload.amountUsdt),
+    });
+    if (!check.ok) return { ok: false, message: check.message };
+    financialImpactUsdt = fmtWalletAmount(check.amountUsdt);
+    if (!title) {
+      title = `Transfer ${check.amountUsdt.toFixed(2)} USDT · ${check.fromBucket} → ${check.toBucket}`;
+    }
   } else if (args.type === "change_interest_rate") {
     const rate = Number(args.payload.interestRatePctTotal);
     if (!Number.isFinite(rate) || rate < 1 || rate > 30) {
