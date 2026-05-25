@@ -52,6 +52,10 @@ export function proposalTypeLabel(type: ProposalType): string {
       return "Critical loan";
     case "loan_medium":
       return "Medium loan (committee)";
+    case "social_aid_medium":
+      return "Social aid (committee)";
+    case "social_aid_critical":
+      return "Social aid (members)";
     default:
       return type;
   }

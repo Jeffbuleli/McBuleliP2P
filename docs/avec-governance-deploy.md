@@ -69,6 +69,23 @@ psql "$DATABASE_URL" -f drizzle/0044_governance_sprint2.sql
 
 Ajoute `vote_audience`, `retry_count`, `parent_proposal_id` sur `group_proposals`.
 
+### Sprint 3 (aide solidarité démocratique)
+
+```bash
+psql "$DATABASE_URL" -f drizzle/0045_social_fund_requests.sql
+```
+
+Crée la table `group_social_fund_requests` (demandes d’aide, lien vote, statuts).
+
+| Montant aide | Vote |
+|--------------|------|
+| **&lt; 50 USDT** | Comité (24 h) |
+| **≥ 50 USDT** | Tous les membres (48 h) |
+
+Plafonds applicatifs : 200 USDT / membre / demande, 500 USDT / groupe / mois, 30 j entre deux demandes du même membre. Paiement **uniquement** depuis le fonds solidarité.
+
+UI : onglet **Trésorerie** → panneau **Aide solidarité** ; votes et cartes dans **Dialogue**.
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -115,7 +132,9 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | Retrait **50–499** ou prêt **50–99 USDT** | **Vote comité** (24 h, 50 % quorum) |
 | Retrait **≥ 500 USDT** | Vote membres (48 h + 24 h délai) |
 | Prêt **≥ 100 USDT** | Vote membres (72 h) |
-| Comité, co-admins, fonds social, taux | Vote membres (72 h) |
+| Comité, co-admins, **taux** fonds social (réunion), taux | Vote membres (72 h) |
+| **Aide solidarité** (paiement) &lt; 50 USDT | Vote comité (24 h) |
+| **Aide solidarité** ≥ 50 USDT | Vote membres (48 h) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

@@ -24,7 +24,13 @@ export function ledgerBucket(
 ): FundBucket {
   const b = meta?.bucket;
   if (b === "savings" || b === "social" || b === "admin") return b;
-  if (entryType === "group_social_contribution_in") return "social";
+  if (
+    entryType === "group_social_contribution_in" ||
+    entryType === "group_social_aid_out"
+  ) {
+    return "social";
+  }
+  if (entryType === "group_social_aid_in") return "savings";
   if (entryType === "group_subscription_fee") return "admin";
   if (
     entryType === "group_contribution_in" ||

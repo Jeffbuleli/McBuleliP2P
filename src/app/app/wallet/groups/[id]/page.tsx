@@ -25,6 +25,7 @@ import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
 import { AvecLoansPanel } from "@/components/groups/avec-loans-panel";
 import { AvecClosurePanel } from "@/components/groups/avec-closure-panel";
 import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
+import { AvecSocialAidPanel } from "@/components/groups/avec-social-aid-panel";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
@@ -410,6 +411,15 @@ export default function AvecDashboardPage() {
         {tab === "treasury" && (
           <div className="space-y-3">
             <AvecTreasuryFunds groupId={id} onRefreshKey={fundsRefresh} />
+            <AvecSocialAidPanel
+              groupId={id}
+              myUserId={myUserId}
+              canRequest={!!canContribute}
+              onDone={() => {
+                setFundsRefresh((n) => n + 1);
+                void load();
+              }}
+            />
             <AvecLoansPanel
               groupId={id}
               members={data.members}

@@ -221,7 +221,7 @@ async function openProposalVote(args: {
   return openProposalVoteFromRow(args);
 }
 
-async function insertAndStartProposal(args: {
+export async function insertAndStartProposal(args: {
   groupId: string;
   authorUserId: string;
   type: ProposalType;

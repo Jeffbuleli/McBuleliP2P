@@ -23,6 +23,11 @@ import {
   AvecGovernanceVoteMessage,
   parseGovernanceVoteMeta,
 } from "@/components/groups/avec-governance-vote-message";
+import {
+  AvecSocialAidPaidMessage,
+  AvecSocialAidRequestedMessage,
+  parseSocialAidMeta,
+} from "@/components/groups/avec-social-aid-message";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 type Reaction = { userId: string; emoji: string };
@@ -255,6 +260,28 @@ export function AvecChatroom({
               return (
                 <div key={m.id} className="flex justify-center py-1">
                   <AvecClosureDecisionMessage meta={m.meta ?? null} />
+                </div>
+              );
+            }
+            if (m.messageType === "social_aid_requested") {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecSocialAidRequestedMessage
+                    meta={parseSocialAidMeta(m.meta ?? null, m.body)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                  />
+                </div>
+              );
+            }
+            if (m.messageType === "social_aid_paid") {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecSocialAidPaidMessage
+                    meta={parseSocialAidMeta(m.meta ?? null, m.body)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                  />
                 </div>
               );
             }

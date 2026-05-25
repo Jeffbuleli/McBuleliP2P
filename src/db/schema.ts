@@ -1092,6 +1092,43 @@ export const groupVotes = pgTable(
   ],
 );
 
+export const groupSocialFundRequests = pgTable(
+  "group_social_fund_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    requesterUserId: uuid("requester_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    aidType: varchar("aid_type", { length: 32 }).notNull(),
+    aidMode: varchar("aid_mode", { length: 16 }).notNull().default("grant"),
+    amountUsdt: numeric("amount_usdt", { precision: 36, scale: 18 }).notNull(),
+    justification: text("justification").notNull(),
+    proofAttachmentUrl: text("proof_attachment_url"),
+    status: varchar("status", { length: 24 }).notNull().default("pending_vote"),
+    proposalId: uuid("proposal_id").references(() => groupProposals.id, {
+      onDelete: "set null",
+    }),
+    limitsSnapshot: jsonb("limits_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_social_fund_requests_group_status_idx").on(t.groupId, t.status),
+    index("group_social_fund_requests_requester_idx").on(t.requesterUserId, t.createdAt),
+  ],
+);
+
 export const groupPayoutRequests = pgTable(
   "group_payout_requests",
   {

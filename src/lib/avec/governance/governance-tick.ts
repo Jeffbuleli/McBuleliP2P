@@ -16,6 +16,10 @@ import { executeClosureFromGovernance } from "@/lib/avec/group-cycle-closure";
 import type { ClosureSnapshot } from "@/lib/avec/group-cycle-closure";
 import { applyGroupSocialFundFromGovernance } from "@/lib/group-savings-meeting-params";
 import { executeLoanFromGovernance } from "@/lib/avec/group-loans";
+import {
+  executeSocialAidFromGovernance,
+  syncSocialAidRequestAfterVote,
+} from "@/lib/avec/social-fund-aid";
 import type { ProposalType } from "@/lib/avec/governance/types";
 
 async function executePassedProposal(args: {
@@ -153,6 +157,13 @@ async function executePassedProposal(args: {
       proposalId: p.id,
     });
     if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "social_aid_medium" || type === "social_aid_critical") {
+    const exec = await executeSocialAidFromGovernance({
+      groupId: args.groupId,
+      proposalId: p.id,
+      actorUserId: p.authorUserId,
+    });
+    if (!exec.ok) return { ok: false, message: exec.message };
   } else if (type === "loan_critical" || type === "loan_medium") {
     const borrowerUserId = String(
       payload.borrowerUserId ?? p.beneficiaryUserId ?? "",
@@ -212,6 +223,22 @@ export async function runGovernanceTick(): Promise<{
       });
       if (r !== "skipped") {
         closed++;
+        const [prop] = await db
+          .select({ type: groupProposals.type })
+          .from(groupProposals)
+          .where(eq(groupProposals.id, row.id))
+          .limit(1);
+        if (
+          (prop?.type === "social_aid_medium" ||
+            prop?.type === "social_aid_critical") &&
+          r !== "passed"
+        ) {
+          await syncSocialAidRequestAfterVote({
+            proposalId: row.id,
+            groupId: row.groupId,
+            result: r,
+          });
+        }
         if (r === "expired") {
           try {
             await maybeRetryExpiredProposal({

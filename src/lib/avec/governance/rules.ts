@@ -22,6 +22,11 @@ export const DEFAULT_GOVERNANCE_RULES = {
   cycleClosureVoteHours: 96,
   criticalWithdrawalExecutionDelayHours: 24,
   maxVoteRetries: 3,
+  /** Social aid: committee vote below this amount */
+  socialAidCommitteeMaxUsdt: 50,
+  socialAidMaxPerMemberUsdt: 200,
+  socialAidMaxPerMonthGroupUsdt: 500,
+  socialAidMinDaysBetweenRequests: 30,
 } as const;
 
 export type OperationTier = RiskTier;
@@ -36,6 +41,15 @@ export function classifyLoanTier(amountUsdt: number): OperationTier {
   if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalLoanUsdt) return "C";
   if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.minorLoanMaxUsdt) return "B";
   return "A";
+}
+
+export function classifySocialAidTier(amountUsdt: number): OperationTier {
+  if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.socialAidCommitteeMaxUsdt) return "C";
+  return "B";
+}
+
+export function socialAidProposalType(amountUsdt: number): "social_aid_medium" | "social_aid_critical" {
+  return classifySocialAidTier(amountUsdt) === "B" ? "social_aid_medium" : "social_aid_critical";
 }
 
 export function isLegacyPayoutTier(tier: OperationTier): boolean {
@@ -68,14 +82,22 @@ export function requiresGovernancePayout(args: {
 }
 
 export function voteAudienceForType(type: ProposalType): VoteAudience {
-  if (type === "payout_medium" || type === "loan_medium") return "committee";
+  if (type === "payout_medium" || type === "loan_medium" || type === "social_aid_medium") {
+    return "committee";
+  }
   return "members";
 }
 
 export function voteDurationHours(type: ProposalType): number {
-  if (type === "payout_critical") return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
+  if (type === "payout_critical" || type === "social_aid_critical") {
+    return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
+  }
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.cycleClosureVoteHours;
-  if (type === "payout_medium" || type === "loan_medium") {
+  if (
+    type === "payout_medium" ||
+    type === "loan_medium" ||
+    type === "social_aid_medium"
+  ) {
     return DEFAULT_GOVERNANCE_RULES.committeeVoteHours;
   }
   return DEFAULT_GOVERNANCE_RULES.policyVoteHours;
@@ -83,7 +105,11 @@ export function voteDurationHours(type: ProposalType): number {
 
 export function voteQuorumPct(type: ProposalType): number {
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalQuorumPct;
-  if (type === "payout_medium" || type === "loan_medium") {
+  if (
+    type === "payout_medium" ||
+    type === "loan_medium" ||
+    type === "social_aid_medium"
+  ) {
     return DEFAULT_GOVERNANCE_RULES.committeeQuorumPct;
   }
   return DEFAULT_GOVERNANCE_RULES.criticalQuorumPct;
@@ -91,15 +117,27 @@ export function voteQuorumPct(type: ProposalType): number {
 
 export function voteMajorityPct(type: ProposalType): number {
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalMajorityPct;
-  if (type === "payout_medium" || type === "loan_medium") {
+  if (
+    type === "payout_medium" ||
+    type === "loan_medium" ||
+    type === "social_aid_medium"
+  ) {
     return DEFAULT_GOVERNANCE_RULES.committeeMajorityPct;
   }
   return DEFAULT_GOVERNANCE_RULES.criticalMajorityPct;
 }
 
 export function riskTierForType(type: ProposalType): RiskTier {
-  if (type === "payout_medium" || type === "loan_medium") return "B";
-  if (type === "payout_critical" || type === "cycle_closure") return "C";
+  if (
+    type === "payout_medium" ||
+    type === "loan_medium" ||
+    type === "social_aid_medium"
+  ) {
+    return "B";
+  }
+  if (type === "social_aid_critical" || type === "payout_critical" || type === "cycle_closure") {
+    return "C";
+  }
   return "C";
 }
 

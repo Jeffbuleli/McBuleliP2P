@@ -10,7 +10,9 @@ export type ProposalType =
   | "change_social_fund"
   | "cycle_closure"
   | "loan_critical"
-  | "loan_medium";
+  | "loan_medium"
+  | "social_aid_medium"
+  | "social_aid_critical";
 
 export type ProposalStatus =
   | "voting"
