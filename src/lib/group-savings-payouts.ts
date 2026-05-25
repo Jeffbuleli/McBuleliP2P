@@ -405,6 +405,10 @@ export async function approveGroupPayout(args: {
     .limit(1);
   if (!req) return { ok: false, message: "group_payout_not_found" };
 
+  if (args.actorUserId === req.initiatedByUserId) {
+    return { ok: false, message: "group_gov_initiator_cannot_vote" };
+  }
+
   const existing = await db
     .select({ id: groupPayoutApprovals.id })
     .from(groupPayoutApprovals)
@@ -633,4 +637,142 @@ export async function payoutFromGroup(args: {
   amountUsdt: number;
 }) {
   return proposeGroupPayout(args);
+}
+
+/** Execute a treasury payout after collective governance approval (no manager quorum). */
+export async function executeGovernancePayout(args: {
+  groupId: string;
+  toUserId: string;
+  amountUsdt: number;
+  initiatedByUserId: string;
+  actorUserId: string;
+  proposalId: string;
+}): Promise<{ ok: true; requestId: string } | { ok: false; message: string }> {
+  const db = getDb();
+  const [g] = await db
+    .select()
+    .from(groupSavingsGroups)
+    .where(eq(groupSavingsGroups.id, args.groupId))
+    .limit(1);
+  if (!g) return { ok: false, message: "group_not_found" };
+  await ensureGroupSubscriptionUpToDate({ groupId: args.groupId });
+  if (g.status !== "active" || g.subscriptionStatus !== "active") {
+    return { ok: false, message: "group_suspended" };
+  }
+  if ((g.cycleStatus ?? "active") !== "active") {
+    return { ok: false, message: "group_cycle_not_active" };
+  }
+
+  const funds = await getGroupFundSummary(args.groupId);
+  if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
+    return { ok: false, message: "group_insufficient_balance" };
+  }
+
+  const amtStr = fmtWalletAmount(args.amountUsdt);
+  const batchId = randomUUID();
+
+  return db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(groupPayoutRequests)
+      .values({
+        groupId: args.groupId,
+        initiatedByUserId: args.initiatedByUserId,
+        toUserId: args.toUserId,
+        amountUsdt: amtStr,
+        status: "executed",
+        requiredApprovals: 0,
+        batchId,
+        proposalId: args.proposalId,
+        executedAt: new Date(),
+      })
+      .returning({ id: groupPayoutRequests.id });
+
+    if (!row?.id) return { ok: false as const, message: "group_action_failed" };
+
+    await tx.insert(groupWalletLedgerEntries).values({
+      batchId,
+      groupId: args.groupId,
+      entryType: "group_payout_out",
+      asset: "USDT",
+      amount: `-${amtStr}`,
+      meta: {
+        toUserId: args.toUserId,
+        requestId: row.id,
+        proposalId: args.proposalId,
+        ...fundBucketMeta("savings"),
+      },
+    });
+    await creditUserAsset(tx, args.toUserId, "USDT", amtStr);
+    await insertWalletLedgerLines(tx, [
+      {
+        batchId,
+        userId: args.toUserId,
+        entryType: "group_payout_in",
+        asset: "USDT",
+        amount: amtStr,
+        meta: {
+          groupId: args.groupId,
+          requestId: row.id,
+          proposalId: args.proposalId,
+        },
+      },
+    ]);
+
+    const beneficiaryDisplay = await userDisplayName(args.toUserId);
+    const initiatorDisplay = await userDisplayName(args.initiatedByUserId);
+    const now = new Date();
+
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: args.actorUserId,
+      action: "gov_payout_executed",
+      after: {
+        requestId: row.id,
+        proposalId: args.proposalId,
+        toUserId: args.toUserId,
+        amountUsdt: args.amountUsdt,
+      },
+    });
+
+    try {
+      await insertGroupPayoutDecisionMessage({
+        groupId: args.groupId,
+        actorUserId: args.actorUserId,
+        meta: {
+          requestId: row.id,
+          amountUsdt: args.amountUsdt,
+          beneficiaryUserId: args.toUserId,
+          beneficiaryDisplay,
+          initiatedByUserId: args.initiatedByUserId,
+          initiatedByDisplay: initiatorDisplay,
+          approvers: [{ userId: "governance", displayName: "Collective vote" }],
+          executedAt: now.toISOString(),
+        },
+      });
+    } catch {
+      // optional
+    }
+
+    await createUserNotification({
+      userId: args.toUserId,
+      kind: "group_payout",
+      payload: {
+        groupId: args.groupId,
+        amount: args.amountUsdt.toFixed(2),
+        asset: "USDT",
+      },
+    });
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_payout",
+      excludeUserId: args.toUserId,
+      payload: {
+        groupId: args.groupId,
+        amount: args.amountUsdt.toFixed(2),
+        asset: "USDT",
+      },
+    });
+
+    return { ok: true as const, requestId: row.id };
+  });
 }

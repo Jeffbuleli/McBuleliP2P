@@ -897,6 +897,10 @@ export const groupSavingsGroups = pgTable(
     cycleNumber: integer("cycle_number").notNull().default(1),
     cycleStartedAt: timestamp("cycle_started_at", { withTimezone: true }),
     cycleClosedAt: timestamp("cycle_closed_at", { withTimezone: true }),
+    /** legacy | hybrid | full — collective governance mode */
+    governanceMode: varchar("governance_mode", { length: 16 })
+      .notNull()
+      .default("legacy"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1021,6 +1025,69 @@ export const groupMessages = pgTable(
   (t) => [index("group_messages_group_created_idx").on(t.groupId, t.createdAt)],
 );
 
+export const groupProposals = pgTable(
+  "group_proposals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groupSavingsGroups.id, { onDelete: "cascade" }),
+    authorUserId: uuid("author_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 64 }).notNull(),
+    riskTier: varchar("risk_tier", { length: 1 }).notNull(),
+    status: varchar("status", { length: 32 }).notNull(),
+    title: text("title").notNull(),
+    justification: text("justification").notNull(),
+    financialImpactUsdt: numeric("financial_impact_usdt", {
+      precision: 36,
+      scale: 18,
+    }),
+    beneficiaryUserId: uuid("beneficiary_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    requiredQuorumPct: integer("required_quorum_pct").notNull(),
+    requiredMajorityPct: integer("required_majority_pct").notNull(),
+    voteOpensAt: timestamp("vote_opens_at", { withTimezone: true }),
+    voteClosesAt: timestamp("vote_closes_at", { withTimezone: true }),
+    executionScheduledAt: timestamp("execution_scheduled_at", { withTimezone: true }),
+    executedAt: timestamp("executed_at", { withTimezone: true }),
+    /** Linked payout request after governance execution (FK in SQL migration). */
+    legacyRequestId: uuid("legacy_request_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("group_proposals_group_status_idx").on(t.groupId, t.status),
+    index("group_proposals_vote_closes_idx").on(t.status, t.voteClosesAt),
+    index("group_proposals_execution_scheduled_idx").on(t.status, t.executionScheduledAt),
+  ],
+);
+
+export const groupVotes = pgTable(
+  "group_votes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    proposalId: uuid("proposal_id")
+      .notNull()
+      .references(() => groupProposals.id, { onDelete: "cascade" }),
+    voterUserId: uuid("voter_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    choice: varchar("choice", { length: 8 }).notNull(),
+    weight: numeric("weight", { precision: 8, scale: 4 }).notNull().default("1"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_votes_proposal_voter_uidx").on(t.proposalId, t.voterUserId),
+  ],
+);
+
 export const groupPayoutRequests = pgTable(
   "group_payout_requests",
   {
@@ -1046,6 +1113,9 @@ export const groupPayoutRequests = pgTable(
       .defaultNow()
       .notNull(),
     executedAt: timestamp("executed_at", { withTimezone: true }),
+    proposalId: uuid("proposal_id").references(() => groupProposals.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [
     index("group_payout_requests_group_status_idx").on(t.groupId, t.status),

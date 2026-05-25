@@ -573,6 +573,10 @@ export async function approveGroupLoan(args: {
     .limit(1);
   if (!loan) return { ok: false, message: "group_loan_not_found" };
 
+  if (args.actorUserId === loan.initiatedByUserId) {
+    return { ok: false, message: "group_gov_initiator_cannot_vote" };
+  }
+
   const dup = await db
     .select({ id: groupAvecLoanApprovals.id })
     .from(groupAvecLoanApprovals)

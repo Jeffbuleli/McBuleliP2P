@@ -19,6 +19,10 @@ import {
   AvecPayoutDecisionMessage,
   parsePayoutMeta,
 } from "@/components/groups/avec-payout-decision-message";
+import {
+  AvecGovernanceVoteMessage,
+  parseGovernanceVoteMeta,
+} from "@/components/groups/avec-governance-vote-message";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 
 type Reaction = { userId: string; emoji: string };
@@ -251,6 +255,25 @@ export function AvecChatroom({
               return (
                 <div key={m.id} className="flex justify-center py-1">
                   <AvecClosureDecisionMessage meta={m.meta ?? null} />
+                </div>
+              );
+            }
+            if (
+              m.messageType === "vote_started" ||
+              m.messageType === "vote_progress" ||
+              m.messageType === "vote_closed"
+            ) {
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <AvecGovernanceVoteMessage
+                    groupId={groupId}
+                    myUserId={myUserId}
+                    messageType={m.messageType}
+                    meta={parseGovernanceVoteMeta(m.meta ?? null)}
+                    createdAt={m.createdAt}
+                    locale={locale}
+                    onVoted={() => void load()}
+                  />
                 </div>
               );
             }

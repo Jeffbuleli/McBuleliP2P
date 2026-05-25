@@ -12,7 +12,10 @@ export type GroupMessageType =
   | "payout_pending"
   | "payout_decision"
   | "loan_decision"
-  | "closure_decision";
+  | "closure_decision"
+  | "vote_started"
+  | "vote_progress"
+  | "vote_closed";
 
 export type PayoutPendingMeta = {
   requestId: string;

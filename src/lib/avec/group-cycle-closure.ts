@@ -438,11 +438,6 @@ export async function proposeCycleClosure(args: {
     })
     .returning({ id: groupCycleClosureRequests.id });
 
-  await db.insert(groupCycleClosureApprovals).values({
-    requestId: row.id,
-    approverUserId: args.actorUserId,
-  });
-
   await writeGroupAudit({
     groupId: args.groupId,
     actorUserId: args.actorUserId,
@@ -458,7 +453,7 @@ export async function proposeCycleClosure(args: {
     ok: true,
     requestId: row.id,
     requiredApprovals,
-    approvalCount: 1,
+    approvalCount: 0,
     snapshot,
   };
 }
@@ -493,6 +488,10 @@ export async function approveCycleClosure(args: {
     .limit(1);
 
   if (!req) return { ok: false, message: "group_closure_not_found" };
+
+  if (args.actorUserId === req.initiatedByUserId) {
+    return { ok: false, message: "group_gov_initiator_cannot_vote" };
+  }
 
   const existing = await db
     .select({ id: groupCycleClosureApprovals.id })

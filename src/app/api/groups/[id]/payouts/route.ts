@@ -3,8 +3,8 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import {
   listPendingGroupPayouts,
-  proposeGroupPayout,
 } from "@/lib/group-savings-payouts";
+import { proposeGroupPayoutWithGovernance } from "@/lib/avec/governance/payout-bridge";
 
 const bodyZ = z.object({
   toUserId: z.string().uuid(),
@@ -35,7 +35,7 @@ export async function POST(
   if (!parsed.success) {
     return NextResponse.json({ error: "group_invalid_body" }, { status: 400 });
   }
-  const r = await proposeGroupPayout({
+  const r = await proposeGroupPayoutWithGovernance({
     groupId: id,
     actorUserId,
     toUserId: parsed.data.toUserId,
