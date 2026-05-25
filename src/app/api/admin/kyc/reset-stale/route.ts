@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { healOrphanNoneKycRows } from "@/lib/didit/reconcile-kyc-on-read";
 import { resetStalePendingKycUsers } from "@/lib/didit/reconcile-stale-kyc";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 
@@ -16,5 +17,6 @@ export async function POST() {
   }
 
   const result = await resetStalePendingKycUsers();
-  return NextResponse.json({ ok: true, ...result });
+  const orphansHealed = await healOrphanNoneKycRows();
+  return NextResponse.json({ ok: true, ...result, orphansHealed });
 }

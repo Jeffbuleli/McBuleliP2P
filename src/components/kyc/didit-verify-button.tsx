@@ -43,7 +43,11 @@ export function DiditVerifyButton({
         error?: string;
       };
       if (!res.ok || !json.url) {
-        throw new Error(json.error ?? "didit_session_failed");
+        const code =
+          typeof json.error === "string" && json.error.length > 0
+            ? json.error
+            : "didit_session_failed";
+        throw new Error(code);
       }
 
       const sessionId = json.sessionId;
@@ -71,9 +75,10 @@ export function DiditVerifyButton({
         url: json.url,
         configuration: { closeModalOnComplete: true },
       });
-    } catch {
+    } catch (e) {
       setStarting(false);
-      callbacksRef.current.onError?.("commonError");
+      const code = e instanceof Error ? e.message : "didit_session_failed";
+      callbacksRef.current.onError?.(code);
     }
   }, []);
 

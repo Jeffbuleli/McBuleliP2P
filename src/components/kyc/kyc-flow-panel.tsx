@@ -77,6 +77,7 @@ export function KycFlowPanel({
   const [busy, setBusy] = useState(false);
   const [loadErr, setLoadErr] = useState(false);
   const [sdkError, setSdkError] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const autoRefreshed = useRef(false);
 
   const load = useCallback(async () => {
@@ -84,6 +85,11 @@ export function KycFlowPanel({
     const payload = await fetchKycStatus();
     if (payload) {
       setData(payload);
+      const fresh = payload.kycStatus ?? "none";
+      if (fresh === "none" || (fresh === "rejected" && payload.canRetryKyc)) {
+        setSdkError(false);
+        setSessionError(null);
+      }
       return;
     }
     setLoadErr(true);
@@ -210,6 +216,7 @@ export function KycFlowPanel({
   const verifyHandlers = {
     onStarted: async (d: { sessionId?: string; sessionStatus?: string }) => {
       setSdkError(false);
+      setSessionError(null);
       setBusy(true);
       await syncKycEvent("started", d);
       await load();
@@ -217,6 +224,7 @@ export function KycFlowPanel({
     },
     onFinished: async (d: { sessionId?: string; sessionStatus?: string }) => {
       setSdkError(false);
+      setSessionError(null);
       setBusy(true);
       await syncKycEvent("finished", d);
       const refreshed = await refreshKycFromDidit();
@@ -228,7 +236,15 @@ export function KycFlowPanel({
       await syncKycEvent("cancelled");
       await load();
     },
-    onError: () => setSdkError(true),
+    onError: (code?: string) => {
+      const s = data?.kycStatus ?? "none";
+      if (s === "none" || s === "rejected") {
+        setSessionError(code ?? "didit_session_failed");
+        setSdkError(false);
+        return;
+      }
+      setSdkError(true);
+    },
   };
 
   if (!data) {
@@ -336,6 +352,16 @@ export function KycFlowPanel({
 
           {!data.didit.configured && phase === "start" ? (
             <p className="text-center text-[10px] text-rose-700">{t("kyc_not_configured")}</p>
+          ) : null}
+
+          {sessionError && phase === "start" ? (
+            <p className="max-w-xs text-center text-[10px] font-semibold text-rose-700">
+              {sessionError.startsWith("group_") ||
+              sessionError.startsWith("kyc_") ||
+              sessionError.startsWith("didit_")
+                ? t(sessionError as keyof Messages)
+                : t("kyc_session_failed")}
+            </p>
           ) : null}
         </div>
       </div>

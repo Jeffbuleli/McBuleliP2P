@@ -101,6 +101,9 @@ export const en = {
   profile_kyc_ok: "KYC: verified",
   kyc_badge_label: "Identity verified",
   kyc_retry: "Retry",
+  kyc_session_failed: "Could not start verification. Tap Verify to try again.",
+  didit_session_failed: "Could not start verification. Tap Verify to try again.",
+  didit_not_configured: "Verification is temporarily unavailable. Try again later.",
   kyc_verify_cta: "Verify",
   kyc_continue_cta: "Continue",
   kyc_sdk_error: "Verification interrupted — tap to retry",
@@ -2994,6 +2997,12 @@ export const fr: Messages = {
   profile_kyc_ok: "KYC : vérifié",
   kyc_badge_label: "Identité vérifiée",
   kyc_retry: "Réessayer",
+  kyc_session_failed:
+    "Impossible de lancer la vérification. Appuyez sur Vérifier pour réessayer.",
+  didit_session_failed:
+    "Impossible de lancer la vérification. Appuyez sur Vérifier pour réessayer.",
+  didit_not_configured:
+    "Vérification temporairement indisponible. Réessayez plus tard.",
   kyc_verify_cta: "Vérifier",
   kyc_continue_cta: "Continuer",
   kyc_sdk_error: "Vérification interrompue — réessayez",

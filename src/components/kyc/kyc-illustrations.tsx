@@ -372,9 +372,10 @@ export function kycUiPhase(args: {
   hasSession?: boolean;
   awaitingDecision?: boolean;
 }): KycUiPhase {
-  if (args.sdkError) return "error";
   if (args.sanctionsBlocked) return "blocked";
   if (args.status === "approved") return "success";
+  if (args.status === "none" || args.status === "rejected") return "start";
+  if (args.sdkError) return "error";
   if (args.status === "manual_review") return "review";
   if (args.status === "pending") {
     const d = args.diditSessionStatus?.trim();
