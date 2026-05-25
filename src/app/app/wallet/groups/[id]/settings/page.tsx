@@ -53,6 +53,7 @@ export default function GroupSettingsPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [committeeSelected, setCommitteeSelected] = useState<Record<string, boolean>>({});
   const [invoices, setInvoices] = useState<any[] | null>(null);
   const [audit, setAudit] = useState<any[] | null>(null);
 
@@ -88,10 +89,13 @@ export default function GroupSettingsPage() {
     setAudit((aud as { audit?: unknown[] }).audit ?? []);
 
     const init: Record<string, boolean> = {};
+    const initCommittee: Record<string, boolean> = {};
     for (const m of d.members) {
       if (m.role === "co_admin") init[m.userId] = true;
+      if (m.role === "committee") initCommittee[m.userId] = true;
     }
     setSelected(init);
+    setCommitteeSelected(initCommittee);
   }
 
   useEffect(() => {
@@ -106,6 +110,13 @@ export default function GroupSettingsPage() {
       .slice(0, 3);
   }, [selected]);
 
+  const committeeIds = useMemo(() => {
+    return Object.entries(committeeSelected)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+      .slice(0, 7);
+  }, [committeeSelected]);
+
   async function saveCoAdmins() {
     setBusy(true);
     setErr(null);
@@ -117,6 +128,30 @@ export default function GroupSettingsPage() {
           type: "set_co_admins",
           justification: t("group_gov_coadmins_justification"),
           payload: { coAdminUserIds: selectedIds },
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveCommittee() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/groups/${id}/governance/proposals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "set_committee",
+          justification: t("group_gov_committee_justification"),
+          payload: { committeeUserIds: committeeIds },
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -225,6 +260,9 @@ export default function GroupSettingsPage() {
         selected={selected}
         onSelectedChange={setSelected}
         onSaveCoAdmins={() => void saveCoAdmins()}
+        committeeSelected={committeeSelected}
+        onCommitteeSelectedChange={setCommitteeSelected}
+        onSaveCommittee={() => void saveCommittee()}
         reminderBlock={reminderBlock}
       />
 

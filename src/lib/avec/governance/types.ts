@@ -3,11 +3,14 @@ export type GovernanceMode = "legacy" | "hybrid" | "full";
 export type ProposalType =
   | "revoke_admin"
   | "payout_critical"
+  | "payout_medium"
   | "change_interest_rate"
   | "set_co_admins"
+  | "set_committee"
   | "change_social_fund"
   | "cycle_closure"
-  | "loan_critical";
+  | "loan_critical"
+  | "loan_medium";
 
 export type ProposalStatus =
   | "voting"
@@ -19,7 +22,9 @@ export type ProposalStatus =
 
 export type VoteChoice = "yes" | "no" | "abstain";
 
-export type RiskTier = "C";
+export type RiskTier = "A" | "B" | "C";
+
+export type VoteAudience = "members" | "committee";
 
 export type GovernanceVoteMeta = {
   proposalId: string;
@@ -38,4 +43,8 @@ export type GovernanceVoteMeta = {
   result?: "passed" | "rejected" | "expired";
   financialImpactUsdt?: number;
   beneficiaryDisplay?: string;
+  riskTier?: RiskTier;
+  voteAudience?: VoteAudience;
+  retryCount?: number;
+  quorumReached?: boolean;
 };

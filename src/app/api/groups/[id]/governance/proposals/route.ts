@@ -28,6 +28,14 @@ const createZ = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("set_committee"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      committeeUserIds: z.array(z.string().uuid()).max(7),
+    }),
+  }),
+  z.object({
     type: z.literal("change_social_fund"),
     title: z.string().max(200).optional(),
     justification: z.string().min(10).max(2000),

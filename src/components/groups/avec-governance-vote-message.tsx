@@ -19,6 +19,7 @@ export function AvecGovernanceVoteMessage({
   meta,
   createdAt,
   locale,
+  isRetry,
   onVoted,
 }: {
   groupId: string;
@@ -27,6 +28,7 @@ export function AvecGovernanceVoteMessage({
   meta: GovernanceVoteMeta | null;
   createdAt: string;
   locale: string;
+  isRetry?: boolean;
   onVoted?: () => void;
 }) {
   const { t } = useI18n();
@@ -101,6 +103,27 @@ export function AvecGovernanceVoteMessage({
       <p className="text-[10px] font-bold uppercase tracking-wide text-violet-900">
         {t(badgeKey)}
       </p>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {meta.riskTier ? (
+          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold text-violet-900">
+            {meta.riskTier === "B"
+              ? t("group_gov_tier_b")
+              : meta.riskTier === "C"
+                ? t("group_gov_tier_c")
+                : t("group_gov_tier_a")}
+          </span>
+        ) : null}
+        {meta.voteAudience === "committee" ? (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
+            {t("group_gov_committee_vote_badge")}
+          </span>
+        ) : null}
+        {isRetry || (meta.retryCount ?? 0) > 0 ? (
+          <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[9px] font-bold text-stone-800">
+            {t("group_gov_vote_retry_badge", { n: String(meta.retryCount ?? 1) })}
+          </span>
+        ) : null}
+      </div>
       <p className="mt-1 text-sm font-bold text-[color:var(--fd-text)]">{meta.title}</p>
       <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
         {t("group_gov_vote_by")} {meta.authorDisplay}

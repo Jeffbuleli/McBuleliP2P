@@ -7,6 +7,7 @@ export function groupRoleLabel(
 ): string {
   if (role === "admin") return t("group_settings_role_admin");
   if (role === "co_admin") return t("group_settings_role_coadmin");
+  if (role === "committee") return t("group_settings_role_committee");
   if (role === "member") return t("group_settings_role_member");
   return role;
 }

@@ -8,6 +8,8 @@ import {
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { executeGovernancePayout } from "@/lib/group-savings-payouts";
 import { applyCoAdminsToGroup } from "@/lib/avec/governance/apply-co-admins";
+import { applyCommitteeToGroup } from "@/lib/avec/governance/apply-committee";
+import { maybeRetryExpiredProposal } from "@/lib/avec/governance/vote-retry";
 import { closeProposalVote } from "@/lib/avec/governance/vote-engine";
 import { mergeGroupPaymentRules } from "@/lib/avec/governance/rules";
 import { executeClosureFromGovernance } from "@/lib/avec/group-cycle-closure";
@@ -40,7 +42,7 @@ async function executePassedProposal(args: {
   const type = p.type as ProposalType;
   const payload = (p.payload ?? {}) as Record<string, unknown>;
 
-  if (type === "payout_critical") {
+  if (type === "payout_critical" || type === "payout_medium") {
     const toUserId = String(payload.toUserId ?? p.beneficiaryUserId ?? "");
     const amountUsdt = Number(payload.amountUsdt ?? p.financialImpactUsdt ?? 0);
     if (!toUserId || !Number.isFinite(amountUsdt) || amountUsdt <= 0) {
@@ -140,7 +142,18 @@ async function executePassedProposal(args: {
     });
     if (!exec.ok) return { ok: false, message: exec.message };
     if (!exec.executed) return { ok: false, message: "closure_not_executed" };
-  } else if (type === "loan_critical") {
+  } else if (type === "set_committee") {
+    const ids = Array.isArray(payload.committeeUserIds)
+      ? (payload.committeeUserIds as unknown[]).map(String).slice(0, 7)
+      : [];
+    const applied = await applyCommitteeToGroup({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      committeeUserIds: ids,
+      proposalId: p.id,
+    });
+    if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "loan_critical" || type === "loan_medium") {
     const borrowerUserId = String(
       payload.borrowerUserId ?? p.beneficiaryUserId ?? "",
     );
@@ -197,7 +210,19 @@ export async function runGovernanceTick(): Promise<{
         proposalId: row.id,
         groupId: row.groupId,
       });
-      if (r !== "skipped") closed++;
+      if (r !== "skipped") {
+        closed++;
+        if (r === "expired") {
+          try {
+            await maybeRetryExpiredProposal({
+              proposalId: row.id,
+              groupId: row.groupId,
+            });
+          } catch (e) {
+            errors.push(`retry:${row.id}:${String(e)}`);
+          }
+        }
+      }
     } catch (e) {
       errors.push(`close:${row.id}:${String(e)}`);
     }

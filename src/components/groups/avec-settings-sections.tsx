@@ -41,6 +41,9 @@ export function AvecSettingsSections({
   selected,
   onSelectedChange,
   onSaveCoAdmins,
+  committeeSelected,
+  onCommitteeSelectedChange,
+  onSaveCommittee,
   reminderBlock,
 }: {
   locale: string;
@@ -54,6 +57,9 @@ export function AvecSettingsSections({
   selected: Record<string, boolean>;
   onSelectedChange: (next: Record<string, boolean>) => void;
   onSaveCoAdmins: () => void;
+  committeeSelected: Record<string, boolean>;
+  onCommitteeSelectedChange: (next: Record<string, boolean>) => void;
+  onSaveCommittee: () => void;
   reminderBlock: ReactNode;
 }) {
   const { t } = useI18n();
@@ -92,7 +98,7 @@ export function AvecSettingsSections({
 
   const sortedMembers = useMemo(() => {
     const order = (r: string) =>
-      r === "admin" ? 0 : r === "co_admin" ? 1 : 2;
+      r === "admin" ? 0 : r === "co_admin" ? 1 : r === "committee" ? 2 : 3;
     return [...approvedMembers].sort(
       (a, b) => order(a.role) - order(b.role) || a.email.localeCompare(b.email),
     );
@@ -251,6 +257,60 @@ export function AvecSettingsSections({
                 className={`${avecCls.btnPrimary} mt-3`}
               >
                 {t("group_settings_save")}
+              </button>
+
+              <p className={`${avecCls.sectionTitle} mt-5`}>
+                {t("group_settings_committee_title")}
+              </p>
+              <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
+                {t("group_settings_committee_note")}
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-[color:var(--fd-primary)]">
+                {t("group_gov_collective_required_hint")}
+              </p>
+              <ul className="mt-2 max-h-[32vh] space-y-1.5 overflow-y-auto">
+                {sortedMembers.map((m) => {
+                  const label = p2pDisplayName({
+                    email: m.email,
+                    displayName: m.displayName ?? null,
+                    avatarUrl: null,
+                    piUsername: null,
+                  });
+                  return (
+                    <li key={`c-${m.userId}`}>
+                      <label className="flex items-center justify-between gap-2 rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-semibold text-[color:var(--fd-text)]">
+                            {label}
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-800">
+                            {groupRoleLabel(t, m.role)}
+                          </span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          disabled={busy || m.role === "admin"}
+                          checked={Boolean(committeeSelected[m.userId])}
+                          onChange={(e) =>
+                            onCommitteeSelectedChange({
+                              ...committeeSelected,
+                              [m.userId]: e.target.checked,
+                            })
+                          }
+                          className="h-4 w-4 accent-amber-700"
+                        />
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onSaveCommittee}
+                className={`${avecCls.btnPrimary} mt-3`}
+              >
+                {t("group_settings_committee_save")}
               </button>
             </>
           )}

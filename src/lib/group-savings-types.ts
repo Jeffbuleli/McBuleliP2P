@@ -22,7 +22,7 @@ export type GroupSavingsStatus =
 
 export type GroupSubscriptionStatus = "active" | "overdue" | "suspended";
 
-export type GroupMembershipRole = "admin" | "co_admin" | "member";
+export type GroupMembershipRole = "admin" | "co_admin" | "committee" | "member";
 export type GroupMembershipStatus = "pending" | "approved" | "rejected" | "left";
 
 export const GROUP_SUBSCRIPTION_FEE_USDT = 5;

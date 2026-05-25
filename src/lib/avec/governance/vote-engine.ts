@@ -1,10 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, groupProposals, groupVotes } from "@/db";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
-import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import { canVoteAsCommittee } from "@/lib/avec/governance/committee";
 import {
   buildVoteMeta,
-  countEligibleVoters,
+  countEligibleVotersForProposal,
 } from "@/lib/avec/governance/proposal-engine";
 import { insertGovernanceVoteMessage } from "@/lib/avec/governance/governance-messaging";
 import {
@@ -12,6 +12,7 @@ import {
   tallyVote,
 } from "@/lib/avec/governance/rules";
 import type { VoteChoice } from "@/lib/avec/governance/types";
+import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 
 export async function castGovernanceVote(args: {
   groupId: string;
@@ -50,6 +51,15 @@ export async function castGovernanceVote(args: {
 
   if (args.voterUserId === p.authorUserId) {
     return { ok: false, message: "group_gov_initiator_cannot_vote" };
+  }
+
+  const audience = p.voteAudience ?? "members";
+  if (audience === "committee") {
+    const ok = await canVoteAsCommittee({
+      groupId: args.groupId,
+      userId: args.voterUserId,
+    });
+    if (!ok) return { ok: false, message: "group_gov_committee_only" };
   }
 
   const dup = await db
@@ -134,7 +144,10 @@ export async function closeProposalVote(args: {
     else abstain++;
   }
 
-  const eligibleCount = await countEligibleVoters(args.groupId);
+  const eligibleCount = await countEligibleVotersForProposal({
+    groupId: args.groupId,
+    voteAudience: p.voteAudience ?? "members",
+  });
   const result = tallyVote({
     yes,
     no,

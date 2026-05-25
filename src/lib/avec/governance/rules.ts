@@ -1,28 +1,57 @@
-import type { GovernanceMode, ProposalType } from "@/lib/avec/governance/types";
+import type { GovernanceMode, ProposalType, RiskTier, VoteAudience } from "@/lib/avec/governance/types";
 
 export const DEFAULT_GOVERNANCE_RULES = {
+  /** Tier A: legacy 2/3 managers */
+  minorPayoutMaxUsdt: 50,
+  minorLoanMaxUsdt: 50,
+  /** Tier B: committee vote */
+  mediumWithdrawalMaxUsdt: 499.99,
+  mediumLoanMaxUsdt: 99.99,
+  /** Tier C: full member vote */
   criticalWithdrawalUsdt: 500,
-  /** Loans at or above this amount require a member vote (not 2/3 managers alone). */
   criticalLoanUsdt: 100,
+  committeeQuorumPct: 50,
+  committeeMajorityPct: 50,
   criticalQuorumPct: 70,
   criticalMajorityPct: 60,
   ultraCriticalQuorumPct: 80,
   ultraCriticalMajorityPct: 66,
+  committeeVoteHours: 24,
   payoutCriticalVoteHours: 48,
   policyVoteHours: 72,
   cycleClosureVoteHours: 96,
   criticalWithdrawalExecutionDelayHours: 24,
+  maxVoteRetries: 3,
 } as const;
 
-export function getGroupLoanInterestPct(paymentRules: string | null | undefined): number {
-  const rules = parseGroupPaymentRules(paymentRules);
-  const rate = Number(rules.loanInterestPctTotal);
-  if (Number.isFinite(rate) && rate >= 1 && rate <= 30) return rate;
-  return 10;
+export type OperationTier = RiskTier;
+
+export function classifyPayoutTier(amountUsdt: number): OperationTier {
+  if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt) return "C";
+  if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.minorPayoutMaxUsdt) return "B";
+  return "A";
+}
+
+export function classifyLoanTier(amountUsdt: number): OperationTier {
+  if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalLoanUsdt) return "C";
+  if (amountUsdt >= DEFAULT_GOVERNANCE_RULES.minorLoanMaxUsdt) return "B";
+  return "A";
+}
+
+export function isLegacyPayoutTier(tier: OperationTier): boolean {
+  return tier === "A";
+}
+
+export function requiresCommitteePayout(amountUsdt: number): boolean {
+  return classifyPayoutTier(amountUsdt) === "B";
 }
 
 export function requiresCollectiveLoan(amountUsdt: number): boolean {
   return amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalLoanUsdt;
+}
+
+export function requiresCommitteeLoan(amountUsdt: number): boolean {
+  return classifyLoanTier(amountUsdt) === "B";
 }
 
 /** McBuleli AVEC — single platform model: large payouts → collective vote. */
@@ -38,20 +67,40 @@ export function requiresGovernancePayout(args: {
   return requiresCollectivePayout(args.amountUsdt);
 }
 
+export function voteAudienceForType(type: ProposalType): VoteAudience {
+  if (type === "payout_medium" || type === "loan_medium") return "committee";
+  return "members";
+}
+
 export function voteDurationHours(type: ProposalType): number {
   if (type === "payout_critical") return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.cycleClosureVoteHours;
+  if (type === "payout_medium" || type === "loan_medium") {
+    return DEFAULT_GOVERNANCE_RULES.committeeVoteHours;
+  }
   return DEFAULT_GOVERNANCE_RULES.policyVoteHours;
 }
 
 export function voteQuorumPct(type: ProposalType): number {
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalQuorumPct;
+  if (type === "payout_medium" || type === "loan_medium") {
+    return DEFAULT_GOVERNANCE_RULES.committeeQuorumPct;
+  }
   return DEFAULT_GOVERNANCE_RULES.criticalQuorumPct;
 }
 
 export function voteMajorityPct(type: ProposalType): number {
   if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalMajorityPct;
+  if (type === "payout_medium" || type === "loan_medium") {
+    return DEFAULT_GOVERNANCE_RULES.committeeMajorityPct;
+  }
   return DEFAULT_GOVERNANCE_RULES.criticalMajorityPct;
+}
+
+export function riskTierForType(type: ProposalType): RiskTier {
+  if (type === "payout_medium" || type === "loan_medium") return "B";
+  if (type === "payout_critical" || type === "cycle_closure") return "C";
+  return "C";
 }
 
 export function executionDelayHours(type: ProposalType): number {
@@ -82,6 +131,13 @@ export function tallyVote(args: {
   const yesPct = args.yes / (args.yes + args.no || 1);
   if (yesPct >= args.majorityPct / 100) return "passed";
   return "rejected";
+}
+
+export function getGroupLoanInterestPct(paymentRules: string | null | undefined): number {
+  const rules = parseGroupPaymentRules(paymentRules);
+  const rate = Number(rules.loanInterestPctTotal);
+  if (Number.isFinite(rate) && rate >= 1 && rate <= 30) return rate;
+  return 10;
 }
 
 export function parseGroupPaymentRules(raw: string | null | undefined): Record<string, unknown> {

@@ -1056,6 +1056,10 @@ export const groupProposals = pgTable(
     executedAt: timestamp("executed_at", { withTimezone: true }),
     /** Linked payout request after governance execution (FK in SQL migration). */
     legacyRequestId: uuid("legacy_request_id"),
+    /** members = all approved members; committee = comité only (tier B). */
+    voteAudience: varchar("vote_audience", { length: 16 }).notNull().default("members"),
+    retryCount: integer("retry_count").notNull().default(0),
+    parentProposalId: uuid("parent_proposal_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

@@ -61,6 +61,14 @@ SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'group_proposa
 
 Sans cette étape, le mode gouvernance et les votes **échoueront** au runtime.
 
+### Sprint 2 (comité + relances)
+
+```bash
+psql "$DATABASE_URL" -f drizzle/0044_governance_sprint2.sql
+```
+
+Ajoute `vote_audience`, `retry_count`, `parent_proposal_id` sur `group_proposals`.
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -103,12 +111,14 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 
 | Action | Règle |
 |--------|--------|
-| Retrait caisse **&lt; 500 USDT** | Approbation **2/3** gestionnaires |
-| Retrait **≥ 500 USDT** | Vote collectif (48 h + 24 h délai) |
-| Prêt **≥ 100 USDT** | Vote collectif (72 h) |
-| Co-admins, fonds social, taux, révocation admin | Vote collectif (72 h) — **pas de changement direct** |
-| Clôture de cycle | Vote collectif (96 h, quorum 80 %, majorité 66 %) |
-| Initiateur | Ne vote / n’approuve pas sa propre proposition |
+| Retrait / prêt **&lt; 50 USDT** | **2/3** gestionnaires |
+| Retrait **50–499** ou prêt **50–99 USDT** | **Vote comité** (24 h, 50 % quorum) |
+| Retrait **≥ 500 USDT** | Vote membres (48 h + 24 h délai) |
+| Prêt **≥ 100 USDT** | Vote membres (72 h) |
+| Comité, co-admins, fonds social, taux | Vote membres (72 h) |
+| Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
+| Quorum absent | Relance auto (max 3) |
+| Initiateur | Ne vote pas sa propre proposition |
 
 ### Tester
 
