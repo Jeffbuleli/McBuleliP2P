@@ -34,6 +34,7 @@ type Dashboard = {
     status: string;
     subscriptionStatus: string;
     nextBillingAt: string | null;
+    governanceMode?: string;
     me: { role: string; status: string };
   };
   viewer: {
@@ -58,6 +59,7 @@ export default function GroupSettingsPage() {
 
   const me = data?.group.me;
   const canAdmin = me?.status === "approved" && me.role === "admin";
+  const canPropose = me?.status === "approved";
 
   const approvedMembers = useMemo(
     () => (data?.members ?? []).filter((m) => m.status === "approved"),
@@ -211,16 +213,20 @@ export default function GroupSettingsPage() {
 
       <AvecSettingsSections
         locale={locale}
+        groupId={id}
+        governanceMode={g.governanceMode ?? "legacy"}
         subscriptionStatus={g.subscriptionStatus}
         nextBillingAt={g.nextBillingAt}
         invoices={invoices}
         audit={audit}
         approvedMembers={approvedMembers}
         canAdmin={!!canAdmin}
+        canPropose={!!canPropose}
         busy={busy}
         selected={selected}
         onSelectedChange={setSelected}
         onSaveCoAdmins={() => void saveCoAdmins()}
+        onGovernanceRefresh={() => void load()}
         reminderBlock={reminderBlock}
       />
 

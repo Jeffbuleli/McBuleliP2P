@@ -18,6 +18,20 @@ services:
         sync: false
 
   - type: cron
+    name: mcbuleli-governance-tick
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/10 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-governance-tick.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
     name: mcbuleli-bots-tick
     runtime: node
     region: oregon

@@ -304,6 +304,7 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       cycleNumber: g.cycleNumber ?? 1,
       cycleStartedAt: cycleStarted.toISOString(),
       cycleClosedAt: g.cycleClosedAt?.toISOString() ?? null,
+      governanceMode: g.governanceMode ?? "legacy",
       me: { role: m.role, status: m.status },
     },
     viewer: {

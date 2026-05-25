@@ -32,6 +32,13 @@ const AUDIT_ACTION_KEYS: Record<string, keyof Messages> = {
   ops_rejected_group: "group_audit_ops_rejected",
   member_revoked: "group_audit_member_revoked",
   member_role_updated: "group_audit_member_role_updated",
+  gov_mode_changed: "group_audit_gov_mode_changed",
+  gov_proposal_created: "group_audit_gov_proposal_created",
+  gov_vote_cast: "group_audit_gov_vote_cast",
+  gov_vote_closed: "group_audit_gov_vote_closed",
+  gov_admin_revoked: "group_audit_gov_admin_revoked",
+  gov_interest_rate_changed: "group_audit_gov_interest_rate_changed",
+  gov_payout_executed: "group_audit_gov_payout_executed",
 };
 
 export function groupAuditLabel(

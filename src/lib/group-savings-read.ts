@@ -40,6 +40,7 @@ export type GroupSavingsRow = {
   cycleNumber: number;
   cycleStartedAt: Date | null;
   cycleClosedAt: Date | null;
+  governanceMode: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -78,6 +79,7 @@ function normalizeBase(row: {
     cycleNumber: 1,
     cycleStartedAt: row.createdAt,
     cycleClosedAt: null,
+    governanceMode: "legacy",
   };
 }
 
@@ -120,6 +122,7 @@ export async function fetchGroupById(groupId: string): Promise<GroupSavingsRow |
       cycleNumber: g.cycleNumber ?? 1,
       cycleStartedAt: g.cycleStartedAt ?? g.createdAt,
       cycleClosedAt: g.cycleClosedAt ?? null,
+      governanceMode: g.governanceMode ?? "legacy",
       createdAt: g.createdAt,
       updatedAt: g.updatedAt,
     };
