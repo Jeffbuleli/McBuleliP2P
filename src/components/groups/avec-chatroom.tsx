@@ -45,6 +45,7 @@ type Msg = {
   attachmentExpiresAt: string | null;
   reactions: Reaction[];
   meta?: Record<string, unknown> | null;
+  hidden?: boolean;
   createdAt: string;
 };
 
@@ -82,11 +83,13 @@ export function AvecChatroom({
   groupId,
   myUserId,
   canPost,
+  canModerate = false,
   mentionMembers,
 }: {
   groupId: string;
   myUserId?: string;
   canPost: boolean;
+  canModerate?: boolean;
   mentionMembers: MentionMember[];
 }) {
   const { t, locale } = useI18n();
@@ -96,6 +99,9 @@ export function AvecChatroom({
   const [err, setErr] = useState<string | null>(null);
   const [mentionPick, setMentionPick] = useState<MentionMember[]>([]);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [minutesOpen, setMinutesOpen] = useState(false);
+  const [minutesBody, setMinutesBody] = useState("");
+  const [minutesLabel, setMinutesLabel] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -206,6 +212,52 @@ export function AvecChatroom({
     await load();
   }
 
+  async function moderateMessage(messageId: string, action: "hide" | "unhide") {
+    setErr(null);
+    const res = await fetch(
+      `/api/groups/${groupId}/messages/${messageId}/moderate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      },
+    );
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr((j as { error?: string }).error ?? "group_action_failed");
+      return;
+    }
+    await load();
+  }
+
+  async function publishMinutes() {
+    const body = minutesBody.trim();
+    if (body.length < 10 || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/minutes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body,
+          meetingLabel: minutesLabel.trim() || null,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      setMinutesBody("");
+      setMinutesLabel("");
+      setMinutesOpen(false);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const loc = locale === "fr" ? "fr-FR" : "en-US";
   const labels = mentionMembers.map((m) => m.label.replace(/\s/g, "_"));
 
@@ -285,6 +337,27 @@ export function AvecChatroom({
                 </div>
               );
             }
+            if (m.messageType === "minutes") {
+              const label =
+                typeof m.meta?.meetingLabel === "string" && m.meta.meetingLabel
+                  ? m.meta.meetingLabel
+                  : null;
+              return (
+                <div key={m.id} className="flex justify-center py-1">
+                  <div className="w-full max-w-md rounded-2xl border-2 border-violet-200 bg-violet-50/90 px-3 py-2.5 text-xs text-violet-950">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wide text-violet-800">
+                      {label
+                        ? t("group_dialogue_minutes_title_labeled", { label })
+                        : t("group_dialogue_minutes_title")}
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap">{m.body}</p>
+                    <p className="mt-1 text-[9px] text-violet-700/80">
+                      {new Date(m.createdAt).toLocaleString(loc)}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
             if (
               m.messageType === "vote_started" ||
               m.messageType === "vote_progress" ||
@@ -308,10 +381,11 @@ export function AvecChatroom({
                 </div>
               );
             }
+            const chatHidden = Boolean(m.hidden);
             return (
               <div
                 key={m.id}
-                className={`flex gap-2 ${mine ? "flex-row-reverse" : "flex-row"} ${system ? "justify-center" : ""}`}
+                className={`flex gap-2 ${mine ? "flex-row-reverse" : "flex-row"} ${system ? "justify-center" : ""} ${chatHidden ? "opacity-50" : ""}`}
               >
                 {!system ? (
                   <UserAvatarMark
@@ -351,6 +425,19 @@ export function AvecChatroom({
                       {new Date(m.createdAt).toLocaleString(loc)}
                     </p>
                   </div>
+                  {!system && canModerate && (m.messageType === "chat" || m.messageType === "proof") ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void moderateMessage(m.id, chatHidden ? "unhide" : "hide")
+                      }
+                      className="mt-0.5 text-[9px] font-bold text-rose-600"
+                    >
+                      {chatHidden
+                        ? t("group_dialogue_unhide")
+                        : t("group_dialogue_hide")}
+                    </button>
+                  ) : null}
                   {!system ? (
                     <div className="mt-1 flex flex-wrap gap-0.5">
                       {REACTIONS.map((e) => {
@@ -387,6 +474,45 @@ export function AvecChatroom({
       </div>
 
       {err ? <p className="mt-2 text-xs text-rose-700">{clientErrorText(t, err)}</p> : null}
+
+      {canModerate ? (
+        <div className="mt-2 rounded-xl border border-violet-200 bg-violet-50/60 p-2">
+          <button
+            type="button"
+            onClick={() => setMinutesOpen((v) => !v)}
+            className="text-[10px] font-bold text-violet-900"
+          >
+            {minutesOpen
+              ? t("group_dialogue_minutes_cancel")
+              : t("group_dialogue_minutes_publish")}
+          </button>
+          {minutesOpen ? (
+            <div className="mt-2 space-y-2">
+              <input
+                value={minutesLabel}
+                onChange={(e) => setMinutesLabel(e.target.value)}
+                placeholder={t("group_dialogue_minutes_label_ph")}
+                className="w-full rounded-lg border border-violet-200 bg-white px-2 py-1.5 text-[10px]"
+              />
+              <textarea
+                value={minutesBody}
+                onChange={(e) => setMinutesBody(e.target.value)}
+                placeholder={t("group_dialogue_minutes_body_ph")}
+                rows={4}
+                className="w-full rounded-lg border border-violet-200 bg-white px-2 py-1.5 text-xs"
+              />
+              <button
+                type="button"
+                disabled={busy || minutesBody.trim().length < 10}
+                onClick={() => void publishMinutes()}
+                className="rounded-lg bg-violet-800 px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
+              >
+                {t("group_dialogue_minutes_submit")}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {canPost ? (
         <div className="relative mt-3 border-t border-[color:var(--fd-border)] pt-3">

@@ -29,6 +29,7 @@ import { createUserNotification } from "@/lib/notifications-service";
 import { userHasAvecSubscriptionWaiver } from "@/lib/group-savings-subscription-waiver";
 import { fetchGroupById } from "@/lib/group-savings-read";
 import { fundBucketMeta } from "@/lib/avec/fund-buckets";
+import { parseGranularRoles } from "@/lib/avec/governance/granular-roles";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
 function isPgMissingColumn(err: unknown): boolean {
@@ -335,7 +336,11 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
       cycleStartedAt: cycleStarted.toISOString(),
       cycleClosedAt: g.cycleClosedAt?.toISOString() ?? null,
       governanceMode: g.governanceMode ?? "legacy",
-      me: { role: m.role, status: m.status },
+      me: {
+        role: m.role,
+        status: m.status,
+        granularRoles: parseGranularRoles(m.granularRoles),
+      },
     },
     viewer: {
       email: viewer?.email ?? "",
@@ -346,7 +351,13 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
     members: members.map((m) => {
       const s = statsByUser.get(m.userId);
       return {
-        ...m,
+        userId: m.userId,
+        role: m.role,
+        status: m.status,
+        email: m.email,
+        displayName: m.displayName,
+        avatarUrl: m.avatarUrl,
+        granularRoles: parseGranularRoles(m.granularRoles),
         kycApproved: isKycApproved(m.kycStatus),
         savedUsdt: s?.totalUsdt ?? 0,
         meetingsPaid: s?.meetingCount ?? 0,

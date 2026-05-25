@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ServicePromoDTO, StakingPromoDTO } from "@/components/mobile/wallet-overview";
 import {
@@ -64,7 +65,18 @@ function Chevron() {
 
 function CompactPromoCard({ promo }: { promo: ServicePromoDTO }) {
   return (
-    <Link href={promo.href} className="fd-card block p-3 active:scale-[0.99]">
+    <Link href={promo.href} className="fd-card block overflow-hidden p-3 active:scale-[0.99]">
+      {promo.imageSrc ? (
+        <div className="relative -mx-3 -mt-3 mb-2 h-16 overflow-hidden">
+          <Image
+            src={promo.imageSrc}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 50vw, 200px"
+          />
+        </div>
+      ) : null}
       <div className="flex items-center gap-2.5">
         <PromoIcon icon={promo.icon} />
         <div className="min-w-0 flex-1">
@@ -84,6 +96,7 @@ function WidePromoCard({
   subtitle,
   rightPrimary,
   rightSecondary,
+  imageSrc,
 }: {
   icon: "staking" | "avec";
   href: string;
@@ -91,9 +104,21 @@ function WidePromoCard({
   subtitle: string;
   rightPrimary: string;
   rightSecondary?: string;
+  imageSrc?: string;
 }) {
   return (
-    <Link href={href} className="fd-card block p-3.5 active:scale-[0.99]">
+    <Link href={href} className="fd-card block overflow-hidden p-3.5 active:scale-[0.99]">
+      {imageSrc ? (
+        <div className="relative -mx-3.5 -mt-3.5 mb-2.5 h-20 overflow-hidden rounded-t-2xl">
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 400px"
+          />
+        </div>
+      ) : null}
       <div className="flex items-center gap-3">
         <PromoIcon icon={icon} />
         <div className="min-w-0 flex-1">
@@ -155,6 +180,7 @@ export function WalletServicePromos({
           subtitle={avecPromo.metaLine}
           rightPrimary={avecPromo.rightPrimary}
           rightSecondary={avecPromo.rightSecondary}
+          imageSrc={avecPromo.imageSrc}
         />
       ) : null}
     </div>

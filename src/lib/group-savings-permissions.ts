@@ -30,15 +30,12 @@ export async function getMyMembershipOrNull(args: {
   return m ?? null;
 }
 
-export function hasRole(m: { role: string; status: string } | null, roles: GroupMembershipRole[]) {
-  if (!m) return false;
-  if (m.status !== "approved") return false;
-  return (roles as string[]).includes(m.role);
-}
-
+export { hasRole } from "@/lib/avec/governance/membership-roles";
 export type { MembershipLike } from "@/lib/avec/governance/permission-engine";
 export {
   canManageGroupLoans,
+  canModerateGroupDialogue,
+  canModerateGroupMembership,
   canProposeGovernancePolicy,
   canProposeGroupLoan,
   canProposeGroupPayout,

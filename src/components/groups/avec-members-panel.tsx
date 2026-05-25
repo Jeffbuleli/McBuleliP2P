@@ -7,7 +7,8 @@ import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { adminCls } from "@/components/admin/admin-ui";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { clientErrorText } from "@/lib/client-error-text";
-import { groupRoleLabel } from "@/lib/group-role-label";
+import { memberRoleSummary } from "@/lib/group-role-label";
+import { AvecMemberTrustBadge } from "@/components/groups/avec-member-trust-badge";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
 
@@ -200,10 +201,25 @@ export function AvecMembersPanel({
                   <td>
                     {canAdmin && m.role !== "admin" ? (
                       <span className="text-[10px] text-[color:var(--fd-muted)]" title={t("group_gov_collective_required")}>
-                        {groupRoleLabel(t, m.role)}
+                        {memberRoleSummary(t, {
+                          role: m.role,
+                          granularRoles: m.granularRoles,
+                        })}
                       </span>
                     ) : (
-                      <span className={adminCls.roleBadge}>{groupRoleLabel(t, m.role)}</span>
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className={adminCls.roleBadge}>
+                          {memberRoleSummary(t, {
+                            role: m.role,
+                            granularRoles: m.granularRoles,
+                          })}
+                        </span>
+                        <AvecMemberTrustBadge
+                          meetingsPaid={m.meetingsPaid}
+                          sharesTotal={m.sharesTotal}
+                          kycApproved={m.kycApproved}
+                        />
+                      </div>
                     )}
                   </td>
                   <td className="text-right font-mono text-xs tabular-nums">

@@ -1,7 +1,10 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb, groupMessages, users } from "@/db";
 import { notifyGroupMembers } from "@/lib/group-savings-notifications";
-import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import {
+  canModerateGroupDialogue,
+  getMyMembershipOrNull,
+} from "@/lib/group-savings-permissions";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { isKycApproved } from "@/lib/kyc-policy";
 
@@ -9,6 +12,7 @@ export type GroupMessageType =
   | "chat"
   | "system"
   | "proof"
+  | "minutes"
   | "payout_pending"
   | "payout_decision"
   | "loan_decision"
@@ -16,6 +20,10 @@ export type GroupMessageType =
   | "vote_started"
   | "vote_progress"
   | "vote_closed";
+
+function isMessageHidden(meta: Record<string, unknown> | null): boolean {
+  return Boolean(meta && typeof meta.hiddenAt === "string");
+}
 
 export type PayoutPendingMeta = {
   requestId: string;
@@ -111,6 +119,7 @@ export async function listGroupMessages(args: {
         attachmentExpiresAt: string | null;
         reactions: MessageReaction[];
         meta: Record<string, unknown> | null;
+        hidden?: boolean;
         createdAt: string;
       }[];
     }
@@ -120,6 +129,7 @@ export async function listGroupMessages(args: {
   if (!m || (m.status !== "approved" && m.status !== "pending")) {
     return { ok: false, message: "group_forbidden" };
   }
+  const canSeeHidden = canModerateGroupDialogue(m);
 
   const limit = Math.min(Math.max(1, args.limit ?? 80), 200);
   const db = getDb();
@@ -148,6 +158,11 @@ export async function listGroupMessages(args: {
   return {
     ok: true,
     messages: rows
+      .filter((r) => {
+        const meta = r.meta as Record<string, unknown> | null;
+        if (!isMessageHidden(meta)) return true;
+        return canSeeHidden;
+      })
       .map((r) => ({
         id: r.id,
         senderUserId: r.senderUserId,
@@ -168,10 +183,108 @@ export async function listGroupMessages(args: {
           : null,
         reactions: parseReactions(r.meta as Record<string, unknown> | null),
         meta: (r.meta as Record<string, unknown> | null) ?? null,
+        hidden: isMessageHidden(r.meta as Record<string, unknown> | null),
         createdAt: r.createdAt.toISOString(),
       }))
       .reverse(),
   };
+}
+
+export async function moderateGroupMessage(args: {
+  groupId: string;
+  userId: string;
+  messageId: string;
+  action: "hide" | "unhide";
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!canModerateGroupDialogue(m)) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const db = getDb();
+  const [msg] = await db
+    .select({
+      id: groupMessages.id,
+      groupId: groupMessages.groupId,
+      messageType: groupMessages.messageType,
+      meta: groupMessages.meta,
+    })
+    .from(groupMessages)
+    .where(eq(groupMessages.id, args.messageId))
+    .limit(1);
+  if (!msg || msg.groupId !== args.groupId) {
+    return { ok: false, message: "group_not_found" };
+  }
+  if (msg.messageType !== "chat" && msg.messageType !== "proof") {
+    return { ok: false, message: "group_message_not_moderatable" };
+  }
+
+  const meta = (msg.meta as Record<string, unknown> | null) ?? {};
+  const next = { ...meta };
+  if (args.action === "hide") {
+    next.hiddenAt = new Date().toISOString();
+    next.hiddenByUserId = args.userId;
+  } else {
+    delete next.hiddenAt;
+    delete next.hiddenByUserId;
+  }
+
+  await db
+    .update(groupMessages)
+    .set({ meta: next })
+    .where(eq(groupMessages.id, args.messageId));
+
+  return { ok: true };
+}
+
+export async function publishGroupMinutes(args: {
+  groupId: string;
+  userId: string;
+  body: string;
+  meetingLabel?: string | null;
+}): Promise<{ ok: true; messageId: string } | { ok: false; message: string }> {
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!canModerateGroupDialogue(m)) {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const body = args.body.trim();
+  if (body.length < 10) return { ok: false, message: "group_minutes_too_short" };
+  if (body.length > 4000) return { ok: false, message: "group_message_too_long" };
+
+  const db = getDb();
+  const [row] = await db
+    .insert(groupMessages)
+    .values({
+      groupId: args.groupId,
+      senderUserId: args.userId,
+      body,
+      messageType: "minutes",
+      attachmentUrl: null,
+      meta: {
+        reactions: [],
+        meetingLabel: args.meetingLabel?.trim() || null,
+        publishedAt: new Date().toISOString(),
+      },
+    })
+    .returning({ id: groupMessages.id });
+
+  if (!row?.id) return { ok: false, message: "group_message_failed" };
+
+  await notifyGroupMembers({
+    groupId: args.groupId,
+    kind: "group_message",
+    excludeUserId: args.userId,
+    payload: {
+      groupId: args.groupId,
+      messageId: row.id,
+      preview: body.slice(0, 120),
+      senderEmail: "",
+      messageType: "minutes",
+    },
+  });
+
+  return { ok: true, messageId: row.id };
 }
 
 export async function sendGroupMessage(args: {

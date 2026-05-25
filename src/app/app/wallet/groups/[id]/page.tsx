@@ -36,6 +36,11 @@ import {
   getDialogueReadAt,
   markDialogueRead,
 } from "@/lib/avec/dialogue-read-state";
+import {
+  canModerateGroupDialogue,
+  canModerateGroupMembership,
+} from "@/lib/avec/governance/permission-engine";
+import type { GranularRoleId } from "@/lib/avec/governance/granular-roles";
 
 type Dashboard = {
   ok: true;
@@ -63,7 +68,7 @@ type Dashboard = {
     cycleNumber?: number;
     cycleStartedAt?: string;
     cycleClosedAt?: string | null;
-    me: { role: string; status: string };
+    me: { role: string; status: string; granularRoles?: GranularRoleId[] };
   };
   viewer: {
     email: string;
@@ -93,8 +98,8 @@ export default function AvecDashboardPage() {
   const [dialogueUnread, setDialogueUnread] = useState(false);
 
   const me = data?.group.me;
-  const canModerate =
-    me?.status === "approved" && (me.role === "admin" || me.role === "co_admin");
+  const canModerateMembership = me ? canModerateGroupMembership(me) : false;
+  const canModerateDialogue = me ? canModerateGroupDialogue(me) : false;
   const canAdmin = me?.status === "approved" && me.role === "admin";
   const groupActive = data?.group.status === "active";
   const cycleActive = (data?.group.cycleStatus ?? "active") === "active";
@@ -353,7 +358,7 @@ export default function AvecDashboardPage() {
               members={data.members}
               pendingCount={pendingCount}
               myUserId={myUserId}
-              canModerate={!!canModerate}
+              canModerate={!!canModerateMembership}
               onNavigate={(t) => setTab(t)}
             />
           ) : (
@@ -390,7 +395,7 @@ export default function AvecDashboardPage() {
           <AvecMembersPanel
             groupId={id}
             members={data.members}
-            canModerate={!!canModerate}
+            canModerate={!!canModerateMembership}
             canAdmin={!!canAdmin}
             busy={busy}
             onRefresh={() => void load()}
@@ -402,6 +407,7 @@ export default function AvecDashboardPage() {
             groupId={id}
             myUserId={myUserId}
             canPost={me?.status === "approved" && (groupActive || canAdmin)}
+            canModerate={!!canModerateDialogue}
             mentionMembers={mentionMembers}
           />
         )}
@@ -429,7 +435,7 @@ export default function AvecDashboardPage() {
                 void load();
               }}
             />
-            {canModerate ? (
+            {canModerateMembership ? (
               <>
                 <AvecClosurePanel
                   groupId={id}

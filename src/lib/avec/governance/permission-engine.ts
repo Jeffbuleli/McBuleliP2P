@@ -1,31 +1,16 @@
-import type { GroupMembershipRole } from "@/lib/group-savings-types";
-import { hasRole } from "@/lib/group-savings-permissions";
 import {
-  parseGranularRoles,
-  type GranularRoleId,
-} from "@/lib/avec/governance/granular-roles";
+  hasGranularRole,
+  hasRole,
+  isGroupManager,
+  type MembershipLike,
+} from "@/lib/avec/governance/membership-roles";
 
-export type MembershipLike = {
-  role: string;
-  status: string;
-  granularRoles?: unknown;
-};
-
-export function membershipGranularRoles(m: MembershipLike | null): GranularRoleId[] {
-  if (!m || m.status !== "approved") return [];
-  return parseGranularRoles(m.granularRoles);
-}
-
-export function hasGranularRole(
-  m: MembershipLike | null,
-  role: GranularRoleId,
-): boolean {
-  return membershipGranularRoles(m).includes(role);
-}
-
-export function isGroupManager(m: MembershipLike | null): boolean {
-  return hasRole(m, ["admin", "co_admin"]);
-}
+export type { MembershipLike } from "@/lib/avec/governance/membership-roles";
+export {
+  hasGranularRole,
+  isGroupManager,
+  membershipGranularRoles,
+} from "@/lib/avec/governance/membership-roles";
 
 /** Propose / initiate internal loans (governance or legacy pending). */
 export function canProposeGroupLoan(m: MembershipLike | null): boolean {
@@ -51,4 +36,16 @@ export function canProposeGroupPayout(m: MembershipLike | null): boolean {
 /** Group settings / RH proposals (co-admins, committee, granular roles). */
 export function canProposeGovernancePolicy(m: MembershipLike | null): boolean {
   return hasRole(m, ["admin"]);
+}
+
+/** Invite link, pending member review, treasury manager tools. */
+export function canModerateGroupMembership(m: MembershipLike | null): boolean {
+  return isGroupManager(m);
+}
+
+/** Dialogue: hide off-topic messages and publish meeting minutes (PV). */
+export function canModerateGroupDialogue(m: MembershipLike | null): boolean {
+  if (!m || m.status !== "approved") return false;
+  if (isGroupManager(m)) return true;
+  return hasGranularRole(m, "secretary");
 }

@@ -42,6 +42,7 @@ export type WalletOverviewLabels = {
 
 export type StakingPromoDTO = {
   href: string;
+  imageSrc?: string;
   title: string;
   tagline: string;
   cta: string;
@@ -54,6 +55,7 @@ export type StakingPromoDTO = {
 };
 
 export type ServicePromoDTO = {
+  imageSrc?: string;
   href: string;
   title: string;
   tagline: string;

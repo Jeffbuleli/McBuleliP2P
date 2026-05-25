@@ -96,6 +96,7 @@ export default async function WalletPage() {
 
   const stakingPromo: StakingPromoDTO = {
     href: "/app/wallet/staking",
+    imageSrc: "/ads/mcbuleli-ad-en-staking-1080.jpg",
     title: d.staking_title,
     tagline: d.staking_wallet_teaser,
     cta: d.staking_cta,
@@ -111,6 +112,7 @@ export default async function WalletPage() {
 
   const poolPromo: ServicePromoDTO = {
     href: "/app/wallet/pool",
+    imageSrc: "/ads/mcbuleli-ad-p2p-1080.jpg",
     title: d.pool_title,
     tagline: d.pool_tagline,
     cta: d.pool_cta,
@@ -215,6 +217,7 @@ export default async function WalletPage() {
           }),
           rightPrimary: String(avecGroupsTotal),
           rightSecondary: d.group_avec_tagline,
+          imageSrc: "/ads/mcbuleli-ad-avec-1080.jpg",
         }}
       />
     </>

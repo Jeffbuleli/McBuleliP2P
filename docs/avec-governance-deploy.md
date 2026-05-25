@@ -110,6 +110,18 @@ Ajoute `granular_roles` (jsonb) sur `group_savings_memberships`.
 
 Attribution via **Paramètres → Gouvernance → Rôles fonctionnels** → vote membres 72 h (`set_granular_roles`).
 
+### Sprint 6 (dialogue secrétaire + badge confiance)
+
+Pas de migration SQL.
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Secrétaire** | Masquer / rétablir messages chat ; publier **PV** (`minutes`) dans Dialogue |
+| **Membres** | Rôles fonctionnels affichés ; badge **Nouveau / Actif / Engagé** (informatif, 1 voix = 1 membre) |
+| **Wallet** | Bannières marketing `public/ads/` sur cartes Staking / Pool / AVEC |
+
+Test : attribuer rôle secrétaire → vote → publier un PV ; masquer un message hors sujet.
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -161,6 +173,7 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **Aide solidarité** ≥ 50 USDT | Vote membres (48 h) |
 | **Taux intérêt / pénalité** prêts | Vote membres (72 h) |
 | **Rôles fonctionnels** (trésorier, crédit, …) | Vote membres (72 h) |
+| **PV de réunion** (secrétaire / gestionnaires) | Publication Dialogue |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

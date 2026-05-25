@@ -1,11 +1,14 @@
 "use client";
 
 import { adminCls } from "@/components/admin/admin-ui";
-import { groupRoleLabel } from "@/lib/group-role-label";
+import { memberRoleSummary } from "@/lib/group-role-label";
+import { AvecMemberTrustBadge } from "@/components/groups/avec-member-trust-badge";
 import { useI18n } from "@/components/i18n-provider";
 
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
+
+import type { GranularRoleId } from "@/lib/avec/governance/granular-roles";
 
 export type AvecMemberRow = {
   userId: string;
@@ -14,6 +17,7 @@ export type AvecMemberRow = {
   avatarUrl?: string | null;
   role: string;
   status: string;
+  granularRoles?: GranularRoleId[];
   kycApproved?: boolean;
   savedUsdt?: number;
   meetingsPaid?: number;
@@ -71,7 +75,19 @@ export function AvecMemberList({
                     </p>
                   </td>
                   <td>
-                    <span className={adminCls.roleBadge}>{groupRoleLabel(t, m.role)}</span>
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className={adminCls.roleBadge}>
+                        {memberRoleSummary(t, {
+                          role: m.role,
+                          granularRoles: m.granularRoles,
+                        })}
+                      </span>
+                      <AvecMemberTrustBadge
+                        meetingsPaid={m.meetingsPaid}
+                        sharesTotal={m.sharesTotal}
+                        kycApproved={m.kycApproved}
+                      />
+                    </div>
                   </td>
                   <td className="text-right font-mono text-xs tabular-nums">
                     {(m.savedUsdt ?? 0).toFixed(2)}
