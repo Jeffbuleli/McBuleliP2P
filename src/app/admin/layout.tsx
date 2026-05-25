@@ -31,6 +31,8 @@ export default async function AdminLayout({
   const showP2p = u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "p2p_disputes");
   const showPlatformExpenses =
     u.role === UserRole.SUPER_ADMIN || canAccessPlatformExpensesModule(u);
+  const showLandingAds =
+    u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "landing_ads");
   const noOps =
     u.role === UserRole.AGENT && !agentHasAnyStaffScope(u);
 
@@ -97,6 +99,11 @@ export default async function AdminLayout({
           {showPlatformExpenses ? (
             <AdminNavLink href="/admin/platform-expenses" variant="money" icon="expenses">
               {d.admin_nav_platform_expenses}
+            </AdminNavLink>
+          ) : null}
+          {showLandingAds ? (
+            <AdminNavLink href="/admin/settings/landing" variant="bots" icon="dashboard">
+              {d.admin_nav_landing_ads}
             </AdminNavLink>
           ) : null}
           {u.role === "super_admin" ? (

@@ -10,6 +10,8 @@ export const STAFF_SCOPES = [
   "platform_expenses",
   /** Approve, reject, mark paid (cannot approve own submissions unless super-admin). */
   "platform_expenses_approve",
+  /** Home page landing promo banners (images, links, copy). */
+  "landing_ads",
 ] as const;
 export type StaffScope = (typeof STAFF_SCOPES)[number];
 

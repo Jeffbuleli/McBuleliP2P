@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { STAFF_SCOPES } from "@/lib/staff-scopes";
 import type { CexId } from "./networks";
 
 const email = z.string().trim().min(3).max(255).email();
@@ -93,7 +94,7 @@ export const adminRejectDepositSchema = z.object({
   reason: z.string().trim().min(3).max(1000),
 });
 
-const staffScopeZ = z.enum(["withdrawals", "groups", "p2p_disputes"]);
+const staffScopeZ = z.enum(STAFF_SCOPES);
 
 export const adminSetRoleSchema = z
   .object({

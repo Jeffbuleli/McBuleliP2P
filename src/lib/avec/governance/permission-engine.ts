@@ -81,12 +81,7 @@ export function canAccessAvecTab(
         hasGranularRole(m, "credit_officer")
       );
     case "reports":
-      return (
-        isGroupManager(m) ||
-        hasRole(m, ["committee"]) ||
-        hasGranularRole(m, "treasurer") ||
-        hasGranularRole(m, "secretary")
-      );
+      return true;
     default:
       return false;
   }
