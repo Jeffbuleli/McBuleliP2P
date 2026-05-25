@@ -30,6 +30,8 @@ export type GroupFundSummary = {
   availableUsdt: number;
   totalShares: number;
   shareValueUsdt: number;
+  outflowLast24hUsdt: number;
+  outflowCapUsdt: number;
 };
 
 /** Classify ledger line → fund bucket (meta.bucket overrides legacy rows). */
@@ -125,6 +127,12 @@ export async function getGroupFundSummary(
   const lentUsdt = await getGroupLentUsdt(groupId);
   const availableUsdt = Math.max(0, savingsUsdt - lentUsdt);
 
+  const { groupTreasuryOutflowLast24hUsdt } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const { DEFAULT_GOVERNANCE_RULES } = await import("@/lib/avec/governance/rules");
+  const outflowLast24hUsdt = await groupTreasuryOutflowLast24hUsdt(groupId);
+
   return {
     totalUsdt,
     savingsUsdt,
@@ -138,6 +146,8 @@ export async function getGroupFundSummary(
     availableUsdt,
     totalShares,
     shareValueUsdt,
+    outflowLast24hUsdt,
+    outflowCapUsdt: DEFAULT_GOVERNANCE_RULES.maxGroupTreasuryOutflowPerDayUsdt,
   };
 }
 

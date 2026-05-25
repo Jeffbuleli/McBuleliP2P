@@ -10,9 +10,14 @@ import {
   users,
 } from "@/db";
 import {
+  classifyLoanTier,
   getGroupLoanInterestPct,
   getGroupLoanPenaltyPct,
 } from "@/lib/avec/governance/rules";
+import {
+  createLoanCriticalProposal,
+  createLoanMediumProposal,
+} from "@/lib/avec/governance/proposal-engine";
 import {
   allocateLoanRepayment,
   AVEC_LOAN_MAX_DAYS,
@@ -132,6 +137,15 @@ async function tryDisburseLoan(args: {
     if (funds.availableUsdt + 1e-18 < amountUsdt) {
       return { ok: false, message: "group_insufficient_balance" };
     }
+
+    const { assertWithinDailyTreasuryOutflowCap } = await import(
+      "@/lib/avec/treasury-daily-limits"
+    );
+    const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+      groupId: args.groupId,
+      additionalUsdt: amountUsdt,
+    });
+    if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
 
     const batchId = randomUUID();
     const amtStr = fmtWalletAmount(amountUsdt);
@@ -350,6 +364,15 @@ export async function executeLoanFromGovernance(args: {
     return { ok: false, message: "group_insufficient_balance" };
   }
 
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
+
   const db = getDb();
   const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
   const penaltyPct = getGroupLoanPenaltyPct(gCheck.group.paymentRules);
@@ -481,13 +504,20 @@ export async function requestMemberLoan(args: {
   return { ok: true, loanId: row.id };
 }
 
-/** Manager accepts a member request → enters 2/3 approval queue. */
+/** Manager accepts a member request → 2/3 queue (tier A) or collective vote (tier B/C). */
 export async function acceptMemberLoanRequest(args: {
   groupId: string;
   loanId: string;
   actorUserId: string;
 }): Promise<
   | { ok: true; requiredApprovals: number }
+  | {
+      ok: true;
+      governance: true;
+      tier: "B" | "C";
+      proposalId: string;
+      voteClosesAt: string;
+    }
   | { ok: false; message: string }
 > {
   const actor = await getMyMembershipOrNull({
@@ -512,15 +542,79 @@ export async function acceptMemberLoanRequest(args: {
     .limit(1);
   if (!loan) return { ok: false, message: "group_loan_not_found" };
 
-  const funds = await getGroupFundSummary(args.groupId);
   const amountUsdt = Number(loan.principalUsdt);
+  const funds = await getGroupFundSummary(args.groupId);
   if (funds.availableUsdt + 1e-18 < amountUsdt) {
     return { ok: false, message: "group_insufficient_balance" };
   }
 
+  const tier = classifyLoanTier(amountUsdt);
+  const now = new Date();
+
+  if (tier === "C") {
+    const gov = await createLoanCriticalProposal({
+      groupId: args.groupId,
+      authorUserId: args.actorUserId,
+      borrowerUserId: loan.borrowerUserId,
+      amountUsdt,
+    });
+    if (!gov.ok) return gov;
+    await db
+      .update(groupAvecLoans)
+      .set({
+        status: "rejected",
+        rejectionReason: "routed_to_collective_vote",
+        updatedAt: now,
+      })
+      .where(eq(groupAvecLoans.id, args.loanId));
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: args.actorUserId,
+      action: "loan_request_routed_to_vote",
+      after: { loanId: args.loanId, proposalId: gov.proposalId, tier: "C" },
+    });
+    return {
+      ok: true,
+      governance: true,
+      tier: "C",
+      proposalId: gov.proposalId,
+      voteClosesAt: gov.voteClosesAt,
+    };
+  }
+
+  if (tier === "B") {
+    const gov = await createLoanMediumProposal({
+      groupId: args.groupId,
+      authorUserId: args.actorUserId,
+      borrowerUserId: loan.borrowerUserId,
+      amountUsdt,
+    });
+    if (!gov.ok) return gov;
+    await db
+      .update(groupAvecLoans)
+      .set({
+        status: "rejected",
+        rejectionReason: "routed_to_committee_vote",
+        updatedAt: now,
+      })
+      .where(eq(groupAvecLoans.id, args.loanId));
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: args.actorUserId,
+      action: "loan_request_routed_to_vote",
+      after: { loanId: args.loanId, proposalId: gov.proposalId, tier: "B" },
+    });
+    return {
+      ok: true,
+      governance: true,
+      tier: "B",
+      proposalId: gov.proposalId,
+      voteClosesAt: gov.voteClosesAt,
+    };
+  }
+
   const managers = await listGroupManagers(args.groupId);
   const required = payoutRequiredApprovals(managers.length);
-  const now = new Date();
 
   await db
     .update(groupAvecLoans)
@@ -650,6 +744,11 @@ export async function approveGroupLoan(args: {
     )
     .limit(1);
   if (!loan) return { ok: false, message: "group_loan_not_found" };
+
+  const amountUsdt = Number(loan.principalUsdt);
+  if (classifyLoanTier(amountUsdt) !== "A") {
+    return { ok: false, message: "group_gov_loan_collective_required" };
+  }
 
   if (args.actorUserId === loan.initiatedByUserId) {
     return { ok: false, message: "group_gov_initiator_cannot_vote" };

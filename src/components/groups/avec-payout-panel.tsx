@@ -93,7 +93,11 @@ export function AvecPayoutPanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
-      setInfo(t("group_payout_proposed"));
+      if ((j as { governance?: boolean }).governance) {
+        setInfo(t("group_gov_payout_vote_started"));
+      } else {
+        setInfo(t("group_payout_proposed"));
+      }
       setAmount("");
       await loadPending();
       onDone();

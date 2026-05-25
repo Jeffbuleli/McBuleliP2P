@@ -184,7 +184,11 @@ export function AvecLoansPanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
-      setInfo(t("group_loan_proposed"));
+      if ((j as { governance?: boolean }).governance) {
+        setInfo(t("group_gov_loan_vote_started"));
+      } else {
+        setInfo(t("group_loan_proposed"));
+      }
       setAmount("");
       await load();
       onDone();
@@ -228,7 +232,11 @@ export function AvecLoansPanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
-      setInfo(t("group_loan_request_accepted"));
+      if ((j as { governance?: boolean }).governance) {
+        setInfo(t("group_gov_loan_vote_started"));
+      } else {
+        setInfo(t("group_loan_request_accepted"));
+      }
       await load();
       onDone();
     } finally {

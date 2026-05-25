@@ -738,7 +738,7 @@ export async function createLoanCriticalProposal(args: {
     groupId: args.groupId,
     userId: args.authorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
+  if (!canProposeGroupLoan(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -748,6 +748,20 @@ export async function createLoanCriticalProposal(args: {
   if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
     return { ok: false, message: "group_invalid_amount" };
   }
+
+  const funds = await getGroupFundSummary(args.groupId);
+  if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
+    return { ok: false, message: "group_insufficient_balance" };
+  }
+
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
 
   if (await hasOpenGovernanceVote(args.groupId)) {
     return { ok: false, message: "group_gov_proposal_open" };
@@ -913,6 +927,20 @@ export async function createLoanMediumProposal(args: {
   if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
     return { ok: false, message: "group_invalid_amount" };
   }
+
+  const funds = await getGroupFundSummary(args.groupId);
+  if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
+    return { ok: false, message: "group_insufficient_balance" };
+  }
+
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
 
   if (await hasOpenGovernanceVote(args.groupId)) {
     return { ok: false, message: "group_gov_proposal_open" };

@@ -18,6 +18,8 @@ type Funds = {
   availableUsdt: number;
   totalShares: number;
   shareValueUsdt: number;
+  outflowLast24hUsdt?: number;
+  outflowCapUsdt?: number;
 };
 
 function FundRow({
@@ -111,6 +113,26 @@ export function AvecTreasuryFunds({
 
       {funds ? (
         <div className="space-y-2">
+          {typeof funds.outflowCapUsdt === "number" && funds.outflowCapUsdt > 0 ? (
+            <div className="rounded-xl border border-sky-200/80 bg-sky-50/50 px-3 py-2">
+              <div className="flex items-center justify-between gap-2 text-[9px] font-bold text-sky-950">
+                <span>{t("avec_treasury_outflow_24h")}</span>
+                <span className="font-mono tabular-nums">
+                  {(funds.outflowLast24hUsdt ?? 0).toFixed(0)} / {funds.outflowCapUsdt.toFixed(0)}{" "}
+                  USDT
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-sky-100">
+                <div
+                  className="h-full rounded-full bg-sky-600 transition-all"
+                  style={{
+                    width: `${Math.min(100, ((funds.outflowLast24hUsdt ?? 0) / funds.outflowCapUsdt) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-1 text-[8px] text-sky-900/80">{t("avec_treasury_outflow_hint")}</p>
+            </div>
+          ) : null}
           <FundRow
             label={t("avec_fund_savings")}
             value={fmt(funds.savingsUsdt)}

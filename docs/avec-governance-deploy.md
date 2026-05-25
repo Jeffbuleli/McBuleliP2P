@@ -145,6 +145,17 @@ Pas de migration SQL.
 | **Plafond journalier** | Max **2000 USDT / 24 h** (retraits + aide solidarité) — `group_gov_daily_outflow_cap` |
 | **Landing** | Bannières `public/ads/` (Wallet, P2P, Futures, AVEC) sous le hero |
 
+### Sprint 9 (prêts B/C, plafond visible, UX votes)
+
+Pas de migration SQL.
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Demandes prêt ≥ 50 USDT** | Acceptation manager → vote comité (B) ou membres (C), plus de file 2/3 seule |
+| **Prêts proposés** | Retour UI « vote dans Dialogue » (comme clôture / retraits) |
+| **Plafond 24 h** | Inclut **décaissements prêts** ; jauge dans **Trésorerie** |
+| **Landing** | + Staking et Bots sur la grille promo |
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -201,7 +212,9 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **Transfert pénalités / intérêts** | Vote membres (72 h) |
 | **Nomination administrateur** | Vote membres (72 h) |
 | **Révocation co-admin** | Vote membres (72 h) |
-| **Sorties trésorerie** | Plafond **2000 USDT / 24 h** (retraits + aide solidarité) |
+| **Sorties trésorerie** | Plafond **2000 USDT / 24 h** (retraits + aide + prêts) |
+| **Prêt ≥ 100 USDT** (demande acceptée) | Vote membres (72 h) |
+| **Prêt 50–99 USDT** (demande acceptée) | Vote comité (24 h) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

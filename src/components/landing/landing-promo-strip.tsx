@@ -28,6 +28,18 @@ const PROMOS = [
     titleKey: "landing_promo_avec_t" as const,
     tagKey: "landing_promo_avec_tag" as const,
   },
+  {
+    href: "/app/trade/bots",
+    image: "/ads/mcbuleli-ad-trading-bot-1080.jpg",
+    titleKey: "landing_promo_bots_t" as const,
+    tagKey: "landing_promo_bots_tag" as const,
+  },
+  {
+    href: "/app/wallet/staking",
+    image: "/ads/mcbuleli-ad-en-staking-1080.jpg",
+    titleKey: "landing_promo_staking_t" as const,
+    tagKey: "landing_promo_staking_tag" as const,
+  },
 ] as const;
 
 export async function LandingPromoStrip() {
@@ -42,7 +54,7 @@ export async function LandingPromoStrip() {
       >
         {d.landing_promo_heading}
       </h2>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {PROMOS.map((p) => (
           <Link
             key={p.href}

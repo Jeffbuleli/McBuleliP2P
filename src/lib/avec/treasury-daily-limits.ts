@@ -3,7 +3,11 @@ import { getDb, groupWalletLedgerEntries } from "@/db";
 import { DEFAULT_GOVERNANCE_RULES } from "@/lib/avec/governance/rules";
 import { numFromNumeric } from "@/lib/wallet-types";
 
-const TREASURY_OUTFLOW_TYPES = ["group_payout_out", "group_social_aid_out"] as const;
+const TREASURY_OUTFLOW_TYPES = [
+  "group_payout_out",
+  "group_social_aid_out",
+  "group_loan_disburse_out",
+] as const;
 
 /** Sum of payouts + solidarity aid sent from group treasury in the last 24 hours. */
 export async function groupTreasuryOutflowLast24hUsdt(groupId: string): Promise<number> {
