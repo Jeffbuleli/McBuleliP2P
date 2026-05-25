@@ -254,21 +254,51 @@ async function getGroupDashboardInner(args: { groupId: string; userId: string })
     .where(eq(users.id, args.userId))
     .limit(1);
 
-  const members = await db
-    .select({
-      userId: groupSavingsMemberships.userId,
-      role: groupSavingsMemberships.role,
-      status: groupSavingsMemberships.status,
-      email: users.email,
-      displayName: users.displayName,
-      avatarUrl: users.avatarUrl,
-      kycStatus: users.kycStatus,
-    })
-    .from(groupSavingsMemberships)
-    .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
-    .where(eq(groupSavingsMemberships.groupId, args.groupId))
-    .orderBy(desc(groupSavingsMemberships.createdAt))
-    .limit(200);
+  let members: {
+    userId: string;
+    role: string;
+    status: string;
+    email: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    kycStatus: string;
+    granularRoles?: unknown;
+  }[];
+  try {
+    members = await db
+      .select({
+        userId: groupSavingsMemberships.userId,
+        role: groupSavingsMemberships.role,
+        status: groupSavingsMemberships.status,
+        granularRoles: groupSavingsMemberships.granularRoles,
+        email: users.email,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
+        kycStatus: users.kycStatus,
+      })
+      .from(groupSavingsMemberships)
+      .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
+      .where(eq(groupSavingsMemberships.groupId, args.groupId))
+      .orderBy(desc(groupSavingsMemberships.createdAt))
+      .limit(200);
+  } catch (e) {
+    if (!isPgMissingColumn(e)) throw e;
+    members = await db
+      .select({
+        userId: groupSavingsMemberships.userId,
+        role: groupSavingsMemberships.role,
+        status: groupSavingsMemberships.status,
+        email: users.email,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
+        kycStatus: users.kycStatus,
+      })
+      .from(groupSavingsMemberships)
+      .innerJoin(users, eq(groupSavingsMemberships.userId, users.id))
+      .where(eq(groupSavingsMemberships.groupId, args.groupId))
+      .orderBy(desc(groupSavingsMemberships.createdAt))
+      .limit(200);
+  }
 
   const cycleStarted =
     g.cycleStartedAt ?? g.createdAt;

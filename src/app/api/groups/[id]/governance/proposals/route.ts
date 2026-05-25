@@ -42,6 +42,24 @@ const createZ = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("set_granular_roles"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      assignments: z
+        .array(
+          z.object({
+            userId: z.string().uuid(),
+            granularRoles: z.array(
+              z.enum(["treasurer", "credit_officer", "secretary"]),
+            ),
+          }),
+        )
+        .min(1)
+        .max(25),
+    }),
+  }),
+  z.object({
     type: z.literal("change_social_fund"),
     title: z.string().max(200).optional(),
     justification: z.string().min(10).max(2000),

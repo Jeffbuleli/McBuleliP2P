@@ -1254,6 +1254,18 @@ export const en = {
   group_gov_vote_retry_badge: "Retry {n}/3",
   group_gov_committee_justification:
     "Proposed update to the committee list for collective approval.",
+  group_gov_granular_justification:
+    "Proposed update to functional roles (treasurer, credit officer, secretary) for collective approval.",
+  group_gov_invalid_granular_roles: "Invalid functional role assignment.",
+  group_audit_gov_granular_roles_applied: "Functional roles updated",
+  group_granular_role_treasurer: "Treasurer",
+  group_granular_role_credit_officer: "Credit officer",
+  group_granular_role_secretary: "Secretary",
+  group_settings_granular_title: "Functional roles",
+  group_settings_granular_note:
+    "Treasurer: propose payouts · Credit officer: propose loans · Secretary: displayed role.",
+  group_settings_granular_save: "Propose role update",
+  avec_role_committee: "Committee",
   group_settings_role_committee: "Committee",
   group_settings_committee_title: "Committee (medium decisions)",
   group_settings_committee_note:
@@ -4189,6 +4201,18 @@ export const fr: Messages = {
   group_gov_vote_retry_badge: "Relance {n}/3",
   group_gov_committee_justification:
     "Mise à jour proposée de la liste du comité pour approbation collective.",
+  group_gov_granular_justification:
+    "Mise à jour proposée des rôles fonctionnels (trésorier, crédit, secrétaire) pour vote collectif.",
+  group_gov_invalid_granular_roles: "Attribution des rôles fonctionnels invalide.",
+  group_audit_gov_granular_roles_applied: "Rôles fonctionnels mis à jour",
+  group_granular_role_treasurer: "Trésorier",
+  group_granular_role_credit_officer: "Chargé de crédit",
+  group_granular_role_secretary: "Secrétaire",
+  group_settings_granular_title: "Rôles fonctionnels",
+  group_settings_granular_note:
+    "Trésorier : proposer retraits · Crédit : proposer prêts · Secrétaire : rôle affiché.",
+  group_settings_granular_save: "Proposer mise à jour rôles",
+  avec_role_committee: "Comité",
   group_settings_role_committee: "Comité",
   group_settings_committee_title: "Comité (décisions moyennes)",
   group_settings_committee_note:

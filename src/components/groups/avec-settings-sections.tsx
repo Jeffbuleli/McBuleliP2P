@@ -4,7 +4,8 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
 import { avecCls } from "@/components/groups/avec-ui";
-import { groupRoleLabel } from "@/lib/group-role-label";
+import { GRANULAR_ROLE_IDS } from "@/lib/avec/governance/granular-roles";
+import { granularRoleLabel, groupRoleLabel } from "@/lib/group-role-label";
 import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import type { Messages } from "@/i18n/messages";
@@ -17,6 +18,7 @@ type MemberRow = {
   status: string;
   email: string;
   displayName?: string | null;
+  granularRoles?: string[];
 };
 
 function subscriptionLabel(t: (k: keyof Messages) => string, status: string): string {
@@ -44,6 +46,9 @@ export function AvecSettingsSections({
   committeeSelected,
   onCommitteeSelectedChange,
   onSaveCommittee,
+  granularSelected,
+  onGranularSelectedChange,
+  onSaveGranularRoles,
   reminderBlock,
 }: {
   locale: string;
@@ -60,6 +65,9 @@ export function AvecSettingsSections({
   committeeSelected: Record<string, boolean>;
   onCommitteeSelectedChange: (next: Record<string, boolean>) => void;
   onSaveCommittee: () => void;
+  granularSelected: Record<string, Record<string, boolean>>;
+  onGranularSelectedChange: (next: Record<string, Record<string, boolean>>) => void;
+  onSaveGranularRoles: () => void;
   reminderBlock: ReactNode;
 }) {
   const { t } = useI18n();
@@ -311,6 +319,75 @@ export function AvecSettingsSections({
                 className={`${avecCls.btnPrimary} mt-3`}
               >
                 {t("group_settings_committee_save")}
+              </button>
+
+              <p className={`${avecCls.sectionTitle} mt-5`}>
+                {t("group_settings_granular_title")}
+              </p>
+              <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
+                {t("group_settings_granular_note")}
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-[color:var(--fd-primary)]">
+                {t("group_gov_collective_required_hint")}
+              </p>
+              <ul className="mt-2 max-h-[40vh] space-y-2 overflow-y-auto">
+                {sortedMembers.map((m) => {
+                  const label = p2pDisplayName({
+                    email: m.email,
+                    displayName: m.displayName ?? null,
+                    avatarUrl: null,
+                    piUsername: null,
+                  });
+                  const sel = granularSelected[m.userId] ?? {};
+                  return (
+                    <li
+                      key={`g-${m.userId}`}
+                      className="rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5"
+                    >
+                      <p className="truncate text-xs font-semibold text-[color:var(--fd-text)]">
+                        {label}
+                      </p>
+                      <p className="text-[10px] font-bold text-teal-800">
+                        {groupRoleLabel(t, m.role)}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {GRANULAR_ROLE_IDS.map((gid) => (
+                          <label
+                            key={gid}
+                            className="flex items-center gap-1.5 rounded-lg border border-teal-200/80 bg-teal-50/60 px-2 py-1"
+                          >
+                            <input
+                              type="checkbox"
+                              disabled={busy || m.role === "admin"}
+                              checked={Boolean(sel[gid])}
+                              onChange={(e) =>
+                                onGranularSelectedChange({
+                                  ...granularSelected,
+                                  [m.userId]: {
+                                    ...sel,
+                                    [gid]: e.target.checked,
+                                  },
+                                })
+                              }
+                              className="h-3.5 w-3.5 accent-teal-700"
+                            />
+                            <span className="text-[9px] font-bold text-teal-900">
+                              {granularRoleLabel(t, gid)}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onSaveGranularRoles}
+                className={`${avecCls.btnPrimary} mt-3`}
+              >
+                {t("group_settings_granular_save")}
               </button>
             </>
           )}

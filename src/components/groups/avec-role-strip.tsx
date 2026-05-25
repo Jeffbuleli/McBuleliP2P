@@ -22,7 +22,9 @@ export function AvecRoleStrip({
       ? "avec_role_admin"
       : role === "co_admin"
         ? "avec_role_coadmin"
-        : "avec_role_member";
+        : role === "committee"
+          ? "avec_role_committee"
+          : "avec_role_member";
   return (
     <p className="rounded-xl border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)]/50 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
       {t(key)}

@@ -28,6 +28,8 @@ import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
 import {
+  canManageGroupLoans,
+  canProposeGroupLoan,
   getGroupOrNull,
   hasRole,
   getMyMembershipOrNull,
@@ -237,7 +239,7 @@ export async function proposeGroupLoan(args: {
     groupId: args.groupId,
     userId: args.actorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
+  if (!canProposeGroupLoan(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
   if (!Number.isFinite(args.amountUsdt) || args.amountUsdt <= 0) {
@@ -492,7 +494,7 @@ export async function acceptMemberLoanRequest(args: {
     groupId: args.groupId,
     userId: args.actorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
+  if (!canManageGroupLoans(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -550,7 +552,7 @@ export async function rejectGroupLoan(args: {
     groupId: args.groupId,
     userId: args.actorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
+  if (!canManageGroupLoans(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -631,7 +633,7 @@ export async function approveGroupLoan(args: {
     groupId: args.groupId,
     userId: args.actorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin"])) {
+  if (!canManageGroupLoans(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -861,7 +863,7 @@ export async function listGroupLoans(args: {
   const loanPenaltyPct = getGroupLoanPenaltyPct(g?.paymentRules);
 
   const db = getDb();
-  const canManage = hasRole(m, ["admin", "co_admin"]);
+  const canManage = canManageGroupLoans(m);
 
   const requestedRows = await db
     .select()

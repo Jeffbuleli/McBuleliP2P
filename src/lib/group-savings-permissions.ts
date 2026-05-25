@@ -36,3 +36,14 @@ export function hasRole(m: { role: string; status: string } | null, roles: Group
   return (roles as string[]).includes(m.role);
 }
 
+export type { MembershipLike } from "@/lib/avec/governance/permission-engine";
+export {
+  canManageGroupLoans,
+  canProposeGovernancePolicy,
+  canProposeGroupLoan,
+  canProposeGroupPayout,
+  hasGranularRole,
+  isGroupManager,
+  membershipGranularRoles,
+} from "@/lib/avec/governance/permission-engine";
+

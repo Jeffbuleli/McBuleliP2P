@@ -8,6 +8,7 @@ export type ProposalType =
   | "change_penalty_rate"
   | "set_co_admins"
   | "set_committee"
+  | "set_granular_roles"
   | "change_social_fund"
   | "cycle_closure"
   | "loan_critical"

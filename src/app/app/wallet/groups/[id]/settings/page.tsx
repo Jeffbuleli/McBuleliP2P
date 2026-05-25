@@ -9,6 +9,10 @@ import { AvecTopBar } from "@/components/groups/avec-top-bar";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { clientErrorText } from "@/lib/client-error-text";
+import {
+  GRANULAR_ROLE_IDS,
+  parseGranularRoles,
+} from "@/lib/avec/governance/granular-roles";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 
 type MemberRow = {
@@ -17,6 +21,7 @@ type MemberRow = {
   status: string;
   email: string;
   displayName?: string | null;
+  granularRoles?: string[];
 };
 
 type Dashboard = {
@@ -54,6 +59,9 @@ export default function GroupSettingsPage() {
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [committeeSelected, setCommitteeSelected] = useState<Record<string, boolean>>({});
+  const [granularSelected, setGranularSelected] = useState<
+    Record<string, Record<string, boolean>>
+  >({});
   const [invoices, setInvoices] = useState<any[] | null>(null);
   const [audit, setAudit] = useState<any[] | null>(null);
 
@@ -90,12 +98,18 @@ export default function GroupSettingsPage() {
 
     const init: Record<string, boolean> = {};
     const initCommittee: Record<string, boolean> = {};
+    const initGranular: Record<string, Record<string, boolean>> = {};
     for (const m of d.members) {
       if (m.role === "co_admin") init[m.userId] = true;
       if (m.role === "committee") initCommittee[m.userId] = true;
+      const gsel: Record<string, boolean> = {};
+      for (const gid of GRANULAR_ROLE_IDS) gsel[gid] = false;
+      for (const gid of parseGranularRoles(m.granularRoles)) gsel[gid] = true;
+      initGranular[m.userId] = gsel;
     }
     setSelected(init);
     setCommitteeSelected(initCommittee);
+    setGranularSelected(initGranular);
   }
 
   useEffect(() => {
@@ -141,6 +155,15 @@ export default function GroupSettingsPage() {
     }
   }
 
+  const granularAssignments = useMemo(() => {
+    return approvedMembers.map((m) => ({
+      userId: m.userId,
+      granularRoles: GRANULAR_ROLE_IDS.filter(
+        (gid) => granularSelected[m.userId]?.[gid],
+      ),
+    }));
+  }, [approvedMembers, granularSelected]);
+
   async function saveCommittee() {
     setBusy(true);
     setErr(null);
@@ -152,6 +175,30 @@ export default function GroupSettingsPage() {
           type: "set_committee",
           justification: t("group_gov_committee_justification"),
           payload: { committeeUserIds: committeeIds },
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveGranularRoles() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/groups/${id}/governance/proposals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "set_granular_roles",
+          justification: t("group_gov_granular_justification"),
+          payload: { assignments: granularAssignments },
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -263,6 +310,9 @@ export default function GroupSettingsPage() {
         committeeSelected={committeeSelected}
         onCommitteeSelectedChange={setCommitteeSelected}
         onSaveCommittee={() => void saveCommittee()}
+        granularSelected={granularSelected}
+        onGranularSelectedChange={setGranularSelected}
+        onSaveGranularRoles={() => void saveGranularRoles()}
         reminderBlock={reminderBlock}
       />
 

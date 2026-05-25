@@ -94,6 +94,22 @@ Pas de migration SQL — extension du ledger par `meta.bucket` et types d’écr
 - Proposition `change_penalty_rate` (vote membres 72 h, comme le taux d’intérêt).
 - Trésorerie / Vue : affichage des poches **Pénalités** et **Intérêts**.
 
+### Sprint 5 (rôles granulaires)
+
+```bash
+psql "$DATABASE_URL" -f drizzle/0046_granular_roles.sql
+```
+
+Ajoute `granular_roles` (jsonb) sur `group_savings_memberships`.
+
+| Rôle fonctionnel | Capacités |
+|------------------|-----------|
+| **Trésorier** (`treasurer`) | Proposer retraits collectifs (palier B/C) |
+| **Crédit** (`credit_officer`) | Proposer des prêts internes |
+| **Secrétaire** (`secretary`) | Rôle affiché (modération PV — évolution) |
+
+Attribution via **Paramètres → Gouvernance → Rôles fonctionnels** → vote membres 72 h (`set_granular_roles`).
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -144,6 +160,7 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **Aide solidarité** (paiement) &lt; 50 USDT | Vote comité (24 h) |
 | **Aide solidarité** ≥ 50 USDT | Vote membres (48 h) |
 | **Taux intérêt / pénalité** prêts | Vote membres (72 h) |
+| **Rôles fonctionnels** (trésorier, crédit, …) | Vote membres (72 h) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

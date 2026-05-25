@@ -10,7 +10,14 @@ import {
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
 import { getGroupFundSummary } from "@/lib/avec/fund-buckets";
-import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import {
+  canProposeGroupLoan,
+  canProposeGroupPayout,
+  canProposeGovernancePolicy,
+  hasRole,
+  getMyMembershipOrNull,
+} from "@/lib/group-savings-permissions";
+import { normalizeGranularAssignments } from "@/lib/avec/governance/granular-roles";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
 import { countCommitteeEligibleVoters } from "@/lib/avec/governance/committee";
@@ -404,6 +411,7 @@ type MemberProposalType =
   | "change_penalty_rate"
   | "set_co_admins"
   | "set_committee"
+  | "set_granular_roles"
   | "change_social_fund";
 
 export async function createMemberProposal(args: {
@@ -428,9 +436,10 @@ export async function createMemberProposal(args: {
   const adminOnly: MemberProposalType[] = [
     "set_co_admins",
     "set_committee",
+    "set_granular_roles",
     "change_social_fund",
   ];
-  if (adminOnly.includes(args.type) && !hasRole(m, ["admin"])) {
+  if (adminOnly.includes(args.type) && !canProposeGovernancePolicy(m)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -524,6 +533,28 @@ export async function createMemberProposal(args: {
       }
     }
     if (!title) title = "Update committee members";
+  } else if (args.type === "set_granular_roles") {
+    const assignments = normalizeGranularAssignments(args.payload.assignments);
+    if (assignments.length === 0) {
+      return { ok: false, message: "group_gov_invalid_granular_roles" };
+    }
+    const ids = assignments.map((a) => a.userId);
+    const members = await db
+      .select({ status: groupSavingsMemberships.status, role: groupSavingsMemberships.role })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          inArray(groupSavingsMemberships.userId, ids),
+        ),
+      );
+    if (
+      members.length !== ids.length ||
+      members.some((x) => x.status !== "approved" || x.role === "admin")
+    ) {
+      return { ok: false, message: "group_gov_invalid_granular_roles" };
+    }
+    if (!title) title = "Update functional roles";
   } else if (args.type === "change_social_fund") {
     const socialFundUsdt = Number(args.payload.socialFundUsdt);
     if (!Number.isFinite(socialFundUsdt) || socialFundUsdt < 0) {
@@ -727,7 +758,7 @@ export async function createPayoutMediumProposal(args: {
     groupId: args.groupId,
     userId: args.authorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin", "committee"])) {
+  if (!canProposeGroupPayout(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 
@@ -793,7 +824,7 @@ export async function createLoanMediumProposal(args: {
     groupId: args.groupId,
     userId: args.authorUserId,
   });
-  if (!hasRole(actor, ["admin", "co_admin", "committee"])) {
+  if (!canProposeGroupLoan(actor)) {
     return { ok: false, message: "group_forbidden" };
   }
 

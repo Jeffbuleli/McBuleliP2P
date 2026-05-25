@@ -9,6 +9,7 @@ import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { executeGovernancePayout } from "@/lib/group-savings-payouts";
 import { applyCoAdminsToGroup } from "@/lib/avec/governance/apply-co-admins";
 import { applyCommitteeToGroup } from "@/lib/avec/governance/apply-committee";
+import { applyGranularRolesToGroup } from "@/lib/avec/governance/apply-granular-roles";
 import { maybeRetryExpiredProposal } from "@/lib/avec/governance/vote-retry";
 import { closeProposalVote } from "@/lib/avec/governance/vote-engine";
 import { mergeGroupPaymentRules } from "@/lib/avec/governance/rules";
@@ -136,6 +137,15 @@ async function executePassedProposal(args: {
       groupId: args.groupId,
       actorUserId: p.authorUserId,
       coAdminUserIds: ids,
+      proposalId: p.id,
+    });
+    if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "set_granular_roles") {
+    const assignments = payload.assignments;
+    const applied = await applyGranularRolesToGroup({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      assignments,
       proposalId: p.id,
     });
     if (!applied.ok) return { ok: false, message: applied.message };

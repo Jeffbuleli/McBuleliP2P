@@ -927,6 +927,10 @@ export const groupSavingsMemberships = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: varchar("role", { length: 16 }).notNull().default("member"),
+    granularRoles: jsonb("granular_roles")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
     approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
       onDelete: "set null",
