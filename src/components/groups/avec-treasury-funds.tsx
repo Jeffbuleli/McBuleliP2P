@@ -14,6 +14,7 @@ type Funds = {
   interestUsdt: number;
   reserveUsdt: number;
   lentUsdt: number;
+  creditUsdt: number;
   availableUsdt: number;
   totalShares: number;
   shareValueUsdt: number;
@@ -133,7 +134,12 @@ export function AvecTreasuryFunds({
               value={fmt(funds.availableUsdt)}
               accent
             />
-            <FundRow compact label={t("avec_fund_lent_short")} value={fmt(funds.lentUsdt)} />
+            <FundRow
+              compact
+              label={t("avec_fund_credit_short")}
+              value={fmt(funds.creditUsdt ?? funds.lentUsdt)}
+              hint={funds.creditUsdt > 0.01 ? t("avec_fund_credit_hint") : undefined}
+            />
           </div>
         </div>
       ) : (

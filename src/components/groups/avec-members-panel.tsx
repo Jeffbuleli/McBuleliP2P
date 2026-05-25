@@ -11,12 +11,14 @@ import { memberRoleSummary } from "@/lib/group-role-label";
 import { AvecMemberTrustBadge } from "@/components/groups/avec-member-trust-badge";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
+import { AvecGovernanceRhPanel } from "@/components/groups/avec-governance-rh-panel";
 
 export function AvecMembersPanel({
   groupId,
   members,
   canModerate,
   canAdmin,
+  myUserId,
   busy,
   onRefresh,
 }: {
@@ -24,6 +26,7 @@ export function AvecMembersPanel({
   members: AvecMemberRow[];
   canModerate: boolean;
   canAdmin: boolean;
+  myUserId?: string;
   busy: boolean;
   onRefresh: () => void;
 }) {
@@ -277,6 +280,19 @@ export function AvecMembersPanel({
           />
         </div>
       </div>
+
+      {myUserId && approved.some((m) => m.userId === myUserId) ? (
+        <AvecGovernanceRhPanel
+          groupId={groupId}
+          myUserId={myUserId}
+          members={approved.map((m) => ({
+            userId: m.userId,
+            role: m.role,
+            email: m.email,
+            displayName: m.displayName,
+          }))}
+        />
+      ) : null}
     </div>
   );
 }

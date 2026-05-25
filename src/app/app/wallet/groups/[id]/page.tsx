@@ -418,6 +418,7 @@ export default function AvecDashboardPage() {
             members={data.members}
             canModerate={!!canModerateMembership}
             canAdmin={!!canAdmin}
+            myUserId={myUserId}
             busy={busy}
             onRefresh={() => void load()}
           />

@@ -668,6 +668,15 @@ export async function executeGovernancePayout(args: {
     return { ok: false, message: "group_insufficient_balance" };
   }
 
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
+
   const amtStr = fmtWalletAmount(args.amountUsdt);
   const batchId = randomUUID();
 

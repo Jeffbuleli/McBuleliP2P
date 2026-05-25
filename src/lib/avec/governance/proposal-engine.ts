@@ -324,6 +324,15 @@ export async function createPayoutCriticalProposal(args: {
     return { ok: false, message: "group_insufficient_balance" };
   }
 
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
+
   const db = getDb();
   const [beneficiary] = await db
     .select({ status: groupSavingsMemberships.status })
@@ -407,6 +416,7 @@ export async function createPayoutCriticalProposal(args: {
 
 type MemberProposalType =
   | "revoke_admin"
+  | "appoint_admin"
   | "revoke_member"
   | "transfer_fund_bucket"
   | "change_interest_rate"
@@ -484,6 +494,26 @@ export async function createMemberProposal(args: {
       return { ok: false, message: "group_gov_cannot_revoke_self" };
     }
     if (!title) title = "Revoke administrator";
+  } else if (args.type === "appoint_admin") {
+    const targetUserId = String(args.payload.targetUserId ?? "");
+    if (!targetUserId) return { ok: false, message: "group_gov_invalid_payload" };
+    const [target] = await db
+      .select({ role: groupSavingsMemberships.role, status: groupSavingsMemberships.status })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          eq(groupSavingsMemberships.userId, targetUserId),
+        ),
+      )
+      .limit(1);
+    if (!target || target.status !== "approved") {
+      return { ok: false, message: "group_gov_target_not_member" };
+    }
+    if (target.role === "admin") {
+      return { ok: false, message: "group_gov_target_already_admin" };
+    }
+    if (!title) title = "Appoint group administrator";
   } else if (args.type === "revoke_member") {
     const targetUserId = String(args.payload.targetUserId ?? "");
     if (!targetUserId) return { ok: false, message: "group_gov_invalid_payload" };
@@ -813,6 +843,15 @@ export async function createPayoutMediumProposal(args: {
   if (funds.availableUsdt + 1e-18 < args.amountUsdt) {
     return { ok: false, message: "group_insufficient_balance" };
   }
+
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: args.amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
 
   const db = getDb();
   const [beneficiary] = await db

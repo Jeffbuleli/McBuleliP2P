@@ -25,6 +25,8 @@ export type GroupFundSummary = {
   interestUsdt: number;
   reserveUsdt: number;
   lentUsdt: number;
+  /** Outstanding internal loans (encours) — same as lentUsdt, informational credit bucket. */
+  creditUsdt: number;
   availableUsdt: number;
   totalShares: number;
   shareValueUsdt: number;
@@ -132,6 +134,7 @@ export async function getGroupFundSummary(
     interestUsdt,
     reserveUsdt,
     lentUsdt,
+    creditUsdt: lentUsdt,
     availableUsdt,
     totalShares,
     shareValueUsdt,

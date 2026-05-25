@@ -27,6 +27,8 @@ export const DEFAULT_GOVERNANCE_RULES = {
   socialAidMaxPerMemberUsdt: 200,
   socialAidMaxPerMonthGroupUsdt: 500,
   socialAidMinDaysBetweenRequests: 30,
+  /** Max combined payouts + solidarity aid from group treasury per rolling 24h. */
+  maxGroupTreasuryOutflowPerDayUsdt: 2000,
 } as const;
 
 export type OperationTier = RiskTier;

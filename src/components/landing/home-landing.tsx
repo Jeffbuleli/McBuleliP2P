@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
+import { LandingPromoStrip } from "@/components/landing/landing-promo-strip";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
@@ -154,6 +155,8 @@ export async function HomeLanding() {
             ))}
           </div>
         </section>
+
+        <LandingPromoStrip />
 
         <div className="mt-5 space-y-5">
           <PriceChartLazy appearance="light" />

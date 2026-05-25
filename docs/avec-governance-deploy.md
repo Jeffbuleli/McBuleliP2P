@@ -133,6 +133,18 @@ Pas de migration SQL.
 
 UI : **Membres** → « Proposer exclusion » · **Trésorerie** → bloc transfert (si pénalités/intérêts &gt; 0).
 
+### Sprint 8 (bureau, crédit, plafond journalier, landing ads)
+
+Pas de migration SQL.
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Nomination admin** | Vote `appoint_admin` 72 h — l’admin actuel devient co-admin, la cible devient admin |
+| **Révocation co-admin** | Vote `revoke_admin` — UI **Membres** → bloc « Direction (vote collectif) » |
+| **Poche crédit** | `creditUsdt` = encours prêts (`lentUsdt`) affiché en Trésorerie / Vue |
+| **Plafond journalier** | Max **2000 USDT / 24 h** (retraits + aide solidarité) — `group_gov_daily_outflow_cap` |
+| **Landing** | Bannières `public/ads/` (Wallet, P2P, Futures, AVEC) sous le hero |
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -187,6 +199,9 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **PV de réunion** (secrétaire / gestionnaires) | Publication Dialogue |
 | **Exclusion d’un membre** | Vote membres (72 h) |
 | **Transfert pénalités / intérêts** | Vote membres (72 h) |
+| **Nomination administrateur** | Vote membres (72 h) |
+| **Révocation co-admin** | Vote membres (72 h) |
+| **Sorties trésorerie** | Plafond **2000 USDT / 24 h** (retraits + aide solidarité) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

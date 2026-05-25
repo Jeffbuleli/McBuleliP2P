@@ -85,6 +85,51 @@ async function executePassedProposal(args: {
       action: "gov_admin_revoked",
       after: { proposalId: p.id, targetUserId },
     });
+  } else if (type === "appoint_admin") {
+    const targetUserId = String(payload.targetUserId ?? "");
+    if (!targetUserId) return { ok: false, message: "invalid_payload" };
+
+    const admins = await db
+      .select({ userId: groupSavingsMemberships.userId })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          eq(groupSavingsMemberships.role, "admin"),
+          eq(groupSavingsMemberships.status, "approved"),
+        ),
+      );
+
+    for (const a of admins) {
+      if (a.userId === targetUserId) continue;
+      await db
+        .update(groupSavingsMemberships)
+        .set({ role: "co_admin", updatedAt: new Date() })
+        .where(
+          and(
+            eq(groupSavingsMemberships.groupId, args.groupId),
+            eq(groupSavingsMemberships.userId, a.userId),
+          ),
+        );
+    }
+
+    await db
+      .update(groupSavingsMemberships)
+      .set({ role: "admin", updatedAt: new Date() })
+      .where(
+        and(
+          eq(groupSavingsMemberships.groupId, args.groupId),
+          eq(groupSavingsMemberships.userId, targetUserId),
+          eq(groupSavingsMemberships.status, "approved"),
+        ),
+      );
+
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_admin_appointed",
+      after: { proposalId: p.id, targetUserId, previousAdminIds: admins.map((x) => x.userId) },
+    });
   } else if (type === "revoke_member") {
     const targetUserId = String(payload.targetUserId ?? "");
     if (!targetUserId) return { ok: false, message: "invalid_payload" };

@@ -38,6 +38,8 @@ export function proposalTypeLabel(type: ProposalType): string {
       return "Medium payout (committee)";
     case "revoke_admin":
       return "Revoke admin";
+    case "appoint_admin":
+      return "Appoint administrator";
     case "revoke_member":
       return "Exclude member";
     case "transfer_fund_bucket":

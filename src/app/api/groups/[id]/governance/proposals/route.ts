@@ -14,6 +14,12 @@ const createZ = z.discriminatedUnion("type", [
     payload: z.object({ targetUserId: z.string().uuid() }),
   }),
   z.object({
+    type: z.literal("appoint_admin"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({ targetUserId: z.string().uuid() }),
+  }),
+  z.object({
     type: z.literal("revoke_member"),
     title: z.string().max(200).optional(),
     justification: z.string().min(10).max(2000),

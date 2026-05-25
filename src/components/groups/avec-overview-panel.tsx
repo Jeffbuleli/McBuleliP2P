@@ -32,6 +32,7 @@ type FundBuckets = {
   interestUsdt?: number;
   reserveUsdt?: number;
   lentUsdt: number;
+  creditUsdt?: number;
   availableUsdt: number;
 };
 
@@ -229,7 +230,11 @@ export function AvecOverviewPanel({
               ...(funds.interestUsdt && funds.interestUsdt > 0.01
                 ? [{ label: t("avec_fund_interest"), val: funds.interestUsdt, color: "#0891b2" }]
                 : []),
-              { label: t("avec_vue_fund_lent"), val: funds.lentUsdt, color: "#7c3aed" },
+              {
+                label: t("avec_fund_credit_short"),
+                val: funds.creditUsdt ?? funds.lentUsdt,
+                color: "#7c3aed",
+              },
             ].map((b) => (
               <div key={b.label} className="flex flex-col items-center gap-1">
                 <div

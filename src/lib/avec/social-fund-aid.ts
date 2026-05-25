@@ -371,6 +371,15 @@ export async function executeSocialAidFromGovernance(args: {
     return { ok: false, message: "group_social_fund_insufficient" };
   }
 
+  const { assertWithinDailyTreasuryOutflowCap } = await import(
+    "@/lib/avec/treasury-daily-limits"
+  );
+  const dailyCap = await assertWithinDailyTreasuryOutflowCap({
+    groupId: args.groupId,
+    additionalUsdt: amountUsdt,
+  });
+  if (!dailyCap.ok) return { ok: false, message: dailyCap.message };
+
   const batchId = randomUUID();
   const amtStr = fmtWalletAmount(amountUsdt);
 
