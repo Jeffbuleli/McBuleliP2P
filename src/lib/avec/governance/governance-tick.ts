@@ -104,6 +104,30 @@ async function executePassedProposal(args: {
       action: "gov_interest_rate_changed",
       after: { proposalId: p.id, interestRatePctTotal: rate },
     });
+  } else if (type === "change_penalty_rate") {
+    const rate = Number(payload.penaltyRatePctTotal);
+    if (!Number.isFinite(rate)) return { ok: false, message: "invalid_payload" };
+    const [g] = await db
+      .select({ paymentRules: groupSavingsGroups.paymentRules })
+      .from(groupSavingsGroups)
+      .where(eq(groupSavingsGroups.id, args.groupId))
+      .limit(1);
+    if (!g) return { ok: false, message: "group_not_found" };
+    await db
+      .update(groupSavingsGroups)
+      .set({
+        paymentRules: mergeGroupPaymentRules(g.paymentRules, {
+          loanPenaltyPctTotal: rate,
+        }),
+        updatedAt: new Date(),
+      })
+      .where(eq(groupSavingsGroups.id, args.groupId));
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_penalty_rate_changed",
+      after: { proposalId: p.id, penaltyRatePctTotal: rate },
+    });
   } else if (type === "set_co_admins") {
     const ids = Array.isArray(payload.coAdminUserIds)
       ? (payload.coAdminUserIds as unknown[]).map(String).slice(0, 3)

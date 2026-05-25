@@ -40,6 +40,8 @@ export function proposalTypeLabel(type: ProposalType): string {
       return "Revoke admin";
     case "change_interest_rate":
       return "Change interest rate";
+    case "change_penalty_rate":
+      return "Change penalty rate";
     case "set_co_admins":
       return "Change co-admins";
     case "set_committee":

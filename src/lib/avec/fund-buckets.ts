@@ -2,15 +2,24 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDb, groupAvecLoans, groupWalletLedgerEntries } from "@/db";
 import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { getGroupUsdtBalance } from "@/lib/group-savings-ledger";
-import { numFromNumeric } from "@/lib/wallet-types";
+import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 
-export type FundBucket = "savings" | "social" | "admin";
+export type FundBucket =
+  | "savings"
+  | "social"
+  | "admin"
+  | "penalties"
+  | "interest"
+  | "reserve";
 
 export type GroupFundSummary = {
   totalUsdt: number;
   savingsUsdt: number;
   socialUsdt: number;
   adminUsdt: number;
+  penaltiesUsdt: number;
+  interestUsdt: number;
+  reserveUsdt: number;
   lentUsdt: number;
   availableUsdt: number;
   totalShares: number;
@@ -23,7 +32,16 @@ export function ledgerBucket(
   meta: Record<string, unknown> | null | undefined,
 ): FundBucket {
   const b = meta?.bucket;
-  if (b === "savings" || b === "social" || b === "admin") return b;
+  if (
+    b === "savings" ||
+    b === "social" ||
+    b === "admin" ||
+    b === "penalties" ||
+    b === "interest" ||
+    b === "reserve"
+  ) {
+    return b;
+  }
   if (
     entryType === "group_social_contribution_in" ||
     entryType === "group_social_aid_out"
@@ -32,12 +50,16 @@ export function ledgerBucket(
   }
   if (entryType === "group_social_aid_in") return "savings";
   if (entryType === "group_subscription_fee") return "admin";
+  if (entryType === "group_loan_repay_penalty_in") return "penalties";
+  if (entryType === "group_loan_repay_interest_in") return "interest";
+  if (entryType === "group_reserve_in") return "reserve";
   if (
     entryType === "group_contribution_in" ||
     entryType === "group_payout_out" ||
     entryType === "group_payout_in" ||
     entryType === "group_loan_disburse_out" ||
     entryType === "group_loan_repay_in" ||
+    entryType === "group_loan_repay_principal_in" ||
     entryType === "group_cycle_distribution_out" ||
     entryType === "group_cycle_distribution_in"
   ) {
@@ -63,12 +85,18 @@ export async function getGroupFundSummary(
   let savingsUsdt = 0;
   let socialUsdt = 0;
   let adminUsdt = 0;
+  let penaltiesUsdt = 0;
+  let interestUsdt = 0;
+  let reserveUsdt = 0;
 
   for (const r of rows) {
     const n = numFromNumeric(r.amount?.toString());
     const bucket = ledgerBucket(r.entryType, r.meta as Record<string, unknown> | null);
     if (bucket === "social") socialUsdt += n;
     else if (bucket === "admin") adminUsdt += n;
+    else if (bucket === "penalties") penaltiesUsdt += n;
+    else if (bucket === "interest") interestUsdt += n;
+    else if (bucket === "reserve") reserveUsdt += n;
     else savingsUsdt += n;
   }
 
@@ -83,6 +111,9 @@ export async function getGroupFundSummary(
     savingsUsdt,
     socialUsdt,
     adminUsdt,
+    penaltiesUsdt,
+    interestUsdt,
+    reserveUsdt,
     lentUsdt,
     availableUsdt,
     totalShares,
@@ -92,6 +123,63 @@ export async function getGroupFundSummary(
 
 export function fundBucketMeta(bucket: FundBucket): { bucket: FundBucket } {
   return { bucket };
+}
+
+/** Split loan repayment into bucket-specific group ledger lines. */
+export function buildLoanRepayGroupLedgerLines(args: {
+  batchId: string;
+  groupId: string;
+  loanId: string;
+  borrowerUserId: string;
+  by: string;
+  toPrincipal: number;
+  toInterest: number;
+  toPenalty: number;
+}): {
+  entryType: string;
+  amount: string;
+  meta: Record<string, unknown>;
+}[] {
+  const base = {
+    loanId: args.loanId,
+    borrowerUserId: args.borrowerUserId,
+    by: args.by,
+  };
+  const lines: { entryType: string; amount: string; meta: Record<string, unknown> }[] = [];
+  if (args.toPenalty > 1e-12) {
+    lines.push({
+      entryType: "group_loan_repay_penalty_in",
+      amount: fmtWalletAmount(args.toPenalty),
+      meta: {
+        ...base,
+        penaltyUsdt: args.toPenalty,
+        ...fundBucketMeta("penalties"),
+      },
+    });
+  }
+  if (args.toInterest > 1e-12) {
+    lines.push({
+      entryType: "group_loan_repay_interest_in",
+      amount: fmtWalletAmount(args.toInterest),
+      meta: {
+        ...base,
+        interestUsdt: args.toInterest,
+        ...fundBucketMeta("interest"),
+      },
+    });
+  }
+  if (args.toPrincipal > 1e-12) {
+    lines.push({
+      entryType: "group_loan_repay_principal_in",
+      amount: fmtWalletAmount(args.toPrincipal),
+      meta: {
+        ...base,
+        principalUsdt: args.toPrincipal,
+        ...fundBucketMeta("savings"),
+      },
+    });
+  }
+  return lines;
 }
 
 /** Outstanding AVEC internal loans (savings fund locked). */

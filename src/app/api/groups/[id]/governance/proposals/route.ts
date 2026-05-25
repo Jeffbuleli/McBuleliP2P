@@ -20,6 +20,12 @@ const createZ = z.discriminatedUnion("type", [
     payload: z.object({ interestRatePctTotal: z.number().min(1).max(30) }),
   }),
   z.object({
+    type: z.literal("change_penalty_rate"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({ penaltyRatePctTotal: z.number().min(1).max(50) }),
+  }),
+  z.object({
     type: z.literal("set_co_admins"),
     title: z.string().max(200).optional(),
     justification: z.string().min(10).max(2000),

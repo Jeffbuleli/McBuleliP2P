@@ -5,6 +5,7 @@ export type ProposalType =
   | "payout_critical"
   | "payout_medium"
   | "change_interest_rate"
+  | "change_penalty_rate"
   | "set_co_admins"
   | "set_committee"
   | "change_social_fund"

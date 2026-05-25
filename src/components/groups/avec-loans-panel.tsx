@@ -5,6 +5,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { AvecIconLoan } from "@/components/groups/avec-icons";
 import { avecCls } from "@/components/groups/avec-ui";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
+import { AvecLoanRatesGovernance } from "@/components/groups/avec-loan-rates-governance";
 import { clientErrorText } from "@/lib/client-error-text";
 import { p2pDisplayName } from "@/lib/p2p-display";
 
@@ -43,15 +44,20 @@ type HistoryLoan = {
   rejectionReason: string | null;
 };
 
-function RatePills() {
-  const { t } = useI18n();
+function RatePills({
+  interestPct,
+  penaltyPct,
+}: {
+  interestPct: number;
+  penaltyPct: number;
+}) {
   return (
     <div className="mb-3 flex flex-wrap gap-1.5">
       <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[9px] font-bold text-cyan-900">
-        10% / 30j
+        {interestPct.toFixed(0)}% / 30j
       </span>
       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
-        +20% · J+37
+        +{penaltyPct.toFixed(0)}% · J+37
       </span>
       <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold text-stone-600">
         max 90j
@@ -132,6 +138,8 @@ export function AvecLoansPanel({
   const [history, setHistory] = useState<HistoryLoan[]>([]);
   const [canManage, setCanManage] = useState(false);
   const [myMaxLoan, setMyMaxLoan] = useState(0);
+  const [loanInterestPct, setLoanInterestPct] = useState(10);
+  const [loanPenaltyPct, setLoanPenaltyPct] = useState(20);
   const [repayAmount, setRepayAmount] = useState<Record<string, string>>({});
 
   const approved = members.filter((m) => m.status === "approved");
@@ -147,6 +155,12 @@ export function AvecLoansPanel({
     setHistory((j.history ?? []) as HistoryLoan[]);
     setCanManage(Boolean(j.canManage));
     setMyMaxLoan(Number(j.myMaxLoanUsdt) || 0);
+    if (Number.isFinite(Number(j.loanInterestPct))) {
+      setLoanInterestPct(Number(j.loanInterestPct));
+    }
+    if (Number.isFinite(Number(j.loanPenaltyPct))) {
+      setLoanPenaltyPct(Number(j.loanPenaltyPct));
+    }
   }, [groupId]);
 
   useEffect(() => {
@@ -302,7 +316,17 @@ export function AvecLoansPanel({
         <p className={avecCls.sectionTitle}>{t("avec_loans_title")}</p>
       </div>
 
-      <RatePills />
+      <RatePills interestPct={loanInterestPct} penaltyPct={loanPenaltyPct} />
+
+      {canManage ? (
+        <AvecLoanRatesGovernance
+          groupId={groupId}
+          interestPct={loanInterestPct}
+          penaltyPct={loanPenaltyPct}
+          canPropose={canManage}
+          onDone={() => void load()}
+        />
+      ) : null}
 
       {!canManage && !pending && requested.length === 0 ? (
         <div className="mb-3 rounded-2xl border border-cyan-200/60 bg-cyan-50/50 p-3">

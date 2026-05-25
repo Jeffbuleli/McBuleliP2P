@@ -1215,6 +1215,24 @@ export const en = {
   group_gov_target_not_admin: "Target member is not an administrator.",
   group_gov_cannot_revoke_self: "You cannot propose revoking yourself.",
   group_gov_invalid_interest_rate: "Interest rate must be between 1% and 30%.",
+  group_gov_invalid_penalty_rate: "Penalty rate must be between 1% and 50%.",
+  group_gov_interest_rate_justification:
+    "Proposed loan interest rate change to {rate}% (collective vote).",
+  group_gov_penalty_rate_justification:
+    "Proposed late-loan penalty rate change to {rate}% (collective vote).",
+  group_gov_proposal_submitted: "Proposal submitted — vote in Dialogue.",
+  group_audit_gov_penalty_rate_changed: "Governance penalty rate changed",
+  avec_fund_penalties: "Penalties fund",
+  avec_fund_interest: "Interest fund",
+  avec_fund_reserve: "Emergency reserve",
+  avec_loan_rates_gov_title: "Loan rates (collective vote)",
+  avec_loan_rates_gov_hint:
+    "Interest and penalty rates apply to new loans after the vote passes.",
+  avec_loan_rate_interest: "Interest % (30d)",
+  avec_loan_rate_penalty: "Penalty % (late)",
+  avec_loan_propose_interest: "Propose interest rate",
+  avec_loan_propose_penalty: "Propose penalty rate",
+  avec_loan_rates_members_hint: "Managers can propose rate changes for member vote.",
   group_gov_collective_required:
     "This change requires a collective member vote — managers cannot decide alone.",
   group_gov_collective_required_hint:
@@ -4130,6 +4148,25 @@ export const fr: Messages = {
   group_gov_target_not_admin: "Le membre visé n’est pas administrateur.",
   group_gov_cannot_revoke_self: "Vous ne pouvez pas proposer votre propre révocation.",
   group_gov_invalid_interest_rate: "Le taux doit être entre 1 % et 30 %.",
+  group_gov_invalid_penalty_rate: "La pénalité doit être entre 1 % et 50 %.",
+  group_gov_interest_rate_justification:
+    "Changement proposé du taux d’intérêt des prêts à {rate} % (vote collectif).",
+  group_gov_penalty_rate_justification:
+    "Changement proposé de la pénalité de retard à {rate} % (vote collectif).",
+  group_gov_proposal_submitted: "Proposition envoyée — vote dans Dialogue.",
+  group_audit_gov_penalty_rate_changed: "Taux pénalité gouvernance modifié",
+  avec_fund_penalties: "Fonds pénalités",
+  avec_fund_interest: "Fonds intérêts",
+  avec_fund_reserve: "Réserve urgence",
+  avec_loan_rates_gov_title: "Taux prêts (vote collectif)",
+  avec_loan_rates_gov_hint:
+    "Les taux s’appliquent aux nouveaux prêts après adoption du vote.",
+  avec_loan_rate_interest: "Intérêt % (30j)",
+  avec_loan_rate_penalty: "Pénalité % (retard)",
+  avec_loan_propose_interest: "Proposer taux intérêt",
+  avec_loan_propose_penalty: "Proposer taux pénalité",
+  avec_loan_rates_members_hint:
+    "Les gestionnaires peuvent proposer des changements de taux au vote des membres.",
   group_gov_collective_required:
     "Ce changement exige un vote collectif des membres — les gestionnaires ne peuvent pas décider seuls.",
   group_gov_collective_required_hint:

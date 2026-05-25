@@ -9,18 +9,29 @@ import {
   groupWalletLedgerEntries,
   users,
 } from "@/db";
-import { getGroupLoanInterestPct } from "@/lib/avec/governance/rules";
+import {
+  getGroupLoanInterestPct,
+  getGroupLoanPenaltyPct,
+} from "@/lib/avec/governance/rules";
 import {
   allocateLoanRepayment,
   AVEC_LOAN_MAX_DAYS,
   AVEC_LOAN_PENALTY_PCT,
   computeLoanCharges,
 } from "@/lib/avec/loan-terms";
-import { getGroupFundSummary, fundBucketMeta } from "@/lib/avec/fund-buckets";
+import {
+  buildLoanRepayGroupLedgerLines,
+  getGroupFundSummary,
+  fundBucketMeta,
+} from "@/lib/avec/fund-buckets";
 import { getMemberContributionStats } from "@/lib/group-savings-member-stats";
 import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { ensureGroupSubscriptionUpToDate } from "@/lib/group-savings-billing";
-import { hasRole, getMyMembershipOrNull } from "@/lib/group-savings-permissions";
+import {
+  getGroupOrNull,
+  hasRole,
+  getMyMembershipOrNull,
+} from "@/lib/group-savings-permissions";
 import { insertGroupLoanDecisionMessage } from "@/lib/group-savings-messaging";
 import {
   listGroupManagers,
@@ -280,6 +291,7 @@ export async function proposeGroupLoan(args: {
   const required = payoutRequiredApprovals(managers.length);
   const amtStr = fmtWalletAmount(args.amountUsdt);
   const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
+  const penaltyPct = getGroupLoanPenaltyPct(gCheck.group.paymentRules);
 
   const [row] = await db
     .insert(groupAvecLoans)
@@ -292,7 +304,7 @@ export async function proposeGroupLoan(args: {
       status: "pending",
       requiredApprovals: required,
       interestRatePctMonth: String(interestPct),
-      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      penaltyRatePct: String(penaltyPct),
       loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
@@ -338,6 +350,7 @@ export async function executeLoanFromGovernance(args: {
 
   const db = getDb();
   const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
+  const penaltyPct = getGroupLoanPenaltyPct(gCheck.group.paymentRules);
   const amtStr = fmtWalletAmount(args.amountUsdt);
 
   const [row] = await db
@@ -351,7 +364,7 @@ export async function executeLoanFromGovernance(args: {
       status: "pending",
       requiredApprovals: 0,
       interestRatePctMonth: String(interestPct),
-      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      penaltyRatePct: String(penaltyPct),
       loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
@@ -418,6 +431,7 @@ export async function requestMemberLoan(args: {
 
   const amtStr = fmtWalletAmount(args.amountUsdt);
   const interestPct = getGroupLoanInterestPct(gCheck.group.paymentRules);
+  const penaltyPct = getGroupLoanPenaltyPct(gCheck.group.paymentRules);
   const [row] = await db
     .insert(groupAvecLoans)
     .values({
@@ -429,7 +443,7 @@ export async function requestMemberLoan(args: {
       status: "requested",
       requiredApprovals: 0,
       interestRatePctMonth: String(interestPct),
-      penaltyRatePct: String(AVEC_LOAN_PENALTY_PCT),
+      penaltyRatePct: String(penaltyPct),
       loanTermDays: AVEC_LOAN_MAX_DAYS,
     })
     .returning({ id: groupAvecLoans.id });
@@ -762,22 +776,28 @@ export async function repayGroupLoan(args: {
         ]);
       }
 
-      await tx.insert(groupWalletLedgerEntries).values({
+      const repayLines = buildLoanRepayGroupLedgerLines({
         batchId,
         groupId: args.groupId,
-        entryType: "group_loan_repay_in",
-        asset: "USDT",
-        amount: payStr,
-        meta: {
-          loanId: loan.id,
-          borrowerUserId: loan.borrowerUserId,
-          by: args.actorUserId,
-          penaltyUsdt: alloc.toPenalty,
-          interestUsdt: alloc.toInterest,
-          principalUsdt: alloc.toPrincipal,
-          ...fundBucketMeta("savings"),
-        },
+        loanId: loan.id,
+        borrowerUserId: loan.borrowerUserId,
+        by: args.actorUserId,
+        toPrincipal: alloc.toPrincipal,
+        toInterest: alloc.toInterest,
+        toPenalty: alloc.toPenalty,
       });
+      if (repayLines.length > 0) {
+        await tx.insert(groupWalletLedgerEntries).values(
+          repayLines.map((line) => ({
+            batchId,
+            groupId: args.groupId,
+            entryType: line.entryType,
+            asset: "USDT" as const,
+            amount: line.amount,
+            meta: line.meta,
+          })),
+        );
+      }
 
       const newOut = charges.principalOutstandingUsdt - alloc.toPrincipal;
       const now = new Date();
@@ -826,6 +846,8 @@ export async function listGroupLoans(args: {
       canManage: boolean;
       maxLoanMultiplier: number;
       myMaxLoanUsdt: number;
+      loanInterestPct: number;
+      loanPenaltyPct: number;
     }
   | { ok: false; message: string }
 > {
@@ -833,6 +855,10 @@ export async function listGroupLoans(args: {
   if (!m || m.status !== "approved") {
     return { ok: false, message: "group_forbidden" };
   }
+
+  const g = await getGroupOrNull(args.groupId);
+  const loanInterestPct = getGroupLoanInterestPct(g?.paymentRules);
+  const loanPenaltyPct = getGroupLoanPenaltyPct(g?.paymentRules);
 
   const db = getDb();
   const canManage = hasRole(m, ["admin", "co_admin"]);
@@ -909,6 +935,8 @@ export async function listGroupLoans(args: {
     canManage,
     maxLoanMultiplier: AVEC_MAX_LOAN_SAVINGS_MULTIPLIER,
     myMaxLoanUsdt: mySaved * AVEC_MAX_LOAN_SAVINGS_MULTIPLIER,
+    loanInterestPct,
+    loanPenaltyPct,
   };
 }
 

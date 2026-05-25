@@ -86,6 +86,14 @@ Plafonds applicatifs : 200 USDT / membre / demande, 500 USDT / groupe / mois, 30
 
 UI : onglet **Trésorerie** → panneau **Aide solidarité** ; votes et cartes dans **Dialogue**.
 
+### Sprint 4 (poches pénalités / intérêts + taux pénalité voté)
+
+Pas de migration SQL — extension du ledger par `meta.bucket` et types d’écriture :
+
+- Remboursement prêt → **épargne** (principal), **intérêts**, **pénalités** (3 lignes si besoin).
+- Proposition `change_penalty_rate` (vote membres 72 h, comme le taux d’intérêt).
+- Trésorerie / Vue : affichage des poches **Pénalités** et **Intérêts**.
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -135,6 +143,7 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | Comité, co-admins, **taux** fonds social (réunion), taux | Vote membres (72 h) |
 | **Aide solidarité** (paiement) &lt; 50 USDT | Vote comité (24 h) |
 | **Aide solidarité** ≥ 50 USDT | Vote membres (48 h) |
+| **Taux intérêt / pénalité** prêts | Vote membres (72 h) |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

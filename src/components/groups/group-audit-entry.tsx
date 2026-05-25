@@ -38,6 +38,7 @@ const AUDIT_ACTION_KEYS: Record<string, keyof Messages> = {
   gov_vote_closed: "group_audit_gov_vote_closed",
   gov_admin_revoked: "group_audit_gov_admin_revoked",
   gov_interest_rate_changed: "group_audit_gov_interest_rate_changed",
+  gov_penalty_rate_changed: "group_audit_gov_penalty_rate_changed",
   gov_payout_executed: "group_audit_gov_payout_executed",
   social_aid_requested: "group_audit_social_aid_requested",
   social_aid_paid: "group_audit_social_aid_paid",

@@ -178,6 +178,13 @@ export function getGroupLoanInterestPct(paymentRules: string | null | undefined)
   return 10;
 }
 
+export function getGroupLoanPenaltyPct(paymentRules: string | null | undefined): number {
+  const rules = parseGroupPaymentRules(paymentRules);
+  const rate = Number(rules.loanPenaltyPctTotal);
+  if (Number.isFinite(rate) && rate >= 1 && rate <= 50) return rate;
+  return 20;
+}
+
 export function parseGroupPaymentRules(raw: string | null | undefined): Record<string, unknown> {
   if (!raw?.trim()) return {};
   try {

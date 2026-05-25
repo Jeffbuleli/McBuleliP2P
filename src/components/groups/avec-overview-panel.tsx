@@ -28,6 +28,9 @@ type LedgerRow = {
 type FundBuckets = {
   savingsUsdt: number;
   socialUsdt: number;
+  penaltiesUsdt?: number;
+  interestUsdt?: number;
+  reserveUsdt?: number;
   lentUsdt: number;
   availableUsdt: number;
 };
@@ -163,7 +166,14 @@ export function AvecOverviewPanel({
   const approved = members.filter((m) => m.status === "approved").length;
   const pending = members.filter((m) => m.status === "pending").length;
   const bucketMax = funds
-    ? Math.max(funds.savingsUsdt, funds.socialUsdt, funds.lentUsdt, 1)
+    ? Math.max(
+        funds.savingsUsdt,
+        funds.socialUsdt,
+        funds.penaltiesUsdt ?? 0,
+        funds.interestUsdt ?? 0,
+        funds.lentUsdt,
+        1,
+      )
     : 1;
 
   return (
@@ -213,6 +223,12 @@ export function AvecOverviewPanel({
             {[
               { label: t("avec_fund_savings"), val: funds.savingsUsdt, color: "var(--fd-primary)" },
               { label: t("avec_fund_social"), val: funds.socialUsdt, color: "#0d9488" },
+              ...(funds.penaltiesUsdt && funds.penaltiesUsdt > 0.01
+                ? [{ label: t("avec_fund_penalties"), val: funds.penaltiesUsdt, color: "#ea580c" }]
+                : []),
+              ...(funds.interestUsdt && funds.interestUsdt > 0.01
+                ? [{ label: t("avec_fund_interest"), val: funds.interestUsdt, color: "#0891b2" }]
+                : []),
               { label: t("avec_vue_fund_lent"), val: funds.lentUsdt, color: "#7c3aed" },
             ].map((b) => (
               <div key={b.label} className="flex flex-col items-center gap-1">

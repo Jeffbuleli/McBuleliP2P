@@ -401,6 +401,7 @@ export async function createPayoutCriticalProposal(args: {
 type MemberProposalType =
   | "revoke_admin"
   | "change_interest_rate"
+  | "change_penalty_rate"
   | "set_co_admins"
   | "set_committee"
   | "change_social_fund";
@@ -476,6 +477,12 @@ export async function createMemberProposal(args: {
       return { ok: false, message: "group_gov_invalid_interest_rate" };
     }
     if (!title) title = `Loan interest → ${rate}%`;
+  } else if (args.type === "change_penalty_rate") {
+    const rate = Number(args.payload.penaltyRatePctTotal);
+    if (!Number.isFinite(rate) || rate < 1 || rate > 50) {
+      return { ok: false, message: "group_gov_invalid_penalty_rate" };
+    }
+    if (!title) title = `Loan penalty → ${rate}%`;
   } else if (args.type === "set_co_admins") {
     const ids = Array.isArray(args.payload.coAdminUserIds)
       ? (args.payload.coAdminUserIds as unknown[]).map(String).slice(0, 3)

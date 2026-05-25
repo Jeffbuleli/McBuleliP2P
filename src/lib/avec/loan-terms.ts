@@ -38,8 +38,16 @@ export function computeLoanCharges(loan: {
   loanTermDays?: number | null;
 }): LoanChargeBreakdown {
   const principalOutstandingUsdt = numFromNumeric(loan.outstandingUsdt?.toString() ?? "0");
-  const interestPctTotal = AVEC_LOAN_INTEREST_PCT_TOTAL;
-  const penaltyPct = AVEC_LOAN_PENALTY_PCT;
+  const interestFromRow = numFromNumeric(loan.interestRatePctMonth?.toString() ?? "");
+  const interestPctTotal =
+    Number.isFinite(interestFromRow) && interestFromRow >= 1 && interestFromRow <= 30
+      ? interestFromRow
+      : AVEC_LOAN_INTEREST_PCT_TOTAL;
+  const penaltyFromRow = numFromNumeric(loan.penaltyRatePct?.toString() ?? "");
+  const penaltyPct =
+    Number.isFinite(penaltyFromRow) && penaltyFromRow >= 1 && penaltyFromRow <= 50
+      ? penaltyFromRow
+      : AVEC_LOAN_PENALTY_PCT;
   const maxDays = AVEC_LOAN_MAX_DAYS;
   const interestPeriodDays = AVEC_LOAN_INTEREST_PERIOD_DAYS;
 

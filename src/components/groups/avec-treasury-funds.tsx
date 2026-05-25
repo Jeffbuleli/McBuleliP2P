@@ -10,6 +10,9 @@ type Funds = {
   savingsUsdt: number;
   socialUsdt: number;
   adminUsdt: number;
+  penaltiesUsdt: number;
+  interestUsdt: number;
+  reserveUsdt: number;
   lentUsdt: number;
   availableUsdt: number;
   totalShares: number;
@@ -117,6 +120,11 @@ export function AvecTreasuryFunds({
             accent
           />
           <FundRow label={t("avec_fund_social")} value={fmt(funds.socialUsdt)} />
+          <FundRow label={t("avec_fund_penalties")} value={fmt(funds.penaltiesUsdt)} />
+          <FundRow label={t("avec_fund_interest")} value={fmt(funds.interestUsdt)} />
+          {funds.reserveUsdt > 0.01 ? (
+            <FundRow label={t("avec_fund_reserve")} value={fmt(funds.reserveUsdt)} />
+          ) : null}
           <FundRow label={t("avec_fund_admin")} value={fmt(funds.adminUsdt)} />
           <div className="grid grid-cols-2 gap-2 pt-1">
             <FundRow
