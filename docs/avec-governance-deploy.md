@@ -156,6 +156,39 @@ Pas de migration SQL.
 | **Plafond 24 h** | Inclut **décaissements prêts** ; jauge dans **Trésorerie** |
 | **Landing** | + Staking et Bots sur la grille promo |
 
+### Sprint 10 (scénarios cahier des charges — complétion)
+
+Pas de migration SQL.
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Dissolution** | Vote `dissolve_group` (96 h, 80 % / 66 %) — groupe → statut `closed` |
+| **Règles réunion** | Vote `change_meeting_rules` (parts max, cycle, intervalle) |
+| **Charte publique** | Vote `change_charter` (profil public du groupe) |
+| **Annulation vote** | Auteur ou admin peut annuler une proposition `voting` |
+| **Snapshot électeurs** | Membre approuvé **après** `voteOpensAt` ne vote pas |
+| **Quorum plancher** | Minimum **3** participants si le groupe le permet |
+| **Hub gouvernance** | Vue d’ensemble : votes ouverts + lien Dialogue |
+
+#### Matrice scénarios métier (architecture §16–18)
+
+| Scénario | Statut système |
+|----------|----------------|
+| S1 Gros retrait (≥ 500 USDT) | `payout_critical` + délai 24 h + plafond journalier |
+| S2 Révocation co-admin | `revoke_admin` + UI Membres |
+| S3 Aide sociale (décès, etc.) | `social_aid_*` + limites + fonds social |
+| S4 Taux intérêt / pénalité | `change_interest_rate` / `change_penalty_rate` |
+| Clôture de cycle | `cycle_closure` (96 h) — prêts dus bloquants |
+| Dissolution groupe | `dissolve_group` (96 h) — prêts / retraits bloquants |
+| Exclusion membre | `revoke_member` |
+| Nomination admin | `appoint_admin` |
+| Transfert poches | `transfer_fund_bucket` |
+| Prêt ≥ 100 / 50–99 | `loan_critical` / `loan_medium` (y compris acceptation demande) |
+| Comité / co-admins / rôles | `set_committee`, `set_co_admins`, `set_granular_roles` |
+| Quorum absent | `expired` + relance auto (max 3) |
+| Groupe suspendu | Gouvernance gelée (`assertGroupReady`) |
+| Collusion 2/3 (gros montants) | Contourné par votes B/C obligatoires |
+
 ---
 
 ## 2. Cron Render — clôture votes + exécution payouts
@@ -215,6 +248,9 @@ Vérifier que le déploiement inclut `scripts/cron-governance-tick.mjs` et le bl
 | **Sorties trésorerie** | Plafond **2000 USDT / 24 h** (retraits + aide + prêts) |
 | **Prêt ≥ 100 USDT** (demande acceptée) | Vote membres (72 h) |
 | **Prêt 50–99 USDT** (demande acceptée) | Vote comité (24 h) |
+| **Dissolution du groupe** | Vote membres (96 h, 80 % / 66 %) |
+| **Règles de réunion / charte** | Vote membres (72 h) |
+| **Annulation d’un vote ouvert** | Auteur ou admin |
 | Clôture de cycle | Vote membres (96 h, 80 % / 66 %) |
 | Quorum absent | Relance auto (max 3) |
 | Initiateur | Ne vote pas sa propre proposition |

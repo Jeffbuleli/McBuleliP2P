@@ -380,6 +380,7 @@ export default function AvecDashboardPage() {
               pendingCount={pendingCount}
               myUserId={myUserId}
               canModerate={!!canModerateMembership}
+              canAdmin={!!canAdmin}
               onNavigate={(t) => setTab(t)}
             />
           ) : (

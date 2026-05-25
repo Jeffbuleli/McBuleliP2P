@@ -4,8 +4,11 @@ import { writeGroupAudit } from "@/lib/group-savings-audit";
 import { canVoteAsCommittee } from "@/lib/avec/governance/committee";
 import {
   buildVoteMeta,
-  countEligibleVotersForProposal,
 } from "@/lib/avec/governance/proposal-engine";
+import {
+  assertVoterEligibleAt,
+  countEligibleVotersAt,
+} from "@/lib/avec/governance/voter-snapshot";
 import { insertGovernanceVoteMessage } from "@/lib/avec/governance/governance-messaging";
 import {
   executionDelayHours,
@@ -54,6 +57,14 @@ export async function castGovernanceVote(args: {
   }
 
   const audience = p.voteAudience ?? "members";
+  const asOf = p.voteOpensAt ?? p.createdAt ?? new Date();
+  const snap = await assertVoterEligibleAt({
+    groupId: args.groupId,
+    userId: args.voterUserId,
+    voteAudience: audience,
+    asOf,
+  });
+  if (!snap.ok) return snap;
   if (audience === "committee") {
     const ok = await canVoteAsCommittee({
       groupId: args.groupId,
@@ -144,9 +155,10 @@ export async function closeProposalVote(args: {
     else abstain++;
   }
 
-  const eligibleCount = await countEligibleVotersForProposal({
+  const eligibleCount = await countEligibleVotersAt({
     groupId: args.groupId,
     voteAudience: p.voteAudience ?? "members",
+    asOf: p.voteOpensAt ?? p.createdAt ?? new Date(),
   });
   const result = tallyVote({
     yes,

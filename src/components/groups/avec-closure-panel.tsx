@@ -100,6 +100,35 @@ export function AvecClosurePanel({
     void load();
   }, [load]);
 
+  async function proposeDissolve() {
+    const justification = window.prompt(t("group_gov_dissolve_prompt"));
+    if (!justification || justification.trim().length < 10) return;
+    setBusy(true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/governance/proposals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "dissolve_group",
+          justification: justification.trim(),
+          payload: {},
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      setInfo(t("group_gov_dissolve_vote_started"));
+      await load();
+      onDone();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function propose() {
     setBusy(true);
     setErr(null);
@@ -250,14 +279,24 @@ export function AvecClosurePanel({
           ) : null}
         </div>
       ) : state?.canManage && status === "active" ? (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void propose()}
-          className={`${avecCls.btnPrimary} mb-3`}
-        >
-          {t("group_closure_propose_btn")}
-        </button>
+        <div className="mb-3 flex flex-col gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void propose()}
+            className={avecCls.btnPrimary}
+          >
+            {t("group_closure_propose_btn")}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void proposeDissolve()}
+            className="rounded-full border border-rose-300 bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-900"
+          >
+            {t("group_gov_dissolve_submit")}
+          </button>
+        </div>
       ) : null}
 
       {snap && snap.members.length > 0 ? (

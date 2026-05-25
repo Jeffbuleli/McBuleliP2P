@@ -255,6 +255,83 @@ async function executePassedProposal(args: {
       proposalId: p.id,
     });
     if (!applied.ok) return { ok: false, message: applied.message };
+  } else if (type === "change_meeting_rules") {
+    const patch: {
+      maxSharesPerMeeting?: number;
+      cycleDurationDays?: number;
+      meetingIntervalDays?: number;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+    const maxShares = Number(payload.maxSharesPerMeeting);
+    const cycleDays = Number(payload.cycleDurationDays ?? payload.cycleDays);
+    const meetingDays = Number(payload.meetingIntervalDays);
+    if (Number.isFinite(maxShares) && maxShares >= 1 && maxShares <= 5) {
+      patch.maxSharesPerMeeting = maxShares;
+    }
+    if (Number.isFinite(cycleDays) && cycleDays >= 30 && cycleDays <= 720) {
+      patch.cycleDurationDays = cycleDays;
+    }
+    if (Number.isFinite(meetingDays) && meetingDays >= 1 && meetingDays <= 31) {
+      patch.meetingIntervalDays = meetingDays;
+    }
+    await db
+      .update(groupSavingsGroups)
+      .set(patch)
+      .where(eq(groupSavingsGroups.id, args.groupId));
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_meeting_rules_changed",
+      after: { proposalId: p.id, ...payload },
+    });
+  } else if (type === "change_charter") {
+    const patch: {
+      publicDescription?: string | null;
+      address?: string | null;
+      contactPhone?: string | null;
+      contactEmail?: string | null;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+    if (payload.publicDescription !== undefined) {
+      const d = String(payload.publicDescription ?? "").trim();
+      patch.publicDescription = d.length ? d.slice(0, 4000) : null;
+    }
+    if (payload.address !== undefined) {
+      const a = String(payload.address ?? "").trim();
+      patch.address = a.length ? a.slice(0, 500) : null;
+    }
+    if (payload.contactPhone !== undefined) {
+      const ph = String(payload.contactPhone ?? "").trim();
+      patch.contactPhone = ph.length ? ph.slice(0, 32) : null;
+    }
+    if (payload.contactEmail !== undefined) {
+      const em = String(payload.contactEmail ?? "").trim();
+      patch.contactEmail = em.length ? em.slice(0, 128) : null;
+    }
+    await db
+      .update(groupSavingsGroups)
+      .set(patch)
+      .where(eq(groupSavingsGroups.id, args.groupId));
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_charter_changed",
+      after: { proposalId: p.id },
+    });
+  } else if (type === "dissolve_group") {
+    const { executeGroupDissolution } = await import("@/lib/avec/group-dissolution");
+    const exec = await executeGroupDissolution({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      proposalId: p.id,
+    });
+    if (!exec.ok) return { ok: false, message: exec.message };
+    await writeGroupAudit({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      action: "gov_group_dissolved",
+      after: { proposalId: p.id },
+    });
   } else if (type === "cycle_closure") {
     const snapshot = payload.snapshot as ClosureSnapshot | undefined;
     const cycleNumber = Number(payload.cycleNumber);

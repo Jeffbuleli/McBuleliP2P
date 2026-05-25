@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecProfileForm } from "@/components/groups/avec-profile-form";
+import { AvecCharterGovernance } from "@/components/groups/avec-charter-governance";
 import { AvecSettingsSections } from "@/components/groups/avec-settings-sections";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
@@ -39,6 +40,9 @@ type Dashboard = {
     status: string;
     subscriptionStatus: string;
     nextBillingAt: string | null;
+    maxSharesPerMeeting: number;
+    cycleDurationDays: number;
+    meetingIntervalDays: number;
     me: { role: string; status: string };
   };
   viewer: {
@@ -289,6 +293,17 @@ export default function GroupSettingsPage() {
         />
       ) : null}
 
+      {canAdmin && data ? (
+        <AvecCharterGovernance
+          groupId={id}
+          publicDescription={g.publicDescription}
+          address={g.address}
+          contactPhone={g.contactPhone}
+          contactEmail={g.contactEmail}
+          canPropose
+        />
+      ) : null}
+
       {err ? (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {clientErrorText(t, err)}
@@ -296,9 +311,13 @@ export default function GroupSettingsPage() {
       ) : null}
 
       <AvecSettingsSections
+        groupId={id}
         locale={locale}
         subscriptionStatus={g.subscriptionStatus}
         nextBillingAt={g.nextBillingAt}
+        maxSharesPerMeeting={g.maxSharesPerMeeting ?? 5}
+        cycleDurationDays={g.cycleDurationDays ?? 360}
+        meetingIntervalDays={g.meetingIntervalDays ?? 7}
         invoices={invoices}
         audit={audit}
         approvedMembers={approvedMembers}

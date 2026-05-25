@@ -21,6 +21,7 @@ import { normalizeGranularAssignments } from "@/lib/avec/governance/granular-rol
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { validateSocialFundPerMeeting } from "@/lib/avec/social-fund-limits";
 import { countCommitteeEligibleVoters } from "@/lib/avec/governance/committee";
+import { countEligibleVotersAt } from "@/lib/avec/governance/voter-snapshot";
 import {
   requiredParticipants,
   riskTierForType,
@@ -150,9 +151,10 @@ export async function buildVoteMeta(args: {
   }
 
   const voteAudience = (p.voteAudience ?? "members") as import("@/lib/avec/governance/types").VoteAudience;
-  const eligibleCount = await countEligibleVotersForProposal({
+  const eligibleCount = await countEligibleVotersAt({
     groupId: args.groupId,
     voteAudience,
+    asOf: p.voteOpensAt ?? p.createdAt ?? new Date(),
   });
   const requiredQuorum = requiredParticipants(eligibleCount, p.requiredQuorumPct);
   const participated = yesCount + noCount + abstainCount;
@@ -424,7 +426,10 @@ type MemberProposalType =
   | "set_co_admins"
   | "set_committee"
   | "set_granular_roles"
-  | "change_social_fund";
+  | "change_social_fund"
+  | "change_meeting_rules"
+  | "change_charter"
+  | "dissolve_group";
 
 export async function createMemberProposal(args: {
   groupId: string;
@@ -450,6 +455,9 @@ export async function createMemberProposal(args: {
     "set_committee",
     "set_granular_roles",
     "change_social_fund",
+    "change_meeting_rules",
+    "change_charter",
+    "dissolve_group",
     "revoke_member",
     "transfer_fund_bucket",
   ];
@@ -636,6 +644,30 @@ export async function createMemberProposal(args: {
     if (err) return { ok: false, message: err };
     financialImpactUsdt = fmtWalletAmount(socialFundUsdt);
     if (!title) title = `Social fund → ${socialFundUsdt.toFixed(2)} USDT/meeting`;
+  } else if (args.type === "change_meeting_rules") {
+    const maxShares = Number(args.payload.maxSharesPerMeeting);
+    const cycleDays = Number(args.payload.cycleDurationDays ?? args.payload.cycleDays);
+    const meetingDays = Number(args.payload.meetingIntervalDays);
+    const hasShares =
+      Number.isFinite(maxShares) && maxShares >= 1 && maxShares <= AVEC_MAX_SHARES_PER_MEETING;
+    const hasCycle = Number.isFinite(cycleDays) && cycleDays >= 30 && cycleDays <= 720;
+    const hasMeeting =
+      Number.isFinite(meetingDays) && meetingDays >= 1 && meetingDays <= 31;
+    if (!hasShares && !hasCycle && !hasMeeting) {
+      return { ok: false, message: "group_gov_invalid_meeting_rules" };
+    }
+    if (!title) title = "Update meeting rules";
+  } else if (args.type === "change_charter") {
+    const desc = String(args.payload.publicDescription ?? "").trim();
+    if (desc.length > 0 && desc.length < 10) {
+      return { ok: false, message: "group_gov_invalid_charter" };
+    }
+    if (!title) title = "Update group charter (public profile)";
+  } else if (args.type === "dissolve_group") {
+    const { assertGroupCanDissolve } = await import("@/lib/avec/group-dissolution");
+    const dCheck = await assertGroupCanDissolve(args.groupId);
+    if (!dCheck.ok) return dCheck;
+    if (!title) title = "Dissolve AVEC group";
   }
 
   return insertAndStartProposal({
@@ -960,6 +992,66 @@ export async function createLoanMediumProposal(args: {
     beneficiaryUserId: args.borrowerUserId,
     payload: { borrowerUserId: args.borrowerUserId, amountUsdt: args.amountUsdt },
   });
+}
+
+export async function cancelGovernanceProposal(args: {
+  groupId: string;
+  proposalId: string;
+  actorUserId: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const m = await getMyMembershipOrNull({
+    groupId: args.groupId,
+    userId: args.actorUserId,
+  });
+  if (!m || m.status !== "approved") {
+    return { ok: false, message: "group_forbidden" };
+  }
+
+  const db = getDb();
+  const [p] = await db
+    .select()
+    .from(groupProposals)
+    .where(
+      and(
+        eq(groupProposals.id, args.proposalId),
+        eq(groupProposals.groupId, args.groupId),
+        eq(groupProposals.status, "voting"),
+      ),
+    )
+    .limit(1);
+  if (!p) return { ok: false, message: "group_gov_proposal_not_found" };
+
+  const canCancel =
+    p.authorUserId === args.actorUserId || hasRole(m, ["admin", "co_admin"]);
+  if (!canCancel) return { ok: false, message: "group_forbidden" };
+
+  await db
+    .update(groupProposals)
+    .set({ status: "cancelled" })
+    .where(eq(groupProposals.id, args.proposalId));
+
+  await writeGroupAudit({
+    groupId: args.groupId,
+    actorUserId: args.actorUserId,
+    action: "gov_proposal_cancelled",
+    after: { proposalId: args.proposalId, type: p.type },
+  });
+
+  const meta = await buildVoteMeta({
+    proposalId: args.proposalId,
+    groupId: args.groupId,
+  });
+  if (meta) {
+    meta.status = "cancelled";
+    await insertGovernanceVoteMessage({
+      groupId: args.groupId,
+      actorUserId: args.actorUserId,
+      messageType: "vote_closed",
+      meta,
+    });
+  }
+
+  return { ok: true };
 }
 
 export async function listGroupProposals(args: {

@@ -14,6 +14,7 @@ import {
   IlluTreasury,
 } from "@/components/groups/avec-illustrations";
 import { AvecVueGovernanceCard } from "@/components/groups/avec-vue-governance-card";
+import { AvecGovernanceHub } from "@/components/groups/avec-governance-hub";
 import { avecCls } from "@/components/groups/avec-ui";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
@@ -76,6 +77,7 @@ export function AvecOverviewPanel({
   pendingCount,
   myUserId,
   canModerate,
+  canAdmin,
   onNavigate,
 }: {
   groupId: string;
@@ -97,6 +99,7 @@ export function AvecOverviewPanel({
   pendingCount: number;
   myUserId?: string;
   canModerate?: boolean;
+  canAdmin?: boolean;
   onNavigate: (tab: "meeting" | "members" | "treasury" | "dialogue") => void;
 }) {
   const { t } = useI18n();
@@ -187,6 +190,13 @@ export function AvecOverviewPanel({
           onVoted={() => void loadGov()}
         />
       ) : null}
+
+      <AvecGovernanceHub
+        groupId={groupId}
+        myUserId={myUserId}
+        canAdmin={!!canAdmin}
+        onOpenDialogue={() => onNavigate("dialogue")}
+      />
 
       <div className={`${avecCls.section} relative overflow-hidden`}>
         <div className="absolute -right-2 -top-2 opacity-[0.12] text-[color:var(--fd-primary)]">

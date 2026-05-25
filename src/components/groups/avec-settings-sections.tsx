@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { GroupAuditEntry } from "@/components/groups/group-audit-entry";
+import { AvecMeetingRulesGovernance } from "@/components/groups/avec-meeting-rules-governance";
 import { avecCls } from "@/components/groups/avec-ui";
 import { GRANULAR_ROLE_IDS } from "@/lib/avec/governance/granular-roles";
 import { granularRoleLabel, groupRoleLabel } from "@/lib/group-role-label";
@@ -32,6 +33,7 @@ function subscriptionLabel(t: (k: keyof Messages) => string, status: string): st
 }
 
 export function AvecSettingsSections({
+  groupId,
   locale,
   subscriptionStatus,
   nextBillingAt,
@@ -49,8 +51,12 @@ export function AvecSettingsSections({
   granularSelected,
   onGranularSelectedChange,
   onSaveGranularRoles,
+  maxSharesPerMeeting,
+  cycleDurationDays,
+  meetingIntervalDays,
   reminderBlock,
 }: {
+  groupId: string;
   locale: string;
   subscriptionStatus: string;
   nextBillingAt: string | null;
@@ -68,6 +74,9 @@ export function AvecSettingsSections({
   granularSelected: Record<string, Record<string, boolean>>;
   onGranularSelectedChange: (next: Record<string, Record<string, boolean>>) => void;
   onSaveGranularRoles: () => void;
+  maxSharesPerMeeting: number;
+  cycleDurationDays: number;
+  meetingIntervalDays: number;
   reminderBlock: ReactNode;
 }) {
   const { t } = useI18n();
@@ -389,6 +398,14 @@ export function AvecSettingsSections({
               >
                 {t("group_settings_granular_save")}
               </button>
+
+              <AvecMeetingRulesGovernance
+                groupId={groupId}
+                maxSharesPerMeeting={maxSharesPerMeeting}
+                cycleDurationDays={cycleDurationDays}
+                meetingIntervalDays={meetingIntervalDays}
+                canPropose={canAdmin}
+              />
             </>
           )}
         </div>

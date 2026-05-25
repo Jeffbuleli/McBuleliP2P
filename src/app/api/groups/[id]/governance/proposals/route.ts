@@ -87,6 +87,33 @@ const createZ = z.discriminatedUnion("type", [
     justification: z.string().min(10).max(2000),
     payload: z.object({ socialFundUsdt: z.number().min(0) }),
   }),
+  z.object({
+    type: z.literal("change_meeting_rules"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      maxSharesPerMeeting: z.number().int().min(1).max(5).optional(),
+      cycleDurationDays: z.number().int().min(30).max(720).optional(),
+      meetingIntervalDays: z.number().int().min(1).max(31).optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("change_charter"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({
+      publicDescription: z.string().max(4000).optional(),
+      address: z.string().max(500).optional(),
+      contactPhone: z.string().max(32).optional(),
+      contactEmail: z.string().max(128).optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("dissolve_group"),
+    title: z.string().max(200).optional(),
+    justification: z.string().min(10).max(2000),
+    payload: z.object({}).default({}),
+  }),
 ]);
 
 export async function GET(
@@ -119,7 +146,7 @@ export async function POST(
     type: parsed.data.type,
     title: parsed.data.title,
     justification: parsed.data.justification,
-    payload: parsed.data.payload,
+    payload: parsed.data.payload ?? {},
   });
   if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
   return NextResponse.json(r);

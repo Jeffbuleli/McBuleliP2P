@@ -94,7 +94,9 @@ export function voteDurationHours(type: ProposalType): number {
   if (type === "payout_critical" || type === "social_aid_critical") {
     return DEFAULT_GOVERNANCE_RULES.payoutCriticalVoteHours;
   }
-  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.cycleClosureVoteHours;
+  if (type === "cycle_closure" || type === "dissolve_group") {
+    return DEFAULT_GOVERNANCE_RULES.cycleClosureVoteHours;
+  }
   if (
     type === "payout_medium" ||
     type === "loan_medium" ||
@@ -106,7 +108,9 @@ export function voteDurationHours(type: ProposalType): number {
 }
 
 export function voteQuorumPct(type: ProposalType): number {
-  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalQuorumPct;
+  if (type === "cycle_closure" || type === "dissolve_group") {
+    return DEFAULT_GOVERNANCE_RULES.ultraCriticalQuorumPct;
+  }
   if (
     type === "payout_medium" ||
     type === "loan_medium" ||
@@ -118,7 +122,9 @@ export function voteQuorumPct(type: ProposalType): number {
 }
 
 export function voteMajorityPct(type: ProposalType): number {
-  if (type === "cycle_closure") return DEFAULT_GOVERNANCE_RULES.ultraCriticalMajorityPct;
+  if (type === "cycle_closure" || type === "dissolve_group") {
+    return DEFAULT_GOVERNANCE_RULES.ultraCriticalMajorityPct;
+  }
   if (
     type === "payout_medium" ||
     type === "loan_medium" ||
@@ -137,7 +143,14 @@ export function riskTierForType(type: ProposalType): RiskTier {
   ) {
     return "B";
   }
-  if (type === "social_aid_critical" || type === "payout_critical" || type === "cycle_closure") {
+  if (
+    type === "social_aid_critical" ||
+    type === "payout_critical" ||
+    type === "cycle_closure" ||
+    type === "dissolve_group" ||
+    type === "change_meeting_rules" ||
+    type === "change_charter"
+  ) {
     return "C";
   }
   return "C";
@@ -154,7 +167,9 @@ export function requiredParticipants(
   eligibleCount: number,
   quorumPct: number,
 ): number {
-  return Math.max(1, Math.ceil((eligibleCount * quorumPct) / 100));
+  const needed = Math.max(1, Math.ceil((eligibleCount * quorumPct) / 100));
+  const floor = Math.max(3, needed);
+  return Math.max(1, Math.min(eligibleCount, floor));
 }
 
 export function tallyVote(args: {

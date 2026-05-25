@@ -56,6 +56,12 @@ export function proposalTypeLabel(type: ProposalType): string {
       return "Functional roles";
     case "change_social_fund":
       return "Change social fund";
+    case "change_meeting_rules":
+      return "Meeting rules";
+    case "change_charter":
+      return "Group charter";
+    case "dissolve_group":
+      return "Dissolve group";
     case "cycle_closure":
       return "Cycle closure";
     case "loan_critical":
