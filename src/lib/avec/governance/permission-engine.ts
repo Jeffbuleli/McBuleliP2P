@@ -49,3 +49,45 @@ export function canModerateGroupDialogue(m: MembershipLike | null): boolean {
   if (isGroupManager(m)) return true;
   return hasGranularRole(m, "secretary");
 }
+
+export type AvecDashboardTab =
+  | "vue"
+  | "meeting"
+  | "members"
+  | "treasury"
+  | "dialogue"
+  | "reports";
+
+/** Tab visibility by role / granular responsibilities. */
+export function canAccessAvecTab(
+  m: MembershipLike | null,
+  tab: AvecDashboardTab,
+): boolean {
+  if (!m) return tab === "vue";
+  if (m.status === "pending") return tab === "vue";
+  if (m.status !== "approved") return false;
+
+  switch (tab) {
+    case "vue":
+    case "meeting":
+    case "members":
+    case "dialogue":
+      return true;
+    case "treasury":
+      return (
+        isGroupManager(m) ||
+        hasRole(m, ["committee"]) ||
+        hasGranularRole(m, "treasurer") ||
+        hasGranularRole(m, "credit_officer")
+      );
+    case "reports":
+      return (
+        isGroupManager(m) ||
+        hasRole(m, ["committee"]) ||
+        hasGranularRole(m, "treasurer") ||
+        hasGranularRole(m, "secretary")
+      );
+    default:
+      return false;
+  }
+}

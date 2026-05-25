@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   AvecBarChart,
-  AvecDonut,
   AvecGauge,
   AvecHorizontalBars,
+  AvecProgressRing,
 } from "@/components/groups/avec-charts";
 import {
   IlluActivityFlow,
@@ -167,7 +167,6 @@ export function AvecOverviewPanel({
       }));
   }, [members]);
 
-  const approved = members.filter((m) => m.status === "approved").length;
   const pending = members.filter((m) => m.status === "pending").length;
   const bucketMax = funds
     ? Math.max(
@@ -198,30 +197,33 @@ export function AvecOverviewPanel({
         onOpenDialogue={() => onNavigate("dialogue")}
       />
 
-      <div className={`${avecCls.section} relative overflow-hidden`}>
-        <div className="absolute -right-2 -top-2 opacity-[0.12] text-[color:var(--fd-primary)]">
-          <IlluTreasury className="h-24 w-28" />
-        </div>
-        <div className="relative flex items-end justify-between gap-2">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {t("avec_vue_treasury")}
+      <div className={`${avecCls.section} space-y-3`}>
+        <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {t("avec_vue_treasury")}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5">
+            <p className="text-[9px] font-bold uppercase text-[color:var(--fd-muted)]">
+              {t("avec_treasury_total")}
             </p>
-            <p className="text-3xl font-black tabular-nums text-[color:var(--fd-primary)]">
+            <p className="mt-0.5 text-2xl font-black tabular-nums text-[color:var(--fd-primary)]">
               {group.balanceUsdt.toFixed(0)}
-              <span className="ml-1 text-sm font-bold">USDT</span>
+              <span className="ml-0.5 text-xs font-bold">USDT</span>
             </p>
-            <p className="text-[10px] text-[color:var(--fd-muted)]">
+            <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
               {t("avec_vue_saved_members", { amount: totalSaved.toFixed(0) })}
             </p>
           </div>
-          {funds ? (
-            <p className="text-right text-[10px] font-bold tabular-nums text-[color:var(--fd-primary)]">
+          <div className="rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)]/50 px-3 py-2.5">
+            <p className="text-[9px] font-bold uppercase text-[color:var(--fd-primary)]">
               {t("avec_fund_available")}
-              <br />
-              {funds.availableUsdt.toFixed(0)}
             </p>
-          ) : null}
+            <p className="mt-0.5 text-2xl font-black tabular-nums text-[color:var(--fd-primary)]">
+              {funds ? funds.availableUsdt.toFixed(0) : "—"}
+              <span className="ml-0.5 text-xs font-bold">USDT</span>
+            </p>
+            <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">{t("avec_treasury_available_hint")}</p>
+          </div>
         </div>
       </div>
 
@@ -274,20 +276,21 @@ export function AvecOverviewPanel({
         </div>
 
         <div className={`${avecCls.section} flex flex-col items-center py-2`}>
-          <AvecDonut
-            size={64}
-            segments={[
-              { value: approved, color: "var(--fd-primary)" },
-              { value: pending || 0.001, color: "#d6d3d1" },
-            ]}
-          />
-          <p className="mt-1 text-lg font-black">
+          <AvecProgressRing value={memberCount} max={group.maxMembers} size={64} />
+          <p className="mt-1 text-lg font-black tabular-nums">
             {memberCount}
-            <span className="text-[10px] text-[color:var(--fd-muted)]">/{group.maxMembers}</span>
+            <span className="text-[10px] font-semibold text-[color:var(--fd-muted)]">
+              /{group.maxMembers}
+            </span>
           </p>
           <p className="text-[9px] font-bold uppercase text-[color:var(--fd-muted)]">
             {t("avec_vue_members")}
           </p>
+          {pending > 0 ? (
+            <p className="mt-0.5 text-[8px] text-amber-800">
+              +{pending} {t("avec_vue_pending_short")}
+            </p>
+          ) : null}
         </div>
 
         <div className={`${avecCls.section} col-span-2`}>

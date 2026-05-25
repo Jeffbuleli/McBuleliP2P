@@ -65,6 +65,7 @@ export default function AvecCreatePage() {
   const [maxShares, setMaxShares] = useState(String(AVEC_MAX_SHARES_PER_MEETING));
   const [socialFund, setSocialFund] = useState("0");
   const [rules, setRules] = useState("");
+  const [publicDesc, setPublicDesc] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [feeChecked, setFeeChecked] = useState(false);
@@ -134,6 +135,7 @@ export default function AvecCreatePage() {
             meetingIntervalDays: parsed.md,
             socialFundUsdt: parsed.sf,
             paymentRules: rules.trim() || null,
+            publicDescription: publicDesc.trim() || null,
             feeConsentAuthorized: true,
           }),
         },
@@ -297,6 +299,16 @@ export default function AvecCreatePage() {
               <span className="text-[10px] text-[color:var(--fd-muted)]">
                 {t("group_field_social_fund_hint")}
               </span>
+            </label>
+            <label className="col-span-2 flex flex-col gap-1">
+              <span className={avecCls.sectionTitle}>{t("group_field_public_desc")}</span>
+              <textarea
+                value={publicDesc}
+                onChange={(e) => setPublicDesc(e.target.value)}
+                placeholder={t("group_field_public_desc_ph")}
+                className={`${avecCls.input} min-h-[56px]`}
+                maxLength={2000}
+              />
             </label>
             <label className="col-span-2 flex flex-col gap-1">
               <span className={avecCls.sectionTitle}>{t("group_field_rules")}</span>

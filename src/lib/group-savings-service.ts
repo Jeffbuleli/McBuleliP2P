@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   getDb,
@@ -50,6 +50,7 @@ export async function createGroup(args: {
   meetingIntervalDays?: number;
   socialFundUsdt?: number;
   paymentRules?: string | null;
+  publicDescription?: string | null;
   feeConsentAuthorized?: boolean;
 }): Promise<
   | { ok: true; groupId: string; status: string; feeWaived: boolean }
@@ -108,6 +109,7 @@ export async function createGroup(args: {
     contributionAmountUsdt: fmtWalletAmount(args.contributionAmountUsdt),
     cycleDurationDays: Math.floor(args.cycleDurationDays),
     paymentRules: args.paymentRules ?? null,
+    publicDescription: args.publicDescription?.trim().slice(0, 2000) || null,
     status,
     subscriptionStatus: superAdminTest ? ("active" as const) : ("overdue" as const),
     nextBillingAt: superAdminTest ? null : undefined,
@@ -198,6 +200,10 @@ export async function listMyGroups(args: { userId: string }) {
       role: groupSavingsMemberships.role,
       membershipStatus: groupSavingsMemberships.status,
       createdAt: groupSavingsGroups.createdAt,
+      logoUrl: groupSavingsGroups.logoUrl,
+      countryCode: groupSavingsGroups.countryCode,
+      maxMembers: groupSavingsGroups.maxMembers,
+      createdByUserId: groupSavingsGroups.createdByUserId,
     })
     .from(groupSavingsMemberships)
     .innerJoin(
@@ -206,12 +212,161 @@ export async function listMyGroups(args: { userId: string }) {
     )
     .where(eq(groupSavingsMemberships.userId, args.userId))
     .orderBy(desc(groupSavingsGroups.createdAt))
-    .limit(50);
+    .limit(200);
+
+  const avecIds = rows
+    .filter((r) => r.type === "avec" || r.type === "likelimba")
+    .map((r) => r.groupId);
+  const memberCounts = new Map<string, number>();
+  if (avecIds.length > 0) {
+    const counts = await db
+      .select({
+        groupId: groupSavingsMemberships.groupId,
+        c: sql<number>`count(*)::int`,
+      })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          inArray(groupSavingsMemberships.groupId, avecIds),
+          eq(groupSavingsMemberships.status, "approved"),
+        ),
+      )
+      .groupBy(groupSavingsMemberships.groupId);
+    for (const row of counts) {
+      memberCounts.set(row.groupId, row.c);
+    }
+  }
 
   return {
     groups: rows.map((r) => ({
       ...r,
       nextBillingAt: r.nextBillingAt ? r.nextBillingAt.toISOString() : null,
+      createdAt: r.createdAt.toISOString(),
+      memberCount: memberCounts.get(r.groupId) ?? 0,
+      isCreator: r.createdByUserId === args.userId,
+    })),
+  };
+}
+
+/** Active AVEC groups the user is not a member of (discover / join). */
+export async function listDiscoverableGroups(args: { userId: string; limit?: number }) {
+  const db = getDb();
+  const mine = await db
+    .select({ groupId: groupSavingsMemberships.groupId })
+    .from(groupSavingsMemberships)
+    .where(eq(groupSavingsMemberships.userId, args.userId));
+  const excludeIds = mine.map((m) => m.groupId);
+
+  const limit = Math.min(Math.max(1, args.limit ?? 60), 100);
+  const whereClause = and(
+    eq(groupSavingsGroups.type, "avec"),
+    eq(groupSavingsGroups.status, "active"),
+    excludeIds.length > 0
+      ? notInArray(groupSavingsGroups.id, excludeIds)
+      : undefined,
+  );
+
+  const rows = await db
+    .select({
+      groupId: groupSavingsGroups.id,
+      name: groupSavingsGroups.name,
+      logoUrl: groupSavingsGroups.logoUrl,
+      countryCode: groupSavingsGroups.countryCode,
+      address: groupSavingsGroups.address,
+      publicDescription: groupSavingsGroups.publicDescription,
+      maxMembers: groupSavingsGroups.maxMembers,
+      contributionAmountUsdt: groupSavingsGroups.contributionAmountUsdt,
+      inviteCode: groupSavingsGroups.inviteCode,
+    })
+    .from(groupSavingsGroups)
+    .where(whereClause)
+    .orderBy(desc(groupSavingsGroups.createdAt))
+    .limit(limit);
+
+  const ids = rows.map((r) => r.groupId);
+  const memberCounts = new Map<string, number>();
+  if (ids.length > 0) {
+    const counts = await db
+      .select({
+        groupId: groupSavingsMemberships.groupId,
+        c: sql<number>`count(*)::int`,
+      })
+      .from(groupSavingsMemberships)
+      .where(
+        and(
+          inArray(groupSavingsMemberships.groupId, ids),
+          eq(groupSavingsMemberships.status, "approved"),
+        ),
+      )
+      .groupBy(groupSavingsMemberships.groupId);
+    for (const row of counts) {
+      memberCounts.set(row.groupId, row.c);
+    }
+  }
+
+  return {
+    groups: rows.map((r) => ({
+      groupId: r.groupId,
+      name: r.name,
+      logoUrl: r.logoUrl ?? null,
+      countryCode: r.countryCode ?? null,
+      address: r.address ?? null,
+      publicDescription: r.publicDescription ?? null,
+      maxMembers: r.maxMembers,
+      memberCount: memberCounts.get(r.groupId) ?? 0,
+      shareValueUsdt: numFromNumeric(r.contributionAmountUsdt?.toString()),
+      inviteCode: r.inviteCode ?? null,
+      joinHref: r.inviteCode
+        ? `/app/wallet/groups/join?code=${encodeURIComponent(r.inviteCode)}`
+        : null,
+    })),
+  };
+}
+
+export async function listMyGroupContributions(args: {
+  groupId: string;
+  userId: string;
+  limit?: number;
+}) {
+  const db = getDb();
+  const m = await getMyMembershipOrNull({ groupId: args.groupId, userId: args.userId });
+  if (!m || m.status !== "approved") return { ok: false as const, message: "group_forbidden" };
+
+  const limit = Math.min(Math.max(1, args.limit ?? 100), 200);
+  const rows = await db
+    .select({
+      id: groupWalletLedgerEntries.id,
+      batchId: groupWalletLedgerEntries.batchId,
+      entryType: groupWalletLedgerEntries.entryType,
+      amount: groupWalletLedgerEntries.amount,
+      meta: groupWalletLedgerEntries.meta,
+      createdAt: groupWalletLedgerEntries.createdAt,
+    })
+    .from(groupWalletLedgerEntries)
+    .where(
+      and(
+        eq(groupWalletLedgerEntries.groupId, args.groupId),
+        inArray(groupWalletLedgerEntries.entryType, [
+          "group_contribution_in",
+          "group_social_contribution_in",
+        ]),
+        sql`${groupWalletLedgerEntries.meta}->>'userId' = ${args.userId}`,
+      ),
+    )
+    .orderBy(desc(groupWalletLedgerEntries.createdAt))
+    .limit(limit);
+
+  return {
+    ok: true as const,
+    contributions: rows.map((r) => ({
+      id: r.id,
+      batchId: r.batchId,
+      entryType: r.entryType,
+      amount: r.amount,
+      shares:
+        typeof r.meta === "object" && r.meta && "shares" in r.meta
+          ? Number((r.meta as { shares?: number }).shares)
+          : null,
       createdAt: r.createdAt.toISOString(),
     })),
   };

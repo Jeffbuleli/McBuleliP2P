@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
 import { AvecIconShares, AvecIconSolidarity } from "@/components/groups/avec-icons";
 import { IlluMeeting } from "@/components/groups/avec-illustrations";
 import { avecCls } from "@/components/groups/avec-ui";
@@ -34,7 +35,7 @@ export function AvecMeetingPanel({
   onSocialFixed?: () => void;
   paySuccess?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [shares, setShares] = useState(1);
   const [justPaid, setJustPaid] = useState(false);
   const [fixSocial, setFixSocial] = useState("");
@@ -86,6 +87,56 @@ export function AvecMeetingPanel({
   }
 
   const showPaid = paySuccess || justPaid;
+
+  type ContribRow = {
+    id: string;
+    batchId: string;
+    entryType: string;
+    amount: string;
+    shares: number | null;
+    createdAt: string;
+  };
+  const [history, setHistory] = useState<ContribRow[] | null>(null);
+
+  useEffect(() => {
+    if (!groupId) return;
+    void fetch(`/api/groups/${groupId}/contributions`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.contributions) setHistory(j.contributions as ContribRow[]);
+        else setHistory([]);
+      })
+      .catch(() => setHistory([]));
+  }, [groupId, showPaid]);
+
+  const batches = useMemo(() => {
+    if (!history?.length) return [];
+    const byBatch = new Map<
+      string,
+      { batchId: string; total: number; shares: number | null; createdAt: string }
+    >();
+    for (const row of history) {
+      const amt = Number(row.amount) || 0;
+      const prev = byBatch.get(row.batchId);
+      if (!prev) {
+        byBatch.set(row.batchId, {
+          batchId: row.batchId,
+          total: amt,
+          shares: row.shares,
+          createdAt: row.createdAt,
+        });
+      } else {
+        prev.total += amt;
+        if (row.shares != null) prev.shares = row.shares;
+      }
+    }
+    return [...byBatch.values()].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [history]);
+
+  const histPag = useListPagination(batches, 10);
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   return (
     <div className="space-y-3">
@@ -197,6 +248,53 @@ export function AvecMeetingPanel({
             {t("group_contribution_success")}
           </p>
         ) : null}
+      </div>
+
+      <div className={avecCls.section}>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {t("avec_meeting_history_title")}
+        </p>
+        {history === null ? (
+          <p className="mt-2 text-xs text-[color:var(--fd-muted)]">…</p>
+        ) : batches.length === 0 ? (
+          <p className="mt-2 text-xs text-[color:var(--fd-muted)]">{t("avec_meeting_history_empty")}</p>
+        ) : (
+          <>
+            <ul className="mt-2 space-y-1.5">
+              {histPag.slice.map((row) => (
+                <li
+                  key={row.batchId}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--fd-border)] px-2.5 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-[color:var(--fd-muted)]">
+                      {new Date(row.createdAt).toLocaleString(loc, {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                    {row.shares != null ? (
+                      <p className="text-[10px] font-semibold text-[color:var(--fd-text)]">
+                        {t("avec_meeting_history_shares", { count: row.shares })}
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="shrink-0 font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
+                    {row.total.toFixed(2)} USDT
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <ListPagination
+              page={histPag.page}
+              pageSize={histPag.pageSize}
+              totalPages={histPag.totalPages}
+              total={histPag.total}
+              onPageChange={histPag.setPage}
+              onPageSizeChange={histPag.setPageSize}
+            />
+          </>
+        )}
       </div>
     </div>
   );

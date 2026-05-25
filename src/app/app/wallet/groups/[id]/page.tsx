@@ -28,19 +28,21 @@ import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
 import { AvecBucketTransferGovernance } from "@/components/groups/avec-bucket-transfer-governance";
 import { AvecSocialAidPanel } from "@/components/groups/avec-social-aid-panel";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
+import { AvecGroupHero } from "@/components/groups/avec-group-hero";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
 import { AvecTopBar } from "@/components/groups/avec-top-bar";
-import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import {
+  canAccessAvecTab,
+  canModerateGroupDialogue,
+  canModerateGroupMembership,
+  type AvecDashboardTab,
+} from "@/lib/avec/governance/permission-engine";
 import { daysUntil, isReminderDay } from "@/lib/group-savings-reminders";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
   getDialogueReadAt,
   markDialogueRead,
 } from "@/lib/avec/dialogue-read-state";
-import {
-  canModerateGroupDialogue,
-  canModerateGroupMembership,
-} from "@/lib/avec/governance/permission-engine";
 import type { GranularRoleId } from "@/lib/avec/governance/granular-roles";
 
 type Dashboard = {
@@ -64,6 +66,7 @@ type Dashboard = {
     meetingIntervalDays: number;
     socialFundUsdt: string;
     maxMembers: number;
+    minMembers?: number;
     createdAt: string;
     cycleStatus?: string;
     cycleNumber?: number;
@@ -238,7 +241,11 @@ export default function AvecDashboardPage() {
     }
   }
 
-  const tabs: { id: Tab; label: string; icon: ReactNode; dot?: "brown" | "violet" }[] = [
+  const meForAccess = me
+    ? { role: me.role, status: me.status, granularRoles: me.granularRoles }
+    : null;
+
+  const allTabs: { id: Tab; label: string; icon: ReactNode; dot?: "brown" | "violet" }[] = [
     { id: "vue", label: t("avec_tab_vue"), icon: <AvecIconView className="h-4 w-4" /> },
     { id: "meeting", label: t("avec_tab_meeting"), icon: <AvecIconShares className="h-4 w-4" /> },
     { id: "members", label: t("avec_tab_members"), icon: <AvecIconMembers className="h-4 w-4" /> },
@@ -251,6 +258,16 @@ export default function AvecDashboardPage() {
     },
     { id: "reports", label: t("avec_tab_reports"), icon: <AvecIconReport className="h-4 w-4" /> },
   ];
+  const tabs = useMemo(
+    () => allTabs.filter((x) => canAccessAvecTab(meForAccess, x.id)),
+    [meForAccess, dialogueUnread, t],
+  );
+
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some((x) => x.id === tab)) {
+      setTab(tabs[0].id);
+    }
+  }, [tab, tabs]);
 
   if (!data) {
     return (
@@ -298,20 +315,30 @@ export default function AvecDashboardPage() {
           </p>
         ) : null}
 
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            {g.publicDescription ? (
-              <p className="text-xs text-[color:var(--fd-muted)]">{g.publicDescription}</p>
-            ) : null}
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <GroupStatusBadge status={g.status} />
-            {canAdmin ? (
-              <Link href={`/app/wallet/groups/${g.id}/settings`} className="text-[10px] font-bold text-[color:var(--fd-primary)] underline">
-                {t("group_dash_settings")}
-              </Link>
-            ) : null}
-          </div>
+        <AvecGroupHero
+          name={g.name}
+          logoUrl={g.logoUrl}
+          countryCode={g.countryCode}
+          address={g.address}
+          publicDescription={g.publicDescription}
+          status={g.status}
+          memberCount={data.memberCount}
+          maxMembers={g.maxMembers}
+          minMembers={g.minMembers}
+          shareValueUsdt={shareValue}
+          meetingIntervalDays={g.meetingIntervalDays}
+          cycleNumber={g.cycleNumber}
+        />
+
+        <div className="flex justify-end">
+          {canAdmin ? (
+            <Link
+              href={`/app/wallet/groups/${g.id}/settings`}
+              className="text-[10px] font-bold text-[color:var(--fd-primary)] underline"
+            >
+              {t("group_dash_settings")}
+            </Link>
+          ) : null}
         </div>
 
         <AvecRoleStrip role={me?.role ?? "member"} status={me?.status ?? "pending"} />

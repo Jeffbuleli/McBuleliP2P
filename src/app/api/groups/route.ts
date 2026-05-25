@@ -28,6 +28,7 @@ const bodyZ = z.object({
   meetingIntervalDays: z.coerce.number().int().min(1).max(30).optional(),
   socialFundUsdt: z.coerce.number().min(0).optional(),
   paymentRules: z.string().max(2000).optional().nullable(),
+  publicDescription: z.string().max(2000).optional().nullable(),
   feeConsentAuthorized: z
     .boolean()
     .refine((v) => v === true, { message: "group_fee_consent_required" }),

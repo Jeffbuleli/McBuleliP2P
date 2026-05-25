@@ -2,6 +2,49 @@
 
 /** Minimal SVG charts — no external lib. */
 
+/** Filled ring: value / max (e.g. members 14/25). */
+export function AvecProgressRing({
+  value,
+  max,
+  size = 72,
+  strokeWidth = 8,
+}: {
+  value: number;
+  max: number;
+  size?: number;
+  strokeWidth?: number;
+}) {
+  const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
+  const r = (size - strokeWidth) / 2;
+  const c = size / 2;
+  const circumference = 2 * Math.PI * r;
+  const dash = pct * circumference;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+      <circle
+        cx={c}
+        cy={c}
+        r={r}
+        fill="none"
+        stroke="var(--fd-border)"
+        strokeWidth={strokeWidth}
+      />
+      <circle
+        cx={c}
+        cy={c}
+        r={r}
+        fill="none"
+        stroke="var(--fd-primary)"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${circumference - dash}`}
+        transform={`rotate(-90 ${c} ${c})`}
+      />
+    </svg>
+  );
+}
+
 export function AvecDonut({
   segments,
   size = 88,
