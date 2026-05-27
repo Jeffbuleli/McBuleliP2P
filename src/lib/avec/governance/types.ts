@@ -49,6 +49,7 @@ export type GovernanceVoteMeta = {
   requiredQuorum: number;
   requiredMajorityPct: number;
   voteClosesAt: string;
+  voteOpensAt?: string;
   status: ProposalStatus | "voting";
   result?: "passed" | "rejected" | "expired";
   financialImpactUsdt?: number;
@@ -57,4 +58,8 @@ export type GovernanceVoteMeta = {
   voteAudience?: VoteAudience;
   retryCount?: number;
   quorumReached?: boolean;
+  majorityProgressPct?: number;
+  timeRemainingMs?: number;
+  executionScheduledAt?: string;
+  ballot?: import("@/lib/avec/governance/ballot-summary").GovernanceBallotDetail;
 };

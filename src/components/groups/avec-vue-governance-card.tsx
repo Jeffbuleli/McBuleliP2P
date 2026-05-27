@@ -3,30 +3,27 @@
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { IlluCollectiveVote } from "@/components/groups/avec-illustrations";
+import { AvecGovernanceBallot } from "@/components/groups/avec-governance-ballot";
 import { clientErrorText } from "@/lib/client-error-text";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
-import { DEFAULT_GOVERNANCE_RULES } from "@/lib/avec/governance/rules";
 
 export function AvecVueGovernanceCard({
   groupId,
   myUserId,
   meta,
+  locale = "en",
   onVoted,
 }: {
   groupId: string;
   myUserId?: string;
   meta: GovernanceVoteMeta;
+  locale?: string;
   onVoted?: () => void;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const participated = meta.yesCount + meta.noCount + meta.abstainCount;
-  const pct = Math.min(
-    100,
-    Math.round((participated / Math.max(1, meta.requiredQuorum)) * 100),
-  );
   const canVote =
     meta.status === "voting" &&
     myUserId &&
@@ -59,34 +56,15 @@ export function AvecVueGovernanceCard({
 
   return (
     <div className="rounded-2xl border-2 border-violet-300/70 bg-gradient-to-br from-violet-50/90 to-white p-3 shadow-sm">
-      <div className="flex gap-3">
+      <div className="mb-2 flex gap-2">
         <span className="shrink-0 text-violet-800/80">
-          <IlluCollectiveVote className="h-16 w-20" />
+          <IlluCollectiveVote className="h-12 w-16" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-violet-900">
-            {t("avec_vue_vote_live")}
-          </p>
-          <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">{meta.title}</p>
-          {meta.financialImpactUsdt != null ? (
-            <p className="text-lg font-black tabular-nums text-violet-950">
-              {meta.financialImpactUsdt.toFixed(0)} USDT
-            </p>
-          ) : null}
-        </div>
+        <p className="text-[9px] font-bold uppercase tracking-wide text-violet-900">
+          {t("avec_vue_vote_live")}
+        </p>
       </div>
-      <div className="mt-2">
-        <div className="mb-1 flex justify-between text-[9px] text-[color:var(--fd-muted)]">
-          <span>{participated}/{meta.requiredQuorum}</span>
-          <span>{pct}%</span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-stone-200">
-          <div
-            className="h-full rounded-full bg-violet-600 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
+      <AvecGovernanceBallot meta={meta} locale={locale} compact showStatus={false} />
       {canVote ? (
         <div className="mt-3 grid grid-cols-3 gap-2">
           <button
@@ -114,14 +92,7 @@ export function AvecVueGovernanceCard({
             {t("group_gov_vote_abstain")}
           </button>
         </div>
-      ) : (
-        <p className="mt-2 text-[9px] text-[color:var(--fd-muted)]">
-          {t("avec_vue_vote_rule").replace(
-            "{amount}",
-            String(DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt),
-          )}
-        </p>
-      )}
+      ) : null}
       {err ? (
         <p className="mt-1 text-[9px] text-rose-600">{clientErrorText(t, err)}</p>
       ) : null}

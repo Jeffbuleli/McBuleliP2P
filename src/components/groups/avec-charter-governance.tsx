@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecGovPromptSheet } from "@/components/groups/avec-gov-sheet";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 
@@ -24,10 +25,9 @@ export function AvecCharterGovernance({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [askJustification, setAskJustification] = useState(false);
 
-  async function submit() {
-    const justification = window.prompt(t("group_gov_charter_prompt"));
-    if (!justification || justification.trim().length < 10) return;
+  async function submit(justification: string) {
     setBusy(true);
     setErr(null);
     setInfo(null);
@@ -51,6 +51,7 @@ export function AvecCharterGovernance({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
+      setAskJustification(false);
       setInfo(t("group_gov_proposal_submitted"));
     } finally {
       setBusy(false);
@@ -66,11 +67,19 @@ export function AvecCharterGovernance({
       <button
         type="button"
         disabled={busy}
-        onClick={() => void submit()}
+        onClick={() => setAskJustification(true)}
         className={`${avecCls.btnPrimary} mt-2 !py-1.5 text-[10px]`}
       >
         {t("avec_charter_gov_submit")}
       </button>
+      <AvecGovPromptSheet
+        open={askJustification}
+        title={t("avec_charter_gov_submit")}
+        message={t("group_gov_charter_prompt")}
+        busy={busy}
+        onCancel={() => setAskJustification(false)}
+        onSubmit={(justification) => void submit(justification)}
+      />
       {info ? <p className="mt-2 text-[10px] text-emerald-800">{info}</p> : null}
       {err ? (
         <p className="mt-2 text-[10px] text-rose-800">{clientErrorText(t, err)}</p>

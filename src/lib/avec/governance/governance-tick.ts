@@ -26,6 +26,9 @@ import {
   executeBucketTransfer,
   type FundBucket,
 } from "@/lib/avec/fund-buckets";
+import { buildBallotDetail } from "@/lib/avec/governance/ballot-summary";
+import { insertGovernanceVoteMessage } from "@/lib/avec/governance/governance-messaging";
+import { buildVoteMeta } from "@/lib/avec/governance/proposal-engine";
 
 async function executePassedProposal(args: {
   proposalId: string;
@@ -50,6 +53,15 @@ async function executePassedProposal(args: {
 
   const type = p.type as ProposalType;
   const payload = (p.payload ?? {}) as Record<string, unknown>;
+
+  const preBallot = await buildBallotDetail({
+    groupId: args.groupId,
+    type,
+    payload,
+    beneficiaryUserId: p.beneficiaryUserId,
+    financialImpactUsdt: p.financialImpactUsdt ? Number(p.financialImpactUsdt) : null,
+    justification: p.justification,
+  });
 
   if (type === "payout_critical" || type === "payout_medium") {
     const toUserId = String(payload.toUserId ?? p.beneficiaryUserId ?? "");
@@ -394,6 +406,22 @@ async function executePassedProposal(args: {
     .update(groupProposals)
     .set({ status: "executed", executedAt: new Date() })
     .where(eq(groupProposals.id, args.proposalId));
+
+  const meta = await buildVoteMeta({
+    proposalId: args.proposalId,
+    groupId: args.groupId,
+  });
+  if (meta) {
+    meta.status = "executed";
+    meta.result = "passed";
+    meta.ballot = preBallot;
+    await insertGovernanceVoteMessage({
+      groupId: args.groupId,
+      actorUserId: p.authorUserId,
+      messageType: "vote_executed",
+      meta,
+    });
+  }
 
   return { ok: true };
 }

@@ -19,7 +19,8 @@ export type GroupMessageType =
   | "closure_decision"
   | "vote_started"
   | "vote_progress"
-  | "vote_closed";
+  | "vote_closed"
+  | "vote_executed";
 
 function isMessageHidden(meta: Record<string, unknown> | null): boolean {
   return Boolean(meta && typeof meta.hiddenAt === "string");

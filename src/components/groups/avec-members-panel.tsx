@@ -12,6 +12,7 @@ import { AvecMemberTrustBadge } from "@/components/groups/avec-member-trust-badg
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
 import { AvecGovernanceRhPanel } from "@/components/groups/avec-governance-rh-panel";
+import { AvecGovPromptSheet } from "@/components/groups/avec-gov-sheet";
 
 export function AvecMembersPanel({
   groupId,
@@ -32,6 +33,9 @@ export function AvecMembersPanel({
 }) {
   const { t } = useI18n();
   const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [revokePromptUserId, setRevokePromptUserId] = useState<string | null>(null);
+  const [promptBusy, setPromptBusy] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -52,26 +56,31 @@ export function AvecMembersPanel({
     void loadInvite();
   }, [loadInvite]);
 
-  async function proposeRevokeMember(userId: string) {
-    const justification = window.prompt(t("group_gov_revoke_member_prompt"));
-    if (!justification || justification.trim().length < 10) return;
+  async function proposeRevokeMember(userId: string, justification: string) {
     setErr(null);
-    const res = await fetch(`/api/groups/${groupId}/governance/proposals`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "revoke_member",
-        justification: justification.trim(),
-        payload: { targetUserId: userId },
-      }),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setErr((j as { error?: string }).error ?? "group_action_failed");
-      return;
+    setInfo(null);
+    setPromptBusy(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/governance/proposals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "revoke_member",
+          justification,
+          payload: { targetUserId: userId },
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr((j as { error?: string }).error ?? "group_action_failed");
+        return;
+      }
+      setRevokePromptUserId(null);
+      onRefresh();
+      setInfo(t("group_gov_proposal_submitted"));
+    } finally {
+      setPromptBusy(false);
     }
-    onRefresh();
-    window.alert(t("group_gov_proposal_submitted"));
   }
 
   async function memberAction(
@@ -256,7 +265,7 @@ export function AvecMembersPanel({
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => void proposeRevokeMember(m.userId)}
+                          onClick={() => setRevokePromptUserId(m.userId)}
                           className="text-[10px] font-bold text-rose-600"
                         >
                           {t("avec_member_propose_revoke")}
@@ -293,6 +302,22 @@ export function AvecMembersPanel({
           }))}
         />
       ) : null}
+
+      {info ? <p className="mt-2 text-[10px] text-emerald-800">{info}</p> : null}
+      {err ? (
+        <p className="mt-2 text-[10px] text-rose-800">{clientErrorText(t, err)}</p>
+      ) : null}
+
+      <AvecGovPromptSheet
+        open={Boolean(revokePromptUserId)}
+        title={t("avec_member_propose_revoke")}
+        message={t("group_gov_revoke_member_prompt")}
+        busy={promptBusy}
+        onCancel={() => setRevokePromptUserId(null)}
+        onSubmit={(justification) => {
+          if (revokePromptUserId) void proposeRevokeMember(revokePromptUserId, justification);
+        }}
+      />
     </div>
   );
 }

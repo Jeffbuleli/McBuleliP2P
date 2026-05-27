@@ -362,10 +362,15 @@ export function AvecChatroom({
               m.messageType === "vote_started" ||
               m.messageType === "vote_progress" ||
               m.messageType === "vote_closed" ||
-              m.messageType === "vote_retry"
+              m.messageType === "vote_retry" ||
+              m.messageType === "vote_executed"
             ) {
               const voteMsgType =
-                m.messageType === "vote_retry" ? "vote_started" : m.messageType;
+                m.messageType === "vote_retry"
+                  ? "vote_started"
+                  : m.messageType === "vote_executed"
+                    ? "vote_executed"
+                    : m.messageType;
               return (
                 <div key={m.id} className="flex justify-center py-1">
                   <AvecGovernanceVoteMessage

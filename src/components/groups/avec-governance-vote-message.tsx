@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecGovernanceBallot } from "@/components/groups/avec-governance-ballot";
 import { clientErrorText } from "@/lib/client-error-text";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
 
@@ -24,7 +25,7 @@ export function AvecGovernanceVoteMessage({
 }: {
   groupId: string;
   myUserId?: string;
-  messageType: "vote_started" | "vote_progress" | "vote_closed";
+  messageType: "vote_started" | "vote_progress" | "vote_closed" | "vote_executed";
   meta: GovernanceVoteMeta | null;
   createdAt: string;
   locale: string;
@@ -44,13 +45,9 @@ export function AvecGovernanceVoteMessage({
     );
   }
 
-  const participated = meta.yesCount + meta.noCount + meta.abstainCount;
-  const pct = Math.min(
-    100,
-    Math.round((participated / Math.max(1, meta.requiredQuorum)) * 100),
-  );
   const canVote =
     messageType !== "vote_closed" &&
+    messageType !== "vote_executed" &&
     meta.status === "voting" &&
     myUserId &&
     myUserId !== meta.authorUserId &&
@@ -75,91 +72,34 @@ export function AvecGovernanceVoteMessage({
         return;
       }
       onVoted?.();
+      if (meta!.ballot?.targetUserId === myUserId) {
+        window.dispatchEvent(new CustomEvent("avec-gov-access-changed"));
+      }
     } finally {
       setBusy(false);
     }
   }
 
-  const badgeKey =
-    messageType === "vote_closed"
-      ? meta.result === "passed"
-        ? "group_gov_vote_passed_badge"
-        : meta.result === "rejected"
-          ? "group_gov_vote_rejected_badge"
-          : "group_gov_vote_expired_badge"
-      : "group_gov_vote_open_badge";
-
   const border =
-    messageType === "vote_closed"
-      ? meta.result === "passed"
-        ? "border-emerald-300/80"
-        : "border-stone-300/80"
-      : "border-violet-300/80";
+    messageType === "vote_executed"
+      ? "border-emerald-400/80"
+      : messageType === "vote_closed"
+        ? meta.result === "passed"
+          ? "border-emerald-300/80"
+          : "border-stone-300/80"
+        : "border-violet-300/80";
 
   return (
     <div
       className={`mx-auto w-full max-w-sm rounded-2xl border-2 border-dashed ${border} bg-gradient-to-br from-violet-50/80 to-[color:var(--fd-card)] p-3 shadow-sm`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-wide text-violet-900">
-        {t(badgeKey)}
-      </p>
-      <div className="mt-1 flex flex-wrap gap-1">
-        {meta.riskTier ? (
-          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold text-violet-900">
-            {meta.riskTier === "B"
-              ? t("group_gov_tier_b")
-              : meta.riskTier === "C"
-                ? t("group_gov_tier_c")
-                : t("group_gov_tier_a")}
-          </span>
-        ) : null}
-        {meta.voteAudience === "committee" ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
-            {t("group_gov_committee_vote_badge")}
-          </span>
-        ) : null}
-        {isRetry || (meta.retryCount ?? 0) > 0 ? (
-          <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[9px] font-bold text-stone-800">
-            {t("group_gov_vote_retry_badge", { n: String(meta.retryCount ?? 1) })}
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-1 text-sm font-bold text-[color:var(--fd-text)]">{meta.title}</p>
-      <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
-        {t("group_gov_vote_by")} {meta.authorDisplay}
-      </p>
-      {meta.financialImpactUsdt != null ? (
-        <p className="mt-1 text-lg font-black tabular-nums text-violet-950">
-          {meta.financialImpactUsdt.toFixed(2)}{" "}
-          <span className="text-xs font-bold">USDT</span>
-        </p>
-      ) : null}
-      {meta.beneficiaryDisplay ? (
-        <p className="text-[10px] text-[color:var(--fd-muted)]">
-          → {meta.beneficiaryDisplay}
+      {isRetry ? (
+        <p className="mb-1 text-[9px] font-bold text-stone-700">
+          {t("group_gov_vote_retry_badge", { n: String(meta.retryCount ?? 1) })}
         </p>
       ) : null}
 
-      <div className="mt-2">
-        <div className="mb-1 flex justify-between text-[9px] text-[color:var(--fd-muted)]">
-          <span>{t("group_gov_vote_quorum")}</span>
-          <span>
-            {participated} / {meta.requiredQuorum}
-          </span>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-stone-200">
-          <div
-            className="h-full rounded-full bg-violet-500 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="mt-1 text-[9px] text-[color:var(--fd-muted)]">
-          {t("group_gov_vote_tally")
-            .replace("{yes}", String(meta.yesCount))
-            .replace("{no}", String(meta.noCount))
-            .replace("{abstain}", String(meta.abstainCount))}
-        </p>
-      </div>
+      <AvecGovernanceBallot meta={meta} locale={locale} showStatus />
 
       {canVote ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -194,14 +134,12 @@ export function AvecGovernanceVoteMessage({
         <p className="mt-2 text-[10px] text-rose-600">{clientErrorText(t, err)}</p>
       ) : null}
 
-      <p className="mt-2 text-[9px] opacity-60">
-        {messageType === "vote_closed"
-          ? t("group_gov_vote_closed_at")
-          : t("group_gov_vote_closes_at")}{" "}
-        {new Date(
-          messageType === "vote_closed" ? createdAt : meta.voteClosesAt,
-        ).toLocaleString(loc)}
-      </p>
+      {messageType === "vote_closed" ? (
+        <p className="mt-2 text-[9px] opacity-60">
+          {t("group_gov_vote_closed_at")}{" "}
+          {new Date(createdAt).toLocaleString(loc)}
+        </p>
+      ) : null}
     </div>
   );
 }

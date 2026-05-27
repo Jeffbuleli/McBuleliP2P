@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecGovPromptSheet } from "@/components/groups/avec-gov-sheet";
 import { AvecIconClosure, AvecIconSolidarity } from "@/components/groups/avec-icons";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -73,6 +74,7 @@ export function AvecClosurePanel({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [askDissolveJustification, setAskDissolveJustification] = useState(false);
   const [state, setState] = useState<ClosureState | null>(null);
   const [preview, setPreview] = useState<ClosureSnapshot | null>(null);
 
@@ -100,9 +102,7 @@ export function AvecClosurePanel({
     void load();
   }, [load]);
 
-  async function proposeDissolve() {
-    const justification = window.prompt(t("group_gov_dissolve_prompt"));
-    if (!justification || justification.trim().length < 10) return;
+  async function proposeDissolve(justification: string) {
     setBusy(true);
     setErr(null);
     setInfo(null);
@@ -121,6 +121,7 @@ export function AvecClosurePanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
+      setAskDissolveJustification(false);
       setInfo(t("group_gov_dissolve_vote_started"));
       await load();
       onDone();
@@ -291,7 +292,7 @@ export function AvecClosurePanel({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void proposeDissolve()}
+            onClick={() => setAskDissolveJustification(true)}
             className="rounded-full border border-rose-300 bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-900"
           >
             {t("group_gov_dissolve_submit")}
@@ -340,6 +341,14 @@ export function AvecClosurePanel({
       {err ? (
         <p className="mt-2 text-xs text-rose-700">{clientErrorText(t, err)}</p>
       ) : null}
+      <AvecGovPromptSheet
+        open={askDissolveJustification}
+        title={t("group_gov_dissolve_submit")}
+        message={t("group_gov_dissolve_prompt")}
+        busy={busy}
+        onCancel={() => setAskDissolveJustification(false)}
+        onSubmit={(justification) => void proposeDissolve(justification)}
+      />
     </div>
   );
 }

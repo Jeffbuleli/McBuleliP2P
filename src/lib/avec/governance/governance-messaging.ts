@@ -8,7 +8,8 @@ export async function insertGovernanceVoteMessage(args: {
     | "vote_started"
     | "vote_progress"
     | "vote_closed"
-    | "vote_retry";
+    | "vote_retry"
+    | "vote_executed";
   meta: GovernanceVoteMeta;
 }): Promise<void> {
   const db = getDb();
@@ -19,7 +20,9 @@ export async function insertGovernanceVoteMessage(args: {
         ? `GOV_VOTE_PROGRESS|${args.meta.proposalId}|${args.meta.yesCount}|${args.meta.noCount}`
         : args.messageType === "vote_retry"
           ? `GOV_VOTE_RETRY|${args.meta.proposalId}|${args.meta.title}|${args.meta.retryCount ?? 1}`
-          : `GOV_VOTE_CLOSED|${args.meta.proposalId}|${args.meta.result ?? args.meta.status}`;
+          : args.messageType === "vote_executed"
+            ? `GOV_VOTE_EXECUTED|${args.meta.proposalId}|${args.meta.title}`
+            : `GOV_VOTE_CLOSED|${args.meta.proposalId}|${args.meta.result ?? args.meta.status}`;
 
   await db.insert(groupMessages).values({
     groupId: args.groupId,

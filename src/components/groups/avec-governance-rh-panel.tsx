@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { AvecGovPromptSheet } from "@/components/groups/avec-gov-sheet";
 import { avecCls } from "@/components/groups/avec-ui";
 import { clientErrorText } from "@/lib/client-error-text";
 import { p2pDisplayName } from "@/lib/p2p-display";
@@ -29,6 +30,7 @@ export function AvecGovernanceRhPanel({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [promptType, setPromptType] = useState<"revoke_admin" | "appoint_admin" | null>(null);
 
   const coAdmins = useMemo(
     () => members.filter((m) => m.role === "co_admin"),
@@ -48,13 +50,11 @@ export function AvecGovernanceRhPanel({
     });
   }
 
-  async function submit(type: "revoke_admin" | "appoint_admin", targetUserId: string) {
-    const promptKey =
-      type === "revoke_admin"
-        ? "group_gov_revoke_admin_prompt"
-        : "group_gov_appoint_admin_prompt";
-    const justification = window.prompt(t(promptKey));
-    if (!justification || justification.trim().length < 10) return;
+  async function submit(
+    type: "revoke_admin" | "appoint_admin",
+    targetUserId: string,
+    justification: string,
+  ) {
     setBusy(true);
     setErr(null);
     setInfo(null);
@@ -73,6 +73,7 @@ export function AvecGovernanceRhPanel({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
+      setPromptType(null);
       setInfo(t("group_gov_proposal_submitted"));
       if (type === "revoke_admin") setRevokeTarget("");
       else setAppointTarget("");
@@ -109,7 +110,7 @@ export function AvecGovernanceRhPanel({
           <button
             type="button"
             disabled={busy || !revokeTarget}
-            onClick={() => void submit("revoke_admin", revokeTarget)}
+            onClick={() => setPromptType("revoke_admin")}
             className="rounded-full bg-violet-800 px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
           >
             {t("avec_gov_rh_revoke_submit")}
@@ -138,7 +139,7 @@ export function AvecGovernanceRhPanel({
           <button
             type="button"
             disabled={busy || !appointTarget}
-            onClick={() => void submit("appoint_admin", appointTarget)}
+            onClick={() => setPromptType("appoint_admin")}
             className="rounded-full bg-[color:var(--fd-primary)] px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
           >
             {t("avec_gov_rh_appoint_submit")}
@@ -150,6 +151,28 @@ export function AvecGovernanceRhPanel({
       {err ? (
         <p className="mt-2 text-[10px] text-rose-800">{clientErrorText(t, err)}</p>
       ) : null}
+      <AvecGovPromptSheet
+        open={Boolean(promptType)}
+        title={
+          promptType === "revoke_admin"
+            ? t("avec_gov_rh_revoke_submit")
+            : t("avec_gov_rh_appoint_submit")
+        }
+        message={
+          promptType === "revoke_admin"
+            ? t("group_gov_revoke_admin_prompt")
+            : t("group_gov_appoint_admin_prompt")
+        }
+        busy={busy}
+        onCancel={() => setPromptType(null)}
+        onSubmit={(justification) => {
+          if (promptType === "revoke_admin" && revokeTarget) {
+            void submit("revoke_admin", revokeTarget, justification);
+          } else if (promptType === "appoint_admin" && appointTarget) {
+            void submit("appoint_admin", appointTarget, justification);
+          }
+        }}
+      />
     </div>
   );
 }

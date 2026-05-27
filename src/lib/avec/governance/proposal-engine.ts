@@ -34,6 +34,7 @@ import type { ClosureSnapshot } from "@/lib/avec/group-cycle-closure";
 import { AVEC_MAX_SHARES_PER_MEETING } from "@/lib/group-savings-types";
 import { numFromNumeric } from "@/lib/wallet-types";
 import { insertGovernanceVoteMessage } from "@/lib/avec/governance/governance-messaging";
+import { buildBallotDetail } from "@/lib/avec/governance/ballot-summary";
 import type {
   GovernanceVoteMeta,
   ProposalType,
@@ -162,6 +163,24 @@ export async function buildVoteMeta(args: {
     ? await userDisplayName(p.beneficiaryUserId)
     : undefined;
 
+  const payload = (p.payload ?? {}) as Record<string, unknown>;
+  const ballot = await buildBallotDetail({
+    groupId: args.groupId,
+    type: p.type as ProposalType,
+    payload,
+    beneficiaryUserId: p.beneficiaryUserId,
+    financialImpactUsdt: p.financialImpactUsdt ? Number(p.financialImpactUsdt) : null,
+    justification: p.justification,
+  });
+
+  const closesAt = p.voteClosesAt?.getTime() ?? 0;
+  const timeRemainingMs =
+    p.status === "voting" && closesAt > Date.now() ? closesAt - Date.now() : 0;
+  const majorityProgressPct =
+    yesCount + noCount > 0
+      ? Math.round((yesCount / (yesCount + noCount)) * 100)
+      : 0;
+
   return {
     proposalId: p.id,
     proposalType: p.type as ProposalType,
@@ -175,6 +194,7 @@ export async function buildVoteMeta(args: {
     requiredQuorum,
     requiredMajorityPct: p.requiredMajorityPct,
     voteClosesAt: p.voteClosesAt?.toISOString() ?? "",
+    voteOpensAt: p.voteOpensAt?.toISOString(),
     status: p.status as ProposalStatus | "voting",
     financialImpactUsdt: p.financialImpactUsdt
       ? Number(p.financialImpactUsdt)
@@ -184,6 +204,10 @@ export async function buildVoteMeta(args: {
     voteAudience,
     retryCount: p.retryCount ?? 0,
     quorumReached: participated >= requiredQuorum,
+    majorityProgressPct,
+    timeRemainingMs,
+    executionScheduledAt: p.executionScheduledAt?.toISOString(),
+    ballot,
   };
 }
 
