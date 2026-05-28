@@ -67,11 +67,13 @@ export function AvecGovernanceBallot({
   locale,
   compact,
   showStatus = true,
+  revealTallies = true,
 }: {
   meta: GovernanceVoteMeta;
   locale: string;
   compact?: boolean;
   showStatus?: boolean;
+  revealTallies?: boolean;
 }) {
   const { t } = useI18n();
   const loc = locale === "fr" ? "fr-FR" : "en-US";
@@ -192,43 +194,51 @@ export function AvecGovernanceBallot({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl bg-stone-50 px-2 py-1.5">
-          <p className="text-[8px] font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("group_gov_ballot_quorum")}
-          </p>
-          <p className="text-xs font-bold tabular-nums">
-            {participated}/{meta.requiredQuorum}
-          </p>
-          <div className="mt-1 h-1 overflow-hidden rounded-full bg-stone-200">
-            <div
-              className="h-full rounded-full bg-violet-500"
-              style={{ width: `${quorumPct}%` }}
-            />
+      {revealTallies ? (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-stone-50 px-2 py-1.5">
+              <p className="text-[8px] font-bold uppercase text-[color:var(--fd-muted)]">
+                {t("group_gov_ballot_quorum")}
+              </p>
+              <p className="text-xs font-bold tabular-nums">
+                {participated}/{meta.requiredQuorum}
+              </p>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-stone-200">
+                <div
+                  className="h-full rounded-full bg-violet-500"
+                  style={{ width: `${quorumPct}%` }}
+                />
+              </div>
+            </div>
+            <div className="rounded-xl bg-stone-50 px-2 py-1.5">
+              <p className="text-[8px] font-bold uppercase text-[color:var(--fd-muted)]">
+                {t("group_gov_ballot_majority")}
+              </p>
+              <p className="text-xs font-bold tabular-nums">
+                {majorityPct}% / {meta.requiredMajorityPct}%
+              </p>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-stone-200">
+                <div
+                  className="h-full rounded-full bg-emerald-500"
+                  style={{ width: `${Math.min(100, majorityPct)}%` }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="rounded-xl bg-stone-50 px-2 py-1.5">
-          <p className="text-[8px] font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("group_gov_ballot_majority")}
-          </p>
-          <p className="text-xs font-bold tabular-nums">
-            {majorityPct}% / {meta.requiredMajorityPct}%
-          </p>
-          <div className="mt-1 h-1 overflow-hidden rounded-full bg-stone-200">
-            <div
-              className="h-full rounded-full bg-emerald-500"
-              style={{ width: `${Math.min(100, majorityPct)}%` }}
-            />
-          </div>
-        </div>
-      </div>
 
-      <p className="text-[9px] tabular-nums text-[color:var(--fd-muted)]">
-        {t("group_gov_vote_tally")
-          .replace("{yes}", String(meta.yesCount))
-          .replace("{no}", String(meta.noCount))
-          .replace("{abstain}", String(meta.abstainCount))}
-      </p>
+          <p className="text-[9px] tabular-nums text-[color:var(--fd-muted)]">
+            {t("group_gov_vote_tally")
+              .replace("{yes}", String(meta.yesCount))
+              .replace("{no}", String(meta.noCount))
+              .replace("{abstain}", String(meta.abstainCount))}
+          </p>
+        </>
+      ) : (
+        <p className="text-[9px] text-[color:var(--fd-muted)]">
+          {t("group_gov_results_hidden_until_vote")}
+        </p>
+      )}
 
       {meta.status === "voting" && timeLeft > 0 ? (
         <p className="text-[10px] font-bold text-violet-900">

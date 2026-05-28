@@ -13,6 +13,7 @@ import { users } from "@/db";
 export type GovernanceBallotDetail = {
   targetUserId?: string;
   targetDisplay?: string;
+  quizOptions?: string[];
   oldRole?: string;
   newRole?: string;
   rolesAdded?: string[];
@@ -96,12 +97,15 @@ export async function buildBallotDetail(args: {
   switch (args.type) {
     case "revoke_admin":
       out.newRole = "member";
+      if (out.targetDisplay) out.quizOptions = [out.targetDisplay];
       break;
     case "appoint_admin":
       out.newRole = "admin";
+      if (out.targetDisplay) out.quizOptions = [out.targetDisplay];
       break;
     case "revoke_member":
       out.newRole = "revoked";
+      if (out.targetDisplay) out.quizOptions = [out.targetDisplay];
       break;
     case "set_co_admins": {
       const next = Array.isArray(payload.coAdminUserIds)
@@ -120,8 +124,11 @@ export async function buildBallotDetail(args: {
         );
       const curIds = new Set(current.map((c) => c.userId));
       const nextSet = new Set(next);
-      out.rolesAdded = next.filter((id) => !curIds.has(id));
-      out.rolesRemoved = [...curIds].filter((id) => !nextSet.has(id));
+      const addedIds = next.filter((id) => !curIds.has(id));
+      const removedIds = [...curIds].filter((id) => !nextSet.has(id));
+      out.rolesAdded = await Promise.all(addedIds.map((id) => displayForUser(id)));
+      out.rolesRemoved = await Promise.all(removedIds.map((id) => displayForUser(id)));
+      out.quizOptions = [...out.rolesAdded].slice(0, 4);
       out.impactLines?.push(`co_admin: ${next.length}`);
       break;
     }
@@ -142,8 +149,11 @@ export async function buildBallotDetail(args: {
         );
       const curIds = new Set(current.map((c) => c.userId));
       const nextSet = new Set(next);
-      out.rolesAdded = next.filter((id) => !curIds.has(id));
-      out.rolesRemoved = [...curIds].filter((id) => !nextSet.has(id));
+      const addedIds = next.filter((id) => !curIds.has(id));
+      const removedIds = [...curIds].filter((id) => !nextSet.has(id));
+      out.rolesAdded = await Promise.all(addedIds.map((id) => displayForUser(id)));
+      out.rolesRemoved = await Promise.all(removedIds.map((id) => displayForUser(id)));
+      out.quizOptions = [...out.rolesAdded].slice(0, 4);
       out.impactLines?.push(`committee: ${next.length}`);
       break;
     }
@@ -185,6 +195,7 @@ export async function buildBallotDetail(args: {
         out.permissionsAdded = [...new Set(added)];
         out.permissionsRemoved = [...new Set(removed)];
       }
+      if (out.targetDisplay) out.quizOptions = [out.targetDisplay];
       break;
     }
     case "transfer_fund_bucket":
@@ -227,6 +238,8 @@ export async function buildBallotDetail(args: {
   }
 
   if (out.impactLines?.length === 0) delete out.impactLines;
+  if (!out.quizOptions?.length && out.targetDisplay) out.quizOptions = [out.targetDisplay];
+  if (out.quizOptions && out.quizOptions.length > 4) out.quizOptions = out.quizOptions.slice(0, 4);
 
   return out;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecGovernanceBallot } from "@/components/groups/avec-governance-ballot";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -35,6 +35,7 @@ export function AvecGovernanceVoteMessage({
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   if (!meta) {
@@ -52,9 +53,45 @@ export function AvecGovernanceVoteMessage({
     myUserId &&
     myUserId !== meta.authorUserId &&
     new Date(meta.voteClosesAt).getTime() > Date.now();
+  const canVoteNow = canVote && !hasVoted;
+  const revealTallies = hasVoted || messageType === "vote_closed" || messageType === "vote_executed";
+  const quizOptions = useMemo(() => {
+    const fromBallot = (meta.ballot?.quizOptions ?? []).filter(Boolean).slice(0, 4);
+    const fallback = [
+      t("group_gov_vote_yes"),
+      t("group_gov_vote_no"),
+      t("group_gov_vote_abstain"),
+    ];
+    const labels = fromBallot.length > 0 ? fromBallot : fallback;
+    return labels.slice(0, 3).map((label, idx) => ({
+      label: `${t("group_gov_quiz_option_prefix")} ${idx + 1} · ${label}`,
+      choice: (idx === 0 ? "yes" : idx === 1 ? "no" : "abstain") as "yes" | "no" | "abstain",
+    }));
+  }, [meta.ballot?.quizOptions, t]);
+
+  useEffect(() => {
+    let off = false;
+    if (!myUserId) return;
+    if (messageType === "vote_closed" || messageType === "vote_executed") {
+      setHasVoted(true);
+      return;
+    }
+    void (async () => {
+      const res = await fetch(
+        `/api/groups/${groupId}/governance/proposals/${meta.proposalId}/vote`,
+        { cache: "no-store" },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (off) return;
+      if (res.ok) setHasVoted(Boolean((j as { hasVoted?: boolean }).hasVoted));
+    })();
+    return () => {
+      off = true;
+    };
+  }, [groupId, messageType, meta.proposalId, myUserId]);
 
   async function vote(choice: "yes" | "no" | "abstain") {
-    if (!canVote || busy) return;
+    if (!canVoteNow || busy) return;
     setBusy(true);
     setErr(null);
     try {
@@ -71,6 +108,7 @@ export function AvecGovernanceVoteMessage({
         setErr((j as { error?: string }).error ?? "group_action_failed");
         return;
       }
+      setHasVoted(true);
       onVoted?.();
       if (meta!.ballot?.targetUserId === myUserId) {
         window.dispatchEvent(new CustomEvent("avec-gov-access-changed"));
@@ -99,34 +137,21 @@ export function AvecGovernanceVoteMessage({
         </p>
       ) : null}
 
-      <AvecGovernanceBallot meta={meta} locale={locale} showStatus />
+      <AvecGovernanceBallot meta={meta} locale={locale} showStatus revealTallies={revealTallies} />
 
-      {canVote ? (
+      {canVoteNow ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void vote("yes")}
-            className="rounded-xl bg-emerald-600 px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
-          >
-            {t("group_gov_vote_yes")}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void vote("no")}
-            className="rounded-xl bg-rose-600 px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
-          >
-            {t("group_gov_vote_no")}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void vote("abstain")}
-            className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-1.5 text-[10px] font-bold disabled:opacity-50"
-          >
-            {t("group_gov_vote_abstain")}
-          </button>
+          {quizOptions.map((opt) => (
+            <button
+              key={opt.choice}
+              type="button"
+              disabled={busy}
+              onClick={() => void vote(opt.choice)}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-[10px] font-bold text-[color:var(--fd-text)] disabled:opacity-50"
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       ) : null}
 
