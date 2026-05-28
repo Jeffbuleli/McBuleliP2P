@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
-import { createAuthChallenge } from "@/lib/auth/challenges";
-import { passwordResetLink, sendAuthEmail } from "@/lib/auth/email";
+import { sendPasswordResetEmail } from "@/lib/email/messages/password-reset";
+import { resolveEmailLocale } from "@/lib/email/locale";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { email?: string } | null;
@@ -11,6 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 });
   }
 
+  const locale = await resolveEmailLocale(req);
   const db = getDb();
   const [user] = await db
     .select({ id: users.id, email: users.email })
@@ -19,16 +20,10 @@ export async function POST(req: Request) {
     .limit(1);
 
   if (user) {
-    const { rawCode } = await createAuthChallenge({
+    await sendPasswordResetEmail({
       userId: user.id,
-      purpose: "password_reset",
-    });
-    const link = passwordResetLink(rawCode);
-    await sendAuthEmail({
-      to: user.email,
-      subject: "McBuleli — réinitialiser votre mot de passe",
-      html: `<p>Bonjour,</p><p><a href="${link}">Réinitialiser mon mot de passe</a></p><p>Ce lien expire dans 1 heure.</p>`,
-      text: `Réinitialiser : ${link}`,
+      email: user.email,
+      locale,
     });
   }
 

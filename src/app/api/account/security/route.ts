@@ -6,6 +6,12 @@ import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { assertStepUp, bumpSessionVersion } from "@/lib/auth/step-up";
 import { isPiSyntheticEmail } from "@/lib/auth/security-status";
+import { sendPasswordChangedEmail } from "@/lib/email/messages/password-changed";
+import {
+  sendEmailChangeAlert,
+  sendEmailChangeConfirm,
+} from "@/lib/email/messages/email-change";
+import { resolveEmailLocale } from "@/lib/email/locale";
 
 const bodyZ = z.object({
   currentPassword: z.string().min(8).max(128),
@@ -34,7 +40,7 @@ export async function POST(req: Request) {
 
   const db = getDb();
   const [u] = await db
-    .select({ passwordHash: users.passwordHash })
+    .select({ passwordHash: users.passwordHash, email: users.email })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
@@ -48,6 +54,11 @@ export async function POST(req: Request) {
     .update(users)
     .set({ passwordHash })
     .where(eq(users.id, userId));
+
+  const locale = await resolveEmailLocale(req);
+  void sendPasswordChangedEmail({ email: u.email, locale }).catch((err) => {
+    console.warn("[account/security] password-changed email failed", err);
+  });
 
   return NextResponse.json({ ok: true });
 }
@@ -101,25 +112,25 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "email_taken" }, { status: 409 });
   }
 
-  const { createAuthChallenge } = await import("@/lib/auth/challenges");
-  const { emailChangeLink, sendAuthEmail } = await import("@/lib/auth/email");
-
   await db
     .update(users)
     .set({ pendingEmail: newEmail })
     .where(eq(users.id, userId));
 
-  const { rawCode } = await createAuthChallenge({
+  const locale = await resolveEmailLocale(req);
+
+  await sendEmailChangeConfirm({
     userId,
-    purpose: "email_change",
-    meta: { newEmail },
+    newEmail,
+    locale,
   });
 
-  await sendAuthEmail({
-    to: newEmail,
-    subject: "McBuleli — confirmer votre nouvel email",
-    html: `<p><a href="${emailChangeLink(rawCode)}">Confirmer ${newEmail}</a></p>`,
-    text: emailChangeLink(rawCode),
+  void sendEmailChangeAlert({
+    currentEmail: u.email,
+    newEmail,
+    locale,
+  }).catch((err) => {
+    console.warn("[account/security] email-change alert failed", err);
   });
 
   return NextResponse.json({ ok: true, pendingEmail: newEmail });

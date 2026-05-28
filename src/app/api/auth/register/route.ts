@@ -11,6 +11,7 @@ import { isDisplayNameTaken } from "@/lib/display-name-uniqueness";
 import { registerSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { sendEmailVerification } from "@/lib/auth/email-verification";
+import { resolveEmailLocale } from "@/lib/email/locale";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
 
 export async function POST(req: Request) {
@@ -72,7 +73,8 @@ export async function POST(req: Request) {
         role: users.role,
       });
 
-    void sendEmailVerification(created.id, created.email).catch((err) => {
+    const locale = await resolveEmailLocale(req);
+    void sendEmailVerification(created.id, created.email, locale).catch((err) => {
       console.warn("[auth/register] verification email failed", err);
     });
 
