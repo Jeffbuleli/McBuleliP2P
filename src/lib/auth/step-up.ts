@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
-import { getDb, users } from "@/db";
+import { getDb, userPasskeys, users } from "@/db";
 import { verifyUserTotpOrBackup } from "@/lib/auth/totp";
+import { passkeyStepUpVerify } from "@/lib/auth/passkeys";
 
 const STEP_UP_COOKIE = "mcbuleli_step_up";
 const STEP_UP_MS = 10 * 60 * 1000;
@@ -16,7 +16,26 @@ export async function isTotpEnabled(userId: string): Promise<boolean> {
   return Boolean(row?.at);
 }
 
+export async function hasPasskeys(userId: string): Promise<boolean> {
+  const db = getDb();
+  const [row] = await db
+    .select({ id: userPasskeys.id })
+    .from(userPasskeys)
+    .where(eq(userPasskeys.userId, userId))
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function userNeedsStepUp(userId: string): Promise<boolean> {
+  const [totp, passkeys] = await Promise.all([
+    isTotpEnabled(userId),
+    hasPasskeys(userId),
+  ]);
+  return totp || passkeys;
+}
+
 export async function setStepUpVerified(userId: string): Promise<void> {
+  const { cookies } = await import("next/headers");
   const jar = await cookies();
   jar.set(STEP_UP_COOKIE, `${userId}:${Date.now()}`, {
     httpOnly: true,
@@ -28,6 +47,7 @@ export async function setStepUpVerified(userId: string): Promise<void> {
 }
 
 export async function hasRecentStepUp(userId: string): Promise<boolean> {
+  const { cookies } = await import("next/headers");
   const jar = await cookies();
   const raw = jar.get(STEP_UP_COOKIE)?.value;
   if (!raw) return false;
@@ -38,20 +58,37 @@ export async function hasRecentStepUp(userId: string): Promise<boolean> {
   return Date.now() - ts < STEP_UP_MS;
 }
 
-/** Require TOTP (or backup) unless step-up cookie is fresh. */
+/** Require TOTP, passkey, or backup unless step-up cookie is fresh. */
 export async function assertStepUp(args: {
   userId: string;
   totpCode?: string | null;
+  passkeyChallengeId?: string | null;
+  passkeyResponse?: unknown;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const enabled = await isTotpEnabled(args.userId);
-  if (!enabled) return { ok: true };
+  const needs = await userNeedsStepUp(args.userId);
+  if (!needs) return { ok: true };
   if (await hasRecentStepUp(args.userId)) return { ok: true };
+
+  if (args.passkeyChallengeId && args.passkeyResponse) {
+    const pk = await passkeyStepUpVerify({
+      userId: args.userId,
+      challengeId: args.passkeyChallengeId,
+      response: args.passkeyResponse,
+    });
+    if (!pk.ok) return pk;
+    await setStepUpVerified(args.userId);
+    return { ok: true };
+  }
+
   const code = args.totpCode?.trim();
-  if (!code) return { ok: false, error: "totp_required" };
-  const valid = await verifyUserTotpOrBackup(args.userId, code);
-  if (!valid) return { ok: false, error: "totp_invalid" };
-  await setStepUpVerified(args.userId);
-  return { ok: true };
+  if (code) {
+    const valid = await verifyUserTotpOrBackup(args.userId, code);
+    if (!valid) return { ok: false, error: "totp_invalid" };
+    await setStepUpVerified(args.userId);
+    return { ok: true };
+  }
+
+  return { ok: false, error: "step_up_required" };
 }
 
 export async function bumpSessionVersion(userId: string): Promise<number> {

@@ -39,12 +39,24 @@ export async function POST(req: Request) {
 
   const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const totpCode = typeof raw?.totpCode === "string" ? raw.totpCode : null;
+  const passkeyChallengeId =
+    typeof raw?.passkeyChallengeId === "string" ? raw.passkeyChallengeId : null;
+  const passkeyResponse = raw?.passkeyResponse;
 
   const { assertStepUp } = await import("@/lib/auth/step-up");
-  const step = await assertStepUp({ userId, totpCode });
+  const step = await assertStepUp({
+    userId,
+    totpCode,
+    passkeyChallengeId,
+    passkeyResponse,
+  });
   if (!step.ok) {
     return NextResponse.json(
-      { message: step.error, error: step.error, requiresTotp: step.error === "totp_required" },
+      {
+        message: step.error,
+        error: step.error,
+        requiresStepUp: step.error === "step_up_required",
+      },
       { status: 403 },
     );
   }

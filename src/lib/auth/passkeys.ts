@@ -229,3 +229,95 @@ export async function passkeyLoginVerify(args: {
     sessionVersion: u?.sessionVersion ?? 0,
   };
 }
+
+export async function passkeyStepUpOptions(userId: string) {
+  const db = getDb();
+  const passkeys = await db
+    .select({
+      credentialId: userPasskeys.credentialId,
+      transports: userPasskeys.transports,
+    })
+    .from(userPasskeys)
+    .where(eq(userPasskeys.userId, userId));
+  if (!passkeys.length) {
+    throw new Error("passkey_not_found");
+  }
+
+  const options = await generateAuthenticationOptions({
+    rpID: webAuthnRpId(),
+    allowCredentials: passkeys.map((pk) => ({
+      id: pk.credentialId,
+      transports: (pk.transports ?? undefined) as AuthenticatorTransportFuture[] | undefined,
+    })),
+    userVerification: "preferred",
+  });
+
+  const { id: challengeId } = await createAuthChallenge({
+    userId,
+    purpose: "passkey_step_up",
+    meta: { challenge: options.challenge },
+  });
+
+  return { options, challengeId };
+}
+
+export async function passkeyStepUpVerify(args: {
+  userId: string;
+  challengeId: string;
+  response: unknown;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const row = await getActiveChallengeById({
+    challengeId: args.challengeId,
+    purpose: "passkey_step_up",
+    userId: args.userId,
+  });
+  if (!row) return { ok: false, error: "challenge_expired" };
+
+  const expectedChallenge =
+    typeof (row.meta as Record<string, unknown> | null)?.challenge === "string"
+      ? ((row.meta as Record<string, unknown>).challenge as string)
+      : null;
+  if (!expectedChallenge) return { ok: false, error: "challenge_invalid" };
+
+  const response = args.response as Parameters<typeof verifyAuthenticationResponse>[0]["response"];
+  const credentialId = response.id;
+
+  const db = getDb();
+  const [passkey] = await db
+    .select()
+    .from(userPasskeys)
+    .where(
+      and(eq(userPasskeys.credentialId, credentialId), eq(userPasskeys.userId, args.userId)),
+    )
+    .limit(1);
+  if (!passkey) return { ok: false, error: "passkey_not_found" };
+
+  const verification = await verifyAuthenticationResponse({
+    response,
+    expectedChallenge,
+    expectedOrigin: webAuthnOrigin(),
+    expectedRPID: webAuthnRpId(),
+    credential: {
+      id: passkey.credentialId,
+      publicKey: Buffer.from(passkey.publicKey, "base64url"),
+      counter: passkey.counter,
+      transports: (passkey.transports ?? undefined) as AuthenticatorTransportFuture[] | undefined,
+    },
+    requireUserVerification: false,
+  });
+
+  if (!verification.verified) {
+    return { ok: false, error: "passkey_invalid" };
+  }
+
+  await db
+    .update(userPasskeys)
+    .set({
+      counter: verification.authenticationInfo.newCounter,
+      lastUsedAt: new Date(),
+    })
+    .where(eq(userPasskeys.id, passkey.id));
+
+  await markChallengeUsed(row.id);
+  return { ok: true };
+}

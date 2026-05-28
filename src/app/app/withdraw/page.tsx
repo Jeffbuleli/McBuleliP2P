@@ -16,6 +16,7 @@ import {
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
 import { WalletStepUpField } from "@/components/wallet/wallet-step-up-field";
+import { WalletPasskeyStepUpButton } from "@/components/wallet/wallet-passkey-step-up-button";
 import {
   FlowCard,
   FlowHubLink,
@@ -45,7 +46,9 @@ export default function WithdrawPage() {
   const [processingStatus, setProcessingStatus] = useState(WithdrawalStatus.PENDING_AGENT);
   const [successHint, setSuccessHint] = useState<string | null>(null);
   const [totpEnabled, setTotpEnabled] = useState(false);
+  const [passkeyCount, setPasskeyCount] = useState(0);
   const [totpCode, setTotpCode] = useState("");
+  const [stepUpViaPasskey, setStepUpViaPasskey] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export default function WithdrawPage() {
         if (!res.ok) return;
         const data = await res.json();
         setTotpEnabled(Boolean(data.totpEnabled));
+        setPasskeyCount(typeof data.passkeyCount === "number" ? data.passkeyCount : 0);
       } catch {
         /* optional */
       }
@@ -86,9 +90,14 @@ export default function WithdrawPage() {
     Number.isFinite(netNum) && netNum > 0 ? netNum + fee : null;
   const unit = wAsset === "PI" ? "PI" : "USDT";
 
+  const needsStepUp = totpEnabled || passkeyCount > 0;
+  const stepUpReady =
+    stepUpViaPasskey || (totpEnabled && totpCode.trim().length >= 6);
+
   function openConfirm() {
     setConfirmError(null);
     setTotpCode("");
+    setStepUpViaPasskey(false);
     setShowConfirm(true);
   }
 
@@ -120,7 +129,12 @@ export default function WithdrawPage() {
             ? String((data as { error?: unknown }).error ?? "")
             : "";
         const keepModal =
-          code === "totp_required" || code === "totp_invalid";
+          code === "step_up_required" ||
+          code === "totp_required" ||
+          code === "totp_invalid" ||
+          code === "passkey_invalid" ||
+          code === "passkey_not_found" ||
+          code === "challenge_expired";
         if (keepModal) {
           setConfirmError(msg);
         } else {
@@ -131,6 +145,7 @@ export default function WithdrawPage() {
       }
       setShowConfirm(false);
       setTotpCode("");
+      setStepUpViaPasskey(false);
       const status =
         typeof data.withdrawal?.status === "string"
           ? data.withdrawal.status
@@ -276,8 +291,30 @@ export default function WithdrawPage() {
                 </p>
               ) : null}
             </div>
-            {totpEnabled ? (
-              <WalletStepUpField value={totpCode} onChange={setTotpCode} />
+            {needsStepUp ? (
+              <div className="mt-3">
+                {passkeyCount > 0 ? (
+                  <WalletPasskeyStepUpButton
+                    verified={stepUpViaPasskey}
+                    onVerified={() => {
+                      setStepUpViaPasskey(true);
+                      setConfirmError(null);
+                    }}
+                    onError={setConfirmError}
+                    disabled={loading}
+                  />
+                ) : null}
+                {totpEnabled ? (
+                  <>
+                    {passkeyCount > 0 ? (
+                      <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                        {t("withdraw_step_up_or")}
+                      </p>
+                    ) : null}
+                    <WalletStepUpField value={totpCode} onChange={setTotpCode} />
+                  </>
+                ) : null}
+              </div>
             ) : null}
             {confirmError ? (
               <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
@@ -291,6 +328,7 @@ export default function WithdrawPage() {
                   setShowConfirm(false);
                   setConfirmError(null);
                   setTotpCode("");
+                  setStepUpViaPasskey(false);
                 }}
                 className="min-h-[48px] rounded-xl border border-[color:var(--fd-border)] font-semibold"
               >
@@ -298,7 +336,7 @@ export default function WithdrawPage() {
               </button>
               <button
                 type="button"
-                disabled={loading || (totpEnabled && totpCode.trim().length < 6)}
+                disabled={loading || (needsStepUp && !stepUpReady)}
                 onClick={() => void submit()}
                 className="min-h-[48px] rounded-xl bg-[color:var(--fd-primary)] font-bold text-white disabled:opacity-50"
               >

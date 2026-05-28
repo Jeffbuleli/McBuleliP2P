@@ -10,7 +10,8 @@ export type AuthChallengePurpose =
   | "wa_recovery_otp"
   | "totp_setup"
   | "passkey_register"
-  | "passkey_login";
+  | "passkey_login"
+  | "passkey_step_up";
 
 const TTL_MINUTES: Record<AuthChallengePurpose, number> = {
   email_verify: 24 * 60,
@@ -21,6 +22,7 @@ const TTL_MINUTES: Record<AuthChallengePurpose, number> = {
   totp_setup: 30,
   passkey_register: 5,
   passkey_login: 5,
+  passkey_step_up: 5,
 };
 
 export async function createAuthChallenge(args: {
