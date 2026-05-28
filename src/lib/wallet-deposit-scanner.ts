@@ -100,12 +100,18 @@ export async function runDepositScanner(): Promise<{
   const usedTxids = await loadUsedTxids();
   const flaggedAmbiguousTxids = new Set<string>();
 
-  const history = await binanceRecentDepositHistory({
-    coin: "USDT",
-    startTimeMs: now - 24 * 3600_000,
-    endTimeMs: now + 5 * 60_000,
-    limit: 1000,
-  });
+  let history: HistoryRow[];
+  try {
+    history = await binanceRecentDepositHistory({
+      coin: "USDT",
+      startTimeMs: now - 24 * 3600_000,
+      endTimeMs: now + 5 * 60_000,
+      limit: 1000,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`binance_deposit_history_failed: ${msg}`);
+  }
 
   for (const row of history) {
     if (!binanceDepositIsSuccessful(row)) continue;

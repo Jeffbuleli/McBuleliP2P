@@ -3,6 +3,7 @@ import { runRetryFailedJobs, runWithdrawalWorker } from "@/lib/wallet-withdraw-q
 import { walletAutomationEnabled, walletCronSecret, walletWithdrawAutoEnabled } from "@/lib/usdt-wallet-features";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const secret = req.headers.get("x-cron-secret") ?? "";

@@ -4,6 +4,7 @@ import { runDepositScanner } from "@/lib/wallet-deposit-scanner";
 import { walletAutomationEnabled, walletCronSecret, walletDepositAutoEnabled } from "@/lib/usdt-wallet-features";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const secret = req.headers.get("x-cron-secret") ?? "";
