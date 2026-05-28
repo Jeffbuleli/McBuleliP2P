@@ -6,6 +6,17 @@ import { IlluCollectiveVote } from "@/components/groups/avec-illustrations";
 import { clientErrorText } from "@/lib/client-error-text";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
 
+function isCandidateVoteType(type: GovernanceVoteMeta["proposalType"]): boolean {
+  return (
+    type === "appoint_admin" ||
+    type === "revoke_admin" ||
+    type === "revoke_member" ||
+    type === "set_co_admins" ||
+    type === "set_committee" ||
+    type === "set_granular_roles"
+  );
+}
+
 export function AvecVueGovernanceCard({
   groupId,
   myUserId,
@@ -32,13 +43,16 @@ export function AvecVueGovernanceCard({
     myUserId &&
     myUserId !== meta.authorUserId &&
     new Date(meta.voteClosesAt).getTime() > Date.now();
+  const candidateVote = isCandidateVoteType(meta.proposalType);
   const canVoteNow = canVote && !hasVoted;
   const quizOptions = useMemo(() => {
     const fromBallot = (meta.ballot?.quizOptions ?? []).filter(Boolean).slice(0, 4);
     const fallback = [t("group_gov_vote_yes"), t("group_gov_vote_no"), t("group_gov_vote_abstain"), "Option 4"];
     const labels = fromBallot.length > 0 ? fromBallot : fallback;
     return labels.slice(0, 4).map((label, idx) => ({
-      label: `${t("group_gov_quiz_option_prefix")} ${idx + 1} · ${label}`,
+      label: `${t(
+        candidateVote ? "group_gov_quiz_candidate_prefix" : "group_gov_quiz_proposal_prefix",
+      )} ${idx + 1} · ${label}`,
       choice: (idx === 0
         ? "option_1"
         : idx === 1
@@ -47,7 +61,7 @@ export function AvecVueGovernanceCard({
             ? "option_3"
             : "option_4") as "option_1" | "option_2" | "option_3" | "option_4",
     }));
-  }, [meta.ballot?.quizOptions, t]);
+  }, [candidateVote, meta.ballot?.quizOptions, t]);
 
   useEffect(() => {
     let off = false;
@@ -134,12 +148,19 @@ export function AvecVueGovernanceCard({
             <div className="mt-2 space-y-1">
               {(meta.optionTallies ?? []).map((row, idx) => (
                 <p key={row.choice} className="text-[9px] text-[color:var(--fd-muted)]">
-                  {t("group_gov_quiz_option_prefix")} {idx + 1} · {row.label}: {row.count}
+                  {t(
+                    candidateVote ? "group_gov_quiz_candidate_prefix" : "group_gov_quiz_proposal_prefix",
+                  )}{" "}
+                  {idx + 1} · {row.label}: {row.count}
                 </p>
               ))}
               {meta.winningLabel ? (
                 <p className="text-[9px] font-bold text-emerald-700">
-                  {t("group_gov_quiz_winner")}: {meta.winningLabel}
+                  {candidateVote
+                    ? `${t("group_gov_quiz_winner")}: ${meta.winningLabel}`
+                    : `${t("group_gov_quiz_proposal_prefix")} ${
+                        (meta.optionTallies ?? []).findIndex((x) => x.label === meta.winningLabel) + 1
+                      }: ${t("group_gov_quiz_validated")}`}
                 </p>
               ) : null}
             </div>

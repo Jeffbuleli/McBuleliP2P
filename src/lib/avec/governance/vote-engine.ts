@@ -112,6 +112,13 @@ export async function castGovernanceVote(args: {
       messageType: "vote_progress",
       meta,
     });
+    if (meta.quorumReached && meta.winningChoice) {
+      await closeProposalVote({
+        proposalId: args.proposalId,
+        groupId: args.groupId,
+        allowEarly: true,
+      });
+    }
   }
 
   return {
@@ -125,6 +132,7 @@ export async function castGovernanceVote(args: {
 export async function closeProposalVote(args: {
   proposalId: string;
   groupId: string;
+  allowEarly?: boolean;
 }): Promise<"passed" | "rejected" | "expired" | "skipped"> {
   const db = getDb();
   const [p] = await db
@@ -138,7 +146,11 @@ export async function closeProposalVote(args: {
       ),
     )
     .limit(1);
-  if (!p || !p.voteClosesAt || p.voteClosesAt.getTime() > Date.now()) {
+  if (!p || !p.voteClosesAt) {
+    return "skipped";
+  }
+  const timeDue = p.voteClosesAt.getTime() <= Date.now();
+  if (!timeDue && !args.allowEarly) {
     return "skipped";
   }
 
@@ -188,22 +200,29 @@ export async function closeProposalVote(args: {
           1,
           Math.ceil((eligibleCount * Math.max(0, Math.min(100, p.requiredQuorumPct))) / 100),
         );
-        if (participated < requiredQuorum) return "expired" as const;
+        if (!timeDue && participated < requiredQuorum) return "skipped" as const;
+        if (timeDue && participated < requiredQuorum) return "expired" as const;
         const sorted = tallies
           .map((count, idx) => ({ count, idx }))
           .sort((a, b) => b.count - a.count);
         if (sorted[0].count <= 0) return "expired" as const;
-        if (sorted[1] && sorted[0].count === sorted[1].count) return "rejected" as const;
+        if (sorted[1] && sorted[0].count === sorted[1].count) {
+          return timeDue ? ("rejected" as const) : ("skipped" as const);
+        }
         return "passed" as const;
       })()
-    : tallyVote({
-        yes,
-        no,
-        abstain,
-        eligibleCount,
-        quorumPct: p.requiredQuorumPct,
-        majorityPct: p.requiredMajorityPct,
-      });
+    : timeDue
+      ? tallyVote({
+          yes,
+          no,
+          abstain,
+          eligibleCount,
+          quorumPct: p.requiredQuorumPct,
+          majorityPct: p.requiredMajorityPct,
+        })
+      : "skipped";
+
+  if (result === "skipped") return "skipped";
 
   const now = new Date();
   const delayH = executionDelayHours(p.type as import("@/lib/avec/governance/types").ProposalType);

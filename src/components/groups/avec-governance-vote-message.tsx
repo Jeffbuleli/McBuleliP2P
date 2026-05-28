@@ -6,6 +6,17 @@ import { AvecGovernanceBallot } from "@/components/groups/avec-governance-ballot
 import { clientErrorText } from "@/lib/client-error-text";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
 
+function isCandidateVoteType(type: GovernanceVoteMeta["proposalType"]): boolean {
+  return (
+    type === "appoint_admin" ||
+    type === "revoke_admin" ||
+    type === "revoke_member" ||
+    type === "set_co_admins" ||
+    type === "set_committee" ||
+    type === "set_granular_roles"
+  );
+}
+
 export function parseGovernanceVoteMeta(
   meta: Record<string, unknown> | null,
 ): GovernanceVoteMeta | null {
@@ -56,6 +67,7 @@ export function AvecGovernanceVoteMessage({
     myUserId &&
     myUserId !== meta.authorUserId &&
     new Date(meta.voteClosesAt).getTime() > Date.now();
+  const candidateVote = isCandidateVoteType(meta.proposalType);
   const canVoteNow = canVote && !hasVoted;
   const revealTallies = hasVoted || messageType === "vote_closed" || messageType === "vote_executed";
   const quizOptions = useMemo(() => {
@@ -63,7 +75,9 @@ export function AvecGovernanceVoteMessage({
     const fallback = [t("group_gov_vote_yes"), t("group_gov_vote_no"), t("group_gov_vote_abstain"), "Option 4"];
     const labels = fromBallot.length > 0 ? fromBallot : fallback;
     return labels.slice(0, 4).map((label, idx) => ({
-      label: `${t("group_gov_quiz_option_prefix")} ${idx + 1} · ${label}`,
+      label: `${t(
+        candidateVote ? "group_gov_quiz_candidate_prefix" : "group_gov_quiz_proposal_prefix",
+      )} ${idx + 1} · ${label}`,
       choice: (idx === 0
         ? "option_1"
         : idx === 1
@@ -72,7 +86,7 @@ export function AvecGovernanceVoteMessage({
             ? "option_3"
             : "option_4") as "option_1" | "option_2" | "option_3" | "option_4",
     }));
-  }, [meta.ballot?.quizOptions, t]);
+  }, [candidateVote, meta.ballot?.quizOptions, t]);
 
   useEffect(() => {
     let off = false;
