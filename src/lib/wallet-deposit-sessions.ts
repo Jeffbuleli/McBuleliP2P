@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, lte } from "drizzle-orm";
 import { depositSessions, deposits, getDb } from "@/db";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import {
@@ -242,7 +242,6 @@ export async function markSessionsAmbiguous(args: {
 
 export async function listScannableSessions(limit = 200) {
   const db = getDb();
-  const now = new Date();
   const rows = await db
     .select({
       id: depositSessions.id,
@@ -257,12 +256,7 @@ export async function listScannableSessions(limit = 200) {
       graceUntil: depositSessions.graceUntil,
     })
     .from(depositSessions)
-    .where(
-      and(
-        inArray(depositSessions.status, [...OPEN_SLOT_STATUSES]),
-        lte(sql`${depositSessions.createdAt}`, now),
-      ),
-    )
+    .where(inArray(depositSessions.status, [...OPEN_SLOT_STATUSES]))
     .orderBy(asc(depositSessions.createdAt))
     .limit(limit);
   return rows;

@@ -25,7 +25,8 @@ const res = await fetch(`${base}/api/internal/wallet/withdraw-worker`, {
 });
 const text = await res.text();
 if (!res.ok) {
-  console.error("[cron-wallet-withdraw-worker] HTTP", res.status, text.slice(0, 400));
+  const detail = text.trim() || "(empty body)";
+  console.error("[cron-wallet-withdraw-worker] HTTP", res.status, detail.slice(0, 800));
   process.exit(1);
 }
 console.log(text.trim());

@@ -13,7 +13,19 @@ export async function POST(req: Request) {
   if (!walletAutomationEnabled() || !walletDepositAutoEnabled()) {
     return NextResponse.json({ ok: true, skipped: "wallet_auto_deposit_disabled" });
   }
-  const expired = await markExpiredSessionsNow();
-  const out = await runDepositScanner();
-  return NextResponse.json({ ok: true, expired, ...out });
+  try {
+    const expired = await markExpiredSessionsNow();
+    const out = await runDepositScanner();
+    return NextResponse.json({ ok: true, expired, ...out });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    const hint = message.includes("deposit_sessions")
+      ? "Run drizzle migrations 0047 and 0048 on the database."
+      : undefined;
+    console.error("[wallet/deposit-scan]", message);
+    return NextResponse.json(
+      { ok: false, error: "deposit_scan_failed", message, hint },
+      { status: 500 },
+    );
+  }
 }
