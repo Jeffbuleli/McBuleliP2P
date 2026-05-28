@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, deposits } from "@/db";
-import { hasBinanceKeys } from "@/lib/env";
+import { hasBinanceWalletKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { depositIntentSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ deposit: row });
   }
 
-  if (!hasBinanceKeys()) {
+  if (!hasBinanceWalletKeys()) {
     return NextResponse.json(
       { message: "deposit_binance_not_configured" },
       { status: 503 },

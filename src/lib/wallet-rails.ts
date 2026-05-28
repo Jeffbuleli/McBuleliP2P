@@ -1,4 +1,4 @@
-import { hasBinanceKeys } from "@/lib/env";
+import { hasBinanceWalletKeys } from "@/lib/env";
 import {
   fetchPlatformBinanceApiRestrictions,
   probePlatformBinanceSpot,
@@ -25,7 +25,7 @@ export type WalletRailsSnapshot = {
 };
 
 export async function getWalletRailsSnapshot(): Promise<WalletRailsSnapshot> {
-  const usdtBinance = hasBinanceKeys();
+  const usdtBinance = hasBinanceWalletKeys();
   const piManual = await isPiManualDepositEnabled();
   const binanceEnv = usdtBinance ? binanceWalletEnvironment() : null;
 

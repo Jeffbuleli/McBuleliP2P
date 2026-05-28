@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { NetworkId } from "./networks";
 import { USDT_NETWORKS } from "./networks";
+import { getBinanceWalletCredentials } from "@/lib/env";
 import {
   binanceWalletApiBase,
   classifyBinanceWalletAuthError,
@@ -19,16 +20,7 @@ function sortedQueryString(params: Record<string, string>): string {
 }
 
 function getCredentials() {
-  const key =
-    process.env.BINANCE_WALLET_API_KEY?.trim() ??
-    process.env.BINANCE_API_KEY?.trim();
-  const secret =
-    process.env.BINANCE_WALLET_API_SECRET?.trim() ??
-    process.env.BINANCE_API_SECRET?.trim();
-  if (!key || !secret) {
-    throw new Error("Binance API credentials are not configured");
-  }
-  return { key, secret };
+  return getBinanceWalletCredentials();
 }
 
 function withTimestamp(params: Record<string, string>) {

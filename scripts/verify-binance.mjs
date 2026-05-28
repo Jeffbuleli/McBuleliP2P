@@ -1,5 +1,5 @@
 /**
- * Quick check that BINANCE_API_KEY / BINANCE_API_SECRET work (signed GET /api/v3/account).
+ * Quick check that BINANCE_WALLET_API_KEY / BINANCE_WALLET_API_SECRET work (wallet rails).
  * Run from repo root: npm run verify:binance
  * Or: node --env-file=.env scripts/verify-binance.mjs
  *
@@ -25,11 +25,11 @@ function walletBase() {
 }
 
 const BASE = walletBase();
-const key = process.env.BINANCE_API_KEY?.trim();
-const secret = process.env.BINANCE_API_SECRET?.trim();
+const key = process.env.BINANCE_WALLET_API_KEY?.trim();
+const secret = process.env.BINANCE_WALLET_API_SECRET?.trim();
 
 if (!key || !secret) {
-  console.error("Set BINANCE_API_KEY and BINANCE_API_SECRET (e.g. in .env).");
+  console.error("Set BINANCE_WALLET_API_KEY and BINANCE_WALLET_API_SECRET (e.g. in .env).");
   process.exit(1);
 }
 
@@ -37,10 +37,10 @@ if (!key || !secret) {
 function warnIfKeyShapeLooksWrong() {
   const issues = [];
   if (key.length < 60 || key.length > 70) {
-    issues.push(`BINANCE_API_KEY length is ${key.length} (expected ~64 on one line).`);
+    issues.push(`BINANCE_WALLET_API_KEY length is ${key.length} (expected ~64 on one line).`);
   }
   if (secret.length < 60 || secret.length > 70) {
-    issues.push(`BINANCE_API_SECRET length is ${secret.length} (expected ~64 on one line).`);
+    issues.push(`BINANCE_WALLET_API_SECRET length is ${secret.length} (expected ~64 on one line).`);
   }
   if (issues.length) {
     console.error("\n⚠️  Key shape looks wrong in .env:");

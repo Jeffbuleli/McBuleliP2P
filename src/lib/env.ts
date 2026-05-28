@@ -25,17 +25,27 @@ export function getAmountTolerance(): number {
   return Number.isFinite(v) ? v : 1e-8;
 }
 
+/** USDT deposit/withdraw rails — only BINANCE_WALLET_* (not BINANCE_API_*). */
+export function hasBinanceWalletKeys(): boolean {
+  const key = process.env.BINANCE_WALLET_API_KEY?.trim();
+  const secret = process.env.BINANCE_WALLET_API_SECRET?.trim();
+  return Boolean(key && secret);
+}
+
+export function getBinanceWalletCredentials(): { key: string; secret: string } {
+  const key = process.env.BINANCE_WALLET_API_KEY?.trim() ?? "";
+  const secret = process.env.BINANCE_WALLET_API_SECRET?.trim() ?? "";
+  if (!key || !secret) {
+    throw new Error(
+      "BINANCE_WALLET_API_KEY and BINANCE_WALLET_API_SECRET must be set in server .env",
+    );
+  }
+  return { key, secret };
+}
+
+/** @deprecated Use hasBinanceWalletKeys — wallet no longer reads BINANCE_API_*. */
 export function hasBinanceKeys(): boolean {
-  const key =
-    process.env.BINANCE_WALLET_API_KEY?.trim() ??
-    process.env.BINANCE_API_KEY?.trim();
-  const secret =
-    process.env.BINANCE_WALLET_API_SECRET?.trim() ??
-    process.env.BINANCE_API_SECRET?.trim();
-  return Boolean(
-    key &&
-      secret,
-  );
+  return hasBinanceWalletKeys();
 }
 
 export function hasOkxKeys(): boolean {

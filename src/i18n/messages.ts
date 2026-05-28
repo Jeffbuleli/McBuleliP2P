@@ -2753,11 +2753,11 @@ export const en = {
   wallet_binance_error_demo_keys:
     "Binance refused the connection. Use API keys from demo.binance.com (not binance.com) and set BINANCE_ENV=demo or BINANCE_API_BASE=https://demo-api.binance.com on the server.",
   wallet_binance_error_live_keys:
-    "Binance refused the wallet API. Check that BINANCE_API_* in server .env matches binance.com (not demo), with Reading enabled and McBuleli server IP whitelisted if restricted.",
+    "Binance refused the wallet API. Check BINANCE_WALLET_API_KEY / BINANCE_WALLET_API_SECRET on the server (binance.com, not demo), Reading + Withdrawals enabled, IP whitelisted if restricted.",
   wallet_binance_error_wallet_permission:
     "Your keys work for BOT LIVE (Spot/Futures) but USDT deposits use Binance Wallet API (/sapi/capital/*). On binance.com → API Management, enable Withdrawals on the platform key in server .env — or use a dedicated key with Reading + Withdrawals (keep bot keys without withdrawals).",
   wallet_binance_error_reading:
-    "Enable Reading on the platform API key (BINANCE_API_KEY / BINANCE_API_SECRET in server .env).",
+    "Enable Reading on the wallet API key (BINANCE_WALLET_API_KEY / BINANCE_WALLET_API_SECRET in server .env).",
   wallet_binance_error_ip:
     "Binance IP restriction: add McBuleli’s server outbound IP to your API key whitelist on binance.com (or demo.binance.com for demo keys).",
   wallet_binance_env_demo: "Demo · demo.binance.com",
@@ -2804,7 +2804,7 @@ export const en = {
   deposit_routes_load_error:
     "Could not load deposit options. Check your connection and try again.",
   deposit_binance_not_configured:
-    "USDT deposits are not configured on the server (Binance API keys).",
+    "USDT deposits are not configured (set BINANCE_WALLET_API_KEY and BINANCE_WALLET_API_SECRET on the server).",
   deposit_binance_setup_hint:
     "USDT deposits are configured but Binance rejected the connection. Check API permissions (Reading + Withdrawals), IP whitelist, and demo vs live keys.",
   continue: "Continue",
@@ -5931,11 +5931,11 @@ export const fr: Messages = {
   wallet_binance_error_demo_keys:
     "Binance a refusé la connexion. Utilisez des clés créées sur demo.binance.com (pas binance.com) et BINANCE_ENV=demo ou BINANCE_API_BASE=https://demo-api.binance.com sur le serveur.",
   wallet_binance_error_live_keys:
-    "Binance a refusé l’API portefeuille. Vérifiez que BINANCE_API_* sur le serveur correspond à binance.com (pas démo), avec Lecture activée et IP serveur McBuleli en liste blanche si restreint.",
+    "Binance a refusé l’API portefeuille. Vérifiez BINANCE_WALLET_API_KEY / BINANCE_WALLET_API_SECRET (binance.com, pas démo), Lecture + Retraits activés, IP serveur en liste blanche si restreint.",
   wallet_binance_error_wallet_permission:
     "Ces clés passent BOT LIVE (Spot/Futures) mais les dépôts USDT utilisent l’API Wallet Binance (/sapi/capital/*). Sur binance.com → Gestion API, activez Retraits sur la clé plateforme (.env serveur) — ou une clé dédiée Lecture + Retraits (gardez les clés bots sans retrait).",
   wallet_binance_error_reading:
-    "Activez Lecture sur la clé API plateforme (BINANCE_API_KEY / BINANCE_API_SECRET dans le .env serveur).",
+    "Activez Lecture sur la clé wallet (BINANCE_WALLET_API_KEY / BINANCE_WALLET_API_SECRET dans le .env serveur).",
   wallet_binance_error_ip:
     "Restriction IP Binance : ajoutez l’IP sortante du serveur McBuleli à la liste blanche de la clé sur binance.com (ou demo.binance.com en démo).",
   wallet_binance_env_demo: "Démo · demo.binance.com",
@@ -5982,7 +5982,7 @@ export const fr: Messages = {
   deposit_routes_load_error:
     "Impossible de charger les options de dépôt. Vérifiez la connexion.",
   deposit_binance_not_configured:
-    "Dépôt USDT non configuré (clés API Binance sur le serveur).",
+    "Dépôt USDT non configuré (BINANCE_WALLET_API_KEY et BINANCE_WALLET_API_SECRET sur le serveur).",
   deposit_binance_setup_hint:
     "USDT est configuré mais Binance a refusé la connexion. Vérifiez les permissions API (Lecture + Retraits), la liste blanche IP et demo vs live.",
   continue: "Suivant",
