@@ -145,10 +145,18 @@ export async function buildVoteMeta(args: {
   let yesCount = 0;
   let noCount = 0;
   let abstainCount = 0;
+  let option1Count = 0;
+  let option2Count = 0;
+  let option3Count = 0;
+  let option4Count = 0;
   for (const v of votes) {
     if (v.choice === "yes") yesCount++;
     else if (v.choice === "no") noCount++;
-    else abstainCount++;
+    else if (v.choice === "abstain") abstainCount++;
+    else if (v.choice === "option_1") option1Count++;
+    else if (v.choice === "option_2") option2Count++;
+    else if (v.choice === "option_3") option3Count++;
+    else if (v.choice === "option_4") option4Count++;
   }
 
   const voteAudience = (p.voteAudience ?? "members") as import("@/lib/avec/governance/types").VoteAudience;
@@ -158,7 +166,6 @@ export async function buildVoteMeta(args: {
     asOf: p.voteOpensAt ?? p.createdAt ?? new Date(),
   });
   const requiredQuorum = requiredParticipants(eligibleCount, p.requiredQuorumPct);
-  const participated = yesCount + noCount + abstainCount;
   const beneficiaryDisplay = p.beneficiaryUserId
     ? await userDisplayName(p.beneficiaryUserId)
     : undefined;
@@ -172,14 +179,51 @@ export async function buildVoteMeta(args: {
     financialImpactUsdt: p.financialImpactUsdt ? Number(p.financialImpactUsdt) : null,
     justification: p.justification,
   });
+  const hasQuiz = (ballot.quizOptions?.length ?? 0) > 0;
+  const optionTallies = hasQuiz
+    ? [
+        {
+          choice: "option_1" as const,
+          label: ballot.quizOptions?.[0] ?? "Option 1",
+          count: option1Count || yesCount,
+        },
+        {
+          choice: "option_2" as const,
+          label: ballot.quizOptions?.[1] ?? "Option 2",
+          count: option2Count || noCount,
+        },
+        {
+          choice: "option_3" as const,
+          label: ballot.quizOptions?.[2] ?? "Option 3",
+          count: option3Count || abstainCount,
+        },
+        {
+          choice: "option_4" as const,
+          label: ballot.quizOptions?.[3] ?? "Option 4",
+          count: option4Count,
+        },
+      ].filter((x) => x.label)
+    : undefined;
+  const participated = hasQuiz
+    ? (optionTallies ?? []).reduce((n, x) => n + x.count, 0)
+    : yesCount + noCount + abstainCount;
 
   const closesAt = p.voteClosesAt?.getTime() ?? 0;
   const timeRemainingMs =
     p.status === "voting" && closesAt > Date.now() ? closesAt - Date.now() : 0;
-  const majorityProgressPct =
-    yesCount + noCount > 0
+  const majorityProgressPct = hasQuiz
+    ? (() => {
+        const top = [...(optionTallies ?? [])].sort((a, b) => b.count - a.count)[0];
+        return top && participated > 0 ? Math.round((top.count / participated) * 100) : 0;
+      })()
+    : yesCount + noCount > 0
       ? Math.round((yesCount / (yesCount + noCount)) * 100)
       : 0;
+  const sortedTallies = [...(optionTallies ?? [])].sort((a, b) => b.count - a.count);
+  const hasUniqueWinner =
+    sortedTallies.length > 1 ? sortedTallies[0].count > sortedTallies[1].count : sortedTallies.length === 1;
+  const winningChoice = hasUniqueWinner ? sortedTallies[0]?.choice : undefined;
+  const winningLabel = hasUniqueWinner ? sortedTallies[0]?.label : undefined;
 
   return {
     proposalId: p.id,
@@ -205,6 +249,9 @@ export async function buildVoteMeta(args: {
     retryCount: p.retryCount ?? 0,
     quorumReached: participated >= requiredQuorum,
     majorityProgressPct,
+    winningChoice,
+    winningLabel,
+    optionTallies,
     timeRemainingMs,
     executionScheduledAt: p.executionScheduledAt?.toISOString(),
     ballot,

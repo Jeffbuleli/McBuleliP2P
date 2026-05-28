@@ -36,6 +36,9 @@ export function AvecGovernanceVoteMessage({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [myChoice, setMyChoice] = useState<
+    "yes" | "no" | "abstain" | "option_1" | "option_2" | "option_3" | "option_4" | null
+  >(null);
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   if (!meta) {
@@ -57,15 +60,17 @@ export function AvecGovernanceVoteMessage({
   const revealTallies = hasVoted || messageType === "vote_closed" || messageType === "vote_executed";
   const quizOptions = useMemo(() => {
     const fromBallot = (meta.ballot?.quizOptions ?? []).filter(Boolean).slice(0, 4);
-    const fallback = [
-      t("group_gov_vote_yes"),
-      t("group_gov_vote_no"),
-      t("group_gov_vote_abstain"),
-    ];
+    const fallback = [t("group_gov_vote_yes"), t("group_gov_vote_no"), t("group_gov_vote_abstain"), "Option 4"];
     const labels = fromBallot.length > 0 ? fromBallot : fallback;
-    return labels.slice(0, 3).map((label, idx) => ({
+    return labels.slice(0, 4).map((label, idx) => ({
       label: `${t("group_gov_quiz_option_prefix")} ${idx + 1} · ${label}`,
-      choice: (idx === 0 ? "yes" : idx === 1 ? "no" : "abstain") as "yes" | "no" | "abstain",
+      choice: (idx === 0
+        ? "option_1"
+        : idx === 1
+          ? "option_2"
+          : idx === 2
+            ? "option_3"
+            : "option_4") as "option_1" | "option_2" | "option_3" | "option_4",
     }));
   }, [meta.ballot?.quizOptions, t]);
 
@@ -83,14 +88,17 @@ export function AvecGovernanceVoteMessage({
       );
       const j = await res.json().catch(() => ({}));
       if (off) return;
-      if (res.ok) setHasVoted(Boolean((j as { hasVoted?: boolean }).hasVoted));
+      if (res.ok) {
+        setHasVoted(Boolean((j as { hasVoted?: boolean }).hasVoted));
+        setMyChoice((j as { choice?: typeof myChoice }).choice ?? null);
+      }
     })();
     return () => {
       off = true;
     };
   }, [groupId, messageType, meta.proposalId, myUserId]);
 
-  async function vote(choice: "yes" | "no" | "abstain") {
+  async function vote(choice: "yes" | "no" | "abstain" | "option_1" | "option_2" | "option_3" | "option_4") {
     if (!canVoteNow || busy) return;
     setBusy(true);
     setErr(null);
@@ -109,6 +117,7 @@ export function AvecGovernanceVoteMessage({
         return;
       }
       setHasVoted(true);
+      setMyChoice(choice);
       onVoted?.();
       if (meta!.ballot?.targetUserId === myUserId) {
         window.dispatchEvent(new CustomEvent("avec-gov-access-changed"));
@@ -149,7 +158,7 @@ export function AvecGovernanceVoteMessage({
               onClick={() => void vote(opt.choice)}
               className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-[10px] font-bold text-[color:var(--fd-text)] disabled:opacity-50"
             >
-              {opt.label}
+              {myChoice === opt.choice ? "✓ " : ""}{opt.label}
             </button>
           ))}
         </div>

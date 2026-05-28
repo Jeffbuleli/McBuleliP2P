@@ -196,6 +196,20 @@ export function AvecGovernanceBallot({
 
       {revealTallies ? (
         <>
+          {(meta.optionTallies ?? []).length > 0 ? (
+            <div className="space-y-1 rounded-xl bg-stone-50 px-2 py-1.5">
+              {(meta.optionTallies ?? []).map((row, idx) => (
+                <p key={row.choice} className="text-[9px] text-[color:var(--fd-muted)]">
+                  {t("group_gov_quiz_option_prefix")} {idx + 1} · {row.label}: {row.count}
+                </p>
+              ))}
+              {meta.winningLabel ? (
+                <p className="text-[9px] font-bold text-emerald-700">
+                  {t("group_gov_quiz_winner")}: {meta.winningLabel}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-stone-50 px-2 py-1.5">
               <p className="text-[8px] font-bold uppercase text-[color:var(--fd-muted)]">

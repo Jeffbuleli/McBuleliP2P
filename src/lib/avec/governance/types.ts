@@ -30,7 +30,14 @@ export type ProposalStatus =
   | "executed"
   | "cancelled";
 
-export type VoteChoice = "yes" | "no" | "abstain";
+export type VoteChoice =
+  | "yes"
+  | "no"
+  | "abstain"
+  | "option_1"
+  | "option_2"
+  | "option_3"
+  | "option_4";
 
 export type RiskTier = "A" | "B" | "C";
 
@@ -59,6 +66,9 @@ export type GovernanceVoteMeta = {
   retryCount?: number;
   quorumReached?: boolean;
   majorityProgressPct?: number;
+  winningChoice?: VoteChoice;
+  winningLabel?: string;
+  optionTallies?: { choice: VoteChoice; label: string; count: number }[];
   timeRemainingMs?: number;
   executionScheduledAt?: string;
   ballot?: import("@/lib/avec/governance/ballot-summary").GovernanceBallotDetail;

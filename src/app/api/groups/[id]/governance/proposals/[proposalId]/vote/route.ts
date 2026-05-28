@@ -7,7 +7,7 @@ import { castGovernanceVote } from "@/lib/avec/governance/vote-engine";
 import { getMyMembershipOrNull } from "@/lib/group-savings-permissions";
 
 const bodyZ = z.object({
-  choice: z.enum(["yes", "no", "abstain"]),
+  choice: z.enum(["yes", "no", "abstain", "option_1", "option_2", "option_3", "option_4"]),
 });
 
 export async function POST(
@@ -51,6 +51,14 @@ export async function GET(
     .limit(1);
   return NextResponse.json({
     hasVoted: Boolean(row?.choice),
-    choice: (row?.choice ?? null) as "yes" | "no" | "abstain" | null,
+    choice: (row?.choice ?? null) as
+      | "yes"
+      | "no"
+      | "abstain"
+      | "option_1"
+      | "option_2"
+      | "option_3"
+      | "option_4"
+      | null,
   });
 }

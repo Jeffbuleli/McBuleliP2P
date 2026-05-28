@@ -23,6 +23,9 @@ export function AvecVueGovernanceCard({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [myChoice, setMyChoice] = useState<
+    "yes" | "no" | "abstain" | "option_1" | "option_2" | "option_3" | "option_4" | null
+  >(null);
 
   const canVote =
     meta.status === "voting" &&
@@ -32,15 +35,17 @@ export function AvecVueGovernanceCard({
   const canVoteNow = canVote && !hasVoted;
   const quizOptions = useMemo(() => {
     const fromBallot = (meta.ballot?.quizOptions ?? []).filter(Boolean).slice(0, 4);
-    const fallback = [
-      t("group_gov_vote_yes"),
-      t("group_gov_vote_no"),
-      t("group_gov_vote_abstain"),
-    ];
+    const fallback = [t("group_gov_vote_yes"), t("group_gov_vote_no"), t("group_gov_vote_abstain"), "Option 4"];
     const labels = fromBallot.length > 0 ? fromBallot : fallback;
-    return labels.slice(0, 3).map((label, idx) => ({
+    return labels.slice(0, 4).map((label, idx) => ({
       label: `${t("group_gov_quiz_option_prefix")} ${idx + 1} · ${label}`,
-      choice: (idx === 0 ? "yes" : idx === 1 ? "no" : "abstain") as "yes" | "no" | "abstain",
+      choice: (idx === 0
+        ? "option_1"
+        : idx === 1
+          ? "option_2"
+          : idx === 2
+            ? "option_3"
+            : "option_4") as "option_1" | "option_2" | "option_3" | "option_4",
     }));
   }, [meta.ballot?.quizOptions, t]);
 
@@ -58,14 +63,17 @@ export function AvecVueGovernanceCard({
       );
       const j = await res.json().catch(() => ({}));
       if (off) return;
-      if (res.ok) setHasVoted(Boolean((j as { hasVoted?: boolean }).hasVoted));
+      if (res.ok) {
+        setHasVoted(Boolean((j as { hasVoted?: boolean }).hasVoted));
+        setMyChoice((j as { choice?: typeof myChoice }).choice ?? null);
+      }
     })();
     return () => {
       off = true;
     };
   }, [groupId, meta.proposalId, meta.status, myUserId]);
 
-  async function vote(choice: "yes" | "no" | "abstain") {
+  async function vote(choice: "yes" | "no" | "abstain" | "option_1" | "option_2" | "option_3" | "option_4") {
     if (!canVoteNow || busy) return;
     setBusy(true);
     setErr(null);
@@ -84,6 +92,7 @@ export function AvecVueGovernanceCard({
         return;
       }
       setHasVoted(true);
+      setMyChoice(choice);
       onVoted?.();
     } finally {
       setBusy(false);
@@ -111,7 +120,7 @@ export function AvecVueGovernanceCard({
             onClick={() => void vote(opt.choice)}
             className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2 text-left text-[10px] font-bold text-[color:var(--fd-text)] disabled:opacity-60"
           >
-            {opt.label}
+            {myChoice === opt.choice ? "✓ " : ""}{opt.label}
           </button>
         ))}
       </div>
@@ -120,12 +129,29 @@ export function AvecVueGovernanceCard({
           {t("group_gov_results_hidden_until_vote")}
         </p>
       ) : (
-        <p className="mt-2 text-[9px] text-[color:var(--fd-muted)]">
-          {t("group_gov_vote_tally")
-            .replace("{yes}", String(meta.yesCount))
-            .replace("{no}", String(meta.noCount))
-            .replace("{abstain}", String(meta.abstainCount))}
-        </p>
+        <>
+          {(meta.optionTallies ?? []).length > 0 ? (
+            <div className="mt-2 space-y-1">
+              {(meta.optionTallies ?? []).map((row, idx) => (
+                <p key={row.choice} className="text-[9px] text-[color:var(--fd-muted)]">
+                  {t("group_gov_quiz_option_prefix")} {idx + 1} · {row.label}: {row.count}
+                </p>
+              ))}
+              {meta.winningLabel ? (
+                <p className="text-[9px] font-bold text-emerald-700">
+                  {t("group_gov_quiz_winner")}: {meta.winningLabel}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-2 text-[9px] text-[color:var(--fd-muted)]">
+              {t("group_gov_vote_tally")
+                .replace("{yes}", String(meta.yesCount))
+                .replace("{no}", String(meta.noCount))
+                .replace("{abstain}", String(meta.abstainCount))}
+            </p>
+          )}
+        </>
       )}
       {err ? (
         <p className="mt-1 text-[9px] text-rose-600">{clientErrorText(t, err)}</p>
