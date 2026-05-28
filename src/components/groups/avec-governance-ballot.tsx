@@ -90,7 +90,10 @@ export function AvecGovernanceBallot({
   const loc = locale === "fr" ? "fr-FR" : "en-US";
   const ballot = meta.ballot;
   const candidateVote = isCandidateVoteType(meta.proposalType);
-  const participated = meta.yesCount + meta.noCount + meta.abstainCount;
+  const participated =
+    (meta.optionTallies ?? []).length > 0
+      ? (meta.optionTallies ?? []).reduce((n, row) => n + row.count, 0)
+      : meta.yesCount + meta.noCount + meta.abstainCount;
   const quorumPct = Math.min(
     100,
     Math.round((participated / Math.max(1, meta.requiredQuorum)) * 100),
@@ -260,12 +263,14 @@ export function AvecGovernanceBallot({
             </div>
           </div>
 
-          <p className="text-[9px] tabular-nums text-[color:var(--fd-muted)]">
-            {t("group_gov_vote_tally")
-              .replace("{yes}", String(meta.yesCount))
-              .replace("{no}", String(meta.noCount))
-              .replace("{abstain}", String(meta.abstainCount))}
-          </p>
+          {(meta.optionTallies ?? []).length === 0 ? (
+            <p className="text-[9px] tabular-nums text-[color:var(--fd-muted)]">
+              {t("group_gov_vote_tally")
+                .replace("{yes}", String(meta.yesCount))
+                .replace("{no}", String(meta.noCount))
+                .replace("{abstain}", String(meta.abstainCount))}
+            </p>
+          ) : null}
         </>
       ) : (
         <p className="text-[9px] text-[color:var(--fd-muted)]">
