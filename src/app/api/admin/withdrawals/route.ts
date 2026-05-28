@@ -65,6 +65,8 @@ export async function GET(req: Request) {
       memoTo: withdrawals.memoTo,
       amount: withdrawals.amount,
       fee: withdrawals.fee,
+      providerFee: withdrawals.providerFee,
+      platformFee: withdrawals.platformFee,
       status: withdrawals.status,
       txid: withdrawals.txid,
       assignedToUserId: withdrawals.assignedToUserId,

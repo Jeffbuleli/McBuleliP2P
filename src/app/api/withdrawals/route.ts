@@ -12,6 +12,11 @@ import {
   parseNetWithdrawal,
   parseNetWithdrawalPi,
 } from "@/lib/withdraw-fees";
+import {
+  piWithdrawFeeSplit,
+  resolveUsdtFeeSplitForNetwork,
+} from "@/lib/withdraw-fee-split";
+import { walletWithdrawAutoEnabled } from "@/lib/usdt-wallet-features";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
 import { applyUsdtWithdrawalAutomation } from "@/lib/wallet-withdraw-automation";
@@ -118,6 +123,13 @@ export async function POST(req: Request) {
       ? USDT_NETWORKS[body.network].binanceNetwork
       : getPiOkxChain();
 
+  const feeSplit =
+    body.asset === "USDT"
+      ? await resolveUsdtFeeSplitForNetwork(body.network, Number(fee))
+      : piWithdrawFeeSplit(fee);
+
+  const usdtProvider = walletWithdrawAutoEnabled() ? "binance" : "manual";
+
   const w = await db.transaction(async (tx) => {
     if (body.asset === "PI") {
       const [deducted] = await tx
@@ -147,6 +159,8 @@ export async function POST(req: Request) {
           memoTo: body.memo?.trim() || null,
           amount: net,
           fee,
+          providerFee: feeSplit.providerFee,
+          platformFee: feeSplit.platformFee,
           status: WithdrawalStatus.PENDING_AGENT,
         })
         .returning();
@@ -172,7 +186,7 @@ export async function POST(req: Request) {
       .insert(withdrawals)
       .values({
         userId,
-        provider: "manual",
+        provider: usdtProvider,
         asset: body.asset,
         networkCanonical: body.network,
         networkCex,
@@ -180,6 +194,8 @@ export async function POST(req: Request) {
         memoTo: body.memo?.trim() || null,
         amount: net,
         fee,
+        providerFee: feeSplit.providerFee,
+        platformFee: feeSplit.platformFee,
         status: WithdrawalStatus.PENDING_AGENT,
       })
       .returning();

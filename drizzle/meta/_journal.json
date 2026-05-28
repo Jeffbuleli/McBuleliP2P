@@ -288,6 +288,13 @@
       "when": 1782000000000,
       "tag": "0048_deposit_session_amount_slot_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1782100000000,
+      "tag": "0049_withdraw_fee_split",
+      "breakpoints": true
     }
   ]
 }

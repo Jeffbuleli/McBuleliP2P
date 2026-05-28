@@ -199,3 +199,58 @@ export async function binanceWithdraw(args: {
     id: string;
   }>;
 }
+
+export type BinanceCoinNetworkConfig = {
+  network: string;
+  withdrawFee: string;
+  withdrawMin?: string;
+  withdrawEnable?: boolean;
+};
+
+export type BinanceCoinConfig = {
+  coin: string;
+  networkList: BinanceCoinNetworkConfig[];
+};
+
+let coinConfigCache: { at: number; rows: BinanceCoinConfig[] } | null = null;
+const COIN_CONFIG_CACHE_MS = 5 * 60 * 1000;
+
+async function fetchBinanceCoinConfigs(): Promise<BinanceCoinConfig[]> {
+  const now = Date.now();
+  if (coinConfigCache && now - coinConfigCache.at < COIN_CONFIG_CACHE_MS) {
+    return coinConfigCache.rows;
+  }
+  const rows = (await signedGet("/sapi/v1/capital/config/getall", {})) as BinanceCoinConfig[];
+  const list = Array.isArray(rows) ? rows : [];
+  coinConfigCache = { at: now, rows: list };
+  return list;
+}
+
+/** Binance USDT withdrawal network fee (0 when promo / free). */
+export async function binanceUsdtWithdrawFee(network: NetworkId): Promise<number> {
+  const configs = await fetchBinanceCoinConfigs();
+  const usdt = configs.find((c) => c.coin === "USDT");
+  const binanceNet = USDT_NETWORKS[network].binanceNetwork;
+  const row = usdt?.networkList?.find((n) => n.network === binanceNet);
+  const fee = Number(row?.withdrawFee ?? 0);
+  return Number.isFinite(fee) && fee >= 0 ? fee : 0;
+}
+
+export type BinanceWithdrawHistoryRow = {
+  id: string;
+  amount: string;
+  transactionFee: string;
+  coin: string;
+  status: number;
+  txId?: string;
+};
+
+export async function binanceWithdrawHistoryById(
+  withdrawId: string,
+): Promise<BinanceWithdrawHistoryRow | null> {
+  const rows = (await signedGet("/sapi/v1/capital/withdraw/history", {
+    coin: "USDT",
+  })) as BinanceWithdrawHistoryRow[];
+  if (!Array.isArray(rows)) return null;
+  return rows.find((r) => r.id === withdrawId) ?? null;
+}

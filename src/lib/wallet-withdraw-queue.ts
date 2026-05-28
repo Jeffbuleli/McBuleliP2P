@@ -7,8 +7,10 @@ import {
   walletWithdrawalBatchDelayMaxMinutes,
   walletWithdrawalBatchDelayMinMinutes,
 } from "@/lib/usdt-wallet-features";
-import { binanceWithdraw } from "@/lib/binance";
+import { binanceWithdraw, binanceWithdrawHistoryById } from "@/lib/binance";
 import { createUserNotification } from "@/lib/notifications-service";
+import type { NetworkId } from "@/lib/networks";
+import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
 export type WithdrawDecision = "AUTO_NOW" | "DELAYED_BATCH" | "MANUAL_REVIEW";
 
@@ -143,19 +145,31 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
 
   if (w.asset.toUpperCase() === "USDT") {
     try {
+      const network = w.networkCanonical as NetworkId;
       const sent = await binanceWithdraw({
         coin: "USDT",
-        network: w.networkCanonical as "TRC20" | "BEP20" | "ERC20",
+        network,
         address: w.toAddress,
         amount: String(w.amount),
         tag: w.memoTo ?? undefined,
       });
+
+      const history = await binanceWithdrawHistoryById(sent.id).catch(() => null);
+      const actualFee = history ? Number(history.transactionFee) : null;
+      const feeSplit = await finalizeUsdtWithdrawFeeSplit({
+        network,
+        userFeeUsdt: Number(w.fee),
+        actualBinanceFeeUsdt: Number.isFinite(actualFee ?? NaN) ? actualFee : null,
+      });
+
       await db
         .update(withdrawals)
         .set({
           status: WithdrawalStatus.COMPLETED,
           externalId: sent.id,
-          txid: sent.id,
+          txid: history?.txId?.trim() || sent.id,
+          providerFee: feeSplit.providerFee,
+          platformFee: feeSplit.platformFee,
           completedAt: new Date(),
         })
         .where(eq(withdrawals.id, w.id));
@@ -166,10 +180,14 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
           withdrawalId: w.id,
           asset: w.asset,
           amount: String(w.amount),
-          txid: sent.id,
+          txid: history?.txId?.trim() || sent.id,
         },
       });
-      return { ok: true, providerRef: sent.id, txid: sent.id };
+      return {
+        ok: true,
+        providerRef: sent.id,
+        txid: history?.txId?.trim() || sent.id,
+      };
     } catch (e) {
       return { ok: false, message: String(e) };
     }

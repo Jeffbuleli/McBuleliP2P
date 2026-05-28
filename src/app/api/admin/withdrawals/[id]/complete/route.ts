@@ -9,6 +9,8 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
+import type { NetworkId } from "@/lib/networks";
+import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
 export async function POST(
   req: Request,
@@ -59,6 +61,14 @@ export async function POST(
     );
   }
 
+  const feeSplit =
+    w.asset.toUpperCase() === "USDT"
+      ? await finalizeUsdtWithdrawFeeSplit({
+          network: w.networkCanonical as NetworkId,
+          userFeeUsdt: Number(w.fee),
+        })
+      : null;
+
   const [updated] = await db
     .update(withdrawals)
     .set({
@@ -67,6 +77,12 @@ export async function POST(
       agentNote: parsed.data.agentNote ?? null,
       processedByUserId: staff.id,
       completedAt: new Date(),
+      ...(feeSplit
+        ? {
+            providerFee: feeSplit.providerFee,
+            platformFee: feeSplit.platformFee,
+          }
+        : {}),
     })
     .where(eq(withdrawals.id, id))
     .returning();

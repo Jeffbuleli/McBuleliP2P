@@ -753,6 +753,14 @@ export const withdrawals = pgTable(
     memoTo: text("memo_to"),
     amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
     fee: numeric("fee", { precision: 36, scale: 18 }).notNull().default("0"),
+    /** CEX network fee (Binance) — paid from user `fee`. */
+    providerFee: numeric("provider_fee", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    /** McBuleli retained portion of user `fee` after provider fee. */
+    platformFee: numeric("platform_fee", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
     status: varchar("status", { length: 32 }).notNull(),
     failureReason: text("failure_reason"),
     externalId: varchar("external_id", { length: 128 }),
