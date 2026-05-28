@@ -15,6 +15,7 @@ import {
 } from "@/lib/withdraw-fees";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
+import { WalletStepUpField } from "@/components/wallet/wallet-step-up-field";
 import {
   FlowCard,
   FlowHubLink,
@@ -43,6 +44,9 @@ export default function WithdrawPage() {
   const [processingOpen, setProcessingOpen] = useState(false);
   const [processingStatus, setProcessingStatus] = useState(WithdrawalStatus.PENDING_AGENT);
   const [successHint, setSuccessHint] = useState<string | null>(null);
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -63,32 +67,70 @@ export default function WithdrawPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/auth/security");
+        if (!res.ok) return;
+        const data = await res.json();
+        setTotpEnabled(Boolean(data.totpEnabled));
+      } catch {
+        /* optional */
+      }
+    })();
+  }, []);
+
   const fee = wAsset === "PI" ? feePi : feeUsdt;
   const netNum = Number(amount);
   const totalDebit =
     Number.isFinite(netNum) && netNum > 0 ? netNum + fee : null;
   const unit = wAsset === "PI" ? "PI" : "USDT";
 
+  function openConfirm() {
+    setConfirmError(null);
+    setTotpCode("");
+    setShowConfirm(true);
+  }
+
   async function submit() {
     setError(null);
+    setConfirmError(null);
     setLoading(true);
     try {
+      const body: Record<string, string> = {
+        asset: wAsset,
+        network: wAsset === "PI" ? PI_MAIN_NETWORK_ID : network,
+        address,
+        amount,
+      };
+      if (totpEnabled && totpCode.trim()) {
+        body.totpCode = totpCode.trim();
+      }
+
       const res = await fetch("/api/withdrawals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          asset: wAsset,
-          network: wAsset === "PI" ? PI_MAIN_NETWORK_ID : network,
-          address,
-          amount,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(formatAuthClientError(data));
-        setShowConfirm(false);
+        const msg = formatAuthClientError(data, t);
+        const code =
+          typeof data === "object" && data && "error" in data
+            ? String((data as { error?: unknown }).error ?? "")
+            : "";
+        const keepModal =
+          code === "totp_required" || code === "totp_invalid";
+        if (keepModal) {
+          setConfirmError(msg);
+        } else {
+          setError(msg);
+          setShowConfirm(false);
+        }
         return;
       }
+      setShowConfirm(false);
+      setTotpCode("");
       const status =
         typeof data.withdrawal?.status === "string"
           ? data.withdrawal.status
@@ -106,7 +148,6 @@ export default function WithdrawPage() {
       }, 2200);
     } finally {
       setLoading(false);
-      setShowConfirm(false);
     }
   }
 
@@ -210,7 +251,7 @@ export default function WithdrawPage() {
 
       <FlowPrimaryBtn
         disabled={!amount || Number(amount) <= 0 || !addrOk || loading}
-        onClick={() => setShowConfirm(true)}
+        onClick={openConfirm}
       >
         {t("withdraw_review")}
       </FlowPrimaryBtn>
@@ -235,17 +276,29 @@ export default function WithdrawPage() {
                 </p>
               ) : null}
             </div>
+            {totpEnabled ? (
+              <WalletStepUpField value={totpCode} onChange={setTotpCode} />
+            ) : null}
+            {confirmError ? (
+              <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+                {confirmError}
+              </p>
+            ) : null}
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setShowConfirm(false)}
+                onClick={() => {
+                  setShowConfirm(false);
+                  setConfirmError(null);
+                  setTotpCode("");
+                }}
                 className="min-h-[48px] rounded-xl border border-[color:var(--fd-border)] font-semibold"
               >
                 {t("back")}
               </button>
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || (totpEnabled && totpCode.trim().length < 6)}
                 onClick={() => void submit()}
                 className="min-h-[48px] rounded-xl bg-[color:var(--fd-primary)] font-bold text-white disabled:opacity-50"
               >

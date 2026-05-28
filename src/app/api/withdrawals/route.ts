@@ -43,7 +43,10 @@ export async function POST(req: Request) {
   const { assertStepUp } = await import("@/lib/auth/step-up");
   const step = await assertStepUp({ userId, totpCode });
   if (!step.ok) {
-    return NextResponse.json({ error: step.error }, { status: 403 });
+    return NextResponse.json(
+      { message: step.error, error: step.error, requiresTotp: step.error === "totp_required" },
+      { status: 403 },
+    );
   }
 
   const parsed = withdrawalSchema.safeParse(raw);
