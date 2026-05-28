@@ -52,6 +52,7 @@ export function depositProgressSteps(status: string): TxStep[] {
   if (status === DepositStatus.FAILED) return withStates(labels, 2, true);
   if (status === DepositStatus.CONFIRMED) return withStates(labels, labels.length, false);
   if (status === DepositStatus.PENDING_VALIDATION) return withStates(labels, 3, false);
+  if (status === DepositStatus.EXPIRED_PENDING_SCAN) return withStates(labels, 2, false);
   if (status === DepositStatus.AWAITING_TXID) return withStates(labels, 2, false);
   if (status === DepositStatus.AWAITING_TRANSFER) return withStates(labels, 1, false);
   return withStates(labels, 0, false);
@@ -69,6 +70,13 @@ export function withdrawalProgressSteps(status: string): TxStep[] {
   }
   if (status === WithdrawalStatus.COMPLETED) return withStates(labels, labels.length, false);
   if (status === WithdrawalStatus.PROCESSING) return withStates(labels, 1, false);
+  if (
+    status === WithdrawalStatus.QUEUED ||
+    status === WithdrawalStatus.DELAYED_BATCH ||
+    status === WithdrawalStatus.PENDING_AGENT
+  ) {
+    return withStates(labels, 0, false);
+  }
   return withStates(labels, 0, false);
 }
 

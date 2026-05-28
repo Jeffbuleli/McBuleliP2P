@@ -26,9 +26,15 @@ export function getAmountTolerance(): number {
 }
 
 export function hasBinanceKeys(): boolean {
+  const key =
+    process.env.BINANCE_WALLET_API_KEY?.trim() ??
+    process.env.BINANCE_API_KEY?.trim();
+  const secret =
+    process.env.BINANCE_WALLET_API_SECRET?.trim() ??
+    process.env.BINANCE_API_SECRET?.trim();
   return Boolean(
-    process.env.BINANCE_API_KEY?.trim() &&
-      process.env.BINANCE_API_SECRET?.trim(),
+    key &&
+      secret,
   );
 }
 

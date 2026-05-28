@@ -14,6 +14,7 @@ import {
 } from "@/lib/withdraw-fees";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
+import { applyUsdtWithdrawalAutomation } from "@/lib/wallet-withdraw-automation";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -180,6 +181,26 @@ export async function POST(req: Request) {
     );
   }
 
+  let finalWithdrawal = w;
+  let automation: Awaited<ReturnType<typeof applyUsdtWithdrawalAutomation>> = null;
+  if (body.asset === "USDT") {
+    const deviceId =
+      typeof raw?.deviceId === "string"
+        ? raw.deviceId
+        : req.headers.get("x-device-id");
+    automation = await applyUsdtWithdrawalAutomation({
+      userId,
+      withdrawalId: w.id,
+      networkCanonical: body.network,
+      address: body.address.trim(),
+      amountNet: net,
+      deviceId,
+    });
+    if (automation) {
+      finalWithdrawal = { ...w, status: automation.status };
+    }
+  }
+
   await createUserNotification({
     userId,
     kind: "withdrawal_queued",
@@ -191,19 +212,34 @@ export async function POST(req: Request) {
     },
   });
 
-  await notifyStaffWithdrawalsScope({
-    kind: "admin_withdrawal_order",
-    payload: {
-      withdrawalId: w.id,
-      asset: body.asset,
-      amount: net,
-      fee,
-    },
-  });
+  if (
+    !automation ||
+    automation.riskLevel === "HIGH" ||
+    finalWithdrawal.status === WithdrawalStatus.PENDING_AGENT
+  ) {
+    await notifyStaffWithdrawalsScope({
+      kind: "admin_withdrawal_order",
+      payload: {
+        withdrawalId: w.id,
+        asset: body.asset,
+        amount: net,
+        fee,
+      },
+    });
+  }
+
+  const message =
+    automation?.messageKey === "withdraw_auto_low"
+      ? "withdraw_auto_low"
+      : automation?.messageKey === "withdraw_auto_medium"
+        ? "withdraw_auto_medium"
+        : "withdraw_manual_review";
 
   return NextResponse.json({
-    withdrawal: w,
-    message:
-      "Withdrawal queued. Our team will process it and you will see the on-chain TXID once sent.",
+    withdrawal: finalWithdrawal,
+    risk: automation
+      ? { level: automation.riskLevel, score: automation.riskScore }
+      : null,
+    message,
   });
 }

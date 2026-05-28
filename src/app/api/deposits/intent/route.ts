@@ -15,6 +15,8 @@ import { fmtWalletAmount } from "@/lib/wallet-types";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { getPiReceiveAddressForDeposits } from "@/lib/pi-receive-address";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
+import { createDepositSession } from "@/lib/wallet-deposit-sessions";
+import { walletDepositAutoEnabled } from "@/lib/usdt-wallet-features";
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -167,10 +169,41 @@ export async function POST(req: Request) {
     })
     .returning();
 
+  const declared = Number(declaredStr);
+  let session:
+    | {
+        id: string;
+        expiresAt: string;
+        graceUntil: string;
+        expectedAmount: string;
+      }
+    | null = null;
+  if (walletDepositAutoEnabled() && row.asset === "USDT") {
+    try {
+      session = await createDepositSession({
+        userId,
+        depositId: row.id,
+        networkCanonical: row.networkCanonical,
+        sharedAddress: row.addressShown,
+        memoShown: row.memoShown,
+        declaredAmount: declared,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg === "deposit_amount_slot_exhausted") {
+        return NextResponse.json(
+          { message: "deposit_amount_slot_exhausted" },
+          { status: 503 },
+        );
+      }
+      throw e;
+    }
+  }
+
   await notifyStaffWithdrawalsScope({
     kind: "admin_deposit_order",
     payload: { depositId: row.id, asset: row.asset },
   });
 
-  return NextResponse.json({ deposit: row });
+  return NextResponse.json({ deposit: row, session });
 }

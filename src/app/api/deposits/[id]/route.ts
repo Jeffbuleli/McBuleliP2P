@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { getDb, deposits } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { getSessionByDepositId } from "@/lib/wallet-deposit-sessions";
 
 export async function GET(
   _req: Request,
@@ -21,5 +22,17 @@ export async function GET(
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json({ deposit: row });
+  const session = await getSessionByDepositId(row.id);
+  return NextResponse.json({
+    deposit: row,
+    session: session
+      ? {
+          id: session.id,
+          status: session.status,
+          expectedAmount: String(session.expectedAmount),
+          expiresAt: session.expiresAt.toISOString(),
+          graceUntil: session.graceUntil.toISOString(),
+        }
+      : null,
+  });
 }

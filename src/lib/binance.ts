@@ -19,8 +19,12 @@ function sortedQueryString(params: Record<string, string>): string {
 }
 
 function getCredentials() {
-  const key = process.env.BINANCE_API_KEY?.trim();
-  const secret = process.env.BINANCE_API_SECRET?.trim();
+  const key =
+    process.env.BINANCE_WALLET_API_KEY?.trim() ??
+    process.env.BINANCE_API_KEY?.trim();
+  const secret =
+    process.env.BINANCE_WALLET_API_SECRET?.trim() ??
+    process.env.BINANCE_API_SECRET?.trim();
   if (!key || !secret) {
     throw new Error("Binance API credentials are not configured");
   }
@@ -155,6 +159,21 @@ export async function binanceDepositHistoryByTxid(args: {
   const rows = (await signedGet("/sapi/v1/capital/deposit/hisrec", {
     coin: args.coin,
     txId: args.txId,
+  })) as BinanceDepositRow[];
+  return Array.isArray(rows) ? rows : [];
+}
+
+export async function binanceRecentDepositHistory(args: {
+  coin: string;
+  startTimeMs: number;
+  endTimeMs?: number;
+  limit?: number;
+}) {
+  const rows = (await signedGet("/sapi/v1/capital/deposit/hisrec", {
+    coin: args.coin,
+    startTime: String(args.startTimeMs),
+    ...(args.endTimeMs ? { endTime: String(args.endTimeMs) } : {}),
+    ...(args.limit ? { limit: String(args.limit) } : {}),
   })) as BinanceDepositRow[];
   return Array.isArray(rows) ? rows : [];
 }

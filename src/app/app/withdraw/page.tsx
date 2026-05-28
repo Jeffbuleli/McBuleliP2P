@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { NetworkId } from "@/lib/networks";
 import { NetworkPicker } from "@/components/wallet/network-picker";
+import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
@@ -40,6 +41,8 @@ export default function WithdrawPage() {
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
   const [minUsdt, setMinUsdt] = useState(10);
   const [processingOpen, setProcessingOpen] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(WithdrawalStatus.PENDING_AGENT);
+  const [successHint, setSuccessHint] = useState<string | null>(null);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -86,6 +89,16 @@ export default function WithdrawPage() {
         setShowConfirm(false);
         return;
       }
+      const status =
+        typeof data.withdrawal?.status === "string"
+          ? data.withdrawal.status
+          : WithdrawalStatus.PENDING_AGENT;
+      setProcessingStatus(status);
+      setSuccessHint(
+        typeof data.message === "string"
+          ? clientErrorText(t, data.message)
+          : null,
+      );
       setProcessingOpen(true);
       window.setTimeout(() => {
         router.push("/app/wallet/history");
@@ -248,7 +261,8 @@ export default function WithdrawPage() {
       <ProcessingSheet
         open={processingOpen}
         title={t("withdraw_title")}
-        steps={withdrawalProgressSteps(WithdrawalStatus.PENDING_AGENT)}
+        subtitle={successHint ?? undefined}
+        steps={withdrawalProgressSteps(processingStatus)}
         onClose={() => setProcessingOpen(false)}
       />
     </WalletFlowShell>

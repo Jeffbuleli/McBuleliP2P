@@ -5,6 +5,7 @@ const I18N_PREFIXES = [
   "staking_",
   "p2p_",
   "deposit_",
+  "withdraw_",
   "wallet_binance_",
   "lp_pool_",
   "pool_",

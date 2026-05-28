@@ -11,6 +11,8 @@ import { depositProgressSteps } from "@/lib/transaction-steps";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import { IconCopy } from "@/components/icons/flow-icons";
+import { DepositExactAmountCard } from "@/components/wallet/deposit-exact-amount-card";
+import { DepositStatusChip } from "@/components/wallet/deposit-status-chip";
 import {
   FlowCard,
   FlowHubLink,
@@ -38,10 +40,21 @@ type Deposit = {
   provider: string;
 };
 
+type DepositSession = {
+  id: string;
+  status: string;
+  expectedAmount: string;
+  expiresAt: string;
+  graceUntil: string;
+} | null;
+
 function depositStatusLine(t: (k: keyof Messages) => string, status: string): string {
   if (status === DepositStatus.AWAITING_TRANSFER) return t("deposit_status_awaiting_transfer");
   if (status === DepositStatus.AWAITING_TXID) return t("deposit_status_awaiting_txid");
   if (status === DepositStatus.PENDING_VALIDATION) return t("deposit_status_pending_validation");
+  if (status === DepositStatus.EXPIRED_PENDING_SCAN) {
+    return t("deposit_status_expired_pending_scan");
+  }
   if (status === DepositStatus.CONFIRMED) return t("deposit_status_confirmed");
   if (status === DepositStatus.FAILED) return t("deposit_status_failed");
   return status;
@@ -53,9 +66,11 @@ export default function DepositDetailPage() {
   const router = useRouter();
   const id = params.id;
   const [deposit, setDeposit] = useState<Deposit | null>(null);
+  const [session, setSession] = useState<DepositSession>(null);
   const [txid, setTxid] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(0);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/deposits/${id}`);
@@ -66,7 +81,22 @@ export default function DepositDetailPage() {
       return;
     }
     setDeposit(data.deposit);
+    setSession((data as { session?: DepositSession }).session ?? null);
   }, [id]);
+
+  useEffect(() => {
+    if (!session?.expiresAt) {
+      setCountdown(0);
+      return;
+    }
+    const tick = () => {
+      const ms = new Date(session.expiresAt).getTime() - Date.now();
+      setCountdown(Math.max(0, Math.floor(ms / 1000)));
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [session?.expiresAt]);
 
   useEffect(() => {
     void load().finally(() => setLoading(false));
@@ -141,8 +171,18 @@ export default function DepositDetailPage() {
   const nid = parseNetwork(deposit.networkCanonical);
   const net = nid ? USDT_NETWORKS[nid] : null;
   const networkLabel = isPiMain ? "Pi" : (net?.label ?? deposit.networkCanonical);
-  const showTxid = deposit.status === DepositStatus.AWAITING_TXID;
+  const sessionAmbiguous = session?.status === "AMBIGUOUS";
+  const autoDetect =
+    session != null &&
+    !sessionAmbiguous &&
+    deposit.asset === "USDT" &&
+    deposit.provider === "binance";
+  const showTxid = !autoDetect && deposit.status === DepositStatus.AWAITING_TXID;
   const steps = depositProgressSteps(deposit.status);
+  const showExactAmount =
+    Boolean(session?.expectedAmount) &&
+    deposit.status === DepositStatus.AWAITING_TRANSFER &&
+    !sessionAmbiguous;
 
   const copy = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -156,6 +196,27 @@ export default function DepositDetailPage() {
       subtitle={depositStatusLine(t, deposit.status)}
     >
       <TransactionStepper steps={steps} />
+
+      {showExactAmount && session ? (
+        <DepositExactAmountCard
+          expectedAmount={session.expectedAmount}
+          asset={deposit.asset}
+          countdownSec={countdown}
+          onCopied={() => setMsg(t("copy_done"))}
+        />
+      ) : null}
+
+      {autoDetect && deposit.status === DepositStatus.AWAITING_TRANSFER ? (
+        <DepositStatusChip variant="auto" />
+      ) : null}
+
+      {sessionAmbiguous || deposit.failureReason === "deposit_amount_ambiguous" ? (
+        <DepositStatusChip variant="ambiguous" />
+      ) : null}
+
+      {deposit.status === DepositStatus.EXPIRED_PENDING_SCAN ? (
+        <DepositStatusChip variant="expired" />
+      ) : null}
 
       {deposit.status === DepositStatus.CONFIRMED ? (
         <StatusOutcomeBanner
@@ -192,13 +253,16 @@ export default function DepositDetailPage() {
       </FlowCard>
 
       <FlowCard className="mt-3">
-        <p className="break-all font-mono text-sm text-[color:var(--fd-text)]">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {t("deposit_copy")}
+        </p>
+        <p className="mt-1 break-all font-mono text-sm text-[color:var(--fd-text)]">
           {deposit.addressShown}
         </p>
         <button
           type="button"
           onClick={() => void copy(deposit.addressShown)}
-          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[color:var(--fd-primary)] text-sm font-bold text-white active:scale-[0.98]"
+          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border-2 border-[color:var(--fd-primary)] bg-white text-sm font-bold text-[color:var(--fd-primary)] active:scale-[0.98]"
         >
           <IconCopy className="h-4 w-4" />
           {t("deposit_copy")}
@@ -228,7 +292,7 @@ export default function DepositDetailPage() {
           <button
             type="button"
             onClick={() => void copy(deposit.memoShown!)}
-            className="mt-2 flex items-center gap-1 text-sm font-semibold text-rose-800"
+            className="mt-2 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-rose-800 text-sm font-bold text-white"
           >
             <IconCopy className="h-4 w-4" />
             {t("deposit_copy")}
@@ -236,11 +300,11 @@ export default function DepositDetailPage() {
         </FlowCard>
       ) : null}
 
-      {deposit.status === DepositStatus.AWAITING_TRANSFER ? (
+      {!autoDetect && deposit.status === DepositStatus.AWAITING_TRANSFER ? (
         <div className="mt-3">
-        <FlowPrimaryBtn onClick={() => void markSent()}>
-          {t("deposit_sent_btn", { asset: deposit.asset })}
-        </FlowPrimaryBtn>
+          <FlowPrimaryBtn onClick={() => void markSent()}>
+            {t("deposit_sent_btn", { asset: deposit.asset })}
+          </FlowPrimaryBtn>
         </div>
       ) : null}
 
@@ -269,9 +333,9 @@ export default function DepositDetailPage() {
 
       {deposit.status === DepositStatus.CONFIRMED ? (
         <div className="mt-3">
-        <FlowPrimaryBtn onClick={() => router.push("/app/wallet")}>
-          {t("wallet_title")}
-        </FlowPrimaryBtn>
+          <FlowPrimaryBtn onClick={() => router.push("/app/wallet")}>
+            {t("wallet_title")}
+          </FlowPrimaryBtn>
         </div>
       ) : (
         <FlowHubLink label={t("wallet_title")} />

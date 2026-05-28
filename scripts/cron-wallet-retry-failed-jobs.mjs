@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+const base = (
+  process.env.MCBULELI_API_URL ??
+  process.env.APP_URL ??
+  "https://mcbuleli.org"
+).replace(/\/$/, "");
+const secret = (
+  process.env.WALLET_CRON_SECRET ??
+  process.env.CRON_SECRET ??
+  process.env.MCBULELI_CRON_SECRET ??
+  ""
+).trim();
+
+if (!secret || secret.length < 12) {
+  console.error("[cron-wallet-retry-failed-jobs] missing WALLET_CRON_SECRET/CRON_SECRET");
+  process.exit(1);
+}
+
+const res = await fetch(`${base}/api/internal/wallet/retry-failed-jobs`, {
+  method: "POST",
+  headers: {
+    "x-cron-secret": secret,
+    "Content-Type": "application/json",
+  },
+});
+const text = await res.text();
+if (!res.ok) {
+  console.error("[cron-wallet-retry-failed-jobs] HTTP", res.status, text.slice(0, 400));
+  process.exit(1);
+}
+console.log(text.trim());

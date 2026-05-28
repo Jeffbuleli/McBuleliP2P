@@ -133,7 +133,10 @@ export default function DepositWizardPage() {
           );
           return;
         }
-        if (msg.startsWith("deposit_") || msg.startsWith("wallet_binance_")) {
+        if (
+          msg.startsWith("deposit_") ||
+          msg.startsWith("wallet_binance_")
+        ) {
           const detail =
             typeof rec.detail === "string" && rec.detail.trim()
               ? rec.detail.trim()

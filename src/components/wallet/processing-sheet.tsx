@@ -9,11 +9,13 @@ import type { TxStep } from "@/lib/transaction-steps";
 export function ProcessingSheet({
   open,
   title,
+  subtitle,
   steps,
   onClose,
 }: {
   open: boolean;
   title: string;
+  subtitle?: string;
   steps: TxStep[];
   onClose?: () => void;
 }) {
@@ -39,7 +41,7 @@ export function ProcessingSheet({
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
         <p className="text-center text-lg font-bold text-[color:var(--fd-text)]">{title}</p>
         <p className="mt-1 text-center text-xs text-[color:var(--fd-muted)]">
-          {t("status_ui_processing")}
+          {subtitle ?? t("status_ui_processing")}
         </p>
         <div className="mt-4">
           <TransactionStepper steps={steps} compact />

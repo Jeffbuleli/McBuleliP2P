@@ -773,6 +773,136 @@ export const withdrawals = pgTable(
   ],
 );
 
+export const depositSessions = pgTable(
+  "deposit_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    depositId: uuid("deposit_id").references(() => deposits.id, {
+      onDelete: "set null",
+    }),
+    asset: varchar("asset", { length: 16 }).notNull().default("USDT"),
+    networkCanonical: varchar("network_canonical", { length: 32 }).notNull(),
+    sharedAddress: text("shared_address").notNull(),
+    memoShown: text("memo_shown"),
+    expectedAmount: numeric("expected_amount", { precision: 36, scale: 18 }).notNull(),
+    declaredAmount: numeric("declared_amount", { precision: 36, scale: 18 }).notNull(),
+    status: varchar("status", { length: 32 }).notNull().default("ACTIVE"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    graceUntil: timestamp("grace_until", { withTimezone: true }).notNull(),
+    matchedTxid: varchar("matched_txid", { length: 512 }),
+    matchMeta: jsonb("match_meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("deposit_sessions_user_idx").on(t.userId, t.createdAt),
+    index("deposit_sessions_status_idx").on(t.status, t.expiresAt),
+    uniqueIndex("deposit_sessions_matched_txid_uidx")
+      .on(t.matchedTxid)
+      .where(sql`${t.matchedTxid} IS NOT NULL`),
+    uniqueIndex("deposit_sessions_open_amount_slot_uidx")
+      .on(t.networkCanonical, t.sharedAddress, t.expectedAmount)
+      .where(sql`${t.status} IN ('ACTIVE', 'EXPIRED')`),
+  ],
+);
+
+export const withdrawalRiskEvents = pgTable(
+  "withdrawal_risk_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    withdrawalId: uuid("withdrawal_id")
+      .notNull()
+      .references(() => withdrawals.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    level: varchar("level", { length: 16 }).notNull(),
+    reasons: jsonb("reasons").$type<string[]>().notNull().default([]),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("withdrawal_risk_events_withdrawal_idx").on(t.withdrawalId),
+    index("withdrawal_risk_events_user_created_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+export const withdrawalQueueJobs = pgTable(
+  "withdrawal_queue_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    withdrawalId: uuid("withdrawal_id")
+      .notNull()
+      .references(() => withdrawals.id, { onDelete: "cascade" }),
+    idempotencyKey: varchar("idempotency_key", { length: 96 }).notNull(),
+    status: varchar("status", { length: 24 }).notNull().default("queued"),
+    runAfter: timestamp("run_after", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(5),
+    lockToken: varchar("lock_token", { length: 64 }),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    providerRef: varchar("provider_ref", { length: 128 }),
+    txid: varchar("txid", { length: 512 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("withdrawal_queue_jobs_idempotency_uidx").on(t.idempotencyKey),
+    uniqueIndex("withdrawal_queue_jobs_withdrawal_uidx").on(t.withdrawalId),
+    index("withdrawal_queue_jobs_status_run_after_idx").on(t.status, t.runAfter),
+  ],
+);
+
+export const withdrawalAddressWhitelist = pgTable(
+  "withdrawal_address_whitelist",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    asset: varchar("asset", { length: 16 }).notNull().default("USDT"),
+    networkCanonical: varchar("network_canonical", { length: 32 }).notNull(),
+    address: text("address").notNull(),
+    memoTo: text("memo_to"),
+    label: varchar("label", { length: 64 }),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    cooldownUntil: timestamp("cooldown_until", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("withdrawal_address_whitelist_user_addr_uidx").on(
+      t.userId,
+      t.asset,
+      t.networkCanonical,
+      t.address,
+    ),
+    index("withdrawal_address_whitelist_status_idx").on(t.userId, t.status),
+  ],
+);
+
 /** Idempotent handling of PawaPay webhook deliveries (v2). */
 /** Custodial USDⓈ-M-style futures (isolated margin in USDT). */
 export const tradeFuturesPositions = pgTable(
