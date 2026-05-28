@@ -45,6 +45,49 @@ services:
       - key: CRON_SECRET
         sync: false
 
+  # USDT wallet automation — deposit scanner, withdraw worker, retry queue
+  - type: cron
+    name: mcbuleli-wallet-deposit-scan
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/2 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-wallet-deposit-scan.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
+    name: mcbuleli-wallet-withdraw-worker
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/1 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-wallet-withdraw-worker.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
+    name: mcbuleli-wallet-retry-jobs
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/15 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-wallet-retry-failed-jobs.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
   - type: cron
     name: mcbuleli-ai-relay
     runtime: python
