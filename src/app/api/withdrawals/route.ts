@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyWithdrawalQueuedEmail } from "@/lib/email/wallet-crypto-notify";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb, loans, users, withdrawals } from "@/db";
@@ -241,6 +242,16 @@ export async function POST(req: Request) {
       amount: net,
       fee,
     },
+  });
+
+  void notifyWithdrawalQueuedEmail({
+    userId,
+    withdrawalId: w.id,
+    asset: body.asset,
+    amount: net,
+    fee,
+    networkCanonical: body.network,
+    address: body.address.trim(),
   });
 
   if (

@@ -20,6 +20,7 @@ import { getPiOkxChain } from "@/lib/pi-constants";
 import { tryAwardReferralFromCryptoDeposit } from "@/lib/referral-service";
 import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyDepositConfirmedEmail } from "@/lib/email/wallet-crypto-notify";
 
 type DepositRow = InferSelectModel<typeof deposits>;
 
@@ -316,6 +317,15 @@ export async function applyConfirmedDeposit(args: {
       amount: args.amountStr,
       txid: args.txidNorm,
     },
+  });
+
+  void notifyDepositConfirmedEmail({
+    userId: args.userId,
+    depositId: args.deposit.id,
+    asset: args.deposit.asset,
+    amount: args.amountStr,
+    networkCanonical: args.deposit.networkCanonical,
+    txid: args.txidNorm,
   });
 
   await tryAwardReferralFromCryptoDeposit({

@@ -1,10 +1,20 @@
 import { getEmailCopy } from "@/lib/email/copy";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
+import { walletDetailRowsForTemplate } from "@/lib/email/send-wallet-crypto";
 import {
   findTemplateDef,
   type McBuleliTemplateKind,
 } from "@/lib/email/template-definitions";
+
+const WALLET_KINDS = new Set<McBuleliTemplateKind>([
+  "depositUsdt",
+  "depositPi",
+  "withdrawUsdt",
+  "withdrawPi",
+  "withdrawQueuedUsdt",
+  "withdrawQueuedPi",
+]);
 
 export function renderResendTemplateHtml(args: {
   kind: McBuleliTemplateKind;
@@ -22,12 +32,17 @@ export function renderResendTemplateHtml(args: {
     copy = { ...copy, body };
   }
 
+  const detailRows = WALLET_KINDS.has(args.kind)
+    ? walletDetailRowsForTemplate({ kind: args.kind, locale: args.locale })
+    : undefined;
+
   const { html } = renderMcBuleliEmail({
     copy,
     actionUrl: "{{{ACTION_URL}}}",
     illustration: def.illustration,
     locale: args.locale,
     resendVariables: true,
+    detailRows,
   });
   return html;
 }

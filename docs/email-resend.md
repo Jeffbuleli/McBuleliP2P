@@ -19,43 +19,47 @@ Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur
 
 ---
 
-## Inventaire officiel — 5 flux × 2 langues = 10 templates
+## Inventaire — 11 flux × 2 langues = 22 templates
 
-| # | Flux | Déclencheur (code) | Destinataire | Template Resend (alias) | Variables |
-|---|------|-------------------|--------------|------------------------|-----------|
-| 1 | Vérification email | Inscription, renvoi sécurité | Email du compte | `mcbuleli-verify-fr` / `mcbuleli-verify-en` | `ACTION_URL` |
-| 2 | Mot de passe oublié | `POST /api/auth/forgot-password` | Email du compte | `mcbuleli-reset-fr` / `mcbuleli-reset-en` | `ACTION_URL` |
-| 3 | Confirmer nouvel email | Changement email (sécurité) | **Nouvelle** adresse | `mcbuleli-email-change-fr` / `-en` | `ACTION_URL` |
-| 4 | Alerte changement email | Changement email (sécurité) | **Ancienne** adresse | `mcbuleli-email-alert-fr` / `-en` | `ACTION_URL`, `NEW_EMAIL` |
-| 5 | Mot de passe modifié | `POST /api/account/security` (mot de passe) | Email du compte | `mcbuleli-password-changed-fr` / `-en` | `ACTION_URL` |
+### Auth & sécurité (5 flux)
+
+| # | Flux | Déclencheur | Template (alias) | Variables |
+|---|------|-------------|------------------|-----------|
+| 1 | Vérification email | Inscription, renvoi | `mcbuleli-verify-fr` / `-en` | `ACTION_URL` |
+| 2 | Mot de passe oublié | Forgot password | `mcbuleli-reset-fr` / `-en` | `ACTION_URL` |
+| 3 | Confirmer nouvel email | Changement email | `mcbuleli-email-change-fr` / `-en` | `ACTION_URL` |
+| 4 | Alerte changement email | Changement email (ancienne adresse) | `mcbuleli-email-alert-fr` / `-en` | `ACTION_URL`, `NEW_EMAIL` |
+| 5 | Mot de passe modifié | Security settings | `mcbuleli-password-changed-fr` / `-en` | `ACTION_URL` |
+
+### Crypto portefeuille (6 flux)
+
+| # | Flux | Déclencheur (code) | Template (alias) | Variables |
+|---|------|-------------------|------------------|-----------|
+| 6 | Dépôt USDT crédité | `applyConfirmedDeposit` (USDT) | `mcbuleli-deposit-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `TXID` |
+| 7 | Dépôt Pi crédité | `applyConfirmedDeposit` (PI) | `mcbuleli-deposit-pi-fr` / `-en` | idem |
+| 8 | Retrait USDT envoyé | Worker auto / admin complete | `mcbuleli-withdraw-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `FEE`, `TOTAL`, `ADDRESS`, `TXID` |
+| 9 | Retrait Pi envoyé | Admin complete (PI) | `mcbuleli-withdraw-pi-fr` / `-en` | idem |
+| 10 | Retrait USDT en file | `POST /api/withdrawals` | `mcbuleli-withdraw-queued-usdt-fr` / `-en` | sans `TXID` |
+| 11 | Retrait Pi en file | `POST /api/withdrawals` (PI) | `mcbuleli-withdraw-queued-pi-fr` / `-en` | sans `TXID` |
 
 Fichiers source :
 
 - Définitions : `src/lib/email/template-definitions.ts`
 - Textes FR/EN : `src/lib/email/copy.ts`
-- Envoi : `src/lib/email/send-transactional.ts`
+- Envoi auth : `src/lib/email/send-transactional.ts`
+- Envoi crypto : `src/lib/email/send-wallet-crypto.ts` · hooks : `src/lib/email/wallet-crypto-notify.ts`
+- Illustrations : `public/email/email-*.png` · logo : `public/brand/logo.png`
 
 ---
 
-## Sujets (aperçu)
+## Branding (logo & images)
 
-| Flux | FR | EN |
-|------|----|----|
-| Vérification | McBuleli — Confirmez votre email | McBuleli — Confirm your email |
-| Reset MDP | McBuleli — Réinitialiser votre mot de passe | McBuleli — Reset your password |
-| Nouvel email | McBuleli — Confirmer votre nouvel email | McBuleli — Confirm your new email |
-| Alerte email | McBuleli — Changement d'email demandé | McBuleli — Email change requested |
-| MDP modifié | McBuleli — Mot de passe modifié | McBuleli — Password changed |
+Les clients mail bloquent souvent `localhost` pour les images. En prod :
 
----
+- `NEXT_PUBLIC_APP_URL=https://mcbuleli.org` (liens CTA)
+- **`EMAIL_ASSET_BASE_URL=https://mcbuleli.org`** (logo + illustrations dans le HTML — recommandé même en dev si vous testez un envoi réel)
 
-## Hors périmètre Resend (pas de quota McBuleli email)
-
-| Canal | Usage |
-|-------|--------|
-| Notifications in-app | Retraits, dépôts, P2P, KYC… (`notifications-service`) |
-| WhatsApp (OpenWA) | OTP récupération compte |
-| Emails marketing Resend | Onglet Marketing / Broadcasts (quota contacts séparé) |
+En-tête et pied de page affichent **McBuleli** + logo + `hi@mcbuleli.org`.
 
 ---
 
@@ -63,29 +67,28 @@ Fichiers source :
 
 | Variable | Local dev | Production |
 |----------|-----------|------------|
-| `RESEND_API_KEY` | Optionnel (sync templates) | **Obligatoire** |
-| `RESEND_ALLOW_SEND` | `false` ou absent (pas d’envoi réel) | `true` ou absent (envoi actif) |
+| `RESEND_API_KEY` | Optionnel (sync) | **Obligatoire** |
+| `RESEND_ALLOW_SEND` | absent / `false` | absent / `true` |
 | `RESEND_USE_TEMPLATES` | `true` après sync | `true` |
 | `AUTH_EMAIL_FROM` | `McBuleli <noreply@mcbuleli.org>` | idem |
+| `AUTH_EMAIL_REPLY_TO` | `hi@mcbuleli.org` | idem |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://mcbuleli.org` |
+| `EMAIL_ASSET_BASE_URL` | `https://mcbuleli.org` (recommandé) | `https://mcbuleli.org` |
 
 ---
 
 ## Commandes
 
 ```bash
-# Publier / mettre à jour les 10 templates sur Resend (ne consomme pas le quota transactionnel)
+# Publier / mettre à jour les 22 templates (ne consomme pas le quota transactionnel)
 npm run resend:sync-templates
-
-# Tester un flux sans consommer le quota (local)
-# → pas de RESEND_ALLOW_SEND dans .env, lancer l’app et déclencher le flux (log console)
 ```
 
 ---
 
 ## Bonnes pratiques quota
 
-1. **Ne pas utiliser « Send test »** dans Resend pour chaque modification — utiliser l’aperçu intégré, puis un seul test réel avant prod.
-2. En local : **ne pas** mettre `RESEND_ALLOW_SEND=true` sauf pour un test volontaire.
-3. En prod : chaque inscription / reset / changement email = **1 email** (parfois 2 pour changement d’email : alerte + confirmation).
+1. Ne pas abuser de « Send test » dans Resend — aperçu intégré + un test réel avant prod.
+2. En local : pas de `RESEND_ALLOW_SEND=true` sauf test volontaire.
+3. Changement d’email = 2 emails ; retrait = email « en file » + email « envoyé ».
 4. Surveiller **Settings → Usage** sur [resend.com](https://resend.com).

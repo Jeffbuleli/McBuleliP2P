@@ -9,6 +9,7 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
 import type { NetworkId } from "@/lib/networks";
 import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
@@ -99,6 +100,7 @@ export async function POST(
     },
   });
 
+  const txid = parsed.data.txid.trim();
   await createUserNotification({
     userId: w.userId,
     kind: "withdrawal_completed",
@@ -106,8 +108,19 @@ export async function POST(
       withdrawalId: id,
       asset: w.asset,
       amount: w.amount?.toString?.() ?? String(w.amount),
-      txid: parsed.data.txid.trim(),
+      txid,
     },
+  });
+
+  void notifyWithdrawalCompletedEmail({
+    userId: w.userId,
+    withdrawalId: id,
+    asset: w.asset,
+    amount: w.amount?.toString?.() ?? String(w.amount),
+    fee: w.fee?.toString?.() ?? String(w.fee),
+    networkCanonical: w.networkCanonical,
+    address: w.toAddress,
+    txid,
   });
 
   return NextResponse.json({ withdrawal: updated });

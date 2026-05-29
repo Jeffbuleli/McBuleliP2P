@@ -9,6 +9,7 @@ import {
 } from "@/lib/usdt-wallet-features";
 import { binanceWithdraw, binanceWithdrawHistoryById } from "@/lib/binance";
 import { createUserNotification } from "@/lib/notifications-service";
+import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
 import type { NetworkId } from "@/lib/networks";
 import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
@@ -173,6 +174,7 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
           completedAt: new Date(),
         })
         .where(eq(withdrawals.id, w.id));
+      const txid = history?.txId?.trim() || sent.id;
       await createUserNotification({
         userId: w.userId,
         kind: "withdrawal_completed",
@@ -180,13 +182,23 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
           withdrawalId: w.id,
           asset: w.asset,
           amount: String(w.amount),
-          txid: history?.txId?.trim() || sent.id,
+          txid,
         },
+      });
+      void notifyWithdrawalCompletedEmail({
+        userId: w.userId,
+        withdrawalId: w.id,
+        asset: w.asset,
+        amount: String(w.amount),
+        fee: String(w.fee),
+        networkCanonical: w.networkCanonical,
+        address: w.toAddress,
+        txid,
       });
       return {
         ok: true,
         providerRef: sent.id,
-        txid: history?.txId?.trim() || sent.id,
+        txid,
       };
     } catch (e) {
       return { ok: false, message: String(e) };

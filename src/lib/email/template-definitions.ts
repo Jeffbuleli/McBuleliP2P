@@ -1,13 +1,20 @@
 import type { EmailCopyKey } from "@/lib/email/copy";
 import type { EmailIllustration } from "@/lib/email/config";
 import type { EmailLocale } from "@/lib/email/locale";
+import { walletTemplateVariables } from "@/lib/email/wallet-email-details";
 
 export type McBuleliTemplateKind =
   | "verify"
   | "passwordReset"
   | "emailChange"
   | "emailChangeAlert"
-  | "passwordChanged";
+  | "passwordChanged"
+  | "depositUsdt"
+  | "depositPi"
+  | "withdrawUsdt"
+  | "withdrawPi"
+  | "withdrawQueuedUsdt"
+  | "withdrawQueuedPi";
 
 export type McBuleliTemplateDef = {
   kind: McBuleliTemplateKind;
@@ -25,6 +32,12 @@ const ALIAS: Record<McBuleliTemplateKind, string> = {
   emailChange: "email-change",
   emailChangeAlert: "email-alert",
   passwordChanged: "password-changed",
+  depositUsdt: "deposit-usdt",
+  depositPi: "deposit-pi",
+  withdrawUsdt: "withdraw-usdt",
+  withdrawPi: "withdraw-pi",
+  withdrawQueuedUsdt: "withdraw-queued-usdt",
+  withdrawQueuedPi: "withdraw-queued-pi",
 };
 
 export function mcbuleliTemplateAlias(
@@ -34,46 +47,85 @@ export function mcbuleliTemplateAlias(
   return `mcbuleli-${ALIAS[kind]}-${locale}`;
 }
 
-export const MC_BULELI_EMAIL_TEMPLATES: McBuleliTemplateDef[] = (
-  [
-    {
-      kind: "verify",
-      copyKey: "verify",
-      illustration: "verify",
-      variables: ["ACTION_URL"],
-    },
-    {
-      kind: "passwordReset",
-      copyKey: "passwordReset",
-      illustration: "reset",
-      variables: ["ACTION_URL"],
-    },
-    {
-      kind: "emailChange",
-      copyKey: "emailChange",
-      illustration: "change",
-      variables: ["ACTION_URL"],
-    },
-    {
-      kind: "emailChangeAlert",
-      copyKey: "emailChangeAlert",
-      illustration: "security",
-      variables: ["ACTION_URL", "NEW_EMAIL"],
-    },
-    {
-      kind: "passwordChanged",
-      copyKey: "passwordChanged",
-      illustration: "security",
-      variables: ["ACTION_URL"],
-    },
-  ] as const
-).flatMap((base) =>
+const AUTH_TEMPLATES = [
+  {
+    kind: "verify" as const,
+    copyKey: "verify" as const,
+    illustration: "verify" as const,
+    variables: ["ACTION_URL"],
+  },
+  {
+    kind: "passwordReset" as const,
+    copyKey: "passwordReset" as const,
+    illustration: "reset" as const,
+    variables: ["ACTION_URL"],
+  },
+  {
+    kind: "emailChange" as const,
+    copyKey: "emailChange" as const,
+    illustration: "change" as const,
+    variables: ["ACTION_URL"],
+  },
+  {
+    kind: "emailChangeAlert" as const,
+    copyKey: "emailChangeAlert" as const,
+    illustration: "security" as const,
+    variables: ["ACTION_URL", "NEW_EMAIL"],
+  },
+  {
+    kind: "passwordChanged" as const,
+    copyKey: "passwordChanged" as const,
+    illustration: "security" as const,
+    variables: ["ACTION_URL"],
+  },
+];
+
+const WALLET_TEMPLATES = [
+  {
+    kind: "depositUsdt" as const,
+    copyKey: "depositUsdt" as const,
+    illustration: "depositUsdt" as const,
+  },
+  {
+    kind: "depositPi" as const,
+    copyKey: "depositPi" as const,
+    illustration: "depositPi" as const,
+  },
+  {
+    kind: "withdrawUsdt" as const,
+    copyKey: "withdrawUsdt" as const,
+    illustration: "withdrawUsdt" as const,
+  },
+  {
+    kind: "withdrawPi" as const,
+    copyKey: "withdrawPi" as const,
+    illustration: "withdrawPi" as const,
+  },
+  {
+    kind: "withdrawQueuedUsdt" as const,
+    copyKey: "withdrawQueuedUsdt" as const,
+    illustration: "withdrawUsdt" as const,
+  },
+  {
+    kind: "withdrawQueuedPi" as const,
+    copyKey: "withdrawQueuedPi" as const,
+    illustration: "withdrawPi" as const,
+  },
+];
+
+export const MC_BULELI_EMAIL_TEMPLATES: McBuleliTemplateDef[] = [
+  ...AUTH_TEMPLATES,
+  ...WALLET_TEMPLATES,
+].flatMap((base) =>
   (["fr", "en"] as EmailLocale[]).map(
     (locale): McBuleliTemplateDef => ({
       ...base,
       locale,
       alias: mcbuleliTemplateAlias(base.kind, locale),
-      variables: [...base.variables],
+      variables:
+        "variables" in base
+          ? [...base.variables]
+          : walletTemplateVariables(base.kind),
     }),
   ),
 );
