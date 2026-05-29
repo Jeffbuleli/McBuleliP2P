@@ -18,13 +18,14 @@ L’inscription ne bloquait pas car l’unicité était **exacte** sur `email`, 
 ## Déploiement prod
 
 ```bash
-# 1. Migration SQL
+# 1. Migration (adds column)
 npm run db:migrate:render
-# ou appliquer drizzle/0050_user_email_canonical.sql
 
-# 2. Backfill canonical (détecte les doublons existants dans les logs)
+# 2. Backfill canonical values + unique index (if no duplicates)
 npm run db:backfill-email-canonical
 ```
+
+Si le backfill échoue avec `42703`, la colonne n’existait pas : relancer `db:migrate:render` puis le backfill (le script crée aussi la colonne si besoin).
 
 Si le backfill affiche `DUPLICATE canonical`, fusionner à la main :
 
