@@ -54,17 +54,15 @@ Fichiers source :
 
 ## Images (logo & illustrations)
 
-**Envois réels (prod)** : images en pièces jointes **CID** Resend (`cid:mcbuleli-logo`, `cid:mcbuleli-illus-*`) — compatible Gmail, Outlook et mobile. Les `data:` base64 et les templates Resend seuls **ne s’affichent pas** dans la plupart des boîtes mail.
+**Envois réels** : **SVG inline** dans le HTML (comme vos anciens templates Resend qui fonctionnaient). Aucune URL externe, base64 ni pièce jointe CID — compatible Gmail, Outlook et mobile.
 
-**Dashboard Resend (sync)** : HTML avec URLs `https://mcbuleli.org/email/*.png` pour l’aperçu éditeur uniquement.
+`RESEND_USE_TEMPLATES` : laisser **absent ou `false`**. Les templates dashboard sont optionnels (aperçu) ; les envois passent par le HTML généré par l’app.
 
 ```bash
-npm run resend:sync-templates   # optimise PNG + publie les 22 templates (aperçu)
+npm run resend:sync-templates   # met à jour l’aperçu Resend (SVG inline)
 ```
 
-Sur Render : **`RESEND_USE_TEMPLATES` absent ou `false`** (défaut). Ne pas forcer `true` sauf tests variables seules (sans images).
-
-`NEXT_PUBLIC_APP_URL` = liens CTA · `EMAIL_ASSET_BASE_URL` = optionnel pour sync (défaut `https://mcbuleli.org`).
+`NEXT_PUBLIC_APP_URL` = liens des boutons CTA uniquement.
 
 ---
 

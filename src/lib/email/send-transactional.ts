@@ -64,7 +64,7 @@ export async function sendMcBuleliTransactionalEmail(args: {
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
-    imageMode: "cid",
+    imageMode: "svg",
   });
 
   return sendBrandedEmail({
@@ -72,6 +72,5 @@ export async function sendMcBuleliTransactionalEmail(args: {
     subject,
     html,
     text,
-    illustration: def.illustration,
   });
 }

@@ -63,7 +63,7 @@ export async function sendMcBuleliWalletCryptoEmail(args: {
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
-    imageMode: "cid",
+    imageMode: "svg",
     detailRows: args.detailRows,
   });
 
@@ -72,7 +72,6 @@ export async function sendMcBuleliWalletCryptoEmail(args: {
     subject,
     html,
     text,
-    illustration: def.illustration,
   });
 }
 

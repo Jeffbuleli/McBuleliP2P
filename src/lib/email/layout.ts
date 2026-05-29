@@ -1,16 +1,18 @@
 import {
   EMAIL_BRAND,
   EMAIL_FOOTER,
-  type EmailIllustration,
-} from "@/lib/email/config";
-import {
   illustrationUrl,
   logoUrl,
+  type EmailIllustration,
 } from "@/lib/email/config";
 import {
   EMAIL_LOGO_CID,
   emailIllustrationCid,
 } from "@/lib/email/email-inline-images";
+import {
+  emailIllustrationSvg,
+  emailLogoSvg,
+} from "@/lib/email/email-illustrations-svg";
 import type { EmailCopyBlock } from "@/lib/email/copy";
 import type { EmailDetailRow } from "@/lib/email/wallet-email-details";
 
@@ -22,14 +24,14 @@ function escHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export type EmailImageMode = "cid" | "https";
+/** svg = inline (Gmail/mobile safe); https = hosted PNG; cid = legacy attachments */
+export type EmailImageMode = "svg" | "https" | "cid";
 
 export type McBuleliEmailLayoutArgs = {
   copy: EmailCopyBlock;
   actionUrl: string;
   illustration: EmailIllustration;
   locale: "en" | "fr";
-  /** cid = inline attachments (real sends); https = hosted PNGs (Resend template sync). */
   imageMode?: EmailImageMode;
   /** When true, href uses Resend {{{ACTION_URL}}} placeholder. */
   resendVariables?: boolean;
@@ -45,6 +47,33 @@ function emailImageSrc(
     return kind === "logo" ? `cid:${EMAIL_LOGO_CID}` : `cid:${emailIllustrationCid(kind)}`;
   }
   return kind === "logo" ? logoUrl() : illustrationUrl(kind);
+}
+
+function renderLogoBlock(imageMode: EmailImageMode, illustration: EmailIllustration): string {
+  if (imageMode === "svg") {
+    return `<td style="vertical-align:middle;padding-right:10px;">${emailLogoSvg(48)}</td>`;
+  }
+  const src = emailImageSrc("logo", imageMode, illustration);
+  return `<td style="vertical-align:middle;padding-right:10px;"><img src="${src}" width="48" height="48" alt="McBuleli" style="display:block;border:0;border-radius:10px;" /></td>`;
+}
+
+function renderIllustrationBlock(
+  illustration: EmailIllustration,
+  imageMode: EmailImageMode,
+): string {
+  if (imageMode === "svg") {
+    return emailIllustrationSvg(illustration);
+  }
+  const src = emailImageSrc(illustration, imageMode, illustration);
+  return `<img src="${src}" width="200" height="200" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />`;
+}
+
+function renderFooterLogo(imageMode: EmailImageMode, illustration: EmailIllustration): string {
+  if (imageMode === "svg") {
+    return `<div style="margin:0 auto 10px;width:32px;">${emailLogoSvg(32)}</div>`;
+  }
+  const src = emailImageSrc("logo", imageMode, illustration);
+  return `<img src="${src}" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;border-radius:6px;opacity:0.9;" />`;
 }
 
 function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): string {
@@ -71,7 +100,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     locale,
     resendVariables,
     detailRows,
-    imageMode = "cid",
+    imageMode = "svg",
   } = args;
   const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
   const bodyHtml = resendVariables
@@ -89,9 +118,6 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     locale === "fr"
       ? "Support McBuleli"
       : "McBuleli support";
-
-  const logoSrc = emailImageSrc("logo", imageMode, illustration);
-  const illustrationSrc = emailImageSrc(illustration, imageMode, illustration);
 
   const detailsHtml =
     detailRows && detailRows.length > 0
@@ -122,9 +148,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
             <td style="padding:24px 28px 8px;text-align:center;">
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
                 <tr>
-                  <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="${logoSrc}" width="48" height="48" alt="McBuleli" style="display:block;border:0;border-radius:10px;" />
-                  </td>
+                  ${renderLogoBlock(imageMode, illustration)}
                   <td style="vertical-align:middle;text-align:left;">
                     <p style="margin:0;font-size:20px;font-weight:800;color:${EMAIL_BRAND.primary};letter-spacing:-0.02em;">McBuleli</p>
                     <p style="margin:2px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};">${brandTagline}</p>
@@ -135,7 +159,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           </tr>
           <tr>
             <td style="padding:8px 28px 0;text-align:center;">
-              <img src="${illustrationSrc}" width="200" height="200" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />
+              ${renderIllustrationBlock(illustration, imageMode)}
             </td>
           </tr>
           <tr>
@@ -161,7 +185,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           }
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
-              <img src="${logoSrc}" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;border-radius:6px;opacity:0.9;" />
+              ${renderFooterLogo(imageMode, illustration)}
               <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${EMAIL_BRAND.text};">McBuleli</p>
               <p style="margin:0 0 10px;font-size:12px;color:${EMAIL_BRAND.muted};">${escHtml(copy.footerHelp)} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(copy.footerContact)}</a></p>
               <p style="margin:0 0 8px;font-size:12px;color:${EMAIL_BRAND.muted};">
