@@ -1,6 +1,6 @@
 import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
-import { isTechnicalBinanceMessage } from "@/lib/binance-wallet-error-response";
+import { isTechnicalBinanceMessage } from "@/lib/binance-error-display";
 
 /** Parse JSON API errors for display (maps totp_*, withdraw_*, etc. when `t` is passed). */
 export function formatAuthClientError(

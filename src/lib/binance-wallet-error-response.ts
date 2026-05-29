@@ -1,15 +1,8 @@
 import { binanceWalletErrorCode } from "@/lib/binance";
+import { isTechnicalBinanceMessage } from "@/lib/binance-error-display";
 import { isSuperAdminUserId } from "@/lib/bot-super-admin";
 
-/** Raw Binance / JSON strings must never be shown to end users. */
-export function isTechnicalBinanceMessage(msg: string): boolean {
-  const m = msg.trim();
-  if (!m) return false;
-  if (m.startsWith("Binance HTTP")) return true;
-  if (m.startsWith("{") && m.includes('"code"')) return true;
-  if (m.includes("-2015") && m.includes("{")) return true;
-  return false;
-}
+export { isTechnicalBinanceMessage } from "@/lib/binance-error-display";
 
 /** Safe API body for deposit/withdraw Binance failures. */
 export async function binanceWalletErrorPayload(
