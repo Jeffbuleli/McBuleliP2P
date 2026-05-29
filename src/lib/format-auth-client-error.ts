@@ -1,10 +1,12 @@
 import type { Messages } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
+import { isTechnicalBinanceMessage } from "@/lib/binance-wallet-error-response";
 
 /** Parse JSON API errors for display (maps totp_*, withdraw_*, etc. when `t` is passed). */
 export function formatAuthClientError(
   data: unknown,
   t?: (key: keyof Messages, vars?: Record<string, string | number>) => string,
+  opts?: { includeAdminDetail?: boolean },
 ): string {
   if (!data || typeof data !== "object") {
     return t ? t("group_action_failed") : "Something went wrong.";
@@ -16,20 +18,29 @@ export function formatAuthClientError(
       : typeof d.error === "string"
         ? d.error
         : null;
+  const adminDetail =
+    opts?.includeAdminDetail && typeof d.adminDetail === "string"
+      ? d.adminDetail.trim().slice(0, 800)
+      : "";
+
   if (code && t) {
-    const detail = typeof d.detail === "string" ? d.detail.trim() : "";
-    const base = clientErrorText(t, code);
-    if (detail && detail.length <= 240 && !code.includes(detail)) {
-      return `${base} (${detail})`;
-    }
-    return base;
+    const safeCode = isTechnicalBinanceMessage(code)
+      ? "deposit_provider_unavailable"
+      : code;
+    const base = clientErrorText(t, safeCode);
+    return adminDetail ? `${base}\n\n${adminDetail}` : base;
   }
   if (typeof d.message === "string") {
-    const detail = typeof d.detail === "string" ? d.detail.trim() : "";
-    if (detail && detail.length <= 240) {
-      return `${d.message} (${detail})`;
+    const msg = d.message.trim();
+    if (isTechnicalBinanceMessage(msg)) {
+      const base = t ? clientErrorText(t, "deposit_provider_unavailable") : "Could not complete request.";
+      return adminDetail ? `${base}\n\n${adminDetail}` : base;
     }
-    return d.message;
+    if (t) {
+      const base = clientErrorText(t, msg);
+      return adminDetail ? `${base}\n\n${adminDetail}` : base;
+    }
+    return adminDetail ? `${msg}\n\n${adminDetail}` : msg;
   }
   if (typeof d.error === "string") {
     return d.error;

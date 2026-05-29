@@ -5,7 +5,8 @@ import { hasBinanceWalletKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { depositIntentSchema } from "@/lib/validation";
 import { USDT_NETWORKS } from "@/lib/networks";
-import { binanceDepositAddress, binanceWalletErrorCode } from "@/lib/binance";
+import { binanceDepositAddress } from "@/lib/binance";
+import { binanceWalletErrorPayload } from "@/lib/binance-wallet-error-response";
 import { DepositStatus } from "@/lib/status";
 import {
   MIN_DEPOSIT_USDT_FIRST,
@@ -132,21 +133,8 @@ export async function POST(req: Request) {
     address = r.address;
     memo = r.tag?.trim() ? r.tag.trim() : null;
   } catch (e) {
-    const code = await binanceWalletErrorCode(e);
-    const raw = e instanceof Error ? e.message : "Binance request failed";
-    const detail =
-      process.env.NODE_ENV === "development" && code === "deposit_provider_unavailable"
-        ? raw.length > 240
-          ? `${raw.slice(0, 240)}…`
-          : raw
-        : undefined;
-    return NextResponse.json(
-      {
-        message: code,
-        ...(detail ? { detail } : {}),
-      },
-      { status: 503 },
-    );
+    const body = await binanceWalletErrorPayload(e, userId);
+    return NextResponse.json(body, { status: 503 });
   }
 
   const declaredStr = fmtWalletAmount(declaredNum);

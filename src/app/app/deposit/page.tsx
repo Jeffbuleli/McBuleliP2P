@@ -137,21 +137,17 @@ export default function DepositWizardPage() {
           msg.startsWith("deposit_") ||
           msg.startsWith("wallet_binance_")
         ) {
-          const detail =
-            typeof rec.detail === "string" && rec.detail.trim()
-              ? rec.detail.trim()
+          const adminDetail =
+            isAdmin && typeof rec.adminDetail === "string"
+              ? rec.adminDetail.trim()
               : "";
           const base = clientErrorText(t, msg);
-          const showDetail =
-            detail &&
-            msg === "deposit_provider_unavailable" &&
-            process.env.NODE_ENV === "development";
-          setError(showDetail ? `${base} (${detail})` : base);
+          setError(adminDetail ? `${base}\n\n${adminDetail}` : base);
           return;
         }
         setError(
-          formatAuthClientError(data) ||
-            "Could not create deposit. Check server configuration.",
+          formatAuthClientError(data, t, { includeAdminDetail: isAdmin }) ||
+            t("deposit_provider_unavailable"),
         );
         return;
       }
@@ -322,7 +318,9 @@ export default function DepositWizardPage() {
           </label>
 
           {error ? (
-            <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">{error}</p>
+            <p className="whitespace-pre-wrap rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+              {error}
+            </p>
           ) : null}
 
           <FlowPrimaryBtn

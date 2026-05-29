@@ -66,7 +66,11 @@ export function classifyBinanceWalletAuthError(
     if (hint?.enableReading === false) {
       return "wallet_binance_error_reading";
     }
-    if (hint?.ipRestrict === true) {
+    if (
+      hint?.ipRestrict === true ||
+      /\bip\b/.test(lower) ||
+      lower.includes("permissions for action")
+    ) {
       return "wallet_binance_error_ip";
     }
     return env === "demo"

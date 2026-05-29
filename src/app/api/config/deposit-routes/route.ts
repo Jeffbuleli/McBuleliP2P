@@ -5,9 +5,9 @@ import { getSessionUserId } from "@/lib/session";
 
 /** Which on-ramp flows are configured server-side. */
 export async function GET() {
+  const userId = await getSessionUserId();
+  const isAdmin = userId ? await isSuperAdminUserId(userId) : false;
   try {
-    const userId = await getSessionUserId();
-    const isAdmin = userId ? await isSuperAdminUserId(userId) : false;
     const rails = await getWalletRailsSnapshot();
     return NextResponse.json({
       ...rails,
@@ -16,9 +16,13 @@ export async function GET() {
       enabled: rails.usdtBinance || rails.piManual,
     });
   } catch (e) {
-    const detail = e instanceof Error ? e.message : "wallet_rails_error";
+    const raw = e instanceof Error ? e.message : "wallet_rails_error";
     return NextResponse.json(
-      { ok: false, error: "wallet_rails_error", detail },
+      {
+        ok: false,
+        error: "wallet_rails_error",
+        ...(isAdmin ? { adminDetail: raw.slice(0, 800) } : {}),
+      },
       { status: 503 },
     );
   }
