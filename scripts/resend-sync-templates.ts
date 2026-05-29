@@ -1,12 +1,32 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { loadEnvFile } from "node:process";
 import { emailSubject } from "../src/lib/email/copy";
 import { renderResendTemplateHtml } from "../src/lib/email/render-resend-template";
 import { MC_BULELI_EMAIL_TEMPLATES } from "../src/lib/email/template-definitions";
 import { upsertResendTemplate } from "../src/lib/email/send";
 
+function loadLocalEnv(): void {
+  const envPath = resolve(process.cwd(), ".env");
+  if (!existsSync(envPath)) return;
+  try {
+    loadEnvFile(envPath);
+  } catch {
+    /* already loaded or invalid */
+  }
+}
+
+loadLocalEnv();
+
 async function main() {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) {
-    console.error("Missing RESEND_API_KEY. Run: npm run resend:sync-templates (with .env)");
+    const envPath = resolve(process.cwd(), ".env");
+    console.error("Missing RESEND_API_KEY.");
+    console.error(`  cwd: ${process.cwd()}`);
+    console.error(`  .env exists: ${existsSync(envPath)} (${envPath})`);
+    console.error("  Add RESEND_API_KEY=re_… to .env, then run from repo root:");
+    console.error("  npm run resend:sync-templates");
     process.exit(1);
   }
 
