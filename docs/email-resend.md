@@ -1,4 +1,10 @@
-# McBuleli — emails transactionnels (Resend)
+# McBuleli — emails Resend
+
+**Transactionnel** (ce fichier) · **Marketing (Broadcasts)** → [email-marketing.md](./email-marketing.md)
+
+---
+
+# Emails transactionnels
 
 Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur `McBuleli <noreply@mcbuleli.org>` · reply-to `hi@mcbuleli.org`
 

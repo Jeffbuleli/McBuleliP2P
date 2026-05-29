@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-05-29T13:28:53.958Z",
+  "broadcasts": [
+    {
+      "slug": "mcbuleli-welcome-fr",
+      "name": "McBuleli · welcome (FR)",
+      "subject": "Bienvenue sur McBuleli · McBuleli",
+      "html": "mcbuleli-welcome-fr.html"
+    },
+    {
+      "slug": "mcbuleli-welcome-en",
+      "name": "McBuleli · welcome (EN)",
+      "subject": "Welcome to McBuleli · McBuleli",
+      "html": "mcbuleli-welcome-en.html"
+    },
+    {
+      "slug": "mcbuleli-staking-fr",
+      "name": "McBuleli · staking (FR)",
+      "subject": "Gagnez sur vos avoirs · McBuleli",
+      "html": "mcbuleli-staking-fr.html"
+    },
+    {
+      "slug": "mcbuleli-staking-en",
+      "name": "McBuleli · staking (EN)",
+      "subject": "Earn on what you hold · McBuleli",
+      "html": "mcbuleli-staking-en.html"
+    },
+    {
+      "slug": "mcbuleli-p2p-fr",
+      "name": "McBuleli · p2p (FR)",
+      "subject": "Le P2P qui protège les deux parties · McBuleli",
+      "html": "mcbuleli-p2p-fr.html"
+    },
+    {
+      "slug": "mcbuleli-p2p-en",
+      "name": "McBuleli · p2p (EN)",
+      "subject": "P2P that protects both sides · McBuleli",
+      "html": "mcbuleli-p2p-en.html"
+    },
+    {
+      "slug": "mcbuleli-wallet_usdt-fr",
+      "name": "McBuleli · wallet_usdt (FR)",
+      "subject": "Votre hub USDT · McBuleli",
+      "html": "mcbuleli-wallet_usdt-fr.html"
+    },
+    {
+      "slug": "mcbuleli-wallet_usdt-en",
+      "name": "McBuleli · wallet_usdt (EN)",
+      "subject": "Your USDT hub · McBuleli",
+      "html": "mcbuleli-wallet_usdt-en.html"
+    },
+    {
+      "slug": "mcbuleli-avec-fr",
+      "name": "McBuleli · avec (FR)",
+      "subject": "Les groupes AVEC sur McBuleli · McBuleli",
+      "html": "mcbuleli-avec-fr.html"
+    },
+    {
+      "slug": "mcbuleli-avec-en",
+      "name": "McBuleli · avec (EN)",
+      "subject": "AVEC groups on McBuleli · McBuleli",
+      "html": "mcbuleli-avec-en.html"
+    },
+    {
+      "slug": "mcbuleli-kyc-fr",
+      "name": "McBuleli · kyc (FR)",
+      "subject": "Vérifiez une fois, agissez librement · McBuleli",
+      "html": "mcbuleli-kyc-fr.html"
+    },
+    {
+      "slug": "mcbuleli-kyc-en",
+      "name": "McBuleli · kyc (EN)",
+      "subject": "Verify once, move freely · McBuleli",
+      "html": "mcbuleli-kyc-en.html"
+    },
+    {
+      "slug": "mcbuleli-security-fr",
+      "name": "McBuleli · security (FR)",
+      "subject": "Sécurisez votre compte · McBuleli",
+      "html": "mcbuleli-security-fr.html"
+    },
+    {
+      "slug": "mcbuleli-security-en",
+      "name": "McBuleli · security (EN)",
+      "subject": "Lock down your account · McBuleli",
+      "html": "mcbuleli-security-en.html"
+    },
+    {
+      "slug": "mcbuleli-reengage-fr",
+      "name": "McBuleli · reengage (FR)",
+      "subject": "Toujours avec nous ? · McBuleli",
+      "html": "mcbuleli-reengage-fr.html"
+    },
+    {
+      "slug": "mcbuleli-reengage-en",
+      "name": "McBuleli · reengage (EN)",
+      "subject": "Still with us? · McBuleli",
+      "html": "mcbuleli-reengage-en.html"
+    },
+    {
+      "slug": "mcbuleli-changelog-fr",
+      "name": "McBuleli · changelog (FR)",
+      "subject": "Mise à jour produit · McBuleli",
+      "html": "mcbuleli-changelog-fr.html"
+    },
+    {
+      "slug": "mcbuleli-changelog-en",
+      "name": "McBuleli · changelog (EN)",
+      "subject": "Product update · McBuleli",
+      "html": "mcbuleli-changelog-en.html"
+    }
+  ]
+}

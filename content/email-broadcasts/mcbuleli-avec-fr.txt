@@ -1,0 +1,19 @@
+McBuleli
+Épargnez ensemble — gouvernance, prêts, objectifs communs.
+
+Bonjour {{{contact.first_name|ami}}},
+
+Les groupes AVEC sur McBuleli
+
+Créez ou rejoignez un cercle d'épargne avec des règles visibles par tous. Cotisations, paiements et votes — au même endroit.
+Pensé pour les communautés qui se connaissent déjà.
+
+• Registre transparent
+• Gouvernance
+• Aide sociale & prêts
+
+Découvrir les groupes: https://mcbuleli.org/app/groups?utm_source=email&utm_medium=broadcast&utm_campaign=avec
+
+hi@mcbuleli.org
+
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

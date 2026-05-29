@@ -1,0 +1,19 @@
+McBuleli
+Achetez & vendez avec séquestre — compatible mobile money.
+
+Bonjour {{{contact.first_name|ami}}},
+
+Le P2P qui protège les deux parties
+
+Échangez avec de vrais utilisateurs. Les fonds restent sous séquestre jusqu'à la fin du deal.
+Les coordonnées de paiement n'apparaissent que dans l'ordre actif.
+
+• Séquestre systématique
+• Support litiges
+• Rails mobile money
+
+Voir le P2P: https://mcbuleli.org/app/p2p?utm_source=email&utm_medium=broadcast&utm_campaign=p2p
+
+hi@mcbuleli.org
+
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

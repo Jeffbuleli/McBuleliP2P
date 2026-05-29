@@ -1,0 +1,17 @@
+McBuleli
+Votre portefeuille crypto pour l'Afrique — déposer, échanger, gagner.
+
+Bonjour {{{contact.first_name|ami}}},
+
+Bienvenue sur McBuleli
+
+Une app pour l'USDT, le Pi, le P2P mobile money et l'épargne de groupe — simple et rapide.
+Confirmez votre email, faites le KYC quand vous voulez, et alimentez votre portefeuille en quelques minutes.
+
+• Portefeuille · P2P séquestre · Staking · Groupes AVEC
+
+Ouvrir mon portefeuille: https://mcbuleli.org/app/wallet?utm_source=email&utm_medium=broadcast&utm_campaign=welcome
+
+hi@mcbuleli.org
+
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -1,0 +1,19 @@
+McBuleli
+Buy & sell crypto with escrow — mobile money friendly.
+
+Hi {{{contact.first_name|there}}},
+
+P2P that protects both sides
+
+Trade with real people, not guesswork. Funds stay in escrow until the deal is done.
+Payment details appear only inside the active order.
+
+• Escrow on every trade
+• Dispute support
+• Mobile money rails
+
+Browse P2P: https://mcbuleli.org/app/p2p?utm_source=email&utm_medium=broadcast&utm_campaign=p2p
+
+hi@mcbuleli.org
+
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -1,0 +1,16 @@
+McBuleli
+Your wallet is waiting — check balance & latest rates.
+
+Hi {{{contact.first_name|there}}},
+
+Still with us?
+
+Markets move fast. Log in to see your balance, open orders, and staking rewards.
+Need help? Reply to this email or message us on WhatsApp.
+
+
+Log in: https://mcbuleli.org/login?utm_source=email&utm_medium=broadcast&utm_campaign=reengage
+
+hi@mcbuleli.org
+
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

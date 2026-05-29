@@ -1,0 +1,16 @@
+McBuleli
+Passkeys & 2FA — protégez votre solde en deux gestes.
+
+Bonjour {{{contact.first_name|ami}}},
+
+Sécurisez votre compte
+
+Ajoutez une passkey ou une app d'authentification. Retraits et changements sensibles = validation rapide.
+McBuleli ne demandera jamais votre seed phrase ou mot de passe par message.
+
+
+Paramètres sécurité: https://mcbuleli.org/app/profile?utm_source=email&utm_medium=broadcast&utm_campaign=security
+
+hi@mcbuleli.org
+
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

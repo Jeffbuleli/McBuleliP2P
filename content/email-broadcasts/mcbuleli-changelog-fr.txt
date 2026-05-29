@@ -1,0 +1,16 @@
+McBuleli
+Nouveautés McBuleli — fonctions & correctifs.
+
+Bonjour {{{contact.first_name|ami}}},
+
+Mise à jour produit
+
+Améliorations portefeuille, P2P et earn ce mois-ci. Dépôts plus fluides, statuts plus clairs, meilleure expérience mobile.
+Ouvrez l'app pour le détail — cet email reste volontairement court.
+
+
+Voir les nouveautés: https://mcbuleli.org/app/wallet?utm_source=email&utm_medium=broadcast&utm_campaign=changelog
+
+hi@mcbuleli.org
+
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}
