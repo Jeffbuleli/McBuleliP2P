@@ -18,6 +18,32 @@ import { getPiReceiveAddressForDeposits } from "@/lib/pi-receive-address";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { createDepositSession } from "@/lib/wallet-deposit-sessions";
 import { walletDepositAutoEnabled } from "@/lib/usdt-wallet-features";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
+import { notifyDepositIntentEmail } from "@/lib/email/wallet-crypto-notify";
+
+function scheduleDepositIntentEmail(args: {
+  req: Request;
+  userId: string;
+  depositId: string;
+  asset: string;
+  amount: string;
+  networkCanonical: string;
+  depositAddress: string;
+}) {
+  scheduleEmailTask(async () => {
+    const locale = await resolveEmailLocale(args.req);
+    await notifyDepositIntentEmail({
+      userId: args.userId,
+      depositId: args.depositId,
+      asset: args.asset,
+      amount: args.amount,
+      networkCanonical: args.networkCanonical,
+      depositAddress: args.depositAddress,
+      locale,
+    });
+  });
+}
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -81,6 +107,15 @@ export async function POST(req: Request) {
     await notifyStaffWithdrawalsScope({
       kind: "admin_deposit_order",
       payload: { depositId: row.id, asset: row.asset },
+    });
+    scheduleDepositIntentEmail({
+      req,
+      userId,
+      depositId: row.id,
+      asset: row.asset,
+      amount: fmtWalletAmount(declaredNum),
+      networkCanonical: row.networkCanonical,
+      depositAddress: row.addressShown,
     });
     return NextResponse.json({ deposit: row });
   }
@@ -191,6 +226,16 @@ export async function POST(req: Request) {
   await notifyStaffWithdrawalsScope({
     kind: "admin_deposit_order",
     payload: { depositId: row.id, asset: row.asset },
+  });
+
+  scheduleDepositIntentEmail({
+    req,
+    userId,
+    depositId: row.id,
+    asset: row.asset,
+    amount: declaredStr,
+    networkCanonical: row.networkCanonical,
+    depositAddress: row.addressShown,
   });
 
   return NextResponse.json({ deposit: row, session });

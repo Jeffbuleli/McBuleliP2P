@@ -7,6 +7,9 @@ import { normalizeTxid } from "@/lib/networks";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { DepositStatus } from "@/lib/status";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
+import { notifyDepositPendingEmail } from "@/lib/email/wallet-crypto-notify";
 
 export async function POST(
   req: Request,
@@ -98,6 +101,20 @@ export async function POST(
   await notifyStaffWithdrawalsScope({
     kind: "admin_deposit_review",
     payload: { depositId: id, asset: d.asset },
+  });
+
+  const amountStr = d.declaredAmountUsdt ?? "0";
+  scheduleEmailTask(async () => {
+    const locale = await resolveEmailLocale(req);
+    await notifyDepositPendingEmail({
+      userId,
+      depositId: id,
+      asset: d.asset,
+      amount: amountStr,
+      networkCanonical: d.networkCanonical,
+      txid: txidNorm,
+      locale,
+    });
   });
 
   return NextResponse.json({

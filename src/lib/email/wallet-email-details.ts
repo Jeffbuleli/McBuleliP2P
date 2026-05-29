@@ -11,7 +11,9 @@ const LABELS = {
     fee: "Frais de retrait",
     total: "Total débité",
     address: "Adresse",
+    depositAddress: "Adresse de dépôt",
     txid: "TXID",
+    reason: "Motif",
   },
   en: {
     amount: "Amount",
@@ -19,26 +21,59 @@ const LABELS = {
     fee: "Withdrawal fee",
     total: "Total debited",
     address: "Address",
+    depositAddress: "Deposit address",
     txid: "TXID",
+    reason: "Reason",
   },
 } as const;
 
-function isDepositKind(kind: McBuleliTemplateKind): boolean {
+function isDepositConfirmedKind(kind: McBuleliTemplateKind): boolean {
   return kind === "depositUsdt" || kind === "depositPi";
+}
+
+function isDepositPendingKind(kind: McBuleliTemplateKind): boolean {
+  return kind === "depositPendingUsdt" || kind === "depositPendingPi";
+}
+
+function isDepositIntentKind(kind: McBuleliTemplateKind): boolean {
+  return kind === "depositIntentUsdt" || kind === "depositIntentPi";
 }
 
 function isWithdrawQueuedKind(kind: McBuleliTemplateKind): boolean {
   return kind === "withdrawQueuedUsdt" || kind === "withdrawQueuedPi";
 }
 
+function isWithdrawClaimedKind(kind: McBuleliTemplateKind): boolean {
+  return kind === "withdrawClaimedUsdt" || kind === "withdrawClaimedPi";
+}
+
+function isWithdrawRejectedKind(kind: McBuleliTemplateKind): boolean {
+  return kind === "withdrawRejectedUsdt" || kind === "withdrawRejectedPi";
+}
+
 export function walletTemplateVariables(
   kind: McBuleliTemplateKind,
 ): string[] {
-  if (isDepositKind(kind)) {
+  if (isDepositIntentKind(kind)) {
+    return ["ACTION_URL", "AMOUNT", "ASSET", "NETWORK", "ADDRESS"];
+  }
+  if (isDepositConfirmedKind(kind) || isDepositPendingKind(kind)) {
     return ["ACTION_URL", "AMOUNT", "ASSET", "NETWORK", "TXID"];
   }
-  if (isWithdrawQueuedKind(kind)) {
+  if (isWithdrawQueuedKind(kind) || isWithdrawClaimedKind(kind)) {
     return ["ACTION_URL", "AMOUNT", "ASSET", "NETWORK", "FEE", "TOTAL", "ADDRESS"];
+  }
+  if (isWithdrawRejectedKind(kind)) {
+    return [
+      "ACTION_URL",
+      "AMOUNT",
+      "ASSET",
+      "NETWORK",
+      "FEE",
+      "TOTAL",
+      "ADDRESS",
+      "REASON",
+    ];
   }
   return [
     "ACTION_URL",
@@ -63,6 +98,7 @@ export function buildWalletDetailRows(args: {
   total?: string;
   address?: string;
   txid?: string;
+  reason?: string;
 }): EmailDetailRow[] {
   const L = LABELS[args.locale];
   const v = (key: string, fallback: string) =>
@@ -73,7 +109,23 @@ export function buildWalletDetailRows(args: {
       ? v("NETWORK", "")
       : activityNetworkLabel(args.locale, args.networkCanonical);
 
-  if (isDepositKind(args.kind)) {
+  if (isDepositIntentKind(args.kind)) {
+    return [
+      {
+        label: L.amount,
+        value: args.resendPlaceholders
+          ? `${v("AMOUNT", "")} ${v("ASSET", "")}`
+          : `${args.amount} ${args.asset}`,
+      },
+      { label: L.network, value: network },
+      {
+        label: L.depositAddress,
+        value: v("ADDRESS", args.address ?? "—"),
+      },
+    ];
+  }
+
+  if (isDepositConfirmedKind(args.kind) || isDepositPendingKind(args.kind)) {
     return [
       {
         label: L.amount,
@@ -98,7 +150,13 @@ export function buildWalletDetailRows(args: {
     { label: L.network, value: network },
     { label: L.address, value: v("ADDRESS", args.address ?? "—") },
   ];
-  if (!isWithdrawQueuedKind(args.kind)) {
+
+  if (isWithdrawRejectedKind(args.kind)) {
+    rows.push({ label: L.reason, value: v("REASON", args.reason ?? "—") });
+    return rows;
+  }
+
+  if (!isWithdrawQueuedKind(args.kind) && !isWithdrawClaimedKind(args.kind)) {
     rows.push({ label: L.txid, value: v("TXID", args.txid ?? "—") });
   }
   return rows;

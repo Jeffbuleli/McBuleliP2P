@@ -19,6 +19,7 @@ export type WalletCryptoEmailVariables = {
   FEE?: string;
   TOTAL?: string;
   ADDRESS?: string;
+  REASON?: string;
 };
 
 export async function sendMcBuleliWalletCryptoEmail(args: {

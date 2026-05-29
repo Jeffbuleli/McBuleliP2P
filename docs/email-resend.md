@@ -25,7 +25,7 @@ Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur
 
 ---
 
-## Inventaire — 11 flux × 2 langues = 22 templates
+## Inventaire — 19 flux × 2 langues = 38 templates
 
 ### Auth & sécurité (5 flux)
 
@@ -37,16 +37,24 @@ Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur
 | 4 | Alerte changement email | Changement email (ancienne adresse) | `mcbuleli-email-alert-fr` / `-en` | `ACTION_URL`, `NEW_EMAIL` |
 | 5 | Mot de passe modifié | Security settings | `mcbuleli-password-changed-fr` / `-en` | `ACTION_URL` |
 
-### Crypto portefeuille (6 flux)
+### Crypto portefeuille (10 flux)
 
 | # | Flux | Déclencheur (code) | Template (alias) | Variables |
 |---|------|-------------------|------------------|-----------|
-| 6 | Dépôt USDT crédité | `applyConfirmedDeposit` (USDT) | `mcbuleli-deposit-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `TXID` |
-| 7 | Dépôt Pi crédité | `applyConfirmedDeposit` (PI) | `mcbuleli-deposit-pi-fr` / `-en` | idem |
-| 8 | Retrait USDT envoyé | Worker auto / admin complete | `mcbuleli-withdraw-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `FEE`, `TOTAL`, `ADDRESS`, `TXID` |
-| 9 | Retrait Pi envoyé | Admin complete (PI) | `mcbuleli-withdraw-pi-fr` / `-en` | idem |
-| 10 | Retrait USDT en file | `POST /api/withdrawals` | `mcbuleli-withdraw-queued-usdt-fr` / `-en` | sans `TXID` |
-| 11 | Retrait Pi en file | `POST /api/withdrawals` (PI) | `mcbuleli-withdraw-queued-pi-fr` / `-en` | sans `TXID` |
+| 6 | Dépôt USDT — instructions | `POST /api/deposits/intent` (USDT) | `mcbuleli-deposit-intent-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `ADDRESS` |
+| 7 | Dépôt Pi — instructions | `POST /api/deposits/intent` (PI) | `mcbuleli-deposit-intent-pi-fr` / `-en` | idem |
+| 8 | Dépôt USDT — TXID en vérification | `POST /api/deposits/[id]/confirm` | `mcbuleli-deposit-pending-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `TXID` |
+| 9 | Dépôt Pi — TXID en vérification | idem (PI) | `mcbuleli-deposit-pending-pi-fr` / `-en` | idem |
+| 10 | Dépôt USDT crédité | `applyConfirmedDeposit` (USDT) | `mcbuleli-deposit-usdt-fr` / `-en` | idem |
+| 11 | Dépôt Pi crédité | `applyConfirmedDeposit` (PI) | `mcbuleli-deposit-pi-fr` / `-en` | idem |
+| 12 | Retrait USDT en file | `POST /api/withdrawals` | `mcbuleli-withdraw-queued-usdt-fr` / `-en` | `ACTION_URL`, `AMOUNT`, `ASSET`, `NETWORK`, `FEE`, `TOTAL`, `ADDRESS` |
+| 13 | Retrait Pi en file | `POST /api/withdrawals` (PI) | `mcbuleli-withdraw-queued-pi-fr` / `-en` | idem |
+| 14 | Retrait USDT en traitement | Admin claim | `mcbuleli-withdraw-claimed-usdt-fr` / `-en` | idem |
+| 15 | Retrait Pi en traitement | Admin claim (PI) | `mcbuleli-withdraw-claimed-pi-fr` / `-en` | idem |
+| 16 | Retrait USDT envoyé | Worker auto / admin complete | `mcbuleli-withdraw-usdt-fr` / `-en` | + `TXID` |
+| 17 | Retrait Pi envoyé | Admin complete (PI) | `mcbuleli-withdraw-pi-fr` / `-en` | + `TXID` |
+| 18 | Retrait USDT annulé | Admin reject | `mcbuleli-withdraw-rejected-usdt-fr` / `-en` | + `REASON` |
+| 19 | Retrait Pi annulé | Admin reject (PI) | `mcbuleli-withdraw-rejected-pi-fr` / `-en` | + `REASON` |
 
 Fichiers source :
 

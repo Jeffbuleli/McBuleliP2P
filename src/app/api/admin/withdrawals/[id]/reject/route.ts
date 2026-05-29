@@ -10,6 +10,9 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
+import { notifyWithdrawalRejectedEmail } from "@/lib/email/wallet-crypto-notify";
 
 export async function POST(
   req: Request,
@@ -116,6 +119,21 @@ export async function POST(
       asset: w.asset,
       reason: parsed.data.reason.trim(),
     },
+  });
+
+  scheduleEmailTask(async () => {
+    const locale = await resolveEmailLocale(req);
+    await notifyWithdrawalRejectedEmail({
+      userId: w.userId,
+      withdrawalId: id,
+      asset: w.asset,
+      amount: w.amount?.toString?.() ?? String(w.amount),
+      fee: w.fee?.toString?.() ?? String(w.fee),
+      networkCanonical: w.networkCanonical,
+      address: w.toAddress,
+      reason: parsed.data.reason.trim(),
+      locale,
+    });
   });
 
   return NextResponse.json({ withdrawal: updated });

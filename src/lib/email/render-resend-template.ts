@@ -10,10 +10,18 @@ import {
 const WALLET_KINDS = new Set<McBuleliTemplateKind>([
   "depositUsdt",
   "depositPi",
+  "depositPendingUsdt",
+  "depositPendingPi",
+  "depositIntentUsdt",
+  "depositIntentPi",
   "withdrawUsdt",
   "withdrawPi",
   "withdrawQueuedUsdt",
   "withdrawQueuedPi",
+  "withdrawClaimedUsdt",
+  "withdrawClaimedPi",
+  "withdrawRejectedUsdt",
+  "withdrawRejectedPi",
 ]);
 
 export function renderResendTemplateHtml(args: {

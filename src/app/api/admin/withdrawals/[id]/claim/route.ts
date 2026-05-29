@@ -8,13 +8,16 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
+import { notifyWithdrawalClaimedEmail } from "@/lib/email/wallet-crypto-notify";
 
 /**
  * Agent takes ownership of a pending withdrawal → PROCESSING.
  * Other agents see it as in progress (same ticket, new status).
  */
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   let staff;
@@ -79,6 +82,20 @@ export async function POST(
       withdrawalId: id,
       asset: w.asset,
     },
+  });
+
+  scheduleEmailTask(async () => {
+    const locale = await resolveEmailLocale(req);
+    await notifyWithdrawalClaimedEmail({
+      userId: w.userId,
+      withdrawalId: id,
+      asset: w.asset,
+      amount: w.amount?.toString?.() ?? String(w.amount),
+      fee: w.fee?.toString?.() ?? String(w.fee),
+      networkCanonical: w.networkCanonical,
+      address: w.toAddress,
+      locale,
+    });
   });
 
   return NextResponse.json({ withdrawal: updated });

@@ -11,10 +11,18 @@ export type McBuleliTemplateKind =
   | "passwordChanged"
   | "depositUsdt"
   | "depositPi"
+  | "depositPendingUsdt"
+  | "depositPendingPi"
+  | "depositIntentUsdt"
+  | "depositIntentPi"
   | "withdrawUsdt"
   | "withdrawPi"
   | "withdrawQueuedUsdt"
-  | "withdrawQueuedPi";
+  | "withdrawQueuedPi"
+  | "withdrawClaimedUsdt"
+  | "withdrawClaimedPi"
+  | "withdrawRejectedUsdt"
+  | "withdrawRejectedPi";
 
 export type McBuleliTemplateDef = {
   kind: McBuleliTemplateKind;
@@ -34,10 +42,18 @@ const ALIAS: Record<McBuleliTemplateKind, string> = {
   passwordChanged: "password-changed",
   depositUsdt: "deposit-usdt",
   depositPi: "deposit-pi",
+  depositPendingUsdt: "deposit-pending-usdt",
+  depositPendingPi: "deposit-pending-pi",
+  depositIntentUsdt: "deposit-intent-usdt",
+  depositIntentPi: "deposit-intent-pi",
   withdrawUsdt: "withdraw-usdt",
   withdrawPi: "withdraw-pi",
   withdrawQueuedUsdt: "withdraw-queued-usdt",
   withdrawQueuedPi: "withdraw-queued-pi",
+  withdrawClaimedUsdt: "withdraw-claimed-usdt",
+  withdrawClaimedPi: "withdraw-claimed-pi",
+  withdrawRejectedUsdt: "withdraw-rejected-usdt",
+  withdrawRejectedPi: "withdraw-rejected-pi",
 };
 
 export function mcbuleliTemplateAlias(
@@ -92,6 +108,26 @@ const WALLET_TEMPLATES = [
     illustration: "depositPi" as const,
   },
   {
+    kind: "depositPendingUsdt" as const,
+    copyKey: "depositPendingUsdt" as const,
+    illustration: "depositUsdt" as const,
+  },
+  {
+    kind: "depositPendingPi" as const,
+    copyKey: "depositPendingPi" as const,
+    illustration: "depositPi" as const,
+  },
+  {
+    kind: "depositIntentUsdt" as const,
+    copyKey: "depositIntentUsdt" as const,
+    illustration: "depositUsdt" as const,
+  },
+  {
+    kind: "depositIntentPi" as const,
+    copyKey: "depositIntentPi" as const,
+    illustration: "depositPi" as const,
+  },
+  {
     kind: "withdrawUsdt" as const,
     copyKey: "withdrawUsdt" as const,
     illustration: "withdrawUsdt" as const,
@@ -109,6 +145,26 @@ const WALLET_TEMPLATES = [
   {
     kind: "withdrawQueuedPi" as const,
     copyKey: "withdrawQueuedPi" as const,
+    illustration: "withdrawPi" as const,
+  },
+  {
+    kind: "withdrawClaimedUsdt" as const,
+    copyKey: "withdrawClaimedUsdt" as const,
+    illustration: "withdrawUsdt" as const,
+  },
+  {
+    kind: "withdrawClaimedPi" as const,
+    copyKey: "withdrawClaimedPi" as const,
+    illustration: "withdrawPi" as const,
+  },
+  {
+    kind: "withdrawRejectedUsdt" as const,
+    copyKey: "withdrawRejectedUsdt" as const,
+    illustration: "withdrawUsdt" as const,
+  },
+  {
+    kind: "withdrawRejectedPi" as const,
+    copyKey: "withdrawRejectedPi" as const,
     illustration: "withdrawPi" as const,
   },
 ];

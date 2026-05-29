@@ -221,3 +221,233 @@ export async function notifyWithdrawalCompletedEmail(args: {
     return false;
   }
 }
+
+export async function notifyDepositIntentEmail(args: {
+  userId: string;
+  depositId: string;
+  asset: string;
+  amount: string;
+  networkCanonical: string;
+  depositAddress: string;
+  locale?: EmailLocale;
+}): Promise<boolean> {
+  const to = await userEmail(args.userId);
+  if (!to) {
+    logEmailSkip("deposit_intent", "user_has_no_email");
+    return false;
+  }
+
+  const locale = args.locale ?? DEFAULT_LOCALE;
+  const asset = args.asset.toUpperCase();
+  const kind = assetKind(args.asset, "depositIntentUsdt", "depositIntentPi");
+  const amount = formatCryptoAmount(args.amount);
+  const network = activityNetworkLabel(locale, args.networkCanonical);
+  const address = args.depositAddress.trim();
+
+  try {
+    const sent = await sendMcBuleliWalletCryptoEmail({
+      to,
+      kind,
+      locale,
+      actionUrl: `${appBaseUrl()}/app/deposit/${args.depositId}`,
+      variables: {
+        AMOUNT: amount,
+        ASSET: asset,
+        NETWORK: network,
+        ADDRESS: address,
+      },
+      detailRows: buildWalletDetailRows({
+        kind,
+        locale,
+        amount,
+        asset,
+        networkCanonical: args.networkCanonical,
+        address,
+      }),
+    });
+    if (!sent) logEmailSkip("deposit_intent", "send_returned_false");
+    return sent;
+  } catch (e) {
+    logEmailError("deposit_intent", e);
+    return false;
+  }
+}
+
+export async function notifyDepositPendingEmail(args: {
+  userId: string;
+  depositId: string;
+  asset: string;
+  amount: string;
+  networkCanonical: string;
+  txid: string;
+  locale?: EmailLocale;
+}): Promise<boolean> {
+  const to = await userEmail(args.userId);
+  if (!to) {
+    logEmailSkip("deposit_pending", "user_has_no_email");
+    return false;
+  }
+
+  const locale = args.locale ?? DEFAULT_LOCALE;
+  const asset = args.asset.toUpperCase();
+  const kind = assetKind(args.asset, "depositPendingUsdt", "depositPendingPi");
+  const amount = formatCryptoAmount(args.amount);
+  const network = activityNetworkLabel(locale, args.networkCanonical);
+  const txid = args.txid.trim();
+
+  try {
+    const sent = await sendMcBuleliWalletCryptoEmail({
+      to,
+      kind,
+      locale,
+      actionUrl: `${appBaseUrl()}/app/deposit/${args.depositId}`,
+      variables: {
+        AMOUNT: amount,
+        ASSET: asset,
+        NETWORK: network,
+        TXID: txid,
+      },
+      detailRows: buildWalletDetailRows({
+        kind,
+        locale,
+        amount,
+        asset,
+        networkCanonical: args.networkCanonical,
+        txid,
+      }),
+    });
+    if (!sent) logEmailSkip("deposit_pending", "send_returned_false");
+    return sent;
+  } catch (e) {
+    logEmailError("deposit_pending", e);
+    return false;
+  }
+}
+
+export async function notifyWithdrawalClaimedEmail(args: {
+  userId: string;
+  withdrawalId: string;
+  asset: string;
+  amount: string;
+  fee: string;
+  networkCanonical: string;
+  address: string;
+  locale?: EmailLocale;
+}): Promise<boolean> {
+  const to = await userEmail(args.userId);
+  if (!to) {
+    logEmailSkip("withdrawal_claimed", "user_has_no_email");
+    return false;
+  }
+
+  const locale = args.locale ?? DEFAULT_LOCALE;
+  const asset = args.asset.toUpperCase();
+  const kind = assetKind(
+    args.asset,
+    "withdrawClaimedUsdt",
+    "withdrawClaimedPi",
+  );
+  const amount = formatCryptoAmount(args.amount);
+  const fee = formatCryptoAmount(args.fee);
+  const total = withdrawTotalDebited(args.amount, args.fee);
+  const network = activityNetworkLabel(locale, args.networkCanonical);
+  const address = truncateMiddle(args.address.trim(), 12, 10);
+
+  try {
+    const sent = await sendMcBuleliWalletCryptoEmail({
+      to,
+      kind,
+      locale,
+      actionUrl: `${appBaseUrl()}/app/wallet/activity/withdraw/${args.withdrawalId}`,
+      variables: {
+        AMOUNT: amount,
+        ASSET: asset,
+        NETWORK: network,
+        FEE: fee,
+        TOTAL: total,
+        ADDRESS: address,
+      },
+      detailRows: buildWalletDetailRows({
+        kind,
+        locale,
+        amount,
+        asset,
+        networkCanonical: args.networkCanonical,
+        fee,
+        total,
+        address,
+      }),
+    });
+    if (!sent) logEmailSkip("withdrawal_claimed", "send_returned_false");
+    return sent;
+  } catch (e) {
+    logEmailError("withdrawal_claimed", e);
+    return false;
+  }
+}
+
+export async function notifyWithdrawalRejectedEmail(args: {
+  userId: string;
+  withdrawalId: string;
+  asset: string;
+  amount: string;
+  fee: string;
+  networkCanonical: string;
+  address: string;
+  reason: string;
+  locale?: EmailLocale;
+}): Promise<boolean> {
+  const to = await userEmail(args.userId);
+  if (!to) {
+    logEmailSkip("withdrawal_rejected", "user_has_no_email");
+    return false;
+  }
+
+  const locale = args.locale ?? DEFAULT_LOCALE;
+  const asset = args.asset.toUpperCase();
+  const kind = assetKind(
+    args.asset,
+    "withdrawRejectedUsdt",
+    "withdrawRejectedPi",
+  );
+  const amount = formatCryptoAmount(args.amount);
+  const fee = formatCryptoAmount(args.fee);
+  const total = withdrawTotalDebited(args.amount, args.fee);
+  const network = activityNetworkLabel(locale, args.networkCanonical);
+  const address = truncateMiddle(args.address.trim(), 12, 10);
+  const reason = args.reason.trim().slice(0, 500);
+
+  try {
+    const sent = await sendMcBuleliWalletCryptoEmail({
+      to,
+      kind,
+      locale,
+      actionUrl: `${appBaseUrl()}/app/wallet/activity/withdraw/${args.withdrawalId}`,
+      variables: {
+        AMOUNT: amount,
+        ASSET: asset,
+        NETWORK: network,
+        FEE: fee,
+        TOTAL: total,
+        ADDRESS: address,
+        REASON: reason,
+      },
+      detailRows: buildWalletDetailRows({
+        kind,
+        locale,
+        amount,
+        asset,
+        networkCanonical: args.networkCanonical,
+        fee,
+        total,
+        address,
+        reason,
+      }),
+    });
+    if (!sent) logEmailSkip("withdrawal_rejected", "send_returned_false");
+    return sent;
+  } catch (e) {
+    logEmailError("withdrawal_rejected", e);
+    return false;
+  }
+}
