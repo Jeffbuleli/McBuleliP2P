@@ -255,7 +255,7 @@ export default function DepositWizardPage() {
                   value={declaredAmountUsdt}
                   onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
                   inputMode="decimal"
-                  placeholder="20"
+                  placeholder="1"
                   className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-lg font-bold tabular-nums text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
               </label>

@@ -193,7 +193,7 @@ export const en = {
     "Anti-abuse: velocity limits, device/IP signals, payout patterns (full KYC only if required).",
   profile_referral_title: "Referrals",
   profile_referral_sub:
-    "Mobile money: 50% of McBuleli’s fee on the invitee’s first qualifying deposit (min $10 US equivalent). On-chain USDT: $1 USDT for you only if their very first USDT deposit is at least 20 USDT; if it is below 20, no USDT referral (including on later deposits). Other deposits: 0%.",
+    "Mobile money: 50% of McBuleli’s fee on the invitee’s first qualifying deposit (min $10 US equivalent). On-chain USDT: $1 USDT for you only if their very first USDT deposit is at least 1 USDT; if it is below 1 USDT, no USDT referral (including on later deposits). Other deposits: 0%.",
   profile_referral_code: "Your code",
   profile_referral_link: "Invite link",
   profile_referral_balance: "Referral balance",
@@ -3360,7 +3360,7 @@ export const fr: Messages = {
     "Anti-fraude : plafonds, signaux appareil/IP, patterns de retrait (KYC complet seulement si requis).",
   profile_referral_title: "Parrainage",
   profile_referral_sub:
-    "Mobile money : 50 % des frais McBuleli sur le 1er dépôt qualifiant (min 10 $ US équivalent). USDT on-chain : 1 USDT pour vous seulement si le tout premier dépôt USDT du filleul est ≥ 20 USDT ; s’il est inférieur à 20 USDT, aucun parrainage USDT (y compris sur les dépôts suivants). Autres dépôts : 0 %.",
+    "Mobile money : 50 % des frais McBuleli sur le 1er dépôt qualifiant (min 10 $ US équivalent). USDT on-chain : 1 USDT pour vous seulement si le tout premier dépôt USDT du filleul est ≥ 1 USDT ; s’il est inférieur à 1 USDT, aucun parrainage USDT (y compris sur les dépôts suivants). Autres dépôts : 0 %.",
   profile_referral_code: "Votre code",
   profile_referral_link: "Lien d’invitation",
   profile_referral_balance: "Solde parrainage",
