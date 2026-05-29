@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { getDb, users } from "@/db";
+import { findUserByAuthEmail } from "@/lib/auth/email-uniqueness";
+import { normalizeAuthEmail } from "@/lib/auth/email-normalize";
 import { sendPasswordResetEmail } from "@/lib/email/messages/password-reset";
 import { resolveEmailLocale } from "@/lib/email/locale";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { email?: string } | null;
-  const email = body?.email?.trim().toLowerCase();
+  const email = body?.email ? normalizeAuthEmail(body.email) : "";
   if (!email) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 });
   }
 
   const locale = await resolveEmailLocale(req);
-  const db = getDb();
-  const [user] = await db
-    .select({ id: users.id, email: users.email })
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+  const user = await findUserByAuthEmail(email);
 
   if (user) {
     await sendPasswordResetEmail({

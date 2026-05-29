@@ -1,8 +1,15 @@
 import { z } from "zod";
+import { normalizeAuthEmail } from "@/lib/auth/email-normalize";
 import { STAFF_SCOPES } from "@/lib/staff-scopes";
 import type { CexId } from "./networks";
 
-const email = z.string().trim().min(3).max(255).email();
+const email = z
+  .string()
+  .trim()
+  .min(3)
+  .max(255)
+  .email()
+  .transform((v) => normalizeAuthEmail(v));
 
 export const loginSchema = z.object({
   email: email,

@@ -18,6 +18,8 @@ import {
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  /** Lowercase + provider rules (Gmail dots) — unique; blocks typo duplicates at signup. */
+  emailCanonical: varchar("email_canonical", { length: 255 }),
   passwordHash: text("password_hash").notNull(),
   /** user | agent | super_admin */
   role: varchar("role", { length: 32 }).notNull().default("user"),
@@ -105,7 +107,11 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (table) => [
+  uniqueIndex("users_email_canonical_unique")
+    .on(table.emailCanonical)
+    .where(sql`${table.emailCanonical} is not null`),
+]);
 
 /** One row per referee when the first qualifying deposit triggers a referrer reward. */
 export const referralFirstRewards = pgTable(

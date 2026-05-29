@@ -27,6 +27,7 @@ const I18N_PREFIXES = [
   "reset_",
   "verify_",
   "recovery_",
+  "auth_email_",
 ] as const;
 
 const PLAIN_MESSAGE_MAP: Record<string, keyof Messages> = {

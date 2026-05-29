@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 export const maxDuration = 60;
-import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { findReferrerByCode } from "@/lib/referral-service";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { assertEmailAvailable } from "@/lib/auth/email-uniqueness";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { isDisplayNameTaken } from "@/lib/display-name-uniqueness";
 import { registerSchema } from "@/lib/validation";
@@ -32,34 +32,37 @@ export async function POST(req: Request) {
     const { email, password, referralCode, countryCode, displayName } = parsed.data;
     const db = getDb();
 
+    const emailCheck = await assertEmailAvailable({ rawEmail: email });
+    if (!emailCheck.ok) {
+      return NextResponse.json(
+        {
+          message: emailCheck.code,
+          ...(emailCheck.suggestedEmail
+            ? { suggestedEmail: emailCheck.suggestedEmail }
+            : {}),
+        },
+        { status: 409 },
+      );
+    }
+
     let referredByUserId: string | null = null;
     if (referralCode) {
       const ref = await findReferrerByCode(referralCode);
       if (ref) referredByUserId = ref.id;
-    }
-    const existing = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-    if (existing.length) {
-      return NextResponse.json(
-        { message: "This email is already registered. Try logging in." },
-        { status: 409 },
-      );
     }
 
     if (await isDisplayNameTaken(displayName)) {
       return NextResponse.json({ error: "profile_pseudo_taken" }, { status: 409 });
     }
     const passwordHash = await bcrypt.hash(password, 12);
-    const role = isSuperAdminEmail(email)
+    const role = isSuperAdminEmail(emailCheck.email)
       ? UserRole.SUPER_ADMIN
       : UserRole.USER;
     const [created] = await db
       .insert(users)
       .values({
-        email,
+        email: emailCheck.email,
+        emailCanonical: emailCheck.emailCanonical,
         passwordHash,
         role,
         tradeLiveEnabled: false,

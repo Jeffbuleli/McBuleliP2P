@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { assertStepUp, bumpSessionVersion } from "@/lib/auth/step-up";
+import { assertEmailAvailable } from "@/lib/auth/email-uniqueness";
+import { normalizeAuthEmail } from "@/lib/auth/email-normalize";
 import { isPiSyntheticEmail } from "@/lib/auth/security-status";
 import { sendPasswordChangedEmail } from "@/lib/email/messages/password-changed";
 import {
@@ -80,7 +82,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const newEmail = parsed.data.newEmail.trim().toLowerCase();
+  const newEmail = normalizeAuthEmail(parsed.data.newEmail);
   if (isPiSyntheticEmail(newEmail)) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 });
   }
@@ -103,35 +105,42 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "invalid_password" }, { status: 401 });
   }
 
-  const [dup] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, newEmail))
-    .limit(1);
-  if (dup) {
-    return NextResponse.json({ error: "email_taken" }, { status: 409 });
+  const emailCheck = await assertEmailAvailable({
+    rawEmail: newEmail,
+    excludeUserId: userId,
+  });
+  if (!emailCheck.ok) {
+    return NextResponse.json(
+      {
+        error: emailCheck.code,
+        ...(emailCheck.suggestedEmail
+          ? { suggestedEmail: emailCheck.suggestedEmail }
+          : {}),
+      },
+      { status: 409 },
+    );
   }
 
   await db
     .update(users)
-    .set({ pendingEmail: newEmail })
+    .set({ pendingEmail: emailCheck.email })
     .where(eq(users.id, userId));
 
   const locale = await resolveEmailLocale(req);
 
   await sendEmailChangeConfirm({
     userId,
-    newEmail,
+    newEmail: emailCheck.email,
     locale,
   });
 
   void sendEmailChangeAlert({
     currentEmail: u.email,
-    newEmail,
+    newEmail: emailCheck.email,
     locale,
   }).catch((err) => {
     console.warn("[account/security] email-change alert failed", err);
   });
 
-  return NextResponse.json({ ok: true, pendingEmail: newEmail });
+  return NextResponse.json({ ok: true, pendingEmail: emailCheck.email });
 }

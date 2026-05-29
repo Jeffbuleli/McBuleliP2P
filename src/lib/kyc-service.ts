@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
+import { findKycDocumentConflict } from "@/lib/auth/kyc-document-uniqueness";
 import { createUserNotification } from "@/lib/notifications-service";
 import type { KycStatus } from "@/lib/kyc-policy";
 import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
@@ -96,9 +97,25 @@ export async function applyKycFromProvider(args: {
     return "none";
   }
 
-  const status = mapVerificationOutcomeToKycStatus(args.outcome);
+  let status = mapVerificationOutcomeToKycStatus(args.outcome);
   const before = await getUserKycRow(args.userId);
   const previousStatus = before?.kycStatus ?? "none";
+
+  let rejectionNote = status === "rejected" ? note : null;
+  if (status === "approved" && args.ocrPatch?.documentNumber) {
+    const conflict = await findKycDocumentConflict({
+      userId: args.userId,
+      documentNumber: args.ocrPatch.documentNumber,
+    });
+    if (conflict) {
+      status = "manual_review";
+      rejectionNote =
+        `Identity document already linked to another account (${conflict.email.slice(0, 3)}***). Contact support.`.slice(
+          0,
+          500,
+        );
+    }
+  }
 
   const db = getDb();
   await db
@@ -106,7 +123,12 @@ export async function applyKycFromProvider(args: {
     .set({
       kycStatus: status,
       kycUpdatedAt: new Date(),
-      kycRejectionNote: status === "rejected" ? note : null,
+      kycRejectionNote:
+        status === "rejected"
+          ? note
+          : status === "manual_review"
+            ? rejectionNote
+            : null,
       ...(args.diditSessionId != null
         ? { diditSessionId: args.diditSessionId }
         : {}),

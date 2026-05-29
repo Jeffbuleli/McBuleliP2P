@@ -3,8 +3,9 @@ import bcrypt from "bcryptjs";
 
 /** Cold DB / bcrypt — generous timeout so Neon can wake on first login. */
 export const maxDuration = 60;
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
+import { findUserByAuthEmail } from "@/lib/auth/email-uniqueness";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { loginSchema } from "@/lib/validation";
@@ -28,11 +29,7 @@ export async function POST(req: Request) {
     }
     const { email, password } = parsed.data;
     const db = getDb();
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(sql`lower(${users.email}) = lower(${email})`)
-      .limit(1);
+    const user = await findUserByAuthEmail(email);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json(
         { message: "Invalid email or password." },

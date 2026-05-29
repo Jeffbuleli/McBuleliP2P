@@ -20,6 +20,7 @@
     "email:optimize-assets": "node scripts/email-optimize-assets.mjs",
     "resend:sync-templates": "node scripts/email-optimize-assets.mjs && tsx scripts/resend-sync-templates.ts",
     "resend:export-broadcasts": "tsx scripts/export-marketing-broadcasts.mjs",
+    "db:backfill-email-canonical": "tsx scripts/backfill-email-canonical.mjs",
     "icons:pwa": "node scripts/generate-pwa-icons.mjs",
     "admin:user": "node scripts/admin-user-account.cjs"
   },

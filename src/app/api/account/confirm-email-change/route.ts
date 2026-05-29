@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { consumeAuthChallenge } from "@/lib/auth/challenges";
+import { assertEmailAvailable } from "@/lib/auth/email-uniqueness";
+import { normalizeAuthEmail } from "@/lib/auth/email-normalize";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { token?: string } | null;
@@ -20,30 +22,38 @@ export async function POST(req: Request) {
 
   const newEmail =
     typeof consumed.meta?.newEmail === "string"
-      ? consumed.meta.newEmail.trim().toLowerCase()
+      ? normalizeAuthEmail(consumed.meta.newEmail)
       : null;
   if (!newEmail) {
     return NextResponse.json({ error: "invalid_token_meta" }, { status: 400 });
   }
 
-  const db = getDb();
-  const [dup] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, newEmail))
-    .limit(1);
-  if (dup && dup.id !== consumed.userId) {
-    return NextResponse.json({ error: "email_taken" }, { status: 409 });
+  const emailCheck = await assertEmailAvailable({
+    rawEmail: newEmail,
+    excludeUserId: consumed.userId,
+  });
+  if (!emailCheck.ok) {
+    return NextResponse.json(
+      {
+        error: emailCheck.code,
+        ...(emailCheck.suggestedEmail
+          ? { suggestedEmail: emailCheck.suggestedEmail }
+          : {}),
+      },
+      { status: 409 },
+    );
   }
 
+  const db = getDb();
   await db
     .update(users)
     .set({
-      email: newEmail,
+      email: emailCheck.email,
+      emailCanonical: emailCheck.emailCanonical,
       pendingEmail: null,
       emailVerifiedAt: new Date(),
     })
     .where(eq(users.id, consumed.userId));
 
-  return NextResponse.json({ ok: true, email: newEmail });
+  return NextResponse.json({ ok: true, email: emailCheck.email });
 }

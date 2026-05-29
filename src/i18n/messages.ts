@@ -475,6 +475,10 @@ export const en = {
   signing_out: "Signing out…",
   auth_timeout: "Request timed out. Check your connection and try again.",
   auth_network_error: "Something went wrong. Check your connection and try again.",
+  auth_email_taken: "This email is already registered. Log in or reset your password.",
+  auth_email_typo_duplicate:
+    "This address looks like a typo of an existing account. Did you mean {suggested}? Use that email to log in.",
+  auth_email_blocked: "This email address cannot be used.",
   no_account: "No account?",
   register_title: "New account",
   register_sub: "Min. 8 chars",
@@ -3643,6 +3647,11 @@ export const fr: Messages = {
     "Délai dépassé. Vérifiez la connexion et réessayez.",
   auth_network_error:
     "Impossible de continuer. Vérifiez la connexion et réessayez.",
+  auth_email_taken:
+    "Cet e-mail est déjà enregistré. Connectez-vous ou réinitialisez le mot de passe.",
+  auth_email_typo_duplicate:
+    "Cette adresse ressemble à une faute de frappe (compte existant). Vouliez-vous dire {suggested} ? Connectez-vous avec cet e-mail.",
+  auth_email_blocked: "Cette adresse e-mail ne peut pas être utilisée.",
   no_account: "Pas de compte ?",
   register_title: "Nouveau compte",
   register_sub: "Min. 8 car.",

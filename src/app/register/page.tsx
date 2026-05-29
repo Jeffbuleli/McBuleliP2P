@@ -79,11 +79,24 @@ function RegisterForm() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const errObj = data as { error?: string };
+        const errObj = data as {
+          error?: string;
+          message?: string;
+          suggestedEmail?: string;
+        };
         if (errObj.error === "profile_pseudo_taken") {
           setError(t("profile_pseudo_taken"));
+        } else if (
+          errObj.message === "auth_email_typo_duplicate" &&
+          typeof errObj.suggestedEmail === "string"
+        ) {
+          setError(
+            t("auth_email_typo_duplicate", {
+              suggested: errObj.suggestedEmail,
+            }),
+          );
         } else {
-          setError(formatAuthClientError(data));
+          setError(formatAuthClientError(data, t));
         }
         setLoading(false);
         return;
