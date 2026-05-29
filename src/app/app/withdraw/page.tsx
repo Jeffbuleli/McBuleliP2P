@@ -204,7 +204,10 @@ export default function WithdrawPage() {
   const feeNote =
     wAsset === "USDT"
       ? isInternalUsdt
-        ? interpolate(t("fee_note_internal"), { min: String(minUsdt) })
+        ? interpolate(t("fee_note_internal"), {
+            fee: String(feeUsdt),
+            min: String(minUsdt),
+          })
         : interpolate(t("fee_note"), { fee: String(feeUsdt), min: String(minUsdt) })
       : interpolate(t("fee_note_asset"), {
           fee: String(feePi),

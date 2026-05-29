@@ -39,8 +39,8 @@ async function isInternalFromDb(args: {
       and(
         eq(withdrawals.asset, "USDT"),
         eq(withdrawals.status, WithdrawalStatus.COMPLETED),
-        sql`${withdrawals.fee}::numeric = 0`,
-        gt(withdrawals.platformFee, sql`0`),
+        sql`${withdrawals.providerFee}::numeric = 0`,
+        gt(withdrawals.fee, sql`0`),
       ),
     )
     .limit(200);
@@ -89,7 +89,7 @@ export async function resolveUsdtWithdrawQuote(args: {
       }));
   }
 
-  const userFeeUsdt = isInternal ? 0 : EXTERNAL_WITHDRAW_FEE_USDT;
+  const userFeeUsdt = EXTERNAL_WITHDRAW_FEE_USDT;
   const minNetUsdt = isInternal
     ? config.withdrawInternalMin
     : config.withdrawMin;

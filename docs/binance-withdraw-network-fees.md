@@ -157,11 +157,15 @@ Exemple de structure (extrait doc Binance) :
 
 ### Principe
 
-L’utilisateur paie un **forfait plateforme** (aujourd’hui **2 USDT** sur retrait externe). Ce forfait est **splitté** :
+L’utilisateur McBuleli paie **toujours** un forfait fixe de **2 USDT** par retrait USDT, quel que soit le réseau ou le type de transfert Binance. Ce forfait est **splitté en compta** :
 
 ```text
-userFee (2 USDT) = providerFee (coût Binance) + platformFee (marge McBuleli)
+userFee (2 USDT) = providerFee (coût Binance réel) + platformFee (marge McBuleli)
 ```
+
+- **Ce que paie l’user** : toujours **+2 USDT** sur son solde McBuleli (jamais 0).
+- **Ce que paie McBuleli à Binance** : `transactionFee` réel (catalogue si externe, **0** si transfert interne Binance).
+- **Bénéfice McBuleli** : `platformFee` = 2 USDT − coût Binance.
 
 Implémentation : `src/lib/withdraw-fee-split.ts` → `computeWithdrawFeeSplit`.
 
@@ -170,41 +174,40 @@ Implémentation : `src/lib/withdraw-fee-split.ts` → `computeWithdrawFeeSplit`.
 | Composant | Montant |
 |-----------|---------|
 | Net reçu par l’utilisateur | 10 USDT |
-| Fee utilisateur (McBuleli) | +2 USDT |
-| **Total débité** | 12 USDT |
+| Fee utilisateur McBuleli | **+2 USDT** (toujours) |
+| **Total débité user** | **12 USDT** |
 | `providerFee` (Binance) | 1.3 USDT |
-| `platformFee` (McBuleli) | 0.7 USDT |
+| `platformFee` (McBuleli) | **0.7 USDT** |
 
-Binance prélève ~1.3 USDT sur le compte hot wallet McBuleli ; le reste du forfait utilisateur reste marge plateforme.
+### Transfert interne Binance (fee réseau Binance = 0)
 
-### Transfert interne Binance (fee réseau = 0)
+Quand Binance barre le fee (`~~1.3~~ → 0.00`) — McBuleli envoie quand même via Binance à coût **0**, mais **l’user paie toujours +2 USDT** :
 
-Quand Binance barre le fee (`~~1.3~~ → 0.00`) :
+| Composant | Montant |
+|-----------|---------|
+| Net reçu | ex. 2 USDT (min abaissé via `withdrawInternalMin`) |
+| Fee utilisateur McBuleli | **+2 USDT** (inchangé) |
+| **Total débité user** | **4 USDT** |
+| `providerFee` (Binance) | **0** |
+| `platformFee` (McBuleli) | **2 USDT** (bénéfice intégral) |
 
-| Composant | Montant cible |
-|-----------|---------------|
-| Net reçu | ex. 2 USDT (min abaissé) |
-| Fee affiché à l’user | **0 USDT** (transfert interne) |
-| `providerFee` réel | **0** (`transactionFee` historique) |
-| `platformFee` / marge | **Économie du fee catalogue** (ex. 1.3 USDT) — bénéfice McBuleli car aucun coût réseau Binance |
+**Règle métier stricte :**
 
-**Règle métier stricte :** la marge sur transfert interne = `withdrawFee` catalogue du réseau **non payé à Binance**, pas le forfait 2 USDT externe. Ne pas confondre :
-
-- **Externe** : user paie 2 USDT → split provider + platform.
-- **Interne Binance** : user paie 0 → McBuleli conserve l’équivalent du `withdrawFee` catalogue comme profit net (aucun débit réseau).
+- **User** : forfait **2 USDT** sur **tous** les retraits USDT McBuleli.
+- **Interne Binance** : seul le **minimum net** baisse ; le forfait user reste 2 USDT.
+- **Marge McBuleli** : plus élevée en interne (2 USDT entiers) vs externe TRC20 (0.7 USDT après coût Binance).
 
 Schéma :
 
 ```mermaid
 flowchart TD
   A[Utilisateur saisit adresse + réseau + montant] --> B{Adresse interne Binance?}
-  B -->|Non| C[Min = withdrawMin · Fee user = 2 USDT]
-  B -->|Oui| D[Min = withdrawInternalMin · Fee user = 0]
+  B -->|Non| C[Min = withdrawMin · User fee = 2 USDT]
+  B -->|Oui| D[Min = withdrawInternalMin · User fee = 2 USDT]
   C --> E[binanceWithdraw apply]
   D --> E
-  E --> F[Lire transactionFee dans withdraw/history]
-  F --> G[finalizeUsdtWithdrawFeeSplit]
-  G --> H[Enregistrer provider_fee + platform_fee en DB]
+  E --> F[transactionFee dans withdraw/history]
+  F --> G[providerFee = fee Binance · platformFee = 2 - providerFee]
 ```
 
 ---
@@ -239,7 +242,7 @@ Avant d’approuver ou debugger un ticket :
 2. **Réseau** — cohérent avec l’adresse (TRC20 ↔ `T…`, BEP20/ERC20 ↔ `0x…`).
 3. **Memo / tag** — requis si `withdrawTag = true` pour ce réseau ; sinon **ne pas** envoyer `addressTag` (erreur Binance `-4106`).
 4. **Montant net** — ≥ `withdrawMin` (externe) ou ≥ `withdrawInternalMin` (interne).
-5. **Frais utilisateur** — 2 USDT (externe) ou 0 (interne) selon détection.
+5. **Frais utilisateur** — **toujours 2 USDT** (interne ou externe).
 6. **Solde McBuleli** — `balance >= net + userFee`.
 7. **Après apply** — vérifier `transactionFee` dans l’historique ; mettre à jour `provider_fee` / `platform_fee`.
 8. **TxID** — présent si externe ; « Internal » si transfert interne Binance.
@@ -286,7 +289,7 @@ Avant d’approuver ou debugger un ticket :
 | Fee réseau BEP20 | **0.01 USDT** | Lu via API | ✅ OK en lecture |
 | Fee réseau ERC20 | **0.4 USDT** | Lu via API | ✅ OK en lecture |
 | Fee utilisateur McBuleli | N/A (Binance affiche seulement le network fee) | **2 USDT fixe** toujours | ⚠️ Pas de distinction interne/externe |
-| Transfert interne Binance | **0 USDT** (fee barré) | Non détecté — fee 2 USDT quand même | ❌ À implémenter |
+| Transfert interne Binance | **0 USDT** côté Binance | User paie **2 USDT** ; min abaissé ; marge McBuleli = **2 USDT** | ✅ |
 | Min transfert interne | Très bas (`withdrawInternalMin`) | Toujours > 10 USDT | ❌ Bloque ex. 2 USDT vers wallet Binance |
 
 ---
@@ -334,9 +337,10 @@ Avant d’approuver ou debugger un ticket :
 | Min net | ~0.000001 (interne) | > 10 ❌ | ≥ `withdrawInternalMin` |
 | Net | 2 USDT ✅ | **refusé** | 2 USDT ✅ |
 | Fee réseau effectif | **0 USDT** | 1.3 non payé si apply réussit | **0 USDT** |
-| Fee user | **0 USDT** | **+2 USDT** ❌ | **0 USDT** |
-| Total débité user | 2 USDT | bloqué | **2 USDT** |
-| Profit McBuleli | N/A | N/A | **1.3 USDT** (= fee catalogue TRC20 économisé, `platform_fee`) |
+| Fee user McBuleli | **+2 USDT** (toujours) | **+2 USDT** |
+| Total débité user | N/A | **4 USDT** |
+| `providerFee` | 0 | **0** |
+| `platformFee` / profit McBuleli | N/A | **2 USDT** (intégral) |
 | TxID | « Internal » | — | « Internal » |
 
 **Verdict :** C’est le cas de vos captures d’écran. Aujourd’hui McBuleli **bloque** (min 10) et **ne modélise pas** le profit interne.
@@ -363,8 +367,8 @@ Avant d’approuver ou debugger un ticket :
 
 1. Lire `withdrawMin` (5) et `withdrawInternalMin` depuis `getall` — remplacer le floor hardcodé 10.
 2. Quote dynamique adresse + réseau → `isInternal`, `userFee`, `minNet`.
-3. Interne : `userFee = 0`, profit = `withdrawFee` catalogue en `platform_fee` après `transactionFee = 0` confirmé.
-4. Externe : conserver forfait 2 USDT ; split = min(binanceFee, 2) provider + reste platform.
+3. Interne : **user fee = 2 USDT** (inchangé), min abaissé ; `platformFee = 2` car `providerFee = 0`.
+4. Externe : forfait 2 USDT ; split = min(binanceFee, 2) provider + reste platform.
 
 ---
 

@@ -141,7 +141,6 @@ export async function POST(req: Request) {
   const feeSplit =
     body.asset === "USDT" && usdtQuote
       ? await resolveUsdtFeeSplitForQuote({
-          network: body.network,
           isInternal: usdtQuote.isInternal,
           userFeeUsdt: usdtQuote.userFeeUsdt,
           binanceListFeeUsdt: usdtQuote.binanceListFeeUsdt,

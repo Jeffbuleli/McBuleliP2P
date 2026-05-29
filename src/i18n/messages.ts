@@ -2847,7 +2847,7 @@ export const en = {
   withdraw_warn: "⚠️ Wrong address/network = loss",
   fee_note: "+ {fee} USDT fee · min net {min} USDT",
   fee_note_internal:
-    "Binance internal wallet · no fee · min net {min} USDT",
+    "+ {fee} USDT fee · Binance internal wallet · min net {min} USDT",
   fee_note_asset: "+ {fee} {unit} fee · net must be > {min} {unit}",
   deposit_pick_asset: "Choose asset",
   asset_usdt_full: "Tether · USDT",
@@ -6053,7 +6053,7 @@ export const fr: Messages = {
   withdraw_warn: "⚠️ Mauvaise adresse/réseau = perte",
   fee_note: "+ {fee} USDT frais · net min. {min} USDT",
   fee_note_internal:
-    "Wallet Binance interne · sans frais · net min. {min} USDT",
+    "+ {fee} USDT frais · wallet Binance interne · net min. {min} USDT",
   fee_note_asset: "+ {fee} {unit} frais · net strictement supérieur à {min} {unit}",
   deposit_pick_asset: "Choisir l’actif",
   asset_usdt_full: "Tether · USDT",
