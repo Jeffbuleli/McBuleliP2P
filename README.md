@@ -8,7 +8,7 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 
 ## Withdrawals
 
-- User enters **net** USDT to receive; platform fee is **2 USDT** (added on top). Minimum net **10 USDT**.
+- User enters **net** USDT to receive; platform fee is **2 USDT** on external withdrawals (added on top). Minimum net **5 USDT** (Binance catalogue). Internal Binance wallets: **0 fee**, lower minimum.
 - Status flow: **Pending** → agent **Take charge** → **Processing** (visible to all agents) → **Completed** / **Rejected**.
 
 ## Agent workflow

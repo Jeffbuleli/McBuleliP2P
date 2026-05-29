@@ -7,7 +7,7 @@ import {
   walletWithdrawalBatchDelayMaxMinutes,
   walletWithdrawalBatchDelayMinMinutes,
 } from "@/lib/usdt-wallet-features";
-import { binanceWithdraw, binanceWithdrawHistoryById } from "@/lib/binance";
+import { binanceWithdraw, binanceWithdrawHistoryById, binanceUsdtWithdrawFee } from "@/lib/binance";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
 import type { NetworkId } from "@/lib/networks";
@@ -157,10 +157,12 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
 
       const history = await binanceWithdrawHistoryById(sent.id).catch(() => null);
       const actualFee = history ? Number(history.transactionFee) : null;
+      const listFee = await binanceUsdtWithdrawFee(network).catch(() => 0);
       const feeSplit = await finalizeUsdtWithdrawFeeSplit({
         network,
         userFeeUsdt: Number(w.fee),
         actualBinanceFeeUsdt: Number.isFinite(actualFee ?? NaN) ? actualFee : null,
+        binanceListFeeUsdt: listFee,
       });
 
       await db

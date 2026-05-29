@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { NetworkId } from "./networks";
-import { USDT_NETWORKS } from "./networks";
+import { canonicalFromBinanceNetwork, USDT_NETWORKS } from "./networks";
 import { getBinanceWalletCredentials } from "@/lib/env";
 import {
   binanceWalletApiBase,
@@ -204,7 +204,16 @@ export type BinanceCoinNetworkConfig = {
   network: string;
   withdrawFee: string;
   withdrawMin?: string;
+  withdrawInternalMin?: string;
   withdrawEnable?: boolean;
+  withdrawTag?: boolean;
+};
+
+export type BinanceUsdtNetworkWithdrawConfig = {
+  withdrawFee: number;
+  withdrawMin: number;
+  withdrawInternalMin: number;
+  withdrawTag: boolean;
 };
 
 export type BinanceCoinConfig = {
@@ -226,14 +235,75 @@ async function fetchBinanceCoinConfigs(): Promise<BinanceCoinConfig[]> {
   return list;
 }
 
-/** Binance USDT withdrawal network fee (0 when promo / free). */
+function usdtNetworkRow(network: NetworkId) {
+  return fetchBinanceCoinConfigs().then((configs) => {
+    const usdt = configs.find((c) => c.coin === "USDT");
+    const binanceNet = USDT_NETWORKS[network].binanceNetwork;
+    return usdt?.networkList?.find((n) => n.network === binanceNet) ?? null;
+  });
+}
+
+/** Binance USDT withdrawal network fee (catalogue; 0 on internal transfer). */
 export async function binanceUsdtWithdrawFee(network: NetworkId): Promise<number> {
-  const configs = await fetchBinanceCoinConfigs();
-  const usdt = configs.find((c) => c.coin === "USDT");
-  const binanceNet = USDT_NETWORKS[network].binanceNetwork;
-  const row = usdt?.networkList?.find((n) => n.network === binanceNet);
+  const row = await usdtNetworkRow(network);
   const fee = Number(row?.withdrawFee ?? 0);
   return Number.isFinite(fee) && fee >= 0 ? fee : 0;
+}
+
+/** Live mins + fee for a USDT network from `config/getall`. */
+export async function binanceUsdtNetworkWithdrawConfig(
+  network: NetworkId,
+): Promise<BinanceUsdtNetworkWithdrawConfig> {
+  const row = await usdtNetworkRow(network);
+  const withdrawFee = Number(row?.withdrawFee ?? 0);
+  const withdrawMin = Number(row?.withdrawMin ?? 5);
+  const withdrawInternalMin = Number(row?.withdrawInternalMin ?? 0.000001);
+  return {
+    withdrawFee: Number.isFinite(withdrawFee) && withdrawFee >= 0 ? withdrawFee : 0,
+    withdrawMin: Number.isFinite(withdrawMin) && withdrawMin > 0 ? withdrawMin : 5,
+    withdrawInternalMin:
+      Number.isFinite(withdrawInternalMin) && withdrawInternalMin > 0
+        ? withdrawInternalMin
+        : 0.000001,
+    withdrawTag: Boolean(row?.withdrawTag),
+  };
+}
+
+export function normalizeWithdrawAddressForNetwork(
+  network: NetworkId,
+  address: string,
+): string {
+  const trimmed = address.trim();
+  if (network === "TRC20") return trimmed;
+  return trimmed.toLowerCase();
+}
+
+export function withdrawAddressCacheKey(
+  network: NetworkId,
+  address: string,
+): string {
+  return `${network}:${normalizeWithdrawAddressForNetwork(network, address)}`;
+}
+
+function parseInternalAddressAllowlist(): Set<string> {
+  const raw = process.env.BINANCE_INTERNAL_WITHDRAW_ADDRESSES?.trim();
+  if (!raw) return new Set();
+  const keys = new Set<string>();
+  for (const part of raw.split(",")) {
+    const p = part.trim();
+    if (!p) continue;
+    const colon = p.indexOf(":");
+    if (colon <= 0) continue;
+    const net = p.slice(0, colon);
+    const addr = p.slice(colon + 1);
+    if (
+      (net === "TRC20" || net === "ERC20" || net === "BEP20") &&
+      addr.length >= 10
+    ) {
+      keys.add(withdrawAddressCacheKey(net as NetworkId, addr));
+    }
+  }
+  return keys;
 }
 
 export type BinanceWithdrawHistoryRow = {
@@ -243,7 +313,58 @@ export type BinanceWithdrawHistoryRow = {
   coin: string;
   status: number;
   txId?: string;
+  address?: string;
+  network?: string;
+  /** 1 = internal Binance transfer, 0 = on-chain */
+  transferType?: number;
 };
+
+let internalAddressCache: { at: number; keys: Set<string> } | null = null;
+const INTERNAL_ADDR_CACHE_MS = 5 * 60 * 1000;
+
+/** Addresses previously withdrawn to with zero network fee (Binance internal). */
+export async function refreshBinanceInternalWithdrawAddresses(): Promise<Set<string>> {
+  const now = Date.now();
+  if (
+    internalAddressCache &&
+    now - internalAddressCache.at < INTERNAL_ADDR_CACHE_MS
+  ) {
+    return internalAddressCache.keys;
+  }
+  const keys = new Set(parseInternalAddressAllowlist());
+  try {
+    const rows = (await signedGet("/sapi/v1/capital/withdraw/history", {
+      coin: "USDT",
+    })) as BinanceWithdrawHistoryRow[];
+    if (Array.isArray(rows)) {
+      for (const row of rows) {
+        if (!row.address || !row.network) continue;
+        const fee = Number(row.transactionFee ?? NaN);
+        const tx = (row.txId ?? "").trim().toLowerCase();
+        const internal =
+          row.transferType === 1 ||
+          (Number.isFinite(fee) && fee === 0) ||
+          tx === "internal";
+        if (!internal) continue;
+        const canonical = canonicalFromBinanceNetwork("USDT", row.network);
+        if (!canonical) continue;
+        keys.add(withdrawAddressCacheKey(canonical, row.address));
+      }
+    }
+  } catch {
+    /* allowlist only */
+  }
+  internalAddressCache = { at: now, keys };
+  return keys;
+}
+
+export async function isKnownBinanceInternalWithdrawAddress(args: {
+  network: NetworkId;
+  address: string;
+}): Promise<boolean> {
+  const keys = await refreshBinanceInternalWithdrawAddresses();
+  return keys.has(withdrawAddressCacheKey(args.network, args.address));
+}
 
 export async function binanceWithdrawHistoryById(
   withdrawId: string,

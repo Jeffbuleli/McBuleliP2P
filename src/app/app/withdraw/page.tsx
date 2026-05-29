@@ -41,7 +41,8 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(false);
   const [feeUsdt, setFeeUsdt] = useState(EXTERNAL_WITHDRAW_FEE_USDT);
   const [feePi, setFeePi] = useState(EXTERNAL_WITHDRAW_FEE_PI);
-  const [minUsdt, setMinUsdt] = useState(10);
+  const [minUsdt, setMinUsdt] = useState(5);
+  const [isInternalUsdt, setIsInternalUsdt] = useState(false);
   const [processingOpen, setProcessingOpen] = useState(false);
   const [processingStatus, setProcessingStatus] = useState(WithdrawalStatus.PENDING_AGENT);
   const [successHint, setSuccessHint] = useState<string | null>(null);
@@ -69,6 +70,35 @@ export default function WithdrawPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (wAsset !== "USDT") return;
+    const trimmed = address.trim();
+    if (trimmed.length < 10) {
+      setIsInternalUsdt(false);
+      setFeeUsdt(EXTERNAL_WITHDRAW_FEE_USDT);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const qs = new URLSearchParams({
+            network,
+            address: trimmed,
+          });
+          const res = await fetch(`/api/config/withdraw-quote?${qs}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (typeof data.userFeeUsdt === "number") setFeeUsdt(data.userFeeUsdt);
+          if (typeof data.minNetUsdt === "number") setMinUsdt(data.minNetUsdt);
+          if (typeof data.isInternal === "boolean") setIsInternalUsdt(data.isInternal);
+        } catch {
+          /* keep previous quote */
+        }
+      })();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [wAsset, network, address]);
 
   useEffect(() => {
     void (async () => {
@@ -173,7 +203,9 @@ export default function WithdrawPage() {
 
   const feeNote =
     wAsset === "USDT"
-      ? interpolate(t("fee_note"), { fee: String(feeUsdt), min: String(minUsdt) })
+      ? isInternalUsdt
+        ? interpolate(t("fee_note_internal"), { min: String(minUsdt) })
+        : interpolate(t("fee_note"), { fee: String(feeUsdt), min: String(minUsdt) })
       : interpolate(t("fee_note_asset"), {
           fee: String(feePi),
           min: "0",

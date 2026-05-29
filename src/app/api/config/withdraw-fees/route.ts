@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import {
+  DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
   EXTERNAL_WITHDRAW_FEE_PI,
   EXTERNAL_WITHDRAW_FEE_USDT,
   MIN_WITHDRAW_NET_PI,
-  MIN_WITHDRAW_NET_USDT,
 } from "@/lib/withdraw-fees";
 import { resolveBinanceUsdtWithdrawFee } from "@/lib/withdraw-fee-split";
+import { binanceUsdtNetworkWithdrawConfig } from "@/lib/binance";
 import type { NetworkId } from "@/lib/networks";
 import { getBinanceWalletCredentials } from "@/lib/env";
 import {
@@ -16,22 +17,29 @@ import {
 /** Fixed platform fee + minimum net withdrawal (no secrets). */
 export async function GET() {
   const binanceFeeByNetwork: Partial<Record<NetworkId, number>> = {};
+  const binanceMinByNetwork: Partial<Record<NetworkId, number>> = {};
   try {
     getBinanceWalletCredentials();
+    for (const net of ["TRC20", "ERC20", "BEP20"] as NetworkId[]) {
+      const cfg = await binanceUsdtNetworkWithdrawConfig(net);
+      binanceFeeByNetwork[net] = cfg.withdrawFee;
+      binanceMinByNetwork[net] = cfg.withdrawMin;
+    }
+  } catch {
+    /* wallet keys not configured */
     for (const net of ["TRC20", "ERC20", "BEP20"] as NetworkId[]) {
       const fee = await resolveBinanceUsdtWithdrawFee(net);
       if (fee != null) binanceFeeByNetwork[net] = fee;
     }
-  } catch {
-    /* wallet keys not configured */
   }
 
   return NextResponse.json({
     feeUsdt: EXTERNAL_WITHDRAW_FEE_USDT,
-    minNetUsdt: MIN_WITHDRAW_NET_USDT,
+    minNetUsdt: DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
     feePi: EXTERNAL_WITHDRAW_FEE_PI,
     minNetPi: MIN_WITHDRAW_NET_PI,
     binanceFeeByNetwork,
+    binanceMinByNetwork,
     withdrawalSlaHours: withdrawalSlaHours(),
     depositValidationSlaHours: depositValidationSlaHours(),
   });

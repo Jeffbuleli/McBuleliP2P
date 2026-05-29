@@ -23,6 +23,17 @@ export function computeWithdrawFeeSplit(args: {
   };
 }
 
+/** Internal Binance transfer: no user fee; McBuleli keeps catalogue network fee as margin. */
+export function computeInternalWithdrawProfitSplit(args: {
+  binanceListFeeUsdt: number;
+}): WithdrawFeeSplit {
+  const saved = Math.max(0, args.binanceListFeeUsdt);
+  return {
+    providerFee: feeToNumericString(0),
+    platformFee: feeToNumericString(saved),
+  };
+}
+
 export async function resolveBinanceUsdtWithdrawFee(
   network: NetworkId,
 ): Promise<number | null> {
@@ -45,6 +56,23 @@ export async function resolveUsdtFeeSplitForNetwork(
   });
 }
 
+export async function resolveUsdtFeeSplitForQuote(args: {
+  network: NetworkId;
+  isInternal: boolean;
+  userFeeUsdt: number;
+  binanceListFeeUsdt: number;
+}): Promise<WithdrawFeeSplit> {
+  if (args.isInternal) {
+    return computeInternalWithdrawProfitSplit({
+      binanceListFeeUsdt: args.binanceListFeeUsdt,
+    });
+  }
+  return computeWithdrawFeeSplit({
+    userFeeUsdt: args.userFeeUsdt,
+    binanceFeeUsdt: args.binanceListFeeUsdt,
+  });
+}
+
 /** PI / manual rails — full user fee stays with McBuleli. */
 export function piWithdrawFeeSplit(userFee: string): WithdrawFeeSplit {
   return {
@@ -58,13 +86,29 @@ export async function finalizeUsdtWithdrawFeeSplit(args: {
   network: NetworkId;
   userFeeUsdt: number;
   actualBinanceFeeUsdt?: number | null;
+  binanceListFeeUsdt?: number | null;
 }): Promise<WithdrawFeeSplit> {
-  let binanceFee = args.actualBinanceFeeUsdt;
-  if (binanceFee == null || !Number.isFinite(binanceFee)) {
-    binanceFee = (await resolveBinanceUsdtWithdrawFee(args.network)) ?? 0;
+  const listFee =
+    args.binanceListFeeUsdt ??
+    (await resolveBinanceUsdtWithdrawFee(args.network)) ??
+    0;
+
+  let actualFee = args.actualBinanceFeeUsdt;
+  if (actualFee == null || !Number.isFinite(actualFee)) {
+    actualFee = listFee;
   }
+
+  const internalTransfer =
+    args.userFeeUsdt === 0 &&
+    Number.isFinite(actualFee) &&
+    actualFee === 0;
+
+  if (internalTransfer) {
+    return computeInternalWithdrawProfitSplit({ binanceListFeeUsdt: listFee });
+  }
+
   return computeWithdrawFeeSplit({
     userFeeUsdt: args.userFeeUsdt,
-    binanceFeeUsdt: binanceFee,
+    binanceFeeUsdt: actualFee,
   });
 }

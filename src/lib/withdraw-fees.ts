@@ -1,14 +1,19 @@
-/** Fixed platform fee (USDT) on every external withdrawal — added on top of net amount. */
+/** Fixed platform fee (USDT) on external withdrawals — added on top of net amount. */
 export const EXTERNAL_WITHDRAW_FEE_USDT = 2;
 
-/**
- * Net USDT sent on-chain must be **strictly greater than** this value (Binance minimum withdrawal is 10 USDT;
- * we align so payouts remain executable). Wallet debit = net + {@link EXTERNAL_WITHDRAW_FEE_USDT}.
- */
-export const MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR = 10;
+/** Binance catalogue default when API unavailable ([cryptoFee](https://www.binance.com/en/fee/cryptoFee)). */
+export const DEFAULT_BINANCE_WITHDRAW_MIN_USDT = 5;
 
-/** @deprecated alias — use `MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR`; validation is `net > floor`. */
-export const MIN_WITHDRAW_NET_USDT = MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR;
+export const DEFAULT_BINANCE_WITHDRAW_INTERNAL_MIN_USDT = 0.000001;
+
+/**
+ * @deprecated Use live quote from `resolveUsdtWithdrawQuote` / Binance `withdrawMin`.
+ * Kept for static config fallback only.
+ */
+export const MIN_WITHDRAW_NET_USDT = DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
+
+/** @deprecated alias */
+export const MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR = DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
 
 export const EXTERNAL_WITHDRAW_FEE_PI = 2;
 export const MIN_WITHDRAW_NET_PI = 10;
@@ -23,18 +28,21 @@ export type ParsedWithdrawAmount =
 
 export function parseNetWithdrawal(args: {
   netAmountStr: string;
+  userFeeUsdt?: number;
+  minNetUsdt?: number;
 }): ParsedWithdrawAmount {
   const net = Number(args.netAmountStr);
+  const minNet = args.minNetUsdt ?? DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
+  const feeN = args.userFeeUsdt ?? EXTERNAL_WITHDRAW_FEE_USDT;
   if (!Number.isFinite(net) || net <= 0) {
     return { ok: false, message: "Invalid amount." };
   }
-  if (!(net > MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR + 1e-12)) {
+  if (net + 1e-12 < minNet) {
     return {
       ok: false,
-      message: `Net amount must be strictly greater than ${MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR} USDT.`,
+      message: `Net amount must be at least ${minNet} USDT.`,
     };
   }
-  const feeN = EXTERNAL_WITHDRAW_FEE_USDT;
   const total = net + feeN;
   return {
     ok: true,

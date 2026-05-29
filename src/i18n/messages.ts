@@ -2845,7 +2845,9 @@ export const en = {
   withdraw_2fa_label: "Authenticator code (2FA)",
   withdraw_confirm_debit: "Net {net} {unit} · wallet debited {total} {unit}",
   withdraw_warn: "⚠️ Wrong address/network = loss",
-  fee_note: "+ {fee} USDT fee · net must be > {min} USDT",
+  fee_note: "+ {fee} USDT fee · min net {min} USDT",
+  fee_note_internal:
+    "Binance internal wallet · no fee · min net {min} USDT",
   fee_note_asset: "+ {fee} {unit} fee · net must be > {min} {unit}",
   deposit_pick_asset: "Choose asset",
   asset_usdt_full: "Tether · USDT",
@@ -6049,7 +6051,9 @@ export const fr: Messages = {
   withdraw_2fa_label: "Code authentificateur (2FA)",
   withdraw_confirm_debit: "Net {net} {unit} · portefeuille débité {total} {unit}",
   withdraw_warn: "⚠️ Mauvaise adresse/réseau = perte",
-  fee_note: "+ {fee} USDT frais · le net doit être strictement supérieur à {min} USDT",
+  fee_note: "+ {fee} USDT frais · net min. {min} USDT",
+  fee_note_internal:
+    "Wallet Binance interne · sans frais · net min. {min} USDT",
   fee_note_asset: "+ {fee} {unit} frais · net strictement supérieur à {min} {unit}",
   deposit_pick_asset: "Choisir l’actif",
   asset_usdt_full: "Tether · USDT",

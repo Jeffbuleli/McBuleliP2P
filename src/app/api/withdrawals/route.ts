@@ -15,8 +15,9 @@ import {
 } from "@/lib/withdraw-fees";
 import {
   piWithdrawFeeSplit,
-  resolveUsdtFeeSplitForNetwork,
+  resolveUsdtFeeSplitForQuote,
 } from "@/lib/withdraw-fee-split";
+import { resolveUsdtWithdrawQuote } from "@/lib/withdraw-quote";
 import { walletWithdrawAutoEnabled } from "@/lib/usdt-wallet-features";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
@@ -89,10 +90,23 @@ export async function POST(req: Request) {
     );
   }
 
+  let usdtQuote: Awaited<ReturnType<typeof resolveUsdtWithdrawQuote>> | null =
+    null;
+  if (body.asset === "USDT") {
+    usdtQuote = await resolveUsdtWithdrawQuote({
+      network: body.network,
+      address: body.address.trim(),
+    });
+  }
+
   const amounts =
     body.asset === "PI"
       ? parseNetWithdrawalPi({ netAmountStr: body.amount })
-      : parseNetWithdrawal({ netAmountStr: body.amount });
+      : parseNetWithdrawal({
+          netAmountStr: body.amount,
+          userFeeUsdt: usdtQuote!.userFeeUsdt,
+          minNetUsdt: usdtQuote!.minNetUsdt,
+        });
 
   if (!amounts.ok) {
     return NextResponse.json({ message: amounts.message }, { status: 400 });
@@ -125,8 +139,13 @@ export async function POST(req: Request) {
       : getPiOkxChain();
 
   const feeSplit =
-    body.asset === "USDT"
-      ? await resolveUsdtFeeSplitForNetwork(body.network, Number(fee))
+    body.asset === "USDT" && usdtQuote
+      ? await resolveUsdtFeeSplitForQuote({
+          network: body.network,
+          isInternal: usdtQuote.isInternal,
+          userFeeUsdt: usdtQuote.userFeeUsdt,
+          binanceListFeeUsdt: usdtQuote.binanceListFeeUsdt,
+        })
       : piWithdrawFeeSplit(fee);
 
   const usdtProvider = walletWithdrawAutoEnabled() ? "binance" : "manual";
