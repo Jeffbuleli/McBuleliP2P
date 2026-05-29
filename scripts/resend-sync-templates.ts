@@ -57,11 +57,20 @@ async function main() {
     } else {
       fail++;
       console.error(`✗ ${def.alias}`, out.error);
+      if (out.error === "network_error") {
+        console.error(
+          "  → DNS/réseau local : impossible de joindre api.resend.com (VPN, hors-ligne, pare-feu). Réessayez plus tard.",
+        );
+      }
     }
   }
 
   console.log(`\nDone: ${ok} published, ${fail} failed.`);
-  console.log("\nEnsure RESEND_USE_TEMPLATES=true in .env after sync.");
+  if (ok > 0) {
+    console.log(
+      "\nAperçu Resend mis à jour. En prod, laissez RESEND_USE_TEMPLATES absent ou false — les envois utilisent le HTML inline (images https://mcbuleli.org).",
+    );
+  }
 
   if (fail > 0) process.exit(1);
 }

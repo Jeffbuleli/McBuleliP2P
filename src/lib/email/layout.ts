@@ -16,15 +16,11 @@ function escHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Hosted PNG on mcbuleli.org — same approach as the working Resend templates. */
-export type EmailImageMode = "https";
-
 export type McBuleliEmailLayoutArgs = {
   copy: EmailCopyBlock;
   actionUrl: string;
   illustration: EmailIllustration;
   locale: "en" | "fr";
-  imageMode?: EmailImageMode;
   /** When true, href uses Resend {{{ACTION_URL}}} placeholder. */
   resendVariables?: boolean;
   detailRows?: EmailDetailRow[];
@@ -41,6 +37,21 @@ function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): stri
     )
     .join("");
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:360px;">${cells}</table>`;
+}
+
+function renderHeaderLogo(): string {
+  const src = logoUrl();
+  return `<td style="vertical-align:middle;padding-right:10px;"><img src="${src}" width="48" height="48" alt="McBuleli" style="display:block;border:0;border-radius:10px;" /></td>`;
+}
+
+function renderIllustration(illustration: EmailIllustration): string {
+  const src = illustrationUrl(illustration);
+  return `<img src="${src}" width="200" height="200" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />`;
+}
+
+function renderFooterLogo(): string {
+  const src = logoUrl();
+  return `<img src="${src}" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;border-radius:6px;opacity:0.9;" />`;
 }
 
 export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
@@ -63,15 +74,20 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
   const rights =
     locale === "fr" ? "Tous droits réservés." : "All rights reserved.";
   const waLabel = locale === "fr" ? "WhatsApp" : "WhatsApp";
-
-  const logoSrc = logoUrl();
-  const illustrationSrc = illustrationUrl(illustration);
+  const brandTagline =
+    locale === "fr"
+      ? "Portefeuille crypto & P2P"
+      : "Crypto wallet & P2P";
+  const supportLine =
+    locale === "fr"
+      ? "Support McBuleli"
+      : "McBuleli support";
 
   const detailsHtml =
     detailRows && detailRows.length > 0
       ? `<tr>
-            <td style="padding:0 40px 20px;text-align:center;">
-              <div style="background:${EMAIL_BRAND.mint};border-radius:14px;padding:16px 18px;text-align:left;">
+            <td style="padding:4px 28px 20px;">
+              <div style="background:${EMAIL_BRAND.mint};border-radius:14px;padding:16px 18px;">
                 ${renderDetailsTable(detailRows, !resendVariables)}
               </div>
             </td>
@@ -91,43 +107,54 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${EMAIL_BRAND.mint};padding:32px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:${EMAIL_BRAND.white};border-radius:20px;border:1px solid ${EMAIL_BRAND.border};">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:${EMAIL_BRAND.white};border-radius:20px;overflow:hidden;border:1px solid ${EMAIL_BRAND.border};">
           <tr>
-            <td style="padding:32px 32px 12px;text-align:center;">
-              <img src="${logoSrc}" width="120" height="auto" alt="McBuleli" style="display:block;margin:0 auto;border:0;max-width:120px;height:auto;" />
+            <td style="padding:24px 28px 8px;text-align:center;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  ${renderHeaderLogo()}
+                  <td style="vertical-align:middle;text-align:left;">
+                    <p style="margin:0;font-size:20px;font-weight:800;color:${EMAIL_BRAND.primary};letter-spacing:-0.02em;">McBuleli</p>
+                    <p style="margin:2px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};">${brandTagline}</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 32px 0;text-align:center;">
-              <img src="${illustrationSrc}" width="200" height="auto" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />
+            <td style="padding:8px 28px 0;text-align:center;">
+              ${renderIllustration(illustration)}
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 40px 8px;text-align:center;">
+            <td style="padding:16px 32px 8px;text-align:center;">
               <h1 style="margin:0;font-size:22px;line-height:1.25;font-weight:700;color:${EMAIL_BRAND.text};">${escHtml(copy.title)}</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 40px 24px;text-align:center;">
+            <td style="padding:0 32px 12px;text-align:center;">
               <p style="margin:0;font-size:15px;line-height:1.5;color:${EMAIL_BRAND.muted};">${bodyHtml}</p>
             </td>
           </tr>
           ${detailsHtml}
           <tr>
-            <td style="padding:0 40px 28px;text-align:center;">
-              <a href="${href}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:12px;">${escHtml(copy.cta)}</a>
+            <td style="padding:8px 32px 24px;text-align:center;">
+              <a href="${href}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${escHtml(copy.cta)}</a>
             </td>
           </tr>
           ${
             copy.expiry
-              ? `<tr><td style="padding:0 40px 28px;text-align:center;"><p style="margin:0;font-size:12px;line-height:1.4;color:${EMAIL_BRAND.muted};">${escHtml(copy.expiry)}</p></td></tr>`
+              ? `<tr><td style="padding:0 32px 24px;text-align:center;"><p style="margin:0;font-size:12px;line-height:1.4;color:${EMAIL_BRAND.muted};">${escHtml(copy.expiry)}</p></td></tr>`
               : ""
           }
           <tr>
-            <td style="padding:24px 40px 32px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
-              <p style="margin:0 0 8px;font-size:12px;color:${EMAIL_BRAND.muted};">${escHtml(copy.footerHelp)} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${escHtml(copy.footerContact)}</a></p>
+            <td style="padding:20px 32px 28px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
+              ${renderFooterLogo()}
+              <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${EMAIL_BRAND.text};">McBuleli</p>
+              <p style="margin:0 0 10px;font-size:12px;color:${EMAIL_BRAND.muted};">${escHtml(copy.footerHelp)} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(copy.footerContact)}</a></p>
               <p style="margin:0 0 8px;font-size:12px;color:${EMAIL_BRAND.muted};">
-                <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${EMAIL_FOOTER.supportEmail}</a>
+                <span style="color:${EMAIL_BRAND.muted};">${supportLine}:</span>
+                <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${EMAIL_FOOTER.supportEmail}</a>
                 · <a href="${EMAIL_FOOTER.whatsApp}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${waLabel}</a>
               </p>
               <p style="margin:0;font-size:11px;color:${EMAIL_BRAND.muted};">© ${year} McBuleli · ${rights}</p>

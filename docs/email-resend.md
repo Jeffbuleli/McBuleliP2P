@@ -75,7 +75,7 @@ npm run resend:sync-templates   # optionnel : aligner l’aperçu dashboard
 |----------|-----------|------------|
 | `RESEND_API_KEY` | Optionnel (sync) | **Obligatoire** |
 | `RESEND_ALLOW_SEND` | absent / `false` | absent / `true` |
-| `RESEND_USE_TEMPLATES` | `false` ou absent | **`false` ou absent** (CID inline) |
+| `RESEND_USE_TEMPLATES` | `false` ou absent | **`false` ou absent** (HTML inline + PNG hébergés) |
 | `AUTH_EMAIL_FROM` | `McBuleli <noreply@mcbuleli.org>` | idem |
 | `AUTH_EMAIL_REPLY_TO` | `hi@mcbuleli.org` | idem |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://mcbuleli.org` |
