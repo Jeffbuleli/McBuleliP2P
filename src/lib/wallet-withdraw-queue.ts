@@ -187,7 +187,7 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
           txid,
         },
       });
-      void notifyWithdrawalCompletedEmail({
+      await notifyWithdrawalCompletedEmail({
         userId: w.userId,
         withdrawalId: w.id,
         asset: w.asset,

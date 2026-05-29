@@ -53,7 +53,7 @@ Fichiers source :
 - Définitions : `src/lib/email/template-definitions.ts`
 - Textes FR/EN : `src/lib/email/copy.ts`
 - Envoi auth : `src/lib/email/send-transactional.ts`
-- Envoi crypto : `src/lib/email/send-wallet-crypto.ts` · hooks : `src/lib/email/wallet-crypto-notify.ts`
+- Envoi crypto : `src/lib/email/send-wallet-crypto.ts` · hooks : `src/lib/email/wallet-crypto-notify.ts` · planification serverless : `src/lib/email/schedule-email.ts` (`after()` Next.js)
 - Illustrations : `public/email/email-*.png` · logo : `public/brand/logo.png`
 
 ---

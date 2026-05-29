@@ -33,6 +33,10 @@ function assetKind(
   return asset.toUpperCase() === "PI" ? piKind : usdtKind;
 }
 
+function logEmailSkip(label: string, reason: string) {
+  console.warn(`[email] ${label} skipped: ${reason}`);
+}
+
 function logEmailError(label: string, err: unknown) {
   console.error(`[email] ${label}`, err);
 }
@@ -45,9 +49,12 @@ export async function notifyDepositConfirmedEmail(args: {
   networkCanonical: string;
   txid: string;
   locale?: EmailLocale;
-}): Promise<void> {
+}): Promise<boolean> {
   const to = await userEmail(args.userId);
-  if (!to) return;
+  if (!to) {
+    logEmailSkip("deposit_confirmed", "user_has_no_email");
+    return false;
+  }
 
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
@@ -57,7 +64,7 @@ export async function notifyDepositConfirmedEmail(args: {
   const txid = args.txid.trim();
 
   try {
-    await sendMcBuleliWalletCryptoEmail({
+    const sent = await sendMcBuleliWalletCryptoEmail({
       to,
       kind,
       locale,
@@ -77,8 +84,13 @@ export async function notifyDepositConfirmedEmail(args: {
         txid,
       }),
     });
+    if (!sent) {
+      logEmailSkip("deposit_confirmed", "send_returned_false");
+    }
+    return sent;
   } catch (e) {
     logEmailError("deposit_confirmed", e);
+    return false;
   }
 }
 
@@ -91,9 +103,12 @@ export async function notifyWithdrawalQueuedEmail(args: {
   networkCanonical: string;
   address: string;
   locale?: EmailLocale;
-}): Promise<void> {
+}): Promise<boolean> {
   const to = await userEmail(args.userId);
-  if (!to) return;
+  if (!to) {
+    logEmailSkip("withdrawal_queued", "user_has_no_email");
+    return false;
+  }
 
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
@@ -109,7 +124,7 @@ export async function notifyWithdrawalQueuedEmail(args: {
   const address = truncateMiddle(args.address.trim(), 12, 10);
 
   try {
-    await sendMcBuleliWalletCryptoEmail({
+    const sent = await sendMcBuleliWalletCryptoEmail({
       to,
       kind,
       locale,
@@ -133,8 +148,13 @@ export async function notifyWithdrawalQueuedEmail(args: {
         address,
       }),
     });
+    if (!sent) {
+      logEmailSkip("withdrawal_queued", "send_returned_false");
+    }
+    return sent;
   } catch (e) {
     logEmailError("withdrawal_queued", e);
+    return false;
   }
 }
 
@@ -148,9 +168,12 @@ export async function notifyWithdrawalCompletedEmail(args: {
   address: string;
   txid: string;
   locale?: EmailLocale;
-}): Promise<void> {
+}): Promise<boolean> {
   const to = await userEmail(args.userId);
-  if (!to) return;
+  if (!to) {
+    logEmailSkip("withdrawal_completed", "user_has_no_email");
+    return false;
+  }
 
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
@@ -163,7 +186,7 @@ export async function notifyWithdrawalCompletedEmail(args: {
   const txid = args.txid.trim();
 
   try {
-    await sendMcBuleliWalletCryptoEmail({
+    const sent = await sendMcBuleliWalletCryptoEmail({
       to,
       kind,
       locale,
@@ -189,7 +212,12 @@ export async function notifyWithdrawalCompletedEmail(args: {
         txid,
       }),
     });
+    if (!sent) {
+      logEmailSkip("withdrawal_completed", "send_returned_false");
+    }
+    return sent;
   } catch (e) {
     logEmailError("withdrawal_completed", e);
+    return false;
   }
 }

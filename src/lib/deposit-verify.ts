@@ -319,7 +319,7 @@ export async function applyConfirmedDeposit(args: {
     },
   });
 
-  void notifyDepositConfirmedEmail({
+  await notifyDepositConfirmedEmail({
     userId: args.userId,
     depositId: args.deposit.id,
     asset: args.deposit.asset,

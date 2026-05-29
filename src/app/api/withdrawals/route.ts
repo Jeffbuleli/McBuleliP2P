@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyWithdrawalQueuedEmail } from "@/lib/email/wallet-crypto-notify";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb, loans, users, withdrawals } from "@/db";
@@ -262,14 +264,19 @@ export async function POST(req: Request) {
     },
   });
 
-  void notifyWithdrawalQueuedEmail({
-    userId,
-    withdrawalId: w.id,
-    asset: body.asset,
-    amount: net,
-    fee,
-    networkCanonical: body.network,
-    address: body.address.trim(),
+  const emailLocale = await resolveEmailLocale(req);
+
+  scheduleEmailTask(async () => {
+    await notifyWithdrawalQueuedEmail({
+      userId,
+      withdrawalId: w.id,
+      asset: body.asset,
+      amount: net,
+      fee,
+      networkCanonical: body.network,
+      address: body.address.trim(),
+      locale: emailLocale,
+    });
   });
 
   if (

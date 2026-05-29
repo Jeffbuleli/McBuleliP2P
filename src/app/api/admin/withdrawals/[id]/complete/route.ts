@@ -10,6 +10,8 @@ import {
 } from "@/lib/admin-audit";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
+import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { resolveEmailLocale } from "@/lib/email/locale";
 import type { NetworkId } from "@/lib/networks";
 import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
@@ -112,15 +114,20 @@ export async function POST(
     },
   });
 
-  void notifyWithdrawalCompletedEmail({
-    userId: w.userId,
-    withdrawalId: id,
-    asset: w.asset,
-    amount: w.amount?.toString?.() ?? String(w.amount),
-    fee: w.fee?.toString?.() ?? String(w.fee),
-    networkCanonical: w.networkCanonical,
-    address: w.toAddress,
-    txid,
+  const emailLocale = await resolveEmailLocale(req);
+
+  scheduleEmailTask(async () => {
+    await notifyWithdrawalCompletedEmail({
+      userId: w.userId,
+      withdrawalId: id,
+      asset: w.asset,
+      amount: w.amount?.toString?.() ?? String(w.amount),
+      fee: w.fee?.toString?.() ?? String(w.fee),
+      networkCanonical: w.networkCanonical,
+      address: w.toAddress,
+      txid,
+      locale: emailLocale,
+    });
   });
 
   return NextResponse.json({ withdrawal: updated });
