@@ -52,14 +52,17 @@ Fichiers source :
 
 ---
 
-## Branding (logo & images)
+## Images (logo & illustrations)
 
-Les clients mail bloquent souvent `localhost` pour les images. En prod :
+Les templates Resend **n’utilisent pas** d’URL externes (`https://…/email/*.png`) : le logo et les illustrations sont **intégrés en base64** dans le HTML au moment du sync (`src/lib/email/embedded-assets.ts`). Cela évite les images cassées dans l’aperçu Resend et les tests.
 
-- `NEXT_PUBLIC_APP_URL=https://mcbuleli.org` (liens CTA)
-- **`EMAIL_ASSET_BASE_URL=https://mcbuleli.org`** (logo + illustrations dans le HTML — recommandé même en dev si vous testez un envoi réel)
+Avant chaque sync, les PNG sont redimensionnés (~320px, ~10–20 Ko) :
 
-En-tête et pied de page affichent **McBuleli** + logo + `hi@mcbuleli.org`.
+```bash
+npm run resend:sync-templates   # optimise + publie les 22 templates
+```
+
+`NEXT_PUBLIC_APP_URL` sert uniquement aux **liens** (boutons CTA), pas aux images.
 
 ---
 
@@ -73,7 +76,6 @@ En-tête et pied de page affichent **McBuleli** + logo + `hi@mcbuleli.org`.
 | `AUTH_EMAIL_FROM` | `McBuleli <noreply@mcbuleli.org>` | idem |
 | `AUTH_EMAIL_REPLY_TO` | `hi@mcbuleli.org` | idem |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://mcbuleli.org` |
-| `EMAIL_ASSET_BASE_URL` | `https://mcbuleli.org` (recommandé) | `https://mcbuleli.org` |
 
 ---
 

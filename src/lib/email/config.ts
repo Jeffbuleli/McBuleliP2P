@@ -23,13 +23,14 @@ export function appBaseUrl(): string {
   );
 }
 
-/** Logo & illustrations in emails — use prod URL so inboxes always load assets. */
+/** @deprecated Layout uses embedded base64 — see embedded-assets.ts */
 export function emailAssetBaseUrl(): string {
   const override = process.env.EMAIL_ASSET_BASE_URL?.trim().replace(/\/$/, "");
   if (override) return override;
   return appBaseUrl();
 }
 
+/** Public URL (site / docs only). Emails embed PNGs inline. */
 export function logoUrl(): string {
   return `${emailAssetBaseUrl()}/brand/logo.png`;
 }
