@@ -2,12 +2,9 @@ import { getEmailCopy, emailSubject } from "@/lib/email/copy";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
 import { sendBrandedEmail } from "@/lib/email/send-branded";
-import { sendResendTemplate } from "@/lib/email/send";
 import {
   findTemplateDef,
   type McBuleliTemplateKind,
-  resendTemplatesEnabled,
-  resolveTemplateId,
 } from "@/lib/email/template-definitions";
 
 function copyKeyForKind(kind: McBuleliTemplateKind) {
@@ -39,32 +36,13 @@ export async function sendMcBuleliTransactionalEmail(args: {
       : copyBase;
 
   const subject = emailSubject(copyKey, locale);
-  const variables: Record<string, string> = {
-    ACTION_URL: args.actionUrl,
-  };
-  if (args.newEmail) variables.NEW_EMAIL = args.newEmail;
 
-  if (resendTemplatesEnabled()) {
-    const templateId = resolveTemplateId(args.kind, locale);
-    const sent = await sendResendTemplate({
-      to: args.to,
-      subject,
-      templateId,
-      variables,
-    });
-    if (sent) return true;
-    console.warn("[email] Resend template failed — falling back to inline HTML", {
-      kind: args.kind,
-      templateId,
-    });
-  }
-
+  // Always send inline HTML with https://mcbuleli.org images (dashboard templates omit assets).
   const { html, text } = renderMcBuleliEmail({
     copy,
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
-    imageMode: "svg",
   });
 
   return sendBrandedEmail({
