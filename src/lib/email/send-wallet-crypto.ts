@@ -1,7 +1,8 @@
 import { getEmailCopy, emailSubject } from "@/lib/email/copy";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
-import { sendEmail, sendResendTemplate } from "@/lib/email/send";
+import { sendBrandedEmail } from "@/lib/email/send-branded";
+import { sendResendTemplate } from "@/lib/email/send";
 import {
   buildWalletDetailRows,
   type EmailDetailRow,
@@ -62,10 +63,17 @@ export async function sendMcBuleliWalletCryptoEmail(args: {
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
+    imageMode: "cid",
     detailRows: args.detailRows,
   });
 
-  return sendEmail({ to: args.to, subject, html, text });
+  return sendBrandedEmail({
+    to: args.to,
+    subject,
+    html,
+    text,
+    illustration: def.illustration,
+  });
 }
 
 export function walletDetailRowsForTemplate(args: {

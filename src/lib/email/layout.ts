@@ -4,9 +4,13 @@ import {
   type EmailIllustration,
 } from "@/lib/email/config";
 import {
-  embeddedIllustrationSrc,
-  embeddedLogoSrc,
-} from "@/lib/email/embedded-assets";
+  illustrationUrl,
+  logoUrl,
+} from "@/lib/email/config";
+import {
+  EMAIL_LOGO_CID,
+  emailIllustrationCid,
+} from "@/lib/email/email-inline-images";
 import type { EmailCopyBlock } from "@/lib/email/copy";
 import type { EmailDetailRow } from "@/lib/email/wallet-email-details";
 
@@ -18,15 +22,30 @@ function escHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+export type EmailImageMode = "cid" | "https";
+
 export type McBuleliEmailLayoutArgs = {
   copy: EmailCopyBlock;
   actionUrl: string;
   illustration: EmailIllustration;
   locale: "en" | "fr";
+  /** cid = inline attachments (real sends); https = hosted PNGs (Resend template sync). */
+  imageMode?: EmailImageMode;
   /** When true, href uses Resend {{{ACTION_URL}}} placeholder. */
   resendVariables?: boolean;
   detailRows?: EmailDetailRow[];
 };
+
+function emailImageSrc(
+  kind: "logo" | EmailIllustration,
+  imageMode: EmailImageMode,
+  illustration: EmailIllustration,
+): string {
+  if (imageMode === "cid") {
+    return kind === "logo" ? `cid:${EMAIL_LOGO_CID}` : `cid:${emailIllustrationCid(kind)}`;
+  }
+  return kind === "logo" ? logoUrl() : illustrationUrl(kind);
+}
 
 function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): string {
   const val = (v: string) => (escapeValues ? escHtml(v) : v);
@@ -45,8 +64,15 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
   html: string;
   text: string;
 } {
-  const { copy, actionUrl, illustration, locale, resendVariables, detailRows } =
-    args;
+  const {
+    copy,
+    actionUrl,
+    illustration,
+    locale,
+    resendVariables,
+    detailRows,
+    imageMode = "cid",
+  } = args;
   const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
   const bodyHtml = resendVariables
     ? copy.body.replace(/\{\{\{NEW_EMAIL\}\}\}/g, "{{{NEW_EMAIL}}}")
@@ -64,8 +90,8 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
       ? "Support McBuleli"
       : "McBuleli support";
 
-  const logoSrc = embeddedLogoSrc();
-  const illustrationSrc = embeddedIllustrationSrc(illustration);
+  const logoSrc = emailImageSrc("logo", imageMode, illustration);
+  const illustrationSrc = emailImageSrc(illustration, imageMode, illustration);
 
   const detailsHtml =
     detailRows && detailRows.length > 0

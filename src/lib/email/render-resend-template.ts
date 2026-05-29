@@ -41,6 +41,7 @@ export function renderResendTemplateHtml(args: {
     actionUrl: "{{{ACTION_URL}}}",
     illustration: def.illustration,
     locale: args.locale,
+    imageMode: "https",
     resendVariables: true,
     detailRows,
   });

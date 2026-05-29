@@ -3,6 +3,7 @@ import {
   emailFromAddress,
   emailReplyTo,
 } from "@/lib/email/config";
+import type { ResendInlineAttachment } from "@/lib/email/email-inline-images";
 
 export { appBaseUrl };
 
@@ -56,6 +57,7 @@ export async function sendEmail(args: {
   subject: string;
   html: string;
   text?: string;
+  inlineAttachments?: ResendInlineAttachment[];
 }): Promise<boolean> {
   const from = emailFromAddress();
   const replyTo = emailReplyTo();
@@ -69,6 +71,13 @@ export async function sendEmail(args: {
     });
   }
 
+  const attachments = args.inlineAttachments?.map((a) => ({
+    filename: a.filename,
+    content: a.content,
+    content_id: a.content_id,
+    content_type: a.content_type,
+  }));
+
   const res = await resendFetch("/emails", {
     method: "POST",
     body: JSON.stringify({
@@ -78,6 +87,7 @@ export async function sendEmail(args: {
       subject: args.subject,
       html: args.html,
       text: args.text,
+      ...(attachments?.length ? { attachments } : {}),
     }),
   });
 

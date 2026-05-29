@@ -149,10 +149,8 @@ export function resolveTemplateId(
   return mcbuleliTemplateAlias(kind, locale);
 }
 
+/** Default false: template API cannot attach CID images; use sendBrandedEmail instead. */
 export function resendTemplatesEnabled(): boolean {
   if (process.env.RESEND_USE_TEMPLATES?.trim() === "false") return false;
-  if (process.env.RESEND_USE_TEMPLATES?.trim() === "true") {
-    return Boolean(process.env.RESEND_API_KEY?.trim());
-  }
-  return Boolean(process.env.RESEND_API_KEY?.trim());
+  return process.env.RESEND_USE_TEMPLATES?.trim() === "true";
 }

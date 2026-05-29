@@ -23,11 +23,11 @@ export function appBaseUrl(): string {
   );
 }
 
-/** @deprecated Layout uses embedded base64 — see embedded-assets.ts */
+/** HTTPS base for images in Resend dashboard template HTML (preview/sync only). */
 export function emailAssetBaseUrl(): string {
   const override = process.env.EMAIL_ASSET_BASE_URL?.trim().replace(/\/$/, "");
   if (override) return override;
-  return appBaseUrl();
+  return "https://mcbuleli.org";
 }
 
 /** Public URL (site / docs only). Emails embed PNGs inline. */

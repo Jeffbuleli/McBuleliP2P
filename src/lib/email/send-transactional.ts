@@ -1,7 +1,8 @@
 import { getEmailCopy, emailSubject } from "@/lib/email/copy";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
-import { sendEmail, sendResendTemplate } from "@/lib/email/send";
+import { sendBrandedEmail } from "@/lib/email/send-branded";
+import { sendResendTemplate } from "@/lib/email/send";
 import {
   findTemplateDef,
   type McBuleliTemplateKind,
@@ -63,7 +64,14 @@ export async function sendMcBuleliTransactionalEmail(args: {
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
+    imageMode: "cid",
   });
 
-  return sendEmail({ to: args.to, subject, html, text });
+  return sendBrandedEmail({
+    to: args.to,
+    subject,
+    html,
+    text,
+    illustration: def.illustration,
+  });
 }

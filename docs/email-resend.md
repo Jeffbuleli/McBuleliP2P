@@ -54,15 +54,17 @@ Fichiers source :
 
 ## Images (logo & illustrations)
 
-Les templates Resend **n’utilisent pas** d’URL externes (`https://…/email/*.png`) : le logo et les illustrations sont **intégrés en base64** dans le HTML au moment du sync (`src/lib/email/embedded-assets.ts`). Cela évite les images cassées dans l’aperçu Resend et les tests.
+**Envois réels (prod)** : images en pièces jointes **CID** Resend (`cid:mcbuleli-logo`, `cid:mcbuleli-illus-*`) — compatible Gmail, Outlook et mobile. Les `data:` base64 et les templates Resend seuls **ne s’affichent pas** dans la plupart des boîtes mail.
 
-Avant chaque sync, les PNG sont redimensionnés (~320px, ~10–20 Ko) :
+**Dashboard Resend (sync)** : HTML avec URLs `https://mcbuleli.org/email/*.png` pour l’aperçu éditeur uniquement.
 
 ```bash
-npm run resend:sync-templates   # optimise + publie les 22 templates
+npm run resend:sync-templates   # optimise PNG + publie les 22 templates (aperçu)
 ```
 
-`NEXT_PUBLIC_APP_URL` sert uniquement aux **liens** (boutons CTA), pas aux images.
+Sur Render : **`RESEND_USE_TEMPLATES` absent ou `false`** (défaut). Ne pas forcer `true` sauf tests variables seules (sans images).
+
+`NEXT_PUBLIC_APP_URL` = liens CTA · `EMAIL_ASSET_BASE_URL` = optionnel pour sync (défaut `https://mcbuleli.org`).
 
 ---
 
@@ -72,7 +74,7 @@ npm run resend:sync-templates   # optimise + publie les 22 templates
 |----------|-----------|------------|
 | `RESEND_API_KEY` | Optionnel (sync) | **Obligatoire** |
 | `RESEND_ALLOW_SEND` | absent / `false` | absent / `true` |
-| `RESEND_USE_TEMPLATES` | `true` après sync | `true` |
+| `RESEND_USE_TEMPLATES` | `false` ou absent | **`false` ou absent** (CID inline) |
 | `AUTH_EMAIL_FROM` | `McBuleli <noreply@mcbuleli.org>` | idem |
 | `AUTH_EMAIL_REPLY_TO` | `hi@mcbuleli.org` | idem |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://mcbuleli.org` |
