@@ -93,11 +93,20 @@ export default function WalletStakingPage() {
     return line?.balance ?? "0";
   }, [walletLines, asset]);
 
-  const estReward = useMemo(() => {
+  const principalNum = useMemo(() => {
     const p = Number(amount.replace(",", "."));
-    if (!Number.isFinite(p) || p <= 0) return null;
-    return maturityRewardAmount(p, apr, termDays);
-  }, [amount, apr, termDays]);
+    return Number.isFinite(p) && p > 0 ? p : null;
+  }, [amount]);
+
+  const estReward = useMemo(() => {
+    if (principalNum == null) return null;
+    return maturityRewardAmount(principalNum, apr, termDays);
+  }, [principalNum, apr, termDays]);
+
+  const estTotal = useMemo(() => {
+    if (principalNum == null || estReward == null) return null;
+    return principalNum + estReward;
+  }, [principalNum, estReward]);
 
   const estEndUtc = useMemo(() => {
     const d = new Date();
@@ -202,6 +211,10 @@ export default function WalletStakingPage() {
         <p className="text-[11px] font-medium text-[color:var(--fd-primary)]">{t("staking_risk_short")}</p>
       </div>
 
+      <div className="fd-card border border-emerald-200/60 bg-emerald-50/50 p-4 dark:border-emerald-800/40 dark:bg-emerald-950/20">
+        <p className="text-xs leading-relaxed text-[color:var(--fd-text)]">{t("staking_roadmap_note")}</p>
+      </div>
+
       <div className="fd-card space-y-3 p-4">
       <label className="block text-sm font-bold text-[color:var(--fd-text)]">
         {t("staking_asset")}
@@ -256,12 +269,12 @@ export default function WalletStakingPage() {
         />
       </label>
 
-      <div className="flex items-center gap-3 rounded-xl bg-emerald-50/80 px-3 py-2">
-        <span className="text-xl" aria-hidden>
-          📈
-        </span>
-        <div className="min-w-0 flex-1 tabular-nums text-sm font-bold text-[color:var(--fd-text)]">
-          {estReward != null && Number.isFinite(estReward) ? (
+      <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/30">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+          {t("staking_est_reward")}
+        </p>
+        <p className="mt-1 tabular-nums text-lg font-bold text-emerald-950 dark:text-emerald-100">
+          {estReward != null ? (
             <>
               +{estReward.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
                 maximumFractionDigits: 8,
@@ -271,8 +284,25 @@ export default function WalletStakingPage() {
           ) : (
             "—"
           )}
-        </div>
-        <span className="text-[10px] text-[color:var(--fd-muted)]">{estEndUtc.slice(0, 10)}</span>
+        </p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+          {t("staking_est_total")}
+        </p>
+        <p className="mt-0.5 tabular-nums text-base font-semibold text-stone-900 dark:text-stone-100">
+          {estTotal != null ? (
+            <>
+              {estTotal.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", {
+                maximumFractionDigits: 8,
+              })}{" "}
+              {asset}
+            </>
+          ) : (
+            "—"
+          )}
+        </p>
+        <p className="mt-2 text-[11px] text-stone-600 dark:text-stone-400">
+          {t("staking_est_end")}: {estEndUtc} UTC
+        </p>
       </div>
 
       <label className="flex cursor-pointer items-start gap-3 text-sm text-stone-700 dark:text-stone-300">

@@ -11,15 +11,15 @@ export type StakingChainAsset = "USDT" | "PI";
 export type StakingTerm = { days: number; aprPercent: number };
 
 const DEFAULT_USDT: StakingTerm[] = [
-  { days: 30, aprPercent: 4.5 },
-  { days: 90, aprPercent: 7 },
-  { days: 180, aprPercent: 10 },
+  { days: 30, aprPercent: 6 },
+  { days: 90, aprPercent: 9 },
+  { days: 180, aprPercent: 12 },
 ];
 
 const DEFAULT_PI: StakingTerm[] = [
-  { days: 30, aprPercent: 3 },
-  { days: 90, aprPercent: 5 },
-  { days: 180, aprPercent: 8 },
+  { days: 30, aprPercent: 4 },
+  { days: 90, aprPercent: 6.5 },
+  { days: 180, aprPercent: 9 },
 ];
 
 function parseTermsJson(raw: string | undefined, fallback: StakingTerm[]): StakingTerm[] {

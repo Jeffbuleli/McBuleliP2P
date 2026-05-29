@@ -7,6 +7,7 @@ import { LandingPromoStrip } from "@/components/landing/landing-promo-strip";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
+import { poolNewDepositsEnabled } from "@/lib/pool-features";
 import {
   IconBot,
   IconChartLine,
@@ -96,7 +97,9 @@ export async function HomeLanding() {
     { icon: IconChartLine, title: d.landing_svc_futures_t, tag: d.landing_svc_futures_tag },
     { icon: IconOptions, title: d.landing_svc_options_t, tag: d.landing_svc_options_tag },
     { icon: IconStaking, title: d.landing_svc_staking_t, tag: d.landing_svc_staking_tag },
-    { icon: IconCoins, title: d.landing_svc_pool_t, tag: d.landing_svc_pool_tag },
+    ...(poolNewDepositsEnabled()
+      ? [{ icon: IconCoins, title: d.landing_svc_pool_t, tag: d.landing_svc_pool_tag }]
+      : []),
     { icon: IconUsers, title: d.landing_svc_groups_t, tag: d.landing_svc_groups_tag },
     { icon: IconKyc, title: d.landing_svc_kyc_t, tag: d.landing_svc_kyc_tag },
     { icon: IconHeadset, title: d.landing_svc_support_t, tag: d.landing_svc_support_tag, accent: true },

@@ -11,6 +11,7 @@ import {
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
+import { poolLoansEnabled } from "@/lib/pool-features";
 
 const LOAN_ASSET = "USDT";
 const LOAN_STATUS_OPEN = "open";
@@ -155,6 +156,10 @@ export type CreateLoanArgs = {
 export async function createLoan(
   args: CreateLoanArgs,
 ): Promise<{ ok: true; loanId: string } | { ok: false; message: string }> {
+  if (!poolLoansEnabled()) {
+    return { ok: false, message: "loan_new_disabled" };
+  }
+
   const amount = Number(args.amountUsdtStr);
   if (!Number.isFinite(amount) || amount <= 0) return { ok: false, message: "loan_invalid_amount" };
 

@@ -16,6 +16,7 @@ import {
 import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
+import { poolNewDepositsEnabled } from "@/lib/pool-features";
 
 export const dynamic = "force-dynamic";
 
@@ -109,15 +110,17 @@ export default async function WalletPage() {
     riskShort: d.staking_risk_short,
   };
 
-  const poolPromo: ServicePromoDTO = {
-    href: "/app/wallet/pool",
-    title: d.pool_title,
-    tagline: d.pool_tagline,
-    cta: d.pool_cta,
-    metaLine: d.pool_meta_line,
-    tone: "emerald",
-    icon: "pool",
-  };
+  const poolPromo: ServicePromoDTO | null = poolNewDepositsEnabled()
+    ? {
+        href: "/app/wallet/pool",
+        title: d.pool_title,
+        tagline: d.pool_tagline,
+        cta: d.pool_cta,
+        metaLine: d.pool_meta_line,
+        tone: "emerald",
+        icon: "pool",
+      }
+    : null;
 
   let avecGroupsTotal = 0;
   let avecGroupsActive = 0;

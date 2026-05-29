@@ -6,6 +6,7 @@ import {
   getLpPoolRewardBalance,
   listLpPoolPositions,
 } from "@/lib/lp-pool-service";
+import { poolNewDepositsEnabled } from "@/lib/pool-features";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,12 @@ export async function GET() {
     getLpPoolRewardBalance(u.id),
     getLpPoolAccruedForLatest24hWindow({ userId: u.id }),
   ]);
-  return NextResponse.json({ positions, balance: bal, today });
+  return NextResponse.json({
+    positions,
+    balance: bal,
+    today,
+    features: { newDepositsEnabled: poolNewDepositsEnabled() },
+  });
 }
 
 export async function POST(req: Request) {

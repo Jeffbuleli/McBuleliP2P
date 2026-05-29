@@ -1,20 +1,9 @@
 #!/usr/bin/env node
-const base = (
-  process.env.MCBULELI_API_URL ??
-  process.env.APP_URL ??
-  "https://mcbuleli.org"
-).replace(/\/$/, "");
-const secret = (
-  process.env.WALLET_CRON_SECRET ??
-  process.env.CRON_SECRET ??
-  process.env.MCBULELI_CRON_SECRET ??
-  ""
-).trim();
+import { cronApiBase, requireCronSecret } from "./cron-shared.mjs";
 
-if (!secret || secret.length < 12) {
-  console.error("[cron-wallet-withdraw-worker] missing WALLET_CRON_SECRET/CRON_SECRET");
-  process.exit(1);
-}
+const NAME = "cron-wallet-withdraw-worker";
+const secret = requireCronSecret(NAME);
+const base = cronApiBase();
 
 const res = await fetch(`${base}/api/internal/wallet/withdraw-worker`, {
   method: "POST",
@@ -26,7 +15,7 @@ const res = await fetch(`${base}/api/internal/wallet/withdraw-worker`, {
 const text = await res.text();
 if (!res.ok) {
   const detail = text.trim() || "(empty body)";
-  console.error("[cron-wallet-withdraw-worker] HTTP", res.status, detail.slice(0, 800));
+  console.error(`[${NAME}] HTTP`, res.status, detail.slice(0, 800));
   process.exit(1);
 }
 console.log(text.trim());

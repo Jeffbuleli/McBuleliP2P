@@ -751,6 +751,11 @@ export const en = {
   pool_amount_presets: "Quick amounts",
   pool_amount_invalid: "Enter at least 50 USDT.",
   pool_amount_invalid_format: "Invalid amount.",
+  pool_new_deposits_disabled: "New pool deposits are closed. Use Staking to grow your balance.",
+  pool_closed_title: "Liquidity pool — closed to new deposits",
+  pool_closed_body:
+    "McBuleli is focusing on fixed-term Staking (USDT & Pi). Existing pool positions remain visible; you can still withdraw earned rewards when eligible.",
+  pool_closed_cta_staking: "Open Staking",
   pool_estimate_title: "Estimate",
   pool_estimate_hint: "Based on recent pool performance (not guaranteed).",
   pool_estimate_daily: "Est. per day (24h)",
@@ -761,6 +766,10 @@ export const en = {
   loans_tagline: "Borrow USDT against your pool.",
   loans_cta: "Open",
   loans_meta_line: "Collateral: pool principal.",
+  loan_new_disabled: "New pool-backed loans are paused.",
+  loan_new_disabled_title: "New loans paused",
+  loan_new_disabled_body:
+    "Borrowing against the liquidity pool is closed while we focus on Staking. You can still repay an open loan below.",
   loans_page_title: "Loans",
   loans_kpi_limit: "Borrow limit",
   loans_kpi_outstanding: "Outstanding",
@@ -937,7 +946,7 @@ export const en = {
   wallet_entry_stake_interest_payment: "Staking — interest paid",
   staking_title: "Staking",
   staking_wallet_teaser:
-    "Lock USDT or Pi for a fixed term; principal + reward at maturity.",
+    "Fixed-term earn on USDT & Pi — up to 12% APR on 180 days. Principal + reward at maturity.",
   staking_cta: "View plans & stake",
   staking_risk_short:
     "Not a bank product. APR fixed per plan; simple interest in the same asset.",
@@ -952,8 +961,11 @@ export const en = {
   staking_term: "Lock period",
   staking_days: "{days} days · {apr}% APR",
   staking_amount: "Amount to lock",
-  staking_est_reward: "Estimated reward at maturity",
+  staking_est_reward: "Estimated interest",
+  staking_est_total: "Total at maturity (principal + interest)",
   staking_est_end: "Unlock on (UTC)",
+  staking_roadmap_note:
+    "McBuleli is building higher-yield paths for savers — e.g. P2P with verified merchants and larger shares in AVEC groups. Staking is our fixed-rate product today; more options will follow.",
   staking_accept: "I understand this is not a regulated savings product and rewards are not guaranteed by law.",
   staking_submit: "Confirm stake",
   staking_active: "Active locks",
@@ -3910,6 +3922,12 @@ export const fr: Messages = {
   pool_amount_presets: "Montants rapides",
   pool_amount_invalid: "Entrez au moins 50 USDT.",
   pool_amount_invalid_format: "Montant invalide.",
+  pool_new_deposits_disabled:
+    "Les nouveaux dépôts pool sont fermés. Utilisez le Staking pour faire fructifier vos fonds.",
+  pool_closed_title: "Pool de liquidité — fermé aux nouveaux dépôts",
+  pool_closed_body:
+    "McBuleli mise sur le Staking à terme fixe (USDT & Pi). Vos positions pool existantes restent visibles ; vous pouvez toujours retirer les rewards lorsque la fenêtre est ouverte.",
+  pool_closed_cta_staking: "Ouvrir le Staking",
   pool_estimate_title: "Estimation",
   pool_estimate_hint: "Basée sur l’historique récent (non garanti).",
   pool_estimate_daily: "Est. par jour (24h)",
@@ -3920,6 +3938,10 @@ export const fr: Messages = {
   loans_tagline: "Empruntez en USDT contre votre pool.",
   loans_cta: "Ouvrir",
   loans_meta_line: "Garantie : principal du pool.",
+  loan_new_disabled: "Les nouveaux prêts garantis pool sont suspendus.",
+  loan_new_disabled_title: "Nouveaux prêts suspendus",
+  loan_new_disabled_body:
+    "L’emprunt contre le pool de liquidité est fermé pendant que nous concentrons l’offre sur le Staking. Vous pouvez toujours rembourser un prêt ouvert ci-dessous.",
   loans_page_title: "Prêts",
   loans_kpi_limit: "Limite",
   loans_kpi_outstanding: "Dû",
@@ -4098,7 +4120,7 @@ export const fr: Messages = {
   wallet_entry_stake_interest_payment: "Staking — intérêts payés",
   staking_title: "Staking",
   staking_wallet_teaser:
-    "Verrouillez USDT ou Pi pour une durée fixe ; principal + récompense à l’échéance.",
+    "Épargne à terme sur USDT & Pi — jusqu’à 12 % TAEG sur 180 j. Principal + intérêts à l’échéance.",
   staking_cta: "Voir les offres & staker",
   staking_risk_short:
     "Pas un produit bancaire. TAEG fixe par offre ; intérêt simple dans le même actif.",
@@ -4113,8 +4135,11 @@ export const fr: Messages = {
   staking_term: "Durée de verrouillage",
   staking_days: "{days} j · {apr} % TAEG",
   staking_amount: "Montant à verrouiller",
-  staking_est_reward: "Récompense estimée à maturité",
+  staking_est_reward: "Intérêts estimés",
+  staking_est_total: "Total à l’échéance (principal + intérêts)",
   staking_est_end: "Déblocage (UTC)",
+  staking_roadmap_note:
+    "McBuleli prépare des rendements plus élevés pour les épargnants — ex. P2P avec grands vendeurs et parts plus importantes dans les AVEC. Le Staking est notre offre à taux fixe aujourd’hui ; d’autres options suivront.",
   staking_accept:
     "Je comprends qu’il ne s’agit pas d’un produit d’épargne réglementé et que les récompenses ne sont pas garanties par la loi.",
   staking_submit: "Confirmer le staking",

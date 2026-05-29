@@ -1,6 +1,17 @@
 # Optional Render Blueprint — import in Dashboard → Blueprints.
 # Web service (McBuleli Next.js) is usually created separately.
 # Either enable BOT_CRON_INLINE=1 on the web service OR use mcbuleli-bots-tick below.
+#
+# Cron jobs do NOT inherit Web env vars. Set CRON_SECRET + MCBULELI_API_URL on each cron
+# (same CRON_SECRET as Web). See docs/wallet-cron-render.md
+
+envVarGroups:
+  - name: mcbuleli-cron-env
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
 
 services:
   - type: cron
@@ -54,11 +65,8 @@ services:
     schedule: "*/2 * * * *"
     buildCommand: "true"
     startCommand: node scripts/cron-wallet-deposit-scan.mjs
-    envVars:
-      - key: MCBULELI_API_URL
-        sync: false
-      - key: CRON_SECRET
-        sync: false
+    envVarGroups:
+      - mcbuleli-cron-env
 
   - type: cron
     name: mcbuleli-wallet-withdraw-worker
@@ -68,11 +76,8 @@ services:
     schedule: "*/1 * * * *"
     buildCommand: "true"
     startCommand: node scripts/cron-wallet-withdraw-worker.mjs
-    envVars:
-      - key: MCBULELI_API_URL
-        sync: false
-      - key: CRON_SECRET
-        sync: false
+    envVarGroups:
+      - mcbuleli-cron-env
 
   - type: cron
     name: mcbuleli-wallet-retry-jobs
@@ -82,11 +87,8 @@ services:
     schedule: "*/15 * * * *"
     buildCommand: "true"
     startCommand: node scripts/cron-wallet-retry-failed-jobs.mjs
-    envVars:
-      - key: MCBULELI_API_URL
-        sync: false
-      - key: CRON_SECRET
-        sync: false
+    envVarGroups:
+      - mcbuleli-cron-env
 
   - type: cron
     name: mcbuleli-ai-relay

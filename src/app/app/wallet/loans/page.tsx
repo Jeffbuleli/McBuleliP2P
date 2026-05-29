@@ -16,6 +16,7 @@ type Snapshot =
       outstandingUsdt: number;
       openLoanId: string | null;
       openAprAnnual: number | null;
+      loansNewEnabled?: boolean;
     }
   | { ok: false; message: string };
 
@@ -59,7 +60,8 @@ export default function WalletLoansPage() {
   const outstanding = snap && snap.ok ? snap.outstandingUsdt : 0;
   const openLoanId = snap && snap.ok ? snap.openLoanId : null;
 
-  const canBorrow = (snap?.ok ?? false) && !openLoanId && limit > 0;
+  const loansNewEnabled = snap && snap.ok ? snap.loansNewEnabled !== false : false;
+  const canBorrow = loansNewEnabled && (snap?.ok ?? false) && !openLoanId && limit > 0;
   const canRepay = (snap?.ok ?? false) && !!openLoanId && outstanding > 0;
 
   async function onBorrow() {
@@ -107,6 +109,13 @@ export default function WalletLoansPage() {
   return (
     <div className="pb-10">
       <WalletSubpageHeader title={t("loans_page_title")} subtitle={t("loans_note")} />
+
+      {snap?.ok && snap.loansNewEnabled === false ? (
+        <div className="mt-3 rounded-2xl border border-amber-200/80 bg-amber-50/90 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
+          <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">{t("loan_new_disabled_title")}</p>
+          <p className="mt-1 text-xs text-amber-900/90 dark:text-amber-100/90">{t("loan_new_disabled_body")}</p>
+        </div>
+      ) : null}
 
       <div className="mt-2 grid grid-cols-2 gap-2">
         <div className="fd-card p-3.5">

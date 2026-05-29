@@ -28,6 +28,7 @@ import {
   poolDayWindowEndingAtLatestCutoff,
 } from "@/lib/lp-pool-time";
 import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
+import { poolNewDepositsEnabled } from "@/lib/pool-features";
 
 const POS_ACTIVE = "active";
 
@@ -64,6 +65,10 @@ export type CreateLpPoolPositionArgs = {
 export async function createLpPoolPosition(
   args: CreateLpPoolPositionArgs,
 ): Promise<{ ok: true; positionId: string } | { ok: false; message: string }> {
+  if (!poolNewDepositsEnabled()) {
+    return { ok: false, message: "pool_new_deposits_disabled" };
+  }
+
   const amount = Number(args.amountUsdtStr);
   if (!Number.isFinite(amount) || amount <= 0) {
     return { ok: false, message: "lp_pool_invalid_amount" };

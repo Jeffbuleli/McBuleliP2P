@@ -25,6 +25,7 @@ type Snapshot = {
   positions: PositionRow[];
   balance: { availableUsdt: number; totalEarnedUsdt: number };
   today: { dayStartAt: string; dayEndAt: string; accruedUsdt: number };
+  features?: { newDepositsEnabled?: boolean };
 };
 
 type Estimate = {
@@ -79,6 +80,7 @@ export default function WalletPoolPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [newDepositsEnabled, setNewDepositsEnabled] = useState(false);
 
   const [amountUsdt, setAmountUsdt] = useState("");
   const [lockMonths, setLockMonths] = useState<1 | 3 | 6>(1);
@@ -92,7 +94,9 @@ export default function WalletPoolPage() {
       setData({ positions: [], balance: { availableUsdt: 0, totalEarnedUsdt: 0 }, today: { dayStartAt: "", dayEndAt: "", accruedUsdt: 0 } });
       return;
     }
-    setData(j as Snapshot);
+    const snap = j as Snapshot;
+    setData(snap);
+    setNewDepositsEnabled(snap.features?.newDepositsEnabled !== false);
   }
 
   useEffect(() => {
@@ -256,6 +260,20 @@ export default function WalletPoolPage() {
         </div>
       </div>
 
+      {!newDepositsEnabled ? (
+        <div className="mt-4 rounded-3xl border border-amber-200/80 bg-amber-50/90 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
+          <h2 className="text-sm font-bold text-amber-950 dark:text-amber-100">{t("pool_closed_title")}</h2>
+          <p className="mt-2 text-sm text-amber-900/90 dark:text-amber-100/90">{t("pool_closed_body")}</p>
+          <Link
+            href="/app/wallet/staking"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-2xl bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white"
+          >
+            {t("pool_closed_cta_staking")}
+          </Link>
+        </div>
+      ) : null}
+
+      {newDepositsEnabled ? (
       <div className="mt-4 rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900/90">
         <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">{t("pool_create_title")}</h2>
         <form onSubmit={onCreate} className="mt-3 grid gap-2">
@@ -363,6 +381,7 @@ export default function WalletPoolPage() {
           </button>
         </form>
       </div>
+      ) : null}
 
       <div className="mt-4 rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900/90">
         <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">{t("pool_positions_title")}</h2>
