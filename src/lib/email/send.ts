@@ -32,12 +32,22 @@ async function resendFetch(
   return { ok: res.ok, status: res.status, body };
 }
 
+function maySendViaResendApi(): boolean {
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
+  if (process.env.NODE_ENV === "production") return true;
+  const allow = (process.env.RESEND_ALLOW_SEND ?? "").trim().toLowerCase();
+  return allow === "1" || allow === "true" || allow === "yes";
+}
+
 function devPreview(args: Record<string, unknown>): boolean {
   if (process.env.NODE_ENV === "production") {
     console.warn("[email] RESEND_API_KEY missing — email not sent", args);
     return false;
   }
-  console.info("[email] dev preview", args);
+  console.info(
+    "[email] dev preview (no Resend API call — set RESEND_ALLOW_SEND=true to send)",
+    args,
+  );
   return true;
 }
 
@@ -47,11 +57,10 @@ export async function sendEmail(args: {
   html: string;
   text?: string;
 }): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY?.trim();
   const from = emailFromAddress();
   const replyTo = emailReplyTo();
 
-  if (!key) {
+  if (!maySendViaResendApi()) {
     return devPreview({
       mode: "html",
       to: args.to,
@@ -85,11 +94,10 @@ export async function sendResendTemplate(args: {
   templateId: string;
   variables: Record<string, string>;
 }): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY?.trim();
   const from = emailFromAddress();
   const replyTo = emailReplyTo();
 
-  if (!key) {
+  if (!maySendViaResendApi()) {
     return devPreview({
       mode: "template",
       to: args.to,
