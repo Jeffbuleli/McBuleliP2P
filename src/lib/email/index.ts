@@ -16,5 +16,12 @@ export {
   accountSecurityLink,
 } from "@/lib/email/send";
 
+export { sendMcBuleliTransactionalEmail } from "@/lib/email/send-transactional";
+export {
+  MC_BULELI_EMAIL_TEMPLATES,
+  mcbuleliTemplateAlias,
+  resendTemplatesEnabled,
+} from "@/lib/email/template-definitions";
+export { renderResendTemplateHtml } from "@/lib/email/render-resend-template";
 export { resolveEmailLocale, normalizeEmailLocale } from "@/lib/email/locale";
 export type { EmailLocale } from "@/lib/email/locale";

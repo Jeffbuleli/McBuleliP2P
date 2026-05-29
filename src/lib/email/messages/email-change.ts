@@ -1,8 +1,7 @@
 import { createAuthChallenge } from "@/lib/auth/challenges";
-import { getEmailCopy, emailSubject } from "@/lib/email/copy";
-import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
-import { emailChangeLink, accountSecurityLink, sendEmail } from "@/lib/email/send";
+import { accountSecurityLink, emailChangeLink } from "@/lib/email/send";
+import { sendMcBuleliTransactionalEmail } from "@/lib/email/send-transactional";
 
 export async function sendEmailChangeConfirm(args: {
   userId: string;
@@ -15,19 +14,11 @@ export async function sendEmailChangeConfirm(args: {
     purpose: "email_change",
     meta: { newEmail: args.newEmail },
   });
-  const link = emailChangeLink(rawCode);
-  const copy = getEmailCopy("emailChange", locale);
-  const { html, text } = renderMcBuleliEmail({
-    copy,
-    actionUrl: link,
-    illustration: "change",
-    locale,
-  });
-  await sendEmail({
+  await sendMcBuleliTransactionalEmail({
     to: args.newEmail,
-    subject: emailSubject("emailChange", locale),
-    html,
-    text,
+    kind: "emailChange",
+    locale,
+    actionUrl: emailChangeLink(rawCode),
   });
 }
 
@@ -37,21 +28,11 @@ export async function sendEmailChangeAlert(args: {
   locale?: EmailLocale;
 }) {
   const locale = args.locale ?? "fr";
-  const copy = getEmailCopy("emailChangeAlert", locale);
-  const body =
-    locale === "fr"
-      ? `${copy.body} Nouvelle adresse demandée : ${args.newEmail}.`
-      : `${copy.body} Requested address: ${args.newEmail}.`;
-  const { html, text } = renderMcBuleliEmail({
-    copy: { ...copy, body },
-    actionUrl: accountSecurityLink(),
-    illustration: "security",
-    locale,
-  });
-  await sendEmail({
+  await sendMcBuleliTransactionalEmail({
     to: args.currentEmail,
-    subject: emailSubject("emailChangeAlert", locale),
-    html,
-    text,
+    kind: "emailChangeAlert",
+    locale,
+    actionUrl: accountSecurityLink(),
+    newEmail: args.newEmail,
   });
 }

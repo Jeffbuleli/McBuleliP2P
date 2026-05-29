@@ -20,13 +20,19 @@ export type McBuleliEmailLayoutArgs = {
   actionUrl: string;
   illustration: EmailIllustration;
   locale: "en" | "fr";
+  /** When true, href uses Resend {{{ACTION_URL}}} placeholder. */
+  resendVariables?: boolean;
 };
 
 export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
   html: string;
   text: string;
 } {
-  const { copy, actionUrl, illustration, locale } = args;
+  const { copy, actionUrl, illustration, locale, resendVariables } = args;
+  const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
+  const bodyHtml = resendVariables
+    ? copy.body.replace(/\{\{\{NEW_EMAIL\}\}\}/g, "{{{NEW_EMAIL}}}")
+    : escHtml(copy.body);
   const year = new Date().getFullYear();
   const rights = locale === "fr" ? "Tous droits réservés." : "All rights reserved.";
   const waLabel = locale === "fr" ? "WhatsApp" : "WhatsApp";
@@ -62,12 +68,12 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           </tr>
           <tr>
             <td style="padding:0 32px 20px;text-align:center;">
-              <p style="margin:0;font-size:15px;line-height:1.5;color:${EMAIL_BRAND.muted};">${escHtml(copy.body)}</p>
+              <p style="margin:0;font-size:15px;line-height:1.5;color:${EMAIL_BRAND.muted};">${bodyHtml}</p>
             </td>
           </tr>
           <tr>
             <td style="padding:0 32px 24px;text-align:center;">
-              <a href="${escHtml(actionUrl)}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${escHtml(copy.cta)}</a>
+              <a href="${href}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${escHtml(copy.cta)}</a>
             </td>
           </tr>
           ${

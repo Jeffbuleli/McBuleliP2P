@@ -6,6 +6,41 @@ import {
 
 export { appBaseUrl };
 
+async function resendFetch(
+  path: string,
+  init: RequestInit,
+): Promise<{ ok: boolean; status: number; body: string }> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) {
+    return { ok: false, status: 0, body: "missing_api_key" };
+  }
+
+  const res = await fetch(`https://api.resend.com${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
+  }).catch((err) => {
+    console.error("[email] resend fetch failed", err);
+    return null;
+  });
+
+  if (!res) return { ok: false, status: 0, body: "network_error" };
+  const body = (await res.text().catch(() => "")) ?? "";
+  return { ok: res.ok, status: res.status, body };
+}
+
+function devPreview(args: Record<string, unknown>): boolean {
+  if (process.env.NODE_ENV === "production") {
+    console.warn("[email] RESEND_API_KEY missing — email not sent", args);
+    return false;
+  }
+  console.info("[email] dev preview", args);
+  return true;
+}
+
 export async function sendEmail(args: {
   to: string;
   subject: string;
@@ -17,27 +52,16 @@ export async function sendEmail(args: {
   const replyTo = emailReplyTo();
 
   if (!key) {
-    if (process.env.NODE_ENV === "production") {
-      console.warn("[email] RESEND_API_KEY missing — email not sent", {
-        to: args.to,
-        subject: args.subject,
-      });
-      return false;
-    }
-    console.info("[email] dev preview", {
+    return devPreview({
+      mode: "html",
       to: args.to,
       subject: args.subject,
       preview: args.text ?? args.html.slice(0, 240),
     });
-    return true;
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
+  const res = await resendFetch("/emails", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({
       from,
       reply_to: replyTo,
@@ -46,14 +70,51 @@ export async function sendEmail(args: {
       html: args.html,
       text: args.text,
     }),
-  }).catch((err) => {
-    console.error("[email] send failed", err);
-    return null;
   });
 
-  if (!res?.ok) {
-    const detail = (await res?.text().catch(() => "")) ?? "";
-    console.error("[email] resend error", res?.status, detail.slice(0, 400));
+  if (!res.ok) {
+    console.error("[email] resend html error", res.status, res.body.slice(0, 400));
+    return false;
+  }
+  return true;
+}
+
+export async function sendResendTemplate(args: {
+  to: string;
+  subject: string;
+  templateId: string;
+  variables: Record<string, string>;
+}): Promise<boolean> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = emailFromAddress();
+  const replyTo = emailReplyTo();
+
+  if (!key) {
+    return devPreview({
+      mode: "template",
+      to: args.to,
+      subject: args.subject,
+      templateId: args.templateId,
+      variables: args.variables,
+    });
+  }
+
+  const res = await resendFetch("/emails", {
+    method: "POST",
+    body: JSON.stringify({
+      from,
+      reply_to: replyTo,
+      to: [args.to],
+      subject: args.subject,
+      template: {
+        id: args.templateId,
+        variables: args.variables,
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[email] resend template error", res.status, res.body.slice(0, 400));
     return false;
   }
   return true;
@@ -76,4 +137,70 @@ export function emailChangeLink(token: string): string {
 
 export function accountSecurityLink(): string {
   return `${appBaseUrl()}/app/profile/security`;
+}
+
+/** Used by scripts/resend-sync-templates.ts */
+export async function upsertResendTemplate(args: {
+  alias: string;
+  name: string;
+  subject: string;
+  html: string;
+  variables: string[];
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const from = emailFromAddress();
+  const variableDefs = args.variables.map((key) => ({
+    key,
+    type: "string" as const,
+    fallback_value: key === "ACTION_URL" ? appBaseUrl() : "—",
+  }));
+
+  const patch = await resendFetch(`/templates/${encodeURIComponent(args.alias)}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      name: args.name,
+      alias: args.alias,
+      from,
+      subject: args.subject,
+      html: args.html,
+      variables: variableDefs,
+    }),
+  });
+
+  let templateId = args.alias;
+
+  if (patch.status === 404) {
+    const created = await resendFetch("/templates", {
+      method: "POST",
+      body: JSON.stringify({
+        name: args.name,
+        alias: args.alias,
+        from,
+        subject: args.subject,
+        html: args.html,
+        variables: variableDefs,
+      }),
+    });
+    if (!created.ok) {
+      return { ok: false, error: created.body.slice(0, 500) };
+    }
+    try {
+      const parsed = JSON.parse(created.body) as { id?: string };
+      if (parsed.id) templateId = parsed.id;
+    } catch {
+      /* alias works for publish */
+    }
+  } else if (!patch.ok) {
+    return { ok: false, error: patch.body.slice(0, 500) };
+  }
+
+  const published = await resendFetch(
+    `/templates/${encodeURIComponent(args.alias)}/publish`,
+    { method: "POST", body: "{}" },
+  );
+
+  if (!published.ok) {
+    return { ok: false, error: published.body.slice(0, 500) };
+  }
+
+  return { ok: true, id: templateId };
 }

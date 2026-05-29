@@ -1,8 +1,7 @@
 import { createAuthChallenge } from "@/lib/auth/challenges";
-import { getEmailCopy, emailSubject } from "@/lib/email/copy";
-import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
-import { passwordResetLink, sendEmail } from "@/lib/email/send";
+import { passwordResetLink } from "@/lib/email/send";
+import { sendMcBuleliTransactionalEmail } from "@/lib/email/send-transactional";
 
 export async function sendPasswordResetEmail(args: {
   userId: string;
@@ -14,18 +13,10 @@ export async function sendPasswordResetEmail(args: {
     userId: args.userId,
     purpose: "password_reset",
   });
-  const link = passwordResetLink(rawCode);
-  const copy = getEmailCopy("passwordReset", locale);
-  const { html, text } = renderMcBuleliEmail({
-    copy,
-    actionUrl: link,
-    illustration: "reset",
-    locale,
-  });
-  await sendEmail({
+  await sendMcBuleliTransactionalEmail({
     to: args.email,
-    subject: emailSubject("passwordReset", locale),
-    html,
-    text,
+    kind: "passwordReset",
+    locale,
+    actionUrl: passwordResetLink(rawCode),
   });
 }

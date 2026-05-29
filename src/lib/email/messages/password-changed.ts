@@ -1,24 +1,16 @@
-import { getEmailCopy, emailSubject } from "@/lib/email/copy";
-import { renderMcBuleliEmail } from "@/lib/email/layout";
 import type { EmailLocale } from "@/lib/email/locale";
-import { accountSecurityLink, sendEmail } from "@/lib/email/send";
+import { accountSecurityLink } from "@/lib/email/send";
+import { sendMcBuleliTransactionalEmail } from "@/lib/email/send-transactional";
 
 export async function sendPasswordChangedEmail(args: {
   email: string;
   locale?: EmailLocale;
 }) {
   const locale = args.locale ?? "fr";
-  const copy = getEmailCopy("passwordChanged", locale);
-  const { html, text } = renderMcBuleliEmail({
-    copy,
-    actionUrl: accountSecurityLink(),
-    illustration: "security",
-    locale,
-  });
-  await sendEmail({
+  await sendMcBuleliTransactionalEmail({
     to: args.email,
-    subject: emailSubject("passwordChanged", locale),
-    html,
-    text,
+    kind: "passwordChanged",
+    locale,
+    actionUrl: accountSecurityLink(),
   });
 }
