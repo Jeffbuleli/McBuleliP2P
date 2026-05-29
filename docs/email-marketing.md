@@ -34,6 +34,9 @@ Doc Resend : [Managing Broadcasts](https://resend.com/docs/dashboard/broadcasts/
 | `security` | Sécurité | Tous | Passkeys / 2FA |
 | `reengage` | Réactivation | Inactifs 30j+ | Connexion |
 | `changelog` | Mise à jour | Toute la base | App |
+| `crypto_discovery` | **Crypto simple (USDT, P2P, AVEC)** | Audience méfiante crypto / Mobile Money | [Inscription + parrain RGZDWHUH](https://mcbuleli.org/register?ref=RGZDWHUH) |
+
+**Campagne recommandée pour votre audience** : `mcbuleli-crypto_discovery-fr.html` — illustrations + 4 blocs pédagogiques, CTA parrainage inclus.
 
 Code source des textes : `src/lib/email/marketing-broadcasts.ts`  
 Layout HTML : `src/lib/email/marketing-layout.ts`

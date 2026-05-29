@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-29T13:28:53.958Z",
+  "generatedAt": "2026-05-29T15:28:39.967Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -108,6 +108,18 @@
       "name": "McBuleli · changelog (EN)",
       "subject": "Product update · McBuleli",
       "html": "mcbuleli-changelog-en.html"
+    },
+    {
+      "slug": "mcbuleli-crypto_discovery-fr",
+      "name": "McBuleli · crypto_discovery (FR)",
+      "subject": "Crypto enfin simple — USDT, Mobile Money & AVEC",
+      "html": "mcbuleli-crypto_discovery-fr.html"
+    },
+    {
+      "slug": "mcbuleli-crypto_discovery-en",
+      "name": "McBuleli · crypto_discovery (EN)",
+      "subject": "Crypto made simple — USDT, Mobile Money & group savings",
+      "html": "mcbuleli-crypto_discovery-en.html"
     }
   ]
 }

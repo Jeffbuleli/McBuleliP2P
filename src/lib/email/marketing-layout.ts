@@ -1,4 +1,16 @@
-import { EMAIL_BRAND, EMAIL_FOOTER, logoUrl } from "@/lib/email/config";
+import {
+  EMAIL_BRAND,
+  EMAIL_FOOTER,
+  illustrationUrl,
+  logoUrl,
+  type EmailIllustration,
+} from "@/lib/email/config";
+
+export type MarketingFeatureRow = {
+  icon: EmailIllustration;
+  title: string;
+  text: string;
+};
 
 export type MarketingBroadcastCopy = {
   preheader: string;
@@ -6,6 +18,12 @@ export type MarketingBroadcastCopy = {
   /** One or two short paragraphs (plain text, escaped). */
   paragraphs: string[];
   bullets?: string[];
+  /** Optional hero illustration below headline */
+  heroIllustration?: EmailIllustration;
+  /** Icon + title + one line — educational blocks */
+  features?: MarketingFeatureRow[];
+  /** Trust line above CTA */
+  reassurance?: string;
   ctaLabel: string;
   /** Absolute URL or Resend placeholder e.g. {{{CTA_URL}}} */
   ctaHref: string;
@@ -23,7 +41,7 @@ function paragraphsHtml(paragraphs: string[]): string {
   return paragraphs
     .map(
       (p) =>
-        `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">${escHtml(p)}</p>`,
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">${escHtml(p)}</p>`,
     )
     .join("");
 }
@@ -38,6 +56,40 @@ function bulletsHtml(items: string[]): string {
   return `<ul style="margin:0 0 20px;padding:0 0 0 20px;text-align:left;">${lis}</ul>`;
 }
 
+function heroIllustrationHtml(kind: EmailIllustration): string {
+  const src = illustrationUrl(kind);
+  return `<tr>
+            <td style="padding:0 28px 12px;text-align:center;">
+              <img src="${src}" width="168" height="168" alt="" style="display:block;margin:0 auto;border:0;max-width:168px;height:auto;" />
+            </td>
+          </tr>`;
+}
+
+function featuresHtml(rows: MarketingFeatureRow[]): string {
+  const cells = rows
+    .map((row) => {
+      const src = illustrationUrl(row.icon);
+      return `<tr>
+        <td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:12px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="width:72px;vertical-align:top;padding-right:10px;">
+                <img src="${src}" width="64" height="64" alt="" style="display:block;border:0;border-radius:10px;" />
+              </td>
+              <td style="vertical-align:top;text-align:left;">
+                <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${EMAIL_BRAND.text};">${escHtml(row.title)}</p>
+                <p style="margin:0;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.muted};">${escHtml(row.text)}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
+    })
+    .join("");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 16px;">${cells}</table>`;
+}
+
 export type RenderMarketingEmailArgs = {
   copy: MarketingBroadcastCopy;
   locale: "en" | "fr";
@@ -47,7 +99,7 @@ export type RenderMarketingEmailArgs = {
 };
 
 /**
- * Minimal McBuleli marketing layout — text-first, one CTA, no hero illustration.
+ * Minimal McBuleli marketing layout — optional hero + feature illustrations.
  * For Resend Broadcasts (unlimited marketing sends).
  */
 export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): string {
@@ -74,6 +126,21 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
     : "";
 
   const href = copy.ctaHref.includes("{{{") ? copy.ctaHref : escHtml(copy.ctaHref);
+
+  const heroBlock = copy.heroIllustration
+    ? heroIllustrationHtml(copy.heroIllustration)
+    : "";
+
+  const featuresBlock =
+    copy.features && copy.features.length > 0
+      ? featuresHtml(copy.features)
+      : copy.bullets?.length
+        ? bulletsHtml(copy.bullets)
+        : "";
+
+  const reassuranceBlock = copy.reassurance
+    ? `<p style="margin:0 0 18px;font-size:12px;line-height:1.5;color:${EMAIL_BRAND.muted};text-align:center;">${escHtml(copy.reassurance)}</p>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="${locale}">
@@ -107,19 +174,25 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
           <tr>
             <td style="padding:8px 28px 0;">
               <p style="margin:0 0 12px;font-size:14px;color:${EMAIL_BRAND.muted};">${greeting}</p>
-              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.25;font-weight:700;color:${EMAIL_BRAND.text};">${escHtml(copy.headline)}</h1>
+              <h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;font-weight:700;color:${EMAIL_BRAND.text};">${escHtml(copy.headline)}</h1>
               ${paragraphsHtml(copy.paragraphs)}
-              ${copy.bullets?.length ? bulletsHtml(copy.bullets) : ""}
+            </td>
+          </tr>
+          ${heroBlock}
+          <tr>
+            <td style="padding:0 28px 0;">
+              ${featuresBlock}
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 28px;text-align:center;">
+            <td style="padding:0 28px 8px;text-align:center;">
+              ${reassuranceBlock}
               <a href="${href}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${escHtml(copy.ctaLabel)}</a>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 24px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
-              <p style="margin:16px 0 6px;font-size:12px;color:${EMAIL_BRAND.muted};">
+            <td style="padding:20px 28px 24px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:${EMAIL_BRAND.muted};">
                 <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${EMAIL_FOOTER.supportEmail}</a>
                 · <a href="${EMAIL_FOOTER.whatsApp}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${waLabel}</a>
               </p>
@@ -146,6 +219,9 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
       ? "Bonjour,"
       : "Hi,";
 
+  const featureLines =
+    copy.features?.flatMap((f) => [`${f.title} — ${f.text}`, ""]) ?? [];
+
   const lines = [
     "McBuleli",
     copy.preheader,
@@ -156,7 +232,10 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
     "",
     ...copy.paragraphs,
     "",
+    ...featureLines,
     ...(copy.bullets?.map((b) => `• ${b}`) ?? []),
+    "",
+    copy.reassurance ?? "",
     "",
     `${copy.ctaLabel}: ${copy.ctaHref}`,
     "",
@@ -165,5 +244,5 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
   if (resendAudience) {
     lines.push("", locale === "fr" ? "Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}" : "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
   }
-  return lines.filter((l) => l !== undefined).join("\n");
+  return lines.filter((l) => l !== undefined && l !== "").join("\n");
 }

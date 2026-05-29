@@ -10,7 +10,8 @@ export type MarketingBroadcastKind =
   | "kyc"
   | "security"
   | "reengage"
-  | "changelog";
+  | "changelog"
+  | "crypto_discovery";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -21,13 +22,28 @@ export type MarketingBroadcastDef = {
   copy: MarketingBroadcastCopy;
 };
 
-function u(path: string, campaign: string): string {
+type CampaignSource = Omit<MarketingBroadcastCopy, "ctaHref"> & {
+  ctaPath: string;
+  campaign: string;
+  referralCode?: string;
+  /** Override default subject line */
+  subject?: string;
+};
+
+function ctaHrefFor(src: CampaignSource): string {
   const base = appBaseUrl().replace(/\/$/, "");
-  const sep = path.includes("?") ? "&" : "?";
-  return `${base}${path}${sep}utm_source=email&utm_medium=broadcast&utm_campaign=${campaign}`;
+  if (src.referralCode) {
+    return `${base}/register?ref=${encodeURIComponent(src.referralCode)}&utm_source=email&utm_medium=broadcast&utm_campaign=${src.campaign}`;
+  }
+  const sep = src.ctaPath.includes("?") ? "&" : "?";
+  return `${base}${src.ctaPath}${sep}utm_source=email&utm_medium=broadcast&utm_campaign=${src.campaign}`;
 }
 
-const EN: Record<MarketingBroadcastKind, Omit<MarketingBroadcastCopy, "ctaHref"> & { ctaPath: string; campaign: string }> = {
+function u(path: string, campaign: string): string {
+  return ctaHrefFor({ ctaPath: path, campaign } as CampaignSource);
+}
+
+const EN: Record<MarketingBroadcastKind, CampaignSource> = {
   welcome: {
     preheader: "Your crypto wallet for Africa — fund, trade, earn.",
     headline: "Welcome to McBuleli",
@@ -132,9 +148,46 @@ const EN: Record<MarketingBroadcastKind, Omit<MarketingBroadcastCopy, "ctaHref">
     ctaPath: "/app/wallet",
     campaign: "changelog",
   },
+  crypto_discovery: {
+    subject: "Crypto made simple — USDT, Mobile Money & group savings",
+    preheader: "Not Bitcoin roulette. Stable USDT, P2P with Mobile Money, AVEC groups — on McBuleli.",
+    headline: "Crypto without the fear",
+    paragraphs: [
+      "Scams and Bitcoin swings scared you off? Fair enough.",
+      "McBuleli keeps it clear: stable USDT, protected P2P trades, and simple deposit & withdraw.",
+    ],
+    heroIllustration: "depositUsdt",
+    features: [
+      {
+        icon: "depositUsdt",
+        title: "USDT ≈ 1 US dollar",
+        text: "Not Bitcoin. USDT stays stable — send and receive without nasty surprises.",
+      },
+      {
+        icon: "verify",
+        title: "P2P + Mobile Money",
+        text: "Buy or sell with Orange, M-Pesa, and more. Funds stay in escrow until the deal is done.",
+      },
+      {
+        icon: "withdrawUsdt",
+        title: "Deposit & withdraw",
+        text: "Your own address, visible fees, email alerts — you stay in control.",
+      },
+      {
+        icon: "depositPi",
+        title: "AVEC group savings",
+        text: "Save together with clear rules, governance, and loans between members.",
+      },
+    ],
+    reassurance: "McBuleli is not a bank — transparent trades, WhatsApp support, Didit KYC.",
+    ctaLabel: "Create my free account",
+    ctaPath: "/register",
+    campaign: "crypto_discovery",
+    referralCode: "RGZDWHUH",
+  },
 };
 
-const FR: Record<MarketingBroadcastKind, Omit<MarketingBroadcastCopy, "ctaHref"> & { ctaPath: string; campaign: string }> = {
+const FR: Record<MarketingBroadcastKind, CampaignSource> = {
   welcome: {
     preheader: "Votre portefeuille crypto pour l'Afrique — déposer, échanger, gagner.",
     headline: "Bienvenue sur McBuleli",
@@ -239,6 +292,44 @@ const FR: Record<MarketingBroadcastKind, Omit<MarketingBroadcastCopy, "ctaHref">
     ctaPath: "/app/wallet",
     campaign: "changelog",
   },
+  crypto_discovery: {
+    subject: "Crypto enfin simple — USDT, Mobile Money & AVEC",
+    preheader: "Pas du Bitcoin à la roulette. USDT stable, P2P Mobile Money, épargne AVEC — sur McBuleli.",
+    headline: "La crypto, sans la peur",
+    paragraphs: [
+      "Arnaques, Bitcoin qui monte et descend — on comprend la méfiance.",
+      "McBuleli, c'est clair : USDT stable, échanges P2P protégés, dépôt et retrait simples.",
+    ],
+    heroIllustration: "depositUsdt",
+    features: [
+      {
+        icon: "depositUsdt",
+        title: "USDT ≈ 1 dollar",
+        text: "Ce n'est pas du Bitcoin. L'USDT reste stable — envoyez et recevez sans mauvaise surprise.",
+      },
+      {
+        icon: "verify",
+        title: "P2P + Mobile Money",
+        text: "Achetez ou vendez avec Orange, M-Pesa, etc. L'argent reste sous séquestre jusqu'à la fin du deal.",
+      },
+      {
+        icon: "withdrawUsdt",
+        title: "Dépôt & retrait crypto",
+        text: "Votre adresse personnelle, frais visibles, alertes email — vous gardez la main.",
+      },
+      {
+        icon: "depositPi",
+        title: "Épargne AVEC",
+        text: "Épargnez à plusieurs, règles claires, gouvernance et prêts entre membres.",
+      },
+    ],
+    reassurance:
+      "McBuleli n'est pas une banque — transparence, support WhatsApp, vérification Didit.",
+    ctaLabel: "Créer mon compte gratuit",
+    ctaPath: "/register",
+    campaign: "crypto_discovery",
+    referralCode: "RGZDWHUH",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -251,6 +342,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "security",
   "reengage",
   "changelog",
+  "crypto_discovery",
 ];
 
 function buildDef(
@@ -259,21 +351,21 @@ function buildDef(
 ): MarketingBroadcastDef {
   const src = locale === "fr" ? FR[kind] : EN[kind];
   const subject =
-    locale === "fr"
+    src.subject ??
+    (locale === "fr"
       ? `${src.headline} · McBuleli`
-      : `${src.headline} · McBuleli`;
+      : `${src.headline} · McBuleli`);
+  const { ctaPath: _p, campaign: _c, referralCode: _r, subject: _s, ...copyFields } =
+    src;
   return {
     kind,
     locale,
     name: `McBuleli · ${kind} (${locale.toUpperCase()})`,
     subject,
     copy: {
-      preheader: src.preheader,
-      headline: src.headline,
-      paragraphs: src.paragraphs,
-      bullets: src.bullets,
+      ...copyFields,
       ctaLabel: src.ctaLabel,
-      ctaHref: u(src.ctaPath, src.campaign),
+      ctaHref: ctaHrefFor(src),
     },
   };
 }
