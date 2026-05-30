@@ -1963,3 +1963,80 @@ export const waInboundEvents = pgTable(
   },
   (t) => [index("wa_inbound_events_created_idx").on(t.createdAt)],
 );
+
+/** McBuleli AI Virtual Assistant — conversation sessions. */
+export const aiAssistantConversations = pgTable(
+  "ai_assistant_conversations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    guestToken: varchar("guest_token", { length: 64 }),
+    locale: varchar("locale", { length: 8 }).notNull().default("en"),
+    pageContext: varchar("page_context", { length: 128 }),
+    detectedIntents: jsonb("detected_intents")
+      .$type<string[]>()
+      .default([]),
+    simplifiedMode: boolean("simplified_mode").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("ai_assistant_conversations_user_idx").on(t.userId),
+    index("ai_assistant_conversations_guest_idx").on(t.guestToken),
+    index("ai_assistant_conversations_updated_idx").on(t.updatedAt),
+  ],
+);
+
+export const aiAssistantMessages = pgTable(
+  "ai_assistant_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => aiAssistantConversations.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 16 }).notNull(),
+    content: text("content").notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("ai_assistant_messages_conversation_idx").on(
+      t.conversationId,
+      t.createdAt,
+    ),
+  ],
+);
+
+/** FAQ / knowledge base for RAG retrieval. */
+export const aiAssistantKnowledge = pgTable(
+  "ai_assistant_knowledge",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 128 }).notNull(),
+    category: varchar("category", { length: 64 }).notNull(),
+    locale: varchar("locale", { length: 8 }).notNull().default("all"),
+    title: varchar("title", { length: 256 }).notNull(),
+    content: text("content").notNull(),
+    tags: jsonb("tags").$type<string[]>().default([]),
+    embedding: jsonb("embedding").$type<number[] | null>(),
+    priority: integer("priority").notNull().default(0),
+    published: boolean("published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ai_assistant_knowledge_slug_locale_uidx").on(t.slug, t.locale),
+    index("ai_assistant_knowledge_category_idx").on(t.category),
+    index("ai_assistant_knowledge_published_idx").on(t.published),
+  ],
+);

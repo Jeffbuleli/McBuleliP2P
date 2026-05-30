@@ -110,3 +110,22 @@ export const adminSetRoleSchema = z
     staffScopes: z.array(staffScopeZ).nullable().optional(),
   })
   .strict();
+
+export const assistantChatSchema = z.object({
+  conversationId: z.string().uuid().optional().nullable(),
+  message: z.string().trim().min(1).max(4000),
+  guestToken: z.string().trim().min(16).max(64).optional().nullable(),
+  locale: z.enum(["en", "fr", "sw"]).optional(),
+  pageContext: z.string().trim().max(128).optional().nullable(),
+});
+
+export const assistantKnowledgeSchema = z.object({
+  slug: z.string().trim().min(2).max(128),
+  category: z.string().trim().min(2).max(64),
+  locale: z.enum(["all", "en", "fr", "sw"]).default("all"),
+  title: z.string().trim().min(2).max(256),
+  content: z.string().trim().min(10).max(20000),
+  tags: z.array(z.string().trim().max(64)).max(20).optional(),
+  priority: z.number().int().min(0).max(1000).optional(),
+  published: z.boolean().optional(),
+});

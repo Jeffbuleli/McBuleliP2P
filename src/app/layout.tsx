@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalLangSwitch } from "@/components/conditional-lang-switch";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { PwaInstallBanner } from "@/components/pwa/install-banner";
+import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
 import { CANONICAL_PRODUCTION_ORIGIN, getMetadataOrigin } from "@/lib/app-url";
 
 const inter = Inter({
@@ -95,6 +96,7 @@ export default async function RootLayout({
             <RegisterServiceWorker />
             <ConditionalLangSwitch />
             <PwaInstallBanner />
+            <AssistantLauncher />
             {children}
           </I18nProvider>
         </ThemeProvider>
