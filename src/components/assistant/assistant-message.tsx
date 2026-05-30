@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { AssistantLocale } from "@/lib/assistant/messages";
 import { getAssistantMessages } from "@/lib/assistant/messages";
 import { RenderAssistantMarkdown } from "@/lib/assistant/render-markdown";
+import { AssistantBotLogo } from "@/components/assistant/assistant-bot-logo";
 
 export function AssistantMessageBubble({
   role,
@@ -31,10 +32,8 @@ export function AssistantMessageBubble({
     >
       <div className={`flex w-full gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
         {!isUser ? (
-          <div className="mt-1 shrink-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#305f33] to-[#1e3d21] text-[10px] font-bold text-white">
-              AI
-            </div>
+          <div className="mt-0.5 shrink-0">
+            <AssistantBotLogo size={28} className="h-7 w-7" />
           </div>
         ) : null}
         <div
@@ -71,9 +70,7 @@ export function AssistantTypingIndicator({ locale }: { locale: AssistantLocale }
   const m = getAssistantMessages(locale);
   return (
     <div className="flex items-center gap-2 px-1 py-2">
-      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#305f33]/80 text-[10px] font-bold text-white">
-        AI
-      </div>
+      <AssistantBotLogo size={28} className="h-7 w-7 shrink-0" />
       <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/10 bg-white/8 px-3 py-2 backdrop-blur-sm">
         <span className="text-xs text-stone-400">{m.thinking}</span>
         {[0, 1, 2].map((i) => (

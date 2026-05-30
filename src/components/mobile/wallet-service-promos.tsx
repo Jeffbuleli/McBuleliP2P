@@ -28,36 +28,36 @@ function StakingPromoCard({ promo }: { promo: StakingPromoDTO }) {
   return (
     <Link
       href={promo.href}
-      className="fd-card group block overflow-hidden p-0 active:scale-[0.99]"
+      className="fd-card flex items-center gap-2 overflow-hidden px-2.5 py-2.5 active:scale-[0.99] sm:gap-3 sm:px-3"
     >
-      <div className="flex items-center gap-2 border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
-        <StakingHeroIllustration className="h-9 w-9 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-[color:var(--fd-text)]">{promo.title}</p>
-          <p className="truncate text-[10px] text-[color:var(--fd-muted)]">
-            {promo.activeLine}
-          </p>
-        </div>
-        <Chevron />
+      <StakingHeroIllustration className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" />
+      <div className="min-w-0 shrink-0">
+        <p className="text-sm font-bold leading-tight text-[color:var(--fd-text)]">
+          {promo.title}
+        </p>
+        <p className="truncate text-[10px] text-[color:var(--fd-muted)]">
+          {promo.activeLine}
+        </p>
       </div>
-      <div className="grid grid-cols-2 divide-x divide-[color:var(--fd-border)] px-0 py-2">
-        <div className="px-3 text-center">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+      <div className="ml-auto flex min-w-0 flex-1 items-stretch justify-end gap-0 divide-x divide-[color:var(--fd-border)] overflow-hidden rounded-lg border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/25">
+        <div className="min-w-0 flex-1 px-2 py-1.5 text-center sm:px-2.5">
+          <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)] sm:text-[9px]">
             {promo.lockedLabel}
           </p>
-          <p className="mt-0.5 text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
+          <p className="truncate text-[11px] font-bold tabular-nums text-[color:var(--fd-primary)] sm:text-xs">
             {promo.lockedDisplay}
           </p>
         </div>
-        <div className="px-3 text-center">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        <div className="min-w-0 flex-1 px-2 py-1.5 text-center sm:px-2.5">
+          <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)] sm:text-[9px]">
             {promo.accruedLabel}
           </p>
-          <p className="mt-0.5 text-xs font-bold tabular-nums text-[color:var(--fd-text)]">
+          <p className="truncate text-[11px] font-bold tabular-nums text-[color:var(--fd-text)] sm:text-xs">
             {promo.accruedDisplay}
           </p>
         </div>
       </div>
+      <Chevron />
     </Link>
   );
 }
@@ -127,14 +127,12 @@ export function WalletServicePromos({
   poolPromo: ServicePromoDTO | null;
   avecPromo: (ServicePromoDTO & { rightPrimary: string; rightSecondary?: string }) | null;
 }) {
-  const showTopRow = stakingPromo || poolPromo;
-
   return (
     <div className="mt-4 flex flex-col gap-2 pb-6">
-      {showTopRow ? (
-        <div className="grid grid-cols-2 gap-2">
-          {stakingPromo ? <StakingPromoCard promo={stakingPromo} /> : null}
-          {poolPromo ? <CompactPromoCard promo={poolPromo} /> : null}
+      {stakingPromo ? <StakingPromoCard promo={stakingPromo} /> : null}
+      {poolPromo ? (
+        <div className={stakingPromo ? "" : "grid grid-cols-2 gap-2"}>
+          <CompactPromoCard promo={poolPromo} />
         </div>
       ) : null}
 
