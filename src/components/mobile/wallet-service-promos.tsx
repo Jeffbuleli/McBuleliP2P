@@ -1,47 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ServicePromoDTO, StakingPromoDTO } from "@/components/mobile/wallet-overview";
-import {
-  WalletIconAvec,
-  WalletIconPool,
-  WalletIconStaking,
-} from "@/components/wallet/wallet-service-icons";
-
-function PromoIcon({ icon }: { icon: ServicePromoDTO["icon"] | "staking" }) {
-  const cls =
-    "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ring-white/80";
-  switch (icon) {
-    case "staking":
-      return (
-        <span
-          className={`${cls} bg-gradient-to-br from-emerald-200 to-amber-200 text-[color:var(--fd-primary)]`}
-          aria-hidden
-        >
-          <WalletIconStaking />
-        </span>
-      );
-    case "pool":
-      return (
-        <span
-          className={`${cls} bg-gradient-to-br from-cyan-200 to-emerald-200 text-cyan-900`}
-          aria-hidden
-        >
-          <WalletIconPool />
-        </span>
-      );
-    case "avec":
-      return (
-        <span
-          className={`${cls} bg-gradient-to-br from-amber-200 to-orange-200 text-orange-900`}
-          aria-hidden
-        >
-          <WalletIconAvec />
-        </span>
-      );
-    default:
-      return null;
-  }
-}
+import { AvecCompactIllustration } from "@/components/wallet/avec-illustrations";
+import { StakingHeroIllustration } from "@/components/wallet/staking-illustrations";
+import { WalletIconPool } from "@/components/wallet/wallet-service-icons";
 
 function Chevron() {
   return (
@@ -63,83 +24,100 @@ function Chevron() {
   );
 }
 
-function CompactPromoCard({ promo }: { promo: ServicePromoDTO }) {
+function StakingPromoCard({ promo }: { promo: StakingPromoDTO }) {
   return (
-    <Link href={promo.href} className="fd-card block overflow-hidden p-3 active:scale-[0.99]">
-      {promo.imageSrc ? (
-        <div className="relative -mx-3 -mt-3 mb-2 h-16 overflow-hidden">
-          <Image
-            src={promo.imageSrc}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, 200px"
-          />
-        </div>
-      ) : null}
-      <div className="flex items-center gap-2.5">
-        <PromoIcon icon={promo.icon} />
+    <Link
+      href={promo.href}
+      className="fd-card group block overflow-hidden p-0 active:scale-[0.99]"
+    >
+      <div className="flex items-center gap-2 border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2">
+        <StakingHeroIllustration className="h-9 w-9 shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{promo.title}</p>
-          <p className="mt-0.5 truncate text-[10px] text-[color:var(--fd-muted)]">{promo.metaLine}</p>
+          <p className="truncate text-[10px] text-[color:var(--fd-muted)]">
+            {promo.activeLine}
+          </p>
         </div>
         <Chevron />
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-[color:var(--fd-border)] px-0 py-2">
+        <div className="px-3 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {promo.lockedLabel}
+          </p>
+          <p className="mt-0.5 text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
+            {promo.lockedDisplay}
+          </p>
+        </div>
+        <div className="px-3 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {promo.accruedLabel}
+          </p>
+          <p className="mt-0.5 text-xs font-bold tabular-nums text-[color:var(--fd-text)]">
+            {promo.accruedDisplay}
+          </p>
+        </div>
       </div>
     </Link>
   );
 }
 
-function WidePromoCard({
-  icon,
-  href,
-  title,
-  subtitle,
-  rightPrimary,
-  rightSecondary,
-  imageSrc,
+function CompactPromoCard({ promo }: { promo: ServicePromoDTO }) {
+  return (
+    <Link
+      href={promo.href}
+      className="fd-card flex items-center gap-2.5 p-3 active:scale-[0.99]"
+    >
+      <span
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 to-emerald-100 text-cyan-900 ring-1 ring-white/80"
+        aria-hidden
+      >
+        <WalletIconPool />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-[color:var(--fd-text)]">{promo.title}</p>
+        <p className="mt-0.5 truncate text-[10px] text-[color:var(--fd-muted)]">
+          {promo.metaLine}
+        </p>
+      </div>
+      <Chevron />
+    </Link>
+  );
+}
+
+function AvecPromoCard({
+  promo,
 }: {
-  icon: "staking" | "avec";
-  href: string;
-  title: string;
-  subtitle: string;
-  rightPrimary: string;
-  rightSecondary?: string;
-  imageSrc?: string;
+  promo: ServicePromoDTO & { rightPrimary: string; rightSecondary?: string };
 }) {
   return (
-    <Link href={href} className="fd-card block overflow-hidden p-3.5 active:scale-[0.99]">
-      {imageSrc ? (
-        <div className="relative -mx-3.5 -mt-3.5 mb-2.5 h-20 overflow-hidden rounded-t-2xl">
-          <Image
-            src={imageSrc}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 400px"
-          />
-        </div>
-      ) : null}
-      <div className="flex items-center gap-3">
-        <PromoIcon icon={icon} />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>
-          <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">{subtitle}</p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
-            {rightPrimary}
-          </p>
-          {rightSecondary ? (
-            <p className="text-[10px] text-[color:var(--fd-muted)]">{rightSecondary}</p>
+    <Link
+      href={promo.href}
+      className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
+    >
+      <AvecCompactIllustration className="h-12 w-12 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold text-[color:var(--fd-text)]">{promo.title}</p>
+          {Number(promo.rightPrimary) > 0 ? (
+            <span className="rounded-full bg-[color:var(--fd-primary)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
+              {promo.rightPrimary}
+            </span>
           ) : null}
         </div>
-        <Chevron />
+        <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">{promo.metaLine}</p>
+        {promo.rightSecondary ? (
+          <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]/80">
+            {promo.rightSecondary}
+          </p>
+        ) : null}
       </div>
+      <Chevron />
     </Link>
   );
 }
 
-/** Staking + pool on one row; AVEC full-width below (staking-style banner). */
+/** Staking + pool on one row; AVEC full-width below. */
 export function WalletServicePromos({
   stakingPromo,
   poolPromo,
@@ -155,34 +133,12 @@ export function WalletServicePromos({
     <div className="mt-4 flex flex-col gap-2 pb-6">
       {showTopRow ? (
         <div className="grid grid-cols-2 gap-2">
-          {stakingPromo ? (
-            <CompactPromoCard
-              promo={{
-                href: stakingPromo.href,
-                title: stakingPromo.title,
-                tagline: stakingPromo.tagline,
-                cta: stakingPromo.cta,
-                metaLine: `${stakingPromo.activeLine} · ${stakingPromo.lockedDisplay}`,
-                tone: "emerald",
-                icon: "staking",
-              }}
-            />
-          ) : null}
+          {stakingPromo ? <StakingPromoCard promo={stakingPromo} /> : null}
           {poolPromo ? <CompactPromoCard promo={poolPromo} /> : null}
         </div>
       ) : null}
 
-      {avecPromo ? (
-        <WidePromoCard
-          icon="avec"
-          href={avecPromo.href}
-          title={avecPromo.title}
-          subtitle={avecPromo.metaLine}
-          rightPrimary={avecPromo.rightPrimary}
-          rightSecondary={avecPromo.rightSecondary}
-          imageSrc={avecPromo.imageSrc}
-        />
-      ) : null}
+      {avecPromo ? <AvecPromoCard promo={avecPromo} /> : null}
     </div>
   );
 }
