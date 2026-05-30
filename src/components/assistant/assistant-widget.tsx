@@ -8,7 +8,6 @@ import { useI18n } from "@/components/i18n-provider";
 import { AssistantAvatar } from "@/components/assistant/assistant-avatar";
 import {
   AssistantMessageBubble,
-  AssistantRecommendations,
   AssistantTypingIndicator,
 } from "@/components/assistant/assistant-message";
 import {
@@ -34,6 +33,21 @@ type ChatMessage = {
 
 type Recommendation = { label: string; href: string; reason: string };
 
+function parseMessageActions(
+  meta?: Record<string, unknown> | null,
+): Recommendation[] | undefined {
+  const rec = meta?.recommendations;
+  if (!Array.isArray(rec)) return undefined;
+  return rec.filter(
+    (item): item is Recommendation =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as Recommendation).label === "string" &&
+      typeof (item as Recommendation).href === "string" &&
+      typeof (item as Recommendation).reason === "string",
+  );
+}
+
 export function AssistantWidget() {
   const pathname = usePathname();
   const { locale: appLocale } = useI18n();
@@ -46,7 +60,6 @@ export function AssistantWidget() {
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [idlePulse, setIdlePulse] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,9 +204,6 @@ export function AssistantWidget() {
       if (data.assistantMessage) next.push(data.assistantMessage);
       return next;
     });
-    if (Array.isArray(data.recommendations)) {
-      setRecommendations(data.recommendations);
-    }
   }
 
   async function consumeStreamResponse(
@@ -272,9 +282,6 @@ export function AssistantWidget() {
             if (am) next.push(am);
             return next;
           });
-          if (Array.isArray(event.recommendations)) {
-            setRecommendations(event.recommendations as Recommendation[]);
-          }
         }
 
         if (event.type === "error") {
@@ -290,7 +297,6 @@ export function AssistantWidget() {
     setDraft("");
     setLoading(true);
     setError(null);
-    setRecommendations([]);
 
     const optimistic: ChatMessage = {
       id: `tmp-${Date.now()}`,
@@ -491,14 +497,14 @@ export function AssistantWidget() {
                     role={msg.role}
                     content={msg.content}
                     locale={assistantLocale}
+                    actions={parseMessageActions(msg.meta)}
+                    onNavigate={() => setOpen(false)}
                   />
                 ))}
 
                 {loading ? (
                   <AssistantTypingIndicator locale={assistantLocale} />
                 ) : null}
-
-                <AssistantRecommendations items={recommendations} />
               </div>
 
               {error ? (

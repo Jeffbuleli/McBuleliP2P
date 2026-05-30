@@ -2,32 +2,22 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
 import type { AssistantLocale } from "@/lib/assistant/messages";
 import { getAssistantMessages } from "@/lib/assistant/messages";
-
-function renderMarkdownLite(text: string): ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-semibold text-white">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return part;
-  });
-}
+import { RenderAssistantMarkdown } from "@/lib/assistant/render-markdown";
 
 export function AssistantMessageBubble({
   role,
   content,
   locale,
+  actions,
+  onNavigate,
 }: {
   role: "user" | "assistant";
   content: string;
   locale: AssistantLocale;
+  actions?: { label: string; href: string; reason: string }[];
+  onNavigate?: () => void;
 }) {
   const isUser = role === "user";
   const m = getAssistantMessages(locale);
@@ -37,27 +27,42 @@ export function AssistantMessageBubble({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex flex-col gap-1.5 ${isUser ? "items-end" : "items-start"}`}
     >
-      {!isUser ? (
-        <div className="mt-1 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#305f33] to-[#1e3d21] text-[10px] font-bold text-white">
-            AI
+      <div className={`flex w-full gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        {!isUser ? (
+          <div className="mt-1 shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#305f33] to-[#1e3d21] text-[10px] font-bold text-white">
+              AI
+            </div>
           </div>
-        </div>
-      ) : null}
-      <div
-        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
-          isUser
-            ? "rounded-br-md bg-[#305f33] text-white shadow-md shadow-[#305f33]/25"
-            : "rounded-bl-md border border-white/10 bg-white/8 text-stone-100 backdrop-blur-sm"
-        }`}
-      >
-        {isUser ? content : renderMarkdownLite(content)}
-        {!isUser && content.length > 20 ? (
-          <p className="mt-1.5 text-[10px] text-stone-400">{m.name}</p>
         ) : null}
+        <div
+          className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+            isUser
+              ? "rounded-br-md bg-[#305f33] text-white shadow-md shadow-[#305f33]/25"
+              : "rounded-bl-md border border-white/10 bg-white/8 text-stone-100 backdrop-blur-sm"
+          }`}
+        >
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{content}</p>
+          ) : (
+            <RenderAssistantMarkdown text={content} />
+          )}
+          {!isUser && content.length > 20 ? (
+            <p className="mt-2 border-t border-white/10 pt-1.5 text-[10px] text-stone-400">
+              {m.name}
+            </p>
+          ) : null}
+        </div>
       </div>
+      {!isUser && actions && actions.length > 0 ? (
+        <AssistantActionLinks
+          items={actions}
+          locale={locale}
+          onNavigate={onNavigate}
+        />
+      ) : null}
     </motion.div>
   );
 }
@@ -88,24 +93,51 @@ export function AssistantTypingIndicator({ locale }: { locale: AssistantLocale }
   );
 }
 
-export function AssistantRecommendations({
+export function AssistantActionLinks({
   items,
+  locale,
+  onNavigate,
 }: {
   items: { label: string; href: string; reason: string }[];
+  locale: AssistantLocale;
+  onNavigate?: () => void;
 }) {
+  const m = getAssistantMessages(locale);
   if (!items.length) return null;
   return (
-    <div className="mt-2 space-y-1.5 px-1">
+    <div className="ml-9 w-full max-w-[88%] space-y-1.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6ee7a0]/90">
+        {m.directAccess}
+      </p>
       {items.map((r) => (
         <Link
           key={r.href}
           href={r.href}
-          className="block rounded-xl border border-[#305f33]/30 bg-[#305f33]/10 px-3 py-2 transition hover:bg-[#305f33]/20"
+          onClick={() => onNavigate?.()}
+          className="flex items-center justify-between gap-2 rounded-xl border border-[#305f33]/40 bg-[#305f33]/15 px-3 py-2.5 transition hover:border-[#6ee7a0]/40 hover:bg-[#305f33]/25"
         >
-          <p className="text-xs font-bold text-[#6ee7a0]">{r.label}</p>
-          <p className="text-[11px] text-stone-400">{r.reason}</p>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-[#6ee7a0]">{r.label}</p>
+            <p className="text-[11px] text-stone-400">{r.reason}</p>
+          </div>
+          <span className="shrink-0 text-sm font-bold text-[#6ee7a0]">→</span>
         </Link>
       ))}
     </div>
+  );
+}
+
+/** @deprecated use AssistantActionLinks per message */
+export function AssistantRecommendations({
+  items,
+  locale,
+  onNavigate,
+}: {
+  items: { label: string; href: string; reason: string }[];
+  locale: AssistantLocale;
+  onNavigate?: () => void;
+}) {
+  return (
+    <AssistantActionLinks items={items} locale={locale} onNavigate={onNavigate} />
   );
 }

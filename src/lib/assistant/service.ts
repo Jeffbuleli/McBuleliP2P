@@ -9,9 +9,9 @@ import type { AssistantLocale } from "@/lib/assistant/messages";
 import {
   classifyUserIntent,
   mergeIntents,
-  recommendServices,
   shouldUseSimplifiedMode,
 } from "@/lib/assistant/intent";
+import { resolveGuidanceActions } from "@/lib/assistant/guidance-actions";
 import {
   formatKnowledgeForPrompt,
   searchAssistantKnowledge,
@@ -47,7 +47,6 @@ export type PreparedAssistantTurn = {
   mergedIntents: string[];
   simplified: boolean;
   hits: Awaited<ReturnType<typeof searchAssistantKnowledge>>;
-  recommendations: { label: string; href: string; reason: string }[];
   pageContext: string | null;
   convRow: typeof aiAssistantConversations.$inferSelect;
 };
@@ -199,8 +198,6 @@ export async function prepareAssistantTurn(args: {
     detectedIntents: mergedIntents,
   });
 
-  const recommendations = recommendServices(mergedIntents, locale);
-
   return {
     locale,
     trimmed,
@@ -209,7 +206,6 @@ export async function prepareAssistantTurn(args: {
     mergedIntents,
     simplified,
     hits,
-    recommendations,
     pageContext,
     convRow,
   };
@@ -227,6 +223,13 @@ async function persistAssistantTurn(args: {
   const db = getDb();
   const now = new Date();
   const { turn } = args;
+
+  const recommendations = resolveGuidanceActions({
+    userMessage: turn.trimmed,
+    assistantReply: args.reply,
+    locale: turn.locale,
+    intents: turn.mergedIntents,
+  });
 
   const [userRow] = await db
     .insert(aiAssistantMessages)
@@ -246,7 +249,7 @@ async function persistAssistantTurn(args: {
       content: args.reply,
       meta: {
         intents: turn.mergedIntents,
-        recommendations: turn.recommendations,
+        recommendations,
         knowledgeSlugs: turn.hits.map((h) => h.slug),
         simplifiedMode: turn.simplified,
       },
@@ -278,7 +281,7 @@ async function persistAssistantTurn(args: {
       meta: (assistantRow.meta as Record<string, unknown>) ?? null,
       createdAt: assistantRow.createdAt.toISOString(),
     },
-    recommendations: turn.recommendations,
+    recommendations,
   };
 }
 

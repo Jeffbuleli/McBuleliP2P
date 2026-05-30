@@ -15,6 +15,8 @@ export type AssistantMessages = {
   simplifiedMode: string;
   quickActions: string;
   suggestedForYou: string;
+  directAccess: string;
+  openInApp: string;
   errorGeneric: string;
   rateLimited: string;
   errorDbNotReady: string;
@@ -46,6 +48,8 @@ export const assistantEn: AssistantMessages = {
   simplifiedMode: "Simple mode",
   quickActions: "Quick topics",
   suggestedForYou: "Suggested for you",
+  directAccess: "Open in McBuleli",
+  openInApp: "Go to this screen",
   errorGeneric: "Something went wrong. Please try again.",
   rateLimited: "Too many messages. Please wait a moment.",
   errorDbNotReady:
@@ -77,6 +81,8 @@ export const assistantFr: AssistantMessages = {
   simplifiedMode: "Mode simple",
   quickActions: "Sujets rapides",
   suggestedForYou: "Suggestions pour vous",
+  directAccess: "Accès direct dans l'app",
+  openInApp: "Ouvrir cette page",
   errorGeneric: "Une erreur s'est produite. Réessayez.",
   rateLimited: "Trop de messages. Patientez un instant.",
   errorDbNotReady:
@@ -108,6 +114,8 @@ export const assistantSw: AssistantMessages = {
   simplifiedMode: "Hali rahisi",
   quickActions: "Mada za haraka",
   suggestedForYou: "Mapendekezo kwako",
+  directAccess: "Fungua kwenye McBuleli",
+  openInApp: "Nenda kwenye ukurasa huu",
   errorGeneric: "Kuna hitilafu. Jaribu tena.",
   rateLimited: "Ujumbe mwingi sana. Subiri kidogo.",
   errorDbNotReady:
