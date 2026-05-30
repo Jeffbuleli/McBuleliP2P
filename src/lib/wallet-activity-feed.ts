@@ -127,7 +127,7 @@ export async function fetchWalletActivitiesForAsset(args: {
       asset: d.asset,
       createdAt: d.createdAt.toISOString(),
       resumeHref:
-        st === "processing" ? `/app/deposit/${d.id}` : null,
+        st === "processing" ? `/app/wallet/activity/deposit/${d.id}` : null,
       detailHref: `/app/wallet/activity/deposit/${d.id}`,
       txid: d.txid,
       destination: d.addressShown,
@@ -314,7 +314,7 @@ export async function fetchWalletGlobalActivities(args: {
       amount: amt,
       asset: d.asset,
       createdAt: d.createdAt.toISOString(),
-      resumeHref: st === "processing" ? `/app/deposit/${d.id}` : null,
+      resumeHref: st === "processing" ? `/app/wallet/activity/deposit/${d.id}` : null,
       detailHref: `/app/wallet/activity/deposit/${d.id}`,
       txid: d.txid,
       destination: d.addressShown,

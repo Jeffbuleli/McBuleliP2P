@@ -59,7 +59,7 @@ export async function notifyDepositConfirmedEmail(args: {
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
   const kind = assetKind(args.asset, "depositUsdt", "depositPi");
-  const amount = formatCryptoAmount(args.amount);
+  const amount = formatCryptoAmount(args.amount, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const txid = args.txid.trim();
 
@@ -117,9 +117,9 @@ export async function notifyWithdrawalQueuedEmail(args: {
     "withdrawQueuedUsdt",
     "withdrawQueuedPi",
   );
-  const amount = formatCryptoAmount(args.amount);
-  const fee = formatCryptoAmount(args.fee);
-  const total = withdrawTotalDebited(args.amount, args.fee);
+  const amount = formatCryptoAmount(args.amount, asset);
+  const fee = formatCryptoAmount(args.fee, asset);
+  const total = withdrawTotalDebited(args.amount, args.fee, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const address = truncateMiddle(args.address.trim(), 12, 10);
 
@@ -178,9 +178,9 @@ export async function notifyWithdrawalCompletedEmail(args: {
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
   const kind = assetKind(args.asset, "withdrawUsdt", "withdrawPi");
-  const amount = formatCryptoAmount(args.amount);
-  const fee = formatCryptoAmount(args.fee);
-  const total = withdrawTotalDebited(args.amount, args.fee);
+  const amount = formatCryptoAmount(args.amount, asset);
+  const fee = formatCryptoAmount(args.fee, asset);
+  const total = withdrawTotalDebited(args.amount, args.fee, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const address = truncateMiddle(args.address.trim(), 12, 10);
   const txid = args.txid.trim();
@@ -240,7 +240,7 @@ export async function notifyDepositIntentEmail(args: {
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
   const kind = assetKind(args.asset, "depositIntentUsdt", "depositIntentPi");
-  const amount = formatCryptoAmount(args.amount);
+  const amount = formatCryptoAmount(args.amount, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const address = args.depositAddress.trim();
 
@@ -291,7 +291,7 @@ export async function notifyDepositPendingEmail(args: {
   const locale = args.locale ?? DEFAULT_LOCALE;
   const asset = args.asset.toUpperCase();
   const kind = assetKind(args.asset, "depositPendingUsdt", "depositPendingPi");
-  const amount = formatCryptoAmount(args.amount);
+  const amount = formatCryptoAmount(args.amount, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const txid = args.txid.trim();
 
@@ -347,9 +347,9 @@ export async function notifyWithdrawalClaimedEmail(args: {
     "withdrawClaimedUsdt",
     "withdrawClaimedPi",
   );
-  const amount = formatCryptoAmount(args.amount);
-  const fee = formatCryptoAmount(args.fee);
-  const total = withdrawTotalDebited(args.amount, args.fee);
+  const amount = formatCryptoAmount(args.amount, asset);
+  const fee = formatCryptoAmount(args.fee, asset);
+  const total = withdrawTotalDebited(args.amount, args.fee, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const address = truncateMiddle(args.address.trim(), 12, 10);
 
@@ -410,9 +410,9 @@ export async function notifyWithdrawalRejectedEmail(args: {
     "withdrawRejectedUsdt",
     "withdrawRejectedPi",
   );
-  const amount = formatCryptoAmount(args.amount);
-  const fee = formatCryptoAmount(args.fee);
-  const total = withdrawTotalDebited(args.amount, args.fee);
+  const amount = formatCryptoAmount(args.amount, asset);
+  const fee = formatCryptoAmount(args.fee, asset);
+  const total = withdrawTotalDebited(args.amount, args.fee, asset);
   const network = activityNetworkLabel(locale, args.networkCanonical);
   const address = truncateMiddle(args.address.trim(), 12, 10);
   const reason = args.reason.trim().slice(0, 500);

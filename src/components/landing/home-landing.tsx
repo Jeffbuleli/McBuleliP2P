@@ -18,7 +18,6 @@ import {
   IconHeadset,
   IconKyc,
   IconLock,
-  IconOptions,
   IconP2P,
   IconShield,
   IconStaking,
@@ -104,7 +103,6 @@ export async function HomeLanding() {
     { icon: IconP2P, title: d.landing_svc_p2p_t, tag: d.landing_svc_p2p_tag },
     { icon: IconBot, title: d.landing_svc_bots_t, tag: d.landing_svc_bots_tag },
     { icon: IconChartLine, title: d.landing_svc_futures_t, tag: d.landing_svc_futures_tag },
-    { icon: IconOptions, title: d.landing_svc_options_t, tag: d.landing_svc_options_tag },
     { icon: IconStaking, title: d.landing_svc_staking_t, tag: d.landing_svc_staking_tag },
     ...(poolNewDepositsEnabled()
       ? [{ icon: IconCoins, title: d.landing_svc_pool_t, tag: d.landing_svc_pool_tag }]

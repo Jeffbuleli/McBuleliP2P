@@ -4,10 +4,13 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import { useCallback, useEffect, useState } from "react";
-import { USDT_NETWORKS, parseNetwork } from "@/lib/networks";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
+import type { Locale } from "@/i18n/locale";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { DepositStatus } from "@/lib/status";
 import { depositProgressSteps } from "@/lib/transaction-steps";
+import { formatWalletHistoryAmount } from "@/lib/wallet-types";
+import { formatSignedWalletAmount } from "@/lib/wallet-history-labels";
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import { IconCopy } from "@/components/icons/flow-icons";
@@ -65,7 +68,7 @@ function depositStatusLine(t: (k: keyof Messages) => string, status: string, aut
 }
 
 export default function DepositDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
@@ -127,6 +130,7 @@ export default function DepositDetailPage() {
       return;
     }
     setDeposit(data.deposit);
+    router.push(`/app/wallet/activity/deposit/${id}`);
   }
 
   async function submitTxid() {
@@ -140,15 +144,18 @@ export default function DepositDetailPage() {
     if (data.status === "confirmed") {
       setDeposit(data.deposit);
       setTxid("");
+      router.push(`/app/wallet/activity/deposit/${id}`);
       return;
     }
     if (data.status === "failed") {
       setDeposit(data.deposit);
       setMsg(data.reason ?? "—");
+      router.push(`/app/wallet/activity/deposit/${id}`);
       return;
     }
     if (data.status === "pending") {
       await load();
+      router.push(`/app/wallet/activity/deposit/${id}`);
       return;
     }
     setMsg(data.message ?? data.error ?? "—");
@@ -172,9 +179,10 @@ export default function DepositDetailPage() {
   }
 
   const isPiMain = deposit.networkCanonical === PI_MAIN_NETWORK_ID;
-  const nid = parseNetwork(deposit.networkCanonical);
-  const net = nid ? USDT_NETWORKS[nid] : null;
-  const networkLabel = isPiMain ? "Pi" : (net?.label ?? deposit.networkCanonical);
+  const networkLabel = activityNetworkLabel(locale as Locale, deposit.networkCanonical);
+  const creditedAmount = deposit.amount
+    ? formatWalletHistoryAmount(deposit.asset, deposit.amount)
+    : null;
   const sessionAmbiguous = session?.status === "AMBIGUOUS";
   const autoDetect =
     session != null &&
@@ -226,7 +234,11 @@ export default function DepositDetailPage() {
         <StatusOutcomeBanner
           variant="success"
           title={t("deposit_confirmed")}
-          detail={`${deposit.amount ?? ""} ${deposit.asset}`.trim()}
+          detail={
+            creditedAmount
+              ? `${formatSignedWalletAmount(deposit.asset, deposit.amount!, { kind: "deposit" })} ${deposit.asset}`
+              : undefined
+          }
         />
       ) : null}
 
@@ -279,7 +291,7 @@ export default function DepositDetailPage() {
             {t("deposit_declared_amount_pi_label")}
           </p>
           <p className="mt-1 text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
-            {deposit.declaredAmountUsdt} π
+            {formatWalletHistoryAmount("PI", deposit.declaredAmountUsdt)} π
           </p>
           {deposit.userNote ? (
             <p className="mt-2 text-sm text-[color:var(--fd-muted)]">
@@ -337,8 +349,8 @@ export default function DepositDetailPage() {
 
       {deposit.status === DepositStatus.CONFIRMED ? (
         <div className="mt-3">
-          <FlowPrimaryBtn onClick={() => router.push("/app/wallet")}>
-            {t("wallet_title")}
+          <FlowPrimaryBtn onClick={() => router.push("/app/wallet/history")}>
+            {t("wallet_history_title")}
           </FlowPrimaryBtn>
         </div>
       ) : (

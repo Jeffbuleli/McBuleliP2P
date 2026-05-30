@@ -9,6 +9,8 @@ import { TransactionDetailRows } from "@/components/wallet/transaction-detail-ro
 import { FlowHubLink } from "@/components/wallet/wallet-flow-shell";
 import { formatSignedWalletAmount, walletEntryLabel } from "@/lib/wallet-history-labels";
 import { formatWalletHistoryAmount } from "@/lib/wallet-types";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
+import type { Locale } from "@/i18n/locale";
 
 type Entry = {
   id: string;
@@ -91,7 +93,10 @@ export default function LedgerActivityDetailPage() {
     rows.push({ label: t("wallet_tx_reference"), value: orderId, mono: true });
   }
   if (network) {
-    rows.push({ label: t("deposit_step_usdt_network"), value: network });
+    rows.push({
+      label: t("wallet_tx_network"),
+      value: activityNetworkLabel(locale as Locale, network),
+    });
   }
   rows.push({
     label: t("wallet_tx_batch"),

@@ -6,6 +6,8 @@ import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import { WithdrawalStatus } from "@/lib/status";
 import { withdrawalProgressSteps } from "@/lib/transaction-steps";
+import { activityNetworkLabel } from "@/lib/activity-network-label";
+import type { Locale } from "@/i18n/locale";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import {
   StatusOutcomeBanner,
@@ -32,7 +34,7 @@ type Withdrawal = {
 };
 
 export default function WithdrawActivityDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
   const [w, setW] = useState<Withdrawal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ export default function WithdrawActivityDetailPage() {
         rows={[
           { label: t("wallet_tx_asset"), value: w.asset },
           { label: t("wallet_tx_type"), value: t("wallet_activity_withdraw") },
-          { label: t("deposit_step_usdt_network"), value: w.networkCanonical },
+          { label: t("wallet_tx_network"), value: activityNetworkLabel(locale as Locale, w.networkCanonical) },
           { label: t("wallet_tx_destination"), value: w.toAddress, mono: true },
           {
             label: t("wallet_tx_amount_net"),

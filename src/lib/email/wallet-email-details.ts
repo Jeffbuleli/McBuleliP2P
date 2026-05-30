@@ -1,6 +1,7 @@
 import { activityNetworkLabel } from "@/lib/activity-network-label";
 import type { EmailLocale } from "@/lib/email/locale";
 import type { McBuleliTemplateKind } from "@/lib/email/template-definitions";
+import { formatWalletHistoryAmount } from "@/lib/wallet-types";
 
 export type EmailDetailRow = { label: string; value: string };
 
@@ -168,20 +169,27 @@ export function truncateMiddle(value: string, head = 10, tail = 8): string {
   return `${s.slice(0, head)}…${s.slice(-tail)}`;
 }
 
-export function formatCryptoAmount(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value.trim();
-  return n
-    .toLocaleString("en-US", {
-      maximumFractionDigits: 8,
-      useGrouping: false,
-    })
-    .replace(/\.?0+$/, "");
+export function formatCryptoAmount(value: string, asset = ""): string {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n)) return trimmed;
+  if (asset) return formatWalletHistoryAmount(asset, trimmed);
+  const s = n.toLocaleString("en-US", {
+    maximumFractionDigits: 8,
+    useGrouping: false,
+  });
+  if (!s.includes(".")) return s;
+  return s.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
 
-export function withdrawTotalDebited(amount: string, fee: string): string {
+export function withdrawTotalDebited(
+  amount: string,
+  fee: string,
+  asset = "",
+): string {
   const a = Number(amount);
   const f = Number(fee);
   if (!Number.isFinite(a) || !Number.isFinite(f)) return amount;
-  return formatCryptoAmount(String(a + f));
+  return formatCryptoAmount(String(a + f), asset);
 }
