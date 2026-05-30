@@ -20,6 +20,10 @@ export async function refreshUserKycFromDidit(
   }
 
   const row = await getUserKycRow(userId);
+  if (row?.kycStatus === "approved") {
+    return { ok: true, status: "approved", outcome: "verified" };
+  }
+
   const sessionId = row?.diditSessionId?.trim();
   if (!sessionId) {
     return { ok: false, error: "no_session_id" };

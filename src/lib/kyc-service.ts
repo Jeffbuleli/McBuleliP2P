@@ -3,7 +3,6 @@ import { getDb, users } from "@/db";
 import { findKycDocumentConflict } from "@/lib/auth/kyc-document-uniqueness";
 import { createUserNotification } from "@/lib/notifications-service";
 import type { KycStatus } from "@/lib/kyc-policy";
-import { isKycSanctionsRejection } from "@/lib/kyc-sanctions";
 
 export type KycVerificationOutcome =
   | "verified"
@@ -24,6 +23,9 @@ export function mapVerificationOutcomeToKycStatus(
 
 /** Reset to initial state so the user can start verification again (non-sanctions). */
 export async function resetUserKycForRetry(userId: string): Promise<void> {
+  const row = await getUserKycRow(userId);
+  if (row?.kycStatus === "approved") return;
+
   const db = getDb();
   await db
     .update(users)
@@ -43,6 +45,7 @@ export async function setUserKycPending(args: {
   diditSessionStatus?: string | null;
 }): Promise<void> {
   const before = await getUserKycRow(args.userId);
+  if (before?.kycStatus === "approved") return;
   const wasPending = before?.kycStatus === "pending";
 
   const db = getDb();
@@ -86,20 +89,20 @@ export async function applyKycFromProvider(args: {
   } | null;
 }): Promise<KycStatus> {
   const note = args.rejectionNote?.slice(0, 500) ?? null;
+  const before = await getUserKycRow(args.userId);
+  const previousStatus = before?.kycStatus ?? "none";
+
+  /** Approved KYC is terminal — ignore stale Didit session lifecycle events. */
+  if (previousStatus === "approved") {
+    return "approved";
+  }
 
   if (args.outcome === "abandoned") {
     await resetUserKycForRetry(args.userId);
     return "none";
   }
 
-  if (args.outcome === "rejected" && !isKycSanctionsRejection(note)) {
-    await resetUserKycForRetry(args.userId);
-    return "none";
-  }
-
   let status = mapVerificationOutcomeToKycStatus(args.outcome);
-  const before = await getUserKycRow(args.userId);
-  const previousStatus = before?.kycStatus ?? "none";
 
   let rejectionNote = status === "rejected" ? note : null;
   if (status === "approved" && args.ocrPatch?.documentNumber) {

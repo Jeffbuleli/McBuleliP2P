@@ -70,6 +70,7 @@ export async function reconcileUserKycState(userId: string): Promise<boolean> {
 
   if (
     !result.ok &&
+    stale &&
     (result.error.includes("404") ||
       result.error.includes("not_found") ||
       result.error.includes("no_session"))

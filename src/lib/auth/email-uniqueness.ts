@@ -114,23 +114,23 @@ export async function assertEmailAvailable(args: {
   return { ok: true, email: typo.email, emailCanonical };
 }
 
-/** Resolve user for login / forgot-password (canonical + legacy case). */
+/** Resolve user for login / forgot-password — exact email first, then canonical alias. */
 export async function findUserByAuthEmail(email: string) {
   const normalized = normalizeAuthEmail(email);
-  const canonical = canonicalEmailForDedup(normalized);
   const db = getDb();
 
+  const [byExact] = await db
+    .select()
+    .from(users)
+    .where(sql`lower(${users.email}) = ${normalized}`)
+    .limit(1);
+  if (byExact) return byExact;
+
+  const canonical = canonicalEmailForDedup(normalized);
   const [byCanonical] = await db
     .select()
     .from(users)
     .where(eq(users.emailCanonical, canonical))
     .limit(1);
-  if (byCanonical) return byCanonical;
-
-  const [byLower] = await db
-    .select()
-    .from(users)
-    .where(sql`lower(${users.email}) = ${normalized}`)
-    .limit(1);
-  return byLower ?? null;
+  return byCanonical ?? null;
 }

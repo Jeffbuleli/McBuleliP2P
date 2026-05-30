@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb, kycResults, users } from "@/db";
 import {
   applyKycFromProvider,
+  getUserKycRow,
   type KycVerificationOutcome,
 } from "@/lib/kyc-service";
 import type { KycStatus } from "@/lib/kyc-policy";
@@ -36,6 +37,11 @@ function outcomeToResultLabel(outcome: KycVerificationOutcome): string {
 export async function applyDiditDecision(
   args: ApplyDiditDecisionArgs,
 ): Promise<KycStatus> {
+  const existing = await getUserKycRow(args.userId);
+  if (existing?.kycStatus === "approved") {
+    return "approved";
+  }
+
   const statusStr = args.diditStatus ?? "";
   const inProgress =
     statusStr === "In Progress" ||
@@ -120,6 +126,9 @@ export async function syncDiditSessionProgress(args: {
   sessionId: string | null;
   diditStatus: string;
 }): Promise<void> {
+  const existing = await getUserKycRow(args.userId);
+  if (existing?.kycStatus === "approved") return;
+
   const db = getDb();
   await db
     .update(users)
