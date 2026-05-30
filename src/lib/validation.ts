@@ -117,6 +117,7 @@ export const assistantChatSchema = z.object({
   guestToken: z.string().trim().min(16).max(64).optional().nullable(),
   locale: z.enum(["en", "fr", "sw"]).optional(),
   pageContext: z.string().trim().max(128).optional().nullable(),
+  stream: z.boolean().optional(),
 });
 
 export const assistantKnowledgeSchema = z.object({

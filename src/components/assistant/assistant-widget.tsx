@@ -148,6 +148,8 @@ export function AssistantWidget() {
     };
     setMessages((prev) => [...prev, optimistic]);
 
+    const streamId = `stream-${Date.now()}`;
+
     try {
       const res = await fetch("/api/assistant/chat", {
         method: "POST",
@@ -159,14 +161,107 @@ export function AssistantWidget() {
           guestToken,
           locale: assistantLocale,
           pageContext,
+          stream: true,
         }),
       });
-      const data = await res.json();
+
       if (res.status === 429) {
         setError(m.rateLimited);
         setMessages((prev) => prev.filter((x) => x.id !== optimistic.id));
         return;
       }
+
+      const contentType = res.headers.get("content-type") ?? "";
+
+      if (contentType.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let streamStarted = false;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const raw = line.slice(6);
+            let event: Record<string, unknown>;
+            try {
+              event = JSON.parse(raw) as Record<string, unknown>;
+            } catch {
+              continue;
+            }
+
+            if (event.type === "meta") {
+              const conv = event.conversation as { id?: string } | undefined;
+              if (conv?.id) {
+                setConversationId(conv.id);
+                localStorage.setItem(STORAGE_KEY, conv.id);
+              }
+              const gt = event.guestToken as string | null | undefined;
+              if (gt) {
+                setGuestToken(gt);
+                localStorage.setItem(GUEST_KEY, gt);
+              }
+            }
+
+            if (event.type === "token" && typeof event.content === "string") {
+              if (!streamStarted) {
+                streamStarted = true;
+                setLoading(false);
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: streamId,
+                    role: "assistant",
+                    content: event.content as string,
+                  },
+                ]);
+              } else {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === streamId
+                      ? { ...msg, content: msg.content + (event.content as string) }
+                      : msg,
+                  ),
+                );
+              }
+            }
+
+            if (event.type === "done") {
+              const um = event.userMessage as ChatMessage | undefined;
+              const am = event.assistantMessage as ChatMessage | undefined;
+              setMessages((prev) => {
+                const without = prev.filter(
+                  (x) =>
+                    x.id !== optimistic.id &&
+                    x.id !== streamId,
+                );
+                const next = [...without];
+                if (um) next.push(um);
+                if (am) next.push(am);
+                return next;
+              });
+              if (Array.isArray(event.recommendations)) {
+                setRecommendations(
+                  event.recommendations as Recommendation[],
+                );
+              }
+            }
+
+            if (event.type === "error") {
+              throw new Error(String(event.error ?? "failed"));
+            }
+          }
+        }
+        return;
+      }
+
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
 
       if (data.conversation?.id) {
@@ -190,7 +285,9 @@ export function AssistantWidget() {
       }
     } catch {
       setError(m.errorGeneric);
-      setMessages((prev) => prev.filter((x) => x.id !== optimistic.id));
+      setMessages((prev) =>
+        prev.filter((x) => x.id !== optimistic.id && x.id !== streamId),
+      );
     } finally {
       setLoading(false);
     }

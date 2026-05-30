@@ -1,9 +1,16 @@
-import { eq, and, or, desc } from "drizzle-orm";
+import { eq, and, or, desc, isNull } from "drizzle-orm";
 import { getDb, aiAssistantKnowledge } from "@/db";
 import { ASSISTANT_KNOWLEDGE_SEED } from "@/lib/assistant/knowledge-seed";
 import type { AssistantLocale } from "@/lib/assistant/messages";
+import {
+  cosineSimilarity,
+  embedText,
+  embeddingsEnabled,
+  knowledgeDocText,
+} from "@/lib/assistant/embeddings";
 
 let seeded = false;
+let embeddingBackfillStarted = false;
 
 export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
   if (seeded) return;
@@ -14,6 +21,7 @@ export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
     .limit(1);
   if (row) {
     seeded = true;
+    void backfillMissingEmbeddings();
     return;
   }
   for (const item of ASSISTANT_KNOWLEDGE_SEED) {
@@ -32,6 +40,76 @@ export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
       .onConflictDoNothing();
   }
   seeded = true;
+  void backfillMissingEmbeddings();
+}
+
+/** Embed knowledge rows missing vectors (background, non-blocking). */
+export async function backfillMissingEmbeddings(): Promise<number> {
+  if (!embeddingsEnabled() || embeddingBackfillStarted) return 0;
+  embeddingBackfillStarted = true;
+  try {
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(aiAssistantKnowledge)
+      .where(
+        and(
+          eq(aiAssistantKnowledge.published, true),
+          isNull(aiAssistantKnowledge.embedding),
+        ),
+      )
+      .limit(50);
+
+    let done = 0;
+    for (const row of rows) {
+      try {
+        const vec = await embedText(
+          knowledgeDocText({
+            title: row.title,
+            content: row.content,
+            tags: row.tags,
+          }),
+        );
+        if (!vec.length) continue;
+        await db
+          .update(aiAssistantKnowledge)
+          .set({ embedding: vec, updatedAt: new Date() })
+          .where(eq(aiAssistantKnowledge.id, row.id));
+        done++;
+      } catch {
+        /* skip row */
+      }
+    }
+    return done;
+  } finally {
+    embeddingBackfillStarted = false;
+  }
+}
+
+/** Embed a single knowledge row (admin save). */
+export async function embedKnowledgeRow(id: string): Promise<void> {
+  if (!embeddingsEnabled()) return;
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(aiAssistantKnowledge)
+    .where(eq(aiAssistantKnowledge.id, id))
+    .limit(1);
+  if (!row) return;
+
+  const vec = await embedText(
+    knowledgeDocText({
+      title: row.title,
+      content: row.content,
+      tags: row.tags,
+    }),
+  );
+  if (!vec.length) return;
+
+  await db
+    .update(aiAssistantKnowledge)
+    .set({ embedding: vec, updatedAt: new Date() })
+    .where(eq(aiAssistantKnowledge.id, id));
 }
 
 function tokenize(text: string): string[] {
@@ -42,7 +120,10 @@ function tokenize(text: string): string[] {
     .filter((w) => w.length > 2);
 }
 
-function scoreMatch(query: string, doc: { title: string; content: string; tags: string[] | null }): number {
+function keywordScore(
+  query: string,
+  doc: { title: string; content: string; tags: string[] | null },
+): number {
   const qTokens = new Set(tokenize(query));
   if (qTokens.size === 0) return 0;
   const hay = `${doc.title} ${doc.content} ${(doc.tags ?? []).join(" ")}`.toLowerCase();
@@ -62,7 +143,7 @@ export type KnowledgeHit = {
   score: number;
 };
 
-/** Keyword + tag retrieval (RAG-lite). Upgrade to vector search when embeddings populated. */
+/** Hybrid keyword + semantic vector retrieval. */
 export async function searchAssistantKnowledge(args: {
   query: string;
   locale: AssistantLocale;
@@ -84,22 +165,63 @@ export async function searchAssistantKnowledge(args: {
     )
     .orderBy(desc(aiAssistantKnowledge.priority));
 
-  const scored = rows
-    .map((r) => ({
+  const limit = args.limit ?? 5;
+  let queryEmbedding: number[] | null = null;
+
+  if (embeddingsEnabled()) {
+    try {
+      queryEmbedding = await embedText(args.query);
+    } catch {
+      queryEmbedding = null;
+    }
+  }
+
+  const hasVectors = rows.some(
+    (r) => Array.isArray(r.embedding) && (r.embedding as number[]).length > 0,
+  );
+
+  const scored = rows.map((r) => {
+    const kw = keywordScore(args.query, r);
+    const priorityBoost = (r.priority ?? 0) * 0.01;
+    let vectorScore = 0;
+
+    if (
+      queryEmbedding?.length &&
+      Array.isArray(r.embedding) &&
+      (r.embedding as number[]).length > 0
+    ) {
+      vectorScore = cosineSimilarity(queryEmbedding, r.embedding as number[]);
+    }
+
+    const score =
+      hasVectors && queryEmbedding?.length
+        ? vectorScore * 0.75 + Math.min(kw, 5) * 0.05 + priorityBoost
+        : kw + priorityBoost;
+
+    return {
       id: r.id,
       slug: r.slug,
       category: r.category,
       title: r.title,
       content: r.content,
-      score: scoreMatch(args.query, r) + (r.priority ?? 0) * 0.01,
-    }))
-    .filter((r) => r.score > 0)
+      score,
+    };
+  });
+
+  const filtered = scored
+    .filter((r) => r.score > (hasVectors && queryEmbedding?.length ? 0.35 : 0))
     .sort((a, b) => b.score - a.score);
 
-  const limit = args.limit ?? 5;
-  if (scored.length >= 2) return scored.slice(0, limit);
+  if (filtered.length >= 2) return filtered.slice(0, limit);
 
-  // Fallback: top priority docs for cold start
+  if (filtered.length === 1) {
+    const rest = scored
+      .filter((r) => r.id !== filtered[0]!.id)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit - 1);
+    return [...filtered, ...rest];
+  }
+
   return rows.slice(0, limit).map((r) => ({
     id: r.id,
     slug: r.slug,

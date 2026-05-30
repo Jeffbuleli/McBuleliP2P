@@ -6,51 +6,33 @@ Production-ready floating AI concierge integrated across mcbuleli.org.
 
 ```mermaid
 flowchart LR
-  UI[AssistantWidget] --> API["/api/assistant/chat"]
+  UI[AssistantWidget SSE] --> API["/api/assistant/chat"]
   API --> SVC[assistant/service.ts]
-  SVC --> RAG[knowledge-search.ts]
-  SVC --> INT[intent.ts]
-  SVC --> OAI[openai-client.ts]
-  RAG --> DB[(ai_assistant_knowledge)]
-  SVC --> MSG[(ai_assistant_messages)]
+  SVC --> RAG[knowledge-search hybrid]
+  SVC --> EMB[embeddings.ts]
+  SVC --> OAI[openai-client stream]
+  RAG --> DB[(ai_assistant_knowledge + embedding jsonb)]
   ADMIN[Admin panel] --> KB["/api/admin/assistant/knowledge"]
 ```
 
-## Folder structure
+## Features (v2)
 
-```
-src/
-  components/assistant/
-    assistant-launcher.tsx
-    assistant-widget.tsx
-    assistant-avatar.tsx
-    assistant-message.tsx
-  lib/assistant/
-    messages.ts
-    system-prompt.ts
-    intent.ts
-    page-context.ts
-    knowledge-seed.ts
-    knowledge-search.ts
-    openai-client.ts
-    service.ts
-  app/api/assistant/
-    chat/route.ts
-    conversation/route.ts
-  app/api/admin/assistant/knowledge/route.ts
-  app/admin/assistant/page.tsx
-drizzle/0051_ai_assistant.sql
-```
+| Feature | Status |
+|---------|--------|
+| SSE streaming replies | ✅ `stream: true` on chat API |
+| Semantic RAG | ✅ OpenAI `text-embedding-3-small` + cosine similarity |
+| Keyword fallback | ✅ When no API key or no embeddings |
+| Auto-embed on seed | ✅ Background backfill |
+| Admin embed button | ✅ `GET ?embed=1` |
 
 ## Environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | Recommended | Enables GPT responses |
+| `OPENAI_API_KEY` | Recommended | GPT + embeddings |
 | `OPENAI_ASSISTANT_MODEL` | Optional | Default `gpt-4o-mini` |
+| `OPENAI_EMBEDDING_MODEL` | Optional | Default `text-embedding-3-small` |
 | `DATABASE_URL` | Yes | Postgres (Neon) |
-
-Without `OPENAI_API_KEY`, the assistant uses built-in rule-based replies.
 
 ## Database migration
 
@@ -58,11 +40,32 @@ Without `OPENAI_API_KEY`, the assistant uses built-in rule-based replies.
 npm run db:migrate:render
 ```
 
-Tables: `ai_assistant_conversations`, `ai_assistant_messages`, `ai_assistant_knowledge`.
+After deploy with `OPENAI_API_KEY`, open **Admin → AI Assistant → Generate embeddings** once to vectorize the FAQ.
+
+## API
+
+### POST `/api/assistant/chat`
+
+```json
+{
+  "message": "How do I deposit USDT?",
+  "conversationId": "uuid-optional",
+  "guestToken": "optional",
+  "locale": "fr",
+  "pageContext": "deposit",
+  "stream": true
+}
+```
+
+With `stream: true`, response is `text/event-stream`:
+
+- `{ type: "meta", conversation, guestToken }`
+- `{ type: "token", content: "..." }` (repeated)
+- `{ type: "done", userMessage, assistantMessage, recommendations }`
 
 ## Admin
 
-Super-admin: `/admin/assistant` — FAQ CRUD + 7-day analytics.
+Super-admin: `/admin/assistant` — FAQ CRUD, analytics, embedding backfill.
 
 ## Security
 
@@ -70,3 +73,9 @@ Super-admin: `/admin/assistant` — FAQ CRUD + 7-day analytics.
 - Guest conversations isolated by `guestToken`
 - Rate limit: 40 user messages / hour / conversation
 - Admin API: super-admin only
+
+## Roadmap
+
+- pgvector index for large knowledge bases
+- Voice input (Web Speech API)
+- Human handoff thread linking

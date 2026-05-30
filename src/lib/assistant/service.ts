@@ -16,7 +16,10 @@ import {
   formatKnowledgeForPrompt,
   searchAssistantKnowledge,
 } from "@/lib/assistant/knowledge-search";
-import { generateAssistantReply } from "@/lib/assistant/openai-client";
+import {
+  generateAssistantReply,
+  streamAssistantReply,
+} from "@/lib/assistant/openai-client";
 import { buildAssistantSystemPrompt } from "@/lib/assistant/system-prompt";
 
 export type AssistantMessageDto = {
@@ -33,6 +36,19 @@ export type AssistantConversationDto = {
   pageContext: string | null;
   detectedIntents: string[];
   simplifiedMode: boolean;
+};
+
+export type PreparedAssistantTurn = {
+  locale: AssistantLocale;
+  trimmed: string;
+  systemPrompt: string;
+  chatHistory: { role: "user" | "assistant"; content: string }[];
+  mergedIntents: string[];
+  simplified: boolean;
+  hits: Awaited<ReturnType<typeof searchAssistantKnowledge>>;
+  recommendations: { label: string; href: string; reason: string }[];
+  pageContext: string | null;
+  convRow: typeof aiAssistantConversations.$inferSelect;
 };
 
 const RATE_LIMIT_PER_HOUR = 40;
@@ -128,22 +144,18 @@ async function checkRateLimit(conversationId: string): Promise<boolean> {
   return (row?.n ?? 0) < RATE_LIMIT_PER_HOUR;
 }
 
-export async function sendAssistantMessage(args: {
+export async function prepareAssistantTurn(args: {
   conversationId: string;
   userMessage: string;
   pageContext?: string | null;
-}): Promise<{
-  userMessage: AssistantMessageDto;
-  assistantMessage: AssistantMessageDto;
-  recommendations: { label: string; href: string; reason: string }[];
-}> {
-  const db = getDb();
+}): Promise<PreparedAssistantTurn> {
   const trimmed = args.userMessage.trim().slice(0, 4000);
   if (!trimmed) throw new Error("assistant_empty");
 
   const ok = await checkRateLimit(args.conversationId);
   if (!ok) throw new Error("assistant_rate_limited");
 
+  const db = getDb();
   const [convRow] = await db
     .select()
     .from(aiAssistantConversations)
@@ -168,8 +180,7 @@ export async function sendAssistantMessage(args: {
     intents,
   );
   const simplified =
-    convRow.simplifiedMode ||
-    shouldUseSimplifiedMode(chatHistory, intents);
+    convRow.simplifiedMode || shouldUseSimplifiedMode(chatHistory, intents);
 
   const hits = await searchAssistantKnowledge({
     query: trimmed,
@@ -186,23 +197,42 @@ export async function sendAssistantMessage(args: {
     detectedIntents: mergedIntents,
   });
 
-  const reply = await generateAssistantReply({
-    systemPrompt,
-    history: chatHistory,
-    userMessage: trimmed,
-  });
-
   const recommendations = recommendServices(mergedIntents, locale);
 
+  return {
+    locale,
+    trimmed,
+    systemPrompt,
+    chatHistory,
+    mergedIntents,
+    simplified,
+    hits,
+    recommendations,
+    pageContext,
+    convRow,
+  };
+}
+
+async function persistAssistantTurn(args: {
+  conversationId: string;
+  turn: PreparedAssistantTurn;
+  reply: string;
+}): Promise<{
+  userMessage: AssistantMessageDto;
+  assistantMessage: AssistantMessageDto;
+  recommendations: { label: string; href: string; reason: string }[];
+}> {
+  const db = getDb();
   const now = new Date();
+  const { turn } = args;
 
   const [userRow] = await db
     .insert(aiAssistantMessages)
     .values({
       conversationId: args.conversationId,
       role: "user",
-      content: trimmed,
-      meta: { intents },
+      content: turn.trimmed,
+      meta: { intents: classifyUserIntent(turn.trimmed) },
     })
     .returning();
 
@@ -211,12 +241,12 @@ export async function sendAssistantMessage(args: {
     .values({
       conversationId: args.conversationId,
       role: "assistant",
-      content: reply,
+      content: args.reply,
       meta: {
-        intents: mergedIntents,
-        recommendations,
-        knowledgeSlugs: hits.map((h) => h.slug),
-        simplifiedMode: simplified,
+        intents: turn.mergedIntents,
+        recommendations: turn.recommendations,
+        knowledgeSlugs: turn.hits.map((h) => h.slug),
+        simplifiedMode: turn.simplified,
       },
     })
     .returning();
@@ -224,9 +254,9 @@ export async function sendAssistantMessage(args: {
   await db
     .update(aiAssistantConversations)
     .set({
-      detectedIntents: mergedIntents,
-      simplifiedMode: simplified,
-      pageContext: pageContext ?? convRow.pageContext,
+      detectedIntents: turn.mergedIntents,
+      simplifiedMode: turn.simplified,
+      pageContext: turn.pageContext ?? turn.convRow.pageContext,
       updatedAt: now,
     })
     .where(eq(aiAssistantConversations.id, args.conversationId));
@@ -246,7 +276,70 @@ export async function sendAssistantMessage(args: {
       meta: (assistantRow.meta as Record<string, unknown>) ?? null,
       createdAt: assistantRow.createdAt.toISOString(),
     },
-    recommendations,
+    recommendations: turn.recommendations,
+  };
+}
+
+export async function sendAssistantMessage(args: {
+  conversationId: string;
+  userMessage: string;
+  pageContext?: string | null;
+}): Promise<{
+  userMessage: AssistantMessageDto;
+  assistantMessage: AssistantMessageDto;
+  recommendations: { label: string; href: string; reason: string }[];
+}> {
+  const turn = await prepareAssistantTurn(args);
+  const reply = await generateAssistantReply({
+    systemPrompt: turn.systemPrompt,
+    history: turn.chatHistory,
+    userMessage: turn.trimmed,
+  });
+  return persistAssistantTurn({
+    conversationId: args.conversationId,
+    turn,
+    reply,
+  });
+}
+
+export async function* streamAssistantMessage(args: {
+  conversationId: string;
+  userMessage: string;
+  pageContext?: string | null;
+}): AsyncGenerator<
+  | { type: "token"; content: string }
+  | {
+      type: "done";
+      userMessage: AssistantMessageDto;
+      assistantMessage: AssistantMessageDto;
+      recommendations: { label: string; href: string; reason: string }[];
+    },
+  void,
+  unknown
+> {
+  const turn = await prepareAssistantTurn(args);
+  let full = "";
+
+  for await (const token of streamAssistantReply({
+    systemPrompt: turn.systemPrompt,
+    history: turn.chatHistory,
+    userMessage: turn.trimmed,
+  })) {
+    full += token;
+    yield { type: "token", content: token };
+  }
+
+  const result = await persistAssistantTurn({
+    conversationId: args.conversationId,
+    turn,
+    reply: full.trim() || "…",
+  });
+
+  yield {
+    type: "done",
+    userMessage: result.userMessage,
+    assistantMessage: result.assistantMessage,
+    recommendations: result.recommendations,
   };
 }
 
@@ -285,7 +378,6 @@ export async function assistantAnalyticsSummary() {
   const recent = await db
     .select({
       content: aiAssistantMessages.content,
-      meta: aiAssistantMessages.meta,
       createdAt: aiAssistantMessages.createdAt,
     })
     .from(aiAssistantMessages)

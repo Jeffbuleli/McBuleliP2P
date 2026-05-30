@@ -62,6 +62,17 @@ export function AdminAssistantPanel() {
     void load();
   }, [load]);
 
+  async function backfillEmbeddings() {
+    setErr(null);
+    const res = await fetch("/api/admin/assistant/knowledge?embed=1", {
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed");
+    window.alert(`Embedded ${data.embedded ?? 0} knowledge entries.`);
+    void load();
+  }
+
   async function saveItem(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch("/api/admin/assistant/knowledge", {
@@ -140,7 +151,16 @@ export function AdminAssistantPanel() {
       ) : null}
 
       <section className={adminCls.section}>
-        <h2 className={adminCls.h2}>Add / update FAQ</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className={adminCls.h2}>Add / update FAQ</h2>
+          <button
+            type="button"
+            onClick={() => void backfillEmbeddings().catch((e) => setErr(String(e)))}
+            className={adminCls.btnSecondary}
+          >
+            Generate embeddings (OpenAI)
+          </button>
+        </div>
         <form onSubmit={saveItem} className={`${adminCls.card} space-y-3`}>
           <div className="grid gap-3 sm:grid-cols-2">
             <input

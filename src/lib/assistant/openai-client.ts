@@ -19,6 +19,21 @@ export function assistantModel(): string {
   return process.env.OPENAI_ASSISTANT_MODEL?.trim() || "gpt-4o-mini";
 }
 
+function buildChatMessages(args: {
+  systemPrompt: string;
+  history: { role: "user" | "assistant"; content: string }[];
+  userMessage: string;
+}): OpenAI.Chat.ChatCompletionMessageParam[] {
+  return [
+    { role: "system", content: args.systemPrompt },
+    ...args.history.slice(-12).map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+    { role: "user", content: args.userMessage },
+  ];
+}
+
 export async function generateAssistantReply(args: {
   systemPrompt: string;
   history: { role: "user" | "assistant"; content: string }[];
@@ -29,18 +44,9 @@ export async function generateAssistantReply(args: {
   }
 
   const openai = getClient();
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: args.systemPrompt },
-    ...args.history.slice(-12).map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-    { role: "user", content: args.userMessage },
-  ];
-
   const res = await openai.chat.completions.create({
     model: assistantModel(),
-    messages,
+    messages: buildChatMessages(args),
     temperature: 0.65,
     max_tokens: 800,
   });
@@ -50,8 +56,47 @@ export async function generateAssistantReply(args: {
   return text;
 }
 
+/** Stream tokens via OpenAI SSE; falls back to single-chunk for rule-based mode. */
+export async function* streamAssistantReply(args: {
+  systemPrompt: string;
+  history: { role: "user" | "assistant"; content: string }[];
+  userMessage: string;
+}): AsyncGenerator<string, void, unknown> {
+  if (!assistantOpenAiEnabled()) {
+    const full = await fallbackAssistantReply(
+      args.userMessage,
+      args.systemPrompt,
+    );
+    const words = full.split(/(\s+)/);
+    for (const w of words) {
+      if (w) {
+        yield w;
+        await new Promise((r) => setTimeout(r, 12));
+      }
+    }
+    return;
+  }
+
+  const openai = getClient();
+  const stream = await openai.chat.completions.create({
+    model: assistantModel(),
+    messages: buildChatMessages(args),
+    temperature: 0.65,
+    max_tokens: 800,
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) yield delta;
+  }
+}
+
 /** Rule-based fallback when OPENAI_API_KEY is not set. */
-function fallbackAssistantReply(userMessage: string, systemPrompt: string): string {
+function fallbackAssistantReply(
+  userMessage: string,
+  systemPrompt: string,
+): string {
   const lower = userMessage.toLowerCase();
   if (/human|agent|support|help me|aide|msaada|support humain/i.test(lower)) {
     return "For personal account issues, fraud, or disputes, please contact our human support team via **Support** in the app (/app/support) or email **hi@mcbuleli.org**. Include your account email and a short description. 💚";
@@ -59,7 +104,7 @@ function fallbackAssistantReply(userMessage: string, systemPrompt: string): stri
   if (/deposit|dépôt|amana|txid/i.test(lower)) {
     return "To deposit USDT: go to **Wallet → Deposit**, choose your network (TRC20 is often cheapest), send to the address shown, then paste your **TXID** to confirm. Need step-by-step help? Tell me which network you prefer.";
   }
-  if (/withdraw|retrait|kutoa|retrait/i.test(lower)) {
+  if (/withdraw|retrait|kutoa/i.test(lower)) {
     return "To withdraw USDT: **Wallet → Withdraw**. Enter address, network, and net amount. Platform fee is ~2 USDT. Track status in your withdrawal history. Enable 2FA for security.";
   }
   if (/p2p|escrow|mobile money/i.test(lower)) {
@@ -83,7 +128,6 @@ function fallbackAssistantReply(userMessage: string, systemPrompt: string): stri
   if (/security|password|2fa|passkey/i.test(lower)) {
     return "Secure your account in **Profile → Security**: strong password, **2FA** (authenticator app), **passkey**, and WhatsApp recovery. McBuleli never asks for your password in chat.";
   }
-  // Extract first knowledge chunk hint from system prompt if present
   const kbMatch = systemPrompt.match(/KNOWLEDGE BASE[\s\S]*?\[1\]/);
   if (kbMatch) {
     return "Based on McBuleli's guides: I found relevant info in our knowledge base. Could you tell me more specifically what you need? I can explain deposits, P2P, KYC, trading, AVEC, or staking. 💚";

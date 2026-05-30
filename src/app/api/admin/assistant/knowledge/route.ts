@@ -7,6 +7,10 @@ import {
   assistantAnalyticsSummary,
   listAssistantKnowledge,
 } from "@/lib/assistant/service";
+import {
+  backfillMissingEmbeddings,
+  embedKnowledgeRow,
+} from "@/lib/assistant/knowledge-search";
 import { UserRole } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +32,10 @@ export async function GET(req: Request) {
   if (url.searchParams.get("analytics") === "1") {
     const analytics = await assistantAnalyticsSummary();
     return NextResponse.json({ analytics });
+  }
+  if (url.searchParams.get("embed") === "1") {
+    const count = await backfillMissingEmbeddings();
+    return NextResponse.json({ ok: true, embedded: count });
   }
 
   const items = await listAssistantKnowledge();
@@ -84,6 +92,8 @@ export async function POST(req: Request) {
       },
     })
     .returning();
+
+  void embedKnowledgeRow(row.id).catch(() => {});
 
   return NextResponse.json({ item: row });
 }
