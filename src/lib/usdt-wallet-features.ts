@@ -1,3 +1,5 @@
+import { hasBinanceWalletKeys } from "@/lib/env";
+
 export function walletCronSecret(): string {
   return (
     process.env.WALLET_CRON_SECRET ??
@@ -16,7 +18,13 @@ export function walletDepositAutoEnabled(): boolean {
 }
 
 export function walletWithdrawAutoEnabled(): boolean {
-  return String(process.env.WALLET_AUTO_WITHDRAW_ENABLED ?? "1").trim() !== "0";
+  if (String(process.env.WALLET_AUTO_WITHDRAW_ENABLED ?? "1").trim() === "0") {
+    return false;
+  }
+  if (String(process.env.WALLET_AUTOMATION_ENABLED ?? "1").trim() === "0") {
+    return false;
+  }
+  return hasBinanceWalletKeys();
 }
 
 export function walletDepositSessionMinutes(): number {

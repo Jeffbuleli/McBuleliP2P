@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, asc, eq, lte, or } from "drizzle-orm";
+import { and, asc, eq, isNull, lte, or } from "drizzle-orm";
 import { getDb, withdrawalQueueJobs, withdrawals } from "@/db";
 import { WithdrawalStatus } from "@/lib/status";
 import {
@@ -42,6 +42,28 @@ export async function enqueueWithdrawalJob(args: {
       maxAttempts: 5,
     })
     .onConflictDoNothing();
+}
+
+async function releaseStaleRunningJobs(maxAgeMs = 10 * 60_000) {
+  const db = getDb();
+  const cutoff = new Date(Date.now() - maxAgeMs);
+  await db
+    .update(withdrawalQueueJobs)
+    .set({
+      status: "queued",
+      lockToken: null,
+      lockedAt: null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(withdrawalQueueJobs.status, "running"),
+        or(
+          isNull(withdrawalQueueJobs.lockedAt),
+          lte(withdrawalQueueJobs.lockedAt, cutoff),
+        ),
+      ),
+    );
 }
 
 async function lockNextJob() {
@@ -220,6 +242,7 @@ export async function runWithdrawalWorker(maxJobs = 20): Promise<{
   completed: number;
   failed: number;
 }> {
+  await releaseStaleRunningJobs();
   let processed = 0;
   let completed = 0;
   let failed = 0;

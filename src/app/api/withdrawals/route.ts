@@ -24,6 +24,8 @@ import { walletWithdrawAutoEnabled } from "@/lib/usdt-wallet-features";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
 import { applyUsdtWithdrawalAutomation } from "@/lib/wallet-withdraw-automation";
+import { userNeedsStepUp } from "@/lib/auth/step-up";
+import { runWithdrawalWorker } from "@/lib/wallet-withdraw-queue";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -240,6 +242,12 @@ export async function POST(req: Request) {
       typeof raw?.deviceId === "string"
         ? raw.deviceId
         : req.headers.get("x-device-id");
+    const needsStepUp = await userNeedsStepUp(userId);
+    const stepUpVerified =
+      step.ok &&
+      (!needsStepUp ||
+        Boolean(passkeyChallengeId && passkeyResponse) ||
+        Boolean(totpCode?.trim()));
     automation = await applyUsdtWithdrawalAutomation({
       userId,
       withdrawalId: w.id,
@@ -247,9 +255,18 @@ export async function POST(req: Request) {
       address: body.address.trim(),
       amountNet: net,
       deviceId,
+      stepUpVerified,
     });
     if (automation) {
       finalWithdrawal = { ...w, status: automation.status };
+      if (
+        automation.status === WithdrawalStatus.QUEUED ||
+        automation.status === WithdrawalStatus.DELAYED_BATCH
+      ) {
+        scheduleEmailTask(async () => {
+          await runWithdrawalWorker(3);
+        });
+      }
     }
   }
 

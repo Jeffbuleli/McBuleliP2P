@@ -16,6 +16,7 @@ export async function scoreWithdrawalRisk(args: {
   address: string;
   amountNum: number;
   deviceId?: string | null;
+  stepUpVerified?: boolean;
 }): Promise<{ score: number; level: WithdrawRiskLevel; reasons: string[] }> {
   const db = getDb();
   let score = 0;
@@ -36,7 +37,7 @@ export async function scoreWithdrawalRisk(args: {
     .limit(1);
 
   if (!wl) {
-    score += 35;
+    score += args.amountNum <= 100 ? 15 : 35;
     reasons.push("new_address");
   }
   if (wl?.cooldownUntil && wl.cooldownUntil.getTime() > Date.now()) {
@@ -54,7 +55,7 @@ export async function scoreWithdrawalRisk(args: {
     score += 10;
     reasons.push("mid_amount");
   }
-  if (!args.deviceId || args.deviceId.length < 8) {
+  if (!args.stepUpVerified && (!args.deviceId || args.deviceId.length < 8)) {
     score += 20;
     reasons.push("unknown_device");
   }
@@ -75,8 +76,12 @@ export async function scoreWithdrawalRisk(args: {
     reasons.push("high_frequency");
   }
 
-  const level: WithdrawRiskLevel =
+  let level: WithdrawRiskLevel =
     score >= 75 ? "HIGH" : score >= 40 ? "MEDIUM" : "LOW";
+
+  if (args.amountNum <= 500 && level === "HIGH") {
+    level = "MEDIUM";
+  }
 
   await db.insert(withdrawalRiskEvents).values({
     withdrawalId: args.withdrawalId,

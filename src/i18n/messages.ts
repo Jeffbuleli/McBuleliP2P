@@ -2786,6 +2786,7 @@ export const en = {
   wallet_binance_env_demo: "Demo · demo.binance.com",
   wallet_binance_env_live: "Live · binance.com",
   deposit_status_awaiting_transfer: "Awaiting your transfer",
+  deposit_status_scanning: "Detecting your transfer…",
   deposit_status_awaiting_txid: "Awaiting transaction ID",
   deposit_status_pending_validation: "Under review",
   deposit_status_confirmed: "Confirmed",
@@ -2836,7 +2837,7 @@ export const en = {
   withdraw_title: "Withdraw",
   withdraw_sub: "Net amount · +{fee} fee → total debited",
   withdraw_usdt_rail_note:
-    "USDT is sent via our liquidity partner (Binance minimum ~10 USDT): enter a net amount strictly greater than {min} USDT; your wallet is debited net + {fee} USDT.",
+    "USDT withdrawals: enter a net amount of at least {min} USDT (internal McBuleli wallet from 1 USDT); your wallet is debited net + {fee} USDT.",
   withdraw_addr: "Address",
   withdraw_memo: "Memo",
   withdraw_amt: "Net (USDT)",
@@ -2847,7 +2848,7 @@ export const en = {
   withdraw_warn: "⚠️ Wrong address/network = loss",
   fee_note: "+ {fee} USDT fee · min net {min} USDT",
   fee_note_internal:
-    "+ {fee} USDT fee · Binance internal wallet · min net {min} USDT",
+    "+ {fee} USDT fee · McBuleli wallet · min net {min} USDT",
   fee_note_asset: "+ {fee} {unit} fee · net must be > {min} {unit}",
   deposit_pick_asset: "Choose asset",
   asset_usdt_full: "Tether · USDT",
@@ -5992,6 +5993,7 @@ export const fr: Messages = {
   wallet_binance_env_demo: "Démo · demo.binance.com",
   wallet_binance_env_live: "Live · binance.com",
   deposit_status_awaiting_transfer: "En attente de votre envoi",
+  deposit_status_scanning: "Détection de votre envoi…",
   deposit_status_awaiting_txid: "En attente du TXID",
   deposit_status_pending_validation: "En vérification",
   deposit_status_confirmed: "Confirmé",
@@ -6042,7 +6044,7 @@ export const fr: Messages = {
   withdraw_title: "Retrait",
   withdraw_sub: "Montant net · +{fee} frais → débit total",
   withdraw_usdt_rail_note:
-    "Les USDT passent par notre partenaire de liquidité (minimum Binance ~10 USDT) : indiquez un net strictement supérieur à {min} USDT ; le portefeuille est débité de net + {fee} USDT.",
+    "Retraits USDT : indiquez un net d'au moins {min} USDT (portefeuille McBuleli interne dès 1 USDT) ; le portefeuille est débité de net + {fee} USDT.",
   withdraw_addr: "Adresse",
   withdraw_memo: "Mémo",
   withdraw_amt: "Net (USDT)",
@@ -6053,7 +6055,7 @@ export const fr: Messages = {
   withdraw_warn: "⚠️ Mauvaise adresse/réseau = perte",
   fee_note: "+ {fee} USDT frais · net min. {min} USDT",
   fee_note_internal:
-    "+ {fee} USDT frais · wallet Binance interne · net min. {min} USDT",
+    "+ {fee} USDT frais · portefeuille McBuleli · net min. {min} USDT",
   fee_note_asset: "+ {fee} {unit} frais · net strictement supérieur à {min} {unit}",
   deposit_pick_asset: "Choisir l’actif",
   asset_usdt_full: "Tether · USDT",

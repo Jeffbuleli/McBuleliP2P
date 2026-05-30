@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, deposits } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { DepositStatus } from "@/lib/status";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export async function POST(
   _req: Request,
@@ -36,5 +37,12 @@ export async function POST(
     })
     .where(eq(deposits.id, id))
     .returning();
+
+  await createUserNotification({
+    userId,
+    kind: "deposit_validation_pending",
+    payload: { depositId: id, asset: d.asset },
+  });
+
   return NextResponse.json({ deposit: updated });
 }

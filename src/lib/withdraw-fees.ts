@@ -6,14 +6,17 @@ export const DEFAULT_BINANCE_WITHDRAW_MIN_USDT = 5;
 
 export const DEFAULT_BINANCE_WITHDRAW_INTERNAL_MIN_USDT = 0.000001;
 
-/**
- * @deprecated Use live quote from `resolveUsdtWithdrawQuote` / Binance `withdrawMin`.
- * Kept for static config fallback only.
- */
-export const MIN_WITHDRAW_NET_USDT = DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
+/** Minimum net shown to McBuleli users (external on-chain destination). */
+export const MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT = 5;
+
+/** Minimum net shown to McBuleli users (internal McBuleli / partner wallet). */
+export const MCBULELI_MIN_WITHDRAW_NET_INTERNAL_USDT = 1;
+
+/** @deprecated Use live quote from `resolveUsdtWithdrawQuote`. */
+export const MIN_WITHDRAW_NET_USDT = MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT;
 
 /** @deprecated alias */
-export const MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR = DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
+export const MIN_WITHDRAW_NET_USDT_EXCLUSIVE_FLOOR = MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT;
 
 export const EXTERNAL_WITHDRAW_FEE_PI = 2;
 export const MIN_WITHDRAW_NET_PI = 10;
@@ -32,7 +35,7 @@ export function parseNetWithdrawal(args: {
   minNetUsdt?: number;
 }): ParsedWithdrawAmount {
   const net = Number(args.netAmountStr);
-  const minNet = args.minNetUsdt ?? DEFAULT_BINANCE_WITHDRAW_MIN_USDT;
+  const minNet = args.minNetUsdt ?? MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT;
   const feeN = args.userFeeUsdt ?? EXTERNAL_WITHDRAW_FEE_USDT;
   if (!Number.isFinite(net) || net <= 0) {
     return { ok: false, message: "Invalid amount." };

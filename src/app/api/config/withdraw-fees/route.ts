@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import {
-  DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
   EXTERNAL_WITHDRAW_FEE_PI,
   EXTERNAL_WITHDRAW_FEE_USDT,
+  MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT,
   MIN_WITHDRAW_NET_PI,
 } from "@/lib/withdraw-fees";
 import { resolveBinanceUsdtWithdrawFee } from "@/lib/withdraw-fee-split";
@@ -35,7 +35,7 @@ export async function GET() {
 
   return NextResponse.json({
     feeUsdt: EXTERNAL_WITHDRAW_FEE_USDT,
-    minNetUsdt: DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
+    minNetUsdt: MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT,
     feePi: EXTERNAL_WITHDRAW_FEE_PI,
     minNetPi: MIN_WITHDRAW_NET_PI,
     binanceFeeByNetwork,

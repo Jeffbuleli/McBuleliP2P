@@ -12,6 +12,8 @@ import {
   DEFAULT_BINANCE_WITHDRAW_INTERNAL_MIN_USDT,
   DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
   EXTERNAL_WITHDRAW_FEE_USDT,
+  MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT,
+  MCBULELI_MIN_WITHDRAW_NET_INTERNAL_USDT,
 } from "@/lib/withdraw-fees";
 
 export type UsdtWithdrawQuote = {
@@ -91,8 +93,8 @@ export async function resolveUsdtWithdrawQuote(args: {
 
   const userFeeUsdt = EXTERNAL_WITHDRAW_FEE_USDT;
   const minNetUsdt = isInternal
-    ? config.withdrawInternalMin
-    : config.withdrawMin;
+    ? MCBULELI_MIN_WITHDRAW_NET_INTERNAL_USDT
+    : MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT;
 
   return {
     isInternal,

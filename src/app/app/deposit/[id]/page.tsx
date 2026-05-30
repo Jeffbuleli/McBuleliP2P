@@ -48,8 +48,12 @@ type DepositSession = {
   graceUntil: string;
 } | null;
 
-function depositStatusLine(t: (k: keyof Messages) => string, status: string): string {
-  if (status === DepositStatus.AWAITING_TRANSFER) return t("deposit_status_awaiting_transfer");
+function depositStatusLine(t: (k: keyof Messages) => string, status: string, autoDetect = false): string {
+  if (status === DepositStatus.AWAITING_TRANSFER) {
+    return autoDetect
+      ? t("deposit_status_scanning")
+      : t("deposit_status_awaiting_transfer");
+  }
   if (status === DepositStatus.AWAITING_TXID) return t("deposit_status_awaiting_txid");
   if (status === DepositStatus.PENDING_VALIDATION) return t("deposit_status_pending_validation");
   if (status === DepositStatus.EXPIRED_PENDING_SCAN) {
@@ -178,7 +182,7 @@ export default function DepositDetailPage() {
     deposit.asset === "USDT" &&
     deposit.provider === "binance";
   const showTxid = !autoDetect && deposit.status === DepositStatus.AWAITING_TXID;
-  const steps = depositProgressSteps(deposit.status);
+  const steps = depositProgressSteps(deposit.status, { autoDetect });
   const showExactAmount =
     Boolean(session?.expectedAmount) &&
     deposit.status === DepositStatus.AWAITING_TRANSFER &&
@@ -193,7 +197,7 @@ export default function DepositDetailPage() {
   return (
     <WalletFlowShell
       title={`${t("deposit_detail_title")} · ${deposit.asset}`}
-      subtitle={depositStatusLine(t, deposit.status)}
+      subtitle={depositStatusLine(t, deposit.status, autoDetect)}
     >
       <TransactionStepper steps={steps} />
 

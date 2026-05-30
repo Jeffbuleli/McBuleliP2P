@@ -18,6 +18,8 @@ export type WithdrawAutomationOutcome = {
     | "withdraw_manual_review";
 };
 
+const AUTO_IMMEDIATE_MAX_USDT = 500;
+
 export async function applyUsdtWithdrawalAutomation(args: {
   userId: string;
   withdrawalId: string;
@@ -25,10 +27,37 @@ export async function applyUsdtWithdrawalAutomation(args: {
   address: string;
   amountNet: string;
   deviceId?: string | null;
+  stepUpVerified?: boolean;
 }): Promise<WithdrawAutomationOutcome | null> {
   if (!walletWithdrawAutoEnabled()) return null;
 
   const amountNum = Number(args.amountNet);
+  const db = getDb();
+
+  /** Verified withdrawals up to 500 USDT go straight to the auto worker queue. */
+  if (
+    args.stepUpVerified &&
+    Number.isFinite(amountNum) &&
+    amountNum > 0 &&
+    amountNum <= AUTO_IMMEDIATE_MAX_USDT
+  ) {
+    const status = WithdrawalStatus.QUEUED;
+    await db
+      .update(withdrawals)
+      .set({ status })
+      .where(eq(withdrawals.id, args.withdrawalId));
+    await enqueueWithdrawalJob({
+      withdrawalId: args.withdrawalId,
+      decision: "AUTO_NOW",
+    });
+    return {
+      status,
+      riskLevel: "LOW",
+      riskScore: 0,
+      messageKey: "withdraw_auto_low",
+    };
+  }
+
   const risk = await scoreWithdrawalRisk({
     userId: args.userId,
     withdrawalId: args.withdrawalId,
@@ -37,6 +66,7 @@ export async function applyUsdtWithdrawalAutomation(args: {
     address: args.address,
     amountNum: Number.isFinite(amountNum) ? amountNum : 0,
     deviceId: args.deviceId,
+    stepUpVerified: args.stepUpVerified,
   });
 
   let status: string = WithdrawalStatus.PENDING_AGENT;
@@ -53,7 +83,6 @@ export async function applyUsdtWithdrawalAutomation(args: {
     messageKey = "withdraw_auto_medium";
   }
 
-  const db = getDb();
   await db
     .update(withdrawals)
     .set({ status })
