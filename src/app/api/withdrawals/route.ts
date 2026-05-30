@@ -24,8 +24,9 @@ import { walletWithdrawAutoEnabled } from "@/lib/usdt-wallet-features";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { getPiOkxChain } from "@/lib/pi-constants";
 import { applyUsdtWithdrawalAutomation } from "@/lib/wallet-withdraw-automation";
-import { userNeedsStepUp } from "@/lib/auth/step-up";
+import { hasRecentStepUp, userNeedsStepUp } from "@/lib/auth/step-up";
 import { runWithdrawalWorker } from "@/lib/wallet-withdraw-queue";
+import { scheduleBackgroundTask } from "@/lib/email/schedule-email";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -219,7 +220,9 @@ export async function POST(req: Request) {
         fee,
         providerFee: feeSplit.providerFee,
         platformFee: feeSplit.platformFee,
-        status: WithdrawalStatus.PENDING_AGENT,
+        status: usdtProvider === "binance"
+          ? WithdrawalStatus.QUEUED
+          : WithdrawalStatus.PENDING_AGENT,
       })
       .returning();
     return row;
@@ -246,6 +249,7 @@ export async function POST(req: Request) {
     const stepUpVerified =
       step.ok &&
       (!needsStepUp ||
+        (await hasRecentStepUp(userId)) ||
         Boolean(passkeyChallengeId && passkeyResponse) ||
         Boolean(totpCode?.trim()));
     automation = await applyUsdtWithdrawalAutomation({
@@ -263,8 +267,9 @@ export async function POST(req: Request) {
         automation.status === WithdrawalStatus.QUEUED ||
         automation.status === WithdrawalStatus.DELAYED_BATCH
       ) {
-        scheduleEmailTask(async () => {
-          await runWithdrawalWorker(3);
+        scheduleBackgroundTask(async () => {
+          const out = await runWithdrawalWorker(3);
+          console.info("[withdraw] inline worker", out);
         });
       }
     }

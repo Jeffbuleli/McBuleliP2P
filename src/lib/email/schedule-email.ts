@@ -28,3 +28,20 @@ export async function runEmailTask(task: () => Promise<void>): Promise<void> {
     console.error("[email] task failed", e);
   }
 }
+
+/** Run non-email background work after the HTTP response (worker, webhooks, etc.). */
+export function scheduleBackgroundTask(task: () => Promise<void>): void {
+  try {
+    after(async () => {
+      try {
+        await task();
+      } catch (e) {
+        console.error("[background] scheduled task failed", e);
+      }
+    });
+  } catch {
+    void task().catch((e) => {
+      console.error("[background] task failed", e);
+    });
+  }
+}

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, asc, eq, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, or } from "drizzle-orm";
 import { getDb, withdrawalQueueJobs, withdrawals } from "@/db";
 import { WithdrawalStatus } from "@/lib/status";
 import {
@@ -42,6 +42,92 @@ export async function enqueueWithdrawalJob(args: {
       maxAttempts: 5,
     })
     .onConflictDoNothing();
+}
+
+const AUTO_REPAIR_STATUSES = [
+  WithdrawalStatus.PENDING_AGENT,
+  WithdrawalStatus.QUEUED,
+  WithdrawalStatus.PROCESSING,
+] as const;
+
+/** Re-queue USDT binance withdrawals that never got a worker job (e.g. keys added later). */
+async function repairOrphanBinanceWithdrawals(): Promise<number> {
+  if (!walletWithdrawAutoEnabled()) return 0;
+  const db = getDb();
+  const rows = await db
+    .select({ id: withdrawals.id, status: withdrawals.status })
+    .from(withdrawals)
+    .where(
+      and(
+        eq(withdrawals.asset, "USDT"),
+        eq(withdrawals.provider, "binance"),
+        inArray(withdrawals.status, [...AUTO_REPAIR_STATUSES]),
+      ),
+    )
+    .limit(30);
+
+  let repaired = 0;
+  for (const row of rows) {
+    const [job] = await db
+      .select({
+        id: withdrawalQueueJobs.id,
+        status: withdrawalQueueJobs.status,
+      })
+      .from(withdrawalQueueJobs)
+      .where(eq(withdrawalQueueJobs.withdrawalId, row.id))
+      .limit(1);
+
+    if (job) {
+      if (job.status === "done") continue;
+      if (job.status === "queued" || job.status === "running") continue;
+      await db
+        .update(withdrawalQueueJobs)
+        .set({
+          status: "queued",
+          runAfter: new Date(),
+          attempts: 0,
+          lastError: null,
+          lockToken: null,
+          lockedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(withdrawalQueueJobs.id, job.id));
+    } else {
+      await enqueueWithdrawalJob({
+        withdrawalId: row.id,
+        decision: "AUTO_NOW",
+      });
+    }
+
+    if (row.status === WithdrawalStatus.PENDING_AGENT) {
+      await db
+        .update(withdrawals)
+        .set({ status: WithdrawalStatus.QUEUED, failureReason: null })
+        .where(eq(withdrawals.id, row.id));
+    }
+
+    repaired++;
+  }
+  return repaired;
+}
+
+async function revertWithdrawalAfterFailure(args: {
+  withdrawalId: string;
+  priorStatus: string;
+  error: string;
+}) {
+  const db = getDb();
+  const status =
+    args.priorStatus === WithdrawalStatus.DELAYED_BATCH
+      ? WithdrawalStatus.DELAYED_BATCH
+      : WithdrawalStatus.QUEUED;
+  await db
+    .update(withdrawals)
+    .set({
+      status,
+      failureReason: args.error.slice(0, 1000),
+    })
+    .where(eq(withdrawals.id, args.withdrawalId));
 }
 
 async function releaseStaleRunningJobs(maxAgeMs = 10 * 60_000) {
@@ -156,13 +242,16 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
     return { ok: false, message: "wallet_auto_withdraw_disabled" };
   }
 
+  const priorStatus = w.status;
+
   if (
     w.status === WithdrawalStatus.QUEUED ||
-    w.status === WithdrawalStatus.DELAYED_BATCH
+    w.status === WithdrawalStatus.DELAYED_BATCH ||
+    w.status === WithdrawalStatus.PROCESSING
   ) {
     await db
       .update(withdrawals)
-      .set({ status: WithdrawalStatus.PROCESSING })
+      .set({ status: WithdrawalStatus.PROCESSING, failureReason: null })
       .where(eq(withdrawals.id, w.id));
   }
 
@@ -175,6 +264,8 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
         address: w.toAddress,
         amount: String(w.amount),
         tag: w.memoTo ?? undefined,
+        withdrawOrderId: w.id,
+        walletType: 0,
       });
 
       const history = await binanceWithdrawHistoryById(sent.id).catch(() => null);
@@ -225,7 +316,17 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
         txid,
       };
     } catch (e) {
-      return { ok: false, message: String(e) };
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[withdraw-worker] binance_withdraw_failed", {
+        withdrawalId: w.id,
+        error: msg,
+      });
+      await revertWithdrawalAfterFailure({
+        withdrawalId: w.id,
+        priorStatus,
+        error: msg,
+      });
+      return { ok: false, message: msg };
     }
   }
 
@@ -241,8 +342,10 @@ export async function runWithdrawalWorker(maxJobs = 20): Promise<{
   processed: number;
   completed: number;
   failed: number;
+  repaired: number;
 }> {
   await releaseStaleRunningJobs();
+  const repaired = await repairOrphanBinanceWithdrawals();
   let processed = 0;
   let completed = 0;
   let failed = 0;
@@ -263,7 +366,7 @@ export async function runWithdrawalWorker(maxJobs = 20): Promise<{
       await markFailed(job.id, out.message ?? "unknown_error");
     }
   }
-  return { processed, completed, failed };
+  return { processed, completed, failed, repaired };
 }
 
 export async function runRetryFailedJobs(): Promise<{ reopened: number }> {

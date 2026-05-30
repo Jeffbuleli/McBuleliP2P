@@ -186,18 +186,41 @@ export async function binanceWithdraw(args: {
   address: string;
   amount: string;
   tag?: string;
+  /** Client id for idempotency — maps to Binance `withdrawOrderId`. */
+  withdrawOrderId?: string;
+  /** 0 = spot wallet (default), 1 = funding wallet. */
+  walletType?: 0 | 1;
+  /** When true, network fee is charged to destination on internal transfers. */
+  transactionFeeFlag?: boolean;
 }) {
   const net = USDT_NETWORKS[args.network].binanceNetwork;
   const params: Record<string, string> = {
     coin: args.coin,
     network: net,
-    address: args.address,
-    amount: args.amount,
+    address: args.address.trim(),
+    amount: formatBinanceUsdtAmount(args.amount),
+    walletType: String(args.walletType ?? 0),
   };
-  if (args.tag) params.addressTag = args.tag;
+  if (args.tag?.trim()) params.addressTag = args.tag.trim();
+  if (args.withdrawOrderId?.trim()) {
+    params.withdrawOrderId = args.withdrawOrderId.trim().slice(0, 64);
+  }
+  if (args.transactionFeeFlag === true) {
+    params.transactionFeeFlag = "true";
+  }
   return signedPost("/sapi/v1/capital/withdraw/apply", params) as Promise<{
     id: string;
   }>;
+}
+
+/** Binance USDT withdraw amount — max 8 decimals, no trailing zeros. */
+export function formatBinanceUsdtAmount(amount: string | number): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error("invalid_withdraw_amount");
+  }
+  const fixed = n.toFixed(8);
+  return fixed.replace(/\.?0+$/, "") || "0";
 }
 
 export type BinanceCoinNetworkConfig = {
