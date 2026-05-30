@@ -13,6 +13,7 @@ import { CANONICAL_PRODUCTION_ORIGIN, getMetadataOrigin } from "@/lib/app-url";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 /** Canonical URL for OG/Twitter links (WhatsApp requires absolute image URLs). */
@@ -74,7 +75,6 @@ export const viewport: Viewport = {
   themeColor: "#305f33",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 };
 

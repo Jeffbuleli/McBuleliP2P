@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { unstable_cache } from "next/cache";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
-import { MarketPreview } from "@/components/mobile/market-preview";
+import { MarketPreviewLazy } from "@/components/mobile/market-preview-lazy";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { LandingPromoStrip } from "@/components/landing/landing-promo-strip";
 import { LandingSeoSection } from "@/components/landing/landing-seo-section";
@@ -92,6 +92,7 @@ export async function HomeLanding() {
   const locale = await getLocale();
   const d = getDictionary(locale);
   const tickers = await getLandingTickers();
+  const previewTickers = tickers?.slice(0, 6) ?? null;
 
   const services: {
     icon: ComponentType<{ className?: string }>;
@@ -174,7 +175,7 @@ export async function HomeLanding() {
         <div className="mt-5 space-y-5">
           <PriceChartLazy appearance="light" deferUntilVisible />
           <section id="market" className="scroll-mt-24">
-            <MarketPreview locale={locale} initialTickers={tickers} appearance="light" />
+            <MarketPreviewLazy locale={locale} initialTickers={previewTickers} appearance="light" />
           </section>
         </div>
       </div>

@@ -81,10 +81,10 @@ export function MarketPreview({
             }
             title={d.market_live_hint}
           >
-            <span className="relative flex h-1.5 w-1.5">
+            <span className="relative flex h-1.5 w-1.5" aria-hidden>
               <span
-                className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  stale ? "bg-amber-500" : "animate-ping bg-emerald-500"
+                className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
+                  stale ? "bg-amber-500" : "bg-emerald-500"
                 }`}
               />
               <span
