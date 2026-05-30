@@ -17,6 +17,7 @@ export type AssistantMessages = {
   suggestedForYou: string;
   errorGeneric: string;
   rateLimited: string;
+  errorDbNotReady: string;
   /** Quick action labels */
   qa_crypto: string;
   qa_usdt: string;
@@ -47,6 +48,8 @@ export const assistantEn: AssistantMessages = {
   suggestedForYou: "Suggested for you",
   errorGeneric: "Something went wrong. Please try again.",
   rateLimited: "Too many messages. Please wait a moment.",
+  errorDbNotReady:
+    "Assistant is being set up. Please try again in a few minutes.",
   qa_crypto: "Learn Crypto",
   qa_usdt: "Buy/Sell USDT",
   qa_trading: "How Trading Works",
@@ -76,6 +79,8 @@ export const assistantFr: AssistantMessages = {
   suggestedForYou: "Suggestions pour vous",
   errorGeneric: "Une erreur s'est produite. Réessayez.",
   rateLimited: "Trop de messages. Patientez un instant.",
+  errorDbNotReady:
+    "L'assistant est en cours de configuration. Réessayez dans quelques minutes.",
   qa_crypto: "Apprendre la crypto",
   qa_usdt: "Acheter/Vendre USDT",
   qa_trading: "Comment trader",
@@ -105,6 +110,8 @@ export const assistantSw: AssistantMessages = {
   suggestedForYou: "Mapendekezo kwako",
   errorGeneric: "Kuna hitilafu. Jaribu tena.",
   rateLimited: "Ujumbe mwingi sana. Subiri kidogo.",
+  errorDbNotReady:
+    "Msaidizi unasanidiwa. Jaribu tena baada ya dakika chache.",
   qa_crypto: "Jifunze Crypto",
   qa_usdt: "Nunua/Uza USDT",
   qa_trading: "Biashara inavyofanya kazi",

@@ -1,19 +1,12 @@
 McBuleli
 Faites travailler vos USDT & Pi — taux clairs, durées flexibles.
-
 Bonjour {{{contact.first_name|ami}}},
-
 Gagnez sur vos avoirs
-
 Le staking est disponible sur McBuleli. Choisissez une durée, voyez le taux dès le départ, suivez les gains dans l'app.
 Pas de bruit — du rendement lisible.
-
 • USDT & Pi
 • APR transparent
 • Wallet → Gagner
-
 Commencer le staking: https://mcbuleli.org/app/staking?utm_source=email&utm_medium=broadcast&utm_campaign=staking
-
 hi@mcbuleli.org
-
 Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

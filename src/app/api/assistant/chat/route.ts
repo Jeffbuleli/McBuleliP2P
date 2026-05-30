@@ -108,6 +108,9 @@ export async function POST(req: Request) {
     if (msg === "assistant_forbidden" || msg === "assistant_not_found") {
       return Response.json({ error: msg }, { status: 403 });
     }
+    if (msg === "assistant_db_not_migrated") {
+      return Response.json({ error: msg }, { status: 503 });
+    }
     console.error("[assistant/chat]", msg);
     return Response.json({ error: "assistant_failed" }, { status: 500 });
   }

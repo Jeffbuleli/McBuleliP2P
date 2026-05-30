@@ -21,6 +21,7 @@ import {
   streamAssistantReply,
 } from "@/lib/assistant/openai-client";
 import { buildAssistantSystemPrompt } from "@/lib/assistant/system-prompt";
+import { assertAssistantDbReady } from "@/lib/assistant/db-ready";
 
 export type AssistantMessageDto = {
   id: string;
@@ -60,6 +61,7 @@ export async function getOrCreateConversation(args: {
   locale: AssistantLocale;
   pageContext?: string | null;
 }): Promise<AssistantConversationDto> {
+  await assertAssistantDbReady();
   const db = getDb();
 
   if (args.conversationId) {

@@ -1,16 +1,9 @@
 McBuleli
 Plafonds plus hauts — vérification rapide Didit.
-
 Bonjour {{{contact.first_name|ami}}},
-
 Vérifiez une fois, agissez librement
-
 Le KYC prend quelques minutes et débloque dépôts, retraits et P2P à plus fort volume.
 Vos données restent dans notre flux sécurisé — jamais de mot de passe par email.
-
-
 Compléter le KYC: https://mcbuleli.org/app/profile?utm_source=email&utm_medium=broadcast&utm_campaign=kyc
-
 hi@mcbuleli.org
-
 Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

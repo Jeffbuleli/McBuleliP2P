@@ -1,16 +1,9 @@
 McBuleli
 What's new on McBuleli — features & fixes.
-
 Hi {{{contact.first_name|there}}},
-
 Product update
-
 We shipped improvements to wallet, P2P, and earn this month. Faster deposits, clearer statuses, and a smoother mobile experience.
 Open the app for full details — this email stays short on purpose.
-
-
 See what's new: https://mcbuleli.org/app/wallet?utm_source=email&utm_medium=broadcast&utm_campaign=changelog
-
 hi@mcbuleli.org
-
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

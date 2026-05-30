@@ -1,19 +1,12 @@
 McBuleli
 Deposit USDT on TRC20, BEP20 & more — withdraw when you need.
-
 Hi {{{contact.first_name|there}}},
-
 Your USDT hub
-
 Send USDT to your personal deposit address. We match amounts automatically when auto-detect is on.
 Withdraw to whitelisted addresses when you're ready to cash out.
-
 • Multi-network deposits
 • Clear fees
 • Security alerts by email
-
 Deposit USDT: https://mcbuleli.org/app/deposit?asset=USDT&utm_source=email&utm_medium=broadcast&utm_campaign=wallet_usdt
-
 hi@mcbuleli.org
-
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -1,17 +1,10 @@
 McBuleli
 Your crypto wallet for Africa — fund, trade, earn.
-
 Hi {{{contact.first_name|there}}},
-
 Welcome to McBuleli
-
 One app for USDT, Pi, mobile-money P2P, and group savings — built for speed and clarity.
 Verify your email, complete KYC when you're ready, and fund your wallet in minutes.
-
 • Wallet · P2P escrow · Staking · AVEC groups
-
 Open my wallet: https://mcbuleli.org/app/wallet?utm_source=email&utm_medium=broadcast&utm_campaign=welcome
-
 hi@mcbuleli.org
-
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

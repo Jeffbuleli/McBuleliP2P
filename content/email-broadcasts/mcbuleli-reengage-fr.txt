@@ -1,16 +1,9 @@
 McBuleli
 Votre portefeuille vous attend — solde & taux à jour.
-
 Bonjour {{{contact.first_name|ami}}},
-
 Toujours avec nous ?
-
 Les marchés bougent vite. Reconnectez-vous pour voir votre solde, ordres et récompenses staking.
 Une question ? Répondez à cet email ou WhatsApp.
-
-
 Se connecter: https://mcbuleli.org/login?utm_source=email&utm_medium=broadcast&utm_campaign=reengage
-
 hi@mcbuleli.org
-
 Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

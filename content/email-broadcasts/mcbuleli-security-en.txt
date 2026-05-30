@@ -1,16 +1,9 @@
 McBuleli
 Passkeys & 2FA — protect your balance in two taps.
-
 Hi {{{contact.first_name|there}}},
-
 Lock down your account
-
 Add a passkey or authenticator app. Withdrawals and sensitive changes can require a quick step-up check.
 McBuleli will never ask for your seed phrase or password by message.
-
-
 Security settings: https://mcbuleli.org/app/profile?utm_source=email&utm_medium=broadcast&utm_campaign=security
-
 hi@mcbuleli.org
-
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

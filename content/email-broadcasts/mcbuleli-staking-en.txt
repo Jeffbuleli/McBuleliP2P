@@ -1,19 +1,12 @@
 McBuleli
 Put idle USDT & Pi to work — clear rates, flexible terms.
-
 Hi {{{contact.first_name|there}}},
-
 Earn on what you hold
-
 Staking is live on McBuleli. Choose a term, see your rate upfront, and track rewards in the app.
 No noise — just yield you can understand.
-
 • USDT & Pi supported
 • Transparent APR
 • Manage from Wallet → Earn
-
 Start staking: https://mcbuleli.org/app/staking?utm_source=email&utm_medium=broadcast&utm_campaign=staking
-
 hi@mcbuleli.org
-
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}
