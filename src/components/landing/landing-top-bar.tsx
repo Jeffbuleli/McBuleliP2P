@@ -44,6 +44,7 @@ export function LandingTopBar() {
 
   const deskNav = [
     { href: "/#market", label: t("landing_nav_market") },
+    { href: "/#africa", label: t("landing_nav_africa") },
     { href: "/#services", label: t("landing_nav_services") },
     { href: "/#how", label: t("landing_nav_how") },
     { href: "/about", label: t("landing_nav_about") },

@@ -4,6 +4,7 @@ import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { LandingPromoStrip } from "@/components/landing/landing-promo-strip";
+import { LandingSeoSection } from "@/components/landing/landing-seo-section";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
@@ -170,6 +171,8 @@ export async function HomeLanding() {
       </div>
 
       <main className="relative mx-auto max-w-5xl space-y-10 px-4 pb-14 pt-8">
+        <LandingSeoSection />
+
         <section id="services" className="scroll-mt-24" aria-labelledby="services-h">
           <div className="text-center">
             <h2

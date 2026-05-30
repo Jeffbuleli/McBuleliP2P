@@ -19,14 +19,14 @@ const inter = Inter({
 const metadataBaseUrl = getMetadataOrigin() || undefined;
 
 const desc =
-  "Buy & sell crypto with mobile money — P2P escrow, wallet, and secure transfers in Africa.";
+  "Buy and sell USDT & Pi with mobile money in DR Congo and Africa. P2P escrow, wallet, staking, AVEC savings and KYC on mcbuleli.org.";
 
-const ogImageAlt = "McBuleli — crypto P2P & mobile money";
+const ogImageAlt = "McBuleli — USDT wallet, P2P & mobile money in Africa";
 
 export const metadata: Metadata = {
   ...(metadataBaseUrl ? { metadataBase: new URL(metadataBaseUrl) } : {}),
   title: {
-    default: "McBuleli",
+    default: "McBuleli — USDT Wallet, P2P & Mobile Money in Africa",
     template: "%s · McBuleli",
   },
   description: desc,
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "McBuleli",
-    title: "McBuleli",
+    title: "McBuleli — USDT Wallet, P2P & Mobile Money in Africa",
     description: desc,
     url: CANONICAL_PRODUCTION_ORIGIN,
     locale: "en_US",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "McBuleli",
+    title: "McBuleli — USDT Wallet, P2P & Mobile Money in Africa",
     description: desc,
     images: [{ url: "/opengraph-image", alt: ogImageAlt }],
   },
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "McBuleli",
+    title: "McBuleli — USDT Wallet, P2P & Mobile Money in Africa",
     statusBarStyle: "black-translucent",
   },
 };
