@@ -2850,6 +2850,18 @@ export const en = {
   fee_note_internal:
     "+ {fee} USDT fee · McBuleli wallet · min net {min} USDT",
   fee_note_asset: "+ {fee} {unit} fee · net must be > {min} {unit}",
+  withdraw_invalid_amount: "Enter a valid net amount.",
+  withdraw_net_below_min: "Net amount must be at least {min} USDT.",
+  withdraw_net_must_exceed_fee:
+    "Net amount must be greater than the {fee} USDT McBuleli fee (fee is added on top).",
+  withdraw_net_below_network_fee:
+    "Net amount must exceed the network fee ({networkFee} USDT) for this address.",
+  withdraw_error_amount_vs_network_fee:
+    "Amount too low for this network — increase the net amount or choose another network.",
+  wallet_withdraw_provider_error:
+    "Withdrawal could not be sent. Our team has been notified — try again later.",
+  wallet_tx_amount_net: "Net amount",
+  wallet_tx_total_debited: "Total debited",
   deposit_pick_asset: "Choose asset",
   asset_usdt_full: "Tether · USDT",
   asset_pi_network: "Pi Network",
@@ -6057,6 +6069,18 @@ export const fr: Messages = {
   fee_note_internal:
     "+ {fee} USDT frais · portefeuille McBuleli · net min. {min} USDT",
   fee_note_asset: "+ {fee} {unit} frais · net strictement supérieur à {min} {unit}",
+  withdraw_invalid_amount: "Indiquez un montant net valide.",
+  withdraw_net_below_min: "Le net doit être d’au moins {min} USDT.",
+  withdraw_net_must_exceed_fee:
+    "Le net doit être supérieur aux {fee} USDT de frais McBuleli (frais en plus du net).",
+  withdraw_net_below_network_fee:
+    "Le net doit dépasser les frais réseau ({networkFee} USDT) pour cette adresse.",
+  withdraw_error_amount_vs_network_fee:
+    "Montant trop bas pour ce réseau — augmentez le net ou changez de réseau.",
+  wallet_withdraw_provider_error:
+    "Envoi impossible. Réessayez plus tard ou contactez le support.",
+  wallet_tx_amount_net: "Montant net",
+  wallet_tx_total_debited: "Total débité",
   deposit_pick_asset: "Choisir l’actif",
   asset_usdt_full: "Tether · USDT",
   asset_pi_network: "Pi Network",

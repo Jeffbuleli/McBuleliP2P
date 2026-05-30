@@ -223,6 +223,65 @@ export function formatBinanceUsdtAmount(amount: string | number): string {
   return fixed.replace(/\.?0+$/, "") || "0";
 }
 
+/**
+ * Amount passed to `POST /sapi/v1/capital/withdraw/apply`.
+ * External on-chain: Binance deducts network fee from the apply amount — send net + fee
+ * so the destination receives exactly `net`. Internal: fee is 0 — send net only.
+ */
+export async function binanceUsdtWithdrawApplyAmount(args: {
+  network: NetworkId;
+  address: string;
+  netAmount: string | number;
+}): Promise<{ applyAmount: string; isInternal: boolean; binanceFee: number }> {
+  const net = Number(args.netAmount);
+  if (!Number.isFinite(net) || net <= 0) {
+    throw new Error("invalid_withdraw_amount");
+  }
+
+  const isInternal = await isKnownBinanceInternalWithdrawAddress({
+    network: args.network,
+    address: args.address,
+  });
+
+  if (isInternal) {
+    return {
+      applyAmount: formatBinanceUsdtAmount(net),
+      isInternal: true,
+      binanceFee: 0,
+    };
+  }
+
+  const binanceFee = await binanceUsdtWithdrawFee(args.network);
+  return {
+    applyAmount: formatBinanceUsdtAmount(net + binanceFee),
+    isInternal: false,
+    binanceFee,
+  };
+}
+
+export async function binanceWithdrawUsdt(args: {
+  network: NetworkId;
+  address: string;
+  netAmount: string;
+  withdrawOrderId?: string;
+  tag?: string;
+}) {
+  const { applyAmount } = await binanceUsdtWithdrawApplyAmount({
+    network: args.network,
+    address: args.address,
+    netAmount: args.netAmount,
+  });
+  return binanceWithdraw({
+    coin: "USDT",
+    network: args.network,
+    address: args.address,
+    amount: applyAmount,
+    tag: args.tag,
+    withdrawOrderId: args.withdrawOrderId,
+    walletType: 0,
+  });
+}
+
 export type BinanceCoinNetworkConfig = {
   network: string;
   withdrawFee: string;

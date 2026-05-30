@@ -33,18 +33,29 @@ export function parseNetWithdrawal(args: {
   netAmountStr: string;
   userFeeUsdt?: number;
   minNetUsdt?: number;
+  isInternal?: boolean;
+  binanceNetworkFeeUsdt?: number;
 }): ParsedWithdrawAmount {
   const net = Number(args.netAmountStr);
   const minNet = args.minNetUsdt ?? MCBULELI_MIN_WITHDRAW_NET_EXTERNAL_USDT;
   const feeN = args.userFeeUsdt ?? EXTERNAL_WITHDRAW_FEE_USDT;
   if (!Number.isFinite(net) || net <= 0) {
-    return { ok: false, message: "Invalid amount." };
+    return { ok: false, message: "withdraw_invalid_amount" };
+  }
+  if (!args.isInternal && net + 1e-12 <= feeN) {
+    return { ok: false, message: "withdraw_net_must_exceed_fee" };
+  }
+  const binanceFee = args.binanceNetworkFeeUsdt ?? 0;
+  if (
+    !args.isInternal &&
+    Number.isFinite(binanceFee) &&
+    binanceFee > 0 &&
+    net + 1e-12 <= binanceFee
+  ) {
+    return { ok: false, message: "withdraw_net_below_network_fee" };
   }
   if (net + 1e-12 < minNet) {
-    return {
-      ok: false,
-      message: `Net amount must be at least ${minNet} USDT.`,
-    };
+    return { ok: false, message: "withdraw_net_below_min" };
   }
   const total = net + feeN;
   return {

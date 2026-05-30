@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { interpolate } from "@/i18n/messages";
 import { WithdrawalStatus } from "@/lib/status";
 import { withdrawalProgressSteps } from "@/lib/transaction-steps";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
@@ -14,6 +15,8 @@ import { FlowHubLink } from "@/components/wallet/wallet-flow-shell";
 import { TransactionDetailRows } from "@/components/wallet/transaction-detail-rows";
 import { formatSignedWalletAmount } from "@/lib/wallet-history-labels";
 import { formatWalletHistoryAmount } from "@/lib/wallet-types";
+import { formatWalletFailureReason } from "@/lib/wallet-error-display";
+import { totalDebitedFromRow } from "@/lib/withdraw-fees";
 
 type Withdrawal = {
   id: string;
@@ -112,18 +115,27 @@ export default function WithdrawActivityDetailPage() {
           { label: t("deposit_step_usdt_network"), value: w.networkCanonical },
           { label: t("wallet_tx_destination"), value: w.toAddress, mono: true },
           {
-            label: t("wallet_tx_amount"),
+            label: t("wallet_tx_amount_net"),
             value: `${formatSignedWalletAmount(w.asset, w.amount, { kind: "withdrawal" })} ${w.asset}`,
           },
           {
             label: t("wallet_tx_fee"),
-            value: formatWalletHistoryAmount(w.asset, w.fee),
+            value: `${formatWalletHistoryAmount(w.asset, w.fee)} ${w.asset}`,
+          },
+          {
+            label: t("wallet_tx_total_debited"),
+            value: `${formatWalletHistoryAmount(w.asset, totalDebitedFromRow(w))} ${w.asset}`,
           },
           ...(w.txid
             ? [{ label: t("wallet_tx_txid"), value: w.txid, mono: true }]
             : []),
           ...(w.failureReason
-            ? [{ label: t("status_ui_failed"), value: w.failureReason }]
+            ? [
+                {
+                  label: t("status_ui_failed"),
+                  value: formatWalletFailureReason(t, w.failureReason) ?? w.failureReason,
+                },
+              ]
             : []),
         ]}
       />

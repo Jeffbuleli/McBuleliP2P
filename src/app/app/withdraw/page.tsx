@@ -153,18 +153,30 @@ export default function WithdrawPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = formatAuthClientError(data, t);
         const code =
+          typeof data === "object" && data && "message" in data
+            ? String((data as { message?: unknown }).message ?? "")
+            : "";
+        const errCode =
           typeof data === "object" && data && "error" in data
             ? String((data as { error?: unknown }).error ?? "")
             : "";
+        let msg = formatAuthClientError(data, t);
+        if (code.startsWith("withdraw_")) {
+          const vars: Record<string, string> = {
+            min: String((data as { min?: number }).min ?? minUsdt),
+            fee: String((data as { fee?: number }).fee ?? feeUsdt),
+            networkFee: String((data as { networkFee?: number }).networkFee ?? ""),
+          };
+          msg = interpolate(t(code as Parameters<typeof t>[0]), vars);
+        }
         const keepModal =
-          code === "step_up_required" ||
-          code === "totp_required" ||
-          code === "totp_invalid" ||
-          code === "passkey_invalid" ||
-          code === "passkey_not_found" ||
-          code === "challenge_expired";
+          errCode === "step_up_required" ||
+          errCode === "totp_required" ||
+          errCode === "totp_invalid" ||
+          errCode === "passkey_invalid" ||
+          errCode === "passkey_not_found" ||
+          errCode === "challenge_expired";
         if (keepModal) {
           setConfirmError(msg);
         } else {

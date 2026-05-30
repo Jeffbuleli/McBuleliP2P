@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyWithdrawalQueuedEmail } from "@/lib/email/wallet-crypto-notify";
-import { scheduleEmailTask } from "@/lib/email/schedule-email";
+import { scheduleEmailTask, runEmailTask } from "@/lib/email/schedule-email";
 import { resolveEmailLocale } from "@/lib/email/locale";
 import { notifyStaffWithdrawalsScope } from "@/lib/staff-notifications";
 import { and, desc, eq, sql } from "drizzle-orm";
@@ -12,6 +12,7 @@ import { USDT_NETWORKS } from "@/lib/networks";
 import { isValidAddressForNetwork } from "@/lib/address-format";
 import { WithdrawalStatus } from "@/lib/status";
 import {
+  EXTERNAL_WITHDRAW_FEE_USDT,
   parseNetWithdrawal,
   parseNetWithdrawalPi,
 } from "@/lib/withdraw-fees";
@@ -111,10 +112,20 @@ export async function POST(req: Request) {
           netAmountStr: body.amount,
           userFeeUsdt: usdtQuote!.userFeeUsdt,
           minNetUsdt: usdtQuote!.minNetUsdt,
+          isInternal: usdtQuote!.isInternal,
+          binanceNetworkFeeUsdt: usdtQuote!.binanceListFeeUsdt,
         });
 
   if (!amounts.ok) {
-    return NextResponse.json({ message: amounts.message }, { status: 400 });
+    return NextResponse.json(
+      {
+        message: amounts.message,
+        min: usdtQuote?.minNetUsdt,
+        fee: usdtQuote?.userFeeUsdt ?? EXTERNAL_WITHDRAW_FEE_USDT,
+        networkFee: usdtQuote?.binanceListFeeUsdt,
+      },
+      { status: 400 },
+    );
   }
 
   const { net, fee, totalDebit } = amounts;
@@ -289,15 +300,17 @@ export async function POST(req: Request) {
   const emailLocale = await resolveEmailLocale(req);
 
   scheduleEmailTask(async () => {
-    await notifyWithdrawalQueuedEmail({
-      userId,
-      withdrawalId: w.id,
-      asset: body.asset,
-      amount: net,
-      fee,
-      networkCanonical: body.network,
-      address: body.address.trim(),
-      locale: emailLocale,
+    await runEmailTask(async () => {
+      await notifyWithdrawalQueuedEmail({
+        userId,
+        withdrawalId: w.id,
+        asset: body.asset,
+        amount: net,
+        fee,
+        networkCanonical: body.network,
+        address: body.address.trim(),
+        locale: emailLocale,
+      });
     });
   });
 

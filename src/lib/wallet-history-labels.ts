@@ -110,11 +110,15 @@ export function formatSignedWalletAmount(
   const n = Number(raw);
   const abs = formatWalletHistoryAmount(asset, String(Math.abs(n)));
   if (!Number.isFinite(n)) return formatWalletHistoryAmount(asset, raw);
+  const vk = historyVisualKind(item);
+  if (vk === "withdraw" || vk === "send") {
+    const out = n !== 0 ? Math.abs(n) : Number(raw);
+    const formatted = formatWalletHistoryAmount(asset, String(out));
+    return `-${formatted}`;
+  }
   if (n < 0) return `-${abs}`;
   if (n > 0) return `+${abs}`;
-  const vk = historyVisualKind(item);
   if (vk === "receive") return `+${abs}`;
-  if (vk === "send" || vk === "withdraw") return `-${abs}`;
   return abs;
 }
 

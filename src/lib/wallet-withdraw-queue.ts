@@ -7,9 +7,10 @@ import {
   walletWithdrawalBatchDelayMaxMinutes,
   walletWithdrawalBatchDelayMinMinutes,
 } from "@/lib/usdt-wallet-features";
-import { binanceWithdraw, binanceWithdrawHistoryById, binanceUsdtWithdrawFee } from "@/lib/binance";
+import { binanceWithdrawUsdt, binanceWithdrawHistoryById, binanceUsdtWithdrawFee } from "@/lib/binance";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
+import { runEmailTask } from "@/lib/email/schedule-email";
 import type { NetworkId } from "@/lib/networks";
 import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
 
@@ -258,14 +259,12 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
   if (w.asset.toUpperCase() === "USDT") {
     try {
       const network = w.networkCanonical as NetworkId;
-      const sent = await binanceWithdraw({
-        coin: "USDT",
+      const sent = await binanceWithdrawUsdt({
         network,
         address: w.toAddress,
-        amount: String(w.amount),
+        netAmount: String(w.amount),
         tag: w.memoTo ?? undefined,
         withdrawOrderId: w.id,
-        walletType: 0,
       });
 
       const history = await binanceWithdrawHistoryById(sent.id).catch(() => null);
@@ -300,15 +299,17 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
           txid,
         },
       });
-      await notifyWithdrawalCompletedEmail({
-        userId: w.userId,
-        withdrawalId: w.id,
-        asset: w.asset,
-        amount: String(w.amount),
-        fee: String(w.fee),
-        networkCanonical: w.networkCanonical,
-        address: w.toAddress,
-        txid,
+      await runEmailTask(async () => {
+        await notifyWithdrawalCompletedEmail({
+          userId: w.userId,
+          withdrawalId: w.id,
+          asset: w.asset,
+          amount: String(w.amount),
+          fee: String(w.fee),
+          networkCanonical: w.networkCanonical,
+          address: w.toAddress,
+          txid,
+        });
       });
       return {
         ok: true,
