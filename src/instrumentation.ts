@@ -4,6 +4,15 @@
  * Calls the same HTTP route as Render Cron — no heavy imports at boot.
  */
 export async function register() {
+  if (process.env.NODE_ENV === "production") {
+    const cronSecret = process.env.CRON_SECRET?.trim() ?? "";
+    if (cronSecret.length < 12) {
+      console.warn(
+        "[cron] CRON_SECRET missing on Web service — wallet/bots crons will fail until set (see docs/wallet-cron-render.md)",
+      );
+    }
+  }
+
   if (process.env.BOT_CRON_INLINE !== "1") return;
   if (process.env.NODE_ENV !== "production") return;
 

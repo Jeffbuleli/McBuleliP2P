@@ -46,9 +46,9 @@ curl -s -X POST "https://mcbuleli.org/api/internal/wallet/retry-failed-jobs" \
 
 Réponse attendue : `200` avec un corps JSON (pas `401`).
 
-## Astuce Render : Environment Group
+## Astuce Render : variables sur chaque cron
 
-Créez un groupe **Environment Group** `mcbuleli-cron-env` avec `CRON_SECRET` + `MCBULELI_API_URL`, puis attachez-le aux crons (voir `render.yaml`). Une seule mise à jour pour tous les crons.
+Chaque cron wallet déclare `CRON_SECRET` + `MCBULELI_API_URL` dans `render.yaml` (comme `mcbuleli-bots-tick`). Dans le Dashboard Render, renseignez les **mêmes valeurs** que sur le service Web — une seule fois par cron si vous n’utilisez pas de Blueprint sync.
 
 ## Email « service unavailable » à chaque deploy
 

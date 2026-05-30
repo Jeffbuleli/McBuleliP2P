@@ -20,9 +20,13 @@ import {
   type QuickActionKey,
 } from "@/lib/assistant/messages";
 import { detectPageContext } from "@/lib/assistant/page-context";
-
-const STORAGE_KEY = "mcbuleli_ai_conversation";
-const GUEST_KEY = "mcbuleli_ai_guest";
+import {
+  ASSISTANT_CONVERSATION_KEY,
+  ASSISTANT_GUEST_KEY,
+  clearAssistantClientStorage,
+  syncAssistantSessionUser,
+  writeAssistantSessionUser,
+} from "@/lib/assistant/client-storage";
 
 type ChatMessage = {
   id: string;
@@ -80,49 +84,109 @@ export function AssistantWidget() {
     });
   }, []);
 
-  const loadConversation = useCallback(async () => {
-    setBooting(true);
-    setError(null);
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const storedGuest = localStorage.getItem(GUEST_KEY);
-      const params = new URLSearchParams({
-        locale: assistantLocale,
-        ...(stored ? { conversationId: stored } : {}),
-        ...(storedGuest ? { guestToken: storedGuest } : {}),
-        ...(pageContext ? { pageContext } : {}),
-      });
-      const res = await fetch(`/api/assistant/conversation?${params}`, {
-        credentials: "include",
-        cache: "no-store",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "assistant_failed");
-      if (data.conversation?.id) {
-        setConversationId(data.conversation.id);
-        localStorage.setItem(STORAGE_KEY, data.conversation.id);
+  const loadConversation = useCallback(
+    async (opts?: { retryFresh?: boolean }) => {
+      setBooting(true);
+      setError(null);
+      try {
+        const stored = opts?.retryFresh
+          ? null
+          : localStorage.getItem(ASSISTANT_CONVERSATION_KEY);
+        const storedGuest = opts?.retryFresh
+          ? null
+          : localStorage.getItem(ASSISTANT_GUEST_KEY);
+        const params = new URLSearchParams({
+          locale: assistantLocale,
+          ...(stored ? { conversationId: stored } : {}),
+          ...(storedGuest ? { guestToken: storedGuest } : {}),
+          ...(pageContext ? { pageContext } : {}),
+        });
+        const res = await fetch(`/api/assistant/conversation?${params}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = (await res.json()) as {
+          error?: string;
+          conversation?: { id: string };
+          guestToken?: string | null;
+          sessionUserId?: string | null;
+          messages?: ChatMessage[];
+        };
+
+        if (
+          typeof data.sessionUserId !== "undefined" &&
+          syncAssistantSessionUser(data.sessionUserId ?? null)
+        ) {
+          setMessages([]);
+          setConversationId(null);
+          setGuestToken(null);
+          if (!opts?.retryFresh) {
+            await loadConversation({ retryFresh: true });
+            return;
+          }
+        }
+
+        if (!res.ok) {
+          if (data.error === "assistant_forbidden" && !opts?.retryFresh) {
+            clearAssistantClientStorage();
+            setMessages([]);
+            setConversationId(null);
+            setGuestToken(null);
+            await loadConversation({ retryFresh: true });
+            return;
+          }
+          throw new Error(data.error ?? "assistant_failed");
+        }
+
+        writeAssistantSessionUser(data.sessionUserId ?? null);
+
+        if (data.conversation?.id) {
+          setConversationId(data.conversation.id);
+          localStorage.setItem(ASSISTANT_CONVERSATION_KEY, data.conversation.id);
+        }
+        if (data.guestToken) {
+          setGuestToken(data.guestToken);
+          localStorage.setItem(ASSISTANT_GUEST_KEY, data.guestToken);
+        } else if (data.sessionUserId) {
+          localStorage.removeItem(ASSISTANT_GUEST_KEY);
+          setGuestToken(null);
+        }
+        setMessages(
+          (data.messages ?? []).filter(
+            (msg) => msg.role === "user" || msg.role === "assistant",
+          ),
+        );
+      } catch (e) {
+        const code = e instanceof Error ? e.message : "";
+        if (code === "assistant_db_not_migrated") setError(m.errorDbNotReady);
+        else setError(m.errorGeneric);
+      } finally {
+        setBooting(false);
       }
-      if (data.guestToken) {
-        setGuestToken(data.guestToken);
-        localStorage.setItem(GUEST_KEY, data.guestToken);
-      }
-      setMessages(
-        (data.messages as ChatMessage[] | undefined)?.filter(
-          (msg) => msg.role === "user" || msg.role === "assistant",
-        ) ?? [],
-      );
-    } catch (e) {
-      const code = e instanceof Error ? e.message : "";
-      if (code === "assistant_db_not_migrated") setError(m.errorDbNotReady);
-      else setError(m.errorGeneric);
-    } finally {
-      setBooting(false);
-    }
-  }, [assistantLocale, m.errorDbNotReady, m.errorGeneric, pageContext]);
+    },
+    [assistantLocale, m.errorDbNotReady, m.errorGeneric, pageContext],
+  );
 
   useEffect(() => {
     if (open) void loadConversation();
   }, [open, loadConversation]);
+
+  useEffect(() => {
+    void fetch("/api/assistant/session", {
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((res) => res.json())
+      .then((data: { sessionUserId?: string | null }) => {
+        if (typeof data.sessionUserId === "undefined") return;
+        if (syncAssistantSessionUser(data.sessionUserId ?? null)) {
+          setMessages([]);
+          setConversationId(null);
+          setGuestToken(null);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     scrollBottom();
@@ -155,10 +219,10 @@ export function AssistantWidget() {
   }
 
   function clearAssistantStorage() {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(GUEST_KEY);
+    clearAssistantClientStorage();
     setConversationId(null);
     setGuestToken(null);
+    setMessages([]);
   }
 
   async function postChat(body: Record<string, unknown>) {
@@ -190,11 +254,11 @@ export function AssistantWidget() {
 
     if (data.conversation?.id) {
       setConversationId(data.conversation.id);
-      localStorage.setItem(STORAGE_KEY, data.conversation.id);
+      localStorage.setItem(ASSISTANT_CONVERSATION_KEY, data.conversation.id);
     }
     if (data.guestToken) {
       setGuestToken(data.guestToken);
-      localStorage.setItem(GUEST_KEY, data.guestToken);
+      localStorage.setItem(ASSISTANT_GUEST_KEY, data.guestToken);
     }
 
     setMessages((prev) => {
@@ -238,12 +302,12 @@ export function AssistantWidget() {
           const conv = event.conversation as { id?: string } | undefined;
           if (conv?.id) {
             setConversationId(conv.id);
-            localStorage.setItem(STORAGE_KEY, conv.id);
+            localStorage.setItem(ASSISTANT_CONVERSATION_KEY, conv.id);
           }
           const gt = event.guestToken as string | null | undefined;
           if (gt) {
             setGuestToken(gt);
-            localStorage.setItem(GUEST_KEY, gt);
+            localStorage.setItem(ASSISTANT_GUEST_KEY, gt);
           }
         }
 

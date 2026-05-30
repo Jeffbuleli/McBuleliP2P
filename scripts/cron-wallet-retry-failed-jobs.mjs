@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import { cronApiBase, requireCronSecret } from "./cron-shared.mjs";
+import { requireCronEnv } from "./cron-shared.mjs";
 
 const NAME = "cron-wallet-retry-failed-jobs";
-const secret = requireCronSecret(NAME);
-const base = cronApiBase();
+const { secret, base } = requireCronEnv(NAME);
 
 const res = await fetch(`${base}/api/internal/wallet/retry-failed-jobs`, {
   method: "POST",

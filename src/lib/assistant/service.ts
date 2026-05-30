@@ -70,15 +70,23 @@ export async function getOrCreateConversation(args: {
       .where(eq(aiAssistantConversations.id, args.conversationId))
       .limit(1);
     if (existing) {
-      if (args.userId && existing.userId && existing.userId !== args.userId) {
-        throw new Error("assistant_forbidden");
+      if (existing.userId) {
+        if (!args.userId || existing.userId !== args.userId) {
+          throw new Error("assistant_forbidden");
+        }
+        return mapConversation(existing);
       }
-      if (
-        args.guestToken &&
-        existing.guestToken &&
-        existing.guestToken !== args.guestToken
-      ) {
-        throw new Error("assistant_forbidden");
+      if (existing.guestToken) {
+        if (args.userId) {
+          throw new Error("assistant_forbidden");
+        }
+        if (
+          !args.guestToken ||
+          existing.guestToken !== args.guestToken
+        ) {
+          throw new Error("assistant_forbidden");
+        }
+        return mapConversation(existing);
       }
       return mapConversation(existing);
     }

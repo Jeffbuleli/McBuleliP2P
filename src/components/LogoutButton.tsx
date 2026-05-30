@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { clearAssistantClientStorage } from "@/lib/assistant/client-storage";
 
 export function LogoutButton({ className }: { className?: string }) {
   const { t } = useI18n();
@@ -19,6 +20,7 @@ export function LogoutButton({ className }: { className?: string }) {
             { method: "POST", credentials: "same-origin" },
             20_000,
           );
+          clearAssistantClientStorage();
           window.location.replace("/");
         } catch {
           setLoading(false);

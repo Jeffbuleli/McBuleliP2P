@@ -57,6 +57,7 @@ export async function GET(req: Request) {
       conversation,
       messages,
       guestToken: userId ? null : guestToken,
+      sessionUserId: userId ?? null,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";

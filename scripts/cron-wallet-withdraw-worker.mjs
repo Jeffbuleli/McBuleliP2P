@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import { cronApiBase, requireCronSecret } from "./cron-shared.mjs";
+import { requireCronEnv } from "./cron-shared.mjs";
 
 const NAME = "cron-wallet-withdraw-worker";
-const secret = requireCronSecret(NAME);
-const base = cronApiBase();
+const { secret, base } = requireCronEnv(NAME);
 
 const res = await fetch(`${base}/api/internal/wallet/withdraw-worker`, {
   method: "POST",
