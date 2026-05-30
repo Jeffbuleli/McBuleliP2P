@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { getJwtSecret } from "./env";
+import { sessionMaxAgeDaysLabel } from "./session-config";
 
 const COOKIE_NAME = "mcbuleli_session";
 
@@ -12,7 +13,7 @@ export async function signSessionToken(userId: string, sessionVersion = 0) {
   return new SignJWT({ sub: userId, sv: sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("30d")
+    .setExpirationTime(sessionMaxAgeDaysLabel())
     .sign(secret);
 }
 

@@ -115,7 +115,7 @@ export async function POST(req: Request) {
   res.cookies.set(
     sessionCookieName(),
     token,
-    getSessionCookieWriteOptions(60 * 60 * 24 * 30),
+    getSessionCookieWriteOptions(),
   );
   return res;
 }

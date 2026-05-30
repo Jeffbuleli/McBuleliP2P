@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     res.cookies.set(
       sessionCookieName(),
       token,
-      getSessionCookieWriteOptions(60 * 60 * 24 * 30),
+      getSessionCookieWriteOptions(),
     );
     reconcileKycAfterLogin(sessionUser.id);
     return res;
@@ -75,6 +75,12 @@ export async function POST(req: Request) {
 }
 
 async function reconcileKycAfterLogin(userId: string) {
+  const { restoreApprovedKycFromHistory } = await import(
+    "@/lib/kyc-restore-from-history"
+  );
+  void restoreApprovedKycFromHistory(userId).catch((err) => {
+    console.warn("[auth/login] kyc restore", err);
+  });
   const { tryRefreshKycIfPending } = await import("@/lib/didit/try-refresh-pending");
   void tryRefreshKycIfPending(userId).catch((err) => {
     console.warn("[auth/login] kyc reconcile", err);

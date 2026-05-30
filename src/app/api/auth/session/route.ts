@@ -1,0 +1,56 @@
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
+import { sessionCookieName, signSessionToken, verifySessionTokenFull } from "@/lib/jwt";
+import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
+import { sessionMaxAgeSeconds } from "@/lib/session-config";
+import { cookies } from "next/headers";
+
+export const dynamic = "force-dynamic";
+
+/** Validate session and refresh cookie (sliding expiry). */
+export async function GET() {
+  const jar = await cookies();
+  const raw = jar.get(sessionCookieName())?.value;
+  if (!raw) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  let userId: string;
+  let sessionVersion: number;
+  try {
+    const verified = await verifySessionTokenFull(raw);
+    userId = verified.userId;
+    sessionVersion = verified.sessionVersion;
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  const db = getDb();
+  const [user] = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      sessionVersion: users.sessionVersion,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user || user.sessionVersion !== sessionVersion) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  const token = await signSessionToken(user.id, user.sessionVersion);
+  const res = NextResponse.json({
+    ok: true,
+    user: { id: user.id, email: user.email, role: user.role },
+  });
+  res.cookies.set(
+    sessionCookieName(),
+    token,
+    getSessionCookieWriteOptions(sessionMaxAgeSeconds()),
+  );
+  return res;
+}

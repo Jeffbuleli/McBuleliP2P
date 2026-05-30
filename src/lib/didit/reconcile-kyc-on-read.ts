@@ -1,6 +1,7 @@
 import { and, eq, isNotNull, or } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { getUserKycRow, resetUserKycForRetry } from "@/lib/kyc-service";
+import { restoreApprovedKycFromHistory } from "@/lib/kyc-restore-from-history";
 import { reconcileUserKycState } from "@/lib/didit/reconcile-stale-kyc";
 
 /** Heal inconsistent KYC rows when the user opens status / KYC UI. */
@@ -13,6 +14,7 @@ export async function reconcileKycOnStatusRead(userId: string): Promise<void> {
   if (status === "approved") return;
 
   if (status === "none") {
+    if (await restoreApprovedKycFromHistory(userId)) return;
     if (row.diditSessionId?.trim() || row.diditSessionStatus?.trim()) {
       await resetUserKycForRetry(userId);
     }

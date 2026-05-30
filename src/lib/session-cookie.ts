@@ -2,10 +2,16 @@
  * Shared session cookie flags for login, register, Pi auth, and logout.
  * Logout must use the same SameSite/Secure as login or the browser may not clear the cookie.
  *
- * Pi Browser / in-app WebView: if the session disappears right after login, set on the host
- * (e.g. Render): SESSION_COOKIE_SAMESITE=none — requires HTTPS (SameSite=None implies Secure).
+ * Default SameSite is Lax (reliable for mcbuleli.org). Set SESSION_COOKIE_SAMESITE=none
+ * only for Pi Browser / embedded WebViews that require cross-site cookies.
  */
-export function getSessionCookieWriteOptions(maxAgeSeconds: number) {
+import { sessionMaxAgeSeconds } from "@/lib/session-config";
+
+export { sessionMaxAgeSeconds };
+
+export function getSessionCookieWriteOptions(
+  maxAgeSeconds = sessionMaxAgeSeconds(),
+) {
   const production = process.env.NODE_ENV === "production";
   const raw = process.env.SESSION_COOKIE_SAMESITE?.trim().toLowerCase();
   const sameSite: "lax" | "strict" | "none" =
@@ -13,11 +19,7 @@ export function getSessionCookieWriteOptions(maxAgeSeconds: number) {
       ? "none"
       : raw === "strict"
         ? "strict"
-        : raw === "lax"
-          ? "lax"
-          : production
-            ? "none"
-            : "lax";
+        : "lax";
   const secure = production || sameSite === "none";
   return {
     httpOnly: true as const,
@@ -37,11 +39,7 @@ export function getSessionCookieClearOptions() {
       ? "none"
       : raw === "strict"
         ? "strict"
-        : raw === "lax"
-          ? "lax"
-          : production
-            ? "none"
-            : "lax";
+        : "lax";
   const secure = production || sameSite === "none";
   return {
     httpOnly: true as const,
