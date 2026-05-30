@@ -36,6 +36,7 @@ export default function WithdrawActivityDetailPage() {
   const params = useParams<{ id: string }>();
   const [w, setW] = useState<Withdrawal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/withdrawals/${params.id}`);
@@ -83,6 +84,28 @@ export default function WithdrawActivityDetailPage() {
       : w.status === WithdrawalStatus.REJECTED || w.status === WithdrawalStatus.FAILED
         ? "failed"
         : "pending";
+
+  const mayCancel =
+    w.status === WithdrawalStatus.QUEUED ||
+    w.status === WithdrawalStatus.DELAYED_BATCH ||
+    w.status === WithdrawalStatus.PENDING_AGENT;
+
+  async function cancelWithdrawal() {
+    if (!w || !mayCancel || cancelling) return;
+    if (!window.confirm(t("withdraw_cancel_confirm"))) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/withdrawals/${w.id}/cancel`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        await load();
+        window.alert(t("withdraw_cancel_done"));
+      }
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   return (
     <div className="pb-8">
@@ -139,6 +162,19 @@ export default function WithdrawActivityDetailPage() {
             : []),
         ]}
       />
+
+      {mayCancel ? (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => void cancelWithdrawal()}
+            disabled={cancelling}
+            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-800 disabled:opacity-60"
+          >
+            {t("withdraw_cancel")}
+          </button>
+        </div>
+      ) : null}
 
       <FlowHubLink label={t("wallet_history_title")} href="/app/wallet/history" />
     </div>

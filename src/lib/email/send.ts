@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import {
   appBaseUrl,
   emailFromAddress,
@@ -87,6 +88,9 @@ export async function sendEmail(args: {
       subject: args.subject,
       html: args.html,
       text: args.text,
+      headers: {
+        "X-Entity-Ref-ID": crypto.randomUUID(),
+      },
       ...(attachments?.length ? { attachments } : {}),
     }),
   });

@@ -1,6 +1,9 @@
 import crypto from "node:crypto";
+import { and, eq, gt, sql } from "drizzle-orm";
 import type { NetworkId } from "./networks";
 import { canonicalFromBinanceNetwork, USDT_NETWORKS } from "./networks";
+import { getDb, withdrawals } from "@/db";
+import { WithdrawalStatus } from "@/lib/status";
 import { getBinanceWalletCredentials } from "@/lib/env";
 import {
   binanceWalletApiBase,
@@ -213,6 +216,37 @@ export async function binanceWithdraw(args: {
   }>;
 }
 
+/** Completed McBuleli withdrawals with zero Binance fee → treat destination as internal. */
+async function isInternalFromMcBuleliHistory(args: {
+  network: NetworkId;
+  address: string;
+}): Promise<boolean> {
+  const key = withdrawAddressCacheKey(args.network, args.address);
+  const db = getDb();
+  const rows = await db
+    .select({
+      networkCanonical: withdrawals.networkCanonical,
+      toAddress: withdrawals.toAddress,
+    })
+    .from(withdrawals)
+    .where(
+      and(
+        eq(withdrawals.asset, "USDT"),
+        eq(withdrawals.status, WithdrawalStatus.COMPLETED),
+        sql`${withdrawals.providerFee}::numeric = 0`,
+        gt(withdrawals.fee, sql`0`),
+      ),
+    )
+    .limit(200);
+  for (const row of rows) {
+    const net = row.networkCanonical as NetworkId;
+    if (withdrawAddressCacheKey(net, row.toAddress) === key) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Binance USDT withdraw amount — max 8 decimals, no trailing zeros. */
 export function formatBinanceUsdtAmount(amount: string | number): string {
   const n = Number(amount);
@@ -238,7 +272,8 @@ export async function binanceUsdtWithdrawApplyAmount(args: {
     throw new Error("invalid_withdraw_amount");
   }
 
-  const isInternal = await isKnownBinanceInternalWithdrawAddress({
+  invalidateBinanceInternalAddressCache();
+  const isInternal = await resolveBinanceWithdrawIsInternal({
     network: args.network,
     address: args.address,
   });
@@ -266,7 +301,7 @@ export async function binanceWithdrawUsdt(args: {
   withdrawOrderId?: string;
   tag?: string;
 }) {
-  const { applyAmount } = await binanceUsdtWithdrawApplyAmount({
+  const { applyAmount, isInternal } = await binanceUsdtWithdrawApplyAmount({
     network: args.network,
     address: args.address,
     netAmount: args.netAmount,
@@ -279,6 +314,7 @@ export async function binanceWithdrawUsdt(args: {
     tag: args.tag,
     withdrawOrderId: args.withdrawOrderId,
     walletType: 0,
+    transactionFeeFlag: isInternal ? true : undefined,
   });
 }
 
@@ -403,6 +439,43 @@ export type BinanceWithdrawHistoryRow = {
 
 let internalAddressCache: { at: number; keys: Set<string> } | null = null;
 const INTERNAL_ADDR_CACHE_MS = 5 * 60 * 1000;
+
+export function invalidateBinanceInternalAddressCache(): void {
+  internalAddressCache = null;
+}
+
+/** Remember an address Binance treated as internal (fee 0). */
+export function registerBinanceInternalWithdrawAddress(args: {
+  network: NetworkId;
+  address: string;
+}): void {
+  const key = withdrawAddressCacheKey(args.network, args.address);
+  if (!internalAddressCache) {
+    internalAddressCache = { at: Date.now(), keys: new Set(parseInternalAddressAllowlist()) };
+  }
+  internalAddressCache.keys.add(key);
+}
+
+/** Binance cache + McBuleli history + env allowlist. */
+export async function resolveBinanceWithdrawIsInternal(args: {
+  network: NetworkId;
+  address: string;
+}): Promise<boolean> {
+  const normalized = normalizeWithdrawAddressForNetwork(args.network, args.address);
+  if (normalized.length < 10) return false;
+  if (
+    await isKnownBinanceInternalWithdrawAddress({
+      network: args.network,
+      address: args.address,
+    })
+  ) {
+    return true;
+  }
+  return isInternalFromMcBuleliHistory({
+    network: args.network,
+    address: args.address,
+  });
+}
 
 /** Addresses previously withdrawn to with zero network fee (Binance internal). */
 export async function refreshBinanceInternalWithdrawAddresses(): Promise<Set<string>> {

@@ -7,12 +7,21 @@ import {
   walletWithdrawalBatchDelayMaxMinutes,
   walletWithdrawalBatchDelayMinMinutes,
 } from "@/lib/usdt-wallet-features";
-import { binanceWithdrawUsdt, binanceWithdrawHistoryById, binanceUsdtWithdrawFee } from "@/lib/binance";
+import {
+  binanceWithdrawUsdt,
+  binanceWithdrawHistoryById,
+  binanceUsdtWithdrawFee,
+  registerBinanceInternalWithdrawAddress,
+} from "@/lib/binance";
 import { createUserNotification } from "@/lib/notifications-service";
-import { notifyWithdrawalCompletedEmail } from "@/lib/email/wallet-crypto-notify";
+import {
+  notifyWithdrawalCompletedEmail,
+  notifyWithdrawalRejectedEmail,
+} from "@/lib/email/wallet-crypto-notify";
 import { runEmailTask } from "@/lib/email/schedule-email";
 import type { NetworkId } from "@/lib/networks";
 import { finalizeUsdtWithdrawFeeSplit } from "@/lib/withdraw-fee-split";
+import { refundAndRejectWithdrawal } from "@/lib/withdraw-refund";
 
 export type WithdrawDecision = "AUTO_NOW" | "DELAYED_BATCH" | "MANUAL_REVIEW";
 
@@ -208,6 +217,89 @@ async function markFailed(jobId: string, error: string) {
       updatedAt: new Date(),
     })
     .where(eq(withdrawalQueueJobs.id, jobId));
+
+  if (terminal) {
+    await autoRefundFailedWithdrawal(job.withdrawalId, error);
+  }
+}
+
+async function autoRefundFailedWithdrawal(withdrawalId: string, error: string) {
+  const db = getDb();
+  const [w] = await db
+    .select()
+    .from(withdrawals)
+    .where(eq(withdrawals.id, withdrawalId))
+    .limit(1);
+  if (!w || w.externalId?.trim()) return;
+
+  const reason =
+    error.trim().slice(0, 500) ||
+    "Automatic refund after repeated withdrawal failures.";
+
+  const out = await refundAndRejectWithdrawal({
+    withdrawalId,
+    reason,
+  });
+  if (!out.ok) return;
+
+  await createUserNotification({
+    userId: w.userId,
+    kind: "withdrawal_rejected",
+    payload: {
+      withdrawalId,
+      asset: w.asset,
+      reason,
+    },
+  });
+  await runEmailTask(async () => {
+    await notifyWithdrawalRejectedEmail({
+      userId: w.userId,
+      withdrawalId,
+      asset: w.asset,
+      amount: String(w.amount),
+      fee: String(w.fee),
+      networkCanonical: w.networkCanonical,
+      address: w.toAddress,
+      reason,
+    });
+  });
+}
+
+/** Refund withdrawals whose worker job is terminal but row still queued. */
+async function repairTerminalFailedWithdrawals(): Promise<number> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      withdrawalId: withdrawalQueueJobs.withdrawalId,
+      lastError: withdrawalQueueJobs.lastError,
+    })
+    .from(withdrawalQueueJobs)
+    .innerJoin(
+      withdrawals,
+      eq(withdrawals.id, withdrawalQueueJobs.withdrawalId),
+    )
+    .where(
+      and(
+        eq(withdrawalQueueJobs.status, "failed"),
+        inArray(withdrawals.status, [
+          WithdrawalStatus.QUEUED,
+          WithdrawalStatus.DELAYED_BATCH,
+          WithdrawalStatus.PROCESSING,
+          WithdrawalStatus.PENDING_AGENT,
+        ]),
+      ),
+    )
+    .limit(20);
+
+  let repaired = 0;
+  for (const row of rows) {
+    await autoRefundFailedWithdrawal(
+      row.withdrawalId,
+      row.lastError ?? "withdrawal_failed",
+    );
+    repaired++;
+  }
+  return repaired;
 }
 
 async function markDone(args: { jobId: string; txid?: string | null; providerRef?: string | null }) {
@@ -270,6 +362,34 @@ async function executeJob(job: typeof withdrawalQueueJobs.$inferSelect): Promise
       const history = await binanceWithdrawHistoryById(sent.id).catch(() => null);
       const actualFee = history ? Number(history.transactionFee) : null;
       const listFee = await binanceUsdtWithdrawFee(network).catch(() => 0);
+
+      const isInternalTransfer =
+        history?.transferType === 1 ||
+        (Number.isFinite(actualFee ?? NaN) && actualFee === 0) ||
+        (history?.txId ?? "").trim().toLowerCase() === "internal";
+      if (isInternalTransfer) {
+        registerBinanceInternalWithdrawAddress({
+          network,
+          address: w.toAddress,
+        });
+      }
+
+      const received = history ? Number(history.amount) : NaN;
+      const expectedNet = Number(w.amount);
+      if (
+        Number.isFinite(received) &&
+        Number.isFinite(expectedNet) &&
+        !isInternalTransfer &&
+        received + 1e-6 < expectedNet
+      ) {
+        console.warn("[withdraw-worker] recipient_amount_short", {
+          withdrawalId: w.id,
+          expectedNet,
+          received,
+          actualFee,
+        });
+      }
+
       const feeSplit = await finalizeUsdtWithdrawFeeSplit({
         network,
         userFeeUsdt: Number(w.fee),
@@ -347,6 +467,7 @@ export async function runWithdrawalWorker(maxJobs = 20): Promise<{
 }> {
   await releaseStaleRunningJobs();
   const repaired = await repairOrphanBinanceWithdrawals();
+  const refunded = await repairTerminalFailedWithdrawals();
   let processed = 0;
   let completed = 0;
   let failed = 0;
@@ -367,7 +488,7 @@ export async function runWithdrawalWorker(maxJobs = 20): Promise<{
       await markFailed(job.id, out.message ?? "unknown_error");
     }
   }
-  return { processed, completed, failed, repaired };
+  return { processed, completed, failed, repaired: repaired + refunded };
 }
 
 export async function runRetryFailedJobs(): Promise<{ reopened: number }> {

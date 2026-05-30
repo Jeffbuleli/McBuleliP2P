@@ -59,6 +59,7 @@ export async function sendMcBuleliWalletCryptoEmail(args: {
     illustration: def.illustration,
     locale,
     detailRows: args.detailRows,
+    useInlineImages: true,
   });
 
   return sendBrandedEmail({
@@ -66,6 +67,7 @@ export async function sendMcBuleliWalletCryptoEmail(args: {
     subject,
     html,
     text,
+    illustration: def.illustration,
   });
 }
 

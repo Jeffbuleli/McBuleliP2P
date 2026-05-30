@@ -1,13 +1,9 @@
-import { and, eq, gt, sql } from "drizzle-orm";
-import { getDb, withdrawals } from "@/db";
 import {
   binanceUsdtNetworkWithdrawConfig,
-  isKnownBinanceInternalWithdrawAddress,
+  resolveBinanceWithdrawIsInternal,
   normalizeWithdrawAddressForNetwork,
-  withdrawAddressCacheKey,
 } from "@/lib/binance";
 import type { NetworkId } from "@/lib/networks";
-import { WithdrawalStatus } from "@/lib/status";
 import {
   DEFAULT_BINANCE_WITHDRAW_INTERNAL_MIN_USDT,
   DEFAULT_BINANCE_WITHDRAW_MIN_USDT,
@@ -25,37 +21,6 @@ export type UsdtWithdrawQuote = {
   binanceWithdrawInternalMin: number;
 };
 
-async function isInternalFromDb(args: {
-  network: NetworkId;
-  address: string;
-}): Promise<boolean> {
-  const key = withdrawAddressCacheKey(args.network, args.address);
-  const db = getDb();
-  const rows = await db
-    .select({
-      networkCanonical: withdrawals.networkCanonical,
-      toAddress: withdrawals.toAddress,
-    })
-    .from(withdrawals)
-    .where(
-      and(
-        eq(withdrawals.asset, "USDT"),
-        eq(withdrawals.status, WithdrawalStatus.COMPLETED),
-        sql`${withdrawals.providerFee}::numeric = 0`,
-        gt(withdrawals.fee, sql`0`),
-      ),
-    )
-    .limit(200);
-  for (const row of rows) {
-    const net = row.networkCanonical as NetworkId;
-    if (
-      withdrawAddressCacheKey(net, row.toAddress) === key
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /** Quote user fee + minimum net from Binance config and internal-address detection. */
 export async function resolveUsdtWithdrawQuote(args: {
@@ -78,18 +43,13 @@ export async function resolveUsdtWithdrawQuote(args: {
     args.network,
     args.address,
   );
-  let isInternal = false;
-  if (normalized.length >= 10) {
-    isInternal =
-      (await isKnownBinanceInternalWithdrawAddress({
-        network: args.network,
-        address: args.address,
-      })) ||
-      (await isInternalFromDb({
-        network: args.network,
-        address: args.address,
-      }));
-  }
+  const isInternal =
+    normalized.length >= 10
+      ? await resolveBinanceWithdrawIsInternal({
+          network: args.network,
+          address: args.address,
+        })
+      : false;
 
   const userFeeUsdt = EXTERNAL_WITHDRAW_FEE_USDT;
   const minNetUsdt = isInternal

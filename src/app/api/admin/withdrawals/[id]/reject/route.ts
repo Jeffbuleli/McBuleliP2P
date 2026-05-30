@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
-import { getDb, users, withdrawals } from "@/db";
+import { eq } from "drizzle-orm";
+import { getDb, withdrawals } from "@/db";
 import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
 import { adminRejectWithdrawalSchema } from "@/lib/validation";
 import { WithdrawalStatus } from "@/lib/status";
-import { totalDebitedFromRow } from "@/lib/withdraw-fees";
 import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
@@ -13,6 +12,10 @@ import { createUserNotification } from "@/lib/notifications-service";
 import { scheduleEmailTask } from "@/lib/email/schedule-email";
 import { resolveEmailLocale } from "@/lib/email/locale";
 import { notifyWithdrawalRejectedEmail } from "@/lib/email/wallet-crypto-notify";
+import {
+  CANCELLABLE_WITHDRAWAL_STATUSES,
+  refundAndRejectWithdrawal,
+} from "@/lib/withdraw-refund";
 
 export async function POST(
   req: Request,
@@ -47,13 +50,16 @@ export async function POST(
   if (!w) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
-  if (w.status !== WithdrawalStatus.PROCESSING) {
+  if (
+    !(CANCELLABLE_WITHDRAWAL_STATUSES as readonly string[]).includes(w.status)
+  ) {
     return NextResponse.json(
-      { message: "Reject only withdrawals in progress (claimed)." },
+      { message: "Withdrawal cannot be rejected in its current state." },
       { status: 409 },
     );
   }
   if (
+    w.status === WithdrawalStatus.PROCESSING &&
     staff.role !== "super_admin" &&
     w.assignedToUserId !== staff.id
   ) {
@@ -63,35 +69,16 @@ export async function POST(
     );
   }
 
-  const refund = totalDebitedFromRow(w);
-  const isPi = w.asset.toUpperCase() === "PI";
-
-  await db.transaction(async (tx) => {
-    if (isPi) {
-      await tx
-        .update(users)
-        .set({
-          piBalance: sql`${users.piBalance} + ${refund}::numeric`,
-        })
-        .where(eq(users.id, w.userId));
-    } else {
-      await tx
-        .update(users)
-        .set({
-          balance: sql`${users.balance} + ${refund}::numeric`,
-        })
-        .where(eq(users.id, w.userId));
-    }
-    await tx
-      .update(withdrawals)
-      .set({
-        status: WithdrawalStatus.REJECTED,
-        failureReason: parsed.data.reason.trim(),
-        processedByUserId: staff.id,
-        completedAt: new Date(),
-      })
-      .where(eq(withdrawals.id, id));
+  const reason = parsed.data.reason.trim();
+  const out = await refundAndRejectWithdrawal({
+    withdrawalId: id,
+    reason,
+    processedByUserId: staff.id,
   });
+
+  if (!out.ok) {
+    return NextResponse.json({ message: out.message }, { status: 409 });
+  }
 
   const [updated] = await db
     .select()
@@ -105,9 +92,9 @@ export async function POST(
     resourceType: "withdrawal",
     resourceId: id,
     meta: {
-      reason: parsed.data.reason.trim(),
+      reason,
       asset: w.asset,
-      refundApprox: refund,
+      refundApprox: out.refund,
     },
   });
 
@@ -117,7 +104,7 @@ export async function POST(
     payload: {
       withdrawalId: id,
       asset: w.asset,
-      reason: parsed.data.reason.trim(),
+      reason,
     },
   });
 
@@ -131,7 +118,7 @@ export async function POST(
       fee: w.fee?.toString?.() ?? String(w.fee),
       networkCanonical: w.networkCanonical,
       address: w.toAddress,
-      reason: parsed.data.reason.trim(),
+      reason,
       locale,
     });
   });

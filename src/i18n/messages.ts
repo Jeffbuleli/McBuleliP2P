@@ -2845,6 +2845,10 @@ export const en = {
   withdraw_confirm: "Confirm",
   withdraw_2fa_label: "Authenticator code (2FA)",
   withdraw_confirm_debit: "Net {net} {unit} · wallet debited {total} {unit}",
+  withdraw_cancel: "Cancel withdrawal",
+  withdraw_cancel_confirm:
+    "Cancel this withdrawal and refund your wallet balance?",
+  withdraw_cancel_done: "Withdrawal cancelled — balance refunded.",
   withdraw_warn: "⚠️ Wrong address/network = loss",
   fee_note: "+ {fee} USDT fee · min net {min} USDT",
   fee_note_internal:
@@ -6064,6 +6068,10 @@ export const fr: Messages = {
   withdraw_confirm: "Confirmer",
   withdraw_2fa_label: "Code authentificateur (2FA)",
   withdraw_confirm_debit: "Net {net} {unit} · portefeuille débité {total} {unit}",
+  withdraw_cancel: "Annuler le retrait",
+  withdraw_cancel_confirm:
+    "Annuler ce retrait et rembourser votre portefeuille ?",
+  withdraw_cancel_done: "Retrait annulé — solde remboursé.",
   withdraw_warn: "⚠️ Mauvaise adresse/réseau = perte",
   fee_note: "+ {fee} USDT frais · net min. {min} USDT",
   fee_note_internal:

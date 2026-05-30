@@ -5,6 +5,10 @@ import {
   logoUrl,
   type EmailIllustration,
 } from "@/lib/email/config";
+import {
+  EMAIL_LOGO_CID,
+  emailIllustrationCid,
+} from "@/lib/email/email-inline-images";
 import type { EmailCopyBlock } from "@/lib/email/copy";
 import type { EmailDetailRow } from "@/lib/email/wallet-email-details";
 
@@ -24,6 +28,8 @@ export type McBuleliEmailLayoutArgs = {
   /** When true, href uses Resend {{{ACTION_URL}}} placeholder. */
   resendVariables?: boolean;
   detailRows?: EmailDetailRow[];
+  /** Embed PNGs via Resend CID attachments (works in spam folders). */
+  useInlineImages?: boolean;
 };
 
 function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): string {
@@ -39,18 +45,23 @@ function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): stri
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:360px;">${cells}</table>`;
 }
 
-function renderHeaderLogo(): string {
-  const src = logoUrl();
+function renderHeaderLogo(useInlineImages: boolean): string {
+  const src = useInlineImages ? `cid:${EMAIL_LOGO_CID}` : logoUrl();
   return `<td style="vertical-align:middle;padding-right:10px;"><img src="${src}" width="48" height="48" alt="McBuleli" style="display:block;border:0;border-radius:10px;" /></td>`;
 }
 
-function renderIllustration(illustration: EmailIllustration): string {
-  const src = illustrationUrl(illustration);
+function renderIllustration(
+  illustration: EmailIllustration,
+  useInlineImages: boolean,
+): string {
+  const src = useInlineImages
+    ? `cid:${emailIllustrationCid(illustration)}`
+    : illustrationUrl(illustration);
   return `<img src="${src}" width="200" height="200" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />`;
 }
 
-function renderFooterLogo(): string {
-  const src = logoUrl();
+function renderFooterLogo(useInlineImages: boolean): string {
+  const src = useInlineImages ? `cid:${EMAIL_LOGO_CID}` : logoUrl();
   return `<img src="${src}" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;border-radius:6px;opacity:0.9;" />`;
 }
 
@@ -65,6 +76,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     locale,
     resendVariables,
     detailRows,
+    useInlineImages = false,
   } = args;
   const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
   const bodyHtml = resendVariables
@@ -112,7 +124,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
             <td style="padding:24px 28px 8px;text-align:center;">
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
                 <tr>
-                  ${renderHeaderLogo()}
+                  ${renderHeaderLogo(useInlineImages)}
                   <td style="vertical-align:middle;text-align:left;">
                     <p style="margin:0;font-size:20px;font-weight:800;color:${EMAIL_BRAND.primary};letter-spacing:-0.02em;">McBuleli</p>
                     <p style="margin:2px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};">${brandTagline}</p>
@@ -123,7 +135,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           </tr>
           <tr>
             <td style="padding:8px 28px 0;text-align:center;">
-              ${renderIllustration(illustration)}
+              ${renderIllustration(illustration, useInlineImages)}
             </td>
           </tr>
           <tr>
@@ -149,7 +161,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           }
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
-              ${renderFooterLogo()}
+              ${renderFooterLogo(useInlineImages)}
               <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${EMAIL_BRAND.text};">McBuleli</p>
               <p style="margin:0 0 10px;font-size:12px;color:${EMAIL_BRAND.muted};">${escHtml(copy.footerHelp)} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(copy.footerContact)}</a></p>
               <p style="margin:0 0 8px;font-size:12px;color:${EMAIL_BRAND.muted};">

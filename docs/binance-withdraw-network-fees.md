@@ -265,6 +265,7 @@ Avant d’approuver ou debugger un ticket :
 | Variable | Rôle |
 |----------|------|
 | `BINANCE_WALLET_API_KEY` / `BINANCE_WALLET_API_SECRET` | Clé avec **Reading + Withdrawals** |
+| `BINANCE_INTERNAL_WITHDRAW_ADDRESSES` | Liste `TRC20:Txxx,ERC20:0x...,BEP20:0x...` — adresses Binance connues (fee 0 via API). Complété automatiquement après chaque retrait interne réussi. |
 | IP whitelist Binance | Outbound IP du serveur Render (voir `docs/wallet-cron-render.md`, `/api/config/outbound-ip`) |
 | `WALLET_AUTOMATION_ENABLED` | Active worker retrait auto |
 

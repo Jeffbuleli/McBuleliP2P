@@ -37,12 +37,12 @@ export async function sendMcBuleliTransactionalEmail(args: {
 
   const subject = emailSubject(copyKey, locale);
 
-  // Always send inline HTML with https://mcbuleli.org images (dashboard templates omit assets).
   const { html, text } = renderMcBuleliEmail({
     copy,
     actionUrl: args.actionUrl,
     illustration: def.illustration,
     locale,
+    useInlineImages: true,
   });
 
   return sendBrandedEmail({
@@ -50,5 +50,6 @@ export async function sendMcBuleliTransactionalEmail(args: {
     subject,
     html,
     text,
+    illustration: def.illustration,
   });
 }

@@ -68,18 +68,20 @@ Fichiers source :
 
 ## Images (logo & illustrations)
 
-**Envois réels** : PNG hébergés sur **`https://mcbuleli.org`** (même principe que vos templates Resend qui fonctionnaient) :
+**Envois réels** : PNG **embarqués en CID** via Resend (`buildMcBuleliInlineAttachments`) — visibles même en dossier spam (Gmail ne bloque pas les pièces jointes inline).
 
-- Logo : `https://mcbuleli.org/brand/logo.png`
-- Illustrations : `https://mcbuleli.org/email/email-verify.png`, etc.
+- Logo : `public/brand/logo.png` → `cid:mcbuleli-logo`
+- Illustrations : `public/email/email-*.png` → `cid:mcbuleli-illus-*`
 
-L’app envoie **toujours le HTML inline** généré par `renderMcBuleliEmail` — **ne pas** utiliser `RESEND_USE_TEMPLATES=true` pour les envois prod (sinon Resend renvoie d’anciens templates sans images).
+Les URLs `https://mcbuleli.org/brand/logo.png` restent utilisées pour `npm run resend:sync-templates` (aperçu dashboard uniquement).
+
+L’app envoie **toujours le HTML inline** généré par `renderMcBuleliEmail` avec `useInlineImages: true` — **ne pas** utiliser `RESEND_USE_TEMPLATES=true` pour les envois prod.
 
 ```bash
 npm run resend:sync-templates   # optionnel : aligner l’aperçu dashboard
 ```
 
-`NEXT_PUBLIC_APP_URL` = liens CTA · images = toujours `https://mcbuleli.org`.
+`AUTH_EMAIL_FROM=McBuleli <noreply@mcbuleli.org>` · vérifier SPF/DKIM sur Resend pour la délivrabilité inbox.
 
 ---
 
