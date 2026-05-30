@@ -17,6 +17,7 @@ export type AssistantMessages = {
   suggestedForYou: string;
   directAccess: string;
   openInApp: string;
+  languageSwitched: string;
   errorGeneric: string;
   rateLimited: string;
   errorDbNotReady: string;
@@ -50,6 +51,7 @@ export const assistantEn: AssistantMessages = {
   suggestedForYou: "Suggested for you",
   directAccess: "Open in McBuleli",
   openInApp: "Go to this screen",
+  languageSwitched: "Next replies will be in English.",
   errorGeneric: "Something went wrong. Please try again.",
   rateLimited: "Too many messages. Please wait a moment.",
   errorDbNotReady:
@@ -83,6 +85,7 @@ export const assistantFr: AssistantMessages = {
   suggestedForYou: "Suggestions pour vous",
   directAccess: "Accès direct dans l'app",
   openInApp: "Ouvrir cette page",
+  languageSwitched: "Les prochaines réponses seront en français.",
   errorGeneric: "Une erreur s'est produite. Réessayez.",
   rateLimited: "Trop de messages. Patientez un instant.",
   errorDbNotReady:
@@ -116,6 +119,7 @@ export const assistantSw: AssistantMessages = {
   suggestedForYou: "Mapendekezo kwako",
   directAccess: "Fungua kwenye McBuleli",
   openInApp: "Nenda kwenye ukurasa huu",
+  languageSwitched: "Majibu yajayo yatakuwa kwa Kiswahili.",
   errorGeneric: "Kuna hitilafu. Jaribu tena.",
   rateLimited: "Ujumbe mwingi sana. Subiri kidogo.",
   errorDbNotReady:

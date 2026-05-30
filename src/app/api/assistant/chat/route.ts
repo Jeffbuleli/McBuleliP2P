@@ -64,6 +64,7 @@ export async function POST(req: Request) {
               conversationId: conversation.id,
               userMessage: parsed.data.message,
               pageContext: parsed.data.pageContext ?? null,
+              locale,
             })) {
               controller.enqueue(encoder.encode(sseLine(event)));
             }
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
       conversationId: conversation.id,
       userMessage: parsed.data.message,
       pageContext: parsed.data.pageContext ?? null,
+      locale,
     });
 
     return Response.json({

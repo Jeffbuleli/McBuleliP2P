@@ -24,7 +24,9 @@ import {
   ASSISTANT_CONVERSATION_KEY,
   ASSISTANT_GUEST_KEY,
   clearAssistantClientStorage,
+  readAssistantLocale,
   syncAssistantSessionUser,
+  writeAssistantLocale,
   writeAssistantSessionUser,
 } from "@/lib/assistant/client-storage";
 
@@ -65,6 +67,7 @@ export function AssistantWidget() {
   const [booting, setBooting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idlePulse, setIdlePulse] = useState(false);
+  const [localeNotice, setLocaleNotice] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -72,8 +75,38 @@ export function AssistantWidget() {
   const pageContext = detectPageContext(pathname ?? "/");
 
   useEffect(() => {
+    const stored = readAssistantLocale();
+    if (stored) {
+      setAssistantLocale(stored);
+      return;
+    }
     setAssistantLocale(resolveAssistantLocale(appLocale));
   }, [appLocale]);
+
+  const syncConversationLocale = useCallback(
+    async (nextLocale: AssistantLocale) => {
+      if (!conversationId) return;
+      const params = new URLSearchParams({
+        locale: nextLocale,
+        conversationId,
+        ...(guestToken ? { guestToken } : {}),
+        ...(pageContext ? { pageContext } : {}),
+      });
+      await fetch(`/api/assistant/conversation?${params}`, {
+        credentials: "include",
+        cache: "no-store",
+      }).catch(() => {});
+    },
+    [conversationId, guestToken, pageContext],
+  );
+
+  function onAssistantLocaleChange(next: AssistantLocale) {
+    if (next === assistantLocale) return;
+    setAssistantLocale(next);
+    writeAssistantLocale(next);
+    setLocaleNotice(getAssistantMessages(next).languageSwitched);
+    void syncConversationLocale(next);
+  }
 
   const scrollBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -361,6 +394,7 @@ export function AssistantWidget() {
     setDraft("");
     setLoading(true);
     setError(null);
+    setLocaleNotice(null);
 
     const optimistic: ChatMessage = {
       id: `tmp-${Date.now()}`,
@@ -501,7 +535,7 @@ export function AssistantWidget() {
                     <button
                       key={l}
                       type="button"
-                      onClick={() => setAssistantLocale(l)}
+                      onClick={() => onAssistantLocaleChange(l)}
                       className={`rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
                         assistantLocale === l
                           ? "bg-[#305f33] text-white"
@@ -521,6 +555,12 @@ export function AssistantWidget() {
                   </button>
                 </div>
               </header>
+
+              {localeNotice ? (
+                <p className="border-b border-[#305f33]/30 bg-[#305f33]/10 px-4 py-2 text-center text-[11px] text-[#6ee7a0]">
+                  {localeNotice}
+                </p>
+              ) : null}
 
               {/* Messages */}
               <div

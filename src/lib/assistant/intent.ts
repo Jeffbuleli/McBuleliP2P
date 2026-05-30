@@ -117,78 +117,102 @@ export function recommendServices(
   intents: string[],
   locale: AssistantLocale,
 ): { label: string; href: string; reason: string }[] {
+  const L = {
+    en: {
+      bot: "AI Trading Bot",
+      botR: "You seem interested in trading",
+      p2p: "P2P Marketplace",
+      p2pR: "Great for buying/selling with mobile money",
+      stakeR: "Explore staking and yields",
+      wallet: "Wallet",
+      walletR: "Mobile money deposits & withdrawals",
+      deposit: "USDT Deposit",
+      depositR: "Start with a guided deposit",
+      kycR: "Complete your identity verification",
+      sec: "Security",
+      secR: "Strengthen your account security",
+      avecR: "Group savings with your community",
+    },
+    fr: {
+      bot: "Bot de trading IA",
+      botR: "Vous semblez intéressé par le trading",
+      p2p: "Marketplace P2P",
+      p2pR: "Idéal pour acheter/vendre avec mobile money",
+      stakeR: "Explorez le staking et les rendements",
+      wallet: "Portefeuille",
+      walletR: "Dépôts et retraits mobile money",
+      deposit: "Dépôt USDT",
+      depositR: "Commencez par un dépôt guidé",
+      kycR: "Complétez votre vérification d'identité",
+      sec: "Sécurité",
+      secR: "Renforcez la sécurité de votre compte",
+      avecR: "Épargne collective avec votre communauté",
+    },
+    sw: {
+      bot: "Boti ya biashara AI",
+      botR: "Unaonekana una nia ya biashara",
+      p2p: "Soko la P2P",
+      p2pR: "Bora kwa kununua/kuuza kwa pesa ya simu",
+      stakeR: "Chunguza staking na mapato",
+      wallet: "Pochi",
+      walletR: "Amana na kutoa kwa pesa ya simu",
+      deposit: "Amana USDT",
+      depositR: "Anza kwa amana ya mwongozo",
+      kycR: "Kamilisha uthibitisho wa utambulisho",
+      sec: "Usalama",
+      secR: "Imarisha usalama wa akaunti yako",
+      avecR: "Akiba ya kikundi na jamii yako",
+    },
+  }[locale === "fr" ? "fr" : locale === "sw" ? "sw" : "en"];
+
   const recs: { label: string; href: string; reason: string; match: UserIntent }[] = [
     {
       match: "trader",
-      label: locale === "fr" ? "Bot de trading IA" : "AI Trading Bot",
+      label: L.bot,
       href: "/app/trade/bots",
-      reason:
-        locale === "fr"
-          ? "Vous semblez intéressé par le trading"
-          : "You seem interested in trading",
+      reason: L.botR,
     },
     {
       match: "p2p",
-      label: locale === "fr" ? "Marketplace P2P" : "P2P Marketplace",
+      label: L.p2p,
       href: "/app/p2p",
-      reason:
-        locale === "fr"
-          ? "Idéal pour acheter/vendre avec mobile money"
-          : "Great for buying/selling with mobile money",
+      reason: L.p2pR,
     },
     {
       match: "investor",
       label: "Staking",
       href: "/app/staking",
-      reason:
-        locale === "fr"
-          ? "Explorez le staking et les rendements"
-          : "Explore staking and yields",
+      reason: L.stakeR,
     },
     {
       match: "mobile_money",
-      label: locale === "fr" ? "Portefeuille" : "Wallet",
+      label: L.wallet,
       href: "/app/wallet",
-      reason:
-        locale === "fr"
-          ? "Dépôts et retraits mobile money"
-          : "Mobile money deposits & withdrawals",
+      reason: L.walletR,
     },
     {
       match: "beginner",
-      label: locale === "fr" ? "Dépôt USDT" : "USDT Deposit",
+      label: L.deposit,
       href: "/app/deposit",
-      reason:
-        locale === "fr"
-          ? "Commencez par un dépôt guidé"
-          : "Start with a guided deposit",
+      reason: L.depositR,
     },
     {
       match: "kyc",
       label: "KYC",
       href: "/app/profile/kyc",
-      reason:
-        locale === "fr"
-          ? "Complétez votre vérification d'identité"
-          : "Complete your identity verification",
+      reason: L.kycR,
     },
     {
       match: "security",
-      label: locale === "fr" ? "Sécurité" : "Security",
+      label: L.sec,
       href: "/app/profile/security",
-      reason:
-        locale === "fr"
-          ? "Renforcez la sécurité de votre compte"
-          : "Strengthen your account security",
+      reason: L.secR,
     },
     {
       match: "investor",
       label: "AVEC",
       href: "/app/groups",
-      reason:
-        locale === "fr"
-          ? "Épargne collective avec votre communauté"
-          : "Group savings with your community",
+      reason: L.avecR,
     },
   ];
 

@@ -21,6 +21,7 @@ import {
   streamAssistantReply,
 } from "@/lib/assistant/openai-client";
 import { buildAssistantSystemPrompt } from "@/lib/assistant/system-prompt";
+import { resolveReplyLocale } from "@/lib/assistant/locale";
 import { assertAssistantDbReady } from "@/lib/assistant/db-ready";
 
 export type AssistantMessageDto = {
@@ -70,25 +71,9 @@ export async function getOrCreateConversation(args: {
       .where(eq(aiAssistantConversations.id, args.conversationId))
       .limit(1);
     if (existing) {
-      if (existing.userId) {
-        if (!args.userId || existing.userId !== args.userId) {
-          throw new Error("assistant_forbidden");
-        }
-        return mapConversation(existing);
-      }
-      if (existing.guestToken) {
-        if (args.userId) {
-          throw new Error("assistant_forbidden");
-        }
-        if (
-          !args.guestToken ||
-          existing.guestToken !== args.guestToken
-        ) {
-          throw new Error("assistant_forbidden");
-        }
-        return mapConversation(existing);
-      }
-      return mapConversation(existing);
+      authorizeExistingConversation(existing, args);
+      const synced = await syncConversationMeta(existing, args);
+      return mapConversation(synced);
     }
   }
 
@@ -103,6 +88,51 @@ export async function getOrCreateConversation(args: {
     .returning();
 
   return mapConversation(created);
+}
+
+async function syncConversationMeta(
+  existing: typeof aiAssistantConversations.$inferSelect,
+  args: { locale: AssistantLocale; pageContext?: string | null },
+): Promise<typeof aiAssistantConversations.$inferSelect> {
+  const needsLocale = existing.locale !== args.locale;
+  const needsPage =
+    args.pageContext != null && existing.pageContext !== args.pageContext;
+  if (!needsLocale && !needsPage) return existing;
+
+  const db = getDb();
+  const [updated] = await db
+    .update(aiAssistantConversations)
+    .set({
+      ...(needsLocale ? { locale: args.locale } : {}),
+      ...(needsPage ? { pageContext: args.pageContext } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(aiAssistantConversations.id, existing.id))
+    .returning();
+  return updated ?? existing;
+}
+
+function authorizeExistingConversation(
+  existing: typeof aiAssistantConversations.$inferSelect,
+  args: {
+    userId?: string | null;
+    guestToken?: string | null;
+  },
+): void {
+  if (existing.userId) {
+    if (!args.userId || existing.userId !== args.userId) {
+      throw new Error("assistant_forbidden");
+    }
+    return;
+  }
+  if (existing.guestToken) {
+    if (args.userId) {
+      throw new Error("assistant_forbidden");
+    }
+    if (!args.guestToken || existing.guestToken !== args.guestToken) {
+      throw new Error("assistant_forbidden");
+    }
+  }
 }
 
 function mapConversation(
@@ -157,6 +187,7 @@ export async function prepareAssistantTurn(args: {
   conversationId: string;
   userMessage: string;
   pageContext?: string | null;
+  locale?: AssistantLocale;
 }): Promise<PreparedAssistantTurn> {
   const trimmed = args.userMessage.trim().slice(0, 4000);
   if (!trimmed) throw new Error("assistant_empty");
@@ -172,8 +203,20 @@ export async function prepareAssistantTurn(args: {
     .limit(1);
   if (!convRow) throw new Error("assistant_not_found");
 
-  const locale = (convRow.locale as AssistantLocale) || "en";
+  const uiLocale =
+    args.locale ?? ((convRow.locale as AssistantLocale) || "en");
+  const locale = resolveReplyLocale({
+    uiLocale,
+    userMessage: trimmed,
+  });
   const pageContext = args.pageContext ?? convRow.pageContext;
+
+  if (convRow.locale !== locale) {
+    await getDb()
+      .update(aiAssistantConversations)
+      .set({ locale, updatedAt: new Date() })
+      .where(eq(aiAssistantConversations.id, args.conversationId));
+  }
 
   const history = await loadAssistantMessages(args.conversationId);
   const chatHistory = history
@@ -297,6 +340,7 @@ export async function sendAssistantMessage(args: {
   conversationId: string;
   userMessage: string;
   pageContext?: string | null;
+  locale?: AssistantLocale;
 }): Promise<{
   userMessage: AssistantMessageDto;
   assistantMessage: AssistantMessageDto;
@@ -319,6 +363,7 @@ export async function* streamAssistantMessage(args: {
   conversationId: string;
   userMessage: string;
   pageContext?: string | null;
+  locale?: AssistantLocale;
 }): AsyncGenerator<
   | { type: "token"; content: string }
   | {

@@ -97,8 +97,16 @@ function fallbackAssistantReply(
   userMessage: string,
   systemPrompt: string,
 ): string {
+  const sw = /ACTIVE UI LANGUAGE:\s*\*\*Swahili/i.test(systemPrompt);
+  const fr = /ACTIVE UI LANGUAGE:\s*\*\*French/i.test(systemPrompt);
   const lower = userMessage.toLowerCase();
   if (/human|agent|support|help me|aide|msaada|support humain/i.test(lower)) {
+    if (sw) {
+      return "Kwa matatizo ya akaunti, ulaghai, au migogoro, wasiliana na **msaada wa binadamu** kupitia **Support** kwenye app (/app/support) au barua pepe **hi@mcbuleli.org**. Jumuisha barua pepe ya akaunti yako na maelezo mafupi. 💚";
+    }
+    if (fr) {
+      return "Pour les problèmes de compte, fraude ou litiges, contactez notre **support humain** via **Support** dans l'app (/app/support) ou **hi@mcbuleli.org**. Indiquez votre e-mail et un bref résumé. 💚";
+    }
     return "For personal account issues, fraud, or disputes, please contact our human support team via **Support** in the app (/app/support) or email **hi@mcbuleli.org**. Include your account email and a short description. 💚";
   }
   if (/deposit|dépôt|amana|txid/i.test(lower)) {
@@ -130,7 +138,19 @@ function fallbackAssistantReply(
   }
   const kbMatch = systemPrompt.match(/KNOWLEDGE BASE[\s\S]*?\[1\]/);
   if (kbMatch) {
+    if (sw) {
+      return "Kulingana na miongozo ya McBuleli: nina taarifa husika. Ungependa nieleze zaidi kuhusu amana, P2P, KYC, biashara, AVEC, au staking? 💚";
+    }
+    if (fr) {
+      return "D'après les guides McBuleli : j'ai trouvé des informations pertinentes. Souhaitez-vous des détails sur dépôts, P2P, KYC, trading, AVEC ou staking ? 💚";
+    }
     return "Based on McBuleli's guides: I found relevant info in our knowledge base. Could you tell me more specifically what you need? I can explain deposits, P2P, KYC, trading, AVEC, or staking. 💚";
+  }
+  if (sw) {
+    return "Karibu McBuleli! 👋 Naweza kusaidia kuhusu misingi ya crypto, amana/kutoa USDT, escrow P2P, pesa ya simu, boti za AI, akiba AVEC, staking na KYC. Ungependa kujua nini? 💚";
+  }
+  if (fr) {
+    return "Bienvenue sur McBuleli ! 👋 Je peux vous aider avec les bases crypto, dépôts/retraits USDT, escrow P2P, mobile money, bots IA, épargne AVEC, staking et KYC. Que souhaitez-vous explorer ? 💚";
   }
   return "Welcome to McBuleli! 👋 I can help with crypto basics, USDT deposits/withdrawals, P2P escrow, mobile money, AI trading bots, AVEC savings, staking, and KYC. What would you like to explore? Visit https://mcbuleli.org or ask me anything.";
 }

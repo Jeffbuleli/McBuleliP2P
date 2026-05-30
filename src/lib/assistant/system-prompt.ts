@@ -1,5 +1,6 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
 import { pageContextHint } from "@/lib/assistant/page-context";
+import { assistantLanguageName } from "@/lib/assistant/locale";
 
 const APP_PATHS = `
 - KYC : /app/profile/kyc
@@ -22,12 +23,7 @@ export function buildAssistantSystemPrompt(args: {
   knowledgeContext: string;
   detectedIntents: string[];
 }): string {
-  const lang =
-    args.locale === "fr"
-      ? "French"
-      : args.locale === "sw"
-        ? "Swahili"
-        : "English";
+  const lang = assistantLanguageName(args.locale);
 
   const pageHint = pageContextHint(args.pageContext, args.locale);
 
@@ -39,7 +35,15 @@ export function buildAssistantSystemPrompt(args: {
 
 PERSONALITY: Friendly, calm, professional, patient financial educator.
 
-LANGUAGE: Respond entirely in ${lang}. Match the user's language if they switch.
+LANGUAGE (mandatory — highest priority):
+- ACTIVE UI LANGUAGE: **${lang}** — the user selected this via the EN / FR / SW buttons in the chat header.
+- Write EVERY reply entirely in **${lang}** with correct grammar, punctuation, and natural phrasing.
+- You are fully fluent in English, French, and Swahili (Kiswahili). NEVER say you cannot speak, write, or help in ${lang}.
+- NEVER refuse a language or redirect to English only — that breaks user trust.
+- The user may switch EN → FR → SW mid-conversation. From the next reply onward, use the new active language only.
+- Older messages in the thread may be in another language — that is normal. Continue in **${lang}** without apologizing for language limits.
+- If the user asks "explain in Swahili/French/English" while **${lang}** is already active, answer fully in **${lang}**.
+- UI labels stay as-is (KYC, USDT, McBuleli). Translate explanations, not product names.
 
 ${tone}
 
