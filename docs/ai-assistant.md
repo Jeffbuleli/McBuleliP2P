@@ -36,11 +36,17 @@ flowchart LR
 
 ## Database migration
 
+**Required** — apply migration `0051_ai_assistant` (registered in Drizzle journal):
+
 ```bash
 npm run db:migrate:render
 ```
 
+If chat returns HTTP 503 / `assistant_db_not_migrated`, the tables are missing — run the command above.
+
 After deploy with `OPENAI_API_KEY`, open **Admin → AI Assistant → Generate embeddings** once to vectorize the FAQ.
+
+Tables: `ai_assistant_conversations`, `ai_assistant_messages`, `ai_assistant_knowledge`.
 
 ## API
 

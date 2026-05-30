@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { getDb, aiAssistantConversations } from "@/db";
+import { getDb } from "@/db";
 
 export function isAssistantDbNotReadyError(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);

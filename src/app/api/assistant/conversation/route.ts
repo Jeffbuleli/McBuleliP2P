@@ -63,6 +63,9 @@ export async function GET(req: Request) {
     if (msg === "assistant_forbidden") {
       return NextResponse.json({ error: msg }, { status: 403 });
     }
+    if (msg === "assistant_db_not_migrated") {
+      return NextResponse.json({ error: msg }, { status: 503 });
+    }
     return NextResponse.json({ error: "assistant_failed" }, { status: 500 });
   }
 }

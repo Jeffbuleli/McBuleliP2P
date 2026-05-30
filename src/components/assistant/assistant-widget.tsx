@@ -84,7 +84,7 @@ export function AssistantWidget() {
         cache: "no-store",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "failed");
+      if (!res.ok) throw new Error(data.error ?? "assistant_failed");
       if (data.conversation?.id) {
         setConversationId(data.conversation.id);
         localStorage.setItem(STORAGE_KEY, data.conversation.id);
@@ -98,12 +98,14 @@ export function AssistantWidget() {
           (msg) => msg.role === "user" || msg.role === "assistant",
         ) ?? [],
       );
-    } catch {
-      setError(m.errorGeneric);
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "";
+      if (code === "assistant_db_not_migrated") setError(m.errorDbNotReady);
+      else setError(m.errorGeneric);
     } finally {
       setBooting(false);
     }
-  }, [assistantLocale, m.errorGeneric, pageContext]);
+  }, [assistantLocale, m.errorDbNotReady, m.errorGeneric, pageContext]);
 
   useEffect(() => {
     if (open) void loadConversation();
@@ -133,6 +135,155 @@ export function AssistantWidget() {
     };
   }, [open]);
 
+  function mapAssistantError(code: string): string {
+    if (code === "assistant_rate_limited") return m.rateLimited;
+    if (code === "assistant_db_not_migrated") return m.errorDbNotReady;
+    return m.errorGeneric;
+  }
+
+  function clearAssistantStorage() {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(GUEST_KEY);
+    setConversationId(null);
+    setGuestToken(null);
+  }
+
+  async function postChat(body: Record<string, unknown>) {
+    return fetch("/api/assistant/chat", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function consumeJsonResponse(
+    res: Response,
+    optimistic: ChatMessage,
+  ) {
+    const data = (await res.json()) as {
+      error?: string;
+      conversation?: { id: string };
+      guestToken?: string | null;
+      userMessage?: ChatMessage;
+      assistantMessage?: ChatMessage;
+      recommendations?: Recommendation[];
+    };
+
+    if (!res.ok) {
+      if (res.status === 403) clearAssistantStorage();
+      throw new Error(data.error ?? "assistant_failed");
+    }
+
+    if (data.conversation?.id) {
+      setConversationId(data.conversation.id);
+      localStorage.setItem(STORAGE_KEY, data.conversation.id);
+    }
+    if (data.guestToken) {
+      setGuestToken(data.guestToken);
+      localStorage.setItem(GUEST_KEY, data.guestToken);
+    }
+
+    setMessages((prev) => {
+      const withoutTmp = prev.filter((x) => x.id !== optimistic.id);
+      const next = [...withoutTmp];
+      if (data.userMessage) next.push(data.userMessage);
+      if (data.assistantMessage) next.push(data.assistantMessage);
+      return next;
+    });
+    if (Array.isArray(data.recommendations)) {
+      setRecommendations(data.recommendations);
+    }
+  }
+
+  async function consumeStreamResponse(
+    res: Response,
+    optimistic: ChatMessage,
+    streamId: string,
+  ) {
+    if (!res.body) throw new Error("assistant_failed");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let streamStarted = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6);
+        let event: Record<string, unknown>;
+        try {
+          event = JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          continue;
+        }
+
+        if (event.type === "meta") {
+          const conv = event.conversation as { id?: string } | undefined;
+          if (conv?.id) {
+            setConversationId(conv.id);
+            localStorage.setItem(STORAGE_KEY, conv.id);
+          }
+          const gt = event.guestToken as string | null | undefined;
+          if (gt) {
+            setGuestToken(gt);
+            localStorage.setItem(GUEST_KEY, gt);
+          }
+        }
+
+        if (event.type === "token" && typeof event.content === "string") {
+          if (!streamStarted) {
+            streamStarted = true;
+            setLoading(false);
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: streamId,
+                role: "assistant",
+                content: event.content as string,
+              },
+            ]);
+          } else {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === streamId
+                  ? { ...msg, content: msg.content + (event.content as string) }
+                  : msg,
+              ),
+            );
+          }
+        }
+
+        if (event.type === "done") {
+          const um = event.userMessage as ChatMessage | undefined;
+          const am = event.assistantMessage as ChatMessage | undefined;
+          setMessages((prev) => {
+            const without = prev.filter(
+              (x) => x.id !== optimistic.id && x.id !== streamId,
+            );
+            const next = [...without];
+            if (um) next.push(um);
+            if (am) next.push(am);
+            return next;
+          });
+          if (Array.isArray(event.recommendations)) {
+            setRecommendations(event.recommendations as Recommendation[]);
+          }
+        }
+
+        if (event.type === "error") {
+          throw new Error(String(event.error ?? "assistant_failed"));
+        }
+      }
+    }
+  }
+
   async function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
@@ -149,21 +300,16 @@ export function AssistantWidget() {
     setMessages((prev) => [...prev, optimistic]);
 
     const streamId = `stream-${Date.now()}`;
+    const payload = {
+      conversationId,
+      message: trimmed,
+      guestToken,
+      locale: assistantLocale,
+      pageContext,
+    };
 
     try {
-      const res = await fetch("/api/assistant/chat", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          message: trimmed,
-          guestToken,
-          locale: assistantLocale,
-          pageContext,
-          stream: true,
-        }),
-      });
+      let res = await postChat({ ...payload, stream: true });
 
       if (res.status === 429) {
         setError(m.rateLimited);
@@ -173,118 +319,28 @@ export function AssistantWidget() {
 
       const contentType = res.headers.get("content-type") ?? "";
 
-      if (contentType.includes("text/event-stream") && res.body) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let streamStarted = false;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const raw = line.slice(6);
-            let event: Record<string, unknown>;
-            try {
-              event = JSON.parse(raw) as Record<string, unknown>;
-            } catch {
-              continue;
-            }
-
-            if (event.type === "meta") {
-              const conv = event.conversation as { id?: string } | undefined;
-              if (conv?.id) {
-                setConversationId(conv.id);
-                localStorage.setItem(STORAGE_KEY, conv.id);
-              }
-              const gt = event.guestToken as string | null | undefined;
-              if (gt) {
-                setGuestToken(gt);
-                localStorage.setItem(GUEST_KEY, gt);
-              }
-            }
-
-            if (event.type === "token" && typeof event.content === "string") {
-              if (!streamStarted) {
-                streamStarted = true;
-                setLoading(false);
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    id: streamId,
-                    role: "assistant",
-                    content: event.content as string,
-                  },
-                ]);
-              } else {
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === streamId
-                      ? { ...msg, content: msg.content + (event.content as string) }
-                      : msg,
-                  ),
-                );
-              }
-            }
-
-            if (event.type === "done") {
-              const um = event.userMessage as ChatMessage | undefined;
-              const am = event.assistantMessage as ChatMessage | undefined;
-              setMessages((prev) => {
-                const without = prev.filter(
-                  (x) =>
-                    x.id !== optimistic.id &&
-                    x.id !== streamId,
-                );
-                const next = [...without];
-                if (um) next.push(um);
-                if (am) next.push(am);
-                return next;
-              });
-              if (Array.isArray(event.recommendations)) {
-                setRecommendations(
-                  event.recommendations as Recommendation[],
-                );
-              }
-            }
-
-            if (event.type === "error") {
-              throw new Error(String(event.error ?? "failed"));
-            }
-          }
+      if (contentType.includes("text/event-stream") && res.ok) {
+        try {
+          await consumeStreamResponse(res, optimistic, streamId);
+          return;
+        } catch {
+          res = await postChat({ ...payload, stream: false });
         }
-        return;
       }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "failed");
-
-      if (data.conversation?.id) {
-        setConversationId(data.conversation.id);
-        localStorage.setItem(STORAGE_KEY, data.conversation.id);
-      }
-      if (data.guestToken) {
-        setGuestToken(data.guestToken);
-        localStorage.setItem(GUEST_KEY, data.guestToken);
+      if (!res.ok && res.status !== 429) {
+        const errBody = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        if (res.status === 403) clearAssistantStorage();
+        throw new Error(errBody.error ?? "assistant_failed");
       }
 
-      setMessages((prev) => {
-        const withoutTmp = prev.filter((x) => x.id !== optimistic.id);
-        const next = [...withoutTmp];
-        if (data.userMessage) next.push(data.userMessage);
-        if (data.assistantMessage) next.push(data.assistantMessage);
-        return next;
-      });
-      if (Array.isArray(data.recommendations)) {
-        setRecommendations(data.recommendations);
-      }
-    } catch {
-      setError(m.errorGeneric);
+      await consumeJsonResponse(res, optimistic);
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "assistant_failed";
+      if (code === "assistant_forbidden") clearAssistantStorage();
+      setError(mapAssistantError(code));
       setMessages((prev) =>
         prev.filter((x) => x.id !== optimistic.id && x.id !== streamId),
       );
