@@ -60,6 +60,7 @@ export function LandingTopBar() {
               <Image
                 src="/brand/logo.png"
                 alt=""
+                aria-hidden
                 width={40}
                 height={40}
                 className="object-cover"

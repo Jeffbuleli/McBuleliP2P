@@ -1,6 +1,7 @@
 "use client";
 
 import nextDynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 
 type UiAppearance = "light" | "dark";
 
@@ -17,7 +18,50 @@ const PriceChartDynamic = nextDynamic(
   },
 );
 
-/** Lazy-loaded chart for server-rendered dashboard pages (no SSR — lighter bundle). */
-export function PriceChartLazy({ appearance = "dark" }: { appearance?: UiAppearance }) {
-  return <PriceChartDynamic appearance={appearance} />;
+function ChartPlaceholder() {
+  return (
+    <div
+      className="fd-card h-56 bg-[color:var(--fd-mint)]/40"
+      aria-hidden
+    />
+  );
+}
+
+/** Lazy-loaded chart (no SSR). Optionally waits until near viewport before loading JS + klines API. */
+export function PriceChartLazy({
+  appearance = "dark",
+  deferUntilVisible = false,
+}: {
+  appearance?: UiAppearance;
+  deferUntilVisible?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(!deferUntilVisible);
+
+  useEffect(() => {
+    if (!deferUntilVisible || visible) return;
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [deferUntilVisible, visible]);
+
+  return (
+    <div ref={ref}>
+      {visible ? (
+        <PriceChartDynamic appearance={appearance} />
+      ) : (
+        <ChartPlaceholder />
+      )}
+    </div>
+  );
 }

@@ -32,7 +32,7 @@ export function MarketPreview({
       return;
     }
     try {
-      const res = await fetch("/api/market/tickers", { cache: "no-store" });
+      const res = await fetch("/api/market/tickers");
       const json = (await res.json().catch(() => ({}))) as {
         tickers?: MarketTicker[];
       };
@@ -48,7 +48,7 @@ export function MarketPreview({
   }, []);
 
   useEffect(() => {
-    void pull();
+    if (!initialTickers?.length) void pull();
     const id = window.setInterval(() => void pull(), TICKERS_POLL_MS);
     const onVis = () => {
       if (document.visibilityState === "visible") void pull();
@@ -58,7 +58,7 @@ export function MarketPreview({
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [pull]);
+  }, [pull, initialTickers]);
 
   return (
     <section
@@ -99,6 +99,7 @@ export function MarketPreview({
         {showViewLink ? (
           <Link
             href="/app/market"
+            prefetch={false}
             className={
               isLight
                 ? "shrink-0 text-xs font-semibold text-[color:var(--fd-primary)]"
@@ -210,7 +211,14 @@ function MarketCoinIcon({ symbol, light }: { symbol: string; light?: boolean }) 
         light ? "ring-[color:var(--fd-border)]" : "ring-stone-600"
       }`}
     >
-      <Image src={url} alt="" width={32} height={32} className="object-cover" />
+      <Image
+        src={url}
+        alt=""
+        aria-hidden
+        width={32}
+        height={32}
+        className="object-cover"
+      />
     </span>
   );
 }

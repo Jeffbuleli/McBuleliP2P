@@ -23,12 +23,13 @@ export async function LandingPromoStrip() {
           <Link
             key={p.id}
             href={p.href}
+            prefetch={false}
             className="group overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-sm transition hover:border-[color:var(--fd-primary)]/30 hover:shadow-md active:scale-[0.99]"
           >
             <div className="relative aspect-[16/10] w-full overflow-hidden">
               <Image
                 src={p.image}
-                alt=""
+                alt={p.title}
                 fill
                 className="object-cover transition group-hover:scale-[1.02]"
                 sizes="(max-width: 640px) 50vw, 25vw"

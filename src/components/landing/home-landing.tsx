@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { unstable_cache } from "next/cache";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
@@ -81,10 +82,16 @@ function StepChip({ n, label }: { n: number; label: string }) {
   );
 }
 
+const getLandingTickers = unstable_cache(
+  () => fetchMarketTickers(),
+  ["landing-market-tickers"],
+  { revalidate: 30 },
+);
+
 export async function HomeLanding() {
   const locale = await getLocale();
   const d = getDictionary(locale);
-  const tickers = await fetchMarketTickers();
+  const tickers = await getLandingTickers();
 
   const services: {
     icon: ComponentType<{ className?: string }>;
@@ -137,12 +144,14 @@ export async function HomeLanding() {
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
               href="/register"
+              prefetch={false}
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-5 text-sm font-extrabold text-white shadow-lg shadow-[color:var(--fd-primary)]/25 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
             <Link
               href="/login"
+              prefetch={false}
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-2xl border-2 border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-5 text-sm font-bold text-[color:var(--fd-text)] active:scale-[0.99]"
             >
               {d.landing_cta_login}
@@ -163,7 +172,7 @@ export async function HomeLanding() {
         <LandingPromoStrip />
 
         <div className="mt-5 space-y-5">
-          <PriceChartLazy appearance="light" />
+          <PriceChartLazy appearance="light" deferUntilVisible />
           <section id="market" className="scroll-mt-24">
             <MarketPreview locale={locale} initialTickers={tickers} appearance="light" />
           </section>
@@ -237,6 +246,7 @@ export async function HomeLanding() {
           </div>
           <Link
             href="/contact"
+            prefetch={false}
             className="inline-flex min-h-[44px] w-full max-w-xs items-center justify-center rounded-xl bg-[color:var(--fd-mint)] px-4 text-xs font-bold text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/20 active:scale-[0.99]"
           >
             {d.landing_footer_contact}
@@ -248,16 +258,16 @@ export async function HomeLanding() {
         <div className="mx-auto max-w-md text-center">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{d.landing_footer_tagline}</p>
           <nav className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-semibold text-[color:var(--fd-primary)]">
-            <Link href="/about" className="hover:opacity-80">
+            <Link href="/about" prefetch={false} className="hover:opacity-80">
               {d.landing_footer_about}
             </Link>
-            <Link href="/contact" className="hover:opacity-80">
+            <Link href="/contact" prefetch={false} className="hover:opacity-80">
               {d.landing_footer_contact}
             </Link>
-            <Link href="/terms" className="hover:opacity-80">
+            <Link href="/terms" prefetch={false} className="hover:opacity-80">
               {d.landing_footer_terms}
             </Link>
-            <Link href="/privacy" className="hover:opacity-80">
+            <Link href="/privacy" prefetch={false} className="hover:opacity-80">
               {d.landing_footer_privacy}
             </Link>
           </nav>
