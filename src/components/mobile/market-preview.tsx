@@ -130,6 +130,7 @@ export function MarketPreview({
             <li key={ticker.symbol}>
               <Link
                 href="/app/market"
+                prefetch={false}
                 className={
                   isLight
                     ? "flex min-h-[44px] items-center justify-between gap-2.5 rounded-lg py-2 transition active:bg-[color:var(--fd-mint)] hover:bg-[color:var(--fd-mint)]/70"
