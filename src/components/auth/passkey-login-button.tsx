@@ -77,7 +77,7 @@ export function PasskeyLoginButton({
   }
 
   const defaultPolishedClass =
-    "group mt-3 flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border-2 border-[color:var(--fd-primary)]/25 bg-gradient-to-r from-white to-[color:var(--fd-mint)] px-4 text-sm font-bold text-[color:var(--fd-primary)] shadow-md shadow-[color:var(--fd-primary)]/10 transition active:scale-[0.99] disabled:opacity-60";
+    "auth-btn-outline group mt-3 flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border-2 border-[color:var(--fd-primary)]/25 bg-gradient-to-r from-white to-[color:var(--fd-mint)] px-4 text-sm font-bold text-[color:var(--fd-primary)] shadow-md shadow-[color:var(--fd-primary)]/10 transition active:scale-[0.99] disabled:opacity-60";
 
   return (
     <div className="space-y-2">

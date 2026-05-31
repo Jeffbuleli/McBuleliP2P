@@ -27,6 +27,8 @@ const ogImageAlt = "McBuleli — USDT wallet, P2P & mobile money in Africa";
 
 export const metadata: Metadata = {
   ...(metadataBaseUrl ? { metadataBase: new URL(metadataBaseUrl) } : {}),
+  /** In-app i18n only — Chrome auto-translate breaks React hydration on auth forms. */
+  other: { google: "notranslate" },
   title: {
     default: "McBuleli — USDT Wallet, P2P & Mobile Money in Africa",
     template: "%s · McBuleli",
@@ -88,7 +90,8 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`dark ${inter.variable} h-full scroll-smooth antialiased`}
+      translate="no"
+      className={`notranslate dark ${inter.variable} h-full scroll-smooth antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans text-stone-100">

@@ -200,7 +200,7 @@ export default function LoginPage() {
       }
     >
       <div className="fd-card rounded-[1.75rem] p-5">
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -215,9 +215,11 @@ export default function LoginPage() {
               placeholder="you@email.com"
             />
           </label>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-sm font-medium text-[color:var(--fd-text)]">{t("password")}</label>
+          <div className="auth-field flex flex-col gap-2">
+            <div className="auth-field-header flex items-center justify-between gap-3">
+              <span className="auth-label text-sm font-medium text-[color:var(--fd-text)]">
+                {t("password")}
+              </span>
               <Link
                 href="/forgot-password"
                 className="text-xs font-semibold text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
@@ -240,19 +242,16 @@ export default function LoginPage() {
               {error}
             </p>
           ) : null}
-          <button
-            type="submit"
-            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 text-base font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
-          >
+          <button type="submit" className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]">
             {t("signin")}
           </button>
         </form>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden>
+        <div className="auth-divider relative my-6">
+          <div className="auth-divider-line absolute inset-0 flex items-center" aria-hidden>
             <div className="w-full border-t border-[color:var(--fd-border)]" />
           </div>
-          <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--fd-muted)]">
+          <div className="auth-divider-label relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--fd-muted)]">
             <span className="bg-[color:var(--fd-card)] px-3">{t("auth_or")}</span>
           </div>
         </div>
@@ -260,7 +259,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => void startPiAuth()}
-          className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"
+          className="auth-btn-outline flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl px-4 disabled:opacity-60"
         >
           <span>{t("auth_pi_continue")}</span>
           <Image

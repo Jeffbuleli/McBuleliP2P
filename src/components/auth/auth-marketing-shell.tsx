@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LangSwitch } from "@/components/lang-switch";
 import { useI18n } from "@/components/i18n-provider";
 
 function BackIcon({ className }: { className?: string }) {
@@ -74,11 +75,10 @@ export function AuthPageFooter({
   );
 }
 
-/** `auth-input` — autofill overrides in globals.css (.fd-public-light) */
-const authInputClass =
-  "auth-input w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-3 text-base text-[color:var(--fd-text)] shadow-sm outline-none placeholder:text-[color:var(--fd-muted)]/70 focus:border-[color:var(--fd-primary)] focus:ring-2 focus:ring-[color:var(--fd-primary)]/20 disabled:opacity-60";
+/** Core input styling lives in globals.css (`.auth-input`) — Tailwind classes are optional polish. */
+const authInputClass = "auth-input";
 
-export const authLabelClass = "flex flex-col gap-1 text-sm font-medium text-[color:var(--fd-text)]";
+export const authLabelClass = "auth-label auth-field flex flex-col gap-1";
 export { authInputClass };
 
 export function AuthMarketingShell({
@@ -92,12 +92,15 @@ export function AuthMarketingShell({
   showBrandHeader?: boolean;
 }) {
   return (
-    <div className="home-theme fd-public-light relative min-h-dvh">
+    <div className="home-theme fd-public-light notranslate relative min-h-dvh">
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-15%,rgba(48,95,51,0.1),transparent)]"
         aria-hidden
       />
       <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="auth-lang-float">
+          <LangSwitch />
+        </div>
         {showBrandHeader ? <AuthBrandHeader /> : null}
         <div className="flex-1">{children}</div>
         {footer}

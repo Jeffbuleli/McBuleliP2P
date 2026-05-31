@@ -260,6 +260,122 @@ html {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
+/* Auth pages — structural CSS (works even if utility chunks load late) */
+.fd-public-light .auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.fd-public-light .auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.fd-public-light .auth-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.fd-public-light .auth-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fd-text);
+}
+.fd-public-light input.auth-input,
+.fd-public-light select.auth-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 1rem;
+  border: 1px solid rgba(48, 95, 51, 0.16);
+  background: var(--fd-card);
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--fd-text);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.fd-public-light input.auth-input::placeholder {
+  color: color-mix(in srgb, var(--fd-muted) 70%, transparent);
+}
+.fd-public-light input.auth-input:focus,
+.fd-public-light select.auth-input:focus {
+  border-color: var(--fd-primary);
+  box-shadow: 0 0 0 3px rgba(48, 95, 51, 0.14);
+}
+.fd-public-light .auth-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: 1rem;
+  background: var(--fd-primary);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+.fd-public-light .auth-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.fd-public-light .auth-btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(48, 95, 51, 0.16);
+  border-radius: 1rem;
+  background: var(--fd-mint);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fd-text);
+  cursor: pointer;
+}
+.fd-public-light .auth-btn-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.fd-public-light .auth-divider {
+  position: relative;
+  margin: 1.5rem 0;
+}
+.fd-public-light .auth-divider-line {
+  border-top: 1px solid rgba(48, 95, 51, 0.14);
+}
+.fd-public-light .auth-divider-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 0.75rem;
+  background: var(--fd-card);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fd-muted);
+}
+.fd-public-light .auth-lang-float {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
 /* Auth inputs — keep white background when iOS/Android autofill is applied */
 .fd-public-light input.auth-input:-webkit-autofill,
 .fd-public-light input.auth-input:-webkit-autofill:hover,

@@ -18,6 +18,16 @@ import {
 const PROMPT_DELAY_MS = 2200;
 const NAV_PROMPT_DELAY_MS = 1200;
 
+const AUTH_PATHS = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/confirm-email-change",
+  "/account/recovery",
+]);
+
 export function PwaInstallBanner() {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -131,6 +141,7 @@ export function PwaInstallBanner() {
   }
 
   if (!open) return null;
+  if (pathname && AUTH_PATHS.has(pathname)) return null;
 
   const showOpenInApp = installedRelated && !isStandaloneDisplay();
   const body = showOpenInApp
