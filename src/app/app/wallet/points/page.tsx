@@ -55,7 +55,10 @@ type ClaimConfig = {
   bpPerMcb: number;
   minBp: number;
   chainLabel: string;
+  chainId: number;
+  tokenStandard: string;
   contractAddress: string | null;
+  explorerTokenUrl: string | null;
   dexUrl: string | null;
 };
 
@@ -504,11 +507,21 @@ export default function WalletPointsPage() {
                     })}
                   </p>
                   <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
-                    {claimData.config.chainLabel}
+                    {claimData.config.tokenStandard} · {claimData.config.chainLabel}
                     {claimData.config.contractAddress
                       ? ` · ${claimData.config.contractAddress.slice(0, 8)}…${claimData.config.contractAddress.slice(-6)}`
                       : ""}
                   </p>
+                  {claimData.config.explorerTokenUrl ? (
+                    <a
+                      href={claimData.config.explorerTokenUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-[11px] font-bold text-[color:var(--fd-primary)]"
+                    >
+                      {t("mcb_contract_bscscan")} ↗
+                    </a>
+                  ) : null}
                 </div>
               </div>
 

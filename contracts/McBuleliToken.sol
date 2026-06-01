@@ -2,9 +2,18 @@
 pragma solidity ^0.8.20;
 
 /**
- * McBuleli utility token (McB) — BEP-20 compatible for BNB Smart Chain.
- * Deploy via Remix or Hardhat; mint full supply to treasury multisig.
- * Claims from McBuleli app are fulfilled off-chain from treasury until Phase 4 automation.
+ * @title McBuleliToken
+ * @notice McB utility token on BNB Smart Chain — **BEP-20** standard.
+ *
+ * BEP-20 and ERC-20 share the same interface on EVM chains. Remix / BscScan may
+ * label this contract "ERC-20" — on BSC mainnet (chainId 56) it is a BEP-20 token.
+ *
+ * Required BEP-20 surface (BNB Chain):
+ *   totalSupply(), balanceOf(), transfer(), allowance(), approve(), transferFrom()
+ * @see https://www.bnbchain.org/en/blog/your-guide-to-creating-bep-20-tokens-on-bnb-smart-chain
+ *
+ * Extensions (not required by BEP-20): mint (owner), transferOwnership.
+ * Deploy: Remix → Injected Provider → BNB Smart Chain → constructor(initialSupply in wei, 18 decimals).
  */
 contract McBuleliToken {
     string public constant name = "McBuleli";
@@ -26,24 +35,32 @@ contract McBuleliToken {
         _;
     }
 
+    /// @param initialSupply Whole tokens × 10**decimals (e.g. 100_000_000e18 for 100M McB).
     constructor(uint256 initialSupply) {
         owner = msg.sender;
         _mint(msg.sender, initialSupply);
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
+    /// @inheritdoc BEP-20
     function transfer(address to, uint256 amount) external returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
     }
 
+    /// @inheritdoc BEP-20
     function approve(address spender, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+    /// @inheritdoc BEP-20
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool) {
         uint256 allowed = allowance[from][msg.sender];
         require(allowed >= amount, "McB: allowance");
         if (allowed != type(uint256).max) {

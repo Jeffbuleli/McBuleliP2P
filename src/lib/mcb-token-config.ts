@@ -13,6 +13,21 @@ export type McbClaimStatus =
 
 export const MCB_CHAIN_LABEL = "BEP20 (BNB Smart Chain)";
 
+/** BNB Smart Chain mainnet — BEP-20 tokens live here. */
+export const MCB_BSC_CHAIN_ID = 56;
+
+export const MCB_TOKEN_STANDARD = "BEP-20" as const;
+
+/** BscScan token page for a BEP-20 contract address. */
+export function mcbBscScanTokenUrl(contractAddress: string): string {
+  return `https://bscscan.com/token/${contractAddress}`;
+}
+
+/** Default PancakeSwap swap URL when env omits MCB_PANCAKESWAP_URL but contract is set. */
+export function mcbPancakeSwapUrlForContract(contractAddress: string): string {
+  return `https://pancakeswap.finance/swap?outputCurrency=${contractAddress}`;
+}
+
 function envTruthy(v: string | undefined): boolean {
   return v === "true" || v === "1";
 }
@@ -43,7 +58,10 @@ export function getMcbClaimMinBp(): number {
 
 export function getMcbDexUrl(): string | null {
   const v = process.env.MCB_PANCAKESWAP_URL?.trim();
-  return v && v.startsWith("https://") ? v : null;
+  if (v && v.startsWith("https://")) return v;
+  const contract = getMcbTokenContract();
+  if (contract) return mcbPancakeSwapUrlForContract(contract);
+  return null;
 }
 
 export function bpToMcbAmount(bp: number): number {
@@ -57,13 +75,19 @@ export function formatMcbAmount(bp: number): string {
 }
 
 export function getMcbClaimPublicConfig() {
+  const contractAddress = getMcbTokenContract();
   return {
     preview: isMcbClaimPortalVisible(),
     enabled: isMcbClaimEnabled(),
     bpPerMcb: REWARD_BP_PER_MCB_CLAIM,
     minBp: getMcbClaimMinBp(),
     chainLabel: MCB_CHAIN_LABEL,
-    contractAddress: getMcbTokenContract(),
+    chainId: MCB_BSC_CHAIN_ID,
+    tokenStandard: MCB_TOKEN_STANDARD,
+    contractAddress,
+    explorerTokenUrl: contractAddress
+      ? mcbBscScanTokenUrl(contractAddress)
+      : null,
     dexUrl: getMcbDexUrl(),
   };
 }

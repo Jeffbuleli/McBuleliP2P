@@ -23,15 +23,14 @@ McBuleli’s ecosystem utility layer: **Buleli Points (BP)** off-chain first, on
 - AVEC, referral mix USDT + BP
 - Withdraw fee discounts
 
-## Phase 3 (in progress) — On-chain McB
+## Phase 3 (live) — On-chain McB (BEP-20 BSC)
 
-- **BEP-20 contract:** `contracts/McBuleliToken.sol` (deploy on BSC)
-- **Claim portal:** `/app/wallet/points` — KYC-gated BP → McB (100 BP = 1 McB)
-- **Admin fulfillment:** `/admin/mcb-claims` — treasury send + tx hash
-- Migration `0054_mcb_claims.sql`
-- Env: `NEXT_PUBLIC_MCB_CLAIM_PREVIEW`, `MCB_CLAIM_ENABLED`, `MCB_TOKEN_CONTRACT`
-- Deploy guide: `docs/mcb-token-phase3.md`
-- **PancakeSwap:** small pool + LP lock (manual ops)
+- **BEP-20 contract:** `McBuleliToken` — mainnet `0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd` (Remix label “ERC-20” = same interface on BSC)
+- **Claim portal:** `/app/wallet/points` — KYC-gated BP → McB (100 BP = 1 McB), BEP20 wallet validation
+- **Admin fulfillment:** `/admin/mcb-claims`
+- Docs: `docs/mcb-token-phase3.md`, `contracts/README.md`
+- Env: `MCB_TOKEN_CONTRACT`, `MCB_CLAIM_ENABLED`, optional `MCB_PANCAKESWAP_URL`
+- **Next ops:** BscScan verify, treasury multisig, PancakeSwap liquidity + LP lock
 
 ## Phase 4 — DEX scale
 
