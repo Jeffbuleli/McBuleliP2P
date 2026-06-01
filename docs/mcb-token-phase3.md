@@ -17,15 +17,15 @@ Required methods (all implemented in `contracts/McBuleliToken.sol`):
 
 - `totalSupply()`, `balanceOf()`, `transfer()`, `allowance()`, `approve()`, `transferFrom()`
 
-## Mainnet contract (deployed)
+## Token contract (after deploy)
 
 | | |
 |---|---|
 | Name | McBuleliToken |
 | Symbol | McB |
 | Standard | BEP-20 (BSC) |
-| Address | `0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd` |
-| BscScan | https://bscscan.com/token/0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd |
+| Address | **Contract** from deploy — **not** your MetaMask wallet |
+| BscScan | `https://bscscan.com/token/<CONTRACT_ADDRESS>` after deploy |
 
 ## App (live after deploy)
 
