@@ -32,6 +32,13 @@ export async function POST(req: Request) {
     .set({ emailVerifiedAt: new Date() })
     .where(eq(users.id, consumed.userId));
 
+  const { tryGrantEmailVerifiedPoints } = await import(
+    "@/lib/reward-points-service"
+  );
+  void tryGrantEmailVerifiedPoints(consumed.userId).catch((err) => {
+    console.warn("[auth/verify-email] reward points grant skipped", err);
+  });
+
   const jwt = await signSessionToken(consumed.userId, u?.sessionVersion ?? 0);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(

@@ -198,9 +198,28 @@ export async function purchaseBotSubscription(args: {
       };
     });
 
+    void grantBotSubscriptionPoints({
+      userId: args.userId,
+      planId: args.planId,
+      subscriptionId: subscription.id,
+    }).catch((err) => {
+      console.warn("[bots] reward points grant skipped", err);
+    });
+
     return { ok: true, subscription };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "bots_subscribe_failed";
     return { ok: false, message: msg };
   }
+}
+
+async function grantBotSubscriptionPoints(args: {
+  userId: string;
+  planId: BotPlanId;
+  subscriptionId: string;
+}): Promise<void> {
+  const { tryGrantBotFirstSubscriptionPoints } = await import(
+    "@/lib/reward-points-service"
+  );
+  await tryGrantBotFirstSubscriptionPoints(args);
 }

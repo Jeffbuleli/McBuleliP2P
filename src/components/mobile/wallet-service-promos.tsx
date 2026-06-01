@@ -117,18 +117,63 @@ function AvecPromoCard({
   );
 }
 
+function PointsPromoCard({
+  balance,
+  teaser,
+  title,
+}: {
+  balance: number;
+  teaser: string;
+  title: string;
+}) {
+  return (
+    <Link
+      href="/app/wallet/points"
+      className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
+    >
+      <span
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-emerald-100 text-lg font-black text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/20"
+        aria-hidden
+      >
+        BP
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>
+          {balance > 0 ? (
+            <span className="rounded-full bg-[color:var(--fd-primary)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
+              {balance}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">{teaser}</p>
+      </div>
+      <Chevron />
+    </Link>
+  );
+}
+
 /** Staking + pool on one row; AVEC full-width below. */
 export function WalletServicePromos({
   stakingPromo,
   poolPromo,
   avecPromo,
+  pointsPromo,
 }: {
   stakingPromo: StakingPromoDTO | null;
   poolPromo: ServicePromoDTO | null;
   avecPromo: (ServicePromoDTO & { rightPrimary: string; rightSecondary?: string }) | null;
+  pointsPromo?: { balance: number; title: string; teaser: string } | null;
 }) {
   return (
     <div className="mt-4 flex flex-col gap-2 pb-6">
+      {pointsPromo ? (
+        <PointsPromoCard
+          balance={pointsPromo.balance}
+          title={pointsPromo.title}
+          teaser={pointsPromo.teaser}
+        />
+      ) : null}
       {stakingPromo ? <StakingPromoCard promo={stakingPromo} /> : null}
       {poolPromo ? (
         <div className={stakingPromo ? "" : "grid grid-cols-2 gap-2"}>

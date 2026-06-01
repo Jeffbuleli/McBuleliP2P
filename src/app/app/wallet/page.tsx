@@ -17,6 +17,7 @@ import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 import { poolNewDepositsEnabled } from "@/lib/pool-features";
+import { getRewardPointsBalance } from "@/lib/reward-points-service";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ export default async function WalletPage() {
   }
 
   const stakeVal = await getStakingValuationUsd(userId);
+  const pointsBalance = await getRewardPointsBalance(userId);
   const state = await getWalletUserState(userId, locale);
   if (!state) {
     return null;
@@ -207,6 +209,11 @@ export default async function WalletPage() {
         cryptoRows={cryptoRows}
       />
       <WalletServicePromos
+        pointsPromo={{
+          balance: pointsBalance,
+          title: d.wallet_link_points,
+          teaser: d.points_wallet_teaser,
+        }}
         stakingPromo={stakingPromo}
         poolPromo={poolPromo}
         avecPromo={{

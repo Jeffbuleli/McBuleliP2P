@@ -157,6 +157,15 @@ export async function applyKycFromProvider(args: {
       kind,
       payload: note ? { note } : {},
     });
+
+    if (status === "approved") {
+      const { tryGrantKycApprovedPoints } = await import(
+        "@/lib/reward-points-service"
+      );
+      void tryGrantKycApprovedPoints(args.userId).catch((err) => {
+        console.warn("[kyc] reward points grant skipped", err);
+      });
+    }
   }
 
   return status;

@@ -89,6 +89,8 @@ export const users = pgTable("users", {
   })
     .notNull()
     .default("0"),
+  /** Buleli Points (BP) — off-chain utility rewards; future McB claim. */
+  buleliPointsBalance: integer("buleli_points_balance").notNull().default(0),
   /**
    * Agent-only allowlist of admin modules. `null` = all modules (legacy).
    * Cleared when role is not `agent`.
@@ -1734,6 +1736,51 @@ export const botSubscriptions = pgTable(
       t.status,
       t.expiresAt,
     ),
+  ],
+);
+
+/** One row per user per grant type — idempotent earn (KYC, first bot, etc.). */
+export const rewardPointGrants = pgTable(
+  "reward_point_grants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    grantType: varchar("grant_type", { length: 48 }).notNull(),
+    points: integer("points").notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("reward_point_grants_user_grant_unique").on(
+      t.userId,
+      t.grantType,
+    ),
+    index("reward_point_grants_user_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+/** Append-only BP ledger (credits; debits in Phase 2). */
+export const rewardPointLedger = pgTable(
+  "reward_point_ledger",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(),
+    grantType: varchar("grant_type", { length: 48 }),
+    note: varchar("note", { length: 128 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("reward_point_ledger_user_created_idx").on(t.userId, t.createdAt),
   ],
 );
 

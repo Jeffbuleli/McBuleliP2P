@@ -1,6 +1,14 @@
 import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { getDb, kycResults, kycSessions, users } from "@/db";
 import { getUserKycRow } from "@/lib/kyc-service";
+import { tryGrantKycApprovedPoints } from "@/lib/reward-points-service";
+
+async function restoreApproved(userId: string): Promise<boolean> {
+  void tryGrantKycApprovedPoints(userId).catch((err) => {
+    console.warn("[kyc-restore] reward points grant skipped", err);
+  });
+  return true;
+}
 
 /**
  * Re-approve users whose KYC was wiped by buggy reconcile but proof remains
@@ -52,7 +60,7 @@ export async function restoreApprovedKycFromHistory(
           : {}),
       })
       .where(eq(users.id, userId));
-    return true;
+    return restoreApproved(userId);
   }
 
   const [approvedSession] = await db
@@ -82,7 +90,7 @@ export async function restoreApprovedKycFromHistory(
         diditSessionStatus: approvedSession.status ?? "Approved",
       })
       .where(eq(users.id, userId));
-    return true;
+    return restoreApproved(userId);
   }
 
   const [identity] = await db
@@ -108,7 +116,7 @@ export async function restoreApprovedKycFromHistory(
         kycRejectionNote: null,
       })
       .where(eq(users.id, userId));
-    return true;
+    return restoreApproved(userId);
   }
 
   const [completedSession] = await db
@@ -133,7 +141,7 @@ export async function restoreApprovedKycFromHistory(
         kycRejectionNote: null,
       })
       .where(eq(users.id, userId));
-    return true;
+    return restoreApproved(userId);
   }
 
   return false;
