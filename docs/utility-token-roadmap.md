@@ -25,7 +25,7 @@ McBuleli’s ecosystem utility layer: **Buleli Points (BP)** off-chain first, on
 
 ## Phase 3 (live) — On-chain McB (BEP-20 BSC)
 
-- **BEP-20 contract:** `McBuleliToken` — mainnet `0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd` (Remix label “ERC-20” = same interface on BSC)
+- **BEP-20 contract:** `McBuleliToken` — set `MCB_TOKEN_CONTRACT` to deploy tx **contract** address (not MetaMask wallet)
 - **Claim portal:** `/app/wallet/points` — KYC-gated BP → McB (100 BP = 1 McB), BEP20 wallet validation
 - **Admin fulfillment:** `/admin/mcb-claims`
 - Docs: `docs/mcb-token-phase3.md`, `contracts/README.md`

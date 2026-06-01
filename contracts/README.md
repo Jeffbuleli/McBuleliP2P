@@ -12,6 +12,21 @@ If Remix shows **"Type: ERC-20 Token"**, that is expected on BSC:
 
 Source: [BNB Chain — Creating BEP-20 tokens](https://www.bnbchain.org/en/blog/your-guide-to-creating-bep-20-tokens-on-bnb-smart-chain).
 
+## Wallet address ≠ contract address
+
+| | MetaMask wallet (EOA) | McBuleliToken contract |
+|---|----------------------|-------------------------|
+| Role | Pays gas, receives initial mint | Holds token logic + `totalSupply` |
+| BscScan | No **Contract** tab | **Contract** tab + verified source |
+| Use in app | Treasury can hold McB | `MCB_TOKEN_CONTRACT` env only |
+
+**Never** put your personal wallet in `MCB_TOKEN_CONTRACT`.
+
+### After deploy — copy the right address
+
+1. Remix → **Deploy & run** → **Deployed Contracts** → **McBuleliToken** → address on the contract row.
+2. BscScan → your wallet → tx **Contract Creation** → **Contract** field in receipt.
+
 ## BEP-20 checklist (this contract)
 
 | Method | `McBuleliToken.sol` |
@@ -25,28 +40,18 @@ Source: [BNB Chain — Creating BEP-20 tokens](https://www.bnbchain.org/en/blog/
 
 Plus metadata: `name`, `symbol`, `decimals` (18).
 
-## Mainnet deploy (reference)
-
-| Field | Value |
-|-------|--------|
-| Contract | `McBuleliToken` |
-| Chain | BNB Smart Chain (56) |
-| Address | `0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd` |
-| Explorer | https://bscscan.com/token/0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd |
-
-Set on Render: `MCB_TOKEN_CONTRACT=0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd`
-
 ## Remix deploy steps
 
 1. [Remix](https://remix.ethereum.org) → compile `McBuleliToken.sol` (0.8.20).
 2. Deploy → **Injected Provider** → wallet on **BNB Smart Chain** (not Ethereum).
 3. Constructor: `initialSupply` in **wei** (e.g. `100000000000000000000000000` = 100M tokens).
-4. Verify on [BscScan](https://bscscan.com/verifyContract) (same source + compiler settings).
-5. Transfer treasury supply to multisig; revoke/minimize owner mint if policy requires fixed supply.
+4. Copy **contract** address → set `MCB_TOKEN_CONTRACT` on Render.
+5. Verify on [BscScan](https://bscscan.com/verifyContract).
+6. Transfer treasury supply to multisig if needed.
 
 ## App integration
 
-- Claim wallets validated as **BEP20** (`0x` + 40 hex) — same as USDT BEP20 withdrawals.
-- PancakeSwap: pair McB/WBNB or McB/USDT after liquidity seed.
+- Claim wallets validated as **BEP20** (`0x` + 40 hex).
+- PancakeSwap: import token by **contract** address.
 
 See [`docs/mcb-token-phase3.md`](../docs/mcb-token-phase3.md).

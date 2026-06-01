@@ -43,14 +43,14 @@ Claim wallets use the same validation as **USDT BEP20** withdrawals (`0x` + 40 h
 ## Env (Render)
 
 ```env
-# BEP-20 contract on BSC mainnet (required for explorer link + PancakeSwap default URL)
-MCB_TOKEN_CONTRACT=0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd
+# BEP-20 **contract** on BSC (NOT your MetaMask wallet address)
+MCB_TOKEN_CONTRACT=0xYourTokenContractAddress
 
 # Accept claims + burn BP (when treasury is ready)
 MCB_CLAIM_ENABLED=true
 
-# Optional — defaults to PancakeSwap swap with outputCurrency=MCB_TOKEN_CONTRACT
-# MCB_PANCAKESWAP_URL=https://pancakeswap.finance/swap?outputCurrency=0x2D2bB686E52bD85057AdBFd1CD0a2b5A1e6aC4Cd
+# Optional — defaults to PancakeSwap with outputCurrency=MCB_TOKEN_CONTRACT
+# MCB_PANCAKESWAP_URL=https://pancakeswap.finance/swap?outputCurrency=0x...
 
 MCB_CLAIM_MIN_BP=100
 ```
@@ -65,6 +65,16 @@ npm run db:migrate:render
 ```
 
 Applies `0054_mcb_claims.sql`.
+
+## Find the contract address (wallet ≠ contract)
+
+After deploy in Remix:
+
+1. **Deploy & run** → **Deployed Contracts** → expand **McBuleliToken** → copy the address shown **on the contract block** (not “Account” at the top).
+2. Or on [BscScan](https://bscscan.com): open your wallet → **Transactions** → find **Contract Creation** → **To** = new contract address.
+3. On BscScan, the contract page shows **Contract** tab + bytecode. A wallet only shows **Transactions** / balance, no “Contract” tab.
+
+If you only have your MetaMask address and no “Contract Creation” tx, **redeploy** `McBuleliToken` on BSC and copy the new contract address.
 
 ## Deploy checklist (BSC)
 
