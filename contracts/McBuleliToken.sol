@@ -34,11 +34,13 @@ contract McBuleliToken {
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
+    /// @dev BEP-20 / ERC-20 standard transfer.
     function transfer(address to, uint256 amount) external returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
     }
 
+    /// @dev BEP-20 / ERC-20 standard approve.
     function approve(address spender, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
