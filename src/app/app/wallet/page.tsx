@@ -17,7 +17,6 @@ import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 import { poolNewDepositsEnabled } from "@/lib/pool-features";
-import { getRewardPointsBalance } from "@/lib/reward-points-service";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +69,10 @@ export default async function WalletPage() {
   }
 
   const stakeVal = await getStakingValuationUsd(userId);
+  const { reconcileUserRewardPoints, getRewardPointsBalance } = await import(
+    "@/lib/reward-points-service"
+  );
+  await reconcileUserRewardPoints(userId);
   const pointsBalance = await getRewardPointsBalance(userId);
   const state = await getWalletUserState(userId, locale);
   if (!state) {

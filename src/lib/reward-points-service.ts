@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import {
   botSubscriptions,
   getDb,
@@ -65,11 +65,13 @@ async function readBalance(
 
 /**
  * Idempotent one-time grant. Returns points credited (0 if already granted or capped).
+ * Reconcile/backfill passes skipMonthlyCap so retroactive one-shots always credit.
  */
 export async function tryGrantRewardPoints(args: {
   userId: string;
   grantType: RewardGrantType;
   meta?: Record<string, unknown>;
+  skipMonthlyCap?: boolean;
 }): Promise<{ granted: boolean; points: number; balance: number }> {
   const points = REWARD_POINTS[args.grantType];
   if (!Number.isFinite(points) || points <= 0) {
@@ -77,10 +79,12 @@ export async function tryGrantRewardPoints(args: {
     return { granted: false, points: 0, balance: bal };
   }
 
-  const earnedThisMonth = await monthlyEarnedPoints(args.userId);
-  if (earnedThisMonth + points > REWARD_MONTHLY_EARN_CAP) {
-    const bal = await getRewardPointsBalance(args.userId);
-    return { granted: false, points: 0, balance: bal };
+  if (!args.skipMonthlyCap) {
+    const earnedThisMonth = await monthlyEarnedPoints(args.userId);
+    if (earnedThisMonth + points > REWARD_MONTHLY_EARN_CAP) {
+      const bal = await getRewardPointsBalance(args.userId);
+      return { granted: false, points: 0, balance: bal };
+    }
   }
 
   const db = getDb();
@@ -243,4 +247,128 @@ export async function tryGrantEmailVerifiedPoints(
     userId,
     grantType: REWARD_GRANT.EMAIL_VERIFIED,
   });
+}
+
+export type ReconcileRewardPointsResult = {
+  credited: Array<{ grantType: RewardGrantType; points: number }>;
+};
+
+/**
+ * Credit any missing one-time BP for past actions (email, KYC, first bot).
+ * Safe to call on login, points page, or bulk backfill — idempotent.
+ */
+export async function reconcileUserRewardPoints(
+  userId: string,
+): Promise<ReconcileRewardPointsResult> {
+  const credited: ReconcileRewardPointsResult["credited"] = [];
+  const db = getDb();
+
+  const [user] = await db
+    .select({
+      emailVerifiedAt: users.emailVerifiedAt,
+      kycStatus: users.kycStatus,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) return { credited };
+
+  const reconcileMeta = { source: "reconcile" as const };
+
+  if (user.emailVerifiedAt) {
+    const r = await tryGrantRewardPoints({
+      userId,
+      grantType: REWARD_GRANT.EMAIL_VERIFIED,
+      meta: reconcileMeta,
+      skipMonthlyCap: true,
+    });
+    if (r.granted) {
+      credited.push({ grantType: REWARD_GRANT.EMAIL_VERIFIED, points: r.points });
+    }
+  }
+
+  if (user.kycStatus === "approved") {
+    const r = await tryGrantRewardPoints({
+      userId,
+      grantType: REWARD_GRANT.KYC_APPROVED,
+      meta: reconcileMeta,
+      skipMonthlyCap: true,
+    });
+    if (r.granted) {
+      credited.push({ grantType: REWARD_GRANT.KYC_APPROVED, points: r.points });
+    }
+  }
+
+  const [firstBot] = await db
+    .select({
+      id: botSubscriptions.id,
+      planId: botSubscriptions.planId,
+    })
+    .from(botSubscriptions)
+    .where(eq(botSubscriptions.userId, userId))
+    .orderBy(asc(botSubscriptions.createdAt))
+    .limit(1);
+
+  if (firstBot) {
+    const r = await tryGrantRewardPoints({
+      userId,
+      grantType: REWARD_GRANT.BOT_FIRST_SUBSCRIPTION,
+      meta: {
+        ...reconcileMeta,
+        planId: firstBot.planId,
+        subscriptionId: firstBot.id,
+      },
+      skipMonthlyCap: true,
+    });
+    if (r.granted) {
+      credited.push({
+        grantType: REWARD_GRANT.BOT_FIRST_SUBSCRIPTION,
+        points: r.points,
+      });
+    }
+  }
+
+  return { credited };
+}
+
+export type BackfillRewardPointsResult = {
+  usersProcessed: number;
+  grantsCreated: number;
+  pointsCredited: number;
+};
+
+/** Bulk backfill — all users with eligible past actions. */
+export async function backfillAllUserRewardPoints(args?: {
+  batchSize?: number;
+}): Promise<BackfillRewardPointsResult> {
+  const batchSize = args?.batchSize ?? 100;
+  const db = getDb();
+  let offset = 0;
+  let usersProcessed = 0;
+  let grantsCreated = 0;
+  let pointsCredited = 0;
+
+  for (;;) {
+    const batch = await db
+      .select({ id: users.id })
+      .from(users)
+      .orderBy(users.createdAt)
+      .limit(batchSize)
+      .offset(offset);
+
+    if (batch.length === 0) break;
+
+    for (const row of batch) {
+      const { credited } = await reconcileUserRewardPoints(row.id);
+      usersProcessed += 1;
+      grantsCreated += credited.length;
+      pointsCredited += credited.reduce((s, c) => s + c.points, 0);
+    }
+
+    offset += batch.length;
+    if (batch.length < batchSize) break;
+  }
+
+  return { usersProcessed, grantsCreated, pointsCredited };
 }

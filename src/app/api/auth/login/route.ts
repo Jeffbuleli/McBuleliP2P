@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       getSessionCookieWriteOptions(),
     );
     reconcileKycAfterLogin(sessionUser.id);
+    reconcileRewardPointsAfterLogin(sessionUser.id);
     return res;
   } catch (e) {
     console.error("[auth/login]", e);
@@ -84,5 +85,12 @@ async function reconcileKycAfterLogin(userId: string) {
   const { tryRefreshKycIfPending } = await import("@/lib/didit/try-refresh-pending");
   void tryRefreshKycIfPending(userId).catch((err) => {
     console.warn("[auth/login] kyc reconcile", err);
+  });
+}
+
+async function reconcileRewardPointsAfterLogin(userId: string) {
+  const { reconcileUserRewardPoints } = await import("@/lib/reward-points-service");
+  void reconcileUserRewardPoints(userId).catch((err) => {
+    console.warn("[auth/login] reward points reconcile", err);
   });
 }

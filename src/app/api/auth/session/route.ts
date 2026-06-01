@@ -52,5 +52,11 @@ export async function GET() {
     token,
     getSessionCookieWriteOptions(sessionMaxAgeSeconds()),
   );
+
+  const { reconcileUserRewardPoints } = await import("@/lib/reward-points-service");
+  void reconcileUserRewardPoints(user.id).catch((err) => {
+    console.warn("[auth/session] reward points reconcile", err);
+  });
+
   return res;
 }

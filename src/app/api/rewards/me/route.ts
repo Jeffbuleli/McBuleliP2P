@@ -7,6 +7,7 @@ import {
 import {
   getRewardPointsSummary,
   listRewardPointLedger,
+  reconcileUserRewardPoints,
 } from "@/lib/reward-points-service";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+
+  await reconcileUserRewardPoints(userId);
 
   const [summary, ledger] = await Promise.all([
     getRewardPointsSummary(userId),
