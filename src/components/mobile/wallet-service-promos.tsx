@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ServicePromoDTO, StakingPromoDTO } from "@/components/mobile/wallet-overview";
 import { AvecCompactIllustration } from "@/components/wallet/avec-illustrations";
+import { BuleliPointsCompactIllustration } from "@/components/wallet/points-illustrations";
 import { StakingHeroIllustration } from "@/components/wallet/staking-illustrations";
 import { WalletIconPool } from "@/components/wallet/wallet-service-icons";
 
@@ -131,12 +132,7 @@ function PointsPromoCard({
       href="/app/wallet/points"
       className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
     >
-      <span
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-emerald-100 text-lg font-black text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/20"
-        aria-hidden
-      >
-        BP
-      </span>
+      <BuleliPointsCompactIllustration className="h-12 w-12 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>

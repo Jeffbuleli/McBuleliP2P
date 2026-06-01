@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import {
+  BuleliPointsEarnIllustration,
+  BuleliPointsHeroIllustration,
+  BuleliPointsSpendIllustration,
+} from "@/components/wallet/points-illustrations";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
 import { interpolate } from "@/i18n/messages";
@@ -13,7 +18,23 @@ type LedgerRow = {
   id: string;
   amount: number;
   grantType: string | null;
+  note: string | null;
   createdAt: string;
+};
+
+type SpendOption = {
+  id: string;
+  perkType: string;
+  costBp: number;
+  discountPercent: number;
+  validDays: number;
+};
+
+type ActivePerk = {
+  id: string;
+  perkType: string;
+  discountPercent: number;
+  expiresAt: string;
 };
 
 type RewardsPayload = {
@@ -21,24 +42,51 @@ type RewardsPayload = {
   monthlyEarned: number;
   monthlyCap: number;
   earnRates: Record<string, number>;
+  spendOptions: SpendOption[];
+  activePerks: ActivePerk[];
   grants: Grants;
   ledger: LedgerRow[];
 };
 
-function grantLabel(
+function ledgerLabel(
   t: (k: keyof import("@/i18n/messages").Messages, vars?: Record<string, string | number>) => string,
-  grantType: string | null,
+  row: LedgerRow,
 ): string {
-  if (grantType === REWARD_GRANT.KYC_APPROVED) return t("points_ledger_kyc_approved");
-  if (grantType === REWARD_GRANT.EMAIL_VERIFIED) return t("points_ledger_email_verified");
-  if (grantType === REWARD_GRANT.BOT_FIRST_SUBSCRIPTION) return t("points_ledger_bot_first");
-  return grantType ?? "—";
+  if (row.grantType === REWARD_GRANT.KYC_APPROVED) return t("points_ledger_kyc_approved");
+  if (row.grantType === REWARD_GRANT.EMAIL_VERIFIED) return t("points_ledger_email_verified");
+  if (row.grantType === REWARD_GRANT.BOT_FIRST_SUBSCRIPTION) return t("points_ledger_bot_first");
+  if (row.grantType === REWARD_GRANT.STAKING_OPENED) return t("points_ledger_staking_opened");
+  if (row.grantType === REWARD_GRANT.STAKING_MATURED) return t("points_ledger_staking_matured");
+  if (row.grantType === REWARD_GRANT.P2P_TRADE_COMPLETED) return t("points_ledger_p2p_trade");
+  if (row.note === "spend:p2p_fee_discount_15") return t("points_ledger_spend_p2p_fee");
+  if (row.note === "spend:bot_renewal_discount_10") return t("points_ledger_spend_bot_renewal");
+  return row.grantType ?? row.note ?? "—";
+}
+
+function spendLabel(
+  t: (k: keyof import("@/i18n/messages").Messages) => string,
+  spendId: string,
+): string {
+  if (spendId === "P2P_FEE_DISCOUNT_15") return t("points_spend_p2p_fee");
+  if (spendId === "BOT_RENEWAL_DISCOUNT_10") return t("points_spend_bot_renewal");
+  return spendId;
+}
+
+function perkLabel(
+  t: (k: keyof import("@/i18n/messages").Messages) => string,
+  perkType: string,
+): string {
+  if (perkType === "p2p_fee_discount_15") return t("points_spend_p2p_fee");
+  if (perkType === "bot_renewal_discount_10") return t("points_spend_bot_renewal");
+  return perkType;
 }
 
 export default function WalletPointsPage() {
   const { t, locale } = useI18n();
   const [data, setData] = useState<RewardsPayload | null>(null);
   const [loadErr, setLoadErr] = useState(false);
+  const [spendErr, setSpendErr] = useState<string | null>(null);
+  const [spendingId, setSpendingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadErr(false);
@@ -57,7 +105,7 @@ export default function WalletPointsPage() {
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
-  const earnRows = useMemo(() => {
+  const oneTimeEarnRows = useMemo(() => {
     if (!data) return [];
     const rates = data.earnRates;
     return [
@@ -85,6 +133,60 @@ export default function WalletPointsPage() {
     ];
   }, [data, t]);
 
+  const repeatableEarnRows = useMemo(() => {
+    if (!data) return [];
+    const rates = data.earnRates;
+    return [
+      {
+        key: REWARD_GRANT.STAKING_OPENED,
+        label: t("points_earn_staking_open"),
+        points: rates[REWARD_GRANT.STAKING_OPENED] ?? 0,
+        href: "/app/wallet/staking",
+      },
+      {
+        key: REWARD_GRANT.STAKING_MATURED,
+        label: t("points_earn_staking_mature"),
+        points: rates[REWARD_GRANT.STAKING_MATURED] ?? 0,
+        href: "/app/wallet/staking",
+      },
+      {
+        key: REWARD_GRANT.P2P_TRADE_COMPLETED,
+        label: t("points_earn_p2p"),
+        points: rates[REWARD_GRANT.P2P_TRADE_COMPLETED] ?? 0,
+        href: "/app/trade/p2p",
+      },
+    ];
+  }, [data, t]);
+
+  const activePerkTypes = useMemo(
+    () => new Set(data?.activePerks.map((p) => p.perkType) ?? []),
+    [data?.activePerks],
+  );
+
+  async function handleSpend(spendId: string) {
+    setSpendErr(null);
+    setSpendingId(spendId);
+    try {
+      const res = await fetch("/api/rewards/spend", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spendId }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) {
+        const msg = body.message ?? "points_spend_failed";
+        if (msg === "points_insufficient_balance") setSpendErr(t("points_spend_error_insufficient"));
+        else if (msg === "points_perk_already_active") setSpendErr(t("points_spend_error_active"));
+        else setSpendErr(t("points_spend_failed"));
+        return;
+      }
+      await load();
+    } finally {
+      setSpendingId(null);
+    }
+  }
+
   return (
     <div className="home-theme wallet-theme home-scroll -mx-4 min-h-[60vh] px-4 pb-10">
       <WalletSubpageHeader title={t("points_title")} backHref="/app/wallet" />
@@ -102,32 +204,68 @@ export default function WalletPointsPage() {
       {data ? (
         <div className="mt-4 space-y-4">
           <section className="fd-card overflow-hidden p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {t("points_balance")}
-            </p>
-            <p className="mt-1 text-4xl font-black tabular-nums text-[color:var(--fd-primary)]">
-              {data.balance.toLocaleString(loc)}{" "}
-              <span className="text-lg font-bold text-[color:var(--fd-muted)]">
-                {t("points_bp_unit")}
-              </span>
-            </p>
-            <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
-              {interpolate(t("points_monthly_progress"), {
-                earned: data.monthlyEarned,
-                cap: data.monthlyCap,
-              })}
-            </p>
+            <div className="flex items-start gap-4">
+              <BuleliPointsHeroIllustration className="h-20 w-20 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                  {t("points_balance")}
+                </p>
+                <p className="mt-1 text-4xl font-black tabular-nums text-[color:var(--fd-primary)]">
+                  {data.balance.toLocaleString(loc)}{" "}
+                  <span className="text-lg font-bold text-[color:var(--fd-muted)]">
+                    {t("points_bp_unit")}
+                  </span>
+                </p>
+                <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
+                  {interpolate(t("points_monthly_progress"), {
+                    earned: data.monthlyEarned,
+                    cap: data.monthlyCap,
+                  })}
+                </p>
+              </div>
+            </div>
             <p className="mt-4 text-sm leading-relaxed text-[color:var(--fd-text)]">
               {t("points_subtitle")}
             </p>
           </section>
 
+          {data.activePerks.length > 0 ? (
+            <section className="fd-card p-4">
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                {t("points_active_perks")}
+              </h2>
+              <ul className="mt-3 space-y-2">
+                {data.activePerks.map((perk) => (
+                  <li
+                    key={perk.id}
+                    className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2.5"
+                  >
+                    <BuleliPointsSpendIllustration className="h-10 w-10 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-emerald-900">
+                        {perkLabel(t, perk.perkType)} (−{perk.discountPercent}%)
+                      </p>
+                      <p className="text-[11px] text-emerald-700">
+                        {interpolate(t("points_spend_active"), {
+                          date: new Date(perk.expiresAt).toLocaleDateString(loc),
+                        })}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <section className="fd-card p-4">
-            <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
-              {t("points_how_earn")}
-            </h2>
+            <div className="flex items-center gap-2">
+              <BuleliPointsEarnIllustration className="h-9 w-9 shrink-0" />
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                {t("points_how_earn")}
+              </h2>
+            </div>
             <ul className="mt-3 space-y-2">
-              {earnRows.map((row) => (
+              {oneTimeEarnRows.map((row) => (
                 <li key={row.key}>
                   <Link
                     href={row.href}
@@ -153,6 +291,76 @@ export default function WalletPointsPage() {
                   </Link>
                 </li>
               ))}
+              {repeatableEarnRows.map((row) => (
+                <li key={row.key}>
+                  <Link
+                    href={row.href}
+                    className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-3 active:scale-[0.99]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+                        {row.label}
+                      </p>
+                      <p className="text-xs font-bold text-[color:var(--fd-primary)]">
+                        +{row.points} {t("points_bp_unit")}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                      {t("points_status_repeatable")}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="fd-card p-4">
+            <div className="flex items-center gap-2">
+              <BuleliPointsSpendIllustration className="h-9 w-9 shrink-0" />
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                {t("points_how_spend")}
+              </h2>
+            </div>
+            {spendErr ? (
+              <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+                {spendErr}
+              </p>
+            ) : null}
+            <ul className="mt-3 space-y-2">
+              {data.spendOptions.map((opt) => {
+                const isActive = activePerkTypes.has(opt.perkType);
+                const canAfford = data.balance >= opt.costBp;
+                return (
+                  <li
+                    key={opt.id}
+                    className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] px-3 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+                        {spendLabel(t, opt.id)}
+                      </p>
+                      <p className="text-xs text-[color:var(--fd-muted)]">
+                        {interpolate(t("points_spend_cost"), {
+                          cost: opt.costBp,
+                          days: opt.validDays,
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isActive || !canAfford || spendingId === opt.id}
+                      onClick={() => void handleSpend(opt.id)}
+                      className="shrink-0 rounded-full bg-[color:var(--fd-primary)] px-3 py-1.5 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {isActive
+                        ? t("points_status_done")
+                        : spendingId === opt.id
+                          ? "…"
+                          : t("points_spend_button")}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </section>
 
@@ -173,14 +381,19 @@ export default function WalletPointsPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-[color:var(--fd-text)]">
-                        {grantLabel(t, row.grantType)}
+                        {ledgerLabel(t, row)}
                       </p>
                       <p className="text-[10px] text-[color:var(--fd-muted)]">
                         {new Date(row.createdAt).toLocaleString(loc)}
                       </p>
                     </div>
-                    <p className="shrink-0 text-sm font-bold tabular-nums text-emerald-700">
-                      +{row.amount} {t("points_bp_unit")}
+                    <p
+                      className={`shrink-0 text-sm font-bold tabular-nums ${
+                        row.amount >= 0 ? "text-emerald-700" : "text-rose-700"
+                      }`}
+                    >
+                      {row.amount >= 0 ? "+" : ""}
+                      {row.amount} {t("points_bp_unit")}
                     </p>
                   </li>
                 ))}

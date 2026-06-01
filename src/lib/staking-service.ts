@@ -24,6 +24,7 @@ function asWalletAsset(asset: string): WalletAsset {
 export async function processMaturedStakesForUser(userId: string): Promise<void> {
   const db = getDb();
   const now = new Date();
+  const maturedIds: string[] = [];
 
   await db.transaction(async (tx) => {
     const matured = await tx
@@ -89,8 +90,21 @@ export async function processMaturedStakesForUser(userId: string): Promise<void>
           meta: { stakeId: s.id, aprAnnual: apr, termDays: term },
         },
       ]);
+
+      maturedIds.push(s.id);
     }
   });
+
+  if (maturedIds.length > 0) {
+    const { tryGrantStakingMaturedPoints } = await import(
+      "@/lib/reward-points-service"
+    );
+    for (const stakeId of maturedIds) {
+      void tryGrantStakingMaturedPoints({ userId, stakeId }).catch((err) => {
+        console.warn("[staking] mature reward points grant skipped", err);
+      });
+    }
+  }
 }
 
 export async function createStake(args: {
@@ -178,6 +192,11 @@ export async function createStake(args: {
 
       return id;
     });
+    void import("@/lib/reward-points-service").then(({ tryGrantStakingOpenedPoints }) =>
+      tryGrantStakingOpenedPoints({ userId: args.userId, stakeId }).catch((err) => {
+        console.warn("[staking] reward points grant skipped", err);
+      }),
+    );
     return { ok: true, stakeId };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "staking_create_failed";

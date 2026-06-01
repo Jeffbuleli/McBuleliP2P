@@ -10,10 +10,18 @@ McBuleli’s ecosystem utility layer: **Buleli Points (BP)** off-chain first, on
 - Monthly earn cap: 2,000 BP / user (anti-farming); **one-shot grants skip cap on reconcile/backfill**
 - **Retroactive credit:** `reconcileUserRewardPoints` on login + points page; bulk: `npm run db:backfill-reward-points` or `POST /api/internal/rewards/backfill` with `x-cron-secret`
 
-## Phase 2 — Expand earn & spend
+## Phase 2 (live) — Expand earn & spend
 
-- P2P volume, staking, AVEC, referral mix USDT + BP
-- Spend: fee discounts (P2P, withdraw, bot renewal)
+- **Earn (repeatable):** staking opened (+30 BP), staking matured (+50 BP), P2P trade completed as buyer (+20 BP)
+- **Spend:** P2P fee −15% (80 BP, 30d), bot renewal −10% (200 BP, 14d)
+- UI: hero BP logo, spend section, active perks on `/app/wallet/points`
+- Migration `0053_reward_points_phase2.sql` — idempotency keys + `reward_point_perks`
+- Re-run backfill after deploy for retro staking/P2P credits
+
+## Phase 2b (planned)
+
+- AVEC, referral mix USDT + BP
+- Withdraw fee discounts
 
 ## Phase 3 — On-chain McB
 

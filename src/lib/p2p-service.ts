@@ -165,6 +165,13 @@ async function finalizeReleaseToBuyer(tx: any, o: typeof p2pOrders.$inferSelect,
       .limit(1);
     if (treasuryRow) {
       feeCrypto = gross * (bps / 10_000);
+      const { applyP2pFeeDiscountInTx } = await import("@/lib/reward-point-perks");
+      feeCrypto = await applyP2pFeeDiscountInTx(
+        tx,
+        o.buyerUserId,
+        o.id,
+        feeCrypto,
+      );
       netToBuyer = gross - feeCrypto;
       if (netToBuyer <= 1e-18 || feeCrypto + 1e-18 >= gross) {
         feeCrypto = 0;
@@ -1699,7 +1706,17 @@ export async function releaseOrder(args: {
       await finalizeReleaseToBuyer(tx, o, now, ST_PAID);
     });
     const releasedCtx = await fetchOrderNotifyCtx(args.orderId);
-    if (releasedCtx) void notifyP2pOrderReleased(releasedCtx);
+    if (releasedCtx) {
+      void notifyP2pOrderReleased(releasedCtx);
+      void import("@/lib/reward-points-service").then(({ tryGrantP2pTradeCompletedPoints }) =>
+        tryGrantP2pTradeCompletedPoints({
+          userId: releasedCtx.buyerUserId,
+          orderId: args.orderId,
+        }).catch((err) => {
+          console.warn("[p2p] reward points grant skipped", err);
+        }),
+      );
+    }
     return { ok: true };
   } catch {
     return { ok: false, message: "p2p_action_not_allowed" };

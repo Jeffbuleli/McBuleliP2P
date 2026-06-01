@@ -1739,7 +1739,7 @@ export const botSubscriptions = pgTable(
   ],
 );
 
-/** One row per user per grant type — idempotent earn (KYC, first bot, etc.). */
+/** Idempotent earn row — unique on (userId, idempotencyKey). */
 export const rewardPointGrants = pgTable(
   "reward_point_grants",
   {
@@ -1748,6 +1748,7 @@ export const rewardPointGrants = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     grantType: varchar("grant_type", { length: 48 }).notNull(),
+    idempotencyKey: varchar("idempotency_key", { length: 96 }).notNull(),
     points: integer("points").notNull(),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -1755,11 +1756,37 @@ export const rewardPointGrants = pgTable(
       .notNull(),
   },
   (t) => [
-    uniqueIndex("reward_point_grants_user_grant_unique").on(
+    uniqueIndex("reward_point_grants_user_idempotency_unique").on(
       t.userId,
-      t.grantType,
+      t.idempotencyKey,
     ),
     index("reward_point_grants_user_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+/** Active spend perks (fee discounts) — Phase 2. */
+export const rewardPointPerks = pgTable(
+  "reward_point_perks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    perkType: varchar("perk_type", { length: 48 }).notNull(),
+    discountPercent: integer("discount_percent").notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    usedOrderId: uuid("used_order_id"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("reward_point_perks_user_active_idx").on(
+      t.userId,
+      t.status,
+      t.expiresAt,
+    ),
   ],
 );
 

@@ -114,11 +114,17 @@ export async function purchaseBotSubscription(args: {
     return { ok: false, message: "bots_invalid_plan" };
   }
   const plan = BOT_PLANS[args.planId];
-  const price = planPriceUsdt(args.planId, args.billing);
+  let price = planPriceUsdt(args.planId, args.billing);
   if (!Number.isFinite(price) || price <= 0) {
     return { ok: false, message: "bots_invalid_price" };
   }
   const privileged = await isSuperAdminUserId(args.userId);
+  if (!privileged) {
+    const { consumeBotRenewalDiscountPerk } = await import(
+      "@/lib/reward-point-perks"
+    );
+    price *= await consumeBotRenewalDiscountPerk(args.userId);
+  }
   const priceStr = privileged ? "0" : fmtWalletAmount(price);
   const existing = await getActiveBotSubscription(args.userId, args.planId);
   if (existing && !privileged) {
