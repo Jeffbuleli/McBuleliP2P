@@ -80,7 +80,7 @@ If you only have your MetaMask address and no “Contract Creation” tx, **rede
 
 1. Remix → compile `McBuleliToken.sol` (Solidity **0.8.20**).
 2. Deploy with **Injected Provider** on **BNB Smart Chain** (not Ethereum mainnet).
-3. Constructor `initialSupply` in **wei** (18 decimals).
+3. Constructor `initialSupply` in **wei** (18 decimals). **Remix "VALUE" must stay `0`** — only fill the constructor box (e.g. `100000000000000000000000000` for 100M McB). If VALUE = supply, you get "sender doesn't have enough funds".
 4. Verify source on **BscScan** (improves trust for PancakeSwap / wallets).
 5. Move treasury balance to **multisig**; document owner/mint policy.
 6. Set `MCB_TOKEN_CONTRACT` on Render → redeploy web service.

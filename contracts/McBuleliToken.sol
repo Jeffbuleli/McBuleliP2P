@@ -27,7 +27,8 @@ contract McBuleliToken {
         _;
     }
 
-    // initialSupply in wei, 18 decimals (e.g. 100000000000000000000000000 = 100M McB)
+    // initialSupply = token amount × 10**18 (NOT Remix "VALUE" — leave VALUE at 0).
+    // Example 100M McB: 100000000000000000000000000
     constructor(uint256 initialSupply) {
         owner = msg.sender;
         _mint(msg.sender, initialSupply);
@@ -47,6 +48,7 @@ contract McBuleliToken {
         return true;
     }
 
+    /// @dev BEP-20 / ERC-20 standard transferFrom.
     function transferFrom(
         address from,
         address to,
