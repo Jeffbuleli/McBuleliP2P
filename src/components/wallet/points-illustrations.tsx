@@ -93,3 +93,66 @@ export function BuleliPointsSpendIllustration({ className = "h-11 w-11" }: IllPr
     </svg>
   );
 }
+
+/** McB on-chain utility token badge (maroon + gold). */
+export function McBHeroIllustration({ className = "h-20 w-20" }: IllProps) {
+  return (
+    <svg className={className} viewBox="0 0 80 80" fill="none" aria-hidden>
+      <circle cx="40" cy="40" r="38" fill="#FEF2F2" />
+      <circle cx="40" cy="40" r="30" fill="url(#mcb_coin_grad)" stroke="#7F1D1D" strokeWidth="2" />
+      <circle cx="40" cy="40" r="24" fill="none" stroke="#FDE68A" strokeWidth="1.5" opacity="0.9" />
+      <text
+        x="40"
+        y="46"
+        textAnchor="middle"
+        fill="#FFFFFF"
+        fontSize="18"
+        fontWeight="800"
+        fontFamily="system-ui,sans-serif"
+        letterSpacing="-0.5"
+      >
+        McB
+      </text>
+      <path
+        d="M14 26 L26 14 M54 14 L66 26"
+        stroke="#FCA5A5"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+      <circle cx="58" cy="58" r="9" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
+      <path
+        d="M55 58h6M58 55v6"
+        stroke="#B45309"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <defs>
+        <linearGradient id="mcb_coin_grad" x1="16" y1="16" x2="64" y2="64">
+          <stop stopColor="#991B1B" />
+          <stop offset="1" stopColor="#7F1D1D" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+export function McBCompactIllustration({ className = "h-12 w-12" }: IllProps) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden>
+      <circle cx="24" cy="24" r="22" fill="#FEE2E2" />
+      <circle cx="24" cy="24" r="17" fill="#991B1B" stroke="#7F1D1D" strokeWidth="1.5" />
+      <text
+        x="24"
+        y="28"
+        textAnchor="middle"
+        fill="#FFFFFF"
+        fontSize="11"
+        fontWeight="800"
+        fontFamily="system-ui,sans-serif"
+      >
+        McB
+      </text>
+    </svg>
+  );
+}

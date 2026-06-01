@@ -17,6 +17,8 @@ export const PlatformAdminAuditAction = {
   PLATFORM_EXPENSE_APPROVE: "platform_expense.approve",
   PLATFORM_EXPENSE_REJECT: "platform_expense.reject",
   PLATFORM_EXPENSE_PAID: "platform_expense.paid",
+  MCB_CLAIM_COMPLETE: "mcb_claim.complete",
+  MCB_CLAIM_REJECT: "mcb_claim.reject",
 } as const;
 
 export async function writePlatformAdminAudit(args: {

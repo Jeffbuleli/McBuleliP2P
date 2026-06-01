@@ -23,10 +23,15 @@ McBuleli’s ecosystem utility layer: **Buleli Points (BP)** off-chain first, on
 - AVEC, referral mix USDT + BP
 - Withdraw fee discounts
 
-## Phase 3 — On-chain McB
+## Phase 3 (in progress) — On-chain McB
 
-- BEP-20 deploy, KYC-gated claim portal (BP → McB)
-- Small PancakeSwap pool + LP lock
+- **BEP-20 contract:** `contracts/McBuleliToken.sol` (deploy on BSC)
+- **Claim portal:** `/app/wallet/points` — KYC-gated BP → McB (100 BP = 1 McB)
+- **Admin fulfillment:** `/admin/mcb-claims` — treasury send + tx hash
+- Migration `0054_mcb_claims.sql`
+- Env: `NEXT_PUBLIC_MCB_CLAIM_PREVIEW`, `MCB_CLAIM_ENABLED`, `MCB_TOKEN_CONTRACT`
+- Deploy guide: `docs/mcb-token-phase3.md`
+- **PancakeSwap:** small pool + LP lock (manual ops)
 
 ## Phase 4 — DEX scale
 

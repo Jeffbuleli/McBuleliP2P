@@ -7,6 +7,7 @@ import {
   BuleliPointsEarnIllustration,
   BuleliPointsHeroIllustration,
   BuleliPointsSpendIllustration,
+  McBHeroIllustration,
 } from "@/components/wallet/points-illustrations";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
@@ -48,6 +49,36 @@ type RewardsPayload = {
   ledger: LedgerRow[];
 };
 
+type ClaimConfig = {
+  preview: boolean;
+  enabled: boolean;
+  bpPerMcb: number;
+  minBp: number;
+  chainLabel: string;
+  contractAddress: string | null;
+  dexUrl: string | null;
+};
+
+type ClaimRow = {
+  id: string;
+  bpAmount: number;
+  mcbAmount: string;
+  walletAddress: string;
+  status: string;
+  txHash: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+type ClaimPayload = {
+  config: ClaimConfig;
+  kycApproved: boolean;
+  balance: number;
+  maxClaimBp: number;
+  pending: ClaimRow | null;
+  claims: ClaimRow[];
+};
+
 function ledgerLabel(
   t: (k: keyof import("@/i18n/messages").Messages, vars?: Record<string, string | number>) => string,
   row: LedgerRow,
@@ -60,6 +91,8 @@ function ledgerLabel(
   if (row.grantType === REWARD_GRANT.P2P_TRADE_COMPLETED) return t("points_ledger_p2p_trade");
   if (row.note === "spend:p2p_fee_discount_15") return t("points_ledger_spend_p2p_fee");
   if (row.note === "spend:bot_renewal_discount_10") return t("points_ledger_spend_bot_renewal");
+  if (row.note?.startsWith("mcb_claim_refund:")) return t("points_ledger_mcb_refund");
+  if (row.note?.startsWith("mcb_claim:")) return t("points_ledger_mcb_claim");
   return row.grantType ?? row.note ?? "—";
 }
 
@@ -87,16 +120,27 @@ export default function WalletPointsPage() {
   const [loadErr, setLoadErr] = useState(false);
   const [spendErr, setSpendErr] = useState<string | null>(null);
   const [spendingId, setSpendingId] = useState<string | null>(null);
+  const [claimData, setClaimData] = useState<ClaimPayload | null>(null);
+  const [claimWallet, setClaimWallet] = useState("");
+  const [claimBp, setClaimBp] = useState("");
+  const [claimErr, setClaimErr] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
 
   const load = useCallback(async () => {
     setLoadErr(false);
-    const res = await fetch("/api/rewards/me", { credentials: "same-origin" });
-    if (!res.ok) {
+    const [rewardsRes, claimRes] = await Promise.all([
+      fetch("/api/rewards/me", { credentials: "same-origin" }),
+      fetch("/api/rewards/claim", { credentials: "same-origin" }),
+    ]);
+    if (!rewardsRes.ok) {
       setLoadErr(true);
       setData(null);
       return;
     }
-    setData((await res.json()) as RewardsPayload);
+    setData((await rewardsRes.json()) as RewardsPayload);
+    if (claimRes.ok) {
+      setClaimData((await claimRes.json()) as ClaimPayload);
+    }
   }, []);
 
   useEffect(() => {
@@ -186,6 +230,51 @@ export default function WalletPointsPage() {
       setSpendingId(null);
     }
   }
+
+  function claimErrorMessage(code: string): string {
+    if (code === "mcb_claim_disabled") return t("mcb_claim_error_disabled");
+    if (code === "mcb_claim_kyc_required") return t("mcb_claim_error_kyc");
+    if (code === "mcb_claim_insufficient_bp") return t("mcb_claim_error_balance");
+    if (code === "mcb_claim_pending_exists") return t("mcb_claim_error_pending");
+    if (code === "mcb_claim_invalid_address") return t("mcb_claim_error_address");
+    if (code === "mcb_claim_bp_step") return t("mcb_claim_error_step");
+    if (code === "mcb_claim_min_bp") return t("mcb_claim_error_min");
+    return t("mcb_claim_error_generic");
+  }
+
+  async function handleClaim(e: React.FormEvent) {
+    e.preventDefault();
+    if (!claimData?.config.enabled) return;
+    setClaimErr(null);
+    setClaiming(true);
+    try {
+      const res = await fetch("/api/rewards/claim", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bpAmount: Number(claimBp),
+          walletAddress: claimWallet.trim(),
+        }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) {
+        setClaimErr(claimErrorMessage(body.message ?? "mcb_claim_error_generic"));
+        return;
+      }
+      setClaimWallet("");
+      setClaimBp("");
+      await load();
+    } finally {
+      setClaiming(false);
+    }
+  }
+
+  const claimMcbPreview = useMemo(() => {
+    const bp = Number(claimBp);
+    if (!claimData || !Number.isFinite(bp) || bp <= 0) return "—";
+    return (bp / claimData.config.bpPerMcb).toString();
+  }, [claimBp, claimData]);
 
   return (
     <div className="home-theme wallet-theme home-scroll -mx-4 min-h-[60vh] px-4 pb-10">
@@ -400,6 +489,144 @@ export default function WalletPointsPage() {
               </ul>
             )}
           </section>
+
+          {claimData?.config.preview ? (
+            <section className="fd-card overflow-hidden p-4">
+              <div className="flex items-start gap-3">
+                <McBHeroIllustration className="h-16 w-16 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                    {t("mcb_claim_title")}
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-[color:var(--fd-muted)]">
+                    {interpolate(t("mcb_claim_ratio"), {
+                      bp: claimData.config.bpPerMcb,
+                    })}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
+                    {claimData.config.chainLabel}
+                    {claimData.config.contractAddress
+                      ? ` · ${claimData.config.contractAddress.slice(0, 8)}…${claimData.config.contractAddress.slice(-6)}`
+                      : ""}
+                  </p>
+                </div>
+              </div>
+
+              {!claimData.config.enabled ? (
+                <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  {t("mcb_claim_preview_notice")}
+                </p>
+              ) : null}
+
+              {claimData.pending ? (
+                <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/80 px-3 py-3">
+                  <p className="text-sm font-semibold text-sky-900">
+                    {t("mcb_claim_pending_title")}
+                  </p>
+                  <p className="mt-1 text-xs text-sky-800">
+                    {claimData.pending.mcbAmount} McB →{" "}
+                    <span className="font-mono">{claimData.pending.walletAddress}</span>
+                  </p>
+                  <p className="mt-1 text-[10px] text-sky-700">
+                    {new Date(claimData.pending.createdAt).toLocaleString(loc)}
+                  </p>
+                </div>
+              ) : null}
+
+              {!claimData.kycApproved ? (
+                <p className="mt-4 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2 text-xs text-[color:var(--fd-text)]">
+                  {t("mcb_claim_kyc_required")}{" "}
+                  <Link href="/app/profile/kyc" className="font-bold text-[color:var(--fd-primary)]">
+                    KYC →
+                  </Link>
+                </p>
+              ) : claimData.config.enabled && !claimData.pending ? (
+                <form onSubmit={(e) => void handleClaim(e)} className="mt-4 space-y-3">
+                  {claimErr ? (
+                    <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+                      {claimErr}
+                    </p>
+                  ) : null}
+                  <label className="block">
+                    <span className="text-[11px] font-semibold text-[color:var(--fd-muted)]">
+                      {t("mcb_claim_wallet_label")}
+                    </span>
+                    <input
+                      type="text"
+                      value={claimWallet}
+                      onChange={(e) => setClaimWallet(e.target.value)}
+                      placeholder="0x…"
+                      className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 font-mono text-sm text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)]"
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[11px] font-semibold text-[color:var(--fd-muted)]">
+                      {t("mcb_claim_bp_label")}
+                    </span>
+                    <input
+                      type="number"
+                      min={claimData.config.minBp}
+                      step={claimData.config.bpPerMcb}
+                      max={claimData.maxClaimBp}
+                      value={claimBp}
+                      onChange={(e) => setClaimBp(e.target.value)}
+                      placeholder={String(claimData.config.minBp)}
+                      className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm tabular-nums text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)]"
+                      required
+                    />
+                    <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
+                      {interpolate(t("mcb_claim_you_receive"), { mcb: claimMcbPreview })}
+                    </p>
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={
+                      claiming ||
+                      claimData.balance < claimData.config.minBp ||
+                      claimData.maxClaimBp < claimData.config.minBp
+                    }
+                    className="w-full rounded-xl bg-[#991B1B] py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {claiming ? "…" : t("mcb_claim_submit")}
+                  </button>
+                </form>
+              ) : null}
+
+              {claimData.claims.length > 0 ? (
+                <ul className="mt-4 divide-y divide-[color:var(--fd-border)] border-t border-[color:var(--fd-border)] pt-3">
+                  {claimData.claims.slice(0, 5).map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-2 py-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[color:var(--fd-text)]">
+                          {c.mcbAmount} McB
+                        </p>
+                        <p className="text-[10px] text-[color:var(--fd-muted)]">
+                          {new Date(c.createdAt).toLocaleDateString(loc)} · {c.status}
+                        </p>
+                      </div>
+                      {c.txHash ? (
+                        <span className="max-w-[120px] truncate font-mono text-[9px] text-[color:var(--fd-muted)]">
+                          {c.txHash}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {claimData.config.dexUrl ? (
+                <a
+                  href={claimData.config.dexUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block text-[11px] font-bold text-[color:var(--fd-primary)]"
+                >
+                  {t("mcb_claim_dex_link")} ↗
+                </a>
+              ) : null}
+            </section>
+          ) : null}
 
           <p className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 px-4 py-3 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
             {t("points_disclaimer")}

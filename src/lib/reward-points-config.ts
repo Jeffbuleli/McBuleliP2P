@@ -27,7 +27,7 @@ export const REWARD_POINTS: Record<RewardGrantType, number> = {
 /** Max BP credited per user per calendar month (UTC). */
 export const REWARD_MONTHLY_EARN_CAP = 2000;
 
-/** Future on-chain claim ratio (not active until Phase 3). */
+/** Future on-chain claim ratio — active in Phase 3 claim portal. */
 export const REWARD_BP_PER_MCB_CLAIM = 100;
 
 export const REWARD_SPEND = {

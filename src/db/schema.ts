@@ -1811,6 +1811,34 @@ export const rewardPointLedger = pgTable(
   ],
 );
 
+/** BP → McB on-chain claim queue (Phase 3). */
+export const mcbClaims = pgTable(
+  "mcb_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    bpAmount: integer("bp_amount").notNull(),
+    mcbAmount: numeric("mcb_amount", { precision: 36, scale: 18 }).notNull(),
+    walletAddress: varchar("wallet_address", { length: 64 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    txHash: varchar("tx_hash", { length: 128 }),
+    rejectReason: text("reject_reason"),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("mcb_claims_user_status_idx").on(t.userId, t.status, t.createdAt),
+    index("mcb_claims_status_created_idx").on(t.status, t.createdAt),
+  ],
+);
+
 /** In-app notifications (bell drawer). */
 export const userNotifications = pgTable(
   "user_notifications",
