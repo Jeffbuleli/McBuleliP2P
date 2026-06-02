@@ -34,11 +34,23 @@ async function resendFetch(
   return { ok: res.ok, status: res.status, body };
 }
 
-function maySendViaResendApi(): boolean {
+/** Whether Resend API will be called (prod always; local needs RESEND_ALLOW_SEND). */
+export function canSendViaResendApi(): boolean {
   if (!process.env.RESEND_API_KEY?.trim()) return false;
   if (process.env.NODE_ENV === "production") return true;
   const allow = (process.env.RESEND_ALLOW_SEND ?? "").trim().toLowerCase();
   return allow === "1" || allow === "true" || allow === "yes";
+}
+
+/** Human-readable reason when canSendViaResendApi() is false. */
+export function resendSendBlockedReason(): string | null {
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    return "RESEND_API_KEY manquant dans .env";
+  }
+  if (process.env.NODE_ENV === "production") return null;
+  const allow = (process.env.RESEND_ALLOW_SEND ?? "").trim().toLowerCase();
+  if (allow === "1" || allow === "true" || allow === "yes") return null;
+  return "RESEND_ALLOW_SEND=true requis en local (ajoutez dans .env à la racine du projet)";
 }
 
 function devPreview(args: Record<string, unknown>): boolean {
@@ -46,11 +58,11 @@ function devPreview(args: Record<string, unknown>): boolean {
     console.warn("[email] RESEND_API_KEY missing — email not sent", args);
     return false;
   }
-  console.info(
-    "[email] dev preview (no Resend API call — set RESEND_ALLOW_SEND=true to send)",
+  console.warn(
+    "[email] not sent — set RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env",
     args,
   );
-  return true;
+  return false;
 }
 
 export async function sendEmail(args: {
@@ -63,7 +75,7 @@ export async function sendEmail(args: {
   const from = emailFromAddress();
   const replyTo = emailReplyTo();
 
-  if (!maySendViaResendApi()) {
+  if (!canSendViaResendApi()) {
     return devPreview({
       mode: "html",
       to: args.to,
@@ -111,7 +123,7 @@ export async function sendResendTemplate(args: {
   const from = emailFromAddress();
   const replyTo = emailReplyTo();
 
-  if (!maySendViaResendApi()) {
+  if (!canSendViaResendApi()) {
     return devPreview({
       mode: "template",
       to: args.to,

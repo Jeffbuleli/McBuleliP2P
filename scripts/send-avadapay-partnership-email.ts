@@ -5,10 +5,12 @@
  *   npx tsx scripts/send-avadapay-partnership-email.ts --template avadapay_initial_fr --preview
  *   npx tsx scripts/send-avadapay-partnership-email.ts --template avadapay_initial_fr --to info@avadapay.com --send
  *
- * Requires RESEND_API_KEY and RESEND_ALLOW_SEND=true in dev.
+ * Requires RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env (loaded automatically).
  */
+import { existsSync } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
+import { loadEnvFile } from "node:process";
 import {
   getPartnershipTemplate,
   listPartnershipTemplateIds,
@@ -16,6 +18,22 @@ import {
 } from "../src/lib/email/partnership/avadapay-templates";
 import { renderPartnershipEmail } from "../src/lib/email/partnership/render-partnership-email";
 import { sendPartnershipEmail } from "../src/lib/email/partnership/send-partnership-email";
+import {
+  canSendViaResendApi,
+  resendSendBlockedReason,
+} from "../src/lib/email/send";
+
+function loadLocalEnv(): void {
+  const envPath = path.resolve(process.cwd(), ".env");
+  if (!existsSync(envPath)) return;
+  try {
+    loadEnvFile(envPath);
+  } catch {
+    /* already loaded */
+  }
+}
+
+loadLocalEnv();
 
 function parseArgs(argv: string[]) {
   const out: Record<string, string | boolean> = {};
@@ -54,7 +72,11 @@ async function main() {
   }
 
   const template = getPartnershipTemplate(templateId);
-  const { html, text, subject } = renderPartnershipEmail({ template });
+  const useInlineImages = !args.preview;
+  const { html, text, subject } = renderPartnershipEmail({
+    template,
+    useInlineImages,
+  });
 
   if (args.preview) {
     const outDir = path.join(process.cwd(), ".tmp");
@@ -64,6 +86,7 @@ async function main() {
     fs.writeFileSync(`${base}.txt`, text, "utf8");
     console.log(`Subject: ${subject}`);
     console.log(`Wrote ${base}.html and ${base}.txt`);
+    console.log("(Images via mcbuleli.org — ouvrir le .html en ligne si besoin.)");
     return;
   }
 
@@ -78,12 +101,21 @@ async function main() {
     process.exit(1);
   }
 
-  const ok = await sendPartnershipEmail({ to, templateId });
-  if (!ok) {
-    console.error("Send failed or skipped (check RESEND_API_KEY / RESEND_ALLOW_SEND).");
+  if (!canSendViaResendApi()) {
+    const reason = resendSendBlockedReason();
+    console.error("Envoi bloqué:", reason ?? "configuration Resend invalide");
+    console.error("Vérifiez .env à la racine du projet :");
+    console.error("  RESEND_API_KEY=re_...");
+    console.error("  RESEND_ALLOW_SEND=true");
     process.exit(1);
   }
-  console.log(`Sent "${subject}" to ${to}`);
+
+  const ok = await sendPartnershipEmail({ to, templateId });
+  if (!ok) {
+    console.error("Échec Resend — voir les logs [email] resend html error ci-dessus.");
+    process.exit(1);
+  }
+  console.log(`✓ Envoyé via Resend : "${subject}" → ${to}`);
 }
 
 main().catch((e) => {

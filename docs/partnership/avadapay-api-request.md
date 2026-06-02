@@ -45,13 +45,20 @@ open .tmp/avadapay-avadapay_initial_fr.html
 
 Depuis `hi@mcbuleli.org` (reply-to) · expéditeur `McBuleli <noreply@mcbuleli.org>`.
 
+Le script **charge `.env` automatiquement**. Sans ça, l’envoi est ignoré en local.
+
 ```bash
-# .env : RESEND_API_KEY=re_...  RESEND_ALLOW_SEND=true
-npx tsx scripts/send-avadapay-partnership-email.ts \
+# .env à la racine :
+# RESEND_API_KEY=re_...
+# RESEND_ALLOW_SEND=true
+
+npm run email:avadapay -- \
   --template avadapay_initial_fr \
   --to info@avadapay.com \
   --send
 ```
+
+Si vous voyez `Envoi bloqué` ou pas de mail dans Gmail : vérifiez Resend → **Emails** (logs) et que le domaine `mcbuleli.org` est vérifié.
 
 **Recommandation :** envoyer depuis **hi@mcbuleli.org** en mettant `Reply-To` identique (déjà configuré dans l’app). Objet professionnel, pas de pièce jointe lourde en premier mail — joindre RCCM / pitch PDF seulement si AvadaPay le demande.
 
