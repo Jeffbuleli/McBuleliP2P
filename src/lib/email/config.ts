@@ -1,3 +1,4 @@
+import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
 import {
   SUPPORT_EMAIL,
   SUPPORT_WA_PATH,
@@ -19,8 +20,15 @@ export const EMAIL_BRAND = {
 export function appBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") ??
-    "https://mcbuleli.org"
+    CANONICAL_PRODUCTION_ORIGIN
   );
+}
+
+/** External partnership emails always link to production (never localhost). */
+export function partnershipPublicBaseUrl(): string {
+  const override = process.env.PARTNERSHIP_EMAIL_BASE_URL?.trim().replace(/\/$/, "");
+  if (override) return override;
+  return CANONICAL_PRODUCTION_ORIGIN;
 }
 
 /** HTTPS base for images in Resend dashboard template HTML (preview/sync only). */

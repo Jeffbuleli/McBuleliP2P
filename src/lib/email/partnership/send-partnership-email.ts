@@ -1,11 +1,12 @@
-import { buildMcBuleliInlineAttachments } from "@/lib/email/email-inline-images";
 import { sendEmail } from "@/lib/email/send";
 import {
   getPartnershipTemplate,
   type PartnershipTemplateId,
 } from "@/lib/email/partnership/avadapay-templates";
 import {
-  PARTNERSHIP_EMAIL_ILLUSTRATION,
+  PARTNERSHIP_EMAIL_LAYOUT,
+  partnershipEmailFrom,
+  partnershipEmailReplyTo,
   partnershipEmailBaseUrl,
 } from "@/lib/email/partnership/partnership-email-config";
 import { renderPartnershipEmail } from "@/lib/email/partnership/render-partnership-email";
@@ -15,12 +16,10 @@ export async function sendPartnershipEmail(args: {
   templateId: PartnershipTemplateId;
 }): Promise<boolean> {
   const template = getPartnershipTemplate(args.templateId);
-  const illustration = PARTNERSHIP_EMAIL_ILLUSTRATION;
   const { html, text, subject } = renderPartnershipEmail({
     template,
     actionUrl: partnershipEmailBaseUrl(),
-    illustration,
-    useInlineImages: true,
+    layout: PARTNERSHIP_EMAIL_LAYOUT,
   });
 
   return sendEmail({
@@ -28,7 +27,8 @@ export async function sendPartnershipEmail(args: {
     subject,
     html,
     text,
-    inlineAttachments: buildMcBuleliInlineAttachments(illustration),
+    from: partnershipEmailFrom(),
+    replyTo: partnershipEmailReplyTo(),
   });
 }
 

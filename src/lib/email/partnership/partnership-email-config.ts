@@ -1,18 +1,29 @@
-import {
-  emailAssetBaseUrl,
-  type EmailIllustration,
-} from "@/lib/email/config";
+import { partnershipPublicBaseUrl } from "@/lib/email/config";
+import { SUPPORT_EMAIL } from "@/lib/support-contact";
+import { PARTNERSHIP_PLACEHOLDERS } from "@/lib/email/partnership/avadapay-templates";
 
-const LOCAL_APP_URL =
-  /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
-
-/** CTA links in partnership emails — never localhost when sending from dev. */
+/** @deprecated use partnershipPublicBaseUrl */
 export function partnershipEmailBaseUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (raw && !LOCAL_APP_URL.test(raw)) return raw;
-  return emailAssetBaseUrl();
+  return partnershipPublicBaseUrl();
 }
 
-/** Mobile-money / payout context (not security padlock). */
-export const PARTNERSHIP_EMAIL_ILLUSTRATION: EmailIllustration =
-  "withdrawUsdt";
+/** Conversation = Gmail Primary; marketing = card + CTA (Promotions). */
+export type PartnershipEmailLayout = "conversation" | "marketing";
+
+export const PARTNERSHIP_EMAIL_LAYOUT: PartnershipEmailLayout =
+  "conversation";
+
+/** Visible sender — hi@ (not noreply). */
+export function partnershipEmailFrom(): string {
+  const override = process.env.PARTNERSHIP_EMAIL_FROM?.trim();
+  if (override) return override;
+  const { contactName } = PARTNERSHIP_PLACEHOLDERS;
+  return `${contactName} — McBuleli <${SUPPORT_EMAIL}>`;
+}
+
+/** Replies to CEO; ceo@ appears in signature. */
+export function partnershipEmailReplyTo(): string {
+  const override = process.env.PARTNERSHIP_EMAIL_REPLY_TO?.trim();
+  if (override) return override;
+  return PARTNERSHIP_PLACEHOLDERS.contactEmail;
+}

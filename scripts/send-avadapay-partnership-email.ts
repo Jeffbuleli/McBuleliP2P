@@ -16,7 +16,10 @@ import {
   listPartnershipTemplateIds,
   type PartnershipTemplateId,
 } from "../src/lib/email/partnership/avadapay-templates";
-import { partnershipEmailBaseUrl } from "../src/lib/email/partnership/partnership-email-config";
+import {
+  PARTNERSHIP_EMAIL_LAYOUT,
+  partnershipEmailBaseUrl,
+} from "../src/lib/email/partnership/partnership-email-config";
 import { renderPartnershipEmail } from "../src/lib/email/partnership/render-partnership-email";
 import { sendPartnershipEmail } from "../src/lib/email/partnership/send-partnership-email";
 import {
@@ -88,7 +91,7 @@ async function main() {
     fs.writeFileSync(`${base}.txt`, text, "utf8");
     console.log(`Subject: ${subject}`);
     console.log(`Wrote ${base}.html and ${base}.txt`);
-    console.log("(Images via mcbuleli.org — ouvrir le .html en ligne si besoin.)");
+    console.log(`Layout: ${PARTNERSHIP_EMAIL_LAYOUT} (conversation = style Gmail Principale)`);
     return;
   }
 

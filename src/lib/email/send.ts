@@ -71,14 +71,19 @@ export async function sendEmail(args: {
   html: string;
   text?: string;
   inlineAttachments?: ResendInlineAttachment[];
+  /** Override default noreply@ (e.g. partnership outreach from hi@). */
+  from?: string;
+  replyTo?: string;
 }): Promise<boolean> {
-  const from = emailFromAddress();
-  const replyTo = emailReplyTo();
+  const from = args.from ?? emailFromAddress();
+  const replyTo = args.replyTo ?? emailReplyTo();
 
   if (!canSendViaResendApi()) {
     return devPreview({
       mode: "html",
       to: args.to,
+      from,
+      replyTo,
       subject: args.subject,
       preview: args.text ?? args.html.slice(0, 240),
     });

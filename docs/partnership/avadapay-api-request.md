@@ -43,7 +43,9 @@ open .tmp/avadapay-avadapay_initial_fr.html
 
 ## Envoyer via Resend
 
-Depuis `hi@mcbuleli.org` (reply-to) · expéditeur `McBuleli <noreply@mcbuleli.org>`.
+Expéditeur **`Jeff Buleli — McBuleli <hi@mcbuleli.org>`** · réponses vers **`ceo@mcbuleli.org`**.
+
+Layout **conversation** par défaut (texte type email pro, sans bouton promo ni image) pour viser la boîte **Principale** Gmail plutôt que Promotions.
 
 Le script **charge `.env` automatiquement**. Sans ça, l’envoi est ignoré en local.
 

@@ -59,8 +59,7 @@ function companyDetailRows(locale: "fr" | "en"): EmailDetailRow[] {
 const INITIAL_FR: PartnershipTemplate = {
   id: "avadapay_initial_fr",
   locale: "fr",
-  subject:
-    "Demande d’intégration API AvadaPay — retraits mobile money (McBuleli, RDC)",
+  subject: "Demande API AvadaPay — McBuleli, payouts mobile money RDC",
   preheader:
     "Fintech wallet & P2P — besoin API payouts RDC (Orange, Airtel, M-Pesa).",
   title: "Demande d’accès API — partenariat mobile money",
@@ -81,8 +80,7 @@ const INITIAL_FR: PartnershipTemplate = {
 const INITIAL_EN: PartnershipTemplate = {
   id: "avadapay_initial_en",
   locale: "en",
-  subject:
-    "AvadaPay API integration request — mobile money payouts (McBuleli, DRC)",
+  subject: "AvadaPay API request — McBuleli, DRC mobile money payouts",
   preheader:
     "Fintech wallet & P2P — DRC payout API for Orange, Airtel, M-Pesa corridors.",
   title: "API access request — mobile money partnership",
