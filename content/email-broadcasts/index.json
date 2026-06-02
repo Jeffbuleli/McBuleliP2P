@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-29T15:30:15.697Z",
+  "generatedAt": "2026-06-02T21:10:24.405Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -120,6 +120,18 @@
       "name": "McBuleli · crypto_discovery (EN)",
       "subject": "Crypto made simple — USDT, Mobile Money & group savings",
       "html": "mcbuleli-crypto_discovery-en.html"
+    },
+    {
+      "slug": "mcbuleli-launch_academy-fr",
+      "name": "McBuleli · launch_academy (FR)",
+      "subject": "Lancement McBuleli — formation gratuite (Crypto, Trading, IA, P2P)",
+      "html": "mcbuleli-launch_academy-fr.html"
+    },
+    {
+      "slug": "mcbuleli-launch_academy-en",
+      "name": "McBuleli · launch_academy (EN)",
+      "subject": "McBuleli launch — free training (Crypto, Trading, AI, P2P)",
+      "html": "mcbuleli-launch_academy-en.html"
     }
   ]
 }

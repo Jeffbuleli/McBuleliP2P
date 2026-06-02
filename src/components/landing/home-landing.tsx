@@ -4,7 +4,8 @@ import { unstable_cache } from "next/cache";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
 import { MarketPreviewLazy } from "@/components/mobile/market-preview-lazy";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
-import { LandingPromoStrip } from "@/components/landing/landing-promo-strip";
+import { LandingLaunchHero } from "@/components/landing/landing-launch-hero";
+import { launchCampaignEnabled } from "@/lib/launch-campaign";
 import { LandingSeoSection } from "@/components/landing/landing-seo-section";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
@@ -168,7 +169,7 @@ export async function HomeLanding() {
           </div>
         </section>
 
-        <LandingPromoStrip />
+        {launchCampaignEnabled() ? <LandingLaunchHero /> : null}
 
         <div className="mt-5 space-y-5">
           <PriceChartLazy appearance="light" deferUntilVisible />

@@ -2142,3 +2142,32 @@ export const aiAssistantKnowledge = pgTable(
     index("ai_assistant_knowledge_published_idx").on(t.published),
   ],
 );
+
+/** Free launch academy registrations (super-admin OPS export). */
+export const trainingRegistrations = pgTable(
+  "training_registrations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    fullName: varchar("full_name", { length: 120 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 32 }).notNull(),
+    city: varchar("city", { length: 80 }),
+    locale: varchar("locale", { length: 8 }).notNull().default("fr"),
+    experienceLevel: varchar("experience_level", { length: 24 }),
+    interests: jsonb("interests").$type<string[]>().default([]),
+    whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(true),
+    source: varchar("source", { length: 64 }).notNull().default("formation"),
+    utmSource: varchar("utm_source", { length: 64 }),
+    utmMedium: varchar("utm_medium", { length: 32 }),
+    utmCampaign: varchar("utm_campaign", { length: 64 }),
+    remindedAt: timestamp("reminded_at", { withTimezone: true }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("training_registrations_created_idx").on(t.createdAt),
+    index("training_registrations_email_idx").on(t.email),
+  ],
+);

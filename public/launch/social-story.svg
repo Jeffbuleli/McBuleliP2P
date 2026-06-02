@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#305f33"/>
+      <stop offset="100%" stop-color="#1a2e1c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <text x="540" y="160" text-anchor="middle" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="32" font-weight="800" letter-spacing="8">MCBULELI</text>
+  <text x="540" y="280" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="64" font-weight="900">Formation</text>
+  <text x="540" y="360" text-anchor="middle" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="36" font-weight="700">Crypto � Trading</text>
+  <text x="540" y="420" text-anchor="middle" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="36" font-weight="700">IA � P2P</text>
+  <text x="540" y="540" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="32" font-weight="800">8 juin � 19h GMT+1</text>
+  <text x="540" y="620" text-anchor="middle" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="28">1530 juin</text>
+  <text x="540" y="670" text-anchor="middle" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="28">Samedis 18h3020h</text>
+  <rect x="240" y="760" width="600" height="80" rx="20" fill="#fff"/>
+  <text x="540" y="812" text-anchor="middle" fill="#305f33" font-family="system-ui,sans-serif" font-size="30" font-weight="800">Inscription gratuite</text>
+  <text x="540" y="1780" text-anchor="middle" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="24">mcbuleli.org/formation</text>
+</svg>

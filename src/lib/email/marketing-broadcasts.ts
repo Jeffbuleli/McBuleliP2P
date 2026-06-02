@@ -11,7 +11,8 @@ export type MarketingBroadcastKind =
   | "security"
   | "reengage"
   | "changelog"
-  | "crypto_discovery";
+  | "crypto_discovery"
+  | "launch_academy";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -185,6 +186,20 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "crypto_discovery",
     referralCode: "RGZDWHUH",
   },
+  launch_academy: {
+    subject: "McBuleli launch — free training (Crypto, Trading, AI, P2P)",
+    preheader: "8 June 7 PM GMT+1 · free sessions 15–30 June · register now.",
+    headline: "Official McBuleli launch",
+    paragraphs: [
+      "We're opening with a live online session on 8 June at 7 PM (GMT+1).",
+      "Then two weeks of free training — Crypto, Trading, AI & P2P — every Saturday 6:30–8 PM.",
+    ],
+    bullets: ["Live launch · Free · Practical Africa-first"],
+    ctaLabel: "Register free",
+    ctaPath: "/formation",
+    campaign: "launch_academy",
+    heroIllustration: "verify",
+  },
 };
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
@@ -330,6 +345,20 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "crypto_discovery",
     referralCode: "RGZDWHUH",
   },
+  launch_academy: {
+    subject: "Lancement McBuleli — formation gratuite (Crypto, Trading, IA, P2P)",
+    preheader: "8 juin 19h GMT+1 · sessions gratuites 15–30 juin · inscrivez-vous.",
+    headline: "Lancement officiel McBuleli",
+    paragraphs: [
+      "Soirée de lancement en ligne le 8 juin à 19h (GMT+1).",
+      "Puis deux semaines de formation gratuite — Crypto, Trading, IA & P2P — chaque samedi 18h30–20h.",
+    ],
+    bullets: ["Live · Gratuit · Pensé pour l'Afrique"],
+    ctaLabel: "S'inscrire gratuitement",
+    ctaPath: "/formation",
+    campaign: "launch_academy",
+    heroIllustration: "verify",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -343,6 +372,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "reengage",
   "changelog",
   "crypto_discovery",
+  "launch_academy",
 ];
 
 function buildDef(
