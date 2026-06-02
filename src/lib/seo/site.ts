@@ -83,7 +83,7 @@ export function organizationJsonLd(locale: Locale) {
         "@id": `${CANONICAL_PRODUCTION_ORIGIN}/#organization`,
         name: "McBuleli",
         url: CANONICAL_PRODUCTION_ORIGIN,
-        logo: `${CANONICAL_PRODUCTION_ORIGIN}/brand/logo.png`,
+        logo: `${CANONICAL_PRODUCTION_ORIGIN}/brand/logo-512.png`,
         description: copy.description,
         areaServed: [
           { "@type": "Country", name: "Democratic Republic of the Congo" },

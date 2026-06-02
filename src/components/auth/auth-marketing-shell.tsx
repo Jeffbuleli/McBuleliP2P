@@ -29,7 +29,7 @@ export function AuthBrandHeader() {
     <header className="flex flex-col items-center pb-6 pt-4 text-center">
       <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-[color:var(--fd-primary)]/20">
         <Image
-          src="/brand/logo.png"
+          src="/brand/logo-256.png"
           alt=""
           width={44}
           height={44}

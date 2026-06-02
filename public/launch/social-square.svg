@@ -10,12 +10,12 @@
   <circle cx="900" cy="180" r="120" fill="#e8f3ee" opacity="0.08"/>
   <text x="72" y="120" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="28" font-weight="800" letter-spacing="6">MCBULELI</text>
   <text x="72" y="200" fill="#fff" font-family="system-ui,sans-serif" font-size="72" font-weight="900">Formation</text>
-  <text x="72" y="280" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="42" font-weight="700">Crypto � Trading � IA � P2P</text>
+  <text x="72" y="280" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="42" font-weight="700">Crypto &#183; Trading &#183; IA &#183; P2P</text>
   <rect x="72" y="320" width="520" height="56" rx="28" fill="#ffffff" opacity="0.15"/>
-  <text x="96" y="358" fill="#fff" font-family="system-ui,sans-serif" font-size="28" font-weight="800">8 juin 2026 � 19h GMT+1</text>
-  <text x="72" y="440" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="26">1530 juin � samedis 18h3020h</text>
-  <text x="72" y="490" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="26">Gratuit � 2 semaines</text>
+  <text x="96" y="358" fill="#fff" font-family="system-ui,sans-serif" font-size="28" font-weight="800">8 juin 2026 &#183; 19h GMT+1</text>
+  <text x="72" y="440" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="26">15&#8211;30 juin &#183; samedis 18h30&#8211;20h</text>
+  <text x="72" y="490" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="26">Gratuit &#183; 2 semaines</text>
   <rect x="72" y="540" width="380" height="72" rx="16" fill="#fff"/>
   <text x="110" y="590" fill="#305f33" font-family="system-ui,sans-serif" font-size="32" font-weight="800">mcbuleli.org/formation</text>
-  <text x="72" y="980" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="22">Jeff Buleli � Lancement officiel</text>
+  <text x="72" y="980" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="22">Jeff Buleli &#183; Lancement officiel</text>
 </svg>

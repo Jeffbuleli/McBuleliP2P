@@ -90,7 +90,7 @@ export function AppTopBar({
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
             <Image
-              src="/brand/logo.png"
+              src="/brand/logo-256.png"
               alt=""
               width={36}
               height={36}

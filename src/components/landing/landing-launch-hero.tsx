@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getLocale } from "@/lib/get-locale";
+import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
   FORMATION_PATH,
   launchCopy,
@@ -109,7 +110,8 @@ export async function LandingLaunchHero() {
                 alt="Jeff Buleli — McBuleli"
                 fill
                 priority
-                className="object-cover object-[center_15%] contrast-[1.04] saturate-[1.05] brightness-[1.02]"
+                unoptimized
+                className="object-cover object-[center_15%]"
                 sizes="(max-width: 640px) 38vw, 32vw"
               />
               <div

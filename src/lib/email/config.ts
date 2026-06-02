@@ -40,7 +40,7 @@ export function emailAssetBaseUrl(): string {
 
 /** Public URL (site / docs only). Emails embed PNGs inline. */
 export function logoUrl(): string {
-  return `${emailAssetBaseUrl()}/brand/logo.png`;
+  return `${emailAssetBaseUrl()}/brand/logo-256.png`;
 }
 
 export type EmailIllustration =

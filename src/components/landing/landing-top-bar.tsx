@@ -58,7 +58,7 @@ export function LandingTopBar() {
           <Link href="/" className="flex min-w-0 items-center gap-2.5 pr-1">
             <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-[color:var(--fd-primary)]/25">
               <Image
-                src="/brand/logo.png"
+                src="/brand/logo-256.png"
                 alt=""
                 aria-hidden
                 width={40}

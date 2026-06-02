@@ -30,12 +30,23 @@ CTA pointe vers `/formation?utm_source=email&utm_medium=broadcast&utm_campaign=l
 
 ## Réseaux sociaux
 
-Assets SVG (à exporter en PNG depuis Figma/browser si besoin) :
+**À publier : les PNG** (WhatsApp/Instagram n’affichent pas bien les SVG dans le fil).
 
-- `public/launch/social-square.svg` — Instagram / Facebook carré
-- `public/launch/social-landscape.svg` — X / Facebook lien
-- `public/launch/social-story.svg` — WhatsApp / Stories
-- Portrait : `public/launch/jeff-portrait.png`
+```bash
+npm run launch:generate-social
+```
+
+- **Page téléchargement** : https://mcbuleli.org/launch/assets
+- `public/launch/social-square.png` — Instagram / Facebook
+- `public/launch/social-landscape.png` — X / Facebook
+- `public/launch/social-story.png` — WhatsApp / Stories
+- SVG sources : `public/launch/social-*.svg` (backup)
+
+## Logo net
+
+- `public/brand/logo-512.png` — partage RS / print
+- `public/brand/logo-256.png` — app & emails (retina)
+- Régénérer avec `npm run launch:generate-social`
 
 ## Migration prod
 

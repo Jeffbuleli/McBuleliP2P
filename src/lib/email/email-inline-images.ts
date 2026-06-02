@@ -45,7 +45,7 @@ export function buildMcBuleliInlineAttachments(
   illustration: EmailIllustration,
 ): ResendInlineAttachment[] {
   return [
-    readPngAttachment("brand/logo.png", EMAIL_LOGO_CID),
+    readPngAttachment("brand/logo-256.png", EMAIL_LOGO_CID),
     readPngAttachment(ILLUSTRATION_FILES[illustration], emailIllustrationCid(illustration)),
   ];
 }

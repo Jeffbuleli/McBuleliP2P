@@ -7,11 +7,11 @@
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <text x="48" y="80" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="20" font-weight="800" letter-spacing="4">LANCement MCBULELI</text>
+  <text x="48" y="80" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="20" font-weight="800" letter-spacing="4">LANCEMENT MCBULELI</text>
   <text x="48" y="160" fill="#fff" font-family="system-ui,sans-serif" font-size="56" font-weight="900">Formation en ligne</text>
-  <text x="48" y="220" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="32" font-weight="700">Crypto � Trading � IA � P2P</text>
-  <text x="48" y="290" fill="#fff" font-family="system-ui,sans-serif" font-size="26" font-weight="700">8 juin 2026 � 19h (GMT+1)</text>
-  <text x="48" y="340" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="22">1530 juin � samedis 18h3020h � gratuit</text>
+  <text x="48" y="220" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="32" font-weight="700">Crypto &#183; Trading &#183; IA &#183; P2P</text>
+  <text x="48" y="290" fill="#fff" font-family="system-ui,sans-serif" font-size="26" font-weight="700">8 juin 2026 &#183; 19h (GMT+1)</text>
+  <text x="48" y="340" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="22">15&#8211;30 juin &#183; samedis 18h30&#8211;20h &#183; gratuit</text>
   <rect x="48" y="400" width="340" height="56" rx="12" fill="#fff"/>
   <text x="72" y="438" fill="#305f33" font-family="system-ui,sans-serif" font-size="24" font-weight="800">mcbuleli.org/formation</text>
 </svg>
