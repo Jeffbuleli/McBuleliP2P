@@ -87,35 +87,41 @@ async function exportLogos() {
 function posterSvg(w, h, variant) {
   const isStory = variant === "story";
   const isLandscape = variant === "landscape";
+  const isMobile = variant === "mobile";
   const diag = isLandscape
     ? `<polygon points="0,0 ${w},0 ${Math.round(w * 0.58)},${h} 0,${h}" fill="#305f33"/>
        <polygon points="${Math.round(w * 0.52)},0 ${w},0 ${w},${h} ${Math.round(w * 0.48)},${h}" fill="#244a27" opacity="0.92"/>`
     : isStory
       ? `<rect width="100%" height="100%" fill="#305f33"/>
          <polygon points="0,${Math.round(h * 0.42)} ${w},${Math.round(h * 0.32)} ${w},${h} 0,${h}" fill="#1a2e1c"/>`
-      : `<polygon points="0,0 ${w},0 ${w},${Math.round(h * 0.72)} 0,${h}" fill="#305f33"/>
-         <rect x="0" y="${Math.round(h * 0.68)}" width="${w}" height="${Math.round(h * 0.32)}" fill="#e8f3ee" opacity="0.12"/>`;
+      : isMobile
+        ? `<rect width="100%" height="100%" fill="#305f33"/>
+           <rect x="0" y="${Math.round(h * 0.52)}" width="${w}" height="${Math.round(h * 0.48)}" fill="#1a2e1c"/>`
+        : `<polygon points="0,0 ${w},0 ${w},${Math.round(h * 0.72)} 0,${h}" fill="#305f33"/>
+           <rect x="0" y="${Math.round(h * 0.68)}" width="${w}" height="${Math.round(h * 0.32)}" fill="#e8f3ee" opacity="0.12"/>`;
 
-  const titleSize = isStory ? 72 : isLandscape ? 56 : 80;
-  const titleY = isStory ? 200 : isLandscape ? 140 : 200;
-  const titleX = isStory ? w / 2 : isLandscape ? 56 : 72;
+  const titleSize = isMobile ? 64 : isStory ? 72 : isLandscape ? 56 : 80;
+  const titleY = isMobile ? 200 : isStory ? 200 : isLandscape ? 140 : 200;
+  const titleX = isMobile || isStory ? w / 2 : isLandscape ? 56 : 72;
 
-  const liveBadge = `<rect x="${isStory ? w / 2 - 100 : 56}" y="${isStory ? 100 : isLandscape ? 48 : 88}" width="200" height="44" rx="22" fill="#e8f3ee"/>
-    <text x="${isStory ? w / 2 : 156}" y="${isStory ? 130 : isLandscape ? 78 : 118}" text-anchor="${isStory ? "middle" : "middle"}" fill="#305f33" font-family="system-ui,sans-serif" font-size="18" font-weight="800">LIVE · MCBULELI</text>`;
+  const liveX = isMobile ? 120 : isStory ? w / 2 - 100 : 56;
+  const liveY = isMobile ? 72 : isStory ? 100 : isLandscape ? 48 : 88;
+  const liveBadge = `<rect x="${liveX}" y="${liveY}" width="200" height="40" rx="20" fill="#e8f3ee"/>
+    <text x="${liveX + 100}" y="${liveY + 26}" text-anchor="middle" fill="#305f33" font-family="system-ui,sans-serif" font-size="17" font-weight="800">LIVE · MCBULELI</text>`;
 
-  const title = `<text x="${titleX}" y="${titleY}" text-anchor="${isStory ? "middle" : "start"}" fill="#fff" font-family="system-ui,sans-serif" font-size="${titleSize}" font-weight="900">Formation</text>
-    <text x="${titleX}" y="${titleY + (isStory ? 56 : 48)}" text-anchor="${isStory ? "middle" : "start"}" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="${isStory ? 32 : isLandscape ? 28 : 36}" font-weight="700">Crypto · Trading · IA · P2P</text>`;
+  const title = `<text x="${titleX}" y="${titleY}" text-anchor="${isMobile || isStory ? "middle" : "start"}" fill="#fff" font-family="system-ui,sans-serif" font-size="${titleSize}" font-weight="900">Formation</text>
+    <text x="${titleX}" y="${titleY + (isMobile ? 48 : isStory ? 56 : 48)}" text-anchor="${isMobile || isStory ? "middle" : "start"}" fill="#c5e8d0" font-family="system-ui,sans-serif" font-size="${isMobile ? 28 : isStory ? 32 : isLandscape ? 28 : 36}" font-weight="700">Crypto · Trading · IA · P2P</text>`;
 
-  const dateY = isStory ? titleY + 120 : titleY + 100;
-  const date = `<text x="${titleX}" y="${dateY}" text-anchor="${isStory ? "middle" : "start"}" fill="#fff" font-family="system-ui,sans-serif" font-size="${isStory ? 28 : 24}" font-weight="700">8 juin 2026 · 19h GMT+1</text>
-    <text x="${titleX}" y="${dateY + 40}" text-anchor="${isStory ? "middle" : "start"}" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="22" font-weight="600">15–30 juin · samedis 18h30–20h</text>`;
+  const dateY = isMobile ? titleY + 100 : isStory ? titleY + 120 : titleY + 100;
+  const date = `<text x="${titleX}" y="${dateY}" text-anchor="${isMobile || isStory ? "middle" : "start"}" fill="#fff" font-family="system-ui,sans-serif" font-size="${isMobile ? 24 : isStory ? 28 : 24}" font-weight="700">8 juin 2026 · 19h GMT+1</text>
+    <text x="${titleX}" y="${dateY + 36}" text-anchor="${isMobile || isStory ? "middle" : "start"}" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="20" font-weight="600">15–30 juin · samedis 18h30–20h</text>`;
 
-  const iconsY = isStory ? dateY + 100 : isLandscape ? dateY + 50 : dateY + 70;
-  const iconsX = isStory ? w / 2 - 100 : isLandscape ? 56 : 72;
-  const icons = topicIconsSvg(iconsX, iconsY, isStory ? 1.1 : 0.85);
+  const iconsY = isMobile ? dateY + 72 : isStory ? dateY + 100 : isLandscape ? dateY + 50 : dateY + 70;
+  const iconsX = isMobile || isStory ? w / 2 - 100 : isLandscape ? 56 : 72;
+  const icons = topicIconsSvg(iconsX, iconsY, isMobile ? 1 : isStory ? 1.1 : 0.85);
 
-  const ctaY = isStory ? h - 200 : isLandscape ? h - 100 : h - 120;
-  const ctaX = isStory ? w / 2 - 180 : isLandscape ? 56 : 72;
+  const ctaY = isMobile ? dateY + 160 : isStory ? h - 200 : isLandscape ? h - 100 : h - 120;
+  const ctaX = isMobile || isStory ? w / 2 - 180 : isLandscape ? 56 : 72;
   const cta = `<rect x="${ctaX}" y="${ctaY}" width="360" height="64" rx="16" fill="#fff"/>
     <text x="${ctaX + 180}" y="${ctaY + 42}" text-anchor="middle" fill="#305f33" font-family="system-ui,sans-serif" font-size="26" font-weight="800">mcbuleli.org/formation</text>
     <text x="${ctaX + 180}" y="${ctaY + 68}" text-anchor="middle" fill="#e8f3ee" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Gratuit · 2 semaines</text>`;
@@ -190,7 +196,7 @@ async function buildPoster(name, w, h, variant) {
 async function buildHeroMobile() {
   const w = 1080;
   const h = 1350;
-  await buildPoster("hero-mobile", w, h, "story");
+  await buildPoster("hero-mobile", w, h, "mobile");
 }
 
 await exportLogos();
