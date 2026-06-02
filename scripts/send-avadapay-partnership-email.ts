@@ -76,11 +76,10 @@ async function main() {
   }
 
   const template = getPartnershipTemplate(templateId);
-  const useInlineImages = !args.preview;
   const { html, text, subject } = renderPartnershipEmail({
     template,
     actionUrl: partnershipEmailBaseUrl(),
-    useInlineImages,
+    layout: PARTNERSHIP_EMAIL_LAYOUT,
   });
 
   if (args.preview) {
