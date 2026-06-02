@@ -19,15 +19,15 @@ export type PartnershipTemplate = {
 
 /** Replace before send — company legal details. */
 export const PARTNERSHIP_PLACEHOLDERS = {
-  companyLegalName: "[Raison sociale / Legal entity name]",
-  registrationId: "[RCCM / ID d'immatriculation]",
-  contactName: "[Prénom Nom — signataire]",
-  contactRole: "[Fondateur / COO / Responsable produit]",
-  contactEmail: "hi@mcbuleli.org",
-  contactPhone: "[+243 …]",
+  companyLegalName: "Ets McBuleli",
+  registrationId: "CD/KNG/RCCM/26-A-00382",
+  contactName: "Jeff Buleli",
+  contactRole: "CEO",
+  contactEmail: "ceo@mcbuleli.org",
+  contactPhone: "+243 997 366 736",
   website: "https://mcbuleli.org",
   countryFocus: "République Démocratique du Congo (RDC)",
-  monthlyVolumeHint: "[ex. 500–2 000 retraits/mois au lancement]",
+  monthlyVolumeHint: "500–2 000 retraits/mois au lancement",
 } as const;
 
 function companyDetailRows(locale: "fr" | "en"): EmailDetailRow[] {
@@ -35,18 +35,22 @@ function companyDetailRows(locale: "fr" | "en"): EmailDetailRow[] {
   if (locale === "fr") {
     return [
       { label: "Société", value: p.companyLegalName },
-      { label: "Site", value: p.website },
-      { label: "Contact", value: `${p.contactName} · ${p.contactEmail}` },
+      { label: "RCCM", value: p.registrationId },
+      { label: "Signataire", value: `${p.contactName} — ${p.contactRole}` },
+      { label: "E-mail", value: p.contactEmail },
       { label: "Téléphone", value: p.contactPhone },
+      { label: "Site web", value: p.website },
       { label: "Marché", value: p.countryFocus },
       { label: "Volume estimé", value: p.monthlyVolumeHint },
     ];
   }
   return [
     { label: "Company", value: p.companyLegalName },
-    { label: "Website", value: p.website },
-    { label: "Contact", value: `${p.contactName} · ${p.contactEmail}` },
+    { label: "Registration", value: p.registrationId },
+    { label: "Signatory", value: `${p.contactName} — ${p.contactRole}` },
+    { label: "Email", value: p.contactEmail },
     { label: "Phone", value: p.contactPhone },
+    { label: "Website", value: p.website },
     { label: "Market", value: "Democratic Republic of Congo (DRC)" },
     { label: "Est. volume", value: p.monthlyVolumeHint },
   ];

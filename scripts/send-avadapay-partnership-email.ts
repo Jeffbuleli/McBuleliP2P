@@ -16,6 +16,7 @@ import {
   listPartnershipTemplateIds,
   type PartnershipTemplateId,
 } from "../src/lib/email/partnership/avadapay-templates";
+import { partnershipEmailBaseUrl } from "../src/lib/email/partnership/partnership-email-config";
 import { renderPartnershipEmail } from "../src/lib/email/partnership/render-partnership-email";
 import { sendPartnershipEmail } from "../src/lib/email/partnership/send-partnership-email";
 import {
@@ -75,6 +76,7 @@ async function main() {
   const useInlineImages = !args.preview;
   const { html, text, subject } = renderPartnershipEmail({
     template,
+    actionUrl: partnershipEmailBaseUrl(),
     useInlineImages,
   });
 

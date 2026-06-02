@@ -1,7 +1,6 @@
 import {
   EMAIL_BRAND,
   EMAIL_FOOTER,
-  appBaseUrl,
   illustrationUrl,
   logoUrl,
   type EmailIllustration,
@@ -11,6 +10,10 @@ import {
   emailIllustrationCid,
 } from "@/lib/email/email-inline-images";
 import type { PartnershipTemplate } from "@/lib/email/partnership/avadapay-templates";
+import {
+  PARTNERSHIP_EMAIL_ILLUSTRATION,
+  partnershipEmailBaseUrl,
+} from "@/lib/email/partnership/partnership-email-config";
 
 function escHtml(value: string): string {
   return value
@@ -42,19 +45,33 @@ function renderParagraphs(paragraphs: string[]): string {
     .join("");
 }
 
+function formatDetailValue(value: string): string {
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return `<a href="${escHtml(trimmed)}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(trimmed)}</a>`;
+  }
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return `<a href="mailto:${escHtml(trimmed)}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(trimmed)}</a>`;
+  }
+  return escHtml(value);
+}
+
 function renderDetailsTable(
   rows: PartnershipTemplate["detailRows"],
-  useInlineImages: boolean,
+  locale: "fr" | "en",
 ): string {
+  const heading =
+    locale === "fr" ? "Coordonnées société" : "Company details";
   const cells = rows
     .map(
       (row) => `<tr>
-      <td style="padding:8px 0;font-size:13px;color:${EMAIL_BRAND.muted};vertical-align:top;width:38%;">${escHtml(row.label)}</td>
-      <td style="padding:8px 0;font-size:13px;color:${EMAIL_BRAND.text};font-weight:600;word-break:break-all;">${escHtml(row.value)}</td>
+      <td style="padding:10px 12px 10px 0;font-size:13px;line-height:1.4;color:${EMAIL_BRAND.muted};vertical-align:top;width:36%;border-bottom:1px solid ${EMAIL_BRAND.border};">${escHtml(row.label)}</td>
+      <td style="padding:10px 0;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};font-weight:600;vertical-align:top;border-bottom:1px solid ${EMAIL_BRAND.border};">${formatDetailValue(row.value)}</td>
     </tr>`,
     )
     .join("");
-  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:360px;">${cells}</table>`;
+  return `<p style="margin:0 0 14px;font-size:12px;font-weight:700;color:${EMAIL_BRAND.primary};letter-spacing:0.04em;text-transform:uppercase;">${heading}</p>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;">${cells}</table>`;
 }
 
 function renderHeaderLogo(useInlineImages: boolean): string {
@@ -69,12 +86,13 @@ function renderIllustration(
   const src = useInlineImages
     ? `cid:${emailIllustrationCid(illustration)}`
     : illustrationUrl(illustration);
-  return `<img src="${src}" width="160" height="160" alt="" style="display:block;margin:0 auto;border:0;max-width:160px;height:auto;opacity:0.95;" />`;
+  return `<img src="${src}" width="160" height="160" alt="" style="display:block;margin:0 auto;border:0;max-width:160px;height:auto;" />`;
 }
 
-function renderFooterLogo(useInlineImages: boolean): string {
-  const src = useInlineImages ? `cid:${EMAIL_LOGO_CID}` : logoUrl();
-  return `<img src="${src}" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;border-radius:6px;opacity:0.9;" />`;
+/** Footer always uses hosted logo — duplicate CID breaks in Gmail/Outlook. */
+function renderFooterLogo(): string {
+  const src = logoUrl();
+  return `<img src="${src}" width="36" height="36" alt="McBuleli" style="display:block;margin:0 auto 10px;border:0;border-radius:8px;" />`;
 }
 
 export function renderPartnershipEmail(args: {
@@ -85,9 +103,9 @@ export function renderPartnershipEmail(args: {
 }): { html: string; text: string; subject: string } {
   const {
     template,
-    actionUrl = appBaseUrl(),
+    actionUrl = partnershipEmailBaseUrl(),
     useInlineImages = true,
-    illustration = "security",
+    illustration = PARTNERSHIP_EMAIL_ILLUSTRATION,
   } = args;
   const locale = template.locale;
   const year = new Date().getFullYear();
@@ -103,8 +121,8 @@ export function renderPartnershipEmail(args: {
   const bodyHtml = renderParagraphs(template.paragraphs);
   const detailsHtml = `<tr>
             <td style="padding:4px 28px 20px;">
-              <div style="background:${EMAIL_BRAND.mint};border-radius:14px;padding:16px 18px;">
-                ${renderDetailsTable(template.detailRows, useInlineImages)}
+              <div style="background:${EMAIL_BRAND.white};border:1px solid ${EMAIL_BRAND.border};border-radius:14px;padding:18px 20px;">
+                ${renderDetailsTable(template.detailRows, locale)}
               </div>
             </td>
           </tr>`;
@@ -159,7 +177,7 @@ export function renderPartnershipEmail(args: {
           </tr>
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
-              ${renderFooterLogo(useInlineImages)}
+              ${renderFooterLogo()}
               <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${EMAIL_BRAND.text};">McBuleli</p>
               <p style="margin:0 0 10px;font-size:12px;color:${EMAIL_BRAND.muted};">${footerHelp} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${footerContact}</a></p>
               <p style="margin:0 0 8px;font-size:12px;color:${EMAIL_BRAND.muted};">

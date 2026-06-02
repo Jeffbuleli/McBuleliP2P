@@ -60,6 +60,8 @@ npm run email:avadapay -- \
 
 Si vous voyez `Envoi bloqué` ou pas de mail dans Gmail : vérifiez Resend → **Emails** (logs) et que le domaine `mcbuleli.org` est vérifié.
 
+Le bouton CTA pointe toujours vers **https://mcbuleli.org** en local (pas `localhost`), même si `NEXT_PUBLIC_APP_URL` est en dev.
+
 **Recommandation :** envoyer depuis **hi@mcbuleli.org** en mettant `Reply-To` identique (déjà configuré dans l’app). Objet professionnel, pas de pièce jointe lourde en premier mail — joindre RCCM / pitch PDF seulement si AvadaPay le demande.
 
 ## Copier-coller texte brut (FR)
