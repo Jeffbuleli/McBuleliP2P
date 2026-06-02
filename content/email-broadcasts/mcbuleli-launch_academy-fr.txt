@@ -2,9 +2,13 @@ McBuleli
 8 juin 19h GMT+1 · sessions gratuites 15–30 juin · inscrivez-vous.
 Bonjour {{{contact.first_name|ami}}},
 Lancement officiel McBuleli
-Soirée de lancement en ligne le 8 juin à 19h (GMT+1).
-Puis deux semaines de formation gratuite — Crypto, Trading, IA & P2P — chaque samedi 18h30–20h.
-• Live · Gratuit · Pensé pour l'Afrique
+Nous lançons McBuleli avec une soirée en ligne, puis deux semaines de formation gratuite pour vous.
+Crypto — Comprendre l'USDT et le portefeuille digital, sans jargon inutile.
+Trading — Les bases pour lire un marché et gérer le risque.
+IA — Outils IA concrets pour le quotidien.
+P2P — Échanges protégés et corridors mobile money.
+8 juin 2026 · 19h (GMT+1) · Live
+15–30 juin · chaque samedi 18h30–20h · Gratuit · Powered by McBuleli
 S'inscrire gratuitement: https://mcbuleli.org/formation?utm_source=email&utm_medium=broadcast&utm_campaign=launch_academy
 hi@mcbuleli.org
 Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

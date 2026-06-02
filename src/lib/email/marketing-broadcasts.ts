@@ -1,5 +1,5 @@
 import type { MarketingBroadcastCopy } from "@/lib/email/marketing-layout";
-import { appBaseUrl } from "@/lib/email/config";
+import { appBaseUrl, emailAssetBaseUrl } from "@/lib/email/config";
 
 export type MarketingBroadcastKind =
   | "welcome"
@@ -191,14 +191,36 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     preheader: "8 June 7 PM GMT+1 · free sessions 15–30 June · register now.",
     headline: "Official McBuleli launch",
     paragraphs: [
-      "We're opening with a live online session on 8 June at 7 PM (GMT+1).",
-      "Then two weeks of free training — Crypto, Trading, AI & P2P — every Saturday 6:30–8 PM.",
+      "We're opening McBuleli with a live online session — then two weeks of free training for you.",
     ],
-    bullets: ["Live launch · Free · Practical Africa-first"],
+    dateHighlight: "8 June 2026 · 7 PM (GMT+1) · Live",
+    bannerImageUrl: `${emailAssetBaseUrl()}/launch/social-landscape.png`,
+    features: [
+      {
+        icon: "depositUsdt",
+        title: "Crypto",
+        text: "Understand USDT and digital wallets without the noise.",
+      },
+      {
+        icon: "withdrawUsdt",
+        title: "Trading",
+        text: "Basics of reading markets and managing risk.",
+      },
+      {
+        icon: "security",
+        title: "AI",
+        text: "Practical AI tools for everyday decisions.",
+      },
+      {
+        icon: "verify",
+        title: "P2P",
+        text: "Protected trades and mobile money corridors.",
+      },
+    ],
+    reassurance: "15–30 June · every Saturday 6:30–8 PM · Free · Powered by McBuleli",
     ctaLabel: "Register free",
     ctaPath: "/formation",
     campaign: "launch_academy",
-    heroIllustration: "verify",
   },
 };
 
@@ -350,14 +372,37 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     preheader: "8 juin 19h GMT+1 · sessions gratuites 15–30 juin · inscrivez-vous.",
     headline: "Lancement officiel McBuleli",
     paragraphs: [
-      "Soirée de lancement en ligne le 8 juin à 19h (GMT+1).",
-      "Puis deux semaines de formation gratuite — Crypto, Trading, IA & P2P — chaque samedi 18h30–20h.",
+      "Nous lançons McBuleli avec une soirée en ligne, puis deux semaines de formation gratuite pour vous.",
     ],
-    bullets: ["Live · Gratuit · Pensé pour l'Afrique"],
+    dateHighlight: "8 juin 2026 · 19h (GMT+1) · Live",
+    bannerImageUrl: `${emailAssetBaseUrl()}/launch/social-landscape.png`,
+    features: [
+      {
+        icon: "depositUsdt",
+        title: "Crypto",
+        text: "Comprendre l'USDT et le portefeuille digital, sans jargon inutile.",
+      },
+      {
+        icon: "withdrawUsdt",
+        title: "Trading",
+        text: "Les bases pour lire un marché et gérer le risque.",
+      },
+      {
+        icon: "security",
+        title: "IA",
+        text: "Outils IA concrets pour le quotidien.",
+      },
+      {
+        icon: "verify",
+        title: "P2P",
+        text: "Échanges protégés et corridors mobile money.",
+      },
+    ],
+    reassurance:
+      "15–30 juin · chaque samedi 18h30–20h · Gratuit · Powered by McBuleli",
     ctaLabel: "S'inscrire gratuitement",
     ctaPath: "/formation",
     campaign: "launch_academy",
-    heroIllustration: "verify",
   },
 };
 

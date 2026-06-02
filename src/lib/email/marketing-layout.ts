@@ -27,6 +27,10 @@ export type MarketingBroadcastCopy = {
   ctaLabel: string;
   /** Absolute URL or Resend placeholder e.g. {{{CTA_URL}}} */
   ctaHref: string;
+  /** Full-width poster above body (e.g. /launch/social-landscape.png) */
+  bannerImageUrl?: string;
+  /** Highlighted date/time line (launch emails) */
+  dateHighlight?: string;
 };
 
 function escHtml(value: string): string {
@@ -54,6 +58,24 @@ function bulletsHtml(items: string[]): string {
     )
     .join("");
   return `<ul style="margin:0 0 20px;padding:0 0 0 20px;text-align:left;">${lis}</ul>`;
+}
+
+function bannerImageHtml(imageUrl: string, alt: string, linkHref: string): string {
+  const src = escHtml(imageUrl);
+  const href = linkHref.includes("{{{") ? linkHref : escHtml(linkHref);
+  return `<tr>
+            <td style="padding:0;line-height:0;">
+              <a href="${href}" style="text-decoration:none;">
+                <img src="${src}" width="520" alt="${escHtml(alt)}" style="display:block;width:100%;max-width:520px;height:auto;border:0;" />
+              </a>
+            </td>
+          </tr>`;
+}
+
+function dateHighlightHtml(text: string): string {
+  return `<p style="margin:0 0 16px;text-align:center;">
+              <span style="display:inline-block;background:${EMAIL_BRAND.primary};color:#fff;font-size:13px;font-weight:800;padding:10px 18px;border-radius:999px;line-height:1.3;">${escHtml(text)}</span>
+            </p>`;
 }
 
 function heroIllustrationHtml(kind: EmailIllustration): string {
@@ -127,6 +149,12 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
 
   const href = copy.ctaHref.includes("{{{") ? copy.ctaHref : escHtml(copy.ctaHref);
 
+  const bannerBlock = copy.bannerImageUrl
+    ? bannerImageHtml(copy.bannerImageUrl, copy.headline, copy.ctaHref)
+    : "";
+
+  const dateBlock = copy.dateHighlight ? dateHighlightHtml(copy.dateHighlight) : "";
+
   const heroBlock = copy.heroIllustration
     ? heroIllustrationHtml(copy.heroIllustration)
     : "";
@@ -156,12 +184,13 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
     <tr>
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:${EMAIL_BRAND.white};border-radius:16px;border:1px solid ${EMAIL_BRAND.border};overflow:hidden;">
+          ${bannerBlock}
           <tr>
             <td style="padding:24px 28px 8px;">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="${logoSrc}" width="44" height="44" alt="McBuleli" style="display:block;border:0;border-radius:10px;" />
+                    <img src="${logoSrc}" width="48" height="48" alt="McBuleli" style="display:block;border:0;border-radius:50%;background:#fff;padding:2px;" />
                   </td>
                   <td style="vertical-align:middle;">
                     <p style="margin:0;font-size:18px;font-weight:800;color:${EMAIL_BRAND.primary};letter-spacing:-0.02em;">McBuleli</p>
@@ -176,6 +205,7 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
               <p style="margin:0 0 12px;font-size:14px;color:${EMAIL_BRAND.muted};">${greeting}</p>
               <h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;font-weight:700;color:${EMAIL_BRAND.text};">${escHtml(copy.headline)}</h1>
               ${paragraphsHtml(copy.paragraphs)}
+              ${dateBlock}
             </td>
           </tr>
           ${heroBlock}
@@ -234,6 +264,7 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
     "",
     ...featureLines,
     ...(copy.bullets?.map((b) => `• ${b}`) ?? []),
+    ...(copy.dateHighlight ? ["", copy.dateHighlight, ""] : []),
     "",
     copy.reassurance ?? "",
     "",

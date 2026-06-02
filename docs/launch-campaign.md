@@ -26,7 +26,23 @@ npm run resend:export-broadcasts
 
 Fichiers : `content/email-broadcasts/mcbuleli-launch_academy-fr.html` (et `.txt`, EN).
 
-CTA pointe vers `/formation?utm_source=email&utm_medium=broadcast&utm_campaign=launch_academy`
+CTA : `https://mcbuleli.org/formation?utm_source=email&utm_medium=broadcast&utm_campaign=launch_academy`
+
+### Ce que tu modifies dans Resend (broadcast)
+
+1. [Resend](https://resend.com) → **Broadcasts** → **Create broadcast**
+2. **Audience** : ta liste marketing
+3. **From** : `Jeff Buleli — McBuleli <hi@mcbuleli.org>` (ou expéditeur validé)
+4. **Subject** : `Lancement McBuleli — formation gratuite (Crypto, Trading, IA, P2P)`
+5. **Body** : coller tout le HTML depuis `content/email-broadcasts/mcbuleli-launch_academy-fr.html`
+6. **Preview** : vérifier bannière + logo + bouton inscription
+7. **Send** ou planifier avant le 8 juin
+
+Régénérer le HTML après changement de texte :
+
+```bash
+npm run resend:export-broadcasts
+```
 
 ## Réseaux sociaux
 
