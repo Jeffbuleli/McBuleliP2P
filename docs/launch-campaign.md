@@ -37,16 +37,18 @@ npm run launch:generate-social
 ```
 
 - **Page téléchargement** : https://mcbuleli.org/launch/assets
+- `public/launch/hero-mobile.png` — bannière PWA (4:5, ne se coupe pas)
 - `public/launch/social-square.png` — Instagram / Facebook
 - `public/launch/social-landscape.png` — X / Facebook
 - `public/launch/social-story.png` — WhatsApp / Stories
-- SVG sources : `public/launch/social-*.svg` (backup)
+- SVG sources : `public/launch/social-*.svg` (édition Mac)
 
-## Logo net
+## Logo net (source 1024px)
 
-- `public/brand/logo-512.png` — partage RS / print
-- `public/brand/logo-256.png` — app & emails (retina)
-- Régénérer avec `npm run launch:generate-social`
+- `public/brand/logo-1024.png` — master
+- `public/brand/logo-512.png` — RS / print
+- `public/brand/logo-256.png` — app & emails
+- Remplacer `public/brand/logo.png` puis `npm run launch:generate-social`
 
 ## Migration prod
 
