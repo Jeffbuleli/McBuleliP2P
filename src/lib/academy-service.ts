@@ -19,14 +19,19 @@ import {
 import {
   ACADEMY_CHECKIN_WINDOW_MIN,
   ACADEMY_EDITION_JUNE_2026,
+  ACADEMY_EDITION_PRO_Q3,
   ACADEMY_PROGRAM_LAUNCH,
+  ACADEMY_PROGRAM_PRO,
   ACADEMY_QUIZ_FUNDAMENTALS,
 } from "@/lib/academy-config";
 import {
   computeAcademyJourney,
   type AcademyJourneySnapshot,
 } from "@/lib/academy-journey";
-import { ensureAcademyModulesSeed } from "@/lib/academy-modules";
+import {
+  ensureAcademyModulesSeed,
+  ensureAcademyProModulesSeed,
+} from "@/lib/academy-modules";
 import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
 import { isKycApproved } from "@/lib/kyc-policy";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
@@ -75,6 +80,8 @@ export type AcademyEditionView = {
   endsAt: string | null;
   enrolled: boolean;
   enrollmentId: string | null;
+  priceUsdt: string | null;
+  requiresKyc: boolean;
 };
 
 export type AcademySessionView = {
@@ -386,18 +393,23 @@ export async function getAcademyHub(args: {
     }
   }
 
-  const editionViews = editions.map(({ edition: e, programSlug }) => ({
-    id: e.id,
-    slug: e.slug,
-    programSlug,
-    title: pickLocale(e, locale),
-    deliveryMode: e.deliveryMode,
-    status: e.status,
-    startsAt: e.startsAt?.toISOString() ?? null,
-    endsAt: e.endsAt?.toISOString() ?? null,
-    enrolled: enrollMap.has(e.id),
-    enrollmentId: enrollMap.get(e.id) ?? null,
-  }));
+  const editionViews = editions.map(({ edition: e, programSlug }) => {
+    const prog = programs.find((p) => p.slug === programSlug);
+    return {
+      id: e.id,
+      slug: e.slug,
+      programSlug,
+      title: pickLocale(e, locale),
+      deliveryMode: e.deliveryMode,
+      status: e.status,
+      startsAt: e.startsAt?.toISOString() ?? null,
+      endsAt: e.endsAt?.toISOString() ?? null,
+      enrolled: enrollMap.has(e.id),
+      enrollmentId: enrollMap.get(e.id) ?? null,
+      priceUsdt: prog?.priceUsdt?.toString() ?? null,
+      requiresKyc: prog?.requiresKyc ?? false,
+    };
+  });
 
   const programViews = programs.map((p) => ({
     id: p.id,
@@ -411,6 +423,7 @@ export async function getAcademyHub(args: {
   }));
 
   await ensureAcademyModulesSeed();
+  await ensureAcademyProModulesSeed();
   let modulesCompleted = 0;
   let modulesTotal = 0;
   const moduleRows: { slug: string; unlocked: boolean; completed: boolean }[] = [];
@@ -443,6 +456,11 @@ export async function getAcademyHub(args: {
     }
   }
 
+  const proRow = editionViews.find(
+    (e) =>
+      e.slug === ACADEMY_EDITION_PRO_Q3 && e.programSlug === ACADEMY_PROGRAM_PRO,
+  );
+
   const journey = computeAcademyJourney({
     formationLead,
     editions: editionViews,
@@ -456,6 +474,14 @@ export async function getAcademyHub(args: {
     modulesCompleted,
     modulesTotal,
     modules: moduleRows,
+    proEdition: proRow
+      ? {
+          editionSlug: proRow.slug,
+          programSlug: proRow.programSlug,
+          enrolled: proRow.enrolled,
+          open: true,
+        }
+      : null,
   });
 
   return {
@@ -649,6 +675,8 @@ export async function getEditionDetail(args: {
       endsAt: row.edition.endsAt?.toISOString() ?? null,
       enrolled: !!enrollment,
       enrollmentId: enrollment?.id ?? null,
+      priceUsdt: row.program.priceUsdt?.toString() ?? null,
+      requiresKyc: row.program.requiresKyc,
       tutorEnabled: row.edition.tutorEnabled,
     },
     program: {

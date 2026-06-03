@@ -12,7 +12,9 @@ import {
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import {
   ACADEMY_EDITION_JUNE_2026,
+  ACADEMY_EDITION_PRO_Q3,
   ACADEMY_PROGRAM_LAUNCH,
+  ACADEMY_PROGRAM_PRO,
 } from "@/lib/academy-config";
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { AcademyVisualHero } from "@/components/academy/academy-visual-hero";
@@ -47,6 +49,8 @@ type Hub = {
     title: string;
     enrolled: boolean;
     startsAt: string | null;
+    priceUsdt: string | null;
+    requiresKyc: boolean;
   }[];
   credentials: {
     id: string;
@@ -134,6 +138,11 @@ export function AcademyHubClient() {
     (e) =>
       e.slug === ACADEMY_EDITION_JUNE_2026 &&
       e.programSlug === ACADEMY_PROGRAM_LAUNCH,
+  );
+
+  const proEdition = hub?.editions.find(
+    (e) =>
+      e.slug === ACADEMY_EDITION_PRO_Q3 && e.programSlug === ACADEMY_PROGRAM_PRO,
   );
 
   const isStaff = hub?.viewer === "staff";
@@ -335,6 +344,36 @@ export function AcademyHubClient() {
                     })
                   : t("academy_formation_linked_body")}
               </p>
+            </section>
+          ) : null}
+
+          {proEdition && !proEdition.enrolled ? (
+            <section
+              id="pro-cohort"
+              className="rounded-2xl border-2 border-[#305f33]/25 bg-white p-4 shadow-sm"
+            >
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#305f33]">
+                {t("academy_pro_badge")}
+              </p>
+              <h2 className="mt-1 text-base font-black text-[color:var(--fd-text)]">
+                {proEdition.title}
+              </h2>
+              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+                {t("academy_pro_summary")}
+              </p>
+              <p className="mt-2 text-sm font-bold text-[#305f33]">
+                {proEdition.priceUsdt} USDT · {t("academy_pro_kyc_hint")}
+              </p>
+              <button
+                type="button"
+                disabled={enrolling}
+                onClick={() =>
+                  void enroll(proEdition.slug, proEdition.programSlug)
+                }
+                className="mt-3 w-full rounded-xl bg-[#305f33] py-3 text-sm font-extrabold text-white disabled:opacity-60"
+              >
+                {t("academy_pro_enroll_btn")}
+              </button>
             </section>
           ) : null}
 

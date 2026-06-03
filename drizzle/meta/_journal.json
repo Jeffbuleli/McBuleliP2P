@@ -365,6 +365,13 @@
       "when": 1783100000000,
       "tag": "0059_academy_modules",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1783200000000,
+      "tag": "0060_academy_pro_open",
+      "breakpoints": true
     }
   ]
 }

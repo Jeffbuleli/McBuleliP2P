@@ -6,7 +6,12 @@ import {
   academyPrograms,
   getDb,
 } from "@/db";
-import { ACADEMY_EDITION_JUNE_2026, ACADEMY_PROGRAM_LAUNCH } from "@/lib/academy-config";
+import {
+  ACADEMY_EDITION_JUNE_2026,
+  ACADEMY_EDITION_PRO_Q3,
+  ACADEMY_PROGRAM_LAUNCH,
+  ACADEMY_PROGRAM_PRO,
+} from "@/lib/academy-config";
 import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
 import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import type { Locale } from "@/i18n/locale";
@@ -116,6 +121,96 @@ export async function ensureAcademyModulesSeed(): Promise<void> {
         "On McBuleli P2P funds stay in **escrow** until confirmed. Never pay off-platform. Check counterparty and KYC limits.",
       visualKey: "p2p",
       unlockAfterSlug: "ia",
+      ecosystemHref: "/app/p2p",
+    },
+  ];
+
+  for (const m of modules) {
+    await db.insert(academyModules).values({
+      editionId: edition.id,
+      slug: m.slug,
+      sortOrder: m.sortOrder,
+      titleFr: m.titleFr,
+      titleEn: m.titleEn,
+      summaryFr: m.summaryFr,
+      summaryEn: m.summaryEn,
+      bodyFr: m.bodyFr,
+      bodyEn: m.bodyEn,
+      visualKey: m.visualKey,
+      unlockAfterSlug: m.unlockAfterSlug,
+      ecosystemHref: m.ecosystemHref,
+    });
+  }
+}
+
+/** Pro cohort micro-lessons (P3). */
+export async function ensureAcademyProModulesSeed(): Promise<void> {
+  await ensureAcademyLaunchSeed();
+  const db = getDb();
+  const [edition] = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        eq(academyEditions.slug, ACADEMY_EDITION_PRO_Q3),
+        eq(academyPrograms.slug, ACADEMY_PROGRAM_PRO),
+      ),
+    )
+    .limit(1);
+  if (!edition) return;
+
+  const [existing] = await db
+    .select({ id: academyModules.id })
+    .from(academyModules)
+    .where(eq(academyModules.editionId, edition.id))
+    .limit(1);
+  if (existing) return;
+
+  const modules = [
+    {
+      slug: "risk",
+      sortOrder: 0,
+      titleFr: "Gestion du risque",
+      titleEn: "Risk management",
+      summaryFr: "Taille de position, drawdown, journal.",
+      summaryEn: "Position size, drawdown, trading journal.",
+      bodyFr:
+        "En Pro on formalise : **1–2 %** du capital par trade, stop-loss planifié, pas de revenge trading. Le wallet McBuleli sert à **capitaliser** — pas à doubler en une nuit.",
+      bodyEn:
+        "Pro level means rules: **1–2 %** per trade, planned stop-loss, no revenge trading. McBuleli wallet is for **building capital** — not doubling overnight.",
+      visualKey: "trading",
+      unlockAfterSlug: null as string | null,
+      ecosystemHref: "/app/trade",
+    },
+    {
+      slug: "strategies",
+      sortOrder: 1,
+      titleFr: "Stratégies & bots",
+      titleEn: "Strategies & bots",
+      summaryFr: "Signaux, backtest léger, bots McBuleli.",
+      summaryEn: "Signals, light backtest, McBuleli bots.",
+      bodyFr:
+        "Comprendre **pourquoi** une stratégie marche avant d'automatiser. Bots = discipline, pas magie. Tester en petit sur démo ou micro-montants.",
+      bodyEn:
+        "Understand **why** a strategy works before automating. Bots = discipline, not magic. Test small on demo or micro size.",
+      visualKey: "ia",
+      unlockAfterSlug: "risk",
+      ecosystemHref: "/app/trade/bots",
+    },
+    {
+      slug: "pro-p2p",
+      sortOrder: 2,
+      titleFr: "P2P volume & conformité",
+      titleEn: "P2P volume & compliance",
+      summaryFr: "Limites KYC, escrow, litiges.",
+      summaryEn: "KYC limits, escrow, disputes.",
+      bodyFr:
+        "Volume P2P = **KYC** et réputation. Toujours escrow McBuleli, preuves claires, pas de hors-plateforme. En cas de litige : support + chat cohorte.",
+      bodyEn:
+        "P2P volume needs **KYC** and reputation. Always McBuleli escrow, clear proof, never off-platform. Disputes: support + cohort chat.",
+      visualKey: "p2p",
+      unlockAfterSlug: "strategies",
       ecosystemHref: "/app/p2p",
     },
   ];

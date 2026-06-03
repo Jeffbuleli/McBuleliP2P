@@ -246,7 +246,7 @@ Hub ops → Admin (inchangé)
 | **P1** | ✅ Assets `/public/academy/` · mentor IA (niveau + events) · parcours visuel thèmes | — |
 | **P1b** ✅ | Email journey Resend (`academy_journey`) · cron `journey-nudge` · cooldown 14j | ops |
 | **P2** ✅ | `academy_modules` + micro-leçons · unlock chain · `/module/[slug]` | livré |
-| **P3** | IA mentor full context · parcours Pro 49 USDT | 2+ sem |
+| **P3** ✅ | Mentor IA contexte cohorte (modules, next step) · cohorte Pro 49 USDT ouverte | livré |
 | **Ops** | Replays · cron · Resend (parallèle) |
 
 ---

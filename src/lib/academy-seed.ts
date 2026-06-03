@@ -250,7 +250,13 @@ async function seedProProgram(
     .from(academyPrograms)
     .where(eq(academyPrograms.slug, ACADEMY_PROGRAM_PRO))
     .limit(1);
-  if (existing) return;
+  if (existing) {
+    await db
+      .update(academyEditions)
+      .set({ status: "open" })
+      .where(eq(academyEditions.slug, ACADEMY_EDITION_PRO_Q3));
+    return;
+  }
 
   const [program] = await db
     .insert(academyPrograms)
@@ -271,15 +277,49 @@ async function seedProProgram(
     })
     .returning({ id: academyPrograms.id });
 
-  await db.insert(academyEditions).values({
-    programId: program.id,
-    slug: ACADEMY_EDITION_PRO_Q3,
-    titleFr: "Cohorte Pro Q3 2026",
-    titleEn: "Pro cohort Q3 2026",
-    deliveryMode: "online",
-    status: "draft",
-    startsAt: new Date("2026-09-01T17:30:00.000Z"),
-    endsAt: new Date("2026-09-30T21:00:00.000Z"),
-    tutorEnabled: true,
-  });
+  const [edition] = await db
+    .insert(academyEditions)
+    .values({
+      programId: program.id,
+      slug: ACADEMY_EDITION_PRO_Q3,
+      titleFr: "Cohorte Pro Q3 2026",
+      titleEn: "Pro cohort Q3 2026",
+      deliveryMode: "online",
+      status: "open",
+      startsAt: new Date("2026-09-01T17:30:00.000Z"),
+      endsAt: new Date("2026-09-30T21:00:00.000Z"),
+      tutorEnabled: true,
+    })
+    .returning({ id: academyEditions.id });
+
+  const proSessions = [
+    {
+      slug: "pro-kickoff",
+      titleFr: "Kick-off Pro",
+      titleEn: "Pro kick-off",
+      startsAt: new Date("2026-09-06T17:30:00.000Z"),
+      endsAt: new Date("2026-09-06T19:00:00.000Z"),
+      sortOrder: 0,
+    },
+    {
+      slug: "pro-trading-lab",
+      titleFr: "Lab trading",
+      titleEn: "Trading lab",
+      startsAt: new Date("2026-09-20T17:30:00.000Z"),
+      endsAt: new Date("2026-09-20T19:00:00.000Z"),
+      sortOrder: 1,
+    },
+  ];
+  for (const s of proSessions) {
+    await db.insert(academySessions).values({
+      editionId: edition.id,
+      slug: s.slug,
+      titleFr: s.titleFr,
+      titleEn: s.titleEn,
+      kind: "live",
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+      sortOrder: s.sortOrder,
+    });
+  }
 }

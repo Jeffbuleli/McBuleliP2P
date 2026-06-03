@@ -109,6 +109,8 @@ export function journeyContinueHref(journey: AcademyJourneySnapshot): string {
       return nextEditionSlug && nextModuleSlug
         ? `/app/academy/${nextEditionSlug}/module/${nextModuleSlug}${q}`
         : "/app/academy";
+    case "enroll_pro":
+      return "/app/academy#pro-cohort";
     case "formation_register":
       return "/formation";
     case "activate_cohort":
@@ -152,6 +154,8 @@ export function journeyNextStepLabel(
       return t("academy_journey_next_quiz");
     case "module":
       return t("academy_journey_next_module");
+    case "enroll_pro":
+      return t("academy_journey_next_pro");
     case "enter_cohort":
       return t("academy_journey_next_cohort");
     default:

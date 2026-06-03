@@ -20,7 +20,8 @@ export type AcademyJourneyNextKind =
   | "live_session"
   | "quiz"
   | "explore_ecosystem"
-  | "module";
+  | "module"
+  | "enroll_pro";
 
 export type AcademyJourneySnapshot = {
   levelKey: AcademyJourneyLevelKey;
@@ -70,6 +71,12 @@ export type JourneyHubInput = {
   modulesCompleted: number;
   modulesTotal: number;
   modules: { slug: string; unlocked: boolean; completed: boolean }[];
+  proEdition: {
+    editionSlug: string;
+    programSlug: string;
+    enrolled: boolean;
+    open: boolean;
+  } | null;
 };
 
 const LEVEL_ORDER: AcademyJourneyLevelKey[] = [
@@ -96,6 +103,13 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
       e.programSlug === ACADEMY_PROGRAM_LAUNCH,
   );
   const launchProgram = input.programs.find((p) => p.slug === ACADEMY_PROGRAM_LAUNCH);
+  const proReady =
+    input.proEdition?.open &&
+    input.proEdition.enrolled === false &&
+    launch?.enrolled &&
+    (input.modulesCompleted >= 2 ||
+      input.quizFundamentalsPassed ||
+      input.livesAttended >= 1);
   const cohortsEnrolled = input.editions.filter((e) => e.enrolled).length;
   const badges = input.credentialsCount;
 
@@ -170,6 +184,10 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
     nextEditionSlug = launch.slug;
     nextProgramSlug = launch.programSlug;
     nextQuizSlug = "fondamentaux";
+  } else if (proReady && input.proEdition) {
+    nextKind = "enroll_pro";
+    nextEditionSlug = input.proEdition.editionSlug;
+    nextProgramSlug = input.proEdition.programSlug;
   } else if (launch?.enrolled) {
     nextKind = "enter_cohort";
     nextEditionSlug = launch.slug;

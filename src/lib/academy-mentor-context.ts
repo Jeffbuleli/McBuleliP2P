@@ -1,7 +1,24 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
-import type { AcademyJourneyLevelKey, AcademyJourneySnapshot } from "@/lib/academy-journey";
+import type {
+  AcademyJourneyLevelKey,
+  AcademyJourneyNextKind,
+  AcademyJourneySnapshot,
+} from "@/lib/academy-journey";
 
 export type MentorTone = "beginner" | "intermediate" | "advanced";
+
+/** Per-edition facts injected into the tutor prompt (P3). */
+export type AcademyMentorLearnerContext = {
+  editionSlug: string;
+  programSlug: string;
+  programLevel: string;
+  priceUsdt: string | null;
+  modulesCompleted: number;
+  modulesTotal: number;
+  pendingModuleTitles: string[];
+  nextKind: AcademyJourneyNextKind;
+  nextModuleSlug: string | null;
+};
 
 export function mentorToneFromLevel(levelKey: AcademyJourneyLevelKey): MentorTone {
   if (levelKey === "explorer" || levelKey === "crypto_user") return "beginner";
@@ -27,11 +44,34 @@ const LEVEL_LABEL_EN: Record<AcademyJourneyLevelKey, string> = {
   advanced: "Advanced Crypto",
 };
 
+function nextStepHintFr(kind: AcademyJourneyNextKind): string {
+  const map: Partial<Record<AcademyJourneyNextKind, string>> = {
+    live_session: "prochaine étape suggérée : rejoindre un live",
+    module: "prochaine étape : micro-leçon",
+    quiz: "prochaine étape : quiz fondamentaux",
+    enroll_pro: "prochaine étape : rejoindre la cohorte Pro (49 USDT)",
+    enter_cohort: "prochaine étape : ouvrir la cohorte",
+  };
+  return map[kind] ?? "";
+}
+
+function nextStepHintEn(kind: AcademyJourneyNextKind): string {
+  const map: Partial<Record<AcademyJourneyNextKind, string>> = {
+    live_session: "suggested next step: join a live session",
+    module: "next step: micro-lesson",
+    quiz: "next step: fundamentals quiz",
+    enroll_pro: "next step: join Pro cohort (49 USDT)",
+    enter_cohort: "next step: open your cohort",
+  };
+  return map[kind] ?? "";
+}
+
 export function buildAcademyMentorSystemAddon(args: {
   locale: AssistantLocale;
   editionTitle: string;
   journey: AcademyJourneySnapshot;
   recentVerbs: string[];
+  learner?: AcademyMentorLearnerContext;
 }): string {
   const tone = mentorToneFromLevel(args.journey.levelKey);
   const levelLabel =
@@ -54,8 +94,35 @@ export function buildAcademyMentorSystemAddon(args: {
 
   const statsLine =
     args.locale === "fr"
-      ? `Progression apprenant : ${args.journey.progressPercent}% · ${args.journey.stats.livesAttended} live(s) · ${args.journey.stats.quizzesPassed} quiz validé(s) · ${args.journey.stats.badges} badge(s).`
-      : `Learner progress: ${args.journey.progressPercent}% · ${args.journey.stats.livesAttended} live(s) · ${args.journey.stats.quizzesPassed} quiz passed · ${args.journey.stats.badges} badge(s).`;
+      ? `Progression globale : ${args.journey.progressPercent}% · ${args.journey.stats.livesAttended} live(s) · ${args.journey.stats.quizzesPassed} quiz · ${args.journey.stats.badges} badge(s) · ${args.journey.stats.modulesCompleted}/${args.journey.stats.modulesTotal} modules.`
+      : `Overall progress: ${args.journey.progressPercent}% · ${args.journey.stats.livesAttended} live(s) · ${args.journey.stats.quizzesPassed} quizzes · ${args.journey.stats.badges} badges · ${args.journey.stats.modulesCompleted}/${args.journey.stats.modulesTotal} modules.`;
+
+  const learner = args.learner;
+  const cohortLine =
+    learner && learner.modulesTotal > 0
+      ? args.locale === "fr"
+        ? `Cohorte actuelle (${learner.programSlug}, niveau ${learner.programLevel}) : ${learner.modulesCompleted}/${learner.modulesTotal} micro-leçons terminées.`
+        : `Current cohort (${learner.programSlug}, level ${learner.programLevel}): ${learner.modulesCompleted}/${learner.modulesTotal} micro-lessons done.`
+      : learner
+        ? args.locale === "fr"
+          ? `Programme cohorte : ${learner.programSlug} (niveau ${learner.programLevel})${learner.priceUsdt ? ` · ${learner.priceUsdt} USDT` : " · gratuit"}.`
+          : `Cohort program: ${learner.programSlug} (${learner.programLevel})${learner.priceUsdt ? ` · ${learner.priceUsdt} USDT` : " · free"}.`
+        : "";
+
+  const pendingLine =
+    learner && learner.pendingModuleTitles.length > 0
+      ? args.locale === "fr"
+        ? `Leçons à faire : ${learner.pendingModuleTitles.join(" · ")}.`
+        : `Lessons to do: ${learner.pendingModuleTitles.join(" · ")}.`
+      : "";
+
+  const nextLine = learner
+    ? args.locale === "fr"
+      ? nextStepHintFr(learner.nextKind) +
+        (learner.nextModuleSlug ? ` (module ${learner.nextModuleSlug})` : "")
+      : nextStepHintEn(learner.nextKind) +
+        (learner.nextModuleSlug ? ` (module ${learner.nextModuleSlug})` : "")
+    : "";
 
   const historyLine =
     args.recentVerbs.length > 0
@@ -74,8 +141,11 @@ export function buildAcademyMentorSystemAddon(args: {
       `Tu es le mentor crypto McBuleli Academy — cohorte « ${args.editionTitle} ».`,
       `Niveau détecté : ${levelLabel}. ${toneGuide}`,
       statsLine,
+      cohortLine,
+      pendingLine,
+      nextLine,
       historyLine,
-      `Réponds uniquement sur le syllabus (crypto, wallet McBuleli, P2P, trading, IA, Buleli Points). Pas de conseil d'investissement personnalisé. Encourage live + quiz si pertinent.`,
+      `Réponds uniquement sur le syllabus (crypto, wallet McBuleli, P2P, trading, IA, Buleli Points). Pas de conseil d'investissement personnalisé. Propose la prochaine micro-leçon ou le live si pertinent.`,
       formatRules,
     ]
       .filter(Boolean)
@@ -86,8 +156,11 @@ export function buildAcademyMentorSystemAddon(args: {
     `You are the McBuleli Academy crypto mentor — cohort « ${args.editionTitle} ».`,
     `Detected level: ${levelLabel}. ${toneGuide}`,
     statsLine,
+    cohortLine,
+    pendingLine,
+    nextLine,
     historyLine,
-    `Answer only on the syllabus (crypto, McBuleli wallet, P2P, trading, AI, Buleli Points). No personalized investment advice. Encourage live + quiz when relevant.`,
+    `Answer only on the syllabus (crypto, McBuleli wallet, P2P, trading, AI, Buleli Points). No personalized investment advice. Suggest the next micro-lesson or live when relevant.`,
     formatRules,
   ]
     .filter(Boolean)

@@ -21,7 +21,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 | **Tuteur IA** | `/api/academy/tutor` — RAG `category=academy`, tags `edition:{slug}` |
 | **Live** | Salle companion `/app/academy/{edition}/live/{session}` (chat léger + conseils) ; vidéo sur Jitsi (360p, partage écran, lever la main) ; **20 min** initiales = réglages ; URL = `session.live_url` → `edition.live_base_url` → Jitsi `meet.jit.si/mcbuleli-{edition}-{session}` |
 | **Admin** | `/admin/academy` — inscriptions par édition + export CSV |
-| **Pro (brouillon)** | Programme `crypto-trading-pro` · 49 USDT · édition `q3-2026` en `draft` |
+| **Pro** | Programme `crypto-trading-pro` · **49 USDT** (wallet) · édition `q3-2026` **ouverte** · KYC requis |
 
 ## Migrations prod (obligatoire après déploiement Academy)
 
@@ -29,7 +29,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 npm run db:migrate:render
 ```
 
-Journal Drizzle : `0055_training_registrations`, `0056_academy`, `0057_academy_phase_b`, `0058_academy_phase_c`.
+Journal Drizzle : `0055` … `0058_academy_phase_c`, `0059_academy_modules`, `0060_academy_pro_open`.
 
 Sans ces migrations : `/formation` et `/app/academy` renvoient HTTP 503 `academy_db_not_migrated`.
 

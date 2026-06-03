@@ -2,14 +2,14 @@ import type { AssistantLocale } from "@/lib/assistant/messages";
 import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
 import { assertEnrolledInEdition, resolveEditionIdBySlug } from "@/lib/academy-cohort-messaging";
 import { buildAcademyMentorSystemAddon } from "@/lib/academy-mentor-context";
-import { getAcademyHub } from "@/lib/academy-service";
+import { buildMentorLearnerContext } from "@/lib/academy-mentor-learner-context";
 import {
   getOrCreateConversation,
   sendAssistantMessage,
 } from "@/lib/assistant/service";
 import type { Locale } from "@/i18n/locale";
-import { desc, eq } from "drizzle-orm";
-import { academyEditions, academyLearningEvents, getDb } from "@/db";
+import { eq } from "drizzle-orm";
+import { academyEditions, getDb } from "@/db";
 
 export function academyPageContext(editionSlug: string): string {
   return `academy:${editionSlug}`.slice(0, 128);
@@ -64,19 +64,12 @@ export async function sendAcademyTutorMessage(args: {
   const pageContext = academyPageContext(args.editionSlug);
   const appLocale: Locale = args.locale === "fr" ? "fr" : "en";
 
-  const hub = await getAcademyHub({
+  const { journey, mentor, recentVerbs } = await buildMentorLearnerContext({
     userId: args.userId,
+    editionSlug: args.editionSlug,
+    programSlug: args.programSlug,
     locale: appLocale,
-    viewerRole: "learner",
   });
-
-  const recentRows = await db
-    .select({ verb: academyLearningEvents.verb })
-    .from(academyLearningEvents)
-    .where(eq(academyLearningEvents.userId, args.userId))
-    .orderBy(desc(academyLearningEvents.createdAt))
-    .limit(6);
-  const recentVerbs = [...new Set(recentRows.map((r) => r.verb))].slice(0, 4);
 
   const conversation = await getOrCreateConversation({
     conversationId: args.conversationId ?? null,
@@ -88,8 +81,9 @@ export async function sendAcademyTutorMessage(args: {
   const addon = buildAcademyMentorSystemAddon({
     locale: args.locale,
     editionTitle,
-    journey: hub.journey,
+    journey,
     recentVerbs,
+    learner: mentor,
   });
 
   const result = await sendAssistantMessage({
