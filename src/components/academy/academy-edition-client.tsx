@@ -62,6 +62,15 @@ export function AcademyEditionClient({
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#academy-tutor") return;
+    const el = document.getElementById("academy-tutor");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [detail?.edition.enrolled]);
+
   async function trackReplay(sessionId: string) {
     try {
       await fetchWithDeadline(

@@ -10,6 +10,7 @@ import {
   type OpenClassroomPanel,
 } from "@/components/academy/academy-open-classroom-bar";
 import { AcademyLiveTutorSheet } from "@/components/academy/academy-live-tutor-sheet";
+import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 import {
   formatLiveCountdown,
@@ -269,11 +270,20 @@ export function AcademyLiveRoomClient({
         </button>
         {tipsOpen ? (
           <ul className="space-y-2 border-t border-[color:var(--fd-border)] px-3 py-2.5 text-xs text-[color:var(--fd-text)]">
-            <li>🎤 {t("academy_live_tip_mic")}</li>
-            <li>📷 {t("academy_live_tip_camera")}</li>
-            <li>🖥️ {t("academy_live_tip_screen")}</li>
-            <li>✋ {t("academy_live_tip_hand")}</li>
-            <li>📶 {t("academy_live_tip_data")}</li>
+            {(
+              [
+                ["mic", "academy_live_tip_mic"],
+                ["camera", "academy_live_tip_camera"],
+                ["screen", "academy_live_tip_screen"],
+                ["hand", "academy_live_tip_hand"],
+                ["signal", "academy_live_tip_data"],
+              ] as const
+            ).map(([icon, key]) => (
+              <li key={key} className="flex items-center gap-2">
+                <AcademyIcon name={icon as AcademyIconName} className="h-4 w-4 shrink-0" />
+                <span>{t(key)}</span>
+              </li>
+            ))}
           </ul>
         ) : null}
       </div>

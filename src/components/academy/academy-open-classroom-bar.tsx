@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { AcademyIcon } from "@/components/academy/academy-icon";
 
 export type OpenClassroomPanel = "chat" | "tutor" | null;
 
@@ -52,9 +53,7 @@ export function AcademyOpenClassroomBar({
               rel="noopener noreferrer"
               className="flex min-w-0 flex-1 flex-col items-center rounded-xl bg-[#305f33] px-2 py-2 text-center text-white shadow-md active:scale-[0.98]"
             >
-              <span className="text-lg leading-none" aria-hidden>
-                ▶
-              </span>
+              <AcademyIcon name="video" className="h-5 w-5 !text-white" />
               <span className="mt-0.5 truncate text-[10px] font-extrabold">
                 {isHost ? t("academy_oc_join_host") : t("academy_join_live")}
               </span>
@@ -65,9 +64,7 @@ export function AcademyOpenClassroomBar({
               rel="noopener noreferrer"
               className="flex min-w-[3.25rem] flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-bold text-[#305f33]"
             >
-              <span className="text-base leading-none" aria-hidden>
-                {isHost ? "🎙" : "🔊"}
-              </span>
+              <AcademyIcon name={isHost ? "mic" : "audio"} className="h-5 w-5" />
               {isHost ? t("academy_oc_host_alt") : t("academy_oc_audio_only")}
             </a>
           </>
@@ -86,9 +83,7 @@ export function AcademyOpenClassroomBar({
               : "text-[color:var(--fd-muted)]"
           }`}
         >
-          <span className="text-base leading-none" aria-hidden>
-            💬
-          </span>
+          <AcademyIcon name="chat" className="h-5 w-5" />
           {t("academy_oc_chat")}
         </button>
 
@@ -102,9 +97,7 @@ export function AcademyOpenClassroomBar({
                 : "text-[color:var(--fd-muted)]"
             }`}
           >
-            <span className="text-base leading-none" aria-hidden>
-              ✨
-            </span>
+            <AcademyIcon name="tutor" className="h-5 w-5" />
             {t("academy_oc_ai")}
           </button>
         ) : null}

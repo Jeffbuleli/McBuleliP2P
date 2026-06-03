@@ -68,7 +68,10 @@ export function AcademyTutorPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-[color:var(--fd-primary)]/30 bg-[#f8faf8] p-3">
+    <section
+      id="academy-tutor"
+      className="scroll-mt-4 rounded-2xl border border-[color:var(--fd-primary)]/30 bg-[#f8faf8] p-3"
+    >
       <h2 className="text-sm font-bold text-[#305f33]">{t("academy_tutor_title")}</h2>
       <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
         {t("academy_tutor_hint")}

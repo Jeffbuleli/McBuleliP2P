@@ -18,6 +18,7 @@ import {
 } from "@/lib/academy-config";
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { AcademyVisualHero } from "@/components/academy/academy-visual-hero";
+import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type FormationLead = {
@@ -60,11 +61,15 @@ type Hub = {
   }[];
 };
 
-const ECOSYSTEM_LINKS = [
-  { href: "/app/wallet", labelKey: "academy_eco_wallet" as const, icon: "💳" },
-  { href: "/app/p2p", labelKey: "academy_eco_p2p" as const, icon: "⇄" },
-  { href: "/app/academy", labelKey: "academy_eco_ia" as const, icon: "✨" },
-] as const;
+const ECOSYSTEM_LINKS: {
+  href: string;
+  labelKey: "academy_eco_wallet" | "academy_eco_p2p" | "academy_eco_ia";
+  icon: AcademyIconName;
+}[] = [
+  { href: "/app/wallet", labelKey: "academy_eco_wallet", icon: "wallet" },
+  { href: "/app/p2p", labelKey: "academy_eco_p2p", icon: "p2p" },
+  { href: "/app/academy", labelKey: "academy_eco_ia", icon: "tutor" },
+];
 
 export function AcademyHubClient() {
   const { t } = useI18n();
@@ -154,6 +159,20 @@ export function AcademyHubClient() {
 
   const continueHref = hub ? journeyContinueHref(hub.journey) : "/app/academy";
   const nextLive = hub?.upcomingSessions[0];
+
+  const tutorEdition =
+    hub?.editions.find((e) => e.enrolled) ?? launchEdition ?? null;
+  const ecosystemLinks = ECOSYSTEM_LINKS.map((link) => {
+    if (link.labelKey !== "academy_eco_ia") return link;
+    if (!tutorEdition) {
+      return { ...link, href: "/formation" };
+    }
+    const q = `?program=${encodeURIComponent(tutorEdition.programSlug)}`;
+    return {
+      ...link,
+      href: `/app/academy/${tutorEdition.slug}${q}#academy-tutor`,
+    };
+  });
 
   return (
     <div className={`space-y-4 pb-6 ${academyCls.root}`}>
@@ -279,12 +298,15 @@ export function AcademyHubClient() {
                         className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 shadow-sm"
                       >
                         <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                             s.isLiveNow ? "bg-rose-100" : "bg-[#e8f3ee]"
                           }`}
                           aria-hidden
                         >
-                          {s.isLiveNow ? "●" : "📅"}
+                          <AcademyIcon
+                            name={s.isLiveNow ? "live" : "calendar"}
+                            className="h-5 w-5"
+                          />
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
@@ -315,16 +337,14 @@ export function AcademyHubClient() {
               {t("academy_journey_ecosystem_hint")}
             </p>
             <div className="mt-2 grid grid-cols-3 gap-2">
-              {ECOSYSTEM_LINKS.map(({ href, labelKey, icon }) => (
+              {ecosystemLinks.map(({ href, labelKey, icon }) => (
                 <Link
-                  key={href}
+                  key={labelKey}
                   href={href}
                   className="flex flex-col items-center rounded-xl border border-[color:var(--fd-border)] bg-white px-2 py-3 text-center shadow-sm active:scale-[0.98]"
                 >
-                  <span className="text-xl" aria-hidden>
-                    {icon}
-                  </span>
-                  <span className="mt-1 text-[10px] font-extrabold text-[color:var(--fd-text)]">
+                  <AcademyIcon name={icon} className="h-6 w-6" />
+                  <span className="mt-1.5 text-[10px] font-extrabold text-[color:var(--fd-text)]">
                     {t(labelKey)}
                   </span>
                 </Link>
