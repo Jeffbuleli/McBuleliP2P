@@ -26,7 +26,14 @@ import { REWARD_GRANT } from "@/lib/reward-points-config";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { Locale } from "@/i18n/locale";
-import { buildLiveJoinUrl, isSessionEnded, isSessionLiveNow } from "@/lib/academy-live";
+import {
+  buildLiveJoinUrl,
+  getLivePhase,
+  isSessionEnded,
+  isSessionLiveNow,
+  setupEndsAtIso,
+  type LivePhase,
+} from "@/lib/academy-live";
 import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
 import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
@@ -70,6 +77,8 @@ export type AcademySessionView = {
   liveUrl: string | null;
   liveJoinUrl: string;
   isLiveNow: boolean;
+  livePhase: LivePhase;
+  setupEndsAt: string | null;
   replayUrl: string | null;
   hasReplay: boolean;
   checkedIn: boolean;
@@ -284,6 +293,7 @@ export async function getEditionDetail(args: {
       endsAt: s.endsAt,
     });
     const ended = isSessionEnded({ startsAt: s.startsAt, endsAt: s.endsAt });
+    const livePhase = getLivePhase({ startsAt: s.startsAt, endsAt: s.endsAt });
     const replayUrl = s.replayUrl?.trim() || null;
     return {
       id: s.id,
@@ -300,6 +310,8 @@ export async function getEditionDetail(args: {
         liveBaseUrl,
       }),
       isLiveNow: liveNow,
+      livePhase,
+      setupEndsAt: setupEndsAtIso(s.startsAt),
       replayUrl: ended ? replayUrl : null,
       hasReplay: ended && !!replayUrl,
       checkedIn: attended.has(s.id),

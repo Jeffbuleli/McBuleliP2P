@@ -19,7 +19,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 |---------|--------|
 | **Chat cohorte** | `/api/academy/editions/{slug}/messages` — inscrits uniquement |
 | **Tuteur IA** | `/api/academy/tutor` — RAG `category=academy`, tags `edition:{slug}` |
-| **Live** | Bouton « Rejoindre le live » pendant la fenêtre session ; URL = `session.live_url` → `edition.live_base_url` → `NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL` → fallback `meet.jit.si/mcbuleli-{edition}-{session}` |
+| **Live** | Salle companion `/app/academy/{edition}/live/{session}` (chat léger + conseils) ; vidéo sur Jitsi (360p, partage écran, lever la main) ; **20 min** initiales = réglages ; URL = `session.live_url` → `edition.live_base_url` → Jitsi `meet.jit.si/mcbuleli-{edition}-{session}` |
 | **Admin** | `/admin/academy` — inscriptions par édition + export CSV |
 | **Pro (brouillon)** | Programme `crypto-trading-pro` · 49 USDT · édition `q3-2026` en `draft` |
 
@@ -53,7 +53,14 @@ Le seed cohorte + syllabus IA s’exécute au premier accès API Academy.
 NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
 ```
 
-Sinon : salles Jitsi publiques `meet.jit.si/mcbuleli-juin-2026-{session}` (Phase C = self-hosted Jitsi/LiveKit).
+Sinon : salles Jitsi publiques `meet.jit.si/mcbuleli-juin-2026-{session}` (préréglages bas débit dans `src/lib/academy-live.ts`).
+
+### Parcours participant live
+
+1. Cohorte → session **LIVE** → **Salle live** (page légère McBuleli)
+2. **Rejoindre le live** → Jitsi (micro, caméra, partage écran, lever la main)
+3. **Chat live** sur la même page (pas de vidéo dans l'app = économie data)
+4. Premières **20 min** : bandeau « Réglages » (ententes, tests techniques)
 
 ## Phase C — Replays, analytics, rappels, Open Badges
 
