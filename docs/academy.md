@@ -1,8 +1,8 @@
-# McBuleli Academy — Phase A
+# McBuleli Academy
 
 Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 
-## URLs
+## Phase A — Ops
 
 | Page | URL |
 |------|-----|
@@ -11,17 +11,28 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 | Quiz fondamentaux | `/app/academy/quiz/fondamentaux?edition=juin-2026` |
 | Vérification badge | `/verify/{verifyCode}` |
 | Inscription publique | `/formation` |
-| Admin inscriptions | `/admin/training-registrations` |
+| Admin inscriptions (legacy) | `/admin/training-registrations` |
 
-## Migration prod
+## Phase B — Cohorte & IA
+
+| Feature | Détail |
+|---------|--------|
+| **Chat cohorte** | `/api/academy/editions/{slug}/messages` — inscrits uniquement |
+| **Tuteur IA** | `/api/academy/tutor` — RAG `category=academy`, tags `edition:{slug}` |
+| **Live** | Bouton « Rejoindre le live » pendant la fenêtre session ; URL = `session.live_url` → `edition.live_base_url` → `NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL` → fallback `meet.jit.si/mcbuleli-{edition}-{session}` |
+| **Admin** | `/admin/academy` — inscriptions par édition + export CSV |
+| **Pro (brouillon)** | Programme `crypto-trading-pro` · 49 USDT · édition `q3-2026` en `draft` |
+
+## Migrations prod
 
 ```bash
 npm run db:migrate:render
 ```
 
-Fichier : `drizzle/0056_academy.sql`
+- `drizzle/0056_academy.sql` — Phase A
+- `drizzle/0057_academy_phase_b.sql` — chat, live_base_url, tutor_enabled
 
-Le seed de la cohorte juin 2026 s’exécute automatiquement au premier accès API Academy.
+Le seed cohorte + syllabus IA s’exécute au premier accès API Academy.
 
 ## Buleli Points
 
@@ -31,10 +42,18 @@ Le seed de la cohorte juin 2026 s’exécute automatiquement au premier accès A
 | Présence session live | `training_session_attended` | 40 |
 | Quiz ≥ 70 % | `training_quiz_passed` | 60 |
 
-## Paiement USDT (formations payantes futures)
+## Paiement USDT
 
 `POST /api/academy/enroll` débite le wallet si `academy_programs.price_usdt` > 0 (ledger `academy_enrollment`).
 
-## Liaison inscription /formation
+## Env live (optionnel)
 
-À la connexion ou inscription compte, l’email est relié à `training_registrations.user_id` et l’utilisateur est inscrit à la cohorte juin si possible.
+```env
+NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
+```
+
+Sinon : salles Jitsi publiques `meet.jit.si/mcbuleli-juin-2026-{session}` (Phase C = self-hosted Jitsi/LiveKit).
+
+## Liaison /formation
+
+À la connexion, email → `training_registrations.user_id` + auto-inscription cohorte juin.

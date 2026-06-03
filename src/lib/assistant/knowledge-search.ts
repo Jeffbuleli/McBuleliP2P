@@ -143,15 +143,30 @@ export type KnowledgeHit = {
   score: number;
 };
 
+function knowledgeMatchesEdition(
+  tags: string[] | null | undefined,
+  editionSlug: string | undefined,
+): boolean {
+  if (!editionSlug) return true;
+  const list = tags ?? [];
+  const editionTags = list.filter((t) => t.startsWith("edition:"));
+  if (editionTags.length === 0) return true;
+  return editionTags.some(
+    (t) => t === `edition:${editionSlug}` || t === "edition:all",
+  );
+}
+
 /** Hybrid keyword + semantic vector retrieval. */
 export async function searchAssistantKnowledge(args: {
   query: string;
   locale: AssistantLocale;
   limit?: number;
+  category?: string;
+  editionSlug?: string;
 }): Promise<KnowledgeHit[]> {
   await ensureAssistantKnowledgeSeeded();
   const db = getDb();
-  const rows = await db
+  let rows = await db
     .select()
     .from(aiAssistantKnowledge)
     .where(
@@ -164,6 +179,15 @@ export async function searchAssistantKnowledge(args: {
       ),
     )
     .orderBy(desc(aiAssistantKnowledge.priority));
+
+  if (args.category) {
+    rows = rows.filter((r) => r.category === args.category);
+  }
+  if (args.editionSlug) {
+    rows = rows.filter((r) =>
+      knowledgeMatchesEdition(r.tags, args.editionSlug),
+    );
+  }
 
   const limit = args.limit ?? 5;
   let queryEmbedding: number[] | null = null;

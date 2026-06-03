@@ -188,6 +188,12 @@ export async function prepareAssistantTurn(args: {
   userMessage: string;
   pageContext?: string | null;
   locale?: AssistantLocale;
+  knowledgeSearch?: {
+    category?: string;
+    editionSlug?: string;
+    limit?: number;
+  };
+  systemPromptSuffix?: string;
 }): Promise<PreparedAssistantTurn> {
   const trimmed = args.userMessage.trim().slice(0, 4000);
   if (!trimmed) throw new Error("assistant_empty");
@@ -237,17 +243,22 @@ export async function prepareAssistantTurn(args: {
   const hits = await searchAssistantKnowledge({
     query: trimmed,
     locale,
-    limit: 5,
+    limit: args.knowledgeSearch?.limit ?? 5,
+    category: args.knowledgeSearch?.category,
+    editionSlug: args.knowledgeSearch?.editionSlug,
   });
   const knowledgeContext = formatKnowledgeForPrompt(hits);
 
-  const systemPrompt = buildAssistantSystemPrompt({
+  let systemPrompt = buildAssistantSystemPrompt({
     locale,
     pageContext,
     simplifiedMode: simplified,
     knowledgeContext,
     detectedIntents: mergedIntents,
   });
+  if (args.systemPromptSuffix?.trim()) {
+    systemPrompt += `\n\n${args.systemPromptSuffix.trim()}`;
+  }
 
   return {
     locale,
@@ -341,6 +352,12 @@ export async function sendAssistantMessage(args: {
   userMessage: string;
   pageContext?: string | null;
   locale?: AssistantLocale;
+  knowledgeSearch?: {
+    category?: string;
+    editionSlug?: string;
+    limit?: number;
+  };
+  systemPromptSuffix?: string;
 }): Promise<{
   userMessage: AssistantMessageDto;
   assistantMessage: AssistantMessageDto;

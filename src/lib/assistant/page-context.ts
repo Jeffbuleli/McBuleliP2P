@@ -13,6 +13,7 @@ export function detectPageContext(pathname: string): string | null {
   if (p.includes("/staking")) return "staking";
   if (p.includes("/profile/kyc")) return "kyc";
   if (p.includes("/profile/security")) return "security";
+  if (p.includes("/academy")) return "academy";
   if (p.includes("/support")) return "support";
   if (p.includes("/register")) return "register";
   if (p.includes("/login")) return "login";
@@ -75,6 +76,11 @@ export function pageContextHint(
       en: "User is on security settings. Guide on 2FA, passkeys, WhatsApp recovery.",
       fr: "L'utilisateur est dans les paramètres de sécurité. Guidez sur 2FA, passkeys, récupération WhatsApp.",
       sw: "Mtumiaji yuko kwenye mipangilio ya usalama. Eleza 2FA, passkeys, na urejeshaji wa WhatsApp.",
+    },
+    academy: {
+      en: "User is in McBuleli Academy (training cohort). Help with syllabus, live sessions, quiz, Buleli Points — not personalized investment advice.",
+      fr: "L'utilisateur est dans McBuleli Academy (cohorte). Aidez sur le syllabus, les lives, le quiz, les Buleli Points — pas de conseil d'investissement personnalisé.",
+      sw: "Mtumiaji yuko katika McBuleli Academy. Saidia kuhusu mada, vikao live, jaribio la maswali, Buleli Points.",
     },
     support: {
       en: "User is on human support chat. Offer to help but remind they can also talk to agents here.",

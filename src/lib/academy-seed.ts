@@ -9,9 +9,13 @@ import {
 } from "@/db";
 import {
   ACADEMY_EDITION_JUNE_2026,
+  ACADEMY_EDITION_PRO_Q3,
   ACADEMY_PROGRAM_LAUNCH,
+  ACADEMY_PROGRAM_PRO,
   ACADEMY_QUIZ_FUNDAMENTALS,
 } from "@/lib/academy-config";
+import { fmtWalletAmount } from "@/lib/wallet-types";
+import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
 import { LAUNCH_WEBINAR_ISO, TRAINING_END, TRAINING_START } from "@/lib/launch-campaign";
 
 let seedPromise: Promise<void> | null = null;
@@ -61,6 +65,9 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
         startsAt: new Date(`${TRAINING_START}T17:30:00.000Z`),
         endsAt: new Date(`${TRAINING_END}T21:00:00.000Z`),
         cohortMeta: { launch: true },
+        liveBaseUrl:
+          process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim() || null,
+        tutorEnabled: true,
       })
       .returning({ id: academyEditions.id });
 
@@ -224,6 +231,51 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
         correctIndex: q.correctIndex,
       });
     }
+
+    await seedProProgram(db);
+    await ensureAcademyKnowledgeSeeded();
   })();
   return seedPromise;
+}
+
+async function seedProProgram(
+  db: ReturnType<typeof import("@/db").getDb>,
+): Promise<void> {
+  const [existing] = await db
+    .select({ id: academyPrograms.id })
+    .from(academyPrograms)
+    .where(eq(academyPrograms.slug, ACADEMY_PROGRAM_PRO))
+    .limit(1);
+  if (existing) return;
+
+  const [program] = await db
+    .insert(academyPrograms)
+    .values({
+      slug: ACADEMY_PROGRAM_PRO,
+      level: "pro",
+      priceUsdt: fmtWalletAmount(49),
+      titleFr: "Crypto & Trading — niveau Pro",
+      titleEn: "Crypto & Trading — Pro level",
+      summaryFr:
+        "Formation approfondie payante en USDT (wallet McBuleli). KYC requis.",
+      summaryEn:
+        "In-depth paid training in USDT (McBuleli wallet). KYC required.",
+      topics: ["crypto", "trading", "ia"],
+      requiresKyc: true,
+      sortOrder: 10,
+      published: true,
+    })
+    .returning({ id: academyPrograms.id });
+
+  await db.insert(academyEditions).values({
+    programId: program.id,
+    slug: ACADEMY_EDITION_PRO_Q3,
+    titleFr: "Cohorte Pro Q3 2026",
+    titleEn: "Pro cohort Q3 2026",
+    deliveryMode: "online",
+    status: "draft",
+    startsAt: new Date("2026-09-01T17:30:00.000Z"),
+    endsAt: new Date("2026-09-30T21:00:00.000Z"),
+    tutorEnabled: true,
+  });
 }

@@ -4,10 +4,18 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { AcademyCohortChat } from "@/components/academy/academy-cohort-chat";
+import { AcademyTutorPanel } from "@/components/academy/academy-tutor-panel";
 import { ACADEMY_QUIZ_FUNDAMENTALS } from "@/lib/academy-config";
 
 type Detail = {
-  edition: { slug: string; programSlug: string; title: string; enrolled: boolean };
+  edition: {
+    slug: string;
+    programSlug: string;
+    title: string;
+    enrolled: boolean;
+    tutorEnabled: boolean;
+  };
   sessions: {
     id: string;
     slug: string;
@@ -15,6 +23,8 @@ type Detail = {
     startsAt: string;
     checkedIn: boolean;
     canCheckIn: boolean;
+    liveJoinUrl: string;
+    isLiveNow: boolean;
   }[];
   quizzes: { slug: string; title: string; passed: boolean; attemptsUsed: number; maxAttempts: number }[];
 };
@@ -106,6 +116,16 @@ export function AcademyEditionClient({
               <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">
                 {new Date(s.startsAt).toLocaleString()}
               </p>
+              {s.isLiveNow ? (
+                <a
+                  href={s.liveJoinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg border-2 border-[#305f33] bg-white px-3 py-2 text-sm font-extrabold text-[#305f33]"
+                >
+                  {t("academy_join_live")} ↗
+                </a>
+              ) : null}
               {s.checkedIn ? (
                 <p className="mt-2 text-xs font-bold text-[color:var(--fd-primary)]">
                   ✓ {t("academy_checked_in")}
@@ -128,6 +148,17 @@ export function AcademyEditionClient({
           ))}
         </ul>
       </section>
+
+      {detail.edition.enrolled ? (
+        <>
+          <AcademyTutorPanel
+            editionSlug={editionSlug}
+            programSlug={programSlug}
+            enabled={detail.edition.tutorEnabled}
+          />
+          <AcademyCohortChat editionSlug={editionSlug} programSlug={programSlug} />
+        </>
+      ) : null}
 
       {quiz && detail.edition.enrolled ? (
         <section>

@@ -2215,6 +2215,8 @@ export const academyEditions = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     cohortMeta: jsonb("cohort_meta").$type<Record<string, unknown> | null>(),
+    liveBaseUrl: text("live_base_url"),
+    tutorEnabled: boolean("tutor_enabled").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2222,6 +2224,33 @@ export const academyEditions = pgTable(
   (t) => [
     uniqueIndex("academy_editions_program_slug_uidx").on(t.programId, t.slug),
     index("academy_editions_status_idx").on(t.status, t.startsAt),
+  ],
+);
+
+export const academyCohortMessages = pgTable(
+  "academy_cohort_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    senderUserId: uuid("sender_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    body: text("body").notNull(),
+    messageType: varchar("message_type", { length: 16 })
+      .notNull()
+      .default("chat"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("academy_cohort_messages_edition_created_idx").on(
+      t.editionId,
+      t.createdAt,
+    ),
   ],
 );
 

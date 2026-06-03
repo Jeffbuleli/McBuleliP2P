@@ -26,6 +26,7 @@ import { REWARD_GRANT } from "@/lib/reward-points-config";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { Locale } from "@/i18n/locale";
+import { buildLiveJoinUrl, isSessionLiveNow } from "@/lib/academy-live";
 
 export type AcademyProgramView = {
   id: string;
@@ -189,7 +190,7 @@ export async function getEditionDetail(args: {
   locale: Locale;
 }): Promise<
   | {
-      edition: AcademyEditionView;
+      edition: AcademyEditionView & { tutorEnabled: boolean };
       program: AcademyProgramView;
       sessions: AcademySessionView[];
       quizzes: { id: string; slug: string; title: string; attemptsUsed: number; maxAttempts: number; bestScore: number | null; passed: boolean }[];
@@ -246,6 +247,9 @@ export async function getEditionDetail(args: {
   const now = Date.now();
   const winMs = ACADEMY_CHECKIN_WINDOW_MIN * 60 * 1000;
 
+  const editionSlug = row.edition.slug;
+  const liveBaseUrl = row.edition.liveBaseUrl ?? null;
+
   const sessionViews: AcademySessionView[] = sessions.map((s) => {
     const start = s.startsAt.getTime();
     const end = s.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
@@ -254,6 +258,10 @@ export async function getEditionDetail(args: {
       now >= start - winMs &&
       now <= end + winMs &&
       !attended.has(s.id);
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
     return {
       id: s.id,
       slug: s.slug,
@@ -262,6 +270,13 @@ export async function getEditionDetail(args: {
       startsAt: s.startsAt.toISOString(),
       endsAt: s.endsAt?.toISOString() ?? null,
       liveUrl: s.liveUrl,
+      liveJoinUrl: buildLiveJoinUrl({
+        editionSlug,
+        sessionSlug: s.slug,
+        sessionLiveUrl: s.liveUrl,
+        liveBaseUrl,
+      }),
+      isLiveNow: liveNow,
       checkedIn: attended.has(s.id),
       canCheckIn,
     };
@@ -317,6 +332,7 @@ export async function getEditionDetail(args: {
       endsAt: row.edition.endsAt?.toISOString() ?? null,
       enrolled: !!enrollment,
       enrollmentId: enrollment?.id ?? null,
+      tutorEnabled: row.edition.tutorEnabled,
     },
     program: {
       id: row.program.id,
@@ -777,4 +793,107 @@ export async function autoEnrollLaunchCohort(userId: string): Promise<void> {
     editionSlug: ACADEMY_EDITION_JUNE_2026,
     programSlug: ACADEMY_PROGRAM_LAUNCH,
   }).catch(() => undefined);
+}
+
+export async function listAdminAcademyOverview(): Promise<{
+  editions: {
+    id: string;
+    slug: string;
+    programSlug: string;
+    titleFr: string;
+    status: string;
+    enrollmentCount: number;
+  }[];
+}> {
+  await ensureAcademyLaunchSeed();
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: academyEditions.id,
+      slug: academyEditions.slug,
+      titleFr: academyEditions.titleFr,
+      status: academyEditions.status,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .orderBy(asc(academyEditions.startsAt));
+
+  const counts = await db
+    .select({
+      editionId: academyEnrollments.editionId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(academyEnrollments)
+    .groupBy(academyEnrollments.editionId);
+
+  const countMap = new Map(counts.map((c) => [c.editionId, c.n]));
+
+  return {
+    editions: rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      programSlug: r.programSlug,
+      titleFr: r.titleFr,
+      status: r.status,
+      enrollmentCount: countMap.get(r.id) ?? 0,
+    })),
+  };
+}
+
+export async function listAdminEditionEnrollments(args: {
+  editionSlug: string;
+  limit: number;
+  offset: number;
+}): Promise<{
+  rows: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    enrolledAt: string;
+    paidUsdt: string;
+    status: string;
+  }[];
+  total: number;
+}> {
+  const db = getDb();
+  const [edition] = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .where(eq(academyEditions.slug, args.editionSlug))
+    .limit(1);
+  if (!edition) return { rows: [], total: 0 };
+
+  const rows = await db
+    .select({
+      id: academyEnrollments.id,
+      email: users.email,
+      displayName: users.displayName,
+      enrolledAt: academyEnrollments.enrolledAt,
+      paidUsdt: academyEnrollments.paidUsdt,
+      status: academyEnrollments.status,
+    })
+    .from(academyEnrollments)
+    .innerJoin(users, eq(academyEnrollments.userId, users.id))
+    .where(eq(academyEnrollments.editionId, edition.id))
+    .orderBy(desc(academyEnrollments.enrolledAt))
+    .limit(args.limit)
+    .offset(args.offset);
+
+  const [countRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(academyEnrollments)
+    .where(eq(academyEnrollments.editionId, edition.id));
+
+  return {
+    rows: rows.map((r) => ({
+      id: r.id,
+      email: r.email,
+      displayName: r.displayName,
+      enrolledAt: r.enrolledAt.toISOString(),
+      paidUsdt: r.paidUsdt.toString(),
+      status: r.status,
+    })),
+    total: countRow?.n ?? 0,
+  };
 }
