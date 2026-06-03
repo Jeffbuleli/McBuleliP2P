@@ -122,7 +122,11 @@ export function AcademyEditionClient({
       </h1>
 
       {detail.edition.enrolled && detail.program.topics?.length ? (
-        <AcademyTopicPath topics={detail.program.topics} />
+        <AcademyTopicPath
+          topics={detail.program.topics}
+          editionSlug={editionSlug}
+          programSlug={programSlug}
+        />
       ) : null}
 
       {bpFlash != null ? (

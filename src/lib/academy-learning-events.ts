@@ -5,7 +5,8 @@ export type AcademyVerb =
   | "attended"
   | "quiz_passed"
   | "replay_viewed"
-  | "credential_issued";
+  | "credential_issued"
+  | "module_completed";
 
 export async function logAcademyLearningEvent(args: {
   userId: string;

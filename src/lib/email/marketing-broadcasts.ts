@@ -12,7 +12,8 @@ export type MarketingBroadcastKind =
   | "reengage"
   | "changelog"
   | "crypto_discovery"
-  | "launch_academy";
+  | "launch_academy"
+  | "academy_journey";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -222,6 +223,19 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/formation",
     campaign: "launch_academy",
   },
+  academy_journey: {
+    subject: "Continue your crypto journey on McBuleli Academy",
+    preheader: "You're enrolled — one tap to pick up where you left off.",
+    headline: "Your progress is waiting",
+    paragraphs: [
+      "You joined the McBuleli Academy cohort. Complete a short module or join the next live — it only takes a few minutes.",
+      "Learn → practice on Wallet & P2P → grow with the community.",
+    ],
+    bullets: ["Micro-lessons", "Live sessions", "IA mentor"],
+    ctaLabel: "Continue learning",
+    ctaPath: "/app/academy",
+    campaign: "academy_journey",
+  },
 };
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
@@ -404,6 +418,19 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/formation",
     campaign: "launch_academy",
   },
+  academy_journey: {
+    subject: "Continuez votre parcours crypto — McBuleli Academy",
+    preheader: "Vous êtes inscrit — reprenez en un clic.",
+    headline: "Votre progression vous attend",
+    paragraphs: [
+      "Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live — quelques minutes suffisent.",
+      "Apprendre → pratiquer sur Wallet & P2P → grandir avec la communauté.",
+    ],
+    bullets: ["Micro-leçons", "Sessions live", "Mentor IA"],
+    ctaLabel: "Continuer l'apprentissage",
+    ctaPath: "/app/academy",
+    campaign: "academy_journey",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -418,6 +445,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "changelog",
   "crypto_discovery",
   "launch_academy",
+  "academy_journey",
 ];
 
 function buildDef(

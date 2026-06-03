@@ -19,7 +19,8 @@ export type AcademyJourneyNextKind =
   | "enter_cohort"
   | "live_session"
   | "quiz"
-  | "explore_ecosystem";
+  | "explore_ecosystem"
+  | "module";
 
 export type AcademyJourneySnapshot = {
   levelKey: AcademyJourneyLevelKey;
@@ -29,11 +30,14 @@ export type AcademyJourneySnapshot = {
   nextProgramSlug: string | null;
   nextSessionSlug: string | null;
   nextQuizSlug: string | null;
+  nextModuleSlug: string | null;
   stats: {
     cohortsEnrolled: number;
     livesAttended: number;
     quizzesPassed: number;
     badges: number;
+    modulesCompleted: number;
+    modulesTotal: number;
   };
 };
 
@@ -63,6 +67,9 @@ export type JourneyHubInput = {
   }[];
   quizFundamentalsAvailable: boolean;
   quizFundamentalsPassed: boolean;
+  modulesCompleted: number;
+  modulesTotal: number;
+  modules: { slug: string; unlocked: boolean; completed: boolean }[];
 };
 
 const LEVEL_ORDER: AcademyJourneyLevelKey[] = [
@@ -101,6 +108,12 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
   if (input.quizFundamentalsPassed) progress += 20;
   if (input.livesAttended >= 2) progress += 10;
   if (badges >= 1) progress += 10;
+  if (input.modulesTotal > 0) {
+    progress += Math.min(
+      20,
+      Math.round((input.modulesCompleted / input.modulesTotal) * 20),
+    );
+  }
   progress = Math.min(100, progress);
 
   const enrolledAny = cohortsEnrolled > 0;
@@ -117,6 +130,9 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
   let nextProgramSlug: string | null = launch?.programSlug ?? ACADEMY_PROGRAM_LAUNCH;
   let nextSessionSlug: string | null = null;
   let nextQuizSlug: string | null = null;
+  let nextModuleSlug: string | null = null;
+
+  const nextModule = input.modules.find((m) => m.unlocked && !m.completed);
 
   if (
     input.formationLead.registeredOnFormation &&
@@ -140,6 +156,11 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
     nextEditionSlug = nextLive.editionSlug;
     nextProgramSlug = nextLive.programSlug;
     nextSessionSlug = nextLive.sessionSlug;
+  } else if (nextModule && launch?.enrolled) {
+    nextKind = "module";
+    nextEditionSlug = launch.slug;
+    nextProgramSlug = launch.programSlug;
+    nextModuleSlug = nextModule.slug;
   } else if (
     launch?.enrolled &&
     input.quizFundamentalsAvailable &&
@@ -167,11 +188,14 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
     nextProgramSlug,
     nextSessionSlug,
     nextQuizSlug,
+    nextModuleSlug,
     stats: {
       cohortsEnrolled,
       livesAttended: input.livesAttended,
       quizzesPassed: input.quizzesPassed,
       badges,
+      modulesCompleted: input.modulesCompleted,
+      modulesTotal: input.modulesTotal,
     },
   };
 }

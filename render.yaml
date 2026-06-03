@@ -92,6 +92,21 @@ services:
       - key: CRON_SECRET
         sync: false
 
+  # Academy — journey nudge emails (inactive learners, P1b)
+  - type: cron
+    name: mcbuleli-academy-journey-nudge
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "0 9 * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-academy-journey-nudge.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
   - type: cron
     name: mcbuleli-wallet-retry-jobs
     runtime: node

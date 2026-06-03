@@ -2278,6 +2278,64 @@ export const academySessions = pgTable(
   ],
 );
 
+export const academyModules = pgTable(
+  "academy_modules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    summaryFr: text("summary_fr").notNull(),
+    summaryEn: text("summary_en").notNull(),
+    bodyFr: text("body_fr").notNull(),
+    bodyEn: text("body_en").notNull(),
+    visualKey: varchar("visual_key", { length: 16 }).notNull().default("crypto"),
+    unlockAfterSlug: varchar("unlock_after_slug", { length: 64 }),
+    ecosystemHref: varchar("ecosystem_href", { length: 256 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_modules_edition_slug_uidx").on(t.editionId, t.slug),
+    index("academy_modules_edition_sort_idx").on(t.editionId, t.sortOrder),
+  ],
+);
+
+export const academyModuleProgress = pgTable(
+  "academy_module_progress",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    moduleId: uuid("module_id")
+      .notNull()
+      .references(() => academyModules.id, { onDelete: "cascade" }),
+    completedAt: timestamp("completed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_module_progress_user_module_uidx").on(
+      t.userId,
+      t.moduleId,
+    ),
+    index("academy_module_progress_user_idx").on(t.userId),
+  ],
+);
+
+export const academyProgressNudges = pgTable("academy_progress_nudges", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  lastSentAt: timestamp("last_sent_at", { withTimezone: true }).notNull(),
+});
+
 export const academyLearningEvents = pgTable(
   "academy_learning_events",
   {

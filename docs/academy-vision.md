@@ -156,7 +156,7 @@ Google Classroom (structure cohorte + live + devoirs légers)
 /app/profile                    ← Teaser "Mon parcours crypto" → /app/academy
 ```
 
-**Futur (P2)** : `/app/academy/modules/[slug]` — micro-leçon 1 écran.
+**P2** : `/app/academy/{edition}/module/[slug]` — micro-leçon 1 écran (seed crypto→p2p).
 
 ---
 
@@ -244,8 +244,8 @@ Hub ops → Admin (inchangé)
 |-------|--------|--------|
 | **P0** ✅ | Doc vision + home journey + profil teaser + ecosystem links | 1–2 j |
 | **P1** | ✅ Assets `/public/academy/` · mentor IA (niveau + events) · parcours visuel thèmes | — |
-| **P1b** | Email journey Resend (rappel progression) · PNG marketing | ops |
-| **P2** | `academy_modules` table + pages micro-leçon · unlock chain | 1–2 sem |
+| **P1b** ✅ | Email journey Resend (`academy_journey`) · cron `journey-nudge` · cooldown 14j | ops |
+| **P2** ✅ | `academy_modules` + micro-leçons · unlock chain · `/module/[slug]` | livré |
 | **P3** | IA mentor full context · parcours Pro 49 USDT | 2+ sem |
 | **Ops** | Replays · cron · Resend (parallèle) |
 

@@ -81,18 +81,34 @@ export function AcademyJourneyProgress({
         <span>
           {journey.stats.badges} {t("academy_journey_stat_badges")}
         </span>
+        {journey.stats.modulesTotal > 0 ? (
+          <span>
+            {journey.stats.modulesCompleted}/{journey.stats.modulesTotal}{" "}
+            {t("academy_journey_stat_modules")}
+          </span>
+        ) : null}
       </div>
     </section>
   );
 }
 
 export function journeyContinueHref(journey: AcademyJourneySnapshot): string {
-  const { nextKind, nextEditionSlug, nextProgramSlug, nextSessionSlug, nextQuizSlug } =
-    journey;
+  const {
+    nextKind,
+    nextEditionSlug,
+    nextProgramSlug,
+    nextSessionSlug,
+    nextQuizSlug,
+    nextModuleSlug,
+  } = journey;
   const q = nextProgramSlug
     ? `?program=${encodeURIComponent(nextProgramSlug)}`
     : "";
   switch (nextKind) {
+    case "module":
+      return nextEditionSlug && nextModuleSlug
+        ? `/app/academy/${nextEditionSlug}/module/${nextModuleSlug}${q}`
+        : "/app/academy";
     case "formation_register":
       return "/formation";
     case "activate_cohort":
@@ -134,6 +150,8 @@ export function journeyNextStepLabel(
         : t("academy_journey_next_live");
     case "quiz":
       return t("academy_journey_next_quiz");
+    case "module":
+      return t("academy_journey_next_module");
     case "enter_cohort":
       return t("academy_journey_next_cohort");
     default:

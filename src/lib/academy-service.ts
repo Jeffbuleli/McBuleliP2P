@@ -5,6 +5,8 @@ import {
   academyCredentials,
   academyEditions,
   academyEnrollments,
+  academyModuleProgress,
+  academyModules,
   academyPrograms,
   academyQuizAttempts,
   academyQuizQuestions,
@@ -24,6 +26,7 @@ import {
   computeAcademyJourney,
   type AcademyJourneySnapshot,
 } from "@/lib/academy-journey";
+import { ensureAcademyModulesSeed } from "@/lib/academy-modules";
 import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
 import { isKycApproved } from "@/lib/kyc-policy";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
@@ -407,6 +410,39 @@ export async function getAcademyHub(args: {
     requiresKyc: p.requiresKyc,
   }));
 
+  await ensureAcademyModulesSeed();
+  let modulesCompleted = 0;
+  let modulesTotal = 0;
+  const moduleRows: { slug: string; unlocked: boolean; completed: boolean }[] = [];
+  const launchEditionRow = editions.find(
+    ({ edition: e, programSlug }) =>
+      e.slug === ACADEMY_EDITION_JUNE_2026 &&
+      programSlug === ACADEMY_PROGRAM_LAUNCH &&
+      enrollMap.has(e.id),
+  );
+  if (launchEditionRow) {
+    const modList = await db
+      .select({ id: academyModules.id, slug: academyModules.slug, unlockAfterSlug: academyModules.unlockAfterSlug })
+      .from(academyModules)
+      .where(eq(academyModules.editionId, launchEditionRow.edition.id))
+      .orderBy(asc(academyModules.sortOrder));
+    modulesTotal = modList.length;
+    const done = await db
+      .select({ moduleId: academyModuleProgress.moduleId })
+      .from(academyModuleProgress)
+      .where(eq(academyModuleProgress.userId, args.userId));
+    const doneSet = new Set(done.map((d) => d.moduleId));
+    const doneSlug = new Set(modList.filter((m) => doneSet.has(m.id)).map((m) => m.slug));
+    modulesCompleted = doneSlug.size;
+    for (const m of modList) {
+      moduleRows.push({
+        slug: m.slug,
+        unlocked: !m.unlockAfterSlug || doneSlug.has(m.unlockAfterSlug),
+        completed: doneSet.has(m.id),
+      });
+    }
+  }
+
   const journey = computeAcademyJourney({
     formationLead,
     editions: editionViews,
@@ -417,6 +453,9 @@ export async function getAcademyHub(args: {
     upcomingSessions,
     quizFundamentalsAvailable,
     quizFundamentalsPassed,
+    modulesCompleted,
+    modulesTotal,
+    modules: moduleRows,
   });
 
   return {

@@ -1,0 +1,12 @@
+McBuleli
+Vous êtes inscrit — reprenez en un clic.
+Bonjour {{{contact.first_name|ami}}},
+Votre progression vous attend
+Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live — quelques minutes suffisent.
+Apprendre → pratiquer sur Wallet & P2P → grandir avec la communauté.
+• Micro-leçons
+• Sessions live
+• Mentor IA
+Continuer l'apprentissage: https://mcbuleli.org/app/academy?utm_source=email&utm_medium=broadcast&utm_campaign=academy_journey
+hi@mcbuleli.org
+Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

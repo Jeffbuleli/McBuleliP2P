@@ -358,6 +358,13 @@
       "when": 1783000000000,
       "tag": "0058_academy_phase_c",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1783100000000,
+      "tag": "0059_academy_modules",
+      "breakpoints": true
     }
   ]
 }

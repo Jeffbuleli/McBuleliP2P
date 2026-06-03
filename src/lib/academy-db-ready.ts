@@ -15,6 +15,7 @@ export async function assertAcademyDbReady(): Promise<void> {
   const db = getDb();
   try {
     await db.execute(sql`SELECT 1 FROM academy_programs LIMIT 1`);
+    await db.execute(sql`SELECT 1 FROM academy_modules LIMIT 1`);
     await db.execute(sql`SELECT 1 FROM training_registrations LIMIT 1`);
   } catch (error) {
     if (isAcademyDbNotReadyError(error)) {

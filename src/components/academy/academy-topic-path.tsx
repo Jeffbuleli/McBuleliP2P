@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import {
   ACADEMY_TOPIC_ORDER,
@@ -29,12 +30,22 @@ const TOPIC_LABEL_KEYS: Record<
   p2p: "academy_topic_p2p",
 };
 
-export function AcademyTopicPath({ topics }: { topics: string[] }) {
+export function AcademyTopicPath({
+  topics,
+  editionSlug,
+  programSlug,
+}: {
+  topics: string[];
+  editionSlug: string;
+  programSlug: string;
+}) {
   const { t } = useI18n();
   const ordered = ACADEMY_TOPIC_ORDER.filter((slug) =>
     topics.some((raw) => normalizeTopicSlug(raw) === slug),
   );
   if (ordered.length === 0) return null;
+
+  const q = `?program=${encodeURIComponent(programSlug)}`;
 
   return (
     <section>
@@ -46,25 +57,27 @@ export function AcademyTopicPath({ topics }: { topics: string[] }) {
       </p>
       <ul className="mt-2 grid grid-cols-2 gap-2">
         {ordered.map((slug, i) => (
-          <li
-            key={slug}
-            className="flex gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white p-2.5 shadow-sm"
-          >
-            <Image
-              src={topicIllustration(slug)}
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 shrink-0 rounded-lg"
-            />
-            <div className="min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#305f33]">
-                {i + 1} · {t(TOPIC_LABEL_KEYS[slug])}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--fd-muted)]">
-                {t(TOPIC_HINT_KEYS[slug])}
-              </p>
-            </div>
+          <li key={slug}>
+            <Link
+              href={`/app/academy/${editionSlug}/module/${slug}${q}`}
+              className="flex gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white p-2.5 shadow-sm transition hover:border-[#305f33]/40"
+            >
+              <Image
+                src={topicIllustration(slug)}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 rounded-lg"
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#305f33]">
+                  {i + 1} · {t(TOPIC_LABEL_KEYS[slug])}
+                </p>
+                <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--fd-muted)]">
+                  {t(TOPIC_HINT_KEYS[slug])}
+                </p>
+              </div>
+            </Link>
           </li>
         ))}
       </ul>
