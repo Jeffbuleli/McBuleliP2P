@@ -278,6 +278,11 @@ export async function getRewardPointsSummary(
     [REWARD_GRANT.P2P_TRADE_COMPLETED]: grantRows.some(
       (r) => r.grantType === REWARD_GRANT.P2P_TRADE_COMPLETED,
     ),
+    [REWARD_GRANT.TRAINING_ENROLLED]: granted.has(REWARD_GRANT.TRAINING_ENROLLED),
+    [REWARD_GRANT.TRAINING_SESSION_ATTENDED]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.TRAINING_SESSION_ATTENDED,
+    ),
+    [REWARD_GRANT.TRAINING_QUIZ_PASSED]: granted.has(REWARD_GRANT.TRAINING_QUIZ_PASSED),
   };
 
   return {

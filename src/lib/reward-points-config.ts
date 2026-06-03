@@ -9,6 +9,9 @@ export const REWARD_GRANT = {
   STAKING_OPENED: "staking_opened",
   STAKING_MATURED: "staking_matured",
   P2P_TRADE_COMPLETED: "p2p_trade_completed",
+  TRAINING_ENROLLED: "training_enrolled",
+  TRAINING_SESSION_ATTENDED: "training_session_attended",
+  TRAINING_QUIZ_PASSED: "training_quiz_passed",
 } as const;
 
 export type RewardGrantType =
@@ -22,6 +25,9 @@ export const REWARD_POINTS: Record<RewardGrantType, number> = {
   [REWARD_GRANT.STAKING_OPENED]: 30,
   [REWARD_GRANT.STAKING_MATURED]: 50,
   [REWARD_GRANT.P2P_TRADE_COMPLETED]: 20,
+  [REWARD_GRANT.TRAINING_ENROLLED]: 25,
+  [REWARD_GRANT.TRAINING_SESSION_ATTENDED]: 40,
+  [REWARD_GRANT.TRAINING_QUIZ_PASSED]: 60,
 };
 
 /** Max BP credited per user per calendar month (UTC). */

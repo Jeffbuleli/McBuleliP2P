@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { getEditionDetail } from "@/lib/academy-service";
+import { getLocale } from "@/lib/get-locale";
+import { getSessionUserId } from "@/lib/session";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ editionSlug: string }> },
+) {
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { editionSlug } = await ctx.params;
+  const programSlug =
+    new URL(req.url).searchParams.get("program")?.trim() || undefined;
+  const locale = await getLocale();
+
+  const detail = await getEditionDetail({
+    userId,
+    editionSlug,
+    programSlug,
+    locale,
+  });
+
+  if (!detail) {
+    return NextResponse.json({ error: "academy_edition_not_found" }, { status: 404 });
+  }
+
+  return NextResponse.json(detail);
+}

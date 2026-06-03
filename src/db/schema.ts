@@ -2148,6 +2148,8 @@ export const trainingRegistrations = pgTable(
   "training_registrations",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    linkedAt: timestamp("linked_at", { withTimezone: true }),
     fullName: varchar("full_name", { length: 120 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 32 }).notNull(),
@@ -2169,5 +2171,223 @@ export const trainingRegistrations = pgTable(
   (t) => [
     index("training_registrations_created_idx").on(t.createdAt),
     index("training_registrations_email_idx").on(t.email),
+    index("training_registrations_user_idx").on(t.userId),
+  ],
+);
+
+/** Academy program catalog (Crypto, Trading, IA, P2P…). */
+export const academyPrograms = pgTable(
+  "academy_programs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 64 }).notNull().unique(),
+    level: varchar("level", { length: 16 }).notNull().default("discovery"),
+    priceUsdt: numeric("price_usdt", { precision: 36, scale: 18 }),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    summaryFr: text("summary_fr"),
+    summaryEn: text("summary_en"),
+    topics: jsonb("topics").$type<string[]>().default([]),
+    requiresKyc: boolean("requires_kyc").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    published: boolean("published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/** Dated cohort / edition of a program. */
+export const academyEditions = pgTable(
+  "academy_editions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    programId: uuid("program_id")
+      .notNull()
+      .references(() => academyPrograms.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    deliveryMode: varchar("delivery_mode", { length: 16 })
+      .notNull()
+      .default("online"),
+    status: varchar("status", { length: 16 }).notNull().default("draft"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    cohortMeta: jsonb("cohort_meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_editions_program_slug_uidx").on(t.programId, t.slug),
+    index("academy_editions_status_idx").on(t.status, t.startsAt),
+  ],
+);
+
+export const academySessions = pgTable(
+  "academy_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    kind: varchar("kind", { length: 16 }).notNull().default("live"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    liveUrl: text("live_url"),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("academy_sessions_edition_slug_uidx").on(t.editionId, t.slug),
+    index("academy_sessions_edition_starts_idx").on(t.editionId, t.startsAt),
+  ],
+);
+
+export const academyEnrollments = pgTable(
+  "academy_enrollments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    paidUsdt: numeric("paid_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    paymentRef: varchar("payment_ref", { length: 64 }),
+    enrolledAt: timestamp("enrolled_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("academy_enrollments_user_edition_uidx").on(
+      t.userId,
+      t.editionId,
+    ),
+    index("academy_enrollments_edition_idx").on(t.editionId),
+  ],
+);
+
+export const academyAttendance = pgTable(
+  "academy_attendance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    enrollmentId: uuid("enrollment_id")
+      .notNull()
+      .references(() => academyEnrollments.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => academySessions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    method: varchar("method", { length: 16 }).notNull().default("live_button"),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_attendance_enrollment_session_uidx").on(
+      t.enrollmentId,
+      t.sessionId,
+    ),
+  ],
+);
+
+export const academyQuizzes = pgTable(
+  "academy_quizzes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    passPercent: integer("pass_percent").notNull().default(70),
+    maxAttempts: integer("max_attempts").notNull().default(3),
+  },
+  (t) => [
+    uniqueIndex("academy_quizzes_edition_slug_uidx").on(t.editionId, t.slug),
+  ],
+);
+
+export const academyQuizQuestions = pgTable(
+  "academy_quiz_questions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quizId: uuid("quiz_id")
+      .notNull()
+      .references(() => academyQuizzes.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    promptFr: text("prompt_fr").notNull(),
+    promptEn: text("prompt_en").notNull(),
+    optionsFr: jsonb("options_fr").$type<string[]>().notNull(),
+    optionsEn: jsonb("options_en").$type<string[]>().notNull(),
+    correctIndex: integer("correct_index").notNull(),
+  },
+);
+
+export const academyQuizAttempts = pgTable(
+  "academy_quiz_attempts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quizId: uuid("quiz_id")
+      .notNull()
+      .references(() => academyQuizzes.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    scorePercent: integer("score_percent").notNull(),
+    passed: boolean("passed").notNull(),
+    answers: jsonb("answers").$type<number[] | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("academy_quiz_attempts_user_quiz_idx").on(
+      t.userId,
+      t.quizId,
+      t.createdAt,
+    ),
+  ],
+);
+
+/** Badges & certificates — public verify via verify_code. */
+export const academyCredentials = pgTable(
+  "academy_credentials",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    programId: uuid("program_id").references(() => academyPrograms.id, {
+      onDelete: "set null",
+    }),
+    editionId: uuid("edition_id").references(() => academyEditions.id, {
+      onDelete: "set null",
+    }),
+    kind: varchar("kind", { length: 16 }).notNull().default("badge"),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    titleFr: varchar("title_fr", { length: 160 }).notNull(),
+    titleEn: varchar("title_en", { length: 160 }).notNull(),
+    verifyCode: varchar("verify_code", { length: 32 }).notNull().unique(),
+    issuedAt: timestamp("issued_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+  },
+  (t) => [
+    index("academy_credentials_user_idx").on(t.userId, t.issuedAt),
   ],
 );

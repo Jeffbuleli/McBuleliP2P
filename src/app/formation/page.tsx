@@ -5,6 +5,7 @@ import { LandingLaunchHero } from "@/components/landing/landing-launch-hero";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { getLocale } from "@/lib/get-locale";
 import { TRAINING_END, TRAINING_SLOT, TRAINING_START } from "@/lib/launch-campaign";
+import { getSessionUserId } from "@/lib/session";
 
 export const metadata = {
   title: "Formation McBuleli — inscription gratuite",
@@ -15,6 +16,7 @@ export const metadata = {
 export default async function FormationPage() {
   const locale = await getLocale();
   const isFr = locale === "fr";
+  const userId = await getSessionUserId();
 
   return (
     <div className="home-theme fd-public-light min-h-dvh">
@@ -35,6 +37,14 @@ export default async function FormationPage() {
               ? "Powered by McBuleli — vos coordonnées servent uniquement aux rappels formation."
               : "Powered by McBuleli — your contact details are used only for training reminders."}
           </p>
+          {userId ? (
+            <p className="mt-4 rounded-xl bg-[#e8f3ee] px-4 py-3 text-sm font-semibold text-[#305f33]">
+              {isFr ? "Compte connecté — " : "Signed in — "}
+              <Link href="/app/academy" className="underline font-extrabold">
+                {isFr ? "ouvrir McBuleli Academy" : "open McBuleli Academy"}
+              </Link>
+            </p>
+          ) : null}
           <Suspense fallback={<p className="mt-6 text-sm text-[color:var(--fd-muted)]">…</p>}>
             <FormationRegisterForm locale={locale} />
           </Suspense>

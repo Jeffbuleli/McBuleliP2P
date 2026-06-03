@@ -10,6 +10,7 @@
 ## URLs
 
 - Inscription : **https://mcbuleli.org/formation**
+- Academy (compte connecté) : **/app/academy**
 - Admin inscriptions (super-admin) : **/admin/training-registrations**
 
 ## Homepage

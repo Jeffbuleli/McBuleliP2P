@@ -81,6 +81,12 @@ export async function POST(req: Request) {
       console.warn("[auth/register] verification email failed", err);
     });
 
+    void import("@/lib/academy-service").then(({ linkTrainingRegistrationToUser, autoEnrollLaunchCohort }) =>
+      linkTrainingRegistrationToUser({ userId: created.id, email: created.email })
+        .then(() => autoEnrollLaunchCohort(created.id))
+        .catch((err) => console.warn("[auth/register] academy", err)),
+    );
+
     const token = await signSessionToken(created.id, 0);
     const res = NextResponse.json({ user: created, emailVerificationSent: true });
     res.cookies.set(

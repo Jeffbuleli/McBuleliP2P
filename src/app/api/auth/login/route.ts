@@ -65,6 +65,7 @@ export async function POST(req: Request) {
     );
     reconcileKycAfterLogin(sessionUser.id);
     reconcileRewardPointsAfterLogin(sessionUser.id);
+    reconcileAcademyAfterLogin(sessionUser.id, sessionUser.email);
     return res;
   } catch (e) {
     console.error("[auth/login]", e);
@@ -93,4 +94,15 @@ async function reconcileRewardPointsAfterLogin(userId: string) {
   void reconcileUserRewardPoints(userId).catch((err) => {
     console.warn("[auth/login] reward points reconcile", err);
   });
+}
+
+async function reconcileAcademyAfterLogin(userId: string, email: string) {
+  const { linkTrainingRegistrationToUser, autoEnrollLaunchCohort } = await import(
+    "@/lib/academy-service"
+  );
+  void linkTrainingRegistrationToUser({ userId, email })
+    .then(() => autoEnrollLaunchCohort(userId))
+    .catch((err) => {
+      console.warn("[auth/login] academy reconcile", err);
+    });
 }

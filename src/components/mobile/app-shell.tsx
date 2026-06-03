@@ -28,6 +28,7 @@ export function AppShell({
     pathname.startsWith("/app/withdraw");
   const onP2p = pathname.startsWith("/app/p2p");
   const onSupport = pathname.startsWith("/app/support");
+  const onAcademy = pathname.startsWith("/app/academy");
   const onAvecGroupFlow =
     pathname.startsWith("/app/wallet/groups/") &&
     pathname !== "/app/wallet/groups" &&
@@ -41,7 +42,8 @@ export function AppShell({
     pathname.startsWith("/app/support") ||
     onAvecGroupFlow;
   const showTopBar = !onProfile && !hideTopBarForFlow;
-  const lightMainBg = onProfile || onWalletFlow || onHome || onP2p || onSupport;
+  const lightMainBg =
+    onProfile || onWalletFlow || onHome || onP2p || onSupport || onAcademy;
 
   return (
     <UnreadCountsProvider>
