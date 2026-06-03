@@ -243,7 +243,8 @@ Hub ops → Admin (inchangé)
 | Phase | Scope | Effort |
 |-------|--------|--------|
 | **P0** ✅ | Doc vision + home journey + profil teaser + ecosystem links | 1–2 j |
-| **P1** | Assets illustrations `/public/academy/` · tutor prompt + niveau · email journey | 3–5 j |
+| **P1** | ✅ Assets `/public/academy/` · mentor IA (niveau + events) · parcours visuel thèmes | — |
+| **P1b** | Email journey Resend (rappel progression) · PNG marketing | ops |
 | **P2** | `academy_modules` table + pages micro-leçon · unlock chain | 1–2 sem |
 | **P3** | IA mentor full context · parcours Pro 49 USDT | 2+ sem |
 | **Ops** | Replays · cron · Resend (parallèle) |

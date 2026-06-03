@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { AcademyTopicPath } from "@/components/academy/academy-topic-path";
 import { AcademyCohortChat } from "@/components/academy/academy-cohort-chat";
 import { AcademyTutorPanel } from "@/components/academy/academy-tutor-panel";
 import { ACADEMY_QUIZ_FUNDAMENTALS } from "@/lib/academy-config";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type Detail = {
+  program: { topics: string[] };
   edition: {
     slug: string;
     programSlug: string;
@@ -118,6 +120,10 @@ export function AcademyEditionClient({
       <h1 className="text-xl font-extrabold text-[color:var(--fd-text)]">
         {detail.edition.title}
       </h1>
+
+      {detail.edition.enrolled && detail.program.topics?.length ? (
+        <AcademyTopicPath topics={detail.program.topics} />
+      ) : null}
 
       {bpFlash != null ? (
         <p className="rounded-xl bg-[#e8f3ee] px-3 py-2 text-sm font-bold text-[#305f33]">

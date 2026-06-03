@@ -120,7 +120,7 @@ Voir **`docs/academy-open-classroom.md`** — audit, rôles host/apprenant, barr
 
 ## Vision produit & parcours guidé
 
-Voir **`docs/academy-vision.md`** — audit complet, gap analysis, roadmap, home journey (P0).
+Voir **`docs/academy-vision.md`** — audit complet, gap analysis, roadmap, home journey (P0), P1 illustrations + mentor IA.
 
 ## Prochaine étape produit
 

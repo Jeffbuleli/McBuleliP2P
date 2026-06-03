@@ -15,6 +15,7 @@ import {
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
+import { AcademyVisualHero } from "@/components/academy/academy-visual-hero";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type FormationLead = {
@@ -213,6 +214,10 @@ export function AcademyHubClient() {
         </div>
       ) : !isStaff ? (
         <>
+          <AcademyVisualHero
+            levelKey={hub.journey.levelKey}
+            alt={t("academy_journey_your_level")}
+          />
           <AcademyJourneyProgress
             displayName={hub.displayName ?? hub.formationLead.fullName}
             journey={hub.journey}

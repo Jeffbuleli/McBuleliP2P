@@ -1,26 +1,18 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
 import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
 import { assertEnrolledInEdition, resolveEditionIdBySlug } from "@/lib/academy-cohort-messaging";
+import { buildAcademyMentorSystemAddon } from "@/lib/academy-mentor-context";
+import { getAcademyHub } from "@/lib/academy-service";
 import {
   getOrCreateConversation,
   sendAssistantMessage,
 } from "@/lib/assistant/service";
-import { eq } from "drizzle-orm";
-import { academyEditions, getDb } from "@/db";
+import type { Locale } from "@/i18n/locale";
+import { desc, eq } from "drizzle-orm";
+import { academyEditions, academyLearningEvents, getDb } from "@/db";
 
 export function academyPageContext(editionSlug: string): string {
   return `academy:${editionSlug}`.slice(0, 128);
-}
-
-function tutorSystemAddon(locale: AssistantLocale, editionTitle: string): string {
-  const formatRules =
-    locale === "fr"
-      ? `Mise en forme : paragraphes courts, listes numérotées ou tirets, mots-clés en **gras**, pas de titres #. Liens app : /app/academy, /app/wallet.`
-      : `Formatting: short paragraphs, numbered or bullet lists, key terms in **bold**, no # headings. App paths: /app/academy, /app/wallet.`;
-  if (locale === "fr") {
-    return `Tu es le tuteur IA de la cohorte McBuleli Academy « ${editionTitle} ». Réponds uniquement sur le syllabus (crypto, wallet McBuleli, P2P, trading, IA, Buleli Points). Pas de conseil d'investissement personnalisé. Encourage la présence aux lives et le quiz. ${formatRules}`;
-  }
-  return `You are the AI tutor for McBuleli Academy cohort « ${editionTitle} ». Answer only about the syllabus (crypto, McBuleli wallet, P2P, trading, AI, Buleli Points). No personalized investment advice. Encourage live attendance and the quiz. ${formatRules}`;
 }
 
 export async function sendAcademyTutorMessage(args: {
@@ -70,6 +62,21 @@ export async function sendAcademyTutorMessage(args: {
   const editionTitle =
     args.locale === "fr" ? edition.titleFr : edition.titleEn;
   const pageContext = academyPageContext(args.editionSlug);
+  const appLocale: Locale = args.locale === "fr" ? "fr" : "en";
+
+  const hub = await getAcademyHub({
+    userId: args.userId,
+    locale: appLocale,
+    viewerRole: "learner",
+  });
+
+  const recentRows = await db
+    .select({ verb: academyLearningEvents.verb })
+    .from(academyLearningEvents)
+    .where(eq(academyLearningEvents.userId, args.userId))
+    .orderBy(desc(academyLearningEvents.createdAt))
+    .limit(6);
+  const recentVerbs = [...new Set(recentRows.map((r) => r.verb))].slice(0, 4);
 
   const conversation = await getOrCreateConversation({
     conversationId: args.conversationId ?? null,
@@ -78,7 +85,12 @@ export async function sendAcademyTutorMessage(args: {
     pageContext,
   });
 
-  const addon = tutorSystemAddon(args.locale, editionTitle);
+  const addon = buildAcademyMentorSystemAddon({
+    locale: args.locale,
+    editionTitle,
+    journey: hub.journey,
+    recentVerbs,
+  });
 
   const result = await sendAssistantMessage({
     conversationId: conversation.id,
