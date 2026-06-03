@@ -23,14 +23,15 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 | **Admin** | `/admin/academy` — inscriptions par édition + export CSV |
 | **Pro (brouillon)** | Programme `crypto-trading-pro` · 49 USDT · édition `q3-2026` en `draft` |
 
-## Migrations prod
+## Migrations prod (obligatoire après déploiement Academy)
 
 ```bash
 npm run db:migrate:render
 ```
 
-- `drizzle/0056_academy.sql` — Phase A
-- `drizzle/0057_academy_phase_b.sql` — chat, live_base_url, tutor_enabled
+Journal Drizzle : `0055_training_registrations`, `0056_academy`, `0057_academy_phase_b`.
+
+Sans ces migrations : `/formation` et `/app/academy` renvoient HTTP 503 `academy_db_not_migrated`.
 
 Le seed cohorte + syllabus IA s’exécute au premier accès API Academy.
 

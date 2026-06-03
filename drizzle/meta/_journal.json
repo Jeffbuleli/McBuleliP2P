@@ -337,6 +337,20 @@
       "when": 1782700000000,
       "tag": "0055_training_registrations",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1782800000000,
+      "tag": "0056_academy",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1782900000000,
+      "tag": "0057_academy_phase_b",
+      "breakpoints": true
     }
   ]
 }

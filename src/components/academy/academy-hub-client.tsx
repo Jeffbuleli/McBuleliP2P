@@ -31,6 +31,7 @@ export function AcademyHubClient() {
   const { t } = useI18n();
   const [hub, setHub] = useState<Hub | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [dbPending, setDbPending] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
 
   const load = useCallback(async () => {
@@ -43,9 +44,16 @@ export function AcademyHubClient() {
       );
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(t("academy_error_load"));
+        if (res.status === 503 && j.error === "academy_db_not_migrated") {
+          setDbPending(true);
+          setErr(t("academy_db_not_ready"));
+        } else {
+          setDbPending(false);
+          setErr(t("academy_error_load"));
+        }
         return;
       }
+      setDbPending(false);
       setHub(j as Hub);
     } catch {
       setErr(t("academy_error_load"));
@@ -105,7 +113,24 @@ export function AcademyHubClient() {
       </header>
 
       {err ? (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800">{err}</p>
+        <div
+          className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+            dbPending
+              ? "bg-amber-50 text-amber-900"
+              : "bg-rose-50 text-rose-800"
+          }`}
+        >
+          <p>{err}</p>
+          {dbPending ? (
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-2 text-xs font-extrabold underline"
+            >
+              {t("academy_retry")}
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {!hub ? (

@@ -739,6 +739,9 @@ export const en = {
   academy_badges: "My badges",
   academy_verify_link: "Verify",
   academy_error_load: "Could not load Academy. Try again.",
+  academy_db_not_ready:
+    "Academy is being updated on the server. Try again in a few minutes.",
+  academy_retry: "Retry",
   academy_error_enroll: "Could not enroll. Check your wallet or KYC.",
   academy_insufficient_balance: "Insufficient USDT balance for this course.",
   academy_kyc_required: "KYC verification required for this level.",
@@ -4045,6 +4048,9 @@ export const fr: Messages = {
   academy_badges: "Mes badges",
   academy_verify_link: "Vérifier",
   academy_error_load: "Impossible de charger l'Academy. Réessayez.",
+  academy_db_not_ready:
+    "L'Academy est en cours de mise à jour sur le serveur. Réessayez dans quelques minutes.",
+  academy_retry: "Réessayer",
   academy_error_enroll: "Inscription impossible. Vérifiez wallet ou KYC.",
   academy_insufficient_balance: "Solde USDT insuffisant pour cette formation.",
   academy_kyc_required: "Vérification KYC requise pour ce niveau.",

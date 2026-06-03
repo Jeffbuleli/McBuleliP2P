@@ -32,7 +32,11 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
       .from(academyPrograms)
       .where(eq(academyPrograms.slug, ACADEMY_PROGRAM_LAUNCH))
       .limit(1);
-    if (existing) return;
+    if (existing) {
+      await seedProProgram(db);
+      await ensureAcademyKnowledgeSeeded();
+      return;
+    }
 
     const [program] = await db
       .insert(academyPrograms)

@@ -26,6 +26,7 @@ type Copy = {
   success: string;
   successDup: string;
   error: string;
+  errorDb: string;
 };
 
 const COPY: Record<"fr" | "en", Copy> = {
@@ -53,6 +54,7 @@ const COPY: Record<"fr" | "en", Copy> = {
     success: "Inscription enregistrée. À très bientôt !",
     successDup: "Vous êtes déjà inscrit avec cet e-mail.",
     error: "Impossible d'enregistrer. Réessayez ou contactez hi@mcbuleli.org",
+    errorDb: "Inscriptions temporairement indisponibles (mise à jour serveur). Réessayez dans quelques minutes.",
   },
   en: {
     title: "Free McBuleli training",
@@ -78,13 +80,15 @@ const COPY: Record<"fr" | "en", Copy> = {
     success: "You're registered. See you soon!",
     successDup: "This email is already registered.",
     error: "Could not save. Try again or email hi@mcbuleli.org",
+    errorDb:
+      "Registration is temporarily unavailable (server update). Try again in a few minutes.",
   },
 };
 
 export function FormationRegisterForm({ locale }: { locale: "fr" | "en" }) {
   const c = COPY[locale];
   const search = useSearchParams();
-  const [status, setStatus] = useState<"idle" | "ok" | "dup" | "err">("idle");
+  const [status, setStatus] = useState<"idle" | "ok" | "dup" | "err" | "db">("idle");
   const [loading, setLoading] = useState(false);
   const [interests, setInterests] = useState<string[]>([]);
 
@@ -121,7 +125,9 @@ export function FormationRegisterForm({ locale }: { locale: "fr" | "en" }) {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setStatus("err");
+        setStatus(
+          res.status === 503 && j.error === "academy_db_not_migrated" ? "db" : "err",
+        );
         return;
       }
       setStatus(j.duplicate ? "dup" : "ok");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isAcademyDbNotReadyError } from "@/lib/academy-db-ready";
 import { createTrainingRegistration } from "@/lib/training-registration-service";
 
 const bodySchema = z.object({
@@ -46,6 +47,12 @@ export async function POST(req: Request) {
       duplicate: result.duplicate,
     });
   } catch (e) {
+    if (isAcademyDbNotReadyError(e)) {
+      return NextResponse.json(
+        { error: "academy_db_not_migrated" },
+        { status: 503 },
+      );
+    }
     console.error("[training/register]", e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

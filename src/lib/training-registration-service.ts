@@ -1,5 +1,6 @@
 import { count, desc, eq } from "drizzle-orm";
 import { getDb, trainingRegistrations } from "@/db";
+import { assertAcademyDbReady } from "@/lib/academy-db-ready";
 
 export type TrainingRegistrationInput = {
   fullName: string;
@@ -19,6 +20,7 @@ export type TrainingRegistrationInput = {
 export async function createTrainingRegistration(
   input: TrainingRegistrationInput,
 ): Promise<{ id: string; duplicate: boolean }> {
+  await assertAcademyDbReady();
   const db = getDb();
   const email = input.email.trim().toLowerCase();
 

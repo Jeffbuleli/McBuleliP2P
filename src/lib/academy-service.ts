@@ -27,6 +27,7 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { Locale } from "@/i18n/locale";
 import { buildLiveJoinUrl, isSessionLiveNow } from "@/lib/academy-live";
+import { assertAcademyDbReady } from "@/lib/academy-db-ready";
 
 export type AcademyProgramView = {
   id: string;
@@ -110,6 +111,7 @@ export async function getAcademyHub(args: {
   editions: AcademyEditionView[];
   credentials: AcademyCredentialView[];
 }> {
+  await assertAcademyDbReady();
   await ensureAcademyLaunchSeed();
   const db = getDb();
   const locale = args.locale;
