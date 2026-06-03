@@ -2336,6 +2336,30 @@ export const academyProgressNudges = pgTable("academy_progress_nudges", {
   lastSentAt: timestamp("last_sent_at", { withTimezone: true }).notNull(),
 });
 
+export const academyEditionHosts = pgTable(
+  "academy_edition_hosts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => academyEditions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 16 }).notNull().default("co_host"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_edition_hosts_edition_user_uidx").on(
+      t.editionId,
+      t.userId,
+    ),
+    index("academy_edition_hosts_edition_idx").on(t.editionId),
+  ],
+);
+
 export const academyLearningEvents = pgTable(
   "academy_learning_events",
   {

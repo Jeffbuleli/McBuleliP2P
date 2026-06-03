@@ -77,6 +77,7 @@ export type JourneyHubInput = {
     enrolled: boolean;
     open: boolean;
   } | null;
+  activeEdition: { slug: string; programSlug: string } | null;
 };
 
 const LEVEL_ORDER: AcademyJourneyLevelKey[] = [
@@ -147,6 +148,11 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
   let nextModuleSlug: string | null = null;
 
   const nextModule = input.modules.find((m) => m.unlocked && !m.completed);
+  const activeEdition =
+    input.activeEdition ??
+    (launch?.enrolled
+      ? { slug: launch.slug, programSlug: launch.programSlug }
+      : null);
 
   if (
     input.formationLead.registeredOnFormation &&
@@ -170,10 +176,10 @@ export function computeAcademyJourney(input: JourneyHubInput): AcademyJourneySna
     nextEditionSlug = nextLive.editionSlug;
     nextProgramSlug = nextLive.programSlug;
     nextSessionSlug = nextLive.sessionSlug;
-  } else if (nextModule && launch?.enrolled) {
+  } else if (nextModule && activeEdition) {
     nextKind = "module";
-    nextEditionSlug = launch.slug;
-    nextProgramSlug = launch.programSlug;
+    nextEditionSlug = activeEdition.slug;
+    nextProgramSlug = activeEdition.programSlug;
     nextModuleSlug = nextModule.slug;
   } else if (
     launch?.enrolled &&

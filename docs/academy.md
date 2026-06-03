@@ -29,7 +29,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 npm run db:migrate:render
 ```
 
-Journal Drizzle : `0055` … `0058_academy_phase_c`, `0059_academy_modules`, `0060_academy_pro_open`.
+Journal Drizzle : `0055` … `0061_academy_edition_hosts`.
 
 Sans ces migrations : `/formation` et `/app/academy` renvoient HTTP 503 `academy_db_not_migrated`.
 
@@ -51,9 +51,13 @@ Le seed cohorte + syllabus IA s’exécute au premier accès API Academy.
 
 ```env
 NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
+# Optionnel — iframe dans la salle companion (recommandé avec live self-host)
+NEXT_PUBLIC_ACADEMY_LIVE_EMBED=true
 ```
 
 Sinon : salles Jitsi publiques `meet.jit.si/mcbuleli-juin-2026-{session}` (préréglages bas débit dans `src/lib/academy-live.ts`).
+
+**Co-animateurs (P4)** : admin `/admin/academy` → ajouter un email McBuleli → lien Jitsi host pour cette cohorte.
 
 ### Parcours participant live
 

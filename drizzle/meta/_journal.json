@@ -372,6 +372,13 @@
       "when": 1783200000000,
       "tag": "0060_academy_pro_open",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1783300000000,
+      "tag": "0061_academy_edition_hosts",
+      "breakpoints": true
     }
   ]
 }

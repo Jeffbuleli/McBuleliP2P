@@ -247,7 +247,8 @@ Hub ops → Admin (inchangé)
 | **P1b** ✅ | Email journey Resend (`academy_journey`) · cron `journey-nudge` · cooldown 14j | ops |
 | **P2** ✅ | `academy_modules` + micro-leçons · unlock chain · `/module/[slug]` | livré |
 | **P3** ✅ | Mentor IA contexte cohorte (modules, next step) · cohorte Pro 49 USDT ouverte | livré |
-| **Ops** | Replays · cron · Resend (parallèle) |
+| **P4** ✅ | Co-animateurs `edition_hosts` · parcours modules Pro · embed Jitsi optionnel | livré |
+| **Ops** | Replays · cron · Resend (parallèle) — **hors phases produit** |
 
 ---
 

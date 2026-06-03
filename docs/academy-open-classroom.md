@@ -87,8 +87,8 @@ Modes : `learner` · `host` · `audio` — `buildLiveJoinUrl({ mode })`.
 |-------|--------|---------|
 | **P0** | ✅ cette PR | UX salle live, temps restant, barre mobile, host/audio URLs, invite errors, doc |
 | **P1** | Ops | `live_url` par session, replays, cron rappels |
-| **P2** | Produit | Table `edition_hosts`, co-animateur |
-| **P3** | Infra | Jitsi self-host + iframe optionnel |
+| **P2** | ✅ | Table `edition_hosts`, co-animateur (admin Academy) |
+| **P3** | ✅ | Iframe optionnel `NEXT_PUBLIC_ACADEMY_LIVE_EMBED=true` (+ self-host live URL) |
 
 ## Références code
 

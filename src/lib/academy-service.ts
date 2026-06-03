@@ -433,11 +433,23 @@ export async function getAcademyHub(args: {
       programSlug === ACADEMY_PROGRAM_LAUNCH &&
       enrollMap.has(e.id),
   );
-  if (launchEditionRow) {
+  const proEditionRowDb = editions.find(
+    ({ edition: e, programSlug }) =>
+      e.slug === ACADEMY_EDITION_PRO_Q3 &&
+      programSlug === ACADEMY_PROGRAM_PRO &&
+      enrollMap.has(e.id),
+  );
+  const progressEditionRow = launchEditionRow ?? proEditionRowDb;
+
+  if (progressEditionRow) {
     const modList = await db
-      .select({ id: academyModules.id, slug: academyModules.slug, unlockAfterSlug: academyModules.unlockAfterSlug })
+      .select({
+        id: academyModules.id,
+        slug: academyModules.slug,
+        unlockAfterSlug: academyModules.unlockAfterSlug,
+      })
       .from(academyModules)
-      .where(eq(academyModules.editionId, launchEditionRow.edition.id))
+      .where(eq(academyModules.editionId, progressEditionRow.edition.id))
       .orderBy(asc(academyModules.sortOrder));
     modulesTotal = modList.length;
     const done = await db
@@ -445,7 +457,9 @@ export async function getAcademyHub(args: {
       .from(academyModuleProgress)
       .where(eq(academyModuleProgress.userId, args.userId));
     const doneSet = new Set(done.map((d) => d.moduleId));
-    const doneSlug = new Set(modList.filter((m) => doneSet.has(m.id)).map((m) => m.slug));
+    const doneSlug = new Set(
+      modList.filter((m) => doneSet.has(m.id)).map((m) => m.slug),
+    );
     modulesCompleted = doneSlug.size;
     for (const m of modList) {
       moduleRows.push({
@@ -480,6 +494,12 @@ export async function getAcademyHub(args: {
           programSlug: proRow.programSlug,
           enrolled: proRow.enrolled,
           open: true,
+        }
+      : null,
+    activeEdition: progressEditionRow
+      ? {
+          slug: progressEditionRow.edition.slug,
+          programSlug: progressEditionRow.programSlug,
         }
       : null,
   });

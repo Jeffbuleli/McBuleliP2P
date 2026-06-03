@@ -38,6 +38,14 @@ type SessionRow = {
   replayUrl: string | null;
 };
 
+type HostRow = {
+  id: string;
+  userId: string;
+  email: string;
+  displayName: string | null;
+  role: string;
+};
+
 export default function AdminAcademyPage() {
   const [editions, setEditions] = useState<EditionRow[]>([]);
   const [formation, setFormation] = useState<FormationStats | null>(null);
@@ -48,6 +56,10 @@ export default function AdminAcademyPage() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [sessionDraft, setSessionDraft] = useState<Record<string, { liveUrl: string; replayUrl: string }>>({});
   const [savingSession, setSavingSession] = useState<string | null>(null);
+  const [hosts, setHosts] = useState<HostRow[]>([]);
+  const [hostEmail, setHostEmail] = useState("");
+  const [hostBusy, setHostBusy] = useState(false);
+  const [hostMsg, setHostMsg] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
@@ -96,6 +108,15 @@ export default function AdminAcademyPage() {
       setEnrollments((j.enrollments as EnrollmentRow[]) ?? []);
       setTotal(typeof j.total === "number" ? j.total : 0);
     }
+  }, []);
+
+  const loadHosts = useCallback(async (editionSlug: string) => {
+    const res = await fetch(
+      `/api/admin/academy/editions/${encodeURIComponent(editionSlug)}/hosts`,
+      { credentials: "include" },
+    );
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) setHosts((j.hosts as HostRow[]) ?? []);
   }, []);
 
   const loadSessions = useCallback(async (editionSlug: string) => {
@@ -147,8 +168,49 @@ export default function AdminAcademyPage() {
     if (selected) {
       void loadEnrollments(selected);
       void loadSessions(selected);
+      void loadHosts(selected);
     }
-  }, [selected, loadEnrollments, loadSessions]);
+  }, [selected, loadEnrollments, loadSessions, loadHosts]);
+
+  async function addCoHost() {
+    if (!selected || !hostEmail.trim()) return;
+    setHostBusy(true);
+    setHostMsg(null);
+    try {
+      const edition = editions.find((e) => e.slug === selected);
+      const res = await fetch(
+        `/api/admin/academy/editions/${encodeURIComponent(selected)}/hosts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: hostEmail.trim(),
+            programSlug: edition?.programSlug,
+          }),
+        },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setHostMsg(typeof j.error === "string" ? j.error : "Erreur");
+        return;
+      }
+      setHostEmail("");
+      setHostMsg("Co-animateur ajouté");
+      await loadHosts(selected);
+    } finally {
+      setHostBusy(false);
+    }
+  }
+
+  async function removeCoHost(hostId: string) {
+    if (!selected) return;
+    await fetch(
+      `/api/admin/academy/editions/${encodeURIComponent(selected)}/hosts?hostId=${encodeURIComponent(hostId)}`,
+      { method: "DELETE", credentials: "include" },
+    );
+    await loadHosts(selected);
+  }
 
   function exportCsv() {
     const header = ["enrolledAt", "email", "displayName", "paidUsdt", "status"];
@@ -289,6 +351,57 @@ export default function AdminAcademyPage() {
                 </button>
               </li>
             ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {selected ? (
+        <div className={adminCls.card}>
+          <h2 className="text-sm font-bold">Co-animateurs — {selected}</h2>
+          <p className="mt-1 text-xs text-stone-500">
+            Accès lien Jitsi host (en plus des agents / super admin)
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <input
+              type="email"
+              placeholder="email@exemple.com"
+              value={hostEmail}
+              onChange={(e) => setHostEmail(e.target.value)}
+              className="min-w-[200px] flex-1 rounded border border-stone-200 px-2 py-1.5 text-sm"
+            />
+            <button
+              type="button"
+              disabled={hostBusy}
+              onClick={() => void addCoHost()}
+              className="rounded-lg bg-[#305f33] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+            >
+              {hostBusy ? "…" : "Ajouter"}
+            </button>
+          </div>
+          {hostMsg ? <p className="mt-2 text-xs font-semibold text-[#305f33]">{hostMsg}</p> : null}
+          <ul className="mt-3 space-y-1">
+            {hosts.length === 0 ? (
+              <li className="text-xs text-stone-500">Aucun co-animateur</li>
+            ) : (
+              hosts.map((h) => (
+                <li
+                  key={h.id}
+                  className="flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-xs"
+                >
+                  <span>
+                    <span className="font-semibold">{h.email}</span>
+                    {h.displayName ? ` · ${h.displayName}` : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void removeCoHost(h.id)}
+                    className="font-bold text-rose-700"
+                  >
+                    Retirer
+                  </button>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       ) : null}

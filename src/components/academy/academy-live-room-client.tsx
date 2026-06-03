@@ -17,6 +17,8 @@ import {
   type LivePhase,
 } from "@/lib/academy-live";
 import type { AcademyLiveRole } from "@/lib/academy-live-role";
+import { isAcademyLiveEmbedEnabled } from "@/lib/academy-live-embed";
+import { AcademyLiveEmbed } from "@/components/academy/academy-live-embed";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 
 type SessionLive = {
@@ -230,7 +232,12 @@ export function AcademyLiveRoomClient({
         </p>
       ) : null}
 
-      {enrolled && canJoin ? (
+      {enrolled && canJoin && isAcademyLiveEmbedEnabled() ? (
+        <AcademyLiveEmbed
+          joinUrl={isHost ? session.liveJoinUrlHost : session.liveJoinUrl}
+          title={session.title}
+        />
+      ) : enrolled && canJoin ? (
         <p className="text-center text-xs leading-relaxed text-[color:var(--fd-muted)]">
           {t("academy_live_bandwidth_note")}
         </p>
