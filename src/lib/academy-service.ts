@@ -18,7 +18,12 @@ import {
   ACADEMY_CHECKIN_WINDOW_MIN,
   ACADEMY_EDITION_JUNE_2026,
   ACADEMY_PROGRAM_LAUNCH,
+  ACADEMY_QUIZ_FUNDAMENTALS,
 } from "@/lib/academy-config";
+import {
+  computeAcademyJourney,
+  type AcademyJourneySnapshot,
+} from "@/lib/academy-journey";
 import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
 import { isKycApproved } from "@/lib/kyc-policy";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
@@ -199,16 +204,28 @@ export async function getFormationLeadForUser(
   };
 }
 
+export type AcademyUpcomingSessionView = {
+  editionSlug: string;
+  programSlug: string;
+  sessionSlug: string;
+  title: string;
+  startsAt: string;
+  isLiveNow: boolean;
+};
+
 export async function getAcademyHub(args: {
   userId: string;
   locale: Locale;
   viewerRole?: AcademyViewerRole;
 }): Promise<{
   viewer: AcademyViewerRole;
+  displayName: string | null;
   formationLead: AcademyFormationLead;
   programs: AcademyProgramView[];
   editions: AcademyEditionView[];
   credentials: AcademyCredentialView[];
+  upcomingSessions: AcademyUpcomingSessionView[];
+  journey: AcademyJourneySnapshot;
 }> {
   await assertAcademyDbReady();
   await ensureAcademyLaunchSeed();
@@ -252,31 +269,162 @@ export async function getAcademyHub(args: {
   const formationLead = await getFormationLeadForUser(args.userId);
   const viewer = args.viewerRole ?? "learner";
 
+  const [userRow] = await db
+    .select({ displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+
+  const enrolledEditionIds = [...enrollMap.keys()];
+  let livesAttended = 0;
+  let quizzesPassed = 0;
+  let quizFundamentalsAvailable = false;
+  let quizFundamentalsPassed = false;
+  const upcomingSessions: AcademyUpcomingSessionView[] = [];
+
+  if (enrolledEditionIds.length > 0) {
+    const [attRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(academyAttendance)
+      .innerJoin(
+        academyEnrollments,
+        eq(academyAttendance.enrollmentId, academyEnrollments.id),
+      )
+      .where(eq(academyEnrollments.userId, args.userId));
+    livesAttended = attRow?.n ?? 0;
+
+    const [quizPassRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(academyQuizAttempts)
+      .where(
+        and(
+          eq(academyQuizAttempts.userId, args.userId),
+          eq(academyQuizAttempts.passed, true),
+        ),
+      );
+    quizzesPassed = quizPassRow?.n ?? 0;
+
+    const launchEditionRow = editions.find(
+      ({ edition: e, programSlug }) =>
+        e.slug === ACADEMY_EDITION_JUNE_2026 &&
+        programSlug === ACADEMY_PROGRAM_LAUNCH &&
+        enrollMap.has(e.id),
+    );
+    if (launchEditionRow) {
+      const [fundQuiz] = await db
+        .select({ id: academyQuizzes.id })
+        .from(academyQuizzes)
+        .where(
+          and(
+            eq(academyQuizzes.editionId, launchEditionRow.edition.id),
+            eq(academyQuizzes.slug, ACADEMY_QUIZ_FUNDAMENTALS),
+          ),
+        )
+        .limit(1);
+      if (fundQuiz) {
+        quizFundamentalsAvailable = true;
+        const [passedAttempt] = await db
+          .select({ id: academyQuizAttempts.id })
+          .from(academyQuizAttempts)
+          .where(
+            and(
+              eq(academyQuizAttempts.userId, args.userId),
+              eq(academyQuizAttempts.quizId, fundQuiz.id),
+              eq(academyQuizAttempts.passed, true),
+            ),
+          )
+          .limit(1);
+        quizFundamentalsPassed = !!passedAttempt;
+      }
+    }
+
+    const sessionRows = await db
+      .select({
+        slug: academySessions.slug,
+        titleFr: academySessions.titleFr,
+        titleEn: academySessions.titleEn,
+        startsAt: academySessions.startsAt,
+        endsAt: academySessions.endsAt,
+        editionSlug: academyEditions.slug,
+        programSlug: academyPrograms.slug,
+      })
+      .from(academySessions)
+      .innerJoin(
+        academyEditions,
+        eq(academySessions.editionId, academyEditions.id),
+      )
+      .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+      .where(inArray(academySessions.editionId, enrolledEditionIds))
+      .orderBy(asc(academySessions.startsAt));
+
+    for (const s of sessionRows) {
+      const liveNow = isSessionLiveNow({
+        startsAt: s.startsAt,
+        endsAt: s.endsAt,
+      });
+      const ended = isSessionEnded({
+        startsAt: s.startsAt,
+        endsAt: s.endsAt,
+      });
+      if (!ended || liveNow) {
+        upcomingSessions.push({
+          editionSlug: s.editionSlug,
+          programSlug: s.programSlug,
+          sessionSlug: s.slug,
+          title: pickLocale(
+            { titleFr: s.titleFr, titleEn: s.titleEn },
+            locale,
+          ),
+          startsAt: s.startsAt.toISOString(),
+          isLiveNow: liveNow,
+        });
+      }
+      if (upcomingSessions.length >= 4) break;
+    }
+  }
+
+  const editionViews = editions.map(({ edition: e, programSlug }) => ({
+    id: e.id,
+    slug: e.slug,
+    programSlug,
+    title: pickLocale(e, locale),
+    deliveryMode: e.deliveryMode,
+    status: e.status,
+    startsAt: e.startsAt?.toISOString() ?? null,
+    endsAt: e.endsAt?.toISOString() ?? null,
+    enrolled: enrollMap.has(e.id),
+    enrollmentId: enrollMap.get(e.id) ?? null,
+  }));
+
+  const programViews = programs.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    level: p.level,
+    priceUsdt: p.priceUsdt?.toString() ?? null,
+    title: pickLocale(p, locale),
+    summary: locale === "fr" ? p.summaryFr : p.summaryEn,
+    topics: p.topics ?? [],
+    requiresKyc: p.requiresKyc,
+  }));
+
+  const journey = computeAcademyJourney({
+    formationLead,
+    editions: editionViews,
+    programs: programViews.map((p) => ({ slug: p.slug, level: p.level })),
+    credentialsCount: creds.length,
+    livesAttended,
+    quizzesPassed,
+    upcomingSessions,
+    quizFundamentalsAvailable,
+    quizFundamentalsPassed,
+  });
+
   return {
     viewer,
+    displayName: userRow?.displayName?.trim() || null,
     formationLead,
-    programs: programs.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      level: p.level,
-      priceUsdt: p.priceUsdt?.toString() ?? null,
-      title: pickLocale(p, locale),
-      summary: locale === "fr" ? p.summaryFr : p.summaryEn,
-      topics: p.topics ?? [],
-      requiresKyc: p.requiresKyc,
-    })),
-    editions: editions.map(({ edition: e, programSlug }) => ({
-      id: e.id,
-      slug: e.slug,
-      programSlug,
-      title: pickLocale(e, locale),
-      deliveryMode: e.deliveryMode,
-      status: e.status,
-      startsAt: e.startsAt?.toISOString() ?? null,
-      endsAt: e.endsAt?.toISOString() ?? null,
-      enrolled: enrollMap.has(e.id),
-      enrollmentId: enrollMap.get(e.id) ?? null,
-    })),
+    programs: programViews,
+    editions: editionViews,
     credentials: creds.map((c) => ({
       id: c.id,
       kind: c.kind,
@@ -286,6 +434,8 @@ export async function getAcademyHub(args: {
       issuedAt: c.issuedAt.toISOString(),
       revoked: c.revokedAt != null,
     })),
+    upcomingSessions,
+    journey,
   };
 }
 

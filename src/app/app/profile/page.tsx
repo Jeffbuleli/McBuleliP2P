@@ -1,3 +1,4 @@
+import { AcademyJourneyTeaser } from "@/components/profile/academy-journey-teaser";
 import { ProfileActionGrid } from "@/components/profile/profile-action-grid";
 import { ProfileHero } from "@/components/profile/profile-hero";
 import { ProfileLogoutButton } from "@/components/profile/profile-logout-button";
@@ -39,6 +40,7 @@ export default async function ProfilePage() {
       <ProfileScreenHeader title={d.profile_title} />
       <ProfileHero dash={dash} locale={locale} />
       <ProfileStatsRow dash={dash} locale={locale} memberSince={memberSince} />
+      <AcademyJourneyTeaser />
       <ProfileActionGrid showAdmin={staff} />
       <ProfileLogoutButton />
     </div>

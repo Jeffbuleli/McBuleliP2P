@@ -118,6 +118,10 @@ Journal : `0058_academy_phase_c`.
 
 Voir **`docs/academy-open-classroom.md`** — audit, rôles host/apprenant, barre mobile, modes audio/host.
 
+## Vision produit & parcours guidé
+
+Voir **`docs/academy-vision.md`** — audit complet, gap analysis, roadmap, home journey (P0).
+
 ## Prochaine étape produit
 
 | Priorité | Sujet |

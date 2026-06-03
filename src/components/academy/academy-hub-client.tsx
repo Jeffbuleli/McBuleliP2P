@@ -4,11 +4,17 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
+import {
+  AcademyJourneyProgress,
+  journeyContinueHref,
+  journeyNextStepLabel,
+} from "@/components/academy/academy-journey-progress";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import {
   ACADEMY_EDITION_JUNE_2026,
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
+import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type FormationLead = {
@@ -17,9 +23,21 @@ type FormationLead = {
   fullName: string | null;
 };
 
+type UpcomingSession = {
+  editionSlug: string;
+  programSlug: string;
+  sessionSlug: string;
+  title: string;
+  startsAt: string;
+  isLiveNow: boolean;
+};
+
 type Hub = {
   viewer: "learner" | "staff";
+  displayName: string | null;
   formationLead: FormationLead;
+  journey: AcademyJourneySnapshot;
+  upcomingSessions: UpcomingSession[];
   programs: { slug: string; title: string; level: string; priceUsdt: string | null }[];
   editions: {
     id: string;
@@ -36,6 +54,12 @@ type Hub = {
     revoked: boolean;
   }[];
 };
+
+const ECOSYSTEM_LINKS = [
+  { href: "/app/wallet", labelKey: "academy_eco_wallet" as const, icon: "💳" },
+  { href: "/app/p2p", labelKey: "academy_eco_p2p" as const, icon: "⇄" },
+  { href: "/app/academy", labelKey: "academy_eco_ia" as const, icon: "✨" },
+] as const;
 
 export function AcademyHubClient() {
   const { t } = useI18n();
@@ -118,6 +142,9 @@ export function AcademyHubClient() {
     launchEdition &&
     !launchEdition.enrolled;
 
+  const continueHref = hub ? journeyContinueHref(hub.journey) : "/app/academy";
+  const nextLive = hub?.upcomingSessions[0];
+
   return (
     <div className={`space-y-4 pb-6 ${academyCls.root}`}>
       <header>
@@ -125,7 +152,7 @@ export function AcademyHubClient() {
           {isStaff ? t("academy_title_staff") : t("academy_title")}
         </h1>
         <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
-          {isStaff ? t("academy_subtitle_staff") : t("academy_subtitle")}
+          {isStaff ? t("academy_subtitle_staff") : t("academy_journey_subtitle")}
         </p>
       </header>
 
@@ -180,9 +207,117 @@ export function AcademyHubClient() {
       ) : null}
 
       {!hub ? (
-        <p className="text-sm text-[color:var(--fd-muted)]">…</p>
-      ) : (
+        <div className="space-y-3">
+          <div className="h-28 animate-pulse rounded-2xl bg-[#e8f3ee]" />
+          <div className="h-12 animate-pulse rounded-xl bg-[color:var(--fd-border)]/30" />
+        </div>
+      ) : !isStaff ? (
         <>
+          <AcademyJourneyProgress
+            displayName={hub.displayName ?? hub.formationLead.fullName}
+            journey={hub.journey}
+          />
+
+          <section className="rounded-2xl border-2 border-[#305f33] bg-[#305f33] p-4 text-white shadow-md">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#c5e8d0]">
+              {t("academy_journey_continue")}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#e8f3ee]">
+              {journeyNextStepLabel(t, hub.journey, nextLive?.title)}
+            </p>
+            {showFormationEnroll ? (
+              <button
+                type="button"
+                disabled={enrolling}
+                onClick={() =>
+                  launchEdition &&
+                  void enroll(launchEdition.slug, launchEdition.programSlug)
+                }
+                className="mt-3 w-full rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33] disabled:opacity-60"
+              >
+                {t("academy_formation_activate")}
+              </button>
+            ) : (
+              <Link
+                href={continueHref}
+                className="mt-3 flex w-full justify-center rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33]"
+              >
+                {t("academy_journey_continue_btn")} →
+              </Link>
+            )}
+          </section>
+
+          {hub.upcomingSessions.length > 0 ? (
+            <section>
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                {t("academy_journey_upcoming_lives")}
+              </h2>
+              <ul className="mt-2 space-y-2">
+                {hub.upcomingSessions.map((s) => {
+                  const q = `?program=${encodeURIComponent(s.programSlug)}`;
+                  const href = s.isLiveNow
+                    ? `/app/academy/${s.editionSlug}/live/${s.sessionSlug}${q}`
+                    : `/app/academy/${s.editionSlug}${q}`;
+                  return (
+                    <li key={`${s.editionSlug}-${s.sessionSlug}`}>
+                      <Link
+                        href={href}
+                        className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 shadow-sm"
+                      >
+                        <span
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                            s.isLiveNow ? "bg-rose-100" : "bg-[#e8f3ee]"
+                          }`}
+                          aria-hidden
+                        >
+                          {s.isLiveNow ? "●" : "📅"}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
+                            {s.title}
+                          </p>
+                          <p className="text-[10px] text-[color:var(--fd-muted)]">
+                            {s.isLiveNow
+                              ? "LIVE"
+                              : new Date(s.startsAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <span className="text-[color:var(--fd-primary)]" aria-hidden>
+                          →
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+
+          <section>
+            <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+              {t("academy_journey_ecosystem")}
+            </h2>
+            <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
+              {t("academy_journey_ecosystem_hint")}
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {ECOSYSTEM_LINKS.map(({ href, labelKey, icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex flex-col items-center rounded-xl border border-[color:var(--fd-border)] bg-white px-2 py-3 text-center shadow-sm active:scale-[0.98]"
+                >
+                  <span className="text-xl" aria-hidden>
+                    {icon}
+                  </span>
+                  <span className="mt-1 text-[10px] font-extrabold text-[color:var(--fd-text)]">
+                    {t(labelKey)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           {showFormationEnroll ? (
             <section className="rounded-2xl border border-[color:var(--fd-primary)]/40 bg-[#e8f3ee] p-4">
               <p className="text-sm font-bold text-[#305f33]">
@@ -195,51 +330,6 @@ export function AcademyHubClient() {
                     })
                   : t("academy_formation_linked_body")}
               </p>
-              <button
-                type="button"
-                disabled={enrolling}
-                onClick={() =>
-                  void enroll(launchEdition.slug, launchEdition.programSlug)
-                }
-                className="mt-3 w-full rounded-xl bg-[#305f33] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-60"
-              >
-                {t("academy_formation_activate")}
-              </button>
-            </section>
-          ) : null}
-
-          {!isStaff && launchEdition ? (
-            <section className="rounded-2xl border border-[color:var(--fd-primary)]/25 bg-[#305f33] p-4 text-white shadow-md">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#c5e8d0]">
-                {t("academy_open_editions")}
-              </p>
-              <h2 className="mt-1 text-lg font-black">{launchEdition.title}</h2>
-              {launchEdition.startsAt ? (
-                <p className="mt-1 text-xs text-[#e8f3ee]">
-                  {new Date(launchEdition.startsAt).toLocaleDateString()}
-                </p>
-              ) : null}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {launchEdition.enrolled ? (
-                  <Link
-                    href={`/app/academy/${launchEdition.slug}?program=${launchEdition.programSlug}`}
-                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-[#305f33]"
-                  >
-                    {t("academy_enter_cohort")} →
-                  </Link>
-                ) : showFormationEnroll ? null : (
-                  <button
-                    type="button"
-                    disabled={enrolling}
-                    onClick={() =>
-                      void enroll(launchEdition.slug, launchEdition.programSlug)
-                    }
-                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-[#305f33] disabled:opacity-60"
-                  >
-                    {t("academy_enroll")}
-                  </button>
-                )}
-              </div>
             </section>
           ) : null}
 
@@ -254,7 +344,7 @@ export function AcademyHubClient() {
                   .map((e) => (
                     <li key={e.id}>
                       <Link
-                        href={`/app/academy/${e.slug}?program=${e.programSlug}`}
+                        href={`/app/academy/${e.slug}?program=${encodeURIComponent(e.programSlug)}`}
                         className="flex items-center justify-between rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--fd-text)] shadow-sm"
                       >
                         {e.title}
@@ -264,13 +354,10 @@ export function AcademyHubClient() {
                   ))}
               </ul>
             </section>
-          ) : !isStaff ? (
+          ) : (
             <section className="rounded-xl border border-dashed border-[color:var(--fd-border)] bg-white p-4 text-center">
               <p className="text-sm font-semibold text-[color:var(--fd-text)]">
                 {t("academy_no_cohort_yet")}
-              </p>
-              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-                {t("academy_no_cohort_hint")}
               </p>
               <Link
                 href="/formation"
@@ -279,7 +366,7 @@ export function AcademyHubClient() {
                 {t("academy_go_formation")} →
               </Link>
             </section>
-          ) : null}
+          )}
 
           {hub.credentials.length > 0 ? (
             <section>
@@ -294,32 +381,23 @@ export function AcademyHubClient() {
                   >
                     <p className="text-sm font-bold text-[color:var(--fd-text)]">
                       {c.title}
-                      {c.revoked ? " (revoked)" : ""}
                     </p>
-                    <div className="mt-1 flex flex-wrap gap-3">
-                      <Link
-                        href={`/verify/${c.verifyCode}`}
-                        className="text-xs font-semibold text-[color:var(--fd-primary)]"
-                      >
-                        {t("academy_verify_link")} →
-                      </Link>
-                      {!c.revoked ? (
-                        <a
-                          href={`/api/academy/verify/${c.verifyCode}/openbadge`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[color:var(--fd-muted)]"
-                        >
-                          {t("academy_openbadge_json")} ↗
-                        </a>
-                      ) : null}
-                    </div>
+                    <Link
+                      href={`/verify/${c.verifyCode}`}
+                      className="mt-1 text-xs font-semibold text-[color:var(--fd-primary)]"
+                    >
+                      {t("academy_verify_link")} →
+                    </Link>
                   </li>
                 ))}
               </ul>
             </section>
           ) : null}
         </>
+      ) : (
+        <p className="text-sm text-[color:var(--fd-muted)]">
+          {t("academy_staff_hint")}
+        </p>
       )}
     </div>
   );
