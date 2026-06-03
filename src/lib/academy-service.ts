@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import {
   academyAttendance,
   academyCredentials,
@@ -102,16 +102,24 @@ export async function linkTrainingRegistrationToUser(args: {
   email: string;
 }): Promise<void> {
   const db = getDb();
-  const email = args.email.trim().toLowerCase();
-  await db
-    .update(trainingRegistrations)
-    .set({ userId: args.userId, linkedAt: new Date() })
-    .where(
-      and(
-        eq(trainingRegistrations.email, email),
-        sql`${trainingRegistrations.userId} IS NULL`,
-      ),
-    );
+  const canonical = canonicalEmailForDedup(normalizeAuthEmail(args.email));
+  const regs = await db
+    .select({
+      id: trainingRegistrations.id,
+      email: trainingRegistrations.email,
+    })
+    .from(trainingRegistrations)
+    .where(isNull(trainingRegistrations.userId));
+  const now = new Date();
+  for (const r of regs) {
+    if (canonicalEmailForDedup(normalizeAuthEmail(r.email)) !== canonical) {
+      continue;
+    }
+    await db
+      .update(trainingRegistrations)
+      .set({ userId: args.userId, linkedAt: now })
+      .where(eq(trainingRegistrations.id, r.id));
+  }
 }
 
 export async function getAcademyHub(args: {
@@ -889,6 +897,7 @@ export async function autoEnrollLaunchCohort(userId: string): Promise<void> {
 }
 
 export async function listAdminAcademyOverview(): Promise<{
+  formation: FormationOpsStats;
   editions: {
     id: string;
     slug: string;
@@ -896,6 +905,7 @@ export async function listAdminAcademyOverview(): Promise<{
     titleFr: string;
     status: string;
     enrollmentCount: number;
+    formationRegistrations: number | null;
   }[];
 }> {
   await ensureAcademyLaunchSeed();
@@ -921,8 +931,10 @@ export async function listAdminAcademyOverview(): Promise<{
     .groupBy(academyEnrollments.editionId);
 
   const countMap = new Map(counts.map((c) => [c.editionId, c.n]));
+  const formation = await getFormationOpsStats();
 
   return {
+    formation,
     editions: rows.map((r) => ({
       id: r.id,
       slug: r.slug,
@@ -930,6 +942,11 @@ export async function listAdminAcademyOverview(): Promise<{
       titleFr: r.titleFr,
       status: r.status,
       enrollmentCount: countMap.get(r.id) ?? 0,
+      formationRegistrations:
+        r.slug === ACADEMY_EDITION_JUNE_2026 &&
+        r.programSlug === ACADEMY_PROGRAM_LAUNCH
+          ? formation.formationTotal
+          : null,
     })),
   };
 }
@@ -1217,4 +1234,140 @@ export async function inviteUserToEdition(args: {
   });
 
   return { ok: true, outcome: "notified" };
+}
+
+export type FormationOpsStats = {
+  formationTotal: number;
+  formationLinkedToUser: number;
+  academyEnrolledLaunch: number;
+  pendingAcademyEnroll: number;
+};
+
+async function launchEditionId(): Promise<string | null> {
+  await ensureAcademyLaunchSeed();
+  const db = getDb();
+  const [row] = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        eq(academyEditions.slug, ACADEMY_EDITION_JUNE_2026),
+        eq(academyPrograms.slug, ACADEMY_PROGRAM_LAUNCH),
+      ),
+    )
+    .limit(1);
+  return row?.id ?? null;
+}
+
+export async function getFormationOpsStats(): Promise<FormationOpsStats> {
+  const db = getDb();
+  const [formationRow] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      linked: sql<number>`count(*) filter (where ${trainingRegistrations.userId} is not null)::int`,
+    })
+    .from(trainingRegistrations);
+
+  const editionId = await launchEditionId();
+  let academyEnrolledLaunch = 0;
+  if (editionId) {
+    const [enRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(academyEnrollments)
+      .where(
+        and(
+          eq(academyEnrollments.editionId, editionId),
+          eq(academyEnrollments.status, "active"),
+        ),
+      );
+    academyEnrolledLaunch = enRow?.n ?? 0;
+  }
+
+  const formationTotal = formationRow?.total ?? 0;
+
+  return {
+    formationTotal,
+    formationLinkedToUser: formationRow?.linked ?? 0,
+    academyEnrolledLaunch,
+    pendingAcademyEnroll: Math.max(0, formationTotal - academyEnrolledLaunch),
+  };
+}
+
+async function findUserIdForFormationEmail(email: string): Promise<string | null> {
+  const normalized = normalizeAuthEmail(email);
+  if (!normalized.includes("@")) return null;
+  const canonical = canonicalEmailForDedup(normalized);
+  const db = getDb();
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(or(eq(users.email, normalized), eq(users.emailCanonical, canonical)))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** When /formation email matches a McBuleli account → link + cohorte juin. */
+export async function trySyncFormationEmailToAcademy(
+  email: string,
+): Promise<{ synced: boolean; enrolled: boolean }> {
+  const normalized = normalizeAuthEmail(email);
+  const userId = await findUserIdForFormationEmail(normalized);
+  if (!userId) return { synced: false, enrolled: false };
+
+  await linkTrainingRegistrationToUser({ userId, email: normalized });
+
+  const editionId = await launchEditionId();
+  if (!editionId) return { synced: true, enrolled: false };
+
+  const db = getDb();
+  const [existing] = await db
+    .select({ id: academyEnrollments.id })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, userId),
+        eq(academyEnrollments.editionId, editionId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    )
+    .limit(1);
+
+  if (existing) return { synced: true, enrolled: true };
+
+  const out = await enrollInEdition({
+    userId,
+    editionSlug: ACADEMY_EDITION_JUNE_2026,
+    programSlug: ACADEMY_PROGRAM_LAUNCH,
+  });
+
+  return { synced: true, enrolled: out.ok };
+}
+
+export async function backfillFormationToAcademy(): Promise<{
+  processed: number;
+  linked: number;
+  enrolled: number;
+  noAccount: number;
+}> {
+  const db = getDb();
+  const rows = await db
+    .select({ email: trainingRegistrations.email })
+    .from(trainingRegistrations);
+
+  let linked = 0;
+  let enrolled = 0;
+  let noAccount = 0;
+
+  for (const row of rows) {
+    const result = await trySyncFormationEmailToAcademy(row.email);
+    if (!result.synced) {
+      noAccount += 1;
+      continue;
+    }
+    linked += 1;
+    if (result.enrolled) enrolled += 1;
+  }
+
+  return { processed: rows.length, linked, enrolled, noAccount };
 }

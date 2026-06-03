@@ -87,6 +87,26 @@ Journal : `0058_academy_phase_c`.
 
 À la connexion, email → `training_registrations.user_id` + auto-inscription cohorte juin.
 
+## État du cahier de charge (juin 2026)
+
+| Phase | Statut | Contenu livré |
+|-------|--------|----------------|
+| **A — Ops** | ✅ | Programmes, éditions, sessions, quiz, badges, BP, `/app/academy`, `/formation`, verify |
+| **B — Cohorte & IA** | ✅ | Chat, tuteur RAG, live Jitsi, admin inscriptions Academy |
+| **C — Replays & ops** | ✅ | Replays, learning events, rappels cron, Open Badges, invites cohorte, admin sessions |
+| **D — Pont /formation** | ✅ | Stats unifiées admin, sync comptes existants, auto-enroll si email = compte McBuleli |
+
+**Hors scope initial (backlog)** : email-broadcasts (commit dédié), Jitsi/LiveKit self-hosted, VOD R2.
+
+### Deux flux d'inscription (important OPS)
+
+| Canal | Table | Quand |
+|-------|--------|--------|
+| **https://mcbuleli.org/formation** | `training_registrations` | Immédiat, sans compte |
+| **Academy in-app** | `academy_enrollments` | Login/register (même email) ou bouton « Rejoindre » · sync admin |
+
+`/admin/academy` affiche les deux totaux. Bouton **Synchroniser /formation → Academy** pour les e-mails qui ont déjà un compte McBuleli. Liste détaillée : `/admin/training-registrations`.
+
 ## Prochaine étape produit
 
 | Priorité | Sujet |

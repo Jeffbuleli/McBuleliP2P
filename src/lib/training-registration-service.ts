@@ -1,6 +1,7 @@
 import { count, desc, eq } from "drizzle-orm";
 import { getDb, trainingRegistrations } from "@/db";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
+import { trySyncFormationEmailToAcademy } from "@/lib/academy-service";
 
 export type TrainingRegistrationInput = {
   fullName: string;
@@ -31,6 +32,7 @@ export async function createTrainingRegistration(
     .limit(1);
 
   if (existing) {
+    void trySyncFormationEmailToAcademy(email).catch(() => undefined);
     return { id: existing.id, duplicate: true };
   }
 
@@ -52,6 +54,7 @@ export async function createTrainingRegistration(
     })
     .returning({ id: trainingRegistrations.id });
 
+  void trySyncFormationEmailToAcademy(email).catch(() => undefined);
   return { id: row.id, duplicate: false };
 }
 

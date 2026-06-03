@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 
+type FormationStats = {
+  formationTotal: number;
+  formationLinkedToUser: number;
+  academyEnrolledLaunch: number;
+  pendingAcademyEnroll: number;
+};
+
 type EditionRow = {
   id: string;
   slug: string;
@@ -10,6 +17,7 @@ type EditionRow = {
   titleFr: string;
   status: string;
   enrollmentCount: number;
+  formationRegistrations: number | null;
 };
 
 type EnrollmentRow = {
@@ -32,6 +40,9 @@ type SessionRow = {
 
 export default function AdminAcademyPage() {
   const [editions, setEditions] = useState<EditionRow[]>([]);
+  const [formation, setFormation] = useState<FormationStats | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
@@ -49,7 +60,31 @@ export default function AdminAcademyPage() {
       return;
     }
     setEditions((j.editions as EditionRow[]) ?? []);
+    setFormation((j.formation as FormationStats) ?? null);
   }, []);
+
+  async function syncFormation() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await fetch("/api/admin/academy/sync-formation", {
+        method: "POST",
+        credentials: "include",
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSyncMsg("Échec synchronisation");
+        return;
+      }
+      setSyncMsg(
+        `OK — ${j.enrolled ?? 0} inscrits Academy · ${j.noAccount ?? 0} sans compte McBuleli`,
+      );
+      await loadOverview();
+      if (selected) await loadEnrollments(selected);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const loadEnrollments = useCallback(async (editionSlug: string) => {
     const res = await fetch(
@@ -136,6 +171,66 @@ export default function AdminAcademyPage() {
       <AdminBackLink href="/admin">← Admin</AdminBackLink>
       <AdminPageHeader title="McBuleli Academy" subtitle="Cohortes & inscriptions" />
       {err ? <p className="text-sm text-rose-700">{err}</p> : null}
+
+      {formation ? (
+        <div className={adminCls.card}>
+          <h2 className="text-sm font-bold">Vue unifiée lancement juin</h2>
+          <p className="mt-1 text-xs text-stone-500">
+            <strong>/formation</strong> enregistre dans{" "}
+            <code className="text-[10px]">training_registrations</code>. Academy
+            Ops compte les comptes connectés dans{" "}
+            <code className="text-[10px]">academy_enrollments</code> (après login ou
+            sync).
+          </p>
+          <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">
+                /formation
+              </dt>
+              <dd className="text-xl font-black text-[#305f33]">
+                {formation.formationTotal}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">
+                Compte lié
+              </dt>
+              <dd className="text-xl font-black">{formation.formationLinkedToUser}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">
+                Academy (app)
+              </dt>
+              <dd className="text-xl font-black">{formation.academyEnrolledLaunch}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">
+                En attente app
+              </dt>
+              <dd className="text-xl font-black text-amber-800">
+                {formation.pendingAcademyEnroll}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={syncing}
+              onClick={() => void syncFormation()}
+              className="rounded-lg bg-[#305f33] px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
+            >
+              {syncing ? "…" : "Synchroniser /formation → Academy"}
+            </button>
+            <a
+              href="/admin/training-registrations"
+              className="text-xs font-bold text-[#305f33] underline"
+            >
+              Liste complète /formation →
+            </a>
+          </div>
+          {syncMsg ? <p className="mt-2 text-xs font-semibold text-[#305f33]">{syncMsg}</p> : null}
+        </div>
+      ) : null}
       {selected && sessions.length > 0 ? (
         <div className={adminCls.card}>
           <h2 className="text-sm font-bold">Sessions — {selected}</h2>
@@ -215,7 +310,12 @@ export default function AdminAcademyPage() {
                 >
                   <span className="font-semibold">{e.titleFr}</span>
                   <span className="ml-2 text-xs opacity-80">
-                    {e.status} · {e.enrollmentCount} inscrits
+                    {e.status}
+                    {e.formationRegistrations != null
+                      ? ` · ${e.formationRegistrations} /formation`
+                      : ""}
+                    {" · "}
+                    {e.enrollmentCount} Academy
                   </span>
                 </button>
               </li>
