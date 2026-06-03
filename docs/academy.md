@@ -29,7 +29,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 npm run db:migrate:render
 ```
 
-Journal Drizzle : `0055_training_registrations`, `0056_academy`, `0057_academy_phase_b`.
+Journal Drizzle : `0055_training_registrations`, `0056_academy`, `0057_academy_phase_b`, `0058_academy_phase_c`.
 
 Sans ces migrations : `/formation` et `/app/academy` renvoient HTTP 503 `academy_db_not_migrated`.
 
@@ -54,6 +54,34 @@ NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
 ```
 
 Sinon : salles Jitsi publiques `meet.jit.si/mcbuleli-juin-2026-{session}` (Phase C = self-hosted Jitsi/LiveKit).
+
+## Phase C — Replays, analytics, rappels, Open Badges
+
+| Feature | Détail |
+|---------|--------|
+| **Replay** | Colonnes `replay_url` / `replay_published_at` sur `academy_sessions` ; bouton « Voir le replay » après fin de session ; `POST /api/academy/replay` logue `replay_viewed` |
+| **Learning events** | Table `academy_learning_events` (xAPI-lite) : `enrolled`, `attended`, `quiz_passed`, `replay_viewed`, `credential_issued` |
+| **Rappels** | Cron `POST /api/internal/academy/reminders` (header `x-cron-secret`) — notif in-app 24h/1h + email Resend optionnel ; dedupe `academy_session_reminders` |
+| **Open Badges** | `GET /api/academy/verify/{code}/openbadge` — JSON-LD Open Badges 2.0 |
+| **Annonces** | Message cohorte `messageType=announcement` (staff) → notif `academy_announcement` pour tous les inscrits |
+| **Invitation cohorte** | Tout inscrit peut inviter par e-mail (`POST …/invite`) — cohorte gratuite = inscription auto ; payante = notif avec lien |
+| **Admin sessions** | `/admin/academy` — édition `live_url` / `replay_url` par session (`PATCH /api/admin/academy`) |
+
+### Cron Render (rappels Academy)
+
+```bash
+node scripts/cron-academy-reminders.mjs
+```
+
+Recommandé : toutes les 15 min (fenêtres 24h et 1h avec tolérance ±15–20 min).
+
+### Migration prod Phase C
+
+```bash
+npm run db:migrate:render
+```
+
+Journal : `0058_academy_phase_c`.
 
 ## Liaison /formation
 

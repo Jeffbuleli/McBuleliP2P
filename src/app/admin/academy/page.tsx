@@ -21,10 +21,22 @@ type EnrollmentRow = {
   status: string;
 };
 
+type SessionRow = {
+  id: string;
+  slug: string;
+  titleFr: string;
+  startsAt: string;
+  liveUrl: string | null;
+  replayUrl: string | null;
+};
+
 export default function AdminAcademyPage() {
   const [editions, setEditions] = useState<EditionRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [sessionDraft, setSessionDraft] = useState<Record<string, { liveUrl: string; replayUrl: string }>>({});
+  const [savingSession, setSavingSession] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
@@ -51,13 +63,57 @@ export default function AdminAcademyPage() {
     }
   }, []);
 
+  const loadSessions = useCallback(async (editionSlug: string) => {
+    const res = await fetch(
+      `/api/admin/academy?edition=${encodeURIComponent(editionSlug)}&sessions=1`,
+      { credentials: "include" },
+    );
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const rows = (j.sessions as SessionRow[]) ?? [];
+      setSessions(rows);
+      const draft: Record<string, { liveUrl: string; replayUrl: string }> = {};
+      for (const s of rows) {
+        draft[s.id] = {
+          liveUrl: s.liveUrl ?? "",
+          replayUrl: s.replayUrl ?? "",
+        };
+      }
+      setSessionDraft(draft);
+    }
+  }, []);
+
+  async function saveSession(sessionId: string) {
+    const d = sessionDraft[sessionId];
+    if (!d) return;
+    setSavingSession(sessionId);
+    try {
+      const res = await fetch("/api/admin/academy", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          sessionId,
+          liveUrl: d.liveUrl.trim() || null,
+          replayUrl: d.replayUrl.trim() || null,
+        }),
+      });
+      if (res.ok && selected) await loadSessions(selected);
+    } finally {
+      setSavingSession(null);
+    }
+  }
+
   useEffect(() => {
     void loadOverview();
   }, [loadOverview]);
 
   useEffect(() => {
-    if (selected) void loadEnrollments(selected);
-  }, [selected, loadEnrollments]);
+    if (selected) {
+      void loadEnrollments(selected);
+      void loadSessions(selected);
+    }
+  }, [selected, loadEnrollments, loadSessions]);
 
   function exportCsv() {
     const header = ["enrolledAt", "email", "displayName", "paidUsdt", "status"];
@@ -80,6 +136,68 @@ export default function AdminAcademyPage() {
       <AdminBackLink href="/admin">← Admin</AdminBackLink>
       <AdminPageHeader title="McBuleli Academy" subtitle="Cohortes & inscriptions" />
       {err ? <p className="text-sm text-rose-700">{err}</p> : null}
+      {selected && sessions.length > 0 ? (
+        <div className={adminCls.card}>
+          <h2 className="text-sm font-bold">Sessions — {selected}</h2>
+          <p className="mt-1 text-xs text-stone-500">
+            URLs live / replay (replay visible après fin de session)
+          </p>
+          <ul className="mt-3 space-y-4">
+            {sessions.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-lg border border-stone-200 p-3 text-xs"
+              >
+                <p className="font-semibold">{s.titleFr}</p>
+                <p className="text-stone-500">{s.slug} · {new Date(s.startsAt).toLocaleString()}</p>
+                <label className="mt-2 block">
+                  <span className="font-medium">live_url</span>
+                  <input
+                    type="url"
+                    className="mt-1 w-full rounded border border-stone-200 px-2 py-1"
+                    value={sessionDraft[s.id]?.liveUrl ?? ""}
+                    onChange={(e) =>
+                      setSessionDraft((prev) => ({
+                        ...prev,
+                        [s.id]: {
+                          liveUrl: e.target.value,
+                          replayUrl: prev[s.id]?.replayUrl ?? "",
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="mt-2 block">
+                  <span className="font-medium">replay_url</span>
+                  <input
+                    type="url"
+                    className="mt-1 w-full rounded border border-stone-200 px-2 py-1"
+                    value={sessionDraft[s.id]?.replayUrl ?? ""}
+                    onChange={(e) =>
+                      setSessionDraft((prev) => ({
+                        ...prev,
+                        [s.id]: {
+                          liveUrl: prev[s.id]?.liveUrl ?? "",
+                          replayUrl: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={savingSession === s.id}
+                  onClick={() => void saveSession(s.id)}
+                  className="mt-2 rounded bg-[#305f33] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+                >
+                  Enregistrer
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={adminCls.card}>
           <h2 className="text-sm font-bold">Éditions</h2>

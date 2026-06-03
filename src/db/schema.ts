@@ -2268,11 +2268,66 @@ export const academySessions = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     liveUrl: text("live_url"),
+    replayUrl: text("replay_url"),
+    replayPublishedAt: timestamp("replay_published_at", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => [
     uniqueIndex("academy_sessions_edition_slug_uidx").on(t.editionId, t.slug),
     index("academy_sessions_edition_starts_idx").on(t.editionId, t.startsAt),
+  ],
+);
+
+export const academyLearningEvents = pgTable(
+  "academy_learning_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id").references(() => academyEditions.id, {
+      onDelete: "set null",
+    }),
+    verb: varchar("verb", { length: 32 }).notNull(),
+    objectType: varchar("object_type", { length: 32 }).notNull(),
+    objectId: varchar("object_id", { length: 64 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("academy_learning_events_user_created_idx").on(
+      t.userId,
+      t.createdAt,
+    ),
+    index("academy_learning_events_edition_idx").on(
+      t.editionId,
+      t.createdAt,
+    ),
+  ],
+);
+
+export const academySessionReminders = pgTable(
+  "academy_session_reminders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => academySessions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reminderKind: varchar("reminder_kind", { length: 16 }).notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("academy_session_reminders_unique").on(
+      t.sessionId,
+      t.userId,
+      t.reminderKind,
+    ),
+    index("academy_session_reminders_session_idx").on(t.sessionId),
   ],
 );
 

@@ -8,6 +8,7 @@ import {
   ACADEMY_EDITION_JUNE_2026,
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
+import { academyCls } from "@/components/academy/academy-ui";
 
 type Hub = {
   programs: { slug: string; title: string; level: string; priceUsdt: string | null }[];
@@ -102,7 +103,7 @@ export function AcademyHubClient() {
   );
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className={`space-y-4 pb-6 ${academyCls.root}`}>
       <header>
         <h1 className="text-xl font-extrabold text-[color:var(--fd-text)]">
           {t("academy_title")}
@@ -210,12 +211,24 @@ export function AcademyHubClient() {
                       {c.title}
                       {c.revoked ? " (revoked)" : ""}
                     </p>
-                    <Link
-                      href={`/verify/${c.verifyCode}`}
-                      className="mt-1 text-xs font-semibold text-[color:var(--fd-primary)]"
-                    >
-                      {t("academy_verify_link")} →
-                    </Link>
+                    <div className="mt-1 flex flex-wrap gap-3">
+                      <Link
+                        href={`/verify/${c.verifyCode}`}
+                        className="text-xs font-semibold text-[color:var(--fd-primary)]"
+                      >
+                        {t("academy_verify_link")} →
+                      </Link>
+                      {!c.revoked ? (
+                        <a
+                          href={`/api/academy/verify/${c.verifyCode}/openbadge`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[color:var(--fd-muted)]"
+                        >
+                          {t("academy_openbadge_json")} ↗
+                        </a>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>

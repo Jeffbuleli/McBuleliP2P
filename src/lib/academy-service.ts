@@ -26,8 +26,15 @@ import { REWARD_GRANT } from "@/lib/reward-points-config";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { Locale } from "@/i18n/locale";
-import { buildLiveJoinUrl, isSessionLiveNow } from "@/lib/academy-live";
+import { buildLiveJoinUrl, isSessionEnded, isSessionLiveNow } from "@/lib/academy-live";
+import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
+import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
+import {
+  canonicalEmailForDedup,
+  normalizeAuthEmail,
+} from "@/lib/auth/email-normalize";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export type AcademyProgramView = {
   id: string;
@@ -61,6 +68,10 @@ export type AcademySessionView = {
   startsAt: string;
   endsAt: string | null;
   liveUrl: string | null;
+  liveJoinUrl: string;
+  isLiveNow: boolean;
+  replayUrl: string | null;
+  hasReplay: boolean;
   checkedIn: boolean;
   canCheckIn: boolean;
 };
@@ -264,6 +275,8 @@ export async function getEditionDetail(args: {
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
+    const ended = isSessionEnded({ startsAt: s.startsAt, endsAt: s.endsAt });
+    const replayUrl = s.replayUrl?.trim() || null;
     return {
       id: s.id,
       slug: s.slug,
@@ -279,6 +292,8 @@ export async function getEditionDetail(args: {
         liveBaseUrl,
       }),
       isLiveNow: liveNow,
+      replayUrl: ended ? replayUrl : null,
+      hasReplay: ended && !!replayUrl,
       checkedIn: attended.has(s.id),
       canCheckIn,
     };
@@ -459,6 +474,14 @@ export async function enrollInEdition(args: {
       grantType: REWARD_GRANT.TRAINING_ENROLLED,
       idempotencyKey: `training_enrolled:${detail.edition.id}`,
       meta: { editionSlug: detail.edition.slug },
+    });
+
+    await logAcademyLearningEvent({
+      userId: args.userId,
+      editionId: detail.edition.id,
+      verb: "enrolled",
+      objectType: "edition",
+      objectId: detail.edition.slug,
     });
 
     return { ok: true, enrollmentId, alreadyEnrolled: false };
@@ -701,6 +724,14 @@ export async function submitQuizAttempt(args: {
         titleFr: "Quiz fondamentaux validé",
         titleEn: "Fundamentals quiz passed",
       });
+      await logAcademyLearningEvent({
+        userId: args.userId,
+        editionId: quizRow.editionId,
+        verb: "quiz_passed",
+        objectType: "quiz",
+        objectId: args.quizSlug,
+        meta: { scorePercent },
+      });
     }
   }
 
@@ -735,6 +766,7 @@ async function issueCredentialIfMissing(args: {
     .where(eq(academyEditions.id, args.editionId))
     .limit(1);
 
+  const code = verifyCode();
   await db.insert(academyCredentials).values({
     userId: args.userId,
     programId: edition?.programId ?? null,
@@ -743,8 +775,67 @@ async function issueCredentialIfMissing(args: {
     slug: args.slug,
     titleFr: args.titleFr,
     titleEn: args.titleEn,
-    verifyCode: verifyCode(),
+    verifyCode: code,
   });
+
+  await logAcademyLearningEvent({
+    userId: args.userId,
+    editionId: args.editionId,
+    verb: "credential_issued",
+    objectType: "credential",
+    objectId: args.slug,
+    meta: { verifyCode: code },
+  });
+}
+
+export async function logReplayView(args: {
+  userId: string;
+  sessionId: string;
+}): Promise<{ ok: true } | { ok: false; code: string }> {
+  const db = getDb();
+  const [session] = await db
+    .select({
+      id: academySessions.id,
+      slug: academySessions.slug,
+      editionId: academySessions.editionId,
+      replayUrl: academySessions.replayUrl,
+      startsAt: academySessions.startsAt,
+      endsAt: academySessions.endsAt,
+    })
+    .from(academySessions)
+    .where(eq(academySessions.id, args.sessionId))
+    .limit(1);
+  if (!session) return { ok: false, code: "academy_session_not_found" };
+
+  const [enrollment] = await db
+    .select({ id: academyEnrollments.id })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, args.userId),
+        eq(academyEnrollments.editionId, session.editionId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    )
+    .limit(1);
+  if (!enrollment) return { ok: false, code: "academy_not_enrolled" };
+
+  if (!isSessionEnded({ startsAt: session.startsAt, endsAt: session.endsAt })) {
+    return { ok: false, code: "academy_replay_not_ready" };
+  }
+  if (!session.replayUrl?.trim()) {
+    return { ok: false, code: "academy_replay_unavailable" };
+  }
+
+  await logAcademyLearningEvent({
+    userId: args.userId,
+    editionId: session.editionId,
+    verb: "replay_viewed",
+    objectType: "session",
+    objectId: session.slug,
+  });
+
+  return { ok: true };
 }
 
 export async function getCredentialByVerifyCode(
@@ -898,4 +989,232 @@ export async function listAdminEditionEnrollments(args: {
     })),
     total: countRow?.n ?? 0,
   };
+}
+
+export async function listAdminEditionSessions(editionSlug: string): Promise<{
+  editionSlug: string;
+  sessions: {
+    id: string;
+    slug: string;
+    titleFr: string;
+    startsAt: string;
+    liveUrl: string | null;
+    replayUrl: string | null;
+    replayPublishedAt: string | null;
+  }[];
+}> {
+  const db = getDb();
+  const [edition] = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .where(eq(academyEditions.slug, editionSlug))
+    .limit(1);
+  if (!edition) return { editionSlug, sessions: [] };
+
+  const rows = await db
+    .select({
+      id: academySessions.id,
+      slug: academySessions.slug,
+      titleFr: academySessions.titleFr,
+      startsAt: academySessions.startsAt,
+      liveUrl: academySessions.liveUrl,
+      replayUrl: academySessions.replayUrl,
+      replayPublishedAt: academySessions.replayPublishedAt,
+    })
+    .from(academySessions)
+    .where(eq(academySessions.editionId, edition.id))
+    .orderBy(asc(academySessions.sortOrder), asc(academySessions.startsAt));
+
+  return {
+    editionSlug,
+    sessions: rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      titleFr: r.titleFr,
+      startsAt: r.startsAt.toISOString(),
+      liveUrl: r.liveUrl,
+      replayUrl: r.replayUrl,
+      replayPublishedAt: r.replayPublishedAt?.toISOString() ?? null,
+    })),
+  };
+}
+
+export async function updateAdminSession(args: {
+  sessionId: string;
+  liveUrl?: string | null;
+  replayUrl?: string | null;
+}): Promise<{ ok: true } | { ok: false; code: string }> {
+  const db = getDb();
+  const [session] = await db
+    .select({ id: academySessions.id })
+    .from(academySessions)
+    .where(eq(academySessions.id, args.sessionId))
+    .limit(1);
+  if (!session) return { ok: false, code: "academy_session_not_found" };
+
+  const patch: {
+    liveUrl?: string | null;
+    replayUrl?: string | null;
+    replayPublishedAt?: Date | null;
+  } = {};
+
+  if (args.liveUrl !== undefined) {
+    patch.liveUrl = args.liveUrl?.trim() || null;
+  }
+  if (args.replayUrl !== undefined) {
+    const replay = args.replayUrl?.trim() || null;
+    patch.replayUrl = replay;
+    patch.replayPublishedAt = replay ? new Date() : null;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return { ok: false, code: "academy_nothing_to_update" };
+  }
+
+  await db
+    .update(academySessions)
+    .set(patch)
+    .where(eq(academySessions.id, args.sessionId));
+
+  return { ok: true };
+}
+
+/** Enrolled member invites another McBuleli user to the cohort (free → auto-enroll). */
+export async function inviteUserToEdition(args: {
+  inviterUserId: string;
+  editionSlug: string;
+  programSlug?: string;
+  inviteeEmail: string;
+}): Promise<
+  | { ok: true; outcome: "enrolled" | "notified" }
+  | { ok: false; code: string }
+> {
+  await ensureAcademyLaunchSeed();
+  const db = getDb();
+  const editionRows = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      args.programSlug
+        ? and(
+            eq(academyEditions.slug, args.editionSlug),
+            eq(academyPrograms.slug, args.programSlug),
+          )
+        : eq(academyEditions.slug, args.editionSlug),
+    )
+    .limit(1);
+  const editionId = editionRows[0]?.id ?? null;
+  if (!editionId) return { ok: false, code: "academy_edition_not_found" };
+
+  const inviterOk = await assertEnrolledInEdition({
+    userId: args.inviterUserId,
+    editionId,
+  });
+  if (!inviterOk) return { ok: false, code: "academy_not_enrolled" };
+
+  const email = normalizeAuthEmail(args.inviteeEmail);
+  if (!email.includes("@")) return { ok: false, code: "academy_invite_email_invalid" };
+
+  const canonical = canonicalEmailForDedup(email);
+  const [invitee] = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+    })
+    .from(users)
+    .where(eq(users.emailCanonical, canonical))
+    .limit(1);
+
+  if (!invitee) return { ok: false, code: "academy_invitee_not_found" };
+  if (invitee.id === args.inviterUserId) {
+    return { ok: false, code: "academy_invite_self" };
+  }
+
+  const [existing] = await db
+    .select({ id: academyEnrollments.id })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, invitee.id),
+        eq(academyEnrollments.editionId, editionId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    )
+    .limit(1);
+  if (existing) return { ok: false, code: "academy_invitee_already_enrolled" };
+
+  const [inviter] = await db
+    .select({ displayName: users.displayName, email: users.email })
+    .from(users)
+    .where(eq(users.id, args.inviterUserId))
+    .limit(1);
+
+  const inviterLabel =
+    inviter?.displayName?.trim() ||
+    inviter?.email?.split("@")[0] ||
+    "McBuleli";
+
+  const detail = await getEditionDetail({
+    userId: invitee.id,
+    editionSlug: args.editionSlug,
+    programSlug: args.programSlug,
+    locale: "fr",
+  });
+  if (!detail) return { ok: false, code: "academy_edition_not_found" };
+
+  const priceNum = detail.program.priceUsdt
+    ? numFromNumeric(detail.program.priceUsdt)
+    : 0;
+
+  const programSlug = detail.program.slug;
+  const href = `/app/academy/${args.editionSlug}?program=${encodeURIComponent(programSlug)}`;
+
+  const [editionMeta] = await db
+    .select({
+      titleFr: academyEditions.titleFr,
+      titleEn: academyEditions.titleEn,
+    })
+    .from(academyEditions)
+    .where(eq(academyEditions.id, editionId))
+    .limit(1);
+
+  if (priceNum <= 0) {
+    const enrolled = await enrollInEdition({
+      userId: invitee.id,
+      editionSlug: args.editionSlug,
+      programSlug,
+    });
+    if (!enrolled.ok) return { ok: false, code: enrolled.code };
+    await createUserNotification({
+      userId: invitee.id,
+      kind: "academy_cohort_invite",
+      payload: {
+        editionSlug: args.editionSlug,
+        editionTitleFr: editionMeta?.titleFr ?? detail.edition.title,
+        editionTitleEn: editionMeta?.titleEn ?? detail.edition.title,
+        inviterLabel,
+        href,
+        enrolled: true,
+      },
+    });
+    return { ok: true, outcome: "enrolled" };
+  }
+
+  await createUserNotification({
+    userId: invitee.id,
+    kind: "academy_cohort_invite",
+    payload: {
+      editionSlug: args.editionSlug,
+      editionTitleFr: editionMeta?.titleFr ?? detail.edition.title,
+      editionTitleEn: editionMeta?.titleEn ?? detail.edition.title,
+      inviterLabel,
+      href,
+      enrolled: false,
+      priceUsdt: detail.program.priceUsdt,
+    },
+  });
+
+  return { ok: true, outcome: "notified" };
 }

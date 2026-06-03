@@ -32,7 +32,10 @@ export type NotificationKind =
   | "kyc_pending"
   | "kyc_approved"
   | "kyc_rejected"
-  | "kyc_manual_review";
+  | "kyc_manual_review"
+  | "academy_session_reminder"
+  | "academy_announcement"
+  | "academy_cohort_invite";
 
 const KYC_NOTIFICATION_KINDS = new Set<NotificationKind>([
   "kyc_pending",

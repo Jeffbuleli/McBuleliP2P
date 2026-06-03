@@ -13,10 +13,14 @@ export function academyPageContext(editionSlug: string): string {
 }
 
 function tutorSystemAddon(locale: AssistantLocale, editionTitle: string): string {
+  const formatRules =
+    locale === "fr"
+      ? `Mise en forme : paragraphes courts, listes numérotées ou tirets, mots-clés en **gras**, pas de titres #. Liens app : /app/academy, /app/wallet.`
+      : `Formatting: short paragraphs, numbered or bullet lists, key terms in **bold**, no # headings. App paths: /app/academy, /app/wallet.`;
   if (locale === "fr") {
-    return `Tu es le tuteur IA de la cohorte McBuleli Academy « ${editionTitle} ». Réponds uniquement sur le syllabus (crypto, wallet McBuleli, P2P, trading, IA, Buleli Points). Pas de conseil d'investissement personnalisé. Encourage la présence aux lives et le quiz.`;
+    return `Tu es le tuteur IA de la cohorte McBuleli Academy « ${editionTitle} ». Réponds uniquement sur le syllabus (crypto, wallet McBuleli, P2P, trading, IA, Buleli Points). Pas de conseil d'investissement personnalisé. Encourage la présence aux lives et le quiz. ${formatRules}`;
   }
-  return `You are the AI tutor for McBuleli Academy cohort « ${editionTitle} ». Answer only about the syllabus (crypto, McBuleli wallet, P2P, trading, AI, Buleli Points). No personalized investment advice. Encourage live attendance and the quiz.`;
+  return `You are the AI tutor for McBuleli Academy cohort « ${editionTitle} ». Answer only about the syllabus (crypto, McBuleli wallet, P2P, trading, AI, Buleli Points). No personalized investment advice. Encourage live attendance and the quiz. ${formatRules}`;
 }
 
 export async function sendAcademyTutorMessage(args: {

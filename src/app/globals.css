@@ -57,6 +57,29 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* McBuleli Academy — light cards; fixes body inheriting light text on white inputs */
+.academy-theme {
+  color: var(--fd-text);
+  -webkit-font-smoothing: antialiased;
+}
+.academy-theme input,
+.academy-theme textarea,
+.academy-theme select {
+  color: var(--fd-text);
+  background: var(--fd-card);
+  caret-color: var(--fd-text);
+}
+.academy-theme input::placeholder,
+.academy-theme textarea::placeholder {
+  color: var(--fd-muted);
+  opacity: 1;
+}
+.academy-theme input:-webkit-autofill,
+.academy-theme textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--fd-text) !important;
+  box-shadow: 0 0 0 1000px var(--fd-card) inset;
+}
+
 /* Profile section — light, card-first UI */
 .profile-theme {
   color: var(--fd-text);

@@ -1,7 +1,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-function renderInline(text: string, keyPrefix: string): ReactNode[] {
+type MarkdownVariant = "dark" | "light";
+
+function linkClass(variant: MarkdownVariant): string {
+  return variant === "light"
+    ? "font-semibold text-[#305f33] underline underline-offset-2"
+    : "font-semibold text-[#6ee7a0] underline underline-offset-2";
+}
+
+function renderInline(
+  text: string,
+  keyPrefix: string,
+  variant: MarkdownVariant,
+): ReactNode[] {
   const nodes: ReactNode[] = [];
   const re = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|\/app\/[^\s),]+)/g;
   let last = 0;
@@ -15,7 +27,14 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     const token = m[0];
     if (token.startsWith("**") && token.endsWith("**")) {
       nodes.push(
-        <strong key={`${keyPrefix}-b-${i}`} className="font-semibold text-white">
+        <strong
+          key={`${keyPrefix}-b-${i}`}
+          className={
+            variant === "light"
+              ? "font-semibold text-[#244a27]"
+              : "font-semibold text-white"
+          }
+        >
           {token.slice(2, -2)}
         </strong>,
       );
@@ -24,23 +43,23 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       if (match) {
         const [, label, href] = match;
         nodes.push(
-          <Link
-            key={`${keyPrefix}-l-${i}`}
-            href={href}
-            className="font-semibold text-[#6ee7a0] underline underline-offset-2"
-          >
+          <Link key={`${keyPrefix}-l-${i}`} href={href} className={linkClass(variant)}>
             {label}
           </Link>,
         );
       } else {
         nodes.push(token);
       }
-    } else if (token.startsWith("/app/") || token.startsWith("/login") || token.startsWith("/register")) {
+    } else if (
+      token.startsWith("/app/") ||
+      token.startsWith("/login") ||
+      token.startsWith("/register")
+    ) {
       nodes.push(
         <Link
           key={`${keyPrefix}-p-${i}`}
           href={token.replace(/[.,;:!?]+$/, "")}
-          className="font-semibold text-[#6ee7a0] underline underline-offset-2"
+          className={linkClass(variant)}
         >
           {token}
         </Link>,
@@ -67,7 +86,13 @@ function isHeading(line: string): { level: number; text: string } | null {
 }
 
 /** Lightweight markdown for assistant replies (headings, lists, bold, links). */
-export function RenderAssistantMarkdown({ text }: { text: string }) {
+export function RenderAssistantMarkdown({
+  text,
+  variant = "dark",
+}: {
+  text: string;
+  variant?: MarkdownVariant;
+}) {
   const normalized = text.replace(/\r\n/g, "\n").trim();
   const lines = normalized.split("\n");
   const blocks: ReactNode[] = [];
@@ -75,16 +100,20 @@ export function RenderAssistantMarkdown({ text }: { text: string }) {
   let ol: string[] = [];
   let blockIdx = 0;
 
+  const listMarker =
+    variant === "light" ? "marker:text-[#305f33]" : "marker:text-[#6ee7a0]";
+  const headingColor = variant === "light" ? "text-[#1a2e1c]" : "text-white";
+
   const flushList = () => {
     if (ul.length) {
       blocks.push(
         <ul
           key={`ul-${blockIdx++}`}
-          className="my-2 list-disc space-y-1.5 pl-4 marker:text-[#6ee7a0]"
+          className={`my-2 list-disc space-y-1.5 pl-4 ${listMarker}`}
         >
           {ul.map((item, j) => (
             <li key={j} className="leading-relaxed">
-              {renderInline(item, `ul-${blockIdx}-${j}`)}
+              {renderInline(item, `ul-${blockIdx}-${j}`, variant)}
             </li>
           ))}
         </ul>,
@@ -95,11 +124,11 @@ export function RenderAssistantMarkdown({ text }: { text: string }) {
       blocks.push(
         <ol
           key={`ol-${blockIdx++}`}
-          className="my-2 list-decimal space-y-1.5 pl-4 marker:font-semibold marker:text-[#6ee7a0]"
+          className={`my-2 list-decimal space-y-1.5 pl-4 marker:font-semibold ${listMarker}`}
         >
           {ol.map((item, j) => (
             <li key={j} className="leading-relaxed">
-              {renderInline(item, `ol-${blockIdx}-${j}`)}
+              {renderInline(item, `ol-${blockIdx}-${j}`, variant)}
             </li>
           ))}
         </ol>,
@@ -123,11 +152,11 @@ export function RenderAssistantMarkdown({ text }: { text: string }) {
       blocks.push(
         <p
           key={`h-${blockIdx++}`}
-          className={`font-bold text-white ${
+          className={`font-bold ${headingColor} ${
             heading.level <= 2 ? "mt-3 text-[14px]" : "mt-2.5 text-[13px]"
           }`}
         >
-          {renderInline(heading.text, `h-${blockIdx}`)}
+          {renderInline(heading.text, `h-${blockIdx}`, variant)}
         </p>,
       );
       continue;
@@ -150,7 +179,7 @@ export function RenderAssistantMarkdown({ text }: { text: string }) {
     flushList();
     blocks.push(
       <p key={`p-${blockIdx++}`} className="my-1.5 leading-relaxed">
-        {renderInline(trimmed, `p-${blockIdx}`)}
+        {renderInline(trimmed, `p-${blockIdx}`, variant)}
       </p>,
     );
   }

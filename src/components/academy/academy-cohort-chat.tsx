@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { academyCls } from "@/components/academy/academy-ui";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 
 type Msg = {
@@ -24,7 +25,14 @@ export function AcademyCohortChat({
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
+  const [inviteErr, setInviteErr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const cohortPath = `/app/academy/${editionSlug}?program=${encodeURIComponent(programSlug)}`;
 
   const load = useCallback(async () => {
     const q = new URLSearchParams({ program: programSlug });
@@ -71,6 +79,60 @@ export function AcademyCohortChat({
     }
   }
 
+  async function inviteByEmail() {
+    const email = inviteEmail.trim();
+    if (!email || inviteBusy) return;
+    setInviteBusy(true);
+    setInviteMsg(null);
+    setInviteErr(null);
+    try {
+      const res = await fetchWithDeadline(
+        `/api/academy/editions/${editionSlug}/invite`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, programSlug }),
+        },
+        15_000,
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = typeof j.error === "string" ? j.error : "";
+        if (code === "academy_invitee_not_found") {
+          setInviteErr(t("academy_invite_not_found"));
+        } else if (code === "academy_invitee_already_enrolled") {
+          setInviteErr(t("academy_invite_already"));
+        } else {
+          setInviteErr(t("academy_invite_error"));
+        }
+        return;
+      }
+      setInviteEmail("");
+      setInviteMsg(
+        j.outcome === "enrolled"
+          ? t("academy_invite_enrolled")
+          : t("academy_invite_notified"),
+      );
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
+  async function copyCohortLink() {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${cohortPath}`
+        : cohortPath;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-[color:var(--fd-border)] bg-white overflow-hidden">
       <div className="border-b border-[color:var(--fd-border)] px-3 py-2">
@@ -78,6 +140,46 @@ export function AcademyCohortChat({
           {t("academy_cohort_chat")}
         </h2>
       </div>
+
+      <div className="border-b border-[color:var(--fd-border)] bg-[#f8faf8] px-3 py-2.5">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {t("academy_invite_title")}
+        </p>
+        <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
+          {t("academy_invite_hint")}
+        </p>
+        <div className="mt-2 flex gap-2">
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder={t("academy_invite_email_placeholder")}
+            className={`min-w-0 flex-1 ${academyCls.input}`}
+          />
+          <button
+            type="button"
+            disabled={inviteBusy || !inviteEmail.trim()}
+            onClick={() => void inviteByEmail()}
+            className={`shrink-0 ${academyCls.btnPrimary}`}
+          >
+            {inviteBusy ? "…" : t("academy_invite_send")}
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => void copyCohortLink()}
+          className="mt-2 text-[10px] font-bold text-[color:var(--fd-primary)] underline"
+        >
+          {copied ? t("academy_invite_link_copied") : t("academy_invite_copy_link")}
+        </button>
+        {inviteMsg ? (
+          <p className="mt-1.5 text-xs font-semibold text-[#305f33]">{inviteMsg}</p>
+        ) : null}
+        {inviteErr ? (
+          <p className="mt-1.5 text-xs text-rose-700">{inviteErr}</p>
+        ) : null}
+      </div>
+
       <div className="max-h-64 overflow-y-auto px-3 py-2 space-y-2">
         {messages.length === 0 ? (
           <p className="text-xs text-[color:var(--fd-muted)]">{t("academy_chat_empty")}</p>
@@ -85,13 +187,19 @@ export function AcademyCohortChat({
           messages.map((m) => (
             <div
               key={m.id}
-              className={`text-sm ${m.messageType === "announcement" ? "rounded-lg bg-[#e8f3ee] px-2 py-1.5" : ""}`}
+              className={`text-sm ${
+                m.messageType === "announcement"
+                  ? "rounded-lg bg-[#e8f3ee] px-2 py-1.5"
+                  : m.own
+                    ? "rounded-lg bg-[#f4f6f5] px-2 py-1.5"
+                    : ""
+              }`}
             >
               <p className="text-[10px] font-bold text-[color:var(--fd-muted)]">
                 {m.senderDisplay}
                 {m.messageType === "announcement" ? " · 📢" : ""}
               </p>
-              <p className="text-[color:var(--fd-text)]">{m.body}</p>
+              <p className="whitespace-pre-wrap text-[color:var(--fd-text)]">{m.body}</p>
             </div>
           ))
         )}
@@ -108,14 +216,14 @@ export function AcademyCohortChat({
             }
           }}
           placeholder={t("academy_chat_placeholder")}
-          className="min-w-0 flex-1 rounded-lg border border-[color:var(--fd-border)] px-3 py-2 text-sm"
+          className={`min-w-0 flex-1 ${academyCls.input}`}
           maxLength={2000}
         />
         <button
           type="button"
           disabled={busy || !draft.trim()}
           onClick={() => void send()}
-          className="shrink-0 rounded-lg bg-[color:var(--fd-primary)] px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className={`shrink-0 ${academyCls.btnPrimary}`}
         >
           →
         </button>

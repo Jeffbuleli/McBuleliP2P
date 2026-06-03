@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { academyCls } from "@/components/academy/academy-ui";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { RenderAssistantMarkdown } from "@/lib/assistant/render-markdown";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -29,7 +31,7 @@ export function AcademyTutorPanel({
     if (!message || busy) return;
     setBusy(true);
     setErr(null);
-    setTurns((t) => [...t, { role: "user", content: message }]);
+    setTurns((prev) => [...prev, { role: "user", content: message }]);
     setDraft("");
     try {
       const res = await fetchWithDeadline(
@@ -56,7 +58,7 @@ export function AcademyTutorPanel({
         setConversationId(j.conversationId);
       }
       if (typeof j.reply === "string") {
-        setTurns((t) => [...t, { role: "assistant", content: j.reply }]);
+        setTurns((prev) => [...prev, { role: "assistant", content: j.reply }]);
       }
     } catch {
       setErr(t("academy_tutor_error"));
@@ -75,13 +77,17 @@ export function AcademyTutorPanel({
         {turns.map((turn, i) => (
           <div
             key={i}
-            className={`rounded-lg px-2.5 py-2 text-xs ${
+            className={`rounded-lg px-2.5 py-2 text-xs leading-relaxed ${
               turn.role === "user"
                 ? "ml-4 bg-white text-[color:var(--fd-text)]"
                 : "mr-4 bg-[#e8f3ee] text-[#1a2e1c]"
             }`}
           >
-            {turn.content}
+            {turn.role === "assistant" ? (
+              <RenderAssistantMarkdown text={turn.content} variant="light" />
+            ) : (
+              turn.content
+            )}
           </div>
         ))}
       </div>
@@ -91,14 +97,14 @@ export function AcademyTutorPanel({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={t("academy_tutor_placeholder")}
-          className="min-w-0 flex-1 rounded-lg border border-[color:var(--fd-border)] px-3 py-2 text-sm"
+          className={`min-w-0 flex-1 ${academyCls.input}`}
           maxLength={2000}
         />
         <button
           type="button"
           disabled={busy}
           onClick={() => void ask()}
-          className="shrink-0 rounded-lg bg-[#305f33] px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className={`shrink-0 ${academyCls.btnPrimary}`}
         >
           {busy ? "…" : t("academy_tutor_send")}
         </button>

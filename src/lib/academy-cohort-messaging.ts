@@ -8,6 +8,7 @@ import {
   users,
 } from "@/db";
 import { p2pDisplayName } from "@/lib/p2p-display";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export async function assertEnrolledInEdition(args: {
   userId: string;
@@ -138,7 +139,61 @@ export async function postCohortMessage(args: {
     })
     .returning({ id: academyCohortMessages.id });
 
+  if (type === "announcement") {
+    await notifyCohortAnnouncement({
+      editionId: args.editionId,
+      messageId: row.id,
+      body,
+    });
+  }
+
   return { ok: true, id: row.id };
+}
+
+async function notifyCohortAnnouncement(args: {
+  editionId: string;
+  messageId: string;
+  body: string;
+}): Promise<void> {
+  const db = getDb();
+  const [edition] = await db
+    .select({
+      slug: academyEditions.slug,
+      titleFr: academyEditions.titleFr,
+      titleEn: academyEditions.titleEn,
+    })
+    .from(academyEditions)
+    .where(eq(academyEditions.id, args.editionId))
+    .limit(1);
+  if (!edition) return;
+
+  const enrollments = await db
+    .select({ userId: academyEnrollments.userId })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.editionId, args.editionId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    );
+
+  const preview = args.body.slice(0, 160);
+  const href = `/app/academy/${edition.slug}`;
+
+  for (const en of enrollments) {
+    await createUserNotification({
+      userId: en.userId,
+      kind: "academy_announcement",
+      payload: {
+        editionSlug: edition.slug,
+        editionTitleFr: edition.titleFr,
+        editionTitleEn: edition.titleEn,
+        messageId: args.messageId,
+        preview,
+        href,
+      },
+    });
+  }
 }
 
 export async function resolveEditionIdBySlug(args: {

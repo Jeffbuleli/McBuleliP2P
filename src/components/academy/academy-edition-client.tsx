@@ -7,6 +7,7 @@ import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { AcademyCohortChat } from "@/components/academy/academy-cohort-chat";
 import { AcademyTutorPanel } from "@/components/academy/academy-tutor-panel";
 import { ACADEMY_QUIZ_FUNDAMENTALS } from "@/lib/academy-config";
+import { academyCls } from "@/components/academy/academy-ui";
 
 type Detail = {
   edition: {
@@ -25,6 +26,8 @@ type Detail = {
     canCheckIn: boolean;
     liveJoinUrl: string;
     isLiveNow: boolean;
+    hasReplay: boolean;
+    replayUrl: string | null;
   }[];
   quizzes: { slug: string; title: string; passed: boolean; attemptsUsed: number; maxAttempts: number }[];
 };
@@ -55,6 +58,23 @@ export function AcademyEditionClient({
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function trackReplay(sessionId: string) {
+    try {
+      await fetchWithDeadline(
+        "/api/academy/replay",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ sessionId }),
+        },
+        10_000,
+      );
+    } catch {
+      /* analytics best-effort */
+    }
+  }
 
   async function checkIn(sessionId: string) {
     setChecking(sessionId);
@@ -87,7 +107,7 @@ export function AcademyEditionClient({
   const quiz = detail.quizzes.find((q) => q.slug === ACADEMY_QUIZ_FUNDAMENTALS);
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className={`space-y-4 pb-6 ${academyCls.root}`}>
       <Link
         href="/app/academy"
         className="text-sm font-semibold text-[color:var(--fd-primary)]"
@@ -144,6 +164,17 @@ export function AcademyEditionClient({
                   {t("academy_checkin_closed")}
                 </p>
               )}
+              {s.hasReplay && s.replayUrl ? (
+                <a
+                  href={s.replayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => void trackReplay(s.id)}
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-[color:var(--fd-border)] bg-[#f8faf8] px-3 py-2 text-sm font-bold text-[color:var(--fd-primary)]"
+                >
+                  {t("academy_watch_replay")} ↗
+                </a>
+              ) : null}
             </li>
           ))}
         </ul>

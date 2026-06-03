@@ -47,6 +47,14 @@ export default async function VerifyCredentialPage({
         >
           {cred.valid ? "✓ Valid" : "Revoked or invalid"}
         </p>
+        {cred.valid ? (
+          <a
+            href={`/api/academy/verify/${code}/openbadge`}
+            className="mt-4 block text-center text-xs font-semibold text-stone-500 underline"
+          >
+            Open Badges 2.0 (JSON-LD)
+          </a>
+        ) : null}
         <a
           href="https://mcbuleli.org"
           className="mt-6 block text-center text-sm font-semibold text-[#305f33]"

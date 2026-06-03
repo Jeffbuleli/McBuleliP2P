@@ -303,6 +303,39 @@ function notifMeta(
         href: "/app/profile/kyc",
         pill: { variant: "pending", label: t("profile_kyc_pending") },
       };
+    case "academy_session_reminder": {
+      const kind = str("reminderKind");
+      const title =
+        str("sessionTitleFr") || str("sessionTitleEn") || t("academy_title");
+      const href = str("href") || "/app/academy";
+      return {
+        title:
+          kind === "1h"
+            ? t("notif_academy_session_1h_title")
+            : t("notif_academy_session_24h_title"),
+        body: t("notif_academy_session_reminder_body", { title }),
+        href,
+        pill: { variant: "pending", label: t("academy_join_live") },
+      };
+    }
+    case "academy_announcement":
+      return {
+        title: t("notif_academy_announcement_title"),
+        body: str("preview") || t("notif_academy_announcement_body"),
+        href: str("href") || "/app/academy",
+        pill: { variant: "processing", label: t("academy_title") },
+      };
+    case "academy_cohort_invite": {
+      const edition =
+        str("editionTitleFr") || str("editionTitleEn") || t("academy_title");
+      const inviter = str("inviterLabel") || "—";
+      return {
+        title: t("notif_academy_cohort_invite_title"),
+        body: t("notif_academy_cohort_invite_body", { inviter, edition }),
+        href: str("href") || "/app/academy",
+        pill: { variant: "success", label: t("academy_enrolled") },
+      };
+    }
     default:
       return {
         title: row.kind,

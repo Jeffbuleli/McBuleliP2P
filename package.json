@@ -25,7 +25,8 @@
     "icons:pwa": "node scripts/generate-pwa-icons.mjs",
     "admin:user": "node scripts/admin-user-account.cjs",
     "email:avadapay": "tsx scripts/send-avadapay-partnership-email.ts",
-    "launch:generate-social": "node scripts/generate-launch-social-pngs.mjs"
+    "launch:generate-social": "node scripts/generate-launch-social-pngs.mjs",
+    "cron:academy-reminders": "node scripts/cron-academy-reminders.mjs"
   },
   "dependencies": {
     "@didit-protocol/sdk-web": "^0.2.1",

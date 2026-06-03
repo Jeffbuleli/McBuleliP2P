@@ -18,7 +18,16 @@ export function buildLiveJoinUrl(args: {
   const room = `mcbuleli-${args.editionSlug}-${args.sessionSlug}`
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-");
-  return `https://meet.jit.si/${room}`;
+  return `https://meet.jit.si/${room}#config.prejoinPageEnabled=false&config.startWithAudioMuted=true`;
+}
+
+/** Session ended — replay may be available. */
+export function isSessionEnded(args: {
+  startsAt: Date;
+  endsAt: Date | null;
+}): boolean {
+  const end = args.endsAt?.getTime() ?? args.startsAt.getTime() + 2 * 60 * 60 * 1000;
+  return Date.now() > end + 5 * 60 * 1000;
 }
 
 export function isSessionLiveNow(args: {

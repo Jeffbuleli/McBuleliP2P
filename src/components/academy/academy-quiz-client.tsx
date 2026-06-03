@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { academyCls } from "@/components/academy/academy-ui";
 import { interpolate } from "@/i18n/messages";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 
@@ -53,12 +54,17 @@ export function AcademyQuizClient({
 
   async function submit() {
     if (!data) return;
+    const unanswered = data.questions.some((q) => choices[q.id] === undefined);
+    if (unanswered) {
+      setErr(t("academy_quiz_answer_all"));
+      return;
+    }
     setSubmitting(true);
     setErr(null);
     try {
       const answers = data.questions.map((q) => ({
         questionId: q.id,
-        choiceIndex: choices[q.id] ?? 0,
+        choiceIndex: choices[q.id]!,
       }));
       const res = await fetchWithDeadline(
         `/api/academy/quiz/${quizSlug}`,
@@ -86,18 +92,20 @@ export function AcademyQuizClient({
   }
 
   if (!data) {
-    return <p className="text-sm text-[color:var(--fd-muted)]">…</p>;
+    return (
+      <p className={`text-sm text-[color:var(--fd-muted)] ${academyCls.root}`}>…</p>
+    );
   }
 
   if (result) {
     return (
-      <div className="space-y-4 pb-6">
-        <p className="text-lg font-extrabold">
+      <div className={`space-y-4 pb-6 ${academyCls.root}`}>
+        <p className="text-lg font-extrabold text-[color:var(--fd-text)]">
           {interpolate(t("academy_quiz_score"), {
             score: String(result.scorePercent),
           })}
         </p>
-        <p className="text-sm">
+        <p className="text-sm text-[color:var(--fd-text)]">
           {result.passed
             ? interpolate(t("academy_quiz_passed"), {
                 bp: String(result.grantedBp),
@@ -115,30 +123,30 @@ export function AcademyQuizClient({
   }
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className={`space-y-4 pb-6 ${academyCls.root}`}>
       <Link
         href={`/app/academy/${editionSlug}`}
         className="text-sm font-semibold text-[color:var(--fd-primary)]"
       >
         ←
       </Link>
-      <h1 className="text-lg font-extrabold">{data.quiz.title}</h1>
-      {err ? (
-        <p className="text-sm text-rose-700">{err}</p>
-      ) : null}
+      <h1 className="text-lg font-extrabold text-[color:var(--fd-text)]">
+        {data.quiz.title}
+      </h1>
+      <p className="text-xs text-[color:var(--fd-muted)]">
+        {data.quiz.attemptsUsed}/{data.quiz.maxAttempts} · {data.quiz.passPercent}%
+      </p>
+      {err ? <p className="text-sm text-rose-700">{err}</p> : null}
       <ol className="space-y-4">
         {data.questions.map((q, i) => (
-          <li
-            key={q.id}
-            className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3"
-          >
-            <p className="text-sm font-bold">
+          <li key={q.id} className={academyCls.card}>
+            <p className="text-sm font-bold text-[color:var(--fd-text)]">
               {i + 1}. {q.prompt}
             </p>
             <ul className="mt-2 space-y-1.5">
               {q.options.map((opt, idx) => (
                 <li key={idx}>
-                  <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[color:var(--fd-text)]">
                     <input
                       type="radio"
                       name={q.id}
@@ -146,9 +154,9 @@ export function AcademyQuizClient({
                       onChange={() =>
                         setChoices((prev) => ({ ...prev, [q.id]: idx }))
                       }
-                      className="mt-1"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#305f33]"
                     />
-                    <span>{opt}</span>
+                    <span className="leading-snug">{opt}</span>
                   </label>
                 </li>
               ))}
