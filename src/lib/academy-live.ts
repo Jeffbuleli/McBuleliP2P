@@ -5,17 +5,27 @@ export const ACADEMY_LIVE_SETUP_MIN = 20;
 
 export type LivePhase = "upcoming" | "warmup" | "setup" | "main" | "ended";
 
+export type LiveJoinMode = "learner" | "host" | "audio";
+
 /** Build sovereign or Jitsi fallback URL for a live session (low-bandwidth defaults). */
 export function buildLiveJoinUrl(args: {
   editionSlug: string;
   sessionSlug: string;
   sessionLiveUrl: string | null;
   liveBaseUrl: string | null;
-  /** Host / animateur — slightly higher video cap. */
+  /** @deprecated use mode */
   asHost?: boolean;
+  mode?: LiveJoinMode;
 }): string {
+  const mode: LiveJoinMode =
+    args.mode ?? (args.asHost ? "host" : "learner");
+
   if (args.sessionLiveUrl?.trim()) {
-    return args.sessionLiveUrl.trim();
+    const raw = args.sessionLiveUrl.trim();
+    if (mode === "learner" || !raw.includes("meet.jit.si")) {
+      return raw;
+    }
+    return `${raw.split("#")[0]}${buildJitsiLowBandwidthHash(mode)}`;
   }
   const base =
     args.liveBaseUrl?.trim() ||
@@ -27,26 +37,63 @@ export function buildLiveJoinUrl(args: {
   const room = `mcbuleli-${args.editionSlug}-${args.sessionSlug}`
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-");
-  return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(args.asHost)}`;
+  return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(mode)}`;
+}
+
+/** Seconds until session end (during live) or until start (before). 0 if ended. */
+export function liveSessionRemainingSec(args: {
+  startsAt: Date;
+  endsAt: Date | null;
+  now?: number;
+}): { kind: "until_start" | "until_end" | "ended"; seconds: number } {
+  const now = args.now ?? Date.now();
+  const start = args.startsAt.getTime();
+  const end = args.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
+  if (now > end + 5 * 60 * 1000) {
+    return { kind: "ended", seconds: 0 };
+  }
+  if (now < start) {
+    return { kind: "until_start", seconds: Math.max(0, Math.ceil((start - now) / 1000)) };
+  }
+  return { kind: "until_end", seconds: Math.max(0, Math.ceil((end - now) / 1000)) };
+}
+
+export function formatLiveCountdown(seconds: number): string {
+  const s = Math.max(0, seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  }
+  return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
 /** Jitsi Meet hash: partage écran, lever la main, qualité adaptée connexion faible. */
-export function buildJitsiLowBandwidthHash(asHost?: boolean): string {
-  const resolution = asHost ? 480 : 360;
-  const toolbar = [
-    "microphone",
-    "camera",
-    "desktop",
-    "raisehand",
-    "chat",
-    "tileview",
-    "fullscreen",
-    "hangup",
-  ];
+export function buildJitsiLowBandwidthHash(
+  mode: LiveJoinMode | boolean = "learner",
+): string {
+  const resolved: LiveJoinMode =
+    typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
+  const isHost = resolved === "host";
+  const audioOnly = resolved === "audio";
+  const resolution = isHost ? 480 : audioOnly ? 180 : 360;
+  const toolbar = audioOnly
+    ? ["microphone", "raisehand", "chat", "hangup"]
+    : [
+        "microphone",
+        "camera",
+        "desktop",
+        "raisehand",
+        "chat",
+        "tileview",
+        "fullscreen",
+        "hangup",
+      ];
   const params: string[] = [
     "config.prejoinPageEnabled=true",
     "config.startWithAudioMuted=false",
-    `config.startWithVideoMuted=${asHost ? "false" : "true"}`,
+    `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
     `config.resolution=${resolution}`,
     "config.channelLastN=8",
     "config.enableNoisyMicDetection=true",

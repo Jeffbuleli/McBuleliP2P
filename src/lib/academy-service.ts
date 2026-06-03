@@ -31,9 +31,11 @@ import {
   getLivePhase,
   isSessionEnded,
   isSessionLiveNow,
+  liveSessionRemainingSec,
   setupEndsAtIso,
   type LivePhase,
 } from "@/lib/academy-live";
+import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
 import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
@@ -76,6 +78,10 @@ export type AcademySessionView = {
   endsAt: string | null;
   liveUrl: string | null;
   liveJoinUrl: string;
+  liveJoinUrlHost: string;
+  liveJoinUrlAudio: string;
+  remainingSec: number;
+  remainingKind: "until_start" | "until_end" | "ended";
   isLiveNow: boolean;
   livePhase: LivePhase;
   setupEndsAt: string | null;
@@ -288,10 +294,12 @@ export async function getEditionDetail(args: {
   editionSlug: string;
   programSlug?: string;
   locale: Locale;
+  viewerLiveRole?: AcademyLiveRole;
 }): Promise<
   | {
       edition: AcademyEditionView & { tutorEnabled: boolean };
       program: AcademyProgramView;
+      liveRole: AcademyLiveRole;
       sessions: AcademySessionView[];
       quizzes: { id: string; slug: string; title: string; attemptsUsed: number; maxAttempts: number; bestScore: number | null; passed: boolean }[];
     }
@@ -365,6 +373,17 @@ export async function getEditionDetail(args: {
     const ended = isSessionEnded({ startsAt: s.startsAt, endsAt: s.endsAt });
     const livePhase = getLivePhase({ startsAt: s.startsAt, endsAt: s.endsAt });
     const replayUrl = s.replayUrl?.trim() || null;
+    const joinBase = {
+      editionSlug,
+      sessionSlug: s.slug,
+      sessionLiveUrl: s.liveUrl,
+      liveBaseUrl,
+    };
+    const remaining = liveSessionRemainingSec({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+      now,
+    });
     return {
       id: s.id,
       slug: s.slug,
@@ -373,12 +392,11 @@ export async function getEditionDetail(args: {
       startsAt: s.startsAt.toISOString(),
       endsAt: s.endsAt?.toISOString() ?? null,
       liveUrl: s.liveUrl,
-      liveJoinUrl: buildLiveJoinUrl({
-        editionSlug,
-        sessionSlug: s.slug,
-        sessionLiveUrl: s.liveUrl,
-        liveBaseUrl,
-      }),
+      liveJoinUrl: buildLiveJoinUrl({ ...joinBase, mode: "learner" }),
+      liveJoinUrlHost: buildLiveJoinUrl({ ...joinBase, mode: "host" }),
+      liveJoinUrlAudio: buildLiveJoinUrl({ ...joinBase, mode: "audio" }),
+      remainingSec: remaining.seconds,
+      remainingKind: remaining.kind,
       isLiveNow: liveNow,
       livePhase,
       setupEndsAt: setupEndsAtIso(s.startsAt),
@@ -427,7 +445,10 @@ export async function getEditionDetail(args: {
     }),
   );
 
+  const liveRole = args.viewerLiveRole ?? "learner";
+
   return {
+    liveRole,
     edition: {
       id: row.edition.id,
       slug: row.edition.slug,
@@ -1185,7 +1206,7 @@ export async function inviteUserToEdition(args: {
   programSlug?: string;
   inviteeEmail: string;
 }): Promise<
-  | { ok: true; outcome: "enrolled" | "notified" }
+  | { ok: true; outcome: "enrolled" | "notified" | "already_enrolled" }
   | { ok: false; code: string }
 > {
   await ensureAcademyLaunchSeed();
@@ -1242,7 +1263,7 @@ export async function inviteUserToEdition(args: {
       ),
     )
     .limit(1);
-  if (existing) return { ok: false, code: "academy_invitee_already_enrolled" };
+  if (existing) return { ok: true, outcome: "already_enrolled" };
 
   const [inviter] = await db
     .select({ displayName: users.displayName, email: users.email })

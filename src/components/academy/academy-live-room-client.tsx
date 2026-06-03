@@ -5,8 +5,18 @@ import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import { AcademyLiveChat } from "@/components/academy/academy-live-chat";
+import {
+  AcademyOpenClassroomBar,
+  type OpenClassroomPanel,
+} from "@/components/academy/academy-open-classroom-bar";
+import { AcademyLiveTutorSheet } from "@/components/academy/academy-live-tutor-sheet";
 import { academyCls } from "@/components/academy/academy-ui";
-import type { LivePhase } from "@/lib/academy-live";
+import {
+  formatLiveCountdown,
+  liveSessionRemainingSec,
+  type LivePhase,
+} from "@/lib/academy-live";
+import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 
 type SessionLive = {
@@ -16,11 +26,15 @@ type SessionLive = {
   startsAt: string;
   endsAt: string | null;
   liveJoinUrl: string;
+  liveJoinUrlHost: string;
+  liveJoinUrlAudio: string;
   livePhase: LivePhase;
   setupEndsAt: string;
   isLiveNow: boolean;
   checkedIn: boolean;
   canCheckIn: boolean;
+  remainingSec: number;
+  remainingKind: "until_start" | "until_end" | "ended";
 };
 
 export function AcademyLiveRoomClient({
@@ -36,8 +50,12 @@ export function AcademyLiveRoomClient({
   const [session, setSession] = useState<SessionLive | null>(null);
   const [editionTitle, setEditionTitle] = useState("");
   const [enrolled, setEnrolled] = useState(false);
+  const [tutorEnabled, setTutorEnabled] = useState(true);
+  const [liveRole, setLiveRole] = useState<AcademyLiveRole>("learner");
   const [checking, setChecking] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
+  const [panel, setPanel] = useState<OpenClassroomPanel>(null);
+  const [tick, setTick] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -62,6 +80,8 @@ export function AcademyLiveRoomClient({
     setSession(s);
     setEditionTitle((j.edition as { title?: string })?.title ?? "");
     setEnrolled(!!(j.edition as { enrolled?: boolean })?.enrolled);
+    setTutorEnabled(!!(j.edition as { tutorEnabled?: boolean })?.tutorEnabled);
+    setLiveRole((j.liveRole as AcademyLiveRole) ?? "learner");
     setErr(null);
   }, [editionSlug, programSlug, sessionSlug, t]);
 
@@ -70,6 +90,11 @@ export function AcademyLiveRoomClient({
     const id = setInterval(() => void load(), 30_000);
     return () => clearInterval(id);
   }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   async function checkIn() {
     if (!session) return;
@@ -91,14 +116,13 @@ export function AcademyLiveRoomClient({
     }
   }
 
+  const backHref = `/app/academy/${editionSlug}?program=${encodeURIComponent(programSlug)}`;
+
   if (err && !session) {
     return (
       <div className={`pb-6 ${academyCls.root}`}>
         <p className="text-sm text-rose-700">{err}</p>
-        <Link
-          href={`/app/academy/${editionSlug}?program=${encodeURIComponent(programSlug)}`}
-          className="mt-3 inline-block text-sm font-semibold text-[color:var(--fd-primary)]"
-        >
+        <Link href={backHref} className="mt-3 inline-block text-sm font-semibold text-[color:var(--fd-primary)]">
           ← {t("academy_title")}
         </Link>
       </div>
@@ -106,10 +130,17 @@ export function AcademyLiveRoomClient({
   }
 
   if (!session) {
-    return <p className={`text-sm text-[color:var(--fd-muted)] ${academyCls.root}`}>…</p>;
+    return (
+      <div className={`space-y-3 pb-24 ${academyCls.root}`}>
+        <div className="h-24 animate-pulse rounded-2xl bg-[#e8f3ee]" />
+        <div className="h-12 animate-pulse rounded-xl bg-[color:var(--fd-border)]/40" />
+        <p className="text-center text-xs text-[color:var(--fd-muted)]">{t("academy_oc_loading")}</p>
+      </div>
+    );
   }
 
   const phase = session.livePhase;
+  const isHost = liveRole === "host";
   const phaseLabel =
     phase === "setup"
       ? t("academy_live_phase_setup")
@@ -135,20 +166,51 @@ export function AcademyLiveRoomClient({
   const canJoin =
     session.isLiveNow && phase !== "ended" && phase !== "upcoming" && enrolled;
 
+  const timing = liveSessionRemainingSec({
+    startsAt: new Date(session.startsAt),
+    endsAt: session.endsAt ? new Date(session.endsAt) : null,
+  });
+  void tick;
+
+  const remainingLabel =
+    timing.kind === "until_start"
+      ? t("academy_oc_starts_in")
+      : timing.kind === "until_end"
+        ? t("academy_oc_ends_in")
+        : null;
+  const displayRemaining =
+    timing.kind !== "ended" ? formatLiveCountdown(timing.seconds) : null;
+
   return (
-    <div className={`space-y-3 pb-8 ${academyCls.root}`}>
-      <Link
-        href={`/app/academy/${editionSlug}?program=${encodeURIComponent(programSlug)}`}
-        className="text-sm font-semibold text-[color:var(--fd-primary)]"
-      >
+    <div className={`space-y-3 pb-28 ${academyCls.root}`}>
+      <Link href={backHref} className="text-sm font-semibold text-[color:var(--fd-primary)]">
         ← {editionTitle || t("academy_title")}
       </Link>
 
       <header className="rounded-2xl border-2 border-[#305f33] bg-gradient-to-br from-[#e8f3ee] to-white p-4">
-        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#305f33]">
-          {session.isLiveNow ? "● LIVE" : t("academy_sessions")}
-        </p>
-        <h1 className="mt-1 text-lg font-black text-[color:var(--fd-text)]">{session.title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {session.isLiveNow ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden />
+              LIVE
+            </span>
+          ) : (
+            <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[10px] font-bold uppercase text-stone-600">
+              {t("academy_sessions")}
+            </span>
+          )}
+          {isHost ? (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-950">
+              {t("academy_oc_host_badge")}
+            </span>
+          ) : null}
+          {remainingLabel && session.remainingKind !== "ended" ? (
+            <span className="ml-auto text-[10px] font-bold text-[#305f33]">
+              {remainingLabel} {displayRemaining}
+            </span>
+          ) : null}
+        </div>
+        <h1 className="mt-2 text-lg font-black text-[color:var(--fd-text)]">{session.title}</h1>
         <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
           {new Date(session.startsAt).toLocaleString()}
         </p>
@@ -168,23 +230,11 @@ export function AcademyLiveRoomClient({
         </p>
       ) : null}
 
-      {canJoin ? (
-        <a
-          href={session.liveJoinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full flex-col items-center rounded-2xl bg-[#305f33] px-4 py-4 text-center text-white shadow-lg active:scale-[0.99]"
-        >
-          <span className="text-base font-black">{t("academy_join_live")}</span>
-          <span className="mt-1 text-[10px] font-medium opacity-90">
-            {t("academy_live_join_sub")}
-          </span>
-        </a>
+      {enrolled && canJoin ? (
+        <p className="text-center text-xs leading-relaxed text-[color:var(--fd-muted)]">
+          {t("academy_live_bandwidth_note")}
+        </p>
       ) : null}
-
-      <p className="text-[10px] leading-relaxed text-[color:var(--fd-muted)]">
-        {t("academy_live_bandwidth_note")}
-      </p>
 
       {enrolled && session.canCheckIn ? (
         <button
@@ -221,9 +271,28 @@ export function AcademyLiveRoomClient({
         ) : null}
       </div>
 
-      {enrolled && session.isLiveNow ? (
+      {panel === "chat" && enrolled && session.isLiveNow ? (
         <AcademyLiveChat editionSlug={editionSlug} programSlug={programSlug} />
       ) : null}
+
+      <AcademyLiveTutorSheet
+        editionSlug={editionSlug}
+        programSlug={programSlug}
+        open={panel === "tutor"}
+        onClose={() => setPanel(null)}
+      />
+
+      <AcademyOpenClassroomBar
+        canJoin={canJoin}
+        isHost={isHost}
+        joinVideoHref={isHost ? session.liveJoinUrlHost : session.liveJoinUrl}
+        joinAudioHref={session.liveJoinUrlAudio}
+        joinHostHref={session.liveJoinUrlHost}
+        activePanel={panel}
+        onPanel={setPanel}
+        backHref={backHref}
+        tutorEnabled={tutorEnabled}
+      />
     </div>
   );
 }

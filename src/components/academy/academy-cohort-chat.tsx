@@ -101,8 +101,17 @@ export function AcademyCohortChat({
         const code = typeof j.error === "string" ? j.error : "";
         if (code === "academy_invitee_not_found") {
           setInviteErr(t("academy_invite_not_found"));
-        } else if (code === "academy_invitee_already_enrolled") {
+        } else if (
+          code === "academy_invitee_already_enrolled" ||
+          code === "academy_invite_already"
+        ) {
           setInviteErr(t("academy_invite_already"));
+        } else if (code === "academy_invite_self") {
+          setInviteErr(t("academy_invite_self"));
+        } else if (code === "academy_invite_email_invalid") {
+          setInviteErr(t("academy_invite_email_invalid"));
+        } else if (code === "academy_not_enrolled") {
+          setInviteErr(t("academy_invite_not_enrolled"));
         } else {
           setInviteErr(t("academy_invite_error"));
         }
@@ -112,7 +121,9 @@ export function AcademyCohortChat({
       setInviteMsg(
         j.outcome === "enrolled"
           ? t("academy_invite_enrolled")
-          : t("academy_invite_notified"),
+          : j.outcome === "already_enrolled"
+            ? t("academy_invite_already_ok")
+            : t("academy_invite_notified"),
       );
     } finally {
       setInviteBusy(false);

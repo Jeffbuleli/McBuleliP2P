@@ -114,10 +114,14 @@ Journal : `0058_academy_phase_c`.
 
 `/admin/academy` affiche les deux totaux. Bouton **Synchroniser /formation → Academy** pour les e-mails qui ont déjà un compte McBuleli. Liste détaillée : `/admin/training-registrations`.
 
+## Open Classroom (companion + Jitsi)
+
+Voir **`docs/academy-open-classroom.md`** — audit, rôles host/apprenant, barre mobile, modes audio/host.
+
 ## Prochaine étape produit
 
 | Priorité | Sujet |
 |----------|--------|
 | **Commit suivant** | `content/email-broadcasts/` — campagne lancement Academy (voir `docs/launch-campaign.md`) |
-| Optionnel | Live self-hosted (Jitsi/LiveKit), VOD replays (R2) |
+| Optionnel | Live self-hosted (Jitsi/LiveKit), iframe Jitsi, VOD replays (R2) |
 | Ops | Cron `mcbuleli-academy-reminders` sur Render + replays admin après chaque session |

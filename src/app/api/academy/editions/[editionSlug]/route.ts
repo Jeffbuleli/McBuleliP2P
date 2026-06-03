@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getEditionDetail } from "@/lib/academy-service";
+import { resolveAcademyLiveRole } from "@/lib/academy-live-role";
 import { getLocale } from "@/lib/get-locale";
-import { getSessionUserId } from "@/lib/session";
+import { getSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,8 @@ export async function GET(
   req: Request,
   ctx: { params: Promise<{ editionSlug: string }> },
 ) {
-  const userId = await getSessionUserId();
-  if (!userId) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,12 +19,14 @@ export async function GET(
   const programSlug =
     new URL(req.url).searchParams.get("program")?.trim() || undefined;
   const locale = await getLocale();
+  const liveRole = resolveAcademyLiveRole(user.role);
 
   const detail = await getEditionDetail({
-    userId,
+    userId: user.id,
     editionSlug,
     programSlug,
     locale,
+    viewerLiveRole: liveRole,
   });
 
   if (!detail) {

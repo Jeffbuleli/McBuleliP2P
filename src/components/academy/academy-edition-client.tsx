@@ -143,16 +143,8 @@ export function AcademyEditionClient({
                     href={`/app/academy/${editionSlug}/live/${s.slug}?program=${encodeURIComponent(programSlug)}`}
                     className="inline-flex w-full items-center justify-center rounded-lg bg-[#305f33] px-3 py-2.5 text-sm font-extrabold text-white"
                   >
-                    {t("academy_live_room")} →
+                    {t("academy_oc_enter_room")} →
                   </Link>
-                  <a
-                    href={s.liveJoinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center rounded-lg border border-[color:var(--fd-border)] bg-[#f8faf8] px-3 py-2 text-xs font-bold text-[color:var(--fd-primary)]"
-                  >
-                    {t("academy_join_live")} ↗
-                  </a>
                   {s.livePhase === "setup" ? (
                     <p className="text-[10px] text-[color:var(--fd-muted)]">
                       {t("academy_live_phase_setup_short")}
