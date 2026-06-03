@@ -36,6 +36,16 @@ type SessionRow = {
   startsAt: string;
   liveUrl: string | null;
   replayUrl: string | null;
+  replayR2Key: string | null;
+};
+
+type EditionAnalytics = {
+  enrollmentsActive: number;
+  livesAttended: number;
+  quizPasses: number;
+  modulesCompleted: number;
+  replayViews: number;
+  eventsByVerb: { verb: string; n: number }[];
 };
 
 type HostRow = {
@@ -54,7 +64,10 @@ export default function AdminAcademyPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
-  const [sessionDraft, setSessionDraft] = useState<Record<string, { liveUrl: string; replayUrl: string }>>({});
+  const [sessionDraft, setSessionDraft] = useState<
+    Record<string, { liveUrl: string; replayUrl: string; replayR2Key: string }>
+  >({});
+  const [analytics, setAnalytics] = useState<EditionAnalytics | null>(null);
   const [savingSession, setSavingSession] = useState<string | null>(null);
   const [hosts, setHosts] = useState<HostRow[]>([]);
   const [hostEmail, setHostEmail] = useState("");
@@ -110,6 +123,16 @@ export default function AdminAcademyPage() {
     }
   }, []);
 
+  const loadAnalytics = useCallback(async (editionSlug: string) => {
+    const res = await fetch(
+      `/api/admin/academy/analytics?edition=${encodeURIComponent(editionSlug)}`,
+      { credentials: "include" },
+    );
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) setAnalytics((j.analytics as EditionAnalytics) ?? null);
+    else setAnalytics(null);
+  }, []);
+
   const loadHosts = useCallback(async (editionSlug: string) => {
     const res = await fetch(
       `/api/admin/academy/editions/${encodeURIComponent(editionSlug)}/hosts`,
@@ -128,11 +151,13 @@ export default function AdminAcademyPage() {
     if (res.ok) {
       const rows = (j.sessions as SessionRow[]) ?? [];
       setSessions(rows);
-      const draft: Record<string, { liveUrl: string; replayUrl: string }> = {};
+      const draft: Record<string, { liveUrl: string; replayUrl: string; replayR2Key: string }> =
+        {};
       for (const s of rows) {
         draft[s.id] = {
           liveUrl: s.liveUrl ?? "",
           replayUrl: s.replayUrl ?? "",
+          replayR2Key: s.replayR2Key ?? "",
         };
       }
       setSessionDraft(draft);
@@ -152,6 +177,7 @@ export default function AdminAcademyPage() {
           sessionId,
           liveUrl: d.liveUrl.trim() || null,
           replayUrl: d.replayUrl.trim() || null,
+          replayR2Key: d.replayR2Key.trim() || null,
         }),
       });
       if (res.ok && selected) await loadSessions(selected);
@@ -169,8 +195,9 @@ export default function AdminAcademyPage() {
       void loadEnrollments(selected);
       void loadSessions(selected);
       void loadHosts(selected);
+      void loadAnalytics(selected);
     }
-  }, [selected, loadEnrollments, loadSessions, loadHosts]);
+  }, [selected, loadEnrollments, loadSessions, loadHosts, loadAnalytics]);
 
   async function addCoHost() {
     if (!selected || !hostEmail.trim()) return;
@@ -319,6 +346,7 @@ export default function AdminAcademyPage() {
                         [s.id]: {
                           liveUrl: e.target.value,
                           replayUrl: prev[s.id]?.replayUrl ?? "",
+                          replayR2Key: prev[s.id]?.replayR2Key ?? "",
                         },
                       }))
                     }
@@ -336,6 +364,26 @@ export default function AdminAcademyPage() {
                         [s.id]: {
                           liveUrl: prev[s.id]?.liveUrl ?? "",
                           replayUrl: e.target.value,
+                          replayR2Key: prev[s.id]?.replayR2Key ?? "",
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="mt-2 block">
+                  <span className="font-medium">replay_r2_key</span>
+                  <input
+                    type="text"
+                    placeholder="replays/edition/session.mp4"
+                    className="mt-1 w-full rounded border border-stone-200 px-2 py-1"
+                    value={sessionDraft[s.id]?.replayR2Key ?? ""}
+                    onChange={(e) =>
+                      setSessionDraft((prev) => ({
+                        ...prev,
+                        [s.id]: {
+                          liveUrl: prev[s.id]?.liveUrl ?? "",
+                          replayUrl: prev[s.id]?.replayUrl ?? "",
+                          replayR2Key: e.target.value,
                         },
                       }))
                     }
@@ -352,6 +400,46 @@ export default function AdminAcademyPage() {
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+
+      {selected && analytics ? (
+        <div className={adminCls.card}>
+          <h2 className="text-sm font-bold">Analytics formateur — {selected}</h2>
+          <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">Inscrits</dt>
+              <dd className="text-xl font-black">{analytics.enrollmentsActive}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">Lives</dt>
+              <dd className="text-xl font-black">{analytics.livesAttended}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">Quiz OK</dt>
+              <dd className="text-xl font-black">{analytics.quizPasses}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">Modules</dt>
+              <dd className="text-xl font-black">{analytics.modulesCompleted}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase text-stone-500">Replays</dt>
+              <dd className="text-xl font-black">{analytics.replayViews}</dd>
+            </div>
+          </dl>
+          {analytics.eventsByVerb.length > 0 ? (
+            <ul className="mt-3 flex flex-wrap gap-2 text-[10px]">
+              {analytics.eventsByVerb.map((e) => (
+                <li
+                  key={e.verb}
+                  className="rounded-full bg-stone-100 px-2 py-0.5 font-semibold text-stone-700"
+                >
+                  {e.verb} · {e.n}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
 

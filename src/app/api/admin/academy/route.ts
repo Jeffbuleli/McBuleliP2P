@@ -64,8 +64,17 @@ export async function PATCH(req: Request) {
     json?.replayUrl === null || typeof json?.replayUrl === "string"
       ? json.replayUrl
       : undefined;
+  const replayR2Key =
+    json?.replayR2Key === null || typeof json?.replayR2Key === "string"
+      ? json.replayR2Key
+      : undefined;
 
-  const result = await updateAdminSession({ sessionId, liveUrl, replayUrl });
+  const result = await updateAdminSession({
+    sessionId,
+    liveUrl,
+    replayUrl,
+    replayR2Key,
+  });
   if (!result.ok) {
     return NextResponse.json({ error: result.code }, { status: 400 });
   }

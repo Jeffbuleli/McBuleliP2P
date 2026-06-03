@@ -2269,6 +2269,7 @@ export const academySessions = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }),
     liveUrl: text("live_url"),
     replayUrl: text("replay_url"),
+    replayR2Key: varchar("replay_r2_key", { length: 256 }),
     replayPublishedAt: timestamp("replay_published_at", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
   },

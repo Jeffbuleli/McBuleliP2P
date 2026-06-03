@@ -37,6 +37,13 @@ export function buildLiveJoinUrl(args: {
   const room = `mcbuleli-${args.editionSlug}-${args.sessionSlug}`
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-");
+  const jitsiSelf =
+    process.env.NEXT_PUBLIC_ACADEMY_JITSI_BASE_URL?.trim() ||
+    process.env.ACADEMY_JITSI_BASE_URL?.trim() ||
+    "";
+  if (jitsiSelf) {
+    return `${jitsiSelf.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode)}`;
+  }
   return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(mode)}`;
 }
 

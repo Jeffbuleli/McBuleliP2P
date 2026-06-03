@@ -11,6 +11,7 @@ import {
 } from "@/components/wallet/points-illustrations";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
+import { rewardLedgerLabel } from "@/lib/reward-points-labels";
 import { interpolate } from "@/i18n/messages";
 
 type Grants = Record<string, boolean>;
@@ -81,23 +82,6 @@ type ClaimPayload = {
   pending: ClaimRow | null;
   claims: ClaimRow[];
 };
-
-function ledgerLabel(
-  t: (k: keyof import("@/i18n/messages").Messages, vars?: Record<string, string | number>) => string,
-  row: LedgerRow,
-): string {
-  if (row.grantType === REWARD_GRANT.KYC_APPROVED) return t("points_ledger_kyc_approved");
-  if (row.grantType === REWARD_GRANT.EMAIL_VERIFIED) return t("points_ledger_email_verified");
-  if (row.grantType === REWARD_GRANT.BOT_FIRST_SUBSCRIPTION) return t("points_ledger_bot_first");
-  if (row.grantType === REWARD_GRANT.STAKING_OPENED) return t("points_ledger_staking_opened");
-  if (row.grantType === REWARD_GRANT.STAKING_MATURED) return t("points_ledger_staking_matured");
-  if (row.grantType === REWARD_GRANT.P2P_TRADE_COMPLETED) return t("points_ledger_p2p_trade");
-  if (row.note === "spend:p2p_fee_discount_15") return t("points_ledger_spend_p2p_fee");
-  if (row.note === "spend:bot_renewal_discount_10") return t("points_ledger_spend_bot_renewal");
-  if (row.note?.startsWith("mcb_claim_refund:")) return t("points_ledger_mcb_refund");
-  if (row.note?.startsWith("mcb_claim:")) return t("points_ledger_mcb_claim");
-  return row.grantType ?? row.note ?? "—";
-}
 
 function spendLabel(
   t: (k: keyof import("@/i18n/messages").Messages) => string,
@@ -177,6 +161,13 @@ export default function WalletPointsPage() {
         done: data.grants[REWARD_GRANT.BOT_FIRST_SUBSCRIPTION],
         href: "/app/trade/bots",
       },
+      {
+        key: REWARD_GRANT.TRAINING_ENROLLED,
+        label: t("points_earn_training_enroll"),
+        points: rates[REWARD_GRANT.TRAINING_ENROLLED] ?? 0,
+        done: data.grants[REWARD_GRANT.TRAINING_ENROLLED],
+        href: "/app/academy",
+      },
     ];
   }, [data, t]);
 
@@ -201,6 +192,18 @@ export default function WalletPointsPage() {
         label: t("points_earn_p2p"),
         points: rates[REWARD_GRANT.P2P_TRADE_COMPLETED] ?? 0,
         href: "/app/trade/p2p",
+      },
+      {
+        key: REWARD_GRANT.TRAINING_SESSION_ATTENDED,
+        label: t("points_earn_training_live"),
+        points: rates[REWARD_GRANT.TRAINING_SESSION_ATTENDED] ?? 0,
+        href: "/app/academy",
+      },
+      {
+        key: REWARD_GRANT.TRAINING_QUIZ_PASSED,
+        label: t("points_earn_training_quiz"),
+        points: rates[REWARD_GRANT.TRAINING_QUIZ_PASSED] ?? 0,
+        href: "/app/academy",
       },
     ];
   }, [data, t]);
@@ -473,7 +476,7 @@ export default function WalletPointsPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-[color:var(--fd-text)]">
-                        {ledgerLabel(t, row)}
+                        {rewardLedgerLabel(t, row)}
                       </p>
                       <p className="text-[10px] text-[color:var(--fd-muted)]">
                         {new Date(row.createdAt).toLocaleString(loc)}

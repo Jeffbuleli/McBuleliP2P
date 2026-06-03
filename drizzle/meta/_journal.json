@@ -379,6 +379,13 @@
       "when": 1783300000000,
       "tag": "0061_academy_edition_hosts",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1783400000000,
+      "tag": "0062_academy_replay_r2",
+      "breakpoints": true
     }
   ]
 }

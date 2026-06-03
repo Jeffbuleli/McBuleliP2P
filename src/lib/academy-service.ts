@@ -51,6 +51,7 @@ import {
 import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
+import { resolveAcademyReplayPlayUrl } from "@/lib/academy-replay-url";
 import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
 import {
   canonicalEmailForDedup,
@@ -607,7 +608,10 @@ export async function getEditionDetail(args: {
     });
     const ended = isSessionEnded({ startsAt: s.startsAt, endsAt: s.endsAt });
     const livePhase = getLivePhase({ startsAt: s.startsAt, endsAt: s.endsAt });
-    const replayUrl = s.replayUrl?.trim() || null;
+    const replayUrl = resolveAcademyReplayPlayUrl({
+      replayUrl: s.replayUrl,
+      replayR2Key: s.replayR2Key,
+    });
     const joinBase = {
       editionSlug,
       sessionSlug: s.slug,
@@ -1147,6 +1151,7 @@ export async function logReplayView(args: {
       slug: academySessions.slug,
       editionId: academySessions.editionId,
       replayUrl: academySessions.replayUrl,
+      replayR2Key: academySessions.replayR2Key,
       startsAt: academySessions.startsAt,
       endsAt: academySessions.endsAt,
     })
@@ -1154,6 +1159,11 @@ export async function logReplayView(args: {
     .where(eq(academySessions.id, args.sessionId))
     .limit(1);
   if (!session) return { ok: false, code: "academy_session_not_found" };
+
+  const playUrl = resolveAcademyReplayPlayUrl({
+    replayUrl: session.replayUrl,
+    replayR2Key: session.replayR2Key,
+  });
 
   const [enrollment] = await db
     .select({ id: academyEnrollments.id })
@@ -1171,7 +1181,7 @@ export async function logReplayView(args: {
   if (!isSessionEnded({ startsAt: session.startsAt, endsAt: session.endsAt })) {
     return { ok: false, code: "academy_replay_not_ready" };
   }
-  if (!session.replayUrl?.trim()) {
+  if (!playUrl) {
     return { ok: false, code: "academy_replay_unavailable" };
   }
 
@@ -1376,6 +1386,7 @@ export async function listAdminEditionSessions(editionSlug: string): Promise<{
       startsAt: academySessions.startsAt,
       liveUrl: academySessions.liveUrl,
       replayUrl: academySessions.replayUrl,
+      replayR2Key: academySessions.replayR2Key,
       replayPublishedAt: academySessions.replayPublishedAt,
     })
     .from(academySessions)
@@ -1391,6 +1402,7 @@ export async function listAdminEditionSessions(editionSlug: string): Promise<{
       startsAt: r.startsAt.toISOString(),
       liveUrl: r.liveUrl,
       replayUrl: r.replayUrl,
+      replayR2Key: r.replayR2Key,
       replayPublishedAt: r.replayPublishedAt?.toISOString() ?? null,
     })),
   };
@@ -1400,10 +1412,15 @@ export async function updateAdminSession(args: {
   sessionId: string;
   liveUrl?: string | null;
   replayUrl?: string | null;
+  replayR2Key?: string | null;
 }): Promise<{ ok: true } | { ok: false; code: string }> {
   const db = getDb();
   const [session] = await db
-    .select({ id: academySessions.id })
+    .select({
+      id: academySessions.id,
+      replayUrl: academySessions.replayUrl,
+      replayR2Key: academySessions.replayR2Key,
+    })
     .from(academySessions)
     .where(eq(academySessions.id, args.sessionId))
     .limit(1);
@@ -1412,16 +1429,36 @@ export async function updateAdminSession(args: {
   const patch: {
     liveUrl?: string | null;
     replayUrl?: string | null;
+    replayR2Key?: string | null;
     replayPublishedAt?: Date | null;
   } = {};
 
   if (args.liveUrl !== undefined) {
     patch.liveUrl = args.liveUrl?.trim() || null;
   }
+
+  const nextReplayUrl =
+    args.replayUrl !== undefined
+      ? args.replayUrl?.trim() || null
+      : session.replayUrl;
+  const nextReplayR2Key =
+    args.replayR2Key !== undefined
+      ? args.replayR2Key?.trim() || null
+      : session.replayR2Key;
+
   if (args.replayUrl !== undefined) {
-    const replay = args.replayUrl?.trim() || null;
-    patch.replayUrl = replay;
-    patch.replayPublishedAt = replay ? new Date() : null;
+    patch.replayUrl = nextReplayUrl;
+  }
+  if (args.replayR2Key !== undefined) {
+    patch.replayR2Key = nextReplayR2Key;
+  }
+  if (args.replayUrl !== undefined || args.replayR2Key !== undefined) {
+    patch.replayPublishedAt = resolveAcademyReplayPlayUrl({
+      replayUrl: nextReplayUrl,
+      replayR2Key: nextReplayR2Key,
+    })
+      ? new Date()
+      : null;
   }
 
   if (Object.keys(patch).length === 0) {

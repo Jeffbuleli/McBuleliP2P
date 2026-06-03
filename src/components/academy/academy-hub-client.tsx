@@ -19,6 +19,7 @@ import {
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { AcademyVisualHero } from "@/components/academy/academy-visual-hero";
 import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
+import { formatAcademyUsdtPrice } from "@/lib/academy-format";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type FormationLead = {
@@ -382,7 +383,8 @@ export function AcademyHubClient() {
                 {t("academy_pro_summary")}
               </p>
               <p className="mt-2 text-sm font-bold text-[#305f33]">
-                {proEdition.priceUsdt} USDT · {t("academy_pro_kyc_hint")}
+                {formatAcademyUsdtPrice(proEdition.priceUsdt)} USDT ·{" "}
+                {t("academy_pro_kyc_hint")}
               </p>
               <button
                 type="button"

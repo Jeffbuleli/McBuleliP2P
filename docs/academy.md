@@ -131,5 +131,5 @@ Voir **`docs/academy-vision.md`** — audit complet, gap analysis, roadmap, home
 | Priorité | Sujet |
 |----------|--------|
 | **Commit suivant** | `content/email-broadcasts/` — campagne lancement Academy (voir `docs/launch-campaign.md`) |
-| Optionnel | Live self-hosted (Jitsi/LiveKit), iframe Jitsi, VOD replays (R2) |
+| Infra | Voir **`docs/academy-infra.md`** — Jitsi self-host, R2 replays, analytics admin |
 | Ops | Cron `mcbuleli-academy-reminders` sur Render + replays admin après chaque session |
