@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -27,6 +28,10 @@ type Copy = {
   successDup: string;
   error: string;
   errorDb: string;
+  accountTitle: string;
+  accountBody: string;
+  accountCta: string;
+  accountLogin: string;
 };
 
 const COPY: Record<"fr" | "en", Copy> = {
@@ -55,6 +60,11 @@ const COPY: Record<"fr" | "en", Copy> = {
     successDup: "Vous êtes déjà inscrit avec cet e-mail.",
     error: "Impossible d'enregistrer. Réessayez ou contactez hi@mcbuleli.org",
     errorDb: "Inscriptions temporairement indisponibles (mise à jour serveur). Réessayez dans quelques minutes.",
+    accountTitle: "Créez votre compte McBuleli gratuit",
+    accountBody:
+      "Utilisez le même e-mail pour rejoindre les lives, le chat de cohorte et les badges dans l'app.",
+    accountCta: "Créer mon compte",
+    accountLogin: "J'ai déjà un compte — me connecter",
   },
   en: {
     title: "Free McBuleli training",
@@ -82,15 +92,27 @@ const COPY: Record<"fr" | "en", Copy> = {
     error: "Could not save. Try again or email hi@mcbuleli.org",
     errorDb:
       "Registration is temporarily unavailable (server update). Try again in a few minutes.",
+    accountTitle: "Create your free McBuleli account",
+    accountBody:
+      "Use the same email to join live sessions, cohort chat and badges in the app.",
+    accountCta: "Create my account",
+    accountLogin: "I already have an account — sign in",
   },
 };
 
-export function FormationRegisterForm({ locale }: { locale: "fr" | "en" }) {
+export function FormationRegisterForm({
+  locale,
+  isLoggedIn = false,
+}: {
+  locale: "fr" | "en";
+  isLoggedIn?: boolean;
+}) {
   const c = COPY[locale];
   const search = useSearchParams();
   const [status, setStatus] = useState<"idle" | "ok" | "dup" | "err" | "db">("idle");
   const [loading, setLoading] = useState(false);
   const [interests, setInterests] = useState<string[]>([]);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   function toggleInterest(v: string) {
     setInterests((prev) =>
@@ -130,6 +152,8 @@ export function FormationRegisterForm({ locale }: { locale: "fr" | "en" }) {
         );
         return;
       }
+      const email = body.email.trim().toLowerCase();
+      setSubmittedEmail(email);
       setStatus(j.duplicate ? "dup" : "ok");
     } catch {
       setStatus("err");
@@ -222,15 +246,41 @@ export function FormationRegisterForm({ locale }: { locale: "fr" | "en" }) {
       >
         {loading ? "…" : c.submit}
       </button>
-      {status === "ok" ? (
-        <p className="rounded-xl bg-[color:var(--fd-mint)] px-3 py-2 text-sm font-semibold text-[color:var(--fd-primary)]">
-          {c.success}
-        </p>
-      ) : null}
-      {status === "dup" ? (
-        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-          {c.successDup}
-        </p>
+      {status === "ok" || status === "dup" ? (
+        <div className="space-y-3">
+          <p
+            className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+              status === "ok"
+                ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {status === "ok" ? c.success : c.successDup}
+          </p>
+          {!isLoggedIn && submittedEmail ? (
+            <div className="rounded-2xl border-2 border-[#305f33] bg-[#e8f3ee] p-4">
+              <p className="text-sm font-extrabold text-[#305f33]">{c.accountTitle}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#1a2e1c]">{c.accountBody}</p>
+              <p className="mt-2 text-[10px] font-semibold text-[color:var(--fd-muted)]">
+                {submittedEmail}
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                <Link
+                  href={`/register?email=${encodeURIComponent(submittedEmail)}&next=${encodeURIComponent("/app/academy")}`}
+                  className="inline-flex justify-center rounded-xl bg-[#305f33] px-4 py-2.5 text-sm font-extrabold text-white"
+                >
+                  {c.accountCta} →
+                </Link>
+                <Link
+                  href={`/login?email=${encodeURIComponent(submittedEmail)}&next=${encodeURIComponent("/app/academy")}`}
+                  className="text-center text-xs font-bold text-[#305f33] underline"
+                >
+                  {c.accountLogin}
+                </Link>
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : null}
       {status === "err" ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">

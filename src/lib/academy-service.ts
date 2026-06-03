@@ -131,10 +131,75 @@ export async function linkTrainingRegistrationToUser(args: {
   }
 }
 
+export type AcademyViewerRole = "learner" | "staff";
+
+export type AcademyFormationLead = {
+  registeredOnFormation: boolean;
+  enrolledInLaunch: boolean;
+  fullName: string | null;
+};
+
+export async function getFormationLeadForUser(
+  userId: string,
+): Promise<AcademyFormationLead> {
+  const db = getDb();
+  const [user] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!user?.email) {
+    return {
+      registeredOnFormation: false,
+      enrolledInLaunch: false,
+      fullName: null,
+    };
+  }
+
+  const canonical = canonicalEmailForDedup(normalizeAuthEmail(user.email));
+  const regs = await db
+    .select({
+      id: trainingRegistrations.id,
+      email: trainingRegistrations.email,
+      fullName: trainingRegistrations.fullName,
+    })
+    .from(trainingRegistrations);
+
+  const reg = regs.find(
+    (r) => canonicalEmailForDedup(normalizeAuthEmail(r.email)) === canonical,
+  );
+
+  const editionId = await launchEditionId();
+  let enrolledInLaunch = false;
+  if (editionId) {
+    const [en] = await db
+      .select({ id: academyEnrollments.id })
+      .from(academyEnrollments)
+      .where(
+        and(
+          eq(academyEnrollments.userId, userId),
+          eq(academyEnrollments.editionId, editionId),
+          eq(academyEnrollments.status, "active"),
+        ),
+      )
+      .limit(1);
+    enrolledInLaunch = !!en;
+  }
+
+  return {
+    registeredOnFormation: !!reg,
+    enrolledInLaunch,
+    fullName: reg?.fullName ?? null,
+  };
+}
+
 export async function getAcademyHub(args: {
   userId: string;
   locale: Locale;
+  viewerRole?: AcademyViewerRole;
 }): Promise<{
+  viewer: AcademyViewerRole;
+  formationLead: AcademyFormationLead;
   programs: AcademyProgramView[];
   editions: AcademyEditionView[];
   credentials: AcademyCredentialView[];
@@ -178,7 +243,12 @@ export async function getAcademyHub(args: {
     .where(eq(academyCredentials.userId, args.userId))
     .orderBy(desc(academyCredentials.issuedAt));
 
+  const formationLead = await getFormationLeadForUser(args.userId);
+  const viewer = args.viewerRole ?? "learner";
+
   return {
+    viewer,
+    formationLead,
     programs: programs.map((p) => ({
       id: p.id,
       slug: p.slug,

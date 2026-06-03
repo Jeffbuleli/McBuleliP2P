@@ -115,6 +115,26 @@ export function buildProfileOpsHubItems(
       icon: "bots",
       badge: null,
     });
+
+    items.push({
+      id: "academy",
+      href: "/admin/academy",
+      labelKey: "profile_ops_academy",
+      descKey: "profile_ops_academy_desc",
+      tone: "forest",
+      icon: "dashboard",
+      badge: null,
+    });
+
+    items.push({
+      id: "formation",
+      href: "/admin/training-registrations",
+      labelKey: "profile_ops_formation",
+      descKey: "profile_ops_formation_desc",
+      tone: "amber",
+      icon: "users",
+      badge: null,
+    });
   }
 
   return items;

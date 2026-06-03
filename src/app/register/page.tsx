@@ -1,7 +1,8 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { safeAppRedirectPath } from "@/lib/safe-app-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -37,14 +38,20 @@ function RegisterForm() {
   const { t, locale } = useI18n();
   const searchParams = useSearchParams();
   const refParam = searchParams.get("ref")?.trim() ?? "";
+  const emailParam = searchParams.get("email")?.trim() ?? "";
+  const nextPath = safeAppRedirectPath(searchParams.get("next"));
   const initialReferralCode = refParam ? refParam.toUpperCase() : "";
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam);
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [referralCode, setReferralCode] = useState(initialReferralCode);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (emailParam) setEmail(emailParam);
+  }, [emailParam]);
 
   const countries = useMemo(() => {
     return [...COUNTRY_OPTIONS].sort((a, b) => {
@@ -101,7 +108,7 @@ function RegisterForm() {
         setLoading(false);
         return;
       }
-      window.location.replace("/app");
+      window.location.replace(nextPath);
     } catch (err) {
       const aborted =
         (err instanceof DOMException || err instanceof Error) &&

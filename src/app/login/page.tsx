@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { safeAppRedirectPath } from "@/lib/safe-app-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -42,13 +44,20 @@ async function piAuthenticateWithTimeout(
   }
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const { t } = useI18n();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get("email")?.trim() ?? "";
+  const nextPath = safeAppRedirectPath(searchParams.get("next"));
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
+
+  useEffect(() => {
+    if (emailParam) setEmail(emailParam);
+  }, [emailParam]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -166,7 +175,7 @@ export default function LoginPage() {
         setError(formatAuthClientError(data));
         return;
       }
-      window.location.replace("/app");
+      window.location.replace(nextPath);
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : typeof e === "string" ? e : null;
@@ -275,5 +284,19 @@ export default function LoginPage() {
 
       </div>
     </AuthMarketingShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthMarketingShell showBrandHeader={false}>
+          <AuthWaitingScreen />
+        </AuthMarketingShell>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

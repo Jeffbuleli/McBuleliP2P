@@ -46,7 +46,7 @@ export default async function FormationPage() {
             </p>
           ) : null}
           <Suspense fallback={<p className="mt-6 text-sm text-[color:var(--fd-muted)]">…</p>}>
-            <FormationRegisterForm locale={locale} />
+            <FormationRegisterForm locale={locale} isLoggedIn={!!userId} />
           </Suspense>
           <p className="mt-6 text-center text-xs text-[color:var(--fd-muted)]">
             <Link href="/" className="font-semibold text-[color:var(--fd-primary)]">
