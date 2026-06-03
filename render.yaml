@@ -77,6 +77,21 @@ services:
       - key: CRON_SECRET
         sync: false
 
+  # Academy — session reminders (24h / 1h before live)
+  - type: cron
+    name: mcbuleli-academy-reminders
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/15 * * * *"
+    buildCommand: "true"
+    startCommand: node scripts/cron-academy-reminders.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
   - type: cron
     name: mcbuleli-wallet-retry-jobs
     runtime: node

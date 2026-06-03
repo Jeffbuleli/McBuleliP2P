@@ -86,3 +86,11 @@ Journal : `0058_academy_phase_c`.
 ## Liaison /formation
 
 À la connexion, email → `training_registrations.user_id` + auto-inscription cohorte juin.
+
+## Prochaine étape produit
+
+| Priorité | Sujet |
+|----------|--------|
+| **Commit suivant** | `content/email-broadcasts/` — campagne lancement Academy (voir `docs/launch-campaign.md`) |
+| Optionnel | Live self-hosted (Jitsi/LiveKit), VOD replays (R2) |
+| Ops | Cron `mcbuleli-academy-reminders` sur Render + replays admin après chaque session |

@@ -79,3 +79,14 @@ Table : `training_registrations`
 ## Suggestion
 
 Après le 8 juin, envoyer un rappel WhatsApp aux inscrits avec `whatsapp_opt_in = true` (export CSV admin).
+
+## Checklist ops (post-déploiement Academy Phase C)
+
+1. **Migrations prod** : `npm run db:migrate:render` (journal jusqu’à `0058_academy_phase_c`)
+2. **Cron Render** : service `mcbuleli-academy-reminders` (`render.yaml`) · `*/15 * * * *` · `CRON_SECRET` + `MCBULELI_API_URL`
+3. **Replays** : après chaque live, renseigner `replay_url` dans `/admin/academy` → édition → sessions
+
+## Prochaine étape (commit dédié)
+
+- **Email broadcasts** : commit des fichiers régénérés sous `content/email-broadcasts/` (dont `mcbuleli-launch_academy-fr.html` / EN) après `npm run resend:export-broadcasts`
+- Envoi Resend : audience marketing · sujet FR ci-dessus · CTA `/formation?utm_campaign=launch_academy`
