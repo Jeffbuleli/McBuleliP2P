@@ -18,13 +18,32 @@ if [[ -f "$JITSI_IMAGES/watermark.svg" && ! -f "$JITSI_IMAGES/watermark.svg.bak"
   cp -a "$JITSI_IMAGES/watermark.svg" "$JITSI_IMAGES/watermark.svg.bak"
 fi
 curl -fsSL "$LOGO_URL" -o "$JITSI_IMAGES/mcbuleli-logo.png"
-if [[ -f "$SCRIPT_DIR/mcbuleli-favicon.png" ]]; then
-  cp "$SCRIPT_DIR/mcbuleli-favicon.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
-else
-  cp "$JITSI_IMAGES/mcbuleli-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
+
+echo "==> Logo rond (PNG)"
+ROUND_OK=0
+if python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-logo.png" "$JITSI_IMAGES/mcbuleli-round.png" 72; then
+  ROUND_OK=1
+elif command -v convert >/dev/null 2>&1; then
+  convert "$JITSI_IMAGES/mcbuleli-logo.png" -resize 72x72^ -gravity center -extent 72x72 \
+    \( +clone -threshold -1 -negate -fill white -draw "circle 36,36 36,0" \) \
+    -alpha off -compose copy_opacity -composite "$JITSI_IMAGES/mcbuleli-round.png"
+  ROUND_OK=1
 fi
+if [[ "$ROUND_OK" -eq 0 ]]; then
+  cp "$JITSI_IMAGES/mcbuleli-logo.png" "$JITSI_IMAGES/mcbuleli-round.png"
+  echo "    (pillow/convert absents — logo carré; installez: apt install -y python3-pil.imaging)"
+fi
+
+cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
+if [[ -f "$SCRIPT_DIR/mcbuleli-favicon.png" ]]; then
+  python3 "$SCRIPT_DIR/make-round-logo.py" "$SCRIPT_DIR/mcbuleli-favicon.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
+    cp "$SCRIPT_DIR/mcbuleli-favicon.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
+fi
+
 cp "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
 cp "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
+# Certaines versions Jitsi lisent aussi watermark.png
+cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/watermark.png" 2>/dev/null || true
 
 echo "==> Favicon navigateur (onglet)"
 for html in "$JITSI_ROOT/index.html" "$JITSI_ROOT/static.html" "$JITSI_ROOT/title.html"; do
@@ -80,6 +99,24 @@ fi
 # Charger CSS sur toutes les pages
 if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-custom.css' "$JITSI_ROOT/index.html"; then
   sed -i 's|</head>|<link rel="stylesheet" href="/css/mcbuleli-custom.css" />\n</head>|' "$JITSI_ROOT/index.html"
+fi
+
+echo "==> Masquer toast « Thank you / Merci » en fin de live"
+if ! grep -q 'mcbuleli-disable-thankyou' "$CONFIG"; then
+  cat >> "$CONFIG" <<'EOF'
+
+// mcbuleli-disable-thankyou
+config.feedbackPercentage = 0;
+config.disabledNotifications = config.disabledNotifications || [];
+if (config.disabledNotifications.indexOf('thankYou') === -1) {
+    config.disabledNotifications.push('thankYou');
+}
+EOF
+fi
+
+cp "$SCRIPT_DIR/mcbuleli-hide-thankyou.js" "$JITSI_ROOT/mcbuleli-hide-thankyou.js"
+if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-hide-thankyou.js' "$JITSI_ROOT/index.html"; then
+  sed -i 's|</body>|<script src="/mcbuleli-hide-thankyou.js"></script>\n</body>|' "$JITSI_ROOT/index.html"
 fi
 
 echo "==> Redémarrage"

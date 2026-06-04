@@ -11,7 +11,7 @@ APP_SHORT = "McBuleli"
 
 # Clés connues (toasts, titres, promos)
 KEY_OVERRIDES: dict[str, str] = {
-    "thankYou": f"Merci d'avoir utilisé {APP} !",
+    "thankYou": "",
     "headerTitle": APP,
     "productLabel": f"via {APP_SHORT}",
     "logoDeepLinking": f"Logo {APP_SHORT}",
@@ -20,7 +20,7 @@ KEY_OVERRIDES: dict[str, str] = {
 }
 
 EN_OVERRIDES: dict[str, str] = {
-    "thankYou": f"Thank you for using {APP}!",
+    "thankYou": "",
     "headerTitle": APP,
     "productLabel": f"via {APP_SHORT}",
     "logoDeepLinking": f"{APP_SHORT} logo",

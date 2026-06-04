@@ -1,47 +1,67 @@
 /**
- * McBuleli — live.mcbuleli.org (favicon page + pré-join + visio)
+ * McBuleli — logo rond sur live.mcbuleli.org (coin pré-join + en-tête)
  */
 .watermark,
 div.watermark,
-#preview .watermark {
+#preview .watermark,
+.prejoin-preview .watermark {
+  display: block !important;
   opacity: 1 !important;
-  max-width: 40px !important;
-  max-height: 40px !important;
-  width: 40px !important;
-  height: 40px !important;
-  top: 10px !important;
-  left: 10px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  top: 12px !important;
+  left: 12px !important;
   right: auto !important;
   bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
   pointer-events: none !important;
   z-index: 2 !important;
   overflow: hidden !important;
   border-radius: 50% !important;
+  clip-path: circle(50% at 50% 50%) !important;
+  background: transparent !important;
+  background-image: url("/images/mcbuleli-round.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
-.watermark svg,
-.watermark img,
-.watermark image {
+/* Cache le SVG Jitsi par défaut si présent */
+.watermark > svg {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Logo en-tête / pré-join */
+.premeeting-screen .logo,
+.prejoin-preview .logo,
+.welcome .header-logo,
+.header-text-title .logo,
+.invite-more-dialog .logo {
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 50% !important;
-  max-height: 36px !important;
-  max-width: 36px !important;
-  width: 36px !important;
-  height: 36px !important;
-  object-fit: cover !important;
+  overflow: hidden !important;
+  clip-path: circle(50% at 50% 50%) !important;
 }
 
-/* Logos en-tête pré-join */
-.prejoin-preview-dropdown-btn-icon,
-.header-text-title .logo img,
-.invite-more-dialog .logo,
-.welcome .header-logo img {
+.premeeting-screen .logo img,
+.prejoin-preview .logo img,
+.welcome .header-logo img,
+.header-text-title .logo img {
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 50% !important;
   object-fit: cover !important;
-  max-height: 36px !important;
-  max-width: 36px !important;
+  clip-path: circle(50% at 50% 50%) !important;
 }
 
-/* Masquer lien / promo Jitsi résiduelle */
 .leftwatermark,
 .poweredby,
 .jitsi-logo,
