@@ -38,6 +38,8 @@ NEXT_PUBLIC_ACADEMY_LIVE_EMBED=true
 6. **Test** : staff ouvre une session → badge **Animation** → lien host 480p ; apprenant → 360p / audio seul.
 7. **Co-animateur** : `/admin/academy` → onglet **Lives & Jitsi** → ajouter l’email → lien host pour cette personne.
 8. **Centre de contrôle** : `/admin/academy` — onglets Aperçu, Programme (`live_base_url`, statut, tuteur IA), Lives (liens host / apprenant / companion), Inscriptions, Analytics, Outils.
+9. **Branding VPS** : `ops/jitsi/README.md` (interface McBuleli sur `live.mcbuleli.org`).
+10. **Produit payant (vision)** : `docs/academy-live-product.md` — 3 plans USDT, phases réalistes.
 
 ### Ordre de résolution URL live
 

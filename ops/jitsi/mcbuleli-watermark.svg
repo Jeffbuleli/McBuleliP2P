@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="72" height="32" viewBox="0 0 72 32" role="img" aria-label="McBuleli">
+  <!-- Coin haut-gauche, ~38% opacité  ne pas couvrir les visages -->
+  <image xlink:href="/images/mcbuleli-logo.png" x="0" y="2" width="28" height="28" opacity="0.38" preserveAspectRatio="xMinYMin meet"/>
+</svg>
