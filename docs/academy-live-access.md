@@ -22,10 +22,19 @@ flowchart LR
 | **Participant** | Compte + inscrit à l’édition | Gratuit |
 | **Animateur** | Staff McBuleli, co-host, ou **Live Studio** payé | 3–28 USDT |
 
-## App
+## App (pas de login Jitsi User/Password)
 
-- **Rejoindre** : `/app/academy/…/live/…` → API `GET /api/academy/live/join-token` (session cookie).
-- **Héberger** : `/app/academy/studio` → achat wallet → création édition `live_studio`.
+| Étape | URL |
+|-------|-----|
+| Entrée recommandée | `/app/academy/…/live/…` (companion) |
+| Lien direct salle | `https://mcbuleli.org/app/live/enter?edition=…&session=…&program=…` |
+| Non connecté | → `/login?next=…` puis JWT → Jitsi |
+| Pas de compte | → inscription depuis login |
+
+**Ne pas** envoyer `https://live.mcbuleli.org/salle` seul (popup User/Password).
+
+- **Rejoindre** : companion ou `/app/live/enter` → `join-token` + `?jwt=…`
+- **Héberger** : `/app/academy/studio` → USDT → création édition
 
 ## VPS (recommandé)
 

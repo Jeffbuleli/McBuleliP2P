@@ -32,10 +32,12 @@ export async function signAcademyJitsiToken(args: {
   const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 3 * 60 * 60);
   return new SignJWT({
     room: args.room,
+    moderator: args.moderator,
     context: {
       user: {
         id: args.userId,
         name: args.displayName,
+        email: `${args.userId}@users.mcbuleli.org`,
         moderator: args.moderator,
       },
     },
