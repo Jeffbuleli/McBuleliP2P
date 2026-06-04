@@ -32,7 +32,7 @@ config.interfaceConfig = config.interfaceConfig || {};
 config.interfaceConfig.APP_NAME = 'McBuleli Academy Live';
 config.interfaceConfig.NATIVE_APP_NAME = 'McBuleli Academy Live';
 config.interfaceConfig.PROVIDER_NAME = 'McBuleli';
-config.interfaceConfig.DEFAULT_WELCOME_PAGE_LOGO_URL = 'https://mcbuleli.org/logo.png';
+config.interfaceConfig.DEFAULT_WELCOME_PAGE_LOGO_URL = 'https://mcbuleli.org/brand/logo-256.png';
 config.interfaceConfig.SHOW_JITSI_WATERMARK = false;
 config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = false;
 config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
@@ -67,16 +67,21 @@ systemctl reload nginx
 - Ouvrir une salle test : `https://live.mcbuleli.org/mcbuleli-test`
 - Titre onglet / interface : **McBuleli Academy Live**
 
-## 6. Logo watermark (coin pré-join, transparent — remplace Jitsi)
+## 6. Branding complet (favicon, logo rond, textes « McBuleli »)
 
-Le logo blanc « jitsi » sur la prévisualisation caméra se remplace par **McBuleli** (~38 % opacité, coin haut-gauche).
+- **Favicon** onglet navigateur → logo McBuleli (plus l’icône Jitsi)
+- **Watermark** pré-join → logo **rond** (anneau vert), coin discret
+- **Notifications** (« Merci d’avoir utilisé… ») → **McBuleli Academy Live**
+- **Promo** Jitsi masquée (`SHOW_PROMOTIONAL_CLOSE_PAGE`)
 
-**Option A — script automatique** (depuis le repo cloné sur le VPS, ou copier le dossier `ops/jitsi/`) :
+**Script automatique** (repo sur le VPS ou copier `ops/jitsi/`) :
 
 ```bash
-chmod +x ops/jitsi/apply-mcbuleli-watermark.sh
-bash ops/jitsi/apply-mcbuleli-watermark.sh
+chmod +x ops/jitsi/apply-mcbuleli-brand.sh ops/jitsi/patch-jitsi-lang.py
+bash ops/jitsi/apply-mcbuleli-brand.sh
 ```
+
+(`apply-mcbuleli-watermark.sh` appelle le même script.)
 
 **Option B — à la main** :
 

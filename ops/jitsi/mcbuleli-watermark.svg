@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="72" height="32" viewBox="0 0 72 32" role="img" aria-label="McBuleli">
-  <!-- Coin haut-gauche, ~38% opacité  ne pas couvrir les visages -->
-  <image xlink:href="/images/mcbuleli-logo.png" x="0" y="2" width="28" height="28" opacity="0.38" preserveAspectRatio="xMinYMin meet"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40" viewBox="0 0 40 40" role="img" aria-label="McBuleli">
+  <defs>
+    <clipPath id="mcbuleliRound">
+      <circle cx="20" cy="20" r="18" />
+    </clipPath>
+  </defs>
+  <!-- Logo rond (anneau vert du brand), coin pré-join -->
+  <g opacity="0.42" clip-path="url(#mcbuleliRound)">
+    <image xlink:href="/images/mcbuleli-logo.png" x="2" y="2" width="36" height="36" preserveAspectRatio="xMidYMid meet"/>
+  </g>
 </svg>

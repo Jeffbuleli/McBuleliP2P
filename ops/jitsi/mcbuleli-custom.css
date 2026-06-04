@@ -1,33 +1,51 @@
 /**
- * McBuleli — watermark pré-join / visio (coin, discret).
- * Chargé via config sur live.mcbuleli.org
+ * McBuleli — live.mcbuleli.org (favicon page + pré-join + visio)
  */
 .watermark,
 div.watermark,
 #preview .watermark {
-  opacity: 0.38 !important;
-  max-width: 88px !important;
-  max-height: 32px !important;
-  width: auto !important;
-  height: auto !important;
+  opacity: 1 !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
   top: 10px !important;
   left: 10px !important;
   right: auto !important;
   bottom: auto !important;
   pointer-events: none !important;
   z-index: 2 !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
 }
 
 .watermark svg,
-.watermark img {
-  max-height: 28px !important;
-  width: auto !important;
-  object-fit: contain !important;
+.watermark img,
+.watermark image {
+  border-radius: 50% !important;
+  max-height: 36px !important;
+  max-width: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: cover !important;
 }
 
-/* Logo en-tête pré-join (remplace Jitsi) */
+/* Logos en-tête pré-join */
 .prejoin-preview-dropdown-btn-icon,
 .header-text-title .logo img,
-.invite-more-dialog .logo {
-  max-height: 32px !important;
+.invite-more-dialog .logo,
+.welcome .header-logo img {
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  max-height: 36px !important;
+  max-width: 36px !important;
+}
+
+/* Masquer lien / promo Jitsi résiduelle */
+.leftwatermark,
+.poweredby,
+.jitsi-logo,
+a[href*="jitsi.org"],
+a[href*="8x8.vc"] {
+  display: none !important;
 }
