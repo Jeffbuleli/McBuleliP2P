@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AcademyIcon } from "@/components/academy/academy-icon";
+import {
+  AdvancedBlock,
+  ANALYTICS_VERB_FR,
+  EDITION_STATUS_FR,
+  formatSessionWhen,
+  LiveActionChip,
+  SectionHead,
+  StatusPill,
+} from "@/components/admin/academy-admin-ui";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
 import { buildLiveJoinUrl } from "@/lib/academy-live";
-import { ACADEMY_JITSI_APP_NAME } from "@/lib/academy-jitsi-brand";
 
 type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools";
 
@@ -84,13 +93,13 @@ type HostRow = {
   role: string;
 };
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "overview", label: "Aperçu" },
-  { id: "program", label: "Programme" },
-  { id: "lives", label: "Lives & Jitsi" },
-  { id: "enrollments", label: "Inscriptions" },
-  { id: "analytics", label: "Analytics" },
-  { id: "tools", label: "Outils" },
+const TABS: { id: TabId; label: string; icon: "live" | "calendar" | "chat" | "tutor" | "wallet" | "signal" }[] = [
+  { id: "overview", label: "Aperçu", icon: "signal" },
+  { id: "program", label: "Programme", icon: "calendar" },
+  { id: "lives", label: "Lives", icon: "live" },
+  { id: "enrollments", label: "Inscriptions", icon: "wallet" },
+  { id: "analytics", label: "Stats", icon: "tutor" },
+  { id: "tools", label: "Outils", icon: "chat" },
 ];
 
 const EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
@@ -419,8 +428,8 @@ export function AcademyAdminClient() {
     <div className={adminCls.page}>
       <AdminBackLink href="/admin">← Admin</AdminBackLink>
       <AdminPageHeader
-        title="Academy — Centre de contrôle"
-        subtitle="Programmes, lives Jitsi McBuleli, inscriptions & analytics"
+        title="Academy"
+        subtitle="Cohortes, lives McBuleli & inscriptions"
       />
       {err ? <p className={adminCls.error}>{err}</p> : null}
 
@@ -441,7 +450,8 @@ export function AcademyAdminClient() {
           >
             {e.titleFr}
             <span className="mt-0.5 block font-medium opacity-80">
-              {e.status} · {e.enrollmentCount} inscrits · {e.sessionCount} sessions
+              {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} inscrits ·{" "}
+              {e.sessionCount} lives
             </span>
           </button>
         ))}
@@ -456,12 +466,16 @@ export function AcademyAdminClient() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
+            className={`flex flex-col items-center gap-0.5 rounded-lg px-2.5 py-2 text-[10px] font-bold transition ${
               tab === t.id
                 ? "bg-[color:var(--fd-primary)] text-white"
                 : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]"
             }`}
           >
+            <AcademyIcon
+              name={t.icon}
+              className={`h-4 w-4 ${tab === t.id ? "!text-white" : ""}`}
+            />
             {t.label}
           </button>
         ))}
@@ -482,44 +496,48 @@ export function AcademyAdminClient() {
 
           {formation ? (
             <div className={adminCls.card}>
-              <h2 className={adminCls.h2}>Lancement juin — /formation ↔ Academy</h2>
-              <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Kpi label="/formation" value={String(formation.formationTotal)} compact />
-                <Kpi label="Compte lié" value={String(formation.formationLinkedToUser)} compact />
-                <Kpi label="Academy app" value={String(formation.academyEnrolledLaunch)} compact />
-                <Kpi
-                  label="En attente"
-                  value={String(formation.pendingAcademyEnroll)}
-                  compact
-                />
+              <SectionHead
+                icon="wallet"
+                title="Inscriptions lancement"
+                hint="Page formation publique et comptes Academy"
+              />
+              <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Kpi label="Demandes" value={String(formation.formationTotal)} compact />
+                <Kpi label="Comptes liés" value={String(formation.formationLinkedToUser)} compact />
+                <Kpi label="Dans l'app" value={String(formation.academyEnrolledLaunch)} compact />
+                <Kpi label="En attente" value={String(formation.pendingAcademyEnroll)} compact />
               </dl>
             </div>
           ) : null}
 
           {infra ? (
             <div className={adminCls.card}>
-              <h2 className={adminCls.h2}>Infra live (Render / VPS)</h2>
-              <ul className="mt-2 space-y-1.5 font-mono text-[11px] text-[color:var(--fd-text)]">
-                <li>
-                  <span className="text-[color:var(--fd-muted)]">LIVE_BASE</span>{" "}
-                  {infra.liveBaseUrl ?? "—"}
-                </li>
-                <li>
-                  <span className="text-[color:var(--fd-muted)]">JITSI_BASE</span>{" "}
-                  {infra.jitsiBaseUrl ?? "—"}
-                </li>
-                <li>
-                  <span className="text-[color:var(--fd-muted)]">EMBED</span>{" "}
-                  {infra.embedEnabled ? "true" : "false"}
-                </li>
-                <li>
-                  <span className="text-[color:var(--fd-muted)]">R2 public</span>{" "}
-                  {infra.r2PublicBaseUrl ?? "—"}
-                </li>
-              </ul>
-              <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
-                Branding Jitsi : {ACADEMY_JITSI_APP_NAME} (hash URL depuis l&apos;app)
-              </p>
+              <SectionHead
+                icon="live"
+                title="Salle live McBuleli"
+                hint="Serveur vidéo pour les cohortes"
+              />
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <StatusPill
+                  ok={!!liveBaseEffective}
+                  label={liveBaseEffective ? "En ligne" : "À configurer"}
+                />
+                {infra.embedEnabled ? (
+                  <StatusPill ok label="Vidéo dans l'app" />
+                ) : null}
+                {infra.r2PublicBaseUrl ? <StatusPill ok label="Replays cloud" /> : null}
+              </div>
+              {liveBaseEffective ? (
+                <a
+                  href={liveBaseEffective}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[color:var(--fd-primary)] underline"
+                >
+                  <AcademyIcon name="video" className="h-4 w-4" />
+                  Ouvrir la salle live ↗
+                </a>
+              ) : null}
             </div>
           ) : null}
 
@@ -540,14 +558,14 @@ export function AcademyAdminClient() {
 
       {tab === "program" && selected && editionDraft ? (
         <div className={adminCls.card}>
-          <h2 className={adminCls.h2}>Programme — {selectedEdition?.titleFr}</h2>
-          <p className={`mt-1 ${adminCls.muted}`}>
-            Slug <code className="text-[10px]">{selected}</code> · {moduleCount} modules
-            · programme {editionDetail?.programSlug}
-          </p>
+          <SectionHead
+            icon="calendar"
+            title={selectedEdition?.titleFr ?? "Programme"}
+            hint={`${moduleCount} modules · cohorte`}
+          />
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="font-bold text-[color:var(--fd-text)]">Statut cohorte</span>
+              <span className="font-bold text-[color:var(--fd-text)]">Statut</span>
               <select
                 className={`${adminCls.select} mt-1 w-full`}
                 value={editionDraft.status}
@@ -559,12 +577,13 @@ export function AcademyAdminClient() {
               >
                 {EDITION_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {EDITION_STATUS_FR[s] ?? s}
                   </option>
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 pt-6 text-sm font-bold">
+            <label className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-3 text-sm font-bold">
+              <AcademyIcon name="tutor" className="h-5 w-5 shrink-0" />
               <input
                 type="checkbox"
                 checked={editionDraft.tutorEnabled}
@@ -573,33 +592,30 @@ export function AcademyAdminClient() {
                     d ? { ...d, tutorEnabled: e.target.checked } : d,
                   )
                 }
-                className="h-4 w-4 rounded border-[color:var(--fd-border)]"
+                className="h-4 w-4 rounded"
               />
-              Tuteur IA activé (companion live)
+              Tuteur IA pendant le live
             </label>
           </div>
-          <label className="mt-4 block text-sm">
-            <span className="font-bold text-[color:var(--fd-text)]">
-              live_base_url (override Jitsi)
-            </span>
-            <input
-              type="url"
-              placeholder="https://live.mcbuleli.org"
-              className={`${adminCls.input} mt-1 w-full font-mono text-xs`}
-              value={editionDraft.liveBaseUrl}
-              onChange={(e) =>
-                setEditionDraft((d) =>
-                  d ? { ...d, liveBaseUrl: e.target.value } : d,
-                )
-              }
-            />
-            <span className="mt-1 block text-[10px] text-[color:var(--fd-muted)]">
-              Vide = env global Render. Salles :{" "}
-              <code>
-                {liveBaseEffective ?? "…"}/{"{session-slug}"}
-              </code>
-            </span>
-          </label>
+          <AdvancedBlock summary="Serveur live personnalisé (optionnel)">
+            <label className="block text-sm">
+              <span className="font-bold text-[color:var(--fd-text)]">Adresse salle live</span>
+              <input
+                type="url"
+                placeholder="https://live.mcbuleli.org"
+                className={`${adminCls.input} mt-1 w-full`}
+                value={editionDraft.liveBaseUrl}
+                onChange={(e) =>
+                  setEditionDraft((d) =>
+                    d ? { ...d, liveBaseUrl: e.target.value } : d,
+                  )
+                }
+              />
+              <span className="mt-1 block text-[10px] text-[color:var(--fd-muted)]">
+                Laissez vide pour utiliser le serveur McBuleli par défaut.
+              </span>
+            </label>
+          </AdvancedBlock>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
@@ -630,135 +646,138 @@ export function AcademyAdminClient() {
       {tab === "lives" && selected ? (
         <div className="space-y-4">
           <div className={adminCls.card}>
-            <h2 className={adminCls.h2}>Jitsi McBuleli — {selected}</h2>
-            <p className={`mt-1 ${adminCls.muted}`}>
-              Liens générés avec branding {ACADEMY_JITSI_APP_NAME}. Testez host avant le live.
-            </p>
-            {liveBaseEffective ? (
-              <a
-                href={liveBaseEffective}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block text-xs font-bold text-[color:var(--fd-primary)] underline"
-              >
-                Ouvrir {liveBaseEffective} ↗
-              </a>
-            ) : (
-              <p className="mt-2 text-xs text-amber-800">
-                Configurez live_base_url ou NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL
+            <SectionHead
+              icon="live"
+              title="Sessions live"
+              hint="Testez « Animation » avant chaque cours"
+            />
+            {!liveBaseEffective ? (
+              <p className="mt-3 text-xs font-semibold text-amber-800">
+                Serveur live non configuré — onglet Programme ou variables Render.
               </p>
-            )}
+            ) : null}
           </div>
 
           {sessions.length === 0 ? (
-            <p className={adminCls.empty}>Aucune session pour cette édition</p>
+            <p className={adminCls.empty}>Aucun live planifié</p>
           ) : (
             <ul className="space-y-4">
               {sessions.map((s) => {
                 const urls = sessionJoinUrls(s);
                 return (
                   <li key={s.id} className={adminCls.card}>
-                    <p className="font-bold text-[color:var(--fd-text)]">{s.titleFr}</p>
-                    <p className="text-xs text-[color:var(--fd-muted)]">
-                      {s.slug} · {new Date(s.startsAt).toLocaleString()}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50">
+                        <AcademyIcon name="live" className="h-6 w-6" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-extrabold text-[color:var(--fd-text)]">{s.titleFr}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[color:var(--fd-muted)]">
+                          <AcademyIcon name="calendar" className="h-3.5 w-3.5" />
+                          {formatSessionWhen(s.startsAt)}
+                        </p>
+                      </div>
+                    </div>
                     {urls ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <a
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <LiveActionChip
                           href={urls.host}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-lg bg-amber-100 px-2.5 py-1.5 text-[10px] font-extrabold text-amber-950"
-                        >
-                          Host 480p ↗
-                        </a>
-                        <a
+                          icon="video"
+                          label="Animation"
+                          variant="host"
+                        />
+                        <LiveActionChip
                           href={urls.learner}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-lg bg-[color:var(--fd-mint)] px-2.5 py-1.5 text-[10px] font-extrabold text-[color:var(--fd-primary)]"
-                        >
-                          Apprenant ↗
-                        </a>
-                        <a
+                          icon="camera"
+                          label="Apprenants"
+                          variant="learner"
+                        />
+                        <LiveActionChip
                           href={urls.audio}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-lg border border-[color:var(--fd-border)] px-2.5 py-1.5 text-[10px] font-bold"
-                        >
-                          Audio seul ↗
-                        </a>
-                        <Link
+                          icon="audio"
+                          label="Audio"
+                          variant="default"
+                        />
+                        <LiveActionChip
                           href={urls.app}
-                          target="_blank"
-                          className="rounded-lg border-2 border-[color:var(--fd-primary)] px-2.5 py-1.5 text-[10px] font-extrabold text-[color:var(--fd-primary)]"
-                        >
-                          Companion app ↗
-                        </Link>
+                          icon="chat"
+                          label="App McBuleli"
+                          variant="app"
+                        />
                       </div>
                     ) : null}
-                    <label className="mt-3 block text-xs">
-                      <span className="font-bold">live_url (override)</span>
-                      <input
-                        type="url"
-                        className={`${adminCls.input} mt-1 w-full text-xs`}
-                        value={sessionDraft[s.id]?.liveUrl ?? ""}
-                        onChange={(e) =>
-                          setSessionDraft((prev) => ({
-                            ...prev,
-                            [s.id]: {
-                              liveUrl: e.target.value,
-                              replayUrl: prev[s.id]?.replayUrl ?? "",
-                              replayR2Key: prev[s.id]?.replayR2Key ?? "",
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="mt-2 block text-xs">
-                      <span className="font-bold">replay_url</span>
-                      <input
-                        type="url"
-                        className={`${adminCls.input} mt-1 w-full text-xs`}
-                        value={sessionDraft[s.id]?.replayUrl ?? ""}
-                        onChange={(e) =>
-                          setSessionDraft((prev) => ({
-                            ...prev,
-                            [s.id]: {
-                              liveUrl: prev[s.id]?.liveUrl ?? "",
-                              replayUrl: e.target.value,
-                              replayR2Key: prev[s.id]?.replayR2Key ?? "",
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="mt-2 block text-xs">
-                      <span className="font-bold">replay_r2_key</span>
-                      <input
-                        type="text"
-                        placeholder="replays/edition/session.mp4"
-                        className={`${adminCls.input} mt-1 w-full font-mono text-xs`}
-                        value={sessionDraft[s.id]?.replayR2Key ?? ""}
-                        onChange={(e) =>
-                          setSessionDraft((prev) => ({
-                            ...prev,
-                            [s.id]: {
-                              liveUrl: prev[s.id]?.liveUrl ?? "",
-                              replayUrl: prev[s.id]?.replayUrl ?? "",
-                              replayR2Key: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </label>
+                    <AdvancedBlock summary="Replay & lien personnalisé">
+                      <label className="block text-xs">
+                        <span className="font-bold text-[color:var(--fd-text)]">
+                          Lien live alternatif
+                        </span>
+                        <input
+                          type="url"
+                          placeholder="Vide = salle McBuleli automatique"
+                          className={`${adminCls.input} mt-1 w-full`}
+                          value={sessionDraft[s.id]?.liveUrl ?? ""}
+                          onChange={(e) =>
+                            setSessionDraft((prev) => ({
+                              ...prev,
+                              [s.id]: {
+                                liveUrl: e.target.value,
+                                replayUrl: prev[s.id]?.replayUrl ?? "",
+                                replayR2Key: prev[s.id]?.replayR2Key ?? "",
+                              },
+                            }))
+                          }
+                        />
+                      </label>
+                      <label className="block text-xs">
+                        <span className="font-bold text-[color:var(--fd-text)]">
+                          Replay (lien web)
+                        </span>
+                        <input
+                          type="url"
+                          placeholder="YouTube, Drive…"
+                          className={`${adminCls.input} mt-1 w-full`}
+                          value={sessionDraft[s.id]?.replayUrl ?? ""}
+                          onChange={(e) =>
+                            setSessionDraft((prev) => ({
+                              ...prev,
+                              [s.id]: {
+                                liveUrl: prev[s.id]?.liveUrl ?? "",
+                                replayUrl: e.target.value,
+                                replayR2Key: prev[s.id]?.replayR2Key ?? "",
+                              },
+                            }))
+                          }
+                        />
+                      </label>
+                      <label className="block text-xs">
+                        <span className="font-bold text-[color:var(--fd-text)]">
+                          Replay (fichier cloud)
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="dossier/nom-de-la-video.mp4"
+                          className={`${adminCls.input} mt-1 w-full`}
+                          value={sessionDraft[s.id]?.replayR2Key ?? ""}
+                          onChange={(e) =>
+                            setSessionDraft((prev) => ({
+                              ...prev,
+                              [s.id]: {
+                                liveUrl: prev[s.id]?.liveUrl ?? "",
+                                replayUrl: prev[s.id]?.replayUrl ?? "",
+                                replayR2Key: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                      </label>
+                    </AdvancedBlock>
                     <button
                       type="button"
                       disabled={savingSession === s.id}
                       onClick={() => void saveSession(s.id)}
-                      className={`${adminCls.btnPrimary} mt-3`}
+                      className={`${adminCls.btnPrimary} mt-3 w-full sm:w-auto`}
                     >
-                      {savingSession === s.id ? "…" : "Enregistrer session"}
+                      {savingSession === s.id ? "…" : "Enregistrer"}
                     </button>
                   </li>
                 );
@@ -767,7 +786,11 @@ export function AcademyAdminClient() {
           )}
 
           <div className={adminCls.card}>
-            <h2 className={adminCls.h2}>Co-animateurs</h2>
+            <SectionHead
+              icon="tutor"
+              title="Équipe live"
+              hint="Co-animateurs avec accès Animation"
+            />
             <div className="mt-3 flex flex-wrap gap-2">
               <input
                 type="email"
@@ -849,11 +872,11 @@ export function AcademyAdminClient() {
 
       {tab === "analytics" && selected && analytics ? (
         <div className={adminCls.card}>
-          <h2 className={adminCls.h2}>Analytics formateur — {selected}</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <SectionHead icon="tutor" title="Statistiques" hint={selectedEdition?.titleFr} />
+          <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <Kpi label="Inscrits" value={String(analytics.enrollmentsActive)} compact />
             <Kpi label="Lives" value={String(analytics.livesAttended)} compact />
-            <Kpi label="Quiz OK" value={String(analytics.quizPasses)} compact />
+            <Kpi label="Quiz" value={String(analytics.quizPasses)} compact />
             <Kpi label="Modules" value={String(analytics.modulesCompleted)} compact />
             <Kpi label="Replays" value={String(analytics.replayViews)} compact />
           </dl>
@@ -862,9 +885,9 @@ export function AcademyAdminClient() {
               {analytics.eventsByVerb.map((e) => (
                 <li
                   key={e.verb}
-                  className="rounded-full bg-[color:var(--fd-mint)] px-2.5 py-0.5 text-[10px] font-semibold"
+                  className="rounded-full bg-[color:var(--fd-mint)] px-2.5 py-1 text-[10px] font-bold text-[color:var(--fd-primary)]"
                 >
-                  {e.verb} · {e.n}
+                  {ANALYTICS_VERB_FR[e.verb] ?? e.verb} ({e.n})
                 </li>
               ))}
             </ul>
@@ -875,42 +898,38 @@ export function AcademyAdminClient() {
       {tab === "tools" ? (
         <div className="space-y-4">
           <div className={adminCls.card}>
-            <h2 className={adminCls.h2}>Synchronisation & données</h2>
+            <SectionHead icon="wallet" title="Données" hint="Formation publique → Academy" />
             <button
               type="button"
               disabled={syncing}
               onClick={() => void syncFormation()}
-              className={adminCls.btnPrimary}
+              className={`${adminCls.btnPrimary} mt-4`}
             >
-              {syncing ? "…" : "Synchroniser /formation → Academy"}
+              {syncing ? "…" : "Synchroniser les inscriptions"}
             </button>
             {syncMsg ? (
               <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
                 {syncMsg}
               </p>
             ) : null}
-            <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
-              <Link href="/admin/training-registrations" className="text-[color:var(--fd-primary)] underline">
-                Liste /formation →
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Link
+                href="/admin/training-registrations"
+                className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
+              >
+                <AcademyIcon name="wallet" className="h-5 w-5" />
+                Liste formation ↗
               </Link>
               <a
                 href="https://live.mcbuleli.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[color:var(--fd-primary)] underline"
+                className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
               >
-                Serveur Jitsi ↗
+                <AcademyIcon name="video" className="h-5 w-5" />
+                Salle live ↗
               </a>
             </div>
-          </div>
-          <div className={adminCls.card}>
-            <h2 className={adminCls.h2}>Guide ops</h2>
-            <p className={`${adminCls.muted} text-xs leading-relaxed`}>
-              Replays R2, crons, variables Render : voir{" "}
-              <code className="text-[10px]">docs/academy-infra.md</code> dans le dépôt.
-              Personnalisation Jitsi côté VPS (logo, couleurs) :{" "}
-              <code className="text-[10px]">interface_config.js</code> sur le serveur live.
-            </p>
           </div>
         </div>
       ) : null}
