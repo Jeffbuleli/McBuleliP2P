@@ -36,7 +36,8 @@ NEXT_PUBLIC_ACADEMY_LIVE_EMBED=true
 
 5. **Édition cohorte** : en admin, champ `live_base_url` sur l’édition (seed juin) ou laisser l’env global.
 6. **Test** : staff ouvre une session → badge **Animation** → lien host 480p ; apprenant → 360p / audio seul.
-7. **Co-animateur** : `/admin/academy` → ajouter l’email → lien host pour cette personne.
+7. **Co-animateur** : `/admin/academy` → onglet **Lives & Jitsi** → ajouter l’email → lien host pour cette personne.
+8. **Centre de contrôle** : `/admin/academy` — onglets Aperçu, Programme (`live_base_url`, statut, tuteur IA), Lives (liens host / apprenant / companion), Inscriptions, Analytics, Outils.
 
 ### Ordre de résolution URL live
 

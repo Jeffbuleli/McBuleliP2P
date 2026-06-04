@@ -612,11 +612,13 @@ export async function getEditionDetail(args: {
       replayUrl: s.replayUrl,
       replayR2Key: s.replayR2Key,
     });
+    const sessionTitle = pickLocale(s, args.locale);
     const joinBase = {
       editionSlug,
       sessionSlug: s.slug,
       sessionLiveUrl: s.liveUrl,
       liveBaseUrl,
+      sessionTitle,
     };
     const remaining = liveSessionRemainingSec({
       startsAt: s.startsAt,
@@ -1246,14 +1248,39 @@ export async function autoEnrollLaunchCohort(userId: string): Promise<void> {
   }).catch(() => undefined);
 }
 
+export type AdminAcademyLiveInfra = {
+  liveBaseUrl: string | null;
+  jitsiBaseUrl: string | null;
+  embedEnabled: boolean;
+  r2PublicBaseUrl: string | null;
+};
+
+export function getAdminAcademyLiveInfra(): AdminAcademyLiveInfra {
+  return {
+    liveBaseUrl: process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim() || null,
+    jitsiBaseUrl:
+      process.env.NEXT_PUBLIC_ACADEMY_JITSI_BASE_URL?.trim() ||
+      process.env.ACADEMY_JITSI_BASE_URL?.trim() ||
+      null,
+    embedEnabled: process.env.NEXT_PUBLIC_ACADEMY_LIVE_EMBED === "true",
+    r2PublicBaseUrl: process.env.ACADEMY_R2_PUBLIC_BASE_URL?.trim() || null,
+  };
+}
+
+const ADMIN_EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
+
 export async function listAdminAcademyOverview(): Promise<{
   formation: FormationOpsStats;
+  infra: AdminAcademyLiveInfra;
   editions: {
     id: string;
     slug: string;
     programSlug: string;
     titleFr: string;
     status: string;
+    liveBaseUrl: string | null;
+    tutorEnabled: boolean;
+    sessionCount: number;
     enrollmentCount: number;
     formationRegistrations: number | null;
   }[];
@@ -1266,13 +1293,15 @@ export async function listAdminAcademyOverview(): Promise<{
       slug: academyEditions.slug,
       titleFr: academyEditions.titleFr,
       status: academyEditions.status,
+      liveBaseUrl: academyEditions.liveBaseUrl,
+      tutorEnabled: academyEditions.tutorEnabled,
       programSlug: academyPrograms.slug,
     })
     .from(academyEditions)
     .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
     .orderBy(asc(academyEditions.startsAt));
 
-  const counts = await db
+  const enrollCounts = await db
     .select({
       editionId: academyEnrollments.editionId,
       n: sql<number>`count(*)::int`,
@@ -1280,18 +1309,31 @@ export async function listAdminAcademyOverview(): Promise<{
     .from(academyEnrollments)
     .groupBy(academyEnrollments.editionId);
 
-  const countMap = new Map(counts.map((c) => [c.editionId, c.n]));
+  const sessionCounts = await db
+    .select({
+      editionId: academySessions.editionId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(academySessions)
+    .groupBy(academySessions.editionId);
+
+  const enrollMap = new Map(enrollCounts.map((c) => [c.editionId, c.n]));
+  const sessionMap = new Map(sessionCounts.map((c) => [c.editionId, c.n]));
   const formation = await getFormationOpsStats();
 
   return {
     formation,
+    infra: getAdminAcademyLiveInfra(),
     editions: rows.map((r) => ({
       id: r.id,
       slug: r.slug,
       programSlug: r.programSlug,
       titleFr: r.titleFr,
       status: r.status,
-      enrollmentCount: countMap.get(r.id) ?? 0,
+      liveBaseUrl: r.liveBaseUrl,
+      tutorEnabled: r.tutorEnabled,
+      sessionCount: sessionMap.get(r.id) ?? 0,
+      enrollmentCount: enrollMap.get(r.id) ?? 0,
       formationRegistrations:
         r.slug === ACADEMY_EDITION_JUNE_2026 &&
         r.programSlug === ACADEMY_PROGRAM_LAUNCH
@@ -1299,6 +1341,115 @@ export async function listAdminAcademyOverview(): Promise<{
           : null,
     })),
   };
+}
+
+export async function getAdminEditionDetail(editionSlug: string): Promise<{
+  edition: {
+    id: string;
+    slug: string;
+    programSlug: string;
+    titleFr: string;
+    titleEn: string;
+    status: string;
+    liveBaseUrl: string | null;
+    tutorEnabled: boolean;
+    startsAt: string | null;
+    endsAt: string | null;
+  };
+  moduleCount: number;
+} | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      id: academyEditions.id,
+      slug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+      titleFr: academyEditions.titleFr,
+      titleEn: academyEditions.titleEn,
+      status: academyEditions.status,
+      liveBaseUrl: academyEditions.liveBaseUrl,
+      tutorEnabled: academyEditions.tutorEnabled,
+      startsAt: academyEditions.startsAt,
+      endsAt: academyEditions.endsAt,
+    })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(eq(academyEditions.slug, editionSlug))
+    .limit(1);
+  if (!row) return null;
+
+  const [modCount] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(academyModules)
+    .where(eq(academyModules.editionId, row.id));
+
+  return {
+    edition: {
+      id: row.id,
+      slug: row.slug,
+      programSlug: row.programSlug,
+      titleFr: row.titleFr,
+      titleEn: row.titleEn,
+      status: row.status,
+      liveBaseUrl: row.liveBaseUrl,
+      tutorEnabled: row.tutorEnabled,
+      startsAt: row.startsAt?.toISOString() ?? null,
+      endsAt: row.endsAt?.toISOString() ?? null,
+    },
+    moduleCount: modCount?.n ?? 0,
+  };
+}
+
+export async function updateAdminEdition(args: {
+  editionId: string;
+  status?: string;
+  liveBaseUrl?: string | null;
+  tutorEnabled?: boolean;
+}): Promise<{ ok: true } | { ok: false; code: string }> {
+  const db = getDb();
+  const [edition] = await db
+    .select({ id: academyEditions.id })
+    .from(academyEditions)
+    .where(eq(academyEditions.id, args.editionId))
+    .limit(1);
+  if (!edition) return { ok: false, code: "academy_edition_not_found" };
+
+  const patch: {
+    status?: string;
+    liveBaseUrl?: string | null;
+    tutorEnabled?: boolean;
+  } = {};
+
+  if (args.status !== undefined) {
+    if (
+      !ADMIN_EDITION_STATUSES.includes(
+        args.status as (typeof ADMIN_EDITION_STATUSES)[number],
+      )
+    ) {
+      return { ok: false, code: "invalid_status" };
+    }
+    patch.status = args.status;
+  }
+  if (args.liveBaseUrl !== undefined) {
+    const v = args.liveBaseUrl?.trim() || null;
+    if (v && !/^https:\/\/.+/i.test(v)) {
+      return { ok: false, code: "invalid_live_base_url" };
+    }
+    patch.liveBaseUrl = v;
+  }
+  if (args.tutorEnabled !== undefined) {
+    patch.tutorEnabled = args.tutorEnabled;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return { ok: false, code: "nothing_to_update" };
+  }
+
+  await db
+    .update(academyEditions)
+    .set(patch)
+    .where(eq(academyEditions.id, edition.id));
+  return { ok: true };
 }
 
 export async function listAdminEditionEnrollments(args: {

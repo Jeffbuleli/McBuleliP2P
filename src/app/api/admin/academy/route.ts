@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import {
+  getAdminEditionDetail,
   listAdminAcademyOverview,
   listAdminEditionEnrollments,
   listAdminEditionSessions,
+  updateAdminEdition,
   updateAdminSession,
 } from "@/lib/academy-service";
 import { getSessionUser } from "@/lib/session-user";
@@ -19,6 +21,15 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const editionSlug = url.searchParams.get("edition")?.trim();
   const sessionsOnly = url.searchParams.get("sessions") === "1";
+  const detailOnly = url.searchParams.get("detail") === "1";
+
+  if (editionSlug && detailOnly) {
+    const detail = await getAdminEditionDetail(editionSlug);
+    if (!detail) {
+      return NextResponse.json({ error: "edition_not_found" }, { status: 404 });
+    }
+    return NextResponse.json(detail);
+  }
 
   if (editionSlug && sessionsOnly) {
     const data = await listAdminEditionSessions(editionSlug);
@@ -50,6 +61,31 @@ export async function PATCH(req: Request) {
   }
 
   const json = await req.json().catch(() => null);
+
+  const editionId =
+    typeof json?.editionId === "string" ? json.editionId.trim() : "";
+  if (editionId) {
+    const status =
+      typeof json?.status === "string" ? json.status.trim() : undefined;
+    const liveBaseUrl =
+      json?.liveBaseUrl === null || typeof json?.liveBaseUrl === "string"
+        ? json.liveBaseUrl
+        : undefined;
+    const tutorEnabled =
+      typeof json?.tutorEnabled === "boolean" ? json.tutorEnabled : undefined;
+
+    const result = await updateAdminEdition({
+      editionId,
+      status,
+      liveBaseUrl,
+      tutorEnabled,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.code }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const sessionId =
     typeof json?.sessionId === "string" ? json.sessionId.trim() : "";
   if (!sessionId) {

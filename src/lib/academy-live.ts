@@ -1,4 +1,5 @@
 import { ACADEMY_CHECKIN_WINDOW_MIN } from "@/lib/academy-config";
+import { appendAcademyJitsiBrandParams } from "@/lib/academy-jitsi-brand";
 
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
 export const ACADEMY_LIVE_SETUP_MIN = 20;
@@ -13,6 +14,7 @@ export function buildLiveJoinUrl(args: {
   sessionSlug: string;
   sessionLiveUrl: string | null;
   liveBaseUrl: string | null;
+  sessionTitle?: string;
   /** @deprecated use mode */
   asHost?: boolean;
   mode?: LiveJoinMode;
@@ -25,7 +27,9 @@ export function buildLiveJoinUrl(args: {
     if (mode === "learner" || !raw.includes("meet.jit.si")) {
       return raw;
     }
-    return `${raw.split("#")[0]}${buildJitsiLowBandwidthHash(mode)}`;
+    return `${raw.split("#")[0]}${buildJitsiLowBandwidthHash(mode, {
+      sessionTitle: args.sessionTitle,
+    })}`;
   }
   const base =
     args.liveBaseUrl?.trim() ||
@@ -42,9 +46,13 @@ export function buildLiveJoinUrl(args: {
     process.env.ACADEMY_JITSI_BASE_URL?.trim() ||
     "";
   if (jitsiSelf) {
-    return `${jitsiSelf.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode)}`;
+    return `${jitsiSelf.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode, {
+      sessionTitle: args.sessionTitle,
+    })}`;
   }
-  return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(mode)}`;
+  return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(mode, {
+    sessionTitle: args.sessionTitle,
+  })}`;
 }
 
 /** Seconds until session end (during live) or until start (before). 0 if ended. */
@@ -79,6 +87,7 @@ export function formatLiveCountdown(seconds: number): string {
 /** Jitsi Meet hash: partage écran, lever la main, qualité adaptée connexion faible. */
 export function buildJitsiLowBandwidthHash(
   mode: LiveJoinMode | boolean = "learner",
+  opts?: { sessionTitle?: string },
 ): string {
   const resolved: LiveJoinMode =
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
@@ -107,13 +116,13 @@ export function buildJitsiLowBandwidthHash(
     "config.enableTalkWhileMuted=false",
     "config.disableThirdPartyRequests=true",
     "config.enableLayerSuspension=true",
-    "config.hideConferenceSubject=true",
     "config.disableDeepLinking=true",
     `interfaceConfig.TOOLBAR_BUTTONS=${encodeURIComponent(JSON.stringify(toolbar))}`,
     "interfaceConfig.SHOW_JITSI_WATERMARK=false",
     "interfaceConfig.MOBILE_APP_PROMO=false",
     "interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true",
   ];
+  appendAcademyJitsiBrandParams(params, opts);
   return `#${params.join("&")}`;
 }
 
