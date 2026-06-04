@@ -386,6 +386,13 @@
       "when": 1783400000000,
       "tag": "0062_academy_replay_r2",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1783500000000,
+      "tag": "0063_academy_live_purchases",
+      "breakpoints": true
     }
   ]
 }

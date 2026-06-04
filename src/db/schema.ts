@@ -2217,6 +2217,10 @@ export const academyEditions = pgTable(
     cohortMeta: jsonb("cohort_meta").$type<Record<string, unknown> | null>(),
     liveBaseUrl: text("live_base_url"),
     tutorEnabled: boolean("tutor_enabled").notNull().default(true),
+    ownerUserId: uuid("owner_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    source: varchar("source", { length: 24 }).notNull().default("internal"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2224,6 +2228,37 @@ export const academyEditions = pgTable(
   (t) => [
     uniqueIndex("academy_editions_program_slug_uidx").on(t.programId, t.slug),
     index("academy_editions_status_idx").on(t.status, t.startsAt),
+    index("academy_editions_owner_idx").on(t.ownerUserId),
+  ],
+);
+
+export const academyLivePurchases = pgTable(
+  "academy_live_purchases",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: varchar("plan_id", { length: 32 }).notNull(),
+    pricePaid: numeric("price_paid", { precision: 18, scale: 8 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    sessionsRemaining: integer("sessions_remaining").notNull(),
+    maxParticipants: integer("max_participants").notNull(),
+    maxMinutesPerSession: integer("max_minutes_per_session").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("academy_live_purchases_user_status_idx").on(
+      t.userId,
+      t.status,
+      t.expiresAt,
+    ),
   ],
 );
 

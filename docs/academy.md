@@ -29,7 +29,7 @@ Espace de formation souverain (sans Google Classroom / Teams comme LMS).
 npm run db:migrate:render
 ```
 
-Journal Drizzle : `0055` … `0061_academy_edition_hosts`.
+Journal Drizzle : `0055` … `0063_academy_live_purchases`.
 
 Sans ces migrations : `/formation` et `/app/academy` renvoient HTTP 503 `academy_db_not_migrated`.
 

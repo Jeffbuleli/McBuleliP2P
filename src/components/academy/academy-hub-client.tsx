@@ -281,6 +281,19 @@ export function AcademyHubClient() {
             )}
           </section>
 
+          <Link
+            href="/app/academy/studio"
+            className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-[#305f33]/40 bg-white px-4 py-3 shadow-sm"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f3ee]">
+              <AcademyIcon name="live" className="h-6 w-6" />
+            </span>
+            <span className="flex-1 text-sm font-extrabold text-[#305f33]">
+              {t("academy_live_studio_hub")}
+            </span>
+            <span aria-hidden>→</span>
+          </Link>
+
           {hub.upcomingSessions.length > 0 ? (
             <section>
               <h2 className="text-sm font-bold text-[color:var(--fd-text)]">

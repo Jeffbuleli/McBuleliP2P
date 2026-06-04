@@ -48,6 +48,8 @@ config.interfaceConfig.DEFAULT_BACKGROUND = '#1a2e1c';
 
 > `enableWelcomePage: false` empêche la page « Démarrer une conférence » pour les visiteurs anonymes — **recommandé** avant d’ouvrir le produit payant.
 
+**Accès McBuleli (compte + paiement hôte)** : `docs/academy-live-access.md` — **JWT VPS** : `ops/jitsi/jwt-setup.md`.
+
 ## 3. Titre page (nginx / HTML)
 
 ```bash

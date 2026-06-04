@@ -72,10 +72,10 @@ Répartition revenus (ordre de grandeur) :
 - Admin centre de contrôle (`/admin/academy`)
 - Liens live host / learner / branding hash
 
-### Phase A — **2–3 semaines** (MVP payant manuel)
-- Table `academy_live_plans` + `academy_live_purchases` (plan, expires_at, max_participants, minutes_included)
-- API `POST /api/academy/live/purchase` → débit wallet + crée édition **draft** liée à l’acheteur
-- UI `/app/academy/studio` : choisir plan → payer → formulaire (titre, date, slug) → lien invite
+### Phase A — **en cours** (MVP payant)
+- ✅ Table `academy_live_purchases` + `owner_user_id` / `source` sur éditions (`0063`)
+- ✅ API `POST /api/academy/live/studio/purchase` + `create` + `GET …/join-token`
+- ✅ UI `/app/academy/studio` : forfaits USDT → création salle
 - **Staff valide** ou cron active l’édition (`status: open`)
 - Pas de JWT Jitsi : salles en slug secret long + réservation dans la DB
 - **Limite participants** : honor system + admin monitor (pas de mur technique fort)

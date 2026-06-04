@@ -21,6 +21,7 @@ import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { isAcademyLiveEmbedEnabled } from "@/lib/academy-live-embed";
 import { AcademyLiveEmbed } from "@/components/academy/academy-live-embed";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { useAcademyLiveJoinUrls } from "@/hooks/use-academy-live-join-urls";
 
 type SessionLive = {
   id: string;
@@ -60,6 +61,20 @@ export function AcademyLiveRoomClient({
   const [panel, setPanel] = useState<OpenClassroomPanel>(null);
   const [tick, setTick] = useState(0);
   const [err, setErr] = useState<string | null>(null);
+
+  const canJoinEnabled =
+    !!session &&
+    enrolled &&
+    session.isLiveNow &&
+    session.livePhase !== "ended" &&
+    session.livePhase !== "upcoming";
+
+  const { urls: gatedUrls, gateError } = useAcademyLiveJoinUrls({
+    editionSlug,
+    sessionSlug,
+    programSlug,
+    enabled: canJoinEnabled,
+  });
 
   const load = useCallback(async () => {
     const q = new URLSearchParams({ program: programSlug });
@@ -143,7 +158,6 @@ export function AcademyLiveRoomClient({
   }
 
   const phase = session.livePhase;
-  const isHost = liveRole === "host";
   const phaseLabel =
     phase === "setup"
       ? t("academy_live_phase_setup")
@@ -166,8 +180,15 @@ export function AcademyLiveRoomClient({
           ? t("academy_live_phase_warmup_detail")
           : "";
 
-  const canJoin =
-    session.isLiveNow && phase !== "ended" && phase !== "upcoming" && enrolled;
+  const canJoin = canJoinEnabled;
+  const isHost = liveRole === "host";
+  const joinVideo = gatedUrls
+    ? isHost
+      ? gatedUrls.host
+      : gatedUrls.learner
+    : session.liveJoinUrl;
+  const joinHost = gatedUrls?.host ?? session.liveJoinUrlHost;
+  const joinAudio = gatedUrls?.audio ?? session.liveJoinUrlAudio;
 
   const timing = liveSessionRemainingSec({
     startsAt: new Date(session.startsAt),
@@ -233,9 +254,15 @@ export function AcademyLiveRoomClient({
         </p>
       ) : null}
 
-      {enrolled && canJoin && isAcademyLiveEmbedEnabled() ? (
+      {gateError && canJoin ? (
+        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {t(gateError as "academy_live_enroll_required")}
+        </p>
+      ) : null}
+
+      {enrolled && canJoin && gatedUrls && isAcademyLiveEmbedEnabled() ? (
         <AcademyLiveEmbed
-          joinUrl={isHost ? session.liveJoinUrlHost : session.liveJoinUrl}
+          joinUrl={joinVideo}
           title={session.title}
         />
       ) : enrolled && canJoin ? (
@@ -300,11 +327,11 @@ export function AcademyLiveRoomClient({
       />
 
       <AcademyOpenClassroomBar
-        canJoin={canJoin}
+        canJoin={canJoin && !!gatedUrls}
         isHost={isHost}
-        joinVideoHref={isHost ? session.liveJoinUrlHost : session.liveJoinUrl}
-        joinAudioHref={session.liveJoinUrlAudio}
-        joinHostHref={session.liveJoinUrlHost}
+        joinVideoHref={joinVideo}
+        joinAudioHref={joinAudio}
+        joinHostHref={joinHost}
         activePanel={panel}
         onPanel={setPanel}
         backHref={backHref}
