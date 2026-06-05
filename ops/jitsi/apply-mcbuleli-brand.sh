@@ -52,12 +52,15 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark PNG sans fond (style Jitsi)"
-if python3 "$SCRIPT_DIR/make-transparent-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png" 72; then
-  echo "    watermark transparent OK"
+echo "==> Watermark coin vidéo (depuis mcbuleli.org ou repo)"
+WATERMARK_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
+if [[ -f "$WATERMARK_SRC" ]]; then
+  cp -a "$WATERMARK_SRC" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
+elif curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png" -o "$JITSI_IMAGES/mcbuleli-meet-watermark.png"; then
+  echo "    watermark depuis mcbuleli.org"
 else
-  cp "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
-  echo "    (fallback logo carré — installez: apt install -y python3-pil.imaging)"
+  python3 "$SCRIPT_DIR/make-transparent-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png" 72 2>/dev/null || \
+    cp "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
 fi
 
 cp "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"

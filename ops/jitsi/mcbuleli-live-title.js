@@ -1,5 +1,5 @@
 /**
- * Onglet : « Soirée de lancement | McBuleli » (config.subject ou nom de salle).
+ * Titre onglet : « Test live McBuleli Meet | McBuleli » — remplace « | Jitsi Meet ».
  */
 (function () {
   var BRAND = "McBuleli";
@@ -31,7 +31,10 @@
   function applyTitle() {
     var subject = subjectFromHash();
     if (subject) {
-      document.title = subject;
+      document.title = subject.replace(/\s*\|\s*Jitsi Meet\s*/gi, " | " + BRAND);
+      if (document.title.indexOf(BRAND) < 0) {
+        document.title = subject + " | " + BRAND;
+      }
       return;
     }
     var room = (location.pathname || "").replace(/^\//, "").split("/")[0];
@@ -42,6 +45,20 @@
     document.title = BRAND;
   }
 
+  function scrubJitsi() {
+    if (/jitsi meet/i.test(document.title)) {
+      document.title = document.title.replace(/\s*\|\s*Jitsi Meet\s*/gi, " | " + BRAND);
+    }
+  }
+
   applyTitle();
-  window.addEventListener("hashchange", applyTitle);
+  scrubJitsi();
+  window.addEventListener("hashchange", function () {
+    applyTitle();
+    scrubJitsi();
+  });
+  setInterval(function () {
+    scrubJitsi();
+    if (!subjectFromHash()) applyTitle();
+  }, 1500);
 })();

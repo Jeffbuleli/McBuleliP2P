@@ -2,6 +2,24 @@
 
 **Pas de migration DB** pour le live : le branding Jitsi est sur le **VPS** (`live.mcbuleli.org`).
 
+## Pourquoi « Jitsi Meet » ou fond noir en prod ?
+
+| Niveau | Où | Ce qui change |
+|--------|-----|----------------|
+| **1. Render** | `mcbuleli.org` | URLs avec `?jwt=` + `#config.subject=…\| McBuleli` — **redéployer** après chaque push `main` |
+| **2. VPS** | `live.mcbuleli.org` | Logo watermark, titre HTML, `config.js` — **`bash ops/jitsi/apply-mcbuleli-brand.sh`** après `git pull` |
+| **3. Cache** | Navigateur mobile | Ancien onglet / PWA — **fermer l’onglet**, rouvrir depuis Academy |
+
+Si l’en-tête affiche encore `lancement-8-juin | Jitsi Meet` → le **VPS** n’a pas la dernière version du script titre, ou vous n’utilisez pas un lien **depuis l’app** (sans hash `#config…`).
+
+Vidéo pré-live **noire** = caméra éteinte ou permission refusée (normal comme meet.jit.si). Activez la caméra dans la barre du bas.
+
+## Live de test
+
+Après deploy Render, une session **`test-live-mcbuleli`** est créée/mise à jour automatiquement (toujours « en direct ») :
+
+`/app/academy/juin-2026/live/test-live-mcbuleli?program=launch-crypto-trading-ia-p2p`
+
 ## Render Dashboard → Environment
 
 ```env

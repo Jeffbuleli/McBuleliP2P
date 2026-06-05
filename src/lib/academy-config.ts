@@ -7,6 +7,8 @@ export const ACADEMY_PROGRAM_LIVE_STUDIO = "live-studio";
 export const ACADEMY_EDITION_JUNE_2026 = "juin-2026";
 export const ACADEMY_EDITION_PRO_Q3 = "q3-2026";
 export const ACADEMY_QUIZ_FUNDAMENTALS = "fondamentaux";
+/** Session live de test (fenêtre « en direct » glissante). */
+export const ACADEMY_TEST_LIVE_SESSION = "test-live-mcbuleli";
 
 /** Minutes before/after session start when live check-in is allowed. */
 export const ACADEMY_CHECKIN_WINDOW_MIN = 20;

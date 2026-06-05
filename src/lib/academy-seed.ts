@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   academyEditions,
   academyPrograms,
@@ -13,6 +13,7 @@ import {
   ACADEMY_PROGRAM_LAUNCH,
   ACADEMY_PROGRAM_PRO,
   ACADEMY_QUIZ_FUNDAMENTALS,
+  ACADEMY_TEST_LIVE_SESSION,
 } from "@/lib/academy-config";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
@@ -35,6 +36,7 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
     if (existing) {
       await seedProProgram(db);
       await ensureAcademyKnowledgeSeeded();
+      await ensureAcademyTestLiveSession(db);
       return;
     }
 
@@ -238,8 +240,62 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
 
     await seedProProgram(db);
     await ensureAcademyKnowledgeSeeded();
+    await ensureAcademyTestLiveSession(db);
   })();
   return seedPromise;
+}
+
+/** Live de test — toujours dans la fenêtre « en direct » pour valider le flux McBuleli Meet. */
+async function ensureAcademyTestLiveSession(
+  db: ReturnType<typeof getDb>,
+): Promise<void> {
+  const [row] = await db
+    .select({
+      editionId: academyEditions.id,
+    })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        eq(academyPrograms.slug, ACADEMY_PROGRAM_LAUNCH),
+        eq(academyEditions.slug, ACADEMY_EDITION_JUNE_2026),
+      ),
+    )
+    .limit(1);
+  if (!row) return;
+
+  const startsAt = new Date(Date.now() - 15 * 60 * 1000);
+  const endsAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+
+  const [existing] = await db
+    .select({ id: academySessions.id })
+    .from(academySessions)
+    .where(
+      and(
+        eq(academySessions.editionId, row.editionId),
+        eq(academySessions.slug, ACADEMY_TEST_LIVE_SESSION),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(academySessions)
+      .set({ startsAt, endsAt })
+      .where(eq(academySessions.id, existing.id));
+    return;
+  }
+
+  await db.insert(academySessions).values({
+    editionId: row.editionId,
+    slug: ACADEMY_TEST_LIVE_SESSION,
+    titleFr: "Test live McBuleli Meet",
+    titleEn: "McBuleli Meet test live",
+    kind: "live",
+    startsAt,
+    endsAt,
+    sortOrder: 99,
+  });
 }
 
 async function seedProProgram(

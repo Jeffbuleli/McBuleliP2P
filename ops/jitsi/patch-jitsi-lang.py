@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-APP = "McBuleli Meet"
+APP = "McBuleli"
 APP_SHORT = "McBuleli"
 
 # Clés connues (toasts, titres, promos)
