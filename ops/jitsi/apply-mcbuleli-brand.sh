@@ -72,6 +72,13 @@ if [[ ! -f "$CONFIG" ]]; then
   echo "Config introuvable: $CONFIG" >&2
   exit 1
 fi
+# Toujours désactiver la welcome page (même si le marker existe déjà)
+if grep -q 'enableWelcomePage' "$CONFIG"; then
+  sed -i 's/enableWelcomePage = true/enableWelcomePage = false/g; s/enableWelcomePage=true/enableWelcomePage=false/g' "$CONFIG"
+else
+  echo "config.enableWelcomePage = false;" >> "$CONFIG"
+fi
+
 if ! grep -q "$MARKER" "$CONFIG"; then
   cat >> "$CONFIG" <<EOF
 
