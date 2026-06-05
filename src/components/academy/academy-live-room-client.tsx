@@ -149,7 +149,7 @@ export function AcademyLiveRoomClient({
 
   if (!session) {
     return (
-      <div className={`space-y-3 pb-24 ${academyCls.root}`}>
+      <div className={`space-y-3 pb-[calc(10.5rem+env(safe-area-inset-bottom))] ${academyCls.root}`}>
         <div className="h-24 animate-pulse rounded-2xl bg-[#e8f3ee]" />
         <div className="h-12 animate-pulse rounded-xl bg-[color:var(--fd-border)]/40" />
         <p className="text-center text-xs text-[color:var(--fd-muted)]">{t("academy_oc_loading")}</p>
@@ -206,7 +206,7 @@ export function AcademyLiveRoomClient({
     timing.kind !== "ended" ? formatLiveCountdown(timing.seconds) : null;
 
   return (
-    <div className={`space-y-3 pb-28 ${academyCls.root}`}>
+    <div className={`space-y-3 pb-[calc(10.5rem+env(safe-area-inset-bottom))] ${academyCls.root}`}>
       <Link href={backHref} className="text-sm font-semibold text-[color:var(--fd-primary)]">
         ← {editionTitle || t("academy_title")}
       </Link>

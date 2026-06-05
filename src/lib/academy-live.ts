@@ -9,6 +9,28 @@ export type LivePhase = "upcoming" | "warmup" | "setup" | "main" | "ended";
 
 export type LiveJoinMode = "learner" | "host" | "audio";
 
+function jitsiRoomUrlBase(raw: string): string {
+  return raw.split("#")[0].split("?")[0];
+}
+
+/** Zoom/YouTube/etc. — skip Jitsi hash params. */
+export function isJitsiMeetRoomUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  try {
+    const u = new URL(jitsiRoomUrlBase(trimmed));
+    const host = u.hostname.toLowerCase();
+    if (host.endsWith(".jit.si") || host.endsWith(".jitsi.net")) return true;
+    if (host === "live.mcbuleli.org" || host.endsWith(".mcbuleli.org")) {
+      const path = u.pathname.replace(/^\//, "");
+      return Boolean(path && !path.includes("."));
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /** Build sovereign or Jitsi fallback URL for a live session (low-bandwidth defaults). */
 export function buildLiveJoinUrl(args: {
   editionSlug: string;
@@ -25,10 +47,10 @@ export function buildLiveJoinUrl(args: {
 
   if (args.sessionLiveUrl?.trim()) {
     const raw = args.sessionLiveUrl.trim();
-    if (mode === "learner" || !raw.includes("meet.jit.si")) {
+    if (!isJitsiMeetRoomUrl(raw)) {
       return raw;
     }
-    return `${raw.split("#")[0]}${buildJitsiLowBandwidthHash(mode, {
+    return `${jitsiRoomUrlBase(raw)}${buildJitsiLowBandwidthHash(mode, {
       sessionTitle: args.sessionTitle,
       sessionSlug: args.sessionSlug,
     })}`;

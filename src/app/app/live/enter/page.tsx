@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AcademyLiveEnterRedirect } from "@/components/academy/academy-live-enter-redirect";
 import { AcademyIcon } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 import {
@@ -43,7 +44,7 @@ export default async function LiveEnterPage({
   });
 
   if (out.ok) {
-    redirect(out.url);
+    return <AcademyLiveEnterRedirect url={out.url} />;
   }
 
   const errKey =

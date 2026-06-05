@@ -109,6 +109,23 @@ else
   echo "config.enableWelcomePage = false;" >> "$CONFIG"
 fi
 
+echo "==> Pré-join (salle d'attente + micro/caméra comme meet.jit.si)"
+if grep -q 'prejoinPageEnabled' "$CONFIG"; then
+  sed -i 's/prejoinPageEnabled = false/prejoinPageEnabled = true/g; s/prejoinPageEnabled=false/prejoinPageEnabled=true/g' "$CONFIG"
+else
+  echo "config.prejoinPageEnabled = true;" >> "$CONFIG"
+fi
+if ! grep -q 'mcbuleli-prejoin-defaults' "$CONFIG"; then
+  cat >> "$CONFIG" <<'EOF'
+
+// mcbuleli-prejoin-defaults — filet si le hash #config est absent (redirect nginx)
+config.prejoinPageEnabled = true;
+config.startWithAudioMuted = false;
+config.startWithVideoMuted = true;
+config.requireDisplayName = true;
+EOF
+fi
+
 if ! grep -q "$MARKER" "$CONFIG"; then
   cat >> "$CONFIG" <<EOF
 
