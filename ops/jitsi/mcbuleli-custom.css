@@ -1,12 +1,29 @@
 /**
- * McBuleli Meet — masquer uniquement le branding 8x8/Jitsi.
- * La salle d'attente (pré-join) reste le layout natif Jitsi comme meet.jit.si.
- * Le logo coin vidéo = watermark.svg (McBuleli).
+ * McBuleli Meet — masquer branding 8x8/Jitsi, garder le watermark McBuleli sur la vidéo.
  */
-.leftwatermark,
 .poweredby,
 .jitsi-logo,
 a[href*="jitsi.org"],
 a[href*="8x8.vc"] {
   display: none !important;
+}
+
+/* Logo coin vidéo (pré-join + live) — mcbuleli-meet-watermark.png via watermark.svg */
+.leftwatermark {
+  display: block !important;
+  opacity: 0.9;
+  width: 72px !important;
+  height: 72px !important;
+  max-width: 72px !important;
+  max-height: 72px !important;
+}
+
+.leftwatermark img,
+.leftwatermark svg,
+.leftwatermark image {
+  width: 72px !important;
+  height: 72px !important;
+  max-width: 72px !important;
+  max-height: 72px !important;
+  object-fit: contain;
 }

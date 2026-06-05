@@ -9,6 +9,7 @@ JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
+WATERMARK_URL="/images/mcbuleli-meet-watermark.png"
 MARKER="mcbuleli-full-brand-v4"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
@@ -63,9 +64,9 @@ else
     cp "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
 fi
 
-cp "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
-cp "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
-cp "$JITSI_IMAGES/mcbuleli-meet-watermark.png" "$JITSI_IMAGES/watermark.png" 2>/dev/null || true
+cp -a "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
+cp -a "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
+cp -a "$JITSI_IMAGES/mcbuleli-meet-watermark.png" "$JITSI_IMAGES/watermark.png"
 
 echo "==> Favicon navigateur (onglet)"
 for html in "$JITSI_ROOT/index.html" "$JITSI_ROOT/static.html" "$JITSI_ROOT/title.html"; do
@@ -137,6 +138,20 @@ sed -i 's/disableThirdPartyRequests = true/disableThirdPartyRequests = false/g' 
 sed -i "s|DEFAULT_BACKGROUND = '#1a2e1c'|DEFAULT_BACKGROUND = '#f4f6f4'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|DEFAULT_BACKGROUND = '#040404'|DEFAULT_BACKGROUND = '#f4f6f4'|g" "$CONFIG" 2>/dev/null || true
 
+echo "==> Watermark vidéo (coin pré-join + live)"
+if ! grep -q 'mcbuleli-video-watermark-v1' "$CONFIG"; then
+  cat >> "$CONFIG" <<EOF
+
+// mcbuleli-video-watermark-v1 — public/brand/mcbuleli-meet-watermark.png
+config.defaultLogoUrl = '$WATERMARK_URL';
+config.interfaceConfig = config.interfaceConfig || {};
+config.interfaceConfig.DEFAULT_LOGO_URL = '$WATERMARK_URL';
+config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
+config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
+config.interfaceConfig.JITSI_WATERMARK_LINK = '';
+EOF
+fi
+
 if ! grep -q "$MARKER" "$CONFIG"; then
   cat >> "$CONFIG" <<EOF
 
@@ -191,4 +206,4 @@ echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2
 systemctl reload nginx
 
-echo "OK — Titre attendu : « Soirée de lancement | McBuleli ». Watermark coin vidéo sans fond."
+echo "OK — Gate: bash apply-nginx-live-gate.sh | Watermark: $WATERMARK_URL"

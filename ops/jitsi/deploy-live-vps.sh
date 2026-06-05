@@ -27,6 +27,7 @@ bash "$WORKDIR/ops/jitsi/apply-mcbuleli-brand.sh"
 echo ""
 echo "==> Vérifications"
 curl -sI "https://live.mcbuleli.org/" | head -3
-curl -sI "https://live.mcbuleli.org/images/mcbuleli-meet-logo.png" | head -3
+curl -sI "https://live.mcbuleli.org/test-live-mcbuleli" | head -3
+curl -sI "https://live.mcbuleli.org/images/mcbuleli-meet-watermark.png" | head -3
 echo ""
-echo "OK — Rejoignez le live depuis l'app McBuleli (pas d'URL directe sans JWT)."
+echo "OK — / et /salle sans jwt → 302 login | avec jwt (app) → pré-join + watermark coin vidéo."

@@ -1,5 +1,8 @@
 import { ACADEMY_CHECKIN_WINDOW_MIN } from "@/lib/academy-config";
-import { academyJitsiSubject } from "@/lib/academy-jitsi-brand";
+import {
+  ACADEMY_JITSI_LOGO_URL_LIVE_HOST,
+  academyJitsiSubject,
+} from "@/lib/academy-jitsi-brand";
 import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
 
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
@@ -126,6 +129,9 @@ export function buildJitsiLowBandwidthHash(
   const params: string[] = [
     "config.prejoinPageEnabled=true",
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
+    `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL_LIVE_HOST)}`,
+    "interfaceConfig.SHOW_JITSI_WATERMARK=true",
+    "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=true",
   ];
   if (opts?.sessionTitle?.trim() || opts?.sessionSlug?.trim()) {
     params.push(

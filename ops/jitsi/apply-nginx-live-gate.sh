@@ -75,7 +75,7 @@ else
   fi
 fi
 
-echo "==> Forcer enableWelcomePage=false (Jitsi config)"
+echo "==> Réactiver gate — désactiver welcome page + retirer overrides pause"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 if [[ -f "$CONFIG" ]]; then
   if grep -q 'enableWelcomePage' "$CONFIG"; then
@@ -83,6 +83,13 @@ if [[ -f "$CONFIG" ]]; then
     sed -i "s/enableWelcomePage=true/enableWelcomePage=false/g" "$CONFIG"
   else
     echo "config.enableWelcomePage = false;" >> "$CONFIG"
+  fi
+  if ! grep -q 'mcbuleli-gate-active' "$CONFIG"; then
+    cat >> "$CONFIG" <<'EOF'
+
+// mcbuleli-gate-active — redirection McBuleli réactivée (plus de mode pause)
+config.enableWelcomePage = false;
+EOF
   fi
 fi
 
