@@ -27,9 +27,26 @@ fi
 
 if command -v node >/dev/null 2>&1; then
   node --check "$CONFIG"
-  echo "==> config.js syntaxe OK"
+  echo "==> config.js syntaxe OK (node)"
+elif command -v python3 >/dev/null 2>&1; then
+  python3 - "$CONFIG" <<'PY'
+import pathlib, re, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+# Ligne enableUserRolesBasedOnToken juste avant }; = config cassé
+if re.search(r"config\.enableUserRolesBasedOnToken = true;\n\};", text):
+    print("ERREUR: enableUserRolesBasedOnToken encore DANS var config = { }", file=sys.stderr)
+    sys.exit(1)
+if "config.enableUserRolesBasedOnToken = true;" not in text:
+    print("ERREUR: enableUserRolesBasedOnToken absent", file=sys.stderr)
+    sys.exit(1)
+print("==> config.js structure OK (python3)")
+PY
 else
-  echo "==> node absent — vérifiez manuellement: node --check $CONFIG"
+  if grep -q 'mcbuleli-jwt-roles' "$CONFIG"; then
+    echo "==> marqueur mcbuleli-jwt-roles présent (vérif manuelle)"
+  else
+    echo "==> installez nodejs ou python3 pour valider: apt install -y nodejs"
+  fi
 fi
 
 systemctl reload nginx
