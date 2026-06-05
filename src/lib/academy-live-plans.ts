@@ -20,8 +20,8 @@ export type AcademyLivePlanDef = {
 export const ACADEMY_LIVE_PLANS: Record<AcademyLivePlanId, AcademyLivePlanDef> = {
   starter: {
     id: "starter",
-    labelFr: "Starter — 1 live",
-    priceUsdt: 3,
+    labelFr: "1 live",
+    priceUsdt: 1,
     billing: "per_event",
     maxParticipants: 15,
     maxMinutesPerSession: 90,
@@ -29,8 +29,8 @@ export const ACADEMY_LIVE_PLANS: Record<AcademyLivePlanId, AcademyLivePlanDef> =
   },
   community: {
     id: "community",
-    labelFr: "Community — 4 lives / mois",
-    priceUsdt: 12,
+    labelFr: "4 lives / mois",
+    priceUsdt: 2,
     billing: "monthly",
     maxParticipants: 35,
     maxMinutesPerSession: 120,
@@ -38,8 +38,8 @@ export const ACADEMY_LIVE_PLANS: Record<AcademyLivePlanId, AcademyLivePlanDef> =
   },
   campus: {
     id: "campus",
-    labelFr: "Campus — 8 lives / mois",
-    priceUsdt: 28,
+    labelFr: "8 lives / mois",
+    priceUsdt: 3,
     billing: "monthly",
     maxParticipants: 60,
     maxMinutesPerSession: 180,

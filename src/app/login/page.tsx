@@ -203,7 +203,7 @@ function LoginForm() {
       footer={
         <AuthPageFooter
           prefix={t("no_account")}
-          linkHref="/register"
+          linkHref={`/register?next=${encodeURIComponent(nextPath)}`}
           linkLabel={t("home_register")}
         />
       }

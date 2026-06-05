@@ -11,7 +11,7 @@ CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-https://mcbuleli.org/brand/logo-256.png}"
 MARKER="mcbuleli-full-brand-v2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_NAME="McBuleli Academy Live"
+APP_NAME="McBuleli Meet"
 
 echo "==> Logo & watermark rond"
 if [[ -f "$JITSI_IMAGES/watermark.svg" && ! -f "$JITSI_IMAGES/watermark.svg.bak" ]]; then

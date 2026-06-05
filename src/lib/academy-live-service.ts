@@ -258,12 +258,18 @@ export async function createLiveStudioEdition(args: {
   titleFr: string;
   startsAt: Date;
   durationMin?: number;
+  theme?: string;
+  subTheme?: string;
+  coordinatesLabel?: string;
+  publish?: boolean;
+  publicSlug?: string;
 }): Promise<
   | {
       ok: true;
       editionSlug: string;
       sessionSlug: string;
       programSlug: string;
+      publicSlug: string;
     }
   | { ok: false; message: string }
 > {
@@ -280,6 +286,7 @@ export async function createLiveStudioEdition(args: {
   const programId = await ensureAcademyLiveStudioProgram();
   const editionSlug = slugifyLiveEdition(args.titleFr);
   const sessionSlug = "session-1";
+  const publicSlug = args.publicSlug ?? randomUUID().replace(/-/g, "").slice(0, 10);
   const liveBase =
     process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim() ||
     process.env.ACADEMY_LIVE_BASE_URL?.trim() ||
@@ -320,6 +327,13 @@ export async function createLiveStudioEdition(args: {
           tutorEnabled: false,
           cohortMeta: {
             liveStudio: true,
+            published: args.publish ?? false,
+            publicSlug,
+            theme: args.theme ?? "business",
+            subTheme: args.subTheme ?? "webinar",
+            coordinates: args.coordinatesLabel?.trim()
+              ? { label: args.coordinatesLabel.trim().slice(0, 120) }
+              : undefined,
             maxParticipants: purchase.maxParticipants,
             purchaseId: purchase.id,
           },
@@ -356,6 +370,7 @@ export async function createLiveStudioEdition(args: {
       editionSlug,
       sessionSlug,
       programSlug: ACADEMY_PROGRAM_LIVE_STUDIO,
+      publicSlug,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "academy_live_create_failed";

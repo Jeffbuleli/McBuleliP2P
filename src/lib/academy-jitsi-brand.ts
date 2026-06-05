@@ -1,5 +1,5 @@
 /** McBuleli-branded Jitsi Meet URL hash params (self-hosted live.mcbuleli.org). */
-export const ACADEMY_JITSI_APP_NAME = "McBuleli Academy Live";
+export const ACADEMY_JITSI_APP_NAME = "McBuleli Meet";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
 /** Logo coin pré-join (même asset que le site). */
@@ -8,7 +8,7 @@ export const ACADEMY_JITSI_LOGO_URL =
 
 export function academyJitsiSubject(sessionTitle?: string): string {
   const t = sessionTitle?.trim();
-  return t ? `McBuleli · ${t}` : "McBuleli Academy — Live";
+  return t ? `${t}` : "McBuleli Meet";
 }
 
 /** Appended to Jitsi iframe / external join URLs via hash config. */
