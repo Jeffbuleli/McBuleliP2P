@@ -8,13 +8,16 @@ JITSI_IMAGES="$JITSI_ROOT/images"
 JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
-LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-watermark.png}"
+LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
 MARKER="mcbuleli-full-brand-v4"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
-MEET_LOGO_SRC="$SCRIPT_DIR/mcbuleli-meet-logo.png"
-if [[ ! -f "$MEET_LOGO_SRC" && -f "$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png" ]]; then
-  MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
+MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
+if [[ ! -f "$MEET_LOGO_SRC" && -f "$SCRIPT_DIR/../../public/brand/logo-256.png" ]]; then
+  MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/logo-256.png"
+fi
+if [[ ! -f "$MEET_LOGO_SRC" ]]; then
+  MEET_LOGO_SRC="$SCRIPT_DIR/mcbuleli-meet-logo.png"
 fi
 
 echo "==> Logo McBuleli (watermark transparent coin vidéo)"
@@ -92,6 +95,10 @@ fi
 # Toujours pointer vers le logo Meet sur ce serveur
 sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
+sed -i "s|APP_NAME = '[^']*'|APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
+sed -i "s|NATIVE_APP_NAME = '[^']*'|NATIVE_APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
+sed -i 's|SHOW_JITSI_WATERMARK = false|SHOW_JITSI_WATERMARK = true|g' "$CONFIG" 2>/dev/null || true
+sed -i 's|SHOW_WATERMARK_FOR_GUESTS = false|SHOW_WATERMARK_FOR_GUESTS = true|g' "$CONFIG" 2>/dev/null || true
 # Toujours désactiver la welcome page (même si le marker existe déjà)
 if grep -q 'enableWelcomePage' "$CONFIG"; then
   sed -i 's/enableWelcomePage = true/enableWelcomePage = false/g; s/enableWelcomePage=true/enableWelcomePage=false/g' "$CONFIG"
@@ -105,7 +112,7 @@ if ! grep -q "$MARKER" "$CONFIG"; then
 // $MARKER
 config.defaultLanguage = 'fr';
 config.defaultLogoUrl = '$LOGO_URL';
-config.subject = 'McBuleli Meet';
+config.subject = 'McBuleli';
 config.enableWelcomePage = false;
 config.disableDeepLinking = true;
 config.interfaceConfig = config.interfaceConfig || {};
@@ -113,8 +120,8 @@ config.interfaceConfig.APP_NAME = '$APP_NAME';
 config.interfaceConfig.NATIVE_APP_NAME = '$APP_NAME';
 config.interfaceConfig.PROVIDER_NAME = 'McBuleli';
 config.interfaceConfig.DEFAULT_LOGO_URL = '$LOGO_URL';
-config.interfaceConfig.SHOW_JITSI_WATERMARK = false;
-config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = false;
+config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
+config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
 config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
 config.interfaceConfig.SHOW_POWERED_BY = false;
 config.interfaceConfig.SHOW_PROMOTIONAL_CLOSE_PAGE = false;

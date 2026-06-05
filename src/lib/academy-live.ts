@@ -122,11 +122,9 @@ export function buildJitsiLowBandwidthHash(
     "config.channelLastN=8",
     "config.enableNoisyMicDetection=true",
     "config.enableTalkWhileMuted=false",
-    "config.disableThirdPartyRequests=true",
     "config.enableLayerSuspension=true",
     "config.disableDeepLinking=true",
     `interfaceConfig.TOOLBAR_BUTTONS=${encodeURIComponent(JSON.stringify(toolbar))}`,
-    "interfaceConfig.SHOW_JITSI_WATERMARK=false",
     "interfaceConfig.MOBILE_APP_PROMO=false",
     "interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true",
   ];
