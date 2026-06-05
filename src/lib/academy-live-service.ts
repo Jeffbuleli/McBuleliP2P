@@ -18,8 +18,9 @@ import {
   isAcademyLivePlanId,
 } from "@/lib/academy-live-plans";
 import { isEditionCoHost } from "@/lib/academy-edition-hosts";
-import { fmtWalletAmount } from "@/lib/wallet-types";
+import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
+import { isAcademyDbNotReadyError } from "@/lib/academy-db-ready";
 import { isSuperAdminUserId } from "@/lib/bot-super-admin";
 import { UserRole, type UserRoleType } from "@/lib/roles";
 
@@ -38,6 +39,40 @@ export type AcademyLivePurchaseRow = {
 };
 
 const PURCHASE_VALID_DAYS = 31;
+
+const PURCHASE_ERROR_CODES = [
+  "academy_live_invalid_plan",
+  "academy_live_purchase_active",
+  "academy_live_insufficient_balance",
+  "academy_live_purchase_failed",
+  "academy_db_not_migrated",
+] as const;
+
+export function normalizeAcademyLivePurchaseError(error: unknown): string {
+  const parts: string[] = [];
+  if (error instanceof Error) {
+    parts.push(error.message);
+    if (error.cause instanceof Error) parts.push(error.cause.message);
+  } else {
+    parts.push(String(error));
+  }
+  const blob = parts.join("\n");
+  for (const code of PURCHASE_ERROR_CODES) {
+    if (blob.includes(code)) return code;
+  }
+  if (isAcademyDbNotReadyError(error)) return "academy_db_not_migrated";
+  return "academy_live_purchase_failed";
+}
+
+export async function getUserUsdtBalance(userId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ balance: users.balance })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return numFromNumeric(row?.balance?.toString());
+}
 
 export async function ensureAcademyLiveStudioProgram(): Promise<string> {
   const db = getDb();
@@ -178,8 +213,7 @@ export async function purchaseAcademyLivePlan(args: {
     });
     return { ok: true, purchase };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "academy_live_purchase_failed";
-    return { ok: false, message: msg };
+    return { ok: false, message: normalizeAcademyLivePurchaseError(e) };
   }
 }
 

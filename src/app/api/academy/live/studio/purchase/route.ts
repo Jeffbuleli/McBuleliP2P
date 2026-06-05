@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { purchaseAcademyLivePlan } from "@/lib/academy-live-service";
+import {
+  normalizeAcademyLivePurchaseError,
+  purchaseAcademyLivePlan,
+} from "@/lib/academy-live-service";
 import { isAcademyLivePlanId } from "@/lib/academy-live-plans";
 import { getSessionUserId } from "@/lib/session";
 
@@ -28,14 +31,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "academy_live_invalid_plan" }, { status: 400 });
   }
 
-  const result = await purchaseAcademyLivePlan({
-    userId,
-    planId: parsed.data.planId,
-  });
+  try {
+    const result = await purchaseAcademyLivePlan({
+      userId,
+      planId: parsed.data.planId,
+    });
 
-  if (!result.ok) {
-    return NextResponse.json({ error: result.message }, { status: 400 });
+    if (!result.ok) {
+      const status =
+        result.message === "academy_db_not_migrated" ? 503 : 400;
+      return NextResponse.json({ error: result.message }, { status });
+    }
+
+    return NextResponse.json({ ok: true, purchase: result.purchase });
+  } catch (e) {
+    const code = normalizeAcademyLivePurchaseError(e);
+    const status = code === "academy_db_not_migrated" ? 503 : 500;
+    console.error("[academy/live/studio/purchase]", e);
+    return NextResponse.json({ error: code }, { status });
   }
-
-  return NextResponse.json({ ok: true, purchase: result.purchase });
 }

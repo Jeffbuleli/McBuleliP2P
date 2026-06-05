@@ -14,6 +14,7 @@ import {
 } from "@/lib/academy-webinar-themes";
 import type { PublishedWebinarRow } from "@/lib/academy-webinar-service";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { formatWalletHistoryAmount } from "@/lib/wallet-types";
 import type { Messages } from "@/i18n/messages";
 
 const LIVE_STUDIO_ERR_KEYS = [
@@ -60,9 +61,12 @@ export function AcademyLiveStudioClient() {
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [mine, setMine] = useState<MineRow[]>([]);
   const [catalog, setCatalog] = useState<PublishedWebinarRow[]>([]);
+  const [balanceUsdt, setBalanceUsdt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [dbPending, setDbPending] = useState(false);
+  const [confirmPlan, setConfirmPlan] = useState<AcademyLivePlanId | null>(null);
 
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
@@ -105,6 +109,7 @@ export function AcademyLiveStudioClient() {
     setPurchase(j.purchase ?? null);
     setMine(j.mine ?? []);
     setCatalog(j.catalog ?? []);
+    setBalanceUsdt(Number(j.balanceUsdt) || 0);
     setDbPending(false);
     setErr(null);
     if (j.purchase) setTab((t0) => (t0 === "plans" ? "publish" : t0));
@@ -114,9 +119,22 @@ export function AcademyLiveStudioClient() {
     void load();
   }, [load]);
 
+  function startBuy(planId: AcademyLivePlanId) {
+    setErr(null);
+    setSuccess(null);
+    const price = ACADEMY_LIVE_PLANS[planId].priceUsdt;
+    if (balanceUsdt + 1e-9 < price) {
+      setErr(t("academy_live_insufficient_balance"));
+      return;
+    }
+    setConfirmPlan(planId);
+  }
+
   async function buy(planId: AcademyLivePlanId) {
+    setConfirmPlan(null);
     setBusy(planId);
     setErr(null);
+    setSuccess(null);
     try {
       const res = await fetchWithDeadline(
         "/api/academy/live/studio/purchase",
@@ -129,11 +147,20 @@ export function AcademyLiveStudioClient() {
         20_000,
       );
       const j = await res.json().catch(() => ({}));
+      if (res.status === 503 && j.error === "academy_db_not_migrated") {
+        setDbPending(true);
+        setErr(t("academy_db_not_migrated"));
+        return;
+      }
       if (!res.ok) {
         setErr(liveStudioErrorMessage((j.error as string) || "", t));
         return;
       }
       setPurchase(j.purchase);
+      setBalanceUsdt((b) =>
+        Math.max(0, b - ACADEMY_LIVE_PLANS[planId].priceUsdt),
+      );
+      setSuccess(t("academy_live_pay_success"));
       setTab("publish");
     } finally {
       setBusy(null);
@@ -237,11 +264,25 @@ export function AcademyLiveStudioClient() {
       {err ? (
         <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">
           <p>{err}</p>
+          {err === t("academy_live_insufficient_balance") ? (
+            <Link
+              href="/app/wallet"
+              className="mt-1 inline-block text-xs font-bold underline"
+            >
+              {t("academy_live_pay_go_wallet")} →
+            </Link>
+          ) : null}
           {dbPending ? (
             <button type="button" onClick={() => void load()} className="mt-1 text-xs underline">
               {t("academy_retry")}
             </button>
           ) : null}
+        </div>
+      ) : null}
+
+      {success ? (
+        <div className="rounded-xl bg-[#e8f3ee] px-3 py-2 text-sm font-semibold text-[#305f33]">
+          {success}
         </div>
       ) : null}
 
@@ -283,32 +324,101 @@ export function AcademyLiveStudioClient() {
       ) : null}
 
       {tab === "plans" && !purchase ? (
-        <ul className="space-y-2">
-          {(Object.keys(ACADEMY_LIVE_PLANS) as AcademyLivePlanId[]).map((id) => {
-            const p = ACADEMY_LIVE_PLANS[id];
-            return (
-              <li key={id}>
+        <section className="space-y-3">
+          <div className="rounded-2xl border border-[#c5dcc9] bg-[#f4faf6] p-3">
+            <p className="text-center text-xs font-extrabold text-[#305f33]">
+              {t("academy_live_pay_guide_title")}
+            </p>
+            <ol className="mt-2 space-y-1.5 text-[11px] font-semibold text-stone-700">
+              <li className="flex gap-2">
+                <span className="font-black text-[#305f33]">①</span>
+                {t("academy_live_pay_step_wallet")}
+              </li>
+              <li className="flex gap-2">
+                <span className="font-black text-[#305f33]">②</span>
+                {t("academy_live_pay_step_plan")}
+              </li>
+              <li className="flex gap-2">
+                <span className="font-black text-[#305f33]">③</span>
+                {t("academy_live_pay_step_publish")}
+              </li>
+            </ol>
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-white px-3 py-2">
+              <span className="text-[10px] font-bold text-[color:var(--fd-muted)]">
+                {t("academy_live_pay_balance")}
+              </span>
+              <span className="text-sm font-black text-[#305f33]">
+                {formatWalletHistoryAmount("USDT", String(balanceUsdt))} USDT
+              </span>
+            </div>
+            <Link
+              href="/app/wallet"
+              className="mt-2 block text-center text-[10px] font-extrabold text-[#305f33] underline"
+            >
+              {t("academy_live_pay_go_wallet")} →
+            </Link>
+          </div>
+
+          {confirmPlan ? (
+            <div className="rounded-2xl border-2 border-[#305f33] bg-white p-3 text-center">
+              <p className="text-sm font-bold text-[#305f33]">
+                {t("academy_live_pay_confirm").replace(
+                  "{price}",
+                  String(ACADEMY_LIVE_PLANS[confirmPlan].priceUsdt),
+                )}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmPlan(null)}
+                  className="flex-1 rounded-xl border py-2 text-xs font-bold"
+                >
+                  {t("academy_live_pay_cancel")}
+                </button>
                 <button
                   type="button"
                   disabled={!!busy}
-                  onClick={() => void buy(id)}
-                  className="flex w-full items-center gap-3 rounded-2xl border-2 border-[color:var(--fd-border)] bg-white px-4 py-3 text-left shadow-sm disabled:opacity-60"
+                  onClick={() => void buy(confirmPlan)}
+                  className="flex-1 rounded-xl bg-[#305f33] py-2 text-xs font-extrabold text-white disabled:opacity-60"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ee]">
-                    <AcademyIcon name={planIcons[id]} className="h-6 w-6" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-lg font-black text-[#305f33]">{p.priceUsdt} USDT</p>
-                    <p className="text-[10px] text-[color:var(--fd-muted)]">
-                      {p.sessionsPerPeriod} live · {p.maxParticipants} pers.
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold">{busy === id ? "…" : "→"}</span>
+                  {busy === confirmPlan ? "…" : t("academy_live_pay_confirm_btn")}
                 </button>
-              </li>
-            );
-          })}
-        </ul>
+              </div>
+            </div>
+          ) : null}
+
+          <ul className="space-y-2">
+            {(Object.keys(ACADEMY_LIVE_PLANS) as AcademyLivePlanId[]).map((id) => {
+              const p = ACADEMY_LIVE_PLANS[id];
+              const affordable = balanceUsdt + 1e-9 >= p.priceUsdt;
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    disabled={!!busy || !!confirmPlan}
+                    onClick={() => startBuy(id)}
+                    className={`flex w-full items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-left shadow-sm disabled:opacity-60 ${
+                      affordable
+                        ? "border-[color:var(--fd-border)]"
+                        : "border-rose-200 opacity-80"
+                    }`}
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ee]">
+                      <AcademyIcon name={planIcons[id]} className="h-6 w-6" />
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-lg font-black text-[#305f33]">{p.priceUsdt} USDT</p>
+                      <p className="text-[10px] text-[color:var(--fd-muted)]">
+                        {p.sessionsPerPeriod} live · {p.maxParticipants} pers.
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold">{busy === id ? "…" : "→"}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       ) : null}
 
       {tab === "publish" && purchase ? (
