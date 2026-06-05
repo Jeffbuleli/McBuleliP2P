@@ -36,7 +36,7 @@ config.enableWelcomePage = false;
 config.enableUserRolesBasedOnToken = false;
 
 config.disableDeepLinking = true;
-config.disableThirdPartyRequests = true;
+config.disableThirdPartyRequests = false;
 
 config.brandingRoomAlias = 'Salle McBuleli';
 
@@ -55,7 +55,7 @@ config.interfaceConfig.MOBILE_APP_PROMO = false;
 config.interfaceConfig.MOBILE_DOWNLOAD_LINK_ANDROID = '';
 config.interfaceConfig.MOBILE_DOWNLOAD_LINK_IOS = '';
 config.interfaceConfig.LANG = 'fr';
-config.interfaceConfig.DEFAULT_BACKGROUND = '#1a2e1c';
+config.interfaceConfig.DEFAULT_BACKGROUND = '#f4f6f4';
 ```
 
 > `enableWelcomePage: false` empêche la page « Démarrer une conférence » pour les visiteurs anonymes — **recommandé** avant d’ouvrir le produit payant.

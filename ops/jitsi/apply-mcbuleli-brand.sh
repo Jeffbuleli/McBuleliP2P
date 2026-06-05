@@ -123,8 +123,16 @@ config.prejoinPageEnabled = true;
 config.startWithAudioMuted = false;
 config.startWithVideoMuted = true;
 config.requireDisplayName = true;
+config.disableThirdPartyRequests = false;
+config.interfaceConfig = config.interfaceConfig || {};
+config.interfaceConfig.DEFAULT_BACKGROUND = '#f4f6f4';
 EOF
 fi
+
+echo "==> Corriger fond sombre + requêtes tierces (README manuel)"
+sed -i 's/disableThirdPartyRequests = true/disableThirdPartyRequests = false/g' "$CONFIG" 2>/dev/null || true
+sed -i "s|DEFAULT_BACKGROUND = '#1a2e1c'|DEFAULT_BACKGROUND = '#f4f6f4'|g" "$CONFIG" 2>/dev/null || true
+sed -i "s|DEFAULT_BACKGROUND = '#040404'|DEFAULT_BACKGROUND = '#f4f6f4'|g" "$CONFIG" 2>/dev/null || true
 
 if ! grep -q "$MARKER" "$CONFIG"; then
   cat >> "$CONFIG" <<EOF
