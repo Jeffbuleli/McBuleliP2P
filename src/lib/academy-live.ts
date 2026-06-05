@@ -16,6 +16,32 @@ function jitsiRoomUrlBase(raw: string): string {
   return raw.split("#")[0].split("?")[0];
 }
 
+/** Base https://live.mcbuleli.org depuis une URL Jitsi self-hosted. */
+export function selfHostedJitsiBase(url: string): string | null {
+  try {
+    const u = new URL(jitsiRoomUrlBase(url));
+    const host = u.hostname.toLowerCase();
+    if (host === "live.mcbuleli.org" || host.endsWith(".mcbuleli.org")) {
+      return `${u.protocol}//${u.host}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/** Nom de salle dans l'URL finale (doit correspondre au claim JWT room). */
+export function jitsiRoomFromJoinUrl(url: string): string | null {
+  try {
+    const segment = new URL(url.split("#")[0].split("?")[0])
+      .pathname.replace(/^\//, "")
+      .split("/")[0];
+    return segment || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Zoom/YouTube/etc. — skip Jitsi hash params. */
 export function isJitsiMeetRoomUrl(url: string): boolean {
   const trimmed = url.trim();
@@ -53,10 +79,16 @@ export function buildLiveJoinUrl(args: {
     if (!isJitsiMeetRoomUrl(raw)) {
       return raw;
     }
-    return `${jitsiRoomUrlBase(raw)}${buildJitsiLowBandwidthHash(mode, {
+    const hash = buildJitsiLowBandwidthHash(mode, {
       sessionTitle: args.sessionTitle,
       sessionSlug: args.sessionSlug,
-    })}`;
+    });
+    const selfBase = selfHostedJitsiBase(raw);
+    if (selfBase) {
+      const room = liveRoomNameFromSessionSlug(args.sessionSlug);
+      return `${selfBase}/${room}${hash}`;
+    }
+    return `${jitsiRoomUrlBase(raw)}${hash}`;
   }
   const base =
     args.liveBaseUrl?.trim() ||

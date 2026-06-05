@@ -86,9 +86,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: out.code }, { status: 403 });
   }
 
+  const room =
+    out.url.split("#")[0].split("?")[0].replace(/\/$/, "").split("/").pop() ??
+    parsed.data.sessionSlug;
+
   return NextResponse.json({
     ok: true,
     url: out.url,
+    room,
     jwtEnabled: Boolean(process.env.JITSI_JWT_SECRET?.trim()),
   });
 }

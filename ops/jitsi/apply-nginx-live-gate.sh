@@ -62,17 +62,20 @@ location ~ ^/([A-Za-z0-9][A-Za-z0-9_-]*)\$ {
 }
 EOF
 
-if grep -q "$MARKER" "$NGINX_VHOST"; then
-  echo "==> Gate déjà présent dans $NGINX_VHOST"
+GATE_INCLUDES="$(grep -c 'include snippets/mcbuleli-live-gate.conf;' "$NGINX_VHOST" 2>/dev/null || echo 0)"
+if [[ "$GATE_INCLUDES" -gt 1 ]]; then
+  echo "==> Déduplication include gate ($GATE_INCLUDES → 1)"
+  sed -i '/include snippets\/mcbuleli-live-gate.conf;/d' "$NGINX_VHOST"
+  GATE_INCLUDES=0
+fi
+if [[ "$GATE_INCLUDES" -eq 0 ]]; then
+  sed -i "0,/server_name.*live.mcbuleli.org/{
+    /server_name.*live.mcbuleli.org/a\\
+    include snippets/mcbuleli-live-gate.conf;
+  }" "$NGINX_VHOST"
+  echo "==> include snippets/mcbuleli-live-gate.conf ajouté (une fois)"
 else
-  # Insérer include après la première ligne server_name du bloc 443
-  if grep -q 'include.*mcbuleli-live-gate' "$NGINX_VHOST"; then
-    echo "==> include déjà référencé"
-  else
-    sed -i "/server_name.*live.mcbuleli.org/a\\
-    include snippets/mcbuleli-live-gate.conf;" "$NGINX_VHOST"
-    echo "==> include snippets/mcbuleli-live-gate.conf ajouté"
-  fi
+  echo "==> include gate déjà présent"
 fi
 
 echo "==> Réactiver gate — désactiver welcome page + retirer overrides pause"

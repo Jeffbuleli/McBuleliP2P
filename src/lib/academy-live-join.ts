@@ -5,7 +5,11 @@ import {
   liveRoomNameFromSessionSlug,
   signAcademyJitsiToken,
 } from "@/lib/academy-jitsi-token";
-import { buildLiveJoinUrl, type LiveJoinMode } from "@/lib/academy-live";
+import {
+  buildLiveJoinUrl,
+  jitsiRoomFromJoinUrl,
+  type LiveJoinMode,
+} from "@/lib/academy-live";
 import {
   canUserHostAcademyLive,
   canUserJoinAcademyLive,
@@ -81,7 +85,9 @@ export async function resolveGatedLiveJoinUrl(args: {
 
   const onSelfHosted = isSelfHostedLiveUrl(url, args.liveBaseUrl);
   if (isAcademyJitsiJwtEnabled() && onSelfHosted) {
-    const room = liveRoomNameFromSessionSlug(args.sessionSlug);
+    const room =
+      jitsiRoomFromJoinUrl(url) ??
+      liveRoomNameFromSessionSlug(args.sessionSlug);
     const jwt = await signAcademyJitsiToken({
       userId: args.userId,
       displayName: args.displayName,

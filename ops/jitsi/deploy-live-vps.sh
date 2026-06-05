@@ -22,6 +22,7 @@ if [[ "${MCBULELI_LIVE_GATE_ENABLED:-true}" == "false" || "${MCBULELI_LIVE_GATE_
 else
   bash "$WORKDIR/ops/jitsi/apply-nginx-live-gate.sh"
 fi
+bash "$WORKDIR/ops/jitsi/fix-jitsi-config-syntax.sh"
 bash "$WORKDIR/ops/jitsi/apply-mcbuleli-brand.sh"
 
 echo ""
