@@ -95,6 +95,9 @@ if [[ ! -f "$CONFIG" ]]; then
   echo "Config introuvable: $CONFIG" >&2
   exit 1
 fi
+
+echo "==> Corriger syntaxe config.js (écran noir si JWT mal injecté)"
+JITSI_MEET_CONFIG="$CONFIG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh" || true
 # Toujours pointer vers le logo Meet sur ce serveur
 sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true

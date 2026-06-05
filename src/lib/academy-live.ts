@@ -1,5 +1,5 @@
 import { ACADEMY_CHECKIN_WINDOW_MIN } from "@/lib/academy-config";
-import { appendAcademyJitsiBrandParams } from "@/lib/academy-jitsi-brand";
+import { academyJitsiSubject } from "@/lib/academy-jitsi-brand";
 import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
 
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
@@ -122,35 +122,16 @@ export function buildJitsiLowBandwidthHash(
   const resolved: LiveJoinMode =
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
   const isHost = resolved === "host";
-  const audioOnly = resolved === "audio";
-  const resolution = isHost ? 480 : audioOnly ? 180 : 360;
-  const toolbar = audioOnly
-    ? ["microphone", "raisehand", "chat", "hangup"]
-    : [
-        "microphone",
-        "camera",
-        "desktop",
-        "raisehand",
-        "chat",
-        "tileview",
-        "fullscreen",
-        "hangup",
-      ];
+  // Hash minimal — branding/prejoin par défaut dans live.mcbuleli.org-config.js.
   const params: string[] = [
     "config.prejoinPageEnabled=true",
-    "config.startWithAudioMuted=false",
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
-    `config.resolution=${resolution}`,
-    "config.channelLastN=8",
-    "config.enableNoisyMicDetection=true",
-    "config.enableTalkWhileMuted=false",
-    "config.enableLayerSuspension=true",
-    "config.disableDeepLinking=true",
-    `interfaceConfig.TOOLBAR_BUTTONS=${encodeURIComponent(JSON.stringify(toolbar))}`,
-    "interfaceConfig.MOBILE_APP_PROMO=false",
-    "interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true",
   ];
-  appendAcademyJitsiBrandParams(params, opts);
+  if (opts?.sessionTitle?.trim() || opts?.sessionSlug?.trim()) {
+    params.push(
+      `config.subject=${encodeURIComponent(academyJitsiSubject(opts))}`,
+    );
+  }
   return `#${params.join("&")}`;
 }
 

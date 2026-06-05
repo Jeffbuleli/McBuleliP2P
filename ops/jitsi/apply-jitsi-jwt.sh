@@ -77,9 +77,9 @@ print("OK: token auth lines written inside VirtualHost")
 PY
 
 MEET_CFG="/etc/jitsi/meet/${DOMAIN}-config.js"
-if [[ -f "$MEET_CFG" ]] && ! grep -q 'enableUserRolesBasedOnToken' "$MEET_CFG"; then
-  sed -i.bak '/^};$/i config.enableUserRolesBasedOnToken = true;' "$MEET_CFG" 2>/dev/null || \
-    echo "config.enableUserRolesBasedOnToken = true;" >> "$MEET_CFG"
+if [[ -f "$MEET_CFG" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  JITSI_MEET_CONFIG="$MEET_CFG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh"
 fi
 
 prosodyctl check config
