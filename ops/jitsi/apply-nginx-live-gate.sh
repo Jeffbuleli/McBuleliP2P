@@ -12,7 +12,7 @@ if [[ "$GATE_ENABLED" == "false" || "$GATE_ENABLED" == "0" ]]; then
   exec bash "$SCRIPT_DIR/pause-nginx-live-gate.sh"
 fi
 
-SCRIPT_VERSION=2
+SCRIPT_VERSION=3
 MARKER="mcbuleli-nginx-gate-v1"
 GATE_SNIPPET=/etc/nginx/snippets/mcbuleli-live-gate.conf
 MCBULELI_LOGIN="${MCBULELI_LOGIN_URL:-https://mcbuleli.org/login}"
@@ -63,20 +63,14 @@ location ~ ^/([A-Za-z0-9][A-Za-z0-9_-]*)\$ {
 }
 EOF
 
+echo "==> Include gate dans chaque bloc server (HTTP + HTTPS — pas seulement le 1er)"
+sed -i '/include snippets\/mcbuleli-live-gate.conf;/d' "$NGINX_VHOST"
+sed -i '/server_name.*live\.mcbuleli\.org;/a\    include snippets/mcbuleli-live-gate.conf;' "$NGINX_VHOST"
 GATE_INCLUDES="$(grep -c 'include snippets/mcbuleli-live-gate.conf;' "$NGINX_VHOST" 2>/dev/null || echo 0)"
-if [[ "$GATE_INCLUDES" -gt 1 ]]; then
-  echo "==> Déduplication include gate ($GATE_INCLUDES → 1)"
-  sed -i '/include snippets\/mcbuleli-live-gate.conf;/d' "$NGINX_VHOST"
-  GATE_INCLUDES=0
-fi
-if [[ "$GATE_INCLUDES" -eq 0 ]]; then
-  sed -i "0,/server_name.*live.mcbuleli.org/{
-    /server_name.*live.mcbuleli.org/a\\
-    include snippets/mcbuleli-live-gate.conf;
-  }" "$NGINX_VHOST"
-  echo "==> include snippets/mcbuleli-live-gate.conf ajouté (une fois)"
-else
-  echo "==> include gate déjà présent"
+echo "==> $GATE_INCLUDES include(s) dans $NGINX_VHOST (attendu: 2 = port 80 + 443)"
+if [[ "$GATE_INCLUDES" -lt 1 ]]; then
+  echo "ERREUR: aucun include gate — vérifiez server_name dans $NGINX_VHOST" >&2
+  exit 1
 fi
 
 echo "==> Réactiver gate — désactiver welcome page + retirer overrides pause"

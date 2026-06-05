@@ -25,9 +25,9 @@ else
 fi
 
 echo ""
-echo "==> Include dans vhost"
+echo "==> Include + listen dans vhost"
 if [[ -n "$VHOST" ]]; then
-  grep -n 'mcbuleli-live-gate\|server_name' "$VHOST" || true
+  grep -n 'mcbuleli-live-gate\|server_name\|listen ' "$VHOST" || true
 else
   echo "vhost introuvable"
 fi
