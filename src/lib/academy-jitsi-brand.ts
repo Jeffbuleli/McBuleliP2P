@@ -2,12 +2,12 @@
 export const ACADEMY_JITSI_APP_NAME = "McBuleli Meet";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
-/** Logo transparent — servi sur live.mcbuleli.org et mcbuleli.org/brand. */
+/** Logo Meet — mcbuleli.org (Render) ; bascule auto sur live après apply-mcbuleli-brand.sh */
 export const ACADEMY_JITSI_LOGO_URL =
-  "https://live.mcbuleli.org/images/mcbuleli-meet-logo.png";
-
-export const ACADEMY_JITSI_LOGO_FALLBACK_URL =
   "https://mcbuleli.org/brand/mcbuleli-meet-logo.png";
+
+export const ACADEMY_JITSI_LOGO_URL_LIVE_HOST =
+  "https://live.mcbuleli.org/images/mcbuleli-meet-logo.png";
 
 /** Titre onglet / pré-join : « Lancement | McBuleli Meet » */
 export function academyJitsiSubject(sessionTitle?: string): string {
