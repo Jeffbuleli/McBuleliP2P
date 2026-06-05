@@ -13,7 +13,11 @@ import {
   StatusPill,
 } from "@/components/admin/academy-admin-ui";
 import { adminCls, AdminBackLink, AdminPageHeader } from "@/components/admin/admin-ui";
-import { buildLiveJoinUrl } from "@/lib/academy-live";
+import {
+  ACADEMY_EDITION_JUNE_2026,
+  ACADEMY_PROGRAM_LAUNCH,
+} from "@/lib/academy-config";
+import { buildLiveEnterAppPath } from "@/lib/academy-live-enter";
 
 type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools";
 
@@ -406,20 +410,26 @@ export function AcademyAdminClient() {
 
   function sessionJoinUrls(session: SessionRow) {
     if (!selected) return null;
-    const base = {
+    const programSlug = selectedEdition?.programSlug ?? "";
+    const enterBase = {
       editionSlug: selected,
       sessionSlug: session.slug,
-      sessionLiveUrl: sessionDraft[session.id]?.liveUrl || session.liveUrl,
-      liveBaseUrl: liveBaseEffective,
-      sessionTitle: session.titleFr,
+      programSlug: programSlug || undefined,
     };
     return {
-      learner: buildLiveJoinUrl({ ...base, mode: "learner" }),
-      host: buildLiveJoinUrl({ ...base, mode: "host" }),
-      audio: buildLiveJoinUrl({ ...base, mode: "audio" }),
-      app: `/app/academy/${selected}/live/${session.slug}?program=${encodeURIComponent(selectedEdition?.programSlug ?? "")}`,
+      learner: buildLiveEnterAppPath({ ...enterBase, mode: "learner" }),
+      host: buildLiveEnterAppPath({ ...enterBase, mode: "host" }),
+      audio: buildLiveEnterAppPath({ ...enterBase, mode: "audio" }),
+      app: `/app/academy/${selected}/live/${session.slug}?program=${encodeURIComponent(programSlug)}`,
     };
   }
+
+  const launchLiveEnterHost = buildLiveEnterAppPath({
+    editionSlug: ACADEMY_EDITION_JUNE_2026,
+    sessionSlug: "lancement-8-juin",
+    programSlug: ACADEMY_PROGRAM_LAUNCH,
+    mode: "host",
+  });
 
   const totalEnrollments = editions.reduce((n, e) => n + e.enrollmentCount, 0);
   const totalSessions = editions.reduce((n, e) => n + e.sessionCount, 0);
@@ -529,7 +539,7 @@ export function AcademyAdminClient() {
               </div>
               {liveBaseEffective ? (
                 <a
-                  href={liveBaseEffective}
+                  href={launchLiveEnterHost}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[color:var(--fd-primary)] underline"
@@ -921,7 +931,7 @@ export function AcademyAdminClient() {
                 Liste formation ↗
               </Link>
               <a
-                href="https://live.mcbuleli.org"
+                href={launchLiveEnterHost}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"

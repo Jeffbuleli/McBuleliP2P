@@ -13,6 +13,22 @@ import {
 import { resolveAcademyLiveRoleForEdition } from "@/lib/academy-live-role";
 import type { UserRoleType } from "@/lib/roles";
 
+/** True when URL targets our JWT-gated Jitsi host (env or edition live base). */
+export function isSelfHostedLiveUrl(
+  url: string,
+  editionLiveBaseUrl?: string | null,
+): boolean {
+  const strip = (u: string) => u.replace(/\/$/, "");
+  const bases = [
+    process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim(),
+    process.env.ACADEMY_LIVE_BASE_URL?.trim(),
+    editionLiveBaseUrl?.trim(),
+    "https://live.mcbuleli.org",
+  ].filter((b): b is string => Boolean(b));
+  const path = url.split("#")[0].split("?")[0];
+  return bases.some((b) => path.startsWith(strip(b)));
+}
+
 export async function resolveGatedLiveJoinUrl(args: {
   userId: string;
   displayName: string;
@@ -63,9 +79,7 @@ export async function resolveGatedLiveJoinUrl(args: {
     mode: effectiveMode,
   });
 
-  const liveHost = process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim();
-  const onSelfHosted =
-    liveHost && url.startsWith(liveHost.replace(/\/$/, ""));
+  const onSelfHosted = isSelfHostedLiveUrl(url, args.liveBaseUrl);
   if (isAcademyJitsiJwtEnabled() && onSelfHosted) {
     const room = liveRoomNameFromSessionSlug(args.sessionSlug);
     const jwt = await signAcademyJitsiToken({

@@ -24,7 +24,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const parsed = querySchema.safeParse({
     editionSlug: url.searchParams.get("editionSlug"),
-    sessionSlug: url.searchParams.get("sessionSlug"),
+    sessionSlug:
+      url.searchParams.get("sessionSlug") ??
+      url.searchParams.get("room") ??
+      undefined,
     program: url.searchParams.get("program") ?? undefined,
     mode: url.searchParams.get("mode") ?? "learner",
   });

@@ -13,12 +13,20 @@ const LEGACY_HOSTS = new Set([
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
-  if (!LEGACY_HOSTS.has(host)) return NextResponse.next();
 
-  const url = request.nextUrl.clone();
-  url.protocol = "https:";
-  url.host = CANONICAL_HOST;
-  return NextResponse.redirect(url, 308);
+  if (LEGACY_HOSTS.has(host)) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.host = CANONICAL_HOST;
+    return NextResponse.redirect(url, 308);
+  }
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(
+    "x-pathname",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  );
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

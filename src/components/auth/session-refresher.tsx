@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const REFRESH_MS = 6 * 60 * 60 * 1000;
+const REFRESH_MS = 30 * 60 * 1000;
 
 /** Keeps the httpOnly session cookie alive while the app is open. */
 export function SessionRefresher() {

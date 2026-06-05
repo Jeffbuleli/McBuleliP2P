@@ -1,5 +1,6 @@
 import { ACADEMY_CHECKIN_WINDOW_MIN } from "@/lib/academy-config";
 import { appendAcademyJitsiBrandParams } from "@/lib/academy-jitsi-brand";
+import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
 
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
 export const ACADEMY_LIVE_SETUP_MIN = 20;
@@ -36,7 +37,10 @@ export function buildLiveJoinUrl(args: {
     process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim() ||
     "";
   if (base) {
-    return `${base.replace(/\/$/, "")}/${args.sessionSlug}`;
+    const room = liveRoomNameFromSessionSlug(args.sessionSlug);
+    return `${base.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode, {
+      sessionTitle: args.sessionTitle,
+    })}`;
   }
   const room = `mcbuleli-${args.editionSlug}-${args.sessionSlug}`
     .toLowerCase()

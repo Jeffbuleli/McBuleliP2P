@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/mobile/app-shell";
 import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { safeAppRedirectPath } from "@/lib/safe-app-path";
 
 export default async function AppLayout({
   children,
@@ -11,7 +13,9 @@ export default async function AppLayout({
 }) {
   const userId = await getSessionUserId();
   if (!userId) {
-    redirect("/login");
+    const h = await headers();
+    const next = safeAppRedirectPath(h.get("x-pathname"));
+    redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
   const db = getDb();

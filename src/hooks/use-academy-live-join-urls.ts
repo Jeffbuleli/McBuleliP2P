@@ -20,6 +20,30 @@ export function useAcademyLiveJoinUrls(args: {
   const [gateError, setGateError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const fetchMode = useCallback(
+    async (q: URLSearchParams, mode: LiveJoinMode, retry: boolean) => {
+      const res = await fetchWithDeadline(
+        `/api/academy/live/join-token?${q}&mode=${mode}`,
+        { credentials: "include", cache: "no-store" },
+        20_000,
+      );
+      const j = await res.json().catch(() => ({}));
+      if (res.status === 401 && retry) {
+        await fetch("/api/auth/session", { credentials: "same-origin" }).catch(
+          () => undefined,
+        );
+        return fetchMode(q, mode, false);
+      }
+      return {
+        mode,
+        ok: res.ok,
+        url: j.url as string | undefined,
+        error: j.error as string | undefined,
+      };
+    },
+    [],
+  );
+
   const load = useCallback(async () => {
     if (!args.enabled) {
       setUrls(null);
@@ -33,17 +57,12 @@ export function useAcademyLiveJoinUrls(args: {
       program: args.programSlug,
     });
     try {
+      await fetch("/api/auth/session", { credentials: "same-origin" }).catch(
+        () => undefined,
+      );
       const modes: LiveJoinMode[] = ["learner", "host", "audio"];
       const results = await Promise.all(
-        modes.map(async (mode) => {
-          const res = await fetchWithDeadline(
-            `/api/academy/live/join-token?${q}&mode=${mode}`,
-            { credentials: "include", cache: "no-store" },
-            20_000,
-          );
-          const j = await res.json().catch(() => ({}));
-          return { mode, ok: res.ok, url: j.url as string | undefined, error: j.error as string | undefined };
-        }),
+        modes.map((mode) => fetchMode(q, mode, true)),
       );
       const firstErr = results.find((r) => !r.ok);
       if (firstErr && firstErr.mode === "learner") {
@@ -68,7 +87,7 @@ export function useAcademyLiveJoinUrls(args: {
     } finally {
       setLoading(false);
     }
-  }, [args.editionSlug, args.enabled, args.programSlug, args.sessionSlug]);
+  }, [args.editionSlug, args.enabled, args.programSlug, args.sessionSlug, fetchMode]);
 
   useEffect(() => {
     void load();

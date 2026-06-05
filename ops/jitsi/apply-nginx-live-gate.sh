@@ -36,15 +36,6 @@ NGINX_VHOST="$(find_nginx_vhost)" || {
 }
 
 echo "==> Vhost: $NGINX_VHOST"
-
-# Les .bak dans sites-enabled sont chargés par nginx → erreur duplicate directive
-mkdir -p /root/nginx-backups
-for stale in /etc/nginx/sites-enabled/*.bak*; do
-  [[ -e "$stale" ]] || continue
-  echo "==> Retire backup de sites-enabled: $stale"
-  mv -f "$stale" "/root/nginx-backups/$(basename "$stale")"
-done
-
 cp -a "$NGINX_VHOST" "/root/nginx-backups/$(basename "$NGINX_VHOST").bak.$(date +%Y%m%d%H%M%S)"
 
 echo "==> Snippet gate (salles + racine uniquement — pas /libs ni /css)"
@@ -55,10 +46,10 @@ location = / {
     return 302 ${MCBULELI_LOGIN}?next=/app/academy;
 }
 
-# Nom de salle (/une-salle) sans jwt → login ; avec jwt → SPA Jitsi
+# Nom de salle (/lancement-8-juin) sans jwt → login McBuleli (next encodé) ; avec jwt → SPA Jitsi
 location ~ ^/([A-Za-z0-9][A-Za-z0-9_-]*)\$ {
     if (\$arg_jwt = "") {
-        return 302 ${MCBULELI_LOGIN}?next=/app/live/enter?room=\$1;
+        return 302 ${MCBULELI_LOGIN}?next=%2Fapp%2Flive%2Fenter%3Froom%3D\$1;
     }
     try_files \$uri /index.html;
 }

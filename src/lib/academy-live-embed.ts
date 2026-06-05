@@ -1,4 +1,8 @@
-/** Optional in-app Jitsi iframe (works best with self-hosted live base URL). */
+/** Optional in-app Jitsi iframe — disabled for JWT-gated live.mcbuleli.org (X-Frame-Options → black screen). */
 export function isAcademyLiveEmbedEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_ACADEMY_LIVE_EMBED === "true";
+  if (process.env.NEXT_PUBLIC_ACADEMY_LIVE_EMBED !== "true") return false;
+  const liveHost =
+    process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim() ||
+    "https://live.mcbuleli.org";
+  return !liveHost.includes("live.mcbuleli.org");
 }

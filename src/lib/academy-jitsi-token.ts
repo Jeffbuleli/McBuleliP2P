@@ -29,7 +29,7 @@ export async function signAcademyJitsiToken(args: {
     throw new Error("jitsi_jwt_not_configured");
   }
   const key = new TextEncoder().encode(secret);
-  const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 3 * 60 * 60);
+  const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 12 * 60 * 60);
   return new SignJWT({
     room: args.room,
     moderator: args.moderator,
