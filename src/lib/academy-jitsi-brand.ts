@@ -1,34 +1,41 @@
 /** McBuleli-branded Jitsi Meet URL hash params (self-hosted live.mcbuleli.org). */
-export const ACADEMY_JITSI_APP_NAME = "McBuleli Meet";
+export const ACADEMY_JITSI_APP_NAME = "McBuleli";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
-/** Logo Meet — mcbuleli.org (Render) ; bascule auto sur live après apply-mcbuleli-brand.sh */
+/** Logo watermark transparent (coin vidéo pré-live + live). */
 export const ACADEMY_JITSI_LOGO_URL =
-  "https://mcbuleli.org/brand/mcbuleli-meet-logo.png";
+  "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png";
 
 export const ACADEMY_JITSI_LOGO_URL_LIVE_HOST =
-  "https://live.mcbuleli.org/images/mcbuleli-meet-logo.png";
+  "https://live.mcbuleli.org/images/mcbuleli-meet-watermark.png";
 
-/** Titre onglet / pré-join : « Lancement | McBuleli Meet » */
-export function academyJitsiSubject(sessionTitle?: string): string {
-  const t = sessionTitle?.trim();
-  if (!t) return ACADEMY_JITSI_APP_NAME;
-  const short = t
-    .replace(/^soirée de /i, "")
-    .replace(/^soirée /i, "")
-    .trim();
-  const label = short
-    ? short.charAt(0).toUpperCase() + short.slice(1)
-    : t;
+/** « lancement-8-juin » → « Lancement 8 Juin » */
+export function humanizeLiveSessionSlug(slug: string): string {
+  return slug
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Titre événement + « | McBuleli » (remplace « | Jitsi Meet »). */
+export function academyJitsiSubject(opts?: {
+  sessionTitle?: string;
+  sessionSlug?: string;
+}): string {
+  const title = opts?.sessionTitle?.trim();
+  const slug = opts?.sessionSlug?.trim();
+  const label = title || (slug ? humanizeLiveSessionSlug(slug) : "");
+  if (!label) return ACADEMY_JITSI_APP_NAME;
   return `${label} | ${ACADEMY_JITSI_APP_NAME}`;
 }
 
 /** Appended to Jitsi iframe / external join URLs via hash config. */
 export function appendAcademyJitsiBrandParams(
   params: string[],
-  opts?: { sessionTitle?: string },
+  opts?: { sessionTitle?: string; sessionSlug?: string },
 ): void {
-  const subject = academyJitsiSubject(opts?.sessionTitle);
+  const subject = academyJitsiSubject(opts);
   params.push(
     "config.defaultLanguage=fr",
     `config.subject=${encodeURIComponent(subject)}`,

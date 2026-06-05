@@ -30,6 +30,7 @@ export function buildLiveJoinUrl(args: {
     }
     return `${raw.split("#")[0]}${buildJitsiLowBandwidthHash(mode, {
       sessionTitle: args.sessionTitle,
+      sessionSlug: args.sessionSlug,
     })}`;
   }
   const base =
@@ -40,6 +41,7 @@ export function buildLiveJoinUrl(args: {
     const room = liveRoomNameFromSessionSlug(args.sessionSlug);
     return `${base.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode, {
       sessionTitle: args.sessionTitle,
+      sessionSlug: args.sessionSlug,
     })}`;
   }
   const room = `mcbuleli-${args.editionSlug}-${args.sessionSlug}`
@@ -52,10 +54,12 @@ export function buildLiveJoinUrl(args: {
   if (jitsiSelf) {
     return `${jitsiSelf.replace(/\/$/, "")}/${room}${buildJitsiLowBandwidthHash(mode, {
       sessionTitle: args.sessionTitle,
+      sessionSlug: args.sessionSlug,
     })}`;
   }
   return `https://meet.jit.si/${room}${buildJitsiLowBandwidthHash(mode, {
     sessionTitle: args.sessionTitle,
+    sessionSlug: args.sessionSlug,
   })}`;
 }
 
@@ -91,7 +95,7 @@ export function formatLiveCountdown(seconds: number): string {
 /** Jitsi Meet hash: partage écran, lever la main, qualité adaptée connexion faible. */
 export function buildJitsiLowBandwidthHash(
   mode: LiveJoinMode | boolean = "learner",
-  opts?: { sessionTitle?: string },
+  opts?: { sessionTitle?: string; sessionSlug?: string },
 ): string {
   const resolved: LiveJoinMode =
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;

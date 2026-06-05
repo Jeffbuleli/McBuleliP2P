@@ -8,16 +8,16 @@ JITSI_IMAGES="$JITSI_ROOT/images"
 JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
-LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
-MARKER="mcbuleli-full-brand-v3"
+LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-watermark.png}"
+MARKER="mcbuleli-full-brand-v4"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_NAME="McBuleli Meet"
+APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/mcbuleli-meet-logo.png"
 if [[ ! -f "$MEET_LOGO_SRC" && -f "$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png" ]]; then
   MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
 fi
 
-echo "==> Logo McBuleli Meet (transparent)"
+echo "==> Logo McBuleli (watermark transparent coin vidéo)"
 if [[ -f "$JITSI_IMAGES/watermark.svg" && ! -f "$JITSI_IMAGES/watermark.svg.bak" ]]; then
   cp -a "$JITSI_IMAGES/watermark.svg" "$JITSI_IMAGES/watermark.svg.bak"
 fi
@@ -49,10 +49,17 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
+echo "==> Watermark PNG sans fond (style Jitsi)"
+if python3 "$SCRIPT_DIR/make-transparent-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png" 72; then
+  echo "    watermark transparent OK"
+else
+  cp "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
+  echo "    (fallback logo carré — installez: apt install -y python3-pil.imaging)"
+fi
+
 cp "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
 cp "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
-# Certaines versions Jitsi lisent aussi watermark.png
-cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/watermark.png" 2>/dev/null || true
+cp "$JITSI_IMAGES/mcbuleli-meet-watermark.png" "$JITSI_IMAGES/watermark.png" 2>/dev/null || true
 
 echo "==> Favicon navigateur (onglet)"
 for html in "$JITSI_ROOT/index.html" "$JITSI_ROOT/static.html" "$JITSI_ROOT/title.html"; do
@@ -146,4 +153,4 @@ echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2
 systemctl reload nginx
 
-echo "OK — Test : https://live.mcbuleli.org/lancement-8-juin (avec ?jwt= depuis l'app). Titre « Lancement | McBuleli Meet »."
+echo "OK — Titre attendu : « Soirée de lancement | McBuleli ». Watermark coin vidéo sans fond."

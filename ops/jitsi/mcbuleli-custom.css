@@ -1,83 +1,88 @@
 /**
- * McBuleli Meet — logo transparent, fond vert (pas écran noir vide)
+ * McBuleli — watermark transparent coin vidéo (pré-live + live), style Jitsi.
  */
 body,
 #react,
-#react > div,
-.videocontainer,
-.large-video-background {
+#react > div {
   background-color: #0f1f12 !important;
 }
 
 .premeeting-screen,
 .prejoin-preview,
-.prejoin-input-area,
-.welcome {
-  background: linear-gradient(165deg, #0f1f12 0%, #1a3d22 55%, #0f1f12 100%) !important;
+.prejoin-input-area {
+  background: #1a2e1c !important;
 }
 
+/* Watermark coin haut-gauche sur la vidéo (comme logo Jitsi) */
 .watermark,
 div.watermark,
 #preview .watermark,
-.prejoin-preview .watermark {
+.prejoin-preview .watermark,
+.videocontainer .watermark,
+.large-video-container .watermark {
   display: block !important;
-  opacity: 1 !important;
-  width: 48px !important;
-  height: 48px !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
-  max-width: 48px !important;
-  max-height: 48px !important;
-  top: 12px !important;
-  left: 12px !important;
+  visibility: visible !important;
+  opacity: 0.88 !important;
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+  max-width: 72px !important;
+  max-height: 72px !important;
+  top: 16px !important;
+  left: 16px !important;
   right: auto !important;
   bottom: auto !important;
   margin: 0 !important;
   padding: 0 !important;
   pointer-events: none !important;
-  z-index: 2 !important;
-  overflow: hidden !important;
-  border-radius: 50% !important;
-  background: transparent !important;
-  background-image: url("/images/mcbuleli-meet-logo.png") !important;
+  z-index: 5 !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  background: none !important;
+  background-color: transparent !important;
+  background-image: url("/images/mcbuleli-meet-watermark.png") !important;
   background-size: contain !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
+  box-shadow: none !important;
 }
 
-.watermark > svg {
+.watermark > svg,
+.watermark svg {
   opacity: 0 !important;
   width: 0 !important;
   height: 0 !important;
+  display: none !important;
 }
 
-.premeeting-screen .logo,
-.prejoin-preview .logo,
-.welcome .header-logo,
-.header-text-title .logo,
-.invite-more-dialog .logo {
-  width: 56px !important;
-  height: 56px !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
-  background: transparent !important;
-}
-
-.premeeting-screen .logo img,
-.prejoin-preview .logo img,
-.welcome .header-logo img,
-.header-text-title .logo img {
-  width: 56px !important;
-  height: 56px !important;
-  border-radius: 50% !important;
-  object-fit: contain !important;
-  background: transparent !important;
-}
-
+/* Masquer logo Jitsi / 8x8 */
 .leftwatermark,
 .poweredby,
 .jitsi-logo,
+[class*="jitsi" i][class*="logo" i],
 a[href*="jitsi.org"],
 a[href*="8x8.vc"] {
+  display: none !important;
+}
+
+/* Pas de pastille ronde ni fond sur les logos pré-join */
+.premeeting-screen .logo,
+.prejoin-preview .logo,
+.welcome .header-logo {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.premeeting-screen .logo img,
+.prejoin-preview .logo img {
+  object-fit: contain !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+#mcbuleli-prejoin-banner {
   display: none !important;
 }

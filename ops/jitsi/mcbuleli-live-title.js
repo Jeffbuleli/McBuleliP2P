@@ -1,8 +1,8 @@
 /**
- * Onglet navigateur : « Lancement | McBuleli Meet » depuis config.subject (hash URL).
+ * Onglet : « Soirée de lancement | McBuleli » (config.subject ou nom de salle).
  */
 (function () {
-  var APP = "McBuleli Meet";
+  var BRAND = "McBuleli";
 
   function subjectFromHash() {
     var h = (location.hash || "").replace(/^#/, "");
@@ -20,21 +20,26 @@
     return null;
   }
 
+  function humanizeRoom(room) {
+    return room
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, function (c) {
+        return c.toUpperCase();
+      });
+  }
+
   function applyTitle() {
     var subject = subjectFromHash();
     if (subject) {
-      document.title = subject.indexOf(APP) >= 0 ? subject : subject + " | " + APP;
+      document.title = subject;
       return;
     }
     var room = (location.pathname || "").replace(/^\//, "").split("/")[0];
     if (room) {
-      var label = room.replace(/-/g, " ").replace(/\b\w/g, function (c) {
-        return c.toUpperCase();
-      });
-      document.title = label + " | " + APP;
+      document.title = humanizeRoom(room) + " | " + BRAND;
       return;
     }
-    document.title = APP;
+    document.title = BRAND;
   }
 
   applyTitle();
