@@ -1,11 +1,24 @@
 #!/bin/bash
 # Redirige live.mcbuleli.org → mcbuleli.org (login) sauf assets Jitsi + URLs avec ?jwt=
 # Usage (root VPS): bash apply-nginx-live-gate.sh
+# Version 2 — sauvegardes dans /root/nginx-backups uniquement
 set -euo pipefail
 
+SCRIPT_VERSION=2
 MARKER="mcbuleli-nginx-gate-v1"
 GATE_SNIPPET=/etc/nginx/snippets/mcbuleli-live-gate.conf
 MCBULELI_LOGIN="${MCBULELI_LOGIN_URL:-https://mcbuleli.org/login}"
+
+echo "==> apply-nginx-live-gate.sh v${SCRIPT_VERSION}"
+
+# TOUJOURS en premier : nginx charge tout sites-enabled (y compris *.bak)
+mkdir -p /root/nginx-backups
+shopt -s nullglob
+for stale in /etc/nginx/sites-enabled/*.bak*; do
+  echo "==> Retire backup de sites-enabled: $stale"
+  mv -f "$stale" "/root/nginx-backups/$(basename "$stale")"
+done
+shopt -u nullglob
 
 find_nginx_vhost() {
   for f in /etc/nginx/sites-enabled/live.mcbuleli.org.conf \
