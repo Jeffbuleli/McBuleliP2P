@@ -99,8 +99,34 @@ nginx -t
 echo "==> Reload"
 systemctl reload nginx
 
+echo "==> Snippet gate (aperçu)"
+head -8 "$GATE_SNIPPET"
+
+verify_gate() {
+  local url="$1"
+  local label="$2"
+  local code
+  code="$(curl -sI -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo "000")"
+  echo "    $label → HTTP $code"
+  [[ "$code" == "302" ]]
+}
+
 echo ""
-echo "OK — Tests attendus:"
-echo "  curl -sI https://live.mcbuleli.org/ | head -3          → 302 mcbuleli.org"
-echo "  curl -sI https://live.mcbuleli.org/une-salle | head -3 → 302 mcbuleli.org"
-echo "  Ouvrir un live depuis l'app McBuleli (URL avec ?jwt=)  → salle OK"
+echo "==> Vérification gate (doit être 302 sans jwt)"
+GATE_OK=1
+verify_gate "https://live.mcbuleli.org/" "racine /" || GATE_OK=0
+verify_gate "https://live.mcbuleli.org/test-live-mcbuleli" "salle sans jwt" || GATE_OK=0
+ROOM_WITH_JWT="$(curl -sI -o /dev/null -w '%{http_code}' 'https://live.mcbuleli.org/test-live-mcbuleli?jwt=test' 2>/dev/null || echo 000)"
+echo "    salle avec jwt → HTTP $ROOM_WITH_JWT (attendu 200)"
+
+if [[ "$GATE_OK" -ne 1 ]]; then
+  echo "" >&2
+  echo "ERREUR: la gate ne répond pas en 302." >&2
+  echo "  1) Vérifiez: grep mcbuleli-live-gate $NGINX_VHOST" >&2
+  echo "  2) Snippet:   cat $GATE_SNIPPET" >&2
+  echo "  3) Puis:      nginx -t && systemctl reload nginx" >&2
+  exit 1
+fi
+
+echo ""
+echo "OK — Gate active. Live depuis l'app McBuleli (URL avec ?jwt=) → pré-join OK."
