@@ -16,7 +16,8 @@ else
 fi
 
 echo "==> Version: $(git -C "$WORKDIR" rev-parse --short HEAD)"
-if [[ "${MCBULELI_LIVE_GATE_ENABLED:-true}" == "false" || "${MCBULELI_LIVE_GATE_ENABLED}" == "0" ]]; then
+GATE_ENABLED="${MCBULELI_LIVE_GATE_ENABLED:-true}"
+if [[ "$GATE_ENABLED" == "false" || "$GATE_ENABLED" == "0" ]]; then
   echo "==> Gate PAUSED (MCBULELI_LIVE_GATE_ENABLED=false)"
   bash "$WORKDIR/ops/jitsi/pause-nginx-live-gate.sh"
 else

@@ -7,7 +7,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ "${MCBULELI_LIVE_GATE_ENABLED:-true}" == "false" || "${MCBULELI_LIVE_GATE_ENABLED}" == "0" ]]; then
+GATE_ENABLED="${MCBULELI_LIVE_GATE_ENABLED:-true}"
+if [[ "$GATE_ENABLED" == "false" || "$GATE_ENABLED" == "0" ]]; then
   exec bash "$SCRIPT_DIR/pause-nginx-live-gate.sh"
 fi
 
