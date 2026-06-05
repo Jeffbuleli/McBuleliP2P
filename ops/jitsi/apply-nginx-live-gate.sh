@@ -23,7 +23,16 @@ NGINX_VHOST="$(find_nginx_vhost)" || {
 }
 
 echo "==> Vhost: $NGINX_VHOST"
-cp -a "$NGINX_VHOST" "${NGINX_VHOST}.bak.$(date +%Y%m%d%H%M%S)"
+
+# Les .bak dans sites-enabled sont chargés par nginx → erreur duplicate directive
+mkdir -p /root/nginx-backups
+for stale in /etc/nginx/sites-enabled/*.bak*; do
+  [[ -e "$stale" ]] || continue
+  echo "==> Retire backup de sites-enabled: $stale"
+  mv -f "$stale" "/root/nginx-backups/$(basename "$stale")"
+done
+
+cp -a "$NGINX_VHOST" "/root/nginx-backups/$(basename "$NGINX_VHOST").bak.$(date +%Y%m%d%H%M%S)"
 
 echo "==> Snippet gate (salles + racine uniquement — pas /libs ni /css)"
 cat > "$GATE_SNIPPET" <<EOF
