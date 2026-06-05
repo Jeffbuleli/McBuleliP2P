@@ -17,7 +17,7 @@ import {
   ACADEMY_EDITION_JUNE_2026,
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
-import { buildLiveEnterAppPath } from "@/lib/academy-live-enter";
+import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
 
 type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools";
 
