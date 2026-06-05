@@ -1,8 +1,15 @@
 #!/bin/bash
 # Redirige live.mcbuleli.org → mcbuleli.org (login) sauf assets Jitsi + URLs avec ?jwt=
 # Usage (root VPS): bash apply-nginx-live-gate.sh
+# Pause (test Jitsi natif): bash pause-nginx-live-gate.sh
+#   ou MCBULELI_LIVE_GATE_ENABLED=false bash apply-nginx-live-gate.sh
 # Version 2 — sauvegardes dans /root/nginx-backups uniquement
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "${MCBULELI_LIVE_GATE_ENABLED:-true}" == "false" || "${MCBULELI_LIVE_GATE_ENABLED}" == "0" ]]; then
+  exec bash "$SCRIPT_DIR/pause-nginx-live-gate.sh"
+fi
 
 SCRIPT_VERSION=2
 MARKER="mcbuleli-nginx-gate-v1"
