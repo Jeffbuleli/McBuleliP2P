@@ -8,16 +8,27 @@ JITSI_IMAGES="$JITSI_ROOT/images"
 JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
-LOGO_URL="${MCBULELI_LOGO_URL:-https://mcbuleli.org/brand/logo-256.png}"
-MARKER="mcbuleli-full-brand-v2"
+LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
+MARKER="mcbuleli-full-brand-v3"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli Meet"
+MEET_LOGO_SRC="$SCRIPT_DIR/mcbuleli-meet-logo.png"
+if [[ ! -f "$MEET_LOGO_SRC" && -f "$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png" ]]; then
+  MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
+fi
 
-echo "==> Logo & watermark rond"
+echo "==> Logo McBuleli Meet (transparent)"
 if [[ -f "$JITSI_IMAGES/watermark.svg" && ! -f "$JITSI_IMAGES/watermark.svg.bak" ]]; then
   cp -a "$JITSI_IMAGES/watermark.svg" "$JITSI_IMAGES/watermark.svg.bak"
 fi
-curl -fsSL "$LOGO_URL" -o "$JITSI_IMAGES/mcbuleli-logo.png"
+if [[ -f "$MEET_LOGO_SRC" ]]; then
+  cp -a "$MEET_LOGO_SRC" "$JITSI_IMAGES/mcbuleli-meet-logo.png"
+  cp -a "$MEET_LOGO_SRC" "$JITSI_IMAGES/mcbuleli-logo.png"
+else
+  curl -fsSL "${MCBULELI_LOGO_REMOTE:-https://mcbuleli.org/brand/mcbuleli-meet-logo.png}" \
+    -o "$JITSI_IMAGES/mcbuleli-meet-logo.png"
+  cp -a "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-logo.png"
+fi
 
 echo "==> Logo rond (PNG)"
 ROUND_OK=0
@@ -35,10 +46,8 @@ if [[ "$ROUND_OK" -eq 0 ]]; then
 fi
 
 cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
-if [[ -f "$SCRIPT_DIR/mcbuleli-favicon.png" ]]; then
-  python3 "$SCRIPT_DIR/make-round-logo.py" "$SCRIPT_DIR/mcbuleli-favicon.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
-    cp "$SCRIPT_DIR/mcbuleli-favicon.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
-fi
+python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
+  cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
 cp "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
 cp "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
@@ -51,6 +60,7 @@ for html in "$JITSI_ROOT/index.html" "$JITSI_ROOT/static.html" "$JITSI_ROOT/titl
   if ! grep -q 'mcbuleli-favicon' "$html"; then
     sed -i 's|favicon.ico|mcbuleli-favicon.png|g; s|images/favicon|images/mcbuleli-favicon|g' "$html" 2>/dev/null || true
     sed -i "s|Jitsi Meet|$APP_NAME|g; s|jitsi meet|$APP_NAME|gi" "$html" 2>/dev/null || true
+    sed -i "s|<title>.*</title>|<title>$APP_NAME</title>|" "$html" 2>/dev/null || true
   fi
 done
 # Lien favicon explicite si absent
@@ -72,6 +82,9 @@ if [[ ! -f "$CONFIG" ]]; then
   echo "Config introuvable: $CONFIG" >&2
   exit 1
 fi
+# Toujours pointer vers le logo Meet sur ce serveur
+sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
+sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
 # Toujours désactiver la welcome page (même si le marker existe déjà)
 if grep -q 'enableWelcomePage' "$CONFIG"; then
   sed -i 's/enableWelcomePage = true/enableWelcomePage = false/g; s/enableWelcomePage=true/enableWelcomePage=false/g' "$CONFIG"
@@ -85,6 +98,7 @@ if ! grep -q "$MARKER" "$CONFIG"; then
 // $MARKER
 config.defaultLanguage = 'fr';
 config.defaultLogoUrl = '$LOGO_URL';
+config.subject = 'McBuleli Meet';
 config.enableWelcomePage = false;
 config.disableDeepLinking = true;
 config.interfaceConfig = config.interfaceConfig || {};
@@ -121,13 +135,15 @@ if (config.disabledNotifications.indexOf('thankYou') === -1) {
 EOF
 fi
 
-cp "$SCRIPT_DIR/mcbuleli-hide-thankyou.js" "$JITSI_ROOT/mcbuleli-hide-thankyou.js"
-if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-hide-thankyou.js' "$JITSI_ROOT/index.html"; then
-  sed -i 's|</body>|<script src="/mcbuleli-hide-thankyou.js"></script>\n</body>|' "$JITSI_ROOT/index.html"
-fi
+for js in mcbuleli-hide-thankyou.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
+  cp "$SCRIPT_DIR/$js" "$JITSI_ROOT/$js"
+  if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q "$js" "$JITSI_ROOT/index.html"; then
+    sed -i "s|</body>|<script src=\"/$js\"></script>\n</body>|" "$JITSI_ROOT/index.html"
+  fi
+done
 
 echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2
 systemctl reload nginx
 
-echo "OK — Test : https://live.mcbuleli.org/test (Ctrl+Shift+R). Favicon + toast McBuleli."
+echo "OK — Test : https://live.mcbuleli.org/lancement-8-juin (avec ?jwt= depuis l'app). Titre « Lancement | McBuleli Meet »."

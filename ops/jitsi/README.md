@@ -1,6 +1,18 @@
-# McBuleli — branding Jitsi sur `live.mcbuleli.org`
+# McBuleli Meet — `live.mcbuleli.org`
 
 À exécuter **en root sur le VPS** (après Jitsi + HTTPS OK).
+
+## Déploiement rapide (depuis GitHub)
+
+```bash
+cd /root
+git clone --depth 1 https://github.com/Jeffbuleli/McBuleliP2P.git
+cd McBuleliP2P
+bash ops/jitsi/apply-nginx-live-gate.sh
+bash ops/jitsi/apply-mcbuleli-brand.sh
+```
+
+Titre onglet attendu avec JWT depuis l’app : **« Lancement | McBuleli Meet »**. Logo : `mcbuleli-meet-logo.png`.
 
 ## 1. Sauvegarde
 

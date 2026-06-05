@@ -1,18 +1,33 @@
 /**
- * McBuleli — logo rond sur live.mcbuleli.org (coin pré-join + en-tête)
+ * McBuleli Meet — logo transparent, fond vert (pas écran noir vide)
  */
+body,
+#react,
+#react > div,
+.videocontainer,
+.large-video-background {
+  background-color: #0f1f12 !important;
+}
+
+.premeeting-screen,
+.prejoin-preview,
+.prejoin-input-area,
+.welcome {
+  background: linear-gradient(165deg, #0f1f12 0%, #1a3d22 55%, #0f1f12 100%) !important;
+}
+
 .watermark,
 div.watermark,
 #preview .watermark,
 .prejoin-preview .watermark {
   display: block !important;
   opacity: 1 !important;
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
   top: 12px !important;
   left: 12px !important;
   right: auto !important;
@@ -23,43 +38,40 @@ div.watermark,
   z-index: 2 !important;
   overflow: hidden !important;
   border-radius: 50% !important;
-  clip-path: circle(50% at 50% 50%) !important;
   background: transparent !important;
-  background-image: url("/images/mcbuleli-round.png") !important;
-  background-size: cover !important;
+  background-image: url("/images/mcbuleli-meet-logo.png") !important;
+  background-size: contain !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
 
-/* Cache le SVG Jitsi par défaut si présent */
 .watermark > svg {
   opacity: 0 !important;
   width: 0 !important;
   height: 0 !important;
 }
 
-/* Logo en-tête / pré-join */
 .premeeting-screen .logo,
 .prejoin-preview .logo,
 .welcome .header-logo,
 .header-text-title .logo,
 .invite-more-dialog .logo {
-  width: 40px !important;
-  height: 40px !important;
+  width: 56px !important;
+  height: 56px !important;
   border-radius: 50% !important;
   overflow: hidden !important;
-  clip-path: circle(50% at 50% 50%) !important;
+  background: transparent !important;
 }
 
 .premeeting-screen .logo img,
 .prejoin-preview .logo img,
 .welcome .header-logo img,
 .header-text-title .logo img {
-  width: 40px !important;
-  height: 40px !important;
+  width: 56px !important;
+  height: 56px !important;
   border-radius: 50% !important;
-  object-fit: cover !important;
-  clip-path: circle(50% at 50% 50%) !important;
+  object-fit: contain !important;
+  background: transparent !important;
 }
 
 .leftwatermark,

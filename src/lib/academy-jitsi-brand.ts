@@ -2,13 +2,25 @@
 export const ACADEMY_JITSI_APP_NAME = "McBuleli Meet";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
-/** Logo coin pré-join (même asset que le site). */
+/** Logo transparent — servi sur live.mcbuleli.org et mcbuleli.org/brand. */
 export const ACADEMY_JITSI_LOGO_URL =
-  "https://mcbuleli.org/brand/logo-256.png";
+  "https://live.mcbuleli.org/images/mcbuleli-meet-logo.png";
 
+export const ACADEMY_JITSI_LOGO_FALLBACK_URL =
+  "https://mcbuleli.org/brand/mcbuleli-meet-logo.png";
+
+/** Titre onglet / pré-join : « Lancement | McBuleli Meet » */
 export function academyJitsiSubject(sessionTitle?: string): string {
   const t = sessionTitle?.trim();
-  return t ? `${t}` : "McBuleli Meet";
+  if (!t) return ACADEMY_JITSI_APP_NAME;
+  const short = t
+    .replace(/^soirée de /i, "")
+    .replace(/^soirée /i, "")
+    .trim();
+  const label = short
+    ? short.charAt(0).toUpperCase() + short.slice(1)
+    : t;
+  return `${label} | ${ACADEMY_JITSI_APP_NAME}`;
 }
 
 /** Appended to Jitsi iframe / external join URLs via hash config. */
@@ -23,6 +35,7 @@ export function appendAcademyJitsiBrandParams(
     "config.hideConferenceSubject=false",
     `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL)}`,
     `interfaceConfig.DEFAULT_LOGO_URL=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL)}`,
+    `interfaceConfig.DEFAULT_WELCOME_PAGE_LOGO_URL=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL)}`,
     "interfaceConfig.SHOW_JITSI_WATERMARK=false",
     "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false",
     "interfaceConfig.JITSI_WATERMARK_LINK=",
