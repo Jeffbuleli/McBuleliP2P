@@ -1,5 +1,5 @@
 #!/bin/bash
-# Capture stanzas XMPP pendant join — lancer PUIS host+guest dans les N secondes.
+# Capture stanzas — surveille conference.* (pas seulement live.*).
 set -euo pipefail
 
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
@@ -12,25 +12,21 @@ OUT="/tmp/mcb-muc-stanzas-${ROOM}.log"
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 command -v expect >/dev/null 2>&1 || { echo "apt install -y expect"; exit 1; }
 
-# Vérifier nginx XMPP
 CODE="$(curl -sI -o /dev/null -w '%{http_code}' "https://${DOMAIN}/xmpp-websocket" 2>/dev/null || echo 000)"
-echo "xmpp-websocket HTTP ${CODE} (attendu 200/400, pas 502)"
-if [[ "$CODE" == "502" || "$CODE" == "000" ]]; then
-  echo "ERREUR nginx — lancez: sudo bash ops/jitsi/fix-nginx-xmpp-dedupe.sh"
-  exit 1
-fi
+echo "xmpp-websocket HTTP ${CODE}"
+[[ "$CODE" == "502" || "$CODE" == "000" ]] && { echo "nginx cassé → fix-nginx-xmpp-dedupe.sh"; exit 1; }
 
 : > "$OUT"
 echo "Capture ${SECS}s → $OUT"
-echo ">>> MAINTENANT: host + guest rejoignent ${ROOM} <<<"
+echo ">>> Host + guest dans l'UI Jitsi (pas juste onglet ouvert) <<<"
 echo ""
 
 expect <<EXPECT 2>&1 | tee -a "$OUT"
-set timeout 60
+set timeout 90
 log_user 1
 spawn prosodyctl shell
 expect "prosody>"
-send "watch:stanzas('${DOMAIN}')\r"
+send "watch:stanzas('${CONFERENCE}')\r"
 sleep ${SECS}
 send "\x03"
 expect {
@@ -42,15 +38,22 @@ expect eof
 EXPECT
 
 echo ""
-echo "==> Filtré MUC / ${ROOM}"
-grep -iE "${ROOM}|${CONFERENCE}|presence|muc|not.?allowed|error|focus|unavailable" "$OUT" | tail -40 || \
-  echo "(rien — pas de stanzas pendant ${SECS}s)"
+echo "==> Stanzas MUC / ${ROOM} sur ${CONFERENCE}"
+grep -iE "${ROOM}|${TARGET}|presence|muc|not.?allowed|error|unavailable|focus" "$OUT" | tail -40 || \
+  echo "(aucune stanza MUC — clients bloqués AVANT join)"
+
+echo ""
+echo "==> Stanzas live.${DOMAIN} (ping seul = bloqué après auth)"
+grep -iE "ping|presence|${ROOM}" "$OUT" | grep -i "${DOMAIN}" | tail -10 || true
 
 echo ""
 if grep -qiE "not.?allowed|policy-violation|forbidden" "$OUT"; then
-  echo "VERDICT: JWT/token rejeté sur join MUC"
+  echo "VERDICT: JWT/token rejeté au join MUC"
 elif grep -qi "${TARGET}" "$OUT"; then
-  echo "VERDICT: join MUC vers ${TARGET} détecté"
+  echo "VERDICT: join MUC ${TARGET} détecté"
+elif grep -qi "ping" "$OUT" && ! grep -qi "${CONFERENCE}" "$OUT"; then
+  echo "VERDICT: XMPP connecté mais Jitsi n'initie PAS la conférence (ping-only)"
+  echo "  → vérifier console navigateur (F12) + config.js + focus component"
 else
-  echo "VERDICT: aucun join — nginx websocket ou clients pas connectés pendant capture"
+  echo "VERDICT: pas de trafic pendant capture — rejoignez PENDANT les ${SECS}s"
 fi
