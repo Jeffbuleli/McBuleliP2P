@@ -1,24 +1,12 @@
 #!/bin/bash
-# Déconnexion après Authenticated — websocket/BOSH nginx incomplet.
-# Ajoute X-Forwarded-Proto, timeouts longs, buffering off.
+# BOSH + websocket nginx → Prosody :5280 (snippet unique, pas de doublon).
 set -euo pipefail
 
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 SNIP="/etc/nginx/snippets/mcbuleli-xmpp-proxy.conf"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
-
-find_nginx_vhost() {
-  for f in /etc/nginx/sites-enabled/${DOMAIN}.conf \
-           /etc/nginx/sites-enabled/${DOMAIN} \
-           /etc/nginx/sites-available/${DOMAIN}.conf; do
-    [[ -f "$f" ]] && echo "$f" && return 0
-  done
-  return 1
-}
-
-VHOST="$(find_nginx_vhost)" || { echo "Vhost nginx introuvable"; exit 1; }
-cp -a "$VHOST" "/root/nginx-backups/$(basename "$VHOST").ws-complete.$(date +%Y%m%d%H%M%S)"
 
 if ! grep -q 'map \$http_upgrade' /etc/nginx/nginx.conf 2>/dev/null; then
   sed -i '/http {/a\
@@ -26,11 +14,10 @@ if ! grep -q 'map \$http_upgrade' /etc/nginx/nginx.conf 2>/dev/null; then
         default upgrade;\
         '\'''\'' close;\
     }' /etc/nginx/nginx.conf
-  echo "ADDED map connection_upgrade"
 fi
 
 cat > "$SNIP" <<EOF
-# mcbuleli-xmpp-proxy — bosh + websocket vers Prosody :5280
+# mcbuleli-xmpp-proxy — unique source /http-bind + /xmpp-websocket
 location = /http-bind {
     proxy_set_header Host ${DOMAIN};
     proxy_set_header X-Forwarded-For \$remote_addr;
@@ -56,13 +43,4 @@ location = /xmpp-websocket {
 }
 EOF
 
-sed -i '/include snippets\/mcbuleli-xmpp-proxy.conf;/d' "$VHOST"
-sed -i '/server_name.*live\.mcbuleli\.org/a\    include snippets/mcbuleli-xmpp-proxy.conf;' "$VHOST"
-
-nginx -t
-systemctl reload nginx
-
-echo "OK nginx websocket/BOSH"
-for path in /http-bind /xmpp-websocket; do
-  curl -sI "https://${DOMAIN}${path}" | head -2
-done
+bash "$SCRIPT_DIR/fix-nginx-xmpp-dedupe.sh"

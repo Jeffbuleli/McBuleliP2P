@@ -19,8 +19,8 @@ echo "==> WebSocket global"
 bash "$SCRIPT_DIR/fix-prosody-websocket-global.sh"
 
 echo ""
-echo "==> nginx websocket"
-bash "$SCRIPT_DIR/fix-nginx-websocket-complete.sh"
+echo "==> nginx websocket (dedupe /http-bind duplicate)"
+bash "$SCRIPT_DIR/fix-nginx-xmpp-dedupe.sh" || bash "$SCRIPT_DIR/fix-nginx-websocket-complete.sh"
 
 echo ""
 echo "==> Jicofo + JVB"
