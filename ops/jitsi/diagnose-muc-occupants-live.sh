@@ -62,7 +62,7 @@ log_user 1
 spawn prosodyctl shell
 expect {
     "prosody>" {
-        send "> assert(loadfile(\"${LUA_RUN}\"))()\r"
+        send "> return (loadfile(\"${LUA_RUN}\"))()\r"
         expect "prosody>"
         send "bye\r"
         expect eof
@@ -80,7 +80,7 @@ EXPECT
     echo ""
     echo "MANUEL (pendant host+guest connectés):"
     echo "  sudo prosodyctl shell"
-    echo "  > assert(loadfile(\"${LUA_RUN}\"))()"
+    echo "  > return (loadfile(\"${LUA_RUN}\"))()"
     echo "  ou:"
     echo "  > room = muc:room(\"${TARGET_JID}\")"
     echo "  > room and room:each_occupant"

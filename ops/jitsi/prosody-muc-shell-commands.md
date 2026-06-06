@@ -19,7 +19,7 @@ Docs : https://prosody.im/doc/console — section **MUC commands**
 Ou script chargé :
 
 ```lua
-> assert(loadfile("/tmp/mcb-muc-check-test-live-mcbuleli.lua"))()
+> return (loadfile("/tmp/mcb-muc-check-test-live-mcbuleli.lua"))()
 ```
 
 (Généré par `diagnose-muc-occupants-live.sh`)
