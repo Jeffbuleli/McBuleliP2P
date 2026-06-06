@@ -17,6 +17,7 @@ echo "==> 1. config.js — guest off, lobby off, pas de jigasi/hiddenDomain"
 if [[ -f "$MEET_CFG" ]]; then
   cp -a "$MEET_CFG" "/root/nginx-backups/$(basename "$MEET_CFG").same-room.$(date +%Y%m%d%H%M%S)"
   bash "$SCRIPT_DIR/fix-no-guest-split.sh" 2>/dev/null || bash "$SCRIPT_DIR/fix-disable-lobby.sh"
+  bash "$SCRIPT_DIR/fix-config-muc-subdomain.sh" 2>/dev/null || true
   python3 - "$MEET_CFG" "$DOMAIN" <<'PY'
 import re, sys
 path, domain = sys.argv[1], sys.argv[2]
