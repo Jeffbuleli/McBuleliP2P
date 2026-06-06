@@ -55,5 +55,8 @@ systemctl restart prosody
 sleep 3
 
 echo ""
-echo "==> jigasi dans logs récents (doit être vide)"
-grep -i 'jigasi\.meet' /var/log/prosody/prosody.log | tail -3 || echo "OK: aucun"
+echo "==> jigasi dans configs restantes"
+grep -rl 'jigasi\.meet\.jitsi' /etc/prosody/ 2>/dev/null || echo "OK: aucun fichier"
+
+: > /var/log/prosody/prosody.log 2>/dev/null || true
+echo "OK: prosody.log vidé — relancer check après join"

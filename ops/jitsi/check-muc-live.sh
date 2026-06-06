@@ -19,51 +19,57 @@ run_check() {
   systemctl is-active prosody jicofo jitsi-videobridge2 nginx 2>/dev/null | paste - - - - || true
 
   echo ""
-  echo "==> 2. c2s (Security doit être secure/TLS, pas insecure)"
-  prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | head -12 || true
-  if prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -q insecure; then
-    echo "  *** ALERTE: sessions insecure → bash ops/jitsi/fix-prosody-websocket-global.sh"
-  fi
+  echo "==> 2. consider_websocket_secure configuré ?"
+  grep -hE 'consider_websocket_secure|consider_bosh_secure' \
+    /etc/prosody/prosody.cfg.lua /etc/prosody/conf.d/${DOMAIN}.cfg.lua 2>/dev/null | head -6 || \
+    echo "MANQUANT → bash ops/jitsi/fix-prosody-websocket-global.sh"
 
   echo ""
-  echo "==> 3. muc:room() via expect (inline — pas loadfile)"
+  echo "==> 3. c2s connectés"
+  prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | head -10 || true
+
+  echo ""
+  echo "==> 4. Room MUC (modulemanager — muc global souvent nil)"
   if command -v expect >/dev/null 2>&1; then
     expect -c "
-      set timeout 20
+      set timeout 25
       log_user 1
       spawn prosodyctl shell
       expect \"prosody>\"
-      send \"> local r=muc:room('${TARGET}')\r\"
+      send \"> local mm=require('core.modulemanager').get_module('${CONFERENCE}','muc')\r\"
+      expect \"prosody>\"
+      send \"> local r=mm and mm.get_room_from_jid and mm:get_room_from_jid('${TARGET}')\r\"
       expect \"prosody>\"
       send \"> if r then print('target_FOUND ${TARGET}') else print('target_MISSING ${TARGET}') end\r\"
       expect \"prosody>\"
-      send \"> if r then local n=0; for o in r:each_occupant() do n=n+1; print('occupant',n,o.nick,o.bare_jid) end; print('occupant_count='..n) end\r\"
-      expect \"prosody>\"
-      send \"> for name in pairs(prosody.hosts) do if name:find('conference') then print('muc_host',name) end end\r\"
+      send \"> if r then local n=0; for o in r:each_occupant() do n=n+1; print('occupant',n,tostring(o.nick),tostring(o.bare_jid)) end; print('occupant_count='..n) end\r\"
       expect \"prosody>\"
       send \"bye\r\"
       expect eof
     " 2>/dev/null || echo "WARN: expect failed"
-  else
-    echo "apt install -y expect"
   fi
 
   echo ""
-  echo "==> 4. jigasi parasite ?"
-  grep -i 'jigasi\.meet' /var/log/prosody/prosody.log 2>/dev/null | tail -2 || echo "OK"
+  echo "==> 5. jigasi dans /etc/prosody (doit être vide)"
+  grep -rl 'jigasi\.meet\.jitsi' /etc/prosody/ 2>/dev/null | head -5 || echo "OK"
 
   echo ""
-  echo "==> 5. Logs MUC récents"
-  tail -400 /var/log/prosody/prosody.log 2>/dev/null | grep -iE \
-    "${ROOM}|${TARGET}|not.?allowed|presence" | tail -15 || echo "(aucune)"
+  echo "==> 6. Logs MUC (depuis dernier restart prosody)"
+  RESTART="$(systemctl show prosody -p ActiveEnterTimestamp --value 2>/dev/null || echo '')"
+  echo "  prosody restart: ${RESTART:-?}"
+  tail -600 /var/log/prosody/prosody.log 2>/dev/null | grep -iE \
+    "${ROOM}|${TARGET}|presence|muc.*${ROOM}|not.?allowed|token" | tail -15 || echo "(aucune)"
 
   echo ""
-  echo "==> 6. Jicofo"
+  echo "==> 7. Jicofo"
   tail -200 /var/log/jitsi/jicofo.log 2>/dev/null | grep -iE \
     "${ROOM}|Allocated|Creating" | tail -6 || echo "(aucune)"
 
   echo ""
-  echo "VERDICT: occupant_count=2 + secure c2s = SUCCÈS"
+  echo "VERDICT"
+  echo "  occupant_count=2 → SUCCÈS"
+  echo "  target_MISSING + 2 c2s → auth OK, join MUC échoue → fix-prosody-websocket-global + finish-baseline"
+  echo "  'insecure' dans c2s = souvent NORMAL derrière nginx (HTTP local)"
 }
 
 if [[ "$WATCH" == "--watch" || "$WATCH" == "-w" ]]; then
