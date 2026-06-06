@@ -98,6 +98,7 @@ echo "==> 3. Prosody — JWT main-only, guest/lobby off, pas de doublons"
 bash "$SCRIPT_DIR/fix-prosody-jwt-main-only.sh" || true
 bash "$SCRIPT_DIR/fix-prosody-purge-stray-hosts.sh" || true
 bash "$SCRIPT_DIR/fix-prosody-single-tenant-muc.sh" 2>/dev/null || true
+bash "$SCRIPT_DIR/fix-prosody-live-websocket.sh" 2>/dev/null || true
 
 # JWT secret si présent
 if [[ -f /root/.mcbuleli-jitsi-secret ]]; then
@@ -105,8 +106,13 @@ if [[ -f /root/.mcbuleli-jitsi-secret ]]; then
   export JITSI_APP_ID="${JITSI_APP_ID:-mcbuleli_live}"
   echo "==> 3b. Sync JWT Prosody"
   # apply-jitsi-jwt sans fix-prosody-jwt-guest (corrigé)
-  bash "$SCRIPT_DIR/apply-jitsi-jwt.sh"
+  bash "$SCRIPT_DIR/apply-jitsi-jwt.sh" || true
 fi
+
+echo ""
+echo "==> 3c. jigasi.meet.jitsi OFF + websocket global (fix insecure c2s)"
+bash "$SCRIPT_DIR/fix-prosody-kill-jigasi-host.sh" || true
+bash "$SCRIPT_DIR/fix-prosody-websocket-global.sh" || true
 
 echo ""
 echo "==> 4. prosody.cfg.lua — c2s_interfaces localhost"

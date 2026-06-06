@@ -152,7 +152,7 @@ if [[ -f "$MEET_CFG" ]]; then
   JITSI_MEET_CONFIG="$MEET_CFG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh"
 fi
 
-prosodyctl check config
+prosodyctl check config 2>&1 | tail -12 || true
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # McBuleli: host ET invité ont un JWT sur live.mcbuleli.org — NE PAS réactiver guest/anonymousdomain
 # (fix-prosody-jwt-guest.sh causait le split MUC host vs guest)

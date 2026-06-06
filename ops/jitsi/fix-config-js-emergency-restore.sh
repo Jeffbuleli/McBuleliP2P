@@ -32,6 +32,7 @@ else
   RESTORED=""
   while IFS= read -r f; do
     [[ -f "$f" ]] || continue
+    is_corrupt "$f" && continue
     if check_cfg "$f"; then
       cp -a "$f" "$MEET_CFG"
       RESTORED="$f"
