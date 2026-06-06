@@ -3,6 +3,7 @@
 # Usage (root VPS): bash ops/jitsi/fix-jicofo-prosody.sh
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 AUTH_DOMAIN="auth.${DOMAIN}"
 CFG="/etc/prosody/conf.d/${DOMAIN}.cfg.lua"
@@ -29,31 +30,6 @@ if [[ -f "$JICOFO_LEGACY" ]]; then
     sed -i "s|^JICOFO_AUTH_PASSWORD=.*|JICOFO_AUTH_PASSWORD=${FOCUS_PASS}|" "$JICOFO_LEGACY"
   else
     echo "JICOFO_AUTH_PASSWORD=${FOCUS_PASS}" >> "$JICOFO_LEGACY"
-  fi
-fi
-
-if [[ -f "$JICOFO_HOCON" ]]; then
-  sed -i "s|auth\\.localhost|${AUTH_DOMAIN}|g; s|localhost|${DOMAIN}|g" "$JICOFO_HOCON"
-  sed -i "s|domain = \"auth\\.[^\"]*\"|domain = \"${AUTH_DOMAIN}\"|g" "$JICOFO_HOCON"
-  sed -i "s|hostname = \"[^\"]*\"|hostname = \"127.0.0.1\"|g" "$JICOFO_HOCON"
-  sed -i "s|username = \"[^\"]*\"|username = \"focus\"|g" "$JICOFO_HOCON"
-  if grep -q 'password = ' "$JICOFO_HOCON"; then
-    sed -i "s|password = \"[^\"]*\"|password = \"${FOCUS_PASS}\"|g" "$JICOFO_HOCON"
-  else
-    cat >> "$JICOFO_HOCON" <<EOF
-
-# mcbuleli-jicofo-auth
-jicofo {
-  xmpp: {
-    client: {
-      hostname = "127.0.0.1"
-      domain = "${AUTH_DOMAIN}"
-      username = "focus"
-      password = "${FOCUS_PASS}"
-    }
-  }
-}
-EOF
   fi
 fi
 
@@ -104,18 +80,20 @@ if [[ -f "$CERT" && -f "$TRUST" ]]; then
     -file "$CERT" -keystore "$TRUST" -storepass changeit 2>/dev/null || true
 fi
 
-systemctl restart prosody
-sleep 2
-systemctl restart jicofo jitsi-videobridge2
+echo "==> 7. jicofo.conf complet (conference-muc-jid + client-proxy + brewery)"
+bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
 
 echo ""
-echo "==> 7. Statut (attendez 10s puis vérifiez les logs)"
-sleep 8
+echo "==> 8. Composant focus Prosody + JVB brewery"
+bash "$SCRIPT_DIR/fix-jitsi-brewery-complete.sh"
+
+echo ""
+echo "==> 9. Statut Jicofo"
 if journalctl -u jicofo -n 15 --no-pager | grep -qi 'Failed to connect'; then
   echo "WARN: Jicofo échoue encore — collez:"
   echo "  journalctl -u jicofo -n 40 --no-pager"
-  echo "  grep -E 'xmpp|password|domain' $JICOFO_HOCON $JICOFO_LEGACY 2>/dev/null"
+  echo "  grep -E 'conference-muc-jid|client-proxy|brewery-jid' $JICOFO_HOCON 2>/dev/null"
 else
-  echo "OK — Jicofo connecté (pas de Failed to connect récent)"
-  journalctl -u jicofo -n 8 --no-pager | tail -5
+  echo "OK — Jicofo connecté"
+  grep -iE 'Registered|conference-muc-jid|Added new videobridge' /var/log/jitsi/jicofo.log 2>/dev/null | tail -6 || true
 fi

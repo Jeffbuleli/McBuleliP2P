@@ -44,11 +44,13 @@ export async function signAcademyJitsiToken(args: {
         email: `${args.userId}@users.mcbuleli.org`,
         moderator: args.moderator,
         affiliation: args.moderator ? "owner" : "member",
+        // Prosody token_lobby_bypass (si installé) — invités dans la même MUC que le host
+        lobby_bypass: true,
       },
     },
   })
     // Prosody luajwtjitsi exige header typ === "JWT" (sinon: Invalid typ)
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT", kid: appId })
     .setIssuer(appId)
     .setAudience("jitsi")
     .setSubject(jitsiJwtSub())

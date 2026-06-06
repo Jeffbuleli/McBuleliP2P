@@ -20,6 +20,7 @@ cp -a "$MEET_CFG" "/root/nginx-backups/$(basename "$MEET_CFG").no-guest.${STAMP}
 # --- 1) config.js : un seul domaine, lobby off ---
 bash "$SCRIPT_DIR/fix-jitsi-jwt-only-mode.sh" 2>/dev/null || true
 bash "$SCRIPT_DIR/fix-disable-lobby.sh" 2>/dev/null || true
+bash "$SCRIPT_DIR/fix-prosody-disable-lobby.sh" 2>/dev/null || true
 sed -i "s|^[[:space:]]*anonymousdomain:|        // anonymousdomain:|" "$MEET_CFG"
 sed -i "s|config\.hosts\.anonymousdomain = '${GUEST}'|// config.hosts.anonymousdomain = '${GUEST}'|g" "$MEET_CFG" || true
 
@@ -34,7 +35,7 @@ config.hosts.muc = 'conference.${DOMAIN}';
 delete config.hosts.anonymousdomain;
 config.enableLobby = false;
 config.disableLobby = true;
-config.enableUserRolesBasedOnToken = true;
+config.enableUserRolesBasedOnToken = false;
 config.deploymentInfo = config.deploymentInfo || {};
 config.deploymentInfo.product = 'mcbuleli';
 config.deploymentInfo.environment = 'same-room-${STAMP}';
