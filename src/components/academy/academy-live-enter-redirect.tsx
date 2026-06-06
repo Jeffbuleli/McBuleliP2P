@@ -14,11 +14,15 @@ export function AcademyLiveEnterRedirect({ url }: { url: string }) {
   }, [url]);
 
   return (
-    <div className={`mx-auto max-w-md space-y-4 px-4 py-8 text-center ${academyCls.root}`}>
-      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#305f33]">
-        <AcademyIcon name="live" className="h-7 w-7 !text-white" />
+    <div className={`mx-auto max-w-md space-y-3 px-4 py-10 text-center ${academyCls.root}`}>
+      <span className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#305f33] shadow-lg">
+        <span
+          className="absolute inset-0 animate-ping rounded-2xl bg-[#305f33]/30"
+          aria-hidden
+        />
+        <AcademyIcon name="video" className="relative h-8 w-8 !text-white" />
       </span>
-      <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+      <p className="text-xs font-extrabold text-[#305f33]">
         {t("academy_live_enter_redirecting")}
       </p>
     </div>

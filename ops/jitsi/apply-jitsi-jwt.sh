@@ -52,6 +52,7 @@ block = f'''    authentication = "token"
     app_id = "{app_id}"
     app_secret = "{secret}"
     allow_empty_token = false
+    enable_domain_verification = false
 '''
 
 vhost_re = rf'VirtualHost "{re.escape(host)}"\s*\n'
@@ -152,7 +153,7 @@ if [[ -f "$MEET_CFG" ]]; then
 fi
 
 prosodyctl check config
-systemctl restart prosody
-systemctl restart jicofo jitsi-videobridge2 nginx
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash "$SCRIPT_DIR/fix-prosody-jwt-guest.sh"
 
 echo "Done. Set the same JITSI_APP_ID and JITSI_JWT_SECRET on Render, then redeploy."

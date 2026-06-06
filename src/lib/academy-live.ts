@@ -158,8 +158,16 @@ export function buildJitsiLowBandwidthHash(
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
   const isHost = resolved === "host";
   // Pas de 2e écran « Rejoindre » — McBuleli ouvre la salle, Jitsi entre directement.
+  const liveHost =
+    process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim().replace(/^https?:\/\//, "").replace(/\/$/, "") ||
+    "live.mcbuleli.org";
   const params: string[] = [
     "config.prejoinPageEnabled=false",
+    "config.prejoinConfig.enabled=false",
+    "config.enableLobby=false",
+    "config.disableLobby=true",
+    `config.hosts.domain=${encodeURIComponent(liveHost)}`,
+    `config.hosts.muc=${encodeURIComponent(`conference.${liveHost}`)}`,
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
     `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL_LIVE_HOST)}`,
     "interfaceConfig.SHOW_JITSI_WATERMARK=true",

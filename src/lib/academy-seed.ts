@@ -25,8 +25,8 @@ let seedPromise: Promise<void> | null = null;
  * Idempotent seed for the June 2026 launch cohort (prod + dev).
  */
 export async function ensureAcademyLaunchSeed(): Promise<void> {
-  if (seedPromise) return seedPromise;
-  seedPromise = (async () => {
+  if (!seedPromise) {
+    seedPromise = (async () => {
     const db = getDb();
     const [existing] = await db
       .select({ id: academyPrograms.id })
@@ -36,7 +36,6 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
     if (existing) {
       await seedProProgram(db);
       await ensureAcademyKnowledgeSeeded();
-      await ensureAcademyTestLiveSession(db);
       return;
     }
 
@@ -242,7 +241,10 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
     await ensureAcademyKnowledgeSeeded();
     await ensureAcademyTestLiveSession(db);
   })();
-  return seedPromise;
+  }
+  await seedPromise;
+  // Fenêtre « en direct » du live de test — rafraîchie à chaque appel (pas seulement au boot Render).
+  await ensureAcademyTestLiveSession(getDb());
 }
 
 /** Live de test — toujours dans la fenêtre « en direct » pour valider le flux McBuleli Meet. */
@@ -281,7 +283,7 @@ async function ensureAcademyTestLiveSession(
   if (existing) {
     await db
       .update(academySessions)
-      .set({ startsAt, endsAt })
+      .set({ startsAt, endsAt, liveStartedAt: null })
       .where(eq(academySessions.id, existing.id));
     return;
   }

@@ -10,7 +10,7 @@ import {
   type OpenClassroomPanel,
 } from "@/components/academy/academy-open-classroom-bar";
 import { AcademyLiveTutorSheet } from "@/components/academy/academy-live-tutor-sheet";
-import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
+import { AcademyIcon } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 import {
   formatLiveCountdown,
@@ -22,6 +22,12 @@ import { isAcademyLiveEmbedEnabled } from "@/lib/academy-live-embed";
 import { AcademyLiveEmbed } from "@/components/academy/academy-live-embed";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { useAcademyLiveJoinUrls } from "@/hooks/use-academy-live-join-urls";
+import {
+  AcademyLiveCompanionGuide,
+  AcademyLiveStatusBanner,
+  AcademyLiveTipsGrid,
+} from "@/components/academy/academy-live-companion-guide";
+import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
 
 type SessionLive = {
   id: string;
@@ -34,6 +40,7 @@ type SessionLive = {
   liveJoinUrlAudio: string;
   livePhase: LivePhase;
   setupEndsAt: string;
+  liveStartedAt: string | null;
   isLiveNow: boolean;
   checkedIn: boolean;
   canCheckIn: boolean;
@@ -57,7 +64,6 @@ export function AcademyLiveRoomClient({
   const [tutorEnabled, setTutorEnabled] = useState(true);
   const [liveRole, setLiveRole] = useState<AcademyLiveRole>("learner");
   const [checking, setChecking] = useState(false);
-  const [tipsOpen, setTipsOpen] = useState(false);
   const [panel, setPanel] = useState<OpenClassroomPanel>(null);
   const [tick, setTick] = useState(0);
   const [err, setErr] = useState<string | null>(null);
@@ -69,11 +75,15 @@ export function AcademyLiveRoomClient({
     session.livePhase !== "ended" &&
     session.livePhase !== "upcoming";
 
+  const isHost = liveRole === "host";
+
   const { urls: gatedUrls, gateError } = useAcademyLiveJoinUrls({
     editionSlug,
     sessionSlug,
     programSlug,
     enabled: canJoinEnabled,
+    isHost,
+    liveStartedAt: session?.liveStartedAt ?? null,
   });
 
   const load = useCallback(async () => {
@@ -180,15 +190,22 @@ export function AcademyLiveRoomClient({
           ? t("academy_live_phase_warmup_detail")
           : "";
 
-  const canJoin = canJoinEnabled;
-  const isHost = liveRole === "host";
-  const joinVideo = gatedUrls
-    ? isHost
-      ? gatedUrls.host
-      : gatedUrls.learner
-    : session.liveJoinUrl;
-  const joinHost = gatedUrls?.host ?? session.liveJoinUrlHost;
-  const joinAudio = gatedUrls?.audio ?? session.liveJoinUrlAudio;
+  const hostStarted = Boolean(session.liveStartedAt);
+  const waitingForHost = canJoinEnabled && !isHost && !hostStarted;
+  const canJoinVideo =
+    canJoinEnabled &&
+    (isHost || hostStarted) &&
+    gateError !== "academy_live_account_required" &&
+    gateError !== "academy_live_host_requires_payment" &&
+    gateError !== "academy_live_enroll_required";
+  // Court lien McBuleli → /app/live/enter signe le JWT côté serveur (évite URL tronquée + bouton JOIN figé).
+  const enterBase = { editionSlug, sessionSlug, programSlug };
+  const joinVideo = buildLiveEnterAppPath({
+    ...enterBase,
+    mode: isHost ? "host" : "learner",
+  });
+  const joinHost = buildLiveEnterAppPath({ ...enterBase, mode: "host" });
+  const joinAudio = buildLiveEnterAppPath({ ...enterBase, mode: "audio" });
 
   const timing = liveSessionRemainingSec({
     startsAt: new Date(session.startsAt),
@@ -238,15 +255,24 @@ export function AcademyLiveRoomClient({
         <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
           {new Date(session.startsAt).toLocaleString()}
         </p>
-        {phaseDetail ? (
-          <p className="mt-2 rounded-lg bg-white/80 px-2.5 py-2 text-xs font-semibold text-[#1a2e1c]">
-            <span className="font-extrabold text-[#305f33]">{phaseLabel}</span>
-            {phaseDetail ? ` — ${phaseDetail}` : ""}
-          </p>
-        ) : (
-          <p className="mt-2 text-xs font-bold text-[#305f33]">{phaseLabel}</p>
-        )}
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-xs font-extrabold text-[#305f33]">
+          <AcademyIcon name="live" className="h-3.5 w-3.5 shrink-0" />
+          {phaseLabel}
+          {phaseDetail ? (
+            <span className="font-semibold text-[color:var(--fd-muted)]">
+              · {phaseDetail}
+            </span>
+          ) : null}
+        </p>
       </header>
+
+      <AcademyLiveCompanionGuide />
+
+      {isHost && canJoinEnabled && !hostStarted ? (
+        <AcademyLiveStatusBanner variant="host_start" />
+      ) : null}
+
+      {waitingForHost ? <AcademyLiveStatusBanner variant="waiting_host" /> : null}
 
       {!enrolled ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -254,19 +280,22 @@ export function AcademyLiveRoomClient({
         </p>
       ) : null}
 
-      {gateError && canJoin ? (
+      {gateError &&
+      canJoinEnabled &&
+      gateError !== "academy_live_waiting_host" ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {t(gateError as "academy_live_enroll_required")}
         </p>
       ) : null}
 
-      {enrolled && canJoin && gatedUrls && isAcademyLiveEmbedEnabled() ? (
+      {enrolled && canJoinVideo && gatedUrls && isAcademyLiveEmbedEnabled() ? (
         <AcademyLiveEmbed
           joinUrl={joinVideo}
           title={session.title}
         />
-      ) : enrolled && canJoin ? (
-        <p className="text-center text-xs leading-relaxed text-[color:var(--fd-muted)]">
+      ) : enrolled && canJoinVideo ? (
+        <p className="flex items-center justify-center gap-1.5 text-center text-[10px] font-bold text-[color:var(--fd-muted)]">
+          <AcademyIcon name="chat" className="h-3.5 w-3.5 shrink-0" />
           {t("academy_live_bandwidth_note")}
         </p>
       ) : null}
@@ -286,34 +315,7 @@ export function AcademyLiveRoomClient({
         </p>
       ) : null}
 
-      <div className="rounded-xl border border-[color:var(--fd-border)] bg-white">
-        <button
-          type="button"
-          onClick={() => setTipsOpen((o) => !o)}
-          className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-bold text-[color:var(--fd-text)]"
-        >
-          {t("academy_live_tips_title")}
-          <span className="text-[color:var(--fd-muted)]">{tipsOpen ? "−" : "+"}</span>
-        </button>
-        {tipsOpen ? (
-          <ul className="space-y-2 border-t border-[color:var(--fd-border)] px-3 py-2.5 text-xs text-[color:var(--fd-text)]">
-            {(
-              [
-                ["mic", "academy_live_tip_mic"],
-                ["camera", "academy_live_tip_camera"],
-                ["screen", "academy_live_tip_screen"],
-                ["hand", "academy_live_tip_hand"],
-                ["signal", "academy_live_tip_data"],
-              ] as const
-            ).map(([icon, key]) => (
-              <li key={key} className="flex items-center gap-2">
-                <AcademyIcon name={icon as AcademyIconName} className="h-4 w-4 shrink-0" />
-                <span>{t(key)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+      <AcademyLiveTipsGrid />
 
       {panel === "chat" && enrolled && session.isLiveNow ? (
         <AcademyLiveChat editionSlug={editionSlug} programSlug={programSlug} />
@@ -327,7 +329,7 @@ export function AcademyLiveRoomClient({
       />
 
       <AcademyOpenClassroomBar
-        canJoin={canJoin && !!gatedUrls}
+        canJoin={canJoinVideo}
         isHost={isHost}
         joinVideoHref={joinVideo}
         joinAudioHref={joinAudio}
@@ -336,6 +338,7 @@ export function AcademyLiveRoomClient({
         onPanel={setPanel}
         backHref={backHref}
         tutorEnabled={tutorEnabled}
+        waitingForHost={waitingForHost}
       />
     </div>
   );

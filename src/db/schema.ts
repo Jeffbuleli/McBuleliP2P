@@ -2306,6 +2306,8 @@ export const academySessions = pgTable(
     replayUrl: text("replay_url"),
     replayR2Key: varchar("replay_r2_key", { length: 256 }),
     replayPublishedAt: timestamp("replay_published_at", { withTimezone: true }),
+    /** Host a cliqué « Démarrer le live » — invités peuvent entrer la vidéo. */
+    liveStartedAt: timestamp("live_started_at", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => [

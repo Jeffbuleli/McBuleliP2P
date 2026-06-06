@@ -15,6 +15,10 @@ import {
   canUserHostAcademyLive,
   canUserJoinAcademyLive,
 } from "@/lib/academy-live-service";
+import {
+  assertLearnerMayEnterLive,
+  markLiveSessionStartedByHost,
+} from "@/lib/academy-live-session";
 import { resolveAcademyLiveRoleForEdition } from "@/lib/academy-live-role";
 import type { UserRoleType } from "@/lib/roles";
 
@@ -78,6 +82,24 @@ export async function resolveGatedLiveJoinUrl(args: {
     : args.mode === "audio"
       ? "audio"
       : "learner";
+
+  const gate = await assertLearnerMayEnterLive({
+    editionId: args.editionId,
+    sessionSlug: args.sessionSlug,
+    mode: effectiveMode,
+  });
+  if (!gate.ok) {
+    return { ok: false, code: gate.code };
+  }
+
+  if (effectiveMode === "host") {
+    await markLiveSessionStartedByHost({
+      userId: args.userId,
+      editionId: args.editionId,
+      sessionSlug: args.sessionSlug,
+      appRole: args.appRole,
+    });
+  }
 
   let url = buildLiveJoinUrl({
     editionSlug: args.editionSlug,

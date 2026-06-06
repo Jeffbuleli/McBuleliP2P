@@ -15,6 +15,8 @@ export function useAcademyLiveJoinUrls(args: {
   sessionSlug: string;
   programSlug: string;
   enabled: boolean;
+  isHost?: boolean;
+  liveStartedAt?: string | null;
 }) {
   const [urls, setUrls] = useState<JoinUrls | null>(null);
   const [gateError, setGateError] = useState<string | null>(null);
@@ -60,34 +62,61 @@ export function useAcademyLiveJoinUrls(args: {
       await fetch("/api/auth/session", { credentials: "same-origin" }).catch(
         () => undefined,
       );
-      const modes: LiveJoinMode[] = ["learner", "host", "audio"];
+      const fetchLearner =
+        args.isHost || Boolean(args.liveStartedAt?.trim());
+      const modes: LiveJoinMode[] = [
+        ...(fetchLearner ? (["learner", "audio"] as const) : []),
+        ...(args.isHost ? (["host"] as const) : []),
+      ];
+      if (modes.length === 0) {
+        setUrls(null);
+        setGateError(null);
+        return;
+      }
       const results = await Promise.all(
         modes.map((mode) => fetchMode(q, mode, true)),
       );
+      const learner = results.find((r) => r.mode === "learner");
+      const host = results.find((r) => r.mode === "host");
+      const audio = results.find((r) => r.mode === "audio");
       const firstErr = results.find((r) => !r.ok);
-      if (firstErr && firstErr.mode === "learner") {
+      if (firstErr?.error === "academy_live_waiting_host") {
+        setGateError("academy_live_waiting_host");
+        setUrls(
+          host?.url
+            ? { learner: "", host: host.url, audio: "" }
+            : null,
+        );
+        return;
+      }
+      if (firstErr && !args.isHost) {
         setGateError(firstErr.error ?? "academy_live_account_required");
         setUrls(null);
         return;
       }
-      const learner = results.find((r) => r.mode === "learner");
-      const host = results.find((r) => r.mode === "host");
-      const audio = results.find((r) => r.mode === "audio");
-      if (!learner?.url) {
+      if (!args.isHost && !learner?.url) {
         setGateError(learner?.error ?? "academy_live_account_required");
         setUrls(null);
         return;
       }
       setUrls({
-        learner: learner.url,
-        host: host?.url ?? learner.url,
-        audio: audio?.url ?? learner.url,
+        learner: learner?.url ?? host?.url ?? "",
+        host: host?.url ?? learner?.url ?? "",
+        audio: audio?.url ?? learner?.url ?? "",
       });
       setGateError(null);
     } finally {
       setLoading(false);
     }
-  }, [args.editionSlug, args.enabled, args.programSlug, args.sessionSlug, fetchMode]);
+  }, [
+    args.editionSlug,
+    args.enabled,
+    args.isHost,
+    args.liveStartedAt,
+    args.programSlug,
+    args.sessionSlug,
+    fetchMode,
+  ]);
 
   useEffect(() => {
     void load();

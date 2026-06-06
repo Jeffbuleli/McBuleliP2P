@@ -101,6 +101,7 @@ export type AcademySessionView = {
   isLiveNow: boolean;
   livePhase: LivePhase;
   setupEndsAt: string | null;
+  liveStartedAt: string | null;
   replayUrl: string | null;
   hasReplay: boolean;
   checkedIn: boolean;
@@ -641,6 +642,7 @@ export async function getEditionDetail(args: {
       isLiveNow: liveNow,
       livePhase,
       setupEndsAt: setupEndsAtIso(s.startsAt),
+      liveStartedAt: s.liveStartedAt?.toISOString() ?? null,
       replayUrl: ended ? replayUrl : null,
       hasReplay: ended && !!replayUrl,
       checkedIn: attended.has(s.id),

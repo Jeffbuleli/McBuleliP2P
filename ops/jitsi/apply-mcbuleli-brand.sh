@@ -114,16 +114,22 @@ else
 fi
 
 echo "==> Entrée directe (sans 2e écran pré-join Jitsi)"
-if grep -q 'prejoinPageEnabled' "$CONFIG"; then
-  sed -i 's/prejoinPageEnabled = true/prejoinPageEnabled = false/g; s/prejoinPageEnabled=true/prejoinPageEnabled=false/g' "$CONFIG"
-else
-  echo "config.prejoinPageEnabled = false;" >> "$CONFIG"
-fi
+# Jitsi récent: prejoinConfig.enabled (dans var config) — pas seulement prejoinPageEnabled
+sed -i \
+  -e 's/prejoinPageEnabled = true/prejoinPageEnabled = false/g' \
+  -e 's/prejoinPageEnabled=true/prejoinPageEnabled=false/g' \
+  -e 's/prejoinPageEnabled: true/prejoinPageEnabled: false/g' \
+  -e 's/prejoinPageEnabled:true/prejoinPageEnabled: false/g' \
+  -e 's/prejoinConfig: { enabled: true/prejoinConfig: { enabled: false/g' \
+  -e 's/prejoinConfig:{enabled:true/prejoinConfig:{enabled:false/g' \
+  "$CONFIG" 2>/dev/null || true
 if ! grep -q 'mcbuleli-prejoin-defaults' "$CONFIG"; then
   cat >> "$CONFIG" <<'EOF'
 
 // mcbuleli-prejoin-defaults — entrée directe (McBuleli gère le clic Joindre)
 config.prejoinPageEnabled = false;
+config.prejoinConfig = config.prejoinConfig || {};
+config.prejoinConfig.enabled = false;
 config.startWithAudioMuted = false;
 config.startWithVideoMuted = true;
 config.requireDisplayName = true;
@@ -131,6 +137,13 @@ config.disableThirdPartyRequests = false;
 config.interfaceConfig = config.interfaceConfig || {};
 config.interfaceConfig.DEFAULT_BACKGROUND = '#f4f6f4';
 EOF
+else
+  grep -q 'prejoinConfig.enabled = false' "$CONFIG" || {
+    cat >> "$CONFIG" <<'EOF'
+config.prejoinConfig = config.prejoinConfig || {};
+config.prejoinConfig.enabled = false;
+EOF
+  }
 fi
 
 echo "==> Corriger fond sombre + requêtes tierces (README manuel)"
