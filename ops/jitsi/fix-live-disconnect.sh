@@ -42,7 +42,7 @@ PY
 
 echo ""
 echo "==> 3. config.js — restauration syntaxe + overrides"
-bash "$SCRIPT_DIR/fix-config-js-emergency-restore.sh"
+bash "$SCRIPT_DIR/fix-config-js-hard-reset.sh" 2>/dev/null || bash "$SCRIPT_DIR/fix-config-js-emergency-restore.sh"
 
 echo ""
 echo "==> 3b. Prosody websocket/bosh derrière nginx TLS"

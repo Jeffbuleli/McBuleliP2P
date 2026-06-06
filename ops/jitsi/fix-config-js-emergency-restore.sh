@@ -14,9 +14,17 @@ check_cfg() {
   command -v node >/dev/null 2>&1 && node --check "$1" 2>/dev/null
 }
 
+is_corrupt() {
+  local f="$1"
+  grep -qE 'if \(subdomain\) \{.*substr.*split' "$f" 2>/dev/null && return 0
+  check_cfg "$f" || return 0
+  return 1
+}
+
 echo "==> 1. État actuel"
-if check_cfg "$MEET_CFG"; then
-  echo "OK: config.js déjà valide — pas de restauration"
+echo "    Note: if (subdomain.startsWith('<!--')) seul = normal (SSI Jitsi)"
+if ! is_corrupt "$MEET_CFG"; then
+  echo "OK: structure saine — pas de restauration"
 else
   echo "ECHEC syntaxe actuelle:"
   node --check "$MEET_CFG" 2>&1 | head -5 || true
