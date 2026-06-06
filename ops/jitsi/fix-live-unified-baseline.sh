@@ -133,13 +133,14 @@ echo ""
 echo "==> 6. Jicofo + JVB brewery"
 bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
 bash "$SCRIPT_DIR/fix-jitsi-brewery-complete.sh"
+bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
 
 echo ""
 echo "==> 7. Restart + vérif"
 prosodyctl check config
 systemctl restart prosody
 sleep 4
-systemctl restart jicofo jitsi-videobridge2
+systemctl restart jitsi-videobridge2
 systemctl reload nginx
 sleep 8
 
@@ -167,6 +168,6 @@ echo "  1. Fermer TOUS les onglets Jitsi / vider cache (Ctrl+Shift+R)"
 echo "  2. Host: App → Démarrer le live (test-live-mcbuleli)"
 echo "  3. Guest: App → Vidéo (même session)"
 echo "  4. Terminal A: sudo tail -f /var/log/prosody/prosody.log"
-echo "  5. Terminal B: sudo journalctl -u jicofo -f"
+echo "  5. Terminal B: sudo tail -f /var/log/jitsi/jicofo.log  (pas journalctl — conférences dans jicofo.log)"
 echo "  6. Attendu: test-live-mcbuleli@${CONFERENCE} pour les DEUX"
 echo "  7. sudo bash ops/jitsi/audit-live-coherence.sh test-live-mcbuleli"
