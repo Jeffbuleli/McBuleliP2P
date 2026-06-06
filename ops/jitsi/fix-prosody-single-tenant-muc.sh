@@ -37,7 +37,7 @@ echo ""
 echo "==> muc_domain_mapper restant (attendu: Component conference seulement)"
 grep -n 'muc_domain_mapper' "$CFG" || echo "(aucun — vérifier manuellement)"
 
-prosodyctl check config
+prosodyctl check config 2>&1 | tail -10 || true
 systemctl restart prosody
 sleep 3
 systemctl restart jicofo

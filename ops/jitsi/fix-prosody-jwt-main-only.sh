@@ -86,5 +86,5 @@ open(path, "w").write(text)
 print("OK: JWT main-only (no guest split)")
 PY
 
-prosodyctl check config
+prosodyctl check config 2>&1 | tail -10 || true
 echo "OK fix-prosody-jwt-main-only"

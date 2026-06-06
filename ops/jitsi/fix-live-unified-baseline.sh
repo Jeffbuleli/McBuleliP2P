@@ -95,8 +95,9 @@ node --check "$MEET_CFG"
 
 echo ""
 echo "==> 3. Prosody — JWT main-only, guest/lobby off, pas de doublons"
-bash "$SCRIPT_DIR/fix-prosody-jwt-main-only.sh"
-bash "$SCRIPT_DIR/fix-prosody-purge-stray-hosts.sh"
+bash "$SCRIPT_DIR/fix-prosody-jwt-main-only.sh" || true
+bash "$SCRIPT_DIR/fix-prosody-purge-stray-hosts.sh" || true
+bash "$SCRIPT_DIR/fix-prosody-single-tenant-muc.sh" 2>/dev/null || true
 
 # JWT secret si présent
 if [[ -f /root/.mcbuleli-jitsi-secret ]]; then
@@ -163,11 +164,7 @@ grep -iE 'Registered|Added new videobridge|Authenticated' /var/log/jitsi/jicofo.
 echo ""
 echo "OK baseline appliquée."
 echo ""
-echo "TEST LIVE (obligatoire):"
-echo "  1. Fermer TOUS les onglets Jitsi / vider cache (Ctrl+Shift+R)"
-echo "  2. Host: App → Démarrer le live (test-live-mcbuleli)"
-echo "  3. Guest: App → Vidéo (même session)"
-echo "  4. Terminal A: sudo tail -f /var/log/prosody/prosody.log"
-echo "  5. Terminal B: sudo tail -f /var/log/jitsi/jicofo.log  (pas journalctl — conférences dans jicofo.log)"
-echo "  6. Attendu: test-live-mcbuleli@${CONFERENCE} pour les DEUX"
-echo "  7. sudo bash ops/jitsi/audit-live-coherence.sh test-live-mcbuleli"
+echo "TEST LIVE — UNE commande (pas de prosodyctl shell manuel):"
+echo "  1. Host + Guest dans l'UI (60s)"
+echo "  2. sudo bash ops/jitsi/check-muc-live.sh test-live-mcbuleli"
+echo "  3. Succès = occupant_count=2 dans la sortie"

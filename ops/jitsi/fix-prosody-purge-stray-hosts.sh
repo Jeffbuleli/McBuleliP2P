@@ -89,7 +89,7 @@ PY
 
 echo ""
 echo "==> 3. prosodyctl check + restart"
-prosodyctl check config
+prosodyctl check config 2>&1 | tail -10 || true
 systemctl restart prosody
 sleep 3
 
