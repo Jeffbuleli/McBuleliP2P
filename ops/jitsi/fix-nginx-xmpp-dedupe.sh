@@ -60,9 +60,27 @@ open(path, 'w').write(text)
 print("OK deduped", path)
 PY
 
-# Snippet doit exister (créé par fix-nginx-websocket-complete.sh)
 if [[ ! -f "$SNIP" ]]; then
-  bash "$(dirname "$0")/fix-nginx-websocket-complete.sh" 2>/dev/null || true
+  cat > "$SNIP" <<EOF
+location = /http-bind {
+    proxy_set_header Host ${DOMAIN};
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_pass http://127.0.0.1:5280/http-bind;
+    proxy_buffering off;
+    proxy_read_timeout 900s;
+}
+location = /xmpp-websocket {
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection \$connection_upgrade;
+    proxy_set_header Host ${DOMAIN};
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_pass http://127.0.0.1:5280/xmpp-websocket;
+    proxy_buffering off;
+    proxy_read_timeout 86400s;
+    tcp_nodelay on;
+}
+EOF
 fi
 
 echo "==> Comptage locations (attendu: 0 inline dans vhost, 1 include)"

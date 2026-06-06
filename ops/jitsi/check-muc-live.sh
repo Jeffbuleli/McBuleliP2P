@@ -28,16 +28,14 @@ run_check() {
   echo "  sessions registered: ${N}"
 
   echo ""
-  echo "==> 3. Room MUC (commande console muc:room — pas de guillemets Tcl)"
+  echo "==> 3. Room MUC (lua eval unique — variable r ne persiste pas entre lignes)"
   if command -v expect >/dev/null 2>&1; then
     expect <<EXPECT 2>&1 || true
 set timeout 30
 log_user 1
 spawn prosodyctl shell
 expect "prosody>"
-send "local r = muc:room(\"${TARGET}\"); if r then print(\"target_FOUND ${TARGET}\") else print(\"target_MISSING ${TARGET}\") end\r"
-expect "prosody>"
-send "if r then local n=0; for o in r:each_occupant() do n=n+1; print(\"occupant\", n, o.nick) end; print(\"occupant_count=\"..tostring(n)) end\r"
+send "> local target='${TARGET}'; local r=muc:room(target); if not r then print('target_MISSING '..target) else print('target_FOUND '..target); local n=0; for o in r:each_occupant() do n=n+1; print('occupant', n, o.nick) end; print('occupant_count='..n) end\r"
 expect "prosody>"
 send "bye\r"
 expect eof

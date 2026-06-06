@@ -12,6 +12,29 @@ MARKER="mcbuleli-force-join"
 
 cp -a "$MEET_CFG" "/root/nginx-backups/$(basename "$MEET_CFG").force-join.$(date +%Y%m%d%H%M%S)"
 
+# Désactiver pré-join / welcome dans var config (pas seulement le bloc final)
+sed -i \
+  -e 's/prejoinPageEnabled = true/prejoinPageEnabled = false/g' \
+  -e 's/prejoinPageEnabled=true/prejoinPageEnabled=false/g' \
+  -e 's/prejoinPageEnabled: true/prejoinPageEnabled: false/g' \
+  -e 's/enableWelcomePage = true/enableWelcomePage = false/g' \
+  -e 's/enableWelcomePage=true/enableWelcomePage=false/g' \
+  -e 's/enableWelcomePage: true/enableWelcomePage: false/g' \
+  "$MEET_CFG"
+python3 - "$MEET_CFG" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+text2 = re.sub(
+    r'(prejoinConfig\s*:\s*\{[^}]*?)enabled\s*:\s*true',
+    r'\1enabled: false',
+    text,
+    flags=re.DOTALL,
+)
+if text2 != text:
+    open(path, 'w').write(text2)
+PY
+
 python3 - "$MEET_CFG" "$DOMAIN" "$CONFERENCE" "$MARKER" <<'PY'
 import re, sys
 path, domain, conference, marker = sys.argv[1:5]
