@@ -1,10 +1,13 @@
 import { SignJWT } from "jose";
 import type { LiveJoinMode } from "@/lib/academy-live";
 
+export function jitsiAppId(): string {
+  return process.env.JITSI_APP_ID?.trim() || "mcbuleli_live";
+}
+
 export function isAcademyJitsiJwtEnabled(): boolean {
   const secret = process.env.JITSI_JWT_SECRET?.trim();
-  const appId = process.env.JITSI_APP_ID?.trim();
-  return Boolean(secret && secret.length >= 16 && appId);
+  return Boolean(secret && secret.length >= 16);
 }
 
 function jitsiJwtSub(): string {
@@ -24,14 +27,16 @@ export async function signAcademyJitsiToken(args: {
   ttlSec?: number;
 }): Promise<string> {
   const secret = process.env.JITSI_JWT_SECRET?.trim();
-  const appId = process.env.JITSI_APP_ID?.trim() ?? "mcbuleli_live";
+  const appId = jitsiAppId();
   if (!secret || secret.length < 16) {
     throw new Error("jitsi_jwt_not_configured");
   }
   const key = new TextEncoder().encode(secret);
   const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 12 * 60 * 60);
+  // room "*" — évite mismatch URL/JWT ; la gate nginx exige déjà ?jwt=
+  const roomClaim = "*";
   return new SignJWT({
-    room: args.room,
+    room: roomClaim,
     moderator: args.moderator,
     context: {
       user: {

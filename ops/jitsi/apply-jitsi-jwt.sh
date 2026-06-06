@@ -54,18 +54,87 @@ block = f'''    authentication = "token"
     allow_empty_token = false
 '''
 
-if re.search(r'authentication\s*=\s*"token"', text):
-    text = re.sub(r'app_id\s*=\s*"[^"]*"', f'app_id = "{app_id}"', text, count=1)
-    text = re.sub(r'app_secret\s*=\s*"[^"]*"', f'app_secret = "{secret}"', text, count=1)
-    text = re.sub(r'allow_empty_token\s*=\s*\w+', 'allow_empty_token = false', text, count=1)
-else:
-    pattern = rf'(VirtualHost "{host}"\s*\n)'
-    if not re.search(pattern, text):
-        print(f"VirtualHost \"{host}\" not found in {path}", file=sys.stderr)
-        sys.exit(1)
-    text = re.sub(pattern, r'\1' + block, text, count=1)
+vhost_re = rf'VirtualHost "{re.escape(host)}"\s*\n'
 
-if "token_verification" not in text:
+def dedupe_token_auth_in_vhost(body: str) -> str:
+    """Un seul bloc token par VirtualHost (doublon jitsi-meet-tokens + manuel)."""
+    if body.count('authentication = "token"') <= 1:
+        return body
+    lines = body.splitlines(keepends=True)
+    out: list[str] = []
+    i = 0
+    kept_token = False
+    while i < len(lines):
+        line = lines[i]
+        if re.match(r'\s*authentication\s*=\s*"token"', line):
+            if kept_token:
+                i += 1
+                while i < len(lines) and re.match(
+                    r'\s*(app_id|app_secret|allow_empty_token|-- do not delete me)', lines[i]
+                ):
+                    i += 1
+                continue
+            kept_token = True
+        out.append(line)
+        i += 1
+    return "".join(out)
+
+if re.search(vhost_re, text):
+    def patch_vhost(m):
+        body = m.group(1)
+        body = dedupe_token_auth_in_vhost(body)
+        if re.search(r'authentication\s*=\s*"token"', body):
+            body = re.sub(r'app_id\s*=\s*"[^"]*"', f'app_id = "{app_id}"', body, count=1)
+            body = re.sub(r'app_secret\s*=\s*"[^"]*"', f'app_secret = "{secret}"', body, count=1)
+            if re.search(r'allow_empty_token\s*=', body):
+                body = re.sub(
+                    r'allow_empty_token\s*=\s*\w+', 'allow_empty_token = false', body, count=1
+                )
+            else:
+                body = re.sub(
+                    r'(app_secret\s*=\s*"[^"]*"\s*\n)',
+                    r'\1    allow_empty_token = false\n',
+                    body,
+                    count=1,
+                )
+        else:
+            body = block + body
+        return f'VirtualHost "{host}"\n' + body
+
+    text = re.sub(
+        vhost_re + r'(.*?)(?=\n(?:VirtualHost|Component)\s|\Z)',
+        patch_vhost,
+        text,
+        count=1,
+        flags=re.DOTALL,
+    )
+else:
+    print(f"VirtualHost \"{host}\" not found in {path}", file=sys.stderr)
+    sys.exit(1)
+
+muc_re = rf'Component "conference\.{re.escape(host)}" "muc"\s*\n'
+
+def patch_muc(m):
+    body = m.group(1)
+    if "token_verification" in body:
+        return f'Component "conference.{host}" "muc"\n' + body
+    patched = re.sub(
+        r'(modules_enabled\s*=\s*\{)',
+        r'\1\n        "token_verification";',
+        body,
+        count=1,
+    )
+    return f'Component "conference.{host}" "muc"\n' + patched
+
+if re.search(muc_re, text):
+    text = re.sub(
+        muc_re + r'(.*?)(?=\n(?:VirtualHost|Component)\s|\Z)',
+        patch_muc,
+        text,
+        count=1,
+        flags=re.DOTALL,
+    )
+elif "token_verification" not in text:
     text = text.replace(
         'modules_enabled = {',
         'modules_enabled = {\n        "token_verification";',

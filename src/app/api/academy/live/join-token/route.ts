@@ -95,5 +95,10 @@ export async function GET(req: Request) {
     url: out.url,
     room,
     jwtEnabled: Boolean(process.env.JITSI_JWT_SECRET?.trim()),
+    jwtAppId: process.env.JITSI_APP_ID?.trim() || "mcbuleli_live",
+    jwtSub:
+      process.env.JITSI_JWT_SUB?.trim() ||
+      process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.replace(/^https?:\/\//, "").replace(/\/$/, "") ||
+      "live.mcbuleli.org",
   });
 }

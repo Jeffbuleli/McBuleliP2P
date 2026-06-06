@@ -24,6 +24,13 @@ else
   bash "$WORKDIR/ops/jitsi/apply-nginx-live-gate.sh"
 fi
 bash "$WORKDIR/ops/jitsi/fix-jitsi-config-syntax.sh"
+if [[ -f /root/.mcbuleli-jitsi-secret ]]; then
+  export JITSI_JWT_SECRET="$(tr -d '[:space:]' < /root/.mcbuleli-jitsi-secret)"
+  echo "==> Sync JWT Prosody (secret depuis /root/.mcbuleli-jitsi-secret)"
+  bash "$WORKDIR/ops/jitsi/apply-jitsi-jwt.sh"
+else
+  echo "==> JWT Prosody: créez /root/.mcbuleli-jitsi-secret puis bash ops/jitsi/verify-prosody-jwt.sh"
+fi
 bash "$WORKDIR/ops/jitsi/apply-mcbuleli-brand.sh"
 
 echo ""
