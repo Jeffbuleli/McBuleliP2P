@@ -28,20 +28,28 @@ run_check() {
   echo "  sessions registered: ${N}"
 
   echo ""
-  echo "==> 3. Room MUC (lib-prosody-muc-shell.lua — muc global nil en console)"
+  echo "==> 3. Room MUC (host.modules.muc — muc:room() = commande console, pas global Lua)"
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   LUA_SNIP="${SCRIPT_DIR}/lib-prosody-muc-shell.lua"
   LUA_RUN="/tmp/mcb-muc-check-${ROOM}.lua"
   if [[ -f "$LUA_SNIP" ]] && command -v expect >/dev/null 2>&1; then
     sed -e "s|@@MCB_CONFERENCE@@|${CONFERENCE}|g" -e "s|@@MCB_ROOM@@|${ROOM}|g" \
       "$LUA_SNIP" > "$LUA_RUN"
+    chmod 644 "$LUA_RUN"
     expect <<EXPECT 2>&1 || true
 set timeout 30
 log_user 1
 spawn prosodyctl shell
 expect "prosody>"
-send "> assert(loadfile(\"${LUA_RUN}\"))()\r"
+send "muc:room('${TARGET}')\r"
 expect "prosody>"
+send "> assert(loadfile('${LUA_RUN}'))()\r"
+expect {
+    "prosody>" {}
+    "FAIL" {}
+    "OK target_FOUND" {}
+    timeout {}
+}
 send "bye\r"
 expect eof
 EXPECT
