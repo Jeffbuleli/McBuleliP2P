@@ -36,7 +36,7 @@ run_check() {
       log_user 1
       spawn prosodyctl shell
       expect \"prosody>\"
-      send \"> local mm=require('core.modulemanager').get_module('${CONFERENCE}','muc')\r\"
+      send \"> local h=prosody.hosts['${CONFERENCE}']; local mm=h and (h:get_module('muc') or (h.modules and h.modules.muc))\r\"
       expect \"prosody>\"
       send \"> local r=mm and mm.get_room_from_jid and mm:get_room_from_jid('${TARGET}')\r\"
       expect \"prosody>\"

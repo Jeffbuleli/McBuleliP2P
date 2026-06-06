@@ -26,24 +26,12 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y jitsi-meet-tokens 2>/dev/null || true
 
-CFG=""
-for d in /etc/prosody/conf.avail /etc/prosody/conf.d; do
-  if [[ -f "$d/${DOMAIN}.cfg.lua" ]]; then
-    CFG="$d/${DOMAIN}.cfg.lua"
-    break
-  fi
-done
-
-if [[ -z "$CFG" ]]; then
-  echo "Prosody config not found for ${DOMAIN}. Check:"
-  ls -la /etc/prosody/conf.avail/ /etc/prosody/conf.d/ 2>/dev/null || true
-  exit 1
-fi
-
-cp -a "$CFG" "${CFG}.bak.$(date +%Y%m%d%H%M%S)"
-echo "==> Patching $CFG"
-
-python3 - "$CFG" "$APP_ID" "$APP_SECRET" "$DOMAIN" <<'PY'
+patch_one_cfg() {
+  local CFG="$1"
+  [[ -f "$CFG" ]] || return 0
+  cp -a "$CFG" "${CFG}.bak.$(date +%Y%m%d%H%M%S)"
+  echo "==> Patching $CFG"
+  python3 - "$CFG" "$APP_ID" "$APP_SECRET" "$DOMAIN" <<'PY'
 import re, sys
 path, app_id, secret, host = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 text = open(path).read()
@@ -110,8 +98,8 @@ if re.search(vhost_re, text):
         flags=re.DOTALL,
     )
 else:
-    print(f"VirtualHost \"{host}\" not found in {path}", file=sys.stderr)
-    sys.exit(1)
+    print(f"SKIP: VirtualHost \"{host}\" not found in {path}", file=sys.stderr)
+    sys.exit(0)
 
 muc_re = rf'Component "conference\.{re.escape(host)}" "muc"\s*\n'
 
@@ -145,6 +133,11 @@ elif "token_verification" not in text:
 open(path, "w").write(text)
 print("OK: token auth lines written inside VirtualHost")
 PY
+}
+
+# Prosody charge conf.d en priorité — patcher LES DEUX
+patch_one_cfg "/etc/prosody/conf.d/${DOMAIN}.cfg.lua"
+patch_one_cfg "/etc/prosody/conf.avail/${DOMAIN}.cfg.lua"
 
 MEET_CFG="/etc/jitsi/meet/${DOMAIN}-config.js"
 if [[ -f "$MEET_CFG" ]]; then

@@ -7,11 +7,15 @@ DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 
-echo "==> Kill jigasi.meet.jitsi"
-bash "$SCRIPT_DIR/fix-prosody-kill-jigasi-host.sh"
+echo "==> Kill jigasi parasite"
+bash "$SCRIPT_DIR/fix-prosody-kill-jigasi-host.sh" || true
 
 echo ""
-echo "==> WebSocket global (fix insecure c2s)"
+echo "==> JWT conf.d + muc join debug"
+bash "$SCRIPT_DIR/fix-prosody-muc-join-debug.sh"
+
+echo ""
+echo "==> WebSocket global"
 bash "$SCRIPT_DIR/fix-prosody-websocket-global.sh"
 
 echo ""
@@ -33,4 +37,7 @@ sleep 5
 
 systemctl is-active prosody jicofo jitsi-videobridge2 nginx
 echo ""
-echo "OK — test: sudo bash ops/jitsi/check-muc-live.sh test-live-mcbuleli"
+echo "OK — test (2 terminaux):"
+echo "  T1: sudo bash ops/jitsi/capture-muc-join.sh test-live-mcbuleli"
+echo "  T2: host+guest rejoignent pendant 25s"
+echo "  Puis: sudo bash ops/jitsi/check-muc-live.sh test-live-mcbuleli"
