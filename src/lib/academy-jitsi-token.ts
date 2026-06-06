@@ -58,6 +58,20 @@ export async function signAcademyJitsiToken(args: {
     .sign(key);
 }
 
+/**
+ * Paramètre hash Jitsi (#config.x=…) — les strings doivent être du JSON valide
+ * (ex. %22focus.live...%22), sinon parseURLParams → SyntaxError → ping-only.
+ */
+export function jitsiHashParam(
+  key: string,
+  value: string | boolean | number,
+): string {
+  if (typeof value === "string") {
+    return `${key}=${encodeURIComponent(JSON.stringify(value))}`;
+  }
+  return `${key}=${value}`;
+}
+
 export function appendJitsiJwtToUrl(baseUrl: string, jwt: string): string {
   const u = new URL(baseUrl.split("#")[0]);
   u.searchParams.set("jwt", jwt);
@@ -68,7 +82,7 @@ export function appendJitsiJwtToUrl(baseUrl: string, jwt: string): string {
 /** Pseudo McBuleli dans le hash Jitsi (évite le 2e écran pré-join). */
 export function appendJitsiUserToUrl(baseUrl: string, displayName: string): string {
   const name = displayName.trim().slice(0, 64) || "McBuleli";
-  const param = `userInfo.displayName=${encodeURIComponent(name)}`;
+  const param = jitsiHashParam("userInfo.displayName", name);
   if (baseUrl.includes("#")) {
     return `${baseUrl}&${param}`;
   }

@@ -45,7 +45,8 @@ print(f"{h}.{p}.{sig}")
 PY
 )"
 
-HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.enableLobby=false&config.disableLobby=true&config.enableUserRolesBasedOnToken=false&config.hosts.domain=${DOMAIN}&config.hosts.muc=conference.${DOMAIN}&config.hosts.focus=focus.${DOMAIN}&userInfo.displayName=TestHost"
+# Pas de config.hosts.* dans le hash (JSON.parse casse sur focus.live…) — voir config.js force-join
+HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.enableLobby=false&config.disableLobby=true&config.enableUserRolesBasedOnToken=false&userInfo.displayName=%22TestHost%22"
 
 URL="https://${DOMAIN}/${ROOM}?jwt=${JWT}${HASH}"
 

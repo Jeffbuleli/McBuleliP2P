@@ -3,7 +3,10 @@ import {
   ACADEMY_JITSI_LOGO_URL_LIVE_HOST,
   academyJitsiSubject,
 } from "@/lib/academy-jitsi-brand";
-import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
+import {
+  jitsiHashParam,
+  liveRoomNameFromSessionSlug,
+} from "@/lib/academy-jitsi-token";
 
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
 export const ACADEMY_LIVE_SETUP_MIN = 20;
@@ -158,26 +161,22 @@ export function buildJitsiLowBandwidthHash(
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
   const isHost = resolved === "host";
   // Pas de 2e écran « Rejoindre » — McBuleli ouvre la salle, Jitsi entre directement.
-  const liveHost =
-    process.env.NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL?.trim().replace(/^https?:\/\//, "").replace(/\/$/, "") ||
-    "live.mcbuleli.org";
+  // hosts.domain/muc/focus : config.js serveur (fix-config-force-join) — pas dans le hash
+  // (valeurs nues → JSON.parse SyntaxError → conference.join() jamais appelé)
   const params: string[] = [
-    "config.prejoinPageEnabled=false",
-    "config.prejoinConfig.enabled=false",
-    "config.enableLobby=false",
-    "config.disableLobby=true",
-    "config.enableUserRolesBasedOnToken=false",
-    `config.hosts.domain=${encodeURIComponent(liveHost)}`,
-    `config.hosts.muc=${encodeURIComponent(`conference.${liveHost}`)}`,
-    `config.hosts.focus=${encodeURIComponent(`focus.${liveHost}`)}`,
-    `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
-    `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL_LIVE_HOST)}`,
-    "interfaceConfig.SHOW_JITSI_WATERMARK=true",
-    "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=true",
+    jitsiHashParam("config.prejoinPageEnabled", false),
+    jitsiHashParam("config.prejoinConfig.enabled", false),
+    jitsiHashParam("config.enableLobby", false),
+    jitsiHashParam("config.disableLobby", true),
+    jitsiHashParam("config.enableUserRolesBasedOnToken", false),
+    jitsiHashParam("config.startWithVideoMuted", !isHost),
+    jitsiHashParam("config.defaultLogoUrl", ACADEMY_JITSI_LOGO_URL_LIVE_HOST),
+    jitsiHashParam("interfaceConfig.SHOW_JITSI_WATERMARK", true),
+    jitsiHashParam("interfaceConfig.SHOW_WATERMARK_FOR_GUESTS", true),
   ];
   if (opts?.sessionTitle?.trim() || opts?.sessionSlug?.trim()) {
     params.push(
-      `config.subject=${encodeURIComponent(academyJitsiSubject(opts))}`,
+      jitsiHashParam("config.subject", academyJitsiSubject(opts)),
     );
   }
   return `#${params.join("&")}`;
