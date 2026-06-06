@@ -45,8 +45,8 @@ echo "==> 3. config.js — restauration syntaxe + overrides"
 bash "$SCRIPT_DIR/fix-config-js-hard-reset.sh" 2>/dev/null || bash "$SCRIPT_DIR/fix-config-js-emergency-restore.sh"
 
 echo ""
-echo "==> 3b. Prosody websocket/bosh derrière nginx TLS"
-bash "$SCRIPT_DIR/fix-prosody-websocket-secure.sh"
+echo "==> 3b. Prosody insecure session + jigasi + localhost 5222"
+bash "$SCRIPT_DIR/fix-prosody-insecure-session.sh"
 
 echo ""
 echo "==> 4. Nginx proxy XMPP"
