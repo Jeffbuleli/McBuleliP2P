@@ -266,11 +266,16 @@ async function ensureAcademyTestLiveSession(
     .limit(1);
   if (!row) return;
 
-  const startsAt = new Date(Date.now() - 15 * 60 * 1000);
-  const endsAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+  const now = Date.now();
+  const startsAt = new Date(now - 15 * 60 * 1000);
+  const endsAt = new Date(now + 4 * 60 * 60 * 1000);
+  const graceMs = 5 * 60 * 1000;
 
   const [existing] = await db
-    .select({ id: academySessions.id })
+    .select({
+      id: academySessions.id,
+      endsAt: academySessions.endsAt,
+    })
     .from(academySessions)
     .where(
       and(
@@ -281,12 +286,24 @@ async function ensureAcademyTestLiveSession(
     .limit(1);
 
   if (existing) {
-    // Ne pas toucher live_started_at — le host le pose via « Démarrer le live ».
-    // (Le remettre à null ici effaçait le démarrage à chaque GET /api/academy/editions/…)
-    await db
-      .update(academySessions)
-      .set({ startsAt, endsAt })
-      .where(eq(academySessions.id, existing.id));
+    const ended =
+      !existing.endsAt || existing.endsAt.getTime() < now - graceMs;
+    if (ended) {
+      // Nouveau cycle test : fenêtre fraîche, gate host réinitialisée
+      await db
+        .update(academySessions)
+        .set({ startsAt, endsAt, liveStartedAt: null })
+        .where(eq(academySessions.id, existing.id));
+    } else {
+      // Fenêtre active : prolonger la fin seulement — ne pas effacer live_started_at
+      const currentEnd = existing.endsAt!.getTime();
+      if (endsAt.getTime() > currentEnd) {
+        await db
+          .update(academySessions)
+          .set({ endsAt })
+          .where(eq(academySessions.id, existing.id));
+      }
+    }
     return;
   }
 

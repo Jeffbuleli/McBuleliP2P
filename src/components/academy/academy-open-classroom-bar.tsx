@@ -67,7 +67,7 @@ export function AcademyOpenClassroomBar({
             >
               <AcademyIcon name="video" className="h-5 w-5 !text-white" />
               <span className="mt-0.5 truncate text-[10px] font-extrabold">
-                {isHost ? t("academy_oc_join_host") : t("academy_join_live")}
+                {isHost ? t("academy_oc_join_host") : t("academy_oc_enter_video")}
               </span>
             </a>
             <a

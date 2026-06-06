@@ -166,6 +166,7 @@ export function buildJitsiLowBandwidthHash(
     "config.prejoinConfig.enabled=false",
     "config.enableLobby=false",
     "config.disableLobby=true",
+    "config.enableUserRolesBasedOnToken=false",
     `config.hosts.domain=${encodeURIComponent(liveHost)}`,
     `config.hosts.muc=${encodeURIComponent(`conference.${liveHost}`)}`,
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
