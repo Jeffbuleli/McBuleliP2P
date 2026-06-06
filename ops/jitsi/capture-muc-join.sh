@@ -112,6 +112,9 @@ if grep -qiE "not.?allowed|policy-violation|forbidden" "$OUT"; then
   echo "VERDICT: JWT/token rejeté au join MUC"
 elif [[ "$HAS_MUC_JOIN" -eq 1 ]]; then
   echo "VERDICT: join MUC ${TARGET} détecté"
+elif grep -qiE 'service-unavailable|focus\.|conference request' "$OUT"; then
+  echo "VERDICT: conference IQ vers focus → service-unavailable (Jicofo déconnecté du client_proxy)"
+  echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
 elif [[ "$HAS_PING" -eq 1 && "$HAS_MUC_JOIN" -eq 0 ]]; then
   echo "VERDICT: ping-only confirmé — auth + ping + disco OK, ZÉRO presence vers ${CONFERENCE}"
   echo "  → Jitsi JS bloqué APRÈS disco#info (pré-join UI, GUM, erreur JS)"
