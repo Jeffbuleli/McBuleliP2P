@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { academyEditions, academyPrograms, academySessions, getDb } from "@/db";
+import {
+  academyEditions,
+  academyPrograms,
+  academySessions,
+  getDb,
+  users,
+} from "@/db";
 import { resolveGatedLiveJoinUrl } from "@/lib/academy-live-join";
 import { getSessionUser } from "@/lib/session-user";
 import type { LiveJoinMode } from "@/lib/academy-live";
@@ -67,7 +73,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "academy_edition_not_found" }, { status: 404 });
   }
 
-  const displayName = user.email.split("@")[0] || "McBuleli";
+  const [profile] = await db
+    .select({ displayName: users.displayName, email: users.email })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+  const displayName =
+    profile?.displayName?.trim() ||
+    profile?.email?.split("@")[0] ||
+    user.email.split("@")[0] ||
+    "McBuleli";
 
   const out = await resolveGatedLiveJoinUrl({
     userId: user.id,

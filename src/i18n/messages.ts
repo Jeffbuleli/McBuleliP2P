@@ -4394,7 +4394,7 @@ export const fr: Messages = {
   academy_oc_ends_in: "Fin dans",
   academy_oc_bar_label: "Actions live",
   academy_oc_leave: "Quitter",
-  academy_oc_join_host: "Animer le live",
+  academy_oc_join_host: "Démarrer le live",
   academy_oc_host_alt: "Salle animateur",
   academy_oc_audio_only: "Audio seul",
   academy_oc_waiting: "Ouverture à l'heure prévue",

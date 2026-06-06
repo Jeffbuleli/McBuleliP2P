@@ -157,9 +157,9 @@ export function buildJitsiLowBandwidthHash(
   const resolved: LiveJoinMode =
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
   const isHost = resolved === "host";
-  // Hash minimal — branding/prejoin par défaut dans live.mcbuleli.org-config.js.
+  // Pas de 2e écran « Rejoindre » — McBuleli ouvre la salle, Jitsi entre directement.
   const params: string[] = [
-    "config.prejoinPageEnabled=true",
+    "config.prejoinPageEnabled=false",
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
     `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL_LIVE_HOST)}`,
     "interfaceConfig.SHOW_JITSI_WATERMARK=true",

@@ -44,6 +44,7 @@ export async function signAcademyJitsiToken(args: {
         name: args.displayName,
         email: `${args.userId}@users.mcbuleli.org`,
         moderator: args.moderator,
+        affiliation: args.moderator ? "owner" : "member",
       },
     },
   })
@@ -60,6 +61,16 @@ export function appendJitsiJwtToUrl(baseUrl: string, jwt: string): string {
   u.searchParams.set("jwt", jwt);
   const hash = baseUrl.includes("#") ? baseUrl.slice(baseUrl.indexOf("#")) : "";
   return `${u.toString()}${hash}`;
+}
+
+/** Pseudo McBuleli dans le hash Jitsi (évite le 2e écran pré-join). */
+export function appendJitsiUserToUrl(baseUrl: string, displayName: string): string {
+  const name = displayName.trim().slice(0, 64) || "McBuleli";
+  const param = `userInfo.displayName=${encodeURIComponent(name)}`;
+  if (baseUrl.includes("#")) {
+    return `${baseUrl}&${param}`;
+  }
+  return `${baseUrl}#${param}`;
 }
 
 export function liveRoomNameFromSessionSlug(sessionSlug: string): string {

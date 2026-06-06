@@ -1,5 +1,6 @@
 import {
   appendJitsiJwtToUrl,
+  appendJitsiUserToUrl,
   isAcademyJitsiJwtEnabled,
   jitsiModeratorForMode,
   liveRoomNameFromSessionSlug,
@@ -66,13 +67,17 @@ export async function resolveGatedLiveJoinUrl(args: {
     }
   }
 
-  const liveRole = await resolveAcademyLiveRoleForEdition({
+  await resolveAcademyLiveRoleForEdition({
     userId: args.userId,
     editionId: args.editionId,
     appRole: args.appRole,
   });
-  const effectiveMode: LiveJoinMode =
-    wantsHost && liveRole === "host" ? "host" : args.mode === "audio" ? "audio" : "learner";
+  // wantsHost déjà validé par canUserHostAcademyLive ci-dessus
+  const effectiveMode: LiveJoinMode = wantsHost
+    ? "host"
+    : args.mode === "audio"
+      ? "audio"
+      : "learner";
 
   let url = buildLiveJoinUrl({
     editionSlug: args.editionSlug,
@@ -96,6 +101,8 @@ export async function resolveGatedLiveJoinUrl(args: {
     });
     url = appendJitsiJwtToUrl(url, jwt);
   }
+
+  url = appendJitsiUserToUrl(url, args.displayName);
 
   return { ok: true, url };
 }

@@ -113,17 +113,17 @@ else
   echo "config.enableWelcomePage = false;" >> "$CONFIG"
 fi
 
-echo "==> Pré-join (salle d'attente + micro/caméra comme meet.jit.si)"
+echo "==> Entrée directe (sans 2e écran pré-join Jitsi)"
 if grep -q 'prejoinPageEnabled' "$CONFIG"; then
-  sed -i 's/prejoinPageEnabled = false/prejoinPageEnabled = true/g; s/prejoinPageEnabled=false/prejoinPageEnabled=true/g' "$CONFIG"
+  sed -i 's/prejoinPageEnabled = true/prejoinPageEnabled = false/g; s/prejoinPageEnabled=true/prejoinPageEnabled=false/g' "$CONFIG"
 else
-  echo "config.prejoinPageEnabled = true;" >> "$CONFIG"
+  echo "config.prejoinPageEnabled = false;" >> "$CONFIG"
 fi
 if ! grep -q 'mcbuleli-prejoin-defaults' "$CONFIG"; then
   cat >> "$CONFIG" <<'EOF'
 
-// mcbuleli-prejoin-defaults — filet si le hash #config est absent (redirect nginx)
-config.prejoinPageEnabled = true;
+// mcbuleli-prejoin-defaults — entrée directe (McBuleli gère le clic Joindre)
+config.prejoinPageEnabled = false;
 config.startWithAudioMuted = false;
 config.startWithVideoMuted = true;
 config.requireDisplayName = true;
