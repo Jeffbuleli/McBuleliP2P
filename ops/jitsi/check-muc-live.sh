@@ -81,7 +81,7 @@ EXPECT
   echo "VERDICT"
   echo "  No such room + 2 c2s secure = ping-only (XMPP OK, join MUC jamais envoyé)"
   echo "  → bash ops/jitsi/capture-muc-join.sh ${ROOM}  (onglets actifs, pas hibernating)"
-  echo "  → F12 : conference / muc / token / getUserMedia"
+  echo "  → Mac Chrome onglet live.mcbuleli.org : Cmd+Option+J (conference / muc / GUM)"
   echo "  occupant_count=2 = SUCCÈS"
 }
 
