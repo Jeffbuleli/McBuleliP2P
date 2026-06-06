@@ -11,8 +11,20 @@ for name in pairs(prosody.hosts) do
     if name:find("conference") then print(name) end
 end
 
-sep("Room cible via muc:room()")
-local room = muc and muc.room and muc:room(target_jid)
+sep("Room cible")
+local host = prosody.hosts[conference_host]
+local muc_mod = host and (host.get_module and host:get_module("muc") or (host.modules and host.modules.muc))
+local room
+if muc_mod then
+    if muc_mod.room then
+        room = muc_mod:room(target_jid)
+    elseif muc_mod.get_room then
+        room = muc_mod:get_room(target_jid)
+    end
+end
+if not room and muc and muc.room then
+    room = muc:room(target_jid)
+end
 if not room then
     print("FAIL target_MISSING " .. target_jid)
 else
@@ -34,8 +46,6 @@ else
 end
 
 sep("Autres hosts conference avec rooms")
-local host = prosody.hosts[conference_host]
-local muc_mod = host and host.get_module and host:get_module("muc") or (host and host.modules and host.modules.muc)
 if muc_mod and muc_mod.each_room then
     local total = 0
     for r in muc_mod:each_room(true) do
