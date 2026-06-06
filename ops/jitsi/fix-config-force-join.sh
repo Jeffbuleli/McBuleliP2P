@@ -54,6 +54,7 @@ config.disableLobby = true;
 config.hosts = config.hosts || {{}};
 config.hosts.domain = '{domain}';
 config.hosts.muc = '{conference}';
+config.hosts.focus = 'focus.{domain}';
 config.bosh = 'https://{domain}/http-bind';
 config.websocket = 'wss://{domain}/xmpp-websocket';
 delete config.hosts.anonymousdomain;

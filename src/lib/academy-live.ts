@@ -169,6 +169,7 @@ export function buildJitsiLowBandwidthHash(
     "config.enableUserRolesBasedOnToken=false",
     `config.hosts.domain=${encodeURIComponent(liveHost)}`,
     `config.hosts.muc=${encodeURIComponent(`conference.${liveHost}`)}`,
+    `config.hosts.focus=${encodeURIComponent(`focus.${liveHost}`)}`,
     `config.startWithVideoMuted=${isHost ? "false" : "true"}`,
     `config.defaultLogoUrl=${encodeURIComponent(ACADEMY_JITSI_LOGO_URL_LIVE_HOST)}`,
     "interfaceConfig.SHOW_JITSI_WATERMARK=true",

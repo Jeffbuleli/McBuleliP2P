@@ -101,19 +101,27 @@ echo "==> Room existe ?"
 prosodyctl shell muc room "${TARGET}" 2>&1 | tail -3 || true
 
 echo ""
+HAS_MUC_JOIN=0
+if grep -qiE "${TARGET}|presence.*${ROOM}@|to='${CONFERENCE}'" "$OUT"; then
+  HAS_MUC_JOIN=1
+fi
+HAS_PING=0
+grep -qi "urn:xmpp:ping" "$OUT" && HAS_PING=1
+
 if grep -qiE "not.?allowed|policy-violation|forbidden" "$OUT"; then
   echo "VERDICT: JWT/token rejeté au join MUC"
-elif grep -qiE "${TARGET}|${ROOM}.*${CONFERENCE}" "$OUT" && grep -qi presence "$OUT"; then
+elif [[ "$HAS_MUC_JOIN" -eq 1 ]]; then
   echo "VERDICT: join MUC ${TARGET} détecté"
-elif grep -qi ping "$OUT" && ! grep -qiE "${ROOM}|${CONFERENCE}" "$OUT"; then
-  echo "VERDICT: ping-only — XMPP OK, Jitsi n'initie PAS conference.join()"
-  echo "  → F12 console : conference, muc, focus, token, GUM, error"
-  echo "  → onglet premier plan + Ctrl+Shift+R (éviter SM hibernating)"
+elif [[ "$HAS_PING" -eq 1 && "$HAS_MUC_JOIN" -eq 0 ]]; then
+  echo "VERDICT: ping-only confirmé — auth + ping + disco OK, ZÉRO presence vers ${CONFERENCE}"
+  echo "  → Jitsi JS bloqué APRÈS disco#info (pré-join UI, GUM, erreur JS)"
+  echo "  → Mac Chrome: Cmd+Option+J → copier lignes rouges"
+  echo "  → Cmd+Shift+R, onglet premier plan (éviter hibernating)"
+  echo "  → sudo bash ops/jitsi/fix-jicofo-jvm-xml-limits.sh"
   echo "  → sudo bash ops/jitsi/fix-config-force-join.sh"
-elif [[ "$N" -ge 2 ]]; then
-  echo "VERDICT: ${N} clients connectés, room MUC absente = ping-only confirmé"
-  echo "  → cause côté navigateur (pré-join UI, erreur JS, permissions caméra)"
-  echo "  → coller erreurs F12 ici"
+elif [[ "$N" -ge 1 ]]; then
+  echo "VERDICT: ${N} client(s) connecté(s) mais pas de join MUC pendant ${SECS}s"
+  echo "  → relancer capture pendant Cmd+Shift+R sur les 2 appareils"
 else
-  echo "VERDICT: peu/pas de clients XMPP — ouvrir host+guest puis relancer"
+  echo "VERDICT: aucun client XMPP — ouvrir host+guest puis relancer"
 fi
