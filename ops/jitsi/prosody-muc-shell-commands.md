@@ -6,23 +6,31 @@ Pendant que **host** et **guest** sont dans l’UI Jitsi (`test-live-mcbuleli`) 
 sudo prosodyctl shell
 ```
 
-## Room cible
+## Room cible (API officielle Prosody)
+
+Docs : https://prosody.im/doc/console — section **MUC commands**
 
 ```lua
-local conf = "conference.live.mcbuleli.org"
-local muc = prosody.hosts[conf]:get_module("muc")
-local jid = "test-live-mcbuleli@" .. conf
-local room = muc:get_room_from_jid(jid)
-
-if room then
-    print("ROOM:", room.jid)
-    for occ in room:each_occupant() do
-        print("  ", occ.nick, occ.bare_jid, occ.role)
-    end
-else
-    print("ROOM ABSENTE:", jid)
-end
+> room = muc:room("test-live-mcbuleli@conference.live.mcbuleli.org")
+> room
+> room and room:each_occupant
 ```
+
+Ou script chargé :
+
+```lua
+> assert(loadfile("/tmp/mcb-muc-check-test-live-mcbuleli.lua"))()
+```
+
+(Généré par `diagnose-muc-occupants-live.sh`)
+
+## Stanzas live (voir join MUC en direct)
+
+```lua
+watch:stanzas("live.mcbuleli.org")
+```
+
+Ctrl+C puis `bye` pour quitter.
 
 ## Toutes les rooms actives
 

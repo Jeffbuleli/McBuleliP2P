@@ -33,143 +33,61 @@ run_once() {
   curl -s "https://${DOMAIN}/config.js" 2>/dev/null | grep -iE 'subdomain|hosts\.muc|muc:|anonymousdomain|domain_mapper' | head -12 || true
 
   echo ""
-  echo "==> B. Prosody shell — rooms actives sur ${CONFERENCE}"
+  echo "==> B. Prosody shell — muc:room() + occupants (mod_admin_shell)"
   if ! command -v prosodyctl >/dev/null 2>&1; then
     echo "ERREUR: prosodyctl absent"
     return 1
   fi
 
-  prosodyctl shell 2>/dev/null <<LUA || echo "WARN: prosodyctl shell a échoué (Prosody actif ?)"
--- diagnose-muc-occupants-live.sh
-local conference_host = "${CONFERENCE}"
-local target_room = "${ROOM}"
-local target_jid = target_room .. "@" .. conference_host
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  LUA_SNIP="${SCRIPT_DIR}/lib-prosody-muc-shell.lua"
+  LUA_RUN="/tmp/mcb-muc-check-${ROOM}.lua"
+  if [[ ! -f "$LUA_SNIP" ]]; then
+    echo "ERREUR: $LUA_SNIP absent — git pull"
+    return 1
+  fi
+  sed -e "s|@@MCB_CONFERENCE@@|${CONFERENCE}|g" -e "s|@@MCB_ROOM@@|${ROOM}|g" \
+    "$LUA_SNIP" > "$LUA_RUN"
 
-local function sep(title)
-    print("")
-    print("--- " .. title .. " ---")
-end
+  # Connexions c2s actives (shortcut prosodyctl — ne bloque pas)
+  echo "--- c2s:show(${DOMAIN}) ---"
+  prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | head -20 || echo "(c2s show indisponible)"
 
-sep("Hôtes Prosody (conference*)")
-for name in pairs(prosody.hosts) do
-    if name:find("conference") or name:find("${DOMAIN}") then
-        print(name)
-    end
-end
+  MUC_SHELL_OK=0
+  if command -v expect >/dev/null 2>&1; then
+    echo "--- prosodyctl shell (expect + muc:room) ---"
+    expect <<EXPECT || true
+set timeout 25
+log_user 1
+spawn prosodyctl shell
+expect {
+    "prosody>" {
+        send "> assert(loadfile(\"${LUA_RUN}\"))()\r"
+        expect "prosody>"
+        send "bye\r"
+        expect eof
+    }
+    timeout { puts "TIMEOUT prosody shell"; exit 1 }
+    eof { exit 0 }
+}
+EXPECT
+    MUC_SHELL_OK=1
+  else
+    echo "WARN: expect absent — commandes MANUELLES ci-dessous"
+  fi
 
-local host = prosody.hosts[conference_host]
-if not host then
-    print("FAIL: pas de host Prosody [" .. conference_host .. "]")
-    print("=> split possible: clients sur un autre composant MUC")
-    return
-end
-
-local muc_mod = nil
-if host.get_module then
-    muc_mod = host:get_module("muc")
-end
-if not muc_mod and host.modules then
-    muc_mod = host.modules.muc
-end
-
-if not muc_mod then
-    print("FAIL: module muc absent sur " .. conference_host)
-    return
-end
-
-sep("Rooms actives (each_room)")
-local room_count = 0
-local target_found = false
-
-local function show_occupants(room)
-    local n = 0
-    if room.each_occupant then
-        for occupant in room:each_occupant() do
-            n = n + 1
-            local nick = occupant.nick or "?"
-            local bare = occupant.bare_jid or occupant.jid or "?"
-            local role = occupant.role or "?"
-            print(string.format("    occupant[%d] nick=%s bare=%s role=%s", n, tostring(nick), tostring(bare), tostring(role)))
-        end
-    elseif room._occupants then
-        for nick, occ in pairs(room._occupants) do
-            n = n + 1
-            print(string.format("    occupant[%d] nick=%s", n, tostring(nick)))
-        end
-    else
-        print("    (API occupants indisponible — room existe)")
-    end
-    return n
-end
-
-if muc_mod.each_room then
-    for room in muc_mod:each_room(true) do
-        room_count = room_count + 1
-        local jid = room.jid or "?"
-        local occ_n = show_occupants(room)
-        print(string.format("ROOM[%d] jid=%s occupants=%s", room_count, jid, tostring(occ_n)))
-        if jid == target_jid then target_found = true end
-    end
-elseif muc_mod.each_room_all then
-    for room in muc_mod:each_room_all() do
-        room_count = room_count + 1
-        local jid = room.jid or "?"
-        local occ_n = show_occupants(room)
-        print(string.format("ROOM[%d] jid=%s occupants=%s", room_count, jid, tostring(occ_n)))
-        if jid == target_jid then target_found = true end
-    end
-else
-    print("WARN: each_room non exposé — tentative get_room_from_jid")
-end
-
-sep("Room cible: " .. target_jid)
-local room = nil
-if muc_mod.get_room_from_jid then
-    room = muc_mod:get_room_from_jid(target_jid)
-elseif muc_mod.get_room then
-    room = muc_mod:get_room(target_room)
-end
-
-if room then
-    target_found = true
-    local occ_n = show_occupants(room)
-    print("OK: room cible EXISTE — occupants=" .. tostring(occ_n))
-    if occ_n == 0 then
-        print("=> auth XMPP OK mais personne dans la MUC (disconnect avant join?)")
-    elseif occ_n == 1 then
-        print("=> 1 seul dans la MUC — l'autre client est ailleurs ou pas entré")
-    elseif occ_n >= 2 then
-        print("=> 2+ dans la MUC — split = UI/media/Jicofo, pas la room XMPP")
-    end
-else
-    print("FAIL: room cible ABSENTE")
-    print("=> clients n'ont pas rejoint " .. target_jid)
-end
-
-sep("Autres composants MUC (guest / subdomain / lobby)")
-for name, h in pairs(prosody.hosts) do
-    if name:find("conference") and name ~= conference_host then
-        print("AUTRE MUC HOST: " .. name)
-        local mm = h.get_module and h:get_module("muc") or (h.modules and h.modules.muc)
-        if mm and mm.each_room then
-            for room in mm:each_room(true) do
-                local jid = room.jid or "?"
-                local cnt = 0
-                if room.each_occupant then
-                    for _ in room:each_occupant() do cnt = cnt + 1 end
-                end
-                if cnt > 0 then
-                    print(string.format("  ACTIVE %s occupants=%d", jid, cnt))
-                end
-            end
-        end
-    end
-end
-
-sep("Résumé")
-print("rooms_sur_" .. conference_host .. "=" .. room_count)
-print("target_" .. target_room .. "=" .. (target_found and "FOUND" or "MISSING"))
-LUA
+  if [[ "$MUC_SHELL_OK" -eq 0 ]]; then
+    echo ""
+    echo "MANUEL (pendant host+guest connectés):"
+    echo "  sudo prosodyctl shell"
+    echo "  > assert(loadfile(\"${LUA_RUN}\"))()"
+    echo "  ou:"
+    echo "  > room = muc:room(\"${TARGET_JID}\")"
+    echo "  > room and room:each_occupant"
+    echo "  bye"
+    echo ""
+    echo "  apt install -y expect   # pour automatiser"
+  fi
 
   echo ""
   echo "==> C. Prosody log — joins / muc récents (2 min)"
