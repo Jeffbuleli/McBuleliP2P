@@ -1,8 +1,14 @@
 #!/bin/bash
+# DÉPRÉCIÉ pour McBuleli — réactive guest/anonymousdomain et CAUSE le split room host/guest.
+# Utiliser: bash ops/jitsi/fix-prosody-jwt-main-only.sh ou fix-live-unified-baseline.sh
+# Réf split: ops/jitsi/SPLIT-ROOM-ROOT-CAUSE.md
+#
 # Fix « Authentication failed » avec JWT valide — conflit guest domain + domain verification.
 # Réf: https://github.com/jitsi/jitsi-meet/issues/11967 (enable_domain_verification = false)
-# Usage (root VPS): bash ops/jitsi/fix-prosody-jwt-guest.sh
 set -euo pipefail
+
+echo "ERREUR: fix-prosody-jwt-guest.sh est déprécié (split MUC). Utilisez fix-prosody-jwt-main-only.sh" >&2
+exit 1
 
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 GUEST="guest.${DOMAIN}"

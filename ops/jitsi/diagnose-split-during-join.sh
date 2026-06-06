@@ -27,3 +27,19 @@ grep -nE 'c2s_interfaces|^interfaces' /etc/prosody/prosody.cfg.lua 2>/dev/null |
 echo ""
 echo "==> 6. muc_lobby_rooms dans modules ?"
 grep -n 'muc_lobby_rooms' /etc/prosody/conf.d/${DOMAIN}.cfg.lua 2>/dev/null || echo "(absent = OK)"
+
+echo ""
+echo "==> 7. MUC JID exacte ${ROOM}@conference.${DOMAIN} (CRITIQUE)"
+grep -iE "${ROOM}@conference\.${DOMAIN}|${ROOM}@conference\." /var/log/prosody/prosody.log 2>/dev/null | tail -12 || \
+  echo "(aucune — relancer PENDANT que les 2 sont dans l'UI)"
+
+echo ""
+echo "==> 8. MUC distinctes récentes sur conference.${DOMAIN}"
+grep -oE '[a-zA-Z0-9._-]+@conference\.'"${DOMAIN}" /var/log/prosody/prosody.log 2>/dev/null | sort -u | tail -15 || echo "(aucune)"
+
+echo ""
+echo "==> 9. JVB colibri (média)"
+grep -iE 'colibri|endpoint|Conference' /var/log/jitsi/jvb.log 2>/dev/null | tail -8 || echo "(aucune)"
+
+echo ""
+echo "==> Diagnostic approfondi: bash ops/jitsi/diagnose-muc-jid-live.sh ${ROOM}"

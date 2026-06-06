@@ -2,6 +2,18 @@
 
 À exécuter **en root sur le VPS** (après Jitsi + HTTPS OK).
 
+## Split room (host + guest = 2 LIVE séparés)
+
+**Cause racine documentée :** `ops/jitsi/SPLIT-ROOM-ROOT-CAUSE.md`
+
+```bash
+cd ~/McBuleliP2P && git pull
+sudo bash ops/jitsi/fix-live-unified-baseline.sh
+sudo bash ops/jitsi/audit-live-coherence.sh test-live-mcbuleli
+```
+
+Ne plus utiliser `fix-prosody-jwt-guest.sh` (réactive `guest.live` → split MUC).
+
 ## Déploiement rapide (depuis GitHub)
 
 ```bash

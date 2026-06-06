@@ -1,9 +1,11 @@
 #!/bin/bash
+# DÉPRÉCIÉ — utiliser fix-live-unified-baseline.sh (baseline unique, pas de patches empilés).
 # Host + invité = 2 meetings séparés (1 participant chacun).
-# Causes traitées : lobby Prosody, guest domain, jigasi.meet.jitsi parasite, transcription.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "==> Redirection vers fix-live-unified-baseline.sh"
+exec bash "$SCRIPT_DIR/fix-live-unified-baseline.sh"
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 LOBBY="lobby.${DOMAIN}"
 GUEST="guest.${DOMAIN}"

@@ -154,6 +154,9 @@ fi
 
 prosodyctl check config
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-bash "$SCRIPT_DIR/fix-prosody-jwt-guest.sh"
+# McBuleli: host ET invité ont un JWT sur live.mcbuleli.org — NE PAS réactiver guest/anonymousdomain
+# (fix-prosody-jwt-guest.sh causait le split MUC host vs guest)
+bash "$SCRIPT_DIR/fix-prosody-jwt-main-only.sh"
 
 echo "Done. Set the same JITSI_APP_ID and JITSI_JWT_SECRET on Render, then redeploy."
+echo "Pour baseline complète: bash ops/jitsi/fix-live-unified-baseline.sh"

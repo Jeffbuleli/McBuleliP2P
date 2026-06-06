@@ -21,7 +21,7 @@ if ! grep -q 'enableUserRolesBasedOnToken' "$CONFIG"; then
   cat >> "$CONFIG" <<'EOF'
 
 // mcbuleli-jwt-roles — après var config = { }; (ne pas insérer dans l'objet)
-config.enableUserRolesBasedOnToken = true;
+config.enableUserRolesBasedOnToken = false;
 EOF
 fi
 
@@ -36,7 +36,7 @@ text = pathlib.Path(sys.argv[1]).read_text()
 if re.search(r"config\.enableUserRolesBasedOnToken = true;\n\};", text):
     print("ERREUR: enableUserRolesBasedOnToken encore DANS var config = { }", file=sys.stderr)
     sys.exit(1)
-if "config.enableUserRolesBasedOnToken = true;" not in text:
+if "config.enableUserRolesBasedOnToken" not in text:
     print("ERREUR: enableUserRolesBasedOnToken absent", file=sys.stderr)
     sys.exit(1)
 print("==> config.js structure OK (python3)")
