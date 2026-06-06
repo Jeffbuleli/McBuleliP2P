@@ -61,11 +61,19 @@ EXPECT
     echo "WARN: ${LUA_SNIP} absent ou expect manquant — git pull"
   fi
 
+  AUTH="auth.${DOMAIN}"
+  FOCUS_ONLINE=0
   echo ""
-  echo "==> 4. focus + Jicofo"
+  echo "==> 4. focus + Jicofo (service-unavailable = focus@auth absent)"
   grep -A3 "Component \"focus.${DOMAIN}\"" /etc/prosody/conf.d/${DOMAIN}.cfg.lua 2>/dev/null | head -5 || \
     echo "WARN: focus component absent"
-  tail -80 /var/log/jitsi/jicofo.log 2>/dev/null | grep -iE 'Registered|bridge|${ROOM}|error|SEVERE' | tail -6 || echo "(aucun)"
+  if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
+    FOCUS_ONLINE=1
+    prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus | head -2
+  else
+    echo "FAIL: focus@${AUTH} non connecté → fix-focus-service-unavailable.sh"
+  fi
+  tail -120 /var/log/jitsi/jicofo.log 2>/dev/null | grep -iE 'Registered|bridge|XmlPullParser|SEVERE|service-unavailable|${ROOM}' | tail -8 || echo "(aucun)"
 
   echo ""
   echo "==> 5. config.js servi (muc/bosh/ws)"
@@ -77,12 +85,28 @@ EXPECT
     "Authenticated as .*@${DOMAIN}" | grep -vi "focus@auth" | tail -6 || \
     echo "(aucune auth client récente sur ${DOMAIN})"
 
+  MUC_OK=0
+  if [[ -f "/tmp/mcb-muc-report-${ROOM}.txt" ]] && grep -q 'OK target_FOUND' "/tmp/mcb-muc-report-${ROOM}.txt" 2>/dev/null; then
+    MUC_OK=1
+  fi
+
   echo ""
   echo "VERDICT"
-  echo "  No such room + 2 c2s secure = ping-only (XMPP OK, join MUC jamais envoyé)"
-  echo "  → bash ops/jitsi/capture-muc-join.sh ${ROOM}  (onglets actifs, pas hibernating)"
-  echo "  → Mac Chrome onglet live.mcbuleli.org : Cmd+Option+J (conference / muc / GUM)"
-  echo "  occupant_count=2 = SUCCÈS"
+  if [[ "$MUC_OK" -eq 1 ]]; then
+    grep -E 'occupant_count=' "/tmp/mcb-muc-report-${ROOM}.txt" 2>/dev/null | tail -1 || true
+    echo "  SUCCÈS — room MUC active"
+  elif [[ "$FOCUS_ONLINE" -eq 0 ]]; then
+    echo "  Console: service-unavailable sur conference IQ → focus.${DOMAIN}"
+    echo "  Cause: Jicofo pas connecté comme focus@${AUTH}"
+    echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
+  elif [[ "$N" -ge 1 ]]; then
+    echo "  Clients XMPP OK (${N} c2s) + focus online mais room absente"
+    echo "  → Cmd+Shift+R navigateur; si 2 rouges service-unavailable → fix-focus-service-unavailable.sh"
+    echo "  → sudo bash ops/jitsi/capture-muc-join.sh ${ROOM}"
+  else
+    echo "  Aucun client sur ${DOMAIN} — ouvrir live.mcbuleli.org puis relancer"
+  fi
+  echo "  occupant_count=2 = SUCCÈS final"
 }
 
 if [[ "$WATCH" == "--watch" || "$WATCH" == "-w" ]]; then
