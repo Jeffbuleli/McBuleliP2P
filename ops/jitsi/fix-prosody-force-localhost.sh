@@ -19,11 +19,18 @@ python3 - "$MAIN" <<'PY'
 import re, sys
 path = sys.argv[1]
 text = open(path).read()
-text = re.sub(r'(?m)^interfaces\s*=.*$', 'interfaces = { "127.0.0.1", "::1" }', text)
-if 'interfaces = { "127.0.0.1"' not in text:
-    text += '\n-- mcbuleli-force-localhost\ninterfaces = { "127.0.0.1", "::1" }\n'
+# Jitsi défaut: c2s_interfaces = { "*", "::1" } → écrase interfaces
+for key in ("interfaces", "c2s_interfaces", "s2s_interfaces"):
+    if re.search(rf'(?m)^{key}\s*=', text):
+        text = re.sub(
+            rf'(?m)^{key}\s*=.*$',
+            f'{key} = {{ "127.0.0.1", "::1" }}',
+            text,
+        )
+    else:
+        text += f'\n{key} = {{ "127.0.0.1", "::1" }}\n'
 open(path, "w").write(text)
-print("OK interfaces")
+print("OK c2s_interfaces + interfaces")
 PY
 
 # Nettoyer doublons consider_* hors VirtualHost
