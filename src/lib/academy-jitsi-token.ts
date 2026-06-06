@@ -33,8 +33,7 @@ export async function signAcademyJitsiToken(args: {
   }
   const key = new TextEncoder().encode(secret);
   const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 12 * 60 * 60);
-  // room "*" — évite mismatch URL/JWT ; la gate nginx exige déjà ?jwt=
-  const roomClaim = "*";
+  const roomClaim = args.room.trim() || "*";
   return new SignJWT({
     room: roomClaim,
     moderator: args.moderator,
@@ -48,7 +47,8 @@ export async function signAcademyJitsiToken(args: {
       },
     },
   })
-    .setProtectedHeader({ alg: "HS256" })
+    // Prosody luajwtjitsi exige header typ === "JWT" (sinon: Invalid typ)
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuer(appId)
     .setAudience("jitsi")
     .setSubject(jitsiJwtSub())

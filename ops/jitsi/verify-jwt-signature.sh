@@ -29,6 +29,8 @@ def b64url_decode(s):
 
 header = json.loads(b64url_decode(parts[0]))
 payload = json.loads(b64url_decode(parts[1]))
+if header.get("typ") != "JWT":
+    print(f"ATTENTION: header typ={header.get('typ')!r} — Prosody exige typ=JWT")
 signing_input = f"{parts[0]}.{parts[1]}".encode()
 expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
 expected_b64 = base64.urlsafe_b64encode(expected).rstrip(b"=").decode()
