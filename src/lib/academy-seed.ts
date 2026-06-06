@@ -281,9 +281,11 @@ async function ensureAcademyTestLiveSession(
     .limit(1);
 
   if (existing) {
+    // Ne pas toucher live_started_at — le host le pose via « Démarrer le live ».
+    // (Le remettre à null ici effaçait le démarrage à chaque GET /api/academy/editions/…)
     await db
       .update(academySessions)
-      .set({ startsAt, endsAt, liveStartedAt: null })
+      .set({ startsAt, endsAt })
       .where(eq(academySessions.id, existing.id));
     return;
   }

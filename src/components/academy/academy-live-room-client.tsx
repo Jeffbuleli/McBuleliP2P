@@ -115,9 +115,14 @@ export function AcademyLiveRoomClient({
 
   useEffect(() => {
     void load();
-    const id = setInterval(() => void load(), 30_000);
+    const waitingGuest =
+      session?.isLiveNow &&
+      !session.liveStartedAt &&
+      liveRole !== "host";
+    const ms = waitingGuest ? 5_000 : 30_000;
+    const id = setInterval(() => void load(), ms);
     return () => clearInterval(id);
-  }, [load]);
+  }, [load, liveRole, session?.isLiveNow, session?.liveStartedAt]);
 
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
