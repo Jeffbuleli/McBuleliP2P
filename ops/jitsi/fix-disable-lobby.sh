@@ -16,7 +16,7 @@ if ! grep -q 'mcbuleli-same-room' "$MEET_CFG"; then
 // mcbuleli-same-room — host + invités dans la MÊME salle (lobby off)
 config.enableLobby = false;
 config.disableLobby = true;
-config.enableUserRolesBasedOnToken = true;
+config.enableUserRolesBasedOnToken = false;
 EOF
 fi
 

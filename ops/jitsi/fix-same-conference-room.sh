@@ -26,7 +26,7 @@ config.hosts.authdomain = '${DOMAIN}';
 delete config.hosts.anonymousdomain;
 config.enableLobby = false;
 config.disableLobby = true;
-config.enableUserRolesBasedOnToken = true;
+config.enableUserRolesBasedOnToken = false;
 EOF
 fi
 

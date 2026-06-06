@@ -28,17 +28,7 @@ text = re.sub(
 if "var subdomain" not in text:
     text = "var subdomain = '';\n" + text
 
-# Commenter muc dynamique dans var config.hosts
-text = re.sub(
-    r"(?m)^(\s*)(muc:\s*'conference\.'\s*\+\s*subdomain\s*\+.*)$",
-    r"\1// \2",
-    text,
-)
-text = re.sub(
-    r"(?m)^(\s*)(muc:\s*\"conference\.\"\s*\+\s*subdomain\s*\+.*)$",
-    r"\1// \2",
-    text,
-)
+# Ne PAS commenter dans var config = { } — risque SyntaxError. Overrides en fin de fichier seulement.
 
 marker = "mcbuleli-muc-fixed"
 if marker not in text:

@@ -41,9 +41,12 @@ open(path, "w").write(text)
 PY
 
 echo ""
-echo "==> 3. config.js bosh + MUC fixe"
-bash "$SCRIPT_DIR/fix-config-bosh-websocket.sh"
-bash "$SCRIPT_DIR/fix-config-muc-subdomain.sh"
+echo "==> 3. config.js — restauration syntaxe + overrides"
+bash "$SCRIPT_DIR/fix-config-js-emergency-restore.sh"
+
+echo ""
+echo "==> 3b. Prosody websocket/bosh derrière nginx TLS"
+bash "$SCRIPT_DIR/fix-prosody-websocket-secure.sh"
 
 echo ""
 echo "==> 4. Nginx proxy XMPP"

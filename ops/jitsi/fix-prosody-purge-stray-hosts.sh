@@ -21,7 +21,7 @@ for f in /etc/prosody/conf.d/*.lua /etc/prosody/conf.avail/*.lua; do
   if [[ "$base" == "${DOMAIN}.cfg.lua" ]] || [[ "$base" == "prosody.cfg.lua" ]]; then
     continue
   fi
-  if grep -qE 'jigasi\.meet\.jitsi|meet\.jitsi|auth\.meet\.jitsi' "$f" 2>/dev/null; then
+  if grep -qE 'jigasi\.meet\.jitsi|meet\.jitsi|auth\.meet\.jitsi|jaas\.cfg' "$f" 2>/dev/null || [[ "$base" == "jaas.cfg.lua" ]]; then
     echo "DISABLE file: $f"
     cp -a "$f" "$DISABLED/"
     rm -f "/etc/prosody/conf.d/$(basename "$f")" 2>/dev/null || true
