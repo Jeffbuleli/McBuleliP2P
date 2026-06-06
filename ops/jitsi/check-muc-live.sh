@@ -43,17 +43,20 @@ spawn prosodyctl shell
 expect "prosody>"
 send "muc:room('${TARGET}')\r"
 expect "prosody>"
-send "> assert(loadfile('${LUA_RUN}'))()\r"
+send "> return (loadfile('${LUA_RUN}'))()\r"
 expect {
-    "OK target_FOUND" {}
-    "FAIL target_MISSING" {}
-    "FAIL lua_error" {}
+    -re {\| Result: (.+)} {}
     "prosody>" {}
     timeout {}
 }
 send "bye\r"
 expect eof
 EXPECT
+    REPORT="/tmp/mcb-muc-report-${ROOM}.txt"
+    if [[ -f "$REPORT" ]]; then
+      echo "--- rapport MUC (fichier) ---"
+      cat "$REPORT"
+    fi
   else
     echo "WARN: ${LUA_SNIP} absent ou expect manquant — git pull"
   fi
