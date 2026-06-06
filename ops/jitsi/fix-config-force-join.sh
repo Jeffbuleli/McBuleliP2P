@@ -54,9 +54,10 @@ config.disableLobby = true;
 config.hosts = config.hosts || {{}};
 config.hosts.domain = '{domain}';
 config.hosts.muc = '{conference}';
-config.bosh = '//{domain}/http-bind';
+config.bosh = 'https://{domain}/http-bind';
 config.websocket = 'wss://{domain}/xmpp-websocket';
 delete config.hosts.anonymousdomain;
+delete config.hiddenDomain;
 """
 text = text.rstrip() + block + "\n"
 open(path, "w").write(text)

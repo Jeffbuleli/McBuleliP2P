@@ -1,5 +1,5 @@
 #!/bin/bash
-# Capture join MUC — tail prosody.log (live + conference), pas seulement watch:stanzas(conference).
+# Capture join MUC — watch:stanzas (live + conference) + prosody.log auth.
 set -euo pipefail
 
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
@@ -18,7 +18,7 @@ echo "xmpp-websocket HTTP ${CODE}"
 [[ "$CODE" == "502" || "$CODE" == "000" ]] && { echo "nginx cassé → fix-nginx-xmpp-dedupe.sh"; exit 1; }
 
 echo ""
-echo "==> Sessions XMPP AVANT capture (ouvrez l'app McBuleli sur host+guest d'abord)"
+echo "==> Sessions XMPP AVANT capture (host+guest via app McBuleli, onglet au premier plan)"
 C2S="$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null || true)"
 echo "$C2S" | head -12
 N="$(echo "$C2S" | grep -c registered || true)"
@@ -26,70 +26,94 @@ N="${N:-0}"
 echo "  registered: ${N}"
 if [[ "$N" -lt 1 ]]; then
   echo ""
-  echo "WARN: 0 client connecté — la capture sera vide."
-  echo "  1) Host + guest : ouvrir la salle via l'app McBuleli"
-  echo "  2) Attendre que la page Jitsi charge (pas 401)"
-  echo "  3) Relancer ce script"
+  echo "WARN: 0 client — ouvrez la salle sur les 2 appareils puis relancez."
   echo ""
 fi
 
 : > "$OUT"
-echo "Capture ${SECS}s → $OUT (prosody.log: ${DOMAIN} + ${CONFERENCE})"
+echo "Capture ${SECS}s → $OUT"
+echo "  (watch:stanzas ${DOMAIN} + tail auth prosody.log)"
 echo ""
-echo ">>> Dans ${SECS}s : host + guest REJOIGNENT la salle (Ctrl+Shift+R si écran pré-join) <<<"
+echo ">>> ${SECS}s : Ctrl+Shift+R sur les 2 navigateurs, onglet ACTIF (pas hibernating) <<<"
 echo ""
 
-# Lignes nouvelles seulement pendant la fenêtre
-tail -n 0 -f "$LOG" 2>/dev/null | grep --line-buffered -iE \
-  "${ROOM}|${TARGET}|${CONFERENCE}|${DOMAIN}|presence|muc|ping|not.?allowed|policy-violation|focus|token" \
+# Auth / erreurs dans prosody.log (les stanzas XMPP ne sont en général PAS loggées en info)
+tail -n 0 -f "$LOG" 2>/dev/null | grep --line-buffered -Fi \
+  -e "${ROOM}" -e "${CONFERENCE}" -e "authenticated" -e "not allowed" -e "policy-violation" -e "token" \
   >> "$OUT" &
-TPID=$!
-trap 'kill "$TPID" 2>/dev/null || true' EXIT
+LOGPID=$!
+
+WATCHPID=""
+if command -v expect >/dev/null 2>&1; then
+  expect <<EXPECT >> "$OUT" 2>&1 &
+set timeout [expr {${SECS} + 15}]
+log_user 1
+spawn prosodyctl shell
+expect "prosody>"
+send "watch:stanzas('${DOMAIN}')\r"
+sleep ${SECS}
+send "\x03"
+expect {
+    "prosody>" {}
+    timeout {}
+}
+send "bye\r"
+expect eof
+EXPECT
+  WATCHPID=$!
+fi
+
+trap 'kill "$LOGPID" "$WATCHPID" 2>/dev/null || true' EXIT
 
 for ((i = SECS; i >= 1; i--)); do
-  printf "\r  %2ds — rejoignez maintenant sur les 2 appareils..." "$i"
+  printf "\r  %2ds — rejoignez / rafraîchissez maintenant..." "$i"
   sleep 1
 done
-printf "\r  capture terminée.%-30s\n" ""
+printf "\r  capture terminée.%-32s\n" ""
 
-kill "$TPID" 2>/dev/null || true
-wait "$TPID" 2>/dev/null || true
+kill "$LOGPID" 2>/dev/null || true
+[[ -n "$WATCHPID" ]] && kill "$WATCHPID" 2>/dev/null || true
+wait "$LOGPID" 2>/dev/null || true
+[[ -n "$WATCHPID" ]] && wait "$WATCHPID" 2>/dev/null || true
 
 echo ""
-echo "==> Lignes capturées (${ROOM} / MUC)"
-if [[ -s "$OUT" ]]; then
-  grep -iE "${ROOM}|${TARGET}|${CONFERENCE}|presence|muc|not.?allowed|error|focus" "$OUT" | tail -40
+echo "==> Stanzas XMPP (watch ${DOMAIN})"
+if grep -qiE "presence|ping|iq|message|${ROOM}|${CONFERENCE}" "$OUT" 2>/dev/null; then
+  grep -iE "presence|ping|iq|message|${ROOM}|${CONFERENCE}|muc|not.?allowed|error" "$OUT" | tail -40
 else
-  echo "(aucune ligne — 0 client actif pendant la fenêtre OU Prosody ne log pas ces stanzas)"
+  echo "(aucune stanza — onglet en arrière-plan / SM hibernating / pas de trafic)"
 fi
 
 echo ""
-echo "==> Ping / auth sur ${DOMAIN} (ping-only = XMPP OK, pas de join MUC)"
-grep -iE "ping|authenticated|c2s" "$OUT" | grep -i "${DOMAIN}" | tail -10 || echo "(aucun ping/auth capturé)"
+echo "==> Auth / erreurs prosody.log"
+grep -iE "authenticated|not.?allowed|policy|token|${ROOM}|${CONFERENCE}" "$OUT" | tail -15 || echo "(aucune)"
 
 echo ""
-echo "==> Jicofo (même fenêtre, grep log fichier)"
+echo "==> Jicofo"
 JICOFO="/var/log/jitsi/jicofo.log"
 if [[ -f "$JICOFO" ]]; then
-  tail -200 "$JICOFO" | grep -iE "${ROOM}|Allocated|Creating|Conference|error|SEVERE" | tail -8 || \
+  tail -300 "$JICOFO" | grep -iE "${ROOM}|Allocated|Creating|Conference|error|SEVERE" | tail -8 || \
     echo "(aucune activité Jicofo pour ${ROOM})"
 fi
 
 echo ""
+echo "==> Room existe ?"
+prosodyctl shell muc room "${TARGET}" 2>&1 | tail -3 || true
+
+echo ""
 if grep -qiE "not.?allowed|policy-violation|forbidden" "$OUT"; then
   echo "VERDICT: JWT/token rejeté au join MUC"
-elif grep -qiE "${TARGET}|${ROOM}.*${CONFERENCE}" "$OUT"; then
-  echo "VERDICT: join MUC ${TARGET} détecté dans prosody.log"
-elif grep -qi "ping" "$OUT" && ! grep -qiE "${ROOM}|${CONFERENCE}" "$OUT"; then
-  echo "VERDICT: ping-only — XMPP connecté mais Jitsi n'initie PAS la conférence"
+elif grep -qiE "${TARGET}|${ROOM}.*${CONFERENCE}" "$OUT" && grep -qi presence "$OUT"; then
+  echo "VERDICT: join MUC ${TARGET} détecté"
+elif grep -qi ping "$OUT" && ! grep -qiE "${ROOM}|${CONFERENCE}" "$OUT"; then
+  echo "VERDICT: ping-only — XMPP OK, Jitsi n'initie PAS conference.join()"
+  echo "  → F12 console : conference, muc, focus, token, GUM, error"
+  echo "  → onglet premier plan + Ctrl+Shift+R (éviter SM hibernating)"
   echo "  → sudo bash ops/jitsi/fix-config-force-join.sh"
-  echo "  → Ctrl+Shift+R + rejoindre via app McBuleli"
-  echo "  → F12 console : conference / muc / token / getUserMedia"
-elif [[ "$N" -lt 1 ]]; then
-  echo "VERDICT: aucun client XMPP connecté pendant le test"
-  echo "  → ouvrir host+guest dans l'app AVANT de relancer la capture"
+elif [[ "$N" -ge 2 ]]; then
+  echo "VERDICT: ${N} clients connectés, room MUC absente = ping-only confirmé"
+  echo "  → cause côté navigateur (pré-join UI, erreur JS, permissions caméra)"
+  echo "  → coller erreurs F12 ici"
 else
-  echo "VERDICT: clients connectés (${N} c2s) mais aucun trafic room pendant ${SECS}s"
-  echo "  → écran pré-join : cliquer « Rejoindre » ou fix-config-force-join.sh"
-  echo "  → relancer: sudo bash ops/jitsi/capture-muc-join.sh ${ROOM}"
+  echo "VERDICT: peu/pas de clients XMPP — ouvrir host+guest puis relancer"
 fi

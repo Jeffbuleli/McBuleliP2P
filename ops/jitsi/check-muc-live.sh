@@ -45,9 +45,10 @@ send "muc:room('${TARGET}')\r"
 expect "prosody>"
 send "> assert(loadfile('${LUA_RUN}'))()\r"
 expect {
-    "prosody>" {}
-    "FAIL" {}
     "OK target_FOUND" {}
+    "FAIL target_MISSING" {}
+    "FAIL lua_error" {}
+    "prosody>" {}
     timeout {}
 }
 send "bye\r"
@@ -68,14 +69,16 @@ EXPECT
   curl -s "https://${DOMAIN}/config.js" | grep -iE 'hosts\.muc|bosh|websocket|prejoinPageEnabled|enableWelcomePage' | head -10
 
   echo ""
-  echo "==> 6. Logs conference.*"
-  tail -300 /var/log/prosody/prosody.log 2>/dev/null | grep -iE \
-    "${ROOM}|${CONFERENCE}|not.?allowed|token|focus" | tail -12 || echo "(aucune)"
+  echo "==> 6. Auth clients récents (pas focus@auth)"
+  tail -500 /var/log/prosody/prosody.log 2>/dev/null | grep -iE \
+    "Authenticated as .*@${DOMAIN}" | grep -vi "focus@auth" | tail -6 || \
+    echo "(aucune auth client récente sur ${DOMAIN})"
 
   echo ""
   echo "VERDICT"
-  echo "  ping-only (capture) = clients connectés mais n'envoient PAS de join MUC"
-  echo "  → bash ops/jitsi/capture-muc-join.sh ${ROOM}"
+  echo "  No such room + 2 c2s secure = ping-only (XMPP OK, join MUC jamais envoyé)"
+  echo "  → bash ops/jitsi/capture-muc-join.sh ${ROOM}  (onglets actifs, pas hibernating)"
+  echo "  → F12 : conference / muc / token / getUserMedia"
   echo "  occupant_count=2 = SUCCÈS"
 }
 
