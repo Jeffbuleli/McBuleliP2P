@@ -3,45 +3,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
-AUTH="auth.${DOMAIN}"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 
 echo "========== fix focus service-unavailable =========="
 echo "Console: StropheErrorHandler service-unavailable + Moderator giving up"
-echo "Cause: IQ conference vers focus.${DOMAIN} mais Jicofo absent du client_proxy"
-
+echo "Cause: IQ conference vers focus.${JITSI_DOMAIN:-live.mcbuleli.org} — client_proxy ne route pas vers Jicofo"
 echo ""
-echo "==> 0. Kill zombies Jicofo (session focus@auth morte)"
-bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
 
-echo ""
-echo "==> 1. Limites JVM XML (évite XmlPullParser → déco Jicofo)"
-bash "$SCRIPT_DIR/fix-jicofo-jvm-xml-limits.sh"
-
-echo ""
-echo "==> 2. Resync complet (mdp focus/jvb → Prosody → jicofo.conf → brewery)"
-# fix-jicofo-prosody appelle déjà localhost + brewery — pas avant (ordre mdp)
-bash "$SCRIPT_DIR/fix-jicofo-prosody.sh"
-
-echo ""
-echo "==> 3. Vérification focus@auth"
-sleep 3
-if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi focus; then
-  echo "OK: focus@${AUTH} session active"
-  prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus | head -2
-else
-  echo "WARN: focus@${AUTH} toujours absent — journalctl:"
-  journalctl -u jicofo -n 25 --no-pager | tail -15
-  exit 1
-fi
-
-echo ""
-echo "==> 4. Jicofo Registered + bridge"
-grep -iE 'Registered|Added new videobridge' /var/log/jitsi/jicofo.log 2>/dev/null | tail -4 || true
-
-echo ""
-echo "OK — retest navigateur (Cmd+Shift+R sur live.mcbuleli.org), puis:"
-echo "  sudo bash ops/jitsi/capture-muc-join.sh test-live-mcbuleli"
-echo "  sudo bash ops/jitsi/check-muc-live.sh test-live-mcbuleli"
+exec bash "$SCRIPT_DIR/fix-focus-iq-route.sh"

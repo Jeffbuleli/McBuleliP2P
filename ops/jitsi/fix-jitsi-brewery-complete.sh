@@ -84,10 +84,12 @@ EOF
 fi
 
 prosodyctl check config || true
-systemctl restart prosody
-sleep 3
-systemctl restart jitsi-videobridge2 jicofo
-sleep 20
+if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
+  systemctl restart prosody
+  sleep 3
+  systemctl restart jitsi-videobridge2 jicofo
+  sleep 20
+fi
 
 echo "=== JVB (journalctl + fichier) ==="
 journalctl -u jitsi-videobridge2 -n 50 --no-pager | grep -iE 'MucClient|brewery|xmpp|Joined|Authenticated|error|SEVERE' | tail -15
