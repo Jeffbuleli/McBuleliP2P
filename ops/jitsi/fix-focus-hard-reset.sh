@@ -25,7 +25,11 @@ systemctl restart prosody
 sleep 6
 
 echo ""
-echo "==> 3. Resync mdp focus/jvb + jicofo.conf + brewery"
+echo "==> 3. MUC whitelist focus@auth (FAQ handbook)"
+bash "$SCRIPT_DIR/fix-muc-focus-whitelist.sh" 2>/dev/null || true
+
+echo ""
+echo "==> 4. Resync mdp focus/jvb + jicofo.conf + brewery"
 bash "$SCRIPT_DIR/fix-jicofo-prosody.sh"
 
 echo ""
