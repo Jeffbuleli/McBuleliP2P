@@ -37,7 +37,17 @@ mcbuleli_ensure_jicofo_runtime_config() {
     echo "JICOFO_OPTS=\"${java_props}\"" >> "$JICOFO_VCFG"
   fi
 
+  mcbuleli_normalize_jicofo_opts
   grep -q 'mcbuleli-jicofo-runtime' "$JICOFO_VCFG" 2>/dev/null || echo "# mcbuleli-jicofo-runtime" >> "$JICOFO_VCFG"
+}
+
+mcbuleli_normalize_jicofo_opts() {
+  local current
+  [[ -f "$JICOFO_VCFG" ]] || return 0
+  grep -q '^JICOFO_OPTS=' "$JICOFO_VCFG" || return 0
+  current="$(grep '^JICOFO_OPTS=' "$JICOFO_VCFG" | head -1 | sed 's/^JICOFO_OPTS=//' | tr -d '"')"
+  current="$(echo "$current" | tr -s '[:space:]' ' ' | sed 's/^ //;s/ $//')"
+  sed -i "s|^JICOFO_OPTS=.*|JICOFO_OPTS=\"${current}\"|" "$JICOFO_VCFG"
 }
 
 mcbuleli_jicofo_process_has_config_file() {

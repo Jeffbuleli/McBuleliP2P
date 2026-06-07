@@ -22,12 +22,15 @@ def patch(m):
     body = m.group(2)
     if not re.search(r'authentication\s*=\s*"internal_hashed"', body):
         body = '    authentication = "internal_hashed"\n' + body
+    if not re.search(r'c2s_require_encryption\s*=\s*false', body):
+        body = '    c2s_require_encryption = false\n' + body
     return m.group(1) + body
 
 if not re.search(pat, text, re.DOTALL):
     block = f'''
 VirtualHost "{auth}"
     authentication = "internal_hashed"
+    c2s_require_encryption = false
     ssl = {{
         key = "/etc/prosody/certs/{auth}.key";
         certificate = "/etc/prosody/certs/{auth}.crt";

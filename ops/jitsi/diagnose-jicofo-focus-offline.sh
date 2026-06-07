@@ -71,6 +71,7 @@ elif ! pgrep -f 'org.jitsi.jicofo|jicofo\.jar' >/dev/null 2>&1; then
   echo "  → systemd dit actif mais pas de JVM — zombie / crash loop"
 elif ! prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
   echo "  → Jicofo tourne mais PAS connecté focus@auth"
+  echo "  → vérifier auth: c2s_require_encryption = false"
   echo "  → sudo bash ops/jitsi/fix-focus-iq-route.sh"
   echo "  → si échec: sudo bash ops/jitsi/fix-jicofo-localhost.sh"
 else

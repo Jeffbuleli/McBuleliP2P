@@ -51,6 +51,7 @@ else
 fi
 
 grep -q "$MARKER" "$JICOFO_CFG" || echo "# $MARKER" >> "$JICOFO_CFG"
+mcbuleli_normalize_jicofo_opts
 
 echo "==> JICOFO_OPTS"
 grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1

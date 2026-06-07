@@ -106,6 +106,7 @@ fi
 
 echo ""
 echo "==> 7. JICOFO_OPTS (doit contenir -Dconfig.file)"
+mcbuleli_normalize_jicofo_opts
 grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1
 
 LOG_LINES="$(wc -l < /var/log/jitsi/jicofo.log 2>/dev/null || echo 0)"
@@ -118,10 +119,17 @@ sleep 8
 systemctl restart jitsi-videobridge2
 sleep 8
 systemctl restart jicofo
-sleep 18
+for ((w = 1; w <= 6; w++)); do
+  sleep 5
+  if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
+    break
+  fi
+  echo "  attente focus@auth... ${w}/6"
+done
 
 echo ""
-echo "==> 9. Vérification"
+echo "==> 9. Vérification (jicofo actif ?)"
+systemctl is-active jicofo 2>/dev/null || { journalctl -u jicofo -n 20 --no-pager; exit 1; }
 if ! mcbuleli_jicofo_process_has_config_file; then
   echo "FAIL: processus Jicofo sans -Dconfig.file=jicofo.conf"
   pgrep -af 'jicofo|org.jitsi.jicofo' | head -3 || true
@@ -145,6 +153,7 @@ tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | \
 
 if ! tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
   echo "FAIL: Jicofo pas Registered après restart"
+  echo "→ sudo bash ops/jitsi/diagnose-jicofo-focus-offline.sh"
   exit 1
 fi
 
