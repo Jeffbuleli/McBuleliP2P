@@ -12,14 +12,18 @@ SECRET_FILE="/root/.mcbuleli-jitsi-secret"
 SECRET="$(tr -d '[:space:]' < "$SECRET_FILE")"
 [[ ${#SECRET} -ge 16 ]] || { echo "FAIL: secret trop court"; exit 1; }
 
-JWT="$(python3 - "$APP_ID" "$DOMAIN" "$ROOM" "$SECRET" <<'PY'
+EXP_SECS="${TEST_JWT_EXP_SECS:-14400}"
+
+JWT_OUT="$(python3 - "$APP_ID" "$DOMAIN" "$ROOM" "$SECRET" "$EXP_SECS" <<'PY'
 import hmac, hashlib, base64, json, sys, time
+from datetime import datetime, timezone
 
 def b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
-app_id, sub, room, secret = sys.argv[1:5]
+app_id, sub, room, secret, exp_secs = sys.argv[1:6]
 now = int(time.time())
+exp = now + int(exp_secs)
 header = {"alg": "HS256", "typ": "JWT", "kid": app_id}
 payload = {
     "iss": app_id,
@@ -27,7 +31,8 @@ payload = {
     "sub": sub,
     "room": room,
     "moderator": True,
-    "exp": now + 3600,
+    "iat": now,
+    "exp": exp,
     "context": {
         "user": {
             "id": "test-host",
@@ -41,9 +46,14 @@ payload = {
 h = b64url(json.dumps(header, separators=(",", ":")).encode())
 p = b64url(json.dumps(payload, separators=(",", ":")).encode())
 sig = b64url(hmac.new(secret.encode(), f"{h}.{p}".encode(), hashlib.sha256).digest())
-print(f"{h}.{p}.{sig}")
+jwt = f"{h}.{p}.{sig}"
+exp_human = datetime.fromtimestamp(exp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+print(jwt)
+print(f"EXP:{exp_human}", file=sys.stderr)
 PY
 )"
+JWT="$(echo "$JWT_OUT" | head -1)"
+JWT_EXP="$(echo "$JWT_OUT" | grep '^EXP:' | sed 's/^EXP://')"
 
 # Pas de config.hosts.* dans le hash (JSON.parse casse sur focus.live…) — voir config.js force-join
 HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.enableLobby=false&config.disableLobby=true&config.enableUserRolesBasedOnToken=false&userInfo.displayName=%22TestHost%22"
