@@ -29,6 +29,13 @@ done
 printf "\r  surveillance terminée.%-28s\n" ""
 
 echo ""
+echo "==> c2s clients ${DOMAIN}"
+C2S_N=$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -c registered 2>/dev/null || true)
+C2S_N=${C2S_N:-0}
+echo "  registered: ${C2S_N}"
+prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep registered | head -4 || true
+
+echo ""
 echo "==> focus@auth (maintenant)"
 prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus || echo "(focus absent)"
 
@@ -52,11 +59,22 @@ if tail -n +"$((J_START + 1))" "$JICOFO" 2>/dev/null | grep -qiE "${ROOM}|Alloca
 elif tail -n +"$((P_START + 1))" "$PROSODY" 2>/dev/null | grep -qi 'service-unavailable'; then
   echo "VERDICT: service-unavailable pendant join → fix-focus-service-unavailable.sh"
   echo "  Puis FERMER onglets + Cmd+Shift+R"
-elif prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -q registered; then
-  echo "VERDICT: clients XMPP OK mais pas d'allocation Jicofo"
-  echo "  → Console Chrome: service-unavailable ou prejoin?"
-  echo "  → sudo bash ops/jitsi/fix-config-force-join.sh"
-  echo "  → sudo bash ops/jitsi/diagnose-ping-only-served.sh ${ROOM}"
+elif [[ "$C2S_N" -ge 1 ]]; then
+  echo "VERDICT: ${C2S_N} client(s) XMPP OK, focus@auth OK, mais ZÉRO IQ conférence → Jicofo"
+  echo "  Le navigateur ne déclenche pas conference.join() OU l'IQ n'arrive pas à focus"
+  echo ""
+  echo "  TEST ISOLÉ (1 onglet, pas l'app McBuleli):"
+  echo "    sudo bash ops/jitsi/gen-live-join-url.sh ${ROOM}"
+  echo "    Chrome PRIVÉ → URL → Cmd+Option+J pendant le join"
+  echo ""
+  echo "  Si console = service-unavailable:"
+  echo "    sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
+  echo "    FERMER tous onglets + Cmd+Shift+R"
+  echo "  Si console = rien / écran pré-join:"
+  echo "    sudo bash ops/jitsi/fix-config-force-join.sh"
+  echo "    sudo bash ops/jitsi/diagnose-ping-only-served.sh ${ROOM}"
+  echo "  Chaîne focus:"
+  echo "    sudo bash ops/jitsi/verify-focus-chain.sh"
 else
   echo "VERDICT: aucun client — rejoindre pendant watch-join-live"
 fi
