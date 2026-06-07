@@ -21,9 +21,8 @@ echo "==> 1. Limites JVM XML (évite XmlPullParser → déco Jicofo)"
 bash "$SCRIPT_DIR/fix-jicofo-jvm-xml-limits.sh"
 
 echo ""
-echo "==> 2. Resync Jicofo/Prosody (focus+jvb, localhost, brewery, composants)"
-bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
-bash "$SCRIPT_DIR/fix-jitsi-brewery-complete.sh"
+echo "==> 2. Resync complet (mdp focus/jvb → Prosody → jicofo.conf → brewery)"
+# fix-jicofo-prosody appelle déjà localhost + brewery — pas avant (ordre mdp)
 bash "$SCRIPT_DIR/fix-jicofo-prosody.sh"
 
 echo ""

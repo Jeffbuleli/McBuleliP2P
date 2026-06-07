@@ -93,7 +93,9 @@ EXPECT
   fi
 
   JICOFO_ALLOC=0
-  grep -qiE "${ROOM}|Allocated.*${CONFERENCE}|Creating conference" /var/log/jitsi/jicofo.log 2>/dev/null && JICOFO_ALLOC=1
+  tail -400 /var/log/jitsi/jicofo.log 2>/dev/null | grep -qiE "${ROOM}|Allocated.*${CONFERENCE}|Creating conference" && JICOFO_ALLOC=1
+  SVC_UNAVAIL=0
+  tail -200 /var/log/prosody/prosody.log 2>/dev/null | grep -qi 'service-unavailable' && SVC_UNAVAIL=1
   MUC_LOG=0
   grep -qiE "${TARGET}|${ROOM}.*${CONFERENCE}" /var/log/prosody/prosody.log 2>/dev/null && MUC_LOG=1
   PREJOIN_BAD=0
