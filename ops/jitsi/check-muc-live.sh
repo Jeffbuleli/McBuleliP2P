@@ -123,8 +123,12 @@ EXPECT
     echo "  FOCUS STALE: focus@auth visible mais Registered pas récent — session fantôme"
     echo "  → sudo bash ops/jitsi/fix-focus-pre-join.sh  (puis join dans 60s)"
     echo "  → PAS via app McBuleli / iframe (CORS mcbuleli.org/login)"
+  elif [[ "$N" -gt 1 && "$JICOFO_ALLOC" -eq 0 ]]; then
+    echo "  WARN: ${N} c2s — tester avec 1 SEUL onglet privé (gen-live-join-url) avant host+guest"
+    echo "  → fermer onglets → fix-focus-pre-join.sh → 1 onglet"
   elif [[ "$N" -ge 1 && "$JICOFO_ALLOC" -eq 0 && "$MUC_LOG" -eq 0 ]]; then
     echo "  PING-ONLY ou FOCUS FAIL: ${N} c2s + focus session OK mais ZÉRO Allocated/MUC récent"
+    echo "  → sudo bash ops/jitsi/diagnose-focus-iq-routing.sh ${ROOM}"
     echo "  → Console service-unavailable? → fix-focus-pre-join.sh puis hard refresh"
     echo "  → CORS mcbuleli.org/login dans console? → onglet TOP-LEVEL gen-live-join-url (pas iframe)"
     echo "  → Sinon: conference.join() pas appelé → fix-config-force-join.sh"

@@ -6,56 +6,50 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 AUTH="auth.${DOMAIN}"
-JICOFO_CFG="/etc/jitsi/jicofo/config"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 
 echo "========== fix-focus-pre-join =========="
-echo "Symptôme: 1 c2s + focus OK + service-unavailable + jicofo.log silencieux"
+echo "Symptôme: c2s + focus OK + service-unavailable + jicofo.log silencieux"
 echo ""
-echo "AVANT: fermer TOUS les onglets live.mcbuleli.org (y compris app McBuleli / iframe)"
-echo "      Erreur CORS mcbuleli.org/login = vous êtes dans un iframe → test INVALIDE"
+echo "AVANT: fermer TOUS les onglets live.mcbuleli.org (0 c2s attendu)"
+echo "      Test = 1 SEUL onglet Chrome privé (gen-live-join-url), pas 2 onglets"
 echo ""
 
-FOCUS_PASS="$(grep '^JICOFO_AUTH_PASSWORD=' "$JICOFO_CFG" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')"
-[[ -n "$FOCUS_PASS" ]] || { echo "FAIL: JICOFO_AUTH_PASSWORD absent"; exit 1; }
-
-echo "==> 1. Stop Jicofo + kill zombies"
-systemctl stop jicofo 2>/dev/null || true
+echo "==> 1. Kill zombies Jicofo"
+systemctl stop jicofo jitsi-videobridge2 2>/dev/null || true
 sleep 2
 for pid in $(pgrep -f 'org.jitsi.jicofo|jicofo\.jar' 2>/dev/null || true); do
   kill -9 "$pid" 2>/dev/null || true
 done
 
-echo "==> 2. Restart Prosody (purge toutes sessions auth — focus fantômes)"
-prosodyctl deluser "focus@${AUTH}" 2>/dev/null || true
-prosodyctl register focus "$AUTH" "$FOCUS_PASS"
-systemctl restart prosody
-sleep 8
-
-echo "==> 3. Start Jicofo (session focus fraîche)"
-LOG_LINES="$(wc -l < /var/log/jitsi/jicofo.log 2>/dev/null || echo 0)"
-systemctl start jicofo
-
-for ((w = 1; w <= 8; w++)); do
-  sleep 4
-  if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
-    if tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
-      break
-    fi
-  fi
-  echo "  attente focus frais... ${w}/8"
-done
+echo ""
+echo "==> 2. focus component target_address"
+SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-focus-component.sh"
 
 echo ""
-echo "==> 4. État (doit être focus ONLINE + Registered récent)"
-prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -iE 'focus|jvb' || echo "FAIL: focus absent"
-tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | \
-  grep -iE 'Registered|Added new videobridge|SEVERE|not-authorized' | tail -6 || true
+echo "==> 3. jicofo.conf + mdp + restart Prosody/Jicofo"
+bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
 
-if ! prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
+echo ""
+echo "==> 4. JVB brewery"
+systemctl restart jitsi-videobridge2
+sleep 10
+
+echo ""
+echo "==> 5. Vérification"
+FOCUS_N=$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -c "focus@${AUTH}" 2>/dev/null || true)
+FOCUS_N=${FOCUS_N:-0}
+prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep "focus@${AUTH}" || echo "FAIL: focus absent"
+echo "  sessions focus@${AUTH}: ${FOCUS_N} (attendu: 1)"
+grep -iE 'Registered|Added new videobridge' /var/log/jitsi/jicofo.log 2>/dev/null | tail -4 || true
+
+if [[ "$FOCUS_N" -lt 1 ]]; then
   echo "FAIL — sudo bash ops/jitsi/diagnose-jicofo-focus-offline.sh"
   exit 1
+fi
+if [[ "$FOCUS_N" -gt 1 ]]; then
+  echo "WARN: plusieurs focus — sudo systemctl restart prosody && sleep 6 && sudo systemctl restart jicofo"
 fi
 
 C2S_N=$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -c registered 2>/dev/null || true)
@@ -63,9 +57,8 @@ C2S_N=${C2S_N:-0}
 echo "c2s ${DOMAIN}: ${C2S_N} (attendu 0 avant join)"
 
 echo ""
-echo "OK — TEST (dans les 60s, sans rouvrir l'app McBuleli):"
+echo "OK — TEST dans les 60s:"
 echo "  Terminal A: sudo tail -f /var/log/jitsi/jicofo.log | grep -iE 'conference|Allocated|Creating|SEVERE'"
 echo "  Terminal B: sudo bash ops/jitsi/gen-live-join-url.sh test-live-mcbuleli"
-echo "  Chrome PRIVÉ → coller URL en onglet TOP-LEVEL (barre d'adresse = live.mcbuleli.org)"
-echo "  PAS d'iframe, PAS /app/live — sinon CORS + service-unavailable"
-echo "  Cmd+Shift+R — succès = Allocated dans Terminal A"
+echo "  1 SEUL onglet Chrome PRIVÉ top-level — Cmd+Shift+R"
+echo "  Succès = Allocated dans Terminal A (pas service-unavailable en console)"
