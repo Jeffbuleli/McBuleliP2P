@@ -113,8 +113,10 @@ EXPECT
     echo "  → Le navigateur n'appelle pas conference.join() (onglets périmés ou JS bloqué)"
     echo "  1) FERMER tous onglets live.mcbuleli.org (host + guest)"
     echo "  2) sudo bash ops/jitsi/fix-conference-no-room.sh ${ROOM}"
-    echo "  3) sudo bash ops/jitsi/join-test-live.sh ${ROOM}   # capture PUIS ouvrir URL"
+    echo "  3) sudo bash ops/jitsi/diagnose-ping-only-served.sh ${ROOM}"
+    echo "  4) sudo bash ops/jitsi/join-test-live.sh ${ROOM}   # capture PUIS ouvrir URL"
     [[ "$PREJOIN_BAD" -eq 1 ]] && echo "  → prejoin encore true: sudo bash ops/jitsi/fix-config-force-join.sh"
+    echo "  → requireDisplayName=true (branding) bloque aussi: fix-config-force-join.sh"
   elif [[ "$N" -ge 1 ]]; then
     echo "  Clients XMPP OK (${N} c2s) + focus online mais room absente"
     echo "  → Jicofo alloc=${JICOFO_ALLOC} muc_log=${MUC_LOG} — relancer join après fix"
