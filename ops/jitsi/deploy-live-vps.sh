@@ -26,12 +26,17 @@ fi
 bash "$WORKDIR/ops/jitsi/fix-jitsi-config-syntax.sh"
 if [[ -f /root/.mcbuleli-jitsi-secret ]]; then
   export JITSI_JWT_SECRET="$(tr -d '[:space:]' < /root/.mcbuleli-jitsi-secret)"
-  echo "==> Sync JWT Prosody (secret depuis /root/.mcbuleli-jitsi-secret)"
-  bash "$WORKDIR/ops/jitsi/apply-jitsi-jwt.sh"
+  echo "==> Master fix: single MUC + JWT-only (no guest split)"
+  bash "$WORKDIR/ops/jitsi/fix-live-master.sh" test-live-mcbuleli || {
+    echo "WARN: fix-live-master partial — run manually: sudo bash ops/jitsi/fix-live-master.sh"
+  }
 else
-  echo "==> JWT Prosody: créez /root/.mcbuleli-jitsi-secret puis bash ops/jitsi/verify-prosody-jwt.sh"
+  echo "==> JWT Prosody: créez /root/.mcbuleli-jitsi-secret puis:"
+  echo "    sudo bash ops/jitsi/fix-live-master.sh"
 fi
 bash "$WORKDIR/ops/jitsi/apply-mcbuleli-brand.sh"
+# Re-apply force-join after branding (brand may touch prejoin)
+bash "$WORKDIR/ops/jitsi/fix-config-force-join.sh" 2>/dev/null || true
 
 echo ""
 echo "==> Vérifications"

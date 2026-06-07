@@ -101,8 +101,9 @@ EXPECT
     echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
   elif [[ "$N" -ge 1 ]]; then
     echo "  Clients XMPP OK (${N} c2s) + focus online mais room absente"
-    echo "  → Cmd+Shift+R navigateur; si 2 rouges service-unavailable → fix-focus-service-unavailable.sh"
-    echo "  → sudo bash ops/jitsi/capture-muc-join.sh ${ROOM}"
+    echo "  → Fermer tous onglets live.mcbuleli.org puis rouvrir (host puis guest)"
+    echo "  → sudo bash ops/jitsi/fix-conference-no-room.sh"
+    echo "  → sudo bash ops/jitsi/diagnose-focus-online-no-room.sh ${ROOM}"
   else
     echo "  Aucun client sur ${DOMAIN} — ouvrir live.mcbuleli.org puis relancer"
   fi

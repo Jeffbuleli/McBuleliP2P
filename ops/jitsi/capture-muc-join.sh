@@ -18,6 +18,13 @@ echo "xmpp-websocket HTTP ${CODE}"
 [[ "$CODE" == "502" || "$CODE" == "000" ]] && { echo "nginx cassé → fix-nginx-xmpp-dedupe.sh"; exit 1; }
 
 echo ""
+echo "==> config.js (prejoin effectif — doit être false)"
+PREJOIN_SERVED="$(curl -s "https://${DOMAIN}/config.js" 2>/dev/null | grep -iE 'prejoinPageEnabled|prejoinConfig' | tail -2 || true)"
+echo "${PREJOIN_SERVED:-"(indisponible)"}"
+echo "$PREJOIN_SERVED" | grep -qiE 'true|enabled:\s*true' && \
+  echo "  WARN prejoin encore true → sudo bash ops/jitsi/fix-config-force-join.sh avant capture"
+
+echo ""
 echo "==> Sessions XMPP AVANT capture (host+guest via app McBuleli, onglet au premier plan)"
 C2S="$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null || true)"
 echo "$C2S" | head -12
@@ -115,13 +122,17 @@ elif [[ "$HAS_MUC_JOIN" -eq 1 ]]; then
 elif grep -qiE 'service-unavailable|focus\.|conference request' "$OUT"; then
   echo "VERDICT: conference IQ vers focus → service-unavailable (Jicofo déconnecté du client_proxy)"
   echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
+elif grep -qiE 'focus\.|conference\.request|urn:ietf:params:xml:ns:xmpp-conference' "$OUT"; then
+  echo "VERDICT: IQ conference vers focus détectée mais pas de join MUC"
+  echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
+  echo "  → sudo bash ops/jitsi/diagnose-focus-online-no-room.sh ${ROOM}"
 elif [[ "$HAS_PING" -eq 1 && "$HAS_MUC_JOIN" -eq 0 ]]; then
   echo "VERDICT: ping-only confirmé — auth + ping + disco OK, ZÉRO presence vers ${CONFERENCE}"
-  echo "  → Jitsi JS bloqué APRÈS disco#info (pré-join UI, GUM, erreur JS)"
-  echo "  → Mac Chrome: Cmd+Option+J → copier lignes rouges"
-  echo "  → Cmd+Shift+R, onglet premier plan (éviter hibernating)"
-  echo "  → sudo bash ops/jitsi/fix-jicofo-jvm-xml-limits.sh"
-  echo "  → sudo bash ops/jitsi/fix-config-force-join.sh"
+  echo "  → Jitsi JS bloqué AVANT conference.join() (pré-join, hash SyntaxError, GUM, erreur JS)"
+  echo "  → sudo bash ops/jitsi/fix-ping-only.sh ${ROOM}"
+  echo "  → Test isolé: gen-live-join-url.sh → fenêtre privée (pas via app)"
+  echo "  → Mac Chrome Cmd+Option+J sur live.mcbuleli.org → copier lignes rouges"
+  echo "  → Cmd+Shift+R, onglet premier plan (pas hibernating / pas ^C pendant capture)"
 elif [[ "$N" -ge 1 ]]; then
   echo "VERDICT: ${N} client(s) connecté(s) mais pas de join MUC pendant ${SECS}s"
   echo "  → relancer capture pendant Cmd+Shift+R sur les 2 appareils"

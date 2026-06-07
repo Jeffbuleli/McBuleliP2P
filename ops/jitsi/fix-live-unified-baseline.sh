@@ -67,14 +67,19 @@ config.hosts = config.hosts || {{}};
 config.hosts.domain = '{domain}';
 config.hosts.authdomain = '{domain}';
 config.hosts.muc = '{conference}';
+config.hosts.focus = 'focus.{domain}';
 delete config.hosts.anonymousdomain;
 
-config.bosh = '//{domain}/http-bind';
+config.bosh = 'https://{domain}/http-bind';
 config.websocket = 'wss://{domain}/xmpp-websocket';
 
+config.prejoinPageEnabled = false;
+config.prejoinConfig = {{ enabled: false }};
+config.enableWelcomePage = false;
 config.enableLobby = false;
 config.disableLobby = true;
 config.enableUserRolesBasedOnToken = false;
+config.requireDisplayName = false;
 
 config.transcription = {{ disabled: true, enableCaptionButton: false }};
 config.liveStreaming = {{ enabled: false }};
@@ -119,7 +124,8 @@ echo "==> 4. prosody.cfg.lua — c2s_interfaces localhost"
 bash "$SCRIPT_DIR/fix-prosody-force-localhost.sh"
 
 echo ""
-echo "==> 5. nginx — BOSH/websocket + no-cache config.js"
+echo "==> 5. nginx — BOSH/websocket (dedupe puis proxy) + no-cache config.js"
+bash "$SCRIPT_DIR/fix-nginx-xmpp-dedupe.sh" 2>/dev/null || true
 bash "$SCRIPT_DIR/fix-nginx-xmpp-proxy.sh"
 NGINX_VHOST=""
 for f in /etc/nginx/sites-enabled/${DOMAIN}.conf /etc/nginx/sites-enabled/${DOMAIN}; do

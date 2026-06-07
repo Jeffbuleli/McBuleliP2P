@@ -2,17 +2,29 @@
 
 À exécuter **en root sur le VPS** (après Jitsi + HTTPS OK).
 
-## Split room (host + guest = 2 LIVE séparés)
+## Split room / MUC fragmentation (host + guest = 2 LIVE séparés)
 
-**Cause racine documentée :** `ops/jitsi/SPLIT-ROOM-ROOT-CAUSE.md`
+**Rapport complet :** `ops/jitsi/MUC-UNIFICATION-REPORT.md`  
+**Cause racine :** `ops/jitsi/SPLIT-ROOM-ROOT-CAUSE.md`
 
 ```bash
 cd ~/McBuleliP2P && git pull
-sudo bash ops/jitsi/fix-live-unified-baseline.sh
-sudo bash ops/jitsi/audit-live-coherence.sh test-live-mcbuleli
+
+# Master fix (audit → backup → patch → restart → verify)
+sudo bash ops/jitsi/fix-live-master.sh test-live-mcbuleli
+
+# Deep audit (doit PASS)
+sudo bash ops/jitsi/audit-muc-fragmentation.sh test-live-mcbuleli
+
+# Pendant test live (2 navigateurs)
+sudo bash ops/jitsi/check-muc-live.sh test-live-mcbuleli
 ```
 
-Ne plus utiliser `fix-prosody-jwt-guest.sh` (réactive `guest.live` → split MUC).
+**Succès =** `occupant_count=2` + même JID `room@conference.live.mcbuleli.org`
+
+Ne **jamais** utiliser `fix-prosody-jwt-guest.sh` (réactive `guest.live` → split MUC).
+
+Si auth OK mais pas de join MUC (ping-only) : `sudo bash ops/jitsi/fix-ping-only.sh`
 
 ## Déploiement rapide (depuis GitHub)
 
