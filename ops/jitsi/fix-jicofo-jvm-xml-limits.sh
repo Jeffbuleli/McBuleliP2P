@@ -13,9 +13,9 @@ cp -a "$JICOFO_CFG" "${JICOFO_CFG}.bak.xmlimits.$(date +%Y%m%d%H%M%S)"
 XML_PROPS=(
   "-Djdk.xml.entityExpansionLimit=0"
   "-Djdk.xml.maxOccurLimit=0"
-  "-Djdk.xml.elementAttributeLimit=524288"
+  "-Djdk.xml.elementAttributeLimit=0"
   "-Djdk.xml.totalEntitySizeLimit=0"
-  "-Djdk.xml.maxXMLNameLimit=524288"
+  "-Djdk.xml.maxXMLNameLimit=0"
   "-Djdk.xml.entityReplacementLimit=0"
 )
 
@@ -40,17 +40,18 @@ grep -q "$MARKER" "$JICOFO_CFG" || echo "# $MARKER" >> "$JICOFO_CFG"
 echo "==> JICOFO_OPTS"
 grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -f "$SCRIPT_DIR/fix-jicofo-zombie.sh" ]]; then
-  bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
-else
-  systemctl restart jicofo
-  sleep 8
+if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -f "$SCRIPT_DIR/fix-jicofo-zombie.sh" ]]; then
+    bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
+  else
+    systemctl restart jicofo
+    sleep 8
+  fi
+  echo ""
+  echo "==> Jicofo (pas de XmlPullParserException récent ?)"
+  grep -iE 'XmlPullParser|XMLStreamException|Registered|SEVERE' /var/log/jitsi/jicofo.log 2>/dev/null | tail -8 || true
 fi
-
-echo ""
-echo "==> Jicofo (pas de XmlPullParserException récent ?)"
-grep -iE 'XmlPullParser|XMLStreamException|Registered|SEVERE' /var/log/jitsi/jicofo.log 2>/dev/null | tail -8 || true
 
 echo ""
 echo "OK — retest capture-muc-join après join"

@@ -112,7 +112,19 @@ Réactiver `fix-prosody-jwt-guest.sh` ou `anonymousdomain` **contredit** le hand
 
 **Test handbook-compatible :** `gen-live-join-url.sh` en onglet top-level.
 
-### 8. Media A/V (FAQ — autre symptôme)
+### 8. XMLStreamException ParseError dans jicofo.log (cause racine service-unavailable)
+
+Symptôme :
+
+```
+SEVERE: XMPP connection closed on error: javax.xml.stream.XMLStreamException: ParseError at [row,col]:[1,713582]
+```
+
+Prosody envoie un `disco#info` énorme (tous les Components Jitsi : polls, speakerstats, breakout, etc.). Jicofo plante → `focus@auth` instable → `service-unavailable` sur conference IQ.
+
+**Fix :** `sudo bash ops/jitsi/fix-jicofo-disco-bloat.sh`
+
+### 9. Media A/V (FAQ — autre symptôme)
 
 [FAQ](https://jitsi.github.io/handbook/docs/faq) : NAT, UDP 10000, `muc_access_whitelist` si « connectés mais pas de son/image ».  
 Pas notre cas actuel (`service-unavailable` avant MUC).

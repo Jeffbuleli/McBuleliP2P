@@ -70,10 +70,12 @@ if [[ -f "$AVAIL" && "$AVAIL" != "$CFG" ]]; then
 fi
 
 prosodyctl check config
-systemctl restart prosody
-sleep 4
-systemctl restart jicofo
-sleep 10
+if [[ "${SKIP_RESTART:-}" != "1" ]]; then
+  systemctl restart prosody
+  sleep 4
+  systemctl restart jicofo
+  sleep 10
+fi
 
 echo "==> MUC component (whitelist/admins)"
 grep -A20 "Component \"${CONFERENCE}\"" "$CFG" | grep -E 'muc_access_whitelist|admins|muc_wait_for_host|muc_room_locking' || true
