@@ -22,15 +22,29 @@ local function muc_module(conf_host)
     return m
 end
 
+local function muc_api_room(jid)
+    -- prosodyctl shell exposes muc:room() — safer than muc_mod.rooms (triggers global lookup)
+    local muc_api = rawget(_G, "muc")
+    if not muc_api or type(muc_api.room) ~= "function" then return nil end
+    for _, args in ipairs({{jid}, {muc_api, jid}}) do
+        local ok, r = pcall(muc_api.room, table.unpack(args))
+        if ok and r then return r end
+    end
+    return nil
+end
+
 local function find_room(muc_mod, jid)
+    local via_api = muc_api_room(jid)
+    if via_api then return via_api end
     if muc_mod.get_room_from_jid then
         local ok, r = pcall(muc_mod.get_room_from_jid, muc_mod, jid)
         if ok and r then return r end
         ok, r = pcall(muc_mod.get_room_from_jid, jid)
         if ok and r then return r end
     end
-    if muc_mod.rooms then
-        local ok, r = pcall(function() return muc_mod.rooms[jid] end)
+    local ok_tbl, rooms = pcall(function() return muc_mod.rooms end)
+    if ok_tbl and type(rooms) == "table" then
+        local ok, r = pcall(function() return rooms[jid] end)
         if ok and r then return r end
     end
     return nil
@@ -64,8 +78,9 @@ local function each_room(muc_mod)
             if ok and iter then return iter end
         end
     end
-    if muc_mod.rooms then
-        return pairs(muc_mod.rooms)
+    local ok_tbl, rooms = pcall(function() return muc_mod.rooms end)
+    if ok_tbl and type(rooms) == "table" then
+        return pairs(rooms)
     end
     return nil
 end
