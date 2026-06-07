@@ -72,14 +72,9 @@ jicofo {
 }
 EOF
 
-for kv in "JICOFO_HOST=${XMPP_HOST}" "JICOFO_AUTH_DOMAIN=${AUTH}" "JICOFO_AUTH_USER=focus" "JICOFO_AUTH_PASSWORD=${FOCUS_PASS}"; do
-  key="${kv%%=*}"; val="${kv#*=}"
-  if grep -q "^${key}=" "$JICOFO_CFG" 2>/dev/null; then
-    sed -i "s|^${key}=.*|${key}=${val}|" "$JICOFO_CFG"
-  else
-    echo "${key}=${val}" >> "$JICOFO_CFG"
-  fi
-done
+# shellcheck source=lib-jicofo-config.sh
+source "${SCRIPT_DIR}/lib-jicofo-config.sh"
+mcbuleli_ensure_jicofo_runtime_config "$XMPP_HOST" "$AUTH" "$FOCUS_PASS"
 
 echo ""
 echo "==> 4. Resync mdp focus/jvb (sans regénérer)"
@@ -99,10 +94,24 @@ source "${SCRIPT_DIR}/lib-jvb-config.sh"
 mcbuleli_ensure_jvb_runtime_config "$DOMAIN" "$AUTH" "$JVB_PASS"
 mcbuleli_write_jvb_hocon "$DOMAIN" "$AUTH" "$INTERNAL" "$JVB_PASS"
 
+echo ""
+echo "==> 6b. auth VirtualHost + truststore TLS"
+SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-prosody-auth-vhost.sh" 2>/dev/null || true
+SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-jicofo-truststore.sh" 2>/dev/null || true
+
+if ! nc -z 127.0.0.1 5222 2>/dev/null; then
+  echo "WARN: 127.0.0.1:5222 KO → fix-prosody-c2s-listen"
+  bash "$SCRIPT_DIR/fix-prosody-c2s-listen.sh" || true
+fi
+
+echo ""
+echo "==> 7. JICOFO_OPTS (doit contenir -Dconfig.file)"
+grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1
+
 LOG_LINES="$(wc -l < /var/log/jitsi/jicofo.log 2>/dev/null || echo 0)"
 
 echo ""
-echo "==> 7. Restart unique Prosody → JVB → Jicofo (purge client_proxy stale)"
+echo "==> 8. Restart unique Prosody → JVB → Jicofo (purge client_proxy stale)"
 prosodyctl check config
 systemctl restart prosody
 sleep 8
@@ -112,7 +121,14 @@ systemctl restart jicofo
 sleep 18
 
 echo ""
-echo "==> 8. Vérification"
+echo "==> 9. Vérification"
+if ! mcbuleli_jicofo_process_has_config_file; then
+  echo "FAIL: processus Jicofo sans -Dconfig.file=jicofo.conf"
+  pgrep -af 'jicofo|org.jitsi.jicofo' | head -3 || true
+  exit 1
+fi
+echo "OK: -Dconfig.file présent dans le processus Java"
+
 FOCUS_LINES="$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus || true)"
 if [[ -z "$FOCUS_LINES" ]]; then
   echo "FAIL: focus@${AUTH} absent"

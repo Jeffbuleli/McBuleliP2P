@@ -58,5 +58,7 @@ echo "=== auth VirtualHost ==="
 grep -A8 "VirtualHost \"${AUTH}\"" "$CFG"
 
 prosodyctl check config || true
-systemctl restart prosody
+if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
+  systemctl restart prosody
+fi
 echo "OK — relancez fix jicofo password puis restart jicofo"

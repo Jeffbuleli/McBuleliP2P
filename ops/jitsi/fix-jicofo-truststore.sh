@@ -41,9 +41,10 @@ else
   echo "WARN: $CERT absent — prosodyctl cert generate ${AUTH} ?"
 fi
 
-systemctl restart prosody && sleep 3
-: > /var/log/jitsi/jicofo.log 2>/dev/null || true
-systemctl restart jicofo && sleep 15
-
-echo "==> Jicofo (log frais)"
-grep -iE 'SSL/TLS|Authenticated|Registered|Failed|Exception|videobridge|discover' /var/log/jitsi/jicofo.log | tail -15
+if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
+  systemctl restart prosody && sleep 3
+  : > /var/log/jitsi/jicofo.log 2>/dev/null || true
+  systemctl restart jicofo && sleep 15
+  echo "==> Jicofo (log frais)"
+  grep -iE 'SSL/TLS|Authenticated|Registered|Failed|Exception|videobridge|discover' /var/log/jitsi/jicofo.log | tail -15
+fi

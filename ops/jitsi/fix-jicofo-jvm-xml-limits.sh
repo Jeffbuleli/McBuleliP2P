@@ -4,11 +4,20 @@ set -euo pipefail
 
 JICOFO_CFG="/etc/jitsi/jicofo/config"
 MARKER="mcbuleli-jvm-xml-limits"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 [[ -f "$JICOFO_CFG" ]] || { echo "FAIL: $JICOFO_CFG absent"; exit 1; }
 
 cp -a "$JICOFO_CFG" "${JICOFO_CFG}.bak.xmlimits.$(date +%Y%m%d%H%M%S)"
+
+# Préserver -Dconfig.file=jicofo.conf (sinon hocon ignoré → focus jamais connecté)
+# shellcheck source=lib-jicofo-config.sh
+source "${SCRIPT_DIR}/lib-jicofo-config.sh"
+AUTH_DOMAIN="${JICOFO_AUTH_DOMAIN:-auth.live.mcbuleli.org}"
+FOCUS_PASS="$(grep '^JICOFO_AUTH_PASSWORD=' "$JICOFO_CFG" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')"
+XMPP_HOST="$(grep '^JICOFO_HOST=' "$JICOFO_CFG" 2>/dev/null | head -1 | cut -d= -f2- || echo 127.0.0.1)"
+[[ -n "$FOCUS_PASS" ]] && mcbuleli_ensure_jicofo_runtime_config "$XMPP_HOST" "$AUTH_DOMAIN" "$FOCUS_PASS"
 
 XML_PROPS=(
   "-Djdk.xml.entityExpansionLimit=0"
@@ -32,7 +41,13 @@ if grep -q '^JICOFO_OPTS=' "$JICOFO_CFG"; then
   done
   sed -i "s|^JICOFO_OPTS=.*|JICOFO_OPTS=\"${current}\"|" "$JICOFO_CFG"
 else
-  echo "JICOFO_OPTS=\"${XML_PROPS[*]}\"" >> "$JICOFO_CFG"
+  # Ne jamais créer JICOFO_OPTS sans -Dconfig.file (voir lib-jicofo-config.sh)
+  mcbuleli_ensure_jicofo_runtime_config "$XMPP_HOST" "$AUTH_DOMAIN" "$FOCUS_PASS"
+  current="$(grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1 | sed 's/^JICOFO_OPTS=//' | tr -d '"')"
+  for prop in "${XML_PROPS[@]}"; do
+    current="${current} ${prop}"
+  done
+  sed -i "s|^JICOFO_OPTS=.*|JICOFO_OPTS=\"${current}\"|" "$JICOFO_CFG"
 fi
 
 grep -q "$MARKER" "$JICOFO_CFG" || echo "# $MARKER" >> "$JICOFO_CFG"
