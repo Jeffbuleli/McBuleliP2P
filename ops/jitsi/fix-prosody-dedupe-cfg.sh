@@ -63,8 +63,24 @@ def remove_blocks(name):
         flags=re.DOTALL,
     )
 
+domain = conference.replace("conference.", "", 1)
+keep = {conference, focus_comp, internal}
+removed = []
+
+# Supprimer TOUS les Components optionnels (polls, breakout, etc.) — cause ParseError Jicofo
+for comp in list(re.findall(r'(?m)^(?:--\s*)?Component "([^"]+)"', text)):
+    if comp in keep:
+        continue
+    if domain not in comp and "auth." not in comp:
+        continue
+    remove_blocks(comp)
+    removed.append(comp)
+
 for comp in (conference, focus_comp, internal):
     remove_blocks(comp)
+
+if removed:
+    print("REMOVED optional:", ", ".join(sorted(set(removed))))
 
 marker = "-- mcbuleli-dedupe-cfg"
 if marker not in text:
@@ -137,6 +153,12 @@ if echo "$CHECK" | grep -qi 'Duplicate option'; then
   echo "  nl -ba $CFG | sed -n '95,140p'"
   exit 1
 fi
+
+echo ""
+echo "==> Components actifs (attendu: 3 — internal, conference, focus)"
+grep -E '^\s*Component "' "$CFG" | grep -v '^--' || true
+COMP_N=$(grep -E '^\s*Component "' "$CFG" | grep -v '^--' | wc -l | tr -d ' ')
+[[ "$COMP_N" -le 3 ]] || echo "WARN: ${COMP_N} components — ParseError Jicofo probable"
 
 echo ""
 echo "==> Blocs conference + focus"

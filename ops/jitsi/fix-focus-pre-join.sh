@@ -37,11 +37,15 @@ echo "==> 2. focus component target_address"
 SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-focus-component.sh"
 
 echo ""
-echo "==> 3. jicofo.conf + mdp + restart Prosody/Jicofo"
+echo "==> 3. JVM XML limits (anti ParseError disco#info)"
+SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-jicofo-jvm-xml-limits.sh" 2>/dev/null || true
+
+echo ""
+echo "==> 4. jicofo.conf + mdp + restart Prosody/Jicofo"
 bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
 
 echo ""
-echo "==> 4. JVB brewery"
+echo "==> 5. JVB brewery"
 systemctl restart jitsi-videobridge2
 sleep 10
 
