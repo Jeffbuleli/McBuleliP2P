@@ -90,6 +90,13 @@ EXPECT
     MUC_OK=1
   fi
 
+  JICOFO_ALLOC=0
+  grep -qiE "${ROOM}|Allocated.*${CONFERENCE}|Creating conference" /var/log/jitsi/jicofo.log 2>/dev/null && JICOFO_ALLOC=1
+  MUC_LOG=0
+  grep -qiE "${TARGET}|${ROOM}.*${CONFERENCE}" /var/log/prosody/prosody.log 2>/dev/null && MUC_LOG=1
+  PREJOIN_BAD=0
+  curl -s "https://${DOMAIN}/config.js" 2>/dev/null | grep -iE 'prejoinPageEnabled|prejoinConfig' | tail -1 | grep -qiE 'true|enabled:\s*true' && PREJOIN_BAD=1
+
   echo ""
   echo "VERDICT"
   if [[ "$MUC_OK" -eq 1 ]]; then
@@ -99,10 +106,17 @@ EXPECT
     echo "  Console: service-unavailable sur conference IQ → focus.${DOMAIN}"
     echo "  Cause: Jicofo pas connecté comme focus@${AUTH}"
     echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
+  elif [[ "$N" -ge 1 && "$JICOFO_ALLOC" -eq 0 && "$MUC_LOG" -eq 0 ]]; then
+    echo "  PING-ONLY: ${N} c2s + focus OK mais ZÉRO Allocated Jicofo et ZÉRO join MUC"
+    echo "  → Le navigateur n'appelle pas conference.join() (onglets périmés ou JS bloqué)"
+    echo "  1) FERMER tous onglets live.mcbuleli.org (host + guest)"
+    echo "  2) sudo bash ops/jitsi/fix-conference-no-room.sh ${ROOM}"
+    echo "  3) sudo bash ops/jitsi/join-test-live.sh ${ROOM}   # capture PUIS ouvrir URL"
+    [[ "$PREJOIN_BAD" -eq 1 ]] && echo "  → prejoin encore true: sudo bash ops/jitsi/fix-config-force-join.sh"
   elif [[ "$N" -ge 1 ]]; then
     echo "  Clients XMPP OK (${N} c2s) + focus online mais room absente"
-    echo "  → Fermer tous onglets live.mcbuleli.org puis rouvrir (host puis guest)"
-    echo "  → sudo bash ops/jitsi/fix-conference-no-room.sh"
+    echo "  → Jicofo alloc=${JICOFO_ALLOC} muc_log=${MUC_LOG} — relancer join après fix"
+    echo "  → sudo bash ops/jitsi/fix-conference-no-room.sh ${ROOM}"
     echo "  → sudo bash ops/jitsi/diagnose-focus-online-no-room.sh ${ROOM}"
   else
     echo "  Aucun client sur ${DOMAIN} — ouvrir live.mcbuleli.org puis relancer"
