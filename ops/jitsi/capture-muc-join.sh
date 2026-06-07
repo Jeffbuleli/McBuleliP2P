@@ -108,8 +108,11 @@ echo "==> Room existe ?"
 prosodyctl shell muc room "${TARGET}" 2>&1 | tail -3 || true
 
 echo ""
+HAS_SVC_UNAVAIL=0
+grep -qiE 'service-unavailable' "$OUT" && HAS_SVC_UNAVAIL=1
 HAS_MUC_JOIN=0
-if grep -qiE "${TARGET}|presence.*${ROOM}@|to='${CONFERENCE}'" "$OUT"; then
+# Presence vers la MUC — pas l'IQ conference vers focus (contient aussi room=...@conference)
+if grep -qiE "presence[^>]*to=['\"]${TARGET}|presence[^>]*to=['\"]${ROOM}@" "$OUT"; then
   HAS_MUC_JOIN=1
 fi
 HAS_PING=0
@@ -117,9 +120,13 @@ grep -qi "urn:xmpp:ping" "$OUT" && HAS_PING=1
 
 if grep -qiE "not.?allowed|policy-violation|forbidden" "$OUT"; then
   echo "VERDICT: JWT/token rejeté au join MUC"
+elif [[ "$HAS_SVC_UNAVAIL" -eq 1 ]]; then
+  echo "VERDICT: conference IQ → focus.${DOMAIN} = service-unavailable (Jicofo n'a pas reçu l'IQ)"
+  echo "  → sudo bash ops/jitsi/fix-focus-iq-route.sh"
+  echo "  → FERMER tous onglets + gen-live-join-url + retest dans 60s"
 elif [[ "$HAS_MUC_JOIN" -eq 1 ]]; then
-  echo "VERDICT: join MUC ${TARGET} détecté"
-elif grep -qiE 'service-unavailable|focus\.|conference request' "$OUT"; then
+  echo "VERDICT: join MUC ${TARGET} détecté (presence)"
+elif grep -qiE 'focus\.|conference request' "$OUT"; then
   echo "VERDICT: conference IQ vers focus → service-unavailable (Jicofo déconnecté du client_proxy)"
   echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
 elif grep -qiE 'focus\.|conference\.request|urn:ietf:params:xml:ns:xmpp-conference' "$OUT"; then

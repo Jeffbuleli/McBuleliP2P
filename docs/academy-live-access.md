@@ -1,5 +1,8 @@
 # Live `live.mcbuleli.org` — accès contrôlé
 
+**Cycle de vie complet (host, JWT, Jicofo, MUC)** : [academy-live-lifecycle.md](./academy-live-lifecycle.md)  
+**Playbook VPS (ordre des scripts)** : [ops/jitsi/LIVE-PLAYBOOK.md](../ops/jitsi/LIVE-PLAYBOOK.md)
+
 ```mermaid
 flowchart LR
   subgraph join [Rejoindre un live]

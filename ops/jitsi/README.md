@@ -2,6 +2,20 @@
 
 À exécuter **en root sur le VPS** (après Jitsi + HTTPS OK).
 
+**Ordre produit + infra** : [LIVE-PLAYBOOK.md](./LIVE-PLAYBOOK.md) · [docs/academy-live-lifecycle.md](../../docs/academy-live-lifecycle.md)
+
+## État actuel (focus / client_proxy)
+
+Si auth XMPP OK mais IQ conference → `service-unavailable` :
+
+```bash
+sudo bash ops/jitsi/fix-focus-iq-route.sh
+# si restart interrompu → restart manuel prosody → jvb → jicofo
+sudo bash ops/jitsi/fix-focus-client-proxy-sessions.sh
+```
+
+Test prod = **deux comptes McBuleli** via companion, pas `gen-live-join-url` seul.
+
 ## Split room / MUC fragmentation (host + guest = 2 LIVE séparés)
 
 **Rapport complet :** `ops/jitsi/MUC-UNIFICATION-REPORT.md`  

@@ -138,21 +138,14 @@ sudo grep -E 'authentication|app_id|app_secret|allow_empty_token' \
 
 ## 3. Jitsi Meet (`config.js`)
 
-```bash
-sudo nano /etc/jitsi/meet/live.mcbuleli.org-config.js
-```
-
-À la fin du `config = { ... }` :
-
-```javascript
-config.enableUserRolesBasedOnToken = true;
-```
-
-Puis :
+McBuleli : **ne pas** activer `enableUserRolesBasedOnToken = true` (bloque les invités JWT). Utiliser :
 
 ```bash
-sudo systemctl restart nginx
+sudo bash ops/jitsi/fix-config-force-join.sh
+sudo bash ops/jitsi/verify-config-served.sh
 ```
+
+Valeurs attendues servies : `prejoinPageEnabled = false`, `enableUserRolesBasedOnToken = false`, `hosts.muc = conference.live.mcbuleli.org`.
 
 ---
 
@@ -172,8 +165,20 @@ Sans jwt → redirection vers `https://mcbuleli.org/app/live/enter?room=…` (lo
 
 ## 5. Test
 
-1. Live Academy sur mcbuleli.org → URL avec `?jwt=...`
-2. `https://live.mcbuleli.org/test-sans-jwt` sans paramètre → **refus** (normal)
+### Prod (valide McBuleli)
+
+1. Deux comptes → companion `/app/academy/…/live/…`
+2. Host → **Démarrer le live** → user → **VIDÉO**
+3. VPS : `sudo bash ops/jitsi/check-muc-live.sh <room-slug>` → `occupant_count=2`
+
+### Ops (isole infra — pas un test sécurité)
+
+```bash
+sudo bash ops/jitsi/gen-live-join-url.sh test-live-mcbuleli
+# Chrome privé top-level, URL avec ?jwt= — ne remplace pas le flux app
+```
+
+Gate nginx (si actif) : `https://live.mcbuleli.org/<room>` sans `?jwt=` → redirection login McBuleli.
 
 ---
 

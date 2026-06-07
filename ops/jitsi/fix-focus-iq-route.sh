@@ -111,7 +111,12 @@ grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1
 
 echo ""
 echo "==> 8. Restart unique Prosody → JVB → Jicofo (purge client_proxy stale)"
-prosodyctl check config
+CHECK="$(prosodyctl check config 2>&1 || true)"
+echo "$CHECK" | tail -15
+if echo "$CHECK" | grep -qiE 'Duplicate option|Error: |Fatal'; then
+  echo "FAIL: prosody config bloquante (voir ci-dessus)"
+  exit 1
+fi
 systemctl restart prosody
 sleep 8
 systemctl restart jitsi-videobridge2
