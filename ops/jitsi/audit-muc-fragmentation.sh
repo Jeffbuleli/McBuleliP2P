@@ -190,7 +190,8 @@ for key in \
   grep -qF "$key" "$JICOFO_CFG" 2>/dev/null && pass "jicofo: $key" || fail "jicofo missing: $key"
 done
 
-FOCUS_C2S="$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -ci focus || echo 0)"
+FOCUS_C2S=$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -ci focus 2>/dev/null || true)
+FOCUS_C2S=${FOCUS_C2S:-0}
 [[ "$FOCUS_C2S" -ge 1 ]] && pass "focus@${AUTH} connected (${FOCUS_C2S})" || fail "focus@${AUTH} not connected"
 [[ "$FOCUS_C2S" -le 1 ]] && pass "Single focus session" || fail "Multiple focus sessions (${FOCUS_C2S}) → stale proxy"
 

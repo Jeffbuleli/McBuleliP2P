@@ -24,7 +24,9 @@ run_check() {
   echo ""
   echo "==> 2. c2s (host+guest connectés AVANT ce script)"
   prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | head -12 || true
-  N="$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -c registered || echo 0)"
+  # grep -c prints 0 and exits 1 when no match — never use "|| echo 0" (yields "0\n0")
+  N=$(prosodyctl shell c2s show "${DOMAIN}" 2>/dev/null | grep -c registered 2>/dev/null || true)
+  N=${N:-0}
   echo "  sessions registered: ${N}"
 
   echo ""

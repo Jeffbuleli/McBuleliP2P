@@ -13,7 +13,8 @@ echo "========== diagnose focus-online no-room (${TARGET}) =========="
 echo ""
 echo "==> 1. Sessions focus@auth (attendu: 1 seule)"
 prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus || echo "(aucune)"
-FOCUS_N="$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -ci focus || echo 0)"
+FOCUS_N=$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -ci focus 2>/dev/null || true)
+FOCUS_N=${FOCUS_N:-0}
 echo "  focus sessions: ${FOCUS_N}"
 [[ "$FOCUS_N" -gt 1 ]] && echo "  WARN: plusieurs focus@auth → client_proxy peut router vers session morte"
 
