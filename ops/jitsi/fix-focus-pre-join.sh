@@ -16,6 +16,13 @@ echo "AVANT: fermer TOUS les onglets live.mcbuleli.org (0 c2s attendu)"
 echo "      Test = 1 SEUL onglet Chrome privé (gen-live-join-url), pas 2 onglets"
 echo ""
 
+echo "==> 0. Dedupe Prosody cfg (Duplicate option → client_proxy cassé)"
+SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-prosody-dedupe-cfg.sh" || {
+  echo "FAIL: dedupe cfg — coller: prosodyctl check config"
+  exit 1
+}
+
+echo ""
 echo "==> 1. Kill zombies Jicofo"
 systemctl stop jicofo jitsi-videobridge2 2>/dev/null || true
 sleep 2

@@ -24,41 +24,27 @@ text = open(path).read()
 # Retirer muc_wait_for_host (handbook JWT — bloque invités sans host)
 text = re.sub(r'^\s*"muc_wait_for_host";\s*\n', '', text, flags=re.M)
 
-muc_re = rf'(Component "{re.escape(conference)}" "muc"\s*\n)(.*?)(?=\n(?:VirtualHost|Component)\s|\Z)'
-
-def patch_muc(m):
-    body = m.group(2)
-    if "muc_access_whitelist" not in body:
-        body = body.rstrip() + f'\n    muc_access_whitelist = {{ "{focus_jid}" }}\n'
-    else:
-        body = re.sub(
-            r'muc_access_whitelist\s*=\s*\{[^}]*\}',
-            f'muc_access_whitelist = {{ "{focus_jid}" }}',
-            body,
-            count=1,
-        )
-    if re.search(r'^\s*admins\s*=', body, re.M):
-        if focus_jid not in body:
-            body = re.sub(
-                r'(admins\s*=\s*\{)',
-                rf'\1 "{focus_jid}",',
-                body,
-                count=1,
-            )
-    else:
-        body = body.rstrip() + f'\n    admins = {{ "{focus_jid}" }}\n'
-    if "muc_room_locking" not in body:
-        body += "    muc_room_locking = false\n"
-    if "muc_room_default_public_jids" not in body:
-        body += "    muc_room_default_public_jids = true\n"
-    return m.group(1) + body
-
-if re.search(muc_re, text, re.DOTALL):
-    text = re.sub(muc_re, patch_muc, text, count=1, flags=re.DOTALL)
-    print(f"OK: patched Component {conference}")
-else:
-    print(f"WARN: Component {conference} not found", file=sys.stderr)
-    sys.exit(1)
+# Éviter Duplicate option — remplacer tout le bloc muc par une version canonique
+canonical = f'''Component "{conference}" "muc"
+    storage = "memory"
+    restrict_room_creation = false
+    admins = {{ "{focus_jid}" }}
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+    muc_access_whitelist = {{ "{focus_jid}" }}
+    modules_enabled = {{
+        "muc_meeting_id";
+        "muc_domain_mapper";
+    }}
+'''
+text = re.sub(
+    rf'(?m)^(?:--\s*)?Component "{re.escape(conference)}"[^\n]*\n.*?(?=\n(?:VirtualHost|Component)\s|\Z)',
+    '',
+    text,
+    flags=re.DOTALL,
+)
+text = text.rstrip() + f"\n\n{canonical}\n"
+print(f"OK: replaced Component {conference} (dedupe)")
 
 open(path, "w").write(text)
 PY
