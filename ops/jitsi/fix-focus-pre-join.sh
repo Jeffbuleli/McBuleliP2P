@@ -17,10 +17,12 @@ echo "      Test = 1 SEUL onglet Chrome privé (gen-live-join-url), pas 2 onglet
 echo ""
 
 echo "==> 0. Dedupe Prosody cfg (Duplicate option → client_proxy cassé)"
-SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-prosody-dedupe-cfg.sh" || {
-  echo "FAIL: dedupe cfg — coller: prosodyctl check config"
+if ! SKIP_RESTART=1 bash "$SCRIPT_DIR/fix-prosody-dedupe-cfg.sh"; then
+  echo "FAIL: dedupe cfg"
+  echo "  prosodyctl check config 2>&1 | grep -i Duplicate"
+  echo "  nl -ba /etc/prosody/conf.d/${DOMAIN}.cfg.lua | sed -n '95,140p'"
   exit 1
-}
+fi
 
 echo ""
 echo "==> 1. Kill zombies Jicofo"

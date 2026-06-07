@@ -1,6 +1,5 @@
 #!/bin/bash
 # Prosody: Duplicate option restrict_room_creation/storage/modules_enabled → MUC/focus cassés.
-# Cause: fix-muc-focus-whitelist et autres scripts ont empilé des blocs conference muc.
 set -euo pipefail
 
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
@@ -8,6 +7,7 @@ AUTH="auth.${DOMAIN}"
 CONFERENCE="conference.${DOMAIN}"
 FOCUS_JID="focus@${AUTH}"
 FOCUS_COMP="focus.${DOMAIN}"
+INTERNAL="internal.${AUTH}"
 CFG="/etc/prosody/conf.d/${DOMAIN}.cfg.lua"
 [[ -f "$CFG" ]] || CFG="/etc/prosody/conf.avail/${DOMAIN}.cfg.lua"
 
@@ -20,10 +20,10 @@ cp -a "$CFG" "/root/nginx-backups/$(basename "$CFG").dedupe.$(date +%Y%m%d%H%M%S
 echo "========== fix-prosody-dedupe-cfg =========="
 echo "AVANT: $(grep -c "Component \"${CONFERENCE}\"" "$CFG" 2>/dev/null || echo 0) bloc(s) Component ${CONFERENCE}"
 
-python3 - "$CFG" "$CONFERENCE" "$FOCUS_JID" "$FOCUS_COMP" "$AUTH" <<'PY'
+python3 - "$CFG" "$CONFERENCE" "$FOCUS_JID" "$FOCUS_COMP" "$AUTH" "$INTERNAL" <<'PY'
 import re, sys
 
-path, conference, focus_jid, focus_comp, auth = sys.argv[1:6]
+path, conference, focus_jid, focus_comp, auth, internal = sys.argv[1:7]
 text = open(path).read()
 
 muc_block = f'''Component "{conference}" "muc"
@@ -43,41 +43,98 @@ focus_block = f'''Component "{focus_comp}" "client_proxy"
     target_address = "{focus_jid}"
 '''
 
-# Supprimer TOUS les blocs conference muc (y compris dupliqués / commentés partiellement)
-text = re.sub(
-    rf'(?m)^(?:--\s*)?Component "{re.escape(conference)}"[^\n]*\n.*?(?=\n(?:VirtualHost|Component)\s|\Z)',
-    '',
-    text,
-    flags=re.DOTALL,
-)
+internal_block = f'''Component "{internal}" "muc"
+    storage = "memory"
+    muc_room_cache_size = 1000
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+    modules_enabled = {{
+        "muc_meeting_id";
+        "ping";
+    }}
+'''
 
-# Supprimer blocs focus client_proxy dupliqués
-text = re.sub(
-    rf'(?m)^(?:--\s*)?Component "{re.escape(focus_comp)}"[^\n]*\n.*?(?=\n(?:VirtualHost|Component)\s|\Z)',
-    '',
-    text,
-    flags=re.DOTALL,
-)
+def remove_blocks(name):
+    global text
+    text = re.sub(
+        rf'(?m)^(?:--\s*)?Component "{re.escape(name)}"[^\n]*\n.*?(?=\n(?:VirtualHost|Component)\s|\Z)',
+        '',
+        text,
+        flags=re.DOTALL,
+    )
+
+for comp in (conference, focus_comp, internal):
+    remove_blocks(comp)
 
 marker = "-- mcbuleli-dedupe-cfg"
 if marker not in text:
     text = text.rstrip() + f"\n\n{marker}\n"
 
-text = text.rstrip() + f"\n\n{muc_block}\n{focus_block}\n"
+text = text.rstrip() + f"\n\n{internal_block}\n{muc_block}\n{focus_block}\n"
+
+# Dédupliquer clés répétées dans chaque VirtualHost/Component (1ère occurrence gagne)
+def dedupe_block_keys(block: str) -> str:
+    seen = set()
+    out = []
+    in_modules = False
+    for line in block.splitlines():
+        stripped = line.strip()
+        if stripped.startswith('modules_enabled'):
+            if 'modules_enabled' in seen:
+                in_modules = True
+                continue
+            seen.add('modules_enabled')
+            in_modules = '{' in stripped and '}' not in stripped
+            out.append(line)
+            continue
+        if in_modules:
+            out.append(line)
+            if '}' in stripped:
+                in_modules = False
+            continue
+        m = re.match(r'^(\s*)(\w+)\s*=', line)
+        if m:
+            key = m.group(2)
+            if key in seen:
+                continue
+            seen.add(key)
+        out.append(line)
+    return '\n'.join(out)
+
+def dedupe_all_blocks(src: str) -> str:
+    pat = re.compile(
+        r'(?m)^((?:VirtualHost|Component)\s+"[^"]+"[^\n]*\n)(.*?)(?=\n(?:VirtualHost|Component)\s|\Z)',
+        re.DOTALL,
+    )
+    def repl(m):
+        return m.group(1) + dedupe_block_keys(m.group(2)) + '\n'
+    return pat.sub(repl, src)
+
+text = dedupe_all_blocks(text)
 open(path, "w").write(text)
-print(f"OK: single Component {conference} + {focus_comp}")
+print(f"OK: canonical {internal} + {conference} + {focus_comp}")
 PY
 
 AVAIL="/etc/prosody/conf.avail/${DOMAIN}.cfg.lua"
-[[ -f "$AVAIL" && "$AVAIL" != "$CFG" ]] && cp -a "$CFG" "$AVAIL"
+if [[ -f "$AVAIL" ]]; then
+  CFG_REAL="$(readlink -f "$CFG" 2>/dev/null || echo "$CFG")"
+  AVAIL_REAL="$(readlink -f "$AVAIL" 2>/dev/null || echo "$AVAIL")"
+  if [[ "$CFG_REAL" != "$AVAIL_REAL" ]]; then
+    cp -a "$CFG" "$AVAIL"
+  fi
+fi
 
 echo ""
 echo "==> prosodyctl check (pas de Duplicate option)"
 CHECK="$(prosodyctl check config 2>&1 || true)"
-echo "$CHECK" | tail -15
+echo "$CHECK" | tail -20
 if echo "$CHECK" | grep -qi 'Duplicate option'; then
-  echo "FAIL: Duplicate option encore présent — lignes:"
+  echo ""
+  echo "FAIL: Duplicate option encore présent:"
   echo "$CHECK" | grep -i 'Duplicate option'
+  echo ""
+  echo "Coller pour analyse:"
+  echo "  nl -ba $CFG | sed -n '95,140p'"
   exit 1
 fi
 
