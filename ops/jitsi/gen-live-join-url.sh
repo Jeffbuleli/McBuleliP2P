@@ -49,7 +49,7 @@ sig = b64url(hmac.new(secret.encode(), f"{h}.{p}".encode(), hashlib.sha256).dige
 jwt = f"{h}.{p}.{sig}"
 exp_human = datetime.fromtimestamp(exp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 print(jwt)
-print(f"EXP:{exp_human}", file=sys.stderr)
+print(f"EXP:{exp_human}")
 PY
 )"
 JWT="$(echo "$JWT_OUT" | head -1)"
@@ -61,10 +61,16 @@ HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config
 URL="https://${DOMAIN}/${ROOM}?jwt=${JWT}${HASH}"
 
 echo "========== URL test direct (host moderator) =========="
+echo "JWT expire: ${JWT_EXP:-?} (${EXP_SECS}s)"
+echo ""
 echo "$URL"
 echo ""
+echo "IMPORTANT — Authentication failed / Token is expired:"
+echo "  → PAS un blocage Chrome privé — regénérer l'URL et coller TOUT DE SUITE"
+echo "  → Ne pas réutiliser une URL du terminal (jwt expiré après ${EXP_SECS}s)"
+echo ""
 echo "1) FERMER tous onglets live.mcbuleli.org d'abord"
-echo "2) Chrome PRIVÉ — coller URL en onglet TOP-LEVEL (pas iframe / pas via app McBuleli)"
+echo "2) Chrome PRIVÉ — coller URL MAINTENANT en onglet TOP-LEVEL"
 echo "3) Vérifier ?jwt= présent dans la barre d'adresse"
-echo "4) Cmd+Option+J — PAS d'erreur CORS mcbuleli.org/login (sinon = iframe/app → test invalide)"
+echo "4) Console: PAS 'Token is expired' ni CORS mcbuleli.org/login"
 echo "5) Pendant join: sudo bash ops/jitsi/watch-join-live.sh ${ROOM}"
