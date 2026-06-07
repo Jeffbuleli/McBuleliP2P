@@ -92,6 +92,10 @@ EXPECT
     MUC_OK=1
   fi
 
+  FOCUS_REGISTERED_RECENT=0
+  journalctl -u jicofo --since "3 min ago" 2>/dev/null | grep -qi 'Registered' && FOCUS_REGISTERED_RECENT=1
+  tail -80 /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered' && FOCUS_REGISTERED_RECENT=1
+
   JICOFO_ALLOC=0
   tail -400 /var/log/jitsi/jicofo.log 2>/dev/null | grep -qiE "${ROOM}|Allocated.*${CONFERENCE}|Creating conference" && JICOFO_ALLOC=1
   SVC_UNAVAIL=0
@@ -115,9 +119,14 @@ EXPECT
     echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
     echo "  → FERMER tous onglets + Cmd+Shift+R puis retest"
     echo "  → sudo bash ops/jitsi/watch-join-live.sh ${ROOM}  (pendant join actif)"
+  elif [[ "$FOCUS_ONLINE" -eq 1 && "$FOCUS_REGISTERED_RECENT" -eq 0 ]]; then
+    echo "  FOCUS STALE: focus@auth visible mais Registered pas récent — session fantôme"
+    echo "  → sudo bash ops/jitsi/fix-focus-pre-join.sh  (puis join dans 60s)"
+    echo "  → PAS via app McBuleli / iframe (CORS mcbuleli.org/login)"
   elif [[ "$N" -ge 1 && "$JICOFO_ALLOC" -eq 0 && "$MUC_LOG" -eq 0 ]]; then
     echo "  PING-ONLY ou FOCUS FAIL: ${N} c2s + focus session OK mais ZÉRO Allocated/MUC récent"
-    echo "  → Console service-unavailable? → fix-focus-service-unavailable.sh + hard refresh"
+    echo "  → Console service-unavailable? → fix-focus-pre-join.sh puis hard refresh"
+    echo "  → CORS mcbuleli.org/login dans console? → onglet TOP-LEVEL gen-live-join-url (pas iframe)"
     echo "  → Sinon: conference.join() pas appelé → fix-config-force-join.sh"
     echo "  1) FERMER tous onglets live.mcbuleli.org"
     echo "  2) sudo bash ops/jitsi/watch-join-live.sh ${ROOM}  # PENDANT join 60s"
