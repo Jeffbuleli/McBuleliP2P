@@ -25,6 +25,7 @@ import re, sys
 
 path, conference, focus_jid, focus_comp, auth, internal = sys.argv[1:7]
 text = open(path).read()
+domain = conference.replace("conference.", "", 1)
 
 muc_block = f'''Component "{conference}" "muc"
     storage = "memory"
@@ -36,6 +37,7 @@ muc_block = f'''Component "{conference}" "muc"
     modules_enabled = {{
         "muc_meeting_id";
         "muc_domain_mapper";
+        "token_verification";
     }}
 '''
 
@@ -63,7 +65,30 @@ def remove_blocks(name):
         flags=re.DOTALL,
     )
 
-domain = conference.replace("conference.", "", 1)
+vh_re = rf'(VirtualHost "{re.escape(domain)}"\s*\n)(.*?)(?=\n(?:VirtualHost|Component)\s|\Z)'
+
+def strip_lobby_breakout(m):
+    body = m.group(2)
+    for mod in ("muc_lobby_rooms", "muc_breakout_rooms"):
+        body = re.sub(rf'^\s*"{mod}";\s*\n', "", body, flags=re.M)
+        body = re.sub(rf'^\s*"{mod}",\s*\n', "", body, flags=re.M)
+    for key in ("lobby_muc", "breakout_rooms_muc"):
+        body = re.sub(
+            rf'^(\s*)({key}\s*=.*)$',
+            r'\1-- \2  -- mcbuleli-no-lobby-breakout',
+            body,
+            flags=re.M,
+        )
+    if "mcbuleli-live-vhost-baseline" not in body:
+        body = body.rstrip() + "\n    -- mcbuleli-live-vhost-baseline\n"
+    return m.group(1) + body
+
+if re.search(vh_re, text, re.DOTALL):
+    text = re.sub(vh_re, strip_lobby_breakout, text, count=1, flags=re.DOTALL)
+    print(f"OK: VirtualHost {domain} — lobby/breakout retirés")
+else:
+    print(f"WARN: VirtualHost {domain} introuvable")
+
 keep = {conference, focus_comp, internal}
 removed = []
 
@@ -163,7 +188,16 @@ COMP_N=$(grep -E '^\s*Component "' "$CFG" | grep -v '^--' | wc -l | tr -d ' ')
 echo ""
 echo "==> Blocs conference + focus"
 grep -n "Component \"${CONFERENCE}\"" "$CFG" | head -3
-grep -A10 "Component \"${CONFERENCE}\"" "$CFG" | head -12
+grep -A12 "Component \"${CONFERENCE}\"" "$CFG" | head -14
+if grep -A12 "Component \"${CONFERENCE}\"" "$CFG" | grep -q token_verification; then
+  echo "OK: token_verification sur MUC"
+else
+  echo "FAIL: token_verification absent — join MUC JWT cassé"
+  exit 1
+fi
+if grep -A40 "VirtualHost \"${DOMAIN}\"" "$CFG" | grep -qE '^\s*(lobby_muc|breakout_rooms_muc|muc_breakout)'; then
+  echo "WARN: lobby/breakout encore actifs sur VirtualHost ${DOMAIN}"
+fi
 
 if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
   systemctl restart prosody

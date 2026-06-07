@@ -51,6 +51,8 @@ sleep 10
 
 echo ""
 echo "==> 5. Vérification"
+echo ""
+echo "==> 7. focus@auth"
 FOCUS_N=$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -c "focus@${AUTH}" 2>/dev/null || true)
 FOCUS_N=${FOCUS_N:-0}
 prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep "focus@${AUTH}" || echo "FAIL: focus absent"

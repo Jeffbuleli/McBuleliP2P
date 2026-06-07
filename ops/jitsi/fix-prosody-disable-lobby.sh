@@ -25,10 +25,16 @@ vh_pat = rf'(VirtualHost "{re.escape(domain)}".*?)(?=\n(?:VirtualHost|Component)
 
 def strip_lobby_module(m):
     block = m.group(1)
-    if "mcbuleli-prosody-no-lobby" in block:
-        return block
-    block = re.sub(r'^\s*"muc_lobby_rooms";\s*\n', "", block, flags=re.M)
-    block = re.sub(r'^\s*"muc_lobby_rooms",\s*\n', "", block, flags=re.M)
+    for mod in ("muc_lobby_rooms", "muc_breakout_rooms"):
+        block = re.sub(rf'^\s*"{mod}";\s*\n', "", block, flags=re.M)
+        block = re.sub(rf'^\s*"{mod}",\s*\n', "", block, flags=re.M)
+    for key in ("lobby_muc", "breakout_rooms_muc"):
+        block = re.sub(
+            rf'^(\s*)({key}\s*=.*)$',
+            r'\1-- \2  -- mcbuleli-no-lobby-breakout',
+            block,
+            flags=re.M,
+        )
     if "mcbuleli-prosody-no-lobby" not in block:
         block = block.rstrip() + '\n    -- mcbuleli-prosody-no-lobby\n'
     return block
@@ -54,9 +60,11 @@ print("OK: Prosody lobby disabled")
 PY
 
 prosodyctl check config
-systemctl restart prosody
-sleep 2
-systemctl restart jicofo jitsi-videobridge2
+if [[ "${SKIP_RESTART:-0}" != "1" ]]; then
+  systemctl restart prosody
+  sleep 2
+  systemctl restart jicofo jitsi-videobridge2
+fi
 
 echo ""
 echo "==> modules VirtualHost ${DOMAIN}"
