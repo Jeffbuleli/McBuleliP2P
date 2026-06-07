@@ -109,8 +109,6 @@ echo "==> 7. JICOFO_OPTS (doit contenir -Dconfig.file)"
 mcbuleli_normalize_jicofo_opts
 grep '^JICOFO_OPTS=' "$JICOFO_CFG" | head -1
 
-LOG_LINES="$(wc -l < /var/log/jitsi/jicofo.log 2>/dev/null || echo 0)"
-
 echo ""
 echo "==> 8. Restart unique Prosody → JVB → Jicofo (purge client_proxy stale)"
 prosodyctl check config
@@ -118,18 +116,38 @@ systemctl restart prosody
 sleep 8
 systemctl restart jitsi-videobridge2
 sleep 8
+LOG_LINES="$(wc -l < /var/log/jitsi/jicofo.log 2>/dev/null || echo 0)"
 systemctl restart jicofo
-for ((w = 1; w <= 6; w++)); do
-  sleep 5
-  if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
-    break
-  fi
-  echo "  attente focus@auth... ${w}/6"
-done
+
+wait_focus_online() {
+  local label="$1" w
+  for ((w = 1; w <= 6; w++)); do
+    sleep 5
+    if prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
+      return 0
+    fi
+    if tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
+      return 0
+    fi
+    echo "  ${label} attente focus@auth... ${w}/6"
+  done
+  return 1
+}
+
+wait_focus_online "1ère" || {
+  echo "WARN: focus absent — retry systemctl start jicofo"
+  systemctl start jicofo 2>/dev/null || true
+  wait_focus_online "2ème" || true
+}
 
 echo ""
 echo "==> 9. Vérification (jicofo actif ?)"
-systemctl is-active jicofo 2>/dev/null || { journalctl -u jicofo -n 20 --no-pager; exit 1; }
+if ! systemctl is-active jicofo 2>/dev/null; then
+  echo "FAIL: jicofo inactive après restart"
+  systemctl status jicofo --no-pager -l 2>/dev/null | head -15 || true
+  journalctl -u jicofo -n 25 --no-pager 2>/dev/null | tail -20
+  exit 1
+fi
 if ! mcbuleli_jicofo_process_has_config_file; then
   echo "FAIL: processus Jicofo sans -Dconfig.file=jicofo.conf"
   pgrep -af 'jicofo|org.jitsi.jicofo' | head -3 || true
@@ -140,7 +158,14 @@ echo "OK: -Dconfig.file présent dans le processus Java"
 FOCUS_LINES="$(prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus || true)"
 if [[ -z "$FOCUS_LINES" ]]; then
   echo "FAIL: focus@${AUTH} absent"
-  tail -25 /var/log/jitsi/jicofo.log 2>/dev/null
+  echo "NOTE: 'exit code 143' = arrêt SIGTERM normal au restart — il faut Registered APRÈS"
+  echo ""
+  echo "--- jicofo.log depuis restart ---"
+  tail -n +"$((LOG_LINES + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | tail -20 || tail -20 /var/log/jitsi/jicofo.log 2>/dev/null
+  journalctl -u jicofo -n 20 --no-pager 2>/dev/null | tail -12 || true
+  echo ""
+  echo "→ sudo bash ops/jitsi/diagnose-jicofo-focus-offline.sh"
+  echo "→ sudo bash ops/jitsi/fix-jicofo-localhost.sh"
   exit 1
 fi
 echo "$FOCUS_LINES"

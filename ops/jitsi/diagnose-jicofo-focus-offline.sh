@@ -47,6 +47,13 @@ echo ""
 echo "==> 6. jicofo.log (20 dernières lignes, brut)"
 if [[ -s /var/log/jitsi/jicofo.log ]]; then
   tail -20 /var/log/jitsi/jicofo.log
+  if tail -5 /var/log/jitsi/jicofo.log | grep -q 'exit code 143'; then
+    echo ""
+    echo "NOTE: exit 143 = arrêt SIGTERM (restart normal). Vérifier si Registered suit plus bas ou jicofo est inactif."
+  fi
+  if ! tail -200 /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
+    echo "WARN: aucun Registered dans les 200 dernières lignes de jicofo.log"
+  fi
 else
   echo "FAIL: /var/log/jitsi/jicofo.log vide ou absent"
 fi
