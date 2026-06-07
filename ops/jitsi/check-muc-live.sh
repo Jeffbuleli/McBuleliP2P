@@ -109,8 +109,9 @@ EXPECT
     echo "  Cause: Jicofo pas connecté comme focus@${AUTH}"
     echo "  → sudo bash ops/jitsi/fix-focus-service-unavailable.sh"
   elif [[ "$N" -ge 1 && "$JICOFO_ALLOC" -eq 0 && "$MUC_LOG" -eq 0 ]]; then
-    echo "  PING-ONLY: ${N} c2s + focus OK mais ZÉRO Allocated Jicofo et ZÉRO join MUC"
-    echo "  → Le navigateur n'appelle pas conference.join() (onglets périmés ou JS bloqué)"
+    echo "  PING-ONLY ou FOCUS FAIL: ${N} c2s + focus session OK mais ZÉRO Allocated/MUC"
+    echo "  → Si console: service-unavailable + Moderator → fix-focus-service-unavailable.sh"
+    echo "  → Si console: pas d'erreur focus → conference.join() jamais appelé (JS/prejoin)"
     echo "  1) FERMER tous onglets live.mcbuleli.org (host + guest)"
     echo "  2) sudo bash ops/jitsi/fix-conference-no-room.sh ${ROOM}"
     echo "  3) sudo bash ops/jitsi/diagnose-ping-only-served.sh ${ROOM}"

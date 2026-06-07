@@ -9,6 +9,12 @@ AUTH="auth.${DOMAIN}"
 [[ "$(id -u)" -eq 0 ]] || { echo "Run as root"; exit 1; }
 
 echo "========== fix focus service-unavailable =========="
+echo "Console: StropheErrorHandler service-unavailable + Moderator giving up"
+echo "Cause: IQ conference vers focus.${DOMAIN} mais Jicofo absent du client_proxy"
+
+echo ""
+echo "==> 0. Kill zombies Jicofo (session focus@auth morte)"
+bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
 
 echo ""
 echo "==> 1. Limites JVM XML (évite XmlPullParser → déco Jicofo)"
@@ -16,6 +22,8 @@ bash "$SCRIPT_DIR/fix-jicofo-jvm-xml-limits.sh"
 
 echo ""
 echo "==> 2. Resync Jicofo/Prosody (focus+jvb, localhost, brewery, composants)"
+bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
+bash "$SCRIPT_DIR/fix-jitsi-brewery-complete.sh"
 bash "$SCRIPT_DIR/fix-jicofo-prosody.sh"
 
 echo ""
