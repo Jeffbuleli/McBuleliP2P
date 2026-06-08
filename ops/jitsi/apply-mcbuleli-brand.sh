@@ -53,8 +53,14 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark coin vidéo (depuis mcbuleli.org ou repo)"
+echo "==> Watermark coin vidéo (transparent — vert + marron)"
 WATERMARK_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
+WATERMARK_RAW="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark-source.png"
+if [[ -f "$WATERMARK_RAW" ]] && command -v python3 >/dev/null; then
+  PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
+  python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WATERMARK_RAW" "$WATERMARK_SRC" 128 2>/dev/null \
+    || python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WATERMARK_RAW" "$WATERMARK_SRC" 128 || true
+fi
 if [[ -f "$WATERMARK_SRC" ]]; then
   cp -a "$WATERMARK_SRC" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
 elif curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png" -o "$JITSI_IMAGES/mcbuleli-meet-watermark.png"; then
