@@ -1,9 +1,11 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import {
+  communityBlogPosts,
   communityUserProfiles,
   getDb,
   users,
 } from "@/db";
+import { listUserBadges } from "@/lib/community/badges-service";
 import { grantCommunityProfileSetup } from "@/lib/community/rewards-service";
 
 function slugHandle(base: string, suffix: string): string {
@@ -149,4 +151,60 @@ export async function getAuthorsMap(
   }
 
   return map;
+}
+
+export type PublicProfileView = {
+  userId: string;
+  handle: string;
+  displayName: string;
+  bio: string | null;
+  showKycBadge: boolean;
+  avatarUrl: string | null;
+  reputationScore: number;
+  postsCount: number;
+  blogCount: number;
+  badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
+};
+
+export async function getPublicProfileByHandle(
+  handle: string,
+): Promise<PublicProfileView | null> {
+  const db = getDb();
+  const [profile] = await db
+    .select()
+    .from(communityUserProfiles)
+    .where(eq(communityUserProfiles.handle, handle))
+    .limit(1);
+  if (!profile) return null;
+
+  const [u] = await db
+    .select({ avatarUrl: users.avatarUrl, kycStatus: users.kycStatus })
+    .from(users)
+    .where(eq(users.id, profile.userId))
+    .limit(1);
+
+  const [blogs] = await db
+    .select({ n: count() })
+    .from(communityBlogPosts)
+    .where(
+      and(
+        eq(communityBlogPosts.authorId, profile.userId),
+        eq(communityBlogPosts.status, "published"),
+      ),
+    );
+
+  const badges = await listUserBadges(profile.userId);
+
+  return {
+    userId: profile.userId,
+    handle: profile.handle,
+    displayName: profile.displayName,
+    bio: profile.bio,
+    showKycBadge: profile.showKycBadge && u?.kycStatus === "approved",
+    avatarUrl: u?.avatarUrl ?? null,
+    reputationScore: profile.reputationScore,
+    postsCount: profile.postsCount,
+    blogCount: Number(blogs?.n ?? 0),
+    badges,
+  };
 }
