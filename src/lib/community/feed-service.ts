@@ -4,6 +4,7 @@ import {
   communityLikes,
   communityPosts,
   communityReports,
+  communityTraderFollows,
   communityUserBlocks,
   getDb,
 } from "@/db";
@@ -72,6 +73,7 @@ export async function listFeedPosts(args: {
   viewerId: string | null;
   cursor?: string | null;
   limit?: number;
+  sort?: "recent" | "popular" | "following";
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
 
@@ -96,6 +98,17 @@ export async function listFeedPosts(args: {
   }
 
   const conditions = [eq(communityPosts.status, "published")];
+
+  if (args.sort === "following" && args.viewerId) {
+    const follows = await db
+      .select({ traderId: communityTraderFollows.traderId })
+      .from(communityTraderFollows)
+      .where(eq(communityTraderFollows.followerId, args.viewerId));
+    const authorIds = follows.map((f) => f.traderId);
+    if (!authorIds.length) return { posts: [], nextCursor: null };
+    conditions.push(inArray(communityPosts.authorId, authorIds));
+  }
+
   if (cursorDate && cursorId) {
     conditions.push(
       or(
@@ -108,11 +121,21 @@ export async function listFeedPosts(args: {
     );
   }
 
+  const orderBy =
+    args.sort === "popular"
+      ? [
+          desc(
+            sql`(${communityPosts.likeCount} + ${communityPosts.commentCount})`,
+          ),
+          desc(communityPosts.publishedAt),
+        ]
+      : [desc(communityPosts.publishedAt), desc(communityPosts.id)];
+
   const rows = await db
     .select()
     .from(communityPosts)
     .where(and(...conditions))
-    .orderBy(desc(communityPosts.publishedAt), desc(communityPosts.id))
+    .orderBy(...orderBy)
     .limit(limit + 1);
 
   const slice = rows.slice(0, limit);

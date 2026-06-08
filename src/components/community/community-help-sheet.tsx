@@ -144,12 +144,13 @@ export function CommunityHelpSheet({
             title={t("community_help_modules_title")}
             body={t("community_help_modules_body")}
             bullets={[
-              t("community_help_modules_1"),
-              t("community_help_modules_2"),
-              t("community_help_modules_3"),
-              t("community_help_modules_4"),
-              t("community_help_modules_5"),
-              t("community_help_modules_6"),
+              t("community_help_primary_1"),
+              t("community_help_primary_2"),
+              t("community_help_primary_3"),
+              t("community_help_explore_1"),
+              t("community_help_explore_2"),
+              t("community_help_explore_3"),
+              t("community_help_explore_4"),
             ]}
           />
           <HelpSection

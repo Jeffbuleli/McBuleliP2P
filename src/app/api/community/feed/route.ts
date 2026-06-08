@@ -21,9 +21,19 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const cursor = url.searchParams.get("cursor");
   const limit = Number(url.searchParams.get("limit") ?? "20");
+  const sort = url.searchParams.get("sort") as
+    | "recent"
+    | "popular"
+    | "following"
+    | null;
   const viewerId = await getSessionUserId();
 
-  const result = await listFeedPosts({ viewerId, cursor, limit });
+  const result = await listFeedPosts({
+    viewerId,
+    cursor,
+    limit,
+    sort: sort ?? "recent",
+  });
   return NextResponse.json(result);
 }
 

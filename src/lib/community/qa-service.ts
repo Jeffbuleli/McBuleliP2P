@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import {
   communityAnswers,
   communityLikes,
@@ -43,20 +43,28 @@ export type QuestionDetail = QuestionListItem & {
 
 export async function listQuestions(args: {
   limit?: number;
-  status?: "open" | "all";
+  sort?: "open" | "popular" | "accepted";
 }): Promise<QuestionListItem[]> {
   const db = getDb();
   const limit = Math.min(Math.max(args.limit ?? 30, 1), 50);
 
+  const conditions = [];
+  if (args.sort === "open") {
+    conditions.push(eq(communityQuestions.status, "open"));
+  } else if (args.sort === "accepted") {
+    conditions.push(isNotNull(communityQuestions.acceptedAnswerId));
+  }
+
+  const orderBy =
+    args.sort === "popular"
+      ? [desc(communityQuestions.voteScore), desc(communityQuestions.createdAt)]
+      : [desc(communityQuestions.createdAt)];
+
   const rows = await db
     .select()
     .from(communityQuestions)
-    .where(
-      args.status === "open"
-        ? eq(communityQuestions.status, "open")
-        : undefined,
-    )
-    .orderBy(desc(communityQuestions.createdAt))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(...orderBy)
     .limit(limit);
 
   const authorIds = [...new Set(rows.map((r) => r.authorId))];

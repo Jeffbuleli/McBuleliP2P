@@ -2983,3 +2983,89 @@ export const communityUserBadges = pgTable(
     index("community_user_badges_user_idx").on(t.userId, t.earnedAt),
   ],
 );
+
+export const communityDiscussionCategories = pgTable(
+  "community_discussion_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 32 }).notNull().unique(),
+    labelFr: varchar("label_fr", { length: 64 }).notNull(),
+    labelEn: varchar("label_en", { length: 64 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+);
+
+export const communityDiscussions = pgTable(
+  "community_discussions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id").references(
+      () => communityDiscussionCategories.id,
+      { onDelete: "set null" },
+    ),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    replyCount: integer("reply_count").notNull().default(0),
+    followCount: integer("follow_count").notNull().default(0),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_discussions_activity_idx").on(t.lastActivityAt),
+    index("community_discussions_category_idx").on(t.categoryId, t.lastActivityAt),
+    index("community_discussions_author_idx").on(t.authorId, t.createdAt),
+  ],
+);
+
+export const communityDiscussionReplies = pgTable(
+  "community_discussion_replies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    discussionId: uuid("discussion_id")
+      .notNull()
+      .references(() => communityDiscussions.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_discussion_replies_disc_idx").on(
+      t.discussionId,
+      t.createdAt,
+    ),
+  ],
+);
+
+export const communityDiscussionFollows = pgTable(
+  "community_discussion_follows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    discussionId: uuid("discussion_id")
+      .notNull()
+      .references(() => communityDiscussions.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_discussion_follows_unique").on(
+      t.userId,
+      t.discussionId,
+    ),
+    index("community_discussion_follows_user_idx").on(t.userId, t.createdAt),
+  ],
+);

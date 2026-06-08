@@ -1,35 +1,49 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { communityEnabled } from "@/lib/community/config";
-import { createQuestion, listQuestions } from "@/lib/community/qa-service";
+import {
+  createDiscussion,
+  listDiscussionCategories,
+  listDiscussions,
+} from "@/lib/community/discussion-service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 const createZ = z.object({
-  title: z.string().min(10).max(200),
+  title: z.string().min(8).max(200),
   body: z.string().min(20).max(4000),
-  tags: z.array(z.string().max(24)).max(5).optional(),
+  categoryId: z.string().uuid().optional(),
 });
 
 export async function GET(req: Request) {
   if (!communityEnabled()) {
-    return NextResponse.json({ questions: [] });
+    return NextResponse.json({ discussions: [], categories: [], nextCursor: null });
   }
 
   const url = new URL(req.url);
-  const limit = Number(url.searchParams.get("limit") ?? "30");
+  const cursor = url.searchParams.get("cursor");
+  const limit = Number(url.searchParams.get("limit") ?? "20");
   const sort = url.searchParams.get("sort") as
-    | "open"
+    | "recent"
     | "popular"
-    | "accepted"
+    | "following"
     | null;
+  const category = url.searchParams.get("category") ?? undefined;
+  const viewerId = await getSessionUserId();
 
-  const questions = await listQuestions({
-    limit,
-    sort: sort ?? "open",
-  });
-  return NextResponse.json({ questions });
+  const [result, categories] = await Promise.all([
+    listDiscussions({
+      viewerId,
+      cursor,
+      limit,
+      sort: sort ?? "recent",
+      categorySlug: category,
+    }),
+    listDiscussionCategories(),
+  ]);
+
+  return NextResponse.json({ ...result, categories });
 }
 
 export async function POST(req: Request) {
@@ -47,7 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const result = await createQuestion({
+  const result = await createDiscussion({
     authorId: userId,
     ...parsed.data,
   });
@@ -56,8 +70,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json({
-    question: result.question,
-    bpGranted: result.bpGranted,
-  });
+  return NextResponse.json({ discussion: result.discussion });
 }

@@ -8,59 +8,65 @@ import {
   CommunityHelpTrigger,
 } from "@/components/community/community-help-sheet";
 import {
-  isDataSaverEnabled,
-  setDataSaverEnabled,
-} from "@/lib/community/data-saver";
-import { getDefaultCommunityModules } from "@/lib/community/default-modules";
-import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
-import type { CommunityModuleCard } from "@/lib/community/overview-service";
+  COMMUNITY_EXPLORE,
+  COMMUNITY_PRIMARY,
+  type CommunityExploreId,
+  type CommunityPrimaryId,
+} from "@/lib/community/nav-config";
 
-function ModuleIcon({ id }: { id: CommunityModuleCard["id"] }) {
-  const stroke = "currentColor";
-  const common = { fill: "none", stroke, strokeWidth: 1.75, strokeLinecap: "round" as const };
-  if (id === "feed") {
+function PrimaryIcon({ id }: { id: CommunityPrimaryId }) {
+  const c = { fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round" as const };
+  if (id === "news") {
     return (
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-        <rect x="3" y="4" width="18" height="14" rx="2" {...common} />
-        <path d="M7 9h10M7 13h6" {...common} />
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+        <rect x="3" y="4" width="18" height="14" rx="2" {...c} />
+        <path d="M7 9h10M7 13h6" {...c} />
       </svg>
     );
   }
+  if (id === "discussions") {
+    return (
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+        <path d="M4 6h14a2 2 0 012 2v8a2 2 0 01-2 2H9l-5 4V8a2 2 0 012-2z" {...c} />
+      </svg>
+    );
+  }
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+      <rect x="2" y="5" width="14" height="10" rx="1.5" {...c} />
+      <path d="M16 8l6-3v10l-6-3" {...c} />
+    </svg>
+  );
+}
+
+function ExploreIcon({ id }: { id: CommunityExploreId }) {
+  const c = { fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round" as const };
   if (id === "blogs") {
     return (
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-        <path d="M6 4h12v16H6z" {...common} />
-        <path d="M9 8h6M9 12h6M9 16h4" {...common} />
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path d="M6 4h12v16H6z" {...c} />
+        <path d="M9 8h6M9 12h6" {...c} />
       </svg>
     );
   }
-  if (id === "formations") {
+  if (id === "questions") {
     return (
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-        <rect x="2" y="5" width="14" height="10" rx="1.5" {...common} />
-        <path d="M16 8l6-3v10l-6-3" {...common} />
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <circle cx="12" cy="12" r="9" {...c} />
+        <path d="M9.5 9.5a3 3 0 015 1c0 2-2 2-2 3M12 17h.01" {...c} />
       </svg>
     );
   }
   if (id === "signals") {
     return (
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-        <path d="M4 18l4-8 4 4 4-10 4 14" {...common} />
-      </svg>
-    );
-  }
-  if (id === "traders") {
-    return (
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-        <path d="M8 21V10M12 21V4M16 21v-7" {...common} />
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path d="M4 18l4-8 4 4 4-10 4 14" {...c} />
       </svg>
     );
   }
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
-      <circle cx="12" cy="12" r="9" {...common} />
-      <path d="M9.5 9.5h5v5h-5z" {...common} />
-      <path d="M12 7v2M12 15v2M7 12h2M15 12h2" {...common} />
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+      <path d="M8 21V10M12 21V4M16 21v-7" {...c} />
     </svg>
   );
 }
@@ -68,105 +74,95 @@ function ModuleIcon({ id }: { id: CommunityModuleCard["id"] }) {
 export function CommunityHub() {
   const { locale } = useI18n();
   const fr = locale === "fr";
-  const [modules, setModules] = useState<CommunityModuleCard[]>(
-    getDefaultCommunityModules,
-  );
-  const [dbPending, setDbPending] = useState(false);
-  const [dataSaver, setDataSaver] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [bpBalance, setBpBalance] = useState<number | null>(null);
 
   useEffect(() => {
-    setDataSaver(isDataSaverEnabled());
-    fetch("/api/community/overview")
-      .then(async (r) => {
-        if (!r.ok) return null;
-        return r.json() as Promise<{
-          enabled?: boolean;
-          modules?: CommunityModuleCard[];
-        }>;
+    fetch("/api/rewards/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { balance?: number } | null) => {
+        if (d?.balance != null) setBpBalance(d.balance);
       })
-      .then((d) => {
-        if (d?.modules?.length) setModules(d.modules);
-        if (d && d.enabled === false) setDbPending(true);
-      })
-      .catch(() => {
-        /* modules statiques déjà affichés */
-      });
+      .catch(() => {});
   }, []);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
-      <header className="mb-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-[#0c0a09]">Community</h1>
-            <p className="mt-1 text-sm text-[#57534e]">
-              {fr
-                ? "Apprendre, échanger et suivre l'actu crypto."
-                : "Learn, discuss, and follow crypto news."}
-            </p>
-          </div>
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+      <header className="mb-4 flex items-center justify-between gap-2">
+        <h1 className="text-xl font-bold text-[#0c0a09]">Community</h1>
+        <div className="flex items-center gap-2">
+          {bpBalance != null ? (
+            <Link
+              href="/app/wallet/points"
+              className="rounded-full bg-[#e8f3ee] px-2.5 py-1 text-[10px] font-bold text-[#305f33]"
+            >
+              {bpBalance} BP
+            </Link>
+          ) : null}
           <CommunityHelpTrigger onClick={() => setHelpOpen(true)} />
         </div>
       </header>
 
-      {dbPending ? (
-        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          {fr
-            ? "Compteurs en attente — vérifiez COMMUNITY_ENABLED=true et migrations 0065–0067 sur Render."
-            : "Live counts pending — ensure COMMUNITY_ENABLED=true and migrations 0065–0067 on Render."}
-        </p>
-      ) : null}
-
-      <CommunityRewardsCard />
-
-      <label className="fd-card mb-4 flex cursor-pointer items-center justify-between gap-3 px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold text-[#0c0a09]">
-            {fr ? "Économie de données" : "Data saver"}
-          </p>
-          <p className="text-xs text-[#78716c]">
-            {fr ? "Images légères, pas d'autoplay vidéo" : "Light images, no video autoplay"}
-          </p>
-        </div>
-        <input
-          type="checkbox"
-          checked={dataSaver}
-          className="h-5 w-5 accent-[#305f33]"
-          onChange={(e) => {
-            setDataSaver(e.target.checked);
-            setDataSaverEnabled(e.target.checked);
-          }}
-        />
-      </label>
-
-      <ul className="grid gap-3">
-        {modules.map((m) => (
-          <li key={m.id}>
-            <Link
-              href={m.href}
-              className="fd-card flex items-center gap-4 px-4 py-4 transition active:scale-[0.99]"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f3ee] text-[#305f33]">
-                <ModuleIcon id={m.id} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-[#0c0a09]">
-                  {fr ? m.titleFr : m.titleEn}
+      <section aria-label={fr ? "Actions principales" : "Primary actions"}>
+        <ul className="space-y-2">
+          {COMMUNITY_PRIMARY.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                className="flex min-h-[60px] items-center gap-3.5 rounded-2xl border border-[#e8f3ee] bg-gradient-to-r from-[#f4faf6] to-white px-4 py-3.5 shadow-sm transition active:scale-[0.99]"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ee] text-[#305f33]">
+                  <PrimaryIcon id={item.id} />
                 </span>
-                <span className="block text-xs text-[#78716c]">
-                  {fr ? m.subtitleFr : m.subtitleEn}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold text-[#0c0a09]">
+                    {fr ? item.titleFr : item.titleEn}
+                  </span>
+                  <span className="block text-xs text-[#78716c]">
+                    {fr ? item.subtitleFr : item.subtitleEn}
+                  </span>
                 </span>
-              </span>
-              {m.count !== null && m.count > 0 ? (
-                <span className="rounded-full bg-[#e8f3ee] px-2 py-0.5 text-xs font-semibold text-[#305f33]">
-                  {m.count}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0 text-[#a8a29e]" aria-hidden>
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="my-4 flex items-center gap-3">
+        <span className="h-px flex-1 bg-[#e7e5e4]" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+          {fr ? "Explorer" : "Explore"}
+        </span>
+        <span className="h-px flex-1 bg-[#e7e5e4]" />
+      </div>
+
+      <section aria-label={fr ? "Explorer" : "Explore"}>
+        <ul className="space-y-1.5">
+          {COMMUNITY_EXPLORE.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                className="flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 transition active:bg-[#fafaf9]"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f4] text-[#57534e]">
+                  <ExploreIcon id={item.id} />
                 </span>
-              ) : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-[#0c0a09]">
+                    {fr ? item.titleFr : item.titleEn}
+                  </span>
+                  <span className="block text-[11px] text-[#78716c]">
+                    {fr ? item.subtitleFr : item.subtitleEn}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <CommunityHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>

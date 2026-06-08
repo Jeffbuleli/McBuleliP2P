@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
+import { CommunityModuleHeader } from "@/components/community/community-module-header";
+import {
+  CommunityEmptyState,
+  EmptyBlogIllustration,
+} from "@/components/community/community-empty-illustrations";
 import type {
   BlogCategoryView,
   BlogPostListItem,
@@ -103,16 +107,8 @@ export function CommunityBlogsClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
-      <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
-        ← {fr ? "Communauté" : "Community"}
-      </Link>
-      <h1 className="mt-3 text-xl font-bold text-[#0c0a09]">Blogs</h1>
-      <p className="mb-4 text-sm text-[#57534e]">
-        {fr ? "Articles crypto & finance" : "Crypto & finance articles"}
-      </p>
-
-      <CommunityRewardsCard />
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+      <CommunityModuleHeader title="Blogs" />
 
       <div className="mb-3 flex flex-wrap gap-2">
         <button
@@ -199,6 +195,17 @@ export function CommunityBlogsClient() {
         </div>
       ) : null}
 
+      {!loading && posts.length === 0 ? (
+        <CommunityEmptyState
+          illustration={<EmptyBlogIllustration />}
+          title={fr ? "Aucun article" : "No articles yet"}
+          body={
+            fr
+              ? "Publiez votre premier article crypto."
+              : "Publish your first crypto article."
+          }
+        />
+      ) : (
       <ul className="space-y-3">
         {posts.map((p) => (
           <li key={p.id}>
@@ -233,6 +240,7 @@ export function CommunityBlogsClient() {
           </li>
         ))}
       </ul>
+      )}
 
       <div ref={sentinel} className="h-8" />
       {loading ? <p className="py-4 text-center text-xs text-[#78716c]">…</p> : null}

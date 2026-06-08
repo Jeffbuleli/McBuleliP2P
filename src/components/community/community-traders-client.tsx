@@ -1,17 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
+import { CommunityModuleHeader } from "@/components/community/community-module-header";
+import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
 import type { TraderLeaderboardEntry } from "@/lib/community/leaderboard-service";
+
+type RankTab = "contributors" | "trainers" | "analysts";
+
+const RANK_TABS = [
+  { id: "contributors" as const, labelFr: "Contributeurs", labelEn: "Contributors" },
+  { id: "trainers" as const, labelFr: "Formateurs", labelEn: "Trainers" },
+  { id: "analysts" as const, labelFr: "Analystes", labelEn: "Analysts" },
+];
 
 export function CommunityTradersClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const [tab, setTab] = useState<RankTab>("contributors");
   const [traders, setTraders] = useState<TraderLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyHandle, setBusyHandle] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    if (tab === "trainers") {
+      return traders.filter((t) =>
+        t.badges.some((b) => b.slug === "mentor" || b.slug === "signal_pro"),
+      );
+    }
+    if (tab === "analysts") {
+      return [...traders].sort((a, b) => b.followerCount - a.followerCount);
+    }
+    return traders;
+  }, [tab, traders]);
 
   const load = async () => {
     setLoading(true);
@@ -52,30 +74,20 @@ export function CommunityTradersClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
-      <header className="mb-4 flex items-center gap-3">
-        <Link
-          href="/app/community"
-          className="text-sm font-semibold text-[#305f33]"
-        >
-          ← {fr ? "Communauté" : "Community"}
-        </Link>
-      </header>
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+      <CommunityModuleHeader title={fr ? "Classement" : "Leaderboard"} />
 
-      <h1 className="text-xl font-bold text-[#0c0a09]">
-        {fr ? "Classement traders" : "Trader leaderboard"}
-      </h1>
-      <p className="mb-4 text-sm text-[#57534e]">
+      <CommunityFilterTabs tabs={RANK_TABS} active={tab} onChange={setTab} fr={fr} />
+
+      <p className="mb-3 mt-2 text-[11px] text-[#78716c]">
         {fr
-          ? "Réputation, perf démo et signaux. Suivez pour préparer le copy trading."
-          : "Reputation, demo performance and signals. Follow to prepare copy trading."}
+          ? "Réputation, badges — copy trading bientôt."
+          : "Reputation, badges — copy trading coming soon."}
       </p>
-
-      <CommunityRewardsCard />
 
       {loading ? (
         <p className="py-8 text-center text-sm text-[#78716c]">…</p>
-      ) : traders.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="fd-card px-4 py-8 text-center text-sm text-[#57534e]">
           {fr
             ? "Aucun trader classé pour l'instant. Publiez des signaux pour gagner en réputation."
@@ -83,7 +95,7 @@ export function CommunityTradersClient() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {traders.map((t, idx) => (
+          {filtered.map((t, idx) => (
             <li key={t.userId}>
               <article className="fd-card px-4 py-3">
                 <div className="flex items-start gap-3">

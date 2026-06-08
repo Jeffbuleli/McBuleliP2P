@@ -3,12 +3,26 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
+import { CommunityModuleHeader } from "@/components/community/community-module-header";
+import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
+import {
+  CommunityEmptyState,
+  EmptyQuestionIllustration,
+} from "@/components/community/community-empty-illustrations";
 import type { QuestionListItem } from "@/lib/community/qa-service";
+
+type QSort = "open" | "popular" | "accepted";
+
+const Q_TABS = [
+  { id: "open" as const, labelFr: "Ouvertes", labelEn: "Open" },
+  { id: "popular" as const, labelFr: "Populaires", labelEn: "Popular" },
+  { id: "accepted" as const, labelFr: "Validées", labelEn: "Accepted" },
+];
 
 export function CommunityQuestionsClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const [sort, setSort] = useState<QSort>("open");
   const [questions, setQuestions] = useState<QuestionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showComposer, setShowComposer] = useState(false);
@@ -21,7 +35,7 @@ export function CommunityQuestionsClient() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/community/questions");
+      const res = await fetch(`/api/community/questions?sort=${sort}`);
       const j = await res.json();
       setQuestions((j.questions ?? []) as QuestionListItem[]);
     } finally {
@@ -31,7 +45,8 @@ export function CommunityQuestionsClient() {
 
   useEffect(() => {
     void load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sort]);
 
   const publish = async () => {
     setPublishing(true);
@@ -61,18 +76,10 @@ export function CommunityQuestionsClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
-      <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
-        ← {fr ? "Communauté" : "Community"}
-      </Link>
-      <h1 className="mt-3 text-xl font-bold text-[#0c0a09]">
-        {fr ? "Questions" : "Q&A"}
-      </h1>
-      <p className="mb-4 text-sm text-[#57534e]">
-        {fr ? "Poser, répondre, voter" : "Ask, answer, vote"}
-      </p>
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+      <CommunityModuleHeader title={fr ? "Questions" : "Q&A"} />
 
-      <CommunityRewardsCard />
+      <CommunityFilterTabs tabs={Q_TABS} active={sort} onChange={setSort} fr={fr} />
 
       <button
         type="button"
@@ -117,6 +124,16 @@ export function CommunityQuestionsClient() {
 
       {loading ? (
         <p className="py-8 text-center text-sm text-[#78716c]">…</p>
+      ) : questions.length === 0 ? (
+        <CommunityEmptyState
+          illustration={<EmptyQuestionIllustration />}
+          title={fr ? "Aucune question" : "No questions yet"}
+          body={
+            fr
+              ? "Posez votre première question à la communauté."
+              : "Ask your first question to the community."
+          }
+        />
       ) : (
         <ul className="space-y-3">
           {questions.map((q) => (

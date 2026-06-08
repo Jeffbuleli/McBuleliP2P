@@ -4,12 +4,25 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunitySignalCard } from "@/components/community/community-signal-card";
-import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
+import { CommunityModuleHeader } from "@/components/community/community-module-header";
+import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
+import {
+  CommunityEmptyState,
+  EmptySignalIllustration,
+} from "@/components/community/community-empty-illustrations";
 import type { TradingSignalView } from "@/lib/community/signals-service";
+
+type SignalTab = "open" | "closed";
+
+const SIGNAL_TABS = [
+  { id: "open" as const, labelFr: "Ouverts", labelEn: "Open" },
+  { id: "closed" as const, labelFr: "Historique", labelEn: "History" },
+];
 
 export function CommunitySignalsClient() {
   const { locale, t } = useI18n();
   const fr = locale === "fr";
+  const [tab, setTab] = useState<SignalTab>("open");
   const [signals, setSignals] = useState<TradingSignalView[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +45,10 @@ export function CommunitySignalsClient() {
       if (loading || (done && !reset)) return;
       setLoading(true);
       try {
-        const q = new URLSearchParams({ limit: "15" });
+        const q = new URLSearchParams({
+          limit: "15",
+          status: tab === "open" ? "open" : "closed",
+        });
         if (!reset && cursor) q.set("cursor", cursor);
         const res = await fetch(`/api/community/signals?${q}`);
         const j = await res.json();
@@ -47,11 +63,17 @@ export function CommunitySignalsClient() {
         setLoading(false);
       }
     },
-    [cursor, done, loading],
+    [cursor, done, loading, tab],
   );
 
   useEffect(() => {
+    setCursor(null);
+    setDone(false);
     void loadMore(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d: { user?: { id: string } | null }) => {
@@ -151,27 +173,18 @@ export function CommunitySignalsClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
-      <header className="mb-4 flex items-center gap-3">
-        <Link
-          href="/app/community"
-          className="text-sm font-semibold text-[#305f33]"
-        >
-          ← {fr ? "Communauté" : "Community"}
-        </Link>
-      </header>
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+      <CommunityModuleHeader title={fr ? "Signaux Trading" : "Trading signals"} />
 
-      <h1 className="text-xl font-bold text-[#0c0a09]">
-        {fr ? "Signaux trading" : "Trading signals"}
-      </h1>
-      <p className="mb-4 text-sm text-[#57534e]">
+      <p className="mb-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900">
         {fr
-          ? "Partagez vos idées (démo). Pas d'exécution automatique."
-          : "Share ideas (demo). No automatic execution."}
+          ? "Signaux éducatifs uniquement — pas un conseil financier. Aucune exécution automatique."
+          : "Educational signals only — not financial advice. No automatic execution."}
       </p>
 
-      <CommunityRewardsCard />
+      <CommunityFilterTabs tabs={SIGNAL_TABS} active={tab} onChange={setTab} fr={fr} />
 
+      {tab === "open" ? (
       <div className="fd-card mb-4 space-y-3 px-4 py-4">
         <p className="text-sm font-semibold text-[#0c0a09]">
           {fr ? "Publier un signal" : "Publish a signal"}
@@ -245,7 +258,19 @@ export function CommunitySignalsClient() {
               : "Publish (+35 BP)"}
         </button>
       </div>
+      ) : null}
 
+      {!loading && signals.length === 0 ? (
+        <CommunityEmptyState
+          illustration={<EmptySignalIllustration />}
+          title={fr ? "Aucun signal" : "No signals yet"}
+          body={
+            fr
+              ? "Les signaux publiés apparaîtront ici."
+              : "Published signals will appear here."
+          }
+        />
+      ) : (
       <ul className="space-y-3">
         {signals.map((s) => (
           <li key={s.id}>
@@ -258,6 +283,7 @@ export function CommunitySignalsClient() {
           </li>
         ))}
       </ul>
+      )}
 
       <div ref={sentinel} className="h-8" />
       {loading ? (
