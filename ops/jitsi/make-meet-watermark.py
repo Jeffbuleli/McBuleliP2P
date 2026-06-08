@@ -35,6 +35,41 @@ def classify(r: int, g: int, b: int) -> str:
     return "bg"
 
 
+def _circle_bounds(im) -> tuple[float, float, float]:
+    """Centre + rayon du disque (anneau vert ou bbox du symbole)."""
+    w, h = im.size
+    px = im.load()
+    xs: list[int] = []
+    ys: list[int] = []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] > 8:
+                xs.append(x)
+                ys.append(y)
+    if not xs:
+        return w / 2, h / 2, min(w, h) / 2
+    cx = (min(xs) + max(xs)) / 2
+    cy = (min(ys) + max(ys)) / 2
+    r = max(math.hypot(x - cx, y - cy) for x, y in zip(xs, ys))
+    return cx, cy, r
+
+
+def _apply_circle_mask(im, cx: float, cy: float, radius: float, feather: float = 1.25):
+    """Coupe tout pixel hors du cercle (coins blancs/noirs → transparent)."""
+    w, h = im.size
+    px = im.load()
+    for y in range(h):
+        for x in range(w):
+            dist = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
+            if dist > radius:
+                px[x, y] = (0, 0, 0, 0)
+            elif dist > radius - feather:
+                r, g, b, a = px[x, y]
+                if a:
+                    fade = max(0.0, min(1.0, (radius - dist) / feather))
+                    px[x, y] = (r, g, b, int(a * fade))
+
+
 def process(src: Path, out: Path, size: int) -> None:
     from PIL import Image
 
@@ -58,6 +93,9 @@ def process(src: Path, out: Path, size: int) -> None:
                 edge = min(1.0, max(0.55, (0.299 * r + 0.587 * g + 0.114 * b) / 130))
                 a = int(255 * edge)
                 opx[x, y] = (*BROWN, a)
+
+    cx, cy, r = _circle_bounds(out_im)
+    _apply_circle_mask(out_im, cx, cy, r)
 
     bbox = out_im.getbbox()
     if bbox:

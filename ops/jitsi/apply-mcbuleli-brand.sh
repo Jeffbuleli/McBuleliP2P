@@ -9,8 +9,8 @@ JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
-WATERMARK_URL="/images/mcbuleli-meet-watermark.png"
-MARKER="mcbuleli-full-brand-v6"
+WATERMARK_URL="/images/watermark.svg"
+MARKER="mcbuleli-full-brand-v8"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
@@ -53,26 +53,11 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark coin vidéo (transparent — vert + marron)"
-WATERMARK_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
-WATERMARK_RAW="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark-source.png"
-if [[ -f "$WATERMARK_RAW" ]] && command -v python3 >/dev/null; then
-  PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
-  python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WATERMARK_RAW" "$WATERMARK_SRC" 128 2>/dev/null \
-    || python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WATERMARK_RAW" "$WATERMARK_SRC" 128 || true
-fi
-if [[ -f "$WATERMARK_SRC" ]]; then
-  cp -a "$WATERMARK_SRC" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
-elif curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png" -o "$JITSI_IMAGES/mcbuleli-meet-watermark.png"; then
-  echo "    watermark depuis mcbuleli.org"
-else
-  python3 "$SCRIPT_DIR/make-transparent-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png" 72 2>/dev/null || \
-    cp "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
-fi
-
+echo "==> Watermark coin vidéo (SVG coloré — cercle vert, symbole marron, fond transparent)"
 cp -a "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
+cp -a "$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.svg" "$JITSI_IMAGES/mcbuleli-meet-watermark.svg" 2>/dev/null \
+  || cp -a "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/mcbuleli-meet-watermark.svg"
 cp -a "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
-cp -a "$JITSI_IMAGES/mcbuleli-meet-watermark.png" "$JITSI_IMAGES/watermark.png"
 
 echo "==> Favicon navigateur (onglet)"
 for html in "$JITSI_ROOT/index.html" "$JITSI_ROOT/static.html" "$JITSI_ROOT/title.html"; do
@@ -105,9 +90,12 @@ fi
 
 echo "==> Corriger syntaxe config.js (écran noir si JWT mal injecté)"
 JITSI_MEET_CONFIG="$CONFIG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh" || true
-# Watermark coin vidéo (pas le logo carré meet-logo)
-sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '${WATERMARK_URL}'|g" "$CONFIG" 2>/dev/null || true
-sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '${WATERMARK_URL}'|g" "$CONFIG" 2>/dev/null || true
+# Watermark coin vidéo — SVG vectoriel (pas PNG carré)
+sed -i \
+  -e "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '${WATERMARK_URL}'|g" \
+  -e "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '${WATERMARK_URL}'|g" \
+  -e "s|/images/mcbuleli-meet-watermark.png|${WATERMARK_URL}|g" \
+  "$CONFIG" 2>/dev/null || true
 sed -i "s|APP_NAME = '[^']*'|APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|NATIVE_APP_NAME = '[^']*'|NATIVE_APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
 sed -i 's|SHOW_JITSI_WATERMARK = false|SHOW_JITSI_WATERMARK = true|g' "$CONFIG" 2>/dev/null || true
@@ -218,7 +206,12 @@ config.interfaceConfig.PROVIDER_NAME = '$APP_NAME';
 EOF
 fi
 
-for js in mcbuleli-watermark-overlay.js mcbuleli-hangup-return.js mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
+# Retirer l'overlay PNG (cause du carré blanc sur mobile)
+if [[ -f "$JITSI_ROOT/index.html" ]]; then
+  sed -i '/mcbuleli-watermark-overlay\.js/d' "$JITSI_ROOT/index.html" 2>/dev/null || true
+fi
+
+for js in mcbuleli-hangup-return.js mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
   cp "$SCRIPT_DIR/$js" "$JITSI_ROOT/$js"
   if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q "$js" "$JITSI_ROOT/index.html"; then
     sed -i "s|</body>|<script src=\"/$js\"></script>\n</body>|" "$JITSI_ROOT/index.html"
