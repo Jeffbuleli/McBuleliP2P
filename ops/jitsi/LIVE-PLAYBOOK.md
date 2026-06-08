@@ -50,6 +50,8 @@ sudo bash ops/jitsi/fix-focus-iq-route.sh
 #   sudo systemctl restart jicofo && sleep 15
 
 # 3. Si service-unavailable persiste malgré focus@auth online
+sudo bash ops/jitsi/fix-focus-roster-subscribe.sh
+# ou séquence complète :
 sudo bash ops/jitsi/fix-focus-client-proxy-sessions.sh
 
 # 4. Vérif

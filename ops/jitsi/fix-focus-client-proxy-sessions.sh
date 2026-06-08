@@ -4,6 +4,7 @@
 # c2s "online" ≠ client_proxy a une session routable.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
 AUTH="auth.${DOMAIN}"
 FOCUS_COMP="focus.${DOMAIN}"
@@ -81,6 +82,10 @@ if ! wait_proxy_session "1ère"; then
 fi
 
 echo ""
+echo "==> 4b. roster subscribe (presence focus → client_proxy — cause #1 service-unavailable)"
+bash "$SCRIPT_DIR/fix-focus-roster-subscribe.sh" || true
+
+echo ""
 echo "==> 5. Vérification"
 prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -i focus || echo "FAIL: focus@${AUTH} absent"
 tail -n +"$((JICOFO_LOG_START + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | \
@@ -97,8 +102,8 @@ if ! prosodyctl shell c2s show "${AUTH}" 2>/dev/null | grep -qi 'focus@'; then
   exit 1
 fi
 
-if ! tail -n +"$((JICOFO_LOG_START + 1))" /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
-  echo "FAIL: Jicofo pas Registered"
+if ! tail -40 /var/log/jitsi/jicofo.log 2>/dev/null | grep -q 'Registered'; then
+  echo "FAIL: Jicofo pas Registered (dernières 40 lignes)"
   exit 1
 fi
 
