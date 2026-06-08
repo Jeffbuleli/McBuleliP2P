@@ -7,124 +7,87 @@ import {
 } from "@/db/schema";
 import { getDb } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
+import {
+  getDefaultCommunityModules,
+  mergeModuleCounts,
+  type CommunityModuleCard,
+} from "@/lib/community/default-modules";
 
-export type CommunityModuleCard = {
-  id: "feed" | "blogs" | "formations" | "questions" | "signals" | "traders";
-  href: string;
-  titleFr: string;
-  titleEn: string;
-  subtitleFr: string;
-  subtitleEn: string;
-  count: number | null;
-  available: boolean;
-};
+export type { CommunityModuleCard };
+
+async function safeCount(
+  run: () => Promise<number>,
+): Promise<number | null> {
+  try {
+    return await run();
+  } catch (e) {
+    const code = (e as { code?: string })?.code;
+    if (code === "42P01") return null;
+    return null;
+  }
+}
 
 export async function getCommunityOverview(): Promise<{
   enabled: boolean;
   modules: CommunityModuleCard[];
 }> {
-  if (!communityEnabled()) {
-    return { enabled: false, modules: [] };
+  const modules = getDefaultCommunityModules();
+  const flagOn = communityEnabled();
+
+  if (!flagOn) {
+    return { enabled: false, modules };
   }
 
-  const db = getDb();
-  let postCount = 0;
-  let blogCount = 0;
-  let questionCount = 0;
-  let signalCount = 0;
+  let postCount: number | null = null;
+  let blogCount: number | null = null;
+  let questionCount: number | null = null;
+  let signalCount: number | null = null;
 
   try {
-    const [posts] = await db
-      .select({ n: count() })
-      .from(communityPosts)
-      .where(eq(communityPosts.status, "published"));
-    postCount = Number(posts?.n ?? 0);
+    const db = getDb();
 
-    const [blogs] = await db
-      .select({ n: count() })
-      .from(communityBlogPosts)
-      .where(eq(communityBlogPosts.status, "published"));
-    blogCount = Number(blogs?.n ?? 0);
+    postCount = await safeCount(async () => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(communityPosts)
+        .where(eq(communityPosts.status, "published"));
+      return Number(row?.n ?? 0);
+    });
 
-    const [questions] = await db
-      .select({ n: count() })
-      .from(communityQuestions)
-      .where(eq(communityQuestions.status, "open"));
-    questionCount = Number(questions?.n ?? 0);
+    blogCount = await safeCount(async () => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(communityBlogPosts)
+        .where(eq(communityBlogPosts.status, "published"));
+      return Number(row?.n ?? 0);
+    });
 
-    const [signals] = await db
-      .select({ n: count() })
-      .from(communityTradingSignals)
-      .where(eq(communityTradingSignals.status, "open"));
-    signalCount = Number(signals?.n ?? 0);
-  } catch (e) {
-    const code = (e as { code?: string })?.code;
-    if (code !== "42P01") throw e;
+    questionCount = await safeCount(async () => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(communityQuestions)
+        .where(eq(communityQuestions.status, "open"));
+      return Number(row?.n ?? 0);
+    });
+
+    signalCount = await safeCount(async () => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(communityTradingSignals)
+        .where(eq(communityTradingSignals.status, "open"));
+      return Number(row?.n ?? 0);
+    });
+  } catch {
+    /* garde les modules par défaut */
   }
 
   return {
     enabled: true,
-    modules: [
-      {
-        id: "feed",
-        href: "/app/community/feed",
-        titleFr: "Fil d'actualité",
-        titleEn: "News feed",
-        subtitleFr: "Publier, commenter, partager",
-        subtitleEn: "Post, comment, share",
-        count: postCount,
-        available: true,
-      },
-      {
-        id: "blogs",
-        href: "/app/community/blogs",
-        titleFr: "Blogs",
-        titleEn: "Blogs",
-        subtitleFr: "Articles crypto & finance",
-        subtitleEn: "Crypto & finance articles",
-        count: blogCount,
-        available: true,
-      },
-      {
-        id: "formations",
-        href: "/app/community/formations",
-        titleFr: "Formations",
-        titleEn: "Training",
-        subtitleFr: "Lives Jitsi & replays",
-        subtitleEn: "Jitsi lives & replays",
-        count: null,
-        available: true,
-      },
-      {
-        id: "questions",
-        href: "/app/community/questions",
-        titleFr: "Questions",
-        titleEn: "Q&A",
-        subtitleFr: "Poser une question, voter",
-        subtitleEn: "Ask, answer, vote",
-        count: questionCount,
-        available: true,
-      },
-      {
-        id: "signals",
-        href: "/app/community/signals",
-        titleFr: "Signaux trading",
-        titleEn: "Trading signals",
-        subtitleFr: "Idées éducatives, clôture manuelle",
-        subtitleEn: "Educational ideas, manual close",
-        count: signalCount,
-        available: true,
-      },
-      {
-        id: "traders",
-        href: "/app/community/traders",
-        titleFr: "Classement traders",
-        titleEn: "Trader leaderboard",
-        subtitleFr: "Réputation, démo, copy trading bientôt",
-        subtitleEn: "Reputation, demo, copy trading soon",
-        count: null,
-        available: true,
-      },
-    ],
+    modules: mergeModuleCounts(modules, {
+      feed: postCount,
+      blogs: blogCount,
+      questions: questionCount,
+      signals: signalCount,
+    }),
   };
 }

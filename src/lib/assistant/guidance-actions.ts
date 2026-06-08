@@ -161,6 +161,30 @@ const ROUTES: RouteDef[] = [
     },
   },
   {
+    href: "/app/community",
+    keywords: [
+      "community",
+      "communauté",
+      "feed",
+      "blog",
+      "question",
+      "signal",
+      "trader",
+      "buleli points",
+      "bp",
+    ],
+    labels: {
+      en: "Community Hub",
+      fr: "Hub Communauté",
+      sw: "Jumuiya ya McBuleli",
+    },
+    reasons: {
+      en: "Open feed, blogs, Q&A, signals, and trader rankings",
+      fr: "Ouvrir fil, blogs, Q&R, signaux et classement traders",
+      sw: "Fungua mipasho, blogu, maswali na ishara za biashara",
+    },
+  },
+  {
     href: "/app/groups",
     keywords: ["avec", "tontine", "group savings", "épargne collective", "groups"],
     labels: {

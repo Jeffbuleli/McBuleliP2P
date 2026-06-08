@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
+  CommunityHelpSheet,
+  CommunityHelpTrigger,
+} from "@/components/community/community-help-sheet";
+import {
   isDataSaverEnabled,
   setDataSaverEnabled,
 } from "@/lib/community/data-saver";
+import { getDefaultCommunityModules } from "@/lib/community/default-modules";
 import { CommunityRewardsCard } from "@/components/community/community-rewards-card";
 import type { CommunityModuleCard } from "@/lib/community/overview-service";
 
@@ -63,33 +68,55 @@ function ModuleIcon({ id }: { id: CommunityModuleCard["id"] }) {
 export function CommunityHub() {
   const { locale } = useI18n();
   const fr = locale === "fr";
-  const [modules, setModules] = useState<CommunityModuleCard[]>([]);
-  const [enabled, setEnabled] = useState(true);
+  const [modules, setModules] = useState<CommunityModuleCard[]>(
+    getDefaultCommunityModules,
+  );
+  const [dbPending, setDbPending] = useState(false);
   const [dataSaver, setDataSaver] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     setDataSaver(isDataSaverEnabled());
     fetch("/api/community/overview")
-      .then((r) => r.json())
-      .then((d: { enabled?: boolean; modules?: CommunityModuleCard[] }) => {
-        setEnabled(d.enabled !== false);
-        setModules(d.modules ?? []);
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return r.json() as Promise<{
+          enabled?: boolean;
+          modules?: CommunityModuleCard[];
+        }>;
       })
-      .catch(() => setEnabled(false));
+      .then((d) => {
+        if (d?.modules?.length) setModules(d.modules);
+        if (d && d.enabled === false) setDbPending(true);
+      })
+      .catch(() => {
+        /* modules statiques déjà affichés */
+      });
   }, []);
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
       <header className="mb-5">
-        <h1 className="text-xl font-bold text-[#0c0a09]">
-          {fr ? "Communauté" : "Community"}
-        </h1>
-        <p className="mt-1 text-sm text-[#57534e]">
-          {fr
-            ? "Apprendre, échanger et suivre l'actu crypto."
-            : "Learn, discuss, and follow crypto news."}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-[#0c0a09]">Community</h1>
+            <p className="mt-1 text-sm text-[#57534e]">
+              {fr
+                ? "Apprendre, échanger et suivre l'actu crypto."
+                : "Learn, discuss, and follow crypto news."}
+            </p>
+          </div>
+          <CommunityHelpTrigger onClick={() => setHelpOpen(true)} />
+        </div>
       </header>
+
+      {dbPending ? (
+        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {fr
+            ? "Compteurs en attente — vérifiez COMMUNITY_ENABLED=true et migrations 0065–0067 sur Render."
+            : "Live counts pending — ensure COMMUNITY_ENABLED=true and migrations 0065–0067 on Render."}
+        </p>
+      ) : null}
 
       <CommunityRewardsCard />
 
@@ -113,39 +140,35 @@ export function CommunityHub() {
         />
       </label>
 
-      {!enabled ? (
-        <div className="fd-card px-4 py-8 text-center text-sm text-[#57534e]">
-          {fr ? "Module en cours de déploiement." : "Module rolling out soon."}
-        </div>
-      ) : (
-        <ul className="grid gap-3">
-          {modules.map((m) => (
-            <li key={m.id}>
-              <Link
-                href={m.href}
-                className="fd-card flex items-center gap-4 px-4 py-4 transition active:scale-[0.99]"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f3ee] text-[#305f33]">
-                  <ModuleIcon id={m.id} />
+      <ul className="grid gap-3">
+        {modules.map((m) => (
+          <li key={m.id}>
+            <Link
+              href={m.href}
+              className="fd-card flex items-center gap-4 px-4 py-4 transition active:scale-[0.99]"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f3ee] text-[#305f33]">
+                <ModuleIcon id={m.id} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-[#0c0a09]">
+                  {fr ? m.titleFr : m.titleEn}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-[#0c0a09]">
-                    {fr ? m.titleFr : m.titleEn}
-                  </span>
-                  <span className="block text-xs text-[#78716c]">
-                    {fr ? m.subtitleFr : m.subtitleEn}
-                  </span>
+                <span className="block text-xs text-[#78716c]">
+                  {fr ? m.subtitleFr : m.subtitleEn}
                 </span>
-                {m.count !== null && m.count > 0 ? (
-                  <span className="rounded-full bg-[#e8f3ee] px-2 py-0.5 text-xs font-semibold text-[#305f33]">
-                    {m.count}
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+              </span>
+              {m.count !== null && m.count > 0 ? (
+                <span className="rounded-full bg-[#e8f3ee] px-2 py-0.5 text-xs font-semibold text-[#305f33]">
+                  {m.count}
+                </span>
+              ) : null}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <CommunityHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
