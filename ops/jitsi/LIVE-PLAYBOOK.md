@@ -9,8 +9,9 @@
 | App : `live_started_at`, waiting host, JWT par compte | ✅ |
 | Prosody : JWT, token_verification MUC, lobby/breakout off | ✅ (après dedupe) |
 | Client : config.js prejoin off, IQ conference envoyée | ✅ |
-| **focus → Jicofo** (`client_proxy`) | ❌ `service-unavailable` fréquent |
-| MUC commune host+user | ❌ tant que focus KO |
+| **focus → Jicofo** (`client_proxy`) | ✅ IQ focus OK (`Adding focus JID`) |
+| Crash UI `isLobbySupported` | ❌ `enableLobby=false` → fix `fix-lobby-ui-crash.sh` |
+| MUC commune host+user | ⏳ après fix lobby UI + retest |
 
 ---
 
@@ -54,7 +55,10 @@ sudo bash ops/jitsi/fix-focus-roster-subscribe.sh
 # ou séquence complète :
 sudo bash ops/jitsi/fix-focus-client-proxy-sessions.sh
 
-# 4. Vérif
+# 4. Lobby UI crash (isLobbySupported) après focus OK
+sudo bash ops/jitsi/fix-lobby-ui-crash.sh
+
+# 5. Vérif
 sudo prosodyctl shell c2s show auth.live.mcbuleli.org | grep focus@
 sudo grep -iE 'registered new target session|no sessions to send' \
   /var/log/prosody/prosody.log | tail -10
@@ -99,6 +103,7 @@ sudo bash ops/jitsi/check-muc-live.sh <room>
 | focus@auth online mais IQ échoue encore | `fix-focus-hard-reset.sh` |
 | Ping-only (auth OK, pas MUC) | `diagnose-ping-only-served.sh` → config.js OK = focus ou JS navigateur |
 | ParseError col ~500k+ jicofo | `fix-focus-pre-join.sh` (dedupe + disco bloat) |
+| Crash `isLobbySupported` après focus OK | `fix-lobby-ui-crash.sh` — retirer `enableLobby=false` |
 | Split host/guest MUC | `audit-muc-fragmentation.sh` — ne pas réactiver guest vhost |
 
 ---

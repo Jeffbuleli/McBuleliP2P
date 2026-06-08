@@ -76,8 +76,10 @@ config.websocket = 'wss://{domain}/xmpp-websocket';
 config.prejoinPageEnabled = false;
 config.prejoinConfig = {{ enabled: false }};
 config.enableWelcomePage = false;
-config.enableLobby = false;
+// NE PAS enableLobby=false — casse isLobbySupported (Toolbox crash)
 config.disableLobby = true;
+config.securityUi = config.securityUi || {{}};
+config.securityUi.hideLobbyButton = true;
 config.enableUserRolesBasedOnToken = false;
 config.requireDisplayName = false;
 

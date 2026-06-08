@@ -56,7 +56,7 @@ JWT="$(echo "$JWT_OUT" | head -1)"
 JWT_EXP="$(echo "$JWT_OUT" | grep '^EXP:' | sed 's/^EXP://')"
 
 # Pas de config.hosts.* dans le hash (JSON.parse casse sur focus.live…) — voir config.js force-join
-HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.enableLobby=false&config.disableLobby=true&config.enableUserRolesBasedOnToken=false&userInfo.displayName=%22TestHost%22"
+HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.disableLobby=true&config.securityUi.hideLobbyButton=true&config.enableUserRolesBasedOnToken=false&userInfo.displayName=%22TestHost%22"
 
 URL="https://${DOMAIN}/${ROOM}?jwt=${JWT}${HASH}"
 

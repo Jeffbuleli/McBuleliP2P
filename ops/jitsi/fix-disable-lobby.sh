@@ -14,8 +14,10 @@ if ! grep -q 'mcbuleli-same-room' "$MEET_CFG"; then
   cat >> "$MEET_CFG" <<EOF
 
 // mcbuleli-same-room — host + invités dans la MÊME salle (lobby off)
-config.enableLobby = false;
+// NE PAS enableLobby=false — casse isLobbySupported (Toolbox crash)
 config.disableLobby = true;
+config.securityUi = config.securityUi || {};
+config.securityUi.hideLobbyButton = true;
 config.enableUserRolesBasedOnToken = false;
 EOF
 fi

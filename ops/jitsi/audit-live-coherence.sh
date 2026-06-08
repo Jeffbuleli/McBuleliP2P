@@ -76,12 +76,15 @@ else
   warn "anonymousdomain: état ambigu — vérifier config servi"
 fi
 
-if tail -30 "$MEET_CFG" | grep -qE 'config\.(enableLobby|disableLobby)\s*=\s*(false|true)'; then
-  grep -nE 'enableLobby|disableLobby' "$MEET_CFG" | grep -v '// enableLobbyChat' | tail -4
-  if tail -30 "$MEET_CFG" | grep -q 'enableLobby = false' && tail -30 "$MEET_CFG" | grep -q 'disableLobby = true'; then
-    pass "lobby désactivé dans config.js"
+if tail -40 "$MEET_CFG" | grep -qE 'config\.(disableLobby|securityUi)'; then
+  grep -nE 'enableLobby|disableLobby|hideLobbyButton' "$MEET_CFG" | grep -v '// enableLobbyChat' | tail -6
+  if tail -40 "$MEET_CFG" | grep -q 'enableLobby = false'; then
+    fail "enableLobby=false présent → crash isLobbySupported (fix-lobby-ui-crash.sh)"
+    record_fail
+  elif tail -40 "$MEET_CFG" | grep -q 'disableLobby = true'; then
+    pass "lobby inactif (disableLobby + pas enableLobby=false)"
   else
-    fail "lobby pas clairement off"
+    fail "disableLobby=true absent"
     record_fail
   fi
 else

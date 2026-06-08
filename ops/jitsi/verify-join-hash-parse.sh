@@ -17,16 +17,16 @@ samples = {
     "gen-live-join-url": (
         "#config.prejoinPageEnabled=false"
         "&config.prejoinConfig.enabled=false"
-        "&config.enableLobby=false"
         "&config.disableLobby=true"
+        "&config.securityUi.hideLobbyButton=true"
         "&config.enableUserRolesBasedOnToken=false"
         "&userInfo.displayName=%22TestHost%22"
     ),
     "app-like": (
         "#config.prejoinPageEnabled=false"
         "&config.prejoinConfig.enabled=false"
-        "&config.enableLobby=false"
         "&config.disableLobby=true"
+        "&config.securityUi.hideLobbyButton=true"
         "&config.enableUserRolesBasedOnToken=false"
         "&config.startWithVideoMuted=true"
         f"&config.defaultLogoUrl={urllib.parse.quote(json.dumps(f'https://{domain}/images/mcbuleli-meet-watermark.png'))}"

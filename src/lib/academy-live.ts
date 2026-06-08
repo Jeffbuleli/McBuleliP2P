@@ -166,8 +166,9 @@ export function buildJitsiLowBandwidthHash(
   const params: string[] = [
     jitsiHashParam("config.prejoinPageEnabled", false),
     jitsiHashParam("config.prejoinConfig.enabled", false),
-    jitsiHashParam("config.enableLobby", false),
+    // Pas enableLobby=false — casse conference.isLobbySupported() (crash Toolbox)
     jitsiHashParam("config.disableLobby", true),
+    jitsiHashParam("config.securityUi.hideLobbyButton", true),
     jitsiHashParam("config.enableUserRolesBasedOnToken", false),
     jitsiHashParam("config.startWithVideoMuted", !isHost),
     jitsiHashParam("config.defaultLogoUrl", ACADEMY_JITSI_LOGO_URL_LIVE_HOST),
