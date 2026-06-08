@@ -2631,7 +2631,7 @@ export const communityMedia = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     bucket: varchar("bucket", { length: 64 }).notNull(),
     objectKey: varchar("object_key", { length: 512 }).notNull(),
-    publicUrl: varchar("public_url", { length: 1024 }).notNull(),
+    publicUrl: text("public_url").notNull(),
     fileType: varchar("file_type", { length: 16 }).notNull(),
     mimeType: varchar("mime_type", { length: 128 }).notNull(),
     sizeBytes: integer("size_bytes").notNull(),
@@ -2721,6 +2721,11 @@ export const communityLikes = pgTable(
   (t) => [
     index("community_likes_target_idx").on(t.targetType, t.targetId),
     index("community_likes_user_target_idx").on(
+      t.userId,
+      t.targetType,
+      t.targetId,
+    ),
+    uniqueIndex("community_likes_user_target_unique").on(
       t.userId,
       t.targetType,
       t.targetId,

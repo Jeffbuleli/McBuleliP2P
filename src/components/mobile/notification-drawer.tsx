@@ -336,6 +336,23 @@ function notifMeta(
         pill: { variant: "success", label: t("academy_enrolled") },
       };
     }
+    case "community_comment": {
+      const preview = str("preview") || "—";
+      return {
+        title: t("notif_community_comment_title"),
+        body: preview,
+        href: `/app/community/feed?post=${str("postId")}`,
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
+    case "community_like": {
+      return {
+        title: t("notif_community_like_title"),
+        body: t("notif_community_like_body"),
+        href: `/app/community/feed?post=${str("postId")}`,
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
     default:
       return {
         title: row.kind,

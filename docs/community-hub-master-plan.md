@@ -342,12 +342,14 @@ Intégré au système existant (`tryGrantRewardPoints`, `users.buleli_points_bal
 - [ ] R2 presign upload (images)
 - [ ] Profil communauté minimal
 
-### Phase 1b — Fil d'actualité (semaine 3–4)
+### Phase 1b — Fil d'actualité ✅
 
-- Feed CRUD + likes + commentaires
-- Notifications `community_comment`, `community_like`
-- Infinite scroll + lazy images
-- Modération signalement basique
+- [x] Feed CRUD + likes + commentaires + partage
+- [x] BP automatiques à chaque action (`rewards-service`)
+- [x] Notifications `community_comment`, `community_like`
+- [x] Infinite scroll + lazy images + compression WebP
+- [x] Upload image (`POST /api/community/media`)
+- [x] Signalement (`POST /api/community/reports`)
 
 ### Phase 2 — Blogs + Q&R (semaine 5–8)
 
