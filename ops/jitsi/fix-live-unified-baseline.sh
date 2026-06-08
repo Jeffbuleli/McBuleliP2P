@@ -88,6 +88,19 @@ config.liveStreaming = {{ enabled: false }};
 config.recordingService = {{ enabled: false }};
 delete config.hiddenDomain;
 config.p2p = {{ enabled: true }};
+
+config.defaultLanguage = 'fr';
+config.defaultLogoUrl = '/images/mcbuleli-meet-watermark.png';
+config.interfaceConfig = config.interfaceConfig || {{}};
+config.interfaceConfig.APP_NAME = 'McBuleli';
+config.interfaceConfig.NATIVE_APP_NAME = 'McBuleli';
+config.interfaceConfig.PROVIDER_NAME = 'McBuleli';
+config.interfaceConfig.DEFAULT_LOGO_URL = '/images/mcbuleli-meet-watermark.png';
+config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
+config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
+config.interfaceConfig.SHOW_POWERED_BY = false;
+config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
+config.customParticipantLabelCssUrl = '/css/mcbuleli-custom.css';
 """
 if marker not in text:
     text = text.rstrip() + baseline + "\n"
@@ -149,6 +162,10 @@ echo "==> 6. Jicofo + JVB brewery"
 bash "$SCRIPT_DIR/fix-jicofo-localhost.sh"
 bash "$SCRIPT_DIR/fix-jitsi-brewery-complete.sh"
 bash "$SCRIPT_DIR/fix-jicofo-zombie.sh"
+
+echo ""
+echo "==> 6b. Branding McBuleli (watermark public/brand, traductions FR)"
+bash "$SCRIPT_DIR/apply-mcbuleli-brand.sh" || true
 
 echo ""
 echo "==> 7. Restart + vérif"

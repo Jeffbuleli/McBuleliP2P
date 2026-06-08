@@ -10,7 +10,7 @@ JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
 WATERMARK_URL="/images/mcbuleli-meet-watermark.png"
-MARKER="mcbuleli-full-brand-v4"
+MARKER="mcbuleli-full-brand-v5"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
@@ -195,20 +195,21 @@ if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-custom.css' "$JITSI_
   sed -i 's|</head>|<link rel="stylesheet" href="/css/mcbuleli-custom.css" />\n</head>|' "$JITSI_ROOT/index.html"
 fi
 
-echo "==> Masquer toast « Thank you / Merci » en fin de live"
-if ! grep -q 'mcbuleli-disable-thankyou' "$CONFIG"; then
-  cat >> "$CONFIG" <<'EOF'
+echo "==> Notifications McBuleli (plus de « via Jitsi »)"
+if ! grep -q 'mcbuleli-brand-notifications' "$CONFIG"; then
+  cat >> "$CONFIG" <<EOF
 
-// mcbuleli-disable-thankyou
+// mcbuleli-brand-notifications — APP_NAME pour {{appName}} dans thankYou
 config.feedbackPercentage = 0;
-config.disabledNotifications = config.disabledNotifications || [];
-if (config.disabledNotifications.indexOf('thankYou') === -1) {
-    config.disabledNotifications.push('thankYou');
-}
+config.brandingRoomAlias = 'Live McBuleli';
+config.interfaceConfig = config.interfaceConfig || {};
+config.interfaceConfig.APP_NAME = '$APP_NAME';
+config.interfaceConfig.NATIVE_APP_NAME = '$APP_NAME';
+config.interfaceConfig.PROVIDER_NAME = '$APP_NAME';
 EOF
 fi
 
-for js in mcbuleli-hide-thankyou.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
+for js in mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
   cp "$SCRIPT_DIR/$js" "$JITSI_ROOT/$js"
   if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q "$js" "$JITSI_ROOT/index.html"; then
     sed -i "s|</body>|<script src=\"/$js\"></script>\n</body>|" "$JITSI_ROOT/index.html"

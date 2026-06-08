@@ -56,7 +56,7 @@ JWT="$(echo "$JWT_OUT" | head -1)"
 JWT_EXP="$(echo "$JWT_OUT" | grep '^EXP:' | sed 's/^EXP://')"
 
 # Pas de config.hosts.* dans le hash (JSON.parse casse sur focus.live…) — voir config.js force-join
-HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.disableLobby=true&config.securityUi.hideLobbyButton=true&config.enableUserRolesBasedOnToken=false&userInfo.displayName=%22TestHost%22"
+HASH="#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.disableLobby=true&config.securityUi.hideLobbyButton=true&config.enableUserRolesBasedOnToken=false&config.defaultLogoUrl=%22%2Fimages%2Fmcbuleli-meet-watermark.png%22&interfaceConfig.APP_NAME=%22McBuleli%22&interfaceConfig.SHOW_JITSI_WATERMARK=true&userInfo.displayName=%22TestHost%22"
 
 URL="https://${DOMAIN}/${ROOM}?jwt=${JWT}${HASH}"
 

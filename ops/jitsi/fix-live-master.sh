@@ -52,26 +52,30 @@ echo "==> Phase 2: nginx dedupe (duplicate /http-bind breaks XMPP)"
 bash "$SCRIPT_DIR/fix-nginx-xmpp-dedupe.sh" 2>/dev/null || bash "$SCRIPT_DIR/fix-nginx-xmpp-proxy.sh"
 
 echo ""
-echo "==> Phase 3: Force immediate join (prejoin/welcome off)"
+echo "==> Phase 3: McBuleli branding (watermark, notifications, traductions)"
+bash "$SCRIPT_DIR/apply-mcbuleli-brand.sh"
+
+echo ""
+echo "==> Phase 4: Force immediate join (prejoin/welcome off)"
 bash "$SCRIPT_DIR/fix-config-force-join.sh"
 
 echo ""
-echo "==> Phase 4: Jicofo JVM XML limits (disco#info / ping-only)"
+echo "==> Phase 5: Jicofo JVM XML limits (disco#info / ping-only)"
 bash "$SCRIPT_DIR/fix-jicofo-jvm-xml-limits.sh" 2>/dev/null || systemctl restart jicofo
 
 echo ""
-echo "==> Phase 5: Focus + conference allocation"
+echo "==> Phase 6: Focus + conference allocation"
 bash "$SCRIPT_DIR/fix-focus-service-unavailable.sh" 2>/dev/null || \
   bash "$SCRIPT_DIR/fix-jicofo-prosody.sh" 2>/dev/null || true
 
 echo ""
-echo "==> Phase 6: Prosody auth vhost + JVB XMPP"
+echo "==> Phase 7: Prosody auth vhost + JVB XMPP"
 bash "$SCRIPT_DIR/fix-prosody-auth-vhost.sh" 2>/dev/null || true
 bash "$SCRIPT_DIR/fix-jvb-force-xmpp-standalone.sh" 2>/dev/null || \
   bash "$SCRIPT_DIR/fix-jvb-force-xmpp.sh" 2>/dev/null || true
 
 echo ""
-echo "==> Phase 7: Final service restart"
+echo "==> Phase 8: Final service restart"
 systemctl restart prosody
 sleep 4
 systemctl restart jitsi-videobridge2
@@ -81,12 +85,12 @@ sleep 10
 nginx -t && systemctl reload nginx
 
 echo ""
-echo "==> Phase 8: Post-fix verification"
+echo "==> Phase 9: Post-fix verification"
 bash "$SCRIPT_DIR/verify-config-served.sh" || true
 bash "$SCRIPT_DIR/verify-join-hash-parse.sh" "$ROOM" || true
 
 echo ""
-echo "==> Phase 9: Coherence audit (must pass)"
+echo "==> Phase 10: Coherence audit (must pass)"
 if bash "$SCRIPT_DIR/audit-muc-fragmentation.sh" "$ROOM"; then
   AUDIT_OK=1
 else

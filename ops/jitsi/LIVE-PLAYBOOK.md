@@ -11,7 +11,8 @@
 | Client : config.js prejoin off, IQ conference envoyée | ✅ |
 | **focus → Jicofo** (`client_proxy`) | ✅ IQ focus OK (`Adding focus JID`) |
 | Crash UI `isLobbySupported` | ❌ `enableLobby=false` → fix `fix-lobby-ui-crash.sh` |
-| MUC commune host+user | ⏳ après fix lobby UI + retest |
+| MUC commune host+user | ✅ `occupant_count=2` |
+| Branding McBuleli (watermark, notifications) | `apply-mcbuleli-brand.sh` |
 
 ---
 
@@ -58,7 +59,10 @@ sudo bash ops/jitsi/fix-focus-client-proxy-sessions.sh
 # 4. Lobby UI crash (isLobbySupported) après focus OK
 sudo bash ops/jitsi/fix-lobby-ui-crash.sh
 
-# 5. Vérif
+# 5. Branding (watermark coin vidéo, notifications McBuleli)
+sudo bash ops/jitsi/apply-mcbuleli-brand.sh
+
+# 6. Vérif
 sudo prosodyctl shell c2s show auth.live.mcbuleli.org | grep focus@
 sudo grep -iE 'registered new target session|no sessions to send' \
   /var/log/prosody/prosody.log | tail -10

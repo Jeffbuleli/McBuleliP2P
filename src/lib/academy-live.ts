@@ -1,8 +1,5 @@
 import { ACADEMY_CHECKIN_WINDOW_MIN } from "@/lib/academy-config";
-import {
-  ACADEMY_JITSI_LOGO_URL_LIVE_HOST,
-  academyJitsiSubject,
-} from "@/lib/academy-jitsi-brand";
+import { appendAcademyJitsiBrandParams } from "@/lib/academy-jitsi-brand";
 import {
   jitsiHashParam,
   liveRoomNameFromSessionSlug,
@@ -171,15 +168,8 @@ export function buildJitsiLowBandwidthHash(
     jitsiHashParam("config.securityUi.hideLobbyButton", true),
     jitsiHashParam("config.enableUserRolesBasedOnToken", false),
     jitsiHashParam("config.startWithVideoMuted", !isHost),
-    jitsiHashParam("config.defaultLogoUrl", ACADEMY_JITSI_LOGO_URL_LIVE_HOST),
-    jitsiHashParam("interfaceConfig.SHOW_JITSI_WATERMARK", true),
-    jitsiHashParam("interfaceConfig.SHOW_WATERMARK_FOR_GUESTS", true),
   ];
-  if (opts?.sessionTitle?.trim() || opts?.sessionSlug?.trim()) {
-    params.push(
-      jitsiHashParam("config.subject", academyJitsiSubject(opts)),
-    );
-  }
+  appendAcademyJitsiBrandParams(params, opts);
   return `#${params.join("&")}`;
 }
 
