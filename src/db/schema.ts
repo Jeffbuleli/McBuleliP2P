@@ -2595,3 +2595,281 @@ export const academyCredentials = pgTable(
     index("academy_credentials_user_idx").on(t.userId, t.issuedAt),
   ],
 );
+
+// ─── Community Hub (métadonnées — médias sur Cloudflare R2 / Stream) ───
+
+export const communityUserProfiles = pgTable(
+  "community_user_profiles",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    handle: varchar("handle", { length: 32 }).notNull().unique(),
+    displayName: varchar("display_name", { length: 64 }).notNull(),
+    showKycBadge: boolean("show_kyc_badge").notNull().default(false),
+    bio: varchar("bio", { length: 280 }),
+    avatarMediaId: uuid("avatar_media_id"),
+    reputationScore: integer("reputation_score").notNull().default(0),
+    postsCount: integer("posts_count").notNull().default(0),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("community_profiles_handle_idx").on(t.handle)],
+);
+
+export const communityMedia = pgTable(
+  "community_media",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    bucket: varchar("bucket", { length: 64 }).notNull(),
+    objectKey: varchar("object_key", { length: 512 }).notNull(),
+    publicUrl: varchar("public_url", { length: 1024 }).notNull(),
+    fileType: varchar("file_type", { length: 16 }).notNull(),
+    mimeType: varchar("mime_type", { length: 128 }).notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    width: integer("width"),
+    height: integer("height"),
+    durationSec: integer("duration_sec"),
+    streamId: varchar("stream_id", { length: 64 }),
+    variants: jsonb("variants").$type<Record<string, string> | null>(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_media_owner_created_idx").on(t.ownerId, t.createdAt),
+    index("community_media_status_idx").on(t.status, t.createdAt),
+  ],
+);
+
+export const communityPosts = pgTable(
+  "community_posts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    postType: varchar("post_type", { length: 16 }).notNull().default("text"),
+    status: varchar("status", { length: 16 }).notNull().default("published"),
+    mediaIds: jsonb("media_ids").$type<string[] | null>(),
+    likeCount: integer("like_count").notNull().default(0),
+    commentCount: integer("comment_count").notNull().default(0),
+    shareCount: integer("share_count").notNull().default(0),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_posts_feed_idx").on(t.status, t.publishedAt),
+    index("community_posts_author_idx").on(t.authorId, t.createdAt),
+  ],
+);
+
+export const communityComments = pgTable(
+  "community_comments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => communityPosts.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id"),
+    body: text("body").notNull(),
+    likeCount: integer("like_count").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_comments_post_idx").on(t.postId, t.createdAt),
+    index("community_comments_author_idx").on(t.authorId, t.createdAt),
+  ],
+);
+
+export const communityLikes = pgTable(
+  "community_likes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    targetType: varchar("target_type", { length: 16 }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_likes_target_idx").on(t.targetType, t.targetId),
+    index("community_likes_user_target_idx").on(
+      t.userId,
+      t.targetType,
+      t.targetId,
+    ),
+  ],
+);
+
+export const communityBlogCategories = pgTable(
+  "community_blog_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 32 }).notNull().unique(),
+    labelFr: varchar("label_fr", { length: 64 }).notNull(),
+    labelEn: varchar("label_en", { length: 64 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+export const communityBlogPosts = pgTable(
+  "community_blog_posts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id").references(
+      () => communityBlogCategories.id,
+      { onDelete: "set null" },
+    ),
+    slug: varchar("slug", { length: 120 }).notNull().unique(),
+    title: varchar("title", { length: 200 }).notNull(),
+    excerpt: varchar("excerpt", { length: 320 }),
+    body: text("body").notNull(),
+    coverMediaId: uuid("cover_media_id"),
+    status: varchar("status", { length: 16 }).notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_blog_posts_status_idx").on(t.status, t.publishedAt),
+    index("community_blog_posts_author_idx").on(t.authorId, t.updatedAt),
+    index("community_blog_posts_category_idx").on(t.categoryId, t.publishedAt),
+  ],
+);
+
+export const communityQuestions = pgTable(
+  "community_questions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    tags: jsonb("tags").$type<string[] | null>(),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    acceptedAnswerId: uuid("accepted_answer_id"),
+    viewCount: integer("view_count").notNull().default(0),
+    answerCount: integer("answer_count").notNull().default(0),
+    voteScore: integer("vote_score").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_questions_status_idx").on(t.status, t.createdAt),
+    index("community_questions_author_idx").on(t.authorId, t.createdAt),
+  ],
+);
+
+export const communityAnswers = pgTable(
+  "community_answers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => communityQuestions.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    voteScore: integer("vote_score").notNull().default(0),
+    isAccepted: boolean("is_accepted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_answers_question_idx").on(
+      t.questionId,
+      t.voteScore,
+      t.createdAt,
+    ),
+    index("community_answers_author_idx").on(t.authorId, t.createdAt),
+  ],
+);
+
+export const communityReports = pgTable(
+  "community_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reporterId: uuid("reporter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    targetType: varchar("target_type", { length: 16 }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    reason: varchar("reason", { length: 32 }).notNull(),
+    details: text("details"),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_reports_status_idx").on(t.status, t.createdAt),
+    index("community_reports_target_idx").on(t.targetType, t.targetId),
+  ],
+);
+
+export const communityUserBlocks = pgTable(
+  "community_user_blocks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    blockerId: uuid("blocker_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    blockedId: uuid("blocked_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_blocks_blocker_idx").on(t.blockerId, t.createdAt),
+    index("community_blocks_pair_idx").on(t.blockerId, t.blockedId),
+  ],
+);

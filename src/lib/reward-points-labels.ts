@@ -37,6 +37,51 @@ export function rewardLedgerLabel(
   if (row.grantType === REWARD_GRANT.TRAINING_QUIZ_PASSED) {
     return t("points_ledger_training_quiz");
   }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_PROFILE_SETUP) {
+    return t("points_ledger_community_profile");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_FIRST_POST) {
+    return t("points_ledger_community_first_post");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_POST_TEXT) {
+    return t("points_ledger_community_post");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_POST_IMAGE) {
+    return t("points_ledger_community_post_image");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_POST_VIDEO) {
+    return t("points_ledger_community_post_video");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_COMMENT) {
+    return t("points_ledger_community_comment");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_LIKE) {
+    return t("points_ledger_community_like");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_LIKE_RECEIVED) {
+    return t("points_ledger_community_like_rx");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_SHARE) {
+    return t("points_ledger_community_share");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_BLOG_PUBLISH) {
+    return t("points_ledger_community_blog");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_QUESTION) {
+    return t("points_ledger_community_question");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_ANSWER) {
+    return t("points_ledger_community_answer");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_ANSWER_ACCEPTED) {
+    return t("points_ledger_community_answer_ok");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE) {
+    return t("points_ledger_community_upvote");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_LIVE_JOIN) {
+    return t("points_ledger_community_live");
+  }
   if (row.note === "spend:p2p_fee_discount_15") {
     return t("points_ledger_spend_p2p_fee");
   }

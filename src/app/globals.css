@@ -80,6 +80,12 @@ html {
   box-shadow: 0 0 0 1000px var(--fd-card) inset;
 }
 
+.community-theme {
+  color: var(--fd-text);
+  background: var(--fd-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
 /* Profile section — light, card-first UI */
 .profile-theme {
   color: var(--fd-text);

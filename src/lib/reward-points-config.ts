@@ -12,6 +12,22 @@ export const REWARD_GRANT = {
   TRAINING_ENROLLED: "training_enrolled",
   TRAINING_SESSION_ATTENDED: "training_session_attended",
   TRAINING_QUIZ_PASSED: "training_quiz_passed",
+  /** Community Hub — convertibles en McB (Phase 3 claim). */
+  COMMUNITY_PROFILE_SETUP: "community_profile_setup",
+  COMMUNITY_FIRST_POST: "community_first_post",
+  COMMUNITY_POST_TEXT: "community_post_text",
+  COMMUNITY_POST_IMAGE: "community_post_image",
+  COMMUNITY_POST_VIDEO: "community_post_video",
+  COMMUNITY_COMMENT: "community_comment",
+  COMMUNITY_LIKE: "community_like",
+  COMMUNITY_LIKE_RECEIVED: "community_like_received",
+  COMMUNITY_SHARE: "community_share",
+  COMMUNITY_BLOG_PUBLISH: "community_blog_publish",
+  COMMUNITY_QUESTION: "community_question",
+  COMMUNITY_ANSWER: "community_answer",
+  COMMUNITY_ANSWER_ACCEPTED: "community_answer_accepted",
+  COMMUNITY_ANSWER_UPVOTE: "community_answer_upvote",
+  COMMUNITY_LIVE_JOIN: "community_live_join",
 } as const;
 
 export type RewardGrantType =
@@ -28,10 +44,43 @@ export const REWARD_POINTS: Record<RewardGrantType, number> = {
   [REWARD_GRANT.TRAINING_ENROLLED]: 25,
   [REWARD_GRANT.TRAINING_SESSION_ATTENDED]: 40,
   [REWARD_GRANT.TRAINING_QUIZ_PASSED]: 60,
+  [REWARD_GRANT.COMMUNITY_PROFILE_SETUP]: 20,
+  [REWARD_GRANT.COMMUNITY_FIRST_POST]: 50,
+  [REWARD_GRANT.COMMUNITY_POST_TEXT]: 25,
+  [REWARD_GRANT.COMMUNITY_POST_IMAGE]: 40,
+  [REWARD_GRANT.COMMUNITY_POST_VIDEO]: 60,
+  [REWARD_GRANT.COMMUNITY_COMMENT]: 8,
+  [REWARD_GRANT.COMMUNITY_LIKE]: 3,
+  [REWARD_GRANT.COMMUNITY_LIKE_RECEIVED]: 5,
+  [REWARD_GRANT.COMMUNITY_SHARE]: 12,
+  [REWARD_GRANT.COMMUNITY_BLOG_PUBLISH]: 100,
+  [REWARD_GRANT.COMMUNITY_QUESTION]: 20,
+  [REWARD_GRANT.COMMUNITY_ANSWER]: 25,
+  [REWARD_GRANT.COMMUNITY_ANSWER_ACCEPTED]: 50,
+  [REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE]: 5,
+  [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: 35,
 };
 
 /** Max BP credited per user per calendar month (UTC). */
-export const REWARD_MONTHLY_EARN_CAP = 2000;
+export const REWARD_MONTHLY_EARN_CAP = 4000;
+
+/** Plafonds journaliers par type (anti-spam communauté). */
+export const COMMUNITY_REWARD_DAILY_CAPS: Partial<
+  Record<RewardGrantType, number>
+> = {
+  [REWARD_GRANT.COMMUNITY_POST_TEXT]: 8,
+  [REWARD_GRANT.COMMUNITY_POST_IMAGE]: 8,
+  [REWARD_GRANT.COMMUNITY_POST_VIDEO]: 5,
+  [REWARD_GRANT.COMMUNITY_COMMENT]: 30,
+  [REWARD_GRANT.COMMUNITY_LIKE]: 50,
+  [REWARD_GRANT.COMMUNITY_LIKE_RECEIVED]: 100,
+  [REWARD_GRANT.COMMUNITY_SHARE]: 15,
+  [REWARD_GRANT.COMMUNITY_BLOG_PUBLISH]: 3,
+  [REWARD_GRANT.COMMUNITY_QUESTION]: 8,
+  [REWARD_GRANT.COMMUNITY_ANSWER]: 20,
+  [REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE]: 40,
+  [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: 5,
+};
 
 /** Future on-chain claim ratio — active in Phase 3 claim portal. */
 export const REWARD_BP_PER_MCB_CLAIM = 100;

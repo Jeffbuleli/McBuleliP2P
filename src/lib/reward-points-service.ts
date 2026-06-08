@@ -283,6 +283,51 @@ export async function getRewardPointsSummary(
       (r) => r.grantType === REWARD_GRANT.TRAINING_SESSION_ATTENDED,
     ),
     [REWARD_GRANT.TRAINING_QUIZ_PASSED]: granted.has(REWARD_GRANT.TRAINING_QUIZ_PASSED),
+    [REWARD_GRANT.COMMUNITY_PROFILE_SETUP]: granted.has(
+      REWARD_GRANT.COMMUNITY_PROFILE_SETUP,
+    ),
+    [REWARD_GRANT.COMMUNITY_FIRST_POST]: granted.has(
+      REWARD_GRANT.COMMUNITY_FIRST_POST,
+    ),
+    [REWARD_GRANT.COMMUNITY_POST_TEXT]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_POST_TEXT,
+    ),
+    [REWARD_GRANT.COMMUNITY_POST_IMAGE]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_POST_IMAGE,
+    ),
+    [REWARD_GRANT.COMMUNITY_POST_VIDEO]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_POST_VIDEO,
+    ),
+    [REWARD_GRANT.COMMUNITY_COMMENT]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_COMMENT,
+    ),
+    [REWARD_GRANT.COMMUNITY_LIKE]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_LIKE,
+    ),
+    [REWARD_GRANT.COMMUNITY_LIKE_RECEIVED]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_LIKE_RECEIVED,
+    ),
+    [REWARD_GRANT.COMMUNITY_SHARE]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_SHARE,
+    ),
+    [REWARD_GRANT.COMMUNITY_BLOG_PUBLISH]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_BLOG_PUBLISH,
+    ),
+    [REWARD_GRANT.COMMUNITY_QUESTION]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_QUESTION,
+    ),
+    [REWARD_GRANT.COMMUNITY_ANSWER]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_ANSWER,
+    ),
+    [REWARD_GRANT.COMMUNITY_ANSWER_ACCEPTED]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_ANSWER_ACCEPTED,
+    ),
+    [REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE,
+    ),
+    [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_LIVE_JOIN,
+    ),
   };
 
   return {

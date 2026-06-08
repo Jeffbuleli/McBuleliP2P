@@ -10,6 +10,7 @@ const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
   { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
   { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
   { href: "/app/trade/bots", key: "nav_trade", icon: MarketIcon },
+  { href: "/app/community", key: "nav_community", icon: CommunityIcon },
   { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
 
@@ -93,6 +94,16 @@ function MarketIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active)} aria-hidden>
       <path d="M4 18V6M10 18V10M16 18v-8M22 18V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CommunityIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active)} aria-hidden>
+      <circle cx="9" cy="9" r="3" stroke="currentColor" strokeWidth="2" />
+      <circle cx="16" cy="10" r="2.5" stroke="currentColor" strokeWidth="2" />
+      <path d="M4 19c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5M13 19c0-1.8 1.5-3.2 3.5-3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
