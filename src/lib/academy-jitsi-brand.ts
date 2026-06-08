@@ -64,5 +64,8 @@ export function appendAcademyJitsiBrandParams(
     jitsiHashParam("interfaceConfig.MOBILE_DOWNLOAD_LINK_ANDROID", ""),
     jitsiHashParam("interfaceConfig.MOBILE_DOWNLOAD_LINK_IOS", ""),
     jitsiHashParam("interfaceConfig.LANG", "fr"),
+    jitsiHashParam("config.enableClosePage", false),
+    jitsiHashParam("config.welcomePage.disabled", true),
+    jitsiHashParam("config.feedbackPercentage", 0),
   );
 }

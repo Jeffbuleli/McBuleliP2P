@@ -100,6 +100,8 @@ config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
 config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
 config.interfaceConfig.SHOW_POWERED_BY = false;
 config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
+config.enableClosePage = false;
+config.welcomePage = {{ disabled: true }};
 config.customParticipantLabelCssUrl = '/css/mcbuleli-custom.css';
 """
 if marker not in text:

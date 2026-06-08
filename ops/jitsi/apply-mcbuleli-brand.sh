@@ -10,7 +10,7 @@ JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
 WATERMARK_URL="/images/mcbuleli-meet-watermark.png"
-MARKER="mcbuleli-full-brand-v5"
+MARKER="mcbuleli-full-brand-v6"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
@@ -99,9 +99,9 @@ fi
 
 echo "==> Corriger syntaxe config.js (écran noir si JWT mal injecté)"
 JITSI_MEET_CONFIG="$CONFIG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh" || true
-# Toujours pointer vers le logo Meet sur ce serveur
-sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
-sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '/images/mcbuleli-meet-logo.png'|g" "$CONFIG" 2>/dev/null || true
+# Watermark coin vidéo (pas le logo carré meet-logo)
+sed -i "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '${WATERMARK_URL}'|g" "$CONFIG" 2>/dev/null || true
+sed -i "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '${WATERMARK_URL}'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|APP_NAME = '[^']*'|APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
 sed -i "s|NATIVE_APP_NAME = '[^']*'|NATIVE_APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
 sed -i 's|SHOW_JITSI_WATERMARK = false|SHOW_JITSI_WATERMARK = true|g' "$CONFIG" 2>/dev/null || true
@@ -170,15 +170,18 @@ if ! grep -q "$MARKER" "$CONFIG"; then
 
 // $MARKER
 config.defaultLanguage = 'fr';
-config.defaultLogoUrl = '$LOGO_URL';
+config.defaultLogoUrl = '$WATERMARK_URL';
 config.subject = 'McBuleli';
 config.enableWelcomePage = false;
+config.enableClosePage = false;
+config.welcomePage = config.welcomePage || {};
+config.welcomePage.disabled = true;
 config.disableDeepLinking = true;
 config.interfaceConfig = config.interfaceConfig || {};
 config.interfaceConfig.APP_NAME = '$APP_NAME';
 config.interfaceConfig.NATIVE_APP_NAME = '$APP_NAME';
 config.interfaceConfig.PROVIDER_NAME = 'McBuleli';
-config.interfaceConfig.DEFAULT_LOGO_URL = '$LOGO_URL';
+config.interfaceConfig.DEFAULT_LOGO_URL = '$WATERMARK_URL';
 config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
 config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
 config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
@@ -209,12 +212,14 @@ config.interfaceConfig.PROVIDER_NAME = '$APP_NAME';
 EOF
 fi
 
-for js in mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
+for js in mcbuleli-watermark-overlay.js mcbuleli-hangup-return.js mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
   cp "$SCRIPT_DIR/$js" "$JITSI_ROOT/$js"
   if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q "$js" "$JITSI_ROOT/index.html"; then
     sed -i "s|</body>|<script src=\"/$js\"></script>\n</body>|" "$JITSI_ROOT/index.html"
   fi
 done
+
+echo "==> Fin de live : retour companion via ?mcbReturn= (passé par l'app McBuleli)"
 
 echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2

@@ -118,6 +118,7 @@ export async function resolveLiveEnterForUser(args: {
     sessionLiveUrl: row.sessionLiveUrl,
     liveBaseUrl: row.liveBaseUrl,
     sessionTitle: row.sessionTitleFr,
+    programSlug: args.params.programSlug,
     mode: args.params.mode,
     appRole: args.appRole,
   });

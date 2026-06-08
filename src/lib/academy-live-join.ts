@@ -1,6 +1,8 @@
+import { getAppAbsoluteUrl } from "@/lib/app-url";
 import {
   appendJitsiJwtToUrl,
   appendJitsiUserToUrl,
+  appendMcbLiveReturnUrl,
   isAcademyJitsiJwtEnabled,
   jitsiModeratorForMode,
   liveRoomNameFromSessionSlug,
@@ -47,6 +49,7 @@ export async function resolveGatedLiveJoinUrl(args: {
   sessionLiveUrl: string | null;
   liveBaseUrl: string | null;
   sessionTitle?: string;
+  programSlug?: string;
   mode: LiveJoinMode;
   appRole: UserRoleType | null | undefined;
 }): Promise<{ ok: true; url: string } | { ok: false; code: string }> {
@@ -125,6 +128,14 @@ export async function resolveGatedLiveJoinUrl(args: {
   }
 
   url = appendJitsiUserToUrl(url, args.displayName);
+
+  if (onSelfHosted) {
+    const companionPath = `/app/academy/${args.editionSlug}/live/${args.sessionSlug}`;
+    const q = args.programSlug?.trim()
+      ? `?program=${encodeURIComponent(args.programSlug.trim())}`
+      : "";
+    url = appendMcbLiveReturnUrl(url, getAppAbsoluteUrl(`${companionPath}${q}`));
+  }
 
   return { ok: true, url };
 }

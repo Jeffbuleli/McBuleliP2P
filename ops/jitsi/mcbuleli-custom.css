@@ -60,3 +60,17 @@ a[href*="8x8.vc"] {
   pointer-events: none;
   opacity: 0.92;
 }
+
+/* Fin de live — pas d'écran promo / close Jitsi figé */
+.welcome-page,
+.close-page,
+#welcome_page,
+[class*="promotional-close"],
+[class*="PromotionalClose"] {
+  display: none !important;
+}
+
+body.welcome-page,
+body.close-page {
+  background: #f4f6f4 !important;
+}

@@ -79,6 +79,16 @@ export function appendJitsiJwtToUrl(baseUrl: string, jwt: string): string {
   return `${u.toString()}${hash}`;
 }
 
+/** Après QUITTER sur live.mcbuleli.org → retour companion (évite re-login nginx gate). */
+export function appendMcbLiveReturnUrl(baseUrl: string, returnUrl: string): string {
+  const trimmed = returnUrl.trim();
+  if (!trimmed) return baseUrl;
+  const u = new URL(baseUrl.split("#")[0]);
+  u.searchParams.set("mcbReturn", trimmed);
+  const hash = baseUrl.includes("#") ? baseUrl.slice(baseUrl.indexOf("#")) : "";
+  return `${u.toString()}${hash}`;
+}
+
 /** Pseudo McBuleli dans le hash Jitsi (évite le 2e écran pré-join). */
 export function appendJitsiUserToUrl(baseUrl: string, displayName: string): string {
   const name = displayName.trim().slice(0, 64) || "McBuleli";
