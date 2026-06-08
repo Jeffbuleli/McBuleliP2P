@@ -1,5 +1,5 @@
 /**
- * McBuleli Meet — watermark PNG traits blancs (style Jitsi, fond transparent).
+ * McBuleli Meet — watermark PNG (logo source, cercle transparent).
  */
 .poweredby,
 .jitsi-logo,
@@ -8,30 +8,29 @@ a[href*="8x8.vc"] {
   display: none !important;
 }
 
-/* Coin vidéo — icône + « McBuleli », comme jitsi + wordmark */
+/* Coin vidéo — disque McBuleli (forme source, pas de carré) */
 .leftwatermark {
   display: block !important;
   opacity: 0.88 !important;
-  width: auto !important;
-  max-width: 156px !important;
-  height: 36px !important;
-  max-height: 36px !important;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  width: 64px !important;
+  max-width: 64px !important;
+  height: 64px !important;
+  max-height: 64px !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
   background: none !important;
 }
 
 .leftwatermark a,
 .leftwatermark img,
 .leftwatermark svg {
-  width: auto !important;
-  max-width: 156px !important;
-  height: 36px !important;
-  max-height: 36px !important;
+  width: 64px !important;
+  max-width: 64px !important;
+  height: 64px !important;
+  max-height: 64px !important;
   object-fit: contain;
   background: none !important;
 }
 
-/* Pas de 2e calque PNG (::before) — évite le carré blanc / damier */
 .premeeting-screen .preview-video-container::before,
 .premeeting-screen .prejoin-preview::before,
 .prejoin-preview::before,
@@ -44,7 +43,6 @@ a[href*="8x8.vc"] {
   display: none !important;
 }
 
-/* Fin de live — pas d'écran promo / close Jitsi figé */
 .welcome-page,
 .close-page,
 #welcome_page,

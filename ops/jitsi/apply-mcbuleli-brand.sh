@@ -10,7 +10,9 @@ JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
 WATERMARK_URL="/images/watermark.png"
-MARKER="mcbuleli-full-brand-v9"
+DOMAIN="${JITSI_DOMAIN:-live.mcbuleli.org}"
+IFACE_CONFIG="/etc/jitsi/meet/${DOMAIN}-interface_config.js"
+MARKER="mcbuleli-full-brand-v10"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
@@ -53,18 +55,26 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark coin vidéo (PNG traits blancs — style Jitsi / marqueur sur vitre)"
-WM_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
-if command -v python3 >/dev/null; then
+echo "==> Watermark coin vidéo (depuis mcbuleli-meet-watermark-source.png — forme logo inchangée)"
+WM_RAW="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark-source.png"
+WM_BUILD="$JITSI_IMAGES/.mcbuleli-watermark-build.png"
+if [[ ! -f "$WM_RAW" ]]; then
+  curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark-source.png" -o "$WM_RAW" || true
+fi
+WM_OK=0
+if [[ -f "$WM_RAW" ]] && command -v python3 >/dev/null; then
   PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
-  python3 "$SCRIPT_DIR/make-marker-watermark.py" "$WM_SRC" 2 2>/dev/null \
-    || python3 "$SCRIPT_DIR/make-marker-watermark.py" "$WM_SRC" 2 || true
+  if python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96 2>/dev/null \
+    || python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96; then
+    WM_OK=1
+  fi
 fi
-if [[ ! -f "$WM_SRC" ]]; then
-  curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png" -o "$WM_SRC" || true
+if [[ "$WM_OK" -eq 0 && -f "$WM_RAW" ]]; then
+  cp -a "$WM_RAW" "$WM_BUILD"
+  echo "    (pillow absent — source brute; apt install -y python3-pil.imaging)"
 fi
-cp -a "$WM_SRC" "$JITSI_IMAGES/watermark.png"
-cp -a "$WM_SRC" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
+cp -a "$WM_BUILD" "$JITSI_IMAGES/watermark.png"
+cp -a "$WM_BUILD" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
 cp -a "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
 
 echo "==> Favicon navigateur (onglet)"
@@ -109,6 +119,42 @@ sed -i "s|APP_NAME = '[^']*'|APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || t
 sed -i "s|NATIVE_APP_NAME = '[^']*'|NATIVE_APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
 sed -i 's|SHOW_JITSI_WATERMARK = false|SHOW_JITSI_WATERMARK = true|g' "$CONFIG" 2>/dev/null || true
 sed -i 's|SHOW_WATERMARK_FOR_GUESTS = false|SHOW_WATERMARK_FOR_GUESTS = true|g' "$CONFIG" 2>/dev/null || true
+
+echo "==> interface_config.js (obligatoire — .leftwatermark lit ce fichier)"
+for ICFG in "$JITSI_ROOT/interface_config.js" "$IFACE_CONFIG"; do
+  [[ -f "$ICFG" ]] || continue
+  if command -v python3 >/dev/null; then
+    python3 "$SCRIPT_DIR/patch-interface-config.py" "$ICFG" || true
+  fi
+  sed -i \
+    -e "s|DEFAULT_LOGO_URL: '[^']*'|DEFAULT_LOGO_URL: '${WATERMARK_URL#/}'|g" \
+    -e "s|DEFAULT_WELCOME_PAGE_LOGO_URL: '[^']*'|DEFAULT_WELCOME_PAGE_LOGO_URL: '${WATERMARK_URL#/}'|g" \
+    -e "s|SHOW_JITSI_WATERMARK: false|SHOW_JITSI_WATERMARK: true|g" \
+    -e "s|SHOW_WATERMARK_FOR_GUESTS: false|SHOW_WATERMARK_FOR_GUESTS: true|g" \
+    "$ICFG" 2>/dev/null || true
+done
+
+# Bloc forcé à chaque run (corrige anciens markers v6–v9)
+if grep -q 'mcbuleli-watermark-force' "$CONFIG"; then
+  sed -i \
+    -e "s|config.defaultLogoUrl = '[^']*'|config.defaultLogoUrl = '${WATERMARK_URL}'|g" \
+    -e "s|config.interfaceConfig.DEFAULT_LOGO_URL = '[^']*'|config.interfaceConfig.DEFAULT_LOGO_URL = '${WATERMARK_URL}'|g" \
+    "$CONFIG" 2>/dev/null || true
+else
+  cat >> "$CONFIG" <<EOF
+
+// mcbuleli-watermark-force — réaligné à chaque apply-mcbuleli-brand.sh
+config.defaultLogoUrl = '${WATERMARK_URL}';
+config.interfaceConfig = config.interfaceConfig || {};
+config.interfaceConfig.DEFAULT_LOGO_URL = '${WATERMARK_URL}';
+config.interfaceConfig.DEFAULT_WELCOME_PAGE_LOGO_URL = '${WATERMARK_URL}';
+config.interfaceConfig.SHOW_JITSI_WATERMARK = true;
+config.interfaceConfig.SHOW_WATERMARK_FOR_GUESTS = true;
+config.interfaceConfig.SHOW_BRAND_WATERMARK = false;
+config.interfaceConfig.JITSI_WATERMARK_LINK = '';
+EOF
+fi
+
 # Toujours désactiver la welcome page (même si le marker existe déjà)
 if grep -q 'enableWelcomePage' "$CONFIG"; then
   sed -i 's/enableWelcomePage = true/enableWelcomePage = false/g; s/enableWelcomePage=true/enableWelcomePage=false/g' "$CONFIG"
@@ -229,8 +275,18 @@ done
 
 echo "==> Fin de live : retour companion via ?mcbReturn= (passé par l'app McBuleli)"
 
+echo "==> Vérification watermark"
+if [[ -f "$JITSI_IMAGES/watermark.png" ]]; then
+  ls -la "$JITSI_IMAGES/watermark.png"
+else
+  echo "ERREUR: watermark.png absent" >&2
+  exit 1
+fi
+grep -E 'defaultLogoUrl|DEFAULT_LOGO_URL|SHOW_JITSI_WATERMARK' "$CONFIG" 2>/dev/null | tail -8 || true
+[[ -f "$IFACE_CONFIG" ]] && grep -E 'DEFAULT_LOGO_URL|SHOW_JITSI_WATERMARK' "$IFACE_CONFIG" 2>/dev/null | head -4 || true
+
 echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2
 systemctl reload nginx
 
-echo "OK — Gate: bash apply-nginx-live-gate.sh | Watermark: $WATERMARK_URL"
+echo "OK — Watermark: $WATERMARK_URL (source: mcbuleli-meet-watermark-source.png)"
