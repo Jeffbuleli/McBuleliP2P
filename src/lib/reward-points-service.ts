@@ -328,6 +328,15 @@ export async function getRewardPointsSummary(
     [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: grantRows.some(
       (r) => r.grantType === REWARD_GRANT.COMMUNITY_LIVE_JOIN,
     ),
+    [REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH,
+    ),
+    [REWARD_GRANT.COMMUNITY_SIGNAL_WIN]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_SIGNAL_WIN,
+    ),
+    [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW,
+    ),
   };
 
   return {

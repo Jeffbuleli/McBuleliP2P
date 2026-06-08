@@ -8,7 +8,8 @@ export type KycGatedFeature =
   | "p2p_ad"
   | "groups"
   | "trade_live"
-  | "trade_bots";
+  | "trade_bots"
+  | "community_signal";
 
 function csvUpper(s: string | undefined): string[] {
   return (s ?? "")

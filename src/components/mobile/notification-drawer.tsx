@@ -353,6 +353,14 @@ function notifMeta(
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
+    case "community_trader_follow": {
+      return {
+        title: t("notif_community_trader_follow_title"),
+        body: t("notif_community_trader_follow_body"),
+        href: "/app/community/traders",
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
     default:
       return {
         title: row.kind,

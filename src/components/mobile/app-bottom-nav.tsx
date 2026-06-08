@@ -17,8 +17,12 @@ const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
 export function AppBottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
-  const labelFor = (key: keyof Messages) =>
-    key === "nav_trade" ? "Trade" : t(key);
+  const labelFor = (key: keyof Messages) => {
+    if (key === "nav_trade") return "Trade";
+    if (key === "nav_community") return "Community";
+    if (key === "nav_profile") return "Profile";
+    return t(key);
+  };
 
   return (
     <nav

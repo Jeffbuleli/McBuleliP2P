@@ -366,3 +366,50 @@ export async function grantCommunityLiveJoin(args: {
     meta: { sessionId: args.sessionId },
   });
 }
+
+/** Publication d'un signal trading éducatif. */
+export async function grantCommunitySignalPublish(args: {
+  userId: string;
+  signalId: string;
+}) {
+  return grantWithDailyCap({
+    userId: args.userId,
+    grantType: REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH,
+    idempotencyKey: `community_signal:${args.signalId}`,
+    meta: { signalId: args.signalId },
+  });
+}
+
+/** Signal clôturé avec succès. */
+export async function grantCommunitySignalClosed(args: {
+  userId: string;
+  signalId: string;
+  outcome: "win" | "loss" | "neutral";
+}) {
+  if (args.outcome !== "win") {
+    const bal = await import("@/lib/reward-points-service").then((m) =>
+      m.getRewardPointsBalance(args.userId),
+    );
+    return { granted: false, points: 0, balance: bal };
+  }
+  return grantWithDailyCap({
+    userId: args.userId,
+    grantType: REWARD_GRANT.COMMUNITY_SIGNAL_WIN,
+    idempotencyKey: `community_signal_win:${args.signalId}`,
+    meta: { signalId: args.signalId },
+    dailyCap: 10,
+  });
+}
+
+/** Suivre un trader (engagement follower). */
+export async function grantCommunityTraderFollow(args: {
+  followerId: string;
+  traderId: string;
+}) {
+  return grantWithDailyCap({
+    userId: args.followerId,
+    grantType: REWARD_GRANT.COMMUNITY_TRADER_FOLLOW,
+    idempotencyKey: `community_follow:${args.followerId}:${args.traderId}`,
+    meta: { traderId: args.traderId },
+  });
+}

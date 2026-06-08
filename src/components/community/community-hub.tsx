@@ -37,6 +37,20 @@ function ModuleIcon({ id }: { id: CommunityModuleCard["id"] }) {
       </svg>
     );
   }
+  if (id === "signals") {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
+        <path d="M4 18l4-8 4 4 4-10 4 14" {...common} />
+      </svg>
+    );
+  }
+  if (id === "traders") {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
+        <path d="M8 21V10M12 21V4M16 21v-7" {...common} />
+      </svg>
+    );
+  }
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
       <circle cx="12" cy="12" r="9" {...common} />

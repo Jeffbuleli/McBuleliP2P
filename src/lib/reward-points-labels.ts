@@ -82,6 +82,15 @@ export function rewardLedgerLabel(
   if (row.grantType === REWARD_GRANT.COMMUNITY_LIVE_JOIN) {
     return t("points_ledger_community_live");
   }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH) {
+    return t("points_ledger_community_signal");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_SIGNAL_WIN) {
+    return t("points_ledger_community_signal_win");
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW) {
+    return t("points_ledger_community_trader_follow");
+  }
   if (row.note === "spend:p2p_fee_discount_15") {
     return t("points_ledger_spend_p2p_fee");
   }

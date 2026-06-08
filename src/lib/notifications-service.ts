@@ -37,7 +37,8 @@ export type NotificationKind =
   | "academy_announcement"
   | "academy_cohort_invite"
   | "community_comment"
-  | "community_like";
+  | "community_like"
+  | "community_trader_follow";
 
 const KYC_NOTIFICATION_KINDS = new Set<NotificationKind>([
   "kyc_pending",

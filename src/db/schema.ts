@@ -2878,3 +2878,108 @@ export const communityUserBlocks = pgTable(
     index("community_blocks_pair_idx").on(t.blockerId, t.blockedId),
   ],
 );
+
+/** Phase 3 — signaux trading communautaires (pas d'exécution auto). */
+export const communityTradingSignals = pgTable(
+  "community_trading_signals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: varchar("symbol", { length: 16 }).notNull(),
+    side: varchar("side", { length: 8 }).notNull(),
+    entryPrice: numeric("entry_price", { precision: 36, scale: 18 }),
+    targetPrice: numeric("target_price", { precision: 36, scale: 18 }),
+    stopPrice: numeric("stop_price", { precision: 36, scale: 18 }),
+    note: varchar("note", { length: 500 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    outcome: varchar("outcome", { length: 16 }),
+    isEducational: boolean("is_educational").notNull().default(true),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_signals_author_idx").on(t.authorId, t.publishedAt),
+    index("community_signals_status_idx").on(t.status, t.publishedAt),
+  ],
+);
+
+/** Phase 3 — copy-trading : suivi trader (exécution auto = futur). */
+export const communityTraderFollows = pgTable(
+  "community_trader_follows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    traderId: uuid("trader_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_trader_follows_pair_unique").on(
+      t.followerId,
+      t.traderId,
+    ),
+    index("community_trader_follows_trader_idx").on(t.traderId, t.createdAt),
+  ],
+);
+
+export const communityReputationEvents = pgTable(
+  "community_reputation_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    delta: integer("delta").notNull(),
+    reason: varchar("reason", { length: 48 }).notNull(),
+    refType: varchar("ref_type", { length: 16 }),
+    refId: uuid("ref_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("community_reputation_user_idx").on(t.userId, t.createdAt)],
+);
+
+export const communityBadges = pgTable(
+  "community_badges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 32 }).notNull().unique(),
+    labelFr: varchar("label_fr", { length: 64 }).notNull(),
+    labelEn: varchar("label_en", { length: 64 }).notNull(),
+    iconKey: varchar("icon_key", { length: 16 }).notNull().default("star"),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+);
+
+export const communityUserBadges = pgTable(
+  "community_user_badges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    badgeId: uuid("badge_id")
+      .notNull()
+      .references(() => communityBadges.id, { onDelete: "cascade" }),
+    earnedAt: timestamp("earned_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_user_badges_unique").on(t.userId, t.badgeId),
+    index("community_user_badges_user_idx").on(t.userId, t.earnedAt),
+  ],
+);

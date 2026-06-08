@@ -3,12 +3,13 @@ import {
   communityBlogPosts,
   communityPosts,
   communityQuestions,
+  communityTradingSignals,
 } from "@/db/schema";
 import { getDb } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
 
 export type CommunityModuleCard = {
-  id: "feed" | "blogs" | "formations" | "questions";
+  id: "feed" | "blogs" | "formations" | "questions" | "signals" | "traders";
   href: string;
   titleFr: string;
   titleEn: string;
@@ -30,6 +31,7 @@ export async function getCommunityOverview(): Promise<{
   let postCount = 0;
   let blogCount = 0;
   let questionCount = 0;
+  let signalCount = 0;
 
   try {
     const [posts] = await db
@@ -49,6 +51,12 @@ export async function getCommunityOverview(): Promise<{
       .from(communityQuestions)
       .where(eq(communityQuestions.status, "open"));
     questionCount = Number(questions?.n ?? 0);
+
+    const [signals] = await db
+      .select({ n: count() })
+      .from(communityTradingSignals)
+      .where(eq(communityTradingSignals.status, "open"));
+    signalCount = Number(signals?.n ?? 0);
   } catch (e) {
     const code = (e as { code?: string })?.code;
     if (code !== "42P01") throw e;
@@ -95,6 +103,26 @@ export async function getCommunityOverview(): Promise<{
         subtitleFr: "Poser une question, voter",
         subtitleEn: "Ask, answer, vote",
         count: questionCount,
+        available: true,
+      },
+      {
+        id: "signals",
+        href: "/app/community/signals",
+        titleFr: "Signaux trading",
+        titleEn: "Trading signals",
+        subtitleFr: "Idées éducatives, clôture manuelle",
+        subtitleEn: "Educational ideas, manual close",
+        count: signalCount,
+        available: true,
+      },
+      {
+        id: "traders",
+        href: "/app/community/traders",
+        titleFr: "Classement traders",
+        titleEn: "Trader leaderboard",
+        subtitleFr: "Réputation, démo, copy trading bientôt",
+        subtitleEn: "Reputation, demo, copy trading soon",
+        count: null,
         available: true,
       },
     ],

@@ -28,6 +28,9 @@ export const REWARD_GRANT = {
   COMMUNITY_ANSWER_ACCEPTED: "community_answer_accepted",
   COMMUNITY_ANSWER_UPVOTE: "community_answer_upvote",
   COMMUNITY_LIVE_JOIN: "community_live_join",
+  COMMUNITY_SIGNAL_PUBLISH: "community_signal_publish",
+  COMMUNITY_SIGNAL_WIN: "community_signal_win",
+  COMMUNITY_TRADER_FOLLOW: "community_trader_follow",
 } as const;
 
 export type RewardGrantType =
@@ -59,6 +62,9 @@ export const REWARD_POINTS: Record<RewardGrantType, number> = {
   [REWARD_GRANT.COMMUNITY_ANSWER_ACCEPTED]: 50,
   [REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE]: 5,
   [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: 35,
+  [REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH]: 35,
+  [REWARD_GRANT.COMMUNITY_SIGNAL_WIN]: 45,
+  [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: 2,
 };
 
 /** Max BP credited per user per calendar month (UTC). */
@@ -80,6 +86,8 @@ export const COMMUNITY_REWARD_DAILY_CAPS: Partial<
   [REWARD_GRANT.COMMUNITY_ANSWER]: 20,
   [REWARD_GRANT.COMMUNITY_ANSWER_UPVOTE]: 40,
   [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: 5,
+  [REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH]: 5,
+  [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: 20,
 };
 
 /** Future on-chain claim ratio — active in Phase 3 claim portal. */

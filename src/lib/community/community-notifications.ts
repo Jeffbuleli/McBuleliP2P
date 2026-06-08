@@ -35,3 +35,17 @@ export async function notifyCommunityLike(args: {
     },
   });
 }
+
+export async function notifyCommunityTraderFollow(args: {
+  traderId: string;
+  followerId: string;
+}) {
+  if (args.traderId === args.followerId) return;
+  await createUserNotification({
+    userId: args.traderId,
+    kind: "community_trader_follow",
+    payload: {
+      fromUserId: args.followerId,
+    },
+  });
+}
