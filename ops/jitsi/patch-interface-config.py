@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 APP = "McBuleli"
-WM = "images/watermark.svg"
+WM = "images/watermark.png"
 
 REPLACEMENTS: list[tuple[str, str]] = [
     (r"DEFAULT_LOGO_URL:\s*'[^']*'", f"DEFAULT_LOGO_URL: '{WM}'"),

@@ -4,15 +4,15 @@ import { jitsiHashParam } from "@/lib/academy-jitsi-token";
 export const ACADEMY_JITSI_APP_NAME = "McBuleli";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
-/** Watermark coin vidéo — SVG coloré (cercle vert + symbole marron), déployé sur le VPS. */
-export const ACADEMY_JITSI_WATERMARK_PATH = "/images/watermark.svg";
+/** Watermark coin vidéo — PNG traits blancs (style Jitsi), déployé sur le VPS. */
+export const ACADEMY_JITSI_WATERMARK_PATH = "/images/watermark.png";
 
-/** Wordmark SVG (coin vidéo pré-live + live). */
+/** Wordmark PNG transparent (coin vidéo pré-live + live). */
 export const ACADEMY_JITSI_LOGO_URL =
-  "https://mcbuleli.org/brand/mcbuleli-meet-watermark.svg";
+  "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png";
 
 export const ACADEMY_JITSI_LOGO_URL_LIVE_HOST =
-  "https://live.mcbuleli.org/images/watermark.svg";
+  "https://live.mcbuleli.org/images/watermark.png";
 
 /** « lancement-8-juin » → « Lancement 8 Juin » */
 export function humanizeLiveSessionSlug(slug: string): string {

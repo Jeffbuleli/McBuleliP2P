@@ -9,8 +9,8 @@ JITSI_CSS="$JITSI_ROOT/css"
 JITSI_LANG="$JITSI_ROOT/lang"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
 LOGO_URL="${MCBULELI_LOGO_URL:-/images/mcbuleli-meet-logo.png}"
-WATERMARK_URL="/images/watermark.svg"
-MARKER="mcbuleli-full-brand-v8"
+WATERMARK_URL="/images/watermark.png"
+MARKER="mcbuleli-full-brand-v9"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="McBuleli"
 MEET_LOGO_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-logo.png"
@@ -53,10 +53,18 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark coin vidéo (SVG coloré — cercle vert, symbole marron, fond transparent)"
-cp -a "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/watermark.svg"
-cp -a "$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.svg" "$JITSI_IMAGES/mcbuleli-meet-watermark.svg" 2>/dev/null \
-  || cp -a "$SCRIPT_DIR/mcbuleli-watermark.svg" "$JITSI_IMAGES/mcbuleli-meet-watermark.svg"
+echo "==> Watermark coin vidéo (PNG traits blancs — style Jitsi / marqueur sur vitre)"
+WM_SRC="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
+if command -v python3 >/dev/null; then
+  PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
+  python3 "$SCRIPT_DIR/make-marker-watermark.py" "$WM_SRC" 2 2>/dev/null \
+    || python3 "$SCRIPT_DIR/make-marker-watermark.py" "$WM_SRC" 2 || true
+fi
+if [[ ! -f "$WM_SRC" ]]; then
+  curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark.png" -o "$WM_SRC" || true
+fi
+cp -a "$WM_SRC" "$JITSI_IMAGES/watermark.png"
+cp -a "$WM_SRC" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
 cp -a "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
 
 echo "==> Favicon navigateur (onglet)"
@@ -90,10 +98,11 @@ fi
 
 echo "==> Corriger syntaxe config.js (écran noir si JWT mal injecté)"
 JITSI_MEET_CONFIG="$CONFIG" bash "$SCRIPT_DIR/fix-jitsi-config-syntax.sh" || true
-# Watermark coin vidéo — SVG vectoriel (pas PNG carré)
+# Watermark coin vidéo — PNG transparent (traits blancs uniquement)
 sed -i \
   -e "s|defaultLogoUrl = '[^']*'|defaultLogoUrl = '${WATERMARK_URL}'|g" \
   -e "s|DEFAULT_LOGO_URL = '[^']*'|DEFAULT_LOGO_URL = '${WATERMARK_URL}'|g" \
+  -e "s|/images/watermark.svg|${WATERMARK_URL}|g" \
   -e "s|/images/mcbuleli-meet-watermark.png|${WATERMARK_URL}|g" \
   "$CONFIG" 2>/dev/null || true
 sed -i "s|APP_NAME = '[^']*'|APP_NAME = 'McBuleli'|g" "$CONFIG" 2>/dev/null || true
