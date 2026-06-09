@@ -54,7 +54,7 @@ export function CommunityInboxClient() {
             ← {fr ? "Communauté" : "Community"}
           </Link>
           <h1 className="mt-1 text-lg font-bold text-[#0c0a09]">
-            {fr ? "Messages" : "Inbox"} 📥
+            {fr ? "Messages" : "Inbox"}
           </h1>
         </div>
       </div>

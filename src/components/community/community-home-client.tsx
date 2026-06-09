@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityCategoryNav } from "@/components/community/community-category-nav";
 import {
@@ -21,13 +22,19 @@ import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
-import { communityPostSharePath } from "@/lib/community/share-url";
+import { communityPostAppPath } from "@/lib/community/share-url";
+import { IconInbox } from "@/components/community/community-icons";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
   return {
     id: item.id,
     body: item.body,
-    postType: item.media.length ? "image" : "text",
+    postType:
+      item.media[0]?.fileType === "video"
+        ? "video"
+        : item.media.length
+          ? "image"
+          : "text",
     likeCount: item.likeCount,
     commentCount: item.commentCount,
     shareCount: item.shareCount,
@@ -41,6 +48,8 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
 export function CommunityHomeClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [category, setCategory] = useState<CommunityCategoryId>("all");
   const [bp, setBp] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -51,6 +60,13 @@ export function CommunityHomeClient() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const legacyPost = searchParams.get("post");
+    if (legacyPost) {
+      router.replace(communityPostAppPath(legacyPost));
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     fetch("/api/rewards/me")
@@ -162,7 +178,7 @@ export function CommunityHomeClient() {
         body: post.body,
         publishedAt: post.publishedAt,
         author: post.author,
-        href: communityPostSharePath(post.id),
+        href: communityPostAppPath(post.id),
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         shareCount: post.shareCount,
@@ -192,15 +208,7 @@ export function CommunityHomeClient() {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33]"
             aria-label={fr ? "Messages" : "Inbox"}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IconInbox size={18} />
           </Link>
           {bp !== null ? (
             <Link

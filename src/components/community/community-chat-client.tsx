@@ -8,6 +8,7 @@ import {
   BlueCheckBadge,
   KycVerifiedBadge,
 } from "@/components/community/community-badges";
+import { IconAttach, IconSend, IconWarning } from "@/components/community/community-icons";
 import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { DmMessageView } from "@/lib/community/dm-service";
 
@@ -253,10 +254,11 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
               }`}
             >
               {m.hidden ? (
-                <p className="text-xs italic opacity-80">
+                <p className="flex items-center gap-1 text-xs italic opacity-80">
+                  <IconWarning size={14} />
                   {fr
-                    ? "⚠ Message masqué (sécurité anti-arnaque)"
-                    : "⚠ Message hidden (anti-scam)"}
+                    ? "Message masqué (sécurité anti-arnaque)"
+                    : "Message hidden (anti-scam)"}
                 </p>
               ) : (
                 <>
@@ -349,7 +351,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
             aria-label={fr ? "Envoyer" : "Send"}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#305f33] text-white disabled:opacity-50"
           >
-            <SendIcon />
+            <IconSend />
           </button>
         </div>
       </footer>

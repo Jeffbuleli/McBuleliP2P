@@ -14,8 +14,9 @@ export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  const viewerId = await getSessionUserId();
   const { id } = await ctx.params;
-  const comments = await listPostComments(id);
+  const comments = await listPostComments(id, viewerId);
   return NextResponse.json({ comments });
 }
 

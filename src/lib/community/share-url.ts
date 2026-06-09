@@ -5,6 +5,11 @@ export function communityPostSharePath(postId: string): string {
   return `/community/p/${postId}`;
 }
 
+/** In-app deep link — preserved through login redirect. */
+export function communityPostAppPath(postId: string): string {
+  return `/app/community/post/${postId}`;
+}
+
 export function communityPostShareUrl(postId: string): string {
   return getAppAbsoluteUrl(communityPostSharePath(postId));
 }

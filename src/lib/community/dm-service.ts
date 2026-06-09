@@ -453,8 +453,8 @@ export async function sendDmMessage(args: {
   if (!row) return { ok: false, error: "send_failed" };
 
   const preview = mod.hidden
-    ? "⚠ Message masqué (sécurité)"
-    : (args.attachmentUrl ? "📎 Fichier" : mod.sanitizedBody).slice(0, 160);
+    ? "[Message masqué]"
+    : (args.attachmentUrl ? "[Fichier]" : mod.sanitizedBody).slice(0, 160);
 
   await db
     .update(communityDmThreads)

@@ -246,7 +246,15 @@ export async function createCommunityImageMedia(args: {
 
 export async function getMediaUrls(
   ids: string[] | null | undefined,
-): Promise<{ id: string; url: string; variants: Record<string, string> | null }[]> {
+): Promise<
+  {
+    id: string;
+    url: string;
+    variants: Record<string, string> | null;
+    fileType: string;
+    mimeType: string;
+  }[]
+> {
   if (!ids?.length) return [];
   const db = getDb();
   const rows = await db
@@ -255,6 +263,8 @@ export async function getMediaUrls(
       publicUrl: communityMedia.publicUrl,
       variants: communityMedia.variants,
       status: communityMedia.status,
+      fileType: communityMedia.fileType,
+      mimeType: communityMedia.mimeType,
     })
     .from(communityMedia)
     .where(
@@ -268,6 +278,8 @@ export async function getMediaUrls(
     id: r.id,
     url: r.publicUrl,
     variants: r.variants,
+    fileType: r.fileType,
+    mimeType: r.mimeType,
   }));
 }
 

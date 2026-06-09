@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getPublicPostForShare } from "@/lib/community/feed-service";
-import { communityPostSharePath } from "@/lib/community/share-url";
+import {
+  communityPostAppPath,
+  communityPostSharePath,
+} from "@/lib/community/share-url";
 import {
   CANONICAL_PRODUCTION_ORIGIN,
   getMetadataOrigin,
 } from "@/lib/app-url";
+import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +64,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CommunityPostSharePage({ params }: Props) {
   const { id } = await params;
+  const userId = await getSessionUserId();
+  if (userId) redirect(communityPostAppPath(id));
+
   const post = await getPublicPostForShare(id);
-  const appHref = `/login?next=${encodeURIComponent(`/app/community?post=${id}`)}`;
+  const appHref = `/login?next=${encodeURIComponent(communityPostAppPath(id))}`;
 
   if (!post) {
     return (

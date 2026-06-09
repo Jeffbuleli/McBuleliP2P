@@ -1,30 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import {
+  CommunityActionBar,
+  CommunityEngagementSummary,
+} from "@/components/community/community-action-bar";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
 import { CommunityCommentThread } from "@/components/community/community-comment-thread";
+import { CommunityExpandableText } from "@/components/community/community-expandable-text";
+import { IconGlobe } from "@/components/community/community-icons";
+import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
-import { communityImageVariant } from "@/lib/community/data-saver";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { communityPostSharePath } from "@/lib/community/share-url";
 
 export function CommunityPostCard({
   post,
   onUpdate,
+  defaultCommentsOpen = false,
+  linkToDetail = true,
 }: {
   post: FeedPostView;
   onUpdate: (patch: Partial<FeedPostView>) => void;
+  defaultCommentsOpen?: boolean;
+  linkToDetail?: boolean;
 }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
-  const [commentOpen, setCommentOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(defaultCommentsOpen);
   const [comments, setComments] = useState<CommentView[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(defaultCommentsOpen);
+
+  useEffect(() => {
+    if (!defaultCommentsOpen) return;
+    fetch(`/api/community/feed/${post.id}/comments`)
+      .then((r) => r.json())
+      .then((j) => setComments(j.comments ?? []))
+      .finally(() => setCommentsLoading(false));
+  }, [defaultCommentsOpen, post.id]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-
-  const img = post.media[0];
-  const imgSrc = img ? communityImageVariant(img.variants, img.url) : null;
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -51,9 +68,11 @@ export function CommunityPostCard({
     const next = !commentOpen;
     setCommentOpen(next);
     if (next && comments === null) {
+      setCommentsLoading(true);
       const res = await fetch(`/api/community/feed/${post.id}/comments`);
       const j = await res.json();
       setComments(j.comments ?? []);
+      setCommentsLoading(false);
     }
   };
 
@@ -96,70 +115,74 @@ export function CommunityPostCard({
     flash(fr ? "Signalé" : "Reported");
   };
 
+  const header = (
+    <div className="mb-3 flex items-start justify-between gap-2">
+      <CommunityAuthorHeader
+        author={post.author}
+        publishedAt={post.publishedAt}
+        fr={fr}
+      />
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <CommunityPostTypeChip kind="news" fr={fr} />
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
+          <IconGlobe size={11} />
+          {fr ? "Public" : "Public"}
+        </span>
+      </div>
+    </div>
+  );
+
+  const bodyBlock = (
+    <>
+      <CommunityExpandableText
+        text={post.body}
+        fr={fr}
+        className="text-[15px] leading-relaxed text-[#292524]"
+      />
+      <CommunityPostMedia media={post.media} postType={post.postType} fr={fr} />
+    </>
+  );
+
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-sm">
+    <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
       <div className="px-4 pt-4">
-        <div className="mb-3 flex items-start justify-between gap-2">
-          <CommunityAuthorHeader
-            author={post.author}
-            publishedAt={post.publishedAt}
-            fr={fr}
-          />
-          <CommunityPostTypeChip kind="news" fr={fr} />
-        </div>
-
-        <p className="max-w-prose text-[15px] leading-relaxed text-[#292524] whitespace-pre-wrap break-words">
-          {post.body}
-        </p>
-
-        {imgSrc ? (
-          <div className="mt-3 overflow-hidden rounded-xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imgSrc}
-              alt=""
-              loading="lazy"
-              className="max-h-72 w-full object-cover"
-            />
-          </div>
-        ) : null}
+        {linkToDetail ? (
+          <Link href={`/app/community/post/${post.id}`} className="block">
+            {header}
+            {bodyBlock}
+          </Link>
+        ) : (
+          <>
+            {header}
+            {bodyBlock}
+          </>
+        )}
       </div>
 
-      <div className="mt-3 flex items-center border-t border-[#f0f4f2] px-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={toggleLike}
-          className={`min-h-[48px] flex-1 rounded-lg text-xs font-semibold transition active:scale-95 ${
-            post.likedByMe ? "text-[#305f33]" : "text-[#57534e]"
-          }`}
-        >
-          {fr ? "J'aime" : "Like"}
-          {post.likeCount > 0 ? ` · ${post.likeCount}` : ""}
-        </button>
-        <button
-          type="button"
-          onClick={() => void openComments()}
-          className="min-h-[48px] flex-1 rounded-lg text-xs font-semibold text-[#57534e] transition active:scale-95"
-        >
-          {fr ? "Commenter" : "Comment"}
-          {post.commentCount > 0 ? ` · ${post.commentCount}` : ""}
-        </button>
-        <button
-          type="button"
-          onClick={sharePost}
-          className="min-h-[48px] flex-1 rounded-lg text-xs font-semibold text-[#57534e] transition active:scale-95"
-        >
-          {fr ? "Partager" : "Share"}
-          {post.shareCount > 0 ? ` · ${post.shareCount}` : ""}
-        </button>
-      </div>
+      <CommunityEngagementSummary
+        likeCount={post.likeCount}
+        commentCount={post.commentCount}
+        fr={fr}
+      />
 
-      {commentOpen && comments !== null ? (
+      <CommunityActionBar
+        fr={fr}
+        likeCount={post.likeCount}
+        commentCount={post.commentCount}
+        shareCount={post.shareCount}
+        likedByMe={post.likedByMe}
+        busy={busy}
+        onLike={() => void toggleLike()}
+        onComment={() => void openComments()}
+        onShare={() => void sharePost()}
+      />
+
+      {commentOpen ? (
         <CommunityCommentThread
           postId={post.id}
           fr={fr}
-          initialComments={comments}
+          initialComments={comments ?? []}
+          loading={commentsLoading}
           onCountChange={() =>
             onUpdate({ commentCount: post.commentCount + 1 })
           }

@@ -5,6 +5,7 @@ import type { CommunityContentKind } from "@/lib/community/post-types";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 import { listQuestions } from "@/lib/community/qa-service";
 import { listTradingSignals } from "@/lib/community/signals-service";
+import { communityPostAppPath } from "@/lib/community/share-url";
 
 export type CommunityFeedCategory =
   | "all"
@@ -27,7 +28,13 @@ export type UnifiedFeedItem = {
   commentCount: number;
   shareCount: number;
   likedByMe?: boolean;
-  media: { id: string; url: string; variants: Record<string, string> | null }[];
+  media: {
+    id: string;
+    url: string;
+    variants: Record<string, string> | null;
+    fileType?: string;
+    mimeType?: string;
+  }[];
   meta?: Record<string, string>;
 };
 
@@ -88,7 +95,7 @@ export async function listUnifiedFeed(args: {
         body: p.body,
         publishedAt: p.publishedAt,
         author: p.author,
-        href: `/app/community/feed?post=${p.id}`,
+        href: communityPostAppPath(p.id),
         likeCount: p.likeCount,
         commentCount: p.commentCount,
         shareCount: p.shareCount,

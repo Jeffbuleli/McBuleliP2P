@@ -46,7 +46,13 @@ export type FeedPostView = {
   shareCount: number;
   publishedAt: string;
   author: CommunityAuthorView;
-  media: { id: string; url: string; variants: Record<string, string> | null }[];
+  media: {
+    id: string;
+    url: string;
+    variants: Record<string, string> | null;
+    fileType?: string;
+    mimeType?: string;
+  }[];
   likedByMe: boolean;
   bpEarned?: number;
 };
@@ -424,6 +430,7 @@ export type CommentView = {
   id: string;
   body: string;
   likeCount: number;
+  likedByMe: boolean;
   createdAt: string;
   parentId: string | null;
   depth: number;
@@ -463,8 +470,67 @@ function buildCommentTree(
   return roots;
 }
 
+export async function getFeedPostById(args: {
+  postId: string;
+  viewerId: string | null;
+}): Promise<FeedPostView | null> {
+  if (!communityEnabled()) return null;
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.id, args.postId),
+        eq(communityPosts.status, "published"),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+
+  const blocked = args.viewerId
+    ? await blockedUserIds(args.viewerId)
+    : new Set<string>();
+  if (blocked.has(row.authorId)) return null;
+
+  const authors = await getAuthorsMap([row.authorId]);
+  const author = authors.get(row.authorId);
+  if (!author) return null;
+
+  let likedByMe = false;
+  if (args.viewerId) {
+    const [like] = await db
+      .select({ id: communityLikes.id })
+      .from(communityLikes)
+      .where(
+        and(
+          eq(communityLikes.userId, args.viewerId),
+          eq(communityLikes.targetType, "post"),
+          eq(communityLikes.targetId, row.id),
+        ),
+      )
+      .limit(1);
+    likedByMe = !!like;
+  }
+
+  const media = await getMediaUrls(row.mediaIds);
+  return {
+    id: row.id,
+    body: row.body,
+    postType: row.postType,
+    likeCount: row.likeCount,
+    commentCount: row.commentCount,
+    shareCount: row.shareCount,
+    publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
+    author,
+    media,
+    likedByMe,
+  };
+}
+
 export async function listPostComments(
   postId: string,
+  viewerId: string | null = null,
   limit = 60,
 ): Promise<CommentView[]> {
   const db = getDb();
@@ -477,6 +543,24 @@ export async function listPostComments(
 
   const authors = await getAuthorsMap(rows.map((r) => r.authorId));
 
+  let likedSet = new Set<string>();
+  if (viewerId && rows.length) {
+    const likes = await db
+      .select({ targetId: communityLikes.targetId })
+      .from(communityLikes)
+      .where(
+        and(
+          eq(communityLikes.userId, viewerId),
+          eq(communityLikes.targetType, "comment"),
+          inArray(
+            communityLikes.targetId,
+            rows.map((r) => r.id),
+          ),
+        ),
+      );
+    likedSet = new Set(likes.map((l) => l.targetId));
+  }
+
   const flat = rows
     .map((r) => {
       const author = authors.get(r.authorId);
@@ -485,6 +569,7 @@ export async function listPostComments(
         id: r.id,
         body: r.body,
         likeCount: r.likeCount,
+        likedByMe: likedSet.has(r.id),
         createdAt: r.createdAt.toISOString(),
         parentId: r.parentId,
         author,
@@ -493,6 +578,72 @@ export async function listPostComments(
     .filter((x): x is Omit<CommentView, "replies" | "depth"> => x !== null);
 
   return buildCommentTree(flat);
+}
+
+export async function toggleCommentLike(args: {
+  userId: string;
+  commentId: string;
+}): Promise<
+  | { ok: true; liked: boolean; likeCount: number }
+  | { ok: false; error: string }
+> {
+  const db = getDb();
+  const [comment] = await db
+    .select()
+    .from(communityComments)
+    .where(eq(communityComments.id, args.commentId))
+    .limit(1);
+  if (!comment) return { ok: false, error: "not_found" };
+  if (!(await assertNotBlocked(args.userId, comment.authorId))) {
+    return { ok: false, error: "blocked" };
+  }
+
+  const [existing] = await db
+    .select({ id: communityLikes.id })
+    .from(communityLikes)
+    .where(
+      and(
+        eq(communityLikes.userId, args.userId),
+        eq(communityLikes.targetType, "comment"),
+        eq(communityLikes.targetId, args.commentId),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    await db.delete(communityLikes).where(eq(communityLikes.id, existing.id));
+    await db
+      .update(communityComments)
+      .set({
+        likeCount: sql`greatest(0, ${communityComments.likeCount} - 1)`,
+      })
+      .where(eq(communityComments.id, args.commentId));
+    const [u] = await db
+      .select({ likeCount: communityComments.likeCount })
+      .from(communityComments)
+      .where(eq(communityComments.id, args.commentId))
+      .limit(1);
+    return { ok: true, liked: false, likeCount: u?.likeCount ?? 0 };
+  }
+
+  await db.insert(communityLikes).values({
+    userId: args.userId,
+    targetType: "comment",
+    targetId: args.commentId,
+  });
+
+  await db
+    .update(communityComments)
+    .set({ likeCount: sql`${communityComments.likeCount} + 1` })
+    .where(eq(communityComments.id, args.commentId));
+
+  const [u] = await db
+    .select({ likeCount: communityComments.likeCount })
+    .from(communityComments)
+    .where(eq(communityComments.id, args.commentId))
+    .limit(1);
+
+  return { ok: true, liked: true, likeCount: u?.likeCount ?? 1 };
 }
 
 export async function addPostComment(args: {
@@ -596,6 +747,7 @@ export async function addPostComment(args: {
       id: row.id,
       body: row.body,
       likeCount: 0,
+      likedByMe: false,
       createdAt: row.createdAt.toISOString(),
       parentId: row.parentId,
       depth: parentId ? 1 : 0,

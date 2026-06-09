@@ -341,7 +341,7 @@ function notifMeta(
       return {
         title: t("notif_community_comment_title"),
         body: preview,
-        href: `/app/community/feed?post=${str("postId")}`,
+        href: `/app/community/post/${str("postId")}`,
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
@@ -349,7 +349,7 @@ function notifMeta(
       return {
         title: t("notif_community_like_title"),
         body: t("notif_community_like_body"),
-        href: `/app/community/feed?post=${str("postId")}`,
+        href: `/app/community/post/${str("postId")}`,
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
