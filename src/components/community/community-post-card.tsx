@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -14,6 +14,7 @@ import { IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
+import { telegramShareUrl } from "@/lib/community/link-embed";
 import { communityPostSharePath } from "@/lib/community/share-url";
 
 export function CommunityPostCard({
@@ -32,6 +33,7 @@ export function CommunityPostCard({
   const [commentOpen, setCommentOpen] = useState(defaultCommentsOpen);
   const [comments, setComments] = useState<CommentView[] | null>(null);
   const [commentsLoading, setCommentsLoading] = useState(defaultCommentsOpen);
+  const viewedRef = useRef(false);
 
   useEffect(() => {
     if (!defaultCommentsOpen) return;
@@ -40,6 +42,20 @@ export function CommunityPostCard({
       .then((j) => setComments(j.comments ?? []))
       .finally(() => setCommentsLoading(false));
   }, [defaultCommentsOpen, post.id]);
+
+  useEffect(() => {
+    if (viewedRef.current) return;
+    viewedRef.current = true;
+    fetch(`/api/community/feed/${post.id}/view`, { method: "POST" })
+      .then((r) => r.json())
+      .then((j: { viewCount?: number }) => {
+        if (typeof j.viewCount === "number") {
+          onUpdate({ viewCount: j.viewCount });
+        }
+      })
+      .catch(() => {});
+  }, [post.id, onUpdate]);
+
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -76,8 +92,11 @@ export function CommunityPostCard({
     }
   };
 
+  const shareUrl = () =>
+    `${window.location.origin}${communityPostSharePath(post.id)}`;
+
   const sharePost = async () => {
-    const url = `${window.location.origin}${communityPostSharePath(post.id)}`;
+    const url = shareUrl();
     try {
       if (navigator.share) {
         await navigator.share({
@@ -102,6 +121,20 @@ export function CommunityPostCard({
     }
   };
 
+  const shareTelegram = () => {
+    const url = telegramShareUrl({
+      url: shareUrl(),
+      text: post.body.slice(0, 120),
+    });
+    window.open(url, "_blank", "noopener,noreferrer");
+    void fetch(`/api/community/feed/${post.id}/share`, { method: "POST" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.shareCount) onUpdate({ shareCount: j.shareCount });
+      })
+      .catch(() => {});
+  };
+
   const reportPost = async () => {
     await fetch("/api/community/reports", {
       method: "POST",
@@ -115,13 +148,25 @@ export function CommunityPostCard({
     flash(fr ? "Signalé" : "Reported");
   };
 
+  const detailHref = `/app/community/post/${post.id}`;
+
   const header = (
     <div className="mb-3 flex items-start justify-between gap-2">
-      <CommunityAuthorHeader
-        author={post.author}
-        publishedAt={post.publishedAt}
-        fr={fr}
-      />
+      {linkToDetail ? (
+        <Link href={detailHref} className="min-w-0 flex-1">
+          <CommunityAuthorHeader
+            author={post.author}
+            publishedAt={post.publishedAt}
+            fr={fr}
+          />
+        </Link>
+      ) : (
+        <CommunityAuthorHeader
+          author={post.author}
+          publishedAt={post.publishedAt}
+          fr={fr}
+        />
+      )}
       <div className="flex shrink-0 flex-col items-end gap-1">
         <CommunityPostTypeChip kind="news" fr={fr} />
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
@@ -132,36 +177,40 @@ export function CommunityPostCard({
     </div>
   );
 
-  const bodyBlock = (
-    <>
+  const textBlock = linkToDetail ? (
+    <Link href={detailHref} className="block">
       <CommunityExpandableText
         text={post.body}
         fr={fr}
         className="text-[15px] leading-relaxed text-[#292524]"
       />
-      <CommunityPostMedia media={post.media} postType={post.postType} fr={fr} />
-    </>
+    </Link>
+  ) : (
+    <CommunityExpandableText
+      text={post.body}
+      fr={fr}
+      className="text-[15px] leading-relaxed text-[#292524]"
+    />
   );
 
   return (
     <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
       <div className="px-4 pt-4">
-        {linkToDetail ? (
-          <Link href={`/app/community/post/${post.id}`} className="block">
-            {header}
-            {bodyBlock}
-          </Link>
-        ) : (
-          <>
-            {header}
-            {bodyBlock}
-          </>
-        )}
+        {header}
+        {textBlock}
+        <CommunityPostMedia
+          media={post.media}
+          postType={post.postType}
+          body={post.body}
+          fr={fr}
+        />
       </div>
 
       <CommunityEngagementSummary
         likeCount={post.likeCount}
         commentCount={post.commentCount}
+        shareCount={post.shareCount}
+        viewCount={post.viewCount ?? 0}
         fr={fr}
       />
 
@@ -175,6 +224,7 @@ export function CommunityPostCard({
         onLike={() => void toggleLike()}
         onComment={() => void openComments()}
         onShare={() => void sharePost()}
+        onTelegramShare={shareTelegram}
       />
 
       {commentOpen ? (

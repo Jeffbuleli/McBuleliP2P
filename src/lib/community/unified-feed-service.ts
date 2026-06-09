@@ -9,6 +9,7 @@ import { communityPostAppPath } from "@/lib/community/share-url";
 
 export type CommunityFeedCategory =
   | "all"
+  | "trending"
   | "news"
   | "discussions"
   | "training"
@@ -27,6 +28,7 @@ export type UnifiedFeedItem = {
   likeCount: number;
   commentCount: number;
   shareCount: number;
+  viewCount: number;
   likedByMe?: boolean;
   media: {
     id: string;
@@ -81,11 +83,11 @@ export async function listUnifiedFeed(args: {
 
   const items: UnifiedFeedItem[] = [];
 
-  if (category === "all" || category === "news") {
+  if (category === "all" || category === "news" || category === "trending") {
     const { posts } = await listFeedPosts({
       viewerId: args.viewerId,
       limit: perSource,
-      sort: "recent",
+      sort: category === "trending" ? "trending" : "recent",
     });
     for (const p of posts) {
       items.push({
@@ -99,6 +101,7 @@ export async function listUnifiedFeed(args: {
         likeCount: p.likeCount,
         commentCount: p.commentCount,
         shareCount: p.shareCount,
+        viewCount: p.viewCount ?? 0,
         likedByMe: p.likedByMe,
         media: p.media,
       });
@@ -123,6 +126,7 @@ export async function listUnifiedFeed(args: {
         likeCount: 0,
         commentCount: d.replyCount,
         shareCount: 0,
+        viewCount: 0,
         media: [],
         meta: d.category
           ? {
@@ -148,6 +152,7 @@ export async function listUnifiedFeed(args: {
         likeCount: 0,
         commentCount: 0,
         shareCount: 0,
+        viewCount: 0,
         media: p.coverUrl
           ? [{ id: p.id, url: p.coverUrl, variants: null }]
           : [],
@@ -169,6 +174,7 @@ export async function listUnifiedFeed(args: {
         likeCount: 0,
         commentCount: q.answerCount,
         shareCount: 0,
+        viewCount: 0,
         media: [],
       });
     }
@@ -191,6 +197,7 @@ export async function listUnifiedFeed(args: {
         likeCount: 0,
         commentCount: 0,
         shareCount: 0,
+        viewCount: 0,
         media: [],
         meta: {
           symbol: s.symbol,

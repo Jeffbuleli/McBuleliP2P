@@ -14,10 +14,11 @@ import { fetchJson } from "@/lib/community/fetch-json";
 import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 
-type FeedSort = "recent" | "popular" | "following";
+type FeedSort = "recent" | "popular" | "trending" | "following";
 
 const FEED_TABS = [
   { id: "recent" as const, labelFr: "Récentes", labelEn: "Recent" },
+  { id: "trending" as const, labelFr: "Tendances", labelEn: "Trending" },
   { id: "popular" as const, labelFr: "Populaires", labelEn: "Popular" },
   { id: "following" as const, labelFr: "Suivies", labelEn: "Following" },
 ];

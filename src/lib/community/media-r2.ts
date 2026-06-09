@@ -47,6 +47,9 @@ function getR2Client(cfg: CommunityR2Config): S3Client {
       accessKeyId: cfg.accessKeyId,
       secretAccessKey: cfg.secretAccessKey,
     },
+    // AWS SDK 3.729+ sends CRC32 by default; R2 rejects it without this.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 }
 
@@ -99,16 +102,20 @@ export async function putCommunityObjectToR2(args: {
   const cfg = getCommunityR2Config();
   if (!cfg) return null;
 
-  const client = getR2Client(cfg);
-  await client.send(
-    new PutObjectCommand({
-      Bucket: cfg.bucket,
-      Key: args.objectKey,
-      Body: args.body,
-      ContentType: args.mimeType,
-    }),
-  );
-  return communityMediaPublicUrl(cfg, args.objectKey);
+  try {
+    const client = getR2Client(cfg);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: cfg.bucket,
+        Key: args.objectKey,
+        Body: args.body,
+        ContentType: args.mimeType,
+      }),
+    );
+    return communityMediaPublicUrl(cfg, args.objectKey);
+  } catch {
+    return null;
+  }
 }
 
 export async function verifyCommunityR2Object(args: {

@@ -44,6 +44,7 @@ export type FeedPostView = {
   likeCount: number;
   commentCount: number;
   shareCount: number;
+  viewCount: number;
   publishedAt: string;
   author: CommunityAuthorView;
   media: {
@@ -88,7 +89,7 @@ export async function listFeedPosts(args: {
   viewerId: string | null;
   cursor?: string | null;
   limit?: number;
-  sort?: "recent" | "popular" | "following";
+  sort?: "recent" | "popular" | "trending" | "following";
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
 
@@ -188,6 +189,7 @@ export async function listFeedPosts(args: {
       likeCount: r.likeCount,
       commentCount: r.commentCount,
       shareCount: r.shareCount,
+      viewCount: r.viewCount ?? 0,
       publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
       author,
       media,
@@ -210,6 +212,21 @@ export async function listFeedPosts(args: {
   }
 
   return { posts, nextCursor };
+}
+
+export async function incrementPostView(postId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .update(communityPosts)
+    .set({ viewCount: sql`${communityPosts.viewCount} + 1` })
+    .where(
+      and(
+        eq(communityPosts.id, postId),
+        eq(communityPosts.status, "published"),
+      ),
+    )
+    .returning({ viewCount: communityPosts.viewCount });
+  return row?.viewCount ?? 0;
 }
 
 export async function createFeedPost(args: {
@@ -291,6 +308,7 @@ export async function createFeedPost(args: {
       likeCount: 0,
       commentCount: 0,
       shareCount: 0,
+      viewCount: 0,
       publishedAt: now.toISOString(),
       author,
       media,
@@ -521,6 +539,7 @@ export async function getFeedPostById(args: {
     likeCount: row.likeCount,
     commentCount: row.commentCount,
     shareCount: row.shareCount,
+    viewCount: row.viewCount ?? 0,
     publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
     author,
     media,

@@ -10,6 +10,7 @@ import {
   CommunityHelpTrigger,
 } from "@/components/community/community-help-sheet";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { CommunitySearchBar } from "@/components/community/community-search-bar";
 import { CommunityUnifiedCard } from "@/components/community/community-unified-card";
 import {
   CommunityEmptyState,
@@ -25,6 +26,7 @@ import {
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
+import type { CommunitySearchHit } from "@/lib/community/search-service";
 import { communityPostAppPath } from "@/lib/community/share-url";
 import {
   IconImage,
@@ -45,6 +47,7 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
     likeCount: item.likeCount,
     commentCount: item.commentCount,
     shareCount: item.shareCount,
+    viewCount: item.viewCount ?? 0,
     publishedAt: item.publishedAt,
     author: item.author,
     media: item.media,
@@ -68,6 +71,9 @@ export function CommunityHomeClient() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
+  const [searchQ, setSearchQ] = useState<string | null>(null);
+  const [searchHits, setSearchHits] = useState<CommunitySearchHit[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     const legacyPost = searchParams.get("post");
@@ -86,8 +92,10 @@ export function CommunityHomeClient() {
   }, []);
 
   const feedCategory =
-    category === "all" || category === "news"
-      ? category
+    category === "all" || category === "news" || category === "trending"
+      ? category === "trending"
+        ? "trending"
+        : category
       : category === "discussions"
         ? "discussions"
         : category === "blogs"
@@ -124,7 +132,35 @@ export function CommunityHomeClient() {
   });
 
   const showNewsComposer =
-    category === "all" || category === "news";
+    category === "all" || category === "news" || category === "trending";
+
+  const runSearch = async (q: string) => {
+    setSearchLoading(true);
+    setSearchQ(q);
+    try {
+      const res = await fetch(
+        `/api/community/search?q=${encodeURIComponent(q)}&limit=20`,
+      );
+      const j = await res.json();
+      setSearchHits((j.hits ?? []) as CommunitySearchHit[]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const searchToPost = (hit: CommunitySearchHit): FeedPostView => ({
+    id: hit.id,
+    body: hit.body,
+    postType: hit.postType,
+    likeCount: hit.likeCount,
+    commentCount: hit.commentCount,
+    shareCount: hit.shareCount,
+    viewCount: hit.viewCount,
+    publishedAt: hit.publishedAt,
+    author: hit.author,
+    media: hit.media,
+    likedByMe: false,
+  });
 
   const onImagePick = async (file: File | null) => {
     if (!file) return;
@@ -215,6 +251,7 @@ export function CommunityHomeClient() {
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         shareCount: post.shareCount,
+        viewCount: post.viewCount ?? 0,
         likedByMe: post.likedByMe,
         media: post.media,
       };
@@ -256,7 +293,30 @@ export function CommunityHomeClient() {
         </div>
       </header>
 
-      <CommunityCategoryNav active={category} onChange={setCategory} fr={fr} />
+      <CommunitySearchBar
+        fr={fr}
+        loading={searchLoading}
+        onSearch={(q) => void runSearch(q)}
+      />
+
+      <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#229ed9]/25 bg-[#e8f6fc] px-3 py-2 text-xs text-[#0c4a6e]">
+        <span className="text-base">✈</span>
+        <p>
+          {fr
+            ? "Influenceurs crypto : partagez vos liens Telegram, YouTube et TikTok — lecture intégrée McBuleli."
+            : "Crypto creators: share Telegram, YouTube & TikTok links — in-app playback on McBuleli."}
+        </p>
+      </div>
+
+      <CommunityCategoryNav
+        active={category}
+        onChange={(c) => {
+          setCategory(c);
+          setSearchQ(null);
+          setSearchHits([]);
+        }}
+        fr={fr}
+      />
 
       {showNewsComposer ? (
         <>
@@ -357,7 +417,7 @@ export function CommunityHomeClient() {
               : "Be the first to share with the community."
           }
         />
-      ) : (
+      ) : !searchQ ? (
         <div className="space-y-4">
           {items.map((item) =>
             item.kind === "news" ? (
@@ -373,6 +433,7 @@ export function CommunityHomeClient() {
                             likeCount: patch.likeCount ?? i.likeCount,
                             commentCount: patch.commentCount ?? i.commentCount,
                             shareCount: patch.shareCount ?? i.shareCount,
+                            viewCount: patch.viewCount ?? i.viewCount,
                             likedByMe: patch.likedByMe ?? i.likedByMe,
                           }
                         : i,
@@ -385,7 +446,7 @@ export function CommunityHomeClient() {
             ),
           )}
         </div>
-      )}
+      ) : null}
 
       <div ref={sentinelRef} className="py-6 text-center text-xs text-[#a8a29e]">
         {loading ? "…" : done && items.length > 0 ? (fr ? "Fin" : "End") : ""}

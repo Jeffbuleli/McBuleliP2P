@@ -29,9 +29,16 @@ export function KycVerifiedBadge({ fr }: { fr: boolean }) {
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path
-          d="M9 12l2 2 4-4M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-8V7l8-4z"
+          d="M12 3l8 4v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V7l8-4z"
           stroke="currentColor"
           strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M9 12l2 2 4-4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>

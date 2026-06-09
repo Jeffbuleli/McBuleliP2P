@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 const CATEGORIES: CommunityFeedCategory[] = [
   "all",
+  "trending",
   "news",
   "discussions",
   "training",

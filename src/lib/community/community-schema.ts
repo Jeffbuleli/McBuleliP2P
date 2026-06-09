@@ -92,6 +92,11 @@ async function runEnsureCommunitySchema(): Promise<void> {
   `);
 
   await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0
+  `);
+
+  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS community_dm_typing (
       thread_id uuid NOT NULL REFERENCES community_dm_threads(id) ON DELETE CASCADE,
       user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,

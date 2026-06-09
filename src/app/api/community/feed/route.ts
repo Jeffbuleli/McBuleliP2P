@@ -25,6 +25,7 @@ export async function GET(req: Request) {
   const sort = url.searchParams.get("sort") as
     | "recent"
     | "popular"
+    | "trending"
     | "following"
     | null;
   const viewerId = await getSessionUserId();

@@ -4,6 +4,7 @@ export type CommunityExploreId = "blogs" | "questions" | "signals" | "ranking";
 /** Menu filtre du fil communauté (page /app/community). */
 export type CommunityCategoryId =
   | "all"
+  | "trending"
   | "news"
   | "discussions"
   | "training"
@@ -21,6 +22,7 @@ export type CommunityCategoryNavItem = {
 
 export const COMMUNITY_CATEGORY_NAV: CommunityCategoryNavItem[] = [
   { id: "all", labelFr: "Tout", labelEn: "All" },
+  { id: "trending", labelFr: "Tendances", labelEn: "Trending" },
   { id: "news", labelFr: "Actualités", labelEn: "News" },
   { id: "discussions", labelFr: "Discussions", labelEn: "Discussions" },
   { id: "training", labelFr: "Formations", labelEn: "Training", href: "/app/community/formations" },
