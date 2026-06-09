@@ -1,7 +1,14 @@
 /**
- * Cloudflare R2 — presign upload (Phase 1b).
- * Métadonnées en PostgreSQL uniquement ; binaires jamais sur Render.
+ * Cloudflare R2 — presigned upload (S3-compatible API).
+ * @see https://developers.cloudflare.com/r2/
  */
+
+import {
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export type CommunityR2Config = {
   accountId: string;
@@ -21,6 +28,28 @@ export function communityR2Configured(): boolean {
   );
 }
 
+export function getCommunityR2Config(): CommunityR2Config | null {
+  if (!communityR2Configured()) return null;
+  return {
+    accountId: process.env.COMMUNITY_R2_ACCOUNT_ID!.trim(),
+    bucket: process.env.COMMUNITY_R2_BUCKET!.trim(),
+    publicBaseUrl: process.env.COMMUNITY_R2_PUBLIC_BASE_URL!.trim().replace(/\/$/, ""),
+    accessKeyId: process.env.COMMUNITY_R2_ACCESS_KEY_ID!.trim(),
+    secretAccessKey: process.env.COMMUNITY_R2_SECRET_ACCESS_KEY!.trim(),
+  };
+}
+
+function getR2Client(cfg: CommunityR2Config): S3Client {
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${cfg.accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: cfg.accessKeyId,
+      secretAccessKey: cfg.secretAccessKey,
+    },
+  });
+}
+
 export function communityMediaKey(
   kind: "avatars" | "posts" | "blogs" | "covers",
   ownerId: string,
@@ -31,13 +60,57 @@ export function communityMediaKey(
   return `mcbuleli-community/${kind}/${ym}/${ownerId}/${fileName}`;
 }
 
-/** Stub — implémentation AWS SDK v3 @aws-sdk/client-s3 en Phase 1b. */
-export async function createCommunityUploadUrl(_args: {
-  ownerId: string;
+export function communityMediaPublicUrl(
+  cfg: CommunityR2Config,
+  objectKey: string,
+): string {
+  return `${cfg.publicBaseUrl}/${objectKey}`;
+}
+
+export async function createCommunityUploadUrl(args: {
   objectKey: string;
   mimeType: string;
   sizeBytes: number;
-}): Promise<{ uploadUrl: string; publicUrl: string } | null> {
-  if (!communityR2Configured()) return null;
-  return null;
+}): Promise<{ uploadUrl: string; publicUrl: string; bucket: string } | null> {
+  const cfg = getCommunityR2Config();
+  if (!cfg) return null;
+
+  const client = getR2Client(cfg);
+  const command = new PutObjectCommand({
+    Bucket: cfg.bucket,
+    Key: args.objectKey,
+    ContentType: args.mimeType,
+    ContentLength: args.sizeBytes,
+  });
+
+  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 900 });
+  return {
+    uploadUrl,
+    publicUrl: communityMediaPublicUrl(cfg, args.objectKey),
+    bucket: cfg.bucket,
+  };
+}
+
+export async function verifyCommunityR2Object(args: {
+  objectKey: string;
+  minSizeBytes?: number;
+}): Promise<boolean> {
+  const cfg = getCommunityR2Config();
+  if (!cfg) return false;
+
+  try {
+    const client = getR2Client(cfg);
+    const head = await client.send(
+      new HeadObjectCommand({
+        Bucket: cfg.bucket,
+        Key: args.objectKey,
+      }),
+    );
+    if (args.minSizeBytes != null && (head.ContentLength ?? 0) < args.minSizeBytes) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }

@@ -10,6 +10,7 @@ import {
   EmptyDiscussionIllustration,
 } from "@/components/community/community-empty-illustrations";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
+import { fetchJson } from "@/lib/community/fetch-json";
 import type {
   DiscussionCategoryView,
   DiscussionListItem,
@@ -85,7 +86,10 @@ export function CommunityDiscussionsClient() {
     setPublishing(true);
     setError(null);
     try {
-      const res = await fetch("/api/community/discussions", {
+      const { ok, data } = await fetchJson<{
+        error?: string;
+        discussion?: DiscussionListItem;
+      }>("/api/community/discussions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,16 +98,17 @@ export function CommunityDiscussionsClient() {
           categoryId: categoryId || undefined,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        setError(mapDiscussionError(j.error, fr));
+      if (!ok) {
+        setError(mapDiscussionError(data.error, fr));
         return;
       }
-      setDiscussions((d) => [j.discussion as DiscussionListItem, ...d]);
+      setDiscussions((d) => [data.discussion as DiscussionListItem, ...d]);
       setTitle("");
       setBody("");
       setCategoryId("");
       setShowComposer(false);
+    } catch {
+      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
     } finally {
       setPublishing(false);
     }

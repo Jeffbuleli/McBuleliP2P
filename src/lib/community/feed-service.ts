@@ -203,7 +203,11 @@ export async function createFeedPost(args: {
   postType?: "text" | "image" | "video";
   mediaIds?: string[];
 }): Promise<
-  | { ok: true; post: FeedPostView; bpGranted: number }
+  | {
+      ok: true;
+      post: FeedPostView;
+      bpGranted: { granted: boolean; points: number };
+    }
   | { ok: false; error: string }
 > {
   if (!communityEnabled()) return { ok: false, error: "community_disabled" };
@@ -264,7 +268,7 @@ export async function createFeedPost(args: {
 
   return {
     ok: true,
-    bpGranted: bp.points,
+    bpGranted: { granted: bp.granted, points: bp.points },
     post: {
       id: row.id,
       body: row.body,

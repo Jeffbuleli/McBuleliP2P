@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createCommunityImageMedia } from "@/lib/community/media-service";
+import { COMMUNITY_IMAGE_MAX_BYTES, COMMUNITY_IMAGE_MIMES } from "@/lib/community/config";
+import { presignCommunityImageUpload } from "@/lib/community/media-service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const postZ = z.object({
-  dataUrl: z.string().min(30).max(400_000),
-  mime: z.string().min(3).max(64),
-  sizeBytes: z.number().int().min(1).max(10_000_000),
+  mime: z.enum(COMMUNITY_IMAGE_MIMES),
+  sizeBytes: z.number().int().min(1).max(COMMUNITY_IMAGE_MAX_BYTES),
+  kind: z.enum(["posts", "blogs", "covers", "avatars"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -24,16 +25,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const result = await createCommunityImageMedia({
+  const result = await presignCommunityImageUpload({
     ownerId: userId,
-    dataUrl: parsed.data.dataUrl,
     mimeType: parsed.data.mime,
     sizeBytes: parsed.data.sizeBytes,
+    kind: parsed.data.kind,
   });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+    const status = result.error === "r2_not_configured" ? 503 : 400;
+    return NextResponse.json({ error: result.error }, { status });
   }
 
-  return NextResponse.json({ id: result.id, url: result.url });
+  return NextResponse.json({
+    id: result.id,
+    uploadUrl: result.uploadUrl,
+    publicUrl: result.publicUrl,
+  });
 }

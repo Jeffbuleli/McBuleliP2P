@@ -9,6 +9,7 @@ import {
   CommunityEmptyState,
   EmptyQuestionIllustration,
 } from "@/components/community/community-empty-illustrations";
+import { fetchJson } from "@/lib/community/fetch-json";
 import type { QuestionListItem } from "@/lib/community/qa-service";
 
 type QSort = "open" | "popular" | "accepted";
@@ -60,30 +61,39 @@ export function CommunityQuestionsClient() {
     setPublishing(true);
     setError(null);
     try {
-      const res = await fetch("/api/community/questions", {
+      const { ok, data } = await fetchJson<{
+        error?: string;
+        question?: QuestionListItem;
+        bpGranted?: { granted?: boolean; points?: number };
+      }>("/api/community/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: title.trim(), body: body.trim() }),
       });
-      const j = await res.json();
-      if (!res.ok) {
+      if (!ok) {
         setError(
-          j.error === "invalid_body"
+          data.error === "invalid_body"
             ? fr
               ? "Titre (min. 10) et détails (min. 20) requis"
               : "Title (min. 10) and details (min. 20) required"
-            : (j.error ?? "failed"),
+            : data.error === "timeout"
+              ? fr
+                ? "Délai dépassé — réessayez"
+                : "Timed out — try again"
+              : (data.error ?? "failed"),
         );
         return;
       }
-      setQuestions((q) => [j.question as QuestionListItem, ...q]);
+      setQuestions((q) => [data.question as QuestionListItem, ...q]);
       setTitle("");
       setBody("");
       setShowComposer(false);
-      if (j.bpGranted?.granted) {
-        setBpToast(`+${j.bpGranted.points} BP`);
+      if (data.bpGranted?.granted) {
+        setBpToast(`+${data.bpGranted.points} BP`);
         setTimeout(() => setBpToast(null), 3000);
       }
+    } catch {
+      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
     } finally {
       setPublishing(false);
     }

@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createCommunityImageMedia } from "@/lib/community/media-service";
+import { completeCommunityImageUpload } from "@/lib/community/media-service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const postZ = z.object({
-  dataUrl: z.string().min(30).max(400_000),
-  mime: z.string().min(3).max(64),
-  sizeBytes: z.number().int().min(1).max(10_000_000),
+  mediaId: z.string().uuid(),
 });
 
 export async function POST(req: Request) {
@@ -24,11 +22,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const result = await createCommunityImageMedia({
+  const result = await completeCommunityImageUpload({
     ownerId: userId,
-    dataUrl: parsed.data.dataUrl,
-    mimeType: parsed.data.mime,
-    sizeBytes: parsed.data.sizeBytes,
+    mediaId: parsed.data.mediaId,
   });
 
   if (!result.ok) {

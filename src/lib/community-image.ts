@@ -48,6 +48,38 @@ async function loadImageSource(file: File): Promise<{
   }
 }
 
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  quality: number,
+): Promise<{ blob: Blob; mime: string }> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve({
+            blob,
+            mime: blob.type || "image/webp",
+          });
+          return;
+        }
+        canvas.toBlob(
+          (jpegBlob) => {
+            if (!jpegBlob) {
+              reject(new Error("community_image_invalid"));
+              return;
+            }
+            resolve({ blob: jpegBlob, mime: "image/jpeg" });
+          },
+          "image/jpeg",
+          quality,
+        );
+      },
+      "image/webp",
+      quality,
+    );
+  });
+}
+
 function canvasToDataUrl(
   canvas: HTMLCanvasElement,
   quality: number,
@@ -60,13 +92,7 @@ function canvasToDataUrl(
   return { dataUrl: jpeg, mime: "image/jpeg" };
 }
 
-export async function prepareCommunityImageFile(
-  file: File,
-): Promise<{ dataUrl: string; mime: string; sizeBytes: number }> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("community_image_invalid");
-  }
-
+async function renderCompressedCanvas(file: File): Promise<HTMLCanvasElement> {
   const source = await loadImageSource(file);
   try {
     const scale = Math.min(
@@ -82,24 +108,58 @@ export async function prepareCommunityImageFile(
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("community_image_invalid");
     source.draw(ctx, w, h);
-
-    let quality = 0.82;
-    let { dataUrl, mime } = canvasToDataUrl(canvas, quality);
-    while (estimateBytes(dataUrl) > TARGET_MAX_BYTES && quality > 0.45) {
-      quality -= 0.08;
-      ({ dataUrl, mime } = canvasToDataUrl(canvas, quality));
-    }
-
-    if (estimateBytes(dataUrl) > TARGET_MAX_BYTES * 1.5) {
-      throw new Error("community_image_too_large");
-    }
-
-    return {
-      dataUrl,
-      mime,
-      sizeBytes: estimateBytes(dataUrl),
-    };
+    return canvas;
   } finally {
     source.cleanup();
   }
+}
+
+export async function prepareCommunityImageBlob(
+  file: File,
+): Promise<{ blob: Blob; mime: string; sizeBytes: number }> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("community_image_invalid");
+  }
+
+  const canvas = await renderCompressedCanvas(file);
+
+  let quality = 0.82;
+  let { blob, mime } = await canvasToBlob(canvas, quality);
+  while (blob.size > TARGET_MAX_BYTES && quality > 0.45) {
+    quality -= 0.08;
+    ({ blob, mime } = await canvasToBlob(canvas, quality));
+  }
+
+  if (blob.size > TARGET_MAX_BYTES * 1.5) {
+    throw new Error("community_image_too_large");
+  }
+
+  return { blob, mime, sizeBytes: blob.size };
+}
+
+export async function prepareCommunityImageFile(
+  file: File,
+): Promise<{ dataUrl: string; mime: string; sizeBytes: number }> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("community_image_invalid");
+  }
+
+  const canvas = await renderCompressedCanvas(file);
+
+  let quality = 0.82;
+  let { dataUrl, mime } = canvasToDataUrl(canvas, quality);
+  while (estimateBytes(dataUrl) > TARGET_MAX_BYTES && quality > 0.45) {
+    quality -= 0.08;
+    ({ dataUrl, mime } = canvasToDataUrl(canvas, quality));
+  }
+
+  if (estimateBytes(dataUrl) > TARGET_MAX_BYTES * 1.5) {
+    throw new Error("community_image_too_large");
+  }
+
+  return {
+    dataUrl,
+    mime,
+    sizeBytes: estimateBytes(dataUrl),
+  };
 }

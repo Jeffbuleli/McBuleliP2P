@@ -30,6 +30,8 @@
     "cron:academy-journey-nudge": "node scripts/cron-academy-journey-nudge.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1064.0",
+    "@aws-sdk/s3-request-presigner": "^3.1064.0",
     "@didit-protocol/sdk-web": "^0.2.1",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",

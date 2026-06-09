@@ -10,7 +10,8 @@ import {
 } from "@/components/community/community-empty-illustrations";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
-import { prepareCommunityImageFile } from "@/lib/community-image";
+import { fetchJson } from "@/lib/community/fetch-json";
+import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 
 type FeedSort = "recent" | "popular" | "following";
@@ -22,8 +23,11 @@ const FEED_TABS = [
 ];
 
 function mapFeedError(code: string | undefined, fr: boolean): string {
-  if (code === "invalid_body") {
+  if (code === "invalid_body" || code === "community_post_length") {
     return fr ? "Texte : min. 20 caractères" : "Text: min. 20 characters";
+  }
+  if (code === "community_post_cooldown") {
+    return fr ? "Attendez 30 s entre deux publications" : "Wait 30s between posts";
   }
   if (code === "invalid_media") {
     return fr ? "Image invalide — réessayez" : "Invalid image — try again";
@@ -34,6 +38,20 @@ function mapFeedError(code: string | undefined, fr: boolean): string {
   if (code === "community_image_invalid" || code === "community_image_invalid_mime") {
     return fr ? "Format image non supporté" : "Unsupported image format";
   }
+  if (code === "r2_upload_failed" || code === "r2_object_missing") {
+    return fr ? "Échec envoi image (R2)" : "Image upload failed (R2)";
+  }
+  if (code === "r2_not_configured" || code === "community_image_use_r2") {
+    return fr
+      ? "Stockage R2 non configuré sur le serveur"
+      : "R2 storage not configured on server";
+  }
+  if (code === "timeout") {
+    return fr ? "Délai dépassé — réessayez" : "Timed out — try again";
+  }
+  if (code === "invalid_json" || code?.startsWith("http_")) {
+    return fr ? "Erreur serveur — réessayez" : "Server error — try again";
+  }
   return code ?? (fr ? "Échec" : "Failed");
 }
 
@@ -43,6 +61,7 @@ export function CommunityFeedClient() {
   const [sort, setSort] = useState<FeedSort>("recent");
   const [body, setBody] = useState("");
   const [mediaId, setMediaId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
@@ -168,7 +187,15 @@ export function CommunityFeedClient() {
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <label className="cursor-pointer rounded-lg border border-[#e8f3ee] px-3 py-2 text-xs font-semibold text-[#305f33]">
-              {mediaId ? (fr ? "Image OK" : "Image added") : fr ? "+ Image" : "+ Image"}
+              {uploading
+                ? "…"
+                : mediaId
+                  ? fr
+                    ? "Image OK"
+                    : "Image added"
+                  : fr
+                    ? "+ Image"
+                    : "+ Image"}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"

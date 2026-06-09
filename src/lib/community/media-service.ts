@@ -4,7 +4,126 @@ import {
   COMMUNITY_IMAGE_MAX_BYTES,
   COMMUNITY_IMAGE_MIMES,
 } from "@/lib/community/config";
+import {
+  communityMediaKey,
+  communityR2Configured,
+  createCommunityUploadUrl,
+  verifyCommunityR2Object,
+} from "@/lib/community/media-r2";
 
+const INLINE_DATA_URL_MAX = 400_000;
+
+export async function presignCommunityImageUpload(args: {
+  ownerId: string;
+  mimeType: string;
+  sizeBytes: number;
+  kind?: "posts" | "blogs" | "covers" | "avatars";
+}): Promise<
+  | { ok: true; id: string; uploadUrl: string; publicUrl: string }
+  | { ok: false; error: string }
+> {
+  if (!communityR2Configured()) {
+    return { ok: false, error: "r2_not_configured" };
+  }
+  if (args.sizeBytes > COMMUNITY_IMAGE_MAX_BYTES) {
+    return { ok: false, error: "community_image_too_large" };
+  }
+  if (
+    !COMMUNITY_IMAGE_MIMES.includes(
+      args.mimeType as (typeof COMMUNITY_IMAGE_MIMES)[number],
+    )
+  ) {
+    return { ok: false, error: "community_image_invalid_mime" };
+  }
+
+  const ext =
+    args.mimeType === "image/png"
+      ? "png"
+      : args.mimeType === "image/webp"
+        ? "webp"
+        : args.mimeType === "image/avif"
+          ? "avif"
+          : "jpg";
+  const objectKey = communityMediaKey(
+    args.kind ?? "posts",
+    args.ownerId,
+    `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`,
+  );
+
+  const signed = await createCommunityUploadUrl({
+    objectKey,
+    mimeType: args.mimeType,
+    sizeBytes: args.sizeBytes,
+  });
+  if (!signed) return { ok: false, error: "r2_presign_failed" };
+
+  const db = getDb();
+  const [row] = await db
+    .insert(communityMedia)
+    .values({
+      ownerId: args.ownerId,
+      bucket: signed.bucket,
+      objectKey,
+      publicUrl: signed.publicUrl,
+      fileType: "image",
+      mimeType: args.mimeType,
+      sizeBytes: args.sizeBytes,
+      status: "pending",
+      variants: null,
+    })
+    .returning({ id: communityMedia.id });
+
+  if (!row) return { ok: false, error: "community_media_failed" };
+
+  return {
+    ok: true,
+    id: row.id,
+    uploadUrl: signed.uploadUrl,
+    publicUrl: signed.publicUrl,
+  };
+}
+
+export async function completeCommunityImageUpload(args: {
+  ownerId: string;
+  mediaId: string;
+}): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(communityMedia)
+    .where(
+      and(
+        eq(communityMedia.id, args.mediaId),
+        eq(communityMedia.ownerId, args.ownerId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return { ok: false, error: "not_found" };
+  if (row.status === "ready") {
+    return { ok: true, id: row.id, url: row.publicUrl };
+  }
+
+  const exists = await verifyCommunityR2Object({
+    objectKey: row.objectKey,
+    minSizeBytes: 1,
+  });
+  if (!exists) {
+    return { ok: false, error: "r2_object_missing" };
+  }
+
+  await db
+    .update(communityMedia)
+    .set({
+      status: "ready",
+      variants: { thumb: row.publicUrl, medium: row.publicUrl },
+    })
+    .where(eq(communityMedia.id, row.id));
+
+  return { ok: true, id: row.id, url: row.publicUrl };
+}
+
+/** Fallback inline (sans R2) — petites images uniquement. */
 export async function createCommunityImageMedia(args: {
   ownerId: string;
   dataUrl: string;
@@ -13,6 +132,9 @@ export async function createCommunityImageMedia(args: {
 }): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
   if (args.sizeBytes > COMMUNITY_IMAGE_MAX_BYTES) {
     return { ok: false, error: "community_image_too_large" };
+  }
+  if (args.dataUrl.length > INLINE_DATA_URL_MAX) {
+    return { ok: false, error: "community_image_use_r2" };
   }
   if (
     !COMMUNITY_IMAGE_MIMES.includes(
@@ -55,17 +177,21 @@ export async function getMediaUrls(
       id: communityMedia.id,
       publicUrl: communityMedia.publicUrl,
       variants: communityMedia.variants,
+      status: communityMedia.status,
     })
     .from(communityMedia)
     .where(
-      and(eq(communityMedia.status, "ready"), inArray(communityMedia.id, ids)),
+      and(
+        eq(communityMedia.status, "ready"),
+        inArray(communityMedia.id, ids),
+      ),
     );
 
   return rows.map((r) => ({
-      id: r.id,
-      url: r.publicUrl,
-      variants: r.variants,
-    }));
+    id: r.id,
+    url: r.publicUrl,
+    variants: r.variants,
+  }));
 }
 
 export async function assertOwnedMedia(
@@ -75,9 +201,14 @@ export async function assertOwnedMedia(
   if (!mediaIds.length) return true;
   const db = getDb();
   const rows = await db
-    .select({ id: communityMedia.id })
+    .select({ id: communityMedia.id, status: communityMedia.status })
     .from(communityMedia)
-    .where(and(eq(communityMedia.ownerId, ownerId)));
-  const owned = new Set(rows.map((r) => r.id));
-  return mediaIds.every((id) => owned.has(id));
+    .where(
+      and(
+        eq(communityMedia.ownerId, ownerId),
+        inArray(communityMedia.id, mediaIds),
+      ),
+    );
+  if (rows.length !== mediaIds.length) return false;
+  return rows.every((r) => r.status === "ready");
 }

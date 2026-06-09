@@ -9,6 +9,7 @@ import {
   EmptyBlogIllustration,
 } from "@/components/community/community-empty-illustrations";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
+import { fetchJson } from "@/lib/community/fetch-json";
 import type {
   BlogCategoryView,
   BlogPostListItem,
@@ -52,10 +53,22 @@ export function CommunityBlogsClient() {
     });
 
   const publish = async () => {
+    if (title.trim().length < 10) {
+      setError(fr ? "Titre : min. 10 caractères" : "Title: min. 10 characters");
+      return;
+    }
+    if (body.trim().length < 200) {
+      setError(fr ? "Contenu : min. 200 caractères" : "Body: min. 200 characters");
+      return;
+    }
     setPublishing(true);
     setError(null);
     try {
-      const res = await fetch("/api/community/blogs", {
+      const { ok, data } = await fetchJson<{
+        error?: string;
+        post?: BlogPostListItem;
+        bpGranted?: { granted?: boolean; points?: number };
+      }>("/api/community/blogs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -66,20 +79,39 @@ export function CommunityBlogsClient() {
           publish: true,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        setError(j.error ?? "failed");
+      if (!ok) {
+        setError(
+          data.error === "invalid_body"
+            ? fr
+              ? "Vérifiez titre (10+) et contenu (200+)"
+              : "Check title (10+) and body (200+)"
+            : data.error === "timeout"
+              ? fr
+                ? "Délai dépassé — réessayez"
+                : "Timed out — try again"
+              : (data.error ?? "failed"),
+        );
         return;
       }
-      setPosts((p) => [j.post as BlogPostListItem, ...p]);
+      setPosts((p) => [data.post as BlogPostListItem, ...p]);
       setTitle("");
       setBody("");
       setExcerpt("");
       setShowComposer(false);
-      if (j.bpGranted?.granted) {
-        setBpToast(`+${j.bpGranted.points} BP`);
+      if (data.bpGranted?.granted) {
+        setBpToast(`+${data.bpGranted.points} BP`);
         setTimeout(() => setBpToast(null), 3000);
       }
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message === "timeout"
+          ? fr
+            ? "Délai dépassé — réessayez"
+            : "Timed out — try again"
+          : fr
+            ? "Erreur serveur — réessayez"
+            : "Server error — try again",
+      );
     } finally {
       setPublishing(false);
     }

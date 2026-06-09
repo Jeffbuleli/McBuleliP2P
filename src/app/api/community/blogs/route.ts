@@ -10,6 +10,7 @@ import { assertOwnedMedia } from "@/lib/community/media-service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const createZ = z.object({
   title: z.string().min(10).max(200),
