@@ -90,19 +90,15 @@ export function CommunityFeedClient() {
   const onImagePick = async (file: File | null) => {
     if (!file) return;
     setError(null);
+    setUploading(true);
     try {
-      const prep = await prepareCommunityImageFile(file);
-      const res = await fetch("/api/community/media", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(prep),
-      });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error ?? "upload_failed");
-      setMediaId(j.id);
+      const uploaded = await uploadCommunityImage(file, "posts");
+      setMediaId(uploaded.id);
     } catch (e) {
       const code = e instanceof Error ? e.message : "upload_failed";
       setError(mapFeedError(code, fr));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -114,7 +110,11 @@ export function CommunityFeedClient() {
     setPublishing(true);
     setError(null);
     try {
-      const res = await fetch("/api/community/feed", {
+      const { ok, data } = await fetchJson<{
+        error?: string;
+        post?: FeedPostView;
+        bpGranted?: { granted?: boolean; points?: number };
+      }>("/api/community/feed", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,19 +123,21 @@ export function CommunityFeedClient() {
           mediaIds: mediaId ? [mediaId] : undefined,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        setError(mapFeedError(j.error, fr));
+      if (!ok) {
+        setError(mapFeedError(data.error, fr));
         return;
       }
-      setPosts((p) => [j.post as FeedPostView, ...p]);
+      setPosts((p) => [data.post as FeedPostView, ...p]);
       setBody("");
       setMediaId(null);
       setShowComposer(false);
-      if (j.bpGranted?.granted) {
-        setBpToast(`+${j.bpGranted.points} BP`);
+      if (data.bpGranted?.granted) {
+        setBpToast(`+${data.bpGranted.points} BP`);
         setTimeout(() => setBpToast(null), 2500);
       }
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "failed";
+      setError(mapFeedError(code, fr));
     } finally {
       setPublishing(false);
     }
