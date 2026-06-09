@@ -6,6 +6,7 @@ import { CommunityExpandableText } from "@/components/community/community-expand
 import { IconEye, IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
+import { postDisplayText } from "@/lib/community/link-embed";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
 
 function formatCount(n: number): string {
@@ -27,6 +28,10 @@ export function CommunityUnifiedCard({
       : item.media.length
         ? "image"
         : "text";
+
+  const displayBody = postDisplayText(item.body, {
+    hasMedia: item.media.length > 0,
+  });
 
   return (
     <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)] transition active:scale-[0.995]">
@@ -53,12 +58,14 @@ export function CommunityUnifiedCard({
             </h3>
           ) : null}
 
-          <CommunityExpandableText
-            text={item.body}
-            fr={fr}
-            maxChars={item.title ? 120 : 180}
-            className="text-sm leading-relaxed text-[#44403c]"
-          />
+          {displayBody.length > 0 ? (
+            <CommunityExpandableText
+              text={displayBody}
+              fr={fr}
+              maxChars={item.title ? 120 : 180}
+              className="text-sm leading-relaxed text-[#44403c]"
+            />
+          ) : null}
         </Link>
 
         <CommunityPostMedia

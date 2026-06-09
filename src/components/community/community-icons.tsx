@@ -20,10 +20,9 @@ export function IconLike({ size = 18, className = "", filled }: IconProps) {
 
 export function IconComment({ size = 18, className = "" }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path
-        d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-        fill="none"
+        d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
@@ -147,7 +146,7 @@ export function IconReply({ size = 14, className = "" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path
-        d="M9 17H5l-1 4-1-4H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v6"
+        d="M10 19l-7-7 7-7M3 12h12a6 6 0 016 6v1"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

@@ -2684,6 +2684,22 @@ export const communityPosts = pgTable(
   ],
 );
 
+export const communityPostViews = pgTable(
+  "community_post_views",
+  {
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => communityPosts.id, { onDelete: "cascade" }),
+    viewerId: uuid("viewer_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.viewerId] })],
+);
+
 export const communityComments = pgTable(
   "community_comments",
   {

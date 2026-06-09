@@ -15,6 +15,7 @@ import { CommunityPostMedia } from "@/components/community/community-post-media"
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
+import { postDisplayText } from "@/lib/community/link-embed";
 import { communityPostSharePath } from "@/lib/community/share-url";
 
 export function CommunityPostCard({
@@ -22,11 +23,14 @@ export function CommunityPostCard({
   onUpdate,
   defaultCommentsOpen = false,
   linkToDetail = true,
+  trackView = false,
 }: {
   post: FeedPostView;
   onUpdate: (patch: Partial<FeedPostView>) => void;
   defaultCommentsOpen?: boolean;
   linkToDetail?: boolean;
+  /** Compte une lecture unique (page détail uniquement). */
+  trackView?: boolean;
 }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
@@ -44,7 +48,7 @@ export function CommunityPostCard({
   }, [defaultCommentsOpen, post.id]);
 
   useEffect(() => {
-    if (viewedRef.current) return;
+    if (!trackView || viewedRef.current) return;
     viewedRef.current = true;
     fetch(`/api/community/feed/${post.id}/view`, { method: "POST" })
       .then((r) => r.json())
@@ -54,7 +58,7 @@ export function CommunityPostCard({
         }
       })
       .catch(() => {});
-  }, [post.id, onUpdate]);
+  }, [post.id, onUpdate, trackView]);
 
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -177,21 +181,28 @@ export function CommunityPostCard({
     </div>
   );
 
-  const textBlock = linkToDetail ? (
-    <Link href={detailHref} className="block">
-      <CommunityExpandableText
-        text={post.body}
-        fr={fr}
-        className="text-[15px] leading-relaxed text-[#292524]"
-      />
-    </Link>
-  ) : (
-    <CommunityExpandableText
-      text={post.body}
-      fr={fr}
-      className="text-[15px] leading-relaxed text-[#292524]"
-    />
-  );
+  const displayBody = postDisplayText(post.body, {
+    hasMedia: post.media.length > 0,
+  });
+
+  const textBlock =
+    displayBody.length > 0 ? (
+      linkToDetail ? (
+        <Link href={detailHref} className="block">
+          <CommunityExpandableText
+            text={displayBody}
+            fr={fr}
+            className="text-[15px] leading-relaxed text-[#292524]"
+          />
+        </Link>
+      ) : (
+        <CommunityExpandableText
+          text={displayBody}
+          fr={fr}
+          className="text-[15px] leading-relaxed text-[#292524]"
+        />
+      )
+    ) : null;
 
   return (
     <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">

@@ -2,6 +2,7 @@ import { and, count, eq, ilike, inArray, or } from "drizzle-orm";
 import {
   communityComments,
   communityMedia,
+  communityPosts,
   communityUserProfiles,
   getDb,
   users,
@@ -299,6 +300,17 @@ export async function getPublicProfileByHandle(
     .from(communityComments)
     .where(eq(communityComments.authorId, profile.userId));
 
+  const [publishedPosts] = await db
+    .select({ n: count() })
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, profile.userId),
+        eq(communityPosts.status, "published"),
+      ),
+    );
+  const livePostsCount = Number(publishedPosts?.n ?? 0);
+
   const badges = await listUserBadges(profile.userId);
   const resolvedHandle = await maybeRepairLegacyHandle(
     db,
@@ -327,7 +339,7 @@ export async function getPublicProfileByHandle(
     coverUrl,
     reputationScore: profile.reputationScore,
     reputationLevel: level.id,
-    postsCount: profile.postsCount,
+    postsCount: Math.max(profile.postsCount, livePostsCount),
     commentCount: Number(comments?.n ?? 0),
     followerCount,
     followingCount,

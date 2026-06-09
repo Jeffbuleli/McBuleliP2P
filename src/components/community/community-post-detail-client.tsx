@@ -53,6 +53,7 @@ export function CommunityPostDetailClient({ postId }: { postId: string }) {
           post={post}
           defaultCommentsOpen
           linkToDetail={false}
+          trackView
           onUpdate={(patch) => setPost((p) => (p ? { ...p, ...patch } : p))}
         />
       </div>

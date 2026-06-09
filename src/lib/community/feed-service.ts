@@ -2,10 +2,12 @@ import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
 import {
   communityComments,
   communityLikes,
+  communityPostViews,
   communityPosts,
   communityReports,
   communityTraderFollows,
   communityUserBlocks,
+  communityUserProfiles,
   getDb,
 } from "@/db";
 import { communityEnabled, COMMUNITY_FEED_PAGE_SIZE } from "@/lib/community/config";
@@ -19,6 +21,7 @@ import {
   getAuthorsMap,
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import {
   grantCommunityComment,
   grantCommunityLike,
@@ -214,19 +217,40 @@ export async function listFeedPosts(args: {
   return { posts, nextCursor };
 }
 
-export async function incrementPostView(postId: string): Promise<number> {
+/** 1 lecture = 1 membre connecté ouvrant la page détail (1× par personne). */
+export async function recordPostView(args: {
+  postId: string;
+  viewerId: string;
+}): Promise<{ viewCount: number; recorded: boolean }> {
+  await ensureCommunitySchema();
   const db = getDb();
+  const inserted = await db
+    .insert(communityPostViews)
+    .values({ postId: args.postId, viewerId: args.viewerId })
+    .onConflictDoNothing()
+    .returning({ postId: communityPostViews.postId });
+
+  if (!inserted.length) {
+    const [current] = await db
+      .select({ viewCount: communityPosts.viewCount })
+      .from(communityPosts)
+      .where(eq(communityPosts.id, args.postId))
+      .limit(1);
+    return { viewCount: current?.viewCount ?? 0, recorded: false };
+  }
+
   const [row] = await db
     .update(communityPosts)
     .set({ viewCount: sql`${communityPosts.viewCount} + 1` })
     .where(
       and(
-        eq(communityPosts.id, postId),
+        eq(communityPosts.id, args.postId),
         eq(communityPosts.status, "published"),
       ),
     )
     .returning({ viewCount: communityPosts.viewCount });
-  return row?.viewCount ?? 0;
+
+  return { viewCount: row?.viewCount ?? 0, recorded: true };
 }
 
 export async function createFeedPost(args: {
@@ -288,6 +312,11 @@ export async function createFeedPost(args: {
 
   if (!row) return { ok: false, error: "community_post_failed" };
 
+  await db
+    .update(communityUserProfiles)
+    .set({ postsCount: sql`${communityUserProfiles.postsCount} + 1` })
+    .where(eq(communityUserProfiles.userId, args.authorId));
+
   const bp = await grantCommunityPostPublished({
     userId: args.authorId,
     postId: row.id,
@@ -338,6 +367,13 @@ export async function deleteFeedPost(args: {
     .update(communityPosts)
     .set({ status: "removed", updatedAt: new Date() })
     .where(eq(communityPosts.id, args.postId));
+
+  await db
+    .update(communityUserProfiles)
+    .set({
+      postsCount: sql`GREATEST(0, ${communityUserProfiles.postsCount} - 1)`,
+    })
+    .where(eq(communityUserProfiles.userId, post.authorId));
 
   return { ok: true };
 }

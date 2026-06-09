@@ -126,6 +126,36 @@ export function findEmbeddableUrl(text: string): ParsedEmbed | null {
   return null;
 }
 
+/** Retire les URLs qui seront affichées en lecteur intégré. */
+export function stripEmbeddableUrls(text: string): string {
+  let result = text;
+  for (const u of extractUrls(text)) {
+    const parsed = parseEmbedUrl(u);
+    if (
+      parsed &&
+      (parsed.embedUrl ||
+        parsed.kind === "telegram" ||
+        parsed.kind === "facebook" ||
+        parsed.kind === "youtube" ||
+        parsed.kind === "tiktok" ||
+        parsed.kind === "twitter")
+    ) {
+      result = result.split(u).join(" ");
+    }
+  }
+  return result.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Texte affiché dans le fil : masque le lien si un embed le remplace. */
+export function postDisplayText(
+  body: string,
+  opts?: { hasMedia?: boolean },
+): string {
+  if (opts?.hasMedia) return body;
+  if (!findEmbeddableUrl(body)) return body;
+  return stripEmbeddableUrls(body);
+}
+
 export function telegramShareUrl(args: {
   url: string;
   text?: string;
