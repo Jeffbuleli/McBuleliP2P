@@ -13,6 +13,7 @@ import {
   users,
 } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import {
   checkDmRateLimit,
   moderateDmText,
@@ -120,7 +121,12 @@ async function peerView(userId: string): Promise<DmPeerView | null> {
   };
 }
 
+async function dmSchemaReady(): Promise<void> {
+  await ensureCommunitySchema();
+}
+
 export async function touchCommunityPresence(userId: string): Promise<void> {
+  await dmSchemaReady();
   const db = getDb();
   await db
     .update(communityUserProfiles)
@@ -132,6 +138,7 @@ export async function listDmThreads(
   userId: string,
 ): Promise<DmThreadListItem[]> {
   if (!communityEnabled()) return [];
+  await dmSchemaReady();
   const db = getDb();
 
   const rows = await db

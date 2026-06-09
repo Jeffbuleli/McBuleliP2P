@@ -16,6 +16,7 @@ import {
 import { UserRole } from "@/lib/roles";
 import { grantCommunityProfileSetup } from "@/lib/community/rewards-service";
 import { reputationLevelFromScore } from "@/lib/community/reputation-levels";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import {
   candidateHandle,
   isLegacyGarbageHandle,
@@ -69,6 +70,7 @@ export type CommunityAuthorView = {
 export async function ensureCommunityProfile(
   userId: string,
 ): Promise<CommunityAuthorView> {
+  await ensureCommunitySchema();
   const db = getDb();
   const [existing] = await db
     .select()
@@ -145,6 +147,7 @@ export async function ensureCommunityProfile(
 export async function getAuthorsMap(
   userIds: string[],
 ): Promise<Map<string, CommunityAuthorView>> {
+  await ensureCommunitySchema();
   const uniq = [...new Set(userIds)];
   const map = new Map<string, CommunityAuthorView>();
   if (!uniq.length) return map;
@@ -272,6 +275,7 @@ export async function getPublicProfileByHandle(
   handle: string,
   viewerId?: string | null,
 ): Promise<PublicProfileView | null> {
+  await ensureCommunitySchema();
   const db = getDb();
   const [profile] = await db
     .select()

@@ -435,6 +435,13 @@
       "when": 1784100000000,
       "tag": "0069_community_profile_dm",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0070_community_profile_columns_fix",
+      "breakpoints": true
     }
   ]
 }
