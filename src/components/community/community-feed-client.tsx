@@ -30,6 +30,11 @@ function mapFeedError(code: string | undefined, fr: boolean): string {
   if (code === "community_post_cooldown") {
     return fr ? "Attendez 30 s entre deux publications" : "Wait 30s between posts";
   }
+  if (code === "community_content_blocked") {
+    return fr
+      ? "Publication refusée — respectez la charte communauté."
+      : "Post blocked — please follow community guidelines.";
+  }
   if (code === "invalid_media") {
     return fr ? "Image invalide — réessayez" : "Invalid image — try again";
   }

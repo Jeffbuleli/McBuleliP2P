@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
 
 export function CommunityExpandableText({
   text,
@@ -19,8 +20,14 @@ export function CommunityExpandableText({
     expanded || !needsMore ? text : `${text.slice(0, maxChars).trim()}…`;
 
   return (
-    <p className={`whitespace-pre-wrap break-words ${className}`}>
-      {shown}
+    <div>
+      <CommunityTranslatableText
+        text={shown}
+        sourceText={text}
+        fr={fr}
+        truncateTranslationAt={!expanded && needsMore ? maxChars : undefined}
+        className={`whitespace-pre-wrap break-words ${className}`}
+      />
       {needsMore && !expanded ? (
         <button
           type="button"
@@ -30,6 +37,6 @@ export function CommunityExpandableText({
           {fr ? "Voir plus" : "See more"}
         </button>
       ) : null}
-    </p>
+    </div>
   );
 }

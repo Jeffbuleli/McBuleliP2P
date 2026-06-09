@@ -191,3 +191,17 @@ export function IconGlobe({ size = 12, className = "" }: IconProps) {
     </svg>
   );
 }
+
+export function IconTranslate({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M5 8h8M9 4v4M6 16l3-6M14 8h5M16.5 5.5L19 8M14 16h6M17 13v6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

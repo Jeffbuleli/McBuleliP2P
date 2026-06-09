@@ -2700,6 +2700,20 @@ export const communityPostViews = pgTable(
   (t) => [primaryKey({ columns: [t.postId, t.viewerId] })],
 );
 
+export const communityTranslationCache = pgTable(
+  "community_translation_cache",
+  {
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    targetLocale: varchar("target_locale", { length: 8 }).notNull(),
+    sourceLocale: varchar("source_locale", { length: 8 }),
+    translatedText: text("translated_text").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.contentHash, t.targetLocale] })],
+);
+
 export const communityComments = pgTable(
   "community_comments",
   {

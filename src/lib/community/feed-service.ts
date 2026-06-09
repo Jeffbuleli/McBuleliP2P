@@ -22,6 +22,7 @@ import {
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
 import { ensureCommunitySchema } from "@/lib/community/community-schema";
+import { moderateCommunityText } from "@/lib/community/moderation-service";
 import {
   grantCommunityComment,
   grantCommunityLike,
@@ -288,6 +289,11 @@ export async function createFeedPost(args: {
     return { ok: false, error: "community_post_cooldown" };
   }
 
+  const moderation = await moderateCommunityText(body);
+  if (!moderation.allowed) {
+    return { ok: false, error: "community_content_blocked" };
+  }
+
   const kind =
     args.postType === "video"
       ? "video"
@@ -311,6 +317,16 @@ export async function createFeedPost(args: {
     .returning();
 
   if (!row) return { ok: false, error: "community_post_failed" };
+
+  if (moderation.reviewQueue) {
+    await reportCommunityContent({
+      reporterId: args.authorId,
+      targetType: "post",
+      targetId: row.id,
+      reason: "ai_review",
+      details: `score=${moderation.score.toFixed(2)} categories=${moderation.categories.join(",")}`,
+    });
+  }
 
   await db
     .update(communityUserProfiles)
@@ -732,6 +748,11 @@ export async function addPostComment(args: {
     return { ok: false, error: "blocked" };
   }
 
+  const moderation = await moderateCommunityText(body);
+  if (!moderation.allowed) {
+    return { ok: false, error: "community_content_blocked" };
+  }
+
   await ensureCommunityProfile(args.userId);
 
   let parentId: string | null = args.parentId ?? null;
@@ -771,6 +792,16 @@ export async function addPostComment(args: {
     .returning();
 
   if (!row) return { ok: false, error: "comment_failed" };
+
+  if (moderation.reviewQueue) {
+    await reportCommunityContent({
+      reporterId: args.userId,
+      targetType: "comment",
+      targetId: row.id,
+      reason: "ai_review",
+      details: `score=${moderation.score.toFixed(2)} categories=${moderation.categories.join(",")}`,
+    });
+  }
 
   await db
     .update(communityPosts)

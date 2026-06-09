@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
-import { CommunityMentionText } from "@/components/community/community-mention-text";
+import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
 import { IconLike, IconReply, IconSend } from "@/components/community/community-icons";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommentView } from "@/lib/community/feed-service";
@@ -84,7 +84,11 @@ function CommentNode({
               {comment.author.displayName}
             </Link>{" "}
             <span className="font-normal text-[#292524]">
-              <CommunityMentionText text={comment.body} />
+              <CommunityTranslatableText
+                text={comment.body}
+                fr={fr}
+                withMentions
+              />
             </span>
           </p>
         </div>

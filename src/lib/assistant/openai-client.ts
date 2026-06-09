@@ -92,6 +92,34 @@ export async function* streamAssistantReply(args: {
   }
 }
 
+/** Structured JSON completion for Community translate / moderation. */
+export async function completeChatJson(args: {
+  systemPrompt: string;
+  userMessage: string;
+  maxTokens?: number;
+  temperature?: number;
+}): Promise<string> {
+  if (!assistantOpenAiEnabled()) {
+    throw new Error("openai_not_configured");
+  }
+
+  const openai = getClient();
+  const res = await openai.chat.completions.create({
+    model: assistantModel(),
+    messages: [
+      { role: "system", content: args.systemPrompt },
+      { role: "user", content: args.userMessage },
+    ],
+    temperature: args.temperature ?? 0.2,
+    max_tokens: args.maxTokens ?? 800,
+    response_format: { type: "json_object" },
+  });
+
+  const text = res.choices[0]?.message?.content?.trim();
+  if (!text) throw new Error("empty_ai_response");
+  return text;
+}
+
 /** Rule-based fallback when OPENAI_API_KEY is not set. */
 function fallbackAssistantReply(
   userMessage: string,
