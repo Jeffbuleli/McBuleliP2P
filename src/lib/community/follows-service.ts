@@ -102,3 +102,12 @@ export async function countTraderFollowers(traderId: string): Promise<number> {
     .where(eq(communityTraderFollows.traderId, traderId));
   return Number(row?.n ?? 0);
 }
+
+export async function countFollowing(followerId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ n: count() })
+    .from(communityTraderFollows)
+    .where(eq(communityTraderFollows.followerId, followerId));
+  return Number(row?.n ?? 0);
+}

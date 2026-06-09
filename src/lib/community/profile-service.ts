@@ -1,12 +1,19 @@
 import { and, count, eq, ilike, inArray, or } from "drizzle-orm";
 import {
-  communityBlogPosts,
   communityComments,
+  communityMedia,
   communityUserProfiles,
   getDb,
   users,
 } from "@/db";
+import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
 import { listUserBadges } from "@/lib/community/badges-service";
+import {
+  countFollowing,
+  countTraderFollowers,
+  isFollowingTrader,
+} from "@/lib/community/follows-service";
+import { UserRole } from "@/lib/roles";
 import { grantCommunityProfileSetup } from "@/lib/community/rewards-service";
 import { reputationLevelFromScore } from "@/lib/community/reputation-levels";
 import {
@@ -199,14 +206,21 @@ export type PublicProfileView = {
   displayName: string;
   bio: string | null;
   showKycBadge: boolean;
+  verifiedBlue: boolean;
+  isAdmin: boolean;
   avatarUrl: string | null;
+  coverUrl: string | null;
   reputationScore: number;
   reputationLevel: string;
   postsCount: number;
-  blogCount: number;
   commentCount: number;
+  followerCount: number;
+  followingCount: number;
   memberSince: string;
+  online: boolean;
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
+  viewerFollows: boolean;
+  isOwnProfile: boolean;
 };
 
 export async function searchCommunityHandles(
@@ -234,8 +248,29 @@ export async function searchCommunityHandles(
   return rows;
 }
 
+const ONLINE_MS = 5 * 60 * 1000;
+
+async function resolveCoverUrl(
+  coverMediaId: string | null,
+): Promise<string | null> {
+  if (!coverMediaId) return null;
+  const db = getDb();
+  const [m] = await db
+    .select({ publicUrl: communityMedia.publicUrl })
+    .from(communityMedia)
+    .where(
+      and(
+        eq(communityMedia.id, coverMediaId),
+        eq(communityMedia.status, "ready"),
+      ),
+    )
+    .limit(1);
+  return m?.publicUrl ?? null;
+}
+
 export async function getPublicProfileByHandle(
   handle: string,
+  viewerId?: string | null,
 ): Promise<PublicProfileView | null> {
   const db = getDb();
   const [profile] = await db
@@ -246,20 +281,14 @@ export async function getPublicProfileByHandle(
   if (!profile) return null;
 
   const [u] = await db
-    .select({ avatarUrl: users.avatarUrl, kycStatus: users.kycStatus })
+    .select({
+      avatarUrl: users.avatarUrl,
+      kycStatus: users.kycStatus,
+      role: users.role,
+    })
     .from(users)
     .where(eq(users.id, profile.userId))
     .limit(1);
-
-  const [blogs] = await db
-    .select({ n: count() })
-    .from(communityBlogPosts)
-    .where(
-      and(
-        eq(communityBlogPosts.authorId, profile.userId),
-        eq(communityBlogPosts.status, "published"),
-      ),
-    );
 
   const [comments] = await db
     .select({ n: count() })
@@ -273,6 +302,13 @@ export async function getPublicProfileByHandle(
     profile.displayName,
   );
   const level = reputationLevelFromScore(profile.reputationScore);
+  const subs = await listActiveBotSubscriptions(profile.userId);
+  const followerCount = await countTraderFollowers(profile.userId);
+  const followingCount = await countFollowing(profile.userId);
+  const coverUrl = await resolveCoverUrl(profile.coverMediaId);
+  const online =
+    !!profile.lastActiveAt &&
+    Date.now() - profile.lastActiveAt.getTime() < ONLINE_MS;
 
   return {
     userId: profile.userId,
@@ -280,13 +316,23 @@ export async function getPublicProfileByHandle(
     displayName: profile.displayName,
     bio: profile.bio,
     showKycBadge: profile.showKycBadge && u?.kycStatus === "approved",
+    verifiedBlue: profile.verifiedBlue || subs.length > 0,
+    isAdmin:
+      u?.role === UserRole.AGENT || u?.role === UserRole.SUPER_ADMIN,
     avatarUrl: u?.avatarUrl ?? null,
+    coverUrl,
     reputationScore: profile.reputationScore,
     reputationLevel: level.id,
     postsCount: profile.postsCount,
-    blogCount: Number(blogs?.n ?? 0),
     commentCount: Number(comments?.n ?? 0),
+    followerCount,
+    followingCount,
     memberSince: profile.createdAt.toISOString(),
+    online,
     badges,
+    viewerFollows: viewerId
+      ? await isFollowingTrader(viewerId, profile.userId)
+      : false,
+    isOwnProfile: viewerId === profile.userId,
   };
 }

@@ -11,6 +11,7 @@ import {
   jsonb,
   uniqueIndex,
   index,
+  primaryKey,
   boolean,
   bigint,
 } from "drizzle-orm/pg-core";
@@ -2609,6 +2610,9 @@ export const communityUserProfiles = pgTable(
     showKycBadge: boolean("show_kyc_badge").notNull().default(false),
     bio: varchar("bio", { length: 280 }),
     avatarMediaId: uuid("avatar_media_id"),
+    coverMediaId: uuid("cover_media_id"),
+    verifiedBlue: boolean("verified_blue").notNull().default(false),
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
     reputationScore: integer("reputation_score").notNull().default(0),
     postsCount: integer("posts_count").notNull().default(0),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
@@ -2908,6 +2912,118 @@ export const communityTradingSignals = pgTable(
     index("community_signals_author_idx").on(t.authorId, t.publishedAt),
     index("community_signals_status_idx").on(t.status, t.publishedAt),
   ],
+);
+
+export const communityDmThreads = pgTable(
+  "community_dm_threads",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    participantA: uuid("participant_a")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    participantB: uuid("participant_b")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    requestedBy: uuid("requested_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastMessagePreview: varchar("last_message_preview", { length: 160 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_dm_threads_pair_unique").on(
+      t.participantA,
+      t.participantB,
+    ),
+    index("community_dm_threads_last_msg_idx").on(t.lastMessageAt),
+  ],
+);
+
+export const communityDmMessages = pgTable(
+  "community_dm_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => communityDmThreads.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull().default(""),
+    messageType: varchar("message_type", { length: 16 })
+      .notNull()
+      .default("text"),
+    attachmentUrl: text("attachment_url"),
+    attachmentMeta: jsonb("attachment_meta").$type<Record<
+      string,
+      unknown
+    > | null>(),
+    hidden: boolean("hidden").notNull().default(false),
+    hiddenReason: varchar("hidden_reason", { length: 32 }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_dm_messages_thread_created_idx").on(
+      t.threadId,
+      t.createdAt,
+    ),
+  ],
+);
+
+export const communityDmReads = pgTable(
+  "community_dm_reads",
+  {
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => communityDmThreads.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.threadId, t.userId] })],
+);
+
+export const communityDmMutes = pgTable(
+  "community_dm_mutes",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mutedUserId: uuid("muted_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    untilAt: timestamp("until_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.mutedUserId] })],
+);
+
+export const communityDmTyping = pgTable(
+  "community_dm_typing",
+  {
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => communityDmThreads.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.threadId, t.userId] })],
 );
 
 /** Phase 3 — copy-trading : suivi trader (exécution auto = futur). */

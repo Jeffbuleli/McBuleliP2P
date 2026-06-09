@@ -60,6 +60,44 @@ export function ReputationLevelBadge({
   );
 }
 
+export function BlueCheckBadge({ fr }: { fr: boolean }) {
+  return (
+    <BadgeShell
+      title={fr ? "Abonnement vérifié" : "Verified subscription"}
+      className="bg-[#dbeafe] text-[#1d4ed8]"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      ✓
+    </BadgeShell>
+  );
+}
+
+export function AdminGoldBadge({ fr }: { fr: boolean }) {
+  return (
+    <BadgeShell
+      title={fr ? "Équipe McBuleli" : "McBuleli team"}
+      className="bg-gradient-to-r from-[#fef3c7] to-[#fde68a] text-[#92400e]"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M12 2l2.4 4.8L20 8l-4 3.9.9 5.6L12 15.8 7.1 17.5 8 11.9 4 8l5.6-1.2L12 2z" />
+      </svg>
+      Admin
+    </BadgeShell>
+  );
+}
+
+export function OnlineDot({ online }: { online: boolean }) {
+  if (!online) return null;
+  return (
+    <span
+      className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#22c55e]"
+      title="En ligne"
+    />
+  );
+}
+
 export function CommunityBadgeIcon({ slug }: { slug: string }) {
   const c = { fill: "none", stroke: "currentColor", strokeWidth: 2 };
   if (slug === "contributor") {
