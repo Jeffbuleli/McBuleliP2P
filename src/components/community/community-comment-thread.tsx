@@ -2,7 +2,41 @@
 
 import { useState } from "react";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
+import { CommunityMentionInput } from "@/components/community/community-mention-input";
+import { CommunityMentionText } from "@/components/community/community-mention-text";
 import type { CommentView } from "@/lib/community/feed-service";
+
+function CommentSendIcon() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function commentErrorMessage(code: string | undefined, fr: boolean): string {
+  switch (code) {
+    case "community_comment_length":
+      return fr
+        ? "Minimum 2 caractères."
+        : "At least 2 characters required.";
+    case "Unauthorized":
+    case "unauthorized":
+      return fr ? "Connectez-vous pour commenter." : "Sign in to comment.";
+    case "parent_not_found":
+      return fr ? "Commentaire parent introuvable." : "Parent comment not found.";
+    case "blocked":
+      return fr ? "Action impossible." : "Action not allowed.";
+    default:
+      return fr ? "Envoi impossible. Réessayez." : "Could not send. Try again.";
+  }
+}
 
 function CommentNode({
   comment,
@@ -35,7 +69,7 @@ function CommentNode({
           compact
         />
         <p className="mt-2 text-sm leading-relaxed text-[#44403c] whitespace-pre-wrap break-words">
-          {comment.body}
+          <CommunityMentionText text={comment.body} />
         </p>
         <div className="mt-2 flex items-center gap-3 text-[11px] font-semibold text-[#78716c]">
           <button
@@ -55,19 +89,22 @@ function CommentNode({
 
       {replyToId === comment.id ? (
         <div className="mt-2 flex gap-2">
-          <input
+          <CommunityMentionInput
             value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
+            onChange={setReplyText}
+            disabled={busy}
             placeholder={fr ? "Réponse… (@pseudo)" : "Reply… (@handle)"}
-            className="min-h-[44px] flex-1 rounded-xl border border-[#e8f3ee] bg-white px-3 text-sm"
+            className="min-h-[44px] w-full rounded-xl border border-[#e8f3ee] bg-white px-3 text-sm"
+            onSubmit={onSubmitReply}
           />
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || replyText.trim().length < 2}
             onClick={onSubmitReply}
-            className="shrink-0 rounded-xl bg-[#305f33] px-4 text-xs font-bold text-white active:scale-95 disabled:opacity-50"
+            aria-label={fr ? "Envoyer" : "Send"}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#305f33] text-white active:scale-95 disabled:opacity-50"
           >
-            {fr ? "Envoyer" : "Send"}
+            <CommentSendIcon />
           </button>
         </div>
       ) : null}
@@ -110,18 +147,27 @@ export function CommunityCommentThread({
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async (body: string, parentId?: string | null) => {
-    if (body.trim().length < 10) return;
+    const trimmed = body.trim();
+    if (trimmed.length < 2) {
+      setError(commentErrorMessage("community_comment_length", fr));
+      return;
+    }
     setBusy(true);
+    setError(null);
     try {
       const res = await fetch(`/api/community/feed/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: body.trim(), parentId: parentId ?? null }),
+        body: JSON.stringify({ body: trimmed, parentId: parentId ?? null }),
       });
-      const j = await res.json();
-      if (!res.ok) return;
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(commentErrorMessage(j.error ?? (res.status === 401 ? "Unauthorized" : undefined), fr));
+        return;
+      }
       const reload = await fetch(`/api/community/feed/${postId}/comments`);
       const rj = await reload.json();
       setComments(rj.comments ?? []);
@@ -158,20 +204,26 @@ export function CommunityCommentThread({
           ))}
         </ul>
       )}
+      {error ? (
+        <p className="mb-2 text-center text-xs font-medium text-red-600">{error}</p>
+      ) : null}
       <div className="flex gap-2">
-        <input
+        <CommunityMentionInput
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={setText}
+          disabled={busy}
           placeholder={fr ? "Commenter… (@pseudo)" : "Comment… (@handle)"}
-          className="min-h-[44px] flex-1 rounded-xl border border-[#e8f3ee] bg-white px-3 text-sm"
+          className="min-h-[44px] w-full rounded-xl border border-[#e8f3ee] bg-white px-3 text-sm"
+          onSubmit={() => void submit(text)}
         />
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || text.trim().length < 2}
           onClick={() => void submit(text)}
-          className="shrink-0 rounded-xl bg-[#305f33] px-4 text-xs font-bold text-white active:scale-95 disabled:opacity-50"
+          aria-label={fr ? "Envoyer" : "Send"}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#305f33] text-white active:scale-95 disabled:opacity-50"
         >
-          {fr ? "Envoyer" : "Send"}
+          <CommentSendIcon />
         </button>
       </div>
     </div>

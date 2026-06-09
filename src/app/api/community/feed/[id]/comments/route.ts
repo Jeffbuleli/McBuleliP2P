@@ -6,7 +6,7 @@ import { getSessionUserId } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 const postZ = z.object({
-  body: z.string().min(10).max(1200),
+  body: z.string().min(2).max(1200),
   parentId: z.string().uuid().optional().nullable(),
 });
 

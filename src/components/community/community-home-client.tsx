@@ -21,6 +21,7 @@ import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
+import { communityPostSharePath } from "@/lib/community/share-url";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
   return {
@@ -161,7 +162,7 @@ export function CommunityHomeClient() {
         body: post.body,
         publishedAt: post.publishedAt,
         author: post.author,
-        href: `/app/community?post=${post.id}`,
+        href: communityPostSharePath(post.id),
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         shareCount: post.shareCount,

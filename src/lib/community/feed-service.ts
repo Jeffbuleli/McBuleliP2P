@@ -28,6 +28,15 @@ import {
 
 const POST_COOLDOWN_MS = 30_000;
 
+export type PublicPostShareView = {
+  id: string;
+  body: string;
+  authorHandle: string;
+  authorDisplayName: string;
+  imageUrl: string | null;
+  publishedAt: string;
+};
+
 export type FeedPostView = {
   id: string;
   body: string;
@@ -496,7 +505,7 @@ export async function addPostComment(args: {
   | { ok: false; error: string }
 > {
   const body = args.body.trim();
-  if (body.length < 10 || body.length > 1200) {
+  if (body.length < 2 || body.length > 1200) {
     return { ok: false, error: "community_comment_length" };
   }
 
@@ -593,6 +602,39 @@ export async function addPostComment(args: {
       author,
       replies: [],
     },
+  };
+}
+
+export async function getPublicPostForShare(
+  postId: string,
+): Promise<PublicPostShareView | null> {
+  if (!communityEnabled()) return null;
+
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.id, postId),
+        eq(communityPosts.status, "published"),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+
+  const authors = await getAuthorsMap([row.authorId]);
+  const author = authors.get(row.authorId);
+  if (!author) return null;
+
+  const media = await getMediaUrls(row.mediaIds);
+  return {
+    id: row.id,
+    body: row.body,
+    authorHandle: author.handle,
+    authorDisplayName: author.displayName,
+    imageUrl: media[0]?.url ?? null,
+    publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
   };
 }
 

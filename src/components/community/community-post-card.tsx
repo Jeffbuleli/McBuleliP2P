@@ -7,6 +7,7 @@ import { CommunityCommentThread } from "@/components/community/community-comment
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import { communityImageVariant } from "@/lib/community/data-saver";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
+import { communityPostSharePath } from "@/lib/community/share-url";
 
 export function CommunityPostCard({
   post,
@@ -57,7 +58,7 @@ export function CommunityPostCard({
   };
 
   const sharePost = async () => {
-    const url = `${window.location.origin}/app/community?post=${post.id}`;
+    const url = `${window.location.origin}${communityPostSharePath(post.id)}`;
     try {
       if (navigator.share) {
         await navigator.share({

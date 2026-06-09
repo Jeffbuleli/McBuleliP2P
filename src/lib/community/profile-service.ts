@@ -1,4 +1,4 @@
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, ilike, inArray, or } from "drizzle-orm";
 import {
   communityBlogPosts,
   communityComments,
@@ -208,6 +208,31 @@ export type PublicProfileView = {
   memberSince: string;
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
 };
+
+export async function searchCommunityHandles(
+  query: string,
+  limit = 8,
+): Promise<{ handle: string; displayName: string }[]> {
+  const term = query.trim().toLowerCase().replace(/^@/, "");
+  if (term.length < 1) return [];
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      handle: communityUserProfiles.handle,
+      displayName: communityUserProfiles.displayName,
+    })
+    .from(communityUserProfiles)
+    .where(
+      or(
+        ilike(communityUserProfiles.handle, `${term}%`),
+        ilike(communityUserProfiles.displayName, `${term}%`),
+      ),
+    )
+    .limit(Math.min(limit, 12));
+
+  return rows;
+}
 
 export async function getPublicProfileByHandle(
   handle: string,

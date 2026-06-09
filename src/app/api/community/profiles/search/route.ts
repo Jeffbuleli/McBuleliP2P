@@ -1,0 +1,10 @@
+import { NextResponse } from "next/server";
+import { searchCommunityHandles } from "@/lib/community/profile-service";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  const q = new URL(req.url).searchParams.get("q") ?? "";
+  const handles = await searchCommunityHandles(q);
+  return NextResponse.json({ handles });
+}
