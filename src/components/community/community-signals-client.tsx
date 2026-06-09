@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunitySignalCard } from "@/components/community/community-signal-card";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
@@ -10,6 +10,7 @@ import {
   CommunityEmptyState,
   EmptySignalIllustration,
 } from "@/components/community/community-empty-illustrations";
+import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 
 type SignalTab = "open" | "closed";
@@ -23,10 +24,6 @@ export function CommunitySignalsClient() {
   const { locale, t } = useI18n();
   const fr = locale === "fr";
   const [tab, setTab] = useState<SignalTab>("open");
-  const [signals, setSignals] = useState<TradingSignalView[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [symbol, setSymbol] = useState("BTCUSDT");
   const [side, setSide] = useState<"long" | "short">("long");
   const [note, setNote] = useState("");
@@ -38,40 +35,29 @@ export function CommunitySignalsClient() {
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
   const [viewerUserId, setViewerUserId] = useState<string | null>(null);
-  const sentinel = useRef<HTMLDivElement | null>(null);
 
-  const loadMore = useCallback(
-    async (reset = false) => {
-      if (loading || (done && !reset)) return;
-      setLoading(true);
-      try {
-        const q = new URLSearchParams({
-          limit: "15",
-          status: tab === "open" ? "open" : "closed",
-        });
-        if (!reset && cursor) q.set("cursor", cursor);
-        const res = await fetch(`/api/community/signals?${q}`);
-        const j = await res.json();
-        const batch = (j.signals ?? []) as TradingSignalView[];
-        setSignals((p) => (reset ? batch : [...p, ...batch]));
-        setCursor(j.nextCursor ?? null);
-        setDone(!j.nextCursor);
-        if (batch[0]?.author.userId) {
-          setViewerUserId((prev) => prev);
-        }
-      } finally {
-        setLoading(false);
-      }
+  const loadPage = useCallback(
+    async (cursor: string | null) => {
+      const q = new URLSearchParams({
+        limit: "15",
+        status: tab === "open" ? "open" : "closed",
+      });
+      if (cursor) q.set("cursor", cursor);
+      const res = await fetch(`/api/community/signals?${q}`);
+      const j = await res.json();
+      return {
+        items: (j.signals ?? []) as TradingSignalView[],
+        nextCursor: (j.nextCursor as string | null) ?? null,
+      };
     },
-    [cursor, done, loading, tab],
+    [tab],
   );
 
-  useEffect(() => {
-    setCursor(null);
-    setDone(false);
-    void loadMore(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  const { items: signals, setItems: setSignals, loading, sentinelRef } =
+    useCommunityPaginatedLoad({
+      loadPage,
+      resetKey: tab,
+    });
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -80,21 +66,7 @@ export function CommunitySignalsClient() {
         if (d.user?.id) setViewerUserId(d.user.id);
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "200px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [loadMore]);
 
   const publish = async () => {
     if (note.trim().length < 10) {
@@ -285,7 +257,7 @@ export function CommunitySignalsClient() {
       </ul>
       )}
 
-      <div ref={sentinel} className="h-8" />
+      <div ref={sentinelRef} className="h-8" />
       {loading ? (
         <p className="py-4 text-center text-xs text-[#78716c]">…</p>
       ) : null}

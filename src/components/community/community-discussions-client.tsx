@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
@@ -9,6 +9,7 @@ import {
   CommunityEmptyState,
   EmptyDiscussionIllustration,
 } from "@/components/community/community-empty-illustrations";
+import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import type {
   DiscussionCategoryView,
   DiscussionListItem,
@@ -22,67 +23,67 @@ const SORT_TABS = [
   { id: "following" as const, labelFr: "Suivies", labelEn: "Following" },
 ];
 
+function mapDiscussionError(code: string | undefined, fr: boolean): string {
+  if (code === "invalid_body" || code === "title_too_short") {
+    return fr ? "Sujet : min. 8 caractères" : "Topic: min. 8 characters";
+  }
+  if (code === "body_too_short") {
+    return fr ? "Message : min. 20 caractères" : "Message: min. 20 characters";
+  }
+  return code ?? (fr ? "Échec" : "Failed");
+}
+
 export function CommunityDiscussionsClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
   const [sort, setSort] = useState<DiscSort>("recent");
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<DiscussionCategoryView[]>([]);
-  const [discussions, setDiscussions] = useState<DiscussionListItem[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [publishing, setPublishing] = useState(false);
-  const sentinel = useRef<HTMLDivElement | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadMore = useCallback(
-    async (reset = false) => {
-      if (loading || (done && !reset)) return;
-      setLoading(true);
-      try {
-        const q = new URLSearchParams({ limit: "15", sort });
-        if (!reset && cursor) q.set("cursor", cursor);
-        if (category) q.set("category", category);
-        const res = await fetch(`/api/community/discussions?${q}`);
-        const j = await res.json();
-        const batch = (j.discussions ?? []) as DiscussionListItem[];
-        setDiscussions((d) => (reset ? batch : [...d, ...batch]));
-        setCategories((j.categories ?? []) as DiscussionCategoryView[]);
-        setCursor(j.nextCursor ?? null);
-        setDone(!j.nextCursor);
-      } finally {
-        setLoading(false);
-      }
+  const loadPage = useCallback(
+    async (cursor: string | null) => {
+      const q = new URLSearchParams({ limit: "15", sort });
+      if (cursor) q.set("cursor", cursor);
+      if (category) q.set("category", category);
+      const res = await fetch(`/api/community/discussions?${q}`);
+      const j = await res.json();
+      const cats = (j.categories ?? []) as DiscussionCategoryView[];
+      if (cats.length) setCategories(cats);
+      return {
+        items: (j.discussions ?? []) as DiscussionListItem[],
+        nextCursor: (j.nextCursor as string | null) ?? null,
+      };
     },
-    [category, cursor, done, loading, sort],
+    [category, sort],
   );
 
-  useEffect(() => {
-    setCursor(null);
-    setDone(false);
-    void loadMore(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, category]);
-
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (e) => {
-        if (e[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "200px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [loadMore]);
+  const {
+    items: discussions,
+    setItems: setDiscussions,
+    loading,
+    sentinelRef,
+  } = useCommunityPaginatedLoad({
+    loadPage,
+    resetKey: `${sort}:${category}`,
+  });
 
   const publish = async () => {
+    if (title.trim().length < 8) {
+      setError(fr ? "Sujet : min. 8 caractères" : "Topic: min. 8 characters");
+      return;
+    }
+    if (body.trim().length < 20) {
+      setError(fr ? "Message : min. 20 caractères" : "Message: min. 20 characters");
+      return;
+    }
     setPublishing(true);
+    setError(null);
     try {
       const res = await fetch("/api/community/discussions", {
         method: "POST",
@@ -94,10 +95,14 @@ export function CommunityDiscussionsClient() {
         }),
       });
       const j = await res.json();
-      if (!res.ok) return;
+      if (!res.ok) {
+        setError(mapDiscussionError(j.error, fr));
+        return;
+      }
       setDiscussions((d) => [j.discussion as DiscussionListItem, ...d]);
       setTitle("");
       setBody("");
+      setCategoryId("");
       setShowComposer(false);
     } finally {
       setPublishing(false);
@@ -163,7 +168,7 @@ export function CommunityDiscussionsClient() {
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
           >
-            <option value="">{fr ? "Catégorie" : "Category"}</option>
+            <option value="">{fr ? "Catégorie (optionnel)" : "Category (optional)"}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {fr ? c.labelFr : c.labelEn}
@@ -177,6 +182,7 @@ export function CommunityDiscussionsClient() {
             onChange={(e) => setBody(e.target.value)}
             placeholder={fr ? "Votre message (min. 20)" : "Your message (min. 20)"}
           />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <button
             type="button"
             disabled={publishing}
@@ -221,7 +227,7 @@ export function CommunityDiscussionsClient() {
         </ul>
       )}
 
-      <div ref={sentinel} className="h-6" />
+      <div ref={sentinelRef} className="h-6" />
       {loading ? <p className="py-4 text-center text-xs text-[#78716c]">…</p> : null}
     </div>
   );

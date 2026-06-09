@@ -42,12 +42,32 @@ export type DiscussionDetail = DiscussionListItem & {
   replies: DiscussionReplyView[];
 };
 
+const DEFAULT_DISCUSSION_CATEGORIES = [
+  { slug: "general", labelFr: "Général", labelEn: "General", sortOrder: 1 },
+  { slug: "crypto", labelFr: "Crypto", labelEn: "Crypto", sortOrder: 2 },
+  { slug: "trading", labelFr: "Trading", labelEn: "Trading", sortOrder: 3 },
+  { slug: "p2p", labelFr: "P2P", labelEn: "P2P", sortOrder: 4 },
+  { slug: "tech", labelFr: "Tech & IA", labelEn: "Tech & AI", sortOrder: 5 },
+] as const;
+
 export async function listDiscussionCategories(): Promise<DiscussionCategoryView[]> {
   const db = getDb();
-  const rows = await db
+  let rows = await db
     .select()
     .from(communityDiscussionCategories)
     .orderBy(communityDiscussionCategories.sortOrder);
+
+  if (!rows.length) {
+    await db
+      .insert(communityDiscussionCategories)
+      .values([...DEFAULT_DISCUSSION_CATEGORIES])
+      .onConflictDoNothing({ target: communityDiscussionCategories.slug });
+    rows = await db
+      .select()
+      .from(communityDiscussionCategories)
+      .orderBy(communityDiscussionCategories.sortOrder);
+  }
+
   return rows.map((r) => ({
     id: r.id,
     slug: r.slug,

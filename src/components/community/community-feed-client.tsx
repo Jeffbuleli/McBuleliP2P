@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
@@ -9,6 +9,7 @@ import {
   EmptyNewsIllustration,
 } from "@/components/community/community-empty-illustrations";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
+import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import { prepareCommunityImageFile } from "@/lib/community-image";
 import type { FeedPostView } from "@/lib/community/feed-service";
 
@@ -20,61 +21,52 @@ const FEED_TABS = [
   { id: "following" as const, labelFr: "Suivies", labelEn: "Following" },
 ];
 
+function mapFeedError(code: string | undefined, fr: boolean): string {
+  if (code === "invalid_body") {
+    return fr ? "Texte : min. 20 caractères" : "Text: min. 20 characters";
+  }
+  if (code === "invalid_media") {
+    return fr ? "Image invalide — réessayez" : "Invalid image — try again";
+  }
+  if (code === "community_image_too_large") {
+    return fr ? "Image trop lourde" : "Image too large";
+  }
+  if (code === "community_image_invalid" || code === "community_image_invalid_mime") {
+    return fr ? "Format image non supporté" : "Unsupported image format";
+  }
+  return code ?? (fr ? "Échec" : "Failed");
+}
+
 export function CommunityFeedClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
   const [sort, setSort] = useState<FeedSort>("recent");
-  const [posts, setPosts] = useState<FeedPostView[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [body, setBody] = useState("");
   const [mediaId, setMediaId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
   const [showComposer, setShowComposer] = useState(false);
-  const sentinel = useRef<HTMLDivElement | null>(null);
 
-  const loadMore = useCallback(
-    async (reset = false) => {
-      if (loading || (done && !reset)) return;
-      setLoading(true);
-      try {
-        const q = new URLSearchParams({ limit: "15", sort });
-        if (!reset && cursor) q.set("cursor", cursor);
-        const res = await fetch(`/api/community/feed?${q}`);
-        const j = await res.json();
-        const batch = (j.posts ?? []) as FeedPostView[];
-        setPosts((p) => (reset ? batch : [...p, ...batch]));
-        setCursor(j.nextCursor ?? null);
-        setDone(!j.nextCursor);
-      } finally {
-        setLoading(false);
-      }
+  const loadPage = useCallback(
+    async (cursor: string | null) => {
+      const q = new URLSearchParams({ limit: "15", sort });
+      if (cursor) q.set("cursor", cursor);
+      const res = await fetch(`/api/community/feed?${q}`);
+      const j = await res.json();
+      return {
+        items: (j.posts ?? []) as FeedPostView[],
+        nextCursor: (j.nextCursor as string | null) ?? null,
+      };
     },
-    [cursor, done, loading, sort],
+    [sort],
   );
 
-  useEffect(() => {
-    setCursor(null);
-    setDone(false);
-    void loadMore(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort]);
-
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "200px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [loadMore]);
+  const { items: posts, setItems: setPosts, loading, done, sentinelRef } =
+    useCommunityPaginatedLoad({
+      loadPage,
+      resetKey: sort,
+    });
 
   const onImagePick = async (file: File | null) => {
     if (!file) return;
@@ -89,8 +81,9 @@ export function CommunityFeedClient() {
       const j = await res.json();
       if (!res.ok) throw new Error(j.error ?? "upload_failed");
       setMediaId(j.id);
-    } catch {
-      setError(fr ? "Image refusée" : "Image rejected");
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "upload_failed";
+      setError(mapFeedError(code, fr));
     }
   };
 
@@ -113,7 +106,7 @@ export function CommunityFeedClient() {
       });
       const j = await res.json();
       if (!res.ok) {
-        setError(j.error ?? "failed");
+        setError(mapFeedError(j.error, fr));
         return;
       }
       setPosts((p) => [j.post as FeedPostView, ...p]);
@@ -178,7 +171,7 @@ export function CommunityFeedClient() {
               {mediaId ? (fr ? "Image OK" : "Image added") : fr ? "+ Image" : "+ Image"}
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 className="hidden"
                 onChange={(e) => onImagePick(e.target.files?.[0] ?? null)}
               />
@@ -227,7 +220,7 @@ export function CommunityFeedClient() {
         </div>
       )}
 
-      <div ref={sentinel} className="py-6 text-center text-xs text-[#a8a29e]">
+      <div ref={sentinelRef} className="py-6 text-center text-xs text-[#a8a29e]">
         {loading ? "…" : done && posts.length > 0 ? (fr ? "Fin" : "End") : ""}
       </div>
 

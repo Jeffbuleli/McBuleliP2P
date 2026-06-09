@@ -49,6 +49,14 @@ export function CommunityQuestionsClient() {
   }, [sort]);
 
   const publish = async () => {
+    if (title.trim().length < 10) {
+      setError(fr ? "Titre : min. 10 caractères" : "Title: min. 10 characters");
+      return;
+    }
+    if (body.trim().length < 20) {
+      setError(fr ? "Détails : min. 20 caractères" : "Details: min. 20 characters");
+      return;
+    }
     setPublishing(true);
     setError(null);
     try {
@@ -59,7 +67,13 @@ export function CommunityQuestionsClient() {
       });
       const j = await res.json();
       if (!res.ok) {
-        setError(j.error ?? "failed");
+        setError(
+          j.error === "invalid_body"
+            ? fr
+              ? "Titre (min. 10) et détails (min. 20) requis"
+              : "Title (min. 10) and details (min. 20) required"
+            : (j.error ?? "failed"),
+        );
         return;
       }
       setQuestions((q) => [j.question as QuestionListItem, ...q]);

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
 import {
   CommunityEmptyState,
   EmptyBlogIllustration,
 } from "@/components/community/community-empty-illustrations";
+import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import type {
   BlogCategoryView,
   BlogPostListItem,
@@ -16,12 +17,8 @@ import type {
 export function CommunityBlogsClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
-  const [posts, setPosts] = useState<BlogPostListItem[]>([]);
   const [categories, setCategories] = useState<BlogCategoryView[]>([]);
   const [category, setCategory] = useState<string>("");
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -30,47 +27,29 @@ export function CommunityBlogsClient() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
-  const sentinel = useRef<HTMLDivElement | null>(null);
 
-  const loadMore = useCallback(
-    async (reset = false) => {
-      if (loading || (done && !reset)) return;
-      setLoading(true);
-      try {
-        const q = new URLSearchParams({ limit: "12" });
-        if (!reset && cursor) q.set("cursor", cursor);
-        if (category) q.set("category", category);
-        const res = await fetch(`/api/community/blogs?${q}`);
-        const j = await res.json();
-        const batch = (j.posts ?? []) as BlogPostListItem[];
-        setPosts((p) => (reset ? batch : [...p, ...batch]));
-        setCategories((j.categories ?? []) as BlogCategoryView[]);
-        setCursor(j.nextCursor ?? null);
-        setDone(!j.nextCursor);
-      } finally {
-        setLoading(false);
-      }
+  const loadPage = useCallback(
+    async (cursor: string | null) => {
+      const q = new URLSearchParams({ limit: "12" });
+      if (cursor) q.set("cursor", cursor);
+      if (category) q.set("category", category);
+      const res = await fetch(`/api/community/blogs?${q}`);
+      const j = await res.json();
+      const cats = (j.categories ?? []) as BlogCategoryView[];
+      if (cats.length) setCategories(cats);
+      return {
+        items: (j.posts ?? []) as BlogPostListItem[],
+        nextCursor: (j.nextCursor as string | null) ?? null,
+      };
     },
-    [category, cursor, done, loading],
+    [category],
   );
 
-  useEffect(() => {
-    void loadMore(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
-
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "200px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [loadMore]);
+  const { items: posts, setItems: setPosts, loading, sentinelRef } =
+    useCommunityPaginatedLoad({
+      loadPage,
+      resetKey: category,
+    });
 
   const publish = async () => {
     setPublishing(true);
@@ -242,7 +221,7 @@ export function CommunityBlogsClient() {
       </ul>
       )}
 
-      <div ref={sentinel} className="h-8" />
+      <div ref={sentinelRef} className="h-8" />
       {loading ? <p className="py-4 text-center text-xs text-[#78716c]">…</p> : null}
 
       {bpToast ? (

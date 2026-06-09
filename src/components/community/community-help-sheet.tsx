@@ -108,10 +108,10 @@ export function CommunityHelpSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="community-help-title"
-        className="max-h-[88vh] w-full max-w-md overflow-hidden rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-xl"
+        className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-[color:var(--fd-border)] bg-gradient-to-r from-[color:var(--fd-mint)] to-[color:var(--fd-card)] px-4 py-4">
+        <div className="shrink-0 border-b border-[color:var(--fd-border)] bg-gradient-to-r from-[color:var(--fd-mint)] to-[color:var(--fd-card)] px-4 py-4">
           <div className="flex items-start gap-3">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-card)] text-[color:var(--fd-primary)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
               <ModulesIcon />
@@ -175,7 +175,7 @@ export function CommunityHelpSheet({
           />
         </div>
 
-        <div className="border-t border-[color:var(--fd-border)] px-3 pb-2 pt-1">
+        <div className="shrink-0 border-t border-[color:var(--fd-border)] px-3 pb-2 pt-1">
           <button
             type="button"
             onClick={onClose}
