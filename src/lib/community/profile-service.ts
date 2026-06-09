@@ -1,22 +1,51 @@
 import { and, count, eq, inArray } from "drizzle-orm";
 import {
   communityBlogPosts,
+  communityComments,
   communityUserProfiles,
   getDb,
   users,
 } from "@/db";
 import { listUserBadges } from "@/lib/community/badges-service";
 import { grantCommunityProfileSetup } from "@/lib/community/rewards-service";
+import { reputationLevelFromScore } from "@/lib/community/reputation-levels";
+import {
+  candidateHandle,
+  isLegacyGarbageHandle,
+  normalizeUsernameBase,
+} from "@/lib/community/username";
 
-function slugHandle(base: string, suffix: string): string {
-  const clean = base
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "")
-    .slice(0, 20);
-  const s = (clean.length >= 3 ? clean : "user") + suffix.slice(0, 6);
-  return s.slice(0, 32);
+async function allocateHandle(
+  db: ReturnType<typeof getDb>,
+  displayName: string,
+): Promise<string> {
+  const base = normalizeUsernameBase(displayName);
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const handle = candidateHandle(base, attempt);
+    const [taken] = await db
+      .select({ userId: communityUserProfiles.userId })
+      .from(communityUserProfiles)
+      .where(eq(communityUserProfiles.handle, handle))
+      .limit(1);
+    if (!taken) return handle;
+  }
+  return `${base}_${Date.now().toString(36).slice(-4)}`;
+}
+
+async function maybeRepairLegacyHandle(
+  db: ReturnType<typeof getDb>,
+  profile: typeof communityUserProfiles.$inferSelect,
+  displayName: string,
+): Promise<string> {
+  if (!isLegacyGarbageHandle(profile.handle, displayName)) {
+    return profile.handle;
+  }
+  const next = await allocateHandle(db, displayName);
+  await db
+    .update(communityUserProfiles)
+    .set({ handle: next, updatedAt: new Date() })
+    .where(eq(communityUserProfiles.userId, profile.userId));
+  return next;
 }
 
 export type CommunityAuthorView = {
@@ -25,6 +54,9 @@ export type CommunityAuthorView = {
   displayName: string;
   showKycBadge: boolean;
   avatarUrl: string | null;
+  reputationScore?: number;
+  reputationLevel?: string;
+  memberSince?: string;
 };
 
 export async function ensureCommunityProfile(
@@ -43,13 +75,22 @@ export async function ensureCommunityProfile(
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+    const handle = await maybeRepairLegacyHandle(
+      db,
+      existing,
+      existing.displayName,
+    );
+    const level = reputationLevelFromScore(existing.reputationScore);
     return {
       userId,
-      handle: existing.handle,
+      handle,
       displayName: existing.displayName,
       showKycBadge:
         existing.showKycBadge && u?.kycStatus === "approved",
       avatarUrl: u?.avatarUrl ?? null,
+      reputationScore: existing.reputationScore,
+      reputationLevel: level.id,
+      memberSince: existing.createdAt.toISOString(),
     };
   }
 
@@ -69,20 +110,13 @@ export async function ensureCommunityProfile(
     u?.email?.split("@")[0]?.slice(0, 32) ||
     "Membre";
 
-  let handle = slugHandle(displayName, userId.replace(/-/g, ""));
-  for (let i = 0; i < 5; i++) {
-    try {
-      await db.insert(communityUserProfiles).values({
-        userId,
-        handle: i === 0 ? handle : `${handle}${i}`,
-        displayName: displayName.slice(0, 64),
-        showKycBadge: u?.kycStatus === "approved",
-      });
-      break;
-    } catch {
-      handle = slugHandle(displayName, userId.replace(/-/g, "") + String(i));
-    }
-  }
+  const handle = await allocateHandle(db, displayName);
+  await db.insert(communityUserProfiles).values({
+    userId,
+    handle,
+    displayName: displayName.slice(0, 64),
+    showKycBadge: u?.kycStatus === "approved",
+  });
 
   await grantCommunityProfileSetup(userId);
 
@@ -131,17 +165,23 @@ export async function getAuthorsMap(
     const p = profiles.find((x) => x.userId === id);
     const u = userById.get(id);
     if (p) {
+      const level = reputationLevelFromScore(p.reputationScore);
       map.set(id, {
         userId: id,
         handle: p.handle,
         displayName: p.displayName,
         showKycBadge: p.showKycBadge && u?.kycStatus === "approved",
         avatarUrl: u?.avatarUrl ?? null,
+        reputationScore: p.reputationScore,
+        reputationLevel: level.id,
+        memberSince: p.createdAt.toISOString(),
       });
     } else if (u) {
       map.set(id, {
         userId: id,
-        handle: slugHandle(u.displayName ?? u.email, id),
+        handle: normalizeUsernameBase(
+          u.displayName?.trim() || u.email.split("@")[0] || "user",
+        ),
         displayName:
           u.displayName?.trim() || u.email.split("@")[0] || "Membre",
         showKycBadge: u.kycStatus === "approved",
@@ -161,8 +201,11 @@ export type PublicProfileView = {
   showKycBadge: boolean;
   avatarUrl: string | null;
   reputationScore: number;
+  reputationLevel: string;
   postsCount: number;
   blogCount: number;
+  commentCount: number;
+  memberSince: string;
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
 };
 
@@ -193,18 +236,32 @@ export async function getPublicProfileByHandle(
       ),
     );
 
+  const [comments] = await db
+    .select({ n: count() })
+    .from(communityComments)
+    .where(eq(communityComments.authorId, profile.userId));
+
   const badges = await listUserBadges(profile.userId);
+  const resolvedHandle = await maybeRepairLegacyHandle(
+    db,
+    profile,
+    profile.displayName,
+  );
+  const level = reputationLevelFromScore(profile.reputationScore);
 
   return {
     userId: profile.userId,
-    handle: profile.handle,
+    handle: resolvedHandle,
     displayName: profile.displayName,
     bio: profile.bio,
     showKycBadge: profile.showKycBadge && u?.kycStatus === "approved",
     avatarUrl: u?.avatarUrl ?? null,
     reputationScore: profile.reputationScore,
+    reputationLevel: level.id,
     postsCount: profile.postsCount,
     blogCount: Number(blogs?.n ?? 0),
+    commentCount: Number(comments?.n ?? 0),
+    memberSince: profile.createdAt.toISOString(),
     badges,
   };
 }

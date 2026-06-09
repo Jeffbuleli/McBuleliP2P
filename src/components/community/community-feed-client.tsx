@@ -49,6 +49,9 @@ function mapFeedError(code: string | undefined, fr: boolean): string {
   if (code === "timeout") {
     return fr ? "Délai dépassé — réessayez" : "Timed out — try again";
   }
+  if (code === "network_error") {
+    return fr ? "Connexion impossible — vérifiez le réseau" : "Network error — check connection";
+  }
   if (code === "invalid_json" || code?.startsWith("http_")) {
     return fr ? "Erreur serveur — réessayez" : "Server error — try again";
   }

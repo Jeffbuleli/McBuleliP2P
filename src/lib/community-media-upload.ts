@@ -1,4 +1,4 @@
-/** Client — upload image communauté via R2 (presign) ou inline fallback. */
+/** Client — upload image via serveur (fiable mobile) avec fallback presign/inline. */
 
 import { fetchJson } from "@/lib/community/fetch-json";
 import {
@@ -11,6 +11,32 @@ export async function uploadCommunityImage(
   kind: "posts" | "blogs" | "covers" | "avatars" = "posts",
 ): Promise<{ id: string; url: string }> {
   const prep = await prepareCommunityImageBlob(file);
+
+  try {
+    const form = new FormData();
+    form.append(
+      "file",
+      new File([prep.blob], "upload.webp", { type: prep.mime }),
+    );
+    form.append("kind", kind);
+
+    const direct = await fetchJson<{ error?: string; id?: string; url?: string }>(
+      "/api/community/media/upload",
+      { method: "POST", body: form, timeoutMs: 60_000 },
+    );
+    if (direct.ok && direct.data.id) {
+      return { id: direct.data.id, url: direct.data.url! };
+    }
+    if (
+      direct.data.error &&
+      direct.data.error !== "r2_not_configured"
+    ) {
+      throw new Error(direct.data.error);
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === "timeout") throw e;
+    /* fallback presign / inline */
+  }
 
   const presign = await fetchJson<{
     error?: string;
@@ -27,36 +53,46 @@ export async function uploadCommunityImage(
     }),
   });
 
-  if (
-    presign.ok &&
-    presign.data.id &&
-    presign.data.uploadUrl
-  ) {
-    const putRes = await fetch(presign.data.uploadUrl, {
-      method: "PUT",
-      body: prep.blob,
-      headers: { "Content-Type": prep.mime },
-    });
-    if (!putRes.ok) {
-      throw new Error("r2_upload_failed");
+  if (presign.ok && presign.data.id && presign.data.uploadUrl) {
+    try {
+      const putRes = await fetch(presign.data.uploadUrl, {
+        method: "PUT",
+        body: prep.blob,
+        headers: { "Content-Type": prep.mime },
+      });
+      if (putRes.ok) {
+        const complete = await fetchJson<{
+          error?: string;
+          id?: string;
+          url?: string;
+        }>("/api/community/media/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mediaId: presign.data.id }),
+        });
+        if (complete.ok && complete.data.id) {
+          return {
+            id: complete.data.id,
+            url: complete.data.url ?? presign.data.publicUrl!,
+          };
+        }
+      }
+    } catch {
+      /* presign PUT failed (CORS) — retry server upload once */
+      const form = new FormData();
+      form.append(
+        "file",
+        new File([prep.blob], "upload.webp", { type: prep.mime }),
+      );
+      form.append("kind", kind);
+      const retry = await fetchJson<{ error?: string; id?: string; url?: string }>(
+        "/api/community/media/upload",
+        { method: "POST", body: form, timeoutMs: 60_000 },
+      );
+      if (retry.ok && retry.data.id) {
+        return { id: retry.data.id, url: retry.data.url! };
+      }
     }
-
-    const complete = await fetchJson<{ error?: string; id?: string; url?: string }>(
-      "/api/community/media/complete",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaId: presign.data.id }),
-      },
-    );
-    if (!complete.ok || !complete.data.id) {
-      throw new Error(complete.data.error ?? "r2_complete_failed");
-    }
-    return { id: complete.data.id, url: complete.data.url ?? presign.data.publicUrl! };
-  }
-
-  if (presign.data.error && presign.data.error !== "r2_not_configured") {
-    throw new Error(presign.data.error);
   }
 
   const inline = await prepareCommunityImageFile(file);

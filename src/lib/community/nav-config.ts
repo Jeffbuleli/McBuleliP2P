@@ -1,6 +1,35 @@
 export type CommunityPrimaryId = "news" | "discussions" | "training";
 export type CommunityExploreId = "blogs" | "questions" | "signals" | "ranking";
 
+/** Menu filtre du fil communauté (page /app/community). */
+export type CommunityCategoryId =
+  | "all"
+  | "news"
+  | "discussions"
+  | "training"
+  | "blogs"
+  | "questions"
+  | "signals"
+  | "ranking";
+
+export type CommunityCategoryNavItem = {
+  id: CommunityCategoryId;
+  labelFr: string;
+  labelEn: string;
+  href?: string;
+};
+
+export const COMMUNITY_CATEGORY_NAV: CommunityCategoryNavItem[] = [
+  { id: "all", labelFr: "Tout", labelEn: "All" },
+  { id: "news", labelFr: "Actualités", labelEn: "News" },
+  { id: "discussions", labelFr: "Discussions", labelEn: "Discussions" },
+  { id: "training", labelFr: "Formations", labelEn: "Training", href: "/app/community/formations" },
+  { id: "blogs", labelFr: "Blogs", labelEn: "Blogs" },
+  { id: "questions", labelFr: "Questions", labelEn: "Q&A" },
+  { id: "signals", labelFr: "Signaux", labelEn: "Signals" },
+  { id: "ranking", labelFr: "Classement", labelEn: "Ranking", href: "/app/community/traders" },
+];
+
 export type CommunityPrimaryNavItem = {
   id: CommunityPrimaryId;
   href: string;

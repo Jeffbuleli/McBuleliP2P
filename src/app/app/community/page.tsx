@@ -1,7 +1,7 @@
-import { CommunityHub } from "@/components/community/community-hub";
+import { CommunityHomeClient } from "@/components/community/community-home-client";
 
 export const dynamic = "force-dynamic";
 
 export default function CommunityPage() {
-  return <CommunityHub />;
+  return <CommunityHomeClient />;
 }

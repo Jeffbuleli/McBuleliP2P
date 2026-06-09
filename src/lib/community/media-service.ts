@@ -8,6 +8,7 @@ import {
   communityMediaKey,
   communityR2Configured,
   createCommunityUploadUrl,
+  putCommunityObjectToR2,
   verifyCommunityR2Object,
 } from "@/lib/community/media-r2";
 
@@ -81,6 +82,82 @@ export async function presignCommunityImageUpload(args: {
     uploadUrl: signed.uploadUrl,
     publicUrl: signed.publicUrl,
   };
+}
+
+/** Upload binaire via serveur (contourne CORS R2 sur mobile). */
+export async function uploadCommunityImageBuffer(args: {
+  ownerId: string;
+  buffer: Uint8Array;
+  mimeType: string;
+  kind?: "posts" | "blogs" | "covers" | "avatars";
+}): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
+  if (args.buffer.length > COMMUNITY_IMAGE_MAX_BYTES) {
+    return { ok: false, error: "community_image_too_large" };
+  }
+  if (
+    !COMMUNITY_IMAGE_MIMES.includes(
+      args.mimeType as (typeof COMMUNITY_IMAGE_MIMES)[number],
+    )
+  ) {
+    return { ok: false, error: "community_image_invalid_mime" };
+  }
+
+  const ext =
+    args.mimeType === "image/png"
+      ? "png"
+      : args.mimeType === "image/webp"
+        ? "webp"
+        : args.mimeType === "image/avif"
+          ? "avif"
+          : "jpg";
+  const objectKey = communityMediaKey(
+    args.kind ?? "posts",
+    args.ownerId,
+    `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`,
+  );
+
+  let publicUrl: string;
+  let bucket = "inline";
+
+  if (communityR2Configured()) {
+    const url = await putCommunityObjectToR2({
+      objectKey,
+      body: args.buffer,
+      mimeType: args.mimeType,
+    });
+    if (!url) return { ok: false, error: "r2_upload_failed" };
+    publicUrl = url;
+    bucket = getCommunityR2ConfigBucket();
+  } else {
+    const b64 = Buffer.from(args.buffer).toString("base64");
+    publicUrl = `data:${args.mimeType};base64,${b64}`;
+    if (publicUrl.length > INLINE_DATA_URL_MAX) {
+      return { ok: false, error: "community_image_use_r2" };
+    }
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .insert(communityMedia)
+    .values({
+      ownerId: args.ownerId,
+      bucket,
+      objectKey,
+      publicUrl,
+      fileType: "image",
+      mimeType: args.mimeType,
+      sizeBytes: args.buffer.length,
+      status: "ready",
+      variants: { thumb: publicUrl, medium: publicUrl },
+    })
+    .returning({ id: communityMedia.id, publicUrl: communityMedia.publicUrl });
+
+  if (!row) return { ok: false, error: "community_media_failed" };
+  return { ok: true, id: row.id, url: row.publicUrl };
+}
+
+function getCommunityR2ConfigBucket(): string {
+  return process.env.COMMUNITY_R2_BUCKET?.trim() || "r2";
 }
 
 export async function completeCommunityImageUpload(args: {

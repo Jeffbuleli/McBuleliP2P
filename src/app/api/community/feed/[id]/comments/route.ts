@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 const postZ = z.object({
   body: z.string().min(10).max(1200),
+  parentId: z.string().uuid().optional().nullable(),
 });
 
 export async function GET(
@@ -38,6 +39,7 @@ export async function POST(
     userId,
     postId: id,
     body: parsed.data.body,
+    parentId: parsed.data.parentId,
   });
 
   if (!result.ok) {

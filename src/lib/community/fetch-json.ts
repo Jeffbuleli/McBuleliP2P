@@ -23,6 +23,9 @@ export async function fetchJson<T extends Record<string, unknown> = Record<strin
     if (e instanceof Error && e.name === "AbortError") {
       throw new Error("timeout");
     }
+    if (e instanceof TypeError) {
+      throw new Error("network_error");
+    }
     throw e;
   } finally {
     clearTimeout(timer);

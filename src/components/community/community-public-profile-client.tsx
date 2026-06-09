@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import {
+  CommunityBadgeIcon,
+  KycVerifiedBadge,
+  ReputationLevelBadge,
+} from "@/components/community/community-badges";
 import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
+import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
 
 export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const { locale } = useI18n();
@@ -58,55 +64,78 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         ← {fr ? "Communauté" : "Community"}
       </Link>
 
-      <header className="fd-card mt-4 px-4 py-4 text-center">
-        {profile.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={profile.avatarUrl}
-            alt=""
-            className="mx-auto h-20 w-20 rounded-full object-cover"
-          />
-        ) : (
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f3ee] text-2xl font-bold text-[#305f33]">
-            {profile.displayName.slice(0, 1).toUpperCase()}
+      <header className="mt-4 overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-sm">
+        <div className="bg-gradient-to-b from-[#e8f3ee] to-white px-4 pb-4 pt-6 text-center">
+          {profile.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={profile.avatarUrl}
+              alt=""
+              className="mx-auto h-20 w-20 rounded-full border-2 border-white object-cover shadow-sm"
+            />
+          ) : (
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-[#e8f3ee] text-2xl font-bold text-[#305f33] shadow-sm">
+              {profile.displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <h1 className="mt-3 text-lg font-bold text-[#0c0a09]">
+            {profile.displayName}
+          </h1>
+          <p className="mt-0.5 text-sm text-[#78716c]">@{profile.handle}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+            {profile.showKycBadge ? <KycVerifiedBadge fr={fr} /> : null}
+            <ReputationLevelBadge levelId={profile.reputationLevel} fr={fr} />
           </div>
-        )}
-        <h1 className="mt-3 text-lg font-bold text-[#0c0a09]">
-          {profile.displayName}
-          {profile.showKycBadge ? (
-            <span className="ml-1 text-sm text-[#305f33]">✓</span>
+        </div>
+        <div className="px-4 pb-4">
+          {profile.bio ? (
+            <p className="text-center text-sm leading-relaxed text-[#57534e]">
+              {profile.bio}
+            </p>
           ) : null}
-        </h1>
-        <p className="text-sm text-[#78716c]">@{profile.handle}</p>
-        {profile.bio ? (
-          <p className="mt-2 text-sm text-[#57534e]">{profile.bio}</p>
-        ) : null}
-        {profile.badges.length > 0 ? (
-          <div className="mt-3 flex flex-wrap justify-center gap-1">
-            {profile.badges.map((b) => (
-              <span
-                key={b.slug}
-                className="rounded-full bg-[#fafaf9] px-2 py-0.5 text-[10px] font-medium text-[#57534e]"
-              >
-                {fr ? b.labelFr : b.labelEn}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
-          <div>
-            <dt className="text-[#a8a29e]">{fr ? "Réputation" : "Reputation"}</dt>
-            <dd className="font-bold text-[#0c0a09]">{profile.reputationScore}</dd>
-          </div>
-          <div>
-            <dt className="text-[#a8a29e]">{fr ? "Posts" : "Posts"}</dt>
-            <dd className="font-bold text-[#0c0a09]">{profile.postsCount}</dd>
-          </div>
-          <div>
-            <dt className="text-[#a8a29e]">Blogs</dt>
-            <dd className="font-bold text-[#0c0a09]">{profile.blogCount}</dd>
-          </div>
-        </dl>
+          {profile.badges.length > 0 ? (
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {profile.badges.map((b) => (
+                <span
+                  key={b.slug}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#fafaf9] px-2 py-0.5 text-[10px] font-semibold text-[#57534e]"
+                >
+                  <CommunityBadgeIcon slug={b.slug} />
+                  {fr ? b.labelFr : b.labelEn}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+            <div className="rounded-xl bg-[#fafafa] px-2 py-2 text-center">
+              <dt className="text-[#a8a29e]">{fr ? "Publications" : "Posts"}</dt>
+              <dd className="font-bold text-[#0c0a09]">{profile.postsCount}</dd>
+            </div>
+            <div className="rounded-xl bg-[#fafafa] px-2 py-2 text-center">
+              <dt className="text-[#a8a29e]">{fr ? "Commentaires" : "Comments"}</dt>
+              <dd className="font-bold text-[#0c0a09]">{profile.commentCount}</dd>
+            </div>
+            <div className="rounded-xl bg-[#fafafa] px-2 py-2 text-center">
+              <dt className="text-[#a8a29e]">Blogs</dt>
+              <dd className="font-bold text-[#0c0a09]">{profile.blogCount}</dd>
+            </div>
+            <div className="rounded-xl bg-[#fafafa] px-2 py-2 text-center">
+              <dt className="text-[#a8a29e]">{fr ? "Score" : "Score"}</dt>
+              <dd className="font-bold text-[#0c0a09]">{profile.reputationScore}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-center text-[10px] text-[#a8a29e]">
+            {fr ? "Membre depuis" : "Member since"}{" "}
+            {new Date(profile.memberSince).toLocaleDateString(fr ? "fr-FR" : "en-US", {
+              month: "long",
+              year: "numeric",
+            })}
+            {" · "}
+            {REPUTATION_LEVELS.find((l) => l.id === profile.reputationLevel)?.[
+              fr ? "labelFr" : "labelEn"
+            ] ?? ""}
+          </p>
+        </div>
       </header>
 
       {blogs.length > 0 ? (

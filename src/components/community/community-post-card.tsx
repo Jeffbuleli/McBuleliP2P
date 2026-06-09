@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { communityImageVariant, isDataSaverEnabled } from "@/lib/community/data-saver";
-import type { FeedPostView } from "@/lib/community/feed-service";
+import { CommunityAuthorHeader } from "@/components/community/community-author-header";
+import { CommunityCommentThread } from "@/components/community/community-comment-thread";
+import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
+import { communityImageVariant } from "@/lib/community/data-saver";
+import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 
 export function CommunityPostCard({
   post,
@@ -15,17 +18,12 @@ export function CommunityPostCard({
   const { locale } = useI18n();
   const fr = locale === "fr";
   const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<
-    { id: string; body: string; author: { displayName: string } }[]
-  >([]);
+  const [comments, setComments] = useState<CommentView[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const img = post.media[0];
-  const imgSrc = img
-    ? communityImageVariant(img.variants, img.url)
-    : null;
+  const imgSrc = img ? communityImageVariant(img.variants, img.url) : null;
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -40,45 +38,7 @@ export function CommunityPostCard({
       });
       const j = await res.json();
       if (res.ok) {
-        onUpdate({
-          likedByMe: j.liked,
-          likeCount: j.likeCount,
-        });
-        if (j.bpGranted > 0) {
-          flash(`+${j.bpGranted} BP`);
-        }
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const loadComments = async () => {
-    const res = await fetch(`/api/community/feed/${post.id}/comments`);
-    const j = await res.json();
-    setComments(j.comments ?? []);
-  };
-
-  const openComments = async () => {
-    const next = !commentOpen;
-    setCommentOpen(next);
-    if (next && comments.length === 0) await loadComments();
-  };
-
-  const submitComment = async () => {
-    if (commentText.trim().length < 10) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/community/feed/${post.id}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: commentText.trim() }),
-      });
-      const j = await res.json();
-      if (res.ok) {
-        setComments((c) => [...c, j.comment]);
-        setCommentText("");
-        onUpdate({ commentCount: post.commentCount + 1 });
+        onUpdate({ likedByMe: j.liked, likeCount: j.likeCount });
         if (j.bpGranted > 0) flash(`+${j.bpGranted} BP`);
       }
     } finally {
@@ -86,8 +46,18 @@ export function CommunityPostCard({
     }
   };
 
+  const openComments = async () => {
+    const next = !commentOpen;
+    setCommentOpen(next);
+    if (next && comments === null) {
+      const res = await fetch(`/api/community/feed/${post.id}/comments`);
+      const j = await res.json();
+      setComments(j.comments ?? []);
+    }
+  };
+
   const sharePost = async () => {
-    const url = `${window.location.origin}/app/community/feed?post=${post.id}`;
+    const url = `${window.location.origin}/app/community?post=${post.id}`;
     try {
       if (navigator.share) {
         await navigator.share({
@@ -108,7 +78,7 @@ export function CommunityPostCard({
         if (j.bpGranted > 0) flash(`+${j.bpGranted} BP`);
       }
     } catch {
-      /* user cancelled share */
+      /* cancelled */
     }
   };
 
@@ -126,111 +96,80 @@ export function CommunityPostCard({
   };
 
   return (
-    <article className="fd-card overflow-hidden">
-      <header className="flex items-center gap-3 px-4 pt-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e8f3ee] text-xs font-bold text-[#305f33]">
-          {post.author.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.author.avatarUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            post.author.displayName.slice(0, 1).toUpperCase()
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-[#0c0a09]">
-            {post.author.displayName}
-            {post.author.showKycBadge ? (
-              <span className="ml-1 text-[10px] font-semibold text-[#305f33]">
-                KYC
-              </span>
-            ) : null}
-          </p>
-          <p className="text-[10px] text-[#a8a29e]">@{post.author.handle}</p>
-        </div>
-      </header>
-
-      <p className="px-4 py-2 text-sm leading-relaxed text-[#292524] whitespace-pre-wrap break-words">
-        {post.body}
-      </p>
-
-      {imgSrc ? (
-        <div className="px-4 pb-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imgSrc}
-            alt=""
-            loading="lazy"
-            className="max-h-64 w-full rounded-xl object-cover"
+    <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-sm">
+      <div className="px-4 pt-4">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <CommunityAuthorHeader
+            author={post.author}
+            publishedAt={post.publishedAt}
+            fr={fr}
           />
+          <CommunityPostTypeChip kind="news" fr={fr} />
         </div>
-      ) : null}
 
-      <div className="flex items-center justify-between border-t border-[#f0f4f2] px-2 py-1">
+        <p className="max-w-prose text-[15px] leading-relaxed text-[#292524] whitespace-pre-wrap break-words">
+          {post.body}
+        </p>
+
+        {imgSrc ? (
+          <div className="mt-3 overflow-hidden rounded-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imgSrc}
+              alt=""
+              loading="lazy"
+              className="max-h-72 w-full object-cover"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-3 flex items-center border-t border-[#f0f4f2] px-2">
         <button
           type="button"
           disabled={busy}
           onClick={toggleLike}
-          className={`min-h-[44px] flex-1 rounded-lg text-xs font-semibold ${
+          className={`min-h-[48px] flex-1 rounded-lg text-xs font-semibold transition active:scale-95 ${
             post.likedByMe ? "text-[#305f33]" : "text-[#57534e]"
           }`}
         >
-          {fr ? "J'aime" : "Like"} {post.likeCount > 0 ? `· ${post.likeCount}` : ""}
+          {fr ? "J'aime" : "Like"}
+          {post.likeCount > 0 ? ` · ${post.likeCount}` : ""}
         </button>
         <button
           type="button"
-          onClick={openComments}
-          className="min-h-[44px] flex-1 rounded-lg text-xs font-semibold text-[#57534e]"
+          onClick={() => void openComments()}
+          className="min-h-[48px] flex-1 rounded-lg text-xs font-semibold text-[#57534e] transition active:scale-95"
         >
-          {fr ? "Commenter" : "Comment"}{" "}
-          {post.commentCount > 0 ? `· ${post.commentCount}` : ""}
+          {fr ? "Commenter" : "Comment"}
+          {post.commentCount > 0 ? ` · ${post.commentCount}` : ""}
         </button>
         <button
           type="button"
           onClick={sharePost}
-          className="min-h-[44px] flex-1 rounded-lg text-xs font-semibold text-[#57534e]"
+          className="min-h-[48px] flex-1 rounded-lg text-xs font-semibold text-[#57534e] transition active:scale-95"
         >
           {fr ? "Partager" : "Share"}
+          {post.shareCount > 0 ? ` · ${post.shareCount}` : ""}
         </button>
       </div>
 
-      {commentOpen ? (
-        <div className="border-t border-[#f0f4f2] px-4 py-3">
-          <ul className="mb-3 max-h-40 space-y-2 overflow-y-auto">
-            {comments.map((c) => (
-              <li key={c.id} className="text-xs text-[#44403c]">
-                <span className="font-bold">{c.author.displayName}</span>{" "}
-                {c.body}
-              </li>
-            ))}
-          </ul>
-          <div className="flex gap-2">
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder={fr ? "Votre commentaire…" : "Your comment…"}
-              className="min-h-[44px] flex-1 rounded-xl border border-[#e8f3ee] px-3 text-sm"
-            />
-            <button
-              type="button"
-              disabled={busy}
-              onClick={submitComment}
-              className="rounded-xl bg-[#305f33] px-4 text-xs font-bold text-white"
-            >
-              OK
-            </button>
-          </div>
-        </div>
+      {commentOpen && comments !== null ? (
+        <CommunityCommentThread
+          postId={post.id}
+          fr={fr}
+          initialComments={comments}
+          onCountChange={() =>
+            onUpdate({ commentCount: post.commentCount + 1 })
+          }
+        />
       ) : null}
 
       <div className="flex justify-end px-4 pb-2">
         <button
           type="button"
           onClick={reportPost}
-          className="text-[10px] text-[#a8a29e]"
+          className="text-[10px] text-[#a8a29e] active:scale-95"
         >
           {fr ? "Signaler" : "Report"}
         </button>

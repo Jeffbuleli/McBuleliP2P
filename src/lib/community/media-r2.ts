@@ -91,6 +91,26 @@ export async function createCommunityUploadUrl(args: {
   };
 }
 
+export async function putCommunityObjectToR2(args: {
+  objectKey: string;
+  body: Uint8Array;
+  mimeType: string;
+}): Promise<string | null> {
+  const cfg = getCommunityR2Config();
+  if (!cfg) return null;
+
+  const client = getR2Client(cfg);
+  await client.send(
+    new PutObjectCommand({
+      Bucket: cfg.bucket,
+      Key: args.objectKey,
+      Body: args.body,
+      ContentType: args.mimeType,
+    }),
+  );
+  return communityMediaPublicUrl(cfg, args.objectKey);
+}
+
 export async function verifyCommunityR2Object(args: {
   objectKey: string;
   minSizeBytes?: number;

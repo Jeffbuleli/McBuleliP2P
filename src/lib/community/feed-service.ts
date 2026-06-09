@@ -416,24 +416,59 @@ export type CommentView = {
   body: string;
   likeCount: number;
   createdAt: string;
+  parentId: string | null;
+  depth: number;
   author: CommunityAuthorView;
+  replies: CommentView[];
 };
+
+function buildCommentTree(
+  flat: Omit<CommentView, "replies" | "depth">[],
+): CommentView[] {
+  const byId = new Map<string, CommentView>();
+  const roots: CommentView[] = [];
+
+  for (const c of flat) {
+    byId.set(c.id, { ...c, depth: 0, replies: [] });
+  }
+
+  for (const c of byId.values()) {
+    if (c.parentId && byId.has(c.parentId)) {
+      const parent = byId.get(c.parentId)!;
+      if (parent.depth < 2) {
+        c.depth = parent.depth + 1;
+        parent.replies.push(c);
+      } else {
+        roots.push(c);
+      }
+    } else {
+      roots.push(c);
+    }
+  }
+
+  const sortRec = (list: CommentView[]) => {
+    list.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    for (const n of list) sortRec(n.replies);
+  };
+  sortRec(roots);
+  return roots;
+}
 
 export async function listPostComments(
   postId: string,
-  limit = 40,
+  limit = 60,
 ): Promise<CommentView[]> {
   const db = getDb();
   const rows = await db
     .select()
     .from(communityComments)
     .where(eq(communityComments.postId, postId))
-    .orderBy(desc(communityComments.createdAt))
-    .limit(Math.min(limit, 80));
+    .orderBy(communityComments.createdAt)
+    .limit(Math.min(limit, 120));
 
   const authors = await getAuthorsMap(rows.map((r) => r.authorId));
 
-  return rows
+  const flat = rows
     .map((r) => {
       const author = authors.get(r.authorId);
       if (!author) return null;
@@ -442,17 +477,20 @@ export async function listPostComments(
         body: r.body,
         likeCount: r.likeCount,
         createdAt: r.createdAt.toISOString(),
+        parentId: r.parentId,
         author,
       };
     })
-    .filter((x): x is CommentView => x !== null)
-    .reverse();
+    .filter((x): x is Omit<CommentView, "replies" | "depth"> => x !== null);
+
+  return buildCommentTree(flat);
 }
 
 export async function addPostComment(args: {
   userId: string;
   postId: string;
   body: string;
+  parentId?: string | null;
 }): Promise<
   | { ok: true; comment: CommentView; bpGranted: number }
   | { ok: false; error: string }
@@ -481,12 +519,39 @@ export async function addPostComment(args: {
 
   await ensureCommunityProfile(args.userId);
 
+  let parentId: string | null = args.parentId ?? null;
+  if (parentId) {
+    const [parent] = await db
+      .select({
+        id: communityComments.id,
+        parentId: communityComments.parentId,
+      })
+      .from(communityComments)
+      .where(
+        and(
+          eq(communityComments.id, parentId),
+          eq(communityComments.postId, args.postId),
+        ),
+      )
+      .limit(1);
+    if (!parent) return { ok: false, error: "parent_not_found" };
+    if (parent.parentId) {
+      const [grand] = await db
+        .select({ parentId: communityComments.parentId })
+        .from(communityComments)
+        .where(eq(communityComments.id, parent.parentId))
+        .limit(1);
+      if (grand?.parentId) parentId = parent.id;
+    }
+  }
+
   const [row] = await db
     .insert(communityComments)
     .values({
       postId: args.postId,
       authorId: args.userId,
       body,
+      parentId,
     })
     .returning();
 
@@ -523,7 +588,10 @@ export async function addPostComment(args: {
       body: row.body,
       likeCount: 0,
       createdAt: row.createdAt.toISOString(),
+      parentId: row.parentId,
+      depth: parentId ? 1 : 0,
       author,
+      replies: [],
     },
   };
 }

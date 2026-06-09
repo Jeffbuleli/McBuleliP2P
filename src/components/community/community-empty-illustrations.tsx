@@ -67,6 +67,20 @@ export function EmptyQuestionIllustration({ className = "h-24 w-24" }: Props) {
   );
 }
 
+export function EmptyCommentIllustration({ className = "h-20 w-20" }: Props) {
+  return (
+    <svg className={className} viewBox="0 0 96 96" fill="none" aria-hidden>
+      <path
+        d="M22 28h44a5 5 0 015 5v18a5 5 0 01-5 5H38l-10 8V33a5 5 0 015-5z"
+        stroke={muted}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M32 40h24M32 48h14" stroke={stroke} strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  );
+}
+
 export function EmptySignalIllustration({ className = "h-24 w-24" }: Props) {
   return (
     <svg className={className} viewBox="0 0 96 96" fill="none" aria-hidden>
