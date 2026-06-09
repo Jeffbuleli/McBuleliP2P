@@ -6,6 +6,24 @@ import {
   prepareCommunityImageFile,
 } from "@/lib/community-image";
 
+export async function uploadCommunityVideo(
+  file: File,
+  kind: "posts" | "blogs" | "covers" = "posts",
+): Promise<{ id: string; url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("kind", kind);
+
+  const direct = await fetchJson<{ error?: string; id?: string; url?: string }>(
+    "/api/community/media/upload",
+    { method: "POST", body: form, timeoutMs: 120_000 },
+  );
+  if (!direct.ok || !direct.data.id) {
+    throw new Error(direct.data.error ?? "upload_failed");
+  }
+  return { id: direct.data.id, url: direct.data.url! };
+}
+
 export async function uploadCommunityImage(
   file: File,
   kind: "posts" | "blogs" | "covers" | "avatars" = "posts",

@@ -18,12 +18,19 @@ import {
 import { CommunityFeedSkeleton } from "@/components/community/community-skeleton";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import { fetchJson } from "@/lib/community/fetch-json";
-import { uploadCommunityImage } from "@/lib/community-media-upload";
+import {
+  uploadCommunityImage,
+  uploadCommunityVideo,
+} from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
 import { communityPostAppPath } from "@/lib/community/share-url";
-import { IconInbox } from "@/components/community/community-icons";
+import {
+  IconImage,
+  IconInbox,
+  IconVideo,
+} from "@/components/community/community-icons";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
   return {
@@ -56,7 +63,8 @@ export function CommunityHomeClient() {
   const [showComposer, setShowComposer] = useState(false);
   const [body, setBody] = useState("");
   const [mediaId, setMediaId] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [mediaKind, setMediaKind] = useState<"image" | "video" | null>(null);
+  const [uploading, setUploading] = useState<"image" | "video" | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
@@ -121,10 +129,11 @@ export function CommunityHomeClient() {
   const onImagePick = async (file: File | null) => {
     if (!file) return;
     setError(null);
-    setUploading(true);
+    setUploading("image");
     try {
       const uploaded = await uploadCommunityImage(file, "posts");
       setMediaId(uploaded.id);
+      setMediaKind("image");
     } catch (e) {
       const code = e instanceof Error ? e.message : "upload_failed";
       setError(
@@ -141,7 +150,31 @@ export function CommunityHomeClient() {
               : "Image upload failed",
       );
     } finally {
-      setUploading(false);
+      setUploading(null);
+    }
+  };
+
+  const onVideoPick = async (file: File | null) => {
+    if (!file) return;
+    setError(null);
+    setUploading("video");
+    try {
+      const uploaded = await uploadCommunityVideo(file, "posts");
+      setMediaId(uploaded.id);
+      setMediaKind("video");
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "upload_failed";
+      setError(
+        code === "timeout"
+          ? fr
+            ? "Délai dépassé — réessayez"
+            : "Timed out — try again"
+          : fr
+            ? "Échec upload vidéo"
+            : "Video upload failed",
+      );
+    } finally {
+      setUploading(null);
     }
   };
 
@@ -162,7 +195,7 @@ export function CommunityHomeClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           body: body.trim(),
-          postType: mediaId ? "image" : "text",
+          postType: mediaKind === "video" ? "video" : mediaId ? "image" : "text",
           mediaIds: mediaId ? [mediaId] : undefined,
         }),
       });
@@ -188,6 +221,7 @@ export function CommunityHomeClient() {
       setItems((list) => [unified, ...list]);
       setBody("");
       setMediaId(null);
+      setMediaKind(null);
       setShowComposer(false);
       if (data.bpGranted?.granted) {
         setBpToast(`+${data.bpGranted.points} BP`);
@@ -254,19 +288,46 @@ export function CommunityHomeClient() {
                 className="w-full resize-none rounded-xl border border-[#e8f3ee] bg-white px-3 py-2 text-sm"
               />
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <label className="cursor-pointer rounded-lg border border-[#e8f3ee] px-3 py-2 text-xs font-semibold text-[#305f33] active:scale-95">
-                  {uploading
-                    ? "…"
-                    : mediaId
-                      ? fr
-                        ? "Image OK"
-                        : "Image added"
-                      : "+ Image"}
+                <label
+                  className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 ${
+                    mediaKind === "image"
+                      ? "bg-[#e8f3ee] text-[#305f33]"
+                      : "bg-white text-[#305f33]"
+                  }`}
+                  aria-label={fr ? "Ajouter une image" : "Add image"}
+                >
+                  {uploading === "image" ? (
+                    <span className="text-xs">…</span>
+                  ) : (
+                    <IconImage size={20} />
+                  )}
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                     className="hidden"
+                    disabled={!!uploading}
                     onChange={(e) => onImagePick(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <label
+                  className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 ${
+                    mediaKind === "video"
+                      ? "bg-[#e8f3ee] text-[#305f33]"
+                      : "bg-white text-[#305f33]"
+                  }`}
+                  aria-label={fr ? "Ajouter une vidéo" : "Add video"}
+                >
+                  {uploading === "video" ? (
+                    <span className="text-xs">…</span>
+                  ) : (
+                    <IconVideo size={20} />
+                  )}
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    className="hidden"
+                    disabled={!!uploading}
+                    onChange={(e) => onVideoPick(e.target.files?.[0] ?? null)}
                   />
                 </label>
                 <button

@@ -3,6 +3,8 @@ import { communityMedia, getDb } from "@/db";
 import {
   COMMUNITY_IMAGE_MAX_BYTES,
   COMMUNITY_IMAGE_MIMES,
+  COMMUNITY_VIDEO_MAX_BYTES,
+  COMMUNITY_VIDEO_MIMES,
 } from "@/lib/community/config";
 import {
   communityMediaKey,
@@ -149,6 +151,62 @@ export async function uploadCommunityImageBuffer(args: {
       sizeBytes: args.buffer.length,
       status: "ready",
       variants: { thumb: publicUrl, medium: publicUrl },
+    })
+    .returning({ id: communityMedia.id, publicUrl: communityMedia.publicUrl });
+
+  if (!row) return { ok: false, error: "community_media_failed" };
+  return { ok: true, id: row.id, url: row.publicUrl };
+}
+
+/** Upload vidéo via serveur → R2 (posts community). */
+export async function uploadCommunityVideoBuffer(args: {
+  ownerId: string;
+  buffer: Uint8Array;
+  mimeType: string;
+  kind?: "posts" | "blogs" | "covers";
+}): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
+  if (args.buffer.length > COMMUNITY_VIDEO_MAX_BYTES) {
+    return { ok: false, error: "community_video_too_large" };
+  }
+  if (
+    !COMMUNITY_VIDEO_MIMES.includes(
+      args.mimeType as (typeof COMMUNITY_VIDEO_MIMES)[number],
+    )
+  ) {
+    return { ok: false, error: "community_video_invalid_mime" };
+  }
+
+  const ext = args.mimeType === "video/webm" ? "webm" : "mp4";
+  const objectKey = communityMediaKey(
+    args.kind ?? "posts",
+    args.ownerId,
+    `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`,
+  );
+
+  if (!communityR2Configured()) {
+    return { ok: false, error: "r2_not_configured" };
+  }
+
+  const url = await putCommunityObjectToR2({
+    objectKey,
+    body: args.buffer,
+    mimeType: args.mimeType,
+  });
+  if (!url) return { ok: false, error: "r2_upload_failed" };
+
+  const db = getDb();
+  const [row] = await db
+    .insert(communityMedia)
+    .values({
+      ownerId: args.ownerId,
+      bucket: getCommunityR2ConfigBucket(),
+      objectKey,
+      publicUrl: url,
+      fileType: "video",
+      mimeType: args.mimeType,
+      sizeBytes: args.buffer.length,
+      status: "ready",
+      variants: null,
     })
     .returning({ id: communityMedia.id, publicUrl: communityMedia.publicUrl });
 

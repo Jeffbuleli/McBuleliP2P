@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityMentionText } from "@/components/community/community-mention-text";
-import { IconSend } from "@/components/community/community-icons";
+import { IconLike, IconReply, IconSend } from "@/components/community/community-icons";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommentView } from "@/lib/community/feed-service";
 
@@ -88,19 +88,31 @@ function CommentNode({
             </span>
           </p>
         </div>
-        <div className="mt-1 flex items-center gap-3 px-1 text-[11px] font-semibold text-[#78716c]">
+        <div className="mt-1 flex items-center gap-3 px-1 text-[11px] text-[#78716c]">
           <span>{formatRelativeTime(comment.createdAt, fr)}</span>
           <button
             type="button"
-            className={comment.likedByMe ? "text-[#305f33]" : ""}
+            aria-label={fr ? "J'aime" : "Like"}
+            className={`relative flex h-8 w-8 items-center justify-center rounded-full active:scale-95 ${
+              comment.likedByMe ? "text-[#305f33]" : "text-[#78716c]"
+            }`}
             onClick={() => onLike(comment.id)}
           >
-            {fr ? "J'aime" : "Like"}
-            {comment.likeCount > 0 ? ` · ${comment.likeCount}` : ""}
+            <IconLike size={16} filled={comment.likedByMe} />
+            {comment.likeCount > 0 ? (
+              <span className="absolute -right-1 -top-0.5 text-[9px] font-bold">
+                {comment.likeCount}
+              </span>
+            ) : null}
           </button>
           {depth < 2 ? (
-            <button type="button" onClick={() => onReply(comment.id)}>
-              {fr ? "Répondre" : "Reply"}
+            <button
+              type="button"
+              aria-label={fr ? "Répondre" : "Reply"}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#78716c] active:scale-95"
+              onClick={() => onReply(comment.id)}
+            >
+              <IconReply size={16} />
             </button>
           ) : null}
         </div>

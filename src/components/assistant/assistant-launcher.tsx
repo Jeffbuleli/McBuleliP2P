@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const AssistantWidget = dynamic(
@@ -13,7 +14,9 @@ const AssistantWidget = dynamic(
 
 /** Defer assistant bundle until the browser is idle — lighter landing first paint. */
 export function AssistantLauncher() {
+  const pathname = usePathname();
   const [ready, setReady] = useState(false);
+  const hideOnInbox = pathname?.startsWith("/app/community/inbox");
 
   useEffect(() => {
     const mount = () => setReady(true);
@@ -25,6 +28,6 @@ export function AssistantLauncher() {
     return () => window.clearTimeout(t);
   }, []);
 
-  if (!ready) return null;
+  if (hideOnInbox || !ready) return null;
   return <AssistantWidget />;
 }

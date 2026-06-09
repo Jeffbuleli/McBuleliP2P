@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   AdminGoldBadge,
@@ -26,20 +26,41 @@ function PeerBadges({
   );
 }
 
+function threadsFingerprint(list: DmThreadListItem[]): string {
+  return list
+    .map(
+      (t) =>
+        `${t.id}:${t.lastMessageAt}:${t.unreadCount ?? 0}:${t.peer.online ? 1 : 0}`,
+    )
+    .join("|");
+}
+
 export function CommunityInboxClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
   const [threads, setThreads] = useState<DmThreadListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const fpRef = useRef("");
+  const initialLoad = useRef(true);
 
   useEffect(() => {
     const load = () => {
       fetch("/api/community/dm/threads")
         .then((r) => r.json())
         .then((d: { threads?: DmThreadListItem[] }) => {
-          setThreads(d.threads ?? []);
+          const next = d.threads ?? [];
+          const fp = threadsFingerprint(next);
+          if (fp !== fpRef.current) {
+            fpRef.current = fp;
+            setThreads(next);
+          }
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (initialLoad.current) {
+            initialLoad.current = false;
+            setLoading(false);
+          }
+        });
     };
     load();
     const t = window.setInterval(load, 8000);

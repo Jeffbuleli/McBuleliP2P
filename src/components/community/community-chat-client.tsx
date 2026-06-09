@@ -27,18 +27,13 @@ type ThreadMeta = {
   isRequest: boolean;
 };
 
-function SendIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+function messagesFingerprint(list: DmMessageView[]): string {
+  return list
+    .map(
+      (m) =>
+        `${m.id}:${m.read ? 1 : 0}:${m.delivered ? 1 : 0}:${m.hidden ? 1 : 0}`,
+    )
+    .join("|");
 }
 
 export function CommunityChatClient({ threadId }: { threadId: string }) {
@@ -52,13 +47,23 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<number | null>(null);
+  const msgFpRef = useRef("");
+  const prevCountRef = useRef(0);
 
   const loadMessages = useCallback(async () => {
     const res = await fetch(`/api/community/dm/threads/${threadId}/messages`);
     const j = await res.json();
     if (res.ok) {
-      setMessages(j.messages ?? []);
-      setTyping(!!j.peerTyping);
+      const next = (j.messages ?? []) as DmMessageView[];
+      const fp = messagesFingerprint(next);
+      if (fp !== msgFpRef.current) {
+        msgFpRef.current = fp;
+        setMessages(next);
+      }
+      setTyping((prev) => {
+        const t = !!j.peerTyping;
+        return prev === t ? prev : t;
+      });
     }
   }, [threadId]);
 
@@ -75,7 +80,11 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
   }, [threadId, loadMessages]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const count = messages.length;
+    if (count > prevCountRef.current || typing) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevCountRef.current = count;
   }, [messages, typing]);
 
   const sendTyping = () => {
@@ -303,9 +312,12 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
         <div ref={bottomRef} />
       </div>
 
-      <footer className="border-t border-[#f0f4f2] bg-white px-3 py-3">
+      <footer className="border-t border-[#f0f4f2] bg-white px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex items-end gap-2">
-          <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#f0f7f3] text-[#305f33]">
+          <label
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#f0f7f3] text-[#305f33]"
+            aria-label={fr ? "Joindre une image" : "Attach image"}
+          >
             <input
               type="file"
               accept="image/*"
@@ -317,7 +329,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
                 e.target.value = "";
               }}
             />
-            📎
+            <IconAttach size={20} />
           </label>
           <textarea
             value={text}
