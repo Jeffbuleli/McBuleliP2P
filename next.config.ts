@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["ccxt", "technicalindicators"],
+  serverExternalPackages: ["ccxt", "technicalindicators", "postgres"],
   images: {
     remotePatterns: [
       {

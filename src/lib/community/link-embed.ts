@@ -11,6 +11,7 @@ export type ParsedEmbed = {
   embedUrl: string | null;
   externalUrl: string;
   label: string;
+  thumbnailUrl: string | null;
 };
 
 const URL_RE =
@@ -45,9 +46,10 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
   if (yt) {
     return {
       kind: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&playsinline=1`,
+      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&playsinline=1&autoplay=1`,
       externalUrl: url,
       label: "YouTube",
+      thumbnailUrl: `https://img.youtube.com/vi/${yt}/hqdefault.jpg`,
     };
   }
 
@@ -58,6 +60,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: `https://www.tiktok.com/embed/v2/${tiktok}`,
       externalUrl: url,
       label: "TikTok",
+      thumbnailUrl: null,
     };
   }
 
@@ -68,6 +71,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: `https://platform.twitter.com/embed/Tweet.html?id=${tweet}&theme=light`,
       externalUrl: url,
       label: "X",
+      thumbnailUrl: null,
     };
   }
 
@@ -80,6 +84,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: `https://t.me/${channel}/${msgId}?embed=1`,
       externalUrl: url,
       label: "Telegram",
+      thumbnailUrl: null,
     };
   }
 
@@ -89,6 +94,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: null,
       externalUrl: url,
       label: "Telegram",
+      thumbnailUrl: null,
     };
   }
 
@@ -99,6 +105,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&width=560`,
       externalUrl: url,
       label: "Facebook",
+      thumbnailUrl: null,
     };
   }
 
@@ -107,6 +114,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
     embedUrl: null,
     externalUrl: url,
     label: "Link",
+    thumbnailUrl: null,
   };
 }
 

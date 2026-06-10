@@ -12,7 +12,10 @@ import {
   getAuthorsMap,
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
-import { communityImageVariant } from "@/lib/community/data-saver";
+import type { MediaCommentView, MediaItemView } from "@/lib/community/media-types";
+
+export type { MediaCommentView, MediaItemView } from "@/lib/community/media-types";
+export { asMediaItemView, mediaDisplayUrl } from "@/lib/community/media-types";
 
 async function assertNotBlocked(
   viewerId: string,
@@ -30,42 +33,6 @@ async function assertNotBlocked(
     )
     .limit(1);
   return !block;
-}
-
-export type MediaItemView = {
-  id: string;
-  url: string;
-  variants: Record<string, string> | null;
-  fileType: string;
-  mimeType: string;
-  likeCount: number;
-  commentCount: number;
-  shareCount: number;
-  likedByMe: boolean;
-};
-
-export function asMediaItemView(item: {
-  id: string;
-  url: string;
-  variants: Record<string, string> | null;
-  fileType?: string;
-  mimeType?: string;
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
-  likedByMe?: boolean;
-}): MediaItemView {
-  return {
-    id: item.id,
-    url: item.url,
-    variants: item.variants,
-    fileType: item.fileType ?? "image",
-    mimeType: item.mimeType ?? "",
-    likeCount: item.likeCount ?? 0,
-    commentCount: item.commentCount ?? 0,
-    shareCount: item.shareCount ?? 0,
-    likedByMe: item.likedByMe ?? false,
-  };
 }
 
 export async function getPostMediaViews(
@@ -268,15 +235,6 @@ export async function shareMedia(args: {
   return { ok: true, shareCount: u?.shareCount ?? 1 };
 }
 
-export type MediaCommentView = {
-  id: string;
-  body: string;
-  likeCount: number;
-  likedByMe: boolean;
-  createdAt: string;
-  author: CommunityAuthorView;
-};
-
 export async function listMediaComments(
   mediaId: string,
   viewerId: string | null,
@@ -392,8 +350,4 @@ export async function addMediaComment(args: {
       author,
     },
   };
-}
-
-export function mediaDisplayUrl(media: MediaItemView): string {
-  return communityImageVariant(media.variants, media.url) ?? media.url;
 }

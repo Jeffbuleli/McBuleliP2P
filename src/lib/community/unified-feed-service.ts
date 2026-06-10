@@ -1,10 +1,7 @@
 import { listPublishedBlogs } from "@/lib/community/blog-service";
 import { listDiscussions } from "@/lib/community/discussion-service";
 import { listFeedPosts } from "@/lib/community/feed-service";
-import {
-  asMediaItemView,
-  type MediaItemView,
-} from "@/lib/community/media-engagement-service";
+import { asMediaItemView, type MediaItemView } from "@/lib/community/media-types";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 import { listQuestions } from "@/lib/community/qa-service";

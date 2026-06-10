@@ -10,9 +10,11 @@ import {
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
-import { mediaDisplayUrl } from "@/lib/community/media-engagement-service";
-import type { MediaCommentView } from "@/lib/community/media-engagement-service";
-import type { MediaItemView } from "@/lib/community/media-engagement-service";
+import {
+  mediaDisplayUrl,
+  type MediaCommentView,
+  type MediaItemView,
+} from "@/lib/community/media-types";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 
 type Payload = {
