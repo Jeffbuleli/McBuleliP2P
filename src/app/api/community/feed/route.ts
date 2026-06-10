@@ -9,8 +9,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const createZ = z.object({
-  body: z.string().min(20).max(4000),
+  body: z.string().min(1).max(4000),
   postType: z.enum(["text", "image", "video"]).optional(),
+  contentKind: z
+    .enum(["news", "discussion", "analysis", "experience"])
+    .optional(),
   mediaIds: z.array(z.string().uuid()).max(4).optional(),
 });
 
@@ -66,6 +69,7 @@ export async function POST(req: Request) {
     authorId: userId,
     body: parsed.data.body,
     postType: parsed.data.postType,
+    contentKind: parsed.data.contentKind,
     mediaIds,
   });
 

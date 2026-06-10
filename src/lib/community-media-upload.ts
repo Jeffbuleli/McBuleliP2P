@@ -10,18 +10,50 @@ export async function uploadCommunityVideo(
   file: File,
   kind: "posts" | "blogs" | "covers" = "posts",
 ): Promise<{ id: string; url: string }> {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("kind", kind);
+  return uploadCommunityVideoWithProgress(file, kind);
+}
 
-  const direct = await fetchJson<{ error?: string; id?: string; url?: string }>(
-    "/api/community/media/upload",
-    { method: "POST", body: form, timeoutMs: 120_000 },
-  );
-  if (!direct.ok || !direct.data.id) {
-    throw new Error(direct.data.error ?? "upload_failed");
-  }
-  return { id: direct.data.id, url: direct.data.url! };
+/** Video upload with progress — pre-upload before publishing. */
+export function uploadCommunityVideoWithProgress(
+  file: File,
+  kind: "posts" | "blogs" | "covers" = "posts",
+  onProgress?: (pct: number) => void,
+): Promise<{ id: string; url: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const form = new FormData();
+    form.append("file", file);
+    form.append("kind", kind);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText) as {
+          error?: string;
+          id?: string;
+          url?: string;
+        };
+        if (xhr.status >= 200 && xhr.status < 300 && data.id) {
+          resolve({ id: data.id, url: data.url! });
+          return;
+        }
+        reject(new Error(data.error ?? "upload_failed"));
+      } catch {
+        reject(new Error("upload_failed"));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("network_error"));
+    xhr.ontimeout = () => reject(new Error("timeout"));
+    xhr.timeout = 120_000;
+    xhr.open("POST", "/api/community/media/upload");
+    xhr.send(form);
+  });
 }
 
 export async function uploadCommunityImage(

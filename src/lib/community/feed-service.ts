@@ -22,6 +22,11 @@ import {
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
 import { ensureCommunitySchema } from "@/lib/community/community-schema";
+import {
+  type FeedComposerKind,
+  isFeedComposerKind,
+  minBodyLengthForKind,
+} from "@/lib/community/composer-config";
 import { moderateCommunityText } from "@/lib/community/moderation-service";
 import {
   grantCommunityComment,
@@ -45,6 +50,7 @@ export type FeedPostView = {
   id: string;
   body: string;
   postType: string;
+  contentKind: string;
   likeCount: number;
   commentCount: number;
   shareCount: number;
@@ -190,6 +196,7 @@ export async function listFeedPosts(args: {
       id: r.id,
       body: r.body,
       postType: r.postType,
+      contentKind: r.contentKind ?? "news",
       likeCount: r.likeCount,
       commentCount: r.commentCount,
       shareCount: r.shareCount,
@@ -258,6 +265,7 @@ export async function createFeedPost(args: {
   authorId: string;
   body: string;
   postType?: "text" | "image" | "video";
+  contentKind?: FeedComposerKind;
   mediaIds?: string[];
 }): Promise<
   | {
@@ -270,7 +278,12 @@ export async function createFeedPost(args: {
   if (!communityEnabled()) return { ok: false, error: "community_disabled" };
 
   const body = args.body.trim();
-  if (body.length < 20 || body.length > 4000) {
+  const contentKind =
+    args.contentKind && isFeedComposerKind(args.contentKind)
+      ? args.contentKind
+      : "news";
+  const minLen = minBodyLengthForKind(contentKind);
+  if (body.length < minLen || body.length > 4000) {
     return { ok: false, error: "community_post_length" };
   }
 
@@ -310,6 +323,7 @@ export async function createFeedPost(args: {
       authorId: args.authorId,
       body,
       postType: kind,
+      contentKind,
       status: "published",
       mediaIds: args.mediaIds?.length ? args.mediaIds : null,
       publishedAt: now,
@@ -350,6 +364,7 @@ export async function createFeedPost(args: {
       id: row.id,
       body: row.body,
       postType: row.postType,
+      contentKind: row.contentKind ?? "news",
       likeCount: 0,
       commentCount: 0,
       shareCount: 0,
@@ -588,6 +603,7 @@ export async function getFeedPostById(args: {
     id: row.id,
     body: row.body,
     postType: row.postType,
+    contentKind: row.contentKind ?? "news",
     likeCount: row.likeCount,
     commentCount: row.commentCount,
     shareCount: row.shareCount,

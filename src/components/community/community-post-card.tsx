@@ -13,6 +13,8 @@ import { CommunityExpandableText } from "@/components/community/community-expand
 import { IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
+import type { CommunityContentKind } from "@/lib/community/post-types";
+import { isFeedComposerKind } from "@/lib/community/composer-config";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
 import { postDisplayText } from "@/lib/community/link-embed";
@@ -172,7 +174,14 @@ export function CommunityPostCard({
         />
       )}
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <CommunityPostTypeChip kind="news" fr={fr} />
+        <CommunityPostTypeChip
+          kind={
+            (isFeedComposerKind(post.contentKind)
+              ? post.contentKind
+              : "news") as CommunityContentKind
+          }
+          fr={fr}
+        />
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
           <IconGlobe size={11} />
           {fr ? "Public" : "Public"}

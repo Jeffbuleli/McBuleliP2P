@@ -10,6 +10,7 @@ export type CommunitySearchHit = {
   id: string;
   body: string;
   postType: string;
+  contentKind: string;
   likeCount: number;
   commentCount: number;
   shareCount: number;
@@ -68,6 +69,7 @@ export async function searchCommunityPosts(args: {
       id: r.id,
       body: r.body,
       postType: r.postType,
+      contentKind: r.contentKind ?? "news",
       likeCount: r.likeCount,
       commentCount: r.commentCount,
       shareCount: r.shareCount,

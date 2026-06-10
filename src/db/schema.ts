@@ -2664,6 +2664,9 @@ export const communityPosts = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
     postType: varchar("post_type", { length: 16 }).notNull().default("text"),
+    contentKind: varchar("content_kind", { length: 16 })
+      .notNull()
+      .default("news"),
     status: varchar("status", { length: 16 }).notNull().default("published"),
     mediaIds: jsonb("media_ids").$type<string[] | null>(),
     likeCount: integer("like_count").notNull().default(0),
@@ -2681,6 +2684,7 @@ export const communityPosts = pgTable(
   (t) => [
     index("community_posts_feed_idx").on(t.status, t.publishedAt),
     index("community_posts_author_idx").on(t.authorId, t.createdAt),
+    index("community_posts_content_kind_idx").on(t.contentKind, t.publishedAt),
   ],
 );
 

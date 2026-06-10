@@ -1,5 +1,6 @@
 "use client";
 
+import { CommunityImageMosaic } from "@/components/community/community-image-mosaic";
 import { CommunityLinkEmbed } from "@/components/community/community-link-embed";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
 import { findEmbeddableUrl } from "@/lib/community/link-embed";
@@ -47,33 +48,18 @@ export function CommunityPostMedia({
       );
     }
 
-    const imgSrc = communityImageVariant(first.variants, first.url);
-    if (!imgSrc) return null;
+    const images = media
+      .map((m) => ({
+        id: m.id,
+        src: communityImageVariant(m.variants, m.url) ?? m.url,
+      }))
+      .filter((m) => m.src);
 
-    if (media.length >= 3) {
-      return (
-        <div className="mt-3 grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
-          <div className="row-span-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imgSrc} alt="" className="h-full min-h-[200px] w-full object-cover" />
-          </div>
-          {media.slice(1, 3).map((m) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={m.id}
-              src={communityImageVariant(m.variants, m.url) ?? m.url}
-              alt=""
-              className="h-[100px] w-full object-cover"
-            />
-          ))}
-        </div>
-      );
-    }
+    if (!images.length) return null;
 
     return (
-      <div className="mt-3 overflow-hidden rounded-xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imgSrc} alt="" loading="lazy" className="max-h-80 w-full object-cover" />
+      <div className="mt-3">
+        <CommunityImageMosaic images={images} />
       </div>
     );
   }

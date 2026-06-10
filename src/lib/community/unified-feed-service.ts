@@ -104,6 +104,7 @@ export async function listUnifiedFeed(args: {
         viewCount: p.viewCount ?? 0,
         likedByMe: p.likedByMe,
         media: p.media,
+        meta: { contentKind: p.contentKind ?? "news" },
       });
     }
   }

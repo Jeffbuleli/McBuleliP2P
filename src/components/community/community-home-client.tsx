@@ -10,6 +10,7 @@ import {
   CommunityHelpTrigger,
 } from "@/components/community/community-help-sheet";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { CommunityPostComposer } from "@/components/community/community-post-composer";
 import { CommunitySearchBar } from "@/components/community/community-search-bar";
 import { CommunityUnifiedCard } from "@/components/community/community-unified-card";
 import {
@@ -18,21 +19,12 @@ import {
 } from "@/components/community/community-empty-illustrations";
 import { CommunityFeedSkeleton } from "@/components/community/community-skeleton";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
-import { fetchJson } from "@/lib/community/fetch-json";
-import {
-  uploadCommunityImage,
-  uploadCommunityVideo,
-} from "@/lib/community-media-upload";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
 import type { CommunitySearchHit } from "@/lib/community/search-service";
 import { communityPostAppPath } from "@/lib/community/share-url";
-import {
-  IconImage,
-  IconInbox,
-  IconVideo,
-} from "@/components/community/community-icons";
+import { IconInbox } from "@/components/community/community-icons";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
   return {
@@ -44,6 +36,7 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
         : item.media.length
           ? "image"
           : "text",
+    contentKind: item.meta?.contentKind ?? "news",
     likeCount: item.likeCount,
     commentCount: item.commentCount,
     shareCount: item.shareCount,
@@ -64,12 +57,6 @@ export function CommunityHomeClient() {
   const [bp, setBp] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
-  const [body, setBody] = useState("");
-  const [mediaId, setMediaId] = useState<string | null>(null);
-  const [mediaKind, setMediaKind] = useState<"image" | "video" | null>(null);
-  const [uploading, setUploading] = useState<"image" | "video" | null>(null);
-  const [publishing, setPublishing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [bpToast, setBpToast] = useState<string | null>(null);
   const [searchQ, setSearchQ] = useState<string | null>(null);
   const [searchHits, setSearchHits] = useState<CommunitySearchHit[]>([]);
@@ -152,6 +139,7 @@ export function CommunityHomeClient() {
     id: hit.id,
     body: hit.body,
     postType: hit.postType,
+    contentKind: hit.contentKind ?? "news",
     likeCount: hit.likeCount,
     commentCount: hit.commentCount,
     shareCount: hit.shareCount,
@@ -162,110 +150,27 @@ export function CommunityHomeClient() {
     likedByMe: false,
   });
 
-  const onImagePick = async (file: File | null) => {
-    if (!file) return;
-    setError(null);
-    setUploading("image");
-    try {
-      const uploaded = await uploadCommunityImage(file, "posts");
-      setMediaId(uploaded.id);
-      setMediaKind("image");
-    } catch (e) {
-      const code = e instanceof Error ? e.message : "upload_failed";
-      setError(
-        code === "timeout"
-          ? fr
-            ? "Délai dépassé — réessayez"
-            : "Timed out — try again"
-          : code === "network_error"
-            ? fr
-              ? "Connexion impossible — vérifiez le réseau"
-              : "Network error — check connection"
-            : fr
-              ? "Échec upload image"
-              : "Image upload failed",
-      );
-    } finally {
-      setUploading(null);
-    }
-  };
-
-  const onVideoPick = async (file: File | null) => {
-    if (!file) return;
-    setError(null);
-    setUploading("video");
-    try {
-      const uploaded = await uploadCommunityVideo(file, "posts");
-      setMediaId(uploaded.id);
-      setMediaKind("video");
-    } catch (e) {
-      const code = e instanceof Error ? e.message : "upload_failed";
-      setError(
-        code === "timeout"
-          ? fr
-            ? "Délai dépassé — réessayez"
-            : "Timed out — try again"
-          : fr
-            ? "Échec upload vidéo"
-            : "Video upload failed",
-      );
-    } finally {
-      setUploading(null);
-    }
-  };
-
-  const publish = async () => {
-    if (body.trim().length < 20) {
-      setError(fr ? "Min. 20 caractères" : "Min. 20 characters");
-      return;
-    }
-    setPublishing(true);
-    setError(null);
-    try {
-      const { ok, data } = await fetchJson<{
-        error?: string;
-        post?: FeedPostView;
-        bpGranted?: { granted?: boolean; points?: number };
-      }>("/api/community/feed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          body: body.trim(),
-          postType: mediaKind === "video" ? "video" : mediaId ? "image" : "text",
-          mediaIds: mediaId ? [mediaId] : undefined,
-        }),
-      });
-      if (!ok) {
-        setError(data.error ?? "failed");
-        return;
-      }
-      const post = data.post as FeedPostView;
-      const unified: UnifiedFeedItem = {
-        id: post.id,
-        kind: "news",
-        title: null,
-        body: post.body,
-        publishedAt: post.publishedAt,
-        author: post.author,
-        href: communityPostAppPath(post.id),
-        likeCount: post.likeCount,
-        commentCount: post.commentCount,
-        shareCount: post.shareCount,
-        viewCount: post.viewCount ?? 0,
-        likedByMe: post.likedByMe,
-        media: post.media,
-      };
-      setItems((list) => [unified, ...list]);
-      setBody("");
-      setMediaId(null);
-      setMediaKind(null);
-      setShowComposer(false);
-      if (data.bpGranted?.granted) {
-        setBpToast(`+${data.bpGranted.points} BP`);
-        setTimeout(() => setBpToast(null), 2500);
-      }
-    } finally {
-      setPublishing(false);
+  const onPostPublished = (post: FeedPostView) => {
+    const unified: UnifiedFeedItem = {
+      id: post.id,
+      kind: "news",
+      title: null,
+      body: post.body,
+      publishedAt: post.publishedAt,
+      author: post.author,
+      href: communityPostAppPath(post.id),
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      shareCount: post.shareCount,
+      viewCount: post.viewCount ?? 0,
+      likedByMe: post.likedByMe,
+      media: post.media,
+      meta: { contentKind: post.contentKind },
+    };
+    setItems((list) => [unified, ...list]);
+    if (post.bpEarned && post.bpEarned > 0) {
+      setBpToast(`+${post.bpEarned} BP`);
+      setTimeout(() => setBpToast(null), 2500);
     }
   };
 
@@ -320,88 +225,21 @@ export function CommunityHomeClient() {
 
       {showNewsComposer ? (
         <>
-          <button
-            type="button"
-            className="mb-3 mt-3 w-full rounded-xl bg-[#305f33] py-2.5 text-sm font-bold text-white active:scale-[0.99]"
-            onClick={() => setShowComposer((v) => !v)}
-          >
-            {showComposer
-              ? fr
-                ? "Fermer"
-                : "Close"
-              : fr
-                ? "+ Publier une actualité"
-                : "+ Post news"}
-          </button>
-
-          {showComposer ? (
-            <section className="mb-4 rounded-2xl border border-[#f0f4f2] bg-white p-4 shadow-sm">
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={3}
-                placeholder={
-                  fr
-                    ? "Partagez une actu crypto… (min. 20 car.)"
-                    : "Share crypto news… (min. 20 chars)"
-                }
-                className="w-full resize-none rounded-xl border border-[#e8f3ee] bg-white px-3 py-2 text-sm"
-              />
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <label
-                  className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 ${
-                    mediaKind === "image"
-                      ? "bg-[#e8f3ee] text-[#305f33]"
-                      : "bg-white text-[#305f33]"
-                  }`}
-                  aria-label={fr ? "Ajouter une image" : "Add image"}
-                >
-                  {uploading === "image" ? (
-                    <span className="text-xs">…</span>
-                  ) : (
-                    <IconImage size={20} />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                    className="hidden"
-                    disabled={!!uploading}
-                    onChange={(e) => onImagePick(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-                <label
-                  className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 ${
-                    mediaKind === "video"
-                      ? "bg-[#e8f3ee] text-[#305f33]"
-                      : "bg-white text-[#305f33]"
-                  }`}
-                  aria-label={fr ? "Ajouter une vidéo" : "Add video"}
-                >
-                  {uploading === "video" ? (
-                    <span className="text-xs">…</span>
-                  ) : (
-                    <IconVideo size={20} />
-                  )}
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    className="hidden"
-                    disabled={!!uploading}
-                    onChange={(e) => onVideoPick(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={publishing}
-                  onClick={() => void publish()}
-                  className="ml-auto min-h-[44px] rounded-xl bg-[#305f33] px-5 text-sm font-bold text-white disabled:opacity-50 active:scale-95"
-                >
-                  {publishing ? "…" : fr ? "Publier" : "Post"}
-                </button>
-              </div>
-              {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
-            </section>
+          {!showComposer ? (
+            <button
+              type="button"
+              className="mb-3 mt-3 w-full rounded-xl bg-[#305f33] py-2.5 text-sm font-bold text-white active:scale-[0.99]"
+              onClick={() => setShowComposer(true)}
+            >
+              {fr ? "+ Publier" : "+ Publish"}
+            </button>
           ) : null}
+          <CommunityPostComposer
+            fr={fr}
+            open={showComposer}
+            onClose={() => setShowComposer(false)}
+            onPublished={onPostPublished}
+          />
         </>
       ) : null}
 
