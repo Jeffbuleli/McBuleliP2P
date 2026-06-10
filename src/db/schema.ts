@@ -2645,6 +2645,9 @@ export const communityMedia = pgTable(
     streamId: varchar("stream_id", { length: 64 }),
     variants: jsonb("variants").$type<Record<string, string> | null>(),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
+    likeCount: integer("like_count").notNull().default(0),
+    commentCount: integer("comment_count").notNull().default(0),
+    shareCount: integer("share_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2729,6 +2732,9 @@ export const communityComments = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     parentId: uuid("parent_id"),
+    mediaId: uuid("media_id").references(() => communityMedia.id, {
+      onDelete: "cascade",
+    }),
     body: text("body").notNull(),
     likeCount: integer("like_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -2740,6 +2746,7 @@ export const communityComments = pgTable(
   },
   (t) => [
     index("community_comments_post_idx").on(t.postId, t.createdAt),
+    index("community_comments_media_idx").on(t.mediaId, t.createdAt),
     index("community_comments_author_idx").on(t.authorId, t.createdAt),
   ],
 );

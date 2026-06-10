@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   communityComments,
   communityLikes,
@@ -15,7 +15,8 @@ import {
   notifyCommunityComment,
   notifyCommunityLike,
 } from "@/lib/community/community-notifications";
-import { getMediaUrls } from "@/lib/community/media-service";
+import { getPostMediaViews } from "@/lib/community/media-engagement-service";
+import type { MediaItemView } from "@/lib/community/media-engagement-service";
 import {
   ensureCommunityProfile,
   getAuthorsMap,
@@ -57,13 +58,8 @@ export type FeedPostView = {
   viewCount: number;
   publishedAt: string;
   author: CommunityAuthorView;
-  media: {
-    id: string;
-    url: string;
-    variants: Record<string, string> | null;
-    fileType?: string;
-    mimeType?: string;
-  }[];
+  media: MediaItemView[];
+  status?: string;
   likedByMe: boolean;
   bpEarned?: number;
 };
@@ -191,12 +187,13 @@ export async function listFeedPosts(args: {
     if (blocked.has(r.authorId)) continue;
     const author = authors.get(r.authorId);
     if (!author) continue;
-    const media = await getMediaUrls(r.mediaIds);
+    const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
     posts.push({
       id: r.id,
       body: r.body,
       postType: r.postType,
       contentKind: r.contentKind ?? "news",
+      status: r.status,
       likeCount: r.likeCount,
       commentCount: r.commentCount,
       shareCount: r.shareCount,
@@ -355,7 +352,7 @@ export async function createFeedPost(args: {
   });
 
   const author = await ensureCommunityProfile(args.authorId);
-  const media = await getMediaUrls(row.mediaIds);
+  const media = await getPostMediaViews(row.id, row.mediaIds, args.authorId);
 
   return {
     ok: true,
@@ -365,6 +362,7 @@ export async function createFeedPost(args: {
       body: row.body,
       postType: row.postType,
       contentKind: row.contentKind ?? "news",
+      status: row.status,
       likeCount: 0,
       commentCount: 0,
       shareCount: 0,
@@ -407,6 +405,151 @@ export async function deleteFeedPost(args: {
     .where(eq(communityUserProfiles.userId, post.authorId));
 
   return { ok: true };
+}
+
+export async function hideFeedPost(args: {
+  postId: string;
+  userId: string;
+  hidden: boolean;
+}): Promise<{ ok: boolean; error?: string }> {
+  const db = getDb();
+  const [post] = await db
+    .select()
+    .from(communityPosts)
+    .where(eq(communityPosts.id, args.postId))
+    .limit(1);
+
+  if (!post) return { ok: false, error: "not_found" };
+  if (post.authorId !== args.userId) return { ok: false, error: "forbidden" };
+  if (post.status === "removed") return { ok: false, error: "removed" };
+
+  await db
+    .update(communityPosts)
+    .set({
+      status: args.hidden ? "hidden" : "published",
+      updatedAt: new Date(),
+    })
+    .where(eq(communityPosts.id, args.postId));
+
+  return { ok: true };
+}
+
+export async function listAuthorFeedPosts(args: {
+  authorId: string;
+  viewerId: string | null;
+  q?: string;
+  cursor?: string | null;
+  limit?: number;
+  includeHidden?: boolean;
+}): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
+  if (!communityEnabled()) return { posts: [], nextCursor: null };
+
+  const limit = Math.min(args.limit ?? 15, 30);
+  const db = getDb();
+  const isOwner = args.viewerId === args.authorId;
+
+  const statuses = args.includeHidden && isOwner
+    ? (["published", "hidden"] as const)
+    : (["published"] as const);
+
+  let cursorDate: Date | null = null;
+  let cursorId: string | null = null;
+  if (args.cursor) {
+    try {
+      const parsed = JSON.parse(
+        Buffer.from(args.cursor, "base64url").toString("utf8"),
+      ) as { t: string; id: string };
+      cursorDate = new Date(parsed.t);
+      cursorId = parsed.id;
+    } catch {
+      cursorDate = null;
+    }
+  }
+
+  const conditions = [
+    eq(communityPosts.authorId, args.authorId),
+    inArray(communityPosts.status, [...statuses]),
+  ];
+
+  if (args.q?.trim()) {
+    conditions.push(ilike(communityPosts.body, `%${args.q.trim()}%`));
+  }
+
+  if (cursorDate && cursorId) {
+    conditions.push(
+      or(
+        lt(communityPosts.publishedAt, cursorDate),
+        and(
+          eq(communityPosts.publishedAt, cursorDate),
+          lt(communityPosts.id, cursorId),
+        ),
+      )!,
+    );
+  }
+
+  const rows = await db
+    .select()
+    .from(communityPosts)
+    .where(and(...conditions))
+    .orderBy(desc(communityPosts.publishedAt), desc(communityPosts.id))
+    .limit(limit + 1);
+
+  const slice = rows.slice(0, limit);
+  const authors = await getAuthorsMap([args.authorId]);
+  const author = authors.get(args.authorId);
+  if (!author) return { posts: [], nextCursor: null };
+
+  const postIds = slice.map((r) => r.id);
+  let likedSet = new Set<string>();
+  if (args.viewerId && postIds.length) {
+    const likes = await db
+      .select({ targetId: communityLikes.targetId })
+      .from(communityLikes)
+      .where(
+        and(
+          eq(communityLikes.userId, args.viewerId),
+          eq(communityLikes.targetType, "post"),
+          inArray(communityLikes.targetId, postIds),
+        ),
+      );
+    likedSet = new Set(likes.map((l) => l.targetId));
+  }
+
+  const posts: FeedPostView[] = [];
+  for (const r of slice) {
+    const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
+    posts.push({
+      id: r.id,
+      body: r.body,
+      postType: r.postType,
+      contentKind: r.contentKind ?? "news",
+      status: r.status,
+      likeCount: r.likeCount,
+      commentCount: r.commentCount,
+      shareCount: r.shareCount,
+      viewCount: r.viewCount ?? 0,
+      publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
+      author,
+      media,
+      likedByMe: likedSet.has(r.id),
+    });
+  }
+
+  let nextCursor: string | null = null;
+  if (rows.length > limit) {
+    const last = slice[slice.length - 1];
+    if (last?.publishedAt) {
+      nextCursor = Buffer.from(
+        JSON.stringify({
+          t: last.publishedAt.toISOString(),
+          id: last.id,
+        }),
+        "utf8",
+      ).toString("base64url");
+    }
+  }
+
+  return { posts, nextCursor };
 }
 
 export async function togglePostLike(args: {
@@ -567,11 +710,12 @@ export async function getFeedPostById(args: {
     .where(
       and(
         eq(communityPosts.id, args.postId),
-        eq(communityPosts.status, "published"),
+        inArray(communityPosts.status, ["published", "hidden"]),
       ),
     )
     .limit(1);
   if (!row) return null;
+  if (row.status === "hidden" && row.authorId !== args.viewerId) return null;
 
   const blocked = args.viewerId
     ? await blockedUserIds(args.viewerId)
@@ -598,12 +742,17 @@ export async function getFeedPostById(args: {
     likedByMe = !!like;
   }
 
-  const media = await getMediaUrls(row.mediaIds);
+  if (row.status === "hidden" && row.authorId !== args.viewerId) {
+    return null;
+  }
+
+  const media = await getPostMediaViews(row.id, row.mediaIds, args.viewerId);
   return {
     id: row.id,
     body: row.body,
     postType: row.postType,
     contentKind: row.contentKind ?? "news",
+    status: row.status,
     likeCount: row.likeCount,
     commentCount: row.commentCount,
     shareCount: row.shareCount,
@@ -624,7 +773,12 @@ export async function listPostComments(
   const rows = await db
     .select()
     .from(communityComments)
-    .where(eq(communityComments.postId, postId))
+    .where(
+      and(
+        eq(communityComments.postId, postId),
+        isNull(communityComments.mediaId),
+      ),
+    )
     .orderBy(communityComments.createdAt)
     .limit(Math.min(limit, 120));
 
@@ -881,7 +1035,7 @@ export async function getPublicPostForShare(
   const author = authors.get(row.authorId);
   if (!author) return null;
 
-  const media = await getMediaUrls(row.mediaIds);
+  const media = await getPostMediaViews(postId, row.mediaIds, null);
   return {
     id: row.id,
     body: row.body,

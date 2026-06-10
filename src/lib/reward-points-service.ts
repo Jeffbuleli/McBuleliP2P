@@ -350,6 +350,7 @@ export async function getRewardPointsSummary(
 export async function listRewardPointLedger(
   userId: string,
   limit = 30,
+  offset = 0,
 ): Promise<RewardLedgerRow[]> {
   const db = getDb();
   const rows = await db
@@ -357,7 +358,8 @@ export async function listRewardPointLedger(
     .from(rewardPointLedger)
     .where(eq(rewardPointLedger.userId, userId))
     .orderBy(desc(rewardPointLedger.createdAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 
   return rows.map((r) => ({
     id: r.id,
@@ -366,6 +368,15 @@ export async function listRewardPointLedger(
     note: r.note,
     createdAt: r.createdAt.toISOString(),
   }));
+}
+
+export async function countRewardPointLedger(userId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(rewardPointLedger)
+    .where(eq(rewardPointLedger.userId, userId));
+  return row?.n ?? 0;
 }
 
 export async function tryGrantKycApprovedPoints(userId: string): Promise<void> {

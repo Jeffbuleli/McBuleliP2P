@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export type MosaicImage = {
   id: string;
   src: string;
@@ -10,20 +12,43 @@ export function CommunityImageMosaic({
   editable = false,
   onRemove,
   onReplace,
+  postId,
   className = "",
 }: {
   images: MosaicImage[];
   editable?: boolean;
   onRemove?: (id: string) => void;
   onReplace?: (id: string) => void;
+  /** When set, each tile links to the individual media page. */
+  postId?: string;
   className?: string;
 }) {
   if (!images.length) return null;
 
-  const slot = (img: MosaicImage, className: string) => (
-    <div key={img.id} className={`relative overflow-hidden ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={img.src} alt="" className="h-full w-full object-cover" />
+  const slot = (img: MosaicImage, slotClass: string) => {
+    const inner = (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={img.src} alt="" className="h-full w-full object-cover" />
+        {postId && !editable ? (
+          <span className="absolute inset-0 bg-black/0 transition hover:bg-black/10" />
+        ) : null}
+      </>
+    );
+
+    const tile = (
+      <div className={`relative overflow-hidden ${slotClass}`}>
+        {postId && !editable ? (
+          <Link
+            href={`/app/community/post/${postId}/media/${img.id}`}
+            className="block h-full w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {inner}
+          </Link>
+        ) : (
+          inner
+        )}
       {editable ? (
         <>
           <button
@@ -44,8 +69,10 @@ export function CommunityImageMosaic({
           </button>
         </>
       ) : null}
-    </div>
-  );
+      </div>
+    );
+    return <div key={img.id}>{tile}</div>;
+  };
 
   if (images.length === 1) {
     return (

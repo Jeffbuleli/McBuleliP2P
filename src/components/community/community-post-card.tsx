@@ -23,12 +23,14 @@ import { communityPostSharePath } from "@/lib/community/share-url";
 export function CommunityPostCard({
   post,
   onUpdate,
+  onRemove,
   defaultCommentsOpen = false,
   linkToDetail = true,
   trackView = false,
 }: {
   post: FeedPostView;
   onUpdate: (patch: Partial<FeedPostView>) => void;
+  onRemove?: () => void;
   defaultCommentsOpen?: boolean;
   linkToDetail?: boolean;
   /** Compte une lecture unique (page détail uniquement). */
@@ -64,6 +66,19 @@ export function CommunityPostCard({
 
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [viewerUserId, setViewerUserId] = useState<string | null>(null);
+  const [ownerOpen, setOwnerOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d: { user?: { id: string } | null }) => {
+        if (d.user?.id) setViewerUserId(d.user.id);
+      })
+      .catch(() => {});
+  }, []);
+
+  const isOwner = viewerUserId === post.author.userId;
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -141,6 +156,36 @@ export function CommunityPostCard({
       .catch(() => {});
   };
 
+  const ownerAction = async (action: "hide" | "unhide" | "delete") => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/community/feed/${post.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) return;
+      if (action === "delete") {
+        flash(fr ? "Publication supprimée" : "Post deleted");
+        onRemove?.();
+      } else {
+        onUpdate({ status: action === "hide" ? "hidden" : "published" });
+        flash(
+          action === "hide"
+            ? fr
+              ? "Masquée du public"
+              : "Hidden from public"
+            : fr
+              ? "Visible à nouveau"
+              : "Visible again",
+        );
+      }
+      setOwnerOpen(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const reportPost = async () => {
     await fetch("/api/community/reports", {
       method: "POST",
@@ -184,8 +229,53 @@ export function CommunityPostCard({
         />
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
           <IconGlobe size={11} />
-          {fr ? "Public" : "Public"}
+          {post.status === "hidden"
+            ? fr
+              ? "Masqué"
+              : "Hidden"
+            : fr
+              ? "Public"
+              : "Public"}
         </span>
+        {isOwner ? (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setOwnerOpen((v) => !v)}
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold text-[#57534e] hover:bg-[#f0f2f5]"
+            >
+              ···
+            </button>
+            {ownerOpen ? (
+              <div className="absolute right-0 z-10 mt-1 min-w-[140px] rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
+                {post.status === "hidden" ? (
+                  <button
+                    type="button"
+                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-[#305f33]"
+                    onClick={() => void ownerAction("unhide")}
+                  >
+                    {fr ? "Afficher" : "Unhide"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-[#57534e]"
+                    onClick={() => void ownerAction("hide")}
+                  >
+                    {fr ? "Masquer" : "Hide"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="block w-full px-3 py-2 text-left text-xs font-semibold text-red-600"
+                  onClick={() => void ownerAction("delete")}
+                >
+                  {fr ? "Supprimer" : "Delete"}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -223,6 +313,7 @@ export function CommunityPostCard({
           postType={post.postType}
           body={post.body}
           fr={fr}
+          postId={post.id}
         />
       </div>
 

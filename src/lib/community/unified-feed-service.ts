@@ -1,6 +1,10 @@
 import { listPublishedBlogs } from "@/lib/community/blog-service";
 import { listDiscussions } from "@/lib/community/discussion-service";
 import { listFeedPosts } from "@/lib/community/feed-service";
+import {
+  asMediaItemView,
+  type MediaItemView,
+} from "@/lib/community/media-engagement-service";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 import { listQuestions } from "@/lib/community/qa-service";
@@ -30,13 +34,7 @@ export type UnifiedFeedItem = {
   shareCount: number;
   viewCount: number;
   likedByMe?: boolean;
-  media: {
-    id: string;
-    url: string;
-    variants: Record<string, string> | null;
-    fileType?: string;
-    mimeType?: string;
-  }[];
+  media: MediaItemView[];
   meta?: Record<string, string>;
 };
 
@@ -155,7 +153,7 @@ export async function listUnifiedFeed(args: {
         shareCount: 0,
         viewCount: 0,
         media: p.coverUrl
-          ? [{ id: p.id, url: p.coverUrl, variants: null }]
+          ? [asMediaItemView({ id: p.id, url: p.coverUrl, variants: null })]
           : [],
       });
     }

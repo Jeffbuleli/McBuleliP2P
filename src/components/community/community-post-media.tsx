@@ -19,11 +19,13 @@ export function CommunityPostMedia({
   postType,
   body,
   fr,
+  postId,
 }: {
   media: Media[];
   postType: string;
   body?: string;
   fr: boolean;
+  postId?: string;
 }) {
   const first = media[0];
 
@@ -59,7 +61,7 @@ export function CommunityPostMedia({
 
     return (
       <div className="mt-3">
-        <CommunityImageMosaic images={images} />
+        <CommunityImageMosaic images={images} postId={postId} />
       </div>
     );
   }

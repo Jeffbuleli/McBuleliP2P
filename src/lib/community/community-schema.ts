@@ -118,6 +118,27 @@ async function runEnsureCommunitySchema(): Promise<void> {
   `);
 
   await db.execute(sql`
+    ALTER TABLE community_media
+    ADD COLUMN IF NOT EXISTS like_count integer NOT NULL DEFAULT 0
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_media
+    ADD COLUMN IF NOT EXISTS comment_count integer NOT NULL DEFAULT 0
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_media
+    ADD COLUMN IF NOT EXISTS share_count integer NOT NULL DEFAULT 0
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_comments
+    ADD COLUMN IF NOT EXISTS media_id uuid REFERENCES community_media(id) ON DELETE CASCADE
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_comments_media_idx
+    ON community_comments (media_id, created_at)
+  `);
+
+  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS community_translation_cache (
       content_hash varchar(64) NOT NULL,
       target_locale varchar(8) NOT NULL,

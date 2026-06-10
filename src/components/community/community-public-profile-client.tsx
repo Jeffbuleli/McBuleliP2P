@@ -12,6 +12,8 @@ import {
   OnlineDot,
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
+import { CommunityPostCard } from "@/components/community/community-post-card";
+import type { FeedPostView } from "@/lib/community/feed-service";
 import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
@@ -39,6 +41,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const router = useRouter();
   const [profile, setProfile] = useState<PublicProfileView | null>(null);
   const [blogs, setBlogs] = useState<BlogPostListItem[]>([]);
+  const [posts, setPosts] = useState<FeedPostView[]>([]);
+  const [postQ, setPostQ] = useState("");
+  const [postsLoading, setPostsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -59,6 +64,21 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
       })
       .catch(() => setNotFound(true));
   }, [handle]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setPostsLoading(true);
+    const q = postQ.trim();
+    const url = `/api/community/profiles/${handle}/posts?limit=20${
+      q ? `&q=${encodeURIComponent(q)}` : ""
+    }`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((d: { posts?: FeedPostView[] }) => {
+        setPosts(d.posts ?? []);
+      })
+      .finally(() => setPostsLoading(false));
+  }, [handle, profile, postQ]);
 
   const toggleFollow = async () => {
     if (!profile || profile.isOwnProfile) return;
@@ -201,7 +221,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           </div>
 
           {profile.bio ? (
-            <p className="mt-3 truncate text-center text-sm text-[#57534e]">
+            <p className="mt-3 whitespace-pre-wrap text-center text-sm leading-relaxed text-[#57534e]">
               {profile.bio}
             </p>
           ) : null}
@@ -303,6 +323,45 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           </div>
         </section>
       ) : null}
+
+      <section className="mt-5 px-4">
+        <h2 className="mb-2 text-sm font-bold text-[#0c0a09]">
+          {fr ? "Publications" : "Posts"}
+        </h2>
+        <input
+          type="search"
+          value={postQ}
+          onChange={(e) => setPostQ(e.target.value)}
+          placeholder={
+            fr ? "Rechercher dans les publications…" : "Search posts…"
+          }
+          className="mb-3 w-full rounded-xl border border-[#e8f3ee] bg-white px-3 py-2 text-sm"
+        />
+        {postsLoading ? (
+          <p className="text-center text-sm text-[#78716c]">…</p>
+        ) : posts.length === 0 ? (
+          <p className="text-center text-sm text-[#78716c]">
+            {fr ? "Aucune publication" : "No posts yet"}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <CommunityPostCard
+                key={post.id}
+                post={post}
+                onUpdate={(patch) =>
+                  setPosts((list) =>
+                    list.map((p) => (p.id === post.id ? { ...p, ...patch } : p)),
+                  )
+                }
+                onRemove={() =>
+                  setPosts((list) => list.filter((p) => p.id !== post.id))
+                }
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {blogs.length > 0 ? (
         <section className="mt-5 px-4">

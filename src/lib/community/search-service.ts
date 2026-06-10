@@ -2,7 +2,7 @@ import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { communityPosts, getDb } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
 import type { FeedPostView } from "@/lib/community/feed-service";
-import { getMediaUrls } from "@/lib/community/media-service";
+import { getPostMediaViews } from "@/lib/community/media-engagement-service";
 import { extractHashtags } from "@/lib/community/link-embed";
 import { getAuthorsMap } from "@/lib/community/profile-service";
 
@@ -64,7 +64,7 @@ export async function searchCommunityPosts(args: {
   for (const r of rows) {
     const author = authors.get(r.authorId);
     if (!author) continue;
-    const media = await getMediaUrls(r.mediaIds);
+    const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
     hits.push({
       id: r.id,
       body: r.body,
