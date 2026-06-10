@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { communityEnabled } from "@/lib/community/config";
 import {
   communityR2Configured,
+  communityR2CredentialWarnings,
+  communityR2EnvPresent,
   getCommunityR2Config,
 } from "@/lib/community/media-r2";
 import { getSessionUserId } from "@/lib/session";
@@ -19,6 +21,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const warnings = communityR2CredentialWarnings();
   const configured = communityR2Configured();
   const cfg = getCommunityR2Config();
 
@@ -27,7 +30,9 @@ export async function GET() {
     integration: "backend_s3_api",
     description:
       "Render uploads via S3 API; files are served from COMMUNITY_R2_PUBLIC_BASE_URL (not the main site DNS).",
+    r2EnvPresent: communityR2EnvPresent(),
     r2Configured: configured,
+    credentialWarnings: warnings,
     bucket: cfg?.bucket ?? null,
     publicBaseUrl: cfg?.publicBaseUrl ?? null,
     objectKeyPrefix: "mcbuleli-community/",

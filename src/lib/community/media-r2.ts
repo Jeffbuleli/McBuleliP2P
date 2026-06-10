@@ -18,24 +18,60 @@ export type CommunityR2Config = {
   secretAccessKey: string;
 };
 
-export function communityR2Configured(): boolean {
+export function communityR2EnvPresent(): boolean {
   return Boolean(
-    process.env.COMMUNITY_R2_ACCOUNT_ID &&
-      process.env.COMMUNITY_R2_BUCKET &&
-      process.env.COMMUNITY_R2_ACCESS_KEY_ID &&
-      process.env.COMMUNITY_R2_SECRET_ACCESS_KEY &&
-      process.env.COMMUNITY_R2_PUBLIC_BASE_URL,
+    process.env.COMMUNITY_R2_ACCOUNT_ID?.trim() &&
+      process.env.COMMUNITY_R2_BUCKET?.trim() &&
+      process.env.COMMUNITY_R2_ACCESS_KEY_ID?.trim() &&
+      process.env.COMMUNITY_R2_SECRET_ACCESS_KEY?.trim() &&
+      process.env.COMMUNITY_R2_PUBLIC_BASE_URL?.trim(),
   );
 }
 
+export function communityR2Configured(): boolean {
+  return Boolean(getCommunityR2Config());
+}
+
+/** Detect common misconfiguration (API token pasted as S3 secret). */
+export function communityR2CredentialWarnings(): string[] {
+  const warnings: string[] = [];
+  const secret = process.env.COMMUNITY_R2_SECRET_ACCESS_KEY?.trim() ?? "";
+  const accessKey = process.env.COMMUNITY_R2_ACCESS_KEY_ID?.trim() ?? "";
+  if (secret.startsWith("cfat_") || secret.startsWith("Bearer ")) {
+    warnings.push(
+      "COMMUNITY_R2_SECRET_ACCESS_KEY looks like a Cloudflare API token — use the R2 S3 secret access key from « Manage R2 API Tokens ».",
+    );
+  }
+  if (accessKey && accessKey.length < 16) {
+    warnings.push(
+      "COMMUNITY_R2_ACCESS_KEY_ID looks too short — use the S3 access key id from R2 API tokens, not a token label.",
+    );
+  }
+  return warnings;
+}
+
 export function getCommunityR2Config(): CommunityR2Config | null {
-  if (!communityR2Configured()) return null;
+  const accountId = process.env.COMMUNITY_R2_ACCOUNT_ID?.trim();
+  const bucket = process.env.COMMUNITY_R2_BUCKET?.trim();
+  const publicBaseUrl = process.env.COMMUNITY_R2_PUBLIC_BASE_URL?.trim();
+  const accessKeyId = process.env.COMMUNITY_R2_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.COMMUNITY_R2_SECRET_ACCESS_KEY?.trim();
+  if (
+    !accountId ||
+    !bucket ||
+    !publicBaseUrl ||
+    !accessKeyId ||
+    !secretAccessKey ||
+    communityR2CredentialWarnings().length > 0
+  ) {
+    return null;
+  }
   return {
-    accountId: process.env.COMMUNITY_R2_ACCOUNT_ID!.trim(),
-    bucket: process.env.COMMUNITY_R2_BUCKET!.trim(),
-    publicBaseUrl: process.env.COMMUNITY_R2_PUBLIC_BASE_URL!.trim().replace(/\/$/, ""),
-    accessKeyId: process.env.COMMUNITY_R2_ACCESS_KEY_ID!.trim(),
-    secretAccessKey: process.env.COMMUNITY_R2_SECRET_ACCESS_KEY!.trim(),
+    accountId,
+    bucket,
+    publicBaseUrl: publicBaseUrl.replace(/\/$/, ""),
+    accessKeyId,
+    secretAccessKey,
   };
 }
 
@@ -113,7 +149,11 @@ export async function putCommunityObjectToR2(args: {
       }),
     );
     return communityMediaPublicUrl(cfg, args.objectKey);
-  } catch {
+  } catch (e) {
+    console.error("[community/r2] putObject failed", {
+      key: args.objectKey,
+      message: e instanceof Error ? e.message : String(e),
+    });
     return null;
   }
 }

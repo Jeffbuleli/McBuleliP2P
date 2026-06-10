@@ -48,6 +48,16 @@ function mapPublishError(code: string | undefined, fr: boolean): string {
   if (code === "invalid_media") {
     return fr ? "Média invalide" : "Invalid media";
   }
+  if (code === "r2_upload_failed" || code === "r2_credentials_invalid") {
+    return fr
+      ? "Stockage R2 indisponible — vérifiez les clés S3 sur Render."
+      : "R2 storage unavailable — check S3 API keys on Render.";
+  }
+  if (code?.includes("COMMUNITY_R2_SECRET") || code?.includes("API token")) {
+    return fr
+      ? "Mauvaise clé R2 sur Render (utilisez la clé S3, pas un token Cloudflare)."
+      : "Wrong R2 key on Render (use S3 API key, not a Cloudflare API token).";
+  }
   return code ?? (fr ? "Échec" : "Failed");
 }
 

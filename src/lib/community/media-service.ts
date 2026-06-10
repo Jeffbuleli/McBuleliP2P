@@ -9,6 +9,8 @@ import {
 import {
   communityMediaKey,
   communityR2Configured,
+  communityR2CredentialWarnings,
+  communityR2EnvPresent,
   createCommunityUploadUrl,
   putCommunityObjectToR2,
   verifyCommunityR2Object,
@@ -118,6 +120,14 @@ export async function uploadCommunityImageBuffer(args: {
     `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`,
   );
 
+  if (communityR2EnvPresent() && !communityR2Configured()) {
+    const hints = communityR2CredentialWarnings();
+    return {
+      ok: false,
+      error: hints[0] ?? "r2_credentials_invalid",
+    };
+  }
+
   let publicUrl: string;
   let bucket = "inline";
 
@@ -130,6 +140,8 @@ export async function uploadCommunityImageBuffer(args: {
     if (!url) return { ok: false, error: "r2_upload_failed" };
     publicUrl = url;
     bucket = getCommunityR2ConfigBucket();
+  } else if (communityR2EnvPresent()) {
+    return { ok: false, error: "r2_upload_failed" };
   } else {
     const b64 = Buffer.from(args.buffer).toString("base64");
     publicUrl = `data:${args.mimeType};base64,${b64}`;
