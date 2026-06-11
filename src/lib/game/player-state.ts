@@ -1,17 +1,28 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
   gameMiningSites,
   gameMineralStocks,
   gamePlayers,
   gameProperties,
   gameTransactions,
+  gameTransportJobs,
   gameVehicles,
   getDb,
+  users,
 } from "@/db";
 import { ensureCommunityProfile } from "@/lib/community/profile-service";
-import { STARTER } from "@/lib/game/constants";
+import { GAME_BP_BOOSTS } from "@/lib/game/bp-boosts";
+import { STARTER, TRANSPORT_ROUTES, type MineralKey } from "@/lib/game/constants";
+import { listActiveWorldEvents } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { seedGameMarketPrices } from "@/lib/game/market-seeder";
+import { buildProgressionView } from "@/lib/game/progression";
+import {
+  getToolDurability,
+  siteRiskLabel,
+  siteRiskLevel,
+} from "@/lib/game/risk-engine";
+import { listTransportOptions } from "@/lib/game/transport-engine";
 import {
   deriveWorldSeed,
   generateStarterSites,
@@ -261,7 +272,17 @@ export async function getPlayerDashboard(userId: string) {
   const player = await getOrCreatePlayer(userId);
   const db = getDb();
 
-  const [sites, stocks, vehicles, properties, recentTx] = await Promise.all([
+  const [
+    sites,
+    stocks,
+    vehicles,
+    properties,
+    recentTx,
+    activeTransports,
+    worldEvents,
+    toolDurability,
+    bpRow,
+  ] = await Promise.all([
     db.select().from(gameMiningSites).where(eq(gameMiningSites.playerId, userId)),
     db.select().from(gameMineralStocks).where(eq(gameMineralStocks.playerId, userId)),
     db.select().from(gameVehicles).where(eq(gameVehicles.playerId, userId)),
@@ -272,12 +293,49 @@ export async function getPlayerDashboard(userId: string) {
       .where(eq(gameTransactions.playerId, userId))
       .orderBy(desc(gameTransactions.createdAt))
       .limit(20),
+    db
+      .select()
+      .from(gameTransportJobs)
+      .where(
+        and(
+          eq(gameTransportJobs.playerId, userId),
+          eq(gameTransportJobs.status, "in_transit"),
+        ),
+      ),
+    listActiveWorldEvents(),
+    getToolDurability(userId),
+    db
+      .select({ bal: users.buleliPointsBalance })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
   ]);
 
+  const progression = buildProgressionView({
+    xp: player.xp,
+    lifestyleTier: player.lifestyleTier,
+    role: player.role,
+  });
+
   return {
-    player,
+    player: {
+      ...player,
+      bpBalance: bpRow[0]?.bal ?? 0,
+      toolDurability,
+    },
+    progression,
     regions: WORLD_REGIONS,
-    sites,
+    sites: sites.map((s) => {
+      const mineralKey = s.mineralKey as MineralKey;
+      const risk = siteRiskLevel(num(s.richness), mineralKey);
+      return {
+        ...s,
+        richness: num(s.richness),
+        riskLevel: Math.round(risk * 100),
+        riskLabel: siteRiskLabel(risk, false),
+        riskLabelFr: siteRiskLabel(risk, true),
+      };
+    }),
     stocks: stocks.map((s) => ({
       ...s,
       quantityKg: num(s.quantityKg),
@@ -285,6 +343,30 @@ export async function getPlayerDashboard(userId: string) {
     })),
     vehicles,
     properties,
+    transportOptions: listTransportOptions(player.xp),
+    transportRoutes: TRANSPORT_ROUTES,
+    bpBoosts: Object.entries(GAME_BP_BOOSTS).map(([id, b]) => ({
+      id,
+      costBp: b.costBp,
+      label: b.label,
+      labelFr: b.labelFr,
+    })),
+    activeTransports: activeTransports.map((j) => ({
+      id: j.id,
+      mineralKey: j.mineralKey,
+      quantityKg: num(j.quantityKg),
+      vehicleKey: j.vehicleKey,
+      routeKey: j.fromLocation,
+      status: j.status,
+      completesAt: j.completesAt?.toISOString() ?? null,
+      rewardMcb: num(j.rewardMcb),
+    })),
+    worldEvents: worldEvents.map((e) => ({
+      id: e.id,
+      eventKey: e.eventKey,
+      title: e.title,
+      endsAt: e.endsAt.toISOString(),
+    })),
     recentTransactions: recentTx.map((t) => ({
       ...t,
       amountMcb: num(t.amountMcb),

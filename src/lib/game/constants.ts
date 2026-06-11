@@ -102,13 +102,102 @@ export const GAME_ROLES: Record<
 };
 
 export const VEHICLES = {
-  foot: { label: "On foot", labelFr: "À pied", capacityKg: 5, speed: 1, costMcb: 0 },
-  bicycle: { label: "Bicycle", labelFr: "Vélo", capacityKg: 15, speed: 1.2, costMcb: 3 },
-  motorcycle: { label: "Motorcycle", labelFr: "Moto", capacityKg: 40, speed: 2, costMcb: 15 },
-  pickup: { label: "Pickup", labelFr: "Pick-up", capacityKg: 200, speed: 1.8, costMcb: 45 },
-  truck: { label: "Truck", labelFr: "Camion", capacityKg: 800, speed: 1.5, costMcb: 120 },
-  fleet_truck: { label: "Fleet Truck", labelFr: "Flotte camions", capacityKg: 2000, speed: 1.4, costMcb: 350 },
+  foot: {
+    label: "On foot",
+    labelFr: "À pied",
+    capacityKg: 5,
+    speed: 1,
+    costMcb: 0,
+    fuelPerKm: 0,
+    maintenanceMcb: 0,
+    durabilityWear: 0,
+  },
+  bicycle: {
+    label: "Bicycle",
+    labelFr: "Vélo",
+    capacityKg: 15,
+    speed: 1.2,
+    costMcb: 3,
+    fuelPerKm: 0.02,
+    maintenanceMcb: 0.3,
+    durabilityWear: 1,
+  },
+  motorcycle: {
+    label: "Motorcycle",
+    labelFr: "Moto",
+    capacityKg: 40,
+    speed: 2,
+    costMcb: 15,
+    fuelPerKm: 0.08,
+    maintenanceMcb: 1.2,
+    durabilityWear: 3,
+  },
+  pickup: {
+    label: "Pickup",
+    labelFr: "Pick-up",
+    capacityKg: 200,
+    speed: 1.8,
+    costMcb: 45,
+    fuelPerKm: 0.15,
+    maintenanceMcb: 2.5,
+    durabilityWear: 4,
+  },
+  truck: {
+    label: "Mining truck",
+    labelFr: "Camion minier",
+    capacityKg: 800,
+    speed: 1.5,
+    costMcb: 120,
+    fuelPerKm: 0.28,
+    maintenanceMcb: 5,
+    durabilityWear: 6,
+  },
+  fleet_truck: {
+    label: "Fleet truck",
+    labelFr: "Flotte camions",
+    capacityKg: 2000,
+    speed: 1.4,
+    costMcb: 350,
+    fuelPerKm: 0.35,
+    maintenanceMcb: 12,
+    durabilityWear: 8,
+  },
 } as const;
+
+export const TRANSPORT_ROUTES = [
+  {
+    key: "village_market",
+    label: "Village → Local market",
+    labelFr: "Village → Marché local",
+    distanceKm: 12,
+    baseRisk: 0.08,
+    mudRisk: 0.1,
+  },
+  {
+    key: "mine_lubumbashi",
+    label: "Mine → Lubumbashi depot",
+    labelFr: "Mine → Dépôt Lubumbashi",
+    distanceKm: 45,
+    baseRisk: 0.12,
+    mudRisk: 0.18,
+  },
+  {
+    key: "kivu_corridor",
+    label: "Kivu → Export corridor",
+    labelFr: "Kivu → Corridor export",
+    distanceKm: 78,
+    baseRisk: 0.2,
+    mudRisk: 0.28,
+  },
+  {
+    key: "muddy_forest",
+    label: "Forest track (muddy)",
+    labelFr: "Piste forestière (boue)",
+    distanceKm: 28,
+    baseRisk: 0.18,
+    mudRisk: 0.35,
+  },
+] as const;
 
 export type UpgradeItem = {
   key: string;
@@ -155,7 +244,7 @@ export const UPGRADE_CATALOG: UpgradeItem[] = [
   { key: "villa_upgrade", category: "upgrade", label: "Luxury Villa", labelFr: "Villa luxe", costMcb: 500, minRole: "mining_corporation", effects: { lifestyleTier: 2, reputation: 30 } },
   { key: "bar_membership", category: "consumable", label: "Bar Membership", labelFr: "Carte bar", costMcb: 3, minRole: "artisanal_miner", effects: { morale: 10 } },
   { key: "tour_package", category: "consumable", label: "Regional Tour", labelFr: "Tour régional", costMcb: 20, minRole: "mineral_trader", effects: { reputation: 5 } },
-  { key: "ai_advisor_plus", category: "consumable", label: "BULEZI Advisor+", labelFr: "Conseiller BULEZI+", costMcb: 2, minRole: "artisanal_miner", effects: { advisorBoost: 1 } },
+  { key: "ai_advisor_plus", category: "consumable", label: "BULELI AI+", labelFr: "BULELI AI+", costMcb: 2, minRole: "artisanal_miner", effects: { advisorBoost: 1 } },
   { key: "energy_boost", category: "consumable", label: "Energy Drink Crate", labelFr: "Caisse énergie", costMcb: 6, minRole: "artisanal_miner", effects: { energyRestore: 40 } },
 ];
 

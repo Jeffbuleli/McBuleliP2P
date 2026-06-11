@@ -23,6 +23,11 @@ import {
   spendEnergy,
 } from "@/lib/game/player-state";
 import { seedGameMarketPrices } from "@/lib/game/market-seeder";
+import { rollExtraction, purityPriceMultiplier } from "@/lib/game/risk-engine";
+import {
+  computeTransportRiskFactor,
+  quoteTransport,
+} from "@/lib/game/transport-engine";
 
 function num(v: string | number | null | undefined): number {
   return Number(v ?? 0);
@@ -78,22 +83,27 @@ export async function runEconomyTick(): Promise<{
     }[] = [
       {
         eventKey: "cobalt_demand_surge",
-        title: "Global cobalt demand rises",
+        title: "Asian cobalt demand rises +12%",
         effects: { cobalt: 1.25 },
       },
       {
         eventKey: "fuel_shortage",
-        title: "Regional fuel shortage",
+        title: "Regional fuel prices spike",
         effects: { transport_cost: 1.15 },
       },
       {
+        eventKey: "heavy_rain_katanga",
+        title: "Heavy rain — muddy roads in Katanga",
+        effects: { transport_cost: 1.12 },
+      },
+      {
         eventKey: "export_slowdown",
-        title: "Export market slows",
+        title: "Export market slows on global uncertainty",
         effects: { gold: 0.85, diamonds: 0.9 },
       },
       {
         eventKey: "lithium_boom",
-        title: "Lithium battery boom",
+        title: "Lithium battery demand surges",
         effects: { lithium: 1.3 },
       },
     ];
@@ -167,7 +177,17 @@ export async function mineAtSite(args: {
   playerId: string;
   siteId: string;
 }): Promise<
-  | { ok: true; quantityKg: number; mineralKey: string; xp: number }
+  | {
+      ok: true;
+      outcome: string;
+      quantityKg: number;
+      purityPct: number;
+      mineralKey: string;
+      xp: number;
+      toolWear: number;
+      message: string;
+      messageFr: string;
+    }
   | { ok: false; error: string }
 > {
   const energy = await spendEnergy(args.playerId, ENERGY.mineCost);
@@ -187,41 +207,51 @@ export async function mineAtSite(args: {
 
   if (!site) return { ok: false, error: "site_not_found" };
 
-  const mineral = MINERALS[site.mineralKey as MineralKey];
-  if (!mineral) return { ok: false, error: "invalid_mineral" };
+  const mineralKey = site.mineralKey as MineralKey;
+  if (!MINERALS[mineralKey]) return { ok: false, error: "invalid_mineral" };
 
-  const richness = num(site.richness);
-  const baseYield = 2 + richness * 8 + (1 - mineral.extractionDifficulty) * 3;
-  const quantityKg = Math.round(baseYield * (0.85 + Math.random() * 0.3) * 100) / 100;
-  const purityPct = clamp(60 + richness * 30 + Math.random() * 10, 55, 98);
+  const result = await rollExtraction({
+    playerId: args.playerId,
+    richness: num(site.richness),
+    mineralKey,
+  });
 
-  const [stock] = await db
-    .select()
-    .from(gameMineralStocks)
-    .where(
-      and(
-        eq(gameMineralStocks.playerId, args.playerId),
-        eq(gameMineralStocks.mineralKey, site.mineralKey),
-      ),
-    )
-    .limit(1);
+  if (result.quantityKg > 0) {
+    const [stock] = await db
+      .select()
+      .from(gameMineralStocks)
+      .where(
+        and(
+          eq(gameMineralStocks.playerId, args.playerId),
+          eq(gameMineralStocks.mineralKey, site.mineralKey),
+        ),
+      )
+      .limit(1);
 
-  if (stock) {
-    await db
-      .update(gameMineralStocks)
-      .set({
-        quantityKg: String(num(stock.quantityKg) + quantityKg),
-        purityPct: String(purityPct),
-        updatedAt: new Date(),
-      })
-      .where(eq(gameMineralStocks.id, stock.id));
-  } else {
-    await db.insert(gameMineralStocks).values({
-      playerId: args.playerId,
-      mineralKey: site.mineralKey,
-      quantityKg: String(quantityKg),
-      purityPct: String(purityPct),
-    });
+    if (stock) {
+      const prevQty = num(stock.quantityKg);
+      const prevPurity = num(stock.purityPct);
+      const totalQty = prevQty + result.quantityKg;
+      const blendedPurity =
+        totalQty > 0
+          ? (prevQty * prevPurity + result.quantityKg * result.purityPct) / totalQty
+          : result.purityPct;
+      await db
+        .update(gameMineralStocks)
+        .set({
+          quantityKg: String(Math.round(totalQty * 100) / 100),
+          purityPct: String(Math.round(blendedPurity * 10) / 10),
+          updatedAt: new Date(),
+        })
+        .where(eq(gameMineralStocks.id, stock.id));
+    } else {
+      await db.insert(gameMineralStocks).values({
+        playerId: args.playerId,
+        mineralKey: site.mineralKey,
+        quantityKg: String(result.quantityKg),
+        purityPct: String(result.purityPct),
+      });
+    }
   }
 
   await db
@@ -229,10 +259,19 @@ export async function mineAtSite(args: {
     .set({ lastMinedAt: new Date(), status: "active" })
     .where(eq(gameMiningSites.id, site.id));
 
-  const xp = 10;
-  await addXp(args.playerId, xp);
+  await addXp(args.playerId, result.xp);
 
-  return { ok: true, quantityKg, mineralKey: site.mineralKey, xp };
+  return {
+    ok: true,
+    outcome: result.outcome,
+    quantityKg: result.quantityKg,
+    purityPct: result.purityPct,
+    mineralKey: site.mineralKey,
+    xp: result.xp,
+    toolWear: result.toolWear,
+    message: result.message,
+    messageFr: result.messageFr,
+  };
 }
 
 export async function startTransport(args: {
@@ -240,16 +279,12 @@ export async function startTransport(args: {
   mineralKey: MineralKey;
   quantityKg: number;
   vehicleKey: keyof typeof VEHICLES;
-  fromLocation: string;
-  toLocation: string;
+  routeKey: string;
+  xp: number;
 }): Promise<
-  | { ok: true; jobId: string; completesAt: string }
+  | { ok: true; jobId: string; completesAt: string; riskPct: number; costMcb: number }
   | { ok: false; error: string }
 > {
-  const vehicle = VEHICLES[args.vehicleKey];
-  if (!vehicle) return { ok: false, error: "invalid_vehicle" };
-  if (args.quantityKg > vehicle.capacityKg) return { ok: false, error: "over_capacity" };
-
   const db = getDb();
   const [stock] = await db
     .select()
@@ -266,24 +301,33 @@ export async function startTransport(args: {
     return { ok: false, error: "insufficient_stock" };
   }
 
+  const quote = await quoteTransport({
+    mineralKey: args.mineralKey,
+    quantityKg: args.quantityKg,
+    vehicleKey: args.vehicleKey,
+    routeKey: args.routeKey,
+    purityPct: num(stock.purityPct),
+    xp: args.xp,
+  });
+  if (!quote.ok) return quote;
+
   const energy = await spendEnergy(args.playerId, ENERGY.transportCost);
   if (!energy.ok) return energy;
 
-  const mineral = MINERALS[args.mineralKey];
-  const fuelCost = Math.round(vehicle.costMcb * 0.05 * 100) / 100;
   const debit = await debitMcb({
     playerId: args.playerId,
-    amount: fuelCost,
+    amount: quote.totalCostMcb,
     category: "transport_fuel",
-    meta: { vehicleKey: args.vehicleKey },
+    meta: { vehicleKey: args.vehicleKey, routeKey: args.routeKey },
   });
   if (!debit.ok) return debit;
 
-  const durationMin = Math.max(2, Math.round((args.quantityKg / vehicle.speed) * 1.5));
-  const completesAt = new Date(Date.now() + durationMin * 60_000);
+  const completesAt = new Date(Date.now() + quote.durationMin * 60_000);
   const priceRow = await getMineralPrice(args.mineralKey);
-  const gross = args.quantityKg * num(priceRow?.currentPriceMcb);
-  const rewardMcb = Math.round(gross * (0.75 + Math.random() * 0.1) * 100) / 100;
+  const purityMult = purityPriceMultiplier(num(stock.purityPct));
+  const gross = args.quantityKg * num(priceRow?.currentPriceMcb) * purityMult;
+  const rewardMcb = Math.round(gross * (0.78 + Math.random() * 0.08) * 100) / 100;
+  const riskFactor = computeTransportRiskFactor(quote.riskPct);
 
   const remaining = num(stock.quantityKg) - args.quantityKg;
   await db
@@ -297,20 +341,26 @@ export async function startTransport(args: {
       playerId: args.playerId,
       mineralKey: args.mineralKey,
       quantityKg: String(args.quantityKg),
-      fromLocation: args.fromLocation,
-      toLocation: args.toLocation,
+      fromLocation: args.routeKey,
+      toLocation: quote.route.key,
       vehicleKey: args.vehicleKey,
       status: "in_transit",
       startedAt: new Date(),
       completesAt,
       rewardMcb: String(rewardMcb),
-      riskFactor: String(mineral.transportRisk),
+      riskFactor: String(riskFactor),
     })
     .returning();
 
   if (!job) return { ok: false, error: "job_failed" };
 
-  return { ok: true, jobId: job.id, completesAt: completesAt.toISOString() };
+  return {
+    ok: true,
+    jobId: job.id,
+    completesAt: completesAt.toISOString(),
+    riskPct: quote.riskPct,
+    costMcb: quote.totalCostMcb,
+  };
 }
 
 async function getMineralPrice(mineralKey: string) {
@@ -352,9 +402,9 @@ export async function sellMinerals(args: {
 
   const priceRow = await getMineralPrice(args.mineralKey);
   const pricePerKg = num(priceRow?.currentPriceMcb);
-  const purityBonus = num(stock.purityPct) / 100;
+  const purityMult = purityPriceMultiplier(num(stock.purityPct));
   const revenueMcb =
-    Math.round(args.quantityKg * pricePerKg * (0.9 + purityBonus * 0.1) * 100) / 100;
+    Math.round(args.quantityKg * pricePerKg * purityMult * 100) / 100;
 
   await creditMcb({
     playerId: args.playerId,

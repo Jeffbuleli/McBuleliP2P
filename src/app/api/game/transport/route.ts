@@ -3,6 +3,7 @@ import { getSessionUserId } from "@/lib/session";
 import { VEHICLES, type MineralKey } from "@/lib/game/constants";
 import { startTransport } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
+import { getOrCreatePlayer } from "@/lib/game/player-state";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +19,22 @@ export async function POST(req: Request) {
     mineralKey?: MineralKey;
     quantityKg?: number;
     vehicleKey?: keyof typeof VEHICLES;
-    fromLocation?: string;
-    toLocation?: string;
+    routeKey?: string;
   };
 
-  if (!body.mineralKey || !body.quantityKg || !body.vehicleKey) {
+  if (!body.mineralKey || !body.quantityKg || !body.vehicleKey || !body.routeKey) {
     return NextResponse.json({ message: "Invalid payload" }, { status: 400 });
   }
+
+  const player = await getOrCreatePlayer(userId);
 
   const result = await startTransport({
     playerId: userId,
     mineralKey: body.mineralKey,
     quantityKg: body.quantityKg,
     vehicleKey: body.vehicleKey,
-    fromLocation: body.fromLocation ?? "mining_site",
-    toLocation: body.toLocation ?? "lubumbashi_market",
+    routeKey: body.routeKey,
+    xp: player.xp,
   });
 
   if (!result.ok) {

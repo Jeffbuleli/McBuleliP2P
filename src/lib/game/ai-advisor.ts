@@ -8,7 +8,7 @@ import {
 import { getPlayerDashboard } from "@/lib/game/player-state";
 import { listMarketPrices } from "@/lib/game/market-seeder";
 
-const BULEZI_SYSTEM = `You are BULEZI, the McBuleli Congo Mining Simulator economic advisor.
+const BULELI_SYSTEM = `You are BULELI AI, the McBuleli Congo Mining Simulator economic advisor.
 You help artisanal miners and entrepreneurs in the DRC mining supply chain.
 Give practical, culturally grounded advice about mining, transport, market timing, and McB utility token management.
 Be concise (max 120 words). Never promise guaranteed profits. Emphasize risk management and reinvestment.
@@ -60,7 +60,7 @@ export async function askBuleziAdvisor(args: {
 
   if (assistantOpenAiEnabled()) {
     answer = await generateAssistantReply({
-      systemPrompt: `${BULEZI_SYSTEM}\n\nPlayer context:\n${context}`,
+      systemPrompt: `${BULELI_SYSTEM}\n\nPlayer context:\n${context}`,
       history: [],
       userMessage: question,
     });
