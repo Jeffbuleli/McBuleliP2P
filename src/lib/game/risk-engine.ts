@@ -112,6 +112,14 @@ export async function rollExtraction(args: {
   richness: number;
   mineralKey: MineralKey;
 }): Promise<MineResult> {
+  const db = getDb();
+  const [player] = await db
+    .select({ stats: gamePlayers.stats })
+    .from(gamePlayers)
+    .where(eq(gamePlayers.userId, args.playerId))
+    .limit(1);
+  const yieldMult = (player?.stats as Record<string, number> | undefined)?.miningYield ?? 1;
+
   const risk = siteRiskLevel(args.richness, args.mineralKey);
   const mineral = MINERALS[args.mineralKey];
   const toolDur = await getToolDurability(args.playerId);
@@ -135,7 +143,7 @@ export async function rollExtraction(args: {
 
   const baseYield = 1.5 + args.richness * 9 + (1 - mineral.extractionDifficulty) * 2.5;
   const yieldRoll = 0.7 + Math.random() * 0.55;
-  let quantityKg = Math.round(baseYield * yieldRoll * 100) / 100;
+  let quantityKg = Math.round(baseYield * yieldRoll * yieldMult * 100) / 100;
 
   const purityBase = 45 + args.richness * 40 + (1 - risk) * 15;
   let purityPct = clamp(purityBase + (Math.random() - 0.5) * 18, 38, 98);

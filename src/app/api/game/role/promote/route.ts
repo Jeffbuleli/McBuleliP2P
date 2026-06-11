@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { purchaseUpgrade } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
-import { listShopForPlayer } from "@/lib/game/upgrade-service";
+import { getRolePromotion, promotePlayerRole } from "@/lib/game/role-service";
 
 export const dynamic = "force-dynamic";
 
@@ -13,29 +12,18 @@ export async function GET() {
   }
 
   await ensureGameSchema();
-  const items = await listShopForPlayer(userId);
-
-  return NextResponse.json({
-    items,
-    count: items.length,
-    categories: ["tool", "upgrade", "consumable", "license"] as const,
-  });
+  const promotion = await getRolePromotion(userId);
+  return NextResponse.json(promotion);
 }
 
-export async function POST(req: Request) {
+export async function POST() {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   await ensureGameSchema();
-
-  const body = (await req.json()) as { itemKey?: string };
-  if (!body.itemKey) {
-    return NextResponse.json({ message: "itemKey required" }, { status: 400 });
-  }
-
-  const result = await purchaseUpgrade({ playerId: userId, itemKey: body.itemKey });
+  const result = await promotePlayerRole(userId);
   if (!result.ok) {
     return NextResponse.json({ message: result.error }, { status: 400 });
   }

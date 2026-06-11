@@ -58,6 +58,38 @@ type Progression = {
 
 type BpBoost = { id: string; costBp: number; label: string; labelFr: string };
 
+type ShopItem = {
+  key: string;
+  category: string;
+  label: string;
+  labelFr: string;
+  costMcb: number;
+  owned: boolean;
+  canBuy: boolean;
+  lockReason: string | null;
+  lockReasonFr: string | null;
+};
+
+type RolePromotion = {
+  nextRole: string | null;
+  nextRoleLabel: string;
+  nextRoleLabelFr: string;
+  entryFeeMcb: number;
+  minXp: number;
+  canPromote: boolean;
+  blockReason: string | null;
+  blockReasonFr: string | null;
+};
+
+type RefineryAccess = {
+  available: boolean;
+  reason: string;
+  reasonFr: string;
+  mcbPerKg: number;
+  energyCost: number;
+  purityBonus: number;
+};
+
 type Dashboard = {
   player: {
     role: string;
@@ -72,6 +104,9 @@ type Dashboard = {
     community: { handle: string; displayName: string; avatarUrl: string | null };
   };
   progression: Progression;
+  rolePromotion: RolePromotion;
+  refinery: RefineryAccess;
+  shopItems: ShopItem[];
   sites: Site[];
   stocks: Stock[];
   transportOptions: TransportOption[];
@@ -139,6 +174,8 @@ export function MiningSimulatorClient() {
   const [routeKey, setRouteKey] = useState("");
   const [transportQty, setTransportQty] = useState(5);
   const [quote, setQuote] = useState<TransportQuote | null>(null);
+  const [shopCategory, setShopCategory] = useState<string>("tool");
+  const [shopExpanded, setShopExpanded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -252,7 +289,11 @@ export function MiningSimulatorClient() {
 
   const p = data.player;
   const prog = data.progression;
+  const promo = data.rolePromotion;
+  const refinery = data.refinery;
   const news = data.worldEvents.length > 0 ? data.worldEvents : [];
+  const shopFiltered = data.shopItems.filter((i) => i.category === shopCategory);
+  const shopVisible = shopExpanded ? shopFiltered : shopFiltered.slice(0, 5);
 
   const msgClass =
     msgTone === "fail"
@@ -360,6 +401,144 @@ export function MiningSimulatorClient() {
         </p>
       ) : null}
 
+      {promo.nextRole ? (
+        <section className="mt-4 rounded-xl border border-[#d6d3d1] bg-[#fafaf9] p-4">
+          <h2 className="text-sm font-bold text-[#44403c]">
+            {fr ? "Carrière minière" : "Mining career"}
+          </h2>
+          <p className="mt-1 text-xs text-[#78716c]">
+            {fr ? "Prochain rôle :" : "Next role:"}{" "}
+            <span className="font-semibold text-[#1c1917]">
+              {fr ? promo.nextRoleLabelFr : promo.nextRoleLabel}
+            </span>
+            {" · "}
+            {promo.minXp} XP · {promo.entryFeeMcb} McB
+          </p>
+          {!promo.canPromote && promo.blockReason ? (
+            <p className="mt-1 text-[10px] text-[#b45309]">
+              {fr ? promo.blockReasonFr : promo.blockReason}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            disabled={!!busy || !promo.canPromote}
+            onClick={() =>
+              void act(
+                "promote",
+                () => fetch("/api/game/role/promote", { method: "POST" }),
+                (body) =>
+                  fr
+                    ? `Promu : ${String(body.roleLabelFr ?? promo.nextRoleLabelFr)}`
+                    : `Promoted to ${String(body.roleLabel ?? promo.nextRoleLabel)}`,
+              )
+            }
+            className="mt-3 w-full rounded-lg bg-[#305f33] py-2.5 text-xs font-bold text-white disabled:opacity-50"
+          >
+            {busy === "promote"
+              ? "…"
+              : fr
+                ? "Promouvoir (licence McB)"
+                : "Promote (McB license fee)"}
+          </button>
+        </section>
+      ) : null}
+
+      <section className="mt-5">
+        <h2 className="mb-2 text-sm font-bold text-[#44403c]">
+          {fr ? "Boutique McB" : "McB shop"}
+        </h2>
+        <p className="mb-2 text-[10px] text-[#78716c]">
+          {fr
+            ? "Outils, licences et upgrades — payés en McB uniquement."
+            : "Tools, licenses & upgrades — McB only."}
+        </p>
+        <div className="mb-2 flex flex-wrap gap-1">
+          {(["tool", "upgrade", "consumable", "license"] as const).map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                setShopCategory(cat);
+                setShopExpanded(false);
+              }}
+              className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${
+                shopCategory === cat
+                  ? "bg-[#305f33] text-white"
+                  : "bg-[#f5f5f4] text-[#78716c]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {shopVisible.map((item) => (
+            <div
+              key={item.key}
+              className="flex items-center justify-between rounded-xl border border-[#f0f4f2] bg-white px-3 py-2.5"
+            >
+              <div className="min-w-0 flex-1 pr-2">
+                <p className="text-xs font-bold text-[#1c1917]">
+                  {fr ? item.labelFr : item.label}
+                  {item.owned ? (
+                    <span className="ml-1 text-[10px] text-[#305f33]">✓</span>
+                  ) : null}
+                </p>
+                <p className="text-[10px] text-[#78716c]">
+                  {item.costMcb} McB
+                  {!item.canBuy && (item.lockReasonFr || item.lockReason) ? (
+                    <span className="text-[#b45309]">
+                      {" "}
+                      · {fr ? item.lockReasonFr : item.lockReason}
+                    </span>
+                  ) : null}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={!!busy || !item.canBuy}
+                onClick={() =>
+                  void act(
+                    `buy-${item.key}`,
+                    () =>
+                      fetch("/api/game/upgrades", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ itemKey: item.key }),
+                      }),
+                    (body) => {
+                      const label = fr ? item.labelFr : item.label;
+                      const applied = Array.isArray(body.applied)
+                        ? (body.applied as string[]).join(", ")
+                        : "";
+                      return applied ? `${label} — ${applied}` : label;
+                    },
+                  )
+                }
+                className="shrink-0 rounded-lg border border-[#305f33] px-2.5 py-1.5 text-[10px] font-bold text-[#305f33] disabled:opacity-40"
+              >
+                {fr ? "Acheter" : "Buy"}
+              </button>
+            </div>
+          ))}
+        </div>
+        {shopFiltered.length > 5 ? (
+          <button
+            type="button"
+            onClick={() => setShopExpanded((v) => !v)}
+            className="mt-2 w-full text-center text-[10px] font-semibold text-[#305f33]"
+          >
+            {shopExpanded
+              ? fr
+                ? "Voir moins"
+                : "Show less"
+              : fr
+                ? `Voir tout (${shopFiltered.length})`
+                : `Show all (${shopFiltered.length})`}
+          </button>
+        ) : null}
+      </section>
+
       <section className="mt-5">
         <h2 className="mb-2 text-sm font-bold text-[#44403c]">
           {fr ? "Sites miniers" : "Mining sites"}
@@ -457,7 +636,34 @@ export function MiningSimulatorClient() {
                     </span>
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  {refinery.available && s.purityPct < 95 && s.quantityKg >= 2 ? (
+                    <button
+                      type="button"
+                      disabled={!!busy || p.energy < refinery.energyCost}
+                      onClick={() =>
+                        void act(
+                          "refine",
+                          () =>
+                            fetch("/api/game/refinery", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                mineralKey: s.mineralKey,
+                                quantityKg: Math.min(s.quantityKg, 5),
+                              }),
+                            }),
+                          (body) =>
+                            fr
+                              ? String(body.messageFr ?? body.message ?? "")
+                              : String(body.message ?? ""),
+                        )
+                      }
+                      className="rounded-lg border border-[#b45309] px-2 py-2 text-[10px] font-bold text-[#b45309] disabled:opacity-50"
+                    >
+                      {fr ? "Raffiner" : "Refine"}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     disabled={!!busy || s.quantityKg < 1}
@@ -473,7 +679,7 @@ export function MiningSimulatorClient() {
                         }),
                       )
                     }
-                    className="rounded-lg border border-[#305f33] px-3 py-2 text-xs font-bold text-[#305f33] disabled:opacity-50"
+                    className="rounded-lg border border-[#305f33] px-2 py-2 text-[10px] font-bold text-[#305f33] disabled:opacity-50"
                   >
                     {fr ? "Vendre" : "Sell"}
                   </button>
@@ -481,7 +687,7 @@ export function MiningSimulatorClient() {
                     type="button"
                     disabled={!!busy || s.quantityKg < 1}
                     onClick={() => openTransport(s)}
-                    className="rounded-lg bg-[#1c1917] px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                    className="rounded-lg bg-[#1c1917] px-2 py-2 text-[10px] font-bold text-white disabled:opacity-50"
                   >
                     {fr ? "Transport" : "Ship"}
                   </button>

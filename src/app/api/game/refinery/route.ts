@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { purchaseUpgrade } from "@/lib/game/economy-engine";
+import { type MineralKey } from "@/lib/game/constants";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
-import { listShopForPlayer } from "@/lib/game/upgrade-service";
+import { getRefineryAccess, refineMinerals } from "@/lib/game/refinery-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +13,8 @@ export async function GET() {
   }
 
   await ensureGameSchema();
-  const items = await listShopForPlayer(userId);
-
-  return NextResponse.json({
-    items,
-    count: items.length,
-    categories: ["tool", "upgrade", "consumable", "license"] as const,
-  });
+  const access = await getRefineryAccess(userId);
+  return NextResponse.json(access);
 }
 
 export async function POST(req: Request) {
@@ -30,12 +25,21 @@ export async function POST(req: Request) {
 
   await ensureGameSchema();
 
-  const body = (await req.json()) as { itemKey?: string };
-  if (!body.itemKey) {
-    return NextResponse.json({ message: "itemKey required" }, { status: 400 });
+  const body = (await req.json()) as {
+    mineralKey?: MineralKey;
+    quantityKg?: number;
+  };
+
+  if (!body.mineralKey || !body.quantityKg) {
+    return NextResponse.json({ message: "Invalid payload" }, { status: 400 });
   }
 
-  const result = await purchaseUpgrade({ playerId: userId, itemKey: body.itemKey });
+  const result = await refineMinerals({
+    playerId: userId,
+    mineralKey: body.mineralKey,
+    quantityKg: body.quantityKg,
+  });
+
   if (!result.ok) {
     return NextResponse.json({ message: result.error }, { status: 400 });
   }

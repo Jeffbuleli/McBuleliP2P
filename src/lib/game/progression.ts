@@ -19,7 +19,7 @@ export type ProgressionView = {
   unlocksFr: string[];
 };
 
-const ROLE_ORDER: GameRole[] = [
+export const ROLE_ORDER: GameRole[] = [
   "artisanal_miner",
   "motorcycle_transporter",
   "truck_operator",
@@ -29,6 +29,78 @@ const ROLE_ORDER: GameRole[] = [
   "export_company",
   "mining_corporation",
 ];
+
+export function roleRank(role: string): number {
+  const idx = ROLE_ORDER.indexOf(role as GameRole);
+  return idx >= 0 ? idx : 0;
+}
+
+export function roleMeetsMinimum(playerRole: string, minRole: GameRole): boolean {
+  return roleRank(playerRole) >= roleRank(minRole);
+}
+
+export function getNextRole(currentRole: string): GameRole | null {
+  const idx = ROLE_ORDER.indexOf(currentRole as GameRole);
+  if (idx < 0 || idx >= ROLE_ORDER.length - 1) return null;
+  return ROLE_ORDER[idx + 1]!;
+}
+
+export type RolePromotionOffer = {
+  nextRole: GameRole | null;
+  nextRoleLabel: string;
+  nextRoleLabelFr: string;
+  entryFeeMcb: number;
+  minXp: number;
+  canPromote: boolean;
+  blockReason: string | null;
+  blockReasonFr: string | null;
+};
+
+export function buildRolePromotionOffer(args: {
+  role: string;
+  xp: number;
+  mcbBalance: number;
+}): RolePromotionOffer {
+  const nextRole = getNextRole(args.role);
+  if (!nextRole) {
+    return {
+      nextRole: null,
+      nextRoleLabel: "",
+      nextRoleLabelFr: "",
+      entryFeeMcb: 0,
+      minXp: 0,
+      canPromote: false,
+      blockReason: "Maximum career rank reached",
+      blockReasonFr: "Rang maximum atteint",
+    };
+  }
+
+  const meta = GAME_ROLES[nextRole];
+  let canPromote = true;
+  let blockReason: string | null = null;
+  let blockReasonFr: string | null = null;
+
+  if (args.xp < meta.minXp) {
+    canPromote = false;
+    blockReason = `Need ${meta.minXp - args.xp} more XP`;
+    blockReasonFr = `Encore ${meta.minXp - args.xp} XP requis`;
+  } else if (args.mcbBalance < meta.entryFeeMcb) {
+    canPromote = false;
+    blockReason = `Need ${meta.entryFeeMcb} McB license fee`;
+    blockReasonFr = `Frais licence : ${meta.entryFeeMcb} McB`;
+  }
+
+  return {
+    nextRole,
+    nextRoleLabel: meta.label,
+    nextRoleLabelFr: meta.labelFr,
+    entryFeeMcb: meta.entryFeeMcb,
+    minXp: meta.minXp,
+    canPromote,
+    blockReason,
+    blockReasonFr,
+  };
+}
 
 export function lifestyleStage(xp: number, lifestyleTier: number): LifestyleStage {
   if (lifestyleTier >= 3 || xp >= 6000) return "mogul";

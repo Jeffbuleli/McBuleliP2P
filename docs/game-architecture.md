@@ -81,6 +81,9 @@ Events surface in market API and UI news ticker.
 | `POST /api/game/trade` | Sell minerals locally |
 | `POST /api/game/boost` | Spend BP on small boosts |
 | `POST /api/game/advisor` | BULELI AI advisor |
+| `GET/POST /api/game/role/promote` | Career promotion (XP + McB license) |
+| `GET/POST /api/game/refinery` | Purity upgrade on mineral stock |
+| `GET/POST /api/game/upgrades` | McB shop (role-gated catalog) |
 | `POST /api/internal/game/tick` | Economy cron |
 
 ## Database
@@ -89,15 +92,15 @@ Events surface in market API and UI news ticker.
 
 ## MVP Roadmap
 
-### Phase 1 (current)
+### Phase 1 ✓
 - Risk extraction, purity, transport quotes, XP progression UI
 - McB/BP separation, world events ticker
 - BULELI AI advisor
 
-### Phase 2
-- Role promotion flow (McB entry fees)
-- Upgrade shop UI wired to `UPGRADE_CATALOG`
-- Refinery / purity upgrade action
+### Phase 2 ✓ (current)
+- Role promotion flow (McB entry fees + XP gates)
+- Upgrade shop UI wired to `UPGRADE_CATALOG` (`upgrade-service.ts`)
+- Refinery / purity upgrade (`refinery-engine.ts`)
 
 ### Phase 3
 - Godot 4 client via same API + Nakama stub

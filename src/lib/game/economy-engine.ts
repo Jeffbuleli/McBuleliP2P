@@ -423,51 +423,7 @@ export async function sellMinerals(args: {
   return { ok: true, revenueMcb, pricePerKg };
 }
 
-export async function purchaseUpgrade(args: {
-  playerId: string;
-  itemKey: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
-  const item = UPGRADE_CATALOG.find((u) => u.key === args.itemKey);
-  if (!item) return { ok: false, error: "item_not_found" };
-
-  const debit = await debitMcb({
-    playerId: args.playerId,
-    amount: item.costMcb,
-    category: "upgrade_purchase",
-    meta: { itemKey: item.key },
-  });
-  if (!debit.ok) return debit;
-
-  const db = getDb();
-  const [existing] = await db
-    .select()
-    .from(gameInventory)
-    .where(
-      and(
-        eq(gameInventory.playerId, args.playerId),
-        eq(gameInventory.itemKey, item.key),
-      ),
-    )
-    .limit(1);
-
-  if (existing) {
-    await db
-      .update(gameInventory)
-      .set({ quantity: existing.quantity + 1 })
-      .where(eq(gameInventory.id, existing.id));
-  } else {
-    await db.insert(gameInventory).values({
-      playerId: args.playerId,
-      itemKey: item.key,
-      category: item.category,
-      quantity: 1,
-      metadata: item.effects,
-    });
-  }
-
-  await addXp(args.playerId, 5);
-  return { ok: true };
-}
+export { purchaseShopItem as purchaseUpgrade } from "@/lib/game/upgrade-service";
 
 export async function listActiveWorldEvents() {
   const db = getDb();

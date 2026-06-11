@@ -1,5 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import {
+  gameInventory,
   gameMiningSites,
   gameMineralStocks,
   gamePlayers,
@@ -16,7 +17,9 @@ import { STARTER, TRANSPORT_ROUTES, type MineralKey } from "@/lib/game/constants
 import { listActiveWorldEvents } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { seedGameMarketPrices } from "@/lib/game/market-seeder";
-import { buildProgressionView } from "@/lib/game/progression";
+import { getRefineryAccess } from "@/lib/game/refinery-engine";
+import { buildRolePromotionOffer, buildProgressionView } from "@/lib/game/progression";
+import { listShopForPlayer } from "@/lib/game/upgrade-service";
 import {
   getToolDurability,
   siteRiskLabel,
@@ -282,6 +285,9 @@ export async function getPlayerDashboard(userId: string) {
     worldEvents,
     toolDurability,
     bpRow,
+    inventory,
+    shopItems,
+    refinery,
   ] = await Promise.all([
     db.select().from(gameMiningSites).where(eq(gameMiningSites.playerId, userId)),
     db.select().from(gameMineralStocks).where(eq(gameMineralStocks.playerId, userId)),
@@ -309,12 +315,21 @@ export async function getPlayerDashboard(userId: string) {
       .from(users)
       .where(eq(users.id, userId))
       .limit(1),
+    db.select().from(gameInventory).where(eq(gameInventory.playerId, userId)),
+    listShopForPlayer(userId),
+    getRefineryAccess(userId),
   ]);
 
   const progression = buildProgressionView({
     xp: player.xp,
     lifestyleTier: player.lifestyleTier,
     role: player.role,
+  });
+
+  const rolePromotion = buildRolePromotionOffer({
+    role: player.role,
+    xp: player.xp,
+    mcbBalance: num(player.mcbBalance),
   });
 
   return {
@@ -324,6 +339,15 @@ export async function getPlayerDashboard(userId: string) {
       toolDurability,
     },
     progression,
+    rolePromotion,
+    refinery,
+    shopItems,
+    inventory: inventory.map((i) => ({
+      itemKey: i.itemKey,
+      category: i.category,
+      quantity: i.quantity,
+      label: i.itemKey,
+    })),
     regions: WORLD_REGIONS,
     sites: sites.map((s) => {
       const mineralKey = s.mineralKey as MineralKey;
