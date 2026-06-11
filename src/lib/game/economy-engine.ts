@@ -1,0 +1,430 @@
+import { and, desc, eq, lte, sql } from "drizzle-orm";
+import {
+  gameEconomyPrices,
+  gameInventory,
+  gameMiningSites,
+  gameMineralStocks,
+  gameTickMeta,
+  gameTransportJobs,
+  gameWorldEvents,
+  getDb,
+} from "@/db";
+import {
+  ENERGY,
+  MINERALS,
+  UPGRADE_CATALOG,
+  VEHICLES,
+  type MineralKey,
+} from "@/lib/game/constants";
+import {
+  addXp,
+  creditMcb,
+  debitMcb,
+  spendEnergy,
+} from "@/lib/game/player-state";
+import { seedGameMarketPrices } from "@/lib/game/market-seeder";
+
+function num(v: string | number | null | undefined): number {
+  return Number(v ?? 0);
+}
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+export async function runEconomyTick(): Promise<{
+  pricesUpdated: number;
+  eventsRotated: number;
+  transportsCompleted: number;
+}> {
+  await seedGameMarketPrices();
+  const db = getDb();
+
+  const prices = await db.select().from(gameEconomyPrices);
+  let pricesUpdated = 0;
+
+  for (const p of prices) {
+    const vol = num(p.volatility);
+    const demand = num(p.demandIndex);
+    const supply = num(p.supplyIndex);
+    const base = num(p.basePriceMcb);
+    const shock = (Math.random() - 0.5) * vol * 2;
+    const factor = clamp(demand / Math.max(supply, 0.1) + shock, 0.55, 1.85);
+    const next = Math.round(base * factor * 100) / 100;
+
+    await db
+      .update(gameEconomyPrices)
+      .set({
+        currentPriceMcb: String(next),
+        demandIndex: String(clamp(demand + (Math.random() - 0.5) * 0.05, 0.5, 1.8)),
+        supplyIndex: String(clamp(supply + (Math.random() - 0.5) * 0.05, 0.5, 1.8)),
+        updatedAt: new Date(),
+      })
+      .where(eq(gameEconomyPrices.mineralKey, p.mineralKey));
+    pricesUpdated += 1;
+  }
+
+  await db
+    .update(gameWorldEvents)
+    .set({ active: false })
+    .where(lte(gameWorldEvents.endsAt, new Date()));
+
+  let eventsRotated = 0;
+  if (Math.random() < 0.25) {
+    const events: {
+      eventKey: string;
+      title: string;
+      effects: Record<string, number>;
+    }[] = [
+      {
+        eventKey: "cobalt_demand_surge",
+        title: "Global cobalt demand rises",
+        effects: { cobalt: 1.25 },
+      },
+      {
+        eventKey: "fuel_shortage",
+        title: "Regional fuel shortage",
+        effects: { transport_cost: 1.15 },
+      },
+      {
+        eventKey: "export_slowdown",
+        title: "Export market slows",
+        effects: { gold: 0.85, diamonds: 0.9 },
+      },
+      {
+        eventKey: "lithium_boom",
+        title: "Lithium battery boom",
+        effects: { lithium: 1.3 },
+      },
+    ];
+    const pick = events[Math.floor(Math.random() * events.length)]!;
+    const ends = new Date(Date.now() + 6 * 3_600_000);
+    await db.insert(gameWorldEvents).values({
+      eventKey: pick.eventKey,
+      title: pick.title,
+      description: pick.title,
+      effects: pick.effects,
+      startsAt: new Date(),
+      endsAt: ends,
+      active: true,
+    });
+    eventsRotated = 1;
+  }
+
+  const dueJobs = await db
+    .select()
+    .from(gameTransportJobs)
+    .where(
+      and(
+        eq(gameTransportJobs.status, "in_transit"),
+        lte(gameTransportJobs.completesAt, new Date()),
+      ),
+    );
+
+  let transportsCompleted = 0;
+  for (const job of dueJobs) {
+    const failRoll = Math.random();
+    if (failRoll < num(job.riskFactor)) {
+      await db
+        .update(gameTransportJobs)
+        .set({ status: "failed" })
+        .where(eq(gameTransportJobs.id, job.id));
+      continue;
+    }
+
+    const reward = num(job.rewardMcb);
+    await creditMcb({
+      playerId: job.playerId,
+      amount: reward,
+      category: "transport_reward",
+      referenceId: job.id,
+    });
+    await db
+      .update(gameTransportJobs)
+      .set({ status: "completed" })
+      .where(eq(gameTransportJobs.id, job.id));
+    await addXp(job.playerId, 15);
+    transportsCompleted += 1;
+  }
+
+  const [meta] = await db.select().from(gameTickMeta).limit(1);
+  if (meta) {
+    await db
+      .update(gameTickMeta)
+      .set({
+        lastTickAt: new Date(),
+        tickCount: (meta.tickCount ?? 0) + 1,
+      })
+      .where(eq(gameTickMeta.id, 1));
+  } else {
+    await db.insert(gameTickMeta).values({ id: 1, tickCount: 1 });
+  }
+
+  return { pricesUpdated, eventsRotated, transportsCompleted };
+}
+
+export async function mineAtSite(args: {
+  playerId: string;
+  siteId: string;
+}): Promise<
+  | { ok: true; quantityKg: number; mineralKey: string; xp: number }
+  | { ok: false; error: string }
+> {
+  const energy = await spendEnergy(args.playerId, ENERGY.mineCost);
+  if (!energy.ok) return energy;
+
+  const db = getDb();
+  const [site] = await db
+    .select()
+    .from(gameMiningSites)
+    .where(
+      and(
+        eq(gameMiningSites.id, args.siteId),
+        eq(gameMiningSites.playerId, args.playerId),
+      ),
+    )
+    .limit(1);
+
+  if (!site) return { ok: false, error: "site_not_found" };
+
+  const mineral = MINERALS[site.mineralKey as MineralKey];
+  if (!mineral) return { ok: false, error: "invalid_mineral" };
+
+  const richness = num(site.richness);
+  const baseYield = 2 + richness * 8 + (1 - mineral.extractionDifficulty) * 3;
+  const quantityKg = Math.round(baseYield * (0.85 + Math.random() * 0.3) * 100) / 100;
+  const purityPct = clamp(60 + richness * 30 + Math.random() * 10, 55, 98);
+
+  const [stock] = await db
+    .select()
+    .from(gameMineralStocks)
+    .where(
+      and(
+        eq(gameMineralStocks.playerId, args.playerId),
+        eq(gameMineralStocks.mineralKey, site.mineralKey),
+      ),
+    )
+    .limit(1);
+
+  if (stock) {
+    await db
+      .update(gameMineralStocks)
+      .set({
+        quantityKg: String(num(stock.quantityKg) + quantityKg),
+        purityPct: String(purityPct),
+        updatedAt: new Date(),
+      })
+      .where(eq(gameMineralStocks.id, stock.id));
+  } else {
+    await db.insert(gameMineralStocks).values({
+      playerId: args.playerId,
+      mineralKey: site.mineralKey,
+      quantityKg: String(quantityKg),
+      purityPct: String(purityPct),
+    });
+  }
+
+  await db
+    .update(gameMiningSites)
+    .set({ lastMinedAt: new Date(), status: "active" })
+    .where(eq(gameMiningSites.id, site.id));
+
+  const xp = 10;
+  await addXp(args.playerId, xp);
+
+  return { ok: true, quantityKg, mineralKey: site.mineralKey, xp };
+}
+
+export async function startTransport(args: {
+  playerId: string;
+  mineralKey: MineralKey;
+  quantityKg: number;
+  vehicleKey: keyof typeof VEHICLES;
+  fromLocation: string;
+  toLocation: string;
+}): Promise<
+  | { ok: true; jobId: string; completesAt: string }
+  | { ok: false; error: string }
+> {
+  const vehicle = VEHICLES[args.vehicleKey];
+  if (!vehicle) return { ok: false, error: "invalid_vehicle" };
+  if (args.quantityKg > vehicle.capacityKg) return { ok: false, error: "over_capacity" };
+
+  const db = getDb();
+  const [stock] = await db
+    .select()
+    .from(gameMineralStocks)
+    .where(
+      and(
+        eq(gameMineralStocks.playerId, args.playerId),
+        eq(gameMineralStocks.mineralKey, args.mineralKey),
+      ),
+    )
+    .limit(1);
+
+  if (!stock || num(stock.quantityKg) < args.quantityKg) {
+    return { ok: false, error: "insufficient_stock" };
+  }
+
+  const energy = await spendEnergy(args.playerId, ENERGY.transportCost);
+  if (!energy.ok) return energy;
+
+  const mineral = MINERALS[args.mineralKey];
+  const fuelCost = Math.round(vehicle.costMcb * 0.05 * 100) / 100;
+  const debit = await debitMcb({
+    playerId: args.playerId,
+    amount: fuelCost,
+    category: "transport_fuel",
+    meta: { vehicleKey: args.vehicleKey },
+  });
+  if (!debit.ok) return debit;
+
+  const durationMin = Math.max(2, Math.round((args.quantityKg / vehicle.speed) * 1.5));
+  const completesAt = new Date(Date.now() + durationMin * 60_000);
+  const priceRow = await getMineralPrice(args.mineralKey);
+  const gross = args.quantityKg * num(priceRow?.currentPriceMcb);
+  const rewardMcb = Math.round(gross * (0.75 + Math.random() * 0.1) * 100) / 100;
+
+  const remaining = num(stock.quantityKg) - args.quantityKg;
+  await db
+    .update(gameMineralStocks)
+    .set({ quantityKg: String(remaining), updatedAt: new Date() })
+    .where(eq(gameMineralStocks.id, stock.id));
+
+  const [job] = await db
+    .insert(gameTransportJobs)
+    .values({
+      playerId: args.playerId,
+      mineralKey: args.mineralKey,
+      quantityKg: String(args.quantityKg),
+      fromLocation: args.fromLocation,
+      toLocation: args.toLocation,
+      vehicleKey: args.vehicleKey,
+      status: "in_transit",
+      startedAt: new Date(),
+      completesAt,
+      rewardMcb: String(rewardMcb),
+      riskFactor: String(mineral.transportRisk),
+    })
+    .returning();
+
+  if (!job) return { ok: false, error: "job_failed" };
+
+  return { ok: true, jobId: job.id, completesAt: completesAt.toISOString() };
+}
+
+async function getMineralPrice(mineralKey: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(gameEconomyPrices)
+    .where(eq(gameEconomyPrices.mineralKey, mineralKey))
+    .limit(1);
+  return row;
+}
+
+export async function sellMinerals(args: {
+  playerId: string;
+  mineralKey: MineralKey;
+  quantityKg: number;
+}): Promise<
+  | { ok: true; revenueMcb: number; pricePerKg: number }
+  | { ok: false; error: string }
+> {
+  const energy = await spendEnergy(args.playerId, ENERGY.tradeCost);
+  if (!energy.ok) return energy;
+
+  const db = getDb();
+  const [stock] = await db
+    .select()
+    .from(gameMineralStocks)
+    .where(
+      and(
+        eq(gameMineralStocks.playerId, args.playerId),
+        eq(gameMineralStocks.mineralKey, args.mineralKey),
+      ),
+    )
+    .limit(1);
+
+  if (!stock || num(stock.quantityKg) < args.quantityKg) {
+    return { ok: false, error: "insufficient_stock" };
+  }
+
+  const priceRow = await getMineralPrice(args.mineralKey);
+  const pricePerKg = num(priceRow?.currentPriceMcb);
+  const purityBonus = num(stock.purityPct) / 100;
+  const revenueMcb =
+    Math.round(args.quantityKg * pricePerKg * (0.9 + purityBonus * 0.1) * 100) / 100;
+
+  await creditMcb({
+    playerId: args.playerId,
+    amount: revenueMcb,
+    category: "mineral_sale",
+    meta: { mineralKey: args.mineralKey, quantityKg: args.quantityKg },
+  });
+
+  const remaining = num(stock.quantityKg) - args.quantityKg;
+  await db
+    .update(gameMineralStocks)
+    .set({ quantityKg: String(remaining), updatedAt: new Date() })
+    .where(eq(gameMineralStocks.id, stock.id));
+
+  await addXp(args.playerId, 8);
+  return { ok: true, revenueMcb, pricePerKg };
+}
+
+export async function purchaseUpgrade(args: {
+  playerId: string;
+  itemKey: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const item = UPGRADE_CATALOG.find((u) => u.key === args.itemKey);
+  if (!item) return { ok: false, error: "item_not_found" };
+
+  const debit = await debitMcb({
+    playerId: args.playerId,
+    amount: item.costMcb,
+    category: "upgrade_purchase",
+    meta: { itemKey: item.key },
+  });
+  if (!debit.ok) return debit;
+
+  const db = getDb();
+  const [existing] = await db
+    .select()
+    .from(gameInventory)
+    .where(
+      and(
+        eq(gameInventory.playerId, args.playerId),
+        eq(gameInventory.itemKey, item.key),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(gameInventory)
+      .set({ quantity: existing.quantity + 1 })
+      .where(eq(gameInventory.id, existing.id));
+  } else {
+    await db.insert(gameInventory).values({
+      playerId: args.playerId,
+      itemKey: item.key,
+      category: item.category,
+      quantity: 1,
+      metadata: item.effects,
+    });
+  }
+
+  await addXp(args.playerId, 5);
+  return { ok: true };
+}
+
+export async function listActiveWorldEvents() {
+  const db = getDb();
+  return db
+    .select()
+    .from(gameWorldEvents)
+    .where(eq(gameWorldEvents.active, true))
+    .orderBy(desc(gameWorldEvents.startsAt))
+    .limit(10);
+}

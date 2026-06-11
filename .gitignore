@@ -25,6 +25,7 @@
 !/public/uploads/avatars/.gitkeep
 
 # misc
+.tmp/
 .DS_Store
 *.pem
 

@@ -3227,3 +3227,5 @@ export const communityDiscussionFollows = pgTable(
     index("community_discussion_follows_user_idx").on(t.userId, t.createdAt),
   ],
 );
+
+export * from "./game-schema";
