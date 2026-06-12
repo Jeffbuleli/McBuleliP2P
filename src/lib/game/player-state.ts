@@ -12,7 +12,7 @@ import {
 } from "@/db";
 import { ensureCommunityProfile } from "@/lib/community/profile-service";
 import { GAME_BP_BOOSTS } from "@/lib/game/bp-boosts";
-import { STARTER, TRANSPORT_ROUTES, type MineralKey } from "@/lib/game/constants";
+import { ENERGY, STARTER, TRANSPORT_ROUTES, type MineralKey } from "@/lib/game/constants";
 import { listActiveWorldEvents } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { seedGameMarketPrices } from "@/lib/game/market-seeder";
@@ -118,15 +118,18 @@ export async function getPlayerView(userId: string): Promise<GamePlayerView> {
   }
 
   const community = await ensureCommunityProfile(userId);
-  const regen = applyEnergyRegen(player);
+  const regen = (await syncEnergyRegen(userId)) ?? {
+    energy: player.energy,
+    energyCap: player.energyCap,
+  };
 
   return {
     userId: player.userId,
     role: player.role,
     lifestyleTier: player.lifestyleTier,
-    xp: regen.xp,
+    xp: player.xp,
     reputation: player.reputation,
-    mcbBalance: num(regen.mcbBalance),
+    mcbBalance: num(player.mcbBalance),
     energy: regen.energy,
     energyCap: player.energyCap,
     regionKey: player.regionKey,
@@ -144,22 +147,36 @@ export async function getPlayerView(userId: string): Promise<GamePlayerView> {
   };
 }
 
-function applyEnergyRegen(player: typeof gamePlayers.$inferSelect) {
+/** Apply hourly regen and persist before any spend or dashboard read. */
+export async function syncEnergyRegen(
+  playerId: string,
+): Promise<{ energy: number; energyCap: number } | null> {
+  const db = getDb();
+  const [player] = await db
+    .select()
+    .from(gamePlayers)
+    .where(eq(gamePlayers.userId, playerId))
+    .limit(1);
+
+  if (!player) return null;
+
   const now = Date.now();
   const last = player.lastEnergyAt?.getTime() ?? now;
   const hours = Math.max(0, (now - last) / 3_600_000);
-  const regen = Math.floor(hours * 10);
+  const regenPerHour = ENERGY.regenPerHour;
+  const stats = (player.stats ?? {}) as Record<string, number>;
+  const regenMult = stats.energyRegen ?? 1;
+  const regen = Math.floor(hours * regenPerHour * regenMult);
   const energy = Math.min(player.energyCap, player.energy + regen);
 
-  if (regen > 0 && energy !== player.energy) {
-    const db = getDb();
-    void db
+  if (energy !== player.energy) {
+    await db
       .update(gamePlayers)
       .set({ energy, lastEnergyAt: new Date(), updatedAt: new Date() })
-      .where(eq(gamePlayers.userId, player.userId));
+      .where(eq(gamePlayers.userId, playerId));
   }
 
-  return { ...player, energy };
+  return { energy, energyCap: player.energyCap };
 }
 
 export async function debitMcb(args: {
@@ -239,22 +256,19 @@ export async function creditMcb(args: {
 export async function spendEnergy(
   playerId: string,
   cost: number,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const db = getDb();
-  const [player] = await db
-    .select()
-    .from(gamePlayers)
-    .where(eq(gamePlayers.userId, playerId))
-    .limit(1);
-  if (!player) return { ok: false, error: "player_not_found" };
-  if (player.energy < cost) return { ok: false, error: "insufficient_energy" };
+): Promise<{ ok: true; energyAfter: number } | { ok: false; error: string }> {
+  const synced = await syncEnergyRegen(playerId);
+  if (!synced) return { ok: false, error: "player_not_found" };
+  if (synced.energy < cost) return { ok: false, error: "insufficient_energy" };
 
+  const energyAfter = synced.energy - cost;
+  const db = getDb();
   await db
     .update(gamePlayers)
-    .set({ energy: player.energy - cost, updatedAt: new Date() })
+    .set({ energy: energyAfter, updatedAt: new Date() })
     .where(eq(gamePlayers.userId, playerId));
 
-  return { ok: true };
+  return { ok: true, energyAfter };
 }
 
 export async function addXp(playerId: string, xp: number): Promise<void> {
@@ -416,5 +430,11 @@ export async function getPlayerDashboard(userId: string) {
       amountMcb: num(t.amountMcb),
       balanceAfter: num(t.balanceAfter),
     })),
+    actionCosts: {
+      mine: ENERGY.mineCost,
+      transport: ENERGY.transportCost,
+      trade: ENERGY.tradeCost,
+      regenPerHour: ENERGY.regenPerHour,
+    },
   };
 }

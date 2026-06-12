@@ -7,7 +7,7 @@ import {
   type UpgradeItem,
 } from "@/lib/game/constants";
 import { roleMeetsMinimum } from "@/lib/game/progression";
-import { addXp, debitMcb } from "@/lib/game/player-state";
+import { addXp, debitMcb, syncEnergyRegen } from "@/lib/game/player-state";
 
 function num(v: string | number | null | undefined): number {
   return Number(v ?? 0);
@@ -99,8 +99,9 @@ async function applyUpgradeEffects(
 
   if (!player) return;
 
+  const synced = await syncEnergyRegen(playerId);
   const stats = { ...(player.stats ?? {}) } as Record<string, number>;
-  let energy = player.energy;
+  let energy = synced?.energy ?? player.energy;
   let energyCap = player.energyCap;
   let lifestyleTier = player.lifestyleTier;
   let reputation = player.reputation;

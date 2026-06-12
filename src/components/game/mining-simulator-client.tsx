@@ -126,7 +126,16 @@ type RefineryAccess = {
   purityBonus: number;
 };
 
+const GAME_INPUT =
+  "w-full rounded-lg border border-[#e7e5e4] bg-white px-3 py-2 text-sm text-[#1c1917] caret-[#305f33] placeholder:text-[#a8a29e]";
+
 type Dashboard = {
+  actionCosts: {
+    mine: number;
+    transport: number;
+    trade: number;
+    regenPerHour: number;
+  };
   player: {
     role: string;
     mcbBalance: number;
@@ -343,8 +352,10 @@ export function MiningSimulatorClient() {
         ? "bg-[#fef3c7] text-[#b45309]"
         : "bg-[#e8f3ee] text-[#305f33]";
 
+  const costs = data.actionCosts;
+
   return (
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-4">
+    <div className="game-theme mx-auto max-w-lg px-4 pb-24 pt-4">
       <div className="mb-4 flex items-center gap-3">
         <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
           ← Community
@@ -745,7 +756,7 @@ export function MiningSimulatorClient() {
               </div>
               <button
                 type="button"
-                disabled={!!busy || p.energy < 8}
+                disabled={!!busy || p.energy < costs.mine}
                 onClick={() =>
                   void act(
                     "mine",
@@ -956,7 +967,7 @@ export function MiningSimulatorClient() {
           value={advisorQ}
           onChange={(e) => setAdvisorQ(e.target.value)}
           placeholder={fr ? "Que faire avec mon cobalt ?" : "What should I do with cobalt?"}
-          className="mt-3 w-full rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm"
+          className={`mt-3 ${GAME_INPUT}`}
         />
         <button
           type="button"
@@ -1008,7 +1019,7 @@ export function MiningSimulatorClient() {
               max={transportStock.quantityKg}
               value={transportQty}
               onChange={(e) => setTransportQty(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm"
+              className={`mt-1 ${GAME_INPUT}`}
             />
 
             <label className="mt-3 block text-xs font-semibold text-[#44403c]">
@@ -1106,9 +1117,18 @@ export function MiningSimulatorClient() {
               </div>
             ) : null}
 
+            <p className="mt-3 text-[10px] text-[#78716c]">
+              {fr ? "Coût" : "Cost"}: {costs.transport} {fr ? "énergie" : "energy"}
+              {p.energy < costs.transport ? (
+                <span className="text-[#b45309]">
+                  {" "}
+                  · {fr ? "énergie insuffisante" : "not enough energy"}
+                </span>
+              ) : null}
+            </p>
             <button
               type="button"
-              disabled={!!busy || !quote}
+              disabled={!!busy || !quote || p.energy < costs.transport}
               onClick={async () => {
                 const res = await act("transport", () =>
                   fetch("/api/game/transport", {

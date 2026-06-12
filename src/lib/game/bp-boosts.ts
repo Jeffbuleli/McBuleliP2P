@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { gamePlayers, getDb, users } from "@/db";
+import { syncEnergyRegen } from "@/lib/game/player-state";
 
 export const GAME_BP_BOOSTS = {
   energy_refill: {
@@ -26,7 +27,9 @@ export type GameBpBoostId = keyof typeof GAME_BP_BOOSTS;
 export async function applyGameBpBoost(args: {
   userId: string;
   boostId: GameBpBoostId;
-}): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+}): Promise<
+  { ok: true; message: string; messageFr?: string } | { ok: false; error: string }
+> {
   const boost = GAME_BP_BOOSTS[args.boostId];
   if (!boost) return { ok: false, error: "invalid_boost" };
 
@@ -57,13 +60,20 @@ export async function applyGameBpBoost(args: {
     .where(eq(users.id, args.userId));
 
   if (args.boostId === "energy_refill") {
+    const synced = await syncEnergyRegen(args.userId);
+    const cap = synced?.energyCap ?? player.energyCap;
+    const current = synced?.energy ?? player.energy;
     const gain = GAME_BP_BOOSTS.energy_refill.energyGain;
-    const energy = Math.min(player.energyCap, player.energy + gain);
+    const energy = Math.min(cap, current + gain);
     await db
       .update(gamePlayers)
       .set({ energy, updatedAt: new Date() })
       .where(eq(gamePlayers.userId, args.userId));
-    return { ok: true, message: `+${gain} energy` };
+    return {
+      ok: true,
+      message: `+${gain} energy`,
+      messageFr: `+${gain} énergie`,
+    };
   }
 
   if (args.boostId === "beginner_tool") {

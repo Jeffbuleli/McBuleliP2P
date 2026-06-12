@@ -86,6 +86,29 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Congo Mining simulator — light inputs on white cards (avoid inherited light text) */
+.game-theme {
+  color: #1c1917;
+  -webkit-font-smoothing: antialiased;
+}
+.game-theme input,
+.game-theme textarea,
+.game-theme select {
+  color: #1c1917;
+  background: #ffffff;
+  caret-color: #305f33;
+}
+.game-theme input::placeholder,
+.game-theme textarea::placeholder {
+  color: #a8a29e;
+  opacity: 1;
+}
+.game-theme input:-webkit-autofill,
+.game-theme textarea:-webkit-autofill {
+  -webkit-text-fill-color: #1c1917 !important;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+}
+
 /* Profile section — light, card-first UI */
 .profile-theme {
   color: var(--fd-text);
