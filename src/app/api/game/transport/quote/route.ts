@@ -5,6 +5,7 @@ import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { getOrCreatePlayer } from "@/lib/game/player-state";
 import { gameErrorResponse } from "@/lib/game/game-api";
 import { quoteTransport } from "@/lib/game/transport-engine";
+import { getVehicleCondition } from "@/lib/game/vehicle-service";
 import { eq, and } from "drizzle-orm";
 import { gameMineralStocks, getDb } from "@/db";
 
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
 
   const purityPct = stock ? Number(stock.purityPct) : 75;
 
+  const vehicleState = await getVehicleCondition(userId, vehicleKey);
   const quote = await quoteTransport({
     mineralKey,
     quantityKg,
@@ -50,6 +52,8 @@ export async function GET(req: Request) {
     routeKey,
     purityPct,
     xp: player.xp,
+    conditionPct: vehicleState.conditionPct,
+    fuelPct: vehicleState.fuelPct,
   });
 
   if (!quote.ok) {

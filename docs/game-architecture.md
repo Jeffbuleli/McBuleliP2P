@@ -84,6 +84,9 @@ Events surface in market API and UI news ticker.
 | `GET/POST /api/game/role/promote` | Career promotion (XP + McB license) |
 | `GET/POST /api/game/refinery` | Purity upgrade on mineral stock |
 | `GET/POST /api/game/upgrades` | McB shop (role-gated catalog) |
+| `POST /api/game/world/travel` | Travel to unlocked region |
+| `POST /api/game/vehicles/repair` | Repair fleet vehicle (McB) |
+| `GET /api/game/client` | Godot 4 / external client manifest |
 | `POST /api/internal/game/tick` | Economy cron |
 
 ## Database
@@ -97,15 +100,15 @@ Events surface in market API and UI news ticker.
 - McB/BP separation, world events ticker
 - BULELI AI advisor
 
-### Phase 2 ✓ (current)
+### Phase 2 ✓
 - Role promotion flow (McB entry fees + XP gates)
 - Upgrade shop UI wired to `UPGRADE_CATALOG` (`upgrade-service.ts`)
 - Refinery / purity upgrade (`refinery-engine.ts`)
 
-### Phase 3
-- Godot 4 client via same API + Nakama stub
-- Regional map (Katanga, Kivu, Kasai, Lualaba)
-- Persistent vehicle durability in `game_vehicles`
+### Phase 3 ✓ (current)
+- Regional map — travel between Katanga, Kasai, Lualaba, Kivu (`region-service.ts`)
+- Persistent vehicle fleet — condition, fuel, repair McB (`vehicle-service.ts`)
+- Godot 4 client manifest — `GET /api/game/client` + Nakama config stub
 
 ### Phase 4
 - Multiplayer depots / co-op transport (Nakama)

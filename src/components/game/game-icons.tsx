@@ -86,3 +86,27 @@ export function IconGameWarningSm({ className = "h-3.5 w-3.5" }: { className?: s
 export function IconGameCloseSm({ className = "h-4 w-4" }: { className?: string }) {
   return <IconClose className={className} />;
 }
+
+export function IconGameMapPin({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function IconGameTruck({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M3 7h11v8H3zM14 10h4l3 3v2h-7v-5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="7" cy="17" r="2" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17" cy="17" r="2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}

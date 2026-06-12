@@ -28,6 +28,15 @@ const ERROR_TEXT: Record<string, { en: string; fr: string }> = {
   "boostId required": { en: "Boost required.", fr: "Boost requis." },
   "Invalid payload": { en: "Invalid request.", fr: "Requête invalide." },
   "Invalid query": { en: "Invalid request.", fr: "Requête invalide." },
+  region_not_found: { en: "Region not found.", fr: "Région introuvable." },
+  region_locked: { en: "Region not unlocked yet.", fr: "Région pas encore débloquée." },
+  already_in_region: { en: "You are already in this region.", fr: "Vous êtes déjà dans cette région." },
+  vehicle_broken: { en: "Vehicle needs repair before transport.", fr: "Véhicule à réparer avant transport." },
+  vehicle_no_fuel: { en: "Vehicle fuel too low.", fr: "Carburant insuffisant." },
+  vehicle_not_found: { en: "Vehicle not in your fleet.", fr: "Véhicule absent de la flotte." },
+  vehicle_fine: { en: "Vehicle is in good condition.", fr: "Véhicule en bon état." },
+  "regionKey required": { en: "Region required.", fr: "Région requise." },
+  "vehicleKey required": { en: "Vehicle required.", fr: "Véhicule requis." },
 };
 
 export function gameErrorText(code: string, fr: boolean): string {

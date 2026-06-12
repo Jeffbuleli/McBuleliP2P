@@ -28,6 +28,10 @@ import {
   computeTransportRiskFactor,
   quoteTransport,
 } from "@/lib/game/transport-engine";
+import {
+  applyVehicleWear,
+  getVehicleCondition,
+} from "@/lib/game/vehicle-service";
 
 function num(v: string | number | null | undefined): number {
   return Number(v ?? 0);
@@ -301,6 +305,7 @@ export async function startTransport(args: {
     return { ok: false, error: "insufficient_stock" };
   }
 
+  const vehicleState = await getVehicleCondition(args.playerId, args.vehicleKey);
   const quote = await quoteTransport({
     mineralKey: args.mineralKey,
     quantityKg: args.quantityKg,
@@ -308,6 +313,8 @@ export async function startTransport(args: {
     routeKey: args.routeKey,
     purityPct: num(stock.purityPct),
     xp: args.xp,
+    conditionPct: vehicleState.conditionPct,
+    fuelPct: vehicleState.fuelPct,
   });
   if (!quote.ok) return quote;
 
@@ -353,6 +360,12 @@ export async function startTransport(args: {
     .returning();
 
   if (!job) return { ok: false, error: "job_failed" };
+
+  await applyVehicleWear({
+    playerId: args.playerId,
+    vehicleKey: args.vehicleKey,
+    distanceKm: quote.route.distanceKm,
+  });
 
   return {
     ok: true,

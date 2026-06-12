@@ -44,3 +44,30 @@ export function nakamaConnectionInfo(): {
     useSsl: cfg.useSsl,
   };
 }
+
+/** Manifest for Godot 4 / external game clients using the same REST API. */
+export function godotClientManifest() {
+  return {
+    version: "0.3.0",
+    game: "mcbuleli_congo_mining",
+    api: {
+      basePath: "/api/game",
+      endpoints: {
+        player: { method: "GET", path: "/api/game/player" },
+        market: { method: "GET", path: "/api/game/market" },
+        mining: { method: "POST", path: "/api/game/mining" },
+        transportQuote: { method: "GET", path: "/api/game/transport/quote" },
+        transport: { method: "POST", path: "/api/game/transport" },
+        trade: { method: "POST", path: "/api/game/trade" },
+        upgrades: { method: "GET", path: "/api/game/upgrades" },
+        worldTravel: { method: "POST", path: "/api/game/world/travel" },
+        vehiclesRepair: { method: "POST", path: "/api/game/vehicles/repair" },
+        advisor: { method: "POST", path: "/api/game/advisor" },
+        client: { method: "GET", path: "/api/game/client" },
+      },
+    },
+    nakama: nakamaConnectionInfo(),
+    notes:
+      "Authenticate with the same session cookie as the web app. Nakama is optional for Phase 4 multiplayer.",
+  };
+}

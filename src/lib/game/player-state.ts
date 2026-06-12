@@ -7,7 +7,6 @@ import {
   gameProperties,
   gameTransactions,
   gameTransportJobs,
-  gameVehicles,
   getDb,
   users,
 } from "@/db";
@@ -19,7 +18,9 @@ import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { seedGameMarketPrices } from "@/lib/game/market-seeder";
 import { getRefineryAccess } from "@/lib/game/refinery-engine";
 import { buildRolePromotionOffer, buildProgressionView } from "@/lib/game/progression";
+import { listRegionsForPlayer, sitesForRegion } from "@/lib/game/region-service";
 import { listShopForPlayer } from "@/lib/game/upgrade-service";
+import { getFleetView } from "@/lib/game/vehicle-service";
 import {
   getToolDurability,
   siteRiskLabel,
@@ -278,7 +279,6 @@ export async function getPlayerDashboard(userId: string) {
   const [
     sites,
     stocks,
-    vehicles,
     properties,
     recentTx,
     activeTransports,
@@ -288,10 +288,11 @@ export async function getPlayerDashboard(userId: string) {
     inventory,
     shopItems,
     refinery,
+    worldMap,
+    fleet,
   ] = await Promise.all([
     db.select().from(gameMiningSites).where(eq(gameMiningSites.playerId, userId)),
     db.select().from(gameMineralStocks).where(eq(gameMineralStocks.playerId, userId)),
-    db.select().from(gameVehicles).where(eq(gameVehicles.playerId, userId)),
     db.select().from(gameProperties).where(eq(gameProperties.playerId, userId)),
     db
       .select()
@@ -318,6 +319,13 @@ export async function getPlayerDashboard(userId: string) {
     db.select().from(gameInventory).where(eq(gameInventory.playerId, userId)),
     listShopForPlayer(userId),
     getRefineryAccess(userId),
+    listRegionsForPlayer({
+      playerId: userId,
+      regionKey: player.regionKey,
+      xp: player.xp,
+      worldSeed: player.worldSeed,
+    }),
+    getFleetView(userId, player.xp),
   ]);
 
   const progression = buildProgressionView({
@@ -348,26 +356,38 @@ export async function getPlayerDashboard(userId: string) {
       quantity: i.quantity,
       label: i.itemKey,
     })),
+    worldMap,
     regions: WORLD_REGIONS,
-    sites: sites.map((s) => {
-      const mineralKey = s.mineralKey as MineralKey;
-      const risk = siteRiskLevel(num(s.richness), mineralKey);
-      return {
-        ...s,
-        richness: num(s.richness),
-        riskLevel: Math.round(risk * 100),
-        riskLabel: siteRiskLabel(risk, false),
-        riskLabelFr: siteRiskLabel(risk, true),
-      };
-    }),
+    sites: sitesForRegion(
+      sites.map((s) => {
+        const mineralKey = s.mineralKey as MineralKey;
+        const risk = siteRiskLevel(num(s.richness), mineralKey);
+        return {
+          ...s,
+          richness: num(s.richness),
+          riskLevel: Math.round(risk * 100),
+          riskLabel: siteRiskLabel(risk, false),
+          riskLabelFr: siteRiskLabel(risk, true),
+        };
+      }),
+      player.regionKey,
+    ),
     stocks: stocks.map((s) => ({
       ...s,
       quantityKg: num(s.quantityKg),
       purityPct: num(s.purityPct),
     })),
-    vehicles,
+    fleet,
     properties,
-    transportOptions: listTransportOptions(player.xp),
+    transportOptions: (() => {
+      const fleetMap = new Map(fleet.map((f) => [f.vehicleKey, f]));
+      return listTransportOptions(player.xp).map((opt) => ({
+        ...opt,
+        conditionPct: fleetMap.get(opt.key)?.conditionPct ?? 100,
+        fuelPct: fleetMap.get(opt.key)?.fuelPct ?? 100,
+        broken: fleetMap.get(opt.key)?.broken ?? false,
+      }));
+    })(),
     transportRoutes: TRANSPORT_ROUTES,
     bpBoosts: Object.entries(GAME_BP_BOOSTS).map(([id, b]) => ({
       id,

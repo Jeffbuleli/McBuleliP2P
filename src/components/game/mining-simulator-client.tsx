@@ -6,6 +6,8 @@ import {
   GameStageIcon,
   IconGameCheckSm,
   IconGameCloseSm,
+  IconGameMapPin,
+  IconGameTruck,
   IconGameWarningSm,
 } from "@/components/game/game-icons";
 import { useI18n } from "@/components/i18n-provider";
@@ -30,6 +32,34 @@ type TransportOption = {
   capacityKg: number;
   fuelPerKm: number;
   maintenanceMcb: number;
+  conditionPct?: number;
+  fuelPct?: number;
+  broken?: boolean;
+};
+
+type WorldRegion = {
+  key: string;
+  name: string;
+  nameFr: string;
+  riskLevel: number;
+  minerals: string[];
+  unlocked: boolean;
+  isCurrent: boolean;
+  travelMcb: number;
+  travelEnergy: number;
+  minXp: number;
+  siteCount: number;
+};
+
+type FleetVehicle = {
+  vehicleKey: string;
+  label: string;
+  labelFr: string;
+  conditionPct: number;
+  fuelPct: number;
+  repairCostMcb: number;
+  canRepair: boolean;
+  broken: boolean;
 };
 
 type TransportRoute = {
@@ -107,12 +137,15 @@ type Dashboard = {
     reputation: number;
     lifestyleTier: number;
     toolDurability: number;
+    regionKey: string;
     community: { handle: string; displayName: string; avatarUrl: string | null };
   };
   progression: Progression;
   rolePromotion: RolePromotion;
   refinery: RefineryAccess;
   shopItems: ShopItem[];
+  worldMap: WorldRegion[];
+  fleet: FleetVehicle[];
   sites: Site[];
   stocks: Stock[];
   transportOptions: TransportOption[];
@@ -138,6 +171,8 @@ type TransportQuote = {
   estimatedRewardMcb: number;
   weatherDelay: boolean;
   purityBonus: boolean;
+  conditionPct?: number;
+  wearEstimate?: number;
   route: { label: string; labelFr: string };
   vehicle: { label: string; labelFr: string; capacityKg: number };
 };
@@ -408,6 +443,142 @@ export function MiningSimulatorClient() {
         <p className={`mt-3 rounded-lg px-3 py-2 text-center text-xs font-semibold ${msgClass}`}>
           {msg}
         </p>
+      ) : null}
+
+      <section className="mt-4">
+        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#44403c]">
+          <IconGameMapPin className="text-[#305f33]" />
+          {fr ? "Carte RDC" : "DRC map"}
+        </h2>
+        <div className="grid grid-cols-2 gap-2">
+          {data.worldMap.map((r) => (
+            <div
+              key={r.key}
+              className={`rounded-xl border px-3 py-2.5 ${
+                r.isCurrent
+                  ? "border-[#305f33] bg-[#e8f3ee]"
+                  : r.unlocked
+                    ? "border-[#f0f4f2] bg-white"
+                    : "border-[#f0f4f2] bg-[#fafaf9] opacity-70"
+              }`}
+            >
+              <p className="text-xs font-bold text-[#1c1917]">{fr ? r.nameFr : r.name}</p>
+              <p className="mt-0.5 text-[10px] text-[#78716c]">
+                {fr ? "Risque" : "Risk"} {(r.riskLevel * 100).toFixed(0)}%
+                {r.isCurrent ? (fr ? " · ici" : " · here") : ""}
+              </p>
+              <p className="text-[10px] text-[#78716c]">
+                {r.minerals.slice(0, 2).join(", ")}
+                {r.travelMcb > 0 ? ` · ${r.travelMcb} McB` : ""}
+              </p>
+              {!r.isCurrent && r.unlocked ? (
+                <button
+                  type="button"
+                  disabled={!!busy || p.energy < r.travelEnergy}
+                  onClick={() =>
+                    void act(
+                      `travel-${r.key}`,
+                      () =>
+                        fetch("/api/game/world/travel", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ regionKey: r.key }),
+                        }),
+                      (body) => formatGameFeedback(body, fr),
+                    )
+                  }
+                  className="mt-2 w-full rounded-lg bg-[#305f33] py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
+                >
+                  {busy === `travel-${r.key}`
+                    ? "…"
+                    : fr
+                      ? `Voyager (${r.travelEnergy} énergie)`
+                      : `Travel (${r.travelEnergy} energy)`}
+                </button>
+              ) : null}
+              {!r.unlocked ? (
+                <p className="mt-2 text-[10px] font-semibold text-[#b45309]">
+                  {r.minXp} XP
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {data.fleet.length > 0 ? (
+        <section className="mt-4">
+          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#44403c]">
+            <IconGameTruck className="text-[#305f33]" />
+            {fr ? "Flotte" : "Fleet"}
+          </h2>
+          <div className="space-y-2">
+            {data.fleet.map((v) => (
+              <div
+                key={v.vehicleKey}
+                className="rounded-xl border border-[#f0f4f2] bg-white px-3 py-2.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-[#1c1917]">
+                    {fr ? v.labelFr : v.label}
+                    {v.broken ? (
+                      <span className="ml-1 text-[10px] text-[#b91c1c]">
+                        {fr ? "HS" : "broken"}
+                      </span>
+                    ) : null}
+                  </p>
+                  {v.canRepair ? (
+                    <button
+                      type="button"
+                      disabled={!!busy}
+                      onClick={() =>
+                        void act(
+                          `repair-${v.vehicleKey}`,
+                          () =>
+                            fetch("/api/game/vehicles/repair", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ vehicleKey: v.vehicleKey }),
+                            }),
+                          (body) => formatGameFeedback(body, fr),
+                        )
+                      }
+                      className="shrink-0 rounded-lg border border-[#b45309] px-2 py-1 text-[10px] font-bold text-[#b45309] disabled:opacity-50"
+                    >
+                      {fr ? "Réparer" : "Repair"} {v.repairCostMcb} McB
+                    </button>
+                  ) : null}
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-[#78716c]">
+                  <div>
+                    <span>{fr ? "État" : "Condition"}</span>
+                    <div className="mt-0.5 h-1.5 rounded-full bg-[#f5f5f4]">
+                      <div
+                        className={`h-full rounded-full ${
+                          v.conditionPct < 30
+                            ? "bg-[#ef4444]"
+                            : v.conditionPct < 60
+                              ? "bg-[#f59e0b]"
+                              : "bg-[#305f33]"
+                        }`}
+                        style={{ width: `${v.conditionPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <span>{fr ? "Carburant" : "Fuel"}</span>
+                    <div className="mt-0.5 h-1.5 rounded-full bg-[#f5f5f4]">
+                      <div
+                        className="h-full rounded-full bg-[#1c1917]"
+                        style={{ width: `${v.fuelPct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {promo.nextRole ? (
@@ -858,7 +1029,9 @@ export function MiningSimulatorClient() {
                   <span className="font-bold">{fr ? v.labelFr : v.label}</span>
                   <span className="text-[#78716c]">
                     {" "}
-                    · {v.capacityKg}kg · {v.maintenanceMcb} McB {fr ? "entretien" : "maint."}
+                    · {v.capacityKg}kg · {v.maintenanceMcb} McB
+                    {v.conditionPct != null ? ` · ${v.conditionPct}%` : ""}
+                    {v.broken ? (fr ? " · HS" : " · broken") : ""}
                   </span>
                 </button>
               ))}
@@ -923,6 +1096,11 @@ export function MiningSimulatorClient() {
                   <p className="mt-1 flex items-center gap-1 text-[#305f33]">
                     <IconGameCheckSm />
                     {fr ? "Bonus pureté premium" : "Premium purity bonus"}
+                  </p>
+                ) : null}
+                {quote.wearEstimate != null ? (
+                  <p className="mt-1 text-[#78716c]">
+                    {fr ? "Usure estimée" : "Est. wear"}: −{quote.wearEstimate}%
                   </p>
                 ) : null}
               </div>
