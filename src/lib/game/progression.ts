@@ -6,7 +6,6 @@ export type ProgressionView = {
   stage: LifestyleStage;
   stageLabel: string;
   stageLabelFr: string;
-  avatarEmoji: string;
   gear: string[];
   gearFr: string[];
   currentRole: GameRole;
@@ -111,33 +110,29 @@ export function lifestyleStage(xp: number, lifestyleTier: number): LifestyleStag
 
 const STAGE_META: Record<
   LifestyleStage,
-  { label: string; labelFr: string; emoji: string; gear: string[]; gearFr: string[] }
+  { label: string; labelFr: string; gear: string[]; gearFr: string[] }
 > = {
   starter: {
     label: "Artisanal miner",
     labelFr: "Mineur artisanal",
-    emoji: "⛏️",
     gear: ["Worn clothes", "Manual pickaxe", "Basic camp"],
     gearFr: ["Vêtements usés", "Pioche manuelle", "Camp basique"],
   },
   rising: {
     label: "Rising operator",
     labelFr: "Opérateur montant",
-    emoji: "🪖",
     gear: ["Safety helmet", "Boots", "Bicycle"],
     gearFr: ["Casque", "Bottes", "Vélo"],
   },
   operator: {
     label: "Regional operator",
     labelFr: "Opérateur régional",
-    emoji: "🏍️",
     gear: ["Motorcycle", "Workers", "Small depot"],
     gearFr: ["Moto", "Ouvriers", "Petit dépôt"],
   },
   mogul: {
     label: "Mining mogul",
     labelFr: "Magnat minier",
-    emoji: "🏭",
     gear: ["Fleet trucks", "Office", "Luxury lifestyle"],
     gearFr: ["Flotte camions", "Bureau", "Style de vie luxe"],
   },
@@ -171,7 +166,6 @@ export function buildProgressionView(args: {
     stage,
     stageLabel: meta.label,
     stageLabelFr: meta.labelFr,
-    avatarEmoji: meta.emoji,
     gear: meta.gear,
     gearFr: meta.gearFr,
     currentRole,

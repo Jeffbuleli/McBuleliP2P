@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { mineAtSite } from "@/lib/game/economy-engine";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
 
   const result = await mineAtSite({ playerId: userId, siteId: body.siteId });
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

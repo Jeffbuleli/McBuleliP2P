@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { getRolePromotion, promotePlayerRole } from "@/lib/game/role-service";
 
@@ -25,7 +26,7 @@ export async function POST() {
   await ensureGameSchema();
   const result = await promotePlayerRole(userId);
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

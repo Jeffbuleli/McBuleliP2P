@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { applyGameBpBoost, type GameBpBoostId } from "@/lib/game/bp-boosts";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
 
   const result = await applyGameBpBoost({ userId, boostId: body.boostId });
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

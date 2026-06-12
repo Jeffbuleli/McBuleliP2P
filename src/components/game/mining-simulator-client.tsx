@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import {
+  GameStageIcon,
+  IconGameCheckSm,
+  IconGameCloseSm,
+  IconGameWarningSm,
+} from "@/components/game/game-icons";
 import { useI18n } from "@/components/i18n-provider";
+import { formatGameFeedback, formatGameSuccess } from "@/lib/game/game-messages";
 
 type Site = {
   id: string;
@@ -46,7 +53,6 @@ type Progression = {
   stage: string;
   stageLabel: string;
   stageLabelFr: string;
-  avatarEmoji: string;
   gear: string[];
   gearFr: string[];
   currentRoleLabel: string;
@@ -214,10 +220,10 @@ export function MiningSimulatorClient() {
       const res = await fn();
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        showMsg(String(body.message ?? "Error"), "fail");
+        showMsg(formatGameFeedback(body, fr), "fail");
         return null;
       }
-      const custom = onSuccess?.(body);
+      const custom = onSuccess?.(body) ?? formatGameSuccess(body, fr);
       if (custom) {
         const tone =
           body.outcome === "failed" ? "fail" : body.outcome === "partial" ? "warn" : "ok";
@@ -328,8 +334,11 @@ export function MiningSimulatorClient() {
             <h1 className="mt-1 text-xl font-bold">{p.community.displayName}</h1>
             <p className="text-xs text-white/70">@{p.community.handle}</p>
           </div>
-          <span className="text-3xl" title={fr ? prog.stageLabelFr : prog.stageLabel}>
-            {prog.avatarEmoji}
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#a8e6cf]"
+            title={fr ? prog.stageLabelFr : prog.stageLabel}
+          >
+            <GameStageIcon stage={prog.stage} className="h-7 w-7" />
           </span>
         </div>
 
@@ -481,7 +490,9 @@ export function MiningSimulatorClient() {
                 <p className="text-xs font-bold text-[#1c1917]">
                   {fr ? item.labelFr : item.label}
                   {item.owned ? (
-                    <span className="ml-1 text-[10px] text-[#305f33]">✓</span>
+                    <span className="ml-1 inline-flex text-[#305f33]">
+                      <IconGameCheckSm />
+                    </span>
                   ) : null}
                 </p>
                 <p className="text-[10px] text-[#78716c]">
@@ -573,10 +584,7 @@ export function MiningSimulatorClient() {
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ siteId: site.id }),
                       }),
-                    (body) =>
-                      fr
-                        ? String(body.messageFr ?? body.message ?? "")
-                        : String(body.message ?? ""),
+                    (body) => formatGameFeedback(body, fr),
                   )
                 }
                 className="shrink-0 rounded-lg bg-[#305f33] px-3 py-2 text-xs font-bold text-white active:scale-95 disabled:opacity-50"
@@ -653,10 +661,7 @@ export function MiningSimulatorClient() {
                                 quantityKg: Math.min(s.quantityKg, 5),
                               }),
                             }),
-                          (body) =>
-                            fr
-                              ? String(body.messageFr ?? body.message ?? "")
-                              : String(body.message ?? ""),
+                          (body) => formatGameFeedback(body, fr),
                         )
                       }
                       className="rounded-lg border border-[#b45309] px-2 py-2 text-[10px] font-bold text-[#b45309] disabled:opacity-50"
@@ -761,9 +766,10 @@ export function MiningSimulatorClient() {
             {(fr ? prog.unlocksFr : prog.unlocks).map((u) => (
               <span
                 key={u}
-                className="rounded-full bg-[#e8f3ee] px-2 py-0.5 text-[10px] font-semibold text-[#305f33]"
+                className="inline-flex items-center gap-1 rounded-full bg-[#e8f3ee] px-2 py-0.5 text-[10px] font-semibold text-[#305f33]"
               >
-                ✓ {u}
+                <IconGameCheckSm className="h-3 w-3" />
+                {u}
               </span>
             ))}
           </div>
@@ -815,9 +821,10 @@ export function MiningSimulatorClient() {
               <button
                 type="button"
                 onClick={() => setTransportOpen(false)}
-                className="text-sm text-[#78716c]"
+                className="text-[#78716c]"
+                aria-label={fr ? "Fermer" : "Close"}
               >
-                ✕
+                <IconGameCloseSm />
               </button>
             </div>
 
@@ -907,13 +914,15 @@ export function MiningSimulatorClient() {
                   </div>
                 </div>
                 {quote.weatherDelay ? (
-                  <p className="mt-2 text-[#b45309]">
-                    ⚠ {fr ? "Retard météo — routes boueuses" : "Weather delay — muddy roads"}
+                  <p className="mt-2 flex items-center gap-1 text-[#b45309]">
+                    <IconGameWarningSm />
+                    {fr ? "Retard météo — routes boueuses" : "Weather delay — muddy roads"}
                   </p>
                 ) : null}
                 {quote.purityBonus ? (
-                  <p className="mt-1 text-[#305f33]">
-                    ✓ {fr ? "Bonus pureté premium" : "Premium purity bonus"}
+                  <p className="mt-1 flex items-center gap-1 text-[#305f33]">
+                    <IconGameCheckSm />
+                    {fr ? "Bonus pureté premium" : "Premium purity bonus"}
                   </p>
                 ) : null}
               </div>

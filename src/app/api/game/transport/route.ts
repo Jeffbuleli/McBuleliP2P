@@ -3,6 +3,7 @@ import { getSessionUserId } from "@/lib/session";
 import { VEHICLES, type MineralKey } from "@/lib/game/constants";
 import { startTransport } from "@/lib/game/economy-engine";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { getOrCreatePlayer } from "@/lib/game/player-state";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

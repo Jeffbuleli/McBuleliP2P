@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { type MineralKey } from "@/lib/game/constants";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { getRefineryAccess, refineMinerals } from "@/lib/game/refinery-engine";
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

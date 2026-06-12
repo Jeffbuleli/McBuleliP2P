@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { gameInventory, gamePlayers, getDb } from "@/db";
 import {
+  GAME_ROLES,
   UPGRADE_CATALOG,
   type GameRole,
   type UpgradeItem,
@@ -56,8 +57,9 @@ export async function listShopForPlayer(playerId: string): Promise<ShopItemView[
 
     if (!roleOk) {
       canBuy = false;
-      lockReason = `Requires ${item.minRole} role`;
-      lockReasonFr = `Rôle ${item.minRole} requis`;
+      const roleMeta = GAME_ROLES[item.minRole];
+      lockReason = `Requires ${roleMeta.label}`;
+      lockReasonFr = `Rôle requis : ${roleMeta.labelFr}`;
     } else if (isOwned) {
       canBuy = false;
       lockReason = "Already owned";

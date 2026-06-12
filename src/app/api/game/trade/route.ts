@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import type { MineralKey } from "@/lib/game/constants";
 import { sellMinerals } from "@/lib/game/economy-engine";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ message: result.error }, { status: 400 });
+    return gameErrorResponse(result.error);
   }
 
   return NextResponse.json(result);

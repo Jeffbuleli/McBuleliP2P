@@ -3,6 +3,7 @@ import { getSessionUserId } from "@/lib/session";
 import { VEHICLES, type MineralKey } from "@/lib/game/constants";
 import { ensureGameSchema } from "@/lib/game/game-schema-ensure";
 import { getOrCreatePlayer } from "@/lib/game/player-state";
+import { gameErrorResponse } from "@/lib/game/game-api";
 import { quoteTransport } from "@/lib/game/transport-engine";
 import { eq, and } from "drizzle-orm";
 import { gameMineralStocks, getDb } from "@/db";
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
   });
 
   if (!quote.ok) {
-    return NextResponse.json({ message: quote.error }, { status: 400 });
+    return gameErrorResponse(quote.error);
   }
 
   return NextResponse.json(quote);
