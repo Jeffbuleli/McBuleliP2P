@@ -3,6 +3,7 @@ import { matchesHistoryCategory } from "@/lib/wallet-history-labels";
 import { getDb, deposits, fiatFreshpayTransactions, walletLedgerEntries, withdrawals } from "@/db";
 import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
+import type { WalletFiatAsset } from "@/lib/wallet-fiat-assets";
 
 export type ActivityStatus = "processing" | "completed" | "failed";
 
@@ -181,6 +182,129 @@ export async function fetchWalletActivitiesForAsset(args: {
       feeUsdEquivalent: r.feeUsdEquivalent?.toString() ?? null,
       meta: r.meta,
       destination: dest,
+    });
+  }
+
+  merged.sort((a, b) => {
+    const ta = new Date(a.createdAt).getTime();
+    const tb = new Date(b.createdAt).getTime();
+    return args.sort === "oldest" ? ta - tb : tb - ta;
+  });
+
+  const total = merged.length;
+  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(args.page, 1), totalPages);
+  const start = (page - 1) * pageSize;
+  const items = merged.slice(start, start + pageSize);
+
+  return { items, total, page, pageSize, totalPages };
+}
+
+export async function fetchWalletActivitiesForFiatAsset(args: {
+  userId: string;
+  asset: WalletFiatAsset;
+  sort: "newest" | "oldest";
+  page: number;
+  pageSize: number;
+}): Promise<{
+  items: WalletActivityItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const db = getDb();
+  const order = args.sort === "oldest" ? asc : desc;
+
+  const [ledgerRows, fiatRows] = await Promise.all([
+    db
+      .select({
+        id: walletLedgerEntries.id,
+        entryType: walletLedgerEntries.entryType,
+        amount: walletLedgerEntries.amount,
+        asset: walletLedgerEntries.asset,
+        createdAt: walletLedgerEntries.createdAt,
+        meta: walletLedgerEntries.meta,
+        feeUsdEquivalent: walletLedgerEntries.feeUsdEquivalent,
+      })
+      .from(walletLedgerEntries)
+      .where(
+        and(eq(walletLedgerEntries.userId, args.userId), eq(walletLedgerEntries.asset, args.asset)),
+      )
+      .orderBy(order(walletLedgerEntries.createdAt)),
+    db
+      .select({
+        reference: fiatFreshpayTransactions.reference,
+        kind: fiatFreshpayTransactions.kind,
+        status: fiatFreshpayTransactions.status,
+        currency: fiatFreshpayTransactions.currency,
+        amount: fiatFreshpayTransactions.amount,
+        provider: fiatFreshpayTransactions.provider,
+        meta: fiatFreshpayTransactions.meta,
+        createdAt: fiatFreshpayTransactions.createdAt,
+      })
+      .from(fiatFreshpayTransactions)
+      .where(
+        and(
+          eq(fiatFreshpayTransactions.userId, args.userId),
+          eq(fiatFreshpayTransactions.currency, args.asset),
+        ),
+      )
+      .orderBy(order(fiatFreshpayTransactions.createdAt))
+      .limit(150),
+  ]);
+
+  const merged: WalletActivityItem[] = [];
+  const fiatRefs = new Set(fiatRows.map((f) => f.reference));
+
+  function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
+    if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
+    if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
+    return null;
+  }
+
+  for (const r of ledgerRows) {
+    const et = r.entryType ?? "";
+    if (et.startsWith("fiat_")) {
+      const ref = ledgerFiatRef(r.meta);
+      if (ref && fiatRefs.has(ref)) continue;
+    }
+    merged.push({
+      id: `ledger-${r.id}`,
+      kind: "ledger",
+      refId: r.id,
+      entryType: r.entryType,
+      status: "completed",
+      amount: r.amount.toString(),
+      asset: r.asset,
+      createdAt: r.createdAt.toISOString(),
+      resumeHref: null,
+      detailHref: `/app/wallet/activity/ledger/${r.id}`,
+      feeUsdEquivalent: r.feeUsdEquivalent?.toString() ?? null,
+      meta: r.meta,
+    });
+  }
+
+  for (const f of fiatRows) {
+    const st = fiatStatusToActivity(f.status);
+    const meta = f.meta ?? {};
+    const rail =
+      meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
+    const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
+    merged.push({
+      id: `fiat-${f.reference}`,
+      kind: "fiat_tx",
+      refId: f.reference,
+      fiatOp,
+      fiatRail: rail,
+      status: st,
+      amount: f.amount.toString(),
+      asset: f.currency,
+      createdAt: f.createdAt.toISOString(),
+      resumeHref: st === "processing" ? `/app/wallet/fiat/status/${f.reference}` : null,
+      detailHref: `/app/wallet/fiat/status/${f.reference}`,
+      meta,
     });
   }
 

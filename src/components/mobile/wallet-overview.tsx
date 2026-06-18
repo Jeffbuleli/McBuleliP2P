@@ -1,18 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { IconHistory } from "@/components/wallet/wallet-action-grid";
-
-const ICON: Record<WalletAsset, string> = {
-  USDT: "/assets/crypto/usdt.png",
-  PI: "/assets/crypto/pi.png",
-  PI_TEST: "/assets/crypto/pi.png",
-  USD: "/assets/crypto/usd.png",
-  CDF: "/assets/crypto/cdf.png",
-};
+import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
+import { WalletAssetIcon, assetDetailHref } from "@/components/wallet/wallet-asset-icon";
 
 export type WalletRowDTO = {
   asset: WalletAsset;
@@ -55,6 +49,7 @@ export type WalletOverviewLabels = {
   wallet_link_history: string;
   wallet_section_crypto: string;
   wallet_section_fiat: string;
+  wallet_swap_title: string;
   wallet_no_match: string;
   hide_balance: string;
   show_balance: string;
@@ -74,6 +69,8 @@ export function WalletOverview({
   totalUsdDisplay: string;
   assetRows: WalletRowDTO[];
 }) {
+  const pathname = usePathname();
+  const onWallet = pathname === "/app/wallet";
   const [q, setQ] = useState("");
   const [hidden, setHidden] = useState(false);
 
@@ -109,12 +106,34 @@ export function WalletOverview({
           {hidden ? mask() : totalUsdDisplay}
         </p>
 
-        <div className="wallet-realm-toggle mt-4 grid grid-cols-2 gap-2">
-          <span className="wallet-realm-btn wallet-realm-btn-crypto wallet-realm-btn-active" aria-current="page">
+        <div className="wallet-realm-toggle mt-4 grid grid-cols-3 gap-2">
+          <Link
+            href="/app/wallet"
+            onClick={(e) => {
+              if (onWallet) {
+                e.preventDefault();
+                document.getElementById("wallet-assets")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            className={`wallet-realm-btn wallet-realm-btn-crypto ${onWallet ? "wallet-realm-btn-active" : ""}`}
+            aria-current={onWallet ? "page" : undefined}
+          >
             {labels.wallet_section_crypto}
-          </span>
-          <Link href="/app/wallet/fiat" className="wallet-realm-btn wallet-realm-btn-fiat">
+          </Link>
+          <Link
+            href="/app/wallet/fiat"
+            className={`wallet-realm-btn wallet-realm-btn-fiat ${pathname.startsWith("/app/wallet/fiat") ? "wallet-realm-btn-active" : ""}`}
+            aria-current={pathname.startsWith("/app/wallet/fiat") ? "page" : undefined}
+          >
             {labels.wallet_section_fiat}
+          </Link>
+          <Link
+            href="/app/wallet/swap"
+            className={`wallet-realm-btn wallet-realm-btn-swap flex items-center justify-center gap-1.5 ${pathname.startsWith("/app/wallet/swap") ? "wallet-realm-btn-active" : ""}`}
+            aria-current={pathname.startsWith("/app/wallet/swap") ? "page" : undefined}
+          >
+            <IconSwapBrand className="h-4 w-4 shrink-0" />
+            <span>{labels.wallet_swap_title}</span>
           </Link>
         </div>
       </section>
@@ -127,7 +146,7 @@ export function WalletOverview({
         <span className="text-[color:var(--fd-primary)]">→</span>
       </Link>
 
-      <section className="mt-4">
+      <section id="wallet-assets" className="mt-4 scroll-mt-4">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {labels.wallet_assets_title}
         </p>
@@ -152,9 +171,9 @@ export function WalletOverview({
           ) : (
             rows.map((row) => (
               <li key={row.asset} className="wallet-asset-row fd-card p-3">
-                <Link href={`/app/wallet/${row.asset}`} className="flex items-center gap-3 active:opacity-90">
+                <Link href={assetDetailHref(row.asset)} className="flex items-center gap-3 active:opacity-90">
                   <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
-                    <Image src={ICON[row.asset]} alt="" width={44} height={44} className="h-full w-full object-cover" />
+                    <WalletAssetIcon asset={row.asset} size={44} className="h-full w-full" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-[color:var(--fd-text)]">{row.title}</p>

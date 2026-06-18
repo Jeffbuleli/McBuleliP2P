@@ -7,6 +7,7 @@ import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
 import { IconMobileMoney } from "@/components/wallet/fiat-icons";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 import {
   WalletErrorBanner,
   WalletFieldLabel,
@@ -129,15 +130,24 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
       {step === 0 ? (
         <>
           <WalletFieldLabel label={t("wallet_transfer_asset")}>
-            <select
-              value={asset}
-              onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
-              disabled={locked}
-              className={`${walletInputClass} disabled:opacity-60`}
-            >
-              <option value="USD">USD</option>
-              <option value="CDF">CDF</option>
-            </select>
+            <div className="mb-1 flex gap-2">
+              {(["USD", "CDF"] as const).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setAsset(a)}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 ${
+                    asset === a
+                      ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)]"
+                      : "border-[color:var(--fd-border)] bg-white"
+                  }`}
+                >
+                  <WalletAssetIcon asset={a} size={24} />
+                  <span className="text-sm font-bold">{a}</span>
+                </button>
+              ))}
+            </div>
           </WalletFieldLabel>
           <WalletFieldLabel label={t("wallet_fiat_gross")}>
             <input

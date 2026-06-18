@@ -198,6 +198,7 @@ export default async function WalletPage() {
     wallet_link_history: d.wallet_link_history,
     wallet_section_crypto: d.wallet_section_crypto,
     wallet_section_fiat: d.wallet_section_fiat,
+    wallet_swap_title: d.wallet_swap_title,
     wallet_no_match: d.wallet_no_match,
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,

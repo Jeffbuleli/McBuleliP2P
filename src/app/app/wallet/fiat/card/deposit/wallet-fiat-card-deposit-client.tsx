@@ -2,29 +2,27 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import {
-  ErrorBanner,
-  FieldLabel,
-  FormCard,
-  inputClass,
-  primaryBtnClass,
-} from "@/components/forms/standard-form";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
 import { IconBankCard } from "@/components/wallet/fiat-icons";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
+import {
+  WalletErrorBanner,
+  WalletFieldLabel,
+  WalletFormCard,
+  WalletStatusBanner,
+  walletInputClass,
+  walletPrimaryBtnClass,
+} from "@/components/wallet/wallet-form";
 
 const STEPS = [
   { id: "amount", label: "Montant" },
   { id: "confirm", label: "OK" },
 ] as const;
 
-export default function WalletFiatCardDepositClient({
-  fiatPaused = false,
-}: {
-  fiatPaused?: boolean;
-}) {
+export default function WalletFiatCardDepositClient({ fiatPaused = false }: { fiatPaused?: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -71,10 +69,11 @@ export default function WalletFiatCardDepositClient({
   }
 
   const locked = fiatPaused;
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   return (
-    <FormCard>
-      <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-primary)]">
+    <WalletFormCard>
+      <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-brown)]">
         <IconBankCard />
         <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_card")}</span>
       </div>
@@ -87,44 +86,47 @@ export default function WalletFiatCardDepositClient({
         current={step}
       />
 
-      {fiatPaused ? (
-        <p className="mb-4 text-sm text-amber-800">{t("wallet_fiat_paused_hint")}</p>
-      ) : null}
+      {fiatPaused ? <WalletStatusBanner tone="warn">{t("wallet_fiat_paused_hint")}</WalletStatusBanner> : null}
 
       {step === 0 ? (
         <>
-          <FieldLabel label={t("wallet_transfer_asset")}>
-            <select
-              value={asset}
-              onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
-              disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
-            >
-              <option value="USD">USD</option>
-              <option value="CDF">CDF</option>
-            </select>
-          </FieldLabel>
-          <FieldLabel label={t("wallet_fiat_gross")}>
+          <WalletFieldLabel label={t("wallet_transfer_asset")}>
+            <div className="mb-1 flex gap-2">
+              {(["USD", "CDF"] as const).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setAsset(a)}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 ${
+                    asset === a
+                      ? "border-[color:var(--fd-brown)] bg-[color:var(--fd-sand)]/40"
+                      : "border-[color:var(--fd-border)] bg-white"
+                  }`}
+                >
+                  <WalletAssetIcon asset={a} size={24} />
+                  <span className="text-sm font-bold">{a}</span>
+                </button>
+              ))}
+            </div>
+          </WalletFieldLabel>
+          <WalletFieldLabel label={t("wallet_fiat_gross")}>
             <input
               value={gross}
               onChange={(e) => setGross(e.target.value)}
               inputMode="decimal"
               disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
+              placeholder="0"
+              className={`${walletInputClass} text-lg font-bold tabular-nums disabled:opacity-60`}
             />
-          </FieldLabel>
+          </WalletFieldLabel>
           {summary ? (
-            <p className="text-xs text-[color:var(--fd-muted)]">
-              {t("wallet_fiat_net")}: {summary.net.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset} ·{" "}
-              {t("wallet_fiat_fee", { pct })}
-            </p>
+            <WalletStatusBanner tone="info">
+              {t("wallet_fiat_net")}: {summary.net.toLocaleString(loc)} {asset} · {t("wallet_fiat_fee", { pct })}
+            </WalletStatusBanner>
           ) : null}
-          <button
-            type="button"
-            className={primaryBtnClass}
-            disabled={locked || !summary}
-            onClick={() => setStep(1)}
-          >
+          <p className="text-[10px] text-[color:var(--fd-muted)]">{t("wallet_fiat_card_checkout_hint")}</p>
+          <button type="button" className={walletPrimaryBtnClass} disabled={locked || !summary} onClick={() => setStep(1)}>
             →
           </button>
         </>
@@ -132,23 +134,24 @@ export default function WalletFiatCardDepositClient({
 
       {step === 1 && summary ? (
         <>
-          <div className="rounded-2xl bg-[color:var(--fd-mint)]/40 p-3 text-sm tabular-nums">
-            <p>
-              {summary.g.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset}
+          <WalletStatusBanner tone="success">
+            <p className="font-bold tabular-nums">
+              {summary.g.toLocaleString(loc)} {asset}
             </p>
-            <p className="text-[color:var(--fd-muted)]">{t("wallet_fiat_card_checkout_hint")}</p>
-          </div>
-          {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+            <p className="text-[11px] opacity-90">Visa · Mastercard</p>
+          </WalletStatusBanner>
+          <p className="text-xs text-[color:var(--fd-muted)]">{t("wallet_fiat_card_checkout_hint")}</p>
+          {err ? <WalletErrorBanner>{clientErrorText(t, err)}</WalletErrorBanner> : null}
           <div className="flex gap-2">
-            <button type="button" className={primaryBtnClass} onClick={() => setStep(0)}>
+            <button type="button" className={walletPrimaryBtnClass} onClick={() => setStep(0)}>
               ←
             </button>
-            <button type="button" className={primaryBtnClass} disabled={loading} onClick={() => void submit()}>
+            <button type="button" className={walletPrimaryBtnClass} disabled={loading} onClick={() => void submit()}>
               {loading ? "…" : t("wallet_fiat_card_pay")}
             </button>
           </div>
         </>
       ) : null}
-    </FormCard>
+    </WalletFormCard>
   );
 }

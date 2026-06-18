@@ -1,5 +1,5 @@
 import type { ReferenceRates } from "@/lib/reference-rates";
-import { SWAP_FEE_USD } from "@/lib/wallet-fees";
+import { swapFeeRate, swapMinGrossUsd } from "@/lib/wallet-fees";
 import type { WalletAsset } from "@/lib/wallet-types";
 
 /** Convert an asset amount to USD notional (reference). */
@@ -15,7 +15,6 @@ export function assetAmountToUsd(amount: number, asset: WalletAsset, r: Referenc
     case "PI":
       return r.piUsd > 0 ? amount * r.piUsd : 0;
     case "PI_TEST":
-      // Training-only; use same reference rate as PI for display.
       return r.piUsd > 0 ? amount * r.piUsd : 0;
     default:
       return 0;
@@ -47,6 +46,7 @@ export type SwapQuote =
       fromAmount: number;
       toAmount: number;
       feeUsd: number;
+      feeRate: number;
       grossUsd: number;
       netUsdAfterFee: number;
     }
@@ -72,10 +72,13 @@ export function quoteSwap(args: {
     return { ok: false, message: "wallet_swap_invalid_amount" };
   }
   const grossUsd = assetAmountToUsd(fromAmount, from, rates);
-  if (grossUsd < SWAP_FEE_USD + 1e-9) {
+  const feeRate = swapFeeRate(from, to);
+  const minGross = swapMinGrossUsd(from, to);
+  if (grossUsd < minGross) {
     return { ok: false, message: "wallet_swap_below_min" };
   }
-  const netUsdAfterFee = grossUsd - SWAP_FEE_USD;
+  const feeUsd = grossUsd * feeRate;
+  const netUsdAfterFee = grossUsd - feeUsd;
   if (netUsdAfterFee <= 0) {
     return { ok: false, message: "wallet_swap_below_min" };
   }
@@ -87,7 +90,8 @@ export function quoteSwap(args: {
     ok: true,
     fromAmount,
     toAmount,
-    feeUsd: SWAP_FEE_USD,
+    feeUsd,
+    feeRate,
     grossUsd,
     netUsdAfterFee,
   };

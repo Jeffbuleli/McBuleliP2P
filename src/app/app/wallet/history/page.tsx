@@ -8,6 +8,8 @@ import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { ActivityListControls } from "@/components/wallet/activity-list-controls";
 import { WalletHistoryRow } from "@/components/wallet/wallet-history-row";
 import { HistoryVisualIcon, IconInbox } from "@/components/icons/flow-icons";
+import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 
 const REALM_CHIPS = [
   { id: "", key: "wallet_history_all" as const },
@@ -41,10 +43,11 @@ export default function WalletHistoryPage() {
   const searchParams = useSearchParams();
   const initialRealm = searchParams.get("realm") ?? "";
   const initialCategory = searchParams.get("category") ?? "";
+  const initialAsset = searchParams.get("asset") ?? "";
 
   const [realm, setRealm] = useState(initialRealm);
   const [category, setCategory] = useState(initialCategory);
-  const [asset, setAsset] = useState("");
+  const [asset, setAsset] = useState(initialAsset);
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
@@ -54,8 +57,14 @@ export default function WalletHistoryPage() {
   useEffect(() => {
     setRealm(initialRealm);
     setCategory(initialCategory);
+    setAsset(initialAsset);
     setPage(1);
-  }, [initialRealm, initialCategory]);
+  }, [initialRealm, initialCategory, initialAsset]);
+
+  useEffect(() => {
+    if (realm === "crypto" && (asset === "USD" || asset === "CDF")) setAsset("");
+    if (realm === "fiat" && (asset === "USDT" || asset === "PI")) setAsset("");
+  }, [realm, asset]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,11 +85,46 @@ export default function WalletHistoryPage() {
   const assetChips =
     realm === "fiat" ? FIAT_ASSETS : realm === "crypto" ? CRYPTO_ASSETS : ALL_ASSETS;
 
+  function pickAsset(next: string) {
+    setAsset(next);
+    setPage(1);
+    if (!next) return;
+    if (next === "USD" || next === "CDF") {
+      if (realm === "crypto") setRealm("fiat");
+    } else if (realm === "fiat") {
+      setRealm("crypto");
+    }
+  }
+
+  function pickRealm(next: string) {
+    setRealm(next);
+    setPage(1);
+    if (next === "crypto" && (asset === "USD" || asset === "CDF")) setAsset("");
+    if (next === "fiat" && (asset === "USDT" || asset === "PI")) setAsset("");
+  }
+
   return (
     <div className="wallet-theme pb-10">
       <WalletSubpageHeader title={t("wallet_history_title")} backHref="/app/wallet" />
 
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+      <ActivityListControls
+        sort={sort}
+        pageSize={pageSize}
+        page={page}
+        totalPages={data?.totalPages ?? 1}
+        total={data?.total ?? 0}
+        onSortChange={(s) => {
+          setSort(s);
+          setPage(1);
+        }}
+        onPageSizeChange={(n) => {
+          setPageSize(n);
+          setPage(1);
+        }}
+        onPageChange={setPage}
+      />
+
+      <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
         {t("wallet_history_realm_label")}
       </p>
       <div className="mb-3 flex flex-wrap gap-2">
@@ -90,11 +134,7 @@ export default function WalletHistoryPage() {
             <button
               key={c.id || "all"}
               type="button"
-              onClick={() => {
-                setRealm(c.id);
-                setAsset("");
-                setPage(1);
-              }}
+              onClick={() => pickRealm(c.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-bold ${
                 active
                   ? "bg-[color:var(--fd-brown)] text-white"
@@ -127,20 +167,24 @@ export default function WalletHistoryPage() {
                   : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
               }`}
             >
-              {c.id ? <HistoryVisualIcon visual={c.visual} className="h-3.5 w-3.5" /> : null}
+              {c.id === "swap" ? (
+                <IconSwapBrand className="h-3.5 w-3.5" />
+              ) : c.id ? (
+                <HistoryVisualIcon visual={c.visual} className="h-3.5 w-3.5" />
+              ) : null}
               {t(c.key)}
             </button>
           );
         })}
       </div>
 
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {t("wallet_history_asset")}
+      </p>
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => {
-            setAsset("");
-            setPage(1);
-          }}
+          onClick={() => pickAsset("")}
           className={`rounded-full px-3 py-1 text-xs font-bold ${
             !asset
               ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
@@ -153,37 +197,18 @@ export default function WalletHistoryPage() {
           <button
             key={a}
             type="button"
-            onClick={() => {
-              setAsset(a);
-              setPage(1);
-            }}
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
+            onClick={() => pickAsset(a)}
+            className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold ${
               asset === a
                 ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
                 : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
             }`}
           >
+            <WalletAssetIcon asset={a} size={22} className="ring-1 ring-white" />
             {a}
           </button>
         ))}
       </div>
-
-      <ActivityListControls
-        sort={sort}
-        pageSize={pageSize}
-        page={page}
-        totalPages={data?.totalPages ?? 1}
-        total={data?.total ?? 0}
-        onSortChange={(s) => {
-          setSort(s);
-          setPage(1);
-        }}
-        onPageSizeChange={(n) => {
-          setPageSize(n);
-          setPage(1);
-        }}
-        onPageChange={setPage}
-      />
 
       {loading ? (
         <div className="mt-3 space-y-2" aria-hidden>

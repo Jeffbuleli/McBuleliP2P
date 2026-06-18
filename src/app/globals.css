@@ -1488,6 +1488,16 @@ html {
   border: 1px solid rgba(180, 83, 9, 0.2);
   box-shadow: 0 4px 14px rgba(120, 53, 15, 0.1);
 }
+.wallet-theme .wallet-realm-btn-swap {
+  background: linear-gradient(145deg, #e8f0f8 0%, #b8cfe8 100%);
+  color: #1e4a7a;
+  border: 1px solid rgba(30, 74, 122, 0.2);
+  box-shadow: 0 4px 14px rgba(30, 74, 122, 0.12);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
 .wallet-theme .wallet-realm-btn-active {
   box-shadow: inset 0 0 0 2px var(--fd-primary);
 }

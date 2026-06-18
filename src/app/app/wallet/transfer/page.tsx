@@ -9,6 +9,7 @@ import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
 import { clientErrorText } from "@/lib/client-error-text";
 import { parseWalletPayRecipient } from "@/lib/wallet-pay-uri";
 import { WalletQrScanner } from "@/components/wallet/wallet-qr-scanner";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
 import { transferProgressSteps } from "@/lib/transaction-steps";
 import {
@@ -21,12 +22,7 @@ import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 
 const TRANSFER_ASSETS = ["USDT", "PI", "USD", "CDF"] as const satisfies readonly WalletAsset[];
 
-const ASSET_ICON: Partial<Record<WalletAsset, string>> = {
-  USDT: "/assets/crypto/usdt.png",
-  PI: "/assets/crypto/pi.png",
-  USD: "/assets/crypto/usd.png",
-  CDF: "/assets/crypto/cdf.png",
-};
+type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 
 type RecipientMode = "email" | "pay";
 
@@ -34,7 +30,7 @@ function TransferForm() {
   const { t } = useI18n();
   const router = useRouter();
   const sp = useSearchParams();
-  const [asset, setAsset] = useState<(typeof TRANSFER_ASSETS)[number]>("USDT");
+  const [asset, setAsset] = useState<TransferAsset>("USDT");
   const [mode, setMode] = useState<RecipientMode>("email");
   const [email, setEmail] = useState("");
   const [recipientId, setRecipientId] = useState<string | null>(null);
@@ -135,7 +131,6 @@ function TransferForm() {
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {TRANSFER_ASSETS.map((a) => {
-              const icon = ASSET_ICON[a];
               const active = asset === a;
               return (
                 <button
@@ -146,13 +141,7 @@ function TransferForm() {
                     active ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
                   }`}
                 >
-                  {icon ? (
-                    <Image src={icon} alt="" width={32} height={32} className="rounded-full" />
-                  ) : (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 text-xs font-bold">
-                      {a.slice(0, 2)}
-                    </span>
-                  )}
+                  <WalletAssetIcon asset={a} size={32} />
                   <span className="text-[10px] font-bold">{a}</span>
                 </button>
               );

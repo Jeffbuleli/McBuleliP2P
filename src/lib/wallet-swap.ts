@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { getDb, users } from "@/db";
 import { fetchReferenceRates } from "@/lib/reference-rates";
@@ -6,7 +6,6 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 import { quoteSwap } from "@/lib/wallet-convert";
-import { SWAP_FEE_USD } from "@/lib/wallet-fees";
 import {
   fmtWalletAmount,
   isWalletAsset,
@@ -36,7 +35,7 @@ export async function executeWalletSwap(args: {
 
   const fromAmtStr = fmtWalletAmount(q.fromAmount);
   const toAmtStr = fmtWalletAmount(q.toAmount);
-  const feeStr = SWAP_FEE_USD.toFixed(8);
+  const feeUsdStr = q.feeUsd.toFixed(8);
 
   const db = getDb();
 
@@ -68,32 +67,6 @@ export async function executeWalletSwap(args: {
         return { ok: false as const, message: "wallet_insufficient_balance" };
       }
 
-      const usdtForFee = b >= SWAP_FEE_USD - 1e-12;
-      const usdForFee = !usdtForFee && usd >= SWAP_FEE_USD - 1e-12;
-      if (!usdtForFee && !usdForFee) {
-        return { ok: false as const, message: "wallet_fee_funding_required" };
-      }
-
-      if (from === "USDT" && usdtForFee && b + 1e-18 < fromAmount + SWAP_FEE_USD) {
-        return { ok: false as const, message: "wallet_insufficient_balance" };
-      }
-
-      if (usdtForFee) {
-        await tx
-          .update(users)
-          .set({
-            balance: sql`${users.balance} - ${feeStr}::numeric`,
-          })
-          .where(eq(users.id, args.userId));
-      } else {
-        await tx
-          .update(users)
-          .set({
-            usdBalance: sql`${users.usdBalance} - ${feeStr}::numeric`,
-          })
-          .where(eq(users.id, args.userId));
-      }
-
       await debitUserAsset(tx, args.userId, from as WalletAsset, fromAmtStr);
       let toCredit = toAmtStr;
       if (to === "USDT") {
@@ -109,16 +82,15 @@ export async function executeWalletSwap(args: {
         await creditUserAsset(tx, args.userId, to as WalletAsset, toCredit);
       }
 
-      const feeAsset = usdtForFee ? "USDT" : "USD";
       await insertWalletLedgerLines(tx, [
         {
           batchId,
           userId: args.userId,
           entryType: "swap_fee",
-          asset: feeAsset,
-          amount: `-${feeStr}`,
-          feeUsdEquivalent: feeStr,
-          meta: { swapFeeUsd: SWAP_FEE_USD },
+          asset: from,
+          amount: "0",
+          feeUsdEquivalent: feeUsdStr,
+          meta: { swapFeeUsd: q.feeUsd, swapFeeRate: q.feeRate, fromAsset: from, toAsset: to },
         },
         {
           batchId,

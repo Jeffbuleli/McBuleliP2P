@@ -1,28 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { SWAP_FEE_USD } from "@/lib/wallet-fees";
+import { swapFeePercentLabel } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
-import { IconSwap } from "@/components/wallet/wallet-action-grid";
+import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 import { WalletErrorBanner, walletPrimaryBtnClass } from "@/components/wallet/wallet-form";
 
 const SWAP_ASSETS = ["USDT", "PI", "USD", "CDF"] as const;
 type SwapAsset = (typeof SWAP_ASSETS)[number];
 
-const ASSET_ICON: Record<SwapAsset, string> = {
-  USDT: "/assets/crypto/usdt.png",
-  PI: "/assets/crypto/pi.png",
-  USD: "/assets/crypto/usd.png",
-  CDF: "/assets/crypto/cdf.png",
-};
-
 type Quote = {
   toAmount: number;
   netUsdAfterFee: number;
+  feeUsd: number;
+  feeRate: number;
   rateLabel: string;
   involvesCdf: boolean;
   cdfPerUsd: number;
@@ -91,6 +86,8 @@ export default function WalletSwapPage() {
     setQuote({
       toAmount: data.toAmount,
       netUsdAfterFee: data.netUsdAfterFee,
+      feeUsd: data.feeUsd ?? 0,
+      feeRate: data.feeRate ?? 0.01,
       rateLabel: data.rateLabel ?? "",
       involvesCdf: Boolean(data.involvesCdf),
       cdfPerUsd: data.cdfPerUsd ?? 0,
@@ -208,13 +205,13 @@ export default function WalletSwapPage() {
             <p className="mt-1 text-[11px] font-medium tabular-nums text-[color:var(--fd-muted)]">≈ {usdHint}</p>
           ) : null}
           <div className="mt-3 flex gap-2">
-            {(["wallet_swap_min", "wallet_swap_half", "wallet_swap_max"] as const).map((key, i) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFraction([0.01, 0.5, 1][i]!)}
-                className="wallet-swap-chip"
-              >
+            {(
+              [
+                ["wallet_swap_half", 0.5],
+                ["wallet_swap_max", 1],
+              ] as const
+            ).map(([key, frac]) => (
+              <button key={key} type="button" onClick={() => setFraction(frac)} className="wallet-swap-chip">
                 {t(key)}
               </button>
             ))}
@@ -222,7 +219,7 @@ export default function WalletSwapPage() {
         </div>
 
         <button type="button" onClick={flip} className="wallet-swap-flip" aria-label="Flip">
-          <IconSwap className="h-5 w-5" />
+          <IconSwapBrand className="h-6 w-6" />
         </button>
 
         <div className="wallet-swap-card wallet-swap-card-receive">
@@ -266,7 +263,15 @@ export default function WalletSwapPage() {
       ) : null}
 
       <p className="mt-3 text-center text-[10px] text-[color:var(--fd-muted)]">
-        {t("wallet_swap_fee_line", { feeUsd: SWAP_FEE_USD })}
+        {quote
+          ? t("wallet_swap_fee_pct_line", {
+              pct: (quote.feeRate * 100).toFixed(1).replace(/\.0$/, ""),
+              feeUsd: quote.feeUsd.toLocaleString(loc, { maximumFractionDigits: 2 }),
+            })
+          : t("wallet_swap_fee_hint", {
+              pctStandard: String(swapFeePercentLabel("USDT", "USD")),
+              pctFiatCrypto: String(swapFeePercentLabel("USD", "USDT")),
+            })}
       </p>
 
       {err ? (
@@ -306,7 +311,7 @@ function AssetPicker({
         onClick={() => setOpen((o) => !o)}
         className="wallet-swap-asset-btn flex items-center gap-1.5"
       >
-        <Image src={ASSET_ICON[selected]} alt="" width={28} height={28} className="rounded-full" />
+        <WalletAssetIcon asset={selected} size={28} />
         <span className="text-sm font-bold">{selected}</span>
         <span className="text-[color:var(--fd-muted)]">▾</span>
       </button>
@@ -324,7 +329,7 @@ function AssetPicker({
                 }}
                 className={`wallet-swap-asset-option ${a === selected ? "wallet-swap-asset-option-active" : ""}`}
               >
-                <Image src={ASSET_ICON[a]} alt="" width={24} height={24} className="rounded-full" />
+                <WalletAssetIcon asset={a} size={24} />
                 <span className="font-bold">{a}</span>
               </button>
             ))}

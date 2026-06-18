@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { fetchReferenceRates } from "@/lib/reference-rates";
 import { assetAmountToUsd, quoteSwap, usdToAssetAmount } from "@/lib/wallet-convert";
-import { SWAP_FEE_USD } from "@/lib/wallet-fees";
+import { swapFeePercentLabel } from "@/lib/wallet-fees";
 import { isWalletAsset, type WalletAsset } from "@/lib/wallet-types";
 
 function unitRateLabel(from: WalletAsset, to: WalletAsset, cdfPerUsd: number, piUsd: number): string {
@@ -39,10 +39,12 @@ export async function GET(req: Request) {
     fromAmount: q.fromAmount,
     toAmount: q.toAmount,
     feeUsd: q.feeUsd,
+    feeRate: q.feeRate,
+    feePercent: swapFeePercentLabel(from, to),
     grossUsd: q.grossUsd,
     netUsdAfterFee: q.netUsdAfterFee,
-    flatFeeUsd: SWAP_FEE_USD,
     cdfPerUsd: rates.cdfPerUsd,
+    cdfSource: rates.cdfSource,
     piUsd: rates.piUsd,
     involvesCdf,
     rateLabel: unitRateLabel(from, to, rates.cdfPerUsd, rates.piUsd),
