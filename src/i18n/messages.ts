@@ -1256,7 +1256,7 @@ export const en = {
   lp_pool_withdraw_failed: "✕ Withdraw failed",
   wallet_fiat_invalid_amount: "Invalid amount.",
   wallet_fiat_withdraw_failed: "Withdrawal could not be completed.",
-  wallet_pawapay_unconfigured: "Mobile money is temporarily unavailable.",
+  wallet_fiat_unconfigured: "Mobile money is temporarily unavailable.",
   wallet_fiat_paused:
     "USD/CDF mobile money deposits and withdrawals are temporarily paused. USDT and Pi are still available.",
   wallet_fiat_paused_title: "Fiat deposit & withdrawal paused",
@@ -1264,12 +1264,12 @@ export const en = {
     "Mobile money top-ups and cash-outs for USD and CDF are paused while we prepare payout rails. Crypto deposits (USDT, Pi) and withdrawals are not affected.",
   wallet_fiat_paused_hint:
     "Paused — use USDT/Pi for deposits and withdrawals.",
-  wallet_pawapay_unavailable:
+  wallet_fiat_unavailable:
     "Fiat wallet is available only in supported corridors (RDC · USD/CDF). Use P2P off-platform payments instead.",
-  wallet_pawapay_deposit_failed: "Deposit could not be initiated. Try again later.",
-  wallet_pawapay_deposit_rejected: "Deposit was rejected. Check details and try again.",
-  wallet_pawapay_payout_failed: "Withdrawal could not be sent. Try again later.",
-  wallet_pawapay_payout_rejected: "Withdrawal was rejected. Check details and try again.",
+  wallet_fiat_deposit_failed: "Deposit could not be initiated. Try again later.",
+  wallet_fiat_deposit_rejected: "Deposit was rejected. Check details and try again.",
+  wallet_fiat_payout_failed: "Withdrawal could not be sent. Try again later.",
+  wallet_fiat_payout_rejected: "Withdrawal was rejected. Check details and try again.",
   wallet_fiat_status_pending_title: "Pending confirmation",
   wallet_fiat_status_pending_body:
     "If you already confirmed on your phone, this page will update automatically.",
@@ -4834,7 +4834,7 @@ export const fr: Messages = {
   lp_pool_withdraw_failed: "✕ Retrait échoué",
   wallet_fiat_invalid_amount: "Montant invalide.",
   wallet_fiat_withdraw_failed: "Retrait impossible.",
-  wallet_pawapay_unconfigured: "Le mobile money est temporairement indisponible.",
+  wallet_fiat_unconfigured: "Le mobile money est temporairement indisponible.",
   wallet_fiat_paused:
     "Les dépôts et retraits mobile money USD/CDF sont temporairement en pause. USDT et Pi restent disponibles.",
   wallet_fiat_paused_title: "Dépôt et retrait fiat en pause",
@@ -4842,12 +4842,12 @@ export const fr: Messages = {
     "Les dépôts et encaissements mobile money pour USD et CDF sont en pause pendant que nous préparons les rails de payout. Les dépôts et retraits crypto (USDT, Pi) ne sont pas concernés.",
   wallet_fiat_paused_hint:
     "En pause — utilisez USDT/Pi pour déposer ou retirer.",
-  wallet_pawapay_unavailable:
+  wallet_fiat_unavailable:
     "Le wallet fiat est disponible uniquement sur les corridors supportés (RDC · USD/CDF). Utilisez plutôt le P2P (paiement externe).",
-  wallet_pawapay_deposit_failed: "Le dépôt n’a pas pu être initié. Réessayez plus tard.",
-  wallet_pawapay_deposit_rejected: "Le dépôt a été rejeté. Vérifiez et réessayez.",
-  wallet_pawapay_payout_failed: "Le retrait n’a pas pu être envoyé. Réessayez plus tard.",
-  wallet_pawapay_payout_rejected: "Le retrait a été rejeté. Vérifiez et réessayez.",
+  wallet_fiat_deposit_failed: "Le dépôt n’a pas pu être initié. Réessayez plus tard.",
+  wallet_fiat_deposit_rejected: "Le dépôt a été rejeté. Vérifiez et réessayez.",
+  wallet_fiat_payout_failed: "Le retrait n’a pas pu être envoyé. Réessayez plus tard.",
+  wallet_fiat_payout_rejected: "Le retrait a été rejeté. Vérifiez et réessayez.",
   wallet_fiat_status_pending_title: "En attente de confirmation",
   wallet_fiat_status_pending_body:
     "Si tu as déjà confirmé sur ton téléphone, cette page se mettra à jour automatiquement.",

@@ -243,7 +243,7 @@ export async function getFinanceCashFlowReport(
 
   const rates = await fetchReferenceRates();
   const ratesNote =
-    "USD estimates: USDT≈1 USD; PI from OKX PI-USDT; CDF from FX_CDF_PER_USD / PawaPay config; fees column stored as USD equivalent where applicable. Group treasury lines are USDT in app flows.";
+    "USD estimates: USDT≈1 USD; PI from OKX PI-USDT; CDF from FX_CDF_PER_USD; fees column stored as USD equivalent where applicable. Group treasury lines are USDT in app flows.";
 
   const db = getDb();
   const dayUtcUser =

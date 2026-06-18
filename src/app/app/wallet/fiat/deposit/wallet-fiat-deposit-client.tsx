@@ -13,9 +13,9 @@ import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
-  PAWAPAY_COD_FALLBACK,
-  filterCodPawapayProviders,
-} from "@/lib/cod-pawapay-providers";
+  COD_MOBILE_FALLBACK,
+  filterCodMobileProviders,
+} from "@/lib/cod-mobile-providers";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -63,26 +63,28 @@ export default function WalletFiatDepositClient({
       setProvidersErr(null);
       setProvidersLoading(true);
       try {
-        const url = `/api/config/pawapay/active-conf?country=COD&operationType=DEPOSIT&currency=${asset}`;
-        const res = await fetch(url);
+        const res = await fetch("/api/config/mobile-money/providers");
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
           if (!cancelled) {
-            setProviders([...PAWAPAY_COD_FALLBACK]);
+            setProviders(
+              COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label })),
+            );
             setProvidersErr(typeof data?.error === "string" ? data.error : "Provider list unavailable");
           }
           return;
         }
-        const cod = (data.countries as Array<any> | undefined)?.find((c) => c?.country === "COD");
-        const list = (cod?.providers as Array<any> | undefined) ?? [];
-        const raw: ProviderOption[] = list
+        const raw: ProviderOption[] = ((data.providers as Array<{ provider: string; label: string }>) ?? [])
           .map((p) => ({
             provider: String(p.provider),
-            label: String(p.displayName ?? p.provider),
+            label: String(p.label ?? p.provider),
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
-        const opts = filterCodPawapayProviders(raw);
-        const use = opts.length > 0 ? opts : [...PAWAPAY_COD_FALLBACK];
+        const opts = filterCodMobileProviders(raw);
+        const use =
+          opts.length > 0
+            ? opts
+            : COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label }));
         if (!cancelled) {
           setProviders(use);
           if (use.length && !use.some((x) => x.provider === provider)) {
@@ -124,7 +126,7 @@ export default function WalletFiatDepositClient({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
-        setErr(typeof data.error === "string" ? data.error : "wallet_pawapay_deposit_failed");
+        setErr(typeof data.error === "string" ? data.error : "wallet_fiat_deposit_failed");
         setErrDetail(typeof data.detail === "string" ? data.detail : null);
         return;
       }
@@ -201,7 +203,7 @@ export default function WalletFiatDepositClient({
             onChange={(e) => setProviderManual(e.target.value)}
             disabled={locked}
             className={`${inputClass} disabled:opacity-60`}
-            placeholder="AIRTEL_COD, ORANGE_COD, VODACOM_MPESA_COD"
+            placeholder="airtel, orange, mpesa, africell"
           />
         )}
       </FieldLabel>

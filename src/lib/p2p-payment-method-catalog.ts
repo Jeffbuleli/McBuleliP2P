@@ -4,7 +4,7 @@
  */
 
 import type { P2pCountryCode } from "@/lib/p2p-config";
-import { isExcludedCodPawapayProvider } from "@/lib/cod-pawapay-providers";
+import { isExcludedCodMobileProvider } from "@/lib/cod-mobile-providers";
 
 export type P2pMethodCatalogEntry = {
   code: string;
@@ -138,7 +138,7 @@ export function getP2pPaymentMethodsForCountry(countryCode: string): P2pMethodDe
   const cc = countryCode.trim().toUpperCase() as P2pCountryCode;
   let list = byCountry.get(cc) ?? byCountry.get("OTHER") ?? [];
   if (cc === "CD") {
-    list = list.filter((e) => !isExcludedCodPawapayProvider(e.code));
+    list = list.filter((e) => !isExcludedCodMobileProvider(e.code));
   }
   return [...list]
     .sort((a, b) => a.sortOrder - b.sortOrder)

@@ -64,7 +64,7 @@ const INTENT_KEYWORDS: Record<UserIntent, string[]> = {
     "airtel",
     "mtn",
     "vodacom",
-    "pawapay",
+    "mobile_money",
     "simu",
   ],
   pi: ["pi network", "pi coin", "pi browser", "mining pi"],

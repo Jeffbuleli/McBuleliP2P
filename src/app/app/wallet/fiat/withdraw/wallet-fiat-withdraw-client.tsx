@@ -14,11 +14,11 @@ import {
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
-import { isPawapaySupportedForCountry } from "@/lib/pawapay/availability";
+import { isFreshpaySupportedForCountry } from "@/lib/freshpay/availability";
 import {
-  PAWAPAY_COD_FALLBACK,
-  filterCodPawapayProviders,
-} from "@/lib/cod-pawapay-providers";
+  COD_MOBILE_FALLBACK,
+  filterCodMobileProviders,
+} from "@/lib/cod-mobile-providers";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -29,7 +29,7 @@ export default function WalletFiatWithdrawClient({
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
-  const [pawapayOk, setPawapayOk] = useState<boolean | null>(null);
+  const [mobileOk, setMobileOk] = useState<boolean | null>(null);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -68,7 +68,7 @@ export default function WalletFiatWithdrawClient({
           ? (data.user.countryCode as string)
           : null;
       if (!cancelled) {
-        setPawapayOk(isPawapaySupportedForCountry(cc));
+        setMobileOk(isFreshpaySupportedForCountry(cc));
       }
     }
     void loadMe();
@@ -83,12 +83,13 @@ export default function WalletFiatWithdrawClient({
       setProvidersErr(null);
       setProvidersLoading(true);
       try {
-        const url = `/api/config/pawapay/active-conf?country=COD&operationType=PAYOUT&currency=${asset}`;
-        const res = await fetch(url);
+        const res = await fetch("/api/config/mobile-money/providers");
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
           if (!cancelled) {
-            setProviders([...PAWAPAY_COD_FALLBACK]);
+            setProviders(
+              COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label })),
+            );
             setProvidersErr(
               typeof data?.error === "string"
                 ? data.error
@@ -97,18 +98,17 @@ export default function WalletFiatWithdrawClient({
           }
           return;
         }
-        const cod = (data.countries as Array<any> | undefined)?.find(
-          (c) => c?.country === "COD",
-        );
-        const list = (cod?.providers as Array<any> | undefined) ?? [];
-        const raw: ProviderOption[] = list
+        const raw: ProviderOption[] = ((data.providers as Array<{ provider: string; label: string }>) ?? [])
           .map((p) => ({
             provider: String(p.provider),
-            label: String(p.displayName ?? p.provider),
+            label: String(p.label ?? p.provider),
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
-        const opts = filterCodPawapayProviders(raw);
-        const use = opts.length > 0 ? opts : [...PAWAPAY_COD_FALLBACK];
+        const opts = filterCodMobileProviders(raw);
+        const use =
+          opts.length > 0
+            ? opts
+            : COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label }));
         if (!cancelled) {
           setProviders(use);
           if (use.length && !use.some((x) => x.provider === provider)) {
@@ -128,7 +128,7 @@ export default function WalletFiatWithdrawClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset]);
 
-  if (!fiatPaused && pawapayOk === false) {
+  if (!fiatPaused && mobileOk === false) {
     return (
       <div className="mx-auto max-w-lg space-y-5 pb-10 pt-2">
         <Link
@@ -141,7 +141,7 @@ export default function WalletFiatWithdrawClient({
           {t("wallet_fiat_withdraw_title")}
         </h1>
         <div className="rounded-2xl border border-amber-600/40 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
-          {t("wallet_pawapay_unavailable")}
+          {t("wallet_fiat_unavailable")}
         </div>
       </div>
     );
@@ -267,7 +267,7 @@ export default function WalletFiatWithdrawClient({
             onChange={(e) => setProviderManual(e.target.value)}
             disabled={controlsLocked}
             className={`${inputClass} disabled:opacity-60`}
-            placeholder="AIRTEL_COD, ORANGE_COD, VODACOM_MPESA_COD"
+            placeholder="airtel, orange, mpesa, africell"
           />
         )}
       </FieldLabel>

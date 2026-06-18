@@ -920,7 +920,7 @@ export const withdrawalAddressWhitelist = pgTable(
   ],
 );
 
-/** Idempotent handling of PawaPay webhook deliveries (v2). */
+/** Idempotent handling of mobile-money webhook deliveries. */
 /** Custodial USDⓈ-M-style futures (isolated margin in USDT). */
 export const tradeFuturesPositions = pgTable(
   "trade_futures_positions",
@@ -1566,53 +1566,47 @@ export const platformExpenseEvents = pgTable(
   ],
 );
 
-export const pawapayWebhookEvents = pgTable(
-  "pawapay_webhook_events",
+export const freshpayWebhookEvents = pgTable(
+  "freshpay_webhook_events",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     dedupKey: varchar("dedup_key", { length: 512 }).notNull().unique(),
     kind: varchar("kind", { length: 16 }).notNull(),
-    pawapayId: varchar("pawapay_id", { length: 64 }).notNull(),
+    providerReference: varchar("provider_reference", { length: 64 }).notNull(),
     status: varchar("status", { length: 32 }).notNull(),
     currency: varchar("currency", { length: 8 }).notNull(),
     amount: varchar("amount", { length: 64 }).notNull(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
-    /** credited_usdt | refund_usdt | none | skipped_currency | no_user */
     effect: varchar("effect", { length: 32 }).notNull(),
-    /** Raw JSON body for audit */
     rawBody: text("raw_body").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (t) => [
-    index("pawapay_webhook_user_idx").on(t.userId),
-    index("pawapay_webhook_pawapay_idx").on(t.pawapayId),
+    index("freshpay_webhook_user_idx").on(t.userId),
+    index("freshpay_webhook_provider_idx").on(t.providerReference),
   ],
 );
 
-/** Fiat deposit/withdraw transactions initiated via PawaPay (pending → completed/failed). */
-export const fiatPawapayTransactions = pgTable(
-  "fiat_pawapay_transactions",
+/** Fiat deposit/withdraw via mobile-money gateway (FreshPay / PayDRC). */
+export const fiatFreshpayTransactions = pgTable(
+  "fiat_freshpay_transactions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** deposit | payout */
     kind: varchar("kind", { length: 16 }).notNull(),
-    /** INITIATED | PROCESSING | COMPLETED | FAILED */
     status: varchar("status", { length: 24 }).notNull().default("INITIATED"),
-    /** PawaPay depositId / payoutId */
-    pawapayId: varchar("pawapay_id", { length: 64 }).notNull().unique(),
+    reference: varchar("reference", { length: 64 }).notNull().unique(),
+    providerTxId: varchar("provider_tx_id", { length: 64 }),
     currency: varchar("currency", { length: 8 }).notNull(),
-    /** Amount requested at initiation (gross for deposit; net for payout). */
     amount: varchar("amount", { length: 64 }).notNull(),
     phoneNumber: varchar("phone_number", { length: 32 }),
     provider: varchar("provider", { length: 64 }),
     failureCode: varchar("failure_code", { length: 64 }),
     failureMessage: text("failure_message"),
-    /** Links to our wallet ledger batch when applicable (withdrawals). */
     batchId: uuid("batch_id"),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -1624,9 +1618,9 @@ export const fiatPawapayTransactions = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (t) => [
-    index("fiat_pawapay_tx_user_idx").on(t.userId),
-    index("fiat_pawapay_tx_status_idx").on(t.status),
-    index("fiat_pawapay_tx_kind_idx").on(t.kind),
+    index("fiat_freshpay_tx_user_idx").on(t.userId),
+    index("fiat_freshpay_tx_status_idx").on(t.status),
+    index("fiat_freshpay_tx_kind_idx").on(t.kind),
   ],
 );
 

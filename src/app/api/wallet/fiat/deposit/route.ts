@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { getSessionUserId } from "@/lib/session";
-import { hasPawapayKeys } from "@/lib/env";
-import { pawapayInitiateDeposit } from "@/lib/pawapay/client";
-import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
-import { getDb, fiatPawapayTransactions, users } from "@/db";
 import { eq } from "drizzle-orm";
+import { fiatFreshpayTransactions, getDb, users } from "@/db";
+import { getSessionUserId } from "@/lib/session";
+import { hasFreshpayKeys } from "@/lib/env";
+import { freshpayPayIn } from "@/lib/freshpay/provider";
+import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import {
-  isPawapaySupportedCurrency,
-  isPawapaySupportedForCountry,
-} from "@/lib/pawapay/availability";
+  isFreshpaySupportedCurrency,
+  isFreshpaySupportedForCountry,
+} from "@/lib/freshpay/availability";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
@@ -21,6 +21,17 @@ const bodyZ = z.object({
   provider: z.string().min(2),
   providerLabel: z.string().min(1).optional(),
 });
+
+function userIdentity(u: {
+  email: string;
+  legalFirstName: string | null;
+  legalLastName: string | null;
+  displayName: string | null;
+}) {
+  const first = u.legalFirstName?.trim() || u.displayName?.trim() || "McBuleli";
+  const last = u.legalLastName?.trim() || "User";
+  return { firstname: first, lastname: last, email: u.email };
+}
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
@@ -34,8 +45,8 @@ export async function POST(req: Request) {
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
-  if (!hasPawapayKeys()) {
-    return NextResponse.json({ error: "wallet_pawapay_unconfigured" }, { status: 503 });
+  if (!hasFreshpayKeys()) {
+    return NextResponse.json({ error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
 
   const json = await req.json().catch(() => null);
@@ -45,62 +56,62 @@ export async function POST(req: Request) {
   }
 
   const { asset, grossAmount, phoneNumber, provider, providerLabel } = parsed.data;
-  if (!isPawapaySupportedCurrency(asset)) {
-    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+  if (!isFreshpaySupportedCurrency(asset)) {
+    return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
+
   const db = getDb();
   const [u] = await db
-    .select({ countryCode: users.countryCode })
+    .select({
+      countryCode: users.countryCode,
+      email: users.email,
+      legalFirstName: users.legalFirstName,
+      legalLastName: users.legalLastName,
+      displayName: users.displayName,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  if (!isPawapaySupportedForCountry(u?.countryCode ?? null)) {
-    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+
+  if (!u || !isFreshpaySupportedForCountry(u.countryCode ?? null)) {
+    return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
+
   const gross = Number(grossAmount);
   if (!Number.isFinite(gross) || gross <= 0) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const depositId = randomUUID();
+  const reference = randomUUID();
+  const identity = userIdentity(u);
 
   try {
     const phone = normalizeCodPhoneNumber(phoneNumber);
-    const r = await pawapayInitiateDeposit({
-      depositId,
+    const r = await freshpayPayIn({
+      reference,
       amount: grossAmount,
       currency: asset,
-      payer: {
-        type: "MMO",
-        accountDetails: {
-          phoneNumber: phone,
-          provider: provider.trim(),
-        },
-      },
-      metadata: {
-        userId,
-      },
+      customerNumber: phone,
+      method: provider,
+      ...identity,
     });
 
-    if (r.status !== "ACCEPTED" && r.status !== "DUPLICATE_IGNORED") {
-      const code = r.failureReason?.failureCode?.trim() || null;
-      const msg = r.failureReason?.failureMessage?.trim() || null;
-      // Record rejected attempt for UX / debugging.
+    if (!r.accepted) {
+      const msg = r.response.Comment ?? r.response.resultCodeErrorDescription ?? null;
       try {
         await db
-          .insert(fiatPawapayTransactions)
+          .insert(fiatFreshpayTransactions)
           .values({
             userId,
             kind: "deposit",
             status: "FAILED",
-            pawapayId: depositId,
+            reference,
             currency: asset,
             amount: grossAmount,
             phoneNumber: phone,
             provider: provider.trim(),
-            failureCode: code,
             failureMessage: msg,
-            meta: { initiationStatus: r.status, providerLabel: providerLabel ?? null },
+            meta: { providerLabel: providerLabel ?? null, initiation: r.response },
           })
           .onConflictDoNothing();
       } catch {
@@ -109,37 +120,35 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error: "wallet_pawapay_deposit_rejected",
-          failureReason: r.failureReason ?? null,
-          detail: code && msg ? `${code}: ${msg}` : msg ?? code,
+          error: "wallet_fiat_deposit_rejected",
+          detail: msg,
         },
         { status: 400 },
       );
     }
 
-    // Record pending tx for UI.
     await db
-      .insert(fiatPawapayTransactions)
+      .insert(fiatFreshpayTransactions)
       .values({
         userId,
         kind: "deposit",
         status: "PROCESSING",
-        pawapayId: depositId,
+        reference,
+        providerTxId: r.response.Transaction_id ?? null,
         currency: asset,
         amount: grossAmount,
         phoneNumber: phone,
         provider: provider.trim(),
-        meta: { initiationStatus: r.status, providerLabel: providerLabel ?? null },
+        meta: { providerLabel: providerLabel ?? null, initiation: r.response },
       })
       .onConflictDoNothing();
 
-    return NextResponse.json({ ok: true, depositId, status: r.status });
+    return NextResponse.json({ ok: true, depositId: reference, status: "PROCESSING" });
   } catch (e) {
     const msg = e instanceof Error ? e.message : null;
     return NextResponse.json(
-      { ok: false, error: "wallet_pawapay_deposit_failed", detail: msg },
+      { ok: false, error: "wallet_fiat_deposit_failed", detail: msg },
       { status: 502 },
     );
   }
 }
-

@@ -56,36 +56,59 @@ export function hasOkxKeys(): boolean {
   );
 }
 
+export function hasFreshpayKeys(): boolean {
+  return Boolean(
+    process.env.FRESHPAY_MERCHANT_ID?.trim() &&
+      process.env.FRESHPAY_SECRET?.trim() &&
+      process.env.FRESHPAY_AES_KEY?.trim() &&
+      process.env.FRESHPAY_HMAC_KEY?.trim(),
+  );
+}
+
+/** @deprecated Use hasFreshpayKeys */
 export function hasPawapayKeys(): boolean {
-  return Boolean(process.env.PAWAPAY_API_TOKEN?.trim());
+  return hasFreshpayKeys();
 }
 
-export function getPawapayApiToken(): string {
-  const t = process.env.PAWAPAY_API_TOKEN?.trim();
-  if (!t) {
-    throw new Error("PAWAPAY_API_TOKEN must be set");
-  }
-  return t;
+export function getFreshpayMerchantId(): string {
+  const id = process.env.FRESHPAY_MERCHANT_ID?.trim();
+  if (!id) throw new Error("FRESHPAY_MERCHANT_ID must be set");
+  return id;
 }
 
-export function getPawapayBaseUrl(): string {
-  const override = process.env.PAWAPAY_API_BASE_URL?.trim();
-  if (override) {
-    return override.replace(/\/+$/, "");
-  }
-  const env = (process.env.PAWAPAY_ENV ?? "sandbox").trim().toLowerCase();
+export function getFreshpayMerchantSecret(): string {
+  const s = process.env.FRESHPAY_SECRET?.trim();
+  if (!s) throw new Error("FRESHPAY_SECRET must be set");
+  return s;
+}
+
+export function getFreshpayAesKey(): string {
+  const k = process.env.FRESHPAY_AES_KEY?.trim();
+  if (!k) throw new Error("FRESHPAY_AES_KEY must be set");
+  return k;
+}
+
+export function getFreshpayHmacKey(): string {
+  const k = process.env.FRESHPAY_HMAC_KEY?.trim();
+  if (!k) throw new Error("FRESHPAY_HMAC_KEY must be set");
+  return k;
+}
+
+export function getFreshpayGatewayUrl(): string {
+  const override = process.env.FRESHPAY_API_BASE_URL?.trim();
+  if (override) return override.replace(/\/+$/, "");
+  const env = (process.env.FRESHPAY_ENV ?? "sandbox").trim().toLowerCase();
   return env === "prod" || env === "production"
-    ? "https://api.pawapay.io"
-    : "https://api.sandbox.pawapay.io";
+    ? "https://paydrc.gofreshbakery.net/api/v5/"
+    : "https://api.gofreshpay.com/api/v1/gateway";
 }
 
-/**
- * Optional: some teams store a shared secret for callbacks.
- *
- * Note: PawaPay v2 signed callbacks are verified using pawaPay public keys (RFC-9421),
- * not a shared secret. This value is currently not used unless you build custom validation.
- */
-export function getPawapayCallbackSecret(): string | null {
-  const s = process.env.PAWAPAY_CALLBACK_SECRET?.trim();
-  return s ? s : null;
+/** Optional comma-separated callback source IPs (FreshPay whitelist). */
+export function getFreshpayCallbackIps(): string[] {
+  const raw = process.env.FRESHPAY_CALLBACK_IPS?.trim();
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }

@@ -144,12 +144,12 @@ export async function tryAwardReferralFirstDeposit(args: {
 }
 
 /** Fiat mobile-money deposit (actual fee taken by platform). */
-export async function tryAwardReferralFromFiatPawapayDeposit(args: {
+export async function tryAwardReferralFromFiatDeposit(args: {
   userId: string;
   grossAmount: number;
   currency: string;
   feeUsdEquivalentStr: string;
-  pawapayDepositId: string;
+  fiatDepositRef: string;
 }): Promise<void> {
   const cur = args.currency.toUpperCase();
   const grossUsd =
@@ -161,13 +161,27 @@ export async function tryAwardReferralFromFiatPawapayDeposit(args: {
     refereeUserId: args.userId,
     grossDepositUsd: grossUsd,
     platformFeeUsd,
-    source: "fiat_pawapay",
+    source: "fiat_mobile_money",
     meta: {
-      pawapayDepositId: args.pawapayDepositId,
+      fiatDepositRef: args.fiatDepositRef,
       gross: args.grossAmount,
       currency: cur,
       feeRate: FIAT_FEE_RATE,
     },
+  });
+}
+
+/** @deprecated Use tryAwardReferralFromFiatDeposit */
+export async function tryAwardReferralFromFiatPawapayDeposit(args: {
+  userId: string;
+  grossAmount: number;
+  currency: string;
+  feeUsdEquivalentStr: string;
+  pawapayDepositId: string;
+}): Promise<void> {
+  return tryAwardReferralFromFiatDeposit({
+    ...args,
+    fiatDepositRef: args.pawapayDepositId,
   });
 }
 

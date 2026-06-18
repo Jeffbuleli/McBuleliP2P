@@ -13,7 +13,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { clientErrorText } from "@/lib/client-error-text";
 
 type Tx = {
-  pawapayId: string;
+  reference: string;
   kind: "deposit" | "payout";
   status: "INITIATED" | "PROCESSING" | "COMPLETED" | "FAILED";
   currency: string;

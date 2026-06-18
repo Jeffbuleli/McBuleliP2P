@@ -1,22 +1,20 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { hasPawapayKeys } from "@/lib/env";
+import { eq, sql } from "drizzle-orm";
+import { fiatFreshpayTransactions, getDb, users, walletLedgerEntries } from "@/db";
+import { hasFreshpayKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
-import { pawapayInitiatePayout } from "@/lib/pawapay/client";
-import { normalizeCodPhoneNumber } from "@/lib/pawapay/normalize-phone";
-import { getDb, users } from "@/db";
-import { walletLedgerEntries } from "@/db/schema";
+import { freshpayPayOut } from "@/lib/freshpay/provider";
+import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
+import {
+  isFreshpaySupportedCurrency,
+  isFreshpaySupportedForCountry,
+} from "@/lib/freshpay/availability";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount } from "@/lib/wallet-types";
-import { eq, sql } from "drizzle-orm";
-import { fiatPawapayTransactions } from "@/db";
-import {
-  isPawapaySupportedCurrency,
-  isPawapaySupportedForCountry,
-} from "@/lib/pawapay/availability";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
@@ -28,12 +26,23 @@ const bodyZ = z.object({
   providerLabel: z.string().min(1).optional(),
 });
 
+function userIdentity(u: {
+  email: string;
+  legalFirstName: string | null;
+  legalLastName: string | null;
+  displayName: string | null;
+}) {
+  const first = u.legalFirstName?.trim() || u.displayName?.trim() || "McBuleli";
+  const last = u.legalLastName?.trim() || "User";
+  return { firstname: first, lastname: last, email: u.email };
+}
+
 async function refundIfNotYet(args: {
   userId: string;
   asset: "USD" | "CDF";
   batchId: string;
   grossAmountStr: string;
-  pawapayPayoutId: string;
+  fiatPayoutRef: string;
   reason: string;
 }) {
   const db = getDb();
@@ -43,12 +52,11 @@ async function refundIfNotYet(args: {
   const grossStr = fmtWalletAmount(grossNum);
 
   await db.transaction(async (tx) => {
-    // Avoid double-refunds if initiation failed but a later callback also fails.
     const rows = await tx
       .select({ id: walletLedgerEntries.id })
       .from(walletLedgerEntries)
       .where(
-        sql`${walletLedgerEntries.batchId} = ${args.batchId}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw_refund' and (${walletLedgerEntries.meta} ->> 'pawapayPayoutId') = ${args.pawapayPayoutId}`,
+        sql`${walletLedgerEntries.batchId} = ${args.batchId}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw_refund' and ((${walletLedgerEntries.meta} ->> 'fiatPayoutRef') = ${args.fiatPayoutRef} or (${walletLedgerEntries.meta} ->> 'pawapayPayoutId') = ${args.fiatPayoutRef})`,
       )
       .limit(1);
     if (rows.length > 0) return;
@@ -63,7 +71,7 @@ async function refundIfNotYet(args: {
         amount: grossStr,
         feeUsdEquivalent: "0",
         meta: {
-          pawapayPayoutId: args.pawapayPayoutId,
+          fiatPayoutRef: args.fiatPayoutRef,
           reason: args.reason,
         },
       },
@@ -83,26 +91,36 @@ export async function POST(req: Request) {
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
-  if (!hasPawapayKeys()) {
-    return NextResponse.json({ error: "wallet_pawapay_unconfigured" }, { status: 503 });
+  if (!hasFreshpayKeys()) {
+    return NextResponse.json({ error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
+
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
-  if (!isPawapaySupportedCurrency(parsed.data.asset)) {
-    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+  if (!isFreshpaySupportedCurrency(parsed.data.asset)) {
+    return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
+
   const db = getDb();
   const [u] = await db
-    .select({ countryCode: users.countryCode })
+    .select({
+      countryCode: users.countryCode,
+      email: users.email,
+      legalFirstName: users.legalFirstName,
+      legalLastName: users.legalLastName,
+      displayName: users.displayName,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  if (!isPawapaySupportedForCountry(u?.countryCode ?? null)) {
-    return NextResponse.json({ error: "wallet_pawapay_unavailable" }, { status: 400 });
+
+  if (!u || !isFreshpaySupportedForCountry(u.countryCode ?? null)) {
+    return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
+
   const providerLabel = parsed.data.providerLabel?.trim() || null;
   const r = await executeFiatWithdraw({
     userId,
@@ -113,20 +131,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
 
-  const payoutId = randomUUID();
+  const reference = randomUUID();
+  const identity = userIdentity(u);
+
   try {
     const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
 
-    // Record pending payout tx for UI/reconciliation.
     try {
-      const db = getDb();
       await db
-        .insert(fiatPawapayTransactions)
+        .insert(fiatFreshpayTransactions)
         .values({
           userId,
           kind: "payout",
           status: "PROCESSING",
-          pawapayId: payoutId,
+          reference,
           currency: parsed.data.asset,
           amount: r.net,
           phoneNumber: phone,
@@ -139,92 +157,87 @@ export async function POST(req: Request) {
       // best-effort
     }
 
-    const pr = await pawapayInitiatePayout({
-      payoutId,
+    const pr = await freshpayPayOut({
+      reference,
       amount: r.net,
       currency: parsed.data.asset,
-      recipient: {
-        type: "MMO",
-        accountDetails: {
-          phoneNumber: phone,
-          provider: parsed.data.provider.trim(),
-        },
-      },
-      metadata: {
-        userId,
-        batchId: r.batchId,
-      },
+      customerNumber: phone,
+      method: parsed.data.provider,
+      ...identity,
     });
 
-    if (pr.status !== "ACCEPTED" && pr.status !== "DUPLICATE_IGNORED") {
-      const code = pr.failureReason?.failureCode?.trim() || null;
-      const msg = pr.failureReason?.failureMessage?.trim() || null;
-      // Refund immediately; initiation was rejected so no payout should proceed.
+    if (!pr.accepted) {
+      const msg = pr.response.Comment ?? pr.response.resultCodeErrorDescription ?? null;
       await refundIfNotYet({
         userId,
         asset: parsed.data.asset,
         batchId: r.batchId,
         grossAmountStr: parsed.data.grossAmount,
-        pawapayPayoutId: payoutId,
+        fiatPayoutRef: reference,
         reason: "initiation_rejected",
       });
       try {
-        const db = getDb();
         await db
-          .update(fiatPawapayTransactions)
+          .update(fiatFreshpayTransactions)
           .set({
             status: "FAILED",
-            failureCode: code,
             failureMessage: msg,
             updatedAt: new Date(),
           })
-          .where(sql`${fiatPawapayTransactions.pawapayId} = ${payoutId}`);
+          .where(eq(fiatFreshpayTransactions.reference, reference));
       } catch {
         // best-effort
       }
       return NextResponse.json(
         {
           ok: false,
-          error: "wallet_pawapay_payout_rejected",
-          failureReason: pr.failureReason ?? null,
-          detail: code && msg ? `${code}: ${msg}` : msg ?? code,
+          error: "wallet_fiat_payout_rejected",
+          detail: msg,
         },
         { status: 400 },
       );
     }
+
+    if (pr.response.Transaction_id) {
+      await db
+        .update(fiatFreshpayTransactions)
+        .set({
+          providerTxId: pr.response.Transaction_id,
+          updatedAt: new Date(),
+        })
+        .where(eq(fiatFreshpayTransactions.reference, reference));
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : null;
-    // Refund immediately; initiation failed (network/server). Safe fallback.
     await refundIfNotYet({
       userId,
       asset: parsed.data.asset,
       batchId: r.batchId,
       grossAmountStr: parsed.data.grossAmount,
-      pawapayPayoutId: payoutId,
+      fiatPayoutRef: reference,
       reason: "initiation_failed",
     });
     try {
-      const db = getDb();
       await db
-        .update(fiatPawapayTransactions)
+        .update(fiatFreshpayTransactions)
         .set({
           status: "FAILED",
           failureMessage: msg,
           updatedAt: new Date(),
         })
-        .where(sql`${fiatPawapayTransactions.pawapayId} = ${payoutId}`);
+        .where(eq(fiatFreshpayTransactions.reference, reference));
     } catch {
       // best-effort
     }
     return NextResponse.json(
-      { ok: false, error: "wallet_pawapay_payout_failed", detail: msg },
+      { ok: false, error: "wallet_fiat_payout_failed", detail: msg },
       { status: 502 },
     );
   }
 
   return NextResponse.json({
     ok: true,
-    payoutId,
+    payoutId: reference,
     batchId: r.batchId,
     net: r.net,
     fee: r.fee,
