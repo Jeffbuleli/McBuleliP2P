@@ -4,14 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { WalletAsset } from "@/lib/wallet-types";
-import {
-  IconDeposit,
-  IconHistory,
-  IconSend,
-  IconSwap,
-  IconWithdraw,
-  WalletActionGrid,
-} from "@/components/wallet/wallet-action-grid";
+import { IconHistory } from "@/components/wallet/wallet-action-grid";
 
 const ICON: Record<WalletAsset, string> = {
   USDT: "/assets/crypto/usdt.png",
@@ -29,13 +22,6 @@ export type WalletRowDTO = {
   valueUsdApprox: string;
   depositHref: string;
   withdrawHref: string;
-};
-
-export type FiatSummaryDTO = {
-  usdDisplay: string;
-  cdfDisplay: string;
-  usdValueUsd: string;
-  cdfValueUsd: string;
 };
 
 export type StakingPromoDTO = {
@@ -66,18 +52,13 @@ export type ServicePromoDTO = {
 export type WalletOverviewLabels = {
   wallet_est_total: string;
   wallet_search_placeholder: string;
-  wallet_action_deposit: string;
-  wallet_action_withdraw: string;
-  wallet_action_send: string;
-  wallet_swap_title: string;
   wallet_link_history: string;
   wallet_section_crypto: string;
   wallet_section_fiat: string;
   wallet_no_match: string;
   hide_balance: string;
   show_balance: string;
-  wallet_fiat_hub_title: string;
-  wallet_fiat_open_hub: string;
+  wallet_assets_title: string;
 };
 
 function mask() {
@@ -87,41 +68,25 @@ function mask() {
 export function WalletOverview({
   labels,
   totalUsdDisplay,
-  cryptoRows,
-  fiat,
+  assetRows,
 }: {
   labels: WalletOverviewLabels;
   totalUsdDisplay: string;
-  cryptoRows: WalletRowDTO[];
-  fiat: FiatSummaryDTO;
+  assetRows: WalletRowDTO[];
 }) {
   const [q, setQ] = useState("");
   const [hidden, setHidden] = useState(false);
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return cryptoRows;
-    return cryptoRows.filter(
+    if (!s) return assetRows;
+    return assetRows.filter(
       (r) =>
         r.asset.toLowerCase().includes(s) ||
         r.title.toLowerCase().includes(s) ||
         r.subtitle.toLowerCase().includes(s),
     );
-  }, [cryptoRows, q]);
-
-  const cryptoActions = [
-    { href: "/app/deposit", label: labels.wallet_action_deposit, icon: <IconDeposit />, tone: "deposit" as const },
-    { href: "/app/withdraw", label: labels.wallet_action_withdraw, icon: <IconWithdraw />, tone: "withdraw" as const },
-    { href: "/app/wallet/transfer", label: labels.wallet_action_send, icon: <IconSend />, tone: "send" as const },
-    { href: "/app/wallet/swap?realm=crypto", label: labels.wallet_swap_title, icon: <IconSwap />, tone: "swap" as const },
-  ];
-
-  const fiatActions = [
-    { href: "/app/wallet/fiat/deposit", label: labels.wallet_action_deposit, icon: <IconDeposit />, tone: "deposit" as const },
-    { href: "/app/wallet/fiat/withdraw", label: labels.wallet_action_withdraw, icon: <IconWithdraw />, tone: "withdraw" as const },
-    { href: "/app/wallet/transfer?asset=USD", label: labels.wallet_action_send, icon: <IconSend />, tone: "send" as const },
-    { href: "/app/wallet/swap?from=USD&to=USDT", label: labels.wallet_swap_title, icon: <IconSwap />, tone: "swap" as const },
-  ];
+  }, [assetRows, q]);
 
   return (
     <div className="flex flex-col gap-0 pb-2">
@@ -130,51 +95,56 @@ export function WalletOverview({
           <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-brown)]/80">
             {labels.wallet_est_total}
           </p>
-          <div className="flex items-center gap-1">
-            <Link
-              href="/app/wallet/history"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] text-[color:var(--fd-primary)] active:scale-95"
-              aria-label={labels.wallet_link_history}
-            >
-              <IconHistory className="h-4 w-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setHidden((h) => !h)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--fd-muted)] active:scale-95"
-              aria-pressed={hidden}
-              aria-label={hidden ? labels.show_balance : labels.hide_balance}
-            >
-              {hidden ? <EyeIcon /> : <EyeOffIcon />}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setHidden((h) => !h)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--fd-muted)] active:scale-95"
+            aria-pressed={hidden}
+            aria-label={hidden ? labels.show_balance : labels.hide_balance}
+          >
+            {hidden ? <EyeIcon /> : <EyeOffIcon />}
+          </button>
         </div>
         <p className="mt-1 text-[1.75rem] font-black leading-tight tabular-nums text-[color:var(--fd-primary-dark)]">
           {hidden ? mask() : totalUsdDisplay}
         </p>
+
+        <div className="wallet-realm-toggle mt-4 grid grid-cols-2 gap-2">
+          <span className="wallet-realm-btn wallet-realm-btn-crypto wallet-realm-btn-active" aria-current="page">
+            {labels.wallet_section_crypto}
+          </span>
+          <Link href="/app/wallet/fiat" className="wallet-realm-btn wallet-realm-btn-fiat">
+            {labels.wallet_section_fiat}
+          </Link>
+        </div>
       </section>
 
+      <Link href="/app/wallet/history" className="wallet-history-banner mx-0 mt-3 flex items-center gap-3 px-4 py-3 active:scale-[0.99]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-[color:var(--fd-primary)] shadow-sm">
+          <IconHistory className="h-5 w-5" />
+        </span>
+        <span className="flex-1 text-sm font-bold text-[color:var(--fd-primary-dark)]">{labels.wallet_link_history}</span>
+        <span className="text-[color:var(--fd-primary)]">→</span>
+      </Link>
+
       <section className="mt-4">
-        <div className="wallet-section-head wallet-section-head-crypto">
-          <span className="wallet-section-dot wallet-section-dot-crypto" aria-hidden />
-          <h2 className="wallet-section-title">{labels.wallet_section_crypto}</h2>
-        </div>
-        <WalletActionGrid actions={cryptoActions} />
-        <div className="mt-3">
-          <label className="relative block">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--fd-muted)]">
-              <SearchIcon />
-            </span>
-            <input
-              type="search"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={labels.wallet_search_placeholder}
-              className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] py-2.5 pl-10 pr-3 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)] focus:ring-2"
-            />
-          </label>
-        </div>
-        <ul className="mt-2 flex flex-col gap-2">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {labels.wallet_assets_title}
+        </p>
+        <label className="relative mb-2 block">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--fd-muted)]">
+            <SearchIcon />
+          </span>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={labels.wallet_search_placeholder}
+            className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] py-2.5 pl-10 pr-3 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)] focus:ring-2"
+          />
+        </label>
+
+        <ul className="flex flex-col gap-2">
           {rows.length === 0 ? (
             <li className="fd-card px-4 py-6 text-center text-sm text-[color:var(--fd-muted)]">
               {labels.wallet_no_match}
@@ -184,7 +154,7 @@ export function WalletOverview({
               <li key={row.asset} className="wallet-asset-row fd-card p-3">
                 <Link href={`/app/wallet/${row.asset}`} className="flex items-center gap-3 active:opacity-90">
                   <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
-                    <Image src={ICON[row.asset]} alt="" width={44} height={44} className="object-cover" />
+                    <Image src={ICON[row.asset]} alt="" width={44} height={44} className="h-full w-full object-cover" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-[color:var(--fd-text)]">{row.title}</p>
@@ -203,42 +173,6 @@ export function WalletOverview({
             ))
           )}
         </ul>
-        <Link
-          href="/app/wallet/history?realm=crypto"
-          className="mt-2 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-[color:var(--fd-primary)]"
-        >
-          <IconHistory className="h-3.5 w-3.5" />
-          {labels.wallet_link_history}
-        </Link>
-      </section>
-
-      <section className="wallet-fiat-panel mt-5 rounded-2xl p-4">
-        <div className="wallet-section-head wallet-section-head-fiat">
-          <span className="wallet-section-dot wallet-section-dot-fiat" aria-hidden />
-          <h2 className="wallet-section-title">{labels.wallet_section_fiat}</h2>
-        </div>
-        <WalletActionGrid actions={fiatActions} />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="wallet-balance-pill">
-            <span className="text-[10px] font-bold uppercase text-[color:var(--fd-brown)]">USD</span>
-            <span className="tabular-nums">{hidden ? mask() : fiat.usdDisplay}</span>
-          </span>
-          <span className="wallet-balance-pill">
-            <span className="text-[10px] font-bold uppercase text-[color:var(--fd-brown)]">CDF</span>
-            <span className="tabular-nums">{hidden ? mask() : fiat.cdfDisplay}</span>
-          </span>
-        </div>
-        <Link href="/app/wallet/fiat" className="wallet-fiat-hub-link mt-3 flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 active:scale-[0.99]">
-          <span className="text-xs font-bold text-[color:var(--fd-brown)]">{labels.wallet_fiat_open_hub}</span>
-          <span className="text-[color:var(--fd-brown)]">→</span>
-        </Link>
-        <Link
-          href="/app/wallet/history?realm=fiat"
-          className="mt-2 flex items-center justify-center gap-1.5 py-1 text-xs font-bold text-[color:var(--fd-brown)]"
-        >
-          <IconHistory className="h-3.5 w-3.5" />
-          {labels.wallet_link_history}
-        </Link>
       </section>
     </div>
   );

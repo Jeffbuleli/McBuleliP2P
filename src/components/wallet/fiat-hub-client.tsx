@@ -8,18 +8,9 @@ import {
   IconBankCard,
   IconDepositArrow,
   IconFiatHub,
-  IconHistoryClock,
   IconMobileMoney,
   IconWithdrawArrow,
 } from "@/components/wallet/fiat-icons";
-import {
-  IconDeposit,
-  IconHistory,
-  IconSend,
-  IconSwap,
-  IconWithdraw,
-  WalletActionGrid,
-} from "@/components/wallet/wallet-action-grid";
 
 type FiatConfig = {
   paused: boolean;
@@ -41,13 +32,6 @@ export function FiatHubClient({ balances }: { balances: BalanceRow[] }) {
   }, []);
 
   const disabled = cfg?.paused || (!cfg?.mobileMoney && !cfg?.card);
-
-  const topActions = [
-    { href: "/app/wallet/fiat/deposit", label: t("wallet_action_deposit"), icon: <IconDeposit />, tone: "deposit" as const },
-    { href: "/app/wallet/fiat/withdraw", label: t("wallet_action_withdraw"), icon: <IconWithdraw />, tone: "withdraw" as const },
-    { href: "/app/wallet/transfer?asset=USD", label: t("wallet_action_send"), icon: <IconSend />, tone: "send" as const },
-    { href: "/app/wallet/swap?from=USD&to=USDT", label: t("wallet_swap_title"), icon: <IconSwap />, tone: "swap" as const },
-  ];
 
   return (
     <div className="wallet-theme pb-10">
@@ -74,9 +58,7 @@ export function FiatHubClient({ balances }: { balances: BalanceRow[] }) {
         <p className="wallet-status-banner wallet-status-banner-warn mb-4">{t("wallet_fiat_paused_hint")}</p>
       ) : null}
 
-      <WalletActionGrid actions={topActions} />
-
-      <section className="mt-4">
+      <section className="mt-2">
         <h2 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
           <IconMobileMoney className="h-4 w-4" />
           {t("wallet_fiat_rail_momo")}
@@ -97,14 +79,6 @@ export function FiatHubClient({ balances }: { balances: BalanceRow[] }) {
           <FiatOpTile href="#" icon={<IconWithdrawArrow />} label={t("wallet_fiat_card_withdraw_soon")} disabled />
         </div>
       </section>
-
-      <Link href="/app/wallet/history?realm=fiat" className="fd-card flex items-center gap-3 p-3 active:scale-[0.99]">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-          <IconHistoryClock />
-        </span>
-        <span className="text-sm font-bold text-[color:var(--fd-text)]">{t("wallet_fiat_hub_history")}</span>
-        <IconHistory className="ml-auto h-4 w-4 text-[color:var(--fd-muted)]" />
-      </Link>
     </div>
   );
 }

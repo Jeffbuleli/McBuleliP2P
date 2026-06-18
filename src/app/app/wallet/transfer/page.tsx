@@ -19,11 +19,13 @@ import {
 } from "@/components/wallet/wallet-flow-shell";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 
-const TRANSFER_ASSETS = ["USDT", "PI"] as const satisfies readonly WalletAsset[];
+const TRANSFER_ASSETS = ["USDT", "PI", "USD", "CDF"] as const satisfies readonly WalletAsset[];
 
 const ASSET_ICON: Partial<Record<WalletAsset, string>> = {
   USDT: "/assets/crypto/usdt.png",
   PI: "/assets/crypto/pi.png",
+  USD: "/assets/crypto/usd.png",
+  CDF: "/assets/crypto/cdf.png",
 };
 
 type RecipientMode = "email" | "pay";
@@ -32,7 +34,7 @@ function TransferForm() {
   const { t } = useI18n();
   const router = useRouter();
   const sp = useSearchParams();
-  const [asset, setAsset] = useState<WalletAsset>("USDT");
+  const [asset, setAsset] = useState<(typeof TRANSFER_ASSETS)[number]>("USDT");
   const [mode, setMode] = useState<RecipientMode>("email");
   const [email, setEmail] = useState("");
   const [recipientId, setRecipientId] = useState<string | null>(null);

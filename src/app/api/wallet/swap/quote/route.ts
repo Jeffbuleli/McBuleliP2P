@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { fetchReferenceRates } from "@/lib/reference-rates";
-import { quoteSwap } from "@/lib/wallet-convert";
+import { assetAmountToUsd, quoteSwap, usdToAssetAmount } from "@/lib/wallet-convert";
 import { SWAP_FEE_USD } from "@/lib/wallet-fees";
-import { isWalletAsset } from "@/lib/wallet-types";
+import { isWalletAsset, type WalletAsset } from "@/lib/wallet-types";
+
+function unitRateLabel(from: WalletAsset, to: WalletAsset, cdfPerUsd: number, piUsd: number): string {
+  const rates = { usdtUsd: 1, cdfPerUsd, piUsd };
+  const grossTo = usdToAssetAmount(assetAmountToUsd(1, from, rates), to, rates);
+  if (!Number.isFinite(grossTo) || grossTo <= 0) return "";
+  const fmt = grossTo >= 100 ? Math.round(grossTo).toLocaleString("en-US") : grossTo.toPrecision(6);
+  return `1 ${from} ≈ ${fmt} ${to}`;
+}
 
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -26,6 +34,7 @@ export async function GET(req: Request) {
   if (!q.ok) {
     return NextResponse.json({ error: q.message }, { status: 400 });
   }
+  const involvesCdf = from === "CDF" || to === "CDF";
   return NextResponse.json({
     fromAmount: q.fromAmount,
     toAmount: q.toAmount,
@@ -33,5 +42,11 @@ export async function GET(req: Request) {
     grossUsd: q.grossUsd,
     netUsdAfterFee: q.netUsdAfterFee,
     flatFeeUsd: SWAP_FEE_USD,
+    cdfPerUsd: rates.cdfPerUsd,
+    piUsd: rates.piUsd,
+    involvesCdf,
+    rateLabel: unitRateLabel(from, to, rates.cdfPerUsd, rates.piUsd),
+    fetchedAt: Date.now(),
+    quoteTtlSec: involvesCdf ? 30 : 60,
   });
 }

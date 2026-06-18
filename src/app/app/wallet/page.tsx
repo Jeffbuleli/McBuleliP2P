@@ -36,12 +36,15 @@ function toRow(
   locale: Locale,
   lang: "en" | "fr",
 ): WalletRowDTO {
-  const depositHref =
-    row.asset === "PI_TEST"
+  const isFiat = row.asset === "USD" || row.asset === "CDF";
+  const depositHref = isFiat
+    ? "/app/wallet/fiat/deposit"
+    : row.asset === "PI_TEST"
       ? "/app/wallet/pi-test"
       : `/app/deposit?asset=${row.asset}`;
-  const withdrawHref =
-    row.asset === "PI"
+  const withdrawHref = isFiat
+    ? "/app/wallet/fiat/withdraw"
+    : row.asset === "PI"
       ? "/app/withdraw?asset=PI"
       : row.asset === "PI_TEST"
         ? "/app/wallet/pi-test"
@@ -183,43 +186,27 @@ export default async function WalletPage() {
     // If DB is unavailable in a build context, keep wallet usable.
   }
 
-  const cryptoRows = state.lines
-    .filter((l) => l.asset === "USDT" || l.asset === "PI")
-    .map((l) => toRow(l, locale, lang));
-
-  const usdLine = state.lines.find((l) => l.asset === "USD");
-  const cdfLine = state.lines.find((l) => l.asset === "CDF");
+  const assetOrder: WalletAsset[] = ["USDT", "PI", "USD", "CDF"];
+  const assetRows = assetOrder
+    .map((asset) => state.lines.find((l) => l.asset === asset))
+    .filter(Boolean)
+    .map((l) => toRow(l!, locale, lang));
 
   const labels: WalletOverviewLabels = {
     wallet_est_total: d.wallet_est_total,
     wallet_search_placeholder: d.wallet_search_placeholder,
-    wallet_action_deposit: d.wallet_action_deposit,
-    wallet_action_withdraw: d.wallet_action_withdraw,
-    wallet_action_send: d.wallet_action_send,
-    wallet_swap_title: d.wallet_swap_title,
     wallet_link_history: d.wallet_link_history,
     wallet_section_crypto: d.wallet_section_crypto,
     wallet_section_fiat: d.wallet_section_fiat,
     wallet_no_match: d.wallet_no_match,
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
-    wallet_fiat_hub_title: d.wallet_fiat_hub_title,
-    wallet_fiat_open_hub: d.wallet_fiat_open_hub,
+    wallet_assets_title: d.wallet_assets_title,
   };
 
   return (
     <>
-      <WalletOverview
-        labels={labels}
-        totalUsdDisplay={totalUsdDisplay}
-        cryptoRows={cryptoRows}
-        fiat={{
-          usdDisplay: formatWalletAssetBalance(usdLine?.balanceNum ?? 0, "USD", locale),
-          cdfDisplay: formatWalletAssetBalance(cdfLine?.balanceNum ?? 0, "CDF", locale),
-          usdValueUsd: usdLine?.valueUsdDisplay ?? "—",
-          cdfValueUsd: cdfLine?.valueUsdDisplay ?? "—",
-        }}
-      />
+      <WalletOverview labels={labels} totalUsdDisplay={totalUsdDisplay} assetRows={assetRows} />
       <WalletServicePromos
         pointsPromo={{
           balance: pointsBalance,
