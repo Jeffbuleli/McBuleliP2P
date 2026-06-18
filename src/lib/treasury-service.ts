@@ -1,4 +1,4 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb, platformSettings, users, walletLedgerEntries } from "@/db";
 import { cdfPerOneUsd } from "@/lib/fx";
 import { numFromNumeric } from "@/lib/wallet-types";
@@ -79,7 +79,11 @@ async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
     .where(
       and(
         gte(walletLedgerEntries.createdAt, since),
-        sql`${walletLedgerEntries.entryType} in ('fiat_deposit', 'fiat_withdraw', 'fiat_withdraw_refund')`,
+        inArray(walletLedgerEntries.entryType, [
+          "fiat_deposit",
+          "fiat_withdraw",
+          "fiat_withdraw_refund",
+        ]),
       ),
     )
     .limit(5000);

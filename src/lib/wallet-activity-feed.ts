@@ -5,6 +5,9 @@ import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
 import type { WalletFiatAsset } from "@/lib/wallet-fiat-assets";
 
+/** Max rows pulled per source before merge — keeps older ops visible in history. */
+const GLOBAL_HISTORY_SOURCE_LIMIT = 3000;
+
 export type ActivityStatus = "processing" | "completed" | "failed";
 
 export type WalletActivityItem = {
@@ -409,7 +412,7 @@ export async function fetchWalletGlobalActivities(args: {
       .from(deposits)
       .where(depositWhere)
       .orderBy(order(deposits.createdAt))
-      .limit(150),
+      .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
     db
       .select({
         id: withdrawals.id,
@@ -423,7 +426,7 @@ export async function fetchWalletGlobalActivities(args: {
       .from(withdrawals)
       .where(withdrawalWhere)
       .orderBy(order(withdrawals.createdAt))
-      .limit(150),
+      .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
     db
       .select({
         id: walletLedgerEntries.id,
@@ -437,7 +440,7 @@ export async function fetchWalletGlobalActivities(args: {
       .from(walletLedgerEntries)
       .where(ledgerWhere)
       .orderBy(order(walletLedgerEntries.createdAt))
-      .limit(300),
+      .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
     db
       .select({
         reference: fiatFreshpayTransactions.reference,
@@ -452,7 +455,7 @@ export async function fetchWalletGlobalActivities(args: {
       .from(fiatFreshpayTransactions)
       .where(fiatWhere)
       .orderBy(order(fiatFreshpayTransactions.createdAt))
-      .limit(150),
+      .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
   ]);
 
   const merged: WalletActivityItem[] = [];

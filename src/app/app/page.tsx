@@ -72,17 +72,14 @@ export default async function DashboardPage() {
         </h1>
       </header>
 
-      <BalanceCard
-        locale={locale}
-        totalEquivDisplay={s.totalEquivDisplay}
-        usdtDisplay={s.usdtDisplay}
-        piDisplay={s.piDisplay}
-      />
+      <BalanceCard locale={locale} totalEquivDisplay={s.totalEquivDisplay} />
 
       <AssetStrip
         locale={locale}
         usdtBalance={s.usdtDisplay}
         piBalance={s.piDisplay}
+        usdBalance={s.usdBalanceDisplay}
+        cdfBalance={s.cdfBalanceDisplay}
       />
 
       <PriceChartLazy appearance="light" />

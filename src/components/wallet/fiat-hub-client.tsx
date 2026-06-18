@@ -61,6 +61,9 @@ export function FiatHubClient() {
           <FiatOpTile href="/app/wallet/fiat/card/deposit" icon={<IconDepositArrow />} label={t("wallet_action_deposit")} disabled={disabled || !cfg?.card} />
           <FiatOpTile href="#" icon={<IconWithdrawArrow />} label={t("wallet_fiat_card_withdraw_soon")} disabled />
         </div>
+        <p className="mt-2 text-[10px] leading-snug text-[color:var(--fd-muted)]">
+          {t("wallet_fiat_card_withdraw_soon_hint")}
+        </p>
       </section>
 
       <div className="mt-auto">

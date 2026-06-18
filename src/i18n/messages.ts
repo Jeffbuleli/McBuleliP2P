@@ -1305,6 +1305,8 @@ export const en = {
   wallet_fiat_card_checkout_hint: "Secure hosted checkout (Visa / Mastercard)",
   wallet_fiat_card_pay: "Pay by card",
   wallet_fiat_card_withdraw_soon: "Soon",
+  wallet_fiat_card_withdraw_soon_hint:
+    "Card payouts are not available via FreshPay yet — use Mobile Money to withdraw USD/CDF.",
   wallet_fiat_step_init: "Start",
   wallet_fiat_step_wait: "Processing",
   wallet_fiat_step_done: "Done",
@@ -4931,6 +4933,8 @@ export const fr: Messages = {
   wallet_fiat_card_checkout_hint: "Paiement sécurisé (Visa / Mastercard)",
   wallet_fiat_card_pay: "Payer par carte",
   wallet_fiat_card_withdraw_soon: "Bientôt",
+  wallet_fiat_card_withdraw_soon_hint:
+    "Les retraits carte ne sont pas encore proposés par FreshPay — utilisez Mobile Money pour retirer USD/CDF.",
   wallet_fiat_step_init: "Départ",
   wallet_fiat_step_wait: "Traitement",
   wallet_fiat_step_done: "Terminé",

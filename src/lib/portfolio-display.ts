@@ -18,6 +18,8 @@ export type PortfolioSnapshot = {
   totalEquivDisplay: string;
   usdtDisplay: string;
   piDisplay: string;
+  usdBalanceDisplay: string;
+  cdfBalanceDisplay: string;
   fiatUsdDisplay: string;
   fiatCdfDisplay: string;
 };
@@ -34,6 +36,8 @@ export function emptyPortfolioSnapshot(locale: Locale): PortfolioSnapshot {
     }),
     usdtDisplay: "0 USDT",
     piDisplay: "0 Pi",
+    usdBalanceDisplay: "0 USD",
+    cdfBalanceDisplay: "0 CDF",
     fiatUsdDisplay: `≈ ${formatMoneyLocale(0, locale, 2)} USD`,
     fiatCdfDisplay: "≈ 0 CDF",
   };
@@ -80,12 +84,16 @@ export async function getPortfolioSnapshotForUser(
 
   const fiatUsdDisplay = `≈ ${formatMoneyLocale(usd.balanceNum, locale, 2)} USD`;
   const fiatCdfDisplay = `≈ ${formatWalletAssetBalance(cdf.balanceNum, "CDF", locale)} CDF`;
+  const usdBalanceDisplay = `${formatHomeAssetBalance(usd.balanceNum, "USD", locale)} USD`;
+  const cdfBalanceDisplay = `${formatWalletAssetBalance(cdf.balanceNum, "CDF", locale)} CDF`;
 
   return {
     totalEquivUsdt: state.totalUsd,
     totalEquivDisplay: state.totalUsdDisplay,
     usdtDisplay,
     piDisplay,
+    usdBalanceDisplay,
+    cdfBalanceDisplay,
     fiatUsdDisplay,
     fiatCdfDisplay,
   };

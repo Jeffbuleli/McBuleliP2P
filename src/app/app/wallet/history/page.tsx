@@ -107,24 +107,7 @@ export default function WalletHistoryPage() {
     <div className="wallet-theme pb-10">
       <WalletSubpageHeader title={t("wallet_history_title")} backHref="/app/wallet" />
 
-      <ActivityListControls
-        sort={sort}
-        pageSize={pageSize}
-        page={page}
-        totalPages={data?.totalPages ?? 1}
-        total={data?.total ?? 0}
-        onSortChange={(s) => {
-          setSort(s);
-          setPage(1);
-        }}
-        onPageSizeChange={(n) => {
-          setPageSize(n);
-          setPage(1);
-        }}
-        onPageChange={setPage}
-      />
-
-      <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
         {t("wallet_history_realm_label")}
       </p>
       <div className="mb-3 flex flex-wrap gap-2">
@@ -209,6 +192,23 @@ export default function WalletHistoryPage() {
           </button>
         ))}
       </div>
+
+      <ActivityListControls
+        sort={sort}
+        pageSize={pageSize}
+        page={page}
+        totalPages={data?.totalPages ?? 1}
+        total={data?.total ?? 0}
+        onSortChange={(s) => {
+          setSort(s);
+          setPage(1);
+        }}
+        onPageSizeChange={(n) => {
+          setPageSize(n);
+          setPage(1);
+        }}
+        onPageChange={setPage}
+      />
 
       {loading ? (
         <div className="mt-3 space-y-2" aria-hidden>

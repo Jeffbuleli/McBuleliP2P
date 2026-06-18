@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { IconHistory } from "@/components/wallet/wallet-action-grid";
-import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
+import { WalletRealmToggle } from "@/components/wallet/wallet-realm-toggle";
 import { WalletAssetIcon, assetDetailHref } from "@/components/wallet/wallet-asset-icon";
 
 export type WalletRowDTO = {
@@ -69,8 +68,6 @@ export function WalletOverview({
   totalUsdDisplay: string;
   assetRows: WalletRowDTO[];
 }) {
-  const pathname = usePathname();
-  const onWallet = pathname === "/app/wallet";
   const [q, setQ] = useState("");
   const [hidden, setHidden] = useState(false);
 
@@ -106,38 +103,13 @@ export function WalletOverview({
           {hidden ? mask() : totalUsdDisplay}
         </p>
 
-        <div className="wallet-realm-toggle mt-4 grid grid-cols-3 gap-2">
-          <Link
-            href="/app/wallet"
-            onClick={(e) => {
-              if (onWallet) {
-                e.preventDefault();
-                document.getElementById("wallet-assets")?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
-            }}
-            className={`wallet-realm-btn wallet-realm-btn-crypto ${onWallet ? "wallet-realm-btn-active" : ""}`}
-            aria-current={onWallet ? "page" : undefined}
-          >
-            {labels.wallet_section_crypto}
-          </Link>
-          <Link
-            href="/app/wallet/fiat"
-            className={`wallet-realm-btn wallet-realm-btn-fiat ${pathname.startsWith("/app/wallet/fiat") ? "wallet-realm-btn-active" : ""}`}
-            aria-current={pathname.startsWith("/app/wallet/fiat") ? "page" : undefined}
-          >
-            {labels.wallet_section_fiat}
-          </Link>
-          <Link
-            href="/app/wallet/swap"
-            className={`wallet-realm-btn wallet-realm-btn-swap ${pathname.startsWith("/app/wallet/swap") ? "wallet-realm-btn-active" : ""}`}
-            aria-current={pathname.startsWith("/app/wallet/swap") ? "page" : undefined}
-          >
-            <span className="wallet-realm-btn-icon">
-              <IconSwapBrand className="h-4 w-4 shrink-0" />
-            </span>
-            <span className="leading-none">{labels.wallet_swap_title}</span>
-          </Link>
-        </div>
+        <WalletRealmToggle
+          labels={{
+            crypto: labels.wallet_section_crypto,
+            fiat: labels.wallet_section_fiat,
+            swap: labels.wallet_swap_title,
+          }}
+        />
       </section>
 
       <Link href="/app/wallet/history" className="wallet-history-banner mx-0 mt-3 flex items-center gap-3 px-4 py-3 active:scale-[0.99]">

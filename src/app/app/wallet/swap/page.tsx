@@ -8,6 +8,7 @@ import { clientErrorText } from "@/lib/client-error-text";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
 import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import { WalletErrorBanner, walletPrimaryBtnClass } from "@/components/wallet/wallet-form";
 
 const SWAP_ASSETS = ["USDT", "PI", "USD", "CDF"] as const;
@@ -178,7 +179,7 @@ export default function WalletSwapPage() {
   const canSubmit = Boolean(quote && amount.trim() && !loading);
 
   return (
-    <div className="wallet-theme pb-10">
+    <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
       <WalletSubpageHeader title={t("wallet_swap_title")} backHref="/app/wallet" />
 
       <div className="wallet-swap-shell">
@@ -288,6 +289,10 @@ export default function WalletSwapPage() {
       >
         {loading ? "…" : t("wallet_swap_exchange")}
       </button>
+
+      <div className="mt-auto pt-6">
+        <McBuleliPoweredFooter />
+      </div>
     </div>
   );
 }

@@ -30,7 +30,26 @@ export default async function AdminTreasuryPage() {
 
   const locale = await getLocale();
   const d = getDictionary(locale);
-  const report = await getTreasuryReport();
+
+  let report: Awaited<ReturnType<typeof getTreasuryReport>> | null = null;
+  let loadError: string | null = null;
+  try {
+    report = await getTreasuryReport();
+  } catch (e) {
+    loadError = e instanceof Error ? e.message : "treasury_load_failed";
+  }
+
+  if (!report) {
+    return (
+      <div>
+        <AdminBackLink href="/admin">{d.admin_back}</AdminBackLink>
+        <AdminPageHeader title={d.admin_treasury_title} />
+        <p className={adminCls.card}>
+          {loadError ?? "Unable to load treasury report. Check database migrations and platform settings."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>

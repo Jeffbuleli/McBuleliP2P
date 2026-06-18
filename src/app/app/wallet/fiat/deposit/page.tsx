@@ -1,4 +1,4 @@
-import { FiatHubClient } from "@/components/wallet/fiat-hub-client";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import WalletFiatDepositClient from "./wallet-fiat-deposit-client";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { getDictionary } from "@/i18n/messages";
@@ -18,9 +18,12 @@ export default async function WalletFiatDepositPage() {
   const fiatPaused = isFiatDepositWithdrawPaused();
 
   return (
-    <div className="wallet-theme pb-10">
+    <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
       <WalletSubpageHeader title={d.wallet_fiat_deposit_title} backHref="/app/wallet/fiat" />
       <WalletFiatDepositClient fiatPaused={fiatPaused} />
+      <div className="mt-auto">
+        <McBuleliPoweredFooter />
+      </div>
     </div>
   );
 }
