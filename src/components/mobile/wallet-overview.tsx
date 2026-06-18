@@ -129,11 +129,13 @@ export function WalletOverview({
           </Link>
           <Link
             href="/app/wallet/swap"
-            className={`wallet-realm-btn wallet-realm-btn-swap flex items-center justify-center gap-1.5 ${pathname.startsWith("/app/wallet/swap") ? "wallet-realm-btn-active" : ""}`}
+            className={`wallet-realm-btn wallet-realm-btn-swap ${pathname.startsWith("/app/wallet/swap") ? "wallet-realm-btn-active" : ""}`}
             aria-current={pathname.startsWith("/app/wallet/swap") ? "page" : undefined}
           >
-            <IconSwapBrand className="h-4 w-4 shrink-0" />
-            <span>{labels.wallet_swap_title}</span>
+            <span className="wallet-realm-btn-icon">
+              <IconSwapBrand className="h-4 w-4 shrink-0" />
+            </span>
+            <span className="leading-none">{labels.wallet_swap_title}</span>
           </Link>
         </div>
       </section>
