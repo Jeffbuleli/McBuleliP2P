@@ -1,5 +1,6 @@
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
-import { fiatFreshpayTransactions, getDb, platformSettings, users, walletLedgerEntries } from "@/db";
+import { getDb, platformSettings, users, walletLedgerEntries } from "@/db";
+import { countPendingFiatFreshpay } from "@/lib/fiat-freshpay-db";
 import { cdfPerOneUsd } from "@/lib/fx";
 import { numFromNumeric } from "@/lib/wallet-types";
 
@@ -140,23 +141,7 @@ export async function getTreasuryReport(): Promise<TreasuryReport> {
     fiatFlowSince(d7),
     fiatFlowSince(d30),
     fiatFeesSince(d30),
-    (async () => {
-      const db = getDb();
-      const [proc] = await db
-        .select({ c: sql<number>`count(*)::int` })
-        .from(fiatFreshpayTransactions)
-        .where(eq(fiatFreshpayTransactions.status, "PROCESSING"));
-      const [fail] = await db
-        .select({ c: sql<number>`count(*)::int` })
-        .from(fiatFreshpayTransactions)
-        .where(
-          and(
-            eq(fiatFreshpayTransactions.status, "FAILED"),
-            gte(fiatFreshpayTransactions.updatedAt, h24),
-          ),
-        );
-      return { processing: proc?.c ?? 0, failed24h: fail?.c ?? 0 };
-    })(),
+    countPendingFiatFreshpay({ failedSince: h24 }),
   ]);
 
   const coverages: TreasuryCoverage[] = [

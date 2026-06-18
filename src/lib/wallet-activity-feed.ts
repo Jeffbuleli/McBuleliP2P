@@ -1,6 +1,9 @@
 import { and, desc, asc, eq, inArray, notInArray } from "drizzle-orm";
 import { matchesHistoryCategory } from "@/lib/wallet-history-labels";
-import { getDb, deposits, fiatFreshpayTransactions, walletLedgerEntries, withdrawals } from "@/db";
+import { getDb, deposits, walletLedgerEntries, withdrawals } from "@/db";
+import { fetchFiatFreshpayRows, type FiatFreshpayRow } from "@/lib/fiat-freshpay-db";
+import { isWalletCryptoAsset } from "@/lib/wallet-crypto-assets";
+import { isWalletFiatAsset } from "@/lib/wallet-fiat-assets";
 import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
 import type { WalletFiatAsset } from "@/lib/wallet-fiat-assets";
@@ -56,19 +59,96 @@ function fiatStatusToActivity(status: string): ActivityStatus {
   return "processing";
 }
 
-export async function fetchWalletActivitiesForAsset(args: {
-  userId: string;
-  asset: WalletCryptoAsset;
-  sort: "newest" | "oldest";
-  page: number;
-  pageSize: number;
-}): Promise<{
+function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
+  if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
+  if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
+  return null;
+}
+
+function fiatRowsToActivityItems(fiatRows: FiatFreshpayRow[]): WalletActivityItem[] {
+  return fiatRows.map((f) => {
+    const st = fiatStatusToActivity(f.status);
+    const meta = f.meta ?? {};
+    const rail =
+      meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
+    const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
+    return {
+      id: `fiat-${f.reference}`,
+      kind: "fiat_tx" as const,
+      refId: f.reference,
+      fiatOp,
+      fiatRail: rail,
+      status: st,
+      amount: f.amount.toString(),
+      asset: f.currency,
+      createdAt: f.createdAt.toISOString(),
+      resumeHref: st === "processing" ? `/app/wallet/fiat/status/${f.reference}` : null,
+      detailHref: `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}`,
+      meta: f.meta,
+    };
+  });
+}
+
+function paginateActivities(
+  merged: WalletActivityItem[],
+  args: { sort: "newest" | "oldest"; page: number; pageSize: number },
+): {
   items: WalletActivityItem[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-}> {
+} {
+  merged.sort((a, b) => {
+    const ta = new Date(a.createdAt).getTime();
+    const tb = new Date(b.createdAt).getTime();
+    return args.sort === "oldest" ? ta - tb : tb - ta;
+  });
+
+  const total = merged.length;
+  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(args.page, 1), totalPages);
+  const start = (page - 1) * pageSize;
+  const items = merged.slice(start, start + pageSize);
+
+  return { items, total, page, pageSize, totalPages };
+}
+
+function applyGlobalHistoryFilters(
+  merged: WalletActivityItem[],
+  args: {
+    category?: string;
+    realm?: "crypto" | "fiat";
+    sort: "newest" | "oldest";
+    page: number;
+    pageSize: number;
+  },
+) {
+  const category = args.category?.trim() ?? "";
+  const realm = args.realm;
+  let filtered = category
+    ? merged.filter((item) => matchesHistoryCategory(item, category))
+    : merged;
+
+  if (realm === "fiat") {
+    filtered = filtered.filter(
+      (item) => item.kind === "fiat_tx" || (item.entryType ?? "").startsWith("fiat_"),
+    );
+  } else if (realm === "crypto") {
+    filtered = filtered.filter(
+      (item) => item.kind !== "fiat_tx" && !(item.entryType ?? "").startsWith("fiat_"),
+    );
+  }
+
+  return paginateActivities(filtered, args);
+}
+
+async function collectCryptoAssetActivities(args: {
+  userId: string;
+  asset: WalletCryptoAsset;
+  sort: "newest" | "oldest";
+}): Promise<WalletActivityItem[]> {
   const db = getDb();
   const order = args.sort === "oldest" ? asc : desc;
 
@@ -188,25 +268,12 @@ export async function fetchWalletActivitiesForAsset(args: {
     });
   }
 
-  merged.sort((a, b) => {
-    const ta = new Date(a.createdAt).getTime();
-    const tb = new Date(b.createdAt).getTime();
-    return args.sort === "oldest" ? ta - tb : tb - ta;
-  });
-
-  const total = merged.length;
-  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(args.page, 1), totalPages);
-  const start = (page - 1) * pageSize;
-  const items = merged.slice(start, start + pageSize);
-
-  return { items, total, page, pageSize, totalPages };
+  return merged;
 }
 
-export async function fetchWalletActivitiesForFiatAsset(args: {
+export async function fetchWalletActivitiesForAsset(args: {
   userId: string;
-  asset: WalletFiatAsset;
+  asset: WalletCryptoAsset;
   sort: "newest" | "oldest";
   page: number;
   pageSize: number;
@@ -217,6 +284,15 @@ export async function fetchWalletActivitiesForFiatAsset(args: {
   pageSize: number;
   totalPages: number;
 }> {
+  const merged = await collectCryptoAssetActivities(args);
+  return paginateActivities(merged, args);
+}
+
+async function collectFiatAssetActivities(args: {
+  userId: string;
+  asset: WalletFiatAsset;
+  sort: "newest" | "oldest";
+}): Promise<WalletActivityItem[]> {
   const db = getDb();
   const order = args.sort === "oldest" ? asc : desc;
 
@@ -236,36 +312,16 @@ export async function fetchWalletActivitiesForFiatAsset(args: {
         and(eq(walletLedgerEntries.userId, args.userId), eq(walletLedgerEntries.asset, args.asset)),
       )
       .orderBy(order(walletLedgerEntries.createdAt)),
-    db
-      .select({
-        reference: fiatFreshpayTransactions.reference,
-        kind: fiatFreshpayTransactions.kind,
-        status: fiatFreshpayTransactions.status,
-        currency: fiatFreshpayTransactions.currency,
-        amount: fiatFreshpayTransactions.amount,
-        provider: fiatFreshpayTransactions.provider,
-        meta: fiatFreshpayTransactions.meta,
-        createdAt: fiatFreshpayTransactions.createdAt,
-      })
-      .from(fiatFreshpayTransactions)
-      .where(
-        and(
-          eq(fiatFreshpayTransactions.userId, args.userId),
-          eq(fiatFreshpayTransactions.currency, args.asset),
-        ),
-      )
-      .orderBy(order(fiatFreshpayTransactions.createdAt))
-      .limit(150),
+    fetchFiatFreshpayRows({
+      userId: args.userId,
+      currency: args.asset,
+      sort: args.sort,
+      limit: 150,
+    }),
   ]);
 
   const merged: WalletActivityItem[] = [];
   const fiatRefs = new Set(fiatRows.map((f) => f.reference));
-
-  function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
-    if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
-    if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
-    return null;
-  }
 
   for (const r of ledgerRows) {
     const et = r.entryType ?? "";
@@ -289,42 +345,25 @@ export async function fetchWalletActivitiesForFiatAsset(args: {
     });
   }
 
-  for (const f of fiatRows) {
-    const st = fiatStatusToActivity(f.status);
-    const meta = f.meta ?? {};
-    const rail =
-      meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
-    const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
-    merged.push({
-      id: `fiat-${f.reference}`,
-      kind: "fiat_tx",
-      refId: f.reference,
-      fiatOp,
-      fiatRail: rail,
-      status: st,
-      amount: f.amount.toString(),
-      asset: f.currency,
-      createdAt: f.createdAt.toISOString(),
-      resumeHref: st === "processing" ? `/app/wallet/fiat/status/${f.reference}` : null,
-      detailHref: `/app/wallet/fiat/status/${f.reference}`,
-      meta,
-    });
-  }
+  merged.push(...fiatRowsToActivityItems(fiatRows));
+  return merged;
+}
 
-  merged.sort((a, b) => {
-    const ta = new Date(a.createdAt).getTime();
-    const tb = new Date(b.createdAt).getTime();
-    return args.sort === "oldest" ? ta - tb : tb - ta;
-  });
-
-  const total = merged.length;
-  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(args.page, 1), totalPages);
-  const start = (page - 1) * pageSize;
-  const items = merged.slice(start, start + pageSize);
-
-  return { items, total, page, pageSize, totalPages };
+export async function fetchWalletActivitiesForFiatAsset(args: {
+  userId: string;
+  asset: WalletFiatAsset;
+  sort: "newest" | "oldest";
+  page: number;
+  pageSize: number;
+}): Promise<{
+  items: WalletActivityItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const merged = await collectFiatAssetActivities(args);
+  return paginateActivities(merged, args);
 }
 
 /** Latest open deposit for asset (resume after interruption). */
@@ -376,26 +415,32 @@ export async function fetchWalletGlobalActivities(args: {
   pageSize: number;
   totalPages: number;
 }> {
-  const db = getDb();
-  const order = args.sort === "oldest" ? asc : desc;
   const assetFilter = args.asset?.trim();
 
-  const depositWhere = assetFilter
-    ? and(eq(deposits.userId, args.userId), eq(deposits.asset, assetFilter))
-    : eq(deposits.userId, args.userId);
-  const withdrawalWhere = assetFilter
-    ? and(eq(withdrawals.userId, args.userId), eq(withdrawals.asset, assetFilter))
-    : eq(withdrawals.userId, args.userId);
-  const ledgerWhere = assetFilter
-    ? and(eq(walletLedgerEntries.userId, args.userId), eq(walletLedgerEntries.asset, assetFilter))
-    : eq(walletLedgerEntries.userId, args.userId);
+  if (assetFilter && isWalletCryptoAsset(assetFilter)) {
+    const merged = await collectCryptoAssetActivities({
+      userId: args.userId,
+      asset: assetFilter,
+      sort: args.sort,
+    });
+    return applyGlobalHistoryFilters(merged, args);
+  }
 
-  const fiatWhere = assetFilter
-    ? and(
-        eq(fiatFreshpayTransactions.userId, args.userId),
-        eq(fiatFreshpayTransactions.currency, assetFilter),
-      )
-    : eq(fiatFreshpayTransactions.userId, args.userId);
+  if (assetFilter && isWalletFiatAsset(assetFilter)) {
+    const merged = await collectFiatAssetActivities({
+      userId: args.userId,
+      asset: assetFilter,
+      sort: args.sort,
+    });
+    return applyGlobalHistoryFilters(merged, args);
+  }
+
+  const db = getDb();
+  const order = args.sort === "oldest" ? asc : desc;
+
+  const depositWhere = eq(deposits.userId, args.userId);
+  const withdrawalWhere = eq(withdrawals.userId, args.userId);
+  const ledgerWhere = eq(walletLedgerEntries.userId, args.userId);
 
   const [depositRows, withdrawalRows, ledgerRows, fiatRows] = await Promise.all([
     db
@@ -441,31 +486,15 @@ export async function fetchWalletGlobalActivities(args: {
       .where(ledgerWhere)
       .orderBy(order(walletLedgerEntries.createdAt))
       .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
-    db
-      .select({
-        reference: fiatFreshpayTransactions.reference,
-        kind: fiatFreshpayTransactions.kind,
-        status: fiatFreshpayTransactions.status,
-        currency: fiatFreshpayTransactions.currency,
-        amount: fiatFreshpayTransactions.amount,
-        provider: fiatFreshpayTransactions.provider,
-        meta: fiatFreshpayTransactions.meta,
-        createdAt: fiatFreshpayTransactions.createdAt,
-      })
-      .from(fiatFreshpayTransactions)
-      .where(fiatWhere)
-      .orderBy(order(fiatFreshpayTransactions.createdAt))
-      .limit(GLOBAL_HISTORY_SOURCE_LIMIT),
+    fetchFiatFreshpayRows({
+      userId: args.userId,
+      sort: args.sort,
+      limit: GLOBAL_HISTORY_SOURCE_LIMIT,
+    }),
   ]);
 
   const merged: WalletActivityItem[] = [];
   const fiatRefs = new Set(fiatRows.map((f) => f.reference));
-
-  function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
-    if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
-    if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
-    return null;
-  }
 
   for (const d of depositRows) {
     const amt =
@@ -533,57 +562,7 @@ export async function fetchWalletGlobalActivities(args: {
     });
   }
 
-  for (const f of fiatRows) {
-    const st = fiatStatusToActivity(f.status);
-    const meta = f.meta ?? {};
-    const rail =
-      meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
-    const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
-    merged.push({
-      id: `fiat-${f.reference}`,
-      kind: "fiat_tx",
-      refId: f.reference,
-      fiatOp,
-      fiatRail: rail,
-      status: st,
-      amount: f.amount,
-      asset: f.currency,
-      createdAt: f.createdAt.toISOString(),
-      resumeHref:
-        st === "processing" ? `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}` : null,
-      detailHref: `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}`,
-      meta: f.meta,
-    });
-  }
+  merged.push(...fiatRowsToActivityItems(fiatRows));
 
-  const category = args.category?.trim() ?? "";
-  const realm = args.realm;
-  let filtered = category
-    ? merged.filter((item) => matchesHistoryCategory(item, category))
-    : merged;
-
-  if (realm === "fiat") {
-    filtered = filtered.filter(
-      (item) => item.kind === "fiat_tx" || (item.entryType ?? "").startsWith("fiat_"),
-    );
-  } else if (realm === "crypto") {
-    filtered = filtered.filter(
-      (item) => item.kind !== "fiat_tx" && !(item.entryType ?? "").startsWith("fiat_"),
-    );
-  }
-
-  filtered.sort((a, b) => {
-    const ta = new Date(a.createdAt).getTime();
-    const tb = new Date(b.createdAt).getTime();
-    return args.sort === "oldest" ? ta - tb : tb - ta;
-  });
-
-  const total = filtered.length;
-  const pageSize = Math.min(Math.max(args.pageSize, 1), 30);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(args.page, 1), totalPages);
-  const start = (page - 1) * pageSize;
-  const items = filtered.slice(start, start + pageSize);
-
-  return { items, total, page, pageSize, totalPages };
+  return applyGlobalHistoryFilters(merged, args);
 }
