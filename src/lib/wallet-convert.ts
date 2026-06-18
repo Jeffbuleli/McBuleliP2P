@@ -1,4 +1,5 @@
 import type { ReferenceRates } from "@/lib/reference-rates";
+import { SWAP_FEE_USD } from "@/lib/wallet-fees";
 import type { WalletAsset } from "@/lib/wallet-types";
 
 /** Convert an asset amount to USD notional (reference). */
@@ -38,4 +39,56 @@ export function usdToAssetAmount(usd: number, asset: WalletAsset, r: ReferenceRa
     default:
       return 0;
   }
+}
+
+export type SwapQuote =
+  | {
+      ok: true;
+      fromAmount: number;
+      toAmount: number;
+      feeUsd: number;
+      grossUsd: number;
+      netUsdAfterFee: number;
+    }
+  | { ok: false; message: string };
+
+export function quoteSwap(args: {
+  from: WalletAsset;
+  to: WalletAsset;
+  fromAmount: number;
+  rates: ReferenceRates;
+}): SwapQuote {
+  const { from, to, fromAmount, rates } = args;
+  if (from === to) {
+    return { ok: false, message: "wallet_swap_same_asset" };
+  }
+  if (from === "PI" && rates.piUsd <= 0) {
+    return { ok: false, message: "wallet_swap_pi_rate_unavailable" };
+  }
+  if (to === "PI" && rates.piUsd <= 0) {
+    return { ok: false, message: "wallet_swap_pi_rate_unavailable" };
+  }
+  if (!Number.isFinite(fromAmount) || fromAmount <= 0) {
+    return { ok: false, message: "wallet_swap_invalid_amount" };
+  }
+  const grossUsd = assetAmountToUsd(fromAmount, from, rates);
+  if (grossUsd < SWAP_FEE_USD + 1e-9) {
+    return { ok: false, message: "wallet_swap_below_min" };
+  }
+  const netUsdAfterFee = grossUsd - SWAP_FEE_USD;
+  if (netUsdAfterFee <= 0) {
+    return { ok: false, message: "wallet_swap_below_min" };
+  }
+  const toAmount = usdToAssetAmount(netUsdAfterFee, to, rates);
+  if (!Number.isFinite(toAmount) || toAmount <= 0) {
+    return { ok: false, message: "wallet_swap_invalid_amount" };
+  }
+  return {
+    ok: true,
+    fromAmount,
+    toAmount,
+    feeUsd: SWAP_FEE_USD,
+    grossUsd,
+    netUsdAfterFee,
+  };
 }

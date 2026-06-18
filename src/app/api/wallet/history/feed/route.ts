@@ -10,6 +10,7 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category")?.trim() ?? "";
+  const realm = searchParams.get("realm")?.trim() as "crypto" | "fiat" | undefined;
   const asset = searchParams.get("asset")?.trim() ?? "";
   const sort = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
@@ -21,6 +22,7 @@ export async function GET(req: Request) {
   const result = await fetchWalletGlobalActivities({
     userId,
     category: category || undefined,
+    realm: realm === "crypto" || realm === "fiat" ? realm : undefined,
     asset: asset || undefined,
     sort,
     page,

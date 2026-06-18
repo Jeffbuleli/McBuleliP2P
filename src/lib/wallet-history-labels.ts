@@ -70,15 +70,27 @@ export function activityTitle(
   t: (k: keyof Messages) => string,
   item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail">,
 ): string {
+  return activityShortTitle(t, item);
+}
+
+/** Minimal label for history rows — SVG carries most meaning. */
+export function activityShortTitle(
+  t: (k: keyof Messages) => string,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail">,
+): string {
   if (item.kind === "fiat_tx") {
-    if (item.fiatOp === "payout") return t("wallet_fiat_withdraw_title");
-    return item.fiatRail === "card"
-      ? t("wallet_fiat_card_deposit_title")
-      : t("wallet_fiat_deposit_title");
+    if (item.fiatOp === "payout") return t("wallet_hist_fiat_out");
+    return item.fiatRail === "card" ? t("wallet_hist_card_in") : t("wallet_hist_momo_in");
   }
-  if (item.kind === "deposit") return t("wallet_activity_deposit");
-  if (item.kind === "withdrawal") return t("wallet_activity_withdraw");
-  if (item.entryType) return walletEntryLabel(t, item.entryType);
+  if (item.kind === "deposit") return t("wallet_hist_crypto_in");
+  if (item.kind === "withdrawal") return t("wallet_hist_crypto_out");
+  const et = item.entryType ?? "";
+  if (et.includes("swap")) return t("wallet_hist_swap");
+  if (et === "transfer_in") return t("wallet_hist_transfer_in");
+  if (et === "transfer_out") return t("wallet_hist_transfer_out");
+  if (et.startsWith("p2p_")) return t("wallet_history_cat_p2p");
+  if (et.startsWith("fiat_")) return t("wallet_history_cat_fiat");
+  if (et) return walletEntryLabel(t, et);
   return t("wallet_activity_ledger");
 }
 

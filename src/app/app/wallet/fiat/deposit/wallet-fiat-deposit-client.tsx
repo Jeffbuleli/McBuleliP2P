@@ -2,22 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ErrorBanner,
-  FieldLabel,
-  FormCard,
-  inputClass,
-  primaryBtnClass,
-} from "@/components/forms/standard-form";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
 import { IconMobileMoney } from "@/components/wallet/fiat-icons";
 import {
-  COD_MOBILE_FALLBACK,
-  filterCodMobileProviders,
-} from "@/lib/cod-mobile-providers";
+  WalletErrorBanner,
+  WalletFieldLabel,
+  WalletFormCard,
+  WalletStatusBanner,
+  walletInputClass,
+  walletPrimaryBtnClass,
+} from "@/components/wallet/wallet-form";
+import { COD_MOBILE_FALLBACK, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -27,11 +25,7 @@ const STEPS = [
   { id: "confirm", label: "OK" },
 ] as const;
 
-export default function WalletFiatDepositClient({
-  fiatPaused = false,
-}: {
-  fiatPaused?: boolean;
-}) {
+export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPaused?: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -113,9 +107,10 @@ export default function WalletFiatDepositClient({
   }
 
   const locked = fiatPaused;
+  const loc = locale === "fr" ? "fr-FR" : "en-US";
 
   return (
-    <FormCard>
+    <WalletFormCard>
       <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-primary)]">
         <IconMobileMoney />
         <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_momo")}</span>
@@ -129,44 +124,36 @@ export default function WalletFiatDepositClient({
         current={step}
       />
 
-      {fiatPaused ? (
-        <p className="mb-4 text-sm text-amber-800">{t("wallet_fiat_paused_hint")}</p>
-      ) : null}
+      {fiatPaused ? <WalletStatusBanner tone="warn">{t("wallet_fiat_paused_hint")}</WalletStatusBanner> : null}
 
       {step === 0 ? (
         <>
-          <FieldLabel label={t("wallet_transfer_asset")}>
+          <WalletFieldLabel label={t("wallet_transfer_asset")}>
             <select
               value={asset}
               onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
               disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
+              className={`${walletInputClass} disabled:opacity-60`}
             >
               <option value="USD">USD</option>
               <option value="CDF">CDF</option>
             </select>
-          </FieldLabel>
-          <FieldLabel label={t("wallet_fiat_gross")}>
+          </WalletFieldLabel>
+          <WalletFieldLabel label={t("wallet_fiat_gross")}>
             <input
               value={gross}
               onChange={(e) => setGross(e.target.value)}
               inputMode="decimal"
               disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
+              className={`${walletInputClass} disabled:opacity-60`}
             />
-          </FieldLabel>
+          </WalletFieldLabel>
           {summary ? (
-            <p className="text-xs text-[color:var(--fd-muted)]">
-              {t("wallet_fiat_net")}: {summary.net.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset} ·{" "}
-              {t("wallet_fiat_fee", { pct })}
-            </p>
+            <WalletStatusBanner tone="info">
+              {t("wallet_fiat_net")}: {summary.net.toLocaleString(loc)} {asset} · {t("wallet_fiat_fee", { pct })}
+            </WalletStatusBanner>
           ) : null}
-          <button
-            type="button"
-            className={primaryBtnClass}
-            disabled={locked || !summary}
-            onClick={() => setStep(1)}
-          >
+          <button type="button" className={walletPrimaryBtnClass} disabled={locked || !summary} onClick={() => setStep(1)}>
             →
           </button>
         </>
@@ -174,22 +161,22 @@ export default function WalletFiatDepositClient({
 
       {step === 1 ? (
         <>
-          <FieldLabel label={t("wallet_phone_number")}>
+          <WalletFieldLabel label={t("wallet_phone_number")}>
             <input
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               inputMode="tel"
               placeholder="09xxxxxxxx"
               disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
+              className={`${walletInputClass} disabled:opacity-60`}
             />
-          </FieldLabel>
-          <FieldLabel label={t("wallet_mobile_money_provider")}>
+          </WalletFieldLabel>
+          <WalletFieldLabel label={t("wallet_mobile_money_provider")}>
             <select
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
               disabled={locked || providersLoading}
-              className={`${inputClass} disabled:opacity-60`}
+              className={`${walletInputClass} disabled:opacity-60`}
             >
               {providers.map((p) => (
                 <option key={p.provider} value={p.provider}>
@@ -197,14 +184,14 @@ export default function WalletFiatDepositClient({
                 </option>
               ))}
             </select>
-          </FieldLabel>
+          </WalletFieldLabel>
           <div className="flex gap-2">
-            <button type="button" className={primaryBtnClass} onClick={() => setStep(0)}>
+            <button type="button" className={walletPrimaryBtnClass} onClick={() => setStep(0)}>
               ←
             </button>
             <button
               type="button"
-              className={primaryBtnClass}
+              className={walletPrimaryBtnClass}
               disabled={locked || !phoneNumber.trim() || !provider}
               onClick={() => setStep(2)}
             >
@@ -216,24 +203,24 @@ export default function WalletFiatDepositClient({
 
       {step === 2 && summary ? (
         <>
-          <div className="rounded-2xl bg-[color:var(--fd-mint)]/40 p-3 text-sm tabular-nums">
-            <p>
-              {summary.g.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset}
+          <WalletStatusBanner tone="success">
+            <p className="font-bold tabular-nums">
+              {summary.g.toLocaleString(loc)} {asset}
             </p>
-            <p className="text-[color:var(--fd-muted)]">{providers.find((p) => p.provider === provider)?.label}</p>
-          </div>
+            <p className="text-[11px] opacity-90">{providers.find((p) => p.provider === provider)?.label}</p>
+          </WalletStatusBanner>
           <p className="text-xs text-[color:var(--fd-muted)]">{t("wallet_fiat_status_pending_body")}</p>
-          {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+          {err ? <WalletErrorBanner>{clientErrorText(t, err)}</WalletErrorBanner> : null}
           <div className="flex gap-2">
-            <button type="button" className={primaryBtnClass} onClick={() => setStep(1)}>
+            <button type="button" className={walletPrimaryBtnClass} onClick={() => setStep(1)}>
               ←
             </button>
-            <button type="button" className={primaryBtnClass} disabled={loading} onClick={() => void submit()}>
+            <button type="button" className={walletPrimaryBtnClass} disabled={loading} onClick={() => void submit()}>
               {loading ? "…" : t("wallet_fiat_deposit_submit")}
             </button>
           </div>
         </>
       ) : null}
-    </FormCard>
+    </WalletFormCard>
   );
 }

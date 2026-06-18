@@ -237,6 +237,7 @@ export async function fetchOpenDepositForAsset(
 export async function fetchWalletGlobalActivities(args: {
   userId: string;
   category?: string;
+  realm?: "crypto" | "fiat";
   asset?: string;
   sort: "newest" | "oldest";
   page: number;
@@ -331,6 +332,13 @@ export async function fetchWalletGlobalActivities(args: {
   ]);
 
   const merged: WalletActivityItem[] = [];
+  const fiatRefs = new Set(fiatRows.map((f) => f.reference));
+
+  function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
+    if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
+    if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
+    return null;
+  }
 
   for (const d of depositRows) {
     const amt =
@@ -369,6 +377,11 @@ export async function fetchWalletGlobalActivities(args: {
   }
 
   for (const r of ledgerRows) {
+    const et = r.entryType ?? "";
+    if (et.startsWith("fiat_")) {
+      const ref = ledgerFiatRef(r.meta);
+      if (ref && fiatRefs.has(ref)) continue;
+    }
     const meta = r.meta;
     const dest =
       typeof meta?.toAddress === "string"
@@ -417,9 +430,20 @@ export async function fetchWalletGlobalActivities(args: {
   }
 
   const category = args.category?.trim() ?? "";
-  const filtered = category
+  const realm = args.realm;
+  let filtered = category
     ? merged.filter((item) => matchesHistoryCategory(item, category))
     : merged;
+
+  if (realm === "fiat") {
+    filtered = filtered.filter(
+      (item) => item.kind === "fiat_tx" || (item.entryType ?? "").startsWith("fiat_"),
+    );
+  } else if (realm === "crypto") {
+    filtered = filtered.filter(
+      (item) => item.kind !== "fiat_tx" && !(item.entryType ?? "").startsWith("fiat_"),
+    );
+  }
 
   filtered.sort((a, b) => {
     const ta = new Date(a.createdAt).getTime();

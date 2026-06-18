@@ -191,20 +191,20 @@ export default async function WalletPage() {
   const cdfLine = state.lines.find((l) => l.asset === "CDF");
 
   const labels: WalletOverviewLabels = {
-    wallet_title: d.wallet_title,
-    wallet_asset_list: d.wallet_asset_list,
-    wallet_asset_balance: d.wallet_asset_balance,
-    wallet_col_usd: d.wallet_col_usd,
-    wallet_no_match: d.wallet_no_match,
     wallet_est_total: d.wallet_est_total,
     wallet_search_placeholder: d.wallet_search_placeholder,
     wallet_action_deposit: d.wallet_action_deposit,
     wallet_action_withdraw: d.wallet_action_withdraw,
     wallet_action_send: d.wallet_action_send,
+    wallet_swap_title: d.wallet_swap_title,
     wallet_link_history: d.wallet_link_history,
+    wallet_section_crypto: d.wallet_section_crypto,
+    wallet_section_fiat: d.wallet_section_fiat,
+    wallet_no_match: d.wallet_no_match,
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
-    wallet_crypto_only_hint: d.wallet_crypto_only_hint,
+    wallet_fiat_hub_title: d.wallet_fiat_hub_title,
+    wallet_fiat_open_hub: d.wallet_fiat_open_hub,
   };
 
   return (
@@ -213,14 +213,14 @@ export default async function WalletPage() {
         labels={labels}
         totalUsdDisplay={totalUsdDisplay}
         cryptoRows={cryptoRows}
+        fiat={{
+          usdDisplay: formatWalletAssetBalance(usdLine?.balanceNum ?? 0, "USD", locale),
+          cdfDisplay: formatWalletAssetBalance(cdfLine?.balanceNum ?? 0, "CDF", locale),
+          usdValueUsd: usdLine?.valueUsdDisplay ?? "—",
+          cdfValueUsd: cdfLine?.valueUsdDisplay ?? "—",
+        }}
       />
       <WalletServicePromos
-        fiatPromo={{
-          title: d.wallet_fiat_hub_title,
-          teaser: d.wallet_fiat_wallet_teaser,
-          usdDisplay: `USD ${formatWalletAssetBalance(usdLine?.balanceNum ?? 0, "USD", locale)}`,
-          cdfDisplay: `CDF ${formatWalletAssetBalance(cdfLine?.balanceNum ?? 0, "CDF", locale)}`,
-        }}
         pointsPromo={{
           balance: pointsBalance,
           title: d.wallet_link_points,

@@ -149,69 +149,20 @@ function PointsPromoCard({
   );
 }
 
-function FiatPromoCard({
-  title,
-  teaser,
-  usdDisplay,
-  cdfDisplay,
-}: {
-  title: string;
-  teaser: string;
-  usdDisplay: string;
-  cdfDisplay: string;
-}) {
-  return (
-    <Link
-      href="/app/wallet/fiat"
-      className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
-    >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.8" />
-          <path d="M2 10h20" stroke="currentColor" strokeWidth="1.8" />
-        </svg>
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>
-        <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">{teaser}</p>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-[color:var(--fd-card)] px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1 ring-[color:var(--fd-border)]">
-            {usdDisplay}
-          </span>
-          <span className="rounded-full bg-[color:var(--fd-card)] px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1 ring-[color:var(--fd-border)]">
-            {cdfDisplay}
-          </span>
-        </div>
-      </div>
-      <Chevron />
-    </Link>
-  );
-}
-
 /** Staking + pool on one row; AVEC full-width below. */
 export function WalletServicePromos({
   stakingPromo,
   poolPromo,
   avecPromo,
   pointsPromo,
-  fiatPromo,
 }: {
   stakingPromo: StakingPromoDTO | null;
   poolPromo: ServicePromoDTO | null;
   avecPromo: (ServicePromoDTO & { rightPrimary: string; rightSecondary?: string }) | null;
   pointsPromo?: { balance: number; title: string; teaser: string } | null;
-  fiatPromo?: { title: string; teaser: string; usdDisplay: string; cdfDisplay: string } | null;
 }) {
   return (
     <div className="mt-4 flex flex-col gap-2 pb-6">
-      {fiatPromo ? (
-        <FiatPromoCard
-          title={fiatPromo.title}
-          teaser={fiatPromo.teaser}
-          usdDisplay={fiatPromo.usdDisplay}
-          cdfDisplay={fiatPromo.cdfDisplay}
-        />
-      ) : null}
       {pointsPromo ? (
         <PointsPromoCard
           balance={pointsPromo.balance}
