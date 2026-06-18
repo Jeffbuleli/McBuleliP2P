@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { hasFreshpayMobileMoneyCallbackKeys } from "@/lib/env";
 import { FreshPayProvider } from "@/lib/freshpay/provider";
 import { handleFreshpayCallbackPayload } from "@/lib/freshpay/handle-callback";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (!hasFreshpayMobileMoneyCallbackKeys()) {
+    return NextResponse.json({ error: "mobile_money_callback_keys_unconfigured" }, { status: 503 });
+  }
+
   let body: { data?: string };
   try {
     body = (await req.json()) as { data?: string };
