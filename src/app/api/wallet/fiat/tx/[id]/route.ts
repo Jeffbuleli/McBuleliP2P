@@ -15,6 +15,7 @@ import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
+import { sanitizeFiatTxForUser } from "@/lib/fiat-api-errors";
 import { cdfPerOneUsd } from "@/lib/fx";
 
 const paramsZ = z.object({
@@ -154,6 +155,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
 
   return NextResponse.json({
     ok: true,
-    tx: fresh,
+    tx: fresh ? sanitizeFiatTxForUser(fresh) : null,
   });
 }

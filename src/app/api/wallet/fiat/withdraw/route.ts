@@ -17,6 +17,7 @@ import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
+import { logFiatApiError } from "@/lib/fiat-api-errors";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -188,14 +189,8 @@ export async function POST(req: Request) {
       } catch {
         // best-effort
       }
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "wallet_fiat_payout_rejected",
-          detail: msg,
-        },
-        { status: 400 },
-      );
+      logFiatApiError("momo.withdraw", msg);
+      return NextResponse.json({ ok: false, error: "wallet_fiat_payout_rejected" }, { status: 400 });
     }
 
     if (pr.response.Transaction_id) {
@@ -229,10 +224,8 @@ export async function POST(req: Request) {
     } catch {
       // best-effort
     }
-    return NextResponse.json(
-      { ok: false, error: "wallet_fiat_payout_failed", detail: msg },
-      { status: 502 },
-    );
+    logFiatApiError("momo.withdraw", msg);
+    return NextResponse.json({ ok: false, error: "wallet_fiat_payout_failed" }, { status: 502 });
   }
 
   return NextResponse.json({

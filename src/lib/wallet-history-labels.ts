@@ -68,8 +68,14 @@ export function walletEntryLabel(
 
 export function activityTitle(
   t: (k: keyof Messages) => string,
-  item: Pick<WalletActivityItem, "kind" | "entryType">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail">,
 ): string {
+  if (item.kind === "fiat_tx") {
+    if (item.fiatOp === "payout") return t("wallet_fiat_withdraw_title");
+    return item.fiatRail === "card"
+      ? t("wallet_fiat_card_deposit_title")
+      : t("wallet_fiat_deposit_title");
+  }
   if (item.kind === "deposit") return t("wallet_activity_deposit");
   if (item.kind === "withdrawal") return t("wallet_activity_withdraw");
   if (item.entryType) return walletEntryLabel(t, item.entryType);
@@ -77,8 +83,11 @@ export function activityTitle(
 }
 
 export function historyVisualKind(
-  item: Pick<WalletActivityItem, "kind" | "entryType">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp">,
 ): HistoryVisualKind {
+  if (item.kind === "fiat_tx") {
+    return item.fiatOp === "payout" ? "withdraw" : "receive";
+  }
   if (item.kind === "deposit") return "receive";
   if (item.kind === "withdrawal") return "withdraw";
   const et = item.entryType ?? "";
@@ -123,10 +132,19 @@ export function formatSignedWalletAmount(
 }
 
 export function matchesHistoryCategory(
-  item: Pick<WalletActivityItem, "kind" | "entryType">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp">,
   category: string,
 ): boolean {
   if (!category) return true;
+  if (category === "fiat") {
+    return item.kind === "fiat_tx" || (item.entryType ?? "").startsWith("fiat_");
+  }
+  if (item.kind === "fiat_tx") {
+    const vk = historyVisualKind(item);
+    if (category === "receive") return vk === "receive";
+    if (category === "withdraw") return vk === "withdraw";
+    return false;
+  }
   const vk = historyVisualKind(item);
   if (category === "receive") return vk === "receive";
   if (category === "send") return vk === "send";

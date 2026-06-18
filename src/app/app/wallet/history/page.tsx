@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
-import { WALLET_ASSETS } from "@/lib/wallet-types";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { ActivityListControls } from "@/components/wallet/activity-list-controls";
@@ -14,15 +14,15 @@ import {
 
 const CATEGORY_CHIPS = [
   { id: "", key: "wallet_history_all" as const },
+  { id: "fiat", key: "wallet_history_cat_fiat" as const },
   { id: "receive", key: "wallet_history_cat_receive" as const },
   { id: "send", key: "wallet_history_cat_send" as const },
   { id: "withdraw", key: "wallet_history_cat_withdraw" as const },
   { id: "p2p", key: "wallet_history_cat_p2p" as const },
 ] as const;
 
-const HISTORY_ASSETS = WALLET_ASSETS.filter(
-  (a) => a !== "USD" && a !== "CDF" && a !== "PI_TEST",
-);
+const CRYPTO_ASSETS = ["USDT", "PI"] as const;
+const FIAT_ASSETS = ["USD", "CDF"] as const;
 
 type FeedResponse = {
   items: WalletActivityItem[];
@@ -42,13 +42,21 @@ function chipVisual(id: string): "receive" | "send" | "withdraw" | "p2p" | "othe
 
 export default function WalletHistoryPage() {
   const { t, locale } = useI18n();
-  const [category, setCategory] = useState("");
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") ?? "";
+
+  const [category, setCategory] = useState(initialCategory);
   const [asset, setAsset] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<FeedResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCategory(initialCategory);
+    setPage(1);
+  }, [initialCategory]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,6 +83,8 @@ export default function WalletHistoryPage() {
     void load();
   }, [load]);
 
+  const assetChips = category === "fiat" ? FIAT_ASSETS : CRYPTO_ASSETS;
+
   return (
     <div className="wallet-theme pb-10">
       <WalletSubpageHeader title={t("wallet_history_title")} backHref="/app/wallet" />
@@ -82,13 +92,14 @@ export default function WalletHistoryPage() {
       <div className="mb-3 flex flex-wrap gap-2">
         {CATEGORY_CHIPS.map((c) => {
           const active = category === c.id;
-          const visual = chipVisual(c.id);
+          const visual = c.id === "fiat" ? "other" : chipVisual(c.id);
           return (
             <button
               key={c.id || "all"}
               type="button"
               onClick={() => {
                 setCategory(c.id);
+                setAsset("");
                 setPage(1);
               }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
@@ -97,7 +108,7 @@ export default function WalletHistoryPage() {
                   : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
               }`}
             >
-              {c.id ? (
+              {c.id && c.id !== "fiat" ? (
                 <HistoryVisualIcon visual={visual} className="h-3.5 w-3.5" />
               ) : null}
               {t(c.key)}
@@ -121,7 +132,7 @@ export default function WalletHistoryPage() {
         >
           {t("wallet_history_all")}
         </button>
-        {HISTORY_ASSETS.map((a) => (
+        {assetChips.map((a) => (
           <button
             key={a}
             type="button"

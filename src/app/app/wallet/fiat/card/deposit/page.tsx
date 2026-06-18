@@ -1,4 +1,4 @@
-import WalletFiatWithdrawClient from "./wallet-fiat-withdraw-client";
+import WalletFiatCardDepositClient from "./wallet-fiat-card-deposit-client";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function WalletFiatWithdrawPage() {
+export default async function WalletFiatCardDepositPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
 
@@ -18,8 +18,8 @@ export default async function WalletFiatWithdrawPage() {
 
   return (
     <div className="wallet-theme pb-10">
-      <WalletSubpageHeader title={d.wallet_fiat_withdraw_title} backHref="/app/wallet/fiat" />
-      <WalletFiatWithdrawClient fiatPaused={fiatPaused} />
+      <WalletSubpageHeader title={d.wallet_fiat_card_deposit_title} backHref="/app/wallet/fiat" />
+      <WalletFiatCardDepositClient fiatPaused={fiatPaused} />
     </div>
   );
 }

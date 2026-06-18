@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ErrorBanner,
   FieldLabel,
@@ -13,21 +13,14 @@ import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
-import { IconMobileMoney } from "@/components/wallet/fiat-icons";
-import {
-  COD_MOBILE_FALLBACK,
-  filterCodMobileProviders,
-} from "@/lib/cod-mobile-providers";
-
-type ProviderOption = { provider: string; label: string };
+import { IconBankCard } from "@/components/wallet/fiat-icons";
 
 const STEPS = [
   { id: "amount", label: "Montant" },
-  { id: "network", label: "Réseau" },
   { id: "confirm", label: "OK" },
 ] as const;
 
-export default function WalletFiatDepositClient({
+export default function WalletFiatCardDepositClient({
   fiatPaused = false,
 }: {
   fiatPaused?: boolean;
@@ -37,10 +30,6 @@ export default function WalletFiatDepositClient({
   const [step, setStep] = useState(0);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [provider, setProvider] = useState("");
-  const [providers, setProviders] = useState<ProviderOption[]>([]);
-  const [providersLoading, setProvidersLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -54,54 +43,23 @@ export default function WalletFiatDepositClient({
     return { fee, net, g };
   }, [gross]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setProvidersLoading(true);
-      try {
-        const res = await fetch("/api/config/mobile-money/providers");
-        const data = await res.json().catch(() => ({}));
-        const raw: ProviderOption[] = ((data.providers as Array<{ provider: string; label: string }>) ?? []).map(
-          (p) => ({ provider: p.provider, label: p.label }),
-        );
-        const use =
-          filterCodMobileProviders(raw).length > 0
-            ? filterCodMobileProviders(raw)
-            : COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label }));
-        if (!cancelled) {
-          setProviders(use);
-          if (use[0] && !provider) setProvider(use[0].provider);
-        }
-      } finally {
-        if (!cancelled) setProvidersLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   async function submit() {
     if (fiatPaused || !summary) return;
     setErr(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/wallet/fiat/deposit", {
+      const res = await fetch("/api/wallet/fiat/card/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          asset,
-          grossAmount: gross,
-          phoneNumber,
-          provider,
-          providerLabel: providers.find((p) => p.provider === provider)?.label ?? provider,
-        }),
+        body: JSON.stringify({ asset, grossAmount: gross }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
         setErr(typeof data.error === "string" ? data.error : "wallet_fiat_deposit_failed");
+        return;
+      }
+      if (typeof data.checkoutUrl === "string") {
+        window.location.href = data.checkoutUrl;
         return;
       }
       if (typeof data.depositId === "string") {
@@ -117,14 +75,14 @@ export default function WalletFiatDepositClient({
   return (
     <FormCard>
       <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-primary)]">
-        <IconMobileMoney />
-        <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_momo")}</span>
+        <IconBankCard />
+        <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_card")}</span>
       </div>
 
       <FiatStepper
         steps={STEPS.map((s, i) => ({
           id: s.id,
-          label: locale === "fr" ? s.label : ["Amount", "Network", "Confirm"][i]!,
+          label: locale === "fr" ? s.label : ["Amount", "Confirm"][i]!,
         }))}
         current={step}
       />
@@ -172,64 +130,21 @@ export default function WalletFiatDepositClient({
         </>
       ) : null}
 
-      {step === 1 ? (
-        <>
-          <FieldLabel label={t("wallet_phone_number")}>
-            <input
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              inputMode="tel"
-              placeholder="09xxxxxxxx"
-              disabled={locked}
-              className={`${inputClass} disabled:opacity-60`}
-            />
-          </FieldLabel>
-          <FieldLabel label={t("wallet_mobile_money_provider")}>
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              disabled={locked || providersLoading}
-              className={`${inputClass} disabled:opacity-60`}
-            >
-              {providers.map((p) => (
-                <option key={p.provider} value={p.provider}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </FieldLabel>
-          <div className="flex gap-2">
-            <button type="button" className={primaryBtnClass} onClick={() => setStep(0)}>
-              ←
-            </button>
-            <button
-              type="button"
-              className={primaryBtnClass}
-              disabled={locked || !phoneNumber.trim() || !provider}
-              onClick={() => setStep(2)}
-            >
-              →
-            </button>
-          </div>
-        </>
-      ) : null}
-
-      {step === 2 && summary ? (
+      {step === 1 && summary ? (
         <>
           <div className="rounded-2xl bg-[color:var(--fd-mint)]/40 p-3 text-sm tabular-nums">
             <p>
               {summary.g.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset}
             </p>
-            <p className="text-[color:var(--fd-muted)]">{providers.find((p) => p.provider === provider)?.label}</p>
+            <p className="text-[color:var(--fd-muted)]">{t("wallet_fiat_card_checkout_hint")}</p>
           </div>
-          <p className="text-xs text-[color:var(--fd-muted)]">{t("wallet_fiat_status_pending_body")}</p>
           {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
           <div className="flex gap-2">
-            <button type="button" className={primaryBtnClass} onClick={() => setStep(1)}>
+            <button type="button" className={primaryBtnClass} onClick={() => setStep(0)}>
               ←
             </button>
             <button type="button" className={primaryBtnClass} disabled={loading} onClick={() => void submit()}>
-              {loading ? "…" : t("wallet_fiat_deposit_submit")}
+              {loading ? "…" : t("wallet_fiat_card_pay")}
             </button>
           </div>
         </>

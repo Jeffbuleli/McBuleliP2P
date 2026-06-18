@@ -4,9 +4,8 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { hasFreshpayKeys } from "@/lib/env";
-import { freshpayPayIn } from "@/lib/freshpay/provider";
-import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
+import { hasFreshpayCardKeys } from "@/lib/env";
+import { freshpayCreateCardOrder } from "@/lib/freshpay/card-provider";
 import {
   isFreshpaySupportedCurrency,
   isFreshpaySupportedForCountry,
@@ -18,9 +17,6 @@ import { logFiatApiError } from "@/lib/fiat-api-errors";
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
   grossAmount: z.string().min(1),
-  phoneNumber: z.string().min(6),
-  provider: z.string().min(2),
-  providerLabel: z.string().min(1).optional(),
 });
 
 function userIdentity(u: {
@@ -28,10 +24,11 @@ function userIdentity(u: {
   legalFirstName: string | null;
   legalLastName: string | null;
   displayName: string | null;
+  phone: string | null;
 }) {
   const first = u.legalFirstName?.trim() || u.displayName?.trim() || "McBuleli";
   const last = u.legalLastName?.trim() || "User";
-  return { firstname: first, lastname: last, email: u.email };
+  return { firstname: first, lastname: last, email: u.email, phone: u.phone ?? undefined };
 }
 
 export async function POST(req: Request) {
@@ -46,7 +43,7 @@ export async function POST(req: Request) {
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
-  if (!hasFreshpayKeys()) {
+  if (!hasFreshpayCardKeys()) {
     return NextResponse.json({ error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
 
@@ -56,9 +53,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const { asset, grossAmount, phoneNumber, provider, providerLabel } = parsed.data;
+  const { asset, grossAmount } = parsed.data;
   if (!isFreshpaySupportedCurrency(asset)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
+  }
+
+  const gross = Number(grossAmount);
+  if (!Number.isFinite(gross) || gross <= 0) {
+    return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
   const db = getDb();
@@ -69,6 +71,7 @@ export async function POST(req: Request) {
       legalFirstName: users.legalFirstName,
       legalLastName: users.legalLastName,
       displayName: users.displayName,
+      phone: users.recoveryWaPhone,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -78,27 +81,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
-  const gross = Number(grossAmount);
-  if (!Number.isFinite(gross) || gross <= 0) {
-    return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
-  }
-
   const reference = randomUUID();
   const identity = userIdentity(u);
 
   try {
-    const phone = normalizeCodPhoneNumber(phoneNumber);
-    const r = await freshpayPayIn({
+    const r = await freshpayCreateCardOrder({
       reference,
-      amount: grossAmount,
+      amount: gross,
       currency: asset,
-      customerNumber: phone,
-      method: provider,
       ...identity,
     });
 
-    if (!r.accepted) {
-      const msg = r.response.Comment ?? r.response.resultCodeErrorDescription ?? null;
+    if (!r.ok) {
+      logFiatApiError("card.deposit", r.message);
       try {
         await db
           .insert(fiatFreshpayTransactions)
@@ -109,16 +104,14 @@ export async function POST(req: Request) {
             reference,
             currency: asset,
             amount: grossAmount,
-            phoneNumber: phone,
-            provider: provider.trim(),
-            failureMessage: msg,
-            meta: { providerLabel: providerLabel ?? null, initiation: r.response },
+            provider: "card",
+            failureMessage: r.message,
+            meta: { rail: "card", providerLabel: "Card" },
           })
           .onConflictDoNothing();
       } catch {
         // best-effort
       }
-      logFiatApiError("momo.deposit", msg);
       return NextResponse.json({ ok: false, error: "wallet_fiat_deposit_rejected" }, { status: 400 });
     }
 
@@ -129,18 +122,27 @@ export async function POST(req: Request) {
         kind: "deposit",
         status: "PROCESSING",
         reference,
-        providerTxId: r.response.Transaction_id ?? null,
+        providerTxId: r.transactionUuid,
         currency: asset,
         amount: grossAmount,
-        phoneNumber: phone,
-        provider: provider.trim(),
-        meta: { providerLabel: providerLabel ?? null, initiation: r.response },
+        provider: "card",
+        meta: {
+          rail: "card",
+          providerLabel: "Card",
+          checkoutUrl: r.checkoutUrl,
+        },
       })
       .onConflictDoNothing();
 
-    return NextResponse.json({ ok: true, depositId: reference, status: "PROCESSING" });
+    return NextResponse.json({
+      ok: true,
+      depositId: reference,
+      checkoutUrl: r.checkoutUrl,
+      status: "PROCESSING",
+    });
   } catch (e) {
-    logFiatApiError("momo.deposit", e instanceof Error ? e.message : null);
+    const msg = e instanceof Error ? e.message : null;
+    logFiatApiError("card.deposit", msg);
     return NextResponse.json({ ok: false, error: "wallet_fiat_deposit_failed" }, { status: 502 });
   }
 }

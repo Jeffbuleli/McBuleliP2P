@@ -1,6 +1,6 @@
 import { and, desc, asc, eq, inArray, notInArray } from "drizzle-orm";
 import { matchesHistoryCategory } from "@/lib/wallet-history-labels";
-import { getDb, deposits, walletLedgerEntries, withdrawals } from "@/db";
+import { getDb, deposits, fiatFreshpayTransactions, walletLedgerEntries, withdrawals } from "@/db";
 import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
 
@@ -8,9 +8,11 @@ export type ActivityStatus = "processing" | "completed" | "failed";
 
 export type WalletActivityItem = {
   id: string;
-  kind: "deposit" | "withdrawal" | "ledger";
+  kind: "deposit" | "withdrawal" | "ledger" | "fiat_tx";
   refId: string;
   entryType?: string;
+  fiatOp?: "deposit" | "payout";
+  fiatRail?: "momo" | "card";
   status: ActivityStatus;
   amount: string;
   asset: string;
@@ -41,6 +43,12 @@ function withdrawalStatusToActivity(status: string): ActivityStatus {
     return "failed";
   }
   if (status === WithdrawalStatus.COMPLETED) return "completed";
+  return "processing";
+}
+
+function fiatStatusToActivity(status: string): ActivityStatus {
+  if (status === "FAILED") return "failed";
+  if (status === "COMPLETED") return "completed";
   return "processing";
 }
 
@@ -254,7 +262,14 @@ export async function fetchWalletGlobalActivities(args: {
     ? and(eq(walletLedgerEntries.userId, args.userId), eq(walletLedgerEntries.asset, assetFilter))
     : eq(walletLedgerEntries.userId, args.userId);
 
-  const [depositRows, withdrawalRows, ledgerRows] = await Promise.all([
+  const fiatWhere = assetFilter
+    ? and(
+        eq(fiatFreshpayTransactions.userId, args.userId),
+        eq(fiatFreshpayTransactions.currency, assetFilter),
+      )
+    : eq(fiatFreshpayTransactions.userId, args.userId);
+
+  const [depositRows, withdrawalRows, ledgerRows, fiatRows] = await Promise.all([
     db
       .select({
         id: deposits.id,
@@ -298,6 +313,21 @@ export async function fetchWalletGlobalActivities(args: {
       .where(ledgerWhere)
       .orderBy(order(walletLedgerEntries.createdAt))
       .limit(300),
+    db
+      .select({
+        reference: fiatFreshpayTransactions.reference,
+        kind: fiatFreshpayTransactions.kind,
+        status: fiatFreshpayTransactions.status,
+        currency: fiatFreshpayTransactions.currency,
+        amount: fiatFreshpayTransactions.amount,
+        provider: fiatFreshpayTransactions.provider,
+        meta: fiatFreshpayTransactions.meta,
+        createdAt: fiatFreshpayTransactions.createdAt,
+      })
+      .from(fiatFreshpayTransactions)
+      .where(fiatWhere)
+      .orderBy(order(fiatFreshpayTransactions.createdAt))
+      .limit(150),
   ]);
 
   const merged: WalletActivityItem[] = [];
@@ -360,6 +390,29 @@ export async function fetchWalletGlobalActivities(args: {
       feeUsdEquivalent: r.feeUsdEquivalent?.toString() ?? null,
       meta: r.meta,
       destination: dest,
+    });
+  }
+
+  for (const f of fiatRows) {
+    const st = fiatStatusToActivity(f.status);
+    const meta = f.meta ?? {};
+    const rail =
+      meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
+    const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
+    merged.push({
+      id: `fiat-${f.reference}`,
+      kind: "fiat_tx",
+      refId: f.reference,
+      fiatOp,
+      fiatRail: rail,
+      status: st,
+      amount: f.amount,
+      asset: f.currency,
+      createdAt: f.createdAt.toISOString(),
+      resumeHref:
+        st === "processing" ? `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}` : null,
+      detailHref: `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}`,
+      meta: f.meta,
     });
   }
 

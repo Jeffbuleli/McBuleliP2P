@@ -187,6 +187,9 @@ export default async function WalletPage() {
     .filter((l) => l.asset === "USDT" || l.asset === "PI")
     .map((l) => toRow(l, locale, lang));
 
+  const usdLine = state.lines.find((l) => l.asset === "USD");
+  const cdfLine = state.lines.find((l) => l.asset === "CDF");
+
   const labels: WalletOverviewLabels = {
     wallet_title: d.wallet_title,
     wallet_asset_list: d.wallet_asset_list,
@@ -212,6 +215,12 @@ export default async function WalletPage() {
         cryptoRows={cryptoRows}
       />
       <WalletServicePromos
+        fiatPromo={{
+          title: d.wallet_fiat_hub_title,
+          teaser: d.wallet_fiat_wallet_teaser,
+          usdDisplay: `USD ${formatWalletAssetBalance(usdLine?.balanceNum ?? 0, "USD", locale)}`,
+          cdfDisplay: `CDF ${formatWalletAssetBalance(cdfLine?.balanceNum ?? 0, "CDF", locale)}`,
+        }}
         pointsPromo={{
           balance: pointsBalance,
           title: d.wallet_link_points,

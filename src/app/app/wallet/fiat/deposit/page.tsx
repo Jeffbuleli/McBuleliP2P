@@ -1,6 +1,26 @@
+import { FiatHubClient } from "@/components/wallet/fiat-hub-client";
+import WalletFiatDepositClient from "./wallet-fiat-deposit-client";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
+import { getDictionary } from "@/i18n/messages";
+import { getLocale } from "@/lib/get-locale";
+import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
+import { getSessionUserId } from "@/lib/session";
 import { redirect } from "next/navigation";
 
-/** Fiat (USD/CDF) via PawaPay is disabled — crypto wallet only. */
-export default function WalletFiatDepositInfoPage() {
-  redirect("/app/wallet");
+export const dynamic = "force-dynamic";
+
+export default async function WalletFiatDepositPage() {
+  const userId = await getSessionUserId();
+  if (!userId) redirect("/login");
+
+  const locale = await getLocale();
+  const d = getDictionary(locale);
+  const fiatPaused = isFiatDepositWithdrawPaused();
+
+  return (
+    <div className="wallet-theme pb-10">
+      <WalletSubpageHeader title={d.wallet_fiat_deposit_title} backHref="/app/wallet/fiat" />
+      <WalletFiatDepositClient fiatPaused={fiatPaused} />
+    </div>
+  );
 }

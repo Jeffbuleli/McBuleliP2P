@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ErrorBanner,
   FieldLabel,
-  FormPageShell,
-  HelperText,
+  FormCard,
   inputClass,
   primaryBtnClass,
 } from "@/components/forms/standard-form";
@@ -15,6 +13,8 @@ import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { clientErrorText } from "@/lib/client-error-text";
 import { isFreshpaySupportedForCountry } from "@/lib/freshpay/availability";
+import { FiatStepper } from "@/components/wallet/fiat-stepper";
+import { IconMobileMoney } from "@/components/wallet/fiat-icons";
 import {
   COD_MOBILE_FALLBACK,
   filterCodMobileProviders,
@@ -22,13 +22,20 @@ import {
 
 type ProviderOption = { provider: string; label: string };
 
+const STEPS = [
+  { id: "amount", label: "Montant" },
+  { id: "network", label: "Réseau" },
+  { id: "confirm", label: "OK" },
+] as const;
+
 export default function WalletFiatWithdrawClient({
-  fiatPaused,
+  fiatPaused = false,
 }: {
-  fiatPaused: boolean;
+  fiatPaused?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const [step, setStep] = useState(0);
   const [mobileOk, setMobileOk] = useState<boolean | null>(null);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
@@ -36,20 +43,10 @@ export default function WalletFiatWithdrawClient({
   const [provider, setProvider] = useState("");
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [providersLoading, setProvidersLoading] = useState(false);
-  const [providersErr, setProvidersErr] = useState<string | null>(null);
-  const [providerManual, setProviderManual] = useState("");
-  const [useManualProvider, setUseManualProvider] = useState(false);
-  const providerLabel = useMemo(() => {
-    if (providers.length > 0) {
-      return providers.find((p) => p.provider === provider)?.label ?? null;
-    }
-    return providerManual.trim() ? providerManual.trim() : null;
-  }, [providers, provider, providerManual]);
   const [err, setErr] = useState<string | null>(null);
-  const [errDetail, setErrDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const pct = Math.round(FIAT_FEE_RATE * 100);
 
+  const pct = Math.round(FIAT_FEE_RATE * 100);
   const summary = useMemo(() => {
     const g = Number(gross);
     if (!Number.isFinite(g) || g <= 0) return null;
@@ -64,12 +61,8 @@ export default function WalletFiatWithdrawClient({
       const res = await fetch("/api/auth/me");
       const data = await res.json().catch(() => ({}));
       const cc =
-        typeof data?.user?.countryCode === "string"
-          ? (data.user.countryCode as string)
-          : null;
-      if (!cancelled) {
-        setMobileOk(isFreshpaySupportedForCountry(cc));
-      }
+        typeof data?.user?.countryCode === "string" ? (data.user.countryCode as string) : null;
+      if (!cancelled) setMobileOk(isFreshpaySupportedForCountry(cc));
     }
     void loadMe();
     return () => {
@@ -80,42 +73,20 @@ export default function WalletFiatWithdrawClient({
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      setProvidersErr(null);
       setProvidersLoading(true);
       try {
         const res = await fetch("/api/config/mobile-money/providers");
         const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok) {
-          if (!cancelled) {
-            setProviders(
-              COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label })),
-            );
-            setProvidersErr(
-              typeof data?.error === "string"
-                ? data.error
-                : "Provider list unavailable",
-            );
-          }
-          return;
-        }
-        const raw: ProviderOption[] = ((data.providers as Array<{ provider: string; label: string }>) ?? [])
-          .map((p) => ({
-            provider: String(p.provider),
-            label: String(p.label ?? p.provider),
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-        const opts = filterCodMobileProviders(raw);
+        const raw: ProviderOption[] = ((data.providers as Array<{ provider: string; label: string }>) ?? []).map(
+          (p) => ({ provider: p.provider, label: p.label }),
+        );
         const use =
-          opts.length > 0
-            ? opts
+          filterCodMobileProviders(raw).length > 0
+            ? filterCodMobileProviders(raw)
             : COD_MOBILE_FALLBACK.map((p) => ({ provider: p.provider, label: p.label }));
         if (!cancelled) {
           setProviders(use);
-          if (use.length && !use.some((x) => x.provider === provider)) {
-            setProvider(use[0]!.provider);
-          } else if (!provider && use[0]) {
-            setProvider(use[0].provider);
-          }
+          if (use[0] && !provider) setProvider(use[0].provider);
         }
       } finally {
         if (!cancelled) setProvidersLoading(false);
@@ -126,35 +97,21 @@ export default function WalletFiatWithdrawClient({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asset]);
+  }, []);
 
   if (!fiatPaused && mobileOk === false) {
     return (
-      <div className="mx-auto max-w-lg space-y-5 pb-10 pt-2">
-        <Link
-          href="/app/wallet"
-          className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
-        >
-          ← {t("wallet_title")}
-        </Link>
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-          {t("wallet_fiat_withdraw_title")}
-        </h1>
-        <div className="rounded-2xl border border-amber-600/40 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
-          {t("wallet_fiat_unavailable")}
-        </div>
-      </div>
+      <FormCard>
+        <p className="text-sm text-amber-900">{t("wallet_fiat_unavailable")}</p>
+      </FormCard>
     );
   }
 
   async function submit() {
-    if (fiatPaused) return;
+    if (fiatPaused || !summary) return;
     setErr(null);
-    setErrDetail(null);
     setLoading(true);
     try {
-      const providerFinal =
-        providers.length > 0 ? provider : providerManual.trim();
       const res = await fetch("/api/wallet/fiat/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,179 +119,144 @@ export default function WalletFiatWithdrawClient({
           asset,
           grossAmount: gross,
           phoneNumber,
-          provider: providerFinal,
-          providerLabel,
+          provider,
+          providerLabel: providers.find((p) => p.provider === provider)?.label ?? provider,
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErr(
-          typeof data.error === "string"
-            ? data.error
-            : "wallet_fiat_withdraw_failed",
-        );
-        setErrDetail(typeof data.detail === "string" ? data.detail : null);
+      if (!res.ok || !data?.ok) {
+        setErr(typeof data.error === "string" ? data.error : "wallet_fiat_withdraw_failed");
         return;
       }
       if (typeof data.payoutId === "string") {
-        router.push(
-          `/app/wallet/fiat/status/${encodeURIComponent(data.payoutId)}`,
-        );
-        router.refresh();
-        return;
+        router.push(`/app/wallet/fiat/status/${encodeURIComponent(data.payoutId)}`);
       }
-      router.push("/app/wallet/history");
-      router.refresh();
     } finally {
       setLoading(false);
     }
   }
 
-  const controlsLocked = fiatPaused;
+  const locked = fiatPaused;
 
   return (
-    <FormPageShell>
-      <Link
-        href="/app/wallet"
-        className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400"
-      >
-        ← {t("wallet_title")}
-      </Link>
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-        {t("wallet_fiat_withdraw_title")}
-      </h1>
-      <p className="text-sm text-stone-600 dark:text-stone-400">
-        {t("wallet_fiat_withdraw_intro", { pct })}
-      </p>
+    <FormCard>
+      <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-primary)]">
+        <IconMobileMoney />
+        <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_momo")}</span>
+      </div>
+
+      <FiatStepper
+        steps={STEPS.map((s, i) => ({
+          id: s.id,
+          label: locale === "fr" ? s.label : ["Amount", "Network", "Confirm"][i]!,
+        }))}
+        current={step}
+      />
 
       {fiatPaused ? (
-        <div className="rounded-2xl border border-amber-600/40 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
-          <p className="font-semibold">{t("wallet_fiat_paused_title")}</p>
-          <p className="mt-1 leading-relaxed">{t("wallet_fiat_paused_body")}</p>
-        </div>
+        <p className="mb-4 text-sm text-amber-800">{t("wallet_fiat_paused_hint")}</p>
       ) : null}
 
-      <FieldLabel label={t("wallet_transfer_asset")}>
-        <select
-          value={asset}
-          onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
-          disabled={controlsLocked}
-          className={`${inputClass} disabled:opacity-60`}
-        >
-          <option value="USD">USD</option>
-          <option value="CDF">CDF</option>
-        </select>
-      </FieldLabel>
-
-      <FieldLabel label={t("wallet_fiat_gross")}>
-        <input
-          value={gross}
-          onChange={(e) => setGross(e.target.value)}
-          inputMode="decimal"
-          disabled={controlsLocked}
-          className={`${inputClass} disabled:opacity-60`}
-        />
-      </FieldLabel>
-
-      <FieldLabel label={t("wallet_phone_number")}>
-        <input
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          inputMode="tel"
-          placeholder="99xxxxxxx ou 24399xxxxxxx"
-          disabled={controlsLocked}
-          className={`${inputClass} disabled:opacity-60`}
-        />
-      </FieldLabel>
-
-      <FieldLabel label={t("wallet_mobile_money_provider")}>
-        {providers.length > 0 && !useManualProvider ? (
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value)}
-            disabled={controlsLocked || providersLoading}
-            className={`${inputClass} disabled:opacity-60`}
-          >
-            {providers.map((p) => (
-              <option key={p.provider} value={p.provider}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            value={providerManual}
-            onChange={(e) => setProviderManual(e.target.value)}
-            disabled={controlsLocked}
-            className={`${inputClass} disabled:opacity-60`}
-            placeholder="airtel, orange, mpesa, africell"
-          />
-        )}
-      </FieldLabel>
-      {providers.length > 0 ? (
-        <button
-          type="button"
-          disabled={controlsLocked}
-          className="text-left text-xs font-semibold text-emerald-800 underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-emerald-400"
-          onClick={() => setUseManualProvider((v) => !v)}
-        >
-          {useManualProvider ? "Use network list" : "Enter provider code manually"}
-        </button>
-      ) : null}
-      {providersErr ? <ErrorBanner>{providersErr}</ErrorBanner> : null}
-
-      {summary ? (
-        <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/70 p-4 text-sm dark:border-emerald-800/30 dark:bg-emerald-950/30">
-          <p>
-            {t("wallet_fiat_fee", { pct })}:{" "}
-            <strong className="tabular-nums">
-              {summary.fee.toLocaleString(
-                locale === "fr" ? "fr-FR" : "en-US",
-                { maximumFractionDigits: 2 },
-              )}{" "}
-              {asset}
-            </strong>
-          </p>
-          <p className="mt-2">
-            {t("wallet_fiat_net")}:{" "}
-            <strong className="tabular-nums">
-              {summary.net.toLocaleString(
-                locale === "fr" ? "fr-FR" : "en-US",
-                { maximumFractionDigits: 2 },
-              )}{" "}
-              {asset}
-            </strong>
-          </p>
-        </div>
-      ) : null}
-
-      <HelperText>{t("wallet_fiat_ops_note")}</HelperText>
-
-      {err ? (
-        <ErrorBanner>
-          <div>{clientErrorText(t, err)}</div>
-          {errDetail ? (
-            <div className="mt-2 font-mono text-[11px] opacity-90">
-              {errDetail}
-            </div>
+      {step === 0 ? (
+        <>
+          <FieldLabel label={t("wallet_transfer_asset")}>
+            <select
+              value={asset}
+              onChange={(e) => setAsset(e.target.value as "USD" | "CDF")}
+              disabled={locked}
+              className={`${inputClass} disabled:opacity-60`}
+            >
+              <option value="USD">USD</option>
+              <option value="CDF">CDF</option>
+            </select>
+          </FieldLabel>
+          <FieldLabel label={t("wallet_fiat_gross")}>
+            <input
+              value={gross}
+              onChange={(e) => setGross(e.target.value)}
+              inputMode="decimal"
+              disabled={locked}
+              className={`${inputClass} disabled:opacity-60`}
+            />
+          </FieldLabel>
+          {summary ? (
+            <p className="text-xs text-[color:var(--fd-muted)]">
+              {t("wallet_fiat_net")}: {summary.net.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset} ·{" "}
+              {t("wallet_fiat_fee", { pct })}
+            </p>
           ) : null}
-        </ErrorBanner>
+          <button
+            type="button"
+            className={primaryBtnClass}
+            disabled={locked || !summary}
+            onClick={() => setStep(1)}
+          >
+            →
+          </button>
+        </>
       ) : null}
 
-      <button
-        type="button"
-        disabled={
-          controlsLocked ||
-          loading ||
-          !summary ||
-          !phoneNumber.trim() ||
-          (providers.length > 0 ? !provider.trim() : !providerManual.trim())
-        }
-        onClick={() => void submit()}
-        className={primaryBtnClass}
-      >
-        {loading ? "…" : t("wallet_fiat_submit")}
-      </button>
-    </FormPageShell>
+      {step === 1 ? (
+        <>
+          <FieldLabel label={t("wallet_phone_number")}>
+            <input
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              inputMode="tel"
+              placeholder="09xxxxxxxx"
+              disabled={locked}
+              className={`${inputClass} disabled:opacity-60`}
+            />
+          </FieldLabel>
+          <FieldLabel label={t("wallet_mobile_money_provider")}>
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              disabled={locked || providersLoading}
+              className={`${inputClass} disabled:opacity-60`}
+            >
+              {providers.map((p) => (
+                <option key={p.provider} value={p.provider}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </FieldLabel>
+          <div className="flex gap-2">
+            <button type="button" className={primaryBtnClass} onClick={() => setStep(0)}>
+              ←
+            </button>
+            <button
+              type="button"
+              className={primaryBtnClass}
+              disabled={locked || !phoneNumber.trim() || !provider}
+              onClick={() => setStep(2)}
+            >
+              →
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {step === 2 && summary ? (
+        <>
+          <div className="rounded-2xl bg-[color:var(--fd-mint)]/40 p-3 text-sm tabular-nums">
+            <p>
+              {summary.g.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")} {asset}
+            </p>
+            <p className="text-[color:var(--fd-muted)]">{providers.find((p) => p.provider === provider)?.label}</p>
+          </div>
+          {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+          <div className="flex gap-2">
+            <button type="button" className={primaryBtnClass} onClick={() => setStep(1)}>
+              ←
+            </button>
+            <button type="button" className={primaryBtnClass} disabled={loading} onClick={() => void submit()}>
+              {loading ? "…" : t("wallet_fiat_submit")}
+            </button>
+          </div>
+        </>
+      ) : null}
+    </FormCard>
   );
 }

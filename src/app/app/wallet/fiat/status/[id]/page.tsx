@@ -5,12 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ErrorBanner,
-  FormPageShell,
-  HelperText,
+  FormCard,
   primaryBtnClass,
 } from "@/components/forms/standard-form";
 import { useI18n } from "@/components/i18n-provider";
 import { clientErrorText } from "@/lib/client-error-text";
+import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
+import { FiatStepper } from "@/components/wallet/fiat-stepper";
+import { IconBankCard, IconMobileMoney } from "@/components/wallet/fiat-icons";
+import { StatusPill } from "@/components/wallet/transaction-progress";
 
 type Tx = {
   reference: string;
@@ -19,14 +22,15 @@ type Tx = {
   currency: string;
   amount: string;
   provider: string | null;
-  phoneNumber: string | null;
-  failureCode: string | null;
   failureMessage: string | null;
-  createdAt: string;
-  updatedAt: string;
-  completedAt: string | null;
   meta?: Record<string, unknown> | null;
 };
+
+const STEPS = [
+  { id: "init", label: "Init" },
+  { id: "wait", label: "Wait" },
+  { id: "done", label: "Done" },
+];
 
 export default function WalletFiatTxStatusPage() {
   const { t } = useI18n();
@@ -36,27 +40,34 @@ export default function WalletFiatTxStatusPage() {
 
   const [tx, setTx] = useState<Tx | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [detail, setDetail] = useState<string | null>(null);
   const [polling, setPolling] = useState(true);
 
-  const title = useMemo(() => {
-    if (!tx) return t("wallet_title");
-    return tx.kind === "deposit" ? t("wallet_fiat_deposit_title") : t("wallet_fiat_withdraw_title");
-  }, [t, tx]);
+  const rail = tx?.meta?.rail === "card" || tx?.provider === "card" ? "card" : "momo";
+  const title =
+    tx?.kind === "payout"
+      ? t("wallet_fiat_withdraw_title")
+      : rail === "card"
+        ? t("wallet_fiat_card_deposit_title")
+        : t("wallet_fiat_deposit_title");
+
+  const stepIndex = useMemo(() => {
+    if (!tx) return 0;
+    if (tx.status === "COMPLETED" || tx.status === "FAILED") return 2;
+    return 1;
+  }, [tx]);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    let timer: any = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     async function fetchOnce(refresh: boolean) {
-      const url = `/api/wallet/fiat/tx/${encodeURIComponent(id)}${refresh ? "?refresh=1" : ""}`;
+      const url = `/api/wallet/fiat/tx/${encodeURIComponent(id!)}${refresh ? "?refresh=1" : ""}`;
       const res = await fetch(url, { cache: "no-store" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
         if (!cancelled) {
           setErr(typeof data?.error === "string" ? data.error : "wallet_fiat_withdraw_failed");
-          setDetail(typeof data?.detail === "string" ? data.detail : null);
           setPolling(false);
         }
         return;
@@ -64,11 +75,8 @@ export default function WalletFiatTxStatusPage() {
       if (!cancelled) {
         setTx(data.tx as Tx);
         setErr(null);
-        setDetail(null);
         const st = (data.tx as Tx).status;
-        if (st === "COMPLETED" || st === "FAILED") {
-          setPolling(false);
-        }
+        if (st === "COMPLETED" || st === "FAILED") setPolling(false);
       }
     }
 
@@ -85,75 +93,62 @@ export default function WalletFiatTxStatusPage() {
     };
   }, [id]);
 
+  const pill =
+    tx?.status === "COMPLETED"
+      ? { variant: "success" as const, label: t("wallet_fiat_status_completed") }
+      : tx?.status === "FAILED"
+        ? { variant: "failed" as const, label: t("wallet_fiat_status_failed") }
+        : { variant: "processing" as const, label: t("wallet_fiat_status_pending_title") };
+
   return (
-    <FormPageShell>
-      <Link href="/app/wallet" className="text-sm font-medium text-emerald-800 underline dark:text-emerald-400">
-        ← {t("wallet_title")}
-      </Link>
+    <div className="wallet-theme pb-10">
+      <WalletSubpageHeader title={title} backHref="/app/wallet/fiat" />
 
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">{title}</h1>
-
-      <HelperText>
-        {tx?.status === "PROCESSING" || tx?.status === "INITIATED"
-          ? `${t("wallet_fiat_status_pending_title")}. ${t("wallet_fiat_status_pending_body")}`
-          : tx?.status === "COMPLETED"
-            ? `${t("wallet_fiat_status_completed")}.`
-            : tx?.status === "FAILED"
-              ? `${t("wallet_fiat_status_failed")}.`
-              : "…"}
-      </HelperText>
-
-      {err ? (
-        <ErrorBanner>
-          <div>{clientErrorText(t, err)}</div>
-          {detail ? <div className="mt-2 font-mono text-[11px] opacity-90">{detail}</div> : null}
-        </ErrorBanner>
-      ) : null}
-
-      {tx ? (
-        <div className="rounded-2xl border border-stone-900/10 bg-white/60 p-4 text-sm text-stone-800 dark:border-stone-50/10 dark:bg-stone-950/20 dark:text-stone-200">
-          <p>
-            <strong>{t("wallet_fiat_status_status")}:</strong> {tx.status}
-          </p>
-          <p className="mt-1">
-            <strong>{t("wallet_fiat_status_type")}:</strong> {tx.kind}
-          </p>
-          <p className="mt-1">
-            <strong>{t("wallet_fiat_status_amount")}:</strong> {tx.amount} {tx.currency}
-          </p>
-          {tx.provider ? (
-            <p className="mt-1">
-              <strong>{t("wallet_fiat_status_provider")}:</strong>{" "}
-              {typeof tx.meta?.providerLabel === "string" && tx.meta.providerLabel.trim()
-                ? tx.meta.providerLabel
-                : tx.provider}
-            </p>
-          ) : null}
-          {tx.failureMessage || tx.failureCode ? (
-            <p className="mt-2">
-              <strong>{t("wallet_fiat_status_reason")}:</strong>{" "}
-              {[tx.failureCode, tx.failureMessage].filter(Boolean).join(": ")}
-            </p>
-          ) : null}
+      <FormCard>
+        <div className="mb-3 flex items-center gap-2 text-[color:var(--fd-primary)]">
+          {rail === "card" ? <IconBankCard /> : <IconMobileMoney />}
+          <StatusPill variant={pill.variant} label={pill.label} />
         </div>
-      ) : null}
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          className={primaryBtnClass}
-          onClick={() => {
-            router.refresh();
-          }}
-          disabled={!id}
-        >
-          {polling ? t("wallet_fiat_status_refreshing") : t("wallet_fiat_status_refresh")}
-        </button>
-        <Link className={primaryBtnClass} href="/app/wallet/history">
-          {t("wallet_fiat_status_history")}
-        </Link>
-      </div>
-    </FormPageShell>
+        <FiatStepper
+          steps={STEPS.map((s, i) => ({
+            id: s.id,
+            label: [t("wallet_fiat_step_init"), t("wallet_fiat_step_wait"), t("wallet_fiat_step_done")][i]!,
+          }))}
+          current={stepIndex}
+        />
+
+        {tx ? (
+          <div className="rounded-2xl bg-[color:var(--fd-mint)]/40 p-3 text-sm tabular-nums">
+            <p className="font-bold">
+              {tx.amount} {tx.currency}
+            </p>
+            {typeof tx.meta?.providerLabel === "string" ? (
+              <p className="text-[color:var(--fd-muted)]">{tx.meta.providerLabel}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {tx?.status === "PROCESSING" || tx?.status === "INITIATED" ? (
+          <p className="text-xs text-[color:var(--fd-muted)]">{t("wallet_fiat_status_pending_body")}</p>
+        ) : null}
+
+        {err ? <ErrorBanner>{clientErrorText(t, err)}</ErrorBanner> : null}
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={primaryBtnClass}
+            onClick={() => router.refresh()}
+            disabled={!id}
+          >
+            {polling ? t("wallet_fiat_status_refreshing") : t("wallet_fiat_status_refresh")}
+          </button>
+          <Link className={primaryBtnClass} href="/app/wallet/history?category=fiat">
+            {t("wallet_fiat_status_history")}
+          </Link>
+        </div>
+      </FormCard>
+    </div>
   );
 }
-
