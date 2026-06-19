@@ -5,11 +5,45 @@ import {
   mapFreshpayVerifyStatus,
 } from "@/lib/freshpay/provider";
 import { handleFreshpayCallbackPayload } from "@/lib/freshpay/handle-callback";
+import { freshpayFetchCardOrderStatus } from "@/lib/freshpay/card-provider";
+import { handleFreshpayCardCallback } from "@/lib/freshpay/handle-card-callback";
 import type { FreshpayCallbackPayload } from "@/lib/freshpay/types";
 
 type FiatTxRow = typeof fiatFreshpayTransactions.$inferSelect;
 
-export async function refreshFiatTxFromProvider(tx: FiatTxRow): Promise<FiatTxRow> {
+function isCardTx(tx: FiatTxRow): boolean {
+  const meta = tx.meta ?? {};
+  return tx.provider === "card" || meta.rail === "card";
+}
+
+async function refreshCardFiatTx(tx: FiatTxRow): Promise<FiatTxRow> {
+  const remote = await freshpayFetchCardOrderStatus({
+    reference: tx.reference,
+    transactionUuid: tx.providerTxId,
+  });
+  if (!remote?.data) return tx;
+
+  const payload = {
+    merchant_reference: tx.reference,
+    transaction_uuid: remote.data.transaction_uuid ?? tx.providerTxId ?? undefined,
+    amount: remote.data.amount ?? Number(tx.amount),
+    currency: remote.data.currency ?? tx.currency,
+    payment_status: remote.data.message,
+    status: remote.status,
+    data: remote.data,
+  };
+
+  await handleFreshpayCardCallback(payload, JSON.stringify(remote)).catch(() => null);
+
+  const db = getDb();
+  const [fresh] = await db
+    .select()
+    .from(fiatFreshpayTransactions)
+    .where(eq(fiatFreshpayTransactions.reference, tx.reference));
+  return fresh ?? tx;
+}
+
+async function refreshMomoFiatTx(tx: FiatTxRow): Promise<FiatTxRow> {
   const db = getDb();
   const remote = await freshpayVerifyBestEffort({
     reference: tx.reference,
@@ -53,4 +87,11 @@ export async function refreshFiatTxFromProvider(tx: FiatTxRow): Promise<FiatTxRo
     .from(fiatFreshpayTransactions)
     .where(eq(fiatFreshpayTransactions.reference, tx.reference));
   return fresh ?? tx;
+}
+
+export async function refreshFiatTxFromProvider(tx: FiatTxRow): Promise<FiatTxRow> {
+  if (isCardTx(tx)) {
+    return refreshCardFiatTx(tx);
+  }
+  return refreshMomoFiatTx(tx);
 }

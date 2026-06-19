@@ -5,21 +5,25 @@ export function logFiatApiError(scope: string, detail: string | null | undefined
   }
 }
 
+const SAFE_META_KEYS = new Set(["providerLabel", "rail", "networkDetected", "networkMatched"]);
+
 export function sanitizeFiatTxForUser<T extends {
   failureCode?: string | null;
   failureMessage?: string | null;
   meta?: Record<string, unknown> | null;
 }>(tx: T): T {
-  const meta = tx.meta ? { ...tx.meta } : null;
-  if (meta) {
-    delete meta.initiation;
-    delete meta.remote;
-    delete meta.checkoutUrl;
+  const meta: Record<string, unknown> = {};
+  if (tx.meta) {
+    for (const key of SAFE_META_KEYS) {
+      const v = tx.meta[key];
+      if (typeof v === "string" && v.trim()) meta[key] = v.trim();
+      if (typeof v === "boolean") meta[key] = v;
+    }
   }
   return {
     ...tx,
     failureCode: null,
     failureMessage: tx.failureMessage ? "wallet_fiat_status_failed" : null,
-    meta,
+    meta: Object.keys(meta).length ? meta : null,
   };
 }

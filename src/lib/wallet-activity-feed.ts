@@ -88,7 +88,6 @@ function fiatRowsToActivityItems(fiatRows: FiatFreshpayRow[]): WalletActivityIte
       createdAt: f.createdAt.toISOString(),
       resumeHref: st === "processing" ? `/app/wallet/fiat/status/${f.reference}` : null,
       detailHref: `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}`,
-      meta: f.meta,
       provider: f.provider,
       providerLabel,
     };

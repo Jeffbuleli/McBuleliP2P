@@ -102,7 +102,6 @@ export async function POST(req: Request) {
               selectedProvider: provider.trim(),
               networkDetected: network.detected,
               networkMatched: network.matched,
-              initiation: r.response,
             },
           })
           .onConflictDoNothing();
@@ -130,7 +129,6 @@ export async function POST(req: Request) {
           selectedProvider: provider.trim(),
           networkDetected: network.detected,
           networkMatched: network.matched,
-          initiation: r.response,
         },
       })
       .onConflictDoNothing();

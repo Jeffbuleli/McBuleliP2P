@@ -115,23 +115,36 @@ function merchantIdentityFields(): {
   };
 }
 
+function formatFreshpayAmount(amount: string | number): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return String(amount);
+  return n % 1 === 0 ? String(n) : n.toFixed(2);
+}
+
+function buildGatewayBody(fields: Record<string, string>): Record<string, string> {
+  return fields;
+}
+
 /** C2B — debit customer mobile wallet (deposit). */
 export async function freshpayPayIn(args: FreshpayPayInArgs): Promise<{
   accepted: boolean;
   response: FreshpayInitResponse;
 }> {
   const phone = formatFreshpayCustomerNumber(normalizeCodPhoneNumber(args.customerNumber));
-  const response = await gatewayPost({
-    ...merchantFields(),
-    amount: args.amount,
-    currency: args.currency,
-    action: "debit",
-    customer_number: phone,
-    ...merchantIdentityFields(),
-    reference: args.reference,
-    method: toFreshpayMethod(args.method),
-    callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),
-  });
+  const method = toFreshpayMethod(args.method);
+  const response = await gatewayPost(
+    buildGatewayBody({
+      ...merchantFields(),
+      amount: formatFreshpayAmount(args.amount),
+      currency: args.currency,
+      action: "debit",
+      customer_number: phone,
+      ...merchantIdentityFields(),
+      reference: args.reference,
+      method,
+      callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),
+    }),
+  );
   return { accepted: isFreshpayInitAccepted(response), response };
 }
 
@@ -141,17 +154,20 @@ export async function freshpayPayOut(args: FreshpayPayOutArgs): Promise<{
   response: FreshpayInitResponse;
 }> {
   const phone = formatFreshpayCustomerNumber(normalizeCodPhoneNumber(args.customerNumber));
-  const response = await gatewayPost({
-    ...merchantFields(),
-    amount: args.amount,
-    currency: args.currency,
-    action: "credit",
-    customer_number: phone,
-    ...merchantIdentityFields(),
-    reference: args.reference,
-    method: toFreshpayMethod(args.method),
-    callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),
-  });
+  const method = toFreshpayMethod(args.method);
+  const response = await gatewayPost(
+    buildGatewayBody({
+      ...merchantFields(),
+      amount: formatFreshpayAmount(args.amount),
+      currency: args.currency,
+      action: "credit",
+      customer_number: phone,
+      ...merchantIdentityFields(),
+      reference: args.reference,
+      method,
+      callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),
+    }),
+  );
   return { accepted: isFreshpayInitAccepted(response), response };
 }
 

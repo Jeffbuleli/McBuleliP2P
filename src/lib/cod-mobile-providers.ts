@@ -1,5 +1,5 @@
 /**
- * DRC mobile money — FreshPay method identifiers.
+ * DRC mobile money — FreshPay method identifiers & MSISDN prefix map.
  */
 export type MobileProviderOption = { provider: string; label: string; method: string };
 
@@ -9,6 +9,27 @@ export const COD_MOBILE_FALLBACK: MobileProviderOption[] = [
   { provider: "mpesa", label: "M-Pesa", method: "mpesa" },
   { provider: "africell", label: "Afrimoney", method: "africell" },
 ];
+
+/** Official DRC prefixes — longest match first (without leading 0). */
+export const COD_MOBILE_PREFIX_MAP: { prefix: string; method: string }[] = [
+  // Vodacom M-Pesa
+  { prefix: "81", method: "mpesa" },
+  { prefix: "82", method: "mpesa" },
+  { prefix: "83", method: "mpesa" },
+  { prefix: "86", method: "mpesa" },
+  // Orange Money
+  { prefix: "80", method: "orange" },
+  { prefix: "84", method: "orange" },
+  { prefix: "85", method: "orange" },
+  { prefix: "89", method: "orange" },
+  // Airtel Money
+  { prefix: "97", method: "airtel" },
+  { prefix: "98", method: "airtel" },
+  { prefix: "99", method: "airtel" },
+  // Africell
+  { prefix: "90", method: "africell" },
+  { prefix: "91", method: "africell" },
+].sort((a, b) => b.prefix.length - a.prefix.length);
 
 const MTN_COD_RE = /^MTN/i;
 
@@ -31,17 +52,20 @@ export function toFreshpayMethod(provider: string): string {
   return provider.trim().toLowerCase();
 }
 
-/** Infer DRC mobile network from MSISDN (243XXXXXXXXX or local). */
-export function detectCodMobileMethodFromPhone(input: string): string | null {
+function normalizeLocalMsisdn(input: string): string {
   let s = (input ?? "").trim().replace(/[()\s.-]/g, "");
   if (s.startsWith("+")) s = s.slice(1);
   while (s.startsWith("0")) s = s.slice(1);
-  const local = s.startsWith("243") ? s.slice(3) : s;
+  return s.startsWith("243") ? s.slice(3) : s;
+}
+
+/** Infer DRC mobile network from MSISDN (243XXXXXXXXX or 0XXXXXXXXX). */
+export function detectCodMobileMethodFromPhone(input: string): string | null {
+  const local = normalizeLocalMsisdn(input);
   if (local.length < 2) return null;
-  if (/^8[123]/.test(local)) return "mpesa";
-  if (/^8[459]/.test(local)) return "orange";
-  if (/^9[789]/.test(local)) return "airtel";
-  if (/^9[01]/.test(local)) return "africell";
+  for (const row of COD_MOBILE_PREFIX_MAP) {
+    if (local.startsWith(row.prefix)) return row.method;
+  }
   return null;
 }
 

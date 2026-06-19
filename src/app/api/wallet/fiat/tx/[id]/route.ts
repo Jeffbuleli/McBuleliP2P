@@ -3,7 +3,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { hasFreshpayKeys } from "@/lib/env";
+import { hasFreshpayCardKeys, hasFreshpayKeys } from "@/lib/env";
 import { refreshFiatTxFromProvider } from "@/lib/freshpay/reconcile-tx";
 import { sanitizeFiatTxForUser } from "@/lib/fiat-api-errors";
 
@@ -36,10 +36,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const isCard = tx.provider === "card" || tx.meta?.rail === "card";
+  const canRefresh = isCard ? hasFreshpayCardKeys() : hasFreshpayKeys();
   const shouldRefresh =
-    refresh &&
-    hasFreshpayKeys() &&
-    (tx.status === "PROCESSING" || tx.status === "INITIATED");
+    refresh && canRefresh && (tx.status === "PROCESSING" || tx.status === "INITIATED");
 
   if (shouldRefresh) {
     try {

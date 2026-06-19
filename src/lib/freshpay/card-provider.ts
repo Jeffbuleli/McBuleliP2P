@@ -51,6 +51,7 @@ export async function freshpayCreateCardOrder(args: {
     bill_to_address_postal_code: "00000",
     bill_to_address_country: "CD",
     callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay/card"),
+    return_url: getAppAbsoluteUrl(`/app/wallet/fiat/status/${encodeURIComponent(args.reference)}?card=1`),
   };
 
   const signature = signCardPayload(payload, timestamp);
@@ -77,6 +78,45 @@ export async function freshpayCreateCardOrder(args: {
     checkoutUrl: String(json.data.links),
     transactionUuid: String(json.data.transaction_uuid ?? args.reference),
   };
+}
+
+function cardAuthHeaders(payload: Record<string, unknown>): Record<string, string> {
+  const timestamp = new Date().toISOString();
+  const signature = signCardPayload(payload, timestamp);
+  return {
+    Accept: "application/json",
+    "X-API-Key": getFreshpayCardApiKey(),
+    "X-Timestamp": timestamp,
+    "X-Signature": signature,
+  };
+}
+
+/** Poll card order status after hosted checkout return (best-effort). */
+export async function freshpayFetchCardOrderStatus(args: {
+  reference: string;
+  transactionUuid?: string | null;
+}): Promise<CardOrderResponse | null> {
+  const base = getFreshpayCardApiBaseUrl().replace(/\/+$/, "");
+  const payload = { merchant_reference: args.reference };
+  const headers = cardAuthHeaders(payload);
+
+  const candidates = [
+    args.transactionUuid
+      ? `${base}/api/v1/payment/orders/${encodeURIComponent(args.transactionUuid)}`
+      : null,
+    `${base}/api/v1/payment/orders?merchant_reference=${encodeURIComponent(args.reference)}`,
+  ].filter(Boolean) as string[];
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { method: "GET", headers, cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as CardOrderResponse;
+      if (res.ok && json.status === "success" && json.data) return json;
+    } catch {
+      // try next endpoint shape
+    }
+  }
+  return null;
 }
 
 export function verifyCardCallbackSignature(rawBody: string, signatureHeader: string | null): boolean {
