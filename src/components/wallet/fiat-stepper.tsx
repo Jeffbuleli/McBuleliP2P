@@ -5,15 +5,18 @@ export type FiatStep = { id: string; label: string };
 export function FiatStepper({
   steps,
   current,
+  finished = false,
 }: {
   steps: FiatStep[];
   current: number;
+  /** When true, the current step shows as completed (e.g. terminal tx status). */
+  finished?: boolean;
 }) {
   return (
     <ol className="mb-5 flex items-center gap-1">
       {steps.map((s, i) => {
-        const done = i < current;
-        const active = i === current;
+        const done = i < current || (finished && i === current);
+        const active = i === current && !finished;
         return (
           <li key={s.id} className="flex min-w-0 flex-1 items-center gap-1">
             <div className="flex min-w-0 flex-col items-center gap-1">

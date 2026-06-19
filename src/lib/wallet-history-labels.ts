@@ -1,5 +1,6 @@
 import type { Messages } from "@/i18n/messages";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
+import { freshpayMethodLabel } from "@/lib/cod-mobile-providers";
 import { formatWalletHistoryAmount } from "@/lib/wallet-types";
 
 const ENTRY_LABEL_KEYS: Record<string, keyof Messages> = {
@@ -68,28 +69,51 @@ export function walletEntryLabel(
 
 export function activityTitle(
   t: (k: keyof Messages) => string,
-  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail" | "asset">,
 ): string {
   return activityShortTitle(t, item);
 }
 
-/** Minimal label for history rows — SVG carries most meaning. */
+function fiatHistoryTitle(
+  t: (k: keyof Messages) => string,
+  item: Pick<WalletActivityItem, "fiatOp" | "fiatRail" | "asset">,
+): string {
+  const asset = item.asset?.toUpperCase() === "CDF" ? "CDF" : "USD";
+  if (item.fiatOp === "payout") {
+    return asset === "CDF" ? t("wallet_hist_withdraw_cdf") : t("wallet_hist_withdraw_usd");
+  }
+  if (item.fiatRail === "card") {
+    return asset === "CDF" ? t("wallet_hist_deposit_cdf_card") : t("wallet_hist_deposit_usd_card");
+  }
+  return asset === "CDF" ? t("wallet_hist_deposit_cdf") : t("wallet_hist_deposit_usd");
+}
+
+/** Channel subtitle — Airtel, M-Pesa, Visa… */
+export function activityChannelLabel(
+  item: Pick<WalletActivityItem, "kind" | "provider" | "providerLabel" | "fiatRail">,
+  locale: "en" | "fr" = "en",
+): string | null {
+  if (item.kind !== "fiat_tx") return null;
+  if (item.providerLabel?.trim()) return item.providerLabel.trim();
+  if (item.fiatRail === "card") return locale === "fr" ? "Carte" : "Card";
+  if (item.provider) return freshpayMethodLabel(item.provider, locale);
+  return null;
+}
+
+/** Minimal label for history rows — channel shown separately with SVG. */
 export function activityShortTitle(
   t: (k: keyof Messages) => string,
-  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail" | "asset">,
 ): string {
-  if (item.kind === "fiat_tx") {
-    if (item.fiatOp === "payout") return t("wallet_hist_fiat_out");
-    return item.fiatRail === "card" ? t("wallet_hist_card_in") : t("wallet_hist_momo_in");
-  }
+  if (item.kind === "fiat_tx") return fiatHistoryTitle(t, item);
   if (item.kind === "deposit") return t("wallet_hist_crypto_in");
   if (item.kind === "withdrawal") return t("wallet_hist_crypto_out");
   const et = item.entryType ?? "";
-  if (et.includes("swap")) return t("wallet_hist_swap");
+  if (et === "swap_in" || et === "swap_out") return t("wallet_hist_swap");
+  if (et === "swap_fee") return t("wallet_entry_swap_fee");
   if (et === "transfer_in") return t("wallet_hist_transfer_in");
   if (et === "transfer_out") return t("wallet_hist_transfer_out");
   if (et.startsWith("p2p_")) return t("wallet_history_cat_p2p");
-  if (et.startsWith("fiat_")) return t("wallet_history_cat_fiat");
   if (et) return walletEntryLabel(t, et);
   return t("wallet_activity_ledger");
 }
@@ -126,7 +150,7 @@ export function historyVisualKind(
 export function formatSignedWalletAmount(
   asset: string,
   raw: string,
-  item: Pick<WalletActivityItem, "kind" | "entryType">,
+  item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp">,
 ): string {
   const n = Number(raw);
   const abs = formatWalletHistoryAmount(asset, String(Math.abs(n)));
@@ -149,7 +173,7 @@ export function matchesHistoryCategory(
 ): boolean {
   if (!category) return true;
   if (category === "fiat") {
-    return item.kind === "fiat_tx" || (item.entryType ?? "").startsWith("fiat_");
+    return item.kind === "fiat_tx";
   }
   if (item.kind === "fiat_tx") {
     const vk = historyVisualKind(item);

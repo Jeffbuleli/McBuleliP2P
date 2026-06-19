@@ -6,6 +6,7 @@ import { fiatFreshpayTransactions, getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { hasFreshpayKeys } from "@/lib/env";
 import { freshpayPayIn } from "@/lib/freshpay/provider";
+import { resolveFreshpayMethod } from "@/lib/cod-mobile-providers";
 import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import {
   isFreshpaySupportedCurrency,
@@ -72,12 +73,13 @@ export async function POST(req: Request) {
 
   try {
     const phone = normalizeCodPhoneNumber(phoneNumber);
+    const network = resolveFreshpayMethod(phone, provider);
     const r = await freshpayPayIn({
       reference,
       amount: grossAmount,
       currency: asset,
       customerNumber: phone,
-      method: provider,
+      method: network.method,
     });
 
     if (!r.accepted) {
@@ -93,9 +95,15 @@ export async function POST(req: Request) {
             currency: asset,
             amount: grossAmount,
             phoneNumber: phone,
-            provider: provider.trim(),
+            provider: network.method,
             failureMessage: msg,
-            meta: { providerLabel: providerLabel ?? null, initiation: r.response },
+            meta: {
+              providerLabel: providerLabel ?? null,
+              selectedProvider: provider.trim(),
+              networkDetected: network.detected,
+              networkMatched: network.matched,
+              initiation: r.response,
+            },
           })
           .onConflictDoNothing();
       } catch {
@@ -116,8 +124,14 @@ export async function POST(req: Request) {
         currency: asset,
         amount: grossAmount,
         phoneNumber: phone,
-        provider: provider.trim(),
-        meta: { providerLabel: providerLabel ?? null, initiation: r.response },
+        provider: network.method,
+        meta: {
+          providerLabel: providerLabel ?? null,
+          selectedProvider: provider.trim(),
+          networkDetected: network.detected,
+          networkMatched: network.matched,
+          initiation: r.response,
+        },
       })
       .onConflictDoNothing();
 

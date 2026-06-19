@@ -28,6 +28,8 @@ export type WalletActivityItem = {
   detailHref: string;
   txid?: string | null;
   feeUsdEquivalent?: string | null;
+  provider?: string | null;
+  providerLabel?: string | null;
   meta?: Record<string, unknown> | null;
   destination?: string | null;
 };
@@ -59,10 +61,10 @@ function fiatStatusToActivity(status: string): ActivityStatus {
   return "processing";
 }
 
-function ledgerFiatRef(meta: Record<string, unknown> | null | undefined): string | null {
-  if (typeof meta?.fiatDepositRef === "string") return meta.fiatDepositRef;
-  if (typeof meta?.fiatPayoutRef === "string") return meta.fiatPayoutRef;
-  return null;
+/** Ledger fiat lines duplicate fiat_tx rows — hide from user history. */
+function skipFiatLedgerInHistory(entryType: string | null | undefined): boolean {
+  const et = entryType ?? "";
+  return et === "fiat_deposit" || et === "fiat_withdraw" || et === "fiat_withdraw_refund";
 }
 
 function fiatRowsToActivityItems(fiatRows: FiatFreshpayRow[]): WalletActivityItem[] {
@@ -72,6 +74,8 @@ function fiatRowsToActivityItems(fiatRows: FiatFreshpayRow[]): WalletActivityIte
     const rail =
       meta.rail === "card" || f.provider === "card" ? ("card" as const) : ("momo" as const);
     const fiatOp = f.kind === "payout" ? ("payout" as const) : ("deposit" as const);
+    const providerLabel =
+      typeof meta.providerLabel === "string" ? meta.providerLabel : null;
     return {
       id: `fiat-${f.reference}`,
       kind: "fiat_tx" as const,
@@ -85,6 +89,8 @@ function fiatRowsToActivityItems(fiatRows: FiatFreshpayRow[]): WalletActivityIte
       resumeHref: st === "processing" ? `/app/wallet/fiat/status/${f.reference}` : null,
       detailHref: `/app/wallet/fiat/status/${encodeURIComponent(f.reference)}`,
       meta: f.meta,
+      provider: f.provider,
+      providerLabel,
     };
   });
 }
@@ -321,14 +327,9 @@ async function collectFiatAssetActivities(args: {
   ]);
 
   const merged: WalletActivityItem[] = [];
-  const fiatRefs = new Set(fiatRows.map((f) => f.reference));
 
   for (const r of ledgerRows) {
-    const et = r.entryType ?? "";
-    if (et.startsWith("fiat_")) {
-      const ref = ledgerFiatRef(r.meta);
-      if (ref && fiatRefs.has(ref)) continue;
-    }
+    if (skipFiatLedgerInHistory(r.entryType)) continue;
     merged.push({
       id: `ledger-${r.id}`,
       kind: "ledger",
@@ -494,7 +495,6 @@ export async function fetchWalletGlobalActivities(args: {
   ]);
 
   const merged: WalletActivityItem[] = [];
-  const fiatRefs = new Set(fiatRows.map((f) => f.reference));
 
   for (const d of depositRows) {
     const amt =
@@ -533,11 +533,7 @@ export async function fetchWalletGlobalActivities(args: {
   }
 
   for (const r of ledgerRows) {
-    const et = r.entryType ?? "";
-    if (et.startsWith("fiat_")) {
-      const ref = ledgerFiatRef(r.meta);
-      if (ref && fiatRefs.has(ref)) continue;
-    }
+    if (skipFiatLedgerInHistory(r.entryType)) continue;
     const meta = r.meta;
     const dest =
       typeof meta?.toAddress === "string"

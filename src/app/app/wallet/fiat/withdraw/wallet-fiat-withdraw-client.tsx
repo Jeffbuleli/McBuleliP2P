@@ -17,7 +17,7 @@ import {
   walletInputClass,
   walletPrimaryBtnClass,
 } from "@/components/wallet/wallet-form";
-import { COD_MOBILE_FALLBACK, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
+import { COD_MOBILE_FALLBACK, detectCodMobileMethodFromPhone, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -94,6 +94,13 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const detected = detectCodMobileMethodFromPhone(phoneNumber);
+    if (detected && providers.some((p) => p.provider === detected)) {
+      setProvider(detected);
+    }
+  }, [phoneNumber, providers]);
 
   if (!fiatPaused && mobileOk === false) {
     return (

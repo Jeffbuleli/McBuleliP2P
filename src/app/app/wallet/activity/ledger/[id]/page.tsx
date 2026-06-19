@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
@@ -32,15 +32,32 @@ function metaStr(meta: Record<string, unknown> | null, key: string): string | nu
 
 export default function LedgerActivityDetailPage() {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const [entry, setEntry] = useState<Entry | null>(null);
 
   useEffect(() => {
     void fetch(`/api/wallet/activity/ledger/${params.id}`)
       .then((r) => r.json())
-      .then((j) => setEntry(j.entry ?? null))
+      .then((j) => {
+        const e = j.entry as Entry | null;
+        if (!e) {
+          setEntry(null);
+          return;
+        }
+        const fiatRef =
+          metaStr(e.meta, "fiatDepositRef") ??
+          metaStr(e.meta, "fiatPayoutRef") ??
+          metaStr(e.meta, "pawapayDepositId") ??
+          metaStr(e.meta, "pawapayPayoutId");
+        if (e.entryType.startsWith("fiat_") && fiatRef) {
+          router.replace(`/app/wallet/fiat/status/${encodeURIComponent(fiatRef)}`);
+          return;
+        }
+        setEntry(e);
+      })
       .catch(() => setEntry(null));
-  }, [params.id]);
+  }, [params.id, router]);
 
   const loc = locale === "fr" ? "fr-FR" : "en-US";
 
@@ -77,7 +94,7 @@ export default function LedgerActivityDetailPage() {
     { label: t("wallet_tx_when"), value: when },
     { label: t("wallet_tx_amount"), value: `${signed} ${entry.asset}` },
   ];
-  if (Number.isFinite(feeUsd) && feeUsd !== 0) {
+  if (Number.isFinite(feeUsd) && feeUsd !== 0 && !entry.entryType.startsWith("fiat_")) {
     rows.push({
       label: t("wallet_tx_est_usd"),
       value: `$${Math.abs(feeUsd).toFixed(2)}`,

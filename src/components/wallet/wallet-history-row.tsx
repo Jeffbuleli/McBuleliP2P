@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import { HistoryVisualIcon } from "@/components/icons/flow-icons";
 import { StatusPill } from "@/components/wallet/transaction-progress";
+import { FiatChannelIcon, resolveFiatChannelId } from "@/components/wallet/fiat-channel-icon";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
 import {
+  activityChannelLabel,
   activityShortTitle,
   formatSignedWalletAmount,
   historyVisualKind,
 } from "@/lib/wallet-history-labels";
 import { CRYPTO_ASSET_ICON, type WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
+import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 
 function pillVariant(
   status: WalletActivityItem["status"],
@@ -49,6 +52,7 @@ export function WalletHistoryRow({
 }) {
   const { t } = useI18n();
   const loc = locale === "fr" ? "fr-FR" : "en-US";
+  const lang = locale === "fr" ? "fr" : "en";
   const when = new Date(item.createdAt).toLocaleString(loc, {
     month: "short",
     day: "numeric",
@@ -60,22 +64,32 @@ export function WalletHistoryRow({
   const visual = historyVisualKind(item);
   const signed = formatSignedWalletAmount(item.asset, item.amount, item);
   const pillLabel =
-    item.status === "completed"
-      ? "✓"
-      : item.status === "failed"
-        ? "✕"
-        : "…";
+    item.status === "completed" ? "✓" : item.status === "failed" ? "✕" : "…";
+  const channel = activityChannelLabel(item, lang);
+  const isFiat = item.kind === "fiat_tx";
   const assetIcon =
-    item.asset in CRYPTO_ASSET_ICON
+    !isFiat && item.asset in CRYPTO_ASSET_ICON
       ? CRYPTO_ASSET_ICON[item.asset as WalletCryptoAsset]
       : null;
 
   return (
     <li>
       <Link href={href} className="wallet-hist-row fd-card flex items-center gap-3 p-3 active:scale-[0.99]">
-        <span className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconTone(visual)}`}>
-          <HistoryVisualIcon visual={visual} className="h-5 w-5" />
-          {showAssetBadge && assetIcon ? (
+        <span
+          className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconTone(visual)}`}
+        >
+          {isFiat ? (
+            <FiatChannelIcon
+              channel={resolveFiatChannelId({
+                provider: item.provider,
+                rail: item.fiatRail,
+              })}
+              className="h-8 w-8"
+            />
+          ) : (
+            <HistoryVisualIcon visual={visual} className="h-5 w-5" />
+          )}
+          {showAssetBadge && !isFiat && assetIcon ? (
             <Image
               src={assetIcon}
               alt=""
@@ -83,9 +97,9 @@ export function WalletHistoryRow({
               height={14}
               className="absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-white"
             />
-          ) : item.kind === "fiat_tx" ? (
-            <span className="absolute -bottom-0.5 -right-0.5 rounded-full bg-[color:var(--fd-brown)] px-1 text-[8px] font-bold text-white ring-2 ring-white">
-              {item.asset}
+          ) : isFiat ? (
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-2 ring-white">
+              <WalletAssetIcon asset={item.asset as "USD" | "CDF"} size={16} />
             </span>
           ) : null}
         </span>
@@ -93,11 +107,13 @@ export function WalletHistoryRow({
           <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
             {activityShortTitle(t, item)}
           </p>
-          <p className="text-[10px] text-[color:var(--fd-muted)]">{when}</p>
+          <p className="truncate text-[10px] text-[color:var(--fd-muted)]">
+            {channel ? `${channel} · ${when}` : when}
+          </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <p className="font-mono text-sm font-bold tabular-nums text-[color:var(--fd-text)]">
-            {signed}
+            {signed} {item.asset}
           </p>
           <StatusPill variant={pillVariant(item.status)} label={pillLabel} />
         </div>

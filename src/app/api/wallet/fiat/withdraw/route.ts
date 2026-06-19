@@ -7,6 +7,7 @@ import { hasFreshpayKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
 import { freshpayPayOut } from "@/lib/freshpay/provider";
+import { resolveFreshpayMethod } from "@/lib/cod-mobile-providers";
 import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import {
   isFreshpaySupportedCurrency,
@@ -121,6 +122,7 @@ export async function POST(req: Request) {
 
   try {
     const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
+    const network = resolveFreshpayMethod(phone, parsed.data.provider);
 
     try {
       await db
@@ -133,9 +135,15 @@ export async function POST(req: Request) {
           currency: parsed.data.asset,
           amount: r.net,
           phoneNumber: phone,
-          provider: parsed.data.provider.trim(),
+          provider: network.method,
           batchId: r.batchId,
-          meta: { grossAmount: parsed.data.grossAmount, providerLabel },
+          meta: {
+            grossAmount: parsed.data.grossAmount,
+            providerLabel,
+            selectedProvider: parsed.data.provider.trim(),
+            networkDetected: network.detected,
+            networkMatched: network.matched,
+          },
         })
         .onConflictDoNothing();
     } catch {
@@ -147,7 +155,7 @@ export async function POST(req: Request) {
       amount: r.net,
       currency: parsed.data.asset,
       customerNumber: phone,
-      method: parsed.data.provider,
+      method: network.method,
     });
 
     if (!pr.accepted) {

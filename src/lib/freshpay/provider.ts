@@ -27,6 +27,47 @@ export function mapFreshpayTransStatus(
   return "PROCESSING";
 }
 
+/** Map verify / callback payload to terminal status. */
+export function mapFreshpayVerifyStatus(
+  remote: FreshpayVerifyResponse | FreshpayInitResponse | null | undefined,
+): "COMPLETED" | "FAILED" | "PROCESSING" | null {
+  if (!remote) return null;
+  const fromTrans = mapFreshpayTransStatus(
+    "Trans_Status" in remote ? remote.Trans_Status : undefined,
+  );
+  if (fromTrans !== "PROCESSING") return fromTrans;
+  const status = String(remote.Status ?? "").trim().toLowerCase();
+  if (status === "success" || status === "successful") return "COMPLETED";
+  if (status === "failed") return "FAILED";
+  const desc = String(
+    ("Trans_Status_Description" in remote ? remote.Trans_Status_Description : null) ??
+      ("Status_Description" in remote ? remote.Status_Description : null) ??
+      "",
+  ).toLowerCase();
+  if (desc.includes("fail")) return "FAILED";
+  return fromTrans;
+}
+
+/** Try merchant reference first, then provider transaction id. */
+export async function freshpayVerifyBestEffort(args: {
+  reference: string;
+  providerTxId?: string | null;
+}): Promise<FreshpayVerifyResponse | null> {
+  const refs = [args.reference.trim(), args.providerTxId?.trim()].filter(Boolean) as string[];
+  const seen = new Set<string>();
+  for (const ref of refs) {
+    if (seen.has(ref)) continue;
+    seen.add(ref);
+    try {
+      const remote = await freshpayVerify(ref);
+      if (mapFreshpayVerifyStatus(remote)) return remote;
+    } catch {
+      // try next ref
+    }
+  }
+  return null;
+}
+
 export function isFreshpayInitAccepted(body: FreshpayInitResponse): boolean {
   return String(body.Status ?? "")
     .trim()
