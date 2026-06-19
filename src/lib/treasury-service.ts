@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { getDb, platformSettings, users, walletLedgerEntries } from "@/db";
 import { countPendingFiatFreshpay } from "@/lib/fiat-freshpay-db";
 import { cdfPerOneUsd } from "@/lib/fx";
@@ -69,30 +69,31 @@ async function sumLiabilities(): Promise<{ usd: number; cdf: number; usdt: numbe
 
 async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
   const db = getDb();
-  const rows = await db
-    .select({
-      entryType: walletLedgerEntries.entryType,
-      amount: walletLedgerEntries.amount,
-      asset: walletLedgerEntries.asset,
-      feeUsd: walletLedgerEntries.feeUsdEquivalent,
-    })
-    .from(walletLedgerEntries)
-    .where(
-      and(
-        gte(walletLedgerEntries.createdAt, since),
-        inArray(walletLedgerEntries.entryType, [
-          "fiat_deposit",
-          "fiat_withdraw",
-          "fiat_withdraw_refund",
-        ]),
-      ),
-    )
-    .limit(5000);
+  const rows = await db.execute(sql`
+    select w.entry_type as "entryType",
+           w.amount,
+           w.asset
+    from wallet_ledger_entries w
+    left join fiat_freshpay_transactions f
+      on f.reference = (w.meta->>'fiatDepositRef')
+     and f.kind = 'deposit'
+    where w.created_at >= ${since}
+      and w.entry_type in ('fiat_deposit', 'fiat_withdraw', 'fiat_withdraw_refund', 'fiat_deposit_reversal')
+      and (
+        w.entry_type != 'fiat_deposit'
+        or (f.status = 'COMPLETED' and not exists (
+          select 1 from wallet_ledger_entries r
+          where r.entry_type = 'fiat_deposit_reversal'
+            and (r.meta->>'fiatDepositRef') = (w.meta->>'fiatDepositRef')
+        ))
+      )
+    limit 5000
+  `);
 
   let inUsd = 0;
   let outUsd = 0;
   const cdfRate = cdfPerOneUsd();
-  for (const r of rows) {
+  for (const r of rows as unknown as { entryType: string; amount: string; asset: string }[]) {
     const n = Number(r.amount);
     if (!Number.isFinite(n)) continue;
     const abs =
@@ -101,13 +102,18 @@ async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
         : r.asset === "CDF"
           ? Math.abs(n) / cdfRate
           : Math.abs(n);
-    if (r.entryType === "fiat_deposit" || r.entryType === "fiat_withdraw_refund") {
+    if (
+      r.entryType === "fiat_deposit" ||
+      r.entryType === "fiat_withdraw_refund"
+    ) {
       inUsd += abs;
+    } else if (r.entryType === "fiat_deposit_reversal") {
+      outUsd += abs;
     } else {
       outUsd += abs;
     }
   }
-  return { inUsd, outUsd, count: rows.length };
+  return { inUsd, outUsd, count: (rows as unknown[]).length };
 }
 
 async function fiatFeesSince(since: Date): Promise<number> {

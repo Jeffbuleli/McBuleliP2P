@@ -69,10 +69,13 @@ async function refreshMomoFiatTx(tx: FiatTxRow): Promise<FiatTxRow> {
   }
 
   if (remote && mapped && mapped !== "PROCESSING") {
+    const transStatus =
+      String(remote.Trans_Status ?? "").trim() ||
+      (mapped === "COMPLETED" ? "Successful" : "Failed");
     const payload: FreshpayCallbackPayload = {
       Action: tx.kind === "deposit" ? "debit" : "credit",
       Reference: tx.reference,
-      Trans_Status: mapped === "COMPLETED" ? "Successful" : "Failed",
+      Trans_Status: transStatus,
       Trans_Status_Description: remote.Trans_Status_Description ?? remote.Status_Description,
       Currency: remote.Currency ?? tx.currency,
       Amount: remote.Amount ?? Number(tx.amount),

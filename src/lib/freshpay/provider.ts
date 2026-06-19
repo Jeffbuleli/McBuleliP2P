@@ -32,20 +32,34 @@ export function mapFreshpayVerifyStatus(
   remote: FreshpayVerifyResponse | FreshpayInitResponse | null | undefined,
 ): "COMPLETED" | "FAILED" | "PROCESSING" | null {
   if (!remote) return null;
-  const fromTrans = mapFreshpayTransStatus(
-    "Trans_Status" in remote ? remote.Trans_Status : undefined,
-  );
-  if (fromTrans !== "PROCESSING") return fromTrans;
-  const status = String(remote.Status ?? "").trim().toLowerCase();
-  if (status === "success" || status === "successful") return "COMPLETED";
-  if (status === "failed") return "FAILED";
+
+  // Funds move only when Trans_Status is terminal — never from initiation Status alone.
+  const transRaw =
+    "Trans_Status" in remote && remote.Trans_Status != null
+      ? String(remote.Trans_Status).trim()
+      : "";
+  if (transRaw) {
+    const mapped = mapFreshpayTransStatus(transRaw);
+    if (mapped !== "PROCESSING") return mapped;
+    const lower = transRaw.toLowerCase();
+    if (lower.includes("fail") || lower.includes("reject") || lower.includes("cancel")) {
+      return "FAILED";
+    }
+    return "PROCESSING";
+  }
+
   const desc = String(
     ("Trans_Status_Description" in remote ? remote.Trans_Status_Description : null) ??
       ("Status_Description" in remote ? remote.Status_Description : null) ??
+      ("Comment" in remote ? remote.Comment : null) ??
       "",
   ).toLowerCase();
-  if (desc.includes("fail")) return "FAILED";
-  return fromTrans;
+  if (desc.includes("fail") || desc.includes("reject") || desc.includes("cancel")) {
+    return "FAILED";
+  }
+
+  // Status=success on pay-in init means "USSD/PIN prompt sent", not wallet credited.
+  return "PROCESSING";
 }
 
 /** Try merchant reference first, then provider transaction id. */

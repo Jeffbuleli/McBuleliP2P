@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCronSecret } from "@/lib/pool-env";
 import {
   findFiatDepositsWithoutCompletedTx,
-  reconcileAllOrphanBalances,
+  runFiatIntegrityReconcile,
 } from "@/lib/wallet-balance-audit";
 
 export const dynamic = "force-dynamic";
@@ -18,16 +18,15 @@ export async function POST(req: Request) {
   const url = new URL(req.url);
   const dryRun = url.searchParams.get("dryRun") === "1";
 
-  const [reconcile, orphanFiat] = await Promise.all([
-    reconcileAllOrphanBalances({ dryRun }),
+  const [report, orphanFiat] = await Promise.all([
+    runFiatIntegrityReconcile({ dryRun }),
     findFiatDepositsWithoutCompletedTx(),
   ]);
 
   return NextResponse.json({
     ok: true,
     dryRun,
-    reconcile,
-    orphanFiatLedgerRows: orphanFiat.length,
-    orphanFiat,
+    ...report,
+    orphanFiatLedgerRowsAfter: orphanFiat.length,
   });
 }
