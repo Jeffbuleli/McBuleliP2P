@@ -1,5 +1,5 @@
-import { and, eq, gte, sql } from "drizzle-orm";
-import { getDb, platformSettings, users, walletLedgerEntries } from "@/db";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { fiatFreshpayTransactions, getDb, platformSettings, users, walletLedgerEntries } from "@/db";
 import { countPendingFiatFreshpay } from "@/lib/fiat-freshpay-db";
 import { cdfPerOneUsd } from "@/lib/fx";
 import { numFromNumeric } from "@/lib/wallet-types";
@@ -34,10 +34,30 @@ export type TreasuryReport = {
   pendingFiat: { processing: number; failed24h: number };
 };
 
+const FIAT_FLOW_TYPES = [
+  "fiat_deposit",
+  "fiat_withdraw",
+  "fiat_withdraw_refund",
+  "fiat_deposit_reversal",
+] as const;
+
 function coverageLevel(pct: number): TreasuryCoverage["level"] {
   if (pct < 100) return "danger";
   if (pct < 120) return "warn";
   return "ok";
+}
+
+function isMissingRelationError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const code =
+    (err as { code?: string }).code ??
+    (err as { cause?: { code?: string } }).cause?.code;
+  return code === "42P01";
+}
+
+function metaRef(meta: Record<string, unknown> | null | undefined): string | null {
+  const v = meta?.fiatDepositRef;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 
 async function readReserve(key: string): Promise<number> {
@@ -67,60 +87,97 @@ async function sumLiabilities(): Promise<{ usd: number; cdf: number; usdt: numbe
   };
 }
 
+async function completedFreshpayDepositRefs(refs: string[]): Promise<Set<string>> {
+  if (refs.length === 0) return new Set();
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({ reference: fiatFreshpayTransactions.reference })
+      .from(fiatFreshpayTransactions)
+      .where(
+        and(
+          inArray(fiatFreshpayTransactions.reference, refs),
+          eq(fiatFreshpayTransactions.kind, "deposit"),
+          eq(fiatFreshpayTransactions.status, "COMPLETED"),
+        ),
+      );
+    return new Set(rows.map((r) => r.reference));
+  } catch (e) {
+    if (isMissingRelationError(e)) return new Set();
+    throw e;
+  }
+}
+
 async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
   const db = getDb();
-  const rows = await db.execute(sql`
-    select w.entry_type as "entryType",
-           w.amount,
-           w.asset
-    from wallet_ledger_entries w
-    left join fiat_freshpay_transactions f
-      on f.reference = (w.meta->>'fiatDepositRef')
-     and f.kind = 'deposit'
-    where w.created_at >= ${since}
-      and w.entry_type in ('fiat_deposit', 'fiat_withdraw', 'fiat_withdraw_refund', 'fiat_deposit_reversal')
-      and (
-        w.entry_type != 'fiat_deposit'
-        or (f.status = 'COMPLETED' and not exists (
-          select 1 from wallet_ledger_entries r
-          where r.entry_type = 'fiat_deposit_reversal'
-            and (r.meta->>'fiatDepositRef') = (w.meta->>'fiatDepositRef')
-        ))
-      )
-    limit 5000
-  `);
+  const rows = await db
+    .select({
+      entryType: walletLedgerEntries.entryType,
+      amount: walletLedgerEntries.amount,
+      asset: walletLedgerEntries.asset,
+      meta: walletLedgerEntries.meta,
+    })
+    .from(walletLedgerEntries)
+    .where(
+      and(
+        gte(walletLedgerEntries.createdAt, since),
+        inArray(walletLedgerEntries.entryType, [...FIAT_FLOW_TYPES]),
+      ),
+    )
+    .limit(5000);
+
+  const reversalRefs = new Set<string>();
+  for (const r of rows) {
+    if (r.entryType !== "fiat_deposit_reversal") continue;
+    const ref = metaRef(r.meta);
+    if (ref) reversalRefs.add(ref);
+  }
+
+  const depositRefs = rows
+    .filter((r) => r.entryType === "fiat_deposit")
+    .map((r) => metaRef(r.meta))
+    .filter((ref): ref is string => Boolean(ref));
+
+  const completedRefs = await completedFreshpayDepositRefs(depositRefs);
 
   let inUsd = 0;
   let outUsd = 0;
+  let count = 0;
   const cdfRate = cdfPerOneUsd();
-  for (const r of rows as unknown as { entryType: string; amount: string; asset: string }[]) {
+
+  for (const r of rows) {
+    if (r.entryType === "fiat_deposit") {
+      const ref = metaRef(r.meta);
+      if (!ref || !completedRefs.has(ref) || reversalRefs.has(ref)) continue;
+    }
+
     const n = Number(r.amount);
     if (!Number.isFinite(n)) continue;
+    count += 1;
+
     const abs =
       r.asset === "USD"
         ? Math.abs(n)
         : r.asset === "CDF"
           ? Math.abs(n) / cdfRate
           : Math.abs(n);
-    if (
-      r.entryType === "fiat_deposit" ||
-      r.entryType === "fiat_withdraw_refund"
-    ) {
+
+    if (r.entryType === "fiat_deposit" || r.entryType === "fiat_withdraw_refund") {
       inUsd += abs;
-    } else if (r.entryType === "fiat_deposit_reversal") {
-      outUsd += abs;
     } else {
       outUsd += abs;
     }
   }
-  return { inUsd, outUsd, count: (rows as unknown[]).length };
+
+  return { inUsd, outUsd, count };
 }
 
 async function fiatFeesSince(since: Date): Promise<number> {
   const db = getDb();
-  const [row] = await db
+  const rows = await db
     .select({
-      s: sql<string>`coalesce(sum(${walletLedgerEntries.feeUsdEquivalent}), 0)`,
+      feeUsd: walletLedgerEntries.feeUsdEquivalent,
+      meta: walletLedgerEntries.meta,
     })
     .from(walletLedgerEntries)
     .where(
@@ -129,7 +186,19 @@ async function fiatFeesSince(since: Date): Promise<number> {
         eq(walletLedgerEntries.entryType, "fiat_deposit"),
       ),
     );
-  return numFromNumeric(row?.s);
+
+  const depositRefs = rows
+    .map((r) => metaRef(r.meta))
+    .filter((ref): ref is string => Boolean(ref));
+  const completedRefs = await completedFreshpayDepositRefs(depositRefs);
+
+  let total = 0;
+  for (const r of rows) {
+    const ref = metaRef(r.meta);
+    if (ref && !completedRefs.has(ref)) continue;
+    total += numFromNumeric(r.feeUsd);
+  }
+  return total;
 }
 
 export async function getTreasuryReport(): Promise<TreasuryReport> {
