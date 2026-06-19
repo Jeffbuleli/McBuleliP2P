@@ -498,6 +498,13 @@
       "when": 1785000000000,
       "tag": "0078_freshpay_tables_init",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1785100000000,
+      "tag": "0079_deposit_launch_rewards",
+      "breakpoints": true
     }
   ]
 }

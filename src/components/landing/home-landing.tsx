@@ -6,6 +6,7 @@ import { MarketPreviewLazy } from "@/components/mobile/market-preview-lazy";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { LandingLaunchHero } from "@/components/landing/landing-launch-hero";
 import { launchCampaignEnabled } from "@/lib/launch-campaign";
+import { LandingPartnersSection } from "@/components/landing/landing-partners-section";
 import { LandingSeoSection } from "@/components/landing/landing-seo-section";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
@@ -181,6 +182,8 @@ export async function HomeLanding() {
 
       <main className="relative mx-auto max-w-5xl space-y-10 px-4 pb-14 pt-8">
         <LandingSeoSection />
+
+        <LandingPartnersSection />
 
         <section id="services" className="scroll-mt-24" aria-labelledby="services-h">
           <div className="text-center">

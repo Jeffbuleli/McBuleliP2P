@@ -7,6 +7,7 @@ export type NotificationKind =
   | "withdrawal_completed"
   | "withdrawal_rejected"
   | "deposit_confirmed"
+  | "deposit_launch_reward"
   | "deposit_validation_pending"
   | "p2p_order_created"
   | "p2p_order_paid"

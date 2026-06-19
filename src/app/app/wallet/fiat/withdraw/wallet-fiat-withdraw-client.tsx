@@ -18,6 +18,7 @@ import {
   walletPrimaryBtnClass,
 } from "@/components/wallet/wallet-form";
 import { COD_MOBILE_FALLBACK, detectCodMobileMethodFromPhone, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
+import { FiatProviderPicker } from "@/components/wallet/fiat-provider-picker";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -214,18 +215,12 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
             />
           </WalletFieldLabel>
           <WalletFieldLabel label={t("wallet_mobile_money_provider")}>
-            <select
+            <FiatProviderPicker
+              providers={providers}
               value={provider}
-              onChange={(e) => setProvider(e.target.value)}
+              onChange={setProvider}
               disabled={locked || providersLoading}
-              className={`${walletInputClass} disabled:opacity-60`}
-            >
-              {providers.map((p) => (
-                <option key={p.provider} value={p.provider}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+            />
           </WalletFieldLabel>
           <div className="flex gap-2">
             <button type="button" className={walletPrimaryBtnClass} onClick={() => setStep(0)}>

@@ -18,6 +18,7 @@ import {
 } from "@/lib/okx";
 import { getPiOkxChain } from "@/lib/pi-constants";
 import { tryAwardReferralFromCryptoDeposit } from "@/lib/referral-service";
+import { tryAwardDepositLaunchReward } from "@/lib/deposit-launch-reward";
 import { applyUsdtCreditWithAutoRepay } from "@/lib/loans-service";
 import { createUserNotification } from "@/lib/notifications-service";
 import { notifyDepositConfirmedEmail } from "@/lib/email/wallet-crypto-notify";
@@ -334,6 +335,16 @@ export async function applyConfirmedDeposit(args: {
     asset: args.deposit.asset,
     amountStr: args.amountStr,
   });
+
+  if (isUsdt) {
+    await tryAwardDepositLaunchReward({
+      userId: args.userId,
+      slot: "usdt",
+      sourceRef: args.deposit.id,
+      grossAmount: Number(args.amountStr),
+      currency: "USDT",
+    }).catch(() => null);
+  }
 }
 
 export async function markDepositFailed(

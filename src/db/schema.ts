@@ -1589,6 +1589,28 @@ export const freshpayWebhookEvents = pgTable(
   ],
 );
 
+/** First-deposit launch rewards — 5 MoMo + 5 USDT slots, +5 USDT each, 72h window. */
+export const depositLaunchRewards = pgTable(
+  "deposit_launch_rewards",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    slot: varchar("slot", { length: 8 }).notNull(),
+    sourceRef: varchar("source_ref", { length: 128 }).notNull().unique(),
+    rewardUsdt: numeric("reward_usdt", { precision: 36, scale: 18 }).notNull(),
+    grossUsd: numeric("gross_usd", { precision: 36, scale: 18 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("deposit_launch_rewards_user_idx").on(t.userId),
+    index("deposit_launch_rewards_slot_idx").on(t.slot),
+  ],
+);
+
 /** Fiat deposit/withdraw via mobile-money gateway (FreshPay / PayDRC). */
 export const fiatFreshpayTransactions = pgTable(
   "fiat_freshpay_transactions",

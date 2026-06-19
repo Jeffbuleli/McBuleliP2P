@@ -88,6 +88,15 @@ function notifMeta(
         href: "/app/wallet/history",
         pill: { variant: "success", label: t("status_ui_success") },
       };
+    case "deposit_launch_reward":
+      return {
+        title: t("notif_deposit_launch_reward_title", {
+          rewardUsdt: str("rewardUsdt") || "5",
+        }),
+        body: t("notif_deposit_launch_reward_body"),
+        href: "/app/wallet",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
     case "deposit_validation_pending":
       return {
         title: t("notif_deposit_validation_pending_title", { asset }),

@@ -12,6 +12,7 @@ import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { tryAwardReferralFromFiatDeposit } from "@/lib/referral-service";
+import { tryAwardDepositLaunchReward } from "@/lib/deposit-launch-reward";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -169,7 +170,7 @@ async function handleDepositCallback(args: {
     return { ok: true };
   }
 
-  if (!tx || !UUID_RE.test(tx.userId)) {
+  if (!tx || tx.kind !== "deposit" || !UUID_RE.test(tx.userId)) {
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
@@ -177,14 +178,19 @@ async function handleDepositCallback(args: {
       status: args.txStatus,
       currency: args.currency,
       amount: args.amount,
-      userId: null,
-      effect: "no_user",
+      userId: tx?.userId ?? null,
+      effect: tx?.kind !== "deposit" ? "wrong_kind" : "no_user",
       rawBody: args.rawBody,
     });
     return { ok: true };
   }
 
-  const gross = Number(args.amount || tx.amount);
+  const initiatedGross = Number(tx.amount);
+  const callbackGross = Number(args.amount || tx.amount);
+  const gross = Math.min(
+    Number.isFinite(initiatedGross) && initiatedGross > 0 ? initiatedGross : callbackGross,
+    Number.isFinite(callbackGross) && callbackGross > 0 ? callbackGross : initiatedGross,
+  );
   if (!Number.isFinite(gross) || gross <= 0) {
     await insertWebhookEvent({
       dedupKey,
@@ -228,6 +234,15 @@ async function handleDepositCallback(args: {
 
       if (!inserted) return;
 
+      const existing = await t
+        .select({ id: walletLedgerEntries.id })
+        .from(walletLedgerEntries)
+        .where(
+          sql`(${walletLedgerEntries.meta} ->> 'fiatDepositRef') = ${args.reference}`,
+        )
+        .limit(1);
+      if (existing.length > 0) return;
+
       await creditUserAsset(t, tx.userId, pocket, netStr);
       await insertWalletLedgerLines(t, [
         {
@@ -257,6 +272,14 @@ async function handleDepositCallback(args: {
     feeUsdEquivalentStr: feeUsdEq,
     fiatDepositRef: args.reference,
   });
+
+  await tryAwardDepositLaunchReward({
+    userId: tx.userId,
+    slot: "momo",
+    sourceRef: args.reference,
+    grossAmount: gross,
+    currency: args.currency,
+  }).catch(() => null);
 
   return { ok: true };
 }

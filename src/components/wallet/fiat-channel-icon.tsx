@@ -1,5 +1,9 @@
-/** Channel icons for fiat history rows (generic marks, not official logos). */
+"use client";
 
+import Image from "next/image";
+import { channelLogoPath } from "@/lib/partner-logos";
+
+/** Channel icons for fiat history / deposit flows. */
 export type FiatChannelId = "airtel" | "orange" | "mpesa" | "africell" | "card" | "momo";
 
 export function resolveFiatChannelId(args: {
@@ -19,7 +23,7 @@ const CHANNEL_STYLE: Record<FiatChannelId, { bg: string; fg: string; mark: strin
   airtel: { bg: "#E40000", fg: "#fff", mark: "A" },
   orange: { bg: "#FF7900", fg: "#fff", mark: "O" },
   mpesa: { bg: "#E60000", fg: "#fff", mark: "M" },
-  africell: { bg: "#E30613", fg: "#fff", mark: "Af" },
+  africell: { bg: "#C4007A", fg: "#fff", mark: "Af" },
   card: { bg: "#1A1F71", fg: "#fff", mark: "V" },
   momo: { bg: "var(--fd-brown)", fg: "#fff", mark: "₣" },
 };
@@ -31,6 +35,17 @@ export function FiatChannelIcon({
   channel: FiatChannelId;
   className?: string;
 }) {
+  const logo = channelLogoPath(channel);
+  if (logo) {
+    return (
+      <span
+        className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[color:var(--fd-border)] ${className}`}
+        aria-hidden
+      >
+        <Image src={logo} alt="" fill className="object-contain p-0.5" unoptimized />
+      </span>
+    );
+  }
   const s = CHANNEL_STYLE[channel];
   return (
     <span
