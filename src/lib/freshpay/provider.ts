@@ -6,6 +6,7 @@ import {
 } from "@/lib/env";
 import { formatFreshpayCustomerNumber, normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import { toFreshpayMethod } from "@/lib/cod-mobile-providers";
+import { FRESHPAY_MERCHANT_IDENTITY } from "@/lib/freshpay/merchant-identity";
 import type {
   FreshpayCallbackPayload,
   FreshpayInitResponse,
@@ -33,7 +34,8 @@ export function isFreshpayInitAccepted(body: FreshpayInitResponse): boolean {
 }
 
 async function gatewayPost(body: Record<string, string>): Promise<FreshpayInitResponse & FreshpayVerifyResponse> {
-  const url = getFreshpayGatewayUrl();
+  const base = getFreshpayGatewayUrl().replace(/\/+$/, "");
+  const url = `${base}/`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -56,12 +58,21 @@ export type FreshpayPayInArgs = {
   currency: "USD" | "CDF";
   customerNumber: string;
   method: string;
-  firstname: string;
-  lastname: string;
-  email: string;
 };
 
 export type FreshpayPayOutArgs = FreshpayPayInArgs;
+
+function merchantIdentityFields(): {
+  firstname: string;
+  lastname: string;
+  "e-mail": string;
+} {
+  return {
+    firstname: FRESHPAY_MERCHANT_IDENTITY.firstname,
+    lastname: FRESHPAY_MERCHANT_IDENTITY.lastname,
+    "e-mail": FRESHPAY_MERCHANT_IDENTITY.email,
+  };
+}
 
 /** C2B — debit customer mobile wallet (deposit). */
 export async function freshpayPayIn(args: FreshpayPayInArgs): Promise<{
@@ -75,9 +86,7 @@ export async function freshpayPayIn(args: FreshpayPayInArgs): Promise<{
     currency: args.currency,
     action: "debit",
     customer_number: phone,
-    firstname: args.firstname,
-    lastname: args.lastname,
-    "e-mail": args.email,
+    ...merchantIdentityFields(),
     reference: args.reference,
     method: toFreshpayMethod(args.method),
     callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),
@@ -97,9 +106,7 @@ export async function freshpayPayOut(args: FreshpayPayOutArgs): Promise<{
     currency: args.currency,
     action: "credit",
     customer_number: phone,
-    firstname: args.firstname,
-    lastname: args.lastname,
-    "e-mail": args.email,
+    ...merchantIdentityFields(),
     reference: args.reference,
     method: toFreshpayMethod(args.method),
     callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay"),

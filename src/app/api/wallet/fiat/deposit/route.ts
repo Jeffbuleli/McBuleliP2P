@@ -23,17 +23,6 @@ const bodyZ = z.object({
   providerLabel: z.string().min(1).optional(),
 });
 
-function userIdentity(u: {
-  email: string;
-  legalFirstName: string | null;
-  legalLastName: string | null;
-  displayName: string | null;
-}) {
-  const first = u.legalFirstName?.trim() || u.displayName?.trim() || "McBuleli";
-  const last = u.legalLastName?.trim() || "User";
-  return { firstname: first, lastname: last, email: u.email };
-}
-
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
@@ -65,10 +54,6 @@ export async function POST(req: Request) {
   const [u] = await db
     .select({
       countryCode: users.countryCode,
-      email: users.email,
-      legalFirstName: users.legalFirstName,
-      legalLastName: users.legalLastName,
-      displayName: users.displayName,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -84,7 +69,6 @@ export async function POST(req: Request) {
   }
 
   const reference = randomUUID();
-  const identity = userIdentity(u);
 
   try {
     const phone = normalizeCodPhoneNumber(phoneNumber);
@@ -94,7 +78,6 @@ export async function POST(req: Request) {
       currency: asset,
       customerNumber: phone,
       method: provider,
-      ...identity,
     });
 
     if (!r.accepted) {
