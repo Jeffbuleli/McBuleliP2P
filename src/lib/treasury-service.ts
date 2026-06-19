@@ -15,6 +15,8 @@ export type TreasuryCoverage = {
 export type TreasuryFlowWindow = {
   inUsd: number;
   outUsd: number;
+  /** Ledger reversals of phantom deposits — not real PSP outflows. */
+  phantomReversedUsd: number;
   count: number;
 };
 
@@ -142,10 +144,24 @@ async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
 
   let inUsd = 0;
   let outUsd = 0;
+  let phantomReversedUsd = 0;
   let count = 0;
   const cdfRate = cdfPerOneUsd();
 
   for (const r of rows) {
+    if (r.entryType === "fiat_deposit_reversal") {
+      const n = Number(r.amount);
+      if (!Number.isFinite(n)) continue;
+      const abs =
+        r.asset === "USD"
+          ? Math.abs(n)
+          : r.asset === "CDF"
+            ? Math.abs(n) / cdfRate
+            : Math.abs(n);
+      phantomReversedUsd += abs;
+      continue;
+    }
+
     if (r.entryType === "fiat_deposit") {
       const ref = metaRef(r.meta);
       if (!ref || !completedRefs.has(ref) || reversalRefs.has(ref)) continue;
@@ -169,7 +185,7 @@ async function fiatFlowSince(since: Date): Promise<TreasuryFlowWindow> {
     }
   }
 
-  return { inUsd, outUsd, count };
+  return { inUsd, outUsd, phantomReversedUsd, count };
 }
 
 async function fiatFeesSince(since: Date): Promise<number> {

@@ -478,7 +478,7 @@ export async function traceUsersWithUntrustedFunds(): Promise<
     const prov = await traceUserBalanceProvenance(u.id);
     for (const asset of ["USDT", "PI", "USD", "CDF"] as WalletAsset[]) {
       const row = prov.assets[asset];
-      if (Math.abs(row.untrustedDelta) > TOL) {
+      if (row.untrustedDelta > TOL) {
         out.push({
           userId: u.id,
           asset,
@@ -594,7 +594,11 @@ export async function reconcileToTrustedBalances(opts: {
 
   for (const u of userRows) {
     const audits = await auditUserBalances(u.id);
-    const drift = audits.filter((r) => Math.abs(r.stored - r.trusted) > TOL);
+    const drift = audits.filter((row) => {
+      if (row.stored - row.trusted > TOL) return true;
+      if (row.stored < -TOL) return true;
+      return false;
+    });
     if (drift.length === 0) continue;
 
     allFixed.push(...drift);
@@ -808,17 +812,17 @@ async function findOrphanSwapsAfterReversedPhantom(): Promise<SwapBatchRow[]> {
       and exists (
         select 1
         from wallet_ledger_entries dep
-        join wallet_ledger_entries rev
-          on rev.user_id = dep.user_id
-         and rev.entry_type = 'fiat_deposit_reversal'
-         and (
-           (rev.meta->>'fiatDepositRef') = (dep.meta->>'fiatDepositRef')
-           or (rev.meta->>'originalLedgerId') = dep.id::text
-         )
+        left join fiat_freshpay_transactions f
+          on f.reference = (dep.meta->>'fiatDepositRef')
+         and f.kind = 'deposit'
         where dep.entry_type = 'fiat_deposit'
           and dep.user_id = so.user_id
           and dep.asset = so.asset
           and dep.created_at <= so.created_at
+          and (
+            f.reference is null
+            or f.status is distinct from 'COMPLETED'
+          )
       )
     order by so.created_at asc
   `);
