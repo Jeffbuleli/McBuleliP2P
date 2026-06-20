@@ -1352,6 +1352,7 @@ export const en = {
   admin_treasury_repair_orphan_fiat: "Orphan fiat ledger rows",
   admin_treasury_repair_error: "Audit failed. Check server logs.",
   admin_nav_treasury: "Treasury",
+  wallet_section_crypto: "Crypto",
   wallet_section_fiat: "Fiat",
   wallet_assets_title: "Assets",
   wallet_fiat_open_hub: "Full fiat hub",
