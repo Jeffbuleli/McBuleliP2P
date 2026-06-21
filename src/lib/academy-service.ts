@@ -34,6 +34,11 @@ import {
   ensureAcademyProModulesSeed,
 } from "@/lib/academy-modules";
 import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
+import {
+  filterVisibleSessions,
+  partitionAcademySessions,
+  shouldShowAcademySessionSlug,
+} from "@/lib/academy-session-filters";
 import { loadEditionEventsAsSessions } from "@/lib/events/edition-events-bridge";
 import { getEventDashboardKpis } from "@/lib/events/events-service";
 import { isKycApproved } from "@/lib/kyc-policy";
@@ -241,6 +246,16 @@ export async function getAcademyHub(args: {
   credentials: AcademyCredentialView[];
   upcomingSessions: AcademyUpcomingSessionView[];
   journey: AcademyJourneySnapshot;
+  quizSummary: {
+    editionSlug: string;
+    programSlug: string;
+    slug: string;
+    title: string;
+    available: boolean;
+    passed: boolean;
+    attemptsUsed: number;
+    maxAttempts: number;
+  } | null;
 }> {
   await assertAcademyDbReady();
   await ensureAcademyLaunchSeed();
@@ -295,7 +310,18 @@ export async function getAcademyHub(args: {
   let quizzesPassed = 0;
   let quizFundamentalsAvailable = false;
   let quizFundamentalsPassed = false;
+  let quizSummary: {
+    editionSlug: string;
+    programSlug: string;
+    slug: string;
+    title: string;
+    available: boolean;
+    passed: boolean;
+    attemptsUsed: number;
+    maxAttempts: number;
+  } | null = null;
   const upcomingSessions: AcademyUpcomingSessionView[] = [];
+  const isStaffViewer = viewer === "staff";
 
   if (enrolledEditionIds.length > 0) {
     const [attRow] = await db
@@ -350,6 +376,33 @@ export async function getAcademyHub(args: {
           )
           .limit(1);
         quizFundamentalsPassed = !!passedAttempt;
+
+        const [quizRow] = await db
+          .select()
+          .from(academyQuizzes)
+          .where(eq(academyQuizzes.id, fundQuiz.id))
+          .limit(1);
+        const attempts = await db
+          .select({ id: academyQuizAttempts.id })
+          .from(academyQuizAttempts)
+          .where(
+            and(
+              eq(academyQuizAttempts.userId, args.userId),
+              eq(academyQuizAttempts.quizId, fundQuiz.id),
+            ),
+          );
+        if (quizRow && launchEditionRow) {
+          quizSummary = {
+            editionSlug: launchEditionRow.edition.slug,
+            programSlug: launchEditionRow.programSlug,
+            slug: ACADEMY_QUIZ_FUNDAMENTALS,
+            title: pickLocale(quizRow, locale),
+            available: true,
+            passed: quizFundamentalsPassed,
+            attemptsUsed: attempts.length,
+            maxAttempts: quizRow.maxAttempts,
+          };
+        }
       }
     }
 
@@ -373,6 +426,14 @@ export async function getAcademyHub(args: {
       .orderBy(asc(academySessions.startsAt));
 
     for (const s of sessionRows) {
+      if (
+        !shouldShowAcademySessionSlug({
+          sessionSlug: s.slug,
+          isStaff: isStaffViewer,
+        })
+      ) {
+        continue;
+      }
       const liveNow = isSessionLiveNow({
         startsAt: s.startsAt,
         endsAt: s.endsAt,
@@ -381,8 +442,8 @@ export async function getAcademyHub(args: {
         startsAt: s.startsAt,
         endsAt: s.endsAt,
       });
-      if (!ended || liveNow) {
-        upcomingSessions.push({
+      if (ended && !liveNow) continue;
+      upcomingSessions.push({
           editionSlug: s.editionSlug,
           programSlug: s.programSlug,
           sessionSlug: s.slug,
@@ -392,8 +453,7 @@ export async function getAcademyHub(args: {
           ),
           startsAt: s.startsAt.toISOString(),
           isLiveNow: liveNow,
-        });
-      }
+      });
       if (upcomingSessions.length >= 4) break;
     }
   }
@@ -526,6 +586,7 @@ export async function getAcademyHub(args: {
     })),
     upcomingSessions,
     journey,
+    quizSummary,
   };
 }
 
@@ -541,6 +602,7 @@ export async function getEditionDetail(args: {
       program: AcademyProgramView;
       liveRole: AcademyLiveRole;
       sessions: AcademySessionView[];
+      replays: AcademySessionView[];
       quizzes: { id: string; slug: string; title: string; attemptsUsed: number; maxAttempts: number; bestScore: number | null; passed: boolean }[];
     }
   | null
@@ -700,6 +762,11 @@ export async function getEditionDetail(args: {
   );
 
   const liveRole = args.viewerLiveRole ?? "learner";
+  const isStaffHost = liveRole === "host";
+  const visibleSessions = filterVisibleSessions(sessionViews, {
+    isStaff: isStaffHost,
+  });
+  const { upcoming, replays } = partitionAcademySessions(visibleSessions);
 
   return {
     liveRole,
@@ -728,7 +795,8 @@ export async function getEditionDetail(args: {
       topics: row.program.topics ?? [],
       requiresKyc: row.program.requiresKyc,
     },
-    sessions: sessionViews,
+    sessions: upcoming,
+    replays,
     quizzes: quizViews,
   };
 }

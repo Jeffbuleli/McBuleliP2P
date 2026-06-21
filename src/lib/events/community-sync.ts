@@ -35,7 +35,7 @@ function formatCommunityBody(event: EventRow, joinPath: string): string {
   }).format(event.startDate);
 
   return [
-    "📢 Nouvelle Formation",
+    "Annonce · Formation",
     "",
     event.title,
     date,
@@ -43,7 +43,7 @@ function formatCommunityBody(event: EventRow, joinPath: string): string {
     "",
     "Plateforme : McBuleli Live",
     "",
-    `👉 Participer : ${joinPath}`,
+    `Participer : ${joinPath}`,
   ].join("\n");
 }
 

@@ -11,11 +11,11 @@ import {
   users,
 } from "@/db";
 import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
-import { syncEventCommunityPost } from "@/lib/events/community-sync";
 import {
   EventAudienceMode,
   EventStatus,
   EventType,
+  EventVisibility,
   ParticipantStatus,
   PaymentStatus,
 } from "@/lib/events/types";
@@ -154,6 +154,7 @@ export async function syncEditionEventsFromSessions(editionId: string): Promise<
     const endDate = s.endsAt ?? new Date(s.startsAt.getTime() + durationMinutes * 60_000);
     const live = buildLiveRoomUrl(s.slug, editionRow.edition.liveBaseUrl, s.liveUrl);
     const status = existing?.status ?? deriveEventStatus(s.startsAt, s.endsAt);
+    const cohortVisibility = EventVisibility.PRIVATE;
 
     if (existing) {
       await db
@@ -190,7 +191,7 @@ export async function syncEditionEventsFromSessions(editionId: string): Promise<
         liveRoomId: live.liveRoomId,
         liveRoomUrl: live.liveRoomUrl,
         eventType: EventType.FREE,
-        visibility: "COMMUNITY",
+        visibility: cohortVisibility,
         audienceMode: EventAudienceMode.ALL_ACADEMY_MEMBERS,
         status,
         editionId,
@@ -204,9 +205,6 @@ export async function syncEditionEventsFromSessions(editionId: string): Promise<
 
     if (created) {
       await autoEnrollEditionMembers(created.id, editionId);
-      if (status === EventStatus.PUBLISHED || status === EventStatus.LIVE) {
-        await syncEventCommunityPost(created.id).catch(() => null);
-      }
       synced += 1;
     }
   }

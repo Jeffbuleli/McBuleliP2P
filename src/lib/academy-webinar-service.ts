@@ -5,9 +5,11 @@ import {
   academyEnrollments,
   academyPrograms,
   academySessions,
+  academyTrainingEvents,
   getDb,
   users,
 } from "@/db";
+import { EventStatus } from "@/lib/events/types";
 import { ACADEMY_PROGRAM_LIVE_STUDIO } from "@/lib/academy-config";
 import { createLiveStudioEdition } from "@/lib/academy-live-service";
 import { enrollInEdition } from "@/lib/academy-service";
@@ -259,6 +261,7 @@ export async function listOwnerWebinars(userId: string) {
     publicUrl: string | null;
     startsAt: string;
     registrationCount: number;
+    status: string;
   }[] = [];
 
   for (const r of rows) {
@@ -279,6 +282,7 @@ export async function listOwnerWebinars(userId: string) {
         : null,
       startsAt: r.sessionStarts.toISOString(),
       registrationCount: countRow?.n ?? 0,
+      status: r.edition.status,
     });
   }
   return out;
@@ -335,4 +339,47 @@ export async function listWebinarRegistrations(args: {
       };
     }),
   };
+}
+
+export async function cancelOwnerWebinar(args: {
+  userId: string;
+  editionSlug: string;
+}): Promise<{ ok: true } | { ok: false; code: string }> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      id: academyEditions.id,
+      startsAt: academyEditions.startsAt,
+      cohortMeta: academyEditions.cohortMeta,
+    })
+    .from(academyEditions)
+    .where(
+      and(
+        eq(academyEditions.slug, args.editionSlug),
+        eq(academyEditions.ownerUserId, args.userId),
+        eq(academyEditions.source, "live_studio"),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return { ok: false, code: "academy_webinar_not_found" };
+  if (row.startsAt && row.startsAt.getTime() <= Date.now()) {
+    return { ok: false, code: "academy_webinar_started" };
+  }
+
+  const meta = row.cohortMeta as LiveStudioCohortMeta | null;
+  await db
+    .update(academyEditions)
+    .set({
+      status: "closed",
+      cohortMeta: meta ? { ...meta, published: false } : row.cohortMeta,
+    })
+    .where(eq(academyEditions.id, row.id));
+
+  await db
+    .update(academyTrainingEvents)
+    .set({ status: EventStatus.CANCELLED, updatedAt: new Date() })
+    .where(eq(academyTrainingEvents.editionId, row.id));
+
+  return { ok: true };
 }

@@ -9,15 +9,16 @@ import {
   journeyContinueHref,
   journeyNextStepLabel,
 } from "@/components/academy/academy-journey-progress";
+import { AcademyTopicPath } from "@/components/academy/academy-topic-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import {
   ACADEMY_EDITION_JUNE_2026,
   ACADEMY_EDITION_PRO_Q3,
   ACADEMY_PROGRAM_LAUNCH,
   ACADEMY_PROGRAM_PRO,
+  ACADEMY_QUIZ_FUNDAMENTALS,
 } from "@/lib/academy-config";
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
-import { AcademyVisualHero } from "@/components/academy/academy-visual-hero";
 import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
 import { formatAcademyUsdtPrice } from "@/lib/academy-format";
 import { academyCls } from "@/components/academy/academy-ui";
@@ -43,7 +44,17 @@ type Hub = {
   formationLead: FormationLead;
   journey: AcademyJourneySnapshot;
   upcomingSessions: UpcomingSession[];
-  programs: { slug: string; title: string; level: string; priceUsdt: string | null }[];
+  quizSummary: {
+    editionSlug: string;
+    programSlug: string;
+    slug: string;
+    title: string;
+    available: boolean;
+    passed: boolean;
+    attemptsUsed: number;
+    maxAttempts: number;
+  } | null;
+  programs: { slug: string; title: string; level: string; priceUsdt: string | null; topics: string[] }[];
   editions: {
     id: string;
     slug: string;
@@ -160,9 +171,13 @@ export function AcademyHubClient() {
 
   const continueHref = hub ? journeyContinueHref(hub.journey) : "/app/academy";
   const nextLive = hub?.upcomingSessions[0];
-
-  const tutorEdition =
+  const enrolledEdition =
     hub?.editions.find((e) => e.enrolled) ?? launchEdition ?? null;
+  const enrolledProgram = enrolledEdition
+    ? hub?.programs.find((p) => p.slug === enrolledEdition.programSlug)
+    : null;
+
+  const tutorEdition = enrolledEdition;
   const ecosystemLinks = ECOSYSTEM_LINKS.map((link) => {
     if (link.labelKey !== "academy_eco_ia") return link;
     if (!tutorEdition) {
@@ -234,14 +249,38 @@ export function AcademyHubClient() {
         </div>
       ) : !isStaff ? (
         <>
-          <AcademyVisualHero
-            levelKey={hub.journey.levelKey}
-            alt={t("academy_journey_your_level")}
-          />
           <AcademyJourneyProgress
             displayName={hub.displayName ?? hub.formationLead.fullName}
             journey={hub.journey}
           />
+
+          {enrolledEdition && enrolledProgram?.topics?.length ? (
+            <AcademyTopicPath
+              topics={enrolledProgram.topics}
+              editionSlug={enrolledEdition.slug}
+              programSlug={enrolledEdition.programSlug}
+            />
+          ) : null}
+
+          {hub.quizSummary?.available ? (
+            <section className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
+              <div className="flex items-center gap-2">
+                <AcademyIcon name="tutor" className="h-5 w-5" />
+                <h2 className="text-sm font-bold">{t("academy_quiz")}</h2>
+              </div>
+              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+                {hub.quizSummary.title} · {hub.quizSummary.attemptsUsed}/
+                {hub.quizSummary.maxAttempts}
+              </p>
+              <Link
+                href={`/app/academy/quiz/${hub.quizSummary.slug}?edition=${hub.quizSummary.editionSlug}`}
+                className="mt-2 inline-flex rounded-xl bg-[#305f33] px-4 py-2.5 text-sm font-bold text-white"
+              >
+                {hub.quizSummary.passed ? "✓ " : ""}
+                {t("academy_quiz_start")} →
+              </Link>
+            </section>
+          ) : null}
 
           <section className="rounded-2xl border-2 border-[#305f33] bg-[#305f33] p-4 text-white shadow-md">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#c5e8d0]">
@@ -276,61 +315,35 @@ export function AcademyHubClient() {
             href="/app/academy/studio"
             className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-[#305f33]/40 bg-white px-4 py-3 shadow-sm"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f3ee]">
-              <AcademyIcon name="live" className="h-6 w-6" />
-            </span>
+            <img src="/academy/event-live.svg" alt="" className="h-11 w-11" />
             <span className="flex-1 text-sm font-extrabold text-[#305f33]">
               {t("academy_live_studio_hub")}
             </span>
             <span aria-hidden>→</span>
           </Link>
 
-          {hub.upcomingSessions.length > 0 ? (
-            <section>
-              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
-                {t("academy_journey_upcoming_lives")}
-              </h2>
-              <ul className="mt-2 space-y-2">
-                {hub.upcomingSessions.map((s) => {
-                  const q = `?program=${encodeURIComponent(s.programSlug)}`;
-                  const href = s.isLiveNow
-                    ? `/app/academy/${s.editionSlug}/live/${s.sessionSlug}${q}`
-                    : `/app/academy/${s.editionSlug}${q}`;
-                  return (
-                    <li key={`${s.editionSlug}-${s.sessionSlug}`}>
-                      <Link
-                        href={href}
-                        className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 shadow-sm"
-                      >
-                        <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                            s.isLiveNow ? "bg-rose-100" : "bg-[#e8f3ee]"
-                          }`}
-                          aria-hidden
-                        >
-                          <AcademyIcon
-                            name={s.isLiveNow ? "live" : "calendar"}
-                            className="h-5 w-5"
-                          />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
-                            {s.title}
-                          </p>
-                          <p className="text-[10px] text-[color:var(--fd-muted)]">
-                            {s.isLiveNow
-                              ? "LIVE"
-                              : new Date(s.startsAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <span className="text-[color:var(--fd-primary)]" aria-hidden>
-                          →
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+          {nextLive ? (
+            <section className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
+              <div className="flex items-center gap-2">
+                <AcademyIcon name={nextLive.isLiveNow ? "live" : "calendar"} className="h-5 w-5" />
+                <h2 className="text-sm font-bold">{t("academy_events")}</h2>
+              </div>
+              <p className="mt-1 text-sm font-semibold">{nextLive.title}</p>
+              <p className="text-[10px] text-[color:var(--fd-muted)]">
+                {nextLive.isLiveNow
+                  ? "LIVE"
+                  : new Date(nextLive.startsAt).toLocaleString()}
+              </p>
+              <Link
+                href={
+                  nextLive.isLiveNow
+                    ? `/app/academy/${nextLive.editionSlug}/event/${nextLive.sessionSlug}?program=${encodeURIComponent(nextLive.programSlug)}`
+                    : `/app/academy/${nextLive.editionSlug}?program=${encodeURIComponent(nextLive.programSlug)}`
+                }
+                className="mt-2 inline-flex w-full justify-center rounded-xl bg-[#305f33] py-2.5 text-sm font-extrabold text-white"
+              >
+                {nextLive.isLiveNow ? "McBuleli Live →" : t("academy_journey_continue_btn")}
+              </Link>
             </section>
           ) : null}
 

@@ -15,6 +15,7 @@ import {
   ACADEMY_QUIZ_FUNDAMENTALS,
   ACADEMY_TEST_LIVE_SESSION,
 } from "@/lib/academy-config";
+import { isAcademyTestLiveEnabled } from "@/lib/academy-session-filters";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
 import { ensureAllEditionEventsSynced } from "@/lib/events/sync-edition-events";
@@ -246,8 +247,9 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
   })();
   }
   await seedPromise;
-  // Fenêtre « en direct » du live de test — rafraîchie à chaque appel (pas seulement au boot Render).
-  await ensureAcademyTestLiveSession(getDb());
+  if (isAcademyTestLiveEnabled()) {
+    await ensureAcademyTestLiveSession(getDb());
+  }
   await ensureAllEditionEventsSynced();
 }
 
@@ -314,8 +316,8 @@ async function ensureAcademyTestLiveSession(
   await db.insert(academySessions).values({
     editionId: row.editionId,
     slug: ACADEMY_TEST_LIVE_SESSION,
-    titleFr: "Test live McBuleli Meet",
-    titleEn: "McBuleli Meet test live",
+    titleFr: "Test live McBuleli Live",
+    titleEn: "McBuleli Live test",
     kind: "live",
     startsAt,
     endsAt,
