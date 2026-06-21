@@ -505,6 +505,13 @@
       "when": 1785200000000,
       "tag": "0080_academy_training_events",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1785300000000,
+      "tag": "0081_academy_events_edition_link",
+      "breakpoints": true
     }
   ]
 }

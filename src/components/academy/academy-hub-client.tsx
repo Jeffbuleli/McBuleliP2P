@@ -188,30 +188,21 @@ export function AcademyHubClient() {
 
       {isStaff ? (
         <section className="rounded-2xl border-2 border-amber-600/30 bg-amber-50 p-4">
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
-            {t("academy_staff_badge")}
-          </p>
-          <p className="mt-1 text-xs text-amber-950">{t("academy_staff_hint")}</p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <Link
-              href="/admin/academy"
-              className="inline-flex justify-center rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white"
-            >
-              {t("academy_staff_ops")} →
-            </Link>
-            <Link
-              href="/admin/training-registrations"
-              className="inline-flex justify-center rounded-xl border border-amber-800/30 bg-white px-4 py-2.5 text-sm font-bold text-amber-950"
-            >
-              {t("academy_staff_formation_list")} →
-            </Link>
-            <Link
-              href="/app/profile/ops"
-              className="inline-flex justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs font-bold text-stone-700"
-            >
-              {t("academy_staff_ops_hub")} →
-            </Link>
+          <div className="flex items-center gap-3">
+            <img src="/academy/event-live.svg" alt="" className="h-12 w-12 shrink-0" />
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
+                {t("academy_staff_badge")}
+              </p>
+              <p className="text-xs text-amber-950">{t("academy_staff_hint")}</p>
+            </div>
           </div>
+          <Link
+            href="/admin/academy"
+            className="mt-3 inline-flex w-full justify-center rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white"
+          >
+            {t("academy_staff_ops")} →
+          </Link>
         </section>
       ) : null}
 

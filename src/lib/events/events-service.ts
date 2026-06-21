@@ -316,12 +316,25 @@ export async function deleteEvent(args: {
   return { ok: true };
 }
 
-async function autoEnrollAcademyMembers(eventId: string): Promise<number> {
+async function autoEnrollAcademyMembers(
+  eventId: string,
+  editionId: string | null,
+): Promise<number> {
   const db = getDb();
-  const members = await db
-    .selectDistinct({ userId: academyEnrollments.userId })
-    .from(academyEnrollments)
-    .where(eq(academyEnrollments.status, "active"));
+  const members = editionId
+    ? await db
+        .selectDistinct({ userId: academyEnrollments.userId })
+        .from(academyEnrollments)
+        .where(
+          and(
+            eq(academyEnrollments.status, "active"),
+            eq(academyEnrollments.editionId, editionId),
+          ),
+        )
+    : await db
+        .selectDistinct({ userId: academyEnrollments.userId })
+        .from(academyEnrollments)
+        .where(eq(academyEnrollments.status, "active"));
 
   let n = 0;
   for (const m of members) {
@@ -378,7 +391,7 @@ export async function publishEvent(args: {
     updated.audienceMode === EventAudienceMode.ALL_ACADEMY_MEMBERS &&
     updated.eventType === EventType.FREE
   ) {
-    autoEnrolled = await autoEnrollAcademyMembers(updated.id);
+    autoEnrolled = await autoEnrollAcademyMembers(updated.id, updated.editionId);
   }
 
   const communityPostId = await syncEventCommunityPost(updated.id);

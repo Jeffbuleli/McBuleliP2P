@@ -17,6 +17,7 @@ import {
 } from "@/lib/academy-config";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { ensureAcademyKnowledgeSeeded } from "@/lib/academy-knowledge";
+import { ensureAllEditionEventsSynced } from "@/lib/events/sync-edition-events";
 import { LAUNCH_WEBINAR_ISO, TRAINING_END, TRAINING_START } from "@/lib/launch-campaign";
 
 let seedPromise: Promise<void> | null = null;
@@ -36,6 +37,7 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
     if (existing) {
       await seedProProgram(db);
       await ensureAcademyKnowledgeSeeded();
+      await ensureAllEditionEventsSynced();
       return;
     }
 
@@ -240,11 +242,13 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
     await seedProProgram(db);
     await ensureAcademyKnowledgeSeeded();
     await ensureAcademyTestLiveSession(db);
+    await ensureAllEditionEventsSynced();
   })();
   }
   await seedPromise;
   // Fenêtre « en direct » du live de test — rafraîchie à chaque appel (pas seulement au boot Render).
   await ensureAcademyTestLiveSession(getDb());
+  await ensureAllEditionEventsSynced();
 }
 
 /** Live de test — toujours dans la fenêtre « en direct » pour valider le flux McBuleli Meet. */

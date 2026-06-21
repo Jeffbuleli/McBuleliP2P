@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AcademyIcon } from "@/components/academy/academy-icon";
+import { AcademyKpiStrip } from "@/components/admin/academy-kpi-strip";
+import { AcademyLeadsTab } from "@/components/admin/academy-leads-tab";
 import {
   AdvancedBlock,
   ANALYTICS_VERB_FR,
@@ -18,8 +21,9 @@ import {
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
 import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
+import type { EventDashboardKpis } from "@/lib/events/types";
 
-type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools";
+type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools" | "leads";
 
 type FormationStats = {
   formationTotal: number;
@@ -99,11 +103,12 @@ type HostRow = {
 
 const TABS: { id: TabId; label: string; icon: "live" | "calendar" | "chat" | "tutor" | "wallet" | "signal" }[] = [
   { id: "overview", label: "Aperçu", icon: "signal" },
-  { id: "program", label: "Programme", icon: "calendar" },
-  { id: "lives", label: "Lives", icon: "live" },
-  { id: "enrollments", label: "Inscriptions", icon: "wallet" },
+  { id: "program", label: "Cohorte", icon: "calendar" },
+  { id: "lives", label: "Événements", icon: "live" },
+  { id: "enrollments", label: "Inscrits", icon: "wallet" },
+  { id: "leads", label: "Leads", icon: "chat" },
   { id: "analytics", label: "Stats", icon: "tutor" },
-  { id: "tools", label: "Outils", icon: "chat" },
+  { id: "tools", label: "Outils", icon: "signal" },
 ];
 
 const EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
@@ -121,9 +126,14 @@ function effectiveLiveBase(
 }
 
 export function AcademyAdminClient() {
-  const [tab, setTab] = useState<TabId>("overview");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as TabId | null) ?? "overview";
+  const [tab, setTab] = useState<TabId>(
+    TABS.some((t) => t.id === initialTab) ? initialTab : "overview",
+  );
   const [editions, setEditions] = useState<EditionRow[]>([]);
   const [formation, setFormation] = useState<FormationStats | null>(null);
+  const [eventKpis, setEventKpis] = useState<EventDashboardKpis | null>(null);
   const [infra, setInfra] = useState<LiveInfra | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [editionDetail, setEditionDetail] = useState<EditionDetail | null>(null);
@@ -178,6 +188,7 @@ export function AcademyAdminClient() {
     const eds = (j.editions as EditionRow[]) ?? [];
     setEditions(eds);
     setFormation((j.formation as FormationStats) ?? null);
+    setEventKpis((j.eventKpis as EventDashboardKpis) ?? null);
     setInfra((j.infra as LiveInfra) ?? null);
     setSelected((cur) => cur ?? eds[0]?.slug ?? null);
   }, []);
@@ -437,10 +448,7 @@ export function AcademyAdminClient() {
   return (
     <div className={adminCls.page}>
       <AdminBackLink href="/admin">← Admin</AdminBackLink>
-      <AdminPageHeader
-        title="Academy"
-        subtitle="Cohortes, lives McBuleli & inscriptions"
-      />
+      <AdminPageHeader title="Academy" subtitle="Cohortes · événements · McBuleli Live" />
       {err ? <p className={adminCls.error}>{err}</p> : null}
 
       <div className={`${adminCls.card} flex flex-wrap gap-2`}>
@@ -460,8 +468,8 @@ export function AcademyAdminClient() {
           >
             {e.titleFr}
             <span className="mt-0.5 block font-medium opacity-80">
-              {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} inscrits ·{" "}
-              {e.sessionCount} lives
+              {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} ·{" "}
+              {e.sessionCount} évts
             </span>
           </button>
         ))}
@@ -493,16 +501,13 @@ export function AcademyAdminClient() {
 
       {tab === "overview" ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi label="Éditions" value={String(editions.length)} />
-            <Kpi label="Inscrits (total)" value={String(totalEnrollments)} />
-            <Kpi label="Sessions live" value={String(totalSessions)} />
-            <Kpi
-              label="Serveur live"
-              value={liveBaseEffective ? "OK" : "—"}
-              sub={liveBaseEffective ?? "Non configuré"}
-            />
-          </div>
+          <AcademyKpiStrip
+            editions={editions.length}
+            enrollments={totalEnrollments}
+            events={totalSessions}
+            eventKpis={eventKpis}
+            liveOk={Boolean(liveBaseEffective)}
+          />
 
           {formation ? (
             <div className={adminCls.card}>
@@ -524,7 +529,7 @@ export function AcademyAdminClient() {
             <div className={adminCls.card}>
               <SectionHead
                 icon="live"
-                title="Salle live McBuleli"
+                title="Salle McBuleli Live"
                 hint="Serveur vidéo pour les cohortes"
               />
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -658,7 +663,7 @@ export function AcademyAdminClient() {
           <div className={adminCls.card}>
             <SectionHead
               icon="live"
-              title="Sessions live"
+              title="Événements McBuleli Live"
               hint="Testez « Animation » avant chaque cours"
             />
             {!liveBaseEffective ? (
@@ -905,6 +910,8 @@ export function AcademyAdminClient() {
         </div>
       ) : null}
 
+      {tab === "leads" ? <AcademyLeadsTab /> : null}
+
       {tab === "tools" ? (
         <div className="space-y-4">
           <div className={adminCls.card}>
@@ -923,13 +930,14 @@ export function AcademyAdminClient() {
               </p>
             ) : null}
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <Link
-                href="/admin/training-registrations"
+              <button
+                type="button"
+                onClick={() => setTab("leads")}
                 className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
               >
                 <AcademyIcon name="wallet" className="h-5 w-5" />
-                Liste formation ↗
-              </Link>
+                Leads /formation
+              </button>
               <a
                 href={launchLiveEnterHost}
                 target="_blank"
@@ -937,14 +945,14 @@ export function AcademyAdminClient() {
                 className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
               >
                 <AcademyIcon name="video" className="h-5 w-5" />
-                Salle live ↗
+                Salle McBuleli Live ↗
               </a>
             </div>
           </div>
         </div>
       ) : null}
 
-      {!selected && tab !== "overview" && tab !== "tools" ? (
+      {!selected && tab !== "overview" && tab !== "tools" && tab !== "leads" ? (
         <p className={adminCls.empty}>Sélectionnez une édition ci-dessus</p>
       ) : null}
     </div>

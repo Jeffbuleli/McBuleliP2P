@@ -60,7 +60,13 @@ export function CommunityFormationsClient() {
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
-      <CommunityModuleHeader title={fr ? "Formations" : "Training"} />
+      <CommunityModuleHeader title={fr ? "Academy" : "Academy"} />
+      <div className="mb-3 flex items-center gap-2 rounded-xl bg-[#e8f3ee] px-3 py-2">
+        <img src="/academy/event-live.svg" alt="" className="h-9 w-9" />
+        <p className="text-xs text-[#305f33]">
+          {fr ? "Événements publiés depuis Academy" : "Events published from Academy"}
+        </p>
+      </div>
 
       <CommunityFilterTabs tabs={TABS} active={tab} onChange={setTab} fr={fr} />
 
@@ -82,7 +88,7 @@ export function CommunityFormationsClient() {
             {liveSessions.map((s) => (
               <li key={`${s.editionSlug}-${s.sessionSlug}`}>
                 <Link
-                  href={`/app/academy/${s.editionSlug}/live/${s.sessionSlug}`}
+                  href={`/app/academy/${s.editionSlug}/event/${s.sessionSlug}`}
                   className="fd-card block border-l-4 border-[#305f33] px-4 py-3"
                 >
                   <span className="text-[10px] font-bold uppercase text-[#305f33]">

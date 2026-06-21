@@ -12,6 +12,7 @@ import {
   academyQuizQuestions,
   academyQuizzes,
   academySessions,
+  academyTrainingEvents,
   getDb,
   trainingRegistrations,
   users,
@@ -33,6 +34,8 @@ import {
   ensureAcademyProModulesSeed,
 } from "@/lib/academy-modules";
 import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
+import { loadEditionEventsAsSessions } from "@/lib/events/edition-events-bridge";
+import { getEventDashboardKpis } from "@/lib/events/events-service";
 import { isKycApproved } from "@/lib/kyc-policy";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
@@ -595,7 +598,15 @@ export async function getEditionDetail(args: {
   const editionSlug = row.edition.slug;
   const liveBaseUrl = row.edition.liveBaseUrl ?? null;
 
-  const sessionViews: AcademySessionView[] = sessions.map((s) => {
+  const eventSessions = await loadEditionEventsAsSessions({
+    editionId: row.edition.id,
+    editionSlug,
+    liveBaseUrl,
+    enrollmentId: enrollment?.id ?? null,
+    attendedSessionIds: attended,
+  });
+
+  const sessionViews: AcademySessionView[] = eventSessions ?? sessions.map((s) => {
     const start = s.startsAt.getTime();
     const end = s.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
     const canCheckIn =
@@ -1274,6 +1285,7 @@ const ADMIN_EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
 export async function listAdminAcademyOverview(): Promise<{
   formation: FormationOpsStats;
   infra: AdminAcademyLiveInfra;
+  eventKpis: Awaited<ReturnType<typeof getEventDashboardKpis>>;
   editions: {
     id: string;
     slug: string;
@@ -1313,6 +1325,15 @@ export async function listAdminAcademyOverview(): Promise<{
 
   const sessionCounts = await db
     .select({
+      editionId: academyTrainingEvents.editionId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(academyTrainingEvents)
+    .where(sql`${academyTrainingEvents.editionId} IS NOT NULL`)
+    .groupBy(academyTrainingEvents.editionId);
+
+  const legacySessionCounts = await db
+    .select({
       editionId: academySessions.editionId,
       n: sql<number>`count(*)::int`,
     })
@@ -1320,12 +1341,17 @@ export async function listAdminAcademyOverview(): Promise<{
     .groupBy(academySessions.editionId);
 
   const enrollMap = new Map(enrollCounts.map((c) => [c.editionId, c.n]));
-  const sessionMap = new Map(sessionCounts.map((c) => [c.editionId, c.n]));
+  const eventMap = new Map(
+    sessionCounts.map((c) => [c.editionId!, c.n]),
+  );
+  const sessionMap = new Map(legacySessionCounts.map((c) => [c.editionId, c.n]));
   const formation = await getFormationOpsStats();
+  const eventKpis = await getEventDashboardKpis();
 
   return {
     formation,
     infra: getAdminAcademyLiveInfra(),
+    eventKpis,
     editions: rows.map((r) => ({
       id: r.id,
       slug: r.slug,
@@ -1334,7 +1360,7 @@ export async function listAdminAcademyOverview(): Promise<{
       status: r.status,
       liveBaseUrl: r.liveBaseUrl,
       tutorEnabled: r.tutorEnabled,
-      sessionCount: sessionMap.get(r.id) ?? 0,
+      sessionCount: eventMap.get(r.id) ?? sessionMap.get(r.id) ?? 0,
       enrollmentCount: enrollMap.get(r.id) ?? 0,
       formationRegistrations:
         r.slug === ACADEMY_EDITION_JUNE_2026 &&

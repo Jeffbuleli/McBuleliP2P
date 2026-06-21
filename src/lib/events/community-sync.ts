@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import {
+  academyEditions,
   academyTrainingEvents,
   communityPosts,
   getDb,
@@ -11,7 +12,19 @@ import type { EventRecord } from "@/lib/events/types";
 
 type EventRow = typeof eventsTable.$inferSelect;
 
-function formatCommunityBody(event: EventRow): string {
+async function eventJoinPath(event: EventRow): Promise<string> {
+  if (event.editionId) {
+    const [ed] = await getDb()
+      .select({ slug: academyEditions.slug })
+      .from(academyEditions)
+      .where(eq(academyEditions.id, event.editionId))
+      .limit(1);
+    if (ed) return `/app/academy/${ed.slug}/event/${event.slug}`;
+  }
+  return `/app/academy`;
+}
+
+function formatCommunityBody(event: EventRow, joinPath: string): string {
   const date = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
     day: "numeric",
@@ -30,7 +43,7 @@ function formatCommunityBody(event: EventRow): string {
     "",
     "Plateforme : McBuleli Live",
     "",
-    `👉 Participer : /app/events/${event.slug}`,
+    `👉 Participer : ${joinPath}`,
   ].join("\n");
 }
 
@@ -47,7 +60,8 @@ export async function syncEventCommunityPost(eventId: string): Promise<string | 
   if (!["PUBLISHED", "LIVE"].includes(event.status)) return null;
 
   await ensureCommunityProfile(event.trainerId);
-  const body = formatCommunityBody(event);
+  const joinPath = await eventJoinPath(event);
+  const body = formatCommunityBody(event, joinPath);
   const now = new Date();
 
   if (event.communityPostId) {

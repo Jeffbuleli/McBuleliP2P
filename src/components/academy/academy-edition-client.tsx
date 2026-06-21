@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { AcademyTopicPath } from "@/components/academy/academy-topic-path";
+import { AcademyIcon } from "@/components/academy/academy-icon";
 import { AcademyCohortChat } from "@/components/academy/academy-cohort-chat";
 import { AcademyTutorPanel } from "@/components/academy/academy-tutor-panel";
 import { ACADEMY_QUIZ_FUNDAMENTALS } from "@/lib/academy-config";
@@ -145,7 +146,10 @@ export function AcademyEditionClient({
       ) : null}
 
       <section>
-        <h2 className="text-sm font-bold">{t("academy_sessions")}</h2>
+        <div className="flex items-center gap-2">
+          <img src="/academy/event-live.svg" alt="" className="h-8 w-8" />
+          <h2 className="text-sm font-bold">{t("academy_events")}</h2>
+        </div>
         <ul className="mt-2 space-y-2">
           {detail.sessions.map((s) => (
             <li
@@ -159,10 +163,11 @@ export function AcademyEditionClient({
               {s.isLiveNow ? (
                 <div className="mt-2 space-y-1.5">
                   <Link
-                    href={`/app/academy/${editionSlug}/live/${s.slug}?program=${encodeURIComponent(programSlug)}`}
-                    className="inline-flex w-full items-center justify-center rounded-lg bg-[#305f33] px-3 py-2.5 text-sm font-extrabold text-white"
+                    href={`/app/academy/${editionSlug}/event/${s.slug}?program=${encodeURIComponent(programSlug)}`}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#305f33] px-3 py-2.5 text-sm font-extrabold text-white"
                   >
-                    {t("academy_oc_enter_room")} →
+                    <AcademyIcon name="live" className="h-4 w-4 !text-white" />
+                    McBuleli Live →
                   </Link>
                   {s.livePhase === "setup" ? (
                     <p className="text-[10px] text-[color:var(--fd-muted)]">

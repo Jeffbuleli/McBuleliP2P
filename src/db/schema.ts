@@ -2735,6 +2735,15 @@ export const academyTrainingEvents = pgTable(
     visibility: varchar("visibility", { length: 16 }).notNull().default("COMMUNITY"),
     audienceMode: varchar("audience_mode", { length: 32 }).notNull().default("MANUAL"),
     status: varchar("status", { length: 16 }).notNull().default("DRAFT"),
+    editionId: uuid("edition_id").references(() => academyEditions.id, {
+      onDelete: "set null",
+    }),
+    legacySessionId: uuid("legacy_session_id").references(() => academySessions.id, {
+      onDelete: "set null",
+    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    replayR2Key: varchar("replay_r2_key", { length: 256 }),
+    liveStartedAt: timestamp("live_started_at", { withTimezone: true }),
     communityPostId: uuid("community_post_id").references(() => communityPosts.id, {
       onDelete: "set null",
     }),
@@ -2747,6 +2756,10 @@ export const academyTrainingEvents = pgTable(
   (t) => [
     index("academy_training_events_status_start_idx").on(t.status, t.startDate),
     index("academy_training_events_trainer_idx").on(t.trainerId, t.startDate),
+    index("academy_training_events_edition_start_idx").on(t.editionId, t.startDate),
+    uniqueIndex("academy_training_events_legacy_session_uidx")
+      .on(t.legacySessionId)
+      .where(sql`${t.legacySessionId} IS NOT NULL`),
   ],
 );
 

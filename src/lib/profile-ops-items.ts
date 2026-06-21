@@ -125,16 +125,6 @@ export function buildProfileOpsHubItems(
       icon: "dashboard",
       badge: null,
     });
-
-    items.push({
-      id: "formation",
-      href: "/admin/training-registrations",
-      labelKey: "profile_ops_formation",
-      descKey: "profile_ops_formation_desc",
-      tone: "amber",
-      icon: "users",
-      badge: null,
-    });
   }
 
   return items;

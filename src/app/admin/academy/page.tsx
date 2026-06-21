@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import { AcademyAdminClient } from "@/components/admin/academy-admin-client";
 
 export default function AdminAcademyPage() {
-  return <AcademyAdminClient />;
+  return (
+    <Suspense fallback={<p className="p-4 text-sm">…</p>}>
+      <AcademyAdminClient />
+    </Suspense>
+  );
 }
