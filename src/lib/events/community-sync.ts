@@ -94,6 +94,37 @@ export async function syncEventCommunityPost(eventId: string): Promise<string | 
   return post.id;
 }
 
+/** Retire le post Community lié à un événement (annulation / erreur). */
+export async function removeEventCommunityPost(eventId: string): Promise<void> {
+  if (!communityEnabled()) return;
+  const db = getDb();
+  const [event] = await db
+    .select({ communityPostId: academyTrainingEvents.communityPostId })
+    .from(academyTrainingEvents)
+    .where(eq(academyTrainingEvents.id, eventId))
+    .limit(1);
+  if (!event?.communityPostId) return;
+  await db
+    .update(communityPosts)
+    .set({ status: "removed", updatedAt: new Date() })
+    .where(eq(communityPosts.id, event.communityPostId));
+  await db
+    .update(academyTrainingEvents)
+    .set({ communityPostId: null, updatedAt: new Date() })
+    .where(eq(academyTrainingEvents.id, eventId));
+}
+
+export async function removeCommunityPostsForEdition(editionId: string): Promise<void> {
+  const db = getDb();
+  const rows = await db
+    .select({ id: academyTrainingEvents.id })
+    .from(academyTrainingEvents)
+    .where(eq(academyTrainingEvents.editionId, editionId));
+  for (const r of rows) {
+    await removeEventCommunityPost(r.id);
+  }
+}
+
 export function eventToPublic(
   row: EventRow,
   extra?: { participantCount?: number },

@@ -7,6 +7,7 @@ import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { AcademyIcon } from "@/components/academy/academy-icon";
 import { AcademyCohortChat } from "@/components/academy/academy-cohort-chat";
 import { AcademyTutorPanel } from "@/components/academy/academy-tutor-panel";
+import { AcademyEditionEnrollBar } from "@/components/academy/academy-edition-enroll-bar";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type SessionRow = {
@@ -29,6 +30,9 @@ type Detail = {
     title: string;
     enrolled: boolean;
     tutorEnabled: boolean;
+    priceUsdt: string | null;
+    requiresKyc: boolean;
+    status: string;
   };
   sessions: SessionRow[];
   replays: SessionRow[];
@@ -131,6 +135,18 @@ export function AcademyEditionClient({
         <p className="rounded-xl bg-[#e8f3ee] px-3 py-2 text-sm font-bold text-[#305f33]">
           +{bpFlash} BP
         </p>
+      ) : null}
+
+      {!detail.edition.enrolled &&
+      ["open", "active"].includes(detail.edition.status) ? (
+        <AcademyEditionEnrollBar
+          editionSlug={editionSlug}
+          programSlug={programSlug}
+          title={detail.edition.title}
+          priceUsdt={detail.edition.priceUsdt}
+          requiresKyc={detail.edition.requiresKyc}
+          onEnrolled={() => void load()}
+        />
       ) : null}
 
       <section>

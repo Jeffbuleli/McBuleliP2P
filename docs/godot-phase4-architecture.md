@@ -382,22 +382,24 @@ value: { quantityKg, purityPct }
 ### Milestone 0 — Bridge (2 weeks)
 
 - [x] Web MVP Phases 1–3
-- [ ] Godot HTTP client + manifest consumer
-- [ ] Login cookie / token flow from McBuleli.org
+- [x] Godot HTTP client + manifest consumer (`godot/` — `NetworkManager`, `EconomyBridge`, HUD)
+- [x] Login cookie flow — paste `mcbuleli_session` JWT in bridge UI (`user://mcbuleli_game.cfg`)
 
-### Milestone 1 — Vertical slice (6–8 weeks)
+### Milestone 1 — Vertical slice (polish pass)
 
-- One region (Katanga) 1 km² chunk
-- Third-person miner + pickaxe interaction
-- One motorcycle + muddy road + REST transport
-- PBR camp + mine site
-- Rain + wet shader
+- [x] Katanga world: wet mud road, savanna grass, zone beacons (PUITS/CAMP/DÉPÔT)
+- [x] Miner look + pickaxe swing + dust on extract
+- [x] Moto headlight + mud splashes when riding
+- [x] HUD: stock, mission line, toast panel, B → bridge
+- [ ] PBR Blender assets (replace primitives)
 
-### Milestone 2 — Economy parity (4 weeks)
+### Milestone 2 — Economy parity (in progress)
 
-- Full REST loop in 3D (mine, stock, sell, shop)
-- Fleet condition UI + repair depot
-- BULELI AI terminal in-world
+- [x] Sell minerals at depot (`POST /api/game/trade`)
+- [x] Garage repairs (`POST /api/game/vehicles/repair`)
+- [x] McB shop at camp (`POST /api/game/upgrades`)
+- [x] BULELI AI terminal (`POST /api/game/advisor`)
+- [x] Runtime `EconomyPanel` menus (code-only, Godot-safe)
 
 ### Milestone 3 — Nakama (6 weeks)
 

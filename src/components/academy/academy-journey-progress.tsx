@@ -92,6 +92,10 @@ export function AcademyJourneyProgress({
   );
 }
 
+export function journeyShouldEnroll(journey: AcademyJourneySnapshot): boolean {
+  return journey.nextKind === "enroll_cohort" || journey.nextKind === "activate_cohort";
+}
+
 export function journeyContinueHref(journey: AcademyJourneySnapshot): string {
   const {
     nextKind,

@@ -64,7 +64,19 @@ next-env.d.ts
 !/src/app/icon.png
 !/src/app/apple-icon.png
 
+# Godot 4 editor cache
+/godot/.godot/
+/godot/.import/
+/godot/*.tmp
+
 # Local uploads (do not commit)
 ID NAT.png
 RCCM1.png
 RCCM2.png
+godot/
+godot/
+Godot.app/
+*.zip
+godot/
+*.zip
+Godot.app/

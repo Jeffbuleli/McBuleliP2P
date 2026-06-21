@@ -21,6 +21,7 @@ import {
   ACADEMY_PROGRAM_LAUNCH,
 } from "@/lib/academy-config";
 import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
+import { AcademyEventsWizard } from "@/components/admin/academy-events-wizard";
 import type { EventDashboardKpis } from "@/lib/events/types";
 
 type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools" | "leads";
@@ -660,11 +661,23 @@ export function AcademyAdminClient() {
 
       {tab === "lives" && selected ? (
         <div className="space-y-4">
+          {selectedEdition ? (
+            <AcademyEventsWizard
+              editionId={selectedEdition.id}
+              editionSlug={selectedEdition.slug}
+              editionTitle={selectedEdition.titleFr}
+              onCreated={() => {
+                void loadSessions(selected);
+                void loadOverview();
+              }}
+            />
+          ) : null}
+
           <div className={adminCls.card}>
             <SectionHead
               icon="live"
-              title="Événements McBuleli Live"
-              hint="Testez « Animation » avant chaque cours"
+              title="Sessions legacy"
+              hint="Sync auto · ops live"
             />
             {!liveBaseEffective ? (
               <p className="mt-3 text-xs font-semibold text-amber-800">

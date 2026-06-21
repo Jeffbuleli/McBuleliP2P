@@ -8,6 +8,7 @@ import {
   AcademyJourneyProgress,
   journeyContinueHref,
   journeyNextStepLabel,
+  journeyShouldEnroll,
 } from "@/components/academy/academy-journey-progress";
 import { AcademyTopicPath } from "@/components/academy/academy-topic-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
@@ -21,6 +22,7 @@ import {
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
 import { formatAcademyUsdtPrice } from "@/lib/academy-format";
+import { AcademyStaffHubPanel } from "@/components/academy/academy-staff-hub-panel";
 import { academyCls } from "@/components/academy/academy-ui";
 
 type FormationLead = {
@@ -169,7 +171,18 @@ export function AcademyHubClient() {
     launchEdition &&
     !launchEdition.enrolled;
 
+  const continueEnrollEdition =
+    hub?.editions.find(
+      (e) =>
+        !e.enrolled &&
+        e.slug === hub.journey.nextEditionSlug &&
+        e.programSlug === hub.journey.nextProgramSlug,
+    ) ?? null;
   const continueHref = hub ? journeyContinueHref(hub.journey) : "/app/academy";
+  const showContinueEnroll =
+    Boolean(continueEnrollEdition) &&
+    (showFormationEnroll ||
+      (hub != null && journeyShouldEnroll(hub.journey)));
   const nextLive = hub?.upcomingSessions[0];
   const enrolledEdition =
     hub?.editions.find((e) => e.enrolled) ?? launchEdition ?? null;
@@ -202,22 +215,12 @@ export function AcademyHubClient() {
       </header>
 
       {isStaff ? (
-        <section className="rounded-2xl border-2 border-amber-600/30 bg-amber-50 p-4">
-          <div className="flex items-center gap-3">
-            <img src="/academy/event-live.svg" alt="" className="h-12 w-12 shrink-0" />
-            <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
-                {t("academy_staff_badge")}
-              </p>
-              <p className="text-xs text-amber-950">{t("academy_staff_hint")}</p>
-            </div>
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <img src="/academy/event-live.svg" alt="" className="h-9 w-9" />
+            <p className="text-xs font-bold text-[#305f33]">{t("academy_staff_badge")}</p>
           </div>
-          <Link
-            href="/admin/academy"
-            className="mt-3 inline-flex w-full justify-center rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white"
-          >
-            {t("academy_staff_ops")} →
-          </Link>
+          <AcademyStaffHubPanel />
         </section>
       ) : null}
 
@@ -289,17 +292,21 @@ export function AcademyHubClient() {
             <p className="mt-1 text-sm font-semibold text-[#e8f3ee]">
               {journeyNextStepLabel(t, hub.journey, nextLive?.title)}
             </p>
-            {showFormationEnroll ? (
+            {showContinueEnroll && continueEnrollEdition ? (
               <button
                 type="button"
                 disabled={enrolling}
                 onClick={() =>
-                  launchEdition &&
-                  void enroll(launchEdition.slug, launchEdition.programSlug)
+                  void enroll(
+                    continueEnrollEdition.slug,
+                    continueEnrollEdition.programSlug,
+                  )
                 }
                 className="mt-3 w-full rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33] disabled:opacity-60"
               >
-                {t("academy_formation_activate")}
+                {showFormationEnroll
+                  ? t("academy_formation_activate")
+                  : t("academy_enroll")}
               </button>
             ) : (
               <Link
@@ -477,11 +484,7 @@ export function AcademyHubClient() {
             </section>
           ) : null}
         </>
-      ) : (
-        <p className="text-sm text-[color:var(--fd-muted)]">
-          {t("academy_staff_hint")}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -88,6 +88,7 @@ export type EventRecord = {
   audienceMode: EventAudienceModeValue;
   status: EventStatusValue;
   communityPostId: string | null;
+  editionId: string | null;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -118,6 +119,7 @@ export type CreateEventInput = {
   eventType?: EventTypeValue;
   visibility?: EventVisibilityValue;
   audienceMode?: EventAudienceModeValue;
+  editionId?: string | null;
 };
 
 export type EventDashboardKpis = {

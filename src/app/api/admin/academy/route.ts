@@ -51,7 +51,13 @@ export async function GET(req: Request) {
   }
 
   const overview = await listAdminAcademyOverview();
-  return NextResponse.json(overview);
+  return NextResponse.json({
+    ...overview,
+    viewer: {
+      id: u.id,
+      name: u.email?.split("@")[0] || "McBuleli",
+    },
+  });
 }
 
 export async function PATCH(req: Request) {

@@ -98,9 +98,9 @@ export function AcademyLiveRoomClient({
       setErr(t("academy_error_load"));
       return;
     }
-    const s = (j.sessions as SessionLive[] | undefined)?.find(
-      (x) => x.slug === sessionSlug,
-    );
+    const sessions = (j.sessions as SessionLive[] | undefined) ?? [];
+    const replays = (j.replays as SessionLive[] | undefined) ?? [];
+    const s = [...sessions, ...replays].find((x) => x.slug === sessionSlug);
     if (!s) {
       setErr(t("academy_live_session_not_found"));
       return;

@@ -10,6 +10,7 @@ import {
   users,
 } from "@/db";
 import { EventStatus } from "@/lib/events/types";
+import { removeCommunityPostsForEdition } from "@/lib/events/community-sync";
 import { ACADEMY_PROGRAM_LIVE_STUDIO } from "@/lib/academy-config";
 import { createLiveStudioEdition } from "@/lib/academy-live-service";
 import { enrollInEdition } from "@/lib/academy-service";
@@ -368,6 +369,9 @@ export async function cancelOwnerWebinar(args: {
   }
 
   const meta = row.cohortMeta as LiveStudioCohortMeta | null;
+
+  await removeCommunityPostsForEdition(row.id);
+
   await db
     .update(academyEditions)
     .set({

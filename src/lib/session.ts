@@ -1,11 +1,23 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import { sessionCookieName, verifySessionTokenFull } from "./jwt";
 
-export async function getSessionUserId(): Promise<string | null> {
+/** Cookie (browser) or `Authorization: Bearer` (Godot / external clients). */
+async function readSessionToken(): Promise<string | null> {
   const jar = await cookies();
-  const raw = jar.get(sessionCookieName())?.value;
+  const fromCookie = jar.get(sessionCookieName())?.value?.trim();
+  if (fromCookie) return fromCookie;
+
+  const auth = (await headers()).get("authorization")?.trim();
+  if (auth?.toLowerCase().startsWith("bearer ")) {
+    return auth.slice(7).trim();
+  }
+  return null;
+}
+
+export async function getSessionUserId(): Promise<string | null> {
+  const raw = await readSessionToken();
   if (!raw) return null;
   try {
     const { userId, sessionVersion } = await verifySessionTokenFull(raw);

@@ -28,6 +28,7 @@ const createSchema = z.object({
   eventType: z.enum(["FREE", "PAID"]).optional(),
   visibility: z.enum(["PUBLIC", "PRIVATE", "COMMUNITY"]).optional(),
   audienceMode: z.enum(["ALL_ACADEMY_MEMBERS", "MANUAL"]).optional(),
+  editionId: z.string().uuid().nullable().optional(),
 });
 
 export async function GET(req: Request) {

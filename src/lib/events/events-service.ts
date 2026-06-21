@@ -9,7 +9,11 @@ import {
 } from "@/db";
 import { getAppAbsoluteUrl } from "@/lib/app-url";
 import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
-import { syncEventCommunityPost, eventToPublic } from "@/lib/events/community-sync";
+import {
+  removeEventCommunityPost,
+  syncEventCommunityPost,
+  eventToPublic,
+} from "@/lib/events/community-sync";
 import {
   canEditEvent,
   canViewEvent,
@@ -115,6 +119,7 @@ export async function createEvent(args: {
       audienceMode: args.input.audienceMode ?? EventAudienceMode.MANUAL,
       status: EventStatus.DRAFT,
       createdBy: args.createdBy,
+      editionId: args.input.editionId ?? null,
     })
     .returning();
 
@@ -307,6 +312,8 @@ export async function deleteEvent(args: {
   if (!canEditEvent({ role, userId: args.userId, event: row })) {
     return { ok: false, code: "event_forbidden" };
   }
+
+  await removeEventCommunityPost(row.id);
 
   await getDb()
     .update(academyTrainingEvents)
