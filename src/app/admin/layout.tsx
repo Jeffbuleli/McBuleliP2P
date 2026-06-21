@@ -132,6 +132,9 @@ export default async function AdminLayout({
               <AdminNavLink href="/admin/academy" variant="support" icon="users">
                 Academy Live
               </AdminNavLink>
+              <AdminNavLink href="/admin/events" variant="support" icon="users">
+                Events
+              </AdminNavLink>
               <AdminNavLink href="/admin/bots" variant="bots" icon="bots">
                 {d.admin_nav_bots}
               </AdminNavLink>

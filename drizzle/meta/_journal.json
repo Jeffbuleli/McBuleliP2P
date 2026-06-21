@@ -500,10 +500,10 @@
       "breakpoints": true
     },
     {
-      "idx": 71,
+      "idx": 72,
       "version": "7",
-      "when": 1785100000000,
-      "tag": "0079_deposit_launch_rewards",
+      "when": 1785200000000,
+      "tag": "0080_academy_training_events",
       "breakpoints": true
     }
   ]

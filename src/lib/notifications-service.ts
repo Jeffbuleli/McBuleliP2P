@@ -37,6 +37,7 @@ export type NotificationKind =
   | "academy_session_reminder"
   | "academy_announcement"
   | "academy_cohort_invite"
+  | "event_reminder"
   | "community_comment"
   | "community_like"
   | "community_trader_follow";

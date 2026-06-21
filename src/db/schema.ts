@@ -2707,6 +2707,96 @@ export const communityPosts = pgTable(
   ],
 );
 
+/** Academy Events & Trainings — SSOT for posters, community, live, calendar. */
+export const academyTrainingEvents = pgTable(
+  "academy_training_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 128 }).notNull().unique(),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description").notNull().default(""),
+    category: varchar("category", { length: 64 }).notNull().default("training"),
+    coverImage: text("cover_image"),
+    trainerId: uuid("trainer_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    trainerName: varchar("trainer_name", { length: 120 }).notNull(),
+    startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+    endDate: timestamp("end_date", { withTimezone: true }).notNull(),
+    timezone: varchar("timezone", { length: 64 }).notNull().default("Africa/Kinshasa"),
+    durationMinutes: integer("duration_minutes").notNull().default(60),
+    locationType: varchar("location_type", { length: 16 }).notNull().default("ONLINE"),
+    liveRoomId: varchar("live_room_id", { length: 128 }),
+    liveRoomUrl: text("live_room_url"),
+    maxParticipants: integer("max_participants"),
+    price: numeric("price", { precision: 36, scale: 18 }).notNull().default("0"),
+    currency: varchar("currency", { length: 16 }).notNull().default("USDT"),
+    eventType: varchar("event_type", { length: 8 }).notNull().default("FREE"),
+    visibility: varchar("visibility", { length: 16 }).notNull().default("COMMUNITY"),
+    audienceMode: varchar("audience_mode", { length: 32 }).notNull().default("MANUAL"),
+    status: varchar("status", { length: 16 }).notNull().default("DRAFT"),
+    communityPostId: uuid("community_post_id").references(() => communityPosts.id, {
+      onDelete: "set null",
+    }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("academy_training_events_status_start_idx").on(t.status, t.startDate),
+    index("academy_training_events_trainer_idx").on(t.trainerId, t.startDate),
+  ],
+);
+
+export const academyTrainingEventParticipants = pgTable(
+  "academy_training_event_participants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => academyTrainingEvents.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    participantStatus: varchar("participant_status", { length: 16 })
+      .notNull()
+      .default("INVITED"),
+    paymentStatus: varchar("payment_status", { length: 16 }).notNull().default("FREE"),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("academy_training_event_participants_event_user_uidx").on(
+      t.eventId,
+      t.userId,
+    ),
+    index("academy_training_event_participants_user_idx").on(t.userId, t.joinedAt),
+  ],
+);
+
+export const academyTrainingEventReminders = pgTable(
+  "academy_training_event_reminders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => academyTrainingEvents.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reminderKind: varchar("reminder_kind", { length: 8 }).notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("academy_training_event_reminders_dedup_uidx").on(
+      t.eventId,
+      t.userId,
+      t.reminderKind,
+    ),
+  ],
+);
+
 export const communityPostViews = pgTable(
   "community_post_views",
   {

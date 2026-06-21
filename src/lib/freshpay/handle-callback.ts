@@ -12,7 +12,6 @@ import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 import { fmtWalletAmount } from "@/lib/wallet-types";
 import { tryAwardReferralFromFiatDeposit } from "@/lib/referral-service";
-import { tryAwardDepositLaunchReward } from "@/lib/deposit-launch-reward";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -272,14 +271,6 @@ async function handleDepositCallback(args: {
     feeUsdEquivalentStr: feeUsdEq,
     fiatDepositRef: args.reference,
   });
-
-  await tryAwardDepositLaunchReward({
-    userId: tx.userId,
-    slot: "momo",
-    sourceRef: args.reference,
-    grossAmount: gross,
-    currency: args.currency,
-  }).catch(() => null);
 
   return { ok: true };
 }

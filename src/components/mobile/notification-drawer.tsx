@@ -97,6 +97,13 @@ function notifMeta(
         href: "/app/wallet",
         pill: { variant: "success", label: t("status_ui_success") },
       };
+    case "event_reminder":
+      return {
+        title: str("title") || "Formation",
+        body: `McBuleli Live · ${str("reminderKind")}`,
+        href: str("href") || "/app/academy",
+        pill: { variant: "processing", label: "Live" },
+      };
     case "deposit_validation_pending":
       return {
         title: t("notif_deposit_validation_pending_title", { asset }),
