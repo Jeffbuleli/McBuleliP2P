@@ -234,6 +234,122 @@ export type AcademyUpcomingSessionView = {
   isLiveNow: boolean;
 };
 
+async function loadHubUpcomingFromTrainingEvents(args: {
+  db: ReturnType<typeof getDb>;
+  enrolledEditionIds: string[];
+  isStaffViewer: boolean;
+}): Promise<AcademyUpcomingSessionView[]> {
+  if (!args.enrolledEditionIds.length) return [];
+
+  const eventRows = await args.db
+    .select({
+      slug: academyTrainingEvents.slug,
+      title: academyTrainingEvents.title,
+      startDate: academyTrainingEvents.startDate,
+      endDate: academyTrainingEvents.endDate,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academyTrainingEvents)
+    .innerJoin(
+      academyEditions,
+      eq(academyTrainingEvents.editionId, academyEditions.id),
+    )
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        inArray(academyTrainingEvents.editionId, args.enrolledEditionIds),
+        inArray(academyTrainingEvents.status, ["PUBLISHED", "LIVE"]),
+      ),
+    )
+    .orderBy(asc(academyTrainingEvents.startDate));
+
+  const upcoming: AcademyUpcomingSessionView[] = [];
+  for (const s of eventRows) {
+    if (
+      !shouldShowAcademySessionSlug({
+        sessionSlug: s.slug,
+        isStaff: args.isStaffViewer,
+      })
+    ) {
+      continue;
+    }
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    const ended = isSessionEnded({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    if (ended && !liveNow) continue;
+    upcoming.push({
+      editionSlug: s.editionSlug,
+      programSlug: s.programSlug,
+      sessionSlug: s.slug,
+      title: s.title,
+      startsAt: s.startDate.toISOString(),
+      isLiveNow: liveNow,
+    });
+    if (upcoming.length >= 4) break;
+  }
+  return upcoming;
+}
+
+async function loadHubUpcomingFromLegacySessions(args: {
+  db: ReturnType<typeof getDb>;
+  enrolledEditionIds: string[];
+  locale: Locale;
+  isStaffViewer: boolean;
+}): Promise<AcademyUpcomingSessionView[]> {
+  const sessionRows = await args.db
+    .select({
+      slug: academySessions.slug,
+      titleFr: academySessions.titleFr,
+      titleEn: academySessions.titleEn,
+      startsAt: academySessions.startsAt,
+      endsAt: academySessions.endsAt,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academySessions)
+    .innerJoin(academyEditions, eq(academySessions.editionId, academyEditions.id))
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(inArray(academySessions.editionId, args.enrolledEditionIds))
+    .orderBy(asc(academySessions.startsAt));
+
+  const upcoming: AcademyUpcomingSessionView[] = [];
+  for (const s of sessionRows) {
+    if (
+      !shouldShowAcademySessionSlug({
+        sessionSlug: s.slug,
+        isStaff: args.isStaffViewer,
+      })
+    ) {
+      continue;
+    }
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    const ended = isSessionEnded({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    if (ended && !liveNow) continue;
+    upcoming.push({
+      editionSlug: s.editionSlug,
+      programSlug: s.programSlug,
+      sessionSlug: s.slug,
+      title: pickLocale({ titleFr: s.titleFr, titleEn: s.titleEn }, args.locale),
+      startsAt: s.startsAt.toISOString(),
+      isLiveNow: liveNow,
+    });
+    if (upcoming.length >= 4) break;
+  }
+  return upcoming;
+}
+
 export async function getAcademyHub(args: {
   userId: string;
   locale: Locale;
@@ -407,55 +523,21 @@ export async function getAcademyHub(args: {
       }
     }
 
-    const sessionRows = await db
-      .select({
-        slug: academySessions.slug,
-        titleFr: academySessions.titleFr,
-        titleEn: academySessions.titleEn,
-        startsAt: academySessions.startsAt,
-        endsAt: academySessions.endsAt,
-        editionSlug: academyEditions.slug,
-        programSlug: academyPrograms.slug,
-      })
-      .from(academySessions)
-      .innerJoin(
-        academyEditions,
-        eq(academySessions.editionId, academyEditions.id),
-      )
-      .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
-      .where(inArray(academySessions.editionId, enrolledEditionIds))
-      .orderBy(asc(academySessions.startsAt));
-
-    for (const s of sessionRows) {
-      if (
-        !shouldShowAcademySessionSlug({
-          sessionSlug: s.slug,
-          isStaff: isStaffViewer,
-        })
-      ) {
-        continue;
-      }
-      const liveNow = isSessionLiveNow({
-        startsAt: s.startsAt,
-        endsAt: s.endsAt,
+    const ssotUpcoming = await loadHubUpcomingFromTrainingEvents({
+      db,
+      enrolledEditionIds,
+      isStaffViewer,
+    });
+    if (ssotUpcoming.length > 0) {
+      upcomingSessions.push(...ssotUpcoming);
+    } else {
+      const legacyUpcoming = await loadHubUpcomingFromLegacySessions({
+        db,
+        enrolledEditionIds,
+        locale,
+        isStaffViewer,
       });
-      const ended = isSessionEnded({
-        startsAt: s.startsAt,
-        endsAt: s.endsAt,
-      });
-      if (ended && !liveNow) continue;
-      upcomingSessions.push({
-          editionSlug: s.editionSlug,
-          programSlug: s.programSlug,
-          sessionSlug: s.slug,
-          title: pickLocale(
-            { titleFr: s.titleFr, titleEn: s.titleEn },
-            locale,
-          ),
-          startsAt: s.startsAt.toISOString(),
-          isLiveNow: liveNow,
-      });
-      if (upcomingSessions.length >= 4) break;
+      upcomingSessions.push(...legacyUpcoming);
     }
   }
 
@@ -1357,7 +1439,9 @@ export function getAdminAcademyLiveInfra(): AdminAcademyLiveInfra {
 
 const ADMIN_EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
 
-export async function listAdminAcademyOverview(): Promise<{
+export async function listAdminAcademyOverview(args?: {
+  funnelEditionSlug?: string | null;
+}): Promise<{
   formation: FormationOpsStats;
   infra: AdminAcademyLiveInfra;
   eventKpis: Awaited<ReturnType<typeof getEventDashboardKpis>>;
@@ -1369,6 +1453,7 @@ export async function listAdminAcademyOverview(): Promise<{
     status: string;
     liveBaseUrl: string | null;
     tutorEnabled: boolean;
+    startsAt: string | null;
     sessionCount: number;
     enrollmentCount: number;
     formationRegistrations: number | null;
@@ -1384,6 +1469,7 @@ export async function listAdminAcademyOverview(): Promise<{
       status: academyEditions.status,
       liveBaseUrl: academyEditions.liveBaseUrl,
       tutorEnabled: academyEditions.tutorEnabled,
+      startsAt: academyEditions.startsAt,
       programSlug: academyPrograms.slug,
     })
     .from(academyEditions)
@@ -1420,7 +1506,11 @@ export async function listAdminAcademyOverview(): Promise<{
     sessionCounts.map((c) => [c.editionId!, c.n]),
   );
   const sessionMap = new Map(legacySessionCounts.map((c) => [c.editionId, c.n]));
-  const formation = await getFormationOpsStats();
+  const funnelEditionId =
+    args?.funnelEditionSlug != null
+      ? (rows.find((r) => r.slug === args.funnelEditionSlug)?.id ?? null)
+      : null;
+  const formation = await getFormationOpsStats(funnelEditionId);
   const eventKpis = await getEventDashboardKpis();
 
   return {
@@ -1435,6 +1525,7 @@ export async function listAdminAcademyOverview(): Promise<{
       status: r.status,
       liveBaseUrl: r.liveBaseUrl,
       tutorEnabled: r.tutorEnabled,
+      startsAt: r.startsAt?.toISOString() ?? null,
       sessionCount: eventMap.get(r.id) ?? sessionMap.get(r.id) ?? 0,
       enrollmentCount: enrollMap.get(r.id) ?? 0,
       formationRegistrations:
@@ -1891,7 +1982,9 @@ async function launchEditionId(): Promise<string | null> {
   return row?.id ?? null;
 }
 
-export async function getFormationOpsStats(): Promise<FormationOpsStats> {
+export async function getFormationOpsStats(
+  editionId?: string | null,
+): Promise<FormationOpsStats> {
   const db = getDb();
   const [formationRow] = await db
     .select({
@@ -1900,15 +1993,15 @@ export async function getFormationOpsStats(): Promise<FormationOpsStats> {
     })
     .from(trainingRegistrations);
 
-  const editionId = await launchEditionId();
+  const targetEditionId = editionId ?? (await launchEditionId());
   let academyEnrolledLaunch = 0;
-  if (editionId) {
+  if (targetEditionId) {
     const [enRow] = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(academyEnrollments)
       .where(
         and(
-          eq(academyEnrollments.editionId, editionId),
+          eq(academyEnrollments.editionId, targetEditionId),
           eq(academyEnrollments.status, "active"),
         ),
       );
@@ -1916,12 +2009,13 @@ export async function getFormationOpsStats(): Promise<FormationOpsStats> {
   }
 
   const formationTotal = formationRow?.total ?? 0;
+  const formationLinkedToUser = formationRow?.linked ?? 0;
 
   return {
     formationTotal,
-    formationLinkedToUser: formationRow?.linked ?? 0,
+    formationLinkedToUser,
     academyEnrolledLaunch,
-    pendingAcademyEnroll: Math.max(0, formationTotal - academyEnrolledLaunch),
+    pendingAcademyEnroll: Math.max(0, formationLinkedToUser - academyEnrolledLaunch),
   };
 }
 

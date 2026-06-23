@@ -49,6 +49,7 @@ type EditionRow = {
   status: string;
   liveBaseUrl: string | null;
   tutorEnabled: boolean;
+  startsAt: string | null;
   sessionCount: number;
   enrollmentCount: number;
   formationRegistrations: number | null;
@@ -105,10 +106,10 @@ type HostRow = {
 
 const TABS: { id: TabId; label: string; icon: "live" | "calendar" | "chat" | "tutor" | "wallet" | "signal" }[] = [
   { id: "overview", label: "Aperçu", icon: "signal" },
-  { id: "program", label: "Cohorte", icon: "calendar" },
+  { id: "program", label: "Paramètres", icon: "calendar" },
   { id: "lives", label: "Événements", icon: "live" },
-  { id: "enrollments", label: "Inscrits", icon: "wallet" },
-  { id: "leads", label: "Leads", icon: "chat" },
+  { id: "enrollments", label: "Membres", icon: "wallet" },
+  { id: "leads", label: "Pré-inscr.", icon: "chat" },
   { id: "analytics", label: "Stats", icon: "tutor" },
 ];
 
@@ -181,7 +182,11 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
 
   const loadOverview = useCallback(async () => {
     setErr(null);
-    const res = await fetch("/api/admin/academy", { credentials: "include" });
+    const editionForFunnel = selected ?? searchParams.get("edition");
+    const qs = editionForFunnel
+      ? `?funnelEdition=${encodeURIComponent(editionForFunnel)}`
+      : "";
+    const res = await fetch(`/api/admin/academy${qs}`, { credentials: "include" });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
       setErr("Forbidden");
@@ -200,7 +205,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
       if (cur && eds.some((e) => e.slug === cur)) return cur;
       return eds[0]?.slug ?? null;
     });
-  }, [searchParams]);
+  }, [searchParams, selected]);
 
   const loadEditionDetail = useCallback(async (editionSlug: string) => {
     const res = await fetch(
@@ -319,7 +324,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
         setEditionMsg(typeof j.error === "string" ? j.error : "Erreur");
         return;
       }
-      setEditionMsg("Programme enregistré");
+      setEditionMsg("Paramètres cohorte enregistrés");
       await loadOverview();
       if (selected) await loadEditionDetail(selected);
     } finally {
@@ -492,7 +497,10 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
           >
             {e.titleFr}
             <span className="mt-0.5 block font-medium opacity-80">
-              {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} ·{" "}
+              {e.startsAt
+                ? `${formatSessionWhen(e.startsAt)} · `
+                : ""}
+              {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} membres ·{" "}
               {e.sessionCount} événements
             </span>
           </button>
@@ -538,10 +546,15 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
               <SectionHead
                 icon="wallet"
                 title="Funnel inscription"
-                hint="Leads /formation → comptes → inscrits cohorte"
+                hint={
+                  selectedEdition
+                    ? `Leads /formation → comptes → membres · ${selectedEdition.titleFr}`
+                    : "Leads /formation → comptes → membres cohorte"
+                }
               />
               <AcademyFormationFunnel
                 formation={formation}
+                editionTitle={selectedEdition?.titleFr}
                 onLeads={() => pickTab("leads")}
                 onSync={() => void syncFormation()}
                 syncing={syncing}
@@ -587,8 +600,8 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
         <div className={adminCls.card}>
           <SectionHead
             icon="calendar"
-            title={selectedEdition?.titleFr ?? "Programme"}
-            hint={`${moduleCount} modules · cohorte`}
+            title={selectedEdition?.titleFr ?? "Cohorte"}
+            hint="Statut, tuteur IA, salle live — n’ouvre pas la Community"
           />
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
@@ -650,7 +663,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
               onClick={() => void saveEdition()}
               className={adminCls.btnPrimary}
             >
-              {savingEdition ? "…" : "Enregistrer le programme"}
+              {savingEdition ? "…" : "Enregistrer la cohorte"}
             </button>
             {editionDetail ? (
               <Link
@@ -677,6 +690,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
               editionId={selectedEdition.id}
               editionSlug={selectedEdition.slug}
               editionTitle={selectedEdition.titleFr}
+              programSlug={selectedEdition.programSlug}
               onCreated={() => {
                 void loadSessions(selected);
                 void loadOverview();
@@ -847,14 +861,18 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
       {tab === "enrollments" && selected ? (
         <div className={adminCls.card}>
           <div className="flex items-center justify-between gap-2">
-            <h2 className={adminCls.h2}>Inscriptions — {selected}</h2>
+            <div>
+              <h2 className={adminCls.h2}>Membres de la cohorte — {selected}</h2>
+              <p className={`mt-1 ${adminCls.muted}`}>
+                Comptes McBuleli inscrits à cette édition · {total} total
+              </p>
+            </div>
             {enrollments.length > 0 ? (
               <button type="button" onClick={exportCsv} className="text-xs font-bold text-[color:var(--fd-primary)]">
                 Export CSV
               </button>
             ) : null}
           </div>
-          <p className={`mt-1 ${adminCls.muted}`}>{total} total</p>
           <div className="mt-3 max-h-[480px] overflow-auto">
             <table className="w-full text-left text-xs">
               <thead>

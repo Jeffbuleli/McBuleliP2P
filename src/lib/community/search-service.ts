@@ -3,6 +3,7 @@ import { communityPosts, getDb } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import { getPostMediaViews } from "@/lib/community/media-engagement-service";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import { extractHashtags } from "@/lib/community/link-embed";
 import { getAuthorsMap } from "@/lib/community/profile-service";
 
@@ -30,6 +31,7 @@ export async function searchCommunityPosts(args: {
 
   const raw = args.q.trim();
   if (raw.length < 2) return [];
+  await ensureCommunitySchema();
 
   const limit = Math.min(args.limit ?? 20, 40);
   const db = getDb();

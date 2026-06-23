@@ -379,6 +379,14 @@ export function AcademyHubClient() {
                         <img src="/academy/event-live.svg" alt="" className="h-10 w-10 shrink-0" />
                         <span className="flex-1 text-sm font-semibold text-[color:var(--fd-text)]">
                           {e.title}
+                          {e.startsAt ? (
+                            <span className="mt-0.5 block text-[10px] font-medium text-[color:var(--fd-muted)]">
+                              {new Date(e.startsAt).toLocaleDateString(
+                                fr ? "fr-FR" : "en-US",
+                                { day: "numeric", month: "short", year: "numeric" },
+                              )}
+                            </span>
+                          ) : null}
                         </span>
                         <span className="text-[10px] font-bold text-[#305f33]">
                           {t("academy_open_classroom")} →

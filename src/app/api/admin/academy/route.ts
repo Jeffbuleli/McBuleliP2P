@@ -50,7 +50,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ enrollments: rows, total, page, pageSize: limit });
   }
 
-  const overview = await listAdminAcademyOverview();
+  const overview = await listAdminAcademyOverview({
+    funnelEditionSlug: url.searchParams.get("funnelEdition")?.trim() || null,
+  });
   return NextResponse.json({
     ...overview,
     viewer: {

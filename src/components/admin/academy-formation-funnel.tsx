@@ -16,18 +16,20 @@ const STEPS: {
 }[] = [
   { key: "formationTotal", label: "Leads", hint: "/formation" },
   { key: "formationLinkedToUser", label: "Comptes liés", hint: "Compte McBuleli" },
-  { key: "academyEnrolledLaunch", label: "Inscrits", hint: "Cohorte active" },
+  { key: "academyEnrolledLaunch", label: "Membres", hint: "Cohorte sélectionnée" },
   { key: "pendingAcademyEnroll", label: "En attente", hint: "À activer" },
 ];
 
 export function AcademyFormationFunnel({
   formation,
+  editionTitle,
   onLeads,
   onSync,
   syncing,
   syncMsg,
 }: {
   formation: FormationStats;
+  editionTitle?: string;
   onLeads: () => void;
   onSync: () => void;
   syncing: boolean;
@@ -37,6 +39,11 @@ export function AcademyFormationFunnel({
 
   return (
     <div className="mt-4 space-y-4">
+      {editionTitle ? (
+        <p className="text-[10px] font-semibold text-[color:var(--fd-muted)]">
+          Membres comptés pour : <span className="font-bold">{editionTitle}</span>
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-end gap-2">
         {STEPS.map((step, i) => {
           const value = formation[step.key];

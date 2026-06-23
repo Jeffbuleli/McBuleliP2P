@@ -12,6 +12,7 @@ import {
   getAuthorsMap,
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import type { MediaCommentView, MediaItemView } from "@/lib/community/media-types";
 
 export type { MediaCommentView, MediaItemView } from "@/lib/community/media-types";
@@ -104,6 +105,7 @@ export async function getPostMediaItem(args: {
     }
   | { ok: false; error: string }
 > {
+  await ensureCommunitySchema();
   const db = getDb();
   const [post] = await db
     .select()

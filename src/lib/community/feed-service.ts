@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   academyTrainingEvents,
   communityComments,
@@ -24,6 +24,10 @@ import {
   type CommunityAuthorView,
 } from "@/lib/community/profile-service";
 import { ensureCommunitySchema } from "@/lib/community/community-schema";
+
+async function ensureFeedReady(): Promise<void> {
+  await ensureCommunitySchema();
+}
 import {
   type FeedComposerKind,
   isFeedComposerKind,
@@ -154,6 +158,7 @@ export async function listFeedPosts(args: {
   sort?: "recent" | "popular" | "trending" | "following";
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
+  await ensureFeedReady();
 
   const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
   const db = getDb();
@@ -271,6 +276,7 @@ export async function listFormationPosts(args: {
   limit?: number;
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
+  await ensureFeedReady();
 
   const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
   const db = getDb();
@@ -292,6 +298,8 @@ export async function listFormationPosts(args: {
     }
   }
 
+  const formationStartAt = sql`coalesce((${communityPosts.meta}->>'startDate')::timestamptz, ${communityPosts.publishedAt})`;
+
   const conditions = [
     eq(communityPosts.status, "published"),
     eq(communityPosts.contentKind, "formation"),
@@ -300,11 +308,8 @@ export async function listFormationPosts(args: {
   if (cursorDate && cursorId) {
     conditions.push(
       or(
-        lt(communityPosts.publishedAt, cursorDate),
-        and(
-          eq(communityPosts.publishedAt, cursorDate),
-          lt(communityPosts.id, cursorId),
-        ),
+        gt(formationStartAt, cursorDate),
+        and(eq(formationStartAt, cursorDate), gt(communityPosts.id, cursorId)),
       )!,
     );
   }
@@ -313,7 +318,7 @@ export async function listFormationPosts(args: {
     .select()
     .from(communityPosts)
     .where(and(...conditions))
-    .orderBy(desc(communityPosts.publishedAt), desc(communityPosts.id))
+    .orderBy(asc(formationStartAt), asc(communityPosts.id))
     .limit(limit + 1);
 
   const slice = rows.slice(0, limit);
@@ -348,10 +353,13 @@ export async function listFormationPosts(args: {
   let nextCursor: string | null = null;
   if (rows.length > limit) {
     const last = slice[slice.length - 1];
-    if (last?.publishedAt) {
+    const lastStart =
+      parseFormationPostMeta(last?.meta, last?.body)?.startDate ??
+      last?.publishedAt?.toISOString();
+    if (lastStart && last?.id) {
       nextCursor = Buffer.from(
         JSON.stringify({
-          t: last.publishedAt.toISOString(),
+          t: lastStart,
           id: last.id,
         }),
         "utf8",
@@ -367,7 +375,7 @@ export async function recordPostView(args: {
   postId: string;
   viewerId: string;
 }): Promise<{ viewCount: number; recorded: boolean }> {
-  await ensureCommunitySchema();
+  await ensureFeedReady();
   const db = getDb();
   const inserted = await db
     .insert(communityPostViews)
@@ -413,6 +421,7 @@ export async function createFeedPost(args: {
   | { ok: false; error: string }
 > {
   if (!communityEnabled()) return { ok: false, error: "community_disabled" };
+  await ensureFeedReady();
 
   const body = args.body.trim();
   const contentKind =
@@ -520,6 +529,7 @@ export async function deleteFeedPost(args: {
   postId: string;
   userId: string;
 }): Promise<{ ok: boolean; error?: string }> {
+  await ensureFeedReady();
   const db = getDb();
   const [post] = await db
     .select()
@@ -557,6 +567,7 @@ export async function hideFeedPost(args: {
   userId: string;
   hidden: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
+  await ensureFeedReady();
   const db = getDb();
   const [post] = await db
     .select()
@@ -588,6 +599,7 @@ export async function listAuthorFeedPosts(args: {
   includeHidden?: boolean;
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
+  await ensureFeedReady();
 
   const limit = Math.min(args.limit ?? 15, 30);
   const db = getDb();
@@ -690,6 +702,7 @@ export async function togglePostLike(args: {
   | { ok: true; liked: boolean; likeCount: number; bpGranted: number }
   | { ok: false; error: string }
 > {
+  await ensureFeedReady();
   const db = getDb();
   const [post] = await db
     .select()
@@ -834,6 +847,7 @@ export async function getFeedPostById(args: {
   viewerId: string | null;
 }): Promise<FeedPostView | null> {
   if (!communityEnabled()) return null;
+  await ensureFeedReady();
   const db = getDb();
   const [row] = await db
     .select()
@@ -1013,6 +1027,7 @@ export async function addPostComment(args: {
   | { ok: true; comment: CommentView; bpGranted: number }
   | { ok: false; error: string }
 > {
+  await ensureFeedReady();
   const body = args.body.trim();
   if (body.length < 2 || body.length > 1200) {
     return { ok: false, error: "community_comment_length" };
@@ -1134,6 +1149,7 @@ export async function getPublicPostForShare(
   postId: string,
 ): Promise<PublicPostShareView | null> {
   if (!communityEnabled()) return null;
+  await ensureFeedReady();
 
   const db = getDb();
   const [row] = await db
@@ -1167,6 +1183,7 @@ export async function recordPostShare(args: {
   userId: string;
   postId: string;
 }): Promise<{ ok: boolean; bpGranted: number; shareCount: number }> {
+  await ensureFeedReady();
   const db = getDb();
   const [post] = await db
     .select()

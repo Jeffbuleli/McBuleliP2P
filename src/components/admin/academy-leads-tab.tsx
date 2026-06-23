@@ -66,8 +66,10 @@ export function AcademyLeadsTab() {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <img src="/academy/event-live.svg" alt="" className="h-10 w-10" />
         <div>
-          <p className="text-sm font-black">Inscriptions publiques</p>
-          <p className="text-xs text-[color:var(--fd-muted)]">/formation · {total}</p>
+          <p className="text-sm font-black">Pré-inscriptions /formation</p>
+          <p className="text-xs text-[color:var(--fd-muted)]">
+            Leads sans compte McBuleli · page publique /formation · {total}
+          </p>
         </div>
         <div className="ml-auto flex gap-2">
           <button type="button" onClick={() => void load()} className={adminCls.btnSecondary}>

@@ -8,6 +8,7 @@ import {
   type academyTrainingEvents as eventsTable,
 } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import {
   formationSummaryBody,
   type FormationPostMeta,
@@ -75,6 +76,7 @@ async function buildFormationMeta(
 
 export async function syncEventCommunityPost(eventId: string): Promise<string | null> {
   if (!communityEnabled()) return null;
+  await ensureCommunitySchema();
 
   const db = getDb();
   const [event] = await db
@@ -111,7 +113,6 @@ export async function syncEventCommunityPost(eventId: string): Promise<string | 
           contentKind: "formation",
           meta,
           updatedAt: now,
-          publishedAt: now,
           status: "published",
         })
         .where(eq(communityPosts.id, event.communityPostId));

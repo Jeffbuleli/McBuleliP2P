@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AcademyIcon } from "@/components/academy/academy-icon";
+import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { adminCls } from "@/components/admin/admin-ui";
 import { formatSessionWhen } from "@/components/admin/academy-admin-ui";
+import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
 
 type SsotEvent = {
   id: string;
@@ -17,25 +19,64 @@ type SsotEvent = {
 
 type Viewer = { id: string; name: string };
 
+const VISIBILITY_FR: Record<string, string> = {
+  PRIVATE: "Cohorte seule",
+  COMMUNITY: "Fil Community",
+};
+
 export function AcademyEventsWizard({
   editionId,
   editionSlug,
   editionTitle,
+  programSlug,
   onCreated,
 }: {
   editionId: string;
   editionSlug: string;
   editionTitle: string;
+  programSlug: string;
   onCreated?: () => void;
 }) {
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [events, setEvents] = useState<SsotEvent[]>([]);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [durationMin, setDurationMin] = useState(90);
   const [visibility, setVisibility] = useState<"PRIVATE" | "COMMUNITY">("PRIVATE");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+
+  const communityPreview = useMemo((): FormationPostMeta | null => {
+    if (visibility !== "COMMUNITY" || !title.trim() || !startsAt) return null;
+    const start = new Date(startsAt);
+    if (Number.isNaN(start.getTime())) return null;
+    const q = programSlug ? `?program=${encodeURIComponent(programSlug)}` : "";
+    return {
+      v: 1,
+      eventId: "preview",
+      eventSlug: "apercu",
+      editionSlug,
+      programSlug,
+      editionTitle,
+      joinPath: `/app/academy/${editionSlug}/live/apercu${q}`,
+      trainerName: viewer?.name ?? "McBuleli",
+      startDate: start.toISOString(),
+      timezone: "Africa/Kinshasa",
+      title: title.trim(),
+      description: description.trim() || undefined,
+      eventStatus: "DRAFT",
+    };
+  }, [
+    visibility,
+    title,
+    startsAt,
+    editionSlug,
+    programSlug,
+    editionTitle,
+    description,
+    viewer?.name,
+  ]);
 
   const loadEvents = useCallback(async () => {
     const res = await fetch("/api/events", { credentials: "include" });
@@ -70,6 +111,7 @@ export function AcademyEventsWizard({
         credentials: "include",
         body: JSON.stringify({
           title: title.trim(),
+          description: description.trim() || undefined,
           trainerId: viewer.id,
           trainerName: viewer.name,
           startDate: start.toISOString(),
@@ -87,8 +129,9 @@ export function AcademyEventsWizard({
         return;
       }
       setTitle("");
+      setDescription("");
       setStartsAt("");
-      setMsg("Brouillon OK");
+      setMsg("Brouillon créé — cliquez Publier pour activer le live");
       await loadEvents();
       onCreated?.();
     } finally {
@@ -96,7 +139,7 @@ export function AcademyEventsWizard({
     }
   }
 
-  async function publishEvent(id: string) {
+  async function publishEvent(id: string, evVisibility: string) {
     setBusy(id);
     setMsg(null);
     try {
@@ -109,7 +152,11 @@ export function AcademyEventsWizard({
         setMsg(typeof j.error === "string" ? j.error : "Erreur");
         return;
       }
-      setMsg("Publié");
+      setMsg(
+        evVisibility === "COMMUNITY"
+          ? "Publié — carte Formation visible dans le fil Community"
+          : "Publié — visible dans la classe cohorte uniquement",
+      );
       await loadEvents();
       onCreated?.();
     } finally {
@@ -137,16 +184,25 @@ export function AcademyEventsWizard({
         <img src="/academy/event-live.svg" alt="" className="h-11 w-11 shrink-0" />
         <div>
           <p className="text-sm font-extrabold">{editionTitle}</p>
-          <p className="text-[10px] text-[color:var(--fd-muted)]">Nouvel événement</p>
+          <p className="text-[10px] text-[color:var(--fd-muted)]">
+            Créer un live (pas la cohorte — voir onglet Paramètres)
+          </p>
         </div>
       </div>
 
       <input
         type="text"
-        placeholder="Titre"
+        placeholder="Titre de l'événement"
         className={adminCls.input}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+      />
+      <textarea
+        placeholder="Description (optionnelle — affichée sur la carte Community)"
+        className={`${adminCls.input} min-h-[72px] resize-y`}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
       />
       <div className="grid gap-2 sm:grid-cols-3">
         <input
@@ -173,10 +229,24 @@ export function AcademyEventsWizard({
             setVisibility(e.target.value as "PRIVATE" | "COMMUNITY")
           }
         >
-          <option value="PRIVATE">Cohorte</option>
-          <option value="COMMUNITY">Community</option>
+          <option value="PRIVATE">Cohorte seule</option>
+          <option value="COMMUNITY">Fil Community</option>
         </select>
       </div>
+      <p className="text-[10px] text-[color:var(--fd-muted)]">
+        {visibility === "COMMUNITY"
+          ? "À la publication : carte Formation dans Community + accès live pour les membres Academy."
+          : "À la publication : live réservé aux inscrits de la cohorte, sans carte Community."}
+      </p>
+
+      {communityPreview ? (
+        <div className="space-y-2 rounded-xl border border-dashed border-[#305f33]/40 bg-[#f4faf6] p-3">
+          <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#305f33]">
+            Aperçu carte Community
+          </p>
+          <CommunityFormationCard meta={communityPreview} fr />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <button
@@ -185,7 +255,7 @@ export function AcademyEventsWizard({
           onClick={() => void createDraft()}
           className={adminCls.btnPrimary}
         >
-          {busy === "create" ? "…" : "Créer"}
+          {busy === "create" ? "…" : "Créer l'événement"}
         </button>
         <a
           href={`/app/academy/${editionSlug}`}
@@ -193,7 +263,7 @@ export function AcademyEventsWizard({
           rel="noopener noreferrer"
           className={adminCls.btnSecondary}
         >
-          Voir ↗
+          Voir la classe ↗
         </a>
       </div>
 
@@ -212,14 +282,15 @@ export function AcademyEventsWizard({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold">{ev.title}</p>
                 <p className="text-[10px] text-[color:var(--fd-muted)]">
-                  {formatSessionWhen(ev.startDate)} · {ev.status}
+                  {formatSessionWhen(ev.startDate)} · {ev.status} ·{" "}
+                  {VISIBILITY_FR[ev.visibility] ?? ev.visibility}
                 </p>
               </div>
               {ev.status === "DRAFT" ? (
                 <button
                   type="button"
                   disabled={busy != null}
-                  onClick={() => void publishEvent(ev.id)}
+                  onClick={() => void publishEvent(ev.id, ev.visibility)}
                   className="rounded-lg bg-[#305f33] px-2 py-1 text-[10px] font-bold text-white"
                 >
                   {busy === ev.id ? "…" : "Publier"}
