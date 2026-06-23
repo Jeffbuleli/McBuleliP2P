@@ -8,11 +8,13 @@ export function CommunityExpandableText({
   fr,
   maxChars = 180,
   className = "",
+  withMentions = false,
 }: {
   text: string;
   fr: boolean;
   maxChars?: number;
   className?: string;
+  withMentions?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const needsMore = text.length > maxChars;
@@ -25,6 +27,7 @@ export function CommunityExpandableText({
         text={shown}
         sourceText={text}
         fr={fr}
+        withMentions={withMentions}
         truncateTranslationAt={!expanded && needsMore ? maxChars : undefined}
         className={`whitespace-pre-wrap break-words ${className}`}
       />

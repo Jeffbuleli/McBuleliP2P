@@ -5,7 +5,11 @@ import {
   IconEye,
   IconLike,
   IconShare,
+  IconTelegram,
 } from "@/components/community/community-icons";
+import {
+  COMMUNITY_ACTION_PILL,
+} from "@/lib/community/community-ui";
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) {
@@ -22,18 +26,22 @@ export function CommunityEngagementSummary({
   shareCount,
   viewCount,
   fr,
+  alwaysShowViews = false,
 }: {
   likeCount: number;
   commentCount: number;
   shareCount: number;
   viewCount: number;
   fr: boolean;
+  alwaysShowViews?: boolean;
 }) {
+  const showViews = alwaysShowViews || viewCount > 0;
+
   if (
     likeCount <= 0 &&
     commentCount <= 0 &&
     shareCount <= 0 &&
-    viewCount <= 0
+    !showViews
   ) {
     return null;
   }
@@ -47,33 +55,33 @@ export function CommunityEngagementSummary({
       : "read";
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs font-semibold text-[#78716c]">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#edf2ef] bg-gradient-to-r from-[#fafcfa] to-white px-4 py-2.5 text-xs font-semibold text-[#78716c]">
+      <div className="flex flex-wrap items-center gap-2.5">
         {likeCount > 0 ? (
-          <span className="inline-flex items-center gap-1">
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#305f33] text-white">
-              <IconLike size={10} filled />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ee] px-2 py-0.5 text-[#305f33]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#305f33] text-white shadow-sm">
+              <IconLike size={11} filled />
             </span>
             {formatCount(likeCount)}
           </span>
         ) : null}
-        {viewCount > 0 ? (
+        {showViews ? (
           <span
-            className="inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 rounded-full bg-[#f4f6f4] px-2 py-0.5"
             title={
               fr
-                ? "1 lecture = 1 membre ayant ouvert la publication"
-                : "1 read = 1 member who opened the post"
+                ? "1 lecture = 1 membre ayant vu la publication"
+                : "1 read = 1 member who viewed the post"
             }
           >
-            <IconEye size={12} />
+            <IconEye size={13} />
             {formatCount(viewCount)} {readLabel}
           </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         {commentCount > 0 ? (
-          <span>
+          <span className="rounded-full bg-[#f4f6f4] px-2 py-0.5">
             {formatCount(commentCount)}{" "}
             {fr
               ? commentCount > 1
@@ -85,7 +93,7 @@ export function CommunityEngagementSummary({
           </span>
         ) : null}
         {shareCount > 0 ? (
-          <span>
+          <span className="rounded-full bg-[#f4f6f4] px-2 py-0.5">
             {formatCount(shareCount)}{" "}
             {fr
               ? shareCount > 1
@@ -124,17 +132,18 @@ export function CommunityActionBar({
   onShare: () => void;
   onTelegramShare?: () => void;
 }) {
-  const pill =
-    "flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-lg bg-[#f0f2f5] text-sm font-bold text-[#57534e] transition active:scale-[0.97]";
-
   return (
-    <div className="flex gap-1.5 border-t border-[#f0f4f2] px-2 py-2">
+    <div className="flex gap-1.5 border-t border-[#edf2ef] bg-white/80 px-2.5 py-2.5 backdrop-blur-sm">
       <button
         type="button"
         disabled={busy}
         onClick={onLike}
         aria-label={fr ? "J'aime" : "Like"}
-        className={`${pill} ${likedByMe ? "text-[#305f33]" : ""}`}
+        className={`${COMMUNITY_ACTION_PILL} ${
+          likedByMe
+            ? "bg-[#eaf5ee] text-[#305f33] ring-1 ring-[#305f33]/20"
+            : ""
+        }`}
       >
         <IconLike size={20} filled={likedByMe} />
         {likeCount > 0 ? <span>{formatCount(likeCount)}</span> : null}
@@ -143,7 +152,7 @@ export function CommunityActionBar({
         type="button"
         onClick={onComment}
         aria-label={fr ? "Commenter" : "Comment"}
-        className={pill}
+        className={COMMUNITY_ACTION_PILL}
       >
         <IconComment size={20} />
         {commentCount > 0 ? <span>{formatCount(commentCount)}</span> : null}
@@ -152,7 +161,7 @@ export function CommunityActionBar({
         type="button"
         onClick={onShare}
         aria-label={fr ? "Partager" : "Share"}
-        className={pill}
+        className={COMMUNITY_ACTION_PILL}
       >
         <IconShare size={20} />
         {shareCount > 0 ? <span>{formatCount(shareCount)}</span> : null}
@@ -162,9 +171,9 @@ export function CommunityActionBar({
           type="button"
           onClick={onTelegramShare}
           aria-label="Telegram"
-          className="flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-lg bg-[#e8f6fc] text-[#229ed9] active:scale-[0.97]"
+          className="flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e8f6fc] to-[#d4edfa] text-[#229ed9] ring-1 ring-[#229ed9]/20 active:scale-[0.97]"
         >
-          <span className="text-base font-bold">✈</span>
+          <IconTelegram size={20} />
         </button>
       ) : null}
     </div>

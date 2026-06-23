@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   academyTrainingEvents,
   communityComments,
@@ -27,6 +27,57 @@ import { ensureCommunitySchema } from "@/lib/community/community-schema";
 
 async function ensureFeedReady(): Promise<void> {
   await ensureCommunitySchema();
+}
+
+const TRENDING_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+function trendingScoreSql() {
+  return sql`(
+    (${communityPosts.likeCount} * 2 + ${communityPosts.commentCount} * 3 + ${communityPosts.shareCount} * 5 + ${communityPosts.viewCount})::double precision
+    / power(
+      greatest(
+        extract(epoch from (now() - coalesce(${communityPosts.publishedAt}, ${communityPosts.createdAt}))) / 3600.0,
+        1.0
+      ),
+      1.5
+    )
+  )`;
+}
+
+function computeTrendingScore(row: {
+  likeCount: number | null;
+  commentCount: number | null;
+  shareCount: number | null;
+  viewCount: number | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+}): number {
+  const published = row.publishedAt ?? row.createdAt;
+  const hours = Math.max((Date.now() - published.getTime()) / 3_600_000, 1);
+  const engagement =
+    (row.likeCount ?? 0) * 2 +
+    (row.commentCount ?? 0) * 3 +
+    (row.shareCount ?? 0) * 5 +
+    (row.viewCount ?? 0);
+  return engagement / Math.pow(hours, 1.5);
+}
+
+const FOR_YOU_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function computeForYouScore(args: {
+  row: (typeof communityPosts.$inferSelect);
+  authorRep: number;
+  isFollowed: boolean;
+  isViewed: boolean;
+}): number {
+  const trending = computeTrendingScore(args.row);
+  return (
+    (args.isFollowed ? 48 : 0) +
+    (args.isViewed ? -32 : 0) +
+    trending * 0.85 +
+    Math.min(args.authorRep / 4, 28) +
+    ((args.row.mediaIds?.length ?? 0) > 0 ? 6 : 0)
+  );
 }
 import {
   type FeedComposerKind,
@@ -151,14 +202,141 @@ async function assertNotBlocked(
   return !row;
 }
 
+async function listForYouFeedPosts(args: {
+  viewerId: string | null;
+  cursor?: string | null;
+  limit?: number;
+}): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
+  const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
+  const db = getDb();
+  const viewerId = args.viewerId!;
+  const blocked = await blockedUserIds(viewerId);
+
+  let cursorScore: number | null = null;
+  let cursorId: string | null = null;
+  if (args.cursor) {
+    try {
+      const parsed = JSON.parse(
+        Buffer.from(args.cursor, "base64url").toString("utf8"),
+      ) as { s?: number; id: string };
+      if (typeof parsed.s === "number") cursorScore = parsed.s;
+      cursorId = parsed.id;
+    } catch {
+      cursorScore = null;
+      cursorId = null;
+    }
+  }
+
+  const since = new Date(Date.now() - FOR_YOU_WINDOW_MS);
+  const rows = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.status, "published"),
+        gte(
+          sql`coalesce(${communityPosts.publishedAt}, ${communityPosts.createdAt})`,
+          since,
+        ),
+      ),
+    )
+    .orderBy(desc(communityPosts.publishedAt))
+    .limit(120);
+
+  const follows = await db
+    .select({ traderId: communityTraderFollows.traderId })
+    .from(communityTraderFollows)
+    .where(eq(communityTraderFollows.followerId, viewerId));
+  const followedSet = new Set(follows.map((f) => f.traderId));
+
+  const viewedRows = await db
+    .select({ postId: communityPostViews.postId })
+    .from(communityPostViews)
+    .where(eq(communityPostViews.viewerId, viewerId));
+  const viewedSet = new Set(viewedRows.map((v) => v.postId));
+
+  const authorIds = [...new Set(rows.map((r) => r.authorId))];
+  const authors = await getAuthorsMap(authorIds);
+
+  const scored = rows
+    .filter((r) => !blocked.has(r.authorId) && authors.has(r.authorId))
+    .map((r) => {
+      const author = authors.get(r.authorId)!;
+      const score = computeForYouScore({
+        row: r,
+        authorRep: author.reputationScore ?? 0,
+        isFollowed: followedSet.has(r.authorId),
+        isViewed: viewedSet.has(r.id),
+      });
+      return { row: r, score, author };
+    })
+    .sort((a, b) => {
+      const ds = b.score - a.score;
+      if (ds !== 0) return ds;
+      return b.row.id.localeCompare(a.row.id);
+    });
+
+  const filtered =
+    cursorScore !== null && cursorId
+      ? scored.filter(
+          (item) =>
+            item.score < cursorScore! ||
+            (item.score === cursorScore && item.row.id < cursorId!),
+        )
+      : scored;
+
+  const page = filtered.slice(0, limit);
+  const postIds = page.map((p) => p.row.id);
+  let likedSet = new Set<string>();
+  if (postIds.length) {
+    const likes = await db
+      .select({ targetId: communityLikes.targetId })
+      .from(communityLikes)
+      .where(
+        and(
+          eq(communityLikes.userId, viewerId),
+          eq(communityLikes.targetType, "post"),
+          inArray(communityLikes.targetId, postIds),
+        ),
+      );
+    likedSet = new Set(likes.map((l) => l.targetId));
+  }
+
+  const posts: FeedPostView[] = [];
+  for (const { row, author } of page) {
+    const media = await getPostMediaViews(row.id, row.mediaIds, viewerId);
+    posts.push(rowToFeedPost(row, author, media, likedSet.has(row.id)));
+  }
+
+  let nextCursor: string | null = null;
+  if (filtered.length > limit) {
+    const last = page[page.length - 1];
+    if (last) {
+      nextCursor = Buffer.from(
+        JSON.stringify({ s: last.score, id: last.row.id }),
+        "utf8",
+      ).toString("base64url");
+    }
+  }
+
+  return { posts, nextCursor };
+}
+
 export async function listFeedPosts(args: {
   viewerId: string | null;
   cursor?: string | null;
   limit?: number;
-  sort?: "recent" | "popular" | "trending" | "following";
+  sort?: "recent" | "popular" | "trending" | "following" | "for_you";
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
   await ensureFeedReady();
+
+  if (args.sort === "for_you") {
+    if (!args.viewerId) {
+      return listFeedPosts({ ...args, sort: "trending" });
+    }
+    return listForYouFeedPosts(args);
+  }
 
   const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
   const db = getDb();
@@ -168,21 +346,38 @@ export async function listFeedPosts(args: {
 
   let cursorDate: Date | null = null;
   let cursorId: string | null = null;
+  let cursorScore: number | null = null;
   if (args.cursor) {
     try {
       const parsed = JSON.parse(
         Buffer.from(args.cursor, "base64url").toString("utf8"),
-      ) as { t: string; id: string };
-      cursorDate = new Date(parsed.t);
+      ) as { t?: string; s?: number; id: string };
       cursorId = parsed.id;
+      if (args.sort === "trending" && typeof parsed.s === "number") {
+        cursorScore = parsed.s;
+      } else if (parsed.t) {
+        cursorDate = new Date(parsed.t);
+      }
     } catch {
       cursorDate = null;
+      cursorId = null;
+      cursorScore = null;
     }
   }
 
   const conditions = [eq(communityPosts.status, "published")];
 
-  if (args.sort === "following" && args.viewerId) {
+  if (args.sort === "trending") {
+    conditions.push(
+      gte(
+        sql`coalesce(${communityPosts.publishedAt}, ${communityPosts.createdAt})`,
+        new Date(Date.now() - TRENDING_WINDOW_MS),
+      ),
+    );
+  }
+
+  if (args.sort === "following") {
+    if (!args.viewerId) return { posts: [], nextCursor: null };
     const follows = await db
       .select({ traderId: communityTraderFollows.traderId })
       .from(communityTraderFollows)
@@ -192,7 +387,15 @@ export async function listFeedPosts(args: {
     conditions.push(inArray(communityPosts.authorId, authorIds));
   }
 
-  if (cursorDate && cursorId) {
+  if (args.sort === "trending" && cursorScore !== null && cursorId) {
+    const score = trendingScoreSql();
+    conditions.push(
+      or(
+        sql`${score} < ${cursorScore}`,
+        and(sql`${score} = ${cursorScore}`, lt(communityPosts.id, cursorId)),
+      )!,
+    );
+  } else if (cursorDate && cursorId) {
     conditions.push(
       or(
         lt(communityPosts.publishedAt, cursorDate),
@@ -205,14 +408,16 @@ export async function listFeedPosts(args: {
   }
 
   const orderBy =
-    args.sort === "popular"
-      ? [
-          desc(
-            sql`(${communityPosts.likeCount} + ${communityPosts.commentCount})`,
-          ),
-          desc(communityPosts.publishedAt),
-        ]
-      : [desc(communityPosts.publishedAt), desc(communityPosts.id)];
+    args.sort === "trending"
+      ? [desc(trendingScoreSql()), desc(communityPosts.id)]
+      : args.sort === "popular"
+        ? [
+            desc(
+              sql`(${communityPosts.likeCount} + ${communityPosts.commentCount})`,
+            ),
+            desc(communityPosts.publishedAt),
+          ]
+        : [desc(communityPosts.publishedAt), desc(communityPosts.id)];
 
   const rows = await db
     .select()
@@ -255,12 +460,16 @@ export async function listFeedPosts(args: {
   let nextCursor: string | null = null;
   if (rows.length > limit) {
     const last = slice[slice.length - 1];
-    if (last?.publishedAt) {
+    if (last) {
       nextCursor = Buffer.from(
-        JSON.stringify({
-          t: last.publishedAt.toISOString(),
-          id: last.id,
-        }),
+        JSON.stringify(
+          args.sort === "trending"
+            ? { s: computeTrendingScore(last), id: last.id }
+            : {
+                t: (last.publishedAt ?? last.createdAt).toISOString(),
+                id: last.id,
+              },
+        ),
         "utf8",
       ).toString("base64url");
     }

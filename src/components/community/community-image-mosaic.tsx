@@ -25,12 +25,17 @@ export function CommunityImageMosaic({
 }) {
   if (!images.length) return null;
 
-  const slot = (img: MosaicImage, slotClass: string) => {
+  const slot = (img: MosaicImage, slotClass: string, overlay?: string) => {
     const inner = (
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={img.src} alt="" className="h-full w-full object-cover" />
-        {postId && !editable ? (
+        {overlay ? (
+          <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/50 text-2xl font-bold text-white">
+            {overlay}
+          </span>
+        ) : null}
+        {postId && !editable && !overlay ? (
           <span className="absolute inset-0 bg-black/0 transition hover:bg-black/10" />
         ) : null}
       </>
@@ -102,7 +107,11 @@ export function CommunityImageMosaic({
 
   return (
     <div className={`grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl ${className}`}>
-      {images.slice(0, 4).map((img) => slot(img, "min-h-[120px]"))}
+      {images.slice(0, 4).map((img, idx) => {
+        const isLast = idx === 3 && images.length > 4;
+        const overlay = isLast ? `+${images.length - 4}` : undefined;
+        return slot(img, "min-h-[120px]", overlay);
+      })}
     </div>
   );
 }

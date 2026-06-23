@@ -11,7 +11,9 @@ import { communityPostAppPath } from "@/lib/community/share-url";
 
 export type CommunityFeedCategory =
   | "all"
+  | "for_you"
   | "trending"
+  | "following"
   | "news"
   | "discussions"
   | "training"
@@ -80,11 +82,101 @@ export async function listUnifiedFeed(args: {
 
   const items: UnifiedFeedItem[] = [];
 
-  if (category === "all" || category === "news" || category === "trending") {
+  if (category === "for_you") {
+    const { posts, nextCursor } = await listFeedPosts({
+      viewerId: args.viewerId,
+      limit: limit + 1,
+      cursor: args.cursor,
+      sort: "for_you",
+    });
+    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
+      id: p.id,
+      kind: p.contentKind === "formation" ? "formation" : "news",
+      title: p.formationMeta?.title ?? null,
+      body: p.body,
+      publishedAt: p.publishedAt,
+      author: p.author,
+      href: communityPostAppPath(p.id),
+      likeCount: p.likeCount,
+      commentCount: p.commentCount,
+      shareCount: p.shareCount,
+      viewCount: p.viewCount ?? 0,
+      likedByMe: p.likedByMe,
+      media: p.media,
+      meta: { contentKind: p.contentKind ?? "news" },
+      formationMeta: p.formationMeta,
+    }));
+    return {
+      items: mapped.slice(0, limit),
+      nextCursor,
+    };
+  }
+
+  if (category === "following") {
+    const { posts, nextCursor } = await listFeedPosts({
+      viewerId: args.viewerId,
+      limit: limit + 1,
+      cursor: args.cursor,
+      sort: "following",
+    });
+    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
+      id: p.id,
+      kind: p.contentKind === "formation" ? "formation" : "news",
+      title: p.formationMeta?.title ?? null,
+      body: p.body,
+      publishedAt: p.publishedAt,
+      author: p.author,
+      href: communityPostAppPath(p.id),
+      likeCount: p.likeCount,
+      commentCount: p.commentCount,
+      shareCount: p.shareCount,
+      viewCount: p.viewCount ?? 0,
+      likedByMe: p.likedByMe,
+      media: p.media,
+      meta: { contentKind: p.contentKind ?? "news" },
+      formationMeta: p.formationMeta,
+    }));
+    return {
+      items: mapped.slice(0, limit),
+      nextCursor,
+    };
+  }
+
+  if (category === "trending") {
+    const { posts, nextCursor } = await listFeedPosts({
+      viewerId: args.viewerId,
+      limit: limit + 1,
+      cursor: args.cursor,
+      sort: "trending",
+    });
+    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
+      id: p.id,
+      kind: p.contentKind === "formation" ? "formation" : "news",
+      title: p.formationMeta?.title ?? null,
+      body: p.body,
+      publishedAt: p.publishedAt,
+      author: p.author,
+      href: communityPostAppPath(p.id),
+      likeCount: p.likeCount,
+      commentCount: p.commentCount,
+      shareCount: p.shareCount,
+      viewCount: p.viewCount ?? 0,
+      likedByMe: p.likedByMe,
+      media: p.media,
+      meta: { contentKind: p.contentKind ?? "news" },
+      formationMeta: p.formationMeta,
+    }));
+    return {
+      items: mapped.slice(0, limit),
+      nextCursor,
+    };
+  }
+
+  if (category === "all" || category === "news") {
     const { posts } = await listFeedPosts({
       viewerId: args.viewerId,
       limit: perSource,
-      sort: category === "trending" ? "trending" : "recent",
+      sort: "recent",
     });
     for (const p of posts) {
       if (category === "news" && p.contentKind === "formation") continue;

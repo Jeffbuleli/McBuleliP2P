@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
-import { IconLike, IconReply, IconSend } from "@/components/community/community-icons";
+import { IconComment, IconLike, IconReply, IconSend } from "@/components/community/community-icons";
+import {
+  COMMUNITY_AVATAR_RING,
+  COMMUNITY_COMMENT_REPLY,
+  COMMUNITY_COMMENT_ROOT,
+  COMMUNITY_COMPOSER_SHELL,
+} from "@/lib/community/community-ui";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommentView } from "@/lib/community/feed-service";
 
@@ -38,6 +44,29 @@ function updateCommentTree(
   });
 }
 
+function CommentAvatar({
+  author,
+  small = false,
+}: {
+  author: CommentView["author"];
+  small?: boolean;
+}) {
+  const size = small ? "h-7 w-7 text-[9px]" : "h-9 w-9 text-[11px]";
+  return (
+    <Link
+      href={`/app/community/u/${author.handle}`}
+      className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#e8f3ee] to-[#d4ebe0] font-bold text-[#305f33] ${COMMUNITY_AVATAR_RING}`}
+    >
+      {author.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={author.avatarUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        author.displayName.slice(0, 1).toUpperCase()
+      )}
+    </Link>
+  );
+}
+
 function CommentNode({
   comment,
   fr,
@@ -61,107 +90,107 @@ function CommentNode({
   onSubmitReply: () => void;
   busy: boolean;
 }) {
+  const isReply = depth > 0;
+  const bubbleClass = isReply ? COMMUNITY_COMMENT_REPLY : COMMUNITY_COMMENT_ROOT;
+
   return (
-    <li className={`flex gap-2 ${depth > 0 ? "ml-8 mt-2" : "mt-3"}`}>
-      <Link
-        href={`/app/community/u/${comment.author.handle}`}
-        className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e8f3ee] text-[10px] font-bold text-[#305f33]"
-      >
-        {comment.author.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={comment.author.avatarUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          comment.author.displayName.slice(0, 1).toUpperCase()
-        )}
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="inline-block max-w-full rounded-2xl rounded-tl-md bg-[#f0f2f5] px-3 py-2">
-          <p className="text-[13px] leading-snug text-[#0c0a09]">
-            <Link
-              href={`/app/community/u/${comment.author.handle}`}
-              className="font-bold hover:underline"
-            >
-              {comment.author.displayName}
-            </Link>{" "}
-            <span className="font-normal text-[#292524]">
+    <li className={`relative ${depth > 0 ? "mt-3" : "mt-4"}`}>
+      {depth > 0 ? (
+        <span
+          className="absolute -left-4 top-0 h-full w-0.5 rounded-full bg-gradient-to-b from-[#b8d4c4] to-transparent"
+          aria-hidden
+        />
+      ) : null}
+      <div className={`flex gap-2.5 ${depth > 0 ? "ml-5" : ""}`}>
+        <CommentAvatar author={comment.author} small={isReply} />
+        <div className="min-w-0 flex-1">
+          <div className={`inline-block max-w-full ${bubbleClass}`}>
+            <p className="text-[13px] leading-[1.55] text-[#0c0a09]">
+              <Link
+                href={`/app/community/u/${comment.author.handle}`}
+                className="font-bold text-[#305f33] hover:underline"
+              >
+                {comment.author.displayName}
+              </Link>
+            </p>
+            <div className="mt-0.5 text-[13px] leading-[1.55] text-[#292524]">
               <CommunityTranslatableText
                 text={comment.body}
                 fr={fr}
                 withMentions
               />
-            </span>
-          </p>
-        </div>
-        <div className="mt-1 flex items-center gap-3 px-1 text-[11px] text-[#78716c]">
-          <span>{formatRelativeTime(comment.createdAt, fr)}</span>
-          <button
-            type="button"
-            aria-label={fr ? "J'aime" : "Like"}
-            className={`relative flex h-8 w-8 items-center justify-center rounded-full active:scale-95 ${
-              comment.likedByMe ? "text-[#305f33]" : "text-[#78716c]"
-            }`}
-            onClick={() => onLike(comment.id)}
-          >
-            <IconLike size={16} filled={comment.likedByMe} />
-            {comment.likeCount > 0 ? (
-              <span className="absolute -right-1 -top-0.5 text-[9px] font-bold">
-                {comment.likeCount}
-              </span>
-            ) : null}
-          </button>
-          {depth < 2 ? (
+            </div>
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 px-1 text-[11px] font-semibold text-[#78716c]">
+            <span>{formatRelativeTime(comment.createdAt, fr)}</span>
             <button
               type="button"
-              aria-label={fr ? "Répondre" : "Reply"}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#78716c] active:scale-95"
-              onClick={() => onReply(comment.id)}
+              aria-label={fr ? "J'aime" : "Like"}
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 transition active:scale-95 ${
+                comment.likedByMe
+                  ? "bg-[#eaf5ee] text-[#305f33]"
+                  : "hover:bg-[#f0f2f5]"
+              }`}
+              onClick={() => onLike(comment.id)}
             >
-              <IconReply size={16} />
+              <IconLike size={14} filled={comment.likedByMe} />
+              {comment.likeCount > 0 ? comment.likeCount : null}
             </button>
+            {depth < 2 ? (
+              <button
+                type="button"
+                aria-label={fr ? "Répondre" : "Reply"}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 hover:bg-[#f0f2f5] active:scale-95"
+                onClick={() => onReply(comment.id)}
+              >
+                <IconReply size={14} />
+                {fr ? "Répondre" : "Reply"}
+              </button>
+            ) : null}
+          </div>
+
+          {replyToId === comment.id ? (
+            <div className={`mt-3 ${COMMUNITY_COMPOSER_SHELL}`}>
+              <CommunityMentionInput
+                value={replyText}
+                onChange={setReplyText}
+                disabled={busy}
+                placeholder={fr ? "Votre réponse… (@pseudo)" : "Your reply… (@handle)"}
+                className="min-h-[40px] w-full border-0 bg-transparent px-1 text-sm outline-none"
+                onSubmit={onSubmitReply}
+              />
+              <button
+                type="button"
+                disabled={busy || replyText.trim().length < 2}
+                onClick={onSubmitReply}
+                aria-label={fr ? "Envoyer" : "Send"}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#305f33] to-[#3d8f5a] text-white shadow-md disabled:opacity-50"
+              >
+                <IconSend size={18} />
+              </button>
+            </div>
+          ) : null}
+
+          {comment.replies.length > 0 ? (
+            <ul>
+              {comment.replies.map((r) => (
+                <CommentNode
+                  key={r.id}
+                  comment={r}
+                  fr={fr}
+                  depth={depth + 1}
+                  onReply={onReply}
+                  onLike={onLike}
+                  replyToId={replyToId}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  onSubmitReply={onSubmitReply}
+                  busy={busy}
+                />
+              ))}
+            </ul>
           ) : null}
         </div>
-
-        {replyToId === comment.id ? (
-          <div className="mt-2 flex gap-2">
-            <CommunityMentionInput
-              value={replyText}
-              onChange={setReplyText}
-              disabled={busy}
-              placeholder={fr ? "Réponse… (@pseudo)" : "Reply… (@handle)"}
-              className="min-h-[40px] w-full rounded-full border border-[#e8f3ee] bg-white px-4 text-sm"
-              onSubmit={onSubmitReply}
-            />
-            <button
-              type="button"
-              disabled={busy || replyText.trim().length < 2}
-              onClick={onSubmitReply}
-              aria-label={fr ? "Envoyer" : "Send"}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#305f33] text-white disabled:opacity-50"
-            >
-              <IconSend />
-            </button>
-          </div>
-        ) : null}
-
-        {comment.replies.length > 0 ? (
-          <ul>
-            {comment.replies.map((r) => (
-              <CommentNode
-                key={r.id}
-                comment={r}
-                fr={fr}
-                depth={depth + 1}
-                onReply={onReply}
-                onLike={onLike}
-                replyToId={replyToId}
-                replyText={replyText}
-                setReplyText={setReplyText}
-                onSubmitReply={onSubmitReply}
-                busy={busy}
-              />
-            ))}
-          </ul>
-        ) : null}
       </div>
     </li>
   );
@@ -246,16 +275,37 @@ export function CommunityCommentThread({
     }
   };
 
+  const totalComments = comments.reduce(
+    (n, c) => n + 1 + c.replies.length,
+    0,
+  );
+
   return (
-    <div className="border-t border-[#f0f4f2] bg-[#fafaf9] px-3 py-3">
+    <div className="border-t border-[#dce8e0] bg-gradient-to-b from-[#f8fbf9] to-[#f4f7f5] px-3 py-4">
+      <div className="mb-3 flex items-center gap-2 px-1">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eaf5ee] text-[#305f33]">
+          <IconComment size={15} />
+        </span>
+        <p className="text-sm font-bold text-[#0c0a09]">
+          {fr ? "Commentaires" : "Comments"}
+          {totalComments > 0 ? (
+            <span className="ml-1.5 font-semibold text-[#78716c]">
+              ({totalComments})
+            </span>
+          ) : null}
+        </p>
+      </div>
+
       {loading ? (
         <p className="py-4 text-center text-xs text-[#a8a29e]">…</p>
       ) : comments.length === 0 ? (
-        <p className="mb-3 text-center text-xs text-[#a8a29e]">
-          {fr ? "Aucun commentaire — soyez le premier." : "No comments yet — be the first."}
+        <p className="mb-4 rounded-xl border border-dashed border-[#dce8e0] bg-white/60 py-6 text-center text-xs text-[#78716c]">
+          {fr
+            ? "Aucun commentaire — lancez la discussion."
+            : "No comments yet — start the conversation."}
         </p>
       ) : (
-        <ul className="mb-3 max-h-80 overflow-y-auto">
+        <ul className="mb-4 max-h-96 overflow-y-auto pr-1">
           {comments.map((c) => (
             <CommentNode
               key={c.id}
@@ -276,13 +326,13 @@ export function CommunityCommentThread({
       {error ? (
         <p className="mb-2 text-center text-xs font-medium text-red-600">{error}</p>
       ) : null}
-      <div className="flex items-center gap-2 rounded-full border border-[#e8f3ee] bg-white px-3 py-1.5 shadow-sm">
+      <div className={COMMUNITY_COMPOSER_SHELL}>
         <CommunityMentionInput
           value={text}
           onChange={setText}
           disabled={busy}
-          placeholder={fr ? "Ajouter un commentaire…" : "Add a comment…"}
-          className="min-h-[40px] w-full border-0 bg-transparent px-1 text-sm outline-none"
+          placeholder={fr ? "Écrire un commentaire…" : "Write a comment…"}
+          className="min-h-[44px] w-full border-0 bg-transparent px-1 text-sm outline-none"
           onSubmit={() => void submit(text)}
         />
         <button
@@ -290,9 +340,9 @@ export function CommunityCommentThread({
           disabled={busy || text.trim().length < 2}
           onClick={() => void submit(text)}
           aria-label={fr ? "Envoyer" : "Send"}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#305f33] disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#305f33] to-[#3d8f5a] text-white shadow-md disabled:opacity-40"
         >
-          <IconSend />
+          <IconSend size={18} />
         </button>
       </div>
     </div>

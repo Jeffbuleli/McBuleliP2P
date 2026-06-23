@@ -8,6 +8,7 @@ import { IconEye, IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import { postDisplayText } from "@/lib/community/link-embed";
+import { COMMUNITY_BODY_TEXT, COMMUNITY_CARD, COMMUNITY_CARD_ACCENT } from "@/lib/community/community-ui";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
 
 function formatCount(n: number): string {
@@ -32,7 +33,8 @@ export function CommunityUnifiedCard({
 
   if (item.kind === "formation" && item.formationMeta) {
     return (
-      <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
+      <article className={COMMUNITY_CARD}>
+        <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
         <div className="p-4">
           <CommunityFormationCard
             meta={item.formationMeta}
@@ -49,7 +51,8 @@ export function CommunityUnifiedCard({
   });
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)] transition active:scale-[0.995]">
+    <article className={`${COMMUNITY_CARD} transition active:scale-[0.995]`}>
+      <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
       <div className="px-4 pt-4">
         <Link href={item.href} className="block">
           <div className="mb-3 flex items-start justify-between gap-2">
@@ -77,8 +80,9 @@ export function CommunityUnifiedCard({
             <CommunityExpandableText
               text={displayBody}
               fr={fr}
+              withMentions
               maxChars={item.title ? 120 : 180}
-              className="text-sm leading-relaxed text-[#44403c]"
+              className={COMMUNITY_BODY_TEXT}
             />
           ) : null}
         </Link>

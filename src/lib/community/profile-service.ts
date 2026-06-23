@@ -3,6 +3,7 @@ import {
   communityComments,
   communityMedia,
   communityPosts,
+  communityTradingSignals,
   communityUserProfiles,
   getDb,
   users,
@@ -204,6 +205,45 @@ export async function getAuthorsMap(
   return map;
 }
 
+export type AuthorSignalStats = {
+  openSignals: number;
+  closedSignals: number;
+  signalWinRate: number | null;
+};
+
+async function loadAuthorSignalStats(
+  authorId: string,
+): Promise<AuthorSignalStats> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      status: communityTradingSignals.status,
+      outcome: communityTradingSignals.outcome,
+      n: count(),
+    })
+    .from(communityTradingSignals)
+    .where(eq(communityTradingSignals.authorId, authorId))
+    .groupBy(communityTradingSignals.status, communityTradingSignals.outcome);
+
+  let openSignals = 0;
+  let closedSignals = 0;
+  let wins = 0;
+  for (const r of rows) {
+    const n = Number(r.n);
+    if (r.status === "open") openSignals += n;
+    if (r.status === "closed") {
+      closedSignals += n;
+      if (r.outcome === "win") wins += n;
+    }
+  }
+  return {
+    openSignals,
+    closedSignals,
+    signalWinRate:
+      closedSignals > 0 ? Math.round((wins / closedSignals) * 100) : null,
+  };
+}
+
 export type PublicProfileView = {
   userId: string;
   handle: string;
@@ -225,6 +265,7 @@ export type PublicProfileView = {
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
   viewerFollows: boolean;
   isOwnProfile: boolean;
+  signalStats: AuthorSignalStats;
 };
 
 export async function searchCommunityHandles(
@@ -321,6 +362,7 @@ export async function getPublicProfileByHandle(
   const subs = await listActiveBotSubscriptions(profile.userId);
   const followerCount = await countTraderFollowers(profile.userId);
   const followingCount = await countFollowing(profile.userId);
+  const signalStats = await loadAuthorSignalStats(profile.userId);
   const coverUrl = await resolveCoverUrl(profile.coverMediaId);
   const online =
     !!profile.lastActiveAt &&
@@ -350,5 +392,6 @@ export async function getPublicProfileByHandle(
       ? await isFollowingTrader(viewerId, profile.userId)
       : false,
     isOwnProfile: viewerId === profile.userId,
+    signalStats,
   };
 }

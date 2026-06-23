@@ -11,7 +11,7 @@ import { CommunityAuthorHeader } from "@/components/community/community-author-h
 import { CommunityCommentThread } from "@/components/community/community-comment-thread";
 import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityExpandableText } from "@/components/community/community-expandable-text";
-import { IconGlobe } from "@/components/community/community-icons";
+import { IconGlobe, IconMore } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommunityContentKind } from "@/lib/community/post-types";
@@ -20,6 +20,12 @@ import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
 import { postDisplayText } from "@/lib/community/link-embed";
 import { communityPostSharePath } from "@/lib/community/share-url";
+import { usePostImpression } from "@/hooks/use-post-impression";
+import {
+  COMMUNITY_BODY_TEXT,
+  COMMUNITY_CARD,
+  COMMUNITY_CARD_ACCENT,
+} from "@/lib/community/community-ui";
 
 export function CommunityPostCard({
   post,
@@ -28,6 +34,7 @@ export function CommunityPostCard({
   defaultCommentsOpen = false,
   linkToDetail = true,
   trackView = false,
+  trackImpression,
 }: {
   post: FeedPostView;
   onUpdate: (patch: Partial<FeedPostView>) => void;
@@ -36,9 +43,17 @@ export function CommunityPostCard({
   linkToDetail?: boolean;
   /** Compte une lecture unique (page détail uniquement). */
   trackView?: boolean;
+  /** Compte une impression feed (visible ≥50 % pendant 1 s). */
+  trackImpression?: boolean;
 }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const shouldTrackImpression = trackImpression ?? (!trackView && linkToDetail);
+  const impressionRef = usePostImpression(
+    post.id,
+    shouldTrackImpression,
+    (viewCount) => onUpdate({ viewCount }),
+  );
   const [commentOpen, setCommentOpen] = useState(defaultCommentsOpen);
   const [comments, setComments] = useState<CommentView[] | null>(null);
   const [commentsLoading, setCommentsLoading] = useState(defaultCommentsOpen);
@@ -245,9 +260,10 @@ export function CommunityPostCard({
             <button
               type="button"
               onClick={() => setOwnerOpen((v) => !v)}
-              className="rounded-full px-2 py-0.5 text-[10px] font-bold text-[#57534e] hover:bg-[#f0f2f5]"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#57534e] hover:bg-[#f0f2f5]"
+              aria-label={fr ? "Options" : "Options"}
             >
-              ···
+              <IconMore size={18} />
             </button>
             {ownerOpen ? (
               <div className="absolute right-0 z-10 mt-1 min-w-[140px] rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
@@ -305,20 +321,26 @@ export function CommunityPostCard({
           <CommunityExpandableText
             text={displayBody}
             fr={fr}
-            className="text-[15px] leading-relaxed text-[#292524]"
+            withMentions
+            className={COMMUNITY_BODY_TEXT}
           />
         </Link>
       ) : (
         <CommunityExpandableText
           text={displayBody}
           fr={fr}
-          className="text-[15px] leading-relaxed text-[#292524]"
+          withMentions
+          className={COMMUNITY_BODY_TEXT}
         />
       )
     ) : null;
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
+    <article
+      ref={impressionRef}
+      className={COMMUNITY_CARD}
+    >
+      <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
       <div className="px-4 pt-4">
         {header}
         {formationBlock}
@@ -338,6 +360,7 @@ export function CommunityPostCard({
         shareCount={post.shareCount}
         viewCount={post.viewCount ?? 0}
         fr={fr}
+        alwaysShowViews
       />
 
       <CommunityActionBar

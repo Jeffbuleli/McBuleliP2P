@@ -30,6 +30,7 @@ export async function GET(req: Request) {
     | "popular"
     | "trending"
     | "following"
+    | "for_you"
     | null;
   const viewerId = await getSessionUserId();
 

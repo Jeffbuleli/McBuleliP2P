@@ -1,5 +1,6 @@
 "use client";
 
+import { CommunityImageCarousel } from "@/components/community/community-image-carousel";
 import { CommunityImageMosaic } from "@/components/community/community-image-mosaic";
 import { CommunityLinkEmbed } from "@/components/community/community-link-embed";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
@@ -58,6 +59,14 @@ export function CommunityPostMedia({
       .filter((m) => m.src);
 
     if (!images.length) return null;
+
+    if (images.length >= 2) {
+      return (
+        <div className="mt-3">
+          <CommunityImageCarousel images={images} postId={postId} />
+        </div>
+      );
+    }
 
     return (
       <div className="mt-3">

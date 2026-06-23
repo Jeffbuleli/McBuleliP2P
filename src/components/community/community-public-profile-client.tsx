@@ -13,22 +13,32 @@ import {
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { CommunitySignalCard } from "@/components/community/community-signal-card";
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
+import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
 
 function StatCard({
   label,
   value,
+  accent = false,
 }: {
   label: string;
   value: number | string;
+  accent?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-[#f0f4f2] bg-white px-3 py-3 text-center shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
+    <div
+      className={`rounded-2xl border px-3 py-3 text-center shadow-sm ${
+        accent
+          ? "border-[#c5dfd0] bg-gradient-to-b from-[#f0faf4] to-white"
+          : "border-[#e8f3ee] bg-white"
+      }`}
+    >
       <p className="text-lg font-bold tabular-nums text-[#0c0a09]">{value}</p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#a8a29e]">
+      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
         {label}
       </p>
     </div>
@@ -42,6 +52,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [profile, setProfile] = useState<PublicProfileView | null>(null);
   const [blogs, setBlogs] = useState<BlogPostListItem[]>([]);
   const [posts, setPosts] = useState<FeedPostView[]>([]);
+  const [signals, setSignals] = useState<TradingSignalView[]>([]);
   const [postQ, setPostQ] = useState("");
   const [postsLoading, setPostsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -56,11 +67,16 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           return;
         }
         setProfile(d.profile);
-        const br = await fetch(
-          `/api/community/blogs?authorId=${d.profile.userId}&limit=5`,
-        );
+        const [br, sr] = await Promise.all([
+          fetch(`/api/community/blogs?authorId=${d.profile.userId}&limit=5`),
+          fetch(
+            `/api/community/signals?authorId=${d.profile.userId}&limit=5&status=all`,
+          ),
+        ]);
         const bj = await br.json();
+        const sj = await sr.json();
         setBlogs((bj.posts ?? []) as BlogPostListItem[]);
+        setSignals((sj.signals ?? []) as TradingSignalView[]);
       })
       .catch(() => setNotFound(true));
   }, [handle]);
@@ -305,8 +321,45 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         <StatCard
           label={fr ? "Réputation" : "Reputation"}
           value={profile.reputationScore}
+          accent
         />
       </section>
+
+      {profile.signalStats.openSignals > 0 ||
+      profile.signalStats.closedSignals > 0 ? (
+        <section className="mt-3 grid grid-cols-3 gap-2 px-4">
+          <StatCard
+            label={fr ? "Signaux ouverts" : "Open signals"}
+            value={profile.signalStats.openSignals}
+            accent
+          />
+          <StatCard
+            label={fr ? "Clôturés" : "Closed"}
+            value={profile.signalStats.closedSignals}
+          />
+          <StatCard
+            label={fr ? "Win rate" : "Win rate"}
+            value={
+              profile.signalStats.signalWinRate !== null
+                ? `${profile.signalStats.signalWinRate}%`
+                : "—"
+            }
+          />
+        </section>
+      ) : null}
+
+      {signals.length > 0 ? (
+        <section className="mt-5 px-4">
+          <h2 className="mb-2 text-sm font-bold text-[#0c0a09]">
+            {fr ? "Signaux trading" : "Trading signals"}
+          </h2>
+          <div className="space-y-3">
+            {signals.map((s) => (
+              <CommunitySignalCard key={s.id} signal={s} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {profile.badges.length > 0 ? (
         <section className="mt-4 px-4">

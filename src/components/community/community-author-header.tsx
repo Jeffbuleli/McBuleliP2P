@@ -3,6 +3,7 @@ import {
   KycVerifiedBadge,
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
+import { COMMUNITY_AVATAR_RING, COMMUNITY_META_TEXT } from "@/lib/community/community-ui";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 
@@ -17,13 +18,13 @@ export function CommunityAuthorHeader({
   fr: boolean;
   compact?: boolean;
 }) {
-  const size = compact ? "h-8 w-8 text-[10px]" : "h-10 w-10 text-xs";
+  const size = compact ? "h-9 w-9 text-[10px]" : "h-11 w-11 text-sm";
 
   return (
     <div className="flex min-w-0 items-start gap-3">
       <Link
         href={`/app/community/u/${author.handle}`}
-        className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e8f3ee] font-bold text-[#305f33]`}
+        className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#e8f3ee] to-[#d4ebe0] font-bold text-[#305f33] ${COMMUNITY_AVATAR_RING}`}
       >
         {author.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -36,11 +37,11 @@ export function CommunityAuthorHeader({
           author.displayName.slice(0, 1).toUpperCase()
         )}
       </Link>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <Link
             href={`/app/community/u/${author.handle}`}
-            className="truncate text-sm font-bold text-[#0c0a09]"
+            className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0c0a09] hover:text-[#305f33]"
           >
             {author.displayName}
           </Link>
@@ -49,13 +50,16 @@ export function CommunityAuthorHeader({
             <ReputationLevelBadge levelId={author.reputationLevel} fr={fr} />
           ) : null}
         </div>
-        <p className="mt-0.5 text-[11px] text-[#a8a29e]">
-          <Link href={`/app/community/u/${author.handle}`} className="font-medium text-[#78716c]">
+        <p className={`mt-0.5 ${COMMUNITY_META_TEXT}`}>
+          <Link
+            href={`/app/community/u/${author.handle}`}
+            className="font-semibold text-[#57534e] hover:text-[#305f33]"
+          >
             @{author.handle}
           </Link>
           {publishedAt ? (
             <>
-              {" · "}
+              <span className="text-[#d6d3d1]"> · </span>
               <time dateTime={publishedAt}>{formatRelativeTime(publishedAt, fr)}</time>
             </>
           ) : null}

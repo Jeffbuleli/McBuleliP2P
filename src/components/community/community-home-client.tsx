@@ -5,13 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityCategoryNav } from "@/components/community/community-category-nav";
+import { CommunityHomeHeader } from "@/components/community/community-home-header";
 import {
   CommunityHelpSheet,
-  CommunityHelpTrigger,
 } from "@/components/community/community-help-sheet";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { CommunityPostComposer } from "@/components/community/community-post-composer";
-import { CommunitySearchBar } from "@/components/community/community-search-bar";
 import { CommunityUnifiedCard } from "@/components/community/community-unified-card";
 import {
   CommunityEmptyState,
@@ -22,9 +21,11 @@ import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load"
 import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityCategoryId } from "@/lib/community/nav-config";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
-import type { CommunitySearchHit } from "@/lib/community/search-service";
+import type { CommunitySearchHit, CommunityProfileSearchHit } from "@/lib/community/search-service";
+import type { TradingSignalView } from "@/lib/community/signals-service";
+import { CommunitySignalCard } from "@/components/community/community-signal-card";
+import { IconChart, IconHashtag, IconUser } from "@/components/community/community-icons";
 import { communityPostAppPath } from "@/lib/community/share-url";
-import { IconInbox } from "@/components/community/community-icons";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
   return {
@@ -61,6 +62,8 @@ export function CommunityHomeClient() {
   const [bpToast, setBpToast] = useState<string | null>(null);
   const [searchQ, setSearchQ] = useState<string | null>(null);
   const [searchHits, setSearchHits] = useState<CommunitySearchHit[]>([]);
+  const [searchProfiles, setSearchProfiles] = useState<CommunityProfileSearchHit[]>([]);
+  const [searchSignals, setSearchSignals] = useState<TradingSignalView[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
@@ -80,19 +83,23 @@ export function CommunityHomeClient() {
   }, []);
 
   const feedCategory =
-    category === "all" || category === "news" || category === "trending"
-      ? category === "trending"
-        ? "trending"
-        : category
-      : category === "discussions"
-        ? "discussions"
-        : category === "blogs"
-          ? "blogs"
-          : category === "questions"
-            ? "questions"
-            : category === "signals"
-              ? "signals"
-              : "all";
+    category === "for_you"
+      ? "for_you"
+      : category === "following"
+        ? "following"
+        : category === "all" || category === "news" || category === "trending"
+          ? category === "trending"
+            ? "trending"
+            : category
+          : category === "discussions"
+            ? "discussions"
+            : category === "blogs"
+              ? "blogs"
+              : category === "questions"
+                ? "questions"
+                : category === "signals"
+                  ? "signals"
+                  : "all";
 
   const loadPage = useCallback(
     async (cursor: string | null) => {
@@ -119,18 +126,30 @@ export function CommunityHomeClient() {
     resetKey: feedCategory,
   });
 
+  const clearSearch = () => {
+    setSearchQ(null);
+    setSearchHits([]);
+    setSearchProfiles([]);
+    setSearchSignals([]);
+  };
+
   const showNewsComposer =
-    category === "all" || category === "news" || category === "trending";
+    category === "all" ||
+    category === "for_you" ||
+    category === "news" ||
+    category === "trending";
 
   const runSearch = async (q: string) => {
     setSearchLoading(true);
     setSearchQ(q);
     try {
       const res = await fetch(
-        `/api/community/search?q=${encodeURIComponent(q)}&limit=20`,
+        `/api/community/search?q=${encodeURIComponent(q)}&unified=1&limit=12`,
       );
       const j = await res.json();
-      setSearchHits((j.hits ?? []) as CommunitySearchHit[]);
+      setSearchHits((j.posts ?? j.hits ?? []) as CommunitySearchHit[]);
+      setSearchProfiles((j.profiles ?? []) as CommunityProfileSearchHit[]);
+      setSearchSignals((j.signals ?? []) as TradingSignalView[]);
     } finally {
       setSearchLoading(false);
     }
@@ -177,42 +196,13 @@ export function CommunityHomeClient() {
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
-      <header className="mb-3 flex items-center justify-between gap-2">
-        <h1 className="text-lg font-bold text-[#0c0a09]">Community</h1>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/app/community/inbox"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33]"
-            aria-label={fr ? "Messages" : "Inbox"}
-          >
-            <IconInbox size={18} />
-          </Link>
-          {bp !== null ? (
-            <Link
-              href="/app/wallet/points"
-              className="rounded-full bg-[#e8f3ee] px-2.5 py-1 text-[11px] font-bold text-[#305f33]"
-            >
-              {bp} BP
-            </Link>
-          ) : null}
-          <CommunityHelpTrigger onClick={() => setHelpOpen(true)} />
-        </div>
-      </header>
-
-      <CommunitySearchBar
+      <CommunityHomeHeader
         fr={fr}
-        loading={searchLoading}
+        bp={bp}
+        searchLoading={searchLoading}
         onSearch={(q) => void runSearch(q)}
+        onHelpOpen={() => setHelpOpen(true)}
       />
-
-      <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#229ed9]/25 bg-[#e8f6fc] px-3 py-2 text-xs text-[#0c4a6e]">
-        <span className="text-base">✈</span>
-        <p>
-          {fr
-            ? "Influenceurs crypto : partagez vos liens Telegram, YouTube et TikTok — lecture intégrée McBuleli."
-            : "Crypto creators: share Telegram, YouTube & TikTok links — in-app playback on McBuleli."}
-        </p>
-      </div>
 
       <CommunityCategoryNav
         active={category}
@@ -220,9 +210,32 @@ export function CommunityHomeClient() {
           setCategory(c);
           setSearchQ(null);
           setSearchHits([]);
+          setSearchProfiles([]);
+          setSearchSignals([]);
         }}
         fr={fr}
       />
+
+      {searchQ ? (
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-[#44403c]">
+            {searchLoading
+              ? fr
+                ? "Recherche…"
+                : "Searching…"
+              : fr
+                ? `${searchHits.length + searchProfiles.length + searchSignals.length} résultat${searchHits.length + searchProfiles.length + searchSignals.length !== 1 ? "s" : ""} pour « ${searchQ} »`
+                : `${searchHits.length + searchProfiles.length + searchSignals.length} result${searchHits.length + searchProfiles.length + searchSignals.length !== 1 ? "s" : ""} for “${searchQ}”`}
+          </p>
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="shrink-0 text-xs font-bold text-[#305f33]"
+          >
+            {fr ? "Effacer" : "Clear"}
+          </button>
+        </div>
+      ) : null}
 
       {showNewsComposer ? (
         <>
@@ -244,19 +257,121 @@ export function CommunityHomeClient() {
         </>
       ) : null}
 
-      {loading && items.length === 0 ? (
+      {searchQ ? (
+        searchLoading &&
+        searchHits.length === 0 &&
+        searchProfiles.length === 0 &&
+        searchSignals.length === 0 ? (
+          <CommunityFeedSkeleton rows={3} />
+        ) : searchHits.length === 0 &&
+          searchProfiles.length === 0 &&
+          searchSignals.length === 0 ? (
+          <CommunityEmptyState
+            illustration={<EmptyNewsIllustration />}
+            title={fr ? "Aucun résultat" : "No results"}
+            body={
+              fr
+                ? "Essayez d'autres mots-clés, un @pseudo ou un #hashtag."
+                : "Try different keywords, an @handle or a #hashtag."
+            }
+          />
+        ) : (
+          <div className="space-y-5">
+            {searchProfiles.length > 0 ? (
+              <section>
+                <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide text-[#78716c]">
+                  <IconUser size={14} />
+                  {fr ? "Membres" : "Members"}
+                </h2>
+                <div className="space-y-2">
+                  {searchProfiles.map((p) => (
+                    <Link
+                      key={p.handle}
+                      href={`/app/community/u/${p.handle}`}
+                      className="flex items-center gap-3 rounded-2xl border border-[#dce8e0] bg-white px-4 py-3 shadow-sm transition active:scale-[0.99]"
+                    >
+                      <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[#e8f3ee] text-sm font-bold text-[#305f33] ring-2 ring-white">
+                        {p.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          p.displayName.slice(0, 1).toUpperCase()
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-[#0c0a09]">{p.displayName}</p>
+                        <p className="text-xs text-[#78716c]">@{p.handle} · {p.reputationScore} BP</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+            {searchSignals.length > 0 ? (
+              <section>
+                <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide text-[#78716c]">
+                  <IconChart size={14} />
+                  {fr ? "Signaux" : "Signals"}
+                </h2>
+                <div className="space-y-3">
+                  {searchSignals.map((s) => (
+                    <CommunitySignalCard key={s.id} signal={s} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+            {searchHits.length > 0 ? (
+              <section>
+                <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide text-[#78716c]">
+                  <IconHashtag size={14} />
+                  {fr ? "Publications" : "Posts"}
+                </h2>
+                <div className="space-y-4">
+                  {searchHits.map((hit) => (
+                    <CommunityPostCard
+                      key={`search-${hit.id}`}
+                      post={searchToPost(hit)}
+                      onUpdate={() => {}}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        )
+      ) : loading && items.length === 0 ? (
         <CommunityFeedSkeleton rows={4} />
       ) : !loading && items.length === 0 ? (
         <CommunityEmptyState
           illustration={<EmptyNewsIllustration />}
-          title={fr ? "Aucune publication" : "No posts yet"}
+          title={
+            category === "following"
+              ? fr
+                ? "Aucun contenu suivi"
+                : "Nothing from people you follow"
+              : category === "for_you"
+                ? fr
+                  ? "Rien à vous proposer pour l'instant"
+                  : "Nothing to recommend yet"
+                : fr
+                  ? "Aucune publication"
+                  : "No posts yet"
+          }
           body={
-            fr
-              ? "Soyez le premier à partager avec la communauté."
-              : "Be the first to share with the community."
+            category === "following"
+              ? fr
+                ? "Suivez des traders depuis leur profil ou le classement pour voir leurs publications ici."
+                : "Follow traders from their profile or the leaderboard to see their posts here."
+              : category === "for_you"
+                ? fr
+                  ? "Suivez des membres, likez et commentez — votre fil Pour vous s'adapte à vos intérêts."
+                  : "Follow members, like and comment — your For you feed adapts to your interests."
+                : fr
+                  ? "Soyez le premier à partager avec la communauté."
+                  : "Be the first to share with the community."
           }
         />
-      ) : !searchQ ? (
+      ) : (
         <div className="space-y-4">
           {items.map((item) =>
             item.kind === "news" || item.kind === "formation" ? (
@@ -286,11 +401,13 @@ export function CommunityHomeClient() {
             ),
           )}
         </div>
-      ) : null}
+      )}
 
-      <div ref={sentinelRef} className="py-6 text-center text-xs text-[#a8a29e]">
-        {loading ? "…" : done && items.length > 0 ? (fr ? "Fin" : "End") : ""}
-      </div>
+      {!searchQ ? (
+        <div ref={sentinelRef} className="py-6 text-center text-xs text-[#a8a29e]">
+          {loading ? "…" : done && items.length > 0 ? (fr ? "Fin" : "End") : ""}
+        </div>
+      ) : null}
 
       {bpToast ? (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#305f33] px-4 py-2 text-sm font-bold text-white shadow-lg">

@@ -205,3 +205,90 @@ export function IconTranslate({ size = 16, className = "" }: IconProps) {
     </svg>
   );
 }
+
+export function IconTelegram({ size = 18, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+      <path
+        d="M21.94 4.57a1.2 1.2 0 00-1.23-.08L3.1 11.28a.9.9 0 00.04 1.66l4.58 1.72 1.76 5.58a.9.9 0 001.45.35l2.52-2.58 4.72 3.48a1.2 1.2 0 001.86-.75l3.01-14.17z"
+        fill="currentColor"
+        opacity="0.15"
+      />
+      <path
+        d="M20.5 4.5L3.5 11.2c-.55.22-.52 1 .05 1.18l4.2 1.4 1.6 5.1c.2.65 1 .8 1.35.28l2.3-3.5 4.3 3.2c.5.37 1.2.1 1.35-.5l2.95-13.5c.15-.7-.55-1.25-1.2-1z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.5 13.5l7.5-4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconSparkles({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M12 2l1.4 4.2L17.6 8 13.4 9.4 12 13.6 10.6 9.4 6.4 8l4.2-1.8L12 2zM19 14l.8 2.4L22 17l-2.2 1 .8 2.4L19 18.4l-1.6 1.2.8-2.4L16 17l2.2-.6L19 14z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function IconUser({ size = 18, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconChart({ size = 18, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M4 20V10M10 20V4M16 20v-7M22 20H2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconHashtag({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M10 3L8 21M16 3l-2 18M3 9h18M2 15h18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconMore({ size = 18, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle cx="6" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="18" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}

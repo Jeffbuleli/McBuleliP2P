@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, lt, or, sql } from "drizzle-orm";
 import {
   communityTradingSignals,
   getDb,
@@ -91,6 +91,74 @@ export async function listTradingSignals(args: {
       : null;
 
   return { signals, nextCursor };
+}
+
+export async function searchTradingSignals(args: {
+  q: string;
+  limit?: number;
+}): Promise<TradingSignalView[]> {
+  const term = args.q.trim();
+  if (term.length < 2) return [];
+  const db = getDb();
+  const limit = Math.min(args.limit ?? 6, 12);
+  const rows = await db
+    .select()
+    .from(communityTradingSignals)
+    .where(
+      or(
+        ilike(communityTradingSignals.symbol, `%${term.toUpperCase()}%`),
+        ilike(communityTradingSignals.note, `%${term}%`),
+      ),
+    )
+    .orderBy(desc(communityTradingSignals.publishedAt))
+    .limit(limit);
+  if (!rows.length) return [];
+  const authors = await getAuthorsMap(rows.map((r) => r.authorId));
+  return rows
+    .map((r) => {
+      const author = authors.get(r.authorId);
+      return author ? mapSignal(r, author) : null;
+    })
+    .filter((s): s is TradingSignalView => s !== null);
+}
+
+export type AuthorSignalStats = {
+  openSignals: number;
+  closedSignals: number;
+  signalWinRate: number | null;
+};
+
+export async function getAuthorSignalStats(
+  authorId: string,
+): Promise<AuthorSignalStats> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      status: communityTradingSignals.status,
+      outcome: communityTradingSignals.outcome,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(communityTradingSignals)
+    .where(eq(communityTradingSignals.authorId, authorId))
+    .groupBy(communityTradingSignals.status, communityTradingSignals.outcome);
+
+  let openSignals = 0;
+  let closedSignals = 0;
+  let wins = 0;
+  for (const r of rows) {
+    const n = Number(r.n);
+    if (r.status === "open") openSignals += n;
+    if (r.status === "closed") {
+      closedSignals += n;
+      if (r.outcome === "win") wins += n;
+    }
+  }
+  return {
+    openSignals,
+    closedSignals,
+    signalWinRate:
+      closedSignals > 0 ? Math.round((wins / closedSignals) * 100) : null,
+  };
 }
 
 export async function createTradingSignal(args: {
