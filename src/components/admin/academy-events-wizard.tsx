@@ -6,15 +6,20 @@ import { CommunityFormationCard } from "@/components/community/community-formati
 import { adminCls } from "@/components/admin/admin-ui";
 import { formatSessionWhen } from "@/components/admin/academy-admin-ui";
 import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
+import { browserTimezone } from "@/lib/community/formation-post-meta";
 
 type SsotEvent = {
   id: string;
   slug: string;
   title: string;
+  description?: string;
   status: string;
   startDate: string;
+  endDate?: string;
   visibility: string;
   editionId: string | null;
+  trainerId: string;
+  timezone: string;
 };
 
 type Viewer = { id: string; name: string };
@@ -46,6 +51,13 @@ export function AcademyEventsWizard({
   const [visibility, setVisibility] = useState<"PRIVATE" | "COMMUNITY">("PRIVATE");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [eventTz] = useState(() => browserTimezone());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editStartsAt, setEditStartsAt] = useState("");
+  const [editVisibility, setEditVisibility] = useState<"PRIVATE" | "COMMUNITY">("PRIVATE");
+  const [editReason, setEditReason] = useState("");
 
   const communityPreview = useMemo((): FormationPostMeta | null => {
     if (visibility !== "COMMUNITY" || !title.trim() || !startsAt) return null;
@@ -62,7 +74,7 @@ export function AcademyEventsWizard({
       joinPath: `/app/academy/${editionSlug}/live/apercu${q}`,
       trainerName: viewer?.name ?? "McBuleli",
       startDate: start.toISOString(),
-      timezone: "Africa/Kinshasa",
+      timezone: eventTz,
       title: title.trim(),
       description: description.trim() || undefined,
       eventStatus: "DRAFT",
@@ -76,6 +88,7 @@ export function AcademyEventsWizard({
     editionTitle,
     description,
     viewer?.name,
+    eventTz,
   ]);
 
   const loadEvents = useCallback(async () => {
@@ -116,6 +129,7 @@ export function AcademyEventsWizard({
           trainerName: viewer.name,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
+          timezone: eventTz,
           visibility,
           editionId,
           category: "cohort-live",
@@ -165,12 +179,70 @@ export function AcademyEventsWizard({
   }
 
   async function cancelEvent(id: string) {
+    const reason = window.prompt(
+      "Raison de l'annulation (min. 3 caractères) :",
+    );
+    if (!reason || reason.trim().length < 3) return;
     setBusy(`x-${id}`);
     try {
       await fetch(`/api/events/${id}`, {
         method: "DELETE",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancelReason: reason.trim() }),
       });
+      setEditingId(null);
+      await loadEvents();
+      onCreated?.();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function startEdit(ev: SsotEvent) {
+    setEditingId(ev.id);
+    setEditTitle(ev.title);
+    setEditDescription(ev.description ?? "");
+    const d = new Date(ev.startDate);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    setEditStartsAt(local);
+    setEditVisibility(ev.visibility === "COMMUNITY" ? "COMMUNITY" : "PRIVATE");
+    setEditReason("");
+  }
+
+  async function saveEdit(id: string) {
+    if (!editTitle.trim() || !editStartsAt || editReason.trim().length < 3) {
+      setMsg("Titre, date et justification (min. 3 car.) requis");
+      return;
+    }
+    setBusy(`edit-${id}`);
+    setMsg(null);
+    const start = new Date(editStartsAt);
+    const end = new Date(start.getTime() + durationMin * 60_000);
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+          timezone: eventTz,
+          visibility: editVisibility,
+          changeReason: editReason.trim(),
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg(typeof j.error === "string" ? j.error : "Erreur");
+        return;
+      }
+      setEditingId(null);
+      setMsg("Événement mis à jour");
       await loadEvents();
       onCreated?.();
     } finally {
@@ -234,6 +306,10 @@ export function AcademyEventsWizard({
         </select>
       </div>
       <p className="text-[10px] text-[color:var(--fd-muted)]">
+        Fuseau horaire : <span className="font-bold">{eventTz}</span> (heure
+        locale du navigateur)
+      </p>
+      <p className="text-[10px] text-[color:var(--fd-muted)]">
         {visibility === "COMMUNITY"
           ? "À la publication : carte Formation dans Community + accès live pour les membres Academy."
           : "À la publication : live réservé aux inscrits de la cohorte, sans carte Community."}
@@ -273,17 +349,22 @@ export function AcademyEventsWizard({
 
       {events.length > 0 ? (
         <ul className="space-y-2 border-t border-[color:var(--fd-border)] pt-3">
-          {events.map((ev) => (
+          {events.map((ev) => {
+            const isOwner = viewer?.id === ev.trainerId;
+            const isEditing = editingId === ev.id;
+            return (
             <li
               key={ev.id}
-              className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2"
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2"
             >
+              <div className="flex items-center gap-2">
               <AcademyIcon name="live" className="h-4 w-4 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold">{ev.title}</p>
                 <p className="text-[10px] text-[color:var(--fd-muted)]">
                   {formatSessionWhen(ev.startDate)} · {ev.status} ·{" "}
                   {VISIBILITY_FR[ev.visibility] ?? ev.visibility}
+                  {ev.timezone ? ` · ${ev.timezone}` : ""}
                 </p>
               </div>
               {ev.status === "DRAFT" ? (
@@ -296,18 +377,80 @@ export function AcademyEventsWizard({
                   {busy === ev.id ? "…" : "Publier"}
                 </button>
               ) : null}
-              {ev.status !== "CANCELLED" ? (
+              {isOwner ? (
+                <button
+                  type="button"
+                  disabled={busy != null}
+                  onClick={() => (isEditing ? setEditingId(null) : startEdit(ev))}
+                  className="rounded-lg border border-[#305f33]/40 px-2 py-1 text-[10px] font-bold text-[#305f33]"
+                >
+                  {isEditing ? "Fermer" : "Gérer"}
+                </button>
+              ) : null}
+              {ev.status !== "CANCELLED" && isOwner ? (
                 <button
                   type="button"
                   disabled={busy != null}
                   onClick={() => void cancelEvent(ev.id)}
                   className="rounded-lg border px-2 py-1 text-[10px] font-bold text-rose-700"
+                  title="Annuler l'événement"
                 >
                   ×
                 </button>
               ) : null}
+              </div>
+              {isEditing ? (
+                <div className="mt-3 space-y-2 border-t border-[color:var(--fd-border)] pt-3">
+                  <input
+                    className={adminCls.input}
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Titre"
+                  />
+                  <textarea
+                    className={`${adminCls.input} min-h-[60px]`}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Description"
+                    rows={2}
+                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <input
+                      type="datetime-local"
+                      className={adminCls.input}
+                      value={editStartsAt}
+                      onChange={(e) => setEditStartsAt(e.target.value)}
+                    />
+                    <select
+                      className={adminCls.select}
+                      value={editVisibility}
+                      onChange={(e) =>
+                        setEditVisibility(e.target.value as "PRIVATE" | "COMMUNITY")
+                      }
+                    >
+                      <option value="PRIVATE">Cohorte seule</option>
+                      <option value="COMMUNITY">Fil Community</option>
+                    </select>
+                  </div>
+                  <input
+                    className={adminCls.input}
+                    value={editReason}
+                    onChange={(e) => setEditReason(e.target.value)}
+                    placeholder="Justification de la modification (obligatoire)"
+                  />
+                  <button
+                    type="button"
+                    disabled={busy != null}
+                    onClick={() => void saveEdit(ev.id)}
+                    className={adminCls.btnPrimary}
+                  >
+                    {busy === `edit-${ev.id}` ? "…" : "Enregistrer les modifications"}
+                  </button>
+                </div>
+              ) : null}
             </li>
-          ))}
+          );
+          })}
         </ul>
       ) : null}
     </div>

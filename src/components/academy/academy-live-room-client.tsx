@@ -87,7 +87,13 @@ export function AcademyLiveRoomClient({
   });
 
   const load = useCallback(async () => {
-    const q = new URLSearchParams({ program: programSlug });
+    await fetch("/api/auth/session", { credentials: "same-origin" }).catch(
+      () => undefined,
+    );
+    const q = new URLSearchParams({
+      program: programSlug,
+      companion: sessionSlug,
+    });
     const res = await fetchWithDeadline(
       `/api/academy/editions/${editionSlug}?${q}`,
       { credentials: "include", cache: "no-store" },
@@ -95,14 +101,26 @@ export function AcademyLiveRoomClient({
     );
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
+      if (res.status === 401) {
+        const next = encodeURIComponent(
+          `/app/academy/${editionSlug}/live/${sessionSlug}?program=${encodeURIComponent(programSlug)}`,
+        );
+        window.location.href = `/login?next=${next}`;
+        return;
+      }
       setErr(t("academy_error_load"));
       return;
     }
     const sessions = (j.sessions as SessionLive[] | undefined) ?? [];
     const replays = (j.replays as SessionLive[] | undefined) ?? [];
-    const s = [...sessions, ...replays].find((x) => x.slug === sessionSlug);
+    const companion = j.companionSession as SessionLive | null | undefined;
+    const s =
+      companion ??
+      [...sessions, ...replays].find((x) => x.slug === sessionSlug);
     if (!s) {
       setErr(t("academy_live_session_not_found"));
+      setEditionTitle((j.edition as { title?: string })?.title ?? "");
+      setEnrolled(!!(j.edition as { enrolled?: boolean })?.enrolled);
       return;
     }
     setSession(s);
@@ -150,14 +168,54 @@ export function AcademyLiveRoomClient({
   }
 
   const backHref = `/app/academy/${editionSlug}?program=${encodeURIComponent(programSlug)}`;
+  const enterBase = { editionSlug, sessionSlug, programSlug };
+  const joinVideo = buildLiveEnterAppPath({
+    ...enterBase,
+    mode: liveRole === "host" ? "host" : "learner",
+  });
+  const joinHost = buildLiveEnterAppPath({ ...enterBase, mode: "host" });
+  const joinAudio = buildLiveEnterAppPath({ ...enterBase, mode: "audio" });
 
   if (err && !session) {
     return (
-      <div className={`pb-6 ${academyCls.root}`}>
-        <p className="text-sm text-rose-700">{err}</p>
-        <Link href={backHref} className="mt-3 inline-block text-sm font-semibold text-[color:var(--fd-primary)]">
-          ← {t("academy_title")}
+      <div className={`space-y-4 pb-6 ${academyCls.root}`}>
+        <Link href={backHref} className="text-sm font-semibold text-[color:var(--fd-primary)]">
+          ← {editionTitle || t("academy_title")}
         </Link>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-bold text-amber-950">{err}</p>
+          <p className="mt-2 text-xs text-amber-900">
+            {t("academy_live_companion_rejoin_hint")}
+          </p>
+        </div>
+        <div className="grid gap-2">
+          <a
+            href={joinVideo}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#305f33] px-4 py-3 text-sm font-extrabold text-white"
+          >
+            <AcademyIcon name="video" className="h-5 w-5 !text-white" />
+            {t("academy_live_rejoin_video")}
+          </a>
+          <a
+            href={joinAudio}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#305f33] bg-white px-4 py-3 text-sm font-bold text-[#305f33]"
+          >
+            <AcademyIcon name="audio" className="h-5 w-5" />
+            {t("academy_live_rejoin_audio")}
+          </a>
+          <Link
+            href={backHref}
+            className="block text-center text-sm font-bold text-[color:var(--fd-muted)] underline"
+          >
+            {t("academy_live_leave_classroom")}
+          </Link>
+          <Link
+            href="/app"
+            className="block text-center text-xs font-semibold text-[color:var(--fd-muted)]"
+          >
+            {t("academy_live_back_home")}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -203,14 +261,12 @@ export function AcademyLiveRoomClient({
     gateError !== "academy_live_account_required" &&
     gateError !== "academy_live_host_requires_payment" &&
     gateError !== "academy_live_enroll_required";
-  // Court lien McBuleli → /app/live/enter signe le JWT côté serveur (évite URL tronquée + bouton JOIN figé).
-  const enterBase = { editionSlug, sessionSlug, programSlug };
-  const joinVideo = buildLiveEnterAppPath({
+  const joinVideoLive = buildLiveEnterAppPath({
     ...enterBase,
     mode: isHost ? "host" : "learner",
   });
-  const joinHost = buildLiveEnterAppPath({ ...enterBase, mode: "host" });
-  const joinAudio = buildLiveEnterAppPath({ ...enterBase, mode: "audio" });
+  const joinHostLive = buildLiveEnterAppPath({ ...enterBase, mode: "host" });
+  const joinAudioLive = buildLiveEnterAppPath({ ...enterBase, mode: "audio" });
 
   const timing = liveSessionRemainingSec({
     startsAt: new Date(session.startsAt),
@@ -258,7 +314,13 @@ export function AcademyLiveRoomClient({
         </div>
         <h1 className="mt-2 text-lg font-black text-[color:var(--fd-text)]">{session.title}</h1>
         <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-          {new Date(session.startsAt).toLocaleString()}
+          {new Date(session.startsAt).toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+          <span className="block text-[10px] opacity-80">
+            {Intl.DateTimeFormat().resolvedOptions().timeZone}
+          </span>
         </p>
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-xs font-extrabold text-[#305f33]">
           <AcademyIcon name="live" className="h-3.5 w-3.5 shrink-0" />
@@ -295,7 +357,7 @@ export function AcademyLiveRoomClient({
 
       {enrolled && canJoinVideo && gatedUrls && isAcademyLiveEmbedEnabled() ? (
         <AcademyLiveEmbed
-          joinUrl={joinVideo}
+          joinUrl={joinVideoLive}
           title={session.title}
         />
       ) : enrolled && canJoinVideo ? (
@@ -336,9 +398,9 @@ export function AcademyLiveRoomClient({
       <AcademyOpenClassroomBar
         canJoin={canJoinVideo}
         isHost={isHost}
-        joinVideoHref={joinVideo}
-        joinAudioHref={joinAudio}
-        joinHostHref={joinHost}
+        joinVideoHref={joinVideoLive}
+        joinAudioHref={joinAudioLive}
+        joinHostHref={joinHostLive}
         activePanel={panel}
         onPanel={setPanel}
         backHref={backHref}

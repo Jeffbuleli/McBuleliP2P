@@ -1,8 +1,9 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   academyEditions,
   academyPrograms,
   academySessions,
+  academyTrainingEvents,
   getDb,
 } from "@/db";
 import { ACADEMY_PROGRAM_LAUNCH } from "@/lib/academy-config";
@@ -26,6 +27,45 @@ type LiveEnterRow = {
   sessionLiveUrl: string | null;
   sessionTitleFr: string;
 };
+
+async function findTrainingEventRow(
+  sessionKey: string,
+  editionSlug?: string,
+  programSlug?: string,
+): Promise<LiveEnterRow | null> {
+  const db = getDb();
+  const conditions = [
+    eq(academyTrainingEvents.slug, sessionKey),
+    inArray(academyTrainingEvents.status, ["DRAFT", "PUBLISHED", "LIVE"]),
+  ];
+  if (editionSlug?.trim()) {
+    conditions.push(eq(academyEditions.slug, editionSlug.trim()));
+  }
+  if (programSlug?.trim()) {
+    conditions.push(eq(academyPrograms.slug, programSlug.trim()));
+  }
+
+  const [row] = await db
+    .select({
+      editionId: academyEditions.id,
+      editionSlug: academyEditions.slug,
+      liveBaseUrl: academyEditions.liveBaseUrl,
+      programSlug: academyPrograms.slug,
+      sessionSlug: academyTrainingEvents.slug,
+      sessionLiveUrl: academyTrainingEvents.liveRoomUrl,
+      sessionTitleFr: academyTrainingEvents.title,
+    })
+    .from(academyTrainingEvents)
+    .innerJoin(
+      academyEditions,
+      eq(academyTrainingEvents.editionId, academyEditions.id),
+    )
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(and(...conditions))
+    .limit(1);
+
+  return row ?? null;
+}
 
 async function findLiveEnterRow(
   params: LiveEnterParams,
@@ -63,7 +103,12 @@ async function findLiveEnterRow(
             ),
       )
       .limit(1);
-    return row ?? null;
+    if (row) return row;
+    return findTrainingEventRow(
+      sessionKey,
+      params.editionSlug.trim(),
+      params.programSlug,
+    );
   }
 
   const rows = await db
@@ -76,7 +121,9 @@ async function findLiveEnterRow(
     )
     .limit(8);
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    return findTrainingEventRow(sessionKey, undefined, params.programSlug);
+  }
   if (rows.length === 1) return rows[0];
 
   const launch = rows.find((r) => r.programSlug === ACADEMY_PROGRAM_LAUNCH);

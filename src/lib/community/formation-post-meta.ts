@@ -91,6 +91,37 @@ export function formatFormationDate(
   }).format(new Date(iso));
 }
 
+/** Event timezone + viewer local time (for cards and links). */
+export function formatFormationDateWithUserTz(
+  iso: string,
+  eventTimezone: string,
+  userTimezone: string,
+  fr: boolean,
+): { eventLocal: string; userLocal: string; userTzLabel: string } {
+  const eventLocal = formatFormationDate(iso, eventTimezone, fr);
+  const userLocal = new Intl.DateTimeFormat(fr ? "fr-FR" : "en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: userTimezone,
+  }).format(new Date(iso));
+  const userTzLabel =
+    userTimezone === eventTimezone
+      ? eventTimezone
+      : `${userTimezone} (${fr ? "votre heure" : "your time"})`;
+  return { eventLocal, userLocal, userTzLabel };
+}
+
+export function browserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Kinshasa";
+  } catch {
+    return "Africa/Kinshasa";
+  }
+}
+
 export function formationSummaryBody(meta: FormationPostMeta, fr: boolean): string {
   const when = formatFormationDate(meta.startDate, meta.timezone, fr);
   return fr

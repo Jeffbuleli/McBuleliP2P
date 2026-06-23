@@ -256,6 +256,7 @@ export async function updateEvent(args: {
   userId: string;
   appRole: UserRoleType;
   patch: Partial<CreateEventInput>;
+  changeReason?: string;
 }): Promise<{ ok: true; event: EventPublicView } | { ok: false; code: string }> {
   const row = await getEventByIdOrSlug(args.idOrSlug);
   if (!row) return { ok: false, code: "event_not_found" };
@@ -268,13 +269,19 @@ export async function updateEvent(args: {
   const price = args.patch.price ?? numFromNumeric(row.price);
   const start = args.patch.startDate ? new Date(args.patch.startDate) : row.startDate;
   const end = args.patch.endDate ? new Date(args.patch.endDate) : row.endDate;
+  const reason = args.changeReason?.trim();
+  const baseDescription = args.patch.description?.trim() ?? row.description;
+  const description =
+    reason && reason.length >= 3
+      ? `${baseDescription}\n\n[${new Date().toISOString().slice(0, 10)} · ${reason}]`
+      : baseDescription;
 
   const db = getDb();
   const [updated] = await db
     .update(academyTrainingEvents)
     .set({
       title: args.patch.title?.trim() ?? row.title,
-      description: args.patch.description?.trim() ?? row.description,
+      description,
       category: args.patch.category ?? row.category,
       coverImage: args.patch.coverImage !== undefined ? args.patch.coverImage : row.coverImage,
       trainerId: args.patch.trainerId ?? row.trainerId,
@@ -310,12 +317,24 @@ export async function deleteEvent(args: {
   idOrSlug: string;
   userId: string;
   appRole: UserRoleType;
+  cancelReason?: string;
 }): Promise<{ ok: true } | { ok: false; code: string }> {
   const row = await getEventByIdOrSlug(args.idOrSlug);
   if (!row) return { ok: false, code: "event_not_found" };
   const role = resolveEventRole({ userId: args.userId, appRole: args.appRole, event: row });
   if (!canEditEvent({ role, userId: args.userId, event: row })) {
     return { ok: false, code: "event_forbidden" };
+  }
+
+  const reason = args.cancelReason?.trim();
+  if (reason && reason.length >= 3) {
+    await getDb()
+      .update(academyTrainingEvents)
+      .set({
+        description: `${row.description}\n\n[Annulé ${new Date().toISOString().slice(0, 10)} · ${reason}]`,
+        updatedAt: new Date(),
+      })
+      .where(eq(academyTrainingEvents.id, row.id));
   }
 
   await removeEventCommunityPost(row.id);

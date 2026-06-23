@@ -27,8 +27,13 @@ const patchSchema = z
     eventType: z.enum(["FREE", "PAID"]).optional(),
     visibility: z.enum(["PUBLIC", "PRIVATE", "COMMUNITY"]).optional(),
     audienceMode: z.enum(["ALL_ACADEMY_MEMBERS", "MANUAL"]).optional(),
+    changeReason: z.string().min(3).max(500).optional(),
   })
   .partial();
+
+const cancelSchema = z.object({
+  cancelReason: z.string().min(3).max(500),
+});
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -56,11 +61,14 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
+  const { changeReason, ...patch } = parsed.data;
+
   const out = await updateEvent({
     idOrSlug: id,
     userId: me.id,
     appRole: me.role,
-    patch: parsed.data,
+    patch,
+    changeReason,
   });
   if (!out.ok) {
     const status = out.code === "event_forbidden" ? 403 : 404;
@@ -69,12 +77,21 @@ export async function PATCH(req: Request, ctx: Ctx) {
   return NextResponse.json({ ok: true, event: out.event });
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   const me = await getSessionUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
 
-  const out = await deleteEvent({ idOrSlug: id, userId: me.id, appRole: me.role });
+  const body = await req.json().catch(() => ({}));
+  const parsed = cancelSchema.safeParse(body);
+  const cancelReason = parsed.success ? parsed.data.cancelReason : undefined;
+
+  const out = await deleteEvent({
+    idOrSlug: id,
+    userId: me.id,
+    appRole: me.role,
+    cancelReason,
+  });
   if (!out.ok) {
     const status = out.code === "event_forbidden" ? 403 : 404;
     return NextResponse.json({ error: out.code }, { status });

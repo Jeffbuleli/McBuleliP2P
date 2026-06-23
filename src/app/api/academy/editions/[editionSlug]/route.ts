@@ -17,8 +17,9 @@ export async function GET(
   }
 
   const { editionSlug } = await ctx.params;
-  const programSlug =
-    new URL(req.url).searchParams.get("program")?.trim() || undefined;
+  const url = new URL(req.url);
+  const programSlug = url.searchParams.get("program")?.trim() || undefined;
+  const companionSession = url.searchParams.get("companion")?.trim() || undefined;
   const locale = await getLocale();
   const editionId = await resolveEditionIdBySlug({ editionSlug, programSlug });
   if (!editionId) {
@@ -37,6 +38,7 @@ export async function GET(
     programSlug,
     locale,
     viewerLiveRole: liveRole,
+    companionSessionSlug: companionSession,
   });
 
   if (!detail) {

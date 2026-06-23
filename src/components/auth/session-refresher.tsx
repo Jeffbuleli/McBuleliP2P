@@ -28,11 +28,13 @@ export function SessionRefresher() {
 
     void refresh();
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
     };
   }, []);
 

@@ -59,6 +59,20 @@ function LoginForm() {
     if (emailParam) setEmail(emailParam);
   }, [emailParam]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/auth/session", { credentials: "same-origin" })
+      .then((res) => {
+        if (!cancelled && res.ok) {
+          window.location.replace(nextPath);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [nextPath]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -89,7 +103,7 @@ function LoginForm() {
         return;
       }
       // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
-      window.location.replace("/app");
+      window.location.replace(nextPath);
     } catch (err) {
       const aborted =
         (err instanceof DOMException || err instanceof Error) &&

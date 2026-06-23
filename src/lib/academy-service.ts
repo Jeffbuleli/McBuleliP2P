@@ -679,6 +679,7 @@ export async function getEditionDetail(args: {
   programSlug?: string;
   locale: Locale;
   viewerLiveRole?: AcademyLiveRole;
+  companionSessionSlug?: string;
 }): Promise<
   | {
       edition: AcademyEditionView & { tutorEnabled: boolean };
@@ -686,6 +687,7 @@ export async function getEditionDetail(args: {
       liveRole: AcademyLiveRole;
       sessions: AcademySessionView[];
       replays: AcademySessionView[];
+      companionSession: AcademySessionView | null;
       quizzes: { id: string; slug: string; title: string; attemptsUsed: number; maxAttempts: number; bestScore: number | null; passed: boolean }[];
     }
   | null
@@ -849,6 +851,11 @@ export async function getEditionDetail(args: {
   const visibleSessions = filterVisibleSessions(sessionViews, {
     isStaff: isStaffHost,
   });
+  const companionSession =
+    args.companionSessionSlug?.trim()
+      ? (sessionViews.find((s) => s.slug === args.companionSessionSlug?.trim()) ??
+        null)
+      : null;
   const { upcoming, replays } = partitionAcademySessions(visibleSessions);
 
   const [memberRow] = await db
@@ -886,6 +893,7 @@ export async function getEditionDetail(args: {
     },
     sessions: upcoming,
     replays,
+    companionSession,
     quizzes: quizViews,
   };
 }

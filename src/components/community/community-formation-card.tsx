@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import {
-  formatFormationDate,
+  formatFormationDateWithUserTz,
+  browserTimezone,
   type FormationPostMeta,
 } from "@/lib/community/formation-post-meta";
 
@@ -61,12 +62,20 @@ export function CommunityFormationCard({
   meta,
   fr,
   isLive,
+  userTimezone,
 }: {
   meta: FormationPostMeta;
   fr: boolean;
   isLive?: boolean;
+  userTimezone?: string;
 }) {
-  const when = formatFormationDate(meta.startDate, meta.timezone, fr);
+  const viewerTz = userTimezone ?? browserTimezone();
+  const when = formatFormationDateWithUserTz(
+    meta.startDate,
+    meta.timezone,
+    viewerTz,
+    fr,
+  );
   const live = isLive || meta.eventStatus === "LIVE";
 
   return (
@@ -115,7 +124,16 @@ export function CommunityFormationCard({
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e8f3ee] text-[#305f33]">
               <IconCalendar className="h-4 w-4" />
             </span>
-            <span className="font-medium">{when}</span>
+            <span className="font-medium">{when.eventLocal}</span>
+            {viewerTz !== meta.timezone ? (
+              <span className="mt-0.5 block text-[11px] text-[#78716c]">
+                {fr ? "Chez vous" : "Your time"}: {when.userLocal}
+              </span>
+            ) : null}
+            <span className="mt-0.5 block text-[10px] text-[#a8a29e]">
+              {meta.timezone}
+              {viewerTz !== meta.timezone ? ` · ${when.userTzLabel}` : ""}
+            </span>
           </li>
           <li className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e8f3ee] text-[#305f33]">
