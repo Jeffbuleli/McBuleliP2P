@@ -1,5 +1,7 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import {
+  academyEditions,
+  academyPrograms,
   academyTrainingEventParticipants,
   academyTrainingEventReminders,
   academyTrainingEvents,
@@ -77,7 +79,24 @@ export async function runEventReminders(): Promise<{
         ),
       );
 
-    const href = `/app/events/${event.slug}`;
+    let href = "/app/academy";
+    if (event.editionId) {
+      const [editionRow] = await db
+        .select({
+          editionSlug: academyEditions.slug,
+          programSlug: academyPrograms.slug,
+        })
+        .from(academyEditions)
+        .innerJoin(
+          academyPrograms,
+          eq(academyEditions.programId, academyPrograms.id),
+        )
+        .where(eq(academyEditions.id, event.editionId))
+        .limit(1);
+      if (editionRow) {
+        href = `/app/academy/${editionRow.editionSlug}/live/${event.slug}?program=${encodeURIComponent(editionRow.programSlug)}`;
+      }
+    }
     const when = new Intl.DateTimeFormat("fr-FR", {
       dateStyle: "full",
       timeStyle: "short",

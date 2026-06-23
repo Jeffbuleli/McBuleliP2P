@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AcademyIcon } from "@/components/academy/academy-icon";
 import { AcademyKpiStrip } from "@/components/admin/academy-kpi-strip";
 import { AcademyLeadsTab } from "@/components/admin/academy-leads-tab";
+import { AcademyFormationFunnel } from "@/components/admin/academy-formation-funnel";
 import {
   AdvancedBlock,
   ANALYTICS_VERB_FR,
@@ -24,7 +25,7 @@ import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
 import { AcademyEventsWizard } from "@/components/admin/academy-events-wizard";
 import type { EventDashboardKpis } from "@/lib/events/types";
 
-type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "tools" | "leads";
+type TabId = "overview" | "program" | "lives" | "enrollments" | "analytics" | "leads";
 
 type FormationStats = {
   formationTotal: number;
@@ -109,7 +110,6 @@ const TABS: { id: TabId; label: string; icon: "live" | "calendar" | "chat" | "tu
   { id: "enrollments", label: "Inscrits", icon: "wallet" },
   { id: "leads", label: "Leads", icon: "chat" },
   { id: "analytics", label: "Stats", icon: "tutor" },
-  { id: "tools", label: "Outils", icon: "signal" },
 ];
 
 const EDITION_STATUSES = ["draft", "open", "active", "closed"] as const;
@@ -126,8 +126,10 @@ function effectiveLiveBase(
   );
 }
 
-export function AcademyAdminClient() {
+export function AcademyAdminClient({ embedded = false }: { embedded?: boolean }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const initialTab = (searchParams.get("tab") as TabId | null) ?? "overview";
   const [tab, setTab] = useState<TabId>(
     TABS.some((t) => t.id === initialTab) ? initialTab : "overview",
@@ -160,7 +162,6 @@ export function AcademyAdminClient() {
 
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
-  const [savingSession, setSavingSession] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
@@ -191,8 +192,15 @@ export function AcademyAdminClient() {
     setFormation((j.formation as FormationStats) ?? null);
     setEventKpis((j.eventKpis as EventDashboardKpis) ?? null);
     setInfra((j.infra as LiveInfra) ?? null);
-    setSelected((cur) => cur ?? eds[0]?.slug ?? null);
-  }, []);
+    const editionFromUrl = searchParams.get("edition");
+    setSelected((cur) => {
+      if (editionFromUrl && eds.some((e) => e.slug === editionFromUrl)) {
+        return editionFromUrl;
+      }
+      if (cur && eds.some((e) => e.slug === cur)) return cur;
+      return eds[0]?.slug ?? null;
+    });
+  }, [searchParams]);
 
   const loadEditionDetail = useCallback(async (editionSlug: string) => {
     const res = await fetch(
@@ -319,28 +327,6 @@ export function AcademyAdminClient() {
     }
   }
 
-  async function saveSession(sessionId: string) {
-    const d = sessionDraft[sessionId];
-    if (!d) return;
-    setSavingSession(sessionId);
-    try {
-      const res = await fetch("/api/admin/academy", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          sessionId,
-          liveUrl: d.liveUrl.trim() || null,
-          replayUrl: d.replayUrl.trim() || null,
-          replayR2Key: d.replayR2Key.trim() || null,
-        }),
-      });
-      if (res.ok && selected) await loadSessions(selected);
-    } finally {
-      setSavingSession(null);
-    }
-  }
-
   async function syncFormation() {
     setSyncing(true);
     setSyncMsg(null);
@@ -446,10 +432,47 @@ export function AcademyAdminClient() {
   const totalEnrollments = editions.reduce((n, e) => n + e.enrollmentCount, 0);
   const totalSessions = editions.reduce((n, e) => n + e.sessionCount, 0);
 
+  const syncUrl = useCallback(
+    (nextTab: TabId, editionSlug: string | null) => {
+      if (embedded) return;
+      const params = new URLSearchParams();
+      params.set("tab", nextTab);
+      if (editionSlug) params.set("edition", editionSlug);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [embedded, pathname, router],
+  );
+
+  function pickTab(nextTab: TabId) {
+    setTab(nextTab);
+    syncUrl(nextTab, selected);
+  }
+
+  function pickEdition(editionSlug: string) {
+    setSelected(editionSlug);
+    syncUrl(tab, editionSlug);
+  }
+
   return (
-    <div className={adminCls.page}>
-      <AdminBackLink href="/admin">← Admin</AdminBackLink>
-      <AdminPageHeader title="Academy" subtitle="Cohortes · événements · McBuleli Live" />
+    <div className={embedded ? "space-y-3" : adminCls.page}>
+      {!embedded ? (
+        <>
+          <AdminBackLink href="/admin">← Admin</AdminBackLink>
+          <AdminPageHeader title="Academy" subtitle="Cohortes · événements · McBuleli Live" />
+        </>
+      ) : (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-600/25 bg-amber-50/80 px-3 py-2">
+          <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#305f33]">
+            Ops Academy
+          </p>
+          <Link
+            href={`/admin/academy${selected ? `?edition=${encodeURIComponent(selected)}&tab=${tab}` : ""}`}
+            className="text-[10px] font-bold text-stone-700 underline"
+          >
+            Admin complet →
+          </Link>
+        </div>
+      )}
       {err ? <p className={adminCls.error}>{err}</p> : null}
 
       <div className={`${adminCls.card} flex flex-wrap gap-2`}>
@@ -460,7 +483,7 @@ export function AcademyAdminClient() {
           <button
             key={e.id}
             type="button"
-            onClick={() => setSelected(e.slug)}
+            onClick={() => pickEdition(e.slug)}
             className={`rounded-xl px-3 py-2 text-left text-xs font-bold transition ${
               selected === e.slug
                 ? "bg-[color:var(--fd-primary)] text-white shadow-md"
@@ -470,7 +493,7 @@ export function AcademyAdminClient() {
             {e.titleFr}
             <span className="mt-0.5 block font-medium opacity-80">
               {EDITION_STATUS_FR[e.status] ?? e.status} · {e.enrollmentCount} ·{" "}
-              {e.sessionCount} évts
+              {e.sessionCount} événements
             </span>
           </button>
         ))}
@@ -484,7 +507,7 @@ export function AcademyAdminClient() {
           <button
             key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => pickTab(t.id)}
             className={`flex flex-col items-center gap-0.5 rounded-lg px-2.5 py-2 text-[10px] font-bold transition ${
               tab === t.id
                 ? "bg-[color:var(--fd-primary)] text-white"
@@ -514,15 +537,16 @@ export function AcademyAdminClient() {
             <div className={adminCls.card}>
               <SectionHead
                 icon="wallet"
-                title="Inscriptions lancement"
-                hint="Page formation publique et comptes Academy"
+                title="Funnel inscription"
+                hint="Leads /formation → comptes → inscrits cohorte"
               />
-              <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Kpi label="Demandes" value={String(formation.formationTotal)} compact />
-                <Kpi label="Comptes liés" value={String(formation.formationLinkedToUser)} compact />
-                <Kpi label="Dans l'app" value={String(formation.academyEnrolledLaunch)} compact />
-                <Kpi label="En attente" value={String(formation.pendingAcademyEnroll)} compact />
-              </dl>
+              <AcademyFormationFunnel
+                formation={formation}
+                onLeads={() => pickTab("leads")}
+                onSync={() => void syncFormation()}
+                syncing={syncing}
+                syncMsg={syncMsg}
+              />
             </div>
           ) : null}
 
@@ -554,19 +578,6 @@ export function AcademyAdminClient() {
                   Ouvrir la salle live ↗
                 </a>
               ) : null}
-            </div>
-          ) : null}
-
-          {selectedEdition && analytics ? (
-            <div className={adminCls.card}>
-              <h2 className={adminCls.h2}>Snapshot — {selectedEdition.titleFr}</h2>
-              <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                <Kpi label="Inscrits" value={String(analytics.enrollmentsActive)} compact />
-                <Kpi label="Lives" value={String(analytics.livesAttended)} compact />
-                <Kpi label="Quiz" value={String(analytics.quizPasses)} compact />
-                <Kpi label="Modules" value={String(analytics.modulesCompleted)} compact />
-                <Kpi label="Replays" value={String(analytics.replayViews)} compact />
-              </dl>
             </div>
           ) : null}
         </>
@@ -647,7 +658,7 @@ export function AcademyAdminClient() {
                 className={adminCls.btnSecondary}
                 target="_blank"
               >
-                Voir hub apprenant ↗
+                Voir la classe ↗
               </Link>
             ) : null}
           </div>
@@ -676,12 +687,12 @@ export function AcademyAdminClient() {
           <div className={adminCls.card}>
             <SectionHead
               icon="live"
-              title="Sessions legacy"
-              hint="Sync auto · ops live"
+              title="Archive legacy"
+              hint="Lecture seule — gérez les événements via l'assistant ci-dessus"
             />
             {!liveBaseEffective ? (
               <p className="mt-3 text-xs font-semibold text-amber-800">
-                Serveur live non configuré — onglet Programme ou variables Render.
+                Serveur live non configuré — onglet Cohorte ou variables Render.
               </p>
             ) : null}
           </div>
@@ -734,26 +745,21 @@ export function AcademyAdminClient() {
                         />
                       </div>
                     ) : null}
-                    <AdvancedBlock summary="Replay & lien personnalisé">
+                    <AdvancedBlock summary="Replay & lien (archive)">
+                      <p className="mb-2 text-[10px] font-semibold text-amber-800">
+                        Lecture seule — gérez les replays via les événements SSOT.
+                      </p>
                       <label className="block text-xs">
                         <span className="font-bold text-[color:var(--fd-text)]">
                           Lien live alternatif
                         </span>
                         <input
                           type="url"
+                          readOnly
+                          disabled
                           placeholder="Vide = salle McBuleli automatique"
-                          className={`${adminCls.input} mt-1 w-full`}
+                          className={`${adminCls.input} mt-1 w-full opacity-60`}
                           value={sessionDraft[s.id]?.liveUrl ?? ""}
-                          onChange={(e) =>
-                            setSessionDraft((prev) => ({
-                              ...prev,
-                              [s.id]: {
-                                liveUrl: e.target.value,
-                                replayUrl: prev[s.id]?.replayUrl ?? "",
-                                replayR2Key: prev[s.id]?.replayR2Key ?? "",
-                              },
-                            }))
-                          }
                         />
                       </label>
                       <label className="block text-xs">
@@ -762,19 +768,11 @@ export function AcademyAdminClient() {
                         </span>
                         <input
                           type="url"
+                          readOnly
+                          disabled
                           placeholder="YouTube, Drive…"
-                          className={`${adminCls.input} mt-1 w-full`}
+                          className={`${adminCls.input} mt-1 w-full opacity-60`}
                           value={sessionDraft[s.id]?.replayUrl ?? ""}
-                          onChange={(e) =>
-                            setSessionDraft((prev) => ({
-                              ...prev,
-                              [s.id]: {
-                                liveUrl: prev[s.id]?.liveUrl ?? "",
-                                replayUrl: e.target.value,
-                                replayR2Key: prev[s.id]?.replayR2Key ?? "",
-                              },
-                            }))
-                          }
                         />
                       </label>
                       <label className="block text-xs">
@@ -783,30 +781,14 @@ export function AcademyAdminClient() {
                         </span>
                         <input
                           type="text"
+                          readOnly
+                          disabled
                           placeholder="dossier/nom-de-la-video.mp4"
-                          className={`${adminCls.input} mt-1 w-full`}
+                          className={`${adminCls.input} mt-1 w-full opacity-60`}
                           value={sessionDraft[s.id]?.replayR2Key ?? ""}
-                          onChange={(e) =>
-                            setSessionDraft((prev) => ({
-                              ...prev,
-                              [s.id]: {
-                                liveUrl: prev[s.id]?.liveUrl ?? "",
-                                replayUrl: prev[s.id]?.replayUrl ?? "",
-                                replayR2Key: e.target.value,
-                              },
-                            }))
-                          }
                         />
                       </label>
                     </AdvancedBlock>
-                    <button
-                      type="button"
-                      disabled={savingSession === s.id}
-                      onClick={() => void saveSession(s.id)}
-                      className={`${adminCls.btnPrimary} mt-3 w-full sm:w-auto`}
-                    >
-                      {savingSession === s.id ? "…" : "Enregistrer"}
-                    </button>
                   </li>
                 );
               })}
@@ -900,7 +882,14 @@ export function AcademyAdminClient() {
 
       {tab === "analytics" && selected && analytics ? (
         <div className={adminCls.card}>
-          <SectionHead icon="tutor" title="Statistiques" hint={selectedEdition?.titleFr} />
+          <SectionHead
+            icon="tutor"
+            title="Rapports cohorte"
+            hint={`Engagement détaillé · ${selectedEdition?.titleFr ?? selected}`}
+          />
+          <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
+            KPIs globaux dans Aperçu · funnel leads dans Aperçu · liste dans Inscrits.
+          </p>
           <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <Kpi label="Inscrits" value={String(analytics.enrollmentsActive)} compact />
             <Kpi label="Lives" value={String(analytics.livesAttended)} compact />
@@ -925,47 +914,7 @@ export function AcademyAdminClient() {
 
       {tab === "leads" ? <AcademyLeadsTab /> : null}
 
-      {tab === "tools" ? (
-        <div className="space-y-4">
-          <div className={adminCls.card}>
-            <SectionHead icon="wallet" title="Données" hint="Formation publique → Academy" />
-            <button
-              type="button"
-              disabled={syncing}
-              onClick={() => void syncFormation()}
-              className={`${adminCls.btnPrimary} mt-4`}
-            >
-              {syncing ? "…" : "Synchroniser les inscriptions"}
-            </button>
-            {syncMsg ? (
-              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
-                {syncMsg}
-              </p>
-            ) : null}
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setTab("leads")}
-                className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
-              >
-                <AcademyIcon name="wallet" className="h-5 w-5" />
-                Leads /formation
-              </button>
-              <a
-                href={launchLiveEnterHost}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm font-bold text-[color:var(--fd-primary)]"
-              >
-                <AcademyIcon name="video" className="h-5 w-5" />
-                Salle McBuleli Live ↗
-              </a>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {!selected && tab !== "overview" && tab !== "tools" && tab !== "leads" ? (
+      {!selected && tab !== "overview" && tab !== "leads" ? (
         <p className={adminCls.empty}>Sélectionnez une édition ci-dessus</p>
       ) : null}
     </div>

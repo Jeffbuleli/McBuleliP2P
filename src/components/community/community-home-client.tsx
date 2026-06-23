@@ -36,7 +36,8 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
         : item.media.length
           ? "image"
           : "text",
-    contentKind: item.meta?.contentKind ?? "news",
+    contentKind: item.kind === "formation" ? "formation" : (item.meta?.contentKind ?? "news"),
+    formationMeta: item.formationMeta ?? null,
     likeCount: item.likeCount,
     commentCount: item.commentCount,
     shareCount: item.shareCount,
@@ -258,14 +259,15 @@ export function CommunityHomeClient() {
       ) : !searchQ ? (
         <div className="space-y-4">
           {items.map((item) =>
-            item.kind === "news" ? (
+            item.kind === "news" || item.kind === "formation" ? (
               <CommunityPostCard
-                key={`news-${item.id}`}
+                key={`post-${item.id}`}
                 post={toFeedPost(item)}
                 onUpdate={(patch) => {
                   setItems((list) =>
                     list.map((i) =>
-                      i.id === item.id && i.kind === "news"
+                      i.id === item.id &&
+                      (i.kind === "news" || i.kind === "formation")
                         ? {
                             ...i,
                             likeCount: patch.likeCount ?? i.likeCount,

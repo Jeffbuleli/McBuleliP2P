@@ -9,6 +9,7 @@ import {
 } from "@/components/community/community-action-bar";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
 import { CommunityCommentThread } from "@/components/community/community-comment-thread";
+import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityExpandableText } from "@/components/community/community-expandable-text";
 import { IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
@@ -221,9 +222,11 @@ export function CommunityPostCard({
       <div className="flex shrink-0 flex-col items-end gap-1">
         <CommunityPostTypeChip
           kind={
-            (isFeedComposerKind(post.contentKind)
-              ? post.contentKind
-              : "news") as CommunityContentKind
+            post.contentKind === "formation"
+              ? "formation"
+              : ((isFeedComposerKind(post.contentKind)
+                  ? post.contentKind
+                  : "news") as CommunityContentKind)
           }
           fr={fr}
         />
@@ -284,8 +287,19 @@ export function CommunityPostCard({
     hasMedia: post.media.length > 0,
   });
 
+  const formationBlock =
+    post.formationMeta ? (
+      <div className="mb-3">
+        <CommunityFormationCard
+          meta={post.formationMeta}
+          fr={fr}
+          isLive={post.formationMeta.eventStatus === "LIVE"}
+        />
+      </div>
+    ) : null;
+
   const textBlock =
-    displayBody.length > 0 ? (
+    !post.formationMeta && displayBody.length > 0 ? (
       linkToDetail ? (
         <Link href={detailHref} className="block">
           <CommunityExpandableText
@@ -307,6 +321,7 @@ export function CommunityPostCard({
     <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
       <div className="px-4 pt-4">
         {header}
+        {formationBlock}
         {textBlock}
         <CommunityPostMedia
           media={post.media}

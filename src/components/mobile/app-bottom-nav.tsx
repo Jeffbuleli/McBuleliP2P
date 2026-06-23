@@ -8,8 +8,8 @@ import type { Messages } from "@/i18n/messages";
 const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
   { href: "/app", key: "nav_home", icon: HomeIcon },
   { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
+  { href: "/app/academy", key: "nav_academy", icon: AcademyNavIcon },
   { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
-  { href: "/app/trade/bots", key: "nav_trade", icon: MarketIcon },
   { href: "/app/community", key: "nav_community", icon: CommunityIcon },
   { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
@@ -19,6 +19,7 @@ export function AppBottomNav() {
   const { t } = useI18n();
   const labelFor = (key: keyof Messages) => {
     if (key === "nav_trade") return "Trade";
+    if (key === "nav_academy") return "Academy";
     if (key === "nav_community") return "Community";
     if (key === "nav_profile") return "Profile";
     return t(key);
@@ -36,8 +37,8 @@ export function AppBottomNav() {
           const active =
             href === "/app"
               ? pathname === "/app"
-              : href === "/app/trade/bots"
-                ? pathname.startsWith("/app/trade")
+              : href === "/app/academy"
+                ? pathname.startsWith("/app/academy")
                 : pathname.startsWith(href);
           const label = labelFor(p.key);
 
@@ -94,10 +95,16 @@ function P2PIcon({ active }: { active: boolean }) {
   );
 }
 
-function MarketIcon({ active }: { active: boolean }) {
+function AcademyNavIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active)} aria-hidden>
-      <path d="M4 18V6M10 18V10M16 18v-8M22 18V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M12 3L2 8.5v7L12 21l10-5.5v-7L12 3z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M12 12v9M2 8.5l10 5.5L22 8.5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
 }

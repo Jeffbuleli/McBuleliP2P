@@ -23,7 +23,14 @@ import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
 import { AcademyIcon, type AcademyIconName } from "@/components/academy/academy-icon";
 import { formatAcademyUsdtPrice } from "@/lib/academy-format";
 import { AcademyStaffHubPanel } from "@/components/academy/academy-staff-hub-panel";
+import { AcademyContinueBar } from "@/components/academy/academy-continue-bar";
+import { AcademyHubAnnouncements } from "@/components/academy/academy-hub-announcements";
+import { AcademyGradesStrip } from "@/components/academy/academy-grades-strip";
 import { academyCls } from "@/components/academy/academy-ui";
+import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
+import {
+  academyCohortHref,
+} from "@/lib/academy-route-paths";
 
 type FormationLead = {
   registeredOnFormation: boolean;
@@ -86,8 +93,12 @@ const ECOSYSTEM_LINKS: {
 ];
 
 export function AcademyHubClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fr = locale === "fr";
   const [hub, setHub] = useState<Hub | null>(null);
+  const [announcements, setAnnouncements] = useState<
+    { id: string; formationMeta: FormationPostMeta }[]
+  >([]);
   const [err, setErr] = useState<string | null>(null);
   const [dbPending, setDbPending] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
@@ -121,6 +132,24 @@ export function AcademyHubClient() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    fetch("/api/community/formations")
+      .then((r) => r.json())
+      .then(
+        (d: {
+          formationPosts?: { id: string; formationMeta: FormationPostMeta | null }[];
+        }) => {
+          setAnnouncements(
+            (d.formationPosts ?? []).filter(
+              (p): p is { id: string; formationMeta: FormationPostMeta } =>
+                Boolean(p.formationMeta),
+            ),
+          );
+        },
+      )
+      .catch(() => {});
+  }, []);
 
   async function enroll(editionSlug: string, programSlug: string) {
     setEnrolling(true);
@@ -204,7 +233,7 @@ export function AcademyHubClient() {
   });
 
   return (
-    <div className={`space-y-4 pb-6 ${academyCls.root}`}>
+    <div className={`space-y-4 pb-28 ${academyCls.root}`}>
       <header>
         <h1 className="text-xl font-extrabold text-[color:var(--fd-text)]">
           {isStaff ? t("academy_title_staff") : t("academy_title")}
@@ -257,34 +286,6 @@ export function AcademyHubClient() {
             journey={hub.journey}
           />
 
-          {enrolledEdition && enrolledProgram?.topics?.length ? (
-            <AcademyTopicPath
-              topics={enrolledProgram.topics}
-              editionSlug={enrolledEdition.slug}
-              programSlug={enrolledEdition.programSlug}
-            />
-          ) : null}
-
-          {hub.quizSummary?.available ? (
-            <section className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
-              <div className="flex items-center gap-2">
-                <AcademyIcon name="tutor" className="h-5 w-5" />
-                <h2 className="text-sm font-bold">{t("academy_quiz")}</h2>
-              </div>
-              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-                {hub.quizSummary.title} · {hub.quizSummary.attemptsUsed}/
-                {hub.quizSummary.maxAttempts}
-              </p>
-              <Link
-                href={`/app/academy/quiz/${hub.quizSummary.slug}?edition=${hub.quizSummary.editionSlug}`}
-                className="mt-2 inline-flex rounded-xl bg-[#305f33] px-4 py-2.5 text-sm font-bold text-white"
-              >
-                {hub.quizSummary.passed ? "✓ " : ""}
-                {t("academy_quiz_start")} →
-              </Link>
-            </section>
-          ) : null}
-
           <section className="rounded-2xl border-2 border-[#305f33] bg-[#305f33] p-4 text-white shadow-md">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#c5e8d0]">
               {t("academy_journey_continue")}
@@ -292,6 +293,20 @@ export function AcademyHubClient() {
             <p className="mt-1 text-sm font-semibold text-[#e8f3ee]">
               {journeyNextStepLabel(t, hub.journey, nextLive?.title)}
             </p>
+            {nextLive ? (
+              <p className="mt-2 flex items-center gap-2 text-xs text-[#c5e8d0]">
+                <AcademyIcon
+                  name={nextLive.isLiveNow ? "live" : "calendar"}
+                  className="h-4 w-4"
+                />
+                <span>
+                  {nextLive.title}
+                  {nextLive.isLiveNow
+                    ? " · LIVE"
+                    : ` · ${new Date(nextLive.startsAt).toLocaleString(fr ? "fr-FR" : "en-US")}`}
+                </span>
+              </p>
+            ) : null}
             {showContinueEnroll && continueEnrollEdition ? (
               <button
                 type="button"
@@ -313,45 +328,86 @@ export function AcademyHubClient() {
                 href={continueHref}
                 className="mt-3 flex w-full justify-center rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33]"
               >
-                {t("academy_journey_continue_btn")} →
+                {nextLive?.isLiveNow
+                  ? "McBuleli Live →"
+                  : `${t("academy_journey_continue_btn")} →`}
               </Link>
             )}
           </section>
 
-          <Link
-            href="/app/academy/studio"
-            className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-[#305f33]/40 bg-white px-4 py-3 shadow-sm"
-          >
-            <img src="/academy/event-live.svg" alt="" className="h-11 w-11" />
-            <span className="flex-1 text-sm font-extrabold text-[#305f33]">
-              {t("academy_live_studio_hub")}
-            </span>
-            <span aria-hidden>→</span>
-          </Link>
+          <AcademyHubAnnouncements
+            items={announcements}
+            fr={fr}
+            title={t("academy_hub_stream")}
+            viewAllHref="/app/community/formations"
+            viewAllLabel={t("academy_hub_view_all")}
+          />
 
-          {nextLive ? (
-            <section className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
-              <div className="flex items-center gap-2">
-                <AcademyIcon name={nextLive.isLiveNow ? "live" : "calendar"} className="h-5 w-5" />
-                <h2 className="text-sm font-bold">{t("academy_events")}</h2>
-              </div>
-              <p className="mt-1 text-sm font-semibold">{nextLive.title}</p>
-              <p className="text-[10px] text-[color:var(--fd-muted)]">
-                {nextLive.isLiveNow
-                  ? "LIVE"
-                  : new Date(nextLive.startsAt).toLocaleString()}
+          <AcademyGradesStrip
+            fr={fr}
+            title={t("academy_grades_title")}
+            quizTitle={
+              hub.quizSummary?.available ? hub.quizSummary.title : undefined
+            }
+            quizHref={
+              hub.quizSummary?.available
+                ? `/app/academy/quiz/${hub.quizSummary.slug}?edition=${hub.quizSummary.editionSlug}`
+                : undefined
+            }
+            quizPassed={hub.quizSummary?.passed}
+            quizAttempts={hub.quizSummary?.attemptsUsed}
+            quizMaxAttempts={hub.quizSummary?.maxAttempts}
+            quizStartLabel={t("academy_quiz_start")}
+            badges={hub.credentials.filter((c) => !c.revoked)}
+            verifyLabel={t("academy_verify_link")}
+          />
+
+          {hub.editions.some((e) => e.enrolled) ? (
+            <section>
+              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
+                {t("academy_my_classrooms")}
+              </h2>
+              <ul className="mt-2 space-y-2">
+                {hub.editions
+                  .filter((e) => e.enrolled)
+                  .map((e) => (
+                    <li key={e.id}>
+                      <Link
+                        href={academyCohortHref(e.slug, e.programSlug)}
+                        className="flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 shadow-sm active:scale-[0.99]"
+                      >
+                        <img src="/academy/event-live.svg" alt="" className="h-10 w-10 shrink-0" />
+                        <span className="flex-1 text-sm font-semibold text-[color:var(--fd-text)]">
+                          {e.title}
+                        </span>
+                        <span className="text-[10px] font-bold text-[#305f33]">
+                          {t("academy_open_classroom")} →
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ) : (
+            <section className="rounded-xl border border-dashed border-[color:var(--fd-border)] bg-white p-4 text-center">
+              <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+                {t("academy_no_cohort_yet")}
               </p>
               <Link
-                href={
-                  nextLive.isLiveNow
-                    ? `/app/academy/${nextLive.editionSlug}/event/${nextLive.sessionSlug}?program=${encodeURIComponent(nextLive.programSlug)}`
-                    : `/app/academy/${nextLive.editionSlug}?program=${encodeURIComponent(nextLive.programSlug)}`
-                }
-                className="mt-2 inline-flex w-full justify-center rounded-xl bg-[#305f33] py-2.5 text-sm font-extrabold text-white"
+                href="/formation"
+                className="mt-3 inline-flex text-sm font-bold text-[color:var(--fd-primary)] underline"
               >
-                {nextLive.isLiveNow ? "McBuleli Live →" : t("academy_journey_continue_btn")}
+                {t("academy_go_formation")} →
               </Link>
             </section>
+          )}
+
+          {enrolledEdition && enrolledProgram?.topics?.length ? (
+            <AcademyTopicPath
+              topics={enrolledProgram.topics}
+              editionSlug={enrolledEdition.slug}
+              programSlug={enrolledEdition.programSlug}
+            />
           ) : null}
 
           <section>
@@ -423,66 +479,34 @@ export function AcademyHubClient() {
             </section>
           ) : null}
 
-          {hub.editions.some((e) => e.enrolled) ? (
-            <section>
-              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
-                {t("academy_my_cohorts")}
-              </h2>
-              <ul className="mt-2 space-y-2">
-                {hub.editions
-                  .filter((e) => e.enrolled)
-                  .map((e) => (
-                    <li key={e.id}>
-                      <Link
-                        href={`/app/academy/${e.slug}?program=${encodeURIComponent(e.programSlug)}`}
-                        className="flex items-center justify-between rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--fd-text)] shadow-sm"
-                      >
-                        {e.title}
-                        <span aria-hidden>→</span>
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          ) : (
-            <section className="rounded-xl border border-dashed border-[color:var(--fd-border)] bg-white p-4 text-center">
-              <p className="text-sm font-semibold text-[color:var(--fd-text)]">
-                {t("academy_no_cohort_yet")}
-              </p>
-              <Link
-                href="/formation"
-                className="mt-3 inline-flex text-sm font-bold text-[color:var(--fd-primary)] underline"
-              >
-                {t("academy_go_formation")} →
-              </Link>
-            </section>
-          )}
+          <Link
+            href="/app/academy/studio"
+            className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-[#305f33]/40 bg-white px-4 py-3 shadow-sm"
+          >
+            <img src="/academy/event-live.svg" alt="" className="h-11 w-11" />
+            <span className="flex-1 text-sm font-extrabold text-[#305f33]">
+              {t("academy_live_studio_hub")}
+            </span>
+            <span aria-hidden>→</span>
+          </Link>
 
-          {hub.credentials.length > 0 ? (
-            <section>
-              <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
-                {t("academy_badges")}
-              </h2>
-              <ul className="mt-2 space-y-2">
-                {hub.credentials.map((c) => (
-                  <li
-                    key={c.id}
-                    className="rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3"
-                  >
-                    <p className="text-sm font-bold text-[color:var(--fd-text)]">
-                      {c.title}
-                    </p>
-                    <Link
-                      href={`/verify/${c.verifyCode}`}
-                      className="mt-1 text-xs font-semibold text-[color:var(--fd-primary)]"
-                    >
-                      {t("academy_verify_link")} →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          <AcademyContinueBar
+            continueLabel={t("academy_journey_continue")}
+            nextStepLabel={journeyNextStepLabel(t, hub.journey, nextLive?.title)}
+            continueHref={continueHref}
+            showEnroll={Boolean(showContinueEnroll && continueEnrollEdition)}
+            enrolling={enrolling}
+            onEnroll={() => {
+              if (continueEnrollEdition) {
+                void enroll(continueEnrollEdition.slug, continueEnrollEdition.programSlug);
+              }
+            }}
+            enrollLabel={
+              showFormationEnroll
+                ? t("academy_formation_activate")
+                : t("academy_enroll")
+            }
+          />
         </>
       ) : null}
     </div>

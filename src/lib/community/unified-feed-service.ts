@@ -1,8 +1,9 @@
 import { listPublishedBlogs } from "@/lib/community/blog-service";
 import { listDiscussions } from "@/lib/community/discussion-service";
-import { listFeedPosts } from "@/lib/community/feed-service";
+import { listFeedPosts, listFormationPosts } from "@/lib/community/feed-service";
 import { asMediaItemView, type MediaItemView } from "@/lib/community/media-types";
 import type { CommunityContentKind } from "@/lib/community/post-types";
+import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 import { listQuestions } from "@/lib/community/qa-service";
 import { listTradingSignals } from "@/lib/community/signals-service";
@@ -33,6 +34,7 @@ export type UnifiedFeedItem = {
   likedByMe?: boolean;
   media: MediaItemView[];
   meta?: Record<string, string>;
+  formationMeta?: FormationPostMeta | null;
 };
 
 function cursorKey(iso: string, id: string): string {
@@ -85,10 +87,13 @@ export async function listUnifiedFeed(args: {
       sort: category === "trending" ? "trending" : "recent",
     });
     for (const p of posts) {
+      if (category === "news" && p.contentKind === "formation") continue;
+      const kind: CommunityContentKind =
+        p.contentKind === "formation" ? "formation" : "news";
       items.push({
         id: p.id,
-        kind: "news",
-        title: null,
+        kind,
+        title: p.formationMeta?.title ?? null,
         body: p.body,
         publishedAt: p.publishedAt,
         author: p.author,
@@ -100,8 +105,48 @@ export async function listUnifiedFeed(args: {
         likedByMe: p.likedByMe,
         media: p.media,
         meta: { contentKind: p.contentKind ?? "news" },
+        formationMeta: p.formationMeta,
       });
     }
+  }
+
+  if (category === "training") {
+    const { posts } = await listFormationPosts({
+      viewerId: args.viewerId,
+      limit: perSource,
+      cursor: args.cursor,
+    });
+    for (const p of posts) {
+      items.push({
+        id: p.id,
+        kind: "formation",
+        title: p.formationMeta?.title ?? null,
+        body: p.body,
+        publishedAt: p.publishedAt,
+        author: p.author,
+        href: communityPostAppPath(p.id),
+        likeCount: p.likeCount,
+        commentCount: p.commentCount,
+        shareCount: p.shareCount,
+        viewCount: p.viewCount ?? 0,
+        likedByMe: p.likedByMe,
+        media: p.media,
+        meta: { contentKind: "formation" },
+        formationMeta: p.formationMeta,
+      });
+    }
+    const slice = items
+      .filter((i) => afterCursor(i.publishedAt, i.id, cursor))
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    const page = slice.slice(0, limit);
+    const last = page[page.length - 1];
+    return {
+      items: page,
+      nextCursor:
+        slice.length > limit && last
+          ? cursorKey(last.publishedAt, last.id)
+          : null,
+    };
   }
 
   if (category === "all" || category === "discussions") {

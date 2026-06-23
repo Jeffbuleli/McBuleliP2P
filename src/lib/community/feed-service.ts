@@ -1,5 +1,6 @@
 import { and, desc, eq, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
+  academyTrainingEvents,
   communityComments,
   communityLikes,
   communityPostViews,
@@ -28,6 +29,10 @@ import {
   isFeedComposerKind,
   minBodyLengthForKind,
 } from "@/lib/community/composer-config";
+import {
+  parseFormationPostMeta,
+  type FormationPostMeta,
+} from "@/lib/community/formation-post-meta";
 import { moderateCommunityText } from "@/lib/community/moderation-service";
 import {
   grantCommunityComment,
@@ -52,6 +57,7 @@ export type FeedPostView = {
   body: string;
   postType: string;
   contentKind: string;
+  formationMeta?: FormationPostMeta | null;
   likeCount: number;
   commentCount: number;
   shareCount: number;
@@ -63,6 +69,56 @@ export type FeedPostView = {
   likedByMe: boolean;
   bpEarned?: number;
 };
+
+function resolveFormationMeta(row: {
+  contentKind: string | null;
+  meta: unknown;
+  body: string;
+}): FormationPostMeta | null {
+  if (row.contentKind === "formation" || row.body.includes("Annonce · Formation")) {
+    return parseFormationPostMeta(row.meta, row.body);
+  }
+  return null;
+}
+
+function rowToFeedPost(
+  r: {
+    id: string;
+    body: string;
+    postType: string;
+    contentKind: string | null;
+    meta: unknown;
+    status: string;
+    likeCount: number;
+    commentCount: number;
+    shareCount: number;
+    viewCount: number;
+    publishedAt: Date | null;
+    createdAt: Date;
+    authorId: string;
+    mediaIds: string[] | null;
+  },
+  author: CommunityAuthorView,
+  media: MediaItemView[],
+  likedByMe: boolean,
+): FeedPostView {
+  return {
+    id: r.id,
+    body: r.body,
+    postType: r.postType,
+    contentKind: r.contentKind ?? "news",
+    formationMeta: resolveFormationMeta(r),
+    status: r.status,
+    likeCount: r.likeCount,
+    commentCount: r.commentCount,
+    shareCount: r.shareCount,
+    viewCount: r.viewCount ?? 0,
+    publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
+    author,
+    media,
+    likedByMe,
+  };
+}
 
 async function blockedUserIds(viewerId: string): Promise<Set<string>> {
   const db = getDb();
@@ -188,21 +244,105 @@ export async function listFeedPosts(args: {
     const author = authors.get(r.authorId);
     if (!author) continue;
     const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
-    posts.push({
-      id: r.id,
-      body: r.body,
-      postType: r.postType,
-      contentKind: r.contentKind ?? "news",
-      status: r.status,
-      likeCount: r.likeCount,
-      commentCount: r.commentCount,
-      shareCount: r.shareCount,
-      viewCount: r.viewCount ?? 0,
-      publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
-      author,
-      media,
-      likedByMe: likedSet.has(r.id),
-    });
+    posts.push(rowToFeedPost(r, author, media, likedSet.has(r.id)));
+  }
+
+  let nextCursor: string | null = null;
+  if (rows.length > limit) {
+    const last = slice[slice.length - 1];
+    if (last?.publishedAt) {
+      nextCursor = Buffer.from(
+        JSON.stringify({
+          t: last.publishedAt.toISOString(),
+          id: last.id,
+        }),
+        "utf8",
+      ).toString("base64url");
+    }
+  }
+
+  return { posts, nextCursor };
+}
+
+/** Formation / Academy announcements only. */
+export async function listFormationPosts(args: {
+  viewerId: string | null;
+  cursor?: string | null;
+  limit?: number;
+}): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
+  if (!communityEnabled()) return { posts: [], nextCursor: null };
+
+  const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
+  const db = getDb();
+  const blocked = args.viewerId
+    ? await blockedUserIds(args.viewerId)
+    : new Set<string>();
+
+  let cursorDate: Date | null = null;
+  let cursorId: string | null = null;
+  if (args.cursor) {
+    try {
+      const parsed = JSON.parse(
+        Buffer.from(args.cursor, "base64url").toString("utf8"),
+      ) as { t: string; id: string };
+      cursorDate = new Date(parsed.t);
+      cursorId = parsed.id;
+    } catch {
+      cursorDate = null;
+    }
+  }
+
+  const conditions = [
+    eq(communityPosts.status, "published"),
+    eq(communityPosts.contentKind, "formation"),
+  ];
+
+  if (cursorDate && cursorId) {
+    conditions.push(
+      or(
+        lt(communityPosts.publishedAt, cursorDate),
+        and(
+          eq(communityPosts.publishedAt, cursorDate),
+          lt(communityPosts.id, cursorId),
+        ),
+      )!,
+    );
+  }
+
+  const rows = await db
+    .select()
+    .from(communityPosts)
+    .where(and(...conditions))
+    .orderBy(desc(communityPosts.publishedAt), desc(communityPosts.id))
+    .limit(limit + 1);
+
+  const slice = rows.slice(0, limit);
+  const authorIds = [...new Set(slice.map((r) => r.authorId))];
+  const authors = await getAuthorsMap(authorIds);
+
+  const postIds = slice.map((r) => r.id);
+  let likedSet = new Set<string>();
+  if (args.viewerId && postIds.length) {
+    const likes = await db
+      .select({ targetId: communityLikes.targetId })
+      .from(communityLikes)
+      .where(
+        and(
+          eq(communityLikes.userId, args.viewerId),
+          eq(communityLikes.targetType, "post"),
+          inArray(communityLikes.targetId, postIds),
+        ),
+      );
+    likedSet = new Set(likes.map((l) => l.targetId));
+  }
+
+  const posts: FeedPostView[] = [];
+  for (const r of slice) {
+    if (blocked.has(r.authorId)) continue;
+    const author = authors.get(r.authorId);
+    if (!author) continue;
+    const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
+    posts.push(rowToFeedPost(r, author, media, likedSet.has(r.id)));
   }
 
   let nextCursor: string | null = null;
@@ -398,6 +538,11 @@ export async function deleteFeedPost(args: {
     .where(eq(communityPosts.id, args.postId));
 
   await db
+    .update(academyTrainingEvents)
+    .set({ communityPostId: null, updatedAt: new Date() })
+    .where(eq(academyTrainingEvents.communityPostId, args.postId));
+
+  await db
     .update(communityUserProfiles)
     .set({
       postsCount: sql`GREATEST(0, ${communityUserProfiles.postsCount} - 1)`,
@@ -518,21 +663,7 @@ export async function listAuthorFeedPosts(args: {
   const posts: FeedPostView[] = [];
   for (const r of slice) {
     const media = await getPostMediaViews(r.id, r.mediaIds, args.viewerId);
-    posts.push({
-      id: r.id,
-      body: r.body,
-      postType: r.postType,
-      contentKind: r.contentKind ?? "news",
-      status: r.status,
-      likeCount: r.likeCount,
-      commentCount: r.commentCount,
-      shareCount: r.shareCount,
-      viewCount: r.viewCount ?? 0,
-      publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
-      author,
-      media,
-      likedByMe: likedSet.has(r.id),
-    });
+    posts.push(rowToFeedPost(r, author, media, likedSet.has(r.id)));
   }
 
   let nextCursor: string | null = null;
@@ -747,21 +878,7 @@ export async function getFeedPostById(args: {
   }
 
   const media = await getPostMediaViews(row.id, row.mediaIds, args.viewerId);
-  return {
-    id: row.id,
-    body: row.body,
-    postType: row.postType,
-    contentKind: row.contentKind ?? "news",
-    status: row.status,
-    likeCount: row.likeCount,
-    commentCount: row.commentCount,
-    shareCount: row.shareCount,
-    viewCount: row.viewCount ?? 0,
-    publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
-    author,
-    media,
-    likedByMe,
-  };
+  return rowToFeedPost(row, author, media, likedByMe);
 }
 
 export async function listPostComments(

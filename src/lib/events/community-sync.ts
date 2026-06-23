@@ -1,50 +1,76 @@
 import { eq } from "drizzle-orm";
 import {
   academyEditions,
+  academyPrograms,
   academyTrainingEvents,
   communityPosts,
   getDb,
   type academyTrainingEvents as eventsTable,
 } from "@/db";
 import { communityEnabled } from "@/lib/community/config";
+import {
+  formationSummaryBody,
+  type FormationPostMeta,
+} from "@/lib/community/formation-post-meta";
 import { ensureCommunityProfile } from "@/lib/community/profile-service";
 import type { EventRecord } from "@/lib/events/types";
 
 type EventRow = typeof eventsTable.$inferSelect;
 
-async function eventJoinPath(event: EventRow): Promise<string> {
-  if (event.editionId) {
-    const [ed] = await getDb()
-      .select({ slug: academyEditions.slug })
-      .from(academyEditions)
-      .where(eq(academyEditions.id, event.editionId))
-      .limit(1);
-    if (ed) return `/app/academy/${ed.slug}/event/${event.slug}`;
+type EditionContext = {
+  editionSlug: string;
+  programSlug: string;
+  editionTitle: string;
+};
+
+async function resolveEditionContext(
+  editionId: string | null,
+): Promise<EditionContext | null> {
+  if (!editionId) return null;
+  const [row] = await getDb()
+    .select({
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+      editionTitle: academyEditions.titleFr,
+    })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(eq(academyEditions.id, editionId))
+    .limit(1);
+  return row ?? null;
+}
+
+async function eventJoinPath(
+  event: EventRow,
+  edition: EditionContext | null,
+): Promise<string> {
+  if (edition) {
+    const q = `?program=${encodeURIComponent(edition.programSlug)}`;
+    return `/app/academy/${edition.editionSlug}/live/${event.slug}${q}`;
   }
   return `/app/academy`;
 }
 
-function formatCommunityBody(event: EventRow, joinPath: string): string {
-  const date = new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: event.timezone,
-  }).format(event.startDate);
-
-  return [
-    "Annonce · Formation",
-    "",
-    event.title,
-    date,
-    `Formateur : ${event.trainerName}`,
-    "",
-    "Plateforme : McBuleli Live",
-    "",
-    `Participer : ${joinPath}`,
-  ].join("\n");
+async function buildFormationMeta(
+  event: EventRow,
+  joinPath: string,
+  edition: EditionContext | null,
+): Promise<FormationPostMeta> {
+  return {
+    v: 1,
+    eventId: event.id,
+    eventSlug: event.slug,
+    editionSlug: edition?.editionSlug ?? "",
+    programSlug: edition?.programSlug ?? "",
+    editionTitle: edition?.editionTitle,
+    joinPath,
+    trainerName: event.trainerName,
+    startDate: event.startDate.toISOString(),
+    timezone: event.timezone,
+    title: event.title,
+    description: event.description?.trim() || undefined,
+    eventStatus: event.status,
+  };
 }
 
 export async function syncEventCommunityPost(eventId: string): Promise<string | null> {
@@ -60,16 +86,37 @@ export async function syncEventCommunityPost(eventId: string): Promise<string | 
   if (!["PUBLISHED", "LIVE"].includes(event.status)) return null;
 
   await ensureCommunityProfile(event.trainerId);
-  const joinPath = await eventJoinPath(event);
-  const body = formatCommunityBody(event, joinPath);
+  const edition = await resolveEditionContext(event.editionId);
+  const joinPath = await eventJoinPath(event, edition);
+  const meta = await buildFormationMeta(event, joinPath, edition);
+  const body = formationSummaryBody(meta, true);
   const now = new Date();
 
   if (event.communityPostId) {
-    await db
-      .update(communityPosts)
-      .set({ body, updatedAt: now, publishedAt: now, status: "published" })
-      .where(eq(communityPosts.id, event.communityPostId));
-    return event.communityPostId;
+    const [existingPost] = await db
+      .select({ status: communityPosts.status })
+      .from(communityPosts)
+      .where(eq(communityPosts.id, event.communityPostId))
+      .limit(1);
+    if (!existingPost || existingPost.status === "removed") {
+      await db
+        .update(academyTrainingEvents)
+        .set({ communityPostId: null, updatedAt: now })
+        .where(eq(academyTrainingEvents.id, eventId));
+    } else {
+      await db
+        .update(communityPosts)
+        .set({
+          body,
+          contentKind: "formation",
+          meta,
+          updatedAt: now,
+          publishedAt: now,
+          status: "published",
+        })
+        .where(eq(communityPosts.id, event.communityPostId));
+      return event.communityPostId;
+    }
   }
 
   const [post] = await db
@@ -78,7 +125,8 @@ export async function syncEventCommunityPost(eventId: string): Promise<string | 
       authorId: event.trainerId,
       body,
       postType: "text",
-      contentKind: "news",
+      contentKind: "formation",
+      meta,
       status: "published",
       publishedAt: now,
     })
@@ -125,9 +173,14 @@ export async function removeCommunityPostsForEdition(editionId: string): Promise
   }
 }
 
+export async function resolveEventJoinPath(row: EventRow): Promise<string> {
+  const edition = await resolveEditionContext(row.editionId);
+  return eventJoinPath(row, edition);
+}
+
 export function eventToPublic(
   row: EventRow,
-  extra?: { participantCount?: number },
+  extra?: { participantCount?: number; joinPath?: string },
 ): EventRecord & {
   platformLabel: "McBuleli Live";
   joinPath: string;
@@ -141,7 +194,7 @@ export function eventToPublic(
     audienceMode: row.audienceMode as EventRecord["audienceMode"],
     status: row.status as EventRecord["status"],
     platformLabel: "McBuleli Live",
-    joinPath: `/app/events/${row.slug}`,
+    joinPath: extra?.joinPath ?? `/app/events/${row.slug}`,
     priceUsdt: Number(row.price),
     participantCount: extra?.participantCount,
   };

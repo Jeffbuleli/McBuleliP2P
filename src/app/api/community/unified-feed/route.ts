@@ -33,10 +33,6 @@ export async function GET(req: Request) {
   const limit = Number(url.searchParams.get("limit") ?? "20");
   const viewerId = await getSessionUserId();
 
-  if (category === "training") {
-    return NextResponse.json({ items: [], nextCursor: null, redirect: "/app/community/formations" });
-  }
-
   const result = await listUnifiedFeed({
     viewerId,
     category,

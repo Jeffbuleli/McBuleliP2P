@@ -91,6 +91,7 @@ export type AcademyEditionView = {
   enrollmentId: string | null;
   priceUsdt: string | null;
   requiresKyc: boolean;
+  cohortMemberCount?: number;
 };
 
 export type AcademySessionView = {
@@ -768,6 +769,11 @@ export async function getEditionDetail(args: {
   });
   const { upcoming, replays } = partitionAcademySessions(visibleSessions);
 
+  const [memberRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(academyEnrollments)
+    .where(eq(academyEnrollments.editionId, row.edition.id));
+
   return {
     liveRole,
     edition: {
@@ -784,6 +790,7 @@ export async function getEditionDetail(args: {
       priceUsdt: row.program.priceUsdt?.toString() ?? null,
       requiresKyc: row.program.requiresKyc,
       tutorEnabled: row.edition.tutorEnabled,
+      cohortMemberCount: memberRow?.n ?? 0,
     },
     program: {
       id: row.program.id,

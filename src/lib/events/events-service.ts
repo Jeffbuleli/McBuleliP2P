@@ -11,6 +11,7 @@ import { getAppAbsoluteUrl } from "@/lib/app-url";
 import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
 import {
   removeEventCommunityPost,
+  resolveEventJoinPath,
   syncEventCommunityPost,
   eventToPublic,
 } from "@/lib/events/community-sync";
@@ -73,8 +74,12 @@ function buildLiveRoom(eventSlug: string): { liveRoomId: string; liveRoomUrl: st
   return { liveRoomId, liveRoomUrl: `${base.replace(/\/$/, "")}/${room}` };
 }
 
-function mapPublic(row: typeof academyTrainingEvents.$inferSelect, participantCount?: number): EventPublicView {
-  const pub = eventToPublic(row, { participantCount });
+async function mapPublic(
+  row: typeof academyTrainingEvents.$inferSelect,
+  participantCount?: number,
+): Promise<EventPublicView> {
+  const joinPath = await resolveEventJoinPath(row);
+  const pub = eventToPublic(row, { participantCount, joinPath });
   const { liveRoomUrl: _hidden, ...rest } = pub;
   return rest as EventPublicView;
 }
@@ -124,7 +129,7 @@ export async function createEvent(args: {
     .returning();
 
   if (!row) return { ok: false, code: "event_create_failed" };
-  return { ok: true, event: mapPublic(row) };
+  return { ok: true, event: await mapPublic(row) };
 }
 
 export async function listEvents(args: {
@@ -179,7 +184,7 @@ export async function listEvents(args: {
     } else if (row.visibility === "PRIVATE" || row.status === EventStatus.DRAFT) {
       continue;
     }
-    out.push(mapPublic(row));
+    out.push(await mapPublic(row));
   }
   return out;
 }
@@ -243,7 +248,7 @@ export async function getEventPublic(args: {
       ),
     );
 
-  return { ok: true, event: mapPublic(row, Number(pc?.c ?? 0)) };
+  return { ok: true, event: await mapPublic(row, Number(pc?.c ?? 0)) };
 }
 
 export async function updateEvent(args: {
@@ -298,7 +303,7 @@ export async function updateEvent(args: {
     await syncEventCommunityPost(updated.id);
   }
 
-  return { ok: true, event: mapPublic(updated) };
+  return { ok: true, event: await mapPublic(updated) };
 }
 
 export async function deleteEvent(args: {
@@ -402,7 +407,7 @@ export async function publishEvent(args: {
   }
 
   const communityPostId = await syncEventCommunityPost(updated.id);
-  return { ok: true, event: mapPublic(updated), autoEnrolled, communityPostId };
+  return { ok: true, event: await mapPublic(updated), autoEnrolled, communityPostId };
 }
 
 export async function joinEvent(args: {

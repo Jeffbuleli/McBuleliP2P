@@ -100,6 +100,10 @@ async function runEnsureCommunitySchema(): Promise<void> {
     ADD COLUMN IF NOT EXISTS content_kind varchar(16) NOT NULL DEFAULT 'news'
   `);
   await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS meta jsonb
+  `);
+  await db.execute(sql`
     CREATE INDEX IF NOT EXISTS community_posts_content_kind_idx
     ON community_posts (content_kind, published_at)
   `);

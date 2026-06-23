@@ -3,6 +3,11 @@
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import type { AcademyJourneySnapshot } from "@/lib/academy-journey";
+import {
+  academyCohortHref,
+  academyLiveHref,
+  academyProgramQuery,
+} from "@/lib/academy-route-paths";
 
 const LEVEL_KEYS = [
   "academy_journey_level_explorer",
@@ -105,13 +110,10 @@ export function journeyContinueHref(journey: AcademyJourneySnapshot): string {
     nextQuizSlug,
     nextModuleSlug,
   } = journey;
-  const q = nextProgramSlug
-    ? `?program=${encodeURIComponent(nextProgramSlug)}`
-    : "";
   switch (nextKind) {
     case "module":
-      return nextEditionSlug && nextModuleSlug
-        ? `/app/academy/${nextEditionSlug}/module/${nextModuleSlug}${q}`
+      return nextEditionSlug && nextModuleSlug && nextProgramSlug
+        ? `/app/academy/${nextEditionSlug}/module/${nextModuleSlug}${academyProgramQuery(nextProgramSlug)}`
         : "/app/academy";
     case "enroll_pro":
       return "/app/academy#pro-cohort";
@@ -120,21 +122,21 @@ export function journeyContinueHref(journey: AcademyJourneySnapshot): string {
     case "activate_cohort":
     case "enroll_cohort":
     case "enter_cohort":
-      return nextEditionSlug
-        ? `/app/academy/${nextEditionSlug}${q}`
+      return nextEditionSlug && nextProgramSlug
+        ? academyCohortHref(nextEditionSlug, nextProgramSlug)
         : "/app/academy";
     case "live_session":
-      return nextEditionSlug && nextSessionSlug
-        ? `/app/academy/${nextEditionSlug}/live/${nextSessionSlug}${q}`
-        : nextEditionSlug
-          ? `/app/academy/${nextEditionSlug}${q}`
+      return nextEditionSlug && nextSessionSlug && nextProgramSlug
+        ? academyLiveHref(nextEditionSlug, nextSessionSlug, nextProgramSlug)
+        : nextEditionSlug && nextProgramSlug
+          ? academyCohortHref(nextEditionSlug, nextProgramSlug)
           : "/app/academy";
     case "quiz":
       return nextQuizSlug && nextEditionSlug
         ? `/app/academy/quiz/${nextQuizSlug}?edition=${encodeURIComponent(nextEditionSlug)}`
         : "/app/academy";
     default:
-      return "/app/wallet";
+      return "/app/academy";
   }
 }
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
+import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityExpandableText } from "@/components/community/community-expandable-text";
 import { IconEye, IconGlobe } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
@@ -28,6 +29,20 @@ export function CommunityUnifiedCard({
       : item.media.length
         ? "image"
         : "text";
+
+  if (item.kind === "formation" && item.formationMeta) {
+    return (
+      <article className="overflow-hidden rounded-2xl border border-[#f0f4f2] bg-white shadow-[0_2px_12px_rgba(12,10,9,0.04)]">
+        <div className="p-4">
+          <CommunityFormationCard
+            meta={item.formationMeta}
+            fr={fr}
+            isLive={item.formationMeta.eventStatus === "LIVE"}
+          />
+        </div>
+      </article>
+    );
+  }
 
   const displayBody = postDisplayText(item.body, {
     hasMedia: item.media.length > 0,
