@@ -9,14 +9,18 @@ import { UnreadCountsProvider } from "@/components/mobile/unread-counts-provider
 import { KycPostLoginSheet } from "@/components/kyc/kyc-post-login-sheet";
 import { KycStatusPoller } from "@/components/kyc/kyc-status-poller";
 import { AppIconBadgeSync } from "@/components/pwa/app-icon-badge-sync";
+import { useScrollChrome } from "@/hooks/use-scroll-chrome";
+import { bottomNavAutoHide, isCommunityRoute } from "@/lib/app-chrome";
 
 export function AppShell({
   email,
   avatarUrl,
+  isSupportStaff = false,
   children,
 }: {
   email: string;
   avatarUrl: string | null;
+  isSupportStaff?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -33,6 +37,7 @@ export function AppShell({
     pathname.startsWith("/app/wallet/groups/") &&
     pathname !== "/app/wallet/groups" &&
     !pathname.endsWith("/new");
+  const onCommunity = isCommunityRoute(pathname);
   const hideTopBarForFlow =
     pathname.startsWith("/app/deposit") ||
     pathname.startsWith("/app/withdraw") ||
@@ -41,19 +46,25 @@ export function AppShell({
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support") ||
     onAvecGroupFlow;
-  const showTopBar = !onProfile && !hideTopBarForFlow;
+  const showTopBar = !onProfile && !onCommunity && !hideTopBarForFlow;
+  const navAutoHide = bottomNavAutoHide(pathname);
+  const navHidden = useScrollChrome(navAutoHide);
   const lightMainBg =
-    onProfile || onWalletFlow || onHome || onP2p || onSupport || onAcademy;
+    onProfile || onWalletFlow || onHome || onP2p || onSupport || onAcademy || onCommunity;
+  const shellPb =
+    navAutoHide && navHidden
+      ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+      : "pb-[calc(5.25rem+env(safe-area-inset-bottom))]";
 
   return (
     <UnreadCountsProvider>
     <div
-      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[var(--fd-bg)] pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]`}
+      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[var(--fd-bg)] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out ${shellPb}`}
     >
       {showTopBar ? (
         <div className="sticky top-0 z-40 px-3 pt-2">
           <div className="fd-app-topbar px-2 py-1.5">
-            <AppTopBar email={email} avatarUrl={avatarUrl} />
+            <AppTopBar email={email} avatarUrl={avatarUrl} isSupportStaff={isSupportStaff} />
           </div>
         </div>
       ) : null}
@@ -62,7 +73,7 @@ export function AppShell({
       >
         {children}
       </main>
-      <AppBottomNav />
+      <AppBottomNav hidden={navAutoHide && navHidden} />
       <AppIconBadgeSync />
       <KycStatusPoller />
       <KycPostLoginSheet />

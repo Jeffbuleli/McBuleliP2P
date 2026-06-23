@@ -159,7 +159,7 @@ export function CommunityFeedClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <CommunityModuleHeader title={fr ? "Actualités" : "News"} />
 
       <CommunityFilterTabs

@@ -8,6 +8,7 @@ import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 import { useUnreadCountsContext } from "@/components/mobile/unread-counts-provider";
+import { supportInboxHref } from "@/lib/support-nav";
 
 function TopBarCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -57,10 +58,12 @@ export function AppTopBar({
   email,
   avatarUrl,
   scrolled: scrolledProp,
+  isSupportStaff = false,
 }: {
   email: string;
   avatarUrl: string | null;
   scrolled?: boolean;
+  isSupportStaff?: boolean;
 }) {
   const { t } = useI18n();
   const [innerScroll, setInnerScroll] = useState(false);
@@ -75,6 +78,7 @@ export function AppTopBar({
   }, []);
 
   const scrolled = scrolledProp ?? innerScroll;
+  const supportHref = supportInboxHref({ isStaff: isSupportStaff });
 
   return (
     <>
@@ -106,7 +110,7 @@ export function AppTopBar({
 
         <div className="flex items-center gap-1">
           <TopBarActionButton
-            href="/app/support"
+            href={supportHref}
             badge={unreadSupport}
             className="bg-[color:var(--fd-primary)] text-white shadow-md shadow-[color:var(--fd-primary)]/25 hover:opacity-95"
             aria-label={t("support_open_chat")}
@@ -137,6 +141,7 @@ export function AppTopBar({
       <NotificationDrawer
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
+        isSupportStaff={isSupportStaff}
         onDidClose={() => {
           refresh();
         }}

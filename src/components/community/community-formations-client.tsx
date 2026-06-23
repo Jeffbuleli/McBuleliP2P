@@ -6,6 +6,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
+import { CommunityLiveBanner } from "@/components/community/community-live-banner";
 import {
   CommunityEmptyState,
   EmptyTrainingIllustration,
@@ -70,7 +71,9 @@ export function CommunityFormationsClient() {
           setEditions(d.editions ?? []);
           const posts = (d.formationPosts ?? []).filter((p) => p.formationMeta);
           setFormationPosts(posts);
-          if (posts.length === 0) setTab("upcoming");
+          const liveNow = (d.upcomingSessions ?? []).some((s) => s.isLiveNow);
+          if (liveNow) setTab("live");
+          else if (posts.length === 0) setTab("upcoming");
         },
       )
       .catch(() => {})
@@ -81,14 +84,17 @@ export function CommunityFormationsClient() {
   const upcomingSessions = sessions.filter((s) => !s.isLiveNow);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
-      <CommunityModuleHeader title={fr ? "Academy" : "Academy"} />
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
+      <CommunityModuleHeader title={fr ? "Lives & Formations" : "Live & Training"} />
+
+      <CommunityLiveBanner fr={fr} />
+
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-[#e8f3ee] px-3 py-2">
         <img src="/academy/event-live.svg" alt="" className="h-9 w-9" />
         <p className="text-xs text-[#305f33]">
           {fr
-            ? "Formations et programmes publiés depuis Academy"
-            : "Training programs published from Academy"}
+            ? "Lives, replays et parcours Academy — hub communauté McBuleli"
+            : "Lives, replays and Academy paths — McBuleli community hub"}
         </p>
       </div>
 
@@ -111,7 +117,7 @@ export function CommunityFormationsClient() {
                 href="/app/academy"
                 className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
               >
-                Academy →
+                {fr ? "Parcours complet →" : "Full journey →"}
               </Link>
             }
           />
@@ -173,7 +179,7 @@ export function CommunityFormationsClient() {
                 href="/app/academy"
                 className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
               >
-                Academy →
+                {fr ? "Parcours complet →" : "Full journey →"}
               </Link>
             }
           />
@@ -228,7 +234,7 @@ export function CommunityFormationsClient() {
                 href="/app/academy"
                 className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
               >
-                {fr ? "Ouvrir Academy" : "Open Academy"}
+                {fr ? "Parcours complet →" : "Full journey →"}
               </Link>
             }
           />

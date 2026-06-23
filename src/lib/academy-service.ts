@@ -66,6 +66,7 @@ import {
   normalizeAuthEmail,
 } from "@/lib/auth/email-normalize";
 import { createUserNotification } from "@/lib/notifications-service";
+import { academySessionContinueHref } from "@/lib/academy-route-paths";
 
 export type AcademyProgramView = {
   id: string;
@@ -2103,4 +2104,138 @@ export async function backfillFormationToAcademy(): Promise<{
   }
 
   return { processed: rows.length, linked, enrolled, noAccount };
+}
+
+export type AcademyLiveBadgeView = {
+  live: boolean;
+  title: string | null;
+  href: string | null;
+};
+
+async function findFirstGlobalLiveSession(args: {
+  locale: Locale;
+}): Promise<AcademyUpcomingSessionView | null> {
+  const db = getDb();
+  const eventRows = await db
+    .select({
+      slug: academyTrainingEvents.slug,
+      title: academyTrainingEvents.title,
+      startDate: academyTrainingEvents.startDate,
+      endDate: academyTrainingEvents.endDate,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academyTrainingEvents)
+    .innerJoin(
+      academyEditions,
+      eq(academyTrainingEvents.editionId, academyEditions.id),
+    )
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        inArray(academyEditions.status, ["open", "active"]),
+        inArray(academyTrainingEvents.status, ["PUBLISHED", "LIVE"]),
+      ),
+    )
+    .orderBy(asc(academyTrainingEvents.startDate))
+    .limit(24);
+
+  for (const s of eventRows) {
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    if (liveNow) {
+      return {
+        editionSlug: s.editionSlug,
+        programSlug: s.programSlug,
+        sessionSlug: s.slug,
+        title: s.title,
+        startsAt: s.startDate.toISOString(),
+        isLiveNow: true,
+      };
+    }
+  }
+
+  const sessionRows = await db
+    .select({
+      slug: academySessions.slug,
+      titleFr: academySessions.titleFr,
+      titleEn: academySessions.titleEn,
+      startsAt: academySessions.startsAt,
+      endsAt: academySessions.endsAt,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academySessions)
+    .innerJoin(academyEditions, eq(academySessions.editionId, academyEditions.id))
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(inArray(academyEditions.status, ["open", "active"]))
+    .orderBy(asc(academySessions.startsAt))
+    .limit(24);
+
+  for (const s of sessionRows) {
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    if (liveNow) {
+      return {
+        editionSlug: s.editionSlug,
+        programSlug: s.programSlug,
+        sessionSlug: s.slug,
+        title: pickLocale(s, args.locale),
+        startsAt: s.startsAt.toISOString(),
+        isLiveNow: true,
+      };
+    }
+  }
+
+  return null;
+}
+
+/** Lightweight live indicator for bottom nav badge and community banners. */
+export async function getAcademyLiveBadge(args: {
+  userId: string;
+  locale: Locale;
+  viewerRole?: AcademyViewerRole;
+}): Promise<AcademyLiveBadgeView> {
+  try {
+    await assertAcademyDbReady();
+  } catch {
+    return { live: false, title: null, href: null };
+  }
+
+  try {
+    const hub = await getAcademyHub({
+      userId: args.userId,
+      locale: args.locale,
+      viewerRole: args.viewerRole,
+    });
+    const enrolledLive = hub.upcomingSessions.find((s) => s.isLiveNow);
+    if (enrolledLive) {
+      return {
+        live: true,
+        title: enrolledLive.title,
+        href: academySessionContinueHref(enrolledLive),
+      };
+    }
+  } catch {
+    // fall through to global scan
+  }
+
+  try {
+    const global = await findFirstGlobalLiveSession({ locale: args.locale });
+    if (global) {
+      return {
+        live: true,
+        title: global.title,
+        href: academySessionContinueHref(global),
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  return { live: false, title: null, href: null };
 }

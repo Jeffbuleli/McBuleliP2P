@@ -54,7 +54,7 @@ function parseMessageActions(
   );
 }
 
-export function AssistantWidget() {
+export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boolean }) {
   const pathname = usePathname();
   const { locale: appLocale } = useI18n();
   const [open, setOpen] = useState(false);
@@ -461,8 +461,12 @@ export function AssistantWidget() {
 
   return (
     <>
-      {/* Floating launcher */}
-      <div className="pointer-events-none fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-[9998] sm:bottom-6 sm:right-6">
+      {/* Floating launcher — bottom-left to avoid bottom-nav / page CTAs on the right */}
+      <div
+        className={`pointer-events-none fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-3 z-[45] transition-transform duration-300 ease-out sm:bottom-6 sm:left-5 ${
+          chromeHidden ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"
+        }`}
+      >
         <AnimatePresence>
           {!open ? (
             <motion.button
@@ -474,12 +478,12 @@ export function AssistantWidget() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setOpen(true)}
               aria-label={m.openAssistant}
-              className="pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-[#305f33] to-[#1a3520] shadow-xl shadow-[#305f33]/50 backdrop-blur-md"
+              className="pointer-events-auto relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-[#305f33] to-[#1a3520] shadow-lg shadow-[#305f33]/35 backdrop-blur-md"
             >
-              <AssistantAvatar size={44} pulse={idlePulse} />
+              <AssistantAvatar size={34} pulse={idlePulse} />
               {idlePulse ? (
                 <motion.span
-                  className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#6ee7a0] text-[9px] font-black text-[#1a3520]"
+                  className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#6ee7a0] text-[8px] font-black text-[#1a3520]"
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
                 >

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useScrollChrome } from "@/hooks/use-scroll-chrome";
 
 const AssistantWidget = dynamic(
   () =>
@@ -12,11 +13,31 @@ const AssistantWidget = dynamic(
   { ssr: false },
 );
 
-/** Defer assistant bundle until the browser is idle — lighter landing first paint. */
+const HIDE_PREFIXES = [
+  "/app/support",
+  "/admin",
+  "/app/community/inbox",
+  "/app/community/chat",
+  "/app/p2p/order/",
+  "/app/deposit",
+  "/app/withdraw",
+];
+
+function shouldHideAssistant(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (HIDE_PREFIXES.some((p) => pathname.startsWith(p))) return true;
+  if (/\/app\/academy\/[^/]+\/live\//.test(pathname)) return true;
+  return false;
+}
+
+/** Defer assistant bundle until idle; hide on dense chat/flow screens. */
 export function AssistantLauncher() {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
-  const hideOnInbox = pathname?.startsWith("/app/community/inbox");
+  const hideByRoute = shouldHideAssistant(pathname);
+  const scrollHide = useScrollChrome(
+    Boolean(pathname?.startsWith("/app") && !hideByRoute),
+  );
 
   useEffect(() => {
     const mount = () => setReady(true);
@@ -28,6 +49,6 @@ export function AssistantLauncher() {
     return () => window.clearTimeout(t);
   }, []);
 
-  if (hideOnInbox || !ready) return null;
-  return <AssistantWidget />;
+  if (hideByRoute || !ready) return null;
+  return <AssistantWidget chromeHidden={scrollHide} />;
 }

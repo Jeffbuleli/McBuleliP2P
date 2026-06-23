@@ -148,7 +148,7 @@ export function CommunityMediaDetailClient({
   const imgSrc = mediaDisplayUrl(data.media);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`/app/community/post/${postId}`}

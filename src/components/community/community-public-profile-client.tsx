@@ -167,7 +167,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
     ] ?? "";
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg pb-28">
+    <div className="community-theme mx-auto w-full max-w-lg pb-4">
       <div className="px-4 pt-3">
         <div className="flex items-center justify-between">
           <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">

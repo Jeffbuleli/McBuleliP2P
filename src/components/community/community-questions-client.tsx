@@ -100,7 +100,7 @@ export function CommunityQuestionsClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <CommunityModuleHeader title={fr ? "Questions" : "Q&A"} />
 
       <CommunityFilterTabs tabs={Q_TABS} active={sort} onChange={setSort} fr={fr} />

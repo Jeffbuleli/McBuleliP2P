@@ -25,6 +25,7 @@ import type { CommunitySearchHit, CommunityProfileSearchHit } from "@/lib/commun
 import type { TradingSignalView } from "@/lib/community/signals-service";
 import { CommunitySignalCard } from "@/components/community/community-signal-card";
 import { IconChart, IconHashtag, IconUser } from "@/components/community/community-icons";
+import { CommunityLiveBanner } from "@/components/community/community-live-banner";
 import { communityPostAppPath } from "@/lib/community/share-url";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
@@ -195,7 +196,7 @@ export function CommunityHomeClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <CommunityHomeHeader
         fr={fr}
         bp={bp}
@@ -203,6 +204,8 @@ export function CommunityHomeClient() {
         onSearch={(q) => void runSearch(q)}
         onHelpOpen={() => setHelpOpen(true)}
       />
+
+      {!searchQ ? <CommunityLiveBanner fr={fr} /> : null}
 
       <CommunityCategoryNav
         active={category}

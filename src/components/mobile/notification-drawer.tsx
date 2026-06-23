@@ -8,6 +8,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { IconBell, IconClose, NotifKindIcon } from "@/components/icons/flow-icons";
 import { StatusPill } from "@/components/wallet/transaction-progress";
 import { formatGroupMessagePreview } from "@/lib/group-message-preview";
+import { supportInboxHref } from "@/lib/support-nav";
 
 type Row = {
   id: string;
@@ -20,6 +21,7 @@ type Row = {
 function notifMeta(
   row: Row,
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string,
+  opts?: { isSupportStaff?: boolean },
 ): {
   title: string;
   body: string;
@@ -195,7 +197,10 @@ function notifMeta(
           fromLabel: str("fromLabel") || t("support_typing_agents"),
           preview: str("preview") || "—",
         }),
-        href: "/app/support",
+        href: supportInboxHref({
+          isStaff: !!opts?.isSupportStaff,
+          threadId: str("threadId"),
+        }),
         pill: { variant: "processing", label: t("status_ui_processing") },
       };
     case "admin_deposit_order":
@@ -424,10 +429,12 @@ export function NotificationDrawer({
   open,
   onClose,
   onDidClose,
+  isSupportStaff = false,
 }: {
   open: boolean;
   onClose: () => void;
   onDidClose?: () => void;
+  isSupportStaff?: boolean;
 }) {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -531,7 +538,9 @@ export function NotificationDrawer({
           ) : (
             <ul className="flex flex-col gap-2 pb-2">
               {rows.map((row) => {
-                const { title, body, href, pill } = notifMeta(row, t);
+                const { title, body, href, pill } = notifMeta(row, t, {
+                  isSupportStaff,
+                });
                 const unread = row.readAt == null;
                 const when = new Date(row.createdAt).toLocaleString(loc, {
                   dateStyle: "short",

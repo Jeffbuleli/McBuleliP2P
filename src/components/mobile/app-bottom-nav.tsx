@@ -3,32 +3,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import { useAcademyLiveBadge } from "@/hooks/use-academy-live-badge";
+import { isCommunityNavRoute } from "@/lib/app-chrome";
 import type { Messages } from "@/i18n/messages";
 
 const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
   { href: "/app", key: "nav_home", icon: HomeIcon },
   { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
-  { href: "/app/academy", key: "nav_academy", icon: AcademyNavIcon },
   { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
   { href: "/app/community", key: "nav_community", icon: CommunityIcon },
   { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
 ];
 
-export function AppBottomNav() {
+export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const liveBadge = useAcademyLiveBadge();
+
   const labelFor = (key: keyof Messages) => {
     if (key === "nav_trade") return "Trade";
-    if (key === "nav_academy") return "Academy";
-    if (key === "nav_community") return "Community";
+    if (key === "nav_community") return t("nav_community");
     if (key === "nav_profile") return "Profile";
     return t(key);
   };
 
   return (
     <nav
-      className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2"
+      className={`pointer-events-none fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 transition-transform duration-300 ease-out ${
+        hidden ? "translate-y-[calc(100%+0.5rem)]" : "translate-y-0"
+      }`}
       aria-label="Main"
+      aria-hidden={hidden}
     >
       <div className="fd-nav-glow pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full px-1 py-1 backdrop-blur-md">
         {paths.map((p) => {
@@ -37,22 +42,34 @@ export function AppBottomNav() {
           const active =
             href === "/app"
               ? pathname === "/app"
-              : href === "/app/academy"
-                ? pathname.startsWith("/app/academy")
+              : href === "/app/community"
+                ? isCommunityNavRoute(pathname)
                 : pathname.startsWith(href);
           const label = labelFor(p.key);
+          const showLiveBadge = href === "/app/community" && liveBadge.live;
 
           return (
             <Link
               key={href}
               href={href}
-              className={`flex min-h-[48px] min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-transform active:scale-95 ${
+              className={`relative flex min-h-[48px] min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-transform active:scale-95 ${
                 active ? "fd-nav-active" : "fd-nav-idle"
               }`}
             >
-              <Icon active={active} />
+              <span className="relative">
+                <Icon active={active} />
+                {showLiveBadge ? (
+                  <span
+                    className="absolute -right-1 -top-0.5 flex h-2.5 w-2.5"
+                    aria-hidden
+                  >
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-70" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
+                  </span>
+                ) : null}
+              </span>
               <span
-                className={`max-w-[4.25rem] truncate text-[9px] leading-tight ${
+                className={`max-w-[4.75rem] truncate text-[10px] leading-tight ${
                   active ? "font-bold text-[#0c0a09]" : "font-semibold"
                 }`}
               >
@@ -91,20 +108,6 @@ function P2PIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active)} aria-hidden>
       <path d="M7 16V4L3 8m4-4 4 4M17 8v12l4-4m-4 4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function AcademyNavIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={navIconColor(active)} aria-hidden>
-      <path
-        d="M12 3L2 8.5v7L12 21l10-5.5v-7L12 3z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M12 12v9M2 8.5l10 5.5L22 8.5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
 }

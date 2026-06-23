@@ -20,13 +20,17 @@ export default async function AppLayout({
 
   const db = getDb();
   const [u] = await db
-    .select({ email: users.email, avatarUrl: users.avatarUrl })
+    .select({ email: users.email, avatarUrl: users.avatarUrl, role: users.role })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
 
   return (
-    <AppShell email={u?.email ?? ""} avatarUrl={u?.avatarUrl ?? null}>
+    <AppShell
+      email={u?.email ?? ""}
+      avatarUrl={u?.avatarUrl ?? null}
+      isSupportStaff={u?.role === "agent" || u?.role === "super_admin"}
+    >
       {children}
     </AppShell>
   );

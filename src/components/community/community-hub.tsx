@@ -87,7 +87,7 @@ export function CommunityHub() {
   }, []);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <header className="mb-4 flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-[#0c0a09]">Community</h1>
         <div className="flex items-center gap-2">

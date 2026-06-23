@@ -145,7 +145,7 @@ export function CommunitySignalsClient() {
   };
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <CommunityModuleHeader title={fr ? "Signaux Trading" : "Trading signals"} />
 
       <p className="mb-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900">

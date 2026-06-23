@@ -86,7 +86,7 @@ export function CommunityQuestionDetailClient({
   const isAuthor = viewerId === question.author.userId;
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-28 pt-4">
+    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-4">
       <Link
         href="/app/community/questions"
         className="text-sm font-semibold text-[#305f33]"
