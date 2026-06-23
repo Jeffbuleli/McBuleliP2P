@@ -15,6 +15,7 @@ import {
 } from "@/lib/withdraw-fees";
 import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
+import { WalletAmountPresets } from "@/components/wallet/wallet-amount-presets";
 import { WalletStepUpField } from "@/components/wallet/wallet-step-up-field";
 import { WalletPasskeyStepUpButton } from "@/components/wallet/wallet-passkey-step-up-button";
 import {
@@ -51,6 +52,7 @@ export default function WithdrawPage() {
   const [totpCode, setTotpCode] = useState("");
   const [stepUpViaPasskey, setStepUpViaPasskey] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [balanceNum, setBalanceNum] = useState<number | null>(null);
 
   useEffect(() => {
     const a = sp.get("asset");
@@ -70,6 +72,24 @@ export default function WithdrawPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`/api/wallet/${wAsset}/activity?page=1&pageSize=10`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const raw = data?.balance?.amount;
+        const n = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : NaN;
+        setBalanceNum(Number.isFinite(n) ? n : null);
+      })
+      .catch(() => {
+        if (!cancelled) setBalanceNum(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [wAsset]);
 
   useEffect(() => {
     if (wAsset !== "USDT") return;
@@ -119,6 +139,8 @@ export default function WithdrawPage() {
   const totalDebit =
     Number.isFinite(netNum) && netNum > 0 ? netNum + fee : null;
   const unit = wAsset === "PI" ? "PI" : "USDT";
+  const maxNet =
+    balanceNum != null && balanceNum > fee ? Math.max(0, balanceNum - fee) : 0;
 
   const needsStepUp = totpEnabled || passkeyCount > 0;
   const stepUpReady =
@@ -292,6 +314,11 @@ export default function WithdrawPage() {
             autoComplete="off"
           />
         </label>
+        {wAsset === "USDT" && isInternalUsdt ? (
+          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+            {t("withdraw_internal_detected")}
+          </p>
+        ) : null}
         <label className="block">
           <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
             {wAsset === "PI" ? t("withdraw_amt_pi") : t("withdraw_amt")}
@@ -302,6 +329,11 @@ export default function WithdrawPage() {
             inputMode="decimal"
             className="mt-1.5 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-lg font-bold tabular-nums outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
             placeholder="0"
+          />
+          <WalletAmountPresets
+            availableMax={maxNet}
+            onPick={setAmount}
+            disabled={loading}
           />
           <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">{feeNote}</p>
         </label>

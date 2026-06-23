@@ -6,8 +6,8 @@ const APP_PATHS = `
 - KYC : /app/profile/kyc
 - Sécurité (2FA, passkey) : /app/profile/security
 - Portefeuille : /app/wallet
-- Dépôt : /app/deposit
-- Retrait : /app/withdraw
+- Dépôt : /app/wallet/deposit
+- Retrait : /app/wallet/withdraw
 - P2P / escrow : /app/p2p
 - Bots trading IA : /app/trade/bots
 - Staking : /app/staking

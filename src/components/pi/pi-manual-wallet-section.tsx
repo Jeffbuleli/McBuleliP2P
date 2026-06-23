@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/components/i18n-provider";
+import { cryptoDepositHref, cryptoWithdrawHref } from "@/lib/wallet-money-routes";
 
 /** Pi wallet — manual deposit & withdraw only (no preset Pi Pay amounts). */
 export function PiManualWalletSection() {
@@ -32,7 +33,7 @@ export function PiManualWalletSection() {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Link
-          href="/app/deposit"
+          href={cryptoDepositHref("PI")}
           className="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-100/90 px-2 text-center active:scale-[0.98]"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-amber-800 shadow-sm">
@@ -43,7 +44,7 @@ export function PiManualWalletSection() {
           </span>
         </Link>
         <Link
-          href="/app/withdraw?asset=PI"
+          href={cryptoWithdrawHref("PI")}
           className="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-[color:var(--fd-mint)] px-2 text-center active:scale-[0.98]"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[color:var(--fd-primary)] shadow-sm">

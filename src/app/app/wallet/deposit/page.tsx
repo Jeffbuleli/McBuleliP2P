@@ -29,7 +29,13 @@ export default function DepositWizardPage() {
 
   useEffect(() => {
     const a = sp.get("asset");
-    if (a === "PI" || a === "USDT") setAsset(a);
+    if (a === "PI") {
+      setAsset("PI");
+      setStep(3);
+    } else if (a === "USDT") {
+      setAsset("USDT");
+      setStep(2);
+    }
   }, [sp]);
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [acceptedRisk, setAcceptedRisk] = useState(false);
@@ -152,11 +158,16 @@ export default function DepositWizardPage() {
         return;
       }
       const id = data.deposit?.id as string | undefined;
-      if (id) router.push(`/app/deposit/${id}`);
+      if (id) router.push(`/app/wallet/deposit/${id}`);
     } finally {
       setLoading(false);
     }
   }
+
+  const declaredAmount =
+    asset === "USDT" ? declaredAmountUsdt.trim().replace(",", ".") : declaredAmountPi.trim().replace(",", ".");
+  const declaredNum = Number(declaredAmount);
+  const hasValidAmount = Number.isFinite(declaredNum) && declaredNum > 0;
 
   const confirmText =
     asset === "USDT"
@@ -303,6 +314,40 @@ export default function DepositWizardPage() {
               </label>
             </FlowCard>
           )}
+
+          {hasValidAmount ? (
+            <FlowCard className="border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)]/40">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                {t("deposit_recap_title")}
+              </p>
+              <dl className="mt-2 space-y-1.5 text-sm text-[color:var(--fd-text)]">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[color:var(--fd-muted)]">{t("wallet_transfer_asset")}</dt>
+                  <dd className="font-bold">{asset}</dd>
+                </div>
+                {asset === "USDT" ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-[color:var(--fd-muted)]">{t("deposit_step_usdt_network")}</dt>
+                    <dd className="font-bold">{network}</dd>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[color:var(--fd-muted)]">
+                    {asset === "PI" ? t("deposit_declared_amount_pi_label") : t("deposit_declared_amount_label")}
+                  </dt>
+                  <dd className="font-bold tabular-nums">
+                    {declaredAmount} {asset === "PI" ? "π" : asset}
+                  </dd>
+                </div>
+                {userNote.trim() ? (
+                  <div className="flex items-start justify-between gap-2">
+                    <dt className="text-[color:var(--fd-muted)]">{t("deposit_user_note_label")}</dt>
+                    <dd className="max-w-[60%] text-right text-xs">{userNote.trim()}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </FlowCard>
+          ) : null}
 
           <label className="fd-card flex cursor-pointer items-center gap-3 p-4">
             <input

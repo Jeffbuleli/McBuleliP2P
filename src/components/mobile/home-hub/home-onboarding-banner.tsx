@@ -18,7 +18,7 @@ export function HomeOnboardingBanner({ fr }: { fr: boolean }) {
         </li>
         <li className="flex items-center gap-2">
           <Step n={2} />
-          <Link href="/app/deposit" className="underline decoration-[color:var(--fd-primary)]/40">
+          <Link href="/app/wallet/deposit" className="underline decoration-[color:var(--fd-primary)]/40">
             {fr ? "Effectuer votre premier dépôt" : "Make your first deposit"}
           </Link>
         </li>

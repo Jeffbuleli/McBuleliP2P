@@ -162,7 +162,7 @@ export function WalletServicePromos({
   pointsPromo?: { balance: number; title: string; teaser: string } | null;
 }) {
   return (
-    <div className="mt-4 flex flex-col gap-2 pb-6">
+    <div className="flex flex-col gap-2">
       {pointsPromo ? (
         <PointsPromoCard
           balance={pointsPromo.balance}

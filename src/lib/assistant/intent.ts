@@ -1,4 +1,5 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
+import { cryptoDepositHref, cryptoWithdrawHref } from "@/lib/wallet-money-routes";
 
 export type UserIntent =
   | "beginner"
@@ -193,7 +194,7 @@ export function recommendServices(
     {
       match: "beginner",
       label: L.deposit,
-      href: "/app/deposit",
+      href: cryptoDepositHref("USDT"),
       reason: L.depositR,
     },
     {

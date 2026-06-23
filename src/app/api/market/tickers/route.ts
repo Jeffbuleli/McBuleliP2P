@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchMarketTickers } from "@/lib/market-tickers";
 
-/** 24h ticker snapshot (Binance Spot) — short CDN cache; client polls for live updates. */
+/** 24h ticker snapshot — Binance spot + OKX Pi; client polls for live updates. */
 export async function GET() {
   try {
     const tickers = await fetchMarketTickers();

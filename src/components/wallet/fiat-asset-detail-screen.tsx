@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
 import { FIAT_ASSET_LABEL, type WalletFiatAsset } from "@/lib/wallet-fiat-assets";
+import { fiatDepositHref, fiatWithdrawHref } from "@/lib/wallet-money-routes";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 import { ActivityListControls } from "@/components/wallet/activity-list-controls";
@@ -84,7 +85,7 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
 
       <div className="mt-4 flex justify-between gap-2">
         <ActionChip
-          href="/app/wallet/fiat/deposit"
+          href={fiatDepositHref(asset)}
           label={t("wallet_action_deposit")}
           icon={<IconArrowDown className="h-5 w-5" />}
           accent="amber"
@@ -95,7 +96,7 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
           icon={<IconSend className="h-5 w-5" />}
         />
         <ActionChip
-          href="/app/wallet/fiat/withdraw"
+          href={fiatWithdrawHref(asset)}
           label={t("wallet_action_withdraw")}
           icon={<IconArrowUp className="h-5 w-5" />}
         />

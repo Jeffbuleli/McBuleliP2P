@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
@@ -19,18 +19,14 @@ import {
 } from "@/components/wallet/wallet-form";
 import { COD_MOBILE_FALLBACK, detectCodMobileMethodFromPhone, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
 import { FiatProviderPicker } from "@/components/wallet/fiat-provider-picker";
+import { WalletAmountPresets } from "@/components/wallet/wallet-amount-presets";
 
 type ProviderOption = { provider: string; label: string };
-
-const STEPS = [
-  { id: "amount", label: "Montant" },
-  { id: "network", label: "Réseau" },
-  { id: "confirm", label: "OK" },
-] as const;
 
 export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatPaused?: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [mobileOk, setMobileOk] = useState<boolean | null>(null);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
@@ -41,6 +37,39 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
   const [providersLoading, setProvidersLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [balanceNum, setBalanceNum] = useState<number | null>(null);
+
+  const steps = useMemo(
+    () => [
+      { id: "amount", label: t("wallet_fiat_form_step_amount") },
+      { id: "network", label: t("wallet_fiat_form_step_network") },
+      { id: "confirm", label: t("wallet_fiat_form_step_confirm") },
+    ],
+    [t],
+  );
+
+  useEffect(() => {
+    const a = searchParams.get("asset");
+    if (a === "USD" || a === "CDF") setAsset(a);
+  }, [searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`/api/wallet/${asset}/activity?page=1&pageSize=10`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const raw = data?.balance?.amount;
+        const n = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : NaN;
+        setBalanceNum(Number.isFinite(n) ? n : null);
+      })
+      .catch(() => {
+        if (!cancelled) setBalanceNum(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [asset]);
 
   const pct = Math.round(FIAT_FEE_RATE * 100);
   const summary = useMemo(() => {
@@ -142,6 +171,7 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
 
   const locked = fiatPaused;
   const loc = locale === "fr" ? "fr-FR" : "en-US";
+  const maxGross = balanceNum != null && balanceNum > 0 ? balanceNum : 0;
 
   return (
     <WalletFormCard>
@@ -150,13 +180,7 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
         <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_momo")}</span>
       </div>
 
-      <FiatStepper
-        steps={STEPS.map((s, i) => ({
-          id: s.id,
-          label: locale === "fr" ? s.label : ["Amount", "Network", "Confirm"][i]!,
-        }))}
-        current={step}
-      />
+      <FiatStepper steps={steps} current={step} />
 
       {fiatPaused ? <WalletStatusBanner tone="warn">{t("wallet_fiat_paused_hint")}</WalletStatusBanner> : null}
 
@@ -189,6 +213,11 @@ export default function WalletFiatWithdrawClient({ fiatPaused = false }: { fiatP
               inputMode="decimal"
               disabled={locked}
               className={`${walletInputClass} disabled:opacity-60`}
+            />
+            <WalletAmountPresets
+              availableMax={maxGross}
+              onPick={setGross}
+              disabled={locked}
             />
           </WalletFieldLabel>
           {summary ? (

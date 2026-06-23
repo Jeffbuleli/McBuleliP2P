@@ -11,6 +11,7 @@ import {
   truncateMiddle,
   withdrawTotalDebited,
 } from "@/lib/email/wallet-email-details";
+import { cryptoDepositDetailHref } from "@/lib/wallet-money-routes";
 
 const DEFAULT_LOCALE: EmailLocale = "fr";
 
@@ -68,7 +69,7 @@ export async function notifyDepositConfirmedEmail(args: {
       to,
       kind,
       locale,
-      actionUrl: `${appBaseUrl()}/app/deposit/${args.depositId}`,
+      actionUrl: `${appBaseUrl()}${cryptoDepositDetailHref(args.depositId)}`,
       variables: {
         AMOUNT: amount,
         ASSET: asset,
@@ -249,7 +250,7 @@ export async function notifyDepositIntentEmail(args: {
       to,
       kind,
       locale,
-      actionUrl: `${appBaseUrl()}/app/deposit/${args.depositId}`,
+      actionUrl: `${appBaseUrl()}${cryptoDepositDetailHref(args.depositId)}`,
       variables: {
         AMOUNT: amount,
         ASSET: asset,
@@ -300,7 +301,7 @@ export async function notifyDepositPendingEmail(args: {
       to,
       kind,
       locale,
-      actionUrl: `${appBaseUrl()}/app/deposit/${args.depositId}`,
+      actionUrl: `${appBaseUrl()}${cryptoDepositDetailHref(args.depositId)}`,
       variables: {
         AMOUNT: amount,
         ASSET: asset,

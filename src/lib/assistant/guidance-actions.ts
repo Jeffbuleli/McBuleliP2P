@@ -1,5 +1,6 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
 import { recommendServices } from "@/lib/assistant/intent";
+import { cryptoDepositHref, cryptoWithdrawHref } from "@/lib/wallet-money-routes";
 
 export type GuidanceAction = {
   label: string;
@@ -40,7 +41,7 @@ const ROUTES: RouteDef[] = [
     },
   },
   {
-    href: "/app/deposit",
+    href: cryptoDepositHref("USDT"),
     keywords: [
       "deposit",
       "dépôt",
@@ -62,7 +63,7 @@ const ROUTES: RouteDef[] = [
     },
   },
   {
-    href: "/app/withdraw",
+    href: cryptoWithdrawHref("USDT"),
     keywords: [
       "withdraw",
       "retrait",

@@ -19,8 +19,8 @@ const HIDE_PREFIXES = [
   "/app/community/inbox",
   "/app/community/chat",
   "/app/p2p/order/",
-  "/app/deposit",
-  "/app/withdraw",
+  "/app/wallet/deposit",
+  "/app/wallet/withdraw",
 ];
 
 function shouldHideAssistant(pathname: string | null): boolean {

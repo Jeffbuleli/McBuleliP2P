@@ -14,6 +14,21 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/app/deposit/:id",
+        destination: "/app/wallet/deposit/:id",
+        permanent: true,
+      },
+      {
+        source: "/app/deposit",
+        destination: "/app/wallet/deposit",
+        permanent: true,
+      },
+      {
+        source: "/app/withdraw",
+        destination: "/app/wallet/withdraw",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         has: [{ type: "host", value: "mcbuleli.online" }],
         destination: "https://mcbuleli.org/:path*",

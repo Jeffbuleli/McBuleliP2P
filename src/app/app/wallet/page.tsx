@@ -14,9 +14,17 @@ import {
   type WalletRowDTO,
 } from "@/components/mobile/wallet-overview";
 import { WalletServicePromos } from "@/components/mobile/wallet-service-promos";
+import { WalletServicesAccordion } from "@/components/wallet/wallet-services-accordion";
 import { getDb, groupSavingsGroups, groupSavingsMemberships } from "@/db";
 import { eq } from "drizzle-orm";
 import { poolNewDepositsEnabled } from "@/lib/pool-features";
+import {
+  cryptoDepositHref,
+  cryptoWithdrawHref,
+  fiatDepositHref,
+  fiatWithdrawHref,
+} from "@/lib/wallet-money-routes";
+import { fetchWalletPendingByAsset } from "@/lib/wallet-pending-badges";
 
 export const dynamic = "force-dynamic";
 
@@ -38,17 +46,17 @@ function toRow(
 ): WalletRowDTO {
   const isFiat = row.asset === "USD" || row.asset === "CDF";
   const depositHref = isFiat
-    ? "/app/wallet/fiat/deposit"
+    ? fiatDepositHref(row.asset as "USD" | "CDF")
     : row.asset === "PI_TEST"
       ? "/app/wallet/pi-test"
-      : `/app/deposit?asset=${row.asset}`;
+      : cryptoDepositHref(row.asset as "USDT" | "PI");
   const withdrawHref = isFiat
-    ? "/app/wallet/fiat/withdraw"
-    : row.asset === "PI"
-      ? "/app/withdraw?asset=PI"
+    ? fiatWithdrawHref(row.asset as "USD" | "CDF")
+    : row.asset === "PI" || row.asset === "USDT"
+      ? cryptoWithdrawHref(row.asset)
       : row.asset === "PI_TEST"
         ? "/app/wallet/pi-test"
-        : "/app/withdraw";
+        : cryptoWithdrawHref("USDT");
 
   return {
     asset: row.asset,
@@ -187,10 +195,23 @@ export default async function WalletPage() {
   }
 
   const assetOrder: WalletAsset[] = ["USDT", "PI", "USD", "CDF"];
+  const pendingByAsset = await fetchWalletPendingByAsset(userId);
   const assetRows = assetOrder
     .map((asset) => state.lines.find((l) => l.asset === asset))
     .filter(Boolean)
-    .map((l) => toRow(l!, locale, lang));
+    .map((l) => {
+      const row = toRow(l!, locale, lang);
+      const pending = pendingByAsset[l!.asset];
+      return {
+        ...row,
+        pending: pending
+          ? {
+              label: pending.label === "status_ui_processing" ? d.status_ui_processing : pending.label,
+              href: pending.href,
+            }
+          : undefined,
+      };
+    });
 
   const labels: WalletOverviewLabels = {
     wallet_est_total: d.wallet_est_total,
@@ -203,30 +224,38 @@ export default async function WalletPage() {
     hide_balance: d.hide_balance,
     show_balance: d.show_balance,
     wallet_assets_title: d.wallet_assets_title,
+    wallet_action_deposit: d.wallet_action_deposit,
+    wallet_action_withdraw: d.wallet_action_withdraw,
+    wallet_action_send: d.wallet_action_send,
   };
 
   return (
     <>
       <WalletOverview labels={labels} totalUsdDisplay={totalUsdDisplay} assetRows={assetRows} />
-      <WalletServicePromos
-        pointsPromo={{
-          balance: pointsBalance,
-          title: d.wallet_link_points,
-          teaser: d.points_wallet_teaser,
-        }}
-        stakingPromo={stakingPromo}
-        poolPromo={poolPromo}
-        avecPromo={{
-          ...avecPromoBase,
-          metaLine: interpolate(d.group_avec_meta, {
-            total: avecGroupsTotal,
-            active: avecGroupsActive,
-            overdue: avecGroupsOverdue,
-          }),
-          rightPrimary: String(avecGroupsTotal),
-          rightSecondary: d.group_avec_tagline,
-        }}
-      />
+      <WalletServicesAccordion
+        title={d.wallet_services_more}
+        defaultOpen={stakeVal.activeCount > 0 || pointsBalance > 0 || avecGroupsTotal > 0}
+      >
+        <WalletServicePromos
+          pointsPromo={{
+            balance: pointsBalance,
+            title: d.wallet_link_points,
+            teaser: d.points_wallet_teaser,
+          }}
+          stakingPromo={stakingPromo}
+          poolPromo={poolPromo}
+          avecPromo={{
+            ...avecPromoBase,
+            metaLine: interpolate(d.group_avec_meta, {
+              total: avecGroupsTotal,
+              active: avecGroupsActive,
+              overdue: avecGroupsOverdue,
+            }),
+            rightPrimary: String(avecGroupsTotal),
+            rightSecondary: d.group_avec_tagline,
+          }}
+        />
+      </WalletServicesAccordion>
     </>
   );
 }

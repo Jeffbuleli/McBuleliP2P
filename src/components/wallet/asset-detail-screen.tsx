@@ -8,6 +8,11 @@ import {
   type WalletCryptoAsset,
 } from "@/lib/wallet-crypto-assets";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
+import {
+  cryptoDepositDetailHref,
+  cryptoDepositHref,
+  cryptoWithdrawHref,
+} from "@/lib/wallet-money-routes";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { ActivityListControls } from "@/components/wallet/activity-list-controls";
 import { WalletActivityRow } from "@/components/wallet/wallet-activity-row";
@@ -60,9 +65,8 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
   }, [load]);
 
   const networkLabel = CRYPTO_ASSET_NETWORK_LABEL[asset] ?? asset;
-  const depositHref =
-    asset === "PI" ? "/app/deposit" : `/app/deposit?asset=${asset}`;
-  const withdrawHref = `/app/withdraw?asset=${asset}`;
+  const depositHref = cryptoDepositHref(asset);
+  const withdrawHref = cryptoWithdrawHref(asset);
   const transferHref = `/app/wallet/transfer?asset=${asset}`;
 
   return (
@@ -94,7 +98,7 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
 
       {data?.openDeposit ? (
         <Link
-          href={`/app/deposit/${data.openDeposit.id}`}
+          href={cryptoDepositDetailHref(data.openDeposit.id)}
           className="fd-card mt-3 flex items-center gap-3 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)]/80 p-3 active:scale-[0.99]"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
@@ -117,7 +121,7 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
       <div className="mt-4 flex justify-between gap-2">
         <ActionChip
           href={depositHref}
-          label={t("wallet_action_receive")}
+          label={t("wallet_action_deposit")}
           icon={<IconArrowDown className="h-5 w-5" />}
           accent="amber"
         />

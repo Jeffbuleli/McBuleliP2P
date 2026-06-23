@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
@@ -21,15 +21,10 @@ import { COD_MOBILE_FALLBACK, detectCodMobileMethodFromPhone, filterCodMobilePro
 
 type ProviderOption = { provider: string; label: string };
 
-const STEPS = [
-  { id: "amount", label: "Montant" },
-  { id: "network", label: "Réseau" },
-  { id: "confirm", label: "OK" },
-] as const;
-
 export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPaused?: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
@@ -39,6 +34,20 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
   const [providersLoading, setProvidersLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const steps = useMemo(
+    () => [
+      { id: "amount", label: t("wallet_fiat_form_step_amount") },
+      { id: "network", label: t("wallet_fiat_form_step_network") },
+      { id: "confirm", label: t("wallet_fiat_form_step_confirm") },
+    ],
+    [t],
+  );
+
+  useEffect(() => {
+    const a = searchParams.get("asset");
+    if (a === "USD" || a === "CDF") setAsset(a);
+  }, [searchParams]);
 
   const pct = Math.round(FIAT_FEE_RATE * 100);
   const summary = useMemo(() => {
@@ -125,13 +134,7 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
         <span className="text-xs font-bold uppercase tracking-wide">{t("wallet_fiat_rail_momo")}</span>
       </div>
 
-      <FiatStepper
-        steps={STEPS.map((s, i) => ({
-          id: s.id,
-          label: locale === "fr" ? s.label : ["Amount", "Network", "Confirm"][i]!,
-        }))}
-        current={step}
-      />
+      <FiatStepper steps={steps} current={step} />
 
       {fiatPaused ? <WalletStatusBanner tone="warn">{t("wallet_fiat_paused_hint")}</WalletStatusBanner> : null}
 

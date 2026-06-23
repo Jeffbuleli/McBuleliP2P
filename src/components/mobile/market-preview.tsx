@@ -148,6 +148,11 @@ export function MarketPreview({
                     <span className={isLight ? "text-[color:var(--fd-muted)]" : "text-stone-500"}>
                       /USDT
                     </span>
+                    {ticker.source === "okx" ? (
+                      <span className="ml-1.5 inline-flex rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-700 ring-1 ring-violet-200">
+                        OKX
+                      </span>
+                    ) : null}
                   </span>
                 </span>
                 <span className="text-right">

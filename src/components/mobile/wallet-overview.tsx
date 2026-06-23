@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { IconHistory } from "@/components/wallet/wallet-action-grid";
-import { WalletRealmToggle } from "@/components/wallet/wallet-realm-toggle";
+import { WalletQuickLinks } from "@/components/wallet/wallet-quick-links";
 import { WalletAssetIcon, assetDetailHref } from "@/components/wallet/wallet-asset-icon";
+import { WalletMoneySheet } from "@/components/wallet/wallet-money-sheet";
+import type { WalletMoneyMode } from "@/lib/wallet-money-routes";
+
+export type WalletRowPendingDTO = {
+  label: string;
+  href?: string;
+};
 
 export type WalletRowDTO = {
   asset: WalletAsset;
@@ -15,6 +22,7 @@ export type WalletRowDTO = {
   valueUsdApprox: string;
   depositHref: string;
   withdrawHref: string;
+  pending?: WalletRowPendingDTO;
 };
 
 export type StakingPromoDTO = {
@@ -53,6 +61,9 @@ export type WalletOverviewLabels = {
   hide_balance: string;
   show_balance: string;
   wallet_assets_title: string;
+  wallet_action_deposit: string;
+  wallet_action_withdraw: string;
+  wallet_action_send: string;
 };
 
 function mask() {
@@ -70,6 +81,20 @@ export function WalletOverview({
 }) {
   const [q, setQ] = useState("");
   const [hidden, setHidden] = useState(false);
+  const [moneyOpen, setMoneyOpen] = useState(false);
+  const [moneyMode, setMoneyMode] = useState<WalletMoneyMode>("deposit");
+  const [balancePulse, setBalancePulse] = useState(false);
+
+  function openMoney(mode: WalletMoneyMode) {
+    setMoneyMode(mode);
+    setMoneyOpen(true);
+  }
+
+  useEffect(() => {
+    if (!balancePulse) return;
+    const timer = window.setTimeout(() => setBalancePulse(false), 320);
+    return () => window.clearTimeout(timer);
+  }, [balancePulse]);
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -91,7 +116,12 @@ export function WalletOverview({
           </p>
           <button
             type="button"
-            onClick={() => setHidden((h) => !h)}
+            onClick={() => {
+              setHidden((h) => {
+                if (h) setBalancePulse(true);
+                return !h;
+              });
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--fd-muted)] active:scale-95"
             aria-pressed={hidden}
             aria-label={hidden ? labels.show_balance : labels.hide_balance}
@@ -99,15 +129,36 @@ export function WalletOverview({
             {hidden ? <EyeIcon /> : <EyeOffIcon />}
           </button>
         </div>
-        <p className="mt-1 text-[1.75rem] font-black leading-tight tabular-nums text-[color:var(--fd-primary-dark)]">
+        <p
+          className={`mt-1 text-[1.75rem] font-black leading-tight tabular-nums text-[color:var(--fd-primary-dark)] transition-transform duration-300 ${balancePulse ? "scale-[1.02]" : ""}`}
+        >
           {hidden ? mask() : totalUsdDisplay}
         </p>
 
-        <WalletRealmToggle
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => openMoney("deposit")}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[color:var(--fd-primary)] px-3 py-2.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+          >
+            <DepositIcon />
+            {labels.wallet_action_deposit}
+          </button>
+          <button
+            type="button"
+            onClick={() => openMoney("withdraw")}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[color:var(--fd-primary)]/30 bg-white px-3 py-2.5 text-sm font-bold text-[color:var(--fd-primary)] active:scale-[0.98]"
+          >
+            <WithdrawIcon />
+            {labels.wallet_action_withdraw}
+          </button>
+        </div>
+
+        <WalletQuickLinks
           labels={{
-            crypto: labels.wallet_section_crypto,
-            fiat: labels.wallet_section_fiat,
             swap: labels.wallet_swap_title,
+            send: labels.wallet_action_send,
+            fiat: labels.wallet_section_fiat,
           }}
         />
       </section>
@@ -150,7 +201,14 @@ export function WalletOverview({
                     <WalletAssetIcon asset={row.asset} size={44} className="h-full w-full" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-[color:var(--fd-text)]">{row.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-bold text-[color:var(--fd-text)]">{row.title}</p>
+                      {row.pending ? (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800">
+                          {row.pending.label}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="truncate text-[10px] text-[color:var(--fd-muted)]">{row.subtitle}</p>
                   </div>
                   <div className="text-right">
@@ -167,6 +225,8 @@ export function WalletOverview({
           )}
         </ul>
       </section>
+
+      <WalletMoneySheet open={moneyOpen} mode={moneyMode} onClose={() => setMoneyOpen(false)} />
     </div>
   );
 }
@@ -193,6 +253,22 @@ function EyeIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M2.5 12c1.5 4.5 5.7 8 9.5 8s8-3.5 9.5-8c-1.5-4.5-5.7-8-9.5-8s-8 3.5-9.5 8z" stroke="currentColor" strokeWidth="1.7" />
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function DepositIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WithdrawIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 20V8M7 13l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

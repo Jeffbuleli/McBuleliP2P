@@ -26,10 +26,7 @@ export function AppShell({
   const pathname = usePathname();
   const onProfile = pathname.startsWith("/app/profile");
   const onHome = pathname === "/app";
-  const onWalletFlow =
-    pathname.startsWith("/app/wallet") ||
-    pathname.startsWith("/app/deposit") ||
-    pathname.startsWith("/app/withdraw");
+  const onWalletFlow = pathname.startsWith("/app/wallet");
   const onP2p = pathname.startsWith("/app/p2p");
   const onSupport = pathname.startsWith("/app/support");
   const onAcademy = pathname.startsWith("/app/academy");
@@ -39,8 +36,8 @@ export function AppShell({
     !pathname.endsWith("/new");
   const onCommunity = isCommunityRoute(pathname);
   const hideTopBarForFlow =
-    pathname.startsWith("/app/deposit") ||
-    pathname.startsWith("/app/withdraw") ||
+    pathname.startsWith("/app/wallet/deposit") ||
+    pathname.startsWith("/app/wallet/withdraw") ||
     pathname === "/app/wallet/transfer" ||
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||

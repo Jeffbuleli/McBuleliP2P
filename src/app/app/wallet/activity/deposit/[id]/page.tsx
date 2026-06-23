@@ -14,6 +14,7 @@ import { FlowHubLink, FlowPrimaryBtn } from "@/components/wallet/wallet-flow-she
 import { TransactionDetailRows } from "@/components/wallet/transaction-detail-rows";
 import { formatSignedWalletAmount } from "@/lib/wallet-history-labels";
 import { activityNetworkLabel } from "@/lib/activity-network-label";
+import { cryptoDepositDetailHref } from "@/lib/wallet-money-routes";
 import type { Locale } from "@/i18n/locale";
 
 type Deposit = {
@@ -186,7 +187,7 @@ export default function DepositActivityDetailPage() {
 
       {needsAddress ? (
         <div className="mt-4">
-          <FlowPrimaryBtn onClick={() => router.push(`/app/deposit/${deposit.id}`)}>
+          <FlowPrimaryBtn onClick={() => router.push(cryptoDepositDetailHref(deposit.id))}>
             {t("deposit_show_addr")}
           </FlowPrimaryBtn>
         </div>

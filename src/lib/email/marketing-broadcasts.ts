@@ -1,5 +1,6 @@
 import type { MarketingBroadcastCopy } from "@/lib/email/marketing-layout";
 import { appBaseUrl, emailAssetBaseUrl } from "@/lib/email/config";
+import { cryptoDepositHref } from "@/lib/wallet-money-routes";
 
 export type MarketingBroadcastKind =
   | "welcome"
@@ -91,7 +92,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     ],
     bullets: ["Multi-network deposits", "Clear fees", "Security alerts by email"],
     ctaLabel: "Deposit USDT",
-    ctaPath: "/app/deposit?asset=USDT",
+    ctaPath: cryptoDepositHref("USDT"),
     campaign: "wallet_usdt",
   },
   avec: {
@@ -284,7 +285,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     ],
     bullets: ["Multi-réseaux", "Frais affichés", "Alertes sécurité par email"],
     ctaLabel: "Déposer des USDT",
-    ctaPath: "/app/deposit?asset=USDT",
+    ctaPath: cryptoDepositHref("USDT"),
     campaign: "wallet_usdt",
   },
   avec: {
