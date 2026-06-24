@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
+import { getAdminUser360 } from "@/lib/admin-user-360";
+import { getLocale } from "@/lib/get-locale";
 import {
   StaffAuthError,
   getSessionUser,
@@ -13,6 +15,28 @@ import {
   PlatformAdminAuditAction,
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
+
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  try {
+    await requireSuperAdmin();
+  } catch (e) {
+    if (e instanceof StaffAuthError) {
+      return NextResponse.json({ message: e.message }, { status: 403 });
+    }
+    throw e;
+  }
+
+  const { id } = await ctx.params;
+  const locale = await getLocale();
+  const data = await getAdminUser360(id, locale);
+  if (!data) {
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true, ...data });
+}
 
 export async function PATCH(
   req: Request,

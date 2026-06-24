@@ -16,6 +16,7 @@ export type SecurityStatusPayload = {
   kycApproved: boolean;
   openWaConfigured: boolean;
   openWaNumber: string | null;
+  antiPhishingSet: boolean;
 };
 
 export async function getSecurityStatus(
@@ -31,6 +32,7 @@ export async function getSecurityStatus(
       waVerifiedAt: users.waVerifiedAt,
       recoveryWaPhone: users.recoveryWaPhone,
       kycStatus: users.kycStatus,
+      antiPhishingCodeHash: users.antiPhishingCodeHash,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -56,6 +58,7 @@ export async function getSecurityStatus(
     kycApproved: u.kycStatus === "approved",
     openWaConfigured,
     openWaNumber: waNumber,
+    antiPhishingSet: Boolean(u.antiPhishingCodeHash),
   };
 }
 

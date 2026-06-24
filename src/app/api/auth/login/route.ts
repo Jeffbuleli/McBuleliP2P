@@ -11,6 +11,7 @@ import { isSuperAdminEmail, UserRole } from "@/lib/roles";
 import { loginSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
+import { recordLoginEvent } from "@/lib/login-events";
 
 export async function POST(req: Request) {
   try {
@@ -66,6 +67,9 @@ export async function POST(req: Request) {
     reconcileKycAfterLogin(sessionUser.id);
     reconcileRewardPointsAfterLogin(sessionUser.id);
     reconcileAcademyAfterLogin(sessionUser.id, sessionUser.email);
+    void recordLoginEvent({ userId: sessionUser.id, method: "password", req }).catch(
+      (err) => console.warn("[auth/login] login event", err),
+    );
     return res;
   } catch (e) {
     console.error("[auth/login]", e);

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq, ilike, inArray, ne, or } from "drizzle-orm";
+import { and, desc, eq, ilike, ne } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import {
   adminKycHelpTier,
   adminKycNeedsHelp,
 } from "@/lib/admin-kyc-help";
-import { kycRequiredCountries } from "@/lib/kyc-policy";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -25,12 +24,7 @@ export async function GET(req: Request) {
   const helpOnly = url.searchParams.get("help") === "1";
   const q = url.searchParams.get("q")?.trim() ?? "";
 
-  const corridor = kycRequiredCountries();
-  const db = getDb();
-
-  const conditions = [
-    or(inArray(users.countryCode, corridor), ne(users.kycStatus, "none")),
-  ];
+  const conditions = [ne(users.kycStatus, "none")];
   if (statusFilter && statusFilter !== "all") {
     conditions.push(eq(users.kycStatus, statusFilter));
   }
@@ -38,6 +32,7 @@ export async function GET(req: Request) {
     conditions.push(ilike(users.email, `%${q}%`));
   }
 
+  const db = getDb();
   const rows = await db
     .select({
       id: users.id,

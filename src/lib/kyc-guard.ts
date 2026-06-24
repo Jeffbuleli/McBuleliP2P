@@ -5,6 +5,7 @@ import {
   kycRequiredForFeature,
   isKycApproved,
   kycEnabled,
+  kycEligibleCountry,
 } from "@/lib/kyc-policy";
 
 export type KycGuardResult =
@@ -32,12 +33,13 @@ export async function checkKycGate(
   if (!u) return { ok: false, error: "kyc_required" };
 
   const cc = u.countryCode ?? null;
-  if (!kycRequiredForFeature(feature, cc)) {
-    return { ok: true, kycStatus: u.kycStatus ?? "none", countryCode: cc };
+
+  if (!kycEligibleCountry(cc)) {
+    return { ok: false, error: "kyc_country_unsupported" };
   }
 
-  if (!cc || cc === "OTHER") {
-    return { ok: false, error: "kyc_country_unsupported" };
+  if (!kycRequiredForFeature(feature, cc)) {
+    return { ok: true, kycStatus: u.kycStatus ?? "none", countryCode: cc };
   }
 
   if (!isKycApproved(u.kycStatus)) {

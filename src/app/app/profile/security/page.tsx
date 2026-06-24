@@ -1,4 +1,5 @@
 import { ProfileSecurityPanel } from "@/components/profile/profile-security-panel";
+import { ProfileSecurityExtras } from "@/components/profile/profile-security-extras";
 import { ProfileSubpageHeader } from "@/components/profile/profile-subpage-header";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
@@ -12,7 +13,10 @@ export default async function ProfileSecurityPage() {
   return (
     <>
       <ProfileSubpageHeader title={d.profile_security_page_title} subtitle={d.profile_security_page_sub} />
-      <ProfileSecurityPanel />
+      <div className="space-y-3">
+        <ProfileSecurityPanel />
+        <ProfileSecurityExtras />
+      </div>
     </>
   );
 }

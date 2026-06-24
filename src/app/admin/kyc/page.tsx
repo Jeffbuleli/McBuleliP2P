@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -125,7 +126,12 @@ export default function AdminKycPage() {
         sortValue: (r) => r.email,
         cell: (r) => (
           <div>
-            <p className="font-semibold text-[color:var(--fd-text)]">{r.email}</p>
+            <Link
+              href={`/admin/users/${r.id}?tab=kyc`}
+              className="font-semibold text-[color:var(--fd-primary)] hover:underline"
+            >
+              {r.email}
+            </Link>
             {(r.legalFirstName || r.legalLastName) && (
               <p className="text-xs text-[color:var(--fd-muted)]">
                 {[r.legalFirstName, r.legalLastName].filter(Boolean).join(" ")}

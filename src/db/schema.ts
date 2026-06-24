@@ -107,6 +107,10 @@ export const users = pgTable("users", {
   waVerifiedAt: timestamp("wa_verified_at", { withTimezone: true }),
   /** Reference selfie URL from KYC for Didit biometric re-auth. */
   kycPortraitUrl: text("kyc_portrait_url"),
+  /** Email / in-app notification toggles (see notification-prefs.ts). */
+  notificationPrefs: jsonb("notification_prefs").$type<Record<string, unknown> | null>(),
+  /** Bcrypt hash of user anti-phishing code (shown in official emails). */
+  antiPhishingCodeHash: varchar("anti_phishing_code_hash", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -2092,6 +2096,25 @@ export const userTotpBackupCodes = pgTable(
       .defaultNow(),
   },
   (t) => [index("user_totp_backup_codes_user_idx").on(t.userId)],
+);
+
+export const userLoginEvents = pgTable(
+  "user_login_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    method: varchar("method", { length: 16 }).notNull(),
+    ipAddress: varchar("ip_address", { length: 64 }),
+    userAgent: text("user_agent"),
+    deviceLabel: varchar("device_label", { length: 128 }),
+    success: boolean("success").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("user_login_events_user_created_idx").on(t.userId, t.createdAt)],
 );
 
 export const userPasskeys = pgTable(

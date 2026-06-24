@@ -1,7 +1,10 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { KycIdentityCorrectionPanel } from "@/components/kyc/kyc-identity-correction-panel";
 import { KycFlowPanel } from "@/components/kyc/kyc-flow-panel";
+import { fetchKycStatus } from "@/lib/kyc-client-sync";
 import {
   isDiditSessionResumableForUi,
   normalizeDiditSessionStatus,
@@ -16,17 +19,31 @@ export function KycPageClient({
   initialData: KycStatusPayload | null;
 }) {
   const searchParams = useSearchParams();
+  const [data, setData] = useState<KycStatusPayload | null>(initialData);
   const wantsStart = searchParams.get("start") === "1";
-  const didit = normalizeDiditSessionStatus(initialData?.diditSessionStatus);
-  const hasSession = Boolean(initialData?.diditSessionId?.trim());
-  /** Only auto-open SDK when resuming an in-flight session — not for fresh `none` users. */
+  const didit = normalizeDiditSessionStatus(data?.diditSessionStatus);
+  const hasSession = Boolean(data?.diditSessionId?.trim());
   const autoStartSdk =
     wantsStart &&
-    initialData?.kycStatus === "pending" &&
-    hasSession &&
-    isDiditSessionResumableForUi(didit);
+    (data?.kycStatus === "none" ||
+      (data?.kycStatus === "pending" &&
+        hasSession &&
+        isDiditSessionResumableForUi(didit)));
+
+  const refresh = useCallback(async () => {
+    const payload = await fetchKycStatus();
+    if (payload) setData(payload);
+  }, []);
 
   return (
-    <KycFlowPanel userId={userId} initialData={initialData} autoStartSdk={autoStartSdk} />
+    <>
+      <KycFlowPanel
+        userId={userId}
+        initialData={data}
+        autoStartSdk={autoStartSdk}
+        onDataChange={setData}
+      />
+      {data ? <KycIdentityCorrectionPanel data={data} onUpdated={refresh} /> : null}
+    </>
   );
 }

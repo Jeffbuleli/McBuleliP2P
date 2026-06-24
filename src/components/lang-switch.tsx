@@ -1,20 +1,22 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { Locale } from "@/i18n/locale";
 import { useI18n } from "@/components/i18n-provider";
+import { ProfileIconFlagEn, ProfileIconFlagFr } from "@/components/icons/profile-icons";
 
 export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }) {
   const { locale, setLocale, t } = useI18n();
   const dark = variant === "dark";
 
-  function btn(target: Locale, flag: string, code: string) {
+  function btn(target: Locale, flag: ReactNode, code: string) {
     const active = locale === target;
     return (
       <button
         type="button"
         onClick={() => setLocale(target)}
         title={code}
-        className={`rounded-lg px-2 py-1 text-lg leading-none transition ${
+        className={`flex items-center justify-center rounded-lg px-2.5 py-1.5 transition ${
           active
             ? dark
               ? "bg-emerald-500 text-stone-950 ring-2 ring-emerald-400/60"
@@ -41,8 +43,8 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
       role="group"
       aria-label={locale === "fr" ? "Langue" : "Language"}
     >
-      {btn("en", "🇬🇧", t("lang_en"))}
-      {btn("fr", "🇫🇷", t("lang_fr"))}
+      {btn("en", <ProfileIconFlagEn />, t("lang_en"))}
+      {btn("fr", <ProfileIconFlagFr />, t("lang_fr"))}
     </div>
   );
 }

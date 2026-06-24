@@ -5,6 +5,7 @@ import { getDb, users } from "@/db";
 import { passkeyLoginOptions, passkeyLoginVerify } from "@/lib/auth/passkeys";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
+import { recordLoginEvent } from "@/lib/login-events";
 
 const optionsZ = z.object({ email: z.string().email().optional() });
 
@@ -57,5 +58,8 @@ export async function PUT(req: Request) {
     token,
     getSessionCookieWriteOptions(),
   );
+  void recordLoginEvent({ userId: user.id, method: "passkey", req }).catch((err) => {
+    console.warn("[auth/passkey/login] login event", err);
+  });
   return res;
 }

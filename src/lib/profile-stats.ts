@@ -1,11 +1,19 @@
 import { and, eq, or, sql } from "drizzle-orm";
-import { getDb, p2pOrderRatings, p2pOrders, users } from "@/db";
+import {
+  communityUserProfiles,
+  getDb,
+  p2pOrderRatings,
+  p2pOrders,
+  userP2pPaymentMethods,
+  users,
+} from "@/db";
 import type { Locale } from "@/i18n/locale";
 import {
   formatPortfolioTotalWithStaking,
   getPortfolioSnapshotForUser,
 } from "@/lib/portfolio-display";
 import { getStakingValuationUsd } from "@/lib/staking-service";
+import { numFromNumeric } from "@/lib/wallet-types";
 
 const ST_RELEASED = "released";
 
@@ -23,6 +31,10 @@ export type ProfileDashboard = {
   /** released / (released + cancelled + expired + disputed?) — simplified: completion among terminal orders */
   completionPct: number | null;
   portfolio: Awaited<ReturnType<typeof getPortfolioSnapshotForUser>>;
+  communityHandle: string | null;
+  referralBalanceUsdt: number;
+  paymentMethodsCount: number;
+  piLinked: boolean;
 };
 
 export async function getProfileDashboard(
@@ -39,6 +51,9 @@ export async function getProfileDashboard(
       countryCode: users.countryCode,
       kycStatus: users.kycStatus,
       createdAt: users.createdAt,
+      referralUsdtBalance: users.referralUsdtBalance,
+      piUsername: users.piUsername,
+      piUid: users.piUid,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -72,6 +87,19 @@ export async function getProfileDashboard(
   const completionPct =
     terminal > 0 ? Math.round((completed / terminal) * 1000) / 10 : null;
 
+  const [communityRow] = await db
+    .select({ handle: communityUserProfiles.handle })
+    .from(communityUserProfiles)
+    .where(eq(communityUserProfiles.userId, userId))
+    .limit(1);
+
+  const [payRow] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(userP2pPaymentMethods)
+    .where(
+      and(eq(userP2pPaymentMethods.userId, userId), eq(userP2pPaymentMethods.active, true)),
+    );
+
   let portfolio = await getPortfolioSnapshotForUser(userId, locale);
   if (portfolio) {
     const stakeVal = await getStakingValuationUsd(userId);
@@ -97,5 +125,9 @@ export async function getProfileDashboard(
     reputationScore: Number(ratingRow?.avg ?? 0),
     completionPct,
     portfolio,
+    communityHandle: communityRow?.handle ?? null,
+    referralBalanceUsdt: numFromNumeric(u.referralUsdtBalance?.toString() ?? "0"),
+    paymentMethodsCount: payRow?.c ?? 0,
+    piLinked: Boolean(u.piUsername?.trim() || u.piUid?.trim()),
   };
 }

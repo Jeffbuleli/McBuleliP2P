@@ -67,10 +67,12 @@ function KycProcessShell({
 export function KycFlowPanel({
   initialData,
   autoStartSdk = false,
+  onDataChange,
 }: {
   userId: string;
   initialData?: KycStatusPayload | null;
   autoStartSdk?: boolean;
+  onDataChange?: (data: KycStatusPayload) => void;
 }) {
   const { t } = useI18n();
   const [data, setData] = useState<KycStatusPayload | null>(initialData ?? null);
@@ -85,6 +87,7 @@ export function KycFlowPanel({
     const payload = await fetchKycStatus();
     if (payload) {
       setData(payload);
+      onDataChange?.(payload);
       const fresh = payload.kycStatus ?? "none";
       if (fresh === "none" || (fresh === "rejected" && payload.canRetryKyc)) {
         setSdkError(false);
@@ -93,7 +96,7 @@ export function KycFlowPanel({
       return;
     }
     setLoadErr(true);
-  }, []);
+  }, [onDataChange]);
 
   const refreshFromDidit = useCallback(async () => {
     setBusy(true);
@@ -287,13 +290,13 @@ export function KycFlowPanel({
         <div className="flex flex-col items-center justify-center p-8">
         <KycHeroScene phase="start" />
         <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">
-          {t("kyc_not_required_country")}
+          {t("kyc_set_country")}
         </p>
         <Link
           href="/app/profile/settings"
           className="mt-3 rounded-full bg-[color:var(--fd-mint)] px-4 py-2 text-[10px] font-bold text-[color:var(--fd-primary)]"
         >
-          {t("kyc_set_country")}
+          {t("profile_tile_settings")}
         </Link>
         </div>
       </KycProcessShell>

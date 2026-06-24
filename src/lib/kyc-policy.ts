@@ -23,10 +23,22 @@ export function kycEnabled(): boolean {
   return v === "1" || v === "true" || v === "yes" || v === "on";
 }
 
+/** Global Didit KYC for all profile countries (default on). Set KYC_GLOBAL=false to use corridor list. */
+export function kycGlobalMode(): boolean {
+  const v = String(process.env.KYC_GLOBAL ?? "true").toLowerCase().trim();
+  return v !== "0" && v !== "false" && v !== "no" && v !== "off";
+}
+
 export function kycRequiredCountries(): string[] {
   const v =
     process.env.KYC_REQUIRED_COUNTRIES ?? "CD,RW,TZ,BI,UG,KE,CG,CM,NG,GH,SN,CI";
   return csvUpper(v);
+}
+
+/** User can start / complete Didit when country is set and not OTHER. */
+export function kycEligibleCountry(countryCode: string | null | undefined): boolean {
+  const cc = (countryCode ?? "").trim().toUpperCase();
+  return Boolean(cc && cc !== "OTHER");
 }
 
 export function kycWithdrawalThresholdUsdt(): number {
@@ -43,8 +55,9 @@ export function kycRequiredForFeature(
   userCountryCode?: string | null,
 ): boolean {
   if (!kycEnabled()) return false;
+  if (!kycEligibleCountry(userCountryCode)) return false;
+  if (kycGlobalMode()) return true;
   const cc = (userCountryCode ?? "").trim().toUpperCase();
-  if (!cc || cc === "OTHER") return false;
   return kycRequiredCountries().includes(cc);
 }
 
@@ -53,10 +66,7 @@ export function requiresKycForLargeWithdrawal(args: {
   userCountryCode?: string | null;
   netAmountUsdt: number;
 }): boolean {
-  if (!kycEnabled()) return false;
-  const cc = (args.userCountryCode ?? "").trim().toUpperCase();
-  if (!cc) return false;
-  if (!kycRequiredCountries().includes(cc)) return false;
+  if (!kycRequiredForFeature("withdraw", args.userCountryCode)) return false;
   return args.netAmountUsdt >= kycWithdrawalThresholdUsdt();
 }
 

@@ -22,7 +22,8 @@ import {
 const OPEN_DELAY_MS = 1800;
 
 function shouldOfferKyc(payload: KycStatusPayload): boolean {
-  if (!payload.corridor || payload.approved) return false;
+  if (!payload.enabled || !payload.inCorridorCountry) return false;
+  if (payload.approved) return false;
   if (payload.kycStatus === "pending" || payload.kycStatus === "manual_review") {
     return false;
   }

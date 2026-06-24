@@ -29,7 +29,8 @@ export function KycStatusPoller() {
       );
 
       const active =
-        payload.corridor &&
+        payload.enabled &&
+        payload.inCorridorCountry &&
         (payload.kycStatus === "pending" ||
           payload.kycStatus === "manual_review");
       schedule(active ? 10_000 : 120_000);

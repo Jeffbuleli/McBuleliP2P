@@ -8,5 +8,5 @@ export function profileKycBadgeText(
   if (s === "approved") return t("profile_kyc_ok");
   if (s === "pending" || s === "manual_review") return t("profile_kyc_pending");
   if (s === "rejected") return t("profile_kyc_rejected");
-  return t("profile_kyc_badge_off");
+  return t("profile_kyc_not_verified");
 }

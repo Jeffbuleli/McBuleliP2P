@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -155,7 +156,12 @@ export default function AdminUsersPage() {
       sortValue: (u) => u.email,
       cell: (u) => (
         <div>
-          <p className="font-medium text-[color:var(--fd-text)]">{u.email}</p>
+          <Link
+            href={`/admin/users/${u.id}`}
+            className="font-medium text-[color:var(--fd-primary)] hover:underline"
+          >
+            {u.email}
+          </Link>
           <p className="font-mono text-[10px] text-[color:var(--fd-muted)]">{u.id}</p>
         </div>
       ),

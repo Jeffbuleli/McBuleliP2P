@@ -1,9 +1,10 @@
 import { AcademyJourneyTeaser } from "@/components/profile/academy-journey-teaser";
-import { ProfileActionGrid } from "@/components/profile/profile-action-grid";
 import { ProfileHero } from "@/components/profile/profile-hero";
-import { ProfileLogoutButton } from "@/components/profile/profile-logout-button";
 import { ProfileScreenHeader } from "@/components/profile/profile-screen-header";
+import { ProfileSecurityMeter } from "@/components/profile/profile-security-meter";
+import { ProfileSettingsList } from "@/components/profile/profile-settings-list";
 import { ProfileStatsRow } from "@/components/profile/profile-stats-row";
+import { ProfileWalletStrip } from "@/components/profile/profile-wallet-strip";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { getProfileDashboard } from "@/lib/profile-stats";
@@ -39,10 +40,21 @@ export default async function ProfilePage() {
     <div className="flex flex-col gap-4 pb-4">
       <ProfileScreenHeader title={d.profile_title} />
       <ProfileHero dash={dash} locale={locale} />
+      <ProfileWalletStrip portfolio={dash.portfolio} locale={locale} />
+      <ProfileSecurityMeter />
       <ProfileStatsRow dash={dash} locale={locale} memberSince={memberSince} />
       <AcademyJourneyTeaser />
-      <ProfileActionGrid showAdmin={staff} />
-      <ProfileLogoutButton />
+      <ProfileSettingsList
+        showAdmin={staff}
+        meta={{
+          userId: dash.id,
+          kycStatus: dash.kycStatus,
+          referralBalanceUsdt: dash.referralBalanceUsdt,
+          paymentMethodsCount: dash.paymentMethodsCount,
+          communityHandle: dash.communityHandle,
+          piLinked: dash.piLinked,
+        }}
+      />
     </div>
   );
 }

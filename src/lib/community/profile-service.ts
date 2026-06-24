@@ -22,6 +22,7 @@ import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import {
   candidateHandle,
   isLegacyGarbageHandle,
+  isValidCommunityHandle,
   normalizeUsernameBase,
 } from "@/lib/community/username";
 
@@ -394,4 +395,87 @@ export async function getPublicProfileByHandle(
     isOwnProfile: viewerId === profile.userId,
     signalStats,
   };
+}
+
+export type OwnCommunityProfile = {
+  handle: string;
+  bio: string;
+  showKycBadge: boolean;
+  displayName: string;
+};
+
+export async function getOwnCommunityProfile(
+  userId: string,
+): Promise<OwnCommunityProfile | null> {
+  const author = await ensureCommunityProfile(userId);
+  const db = getDb();
+  const [row] = await db
+    .select({
+      bio: communityUserProfiles.bio,
+      showKycBadge: communityUserProfiles.showKycBadge,
+      displayName: communityUserProfiles.displayName,
+    })
+    .from(communityUserProfiles)
+    .where(eq(communityUserProfiles.userId, userId))
+    .limit(1);
+  if (!row) return null;
+  return {
+    handle: author.handle,
+    bio: row.bio?.trim() ?? "",
+    showKycBadge: row.showKycBadge,
+    displayName: row.displayName,
+  };
+}
+
+export async function updateOwnCommunityProfile(
+  userId: string,
+  patch: { handle?: string; bio?: string; showKycBadge?: boolean },
+): Promise<{ ok: true; profile: OwnCommunityProfile } | { ok: false; error: string }> {
+  await ensureCommunityProfile(userId);
+  const db = getDb();
+
+  const updates: {
+    handle?: string;
+    bio?: string | null;
+    showKycBadge?: boolean;
+    updatedAt: Date;
+  } = { updatedAt: new Date() };
+
+  if (patch.handle !== undefined) {
+    const next = patch.handle.trim().toLowerCase();
+    if (!isValidCommunityHandle(next)) {
+      return { ok: false, error: "profile_community_handle_invalid" };
+    }
+    const [taken] = await db
+      .select({ userId: communityUserProfiles.userId })
+      .from(communityUserProfiles)
+      .where(eq(communityUserProfiles.handle, next))
+      .limit(1);
+    if (taken && taken.userId !== userId) {
+      return { ok: false, error: "profile_community_handle_taken" };
+    }
+    updates.handle = next;
+  }
+
+  if (patch.bio !== undefined) {
+    const bio = patch.bio.trim();
+    updates.bio = bio ? bio.slice(0, 280) : null;
+  }
+
+  if (patch.showKycBadge !== undefined) {
+    updates.showKycBadge = patch.showKycBadge;
+  }
+
+  if (Object.keys(updates).length <= 1) {
+    return { ok: false, error: "profile_invalid_input" };
+  }
+
+  await db
+    .update(communityUserProfiles)
+    .set(updates)
+    .where(eq(communityUserProfiles.userId, userId));
+
+  const profile = await getOwnCommunityProfile(userId);
+  if (!profile) return { ok: false, error: "profile_invalid_input" };
+  return { ok: true, profile };
 }

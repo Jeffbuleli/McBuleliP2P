@@ -39,6 +39,21 @@ export async function resetUserKycForRetry(userId: string): Promise<void> {
     .where(eq(users.id, userId));
 }
 
+/** User-initiated resubmit after correcting OCR / legal name (including when previously approved). */
+export async function resetUserKycForResubmit(userId: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(users)
+    .set({
+      kycStatus: "none",
+      kycUpdatedAt: new Date(),
+      kycRejectionNote: null,
+      diditSessionId: null,
+      diditSessionStatus: null,
+    })
+    .where(eq(users.id, userId));
+}
+
 export async function setUserKycPending(args: {
   userId: string;
   diditSessionId?: string | null;

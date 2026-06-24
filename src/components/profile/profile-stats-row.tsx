@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/locale";
+import { ProfileIconStar } from "@/components/icons/profile-icons";
 import { getDictionary } from "@/i18n/messages";
 import type { ProfileDashboard } from "@/lib/profile-stats";
 
@@ -21,9 +22,14 @@ export function ProfileStatsRow({
     {
       label: d.profile_stat_reputation_short,
       value:
-        dash.reputationScore > 0
-          ? `${dash.reputationScore.toFixed(1)}★`
-          : "—",
+        dash.reputationScore > 0 ? (
+          <span className="inline-flex items-center justify-center gap-0.5">
+            {dash.reputationScore.toFixed(1)}
+            <ProfileIconStar className="h-3.5 w-3.5 text-amber-500" />
+          </span>
+        ) : (
+          "—"
+        ),
     },
     {
       label: d.profile_stat_completion_short,
@@ -42,9 +48,9 @@ export function ProfileStatsRow({
           <p className="text-[9px] font-bold uppercase leading-tight tracking-wide text-[var(--fd-muted)]">
             {item.label}
           </p>
-          <p className="mt-1 text-sm font-bold tabular-nums tracking-tight text-[#1c1917]">
+          <div className="mt-1 flex justify-center text-sm font-bold tabular-nums tracking-tight text-[#1c1917]">
             {item.value}
-          </p>
+          </div>
         </div>
       ))}
     </section>
