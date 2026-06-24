@@ -2734,6 +2734,47 @@ export const communityStories = pgTable(
   ],
 );
 
+export const communityStoryViews = pgTable(
+  "community_story_views",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storyId: uuid("story_id")
+      .notNull()
+      .references(() => communityStories.id, { onDelete: "cascade" }),
+    viewerId: uuid("viewer_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_story_views_unique").on(t.storyId, t.viewerId),
+    index("community_story_views_story_idx").on(t.storyId),
+  ],
+);
+
+export const communityStoryReactions = pgTable(
+  "community_story_reactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storyId: uuid("story_id")
+      .notNull()
+      .references(() => communityStories.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    emoji: varchar("emoji", { length: 16 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_story_reactions_unique").on(t.storyId, t.userId),
+    index("community_story_reactions_story_idx").on(t.storyId),
+  ],
+);
+
 /** Academy Events & Trainings — SSOT for posters, community, live, calendar. */
 export const academyTrainingEvents = pgTable(
   "academy_training_events",
