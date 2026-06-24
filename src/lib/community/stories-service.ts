@@ -31,8 +31,21 @@ const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_DAY = 8;
 
 function isMissingTable(e: unknown): boolean {
-  const code = (e as { code?: string })?.code;
-  return code === "42P01";
+  let cur: unknown = e;
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (!cur || typeof cur !== "object") break;
+    const anyE = cur as { code?: unknown; message?: unknown; cause?: unknown };
+    if (anyE.code === "42P01") return true;
+    const msg = String(anyE.message ?? "");
+    if (
+      msg.includes("42P01") ||
+      msg.includes('relation "community_stories" does not exist')
+    ) {
+      return true;
+    }
+    cur = anyE.cause;
+  }
+  return false;
 }
 
 export async function listActiveStoryRings(args: {
