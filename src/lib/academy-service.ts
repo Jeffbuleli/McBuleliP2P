@@ -1124,7 +1124,7 @@ export async function listCommunityUpcomingEvents(args: {
       and(
         inArray(academyTrainingEvents.status, ["PUBLISHED", "LIVE"]),
         inArray(academyEditions.status, ["open", "active"]),
-        eq(academyTrainingEvents.visibility, "COMMUNITY"),
+        inArray(academyTrainingEvents.visibility, ["COMMUNITY", "PUBLIC"]),
         sql`${academyTrainingEvents.endDate} >= ${now}`,
       ),
     )
@@ -1157,6 +1157,203 @@ export async function listCommunityUpcomingEvents(args: {
       requiresKyc: r.requiresKyc ?? false,
     });
   }
+  return out;
+}
+
+export type CommunityEditionCatalogView = {
+  slug: string;
+  title: string;
+  programSlug: string;
+  programTitle: string;
+  status: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  enrolled: boolean;
+  priceUsdt: string | null;
+  requiresKyc: boolean;
+};
+
+/** Tous les programmes / éditions publiés (y compris passés). */
+export async function listCommunityProgramCatalog(args: {
+  userId: string;
+  locale: Locale;
+}): Promise<CommunityEditionCatalogView[]> {
+  await assertAcademyDbReady();
+  const db = getDb();
+
+  const enrollRows = await db
+    .select({ editionId: academyEnrollments.editionId })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, args.userId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    );
+  const enrolledEditionIds = new Set(enrollRows.map((r) => r.editionId));
+
+  const rows = await db
+    .select({
+      slug: academyEditions.slug,
+      titleFr: academyEditions.titleFr,
+      titleEn: academyEditions.titleEn,
+      status: academyEditions.status,
+      startsAt: academyEditions.startsAt,
+      endsAt: academyEditions.endsAt,
+      programSlug: academyPrograms.slug,
+      programTitleFr: academyPrograms.titleFr,
+      programTitleEn: academyPrograms.titleEn,
+      priceUsdt: academyPrograms.priceUsdt,
+      requiresKyc: academyPrograms.requiresKyc,
+      editionId: academyEditions.id,
+    })
+    .from(academyEditions)
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(eq(academyPrograms.published, true))
+    .orderBy(desc(academyEditions.startsAt))
+    .limit(48);
+
+  return rows.map((r) => ({
+    slug: r.slug,
+    title: pickLocale({ titleFr: r.titleFr, titleEn: r.titleEn }, args.locale),
+    programSlug: r.programSlug,
+    programTitle: pickLocale(
+      { titleFr: r.programTitleFr, titleEn: r.programTitleEn },
+      args.locale,
+    ),
+    status: r.status,
+    startsAt: r.startsAt?.toISOString() ?? null,
+    endsAt: r.endsAt?.toISOString() ?? null,
+    enrolled: enrolledEditionIds.has(r.editionId),
+    priceUsdt: r.priceUsdt?.toString() ?? null,
+    requiresKyc: r.requiresKyc ?? false,
+  }));
+}
+
+/** Sessions / lives à venir visibles sans inscription préalable. */
+export async function listCommunityUpcomingSessions(args: {
+  userId: string;
+  locale: Locale;
+  viewerRole?: AcademyViewerRole;
+}): Promise<AcademyUpcomingSessionView[]> {
+  await assertAcademyDbReady();
+  const db = getDb();
+  const now = new Date();
+  const isStaffViewer = (args.viewerRole ?? "learner") === "staff";
+  const seen = new Set<string>();
+  const out: AcademyUpcomingSessionView[] = [];
+
+  const eventRows = await db
+    .select({
+      slug: academyTrainingEvents.slug,
+      title: academyTrainingEvents.title,
+      startDate: academyTrainingEvents.startDate,
+      endDate: academyTrainingEvents.endDate,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academyTrainingEvents)
+    .innerJoin(
+      academyEditions,
+      eq(academyTrainingEvents.editionId, academyEditions.id),
+    )
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        inArray(academyTrainingEvents.status, ["PUBLISHED", "LIVE"]),
+        inArray(academyEditions.status, ["open", "active"]),
+        inArray(academyTrainingEvents.visibility, ["COMMUNITY", "PUBLIC"]),
+        sql`${academyTrainingEvents.endDate} >= ${now}`,
+      ),
+    )
+    .orderBy(asc(academyTrainingEvents.startDate))
+    .limit(32);
+
+  for (const s of eventRows) {
+    if (
+      !shouldShowAcademySessionSlug({
+        sessionSlug: s.slug,
+        isStaff: isStaffViewer,
+      })
+    ) {
+      continue;
+    }
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    const ended = isSessionEnded({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    if (ended && !liveNow) continue;
+    const key = `${s.editionSlug}:${s.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      editionSlug: s.editionSlug,
+      programSlug: s.programSlug,
+      sessionSlug: s.slug,
+      title: s.title,
+      startsAt: s.startDate.toISOString(),
+      isLiveNow: liveNow,
+    });
+  }
+
+  const sessionRows = await db
+    .select({
+      slug: academySessions.slug,
+      titleFr: academySessions.titleFr,
+      titleEn: academySessions.titleEn,
+      startsAt: academySessions.startsAt,
+      endsAt: academySessions.endsAt,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academySessions)
+    .innerJoin(academyEditions, eq(academySessions.editionId, academyEditions.id))
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(inArray(academyEditions.status, ["open", "active"]))
+    .orderBy(asc(academySessions.startsAt))
+    .limit(32);
+
+  for (const s of sessionRows) {
+    if (
+      !shouldShowAcademySessionSlug({
+        sessionSlug: s.slug,
+        isStaff: isStaffViewer,
+      })
+    ) {
+      continue;
+    }
+    const liveNow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    const ended = isSessionEnded({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    if (ended && !liveNow) continue;
+    const key = `${s.editionSlug}:${s.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      editionSlug: s.editionSlug,
+      programSlug: s.programSlug,
+      sessionSlug: s.slug,
+      title: pickLocale(s, args.locale),
+      startsAt: s.startsAt.toISOString(),
+      isLiveNow: liveNow,
+    });
+  }
+
+  out.sort((a, b) => {
+    if (a.isLiveNow && !b.isLiveNow) return -1;
+    if (!a.isLiveNow && b.isLiveNow) return 1;
+    return a.startsAt.localeCompare(b.startsAt);
+  });
+
   return out;
 }
 

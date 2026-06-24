@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { getAcademyHub, listCommunityReplays, listCommunityUpcomingEvents } from "@/lib/academy-service";
+import {
+  getAcademyHub,
+  listCommunityProgramCatalog,
+  listCommunityReplays,
+  listCommunityUpcomingEvents,
+  listCommunityUpcomingSessions,
+} from "@/lib/academy-service";
 import { communityEnabled } from "@/lib/community/config";
 import { listFormationPosts } from "@/lib/community/feed-service";
 import { getLocale } from "@/lib/get-locale";
@@ -19,7 +25,8 @@ export async function GET() {
 
   try {
     const locale = await getLocale();
-    const [hub, formations, upcomingEvents, replays] = await Promise.all([
+    const [hub, formations, upcomingEvents, replays, catalogEditions, upcomingSessions] =
+      await Promise.all([
       getAcademyHub({
         userId: user.id,
         locale,
@@ -29,12 +36,31 @@ export async function GET() {
       listFormationPosts({ viewerId: user.id, limit: 12 }),
       listCommunityUpcomingEvents({ userId: user.id, locale }),
       listCommunityReplays({ userId: user.id, locale }),
+      listCommunityProgramCatalog({ userId: user.id, locale }),
+      listCommunityUpcomingSessions({
+        userId: user.id,
+        locale,
+        viewerRole:
+          user.role === "agent" || user.role === "super_admin" ? "staff" : "learner",
+      }),
     ]);
 
     return NextResponse.json({
-      upcomingSessions: hub.upcomingSessions,
+      upcomingSessions,
       upcomingEvents,
       replays,
+      catalogEditions: catalogEditions.map((e) => ({
+        slug: e.slug,
+        title: e.title,
+        programSlug: e.programSlug,
+        programTitle: e.programTitle,
+        status: e.status,
+        startsAt: e.startsAt,
+        endsAt: e.endsAt,
+        enrolled: e.enrolled,
+        priceUsdt: e.priceUsdt,
+        requiresKyc: e.requiresKyc,
+      })),
       programs: hub.programs.map((p) => ({
         slug: p.slug,
         title: p.title,
@@ -67,6 +93,7 @@ export async function GET() {
       upcomingSessions: [],
       upcomingEvents: [],
       replays: [],
+      catalogEditions: [],
       programs: [],
       editions: [],
       formationPosts: [],

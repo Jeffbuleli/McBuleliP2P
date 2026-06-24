@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CommunityStoryRing } from "@/lib/community/stories-service";
+import type { CommunityStoryRing, StoryEngagement } from "@/lib/community/stories-service";
+import { STORY_REACTION_EMOJIS } from "@/lib/community/stories-service";
 import {
   COMMUNITY_STORY_TEXT_BG,
   normalizeStoryTextBg,
@@ -44,6 +46,7 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewer, setViewer] = useState<{ ringIdx: number; storyIdx: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -71,6 +74,10 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
     setViewer({ ringIdx, storyIdx: 0 });
   };
 
+  const scrollStrip = (dir: -1 | 1) => {
+    scrollRef.current?.scrollBy({ left: dir * 220, behavior: "smooth" });
+  };
+
   return (
     <>
       {toast ? (
@@ -79,60 +86,64 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
         </div>
       ) : null}
 
-      <div className="mb-3 -mx-1 overflow-x-auto px-1 scrollbar-none">
-        <div className="flex gap-3 pb-1">
+      <div className="relative mb-3">
+        {rings.length > 2 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => scrollStrip(-1)}
+              className="absolute left-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white shadow-md"
+              aria-label={fr ? "Précédent" : "Previous"}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollStrip(1)}
+              className="absolute right-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[#229ed9] bg-black/55 text-white shadow-md"
+              aria-label={fr ? "Suivant" : "Next"}
+            >
+              ›
+            </button>
+          </>
+        ) : null}
+
+        <div
+          ref={scrollRef}
+          className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none"
+        >
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
-            className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5"
+            className="relative h-[168px] w-[108px] shrink-0 overflow-hidden rounded-xl border-2 border-dashed border-[#305f33]/35 bg-[#eaf5ee]"
           >
-            <span className="flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full border-2 border-dashed border-[#305f33]/40 bg-[#eaf5ee] text-xl font-bold text-[#305f33]">
-              +
-            </span>
-            <span className="max-w-[4.5rem] truncate text-[10px] font-semibold text-[#57534e]">
-              {fr ? "Votre statut" : "Your status"}
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#305f33]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl font-bold shadow-sm">
+                +
+              </span>
+              <span className="px-2 text-center text-[10px] font-bold leading-tight">
+                {fr ? "Créer un statut" : "Create status"}
+              </span>
             </span>
           </button>
 
           {loading ? (
             <>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5">
-                  <span className="h-[3.75rem] w-[3.75rem] animate-pulse rounded-full bg-[#e7e5e4]" />
-                  <span className="h-2 w-10 animate-pulse rounded bg-[#e7e5e4]" />
-                </div>
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-[168px] w-[108px] shrink-0 animate-pulse rounded-xl bg-[#e7e5e4]"
+                />
               ))}
             </>
           ) : (
             rings.map((ring, idx) => (
-              <button
+              <StoryRingCard
                 key={ring.userId}
-                type="button"
+                ring={ring}
+                fr={fr}
                 onClick={() => openRing(idx)}
-                className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5"
-              >
-                <span className="rounded-full bg-gradient-to-tr from-[#3d8f5a] via-[#305f33] to-[#229ed9] p-[2.5px]">
-                  <span className="flex h-[3.5rem] w-[3.5rem] items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white">
-                    {ring.avatarUrl ? (
-                      <Image
-                        src={ring.avatarUrl}
-                        alt=""
-                        width={56}
-                        height={56}
-                        className="h-full w-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <span className="text-sm font-bold text-[#305f33]">
-                        {(ring.displayName || ring.handle).slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                  </span>
-                </span>
-                <span className="max-w-[4.5rem] truncate text-[10px] font-semibold text-[#44403c]">
-                  {ring.isMe ? (fr ? "Vous" : "You") : ring.displayName || ring.handle}
-                </span>
-              </button>
+              />
             ))
           )}
         </div>
@@ -170,6 +181,86 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
         />
       ) : null}
     </>
+  );
+}
+
+function StoryRingCard({
+  ring,
+  fr,
+  onClick,
+}: {
+  ring: CommunityStoryRing;
+  fr: boolean;
+  onClick: () => void;
+}) {
+  const label = ring.isMe ? (fr ? "Vous" : "You") : ring.displayName || ring.handle;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative h-[168px] w-[108px] shrink-0 overflow-hidden rounded-xl bg-[#1c1917] shadow-md ring-1 ring-black/10 transition active:scale-[0.98]"
+    >
+      {ring.previewType === "text" ? (
+        <div
+          className="absolute inset-0 flex items-center justify-center p-2"
+          style={{ backgroundColor: ring.previewBg ?? TEXT_BG[0] }}
+        >
+          <p className="line-clamp-5 text-center text-[10px] font-semibold leading-snug text-white">
+            {ring.previewText}
+          </p>
+        </div>
+      ) : ring.previewUrl ? (
+        ring.previewType === "video" ? (
+          <video
+            src={ring.previewUrl}
+            className="absolute inset-0 h-full w-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <Image
+            src={ring.previewUrl}
+            alt=""
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        )
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#305f33] to-[#229ed9]" />
+      )}
+
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-2 pb-2 pt-10">
+        <p className="line-clamp-2 text-left text-[11px] font-bold leading-tight text-white">
+          {label}
+        </p>
+      </div>
+
+      <div
+        className={`absolute left-2 top-2 rounded-full p-[2.5px] ${
+          ring.hasUnseen ? "bg-[#229ed9]" : "bg-white/40"
+        }`}
+      >
+        <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white">
+          {ring.avatarUrl ? (
+            <Image
+              src={ring.avatarUrl}
+              alt=""
+              width={32}
+              height={32}
+              className="h-full w-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <span className="text-[10px] font-bold text-[#305f33]">
+              {label.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -357,10 +448,27 @@ function StoryViewer({
   onDeleted: () => void;
   onViewBp: (bp: number) => void;
 }) {
+  const router = useRouter();
   const ring = rings[ringIdx];
   const story = ring?.stories[storyIdx];
   const viewedRef = useRef<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [engagement, setEngagement] = useState<StoryEngagement | null>(null);
+  const [reactBusy, setReactBusy] = useState(false);
+  const [dmBusy, setDmBusy] = useState(false);
+  const [showEmojiBar, setShowEmojiBar] = useState(false);
+
+  const loadEngagement = useCallback(async (storyId: string) => {
+    const res = await fetch(`/api/community/stories/${storyId}/engagement`);
+    if (!res.ok) return;
+    const j = (await res.json()) as StoryEngagement;
+    setEngagement(j);
+  }, []);
+
+  useEffect(() => {
+    if (!story?.id) return;
+    void loadEngagement(story.id);
+  }, [story?.id, loadEngagement]);
 
   useEffect(() => {
     if (!story?.id || ring.isMe) return;
@@ -368,8 +476,13 @@ function StoryViewer({
     viewedRef.current.add(story.id);
     void fetch(`/api/community/stories/${story.id}/view`, { method: "POST" })
       .then((r) => r.json())
-      .then((j: { viewerBp?: number }) => {
+      .then((j: { viewerBp?: number; viewCount?: number }) => {
         if (typeof j.viewerBp === "number" && j.viewerBp > 0) onViewBp(j.viewerBp);
+        if (typeof j.viewCount === "number") {
+          setEngagement((e) =>
+            e ? { ...e, viewCount: j.viewCount! } : { viewCount: j.viewCount!, reactions: [], myReaction: null },
+          );
+        }
       })
       .catch(() => {});
   }, [story?.id, ring?.isMe, onViewBp]);
@@ -406,6 +519,66 @@ function StoryViewer({
     }
   };
 
+  const react = async (emoji: string) => {
+    if (reactBusy) return;
+    setReactBusy(true);
+    try {
+      const res = await fetch(`/api/community/stories/${story.id}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji }),
+      });
+      if (res.ok) await loadEngagement(story.id);
+      setShowEmojiBar(false);
+    } finally {
+      setReactBusy(false);
+    }
+  };
+
+  const shareStory = async () => {
+    const url = `${window.location.origin}/app/community/u/${encodeURIComponent(ring.handle)}`;
+    const text = fr
+      ? `Statut de ${ring.displayName || ring.handle} sur McBuleli`
+      : `${ring.displayName || ring.handle}'s status on McBuleli`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "McBuleli", text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch {
+      /* cancelled */
+    }
+  };
+
+  const messageAuthor = async () => {
+    if (dmBusy || ring.isMe) return;
+    setDmBusy(true);
+    try {
+      const res = await fetch("/api/community/dm/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: ring.handle }),
+      });
+      const j = (await res.json()) as { threadId?: string };
+      if (res.ok && j.threadId) {
+        const q = new URLSearchParams({
+          draft: fr
+            ? `Réaction à votre statut 👋`
+            : `About your status 👋`,
+        });
+        router.push(`/app/community/inbox/${j.threadId}?${q}`);
+        onClose();
+      }
+    } finally {
+      setDmBusy(false);
+    }
+  };
+
+  const reactionSummary = engagement?.reactions?.length
+    ? engagement.reactions.map((r) => `${r.emoji}${r.count > 1 ? r.count : ""}`).join(" ")
+    : null;
+
   return (
     <div className="fixed inset-0 z-[90] flex flex-col bg-black">
       <div className="flex gap-1 px-3 pt-3">
@@ -419,9 +592,21 @@ function StoryViewer({
 
       <div className="flex items-center justify-between px-4 py-2 text-white">
         <Link href={`/app/community/u/${encodeURIComponent(ring.handle)}`} className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white/20">
+            {ring.avatarUrl ? (
+              <Image src={ring.avatarUrl} alt="" width={32} height={32} className="h-full w-full object-cover" unoptimized />
+            ) : (
+              <span className="text-xs font-bold">{(ring.displayName || ring.handle).slice(0, 1)}</span>
+            )}
+          </span>
           <span className="text-sm font-bold">{ring.displayName || ring.handle}</span>
         </Link>
         <div className="flex items-center gap-2">
+          {ring.isMe && engagement ? (
+            <span className="text-[10px] font-semibold text-white/80">
+              {engagement.viewCount} {fr ? "vues" : "views"}
+            </span>
+          ) : null}
           {ring.isMe ? (
             <button
               type="button"
@@ -465,9 +650,59 @@ function StoryViewer({
         ) : null}
       </div>
 
-      <p className="pb-6 text-center text-[10px] text-white/60">
-        {fr ? "Expire dans 24h · +BP si quelqu'un regarde" : "Expires in 24h · +BP when viewed"}
-      </p>
+      <div className="border-t border-white/10 px-4 pb-6 pt-3">
+        {reactionSummary ? (
+          <p className="mb-2 text-center text-sm">{reactionSummary}</p>
+        ) : null}
+
+        {showEmojiBar ? (
+          <div className="mb-3 flex justify-center gap-2">
+            {STORY_REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                disabled={reactBusy}
+                onClick={() => void react(emoji)}
+                className={`text-2xl transition active:scale-110 ${
+                  engagement?.myReaction === emoji ? "scale-125" : ""
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-around gap-2">
+          <button
+            type="button"
+            onClick={() => setShowEmojiBar((v) => !v)}
+            className="flex flex-col items-center gap-0.5 text-[10px] font-semibold text-white/90"
+          >
+            <span className="text-xl">{engagement?.myReaction ?? "❤️"}</span>
+            {fr ? "Réagir" : "React"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void shareStory()}
+            className="flex flex-col items-center gap-0.5 text-[10px] font-semibold text-white/90"
+          >
+            <span className="text-xl">↗</span>
+            {fr ? "Partager" : "Share"}
+          </button>
+          {!ring.isMe ? (
+            <button
+              type="button"
+              disabled={dmBusy}
+              onClick={() => void messageAuthor()}
+              className="flex flex-col items-center gap-0.5 text-[10px] font-semibold text-white/90 disabled:opacity-50"
+            >
+              <span className="text-xl">💬</span>
+              {fr ? "Message" : "Message"}
+            </button>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

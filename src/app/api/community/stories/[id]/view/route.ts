@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getActiveStoryAuthor } from "@/lib/community/stories-service";
+import { getActiveStoryAuthor, recordStoryView } from "@/lib/community/stories-service";
 import {
   grantCommunityStoryViewReceived,
   grantCommunityStoryViewed,
@@ -34,8 +34,11 @@ export async function POST(
     viewerId: userId,
   });
 
+  const viewCount = await recordStoryView(storyId, userId);
+
   return NextResponse.json({
     ok: true,
+    viewCount,
     viewerBp: viewerGrant.granted ? viewerGrant.points : 0,
     authorBp: authorGrant.granted ? authorGrant.points : 0,
   });

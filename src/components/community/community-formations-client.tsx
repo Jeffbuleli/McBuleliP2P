@@ -14,7 +14,7 @@ import {
   CommunityUpcomingEventCard,
   type UpcomingEventRow,
 } from "@/components/community/community-upcoming-event-card";
-import { academySessionContinueHref } from "@/lib/academy-route-paths";
+import { academyCohortHref, academySessionContinueHref } from "@/lib/academy-route-paths";
 import { formatUpcomingSessionDate } from "@/lib/community/formation-post-meta";
 import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
 import Link from "next/link";
@@ -34,8 +34,11 @@ type Edition = {
   slug: string;
   title: string;
   startsAt: string | null;
+  endsAt?: string | null;
   enrolled: boolean;
   programSlug: string;
+  programTitle?: string;
+  status?: string;
   priceUsdt?: string | null;
   requiresKyc?: boolean;
 };
@@ -77,6 +80,7 @@ export function CommunityFormationsClient() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEventRow[]>([]);
   const [editions, setEditions] = useState<Edition[]>([]);
+  const [catalogEditions, setCatalogEditions] = useState<Edition[]>([]);
   const [formationPosts, setFormationPosts] = useState<FormationPost[]>([]);
   const [programs, setPrograms] = useState<AcademyProgram[]>([]);
   const [replays, setReplays] = useState<ReplayRow[]>([]);
@@ -91,6 +95,7 @@ export function CommunityFormationsClient() {
           upcomingSessions?: Session[];
           upcomingEvents?: UpcomingEventRow[];
           editions?: Edition[];
+          catalogEditions?: Edition[];
           formationPosts?: FormationPost[];
           programs?: AcademyProgram[];
           replays?: ReplayRow[];
@@ -98,6 +103,7 @@ export function CommunityFormationsClient() {
           setSessions(d.upcomingSessions ?? []);
           setUpcomingEvents(d.upcomingEvents ?? []);
           setEditions(d.editions ?? []);
+          setCatalogEditions(d.catalogEditions ?? d.editions ?? []);
           setPrograms(d.programs ?? []);
           setReplays(d.replays ?? []);
           const posts = (d.formationPosts ?? []).filter(
@@ -115,7 +121,6 @@ export function CommunityFormationsClient() {
   }, [load]);
 
   const liveSessions = sessions.filter((s) => s.isLiveNow);
-  const enrolledSessions = sessions.filter((s) => !s.isLiveNow);
 
   const eventSlugs = new Set(upcomingEvents.map((e) => e.eventSlug));
   const extraEditions = editions.filter(
@@ -123,6 +128,9 @@ export function CommunityFormationsClient() {
       !upcomingEvents.some((ev) => ev.editionSlug === e.slug) &&
       !e.enrolled,
   );
+
+  const programEditions =
+    catalogEditions.length > 0 ? catalogEditions : editions;
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
@@ -143,7 +151,9 @@ export function CommunityFormationsClient() {
       {loading ? (
         <p className="py-12 text-center text-sm text-[#78716c]">…</p>
       ) : tab === "programs" ? (
-        programs.length === 0 && formationPosts.length === 0 ? (
+        programs.length === 0 &&
+        programEditions.length === 0 &&
+        formationPosts.length === 0 ? (
           <CommunityEmptyState
             illustration={<EmptyTrainingIllustration />}
             title={fr ? "Aucun programme publié" : "No published programs"}
@@ -169,6 +179,37 @@ export function CommunityFormationsClient() {
                   className="mt-3 inline-flex rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
                 >
                   {fr ? "Voir le programme" : "View program"}
+                </Link>
+              </li>
+            ))}
+            {programEditions.map((e) => (
+              <li key={e.slug} className="fd-card p-4">
+                <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                  <span className="rounded-full bg-[#eaf5ee] px-2 py-0.5 text-[9px] font-bold uppercase text-[#305f33]">
+                    {e.programTitle ?? e.programSlug}
+                  </span>
+                  {e.status && e.status !== "open" && e.status !== "active" ? (
+                    <span className="rounded-full bg-[#f5f5f4] px-2 py-0.5 text-[9px] font-bold text-[#78716c]">
+                      {e.status}
+                    </span>
+                  ) : null}
+                  {e.enrolled ? (
+                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[9px] font-bold text-sky-800">
+                      {fr ? "Inscrit" : "Enrolled"}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-sm font-bold text-[#0c0a09]">{e.title}</p>
+                {e.startsAt ? (
+                  <p className="mt-1 text-xs text-[#78716c]">
+                    {formatUpcomingSessionDate(e.startsAt, fr)}
+                  </p>
+                ) : null}
+                <Link
+                  href={academyCohortHref(e.slug, e.programSlug)}
+                  className="mt-3 inline-flex rounded-xl border border-[#dce8e0] bg-white px-4 py-2 text-xs font-bold text-[#305f33]"
+                >
+                  {fr ? "Ouvrir l'édition" : "Open edition"}
                 </Link>
               </li>
             ))}
@@ -209,7 +250,7 @@ export function CommunityFormationsClient() {
         )
       ) : tab === "upcoming" ? (
         upcomingEvents.length === 0 &&
-        enrolledSessions.length === 0 &&
+        sessions.filter((s) => !s.isLiveNow).length === 0 &&
         extraEditions.length === 0 ? (
           <CommunityEmptyState
             illustration={<EmptyTrainingIllustration />}
@@ -226,7 +267,8 @@ export function CommunityFormationsClient() {
                 onChanged={load}
               />
             ))}
-            {enrolledSessions
+            {sessions
+              .filter((s) => !s.isLiveNow)
               .filter((s) => !eventSlugs.has(s.sessionSlug))
               .map((s) => (
                 <li key={`${s.editionSlug}-${s.sessionSlug}`} className="fd-card p-4">

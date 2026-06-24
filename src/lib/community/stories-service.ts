@@ -1,12 +1,17 @@
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import {
   communityMedia,
   communityStories,
+  communityStoryReactions,
+  communityStoryViews,
   communityUserProfiles,
   getDb,
   users,
 } from "@/db";
 import { normalizeStoryTextBg } from "@/lib/community/story-text-colors";
+
+export const STORY_REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "👏", "🔥"] as const;
+export type StoryReactionEmoji = (typeof STORY_REACTION_EMOJIS)[number];
 
 export type CommunityStoryItem = {
   id: string;
@@ -18,12 +23,19 @@ export type CommunityStoryItem = {
   expiresAt: string;
 };
 
+export type StoryReactionCount = { emoji: string; count: number };
+
 export type CommunityStoryRing = {
   userId: string;
   handle: string;
   displayName: string;
   avatarUrl: string | null;
   isMe: boolean;
+  hasUnseen: boolean;
+  previewType: "text" | "image" | "video";
+  previewUrl: string | null;
+  previewBg: string | null;
+  previewText: string | null;
   stories: CommunityStoryItem[];
 };
 
@@ -84,22 +96,38 @@ export async function listActiveStoryRings(args: {
       .orderBy(desc(communityStories.createdAt));
 
     const byAuthor = new Map<string, CommunityStoryRing>();
+    const storyIds: string[] = [];
 
     for (const row of rows) {
       const handle = row.handle ?? row.authorId.slice(0, 8);
       const displayName = row.displayName ?? handle;
       let ring = byAuthor.get(row.authorId);
       if (!ring) {
+        const latest = {
+          type: row.storyType as CommunityStoryItem["type"],
+          body: row.body,
+          mediaUrl: row.mediaUrl,
+          bgColor: row.bgColor,
+        };
         ring = {
           userId: row.authorId,
           handle,
           displayName,
           avatarUrl: row.avatarUrl ?? null,
           isMe: args.viewerId === row.authorId,
+          hasUnseen: false,
+          previewType: latest.type,
+          previewUrl: latest.type !== "text" ? latest.mediaUrl : null,
+          previewBg:
+            latest.type === "text"
+              ? normalizeStoryTextBg(latest.bgColor)
+              : null,
+          previewText: latest.type === "text" ? latest.body : null,
           stories: [],
         };
         byAuthor.set(row.authorId, ring);
       }
+      storyIds.push(row.id);
       ring.stories.push({
         id: row.id,
         type: row.storyType as CommunityStoryItem["type"],
@@ -112,6 +140,26 @@ export async function listActiveStoryRings(args: {
         createdAt: row.createdAt.toISOString(),
         expiresAt: row.expiresAt.toISOString(),
       });
+    }
+
+    if (args.viewerId && storyIds.length) {
+      const viewedRows = await db
+        .select({ storyId: communityStoryViews.storyId })
+        .from(communityStoryViews)
+        .where(
+          and(
+            eq(communityStoryViews.viewerId, args.viewerId),
+            inArray(communityStoryViews.storyId, storyIds),
+          ),
+        );
+      const viewedSet = new Set(viewedRows.map((r) => r.storyId));
+      for (const ring of byAuthor.values()) {
+        if (ring.isMe) {
+          ring.hasUnseen = false;
+          continue;
+        }
+        ring.hasUnseen = ring.stories.some((s) => !viewedSet.has(s.id));
+      }
     }
 
     const rings = [...byAuthor.values()];
@@ -259,6 +307,121 @@ export async function deleteCommunityStory(args: {
       )
       .returning({ id: communityStories.id });
     if (!row) return { ok: false, error: "story_not_found" };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingTable(e)) return { ok: false, error: "stories_unavailable" };
+    throw e;
+  }
+}
+
+export type StoryEngagement = {
+  viewCount: number;
+  reactions: StoryReactionCount[];
+  myReaction: string | null;
+};
+
+export async function recordStoryView(
+  storyId: string,
+  viewerId: string,
+): Promise<number> {
+  try {
+    const db = getDb();
+    await db
+      .insert(communityStoryViews)
+      .values({ storyId, viewerId })
+      .onConflictDoNothing();
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(communityStoryViews)
+      .where(eq(communityStoryViews.storyId, storyId));
+    return Number(row?.n ?? 0);
+  } catch (e) {
+    if (isMissingTable(e)) return 0;
+    throw e;
+  }
+}
+
+export async function getStoryEngagement(args: {
+  storyId: string;
+  viewerId: string | null;
+}): Promise<StoryEngagement> {
+  try {
+    const db = getDb();
+    const [viewRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(communityStoryViews)
+      .where(eq(communityStoryViews.storyId, args.storyId));
+
+    const reactionRows = await db
+      .select({
+        emoji: communityStoryReactions.emoji,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(communityStoryReactions)
+      .where(eq(communityStoryReactions.storyId, args.storyId))
+      .groupBy(communityStoryReactions.emoji);
+
+    let myReaction: string | null = null;
+    if (args.viewerId) {
+      const [mine] = await db
+        .select({ emoji: communityStoryReactions.emoji })
+        .from(communityStoryReactions)
+        .where(
+          and(
+            eq(communityStoryReactions.storyId, args.storyId),
+            eq(communityStoryReactions.userId, args.viewerId),
+          ),
+        )
+        .limit(1);
+      myReaction = mine?.emoji ?? null;
+    }
+
+    return {
+      viewCount: Number(viewRow?.n ?? 0),
+      reactions: reactionRows.map((r) => ({
+        emoji: r.emoji,
+        count: Number(r.n ?? 0),
+      })),
+      myReaction,
+    };
+  } catch (e) {
+    if (isMissingTable(e)) {
+      return { viewCount: 0, reactions: [], myReaction: null };
+    }
+    throw e;
+  }
+}
+
+export async function setStoryReaction(args: {
+  storyId: string;
+  userId: string;
+  emoji: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (
+    !(STORY_REACTION_EMOJIS as readonly string[]).includes(args.emoji)
+  ) {
+    return { ok: false, error: "invalid_emoji" };
+  }
+
+  try {
+    const db = getDb();
+    const active = await getActiveStoryAuthor(args.storyId);
+    if (!active) return { ok: false, error: "story_not_found" };
+
+    await db
+      .insert(communityStoryReactions)
+      .values({
+        storyId: args.storyId,
+        userId: args.userId,
+        emoji: args.emoji,
+      })
+      .onConflictDoUpdate({
+        target: [
+          communityStoryReactions.storyId,
+          communityStoryReactions.userId,
+        ],
+        set: { emoji: args.emoji },
+      });
     return { ok: true };
   } catch (e) {
     if (isMissingTable(e)) return { ok: false, error: "stories_unavailable" };
