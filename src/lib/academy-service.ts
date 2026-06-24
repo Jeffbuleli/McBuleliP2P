@@ -1160,6 +1160,75 @@ export async function listCommunityUpcomingEvents(args: {
   return out;
 }
 
+export type CommunityReplayView = {
+  sessionSlug: string;
+  editionSlug: string;
+  programSlug: string;
+  title: string;
+  endedAt: string | null;
+  replayUrl: string;
+};
+
+/** Replays des sessions Academy (éditions où l'utilisateur est inscrit). */
+export async function listCommunityReplays(args: {
+  userId: string;
+  locale: Locale;
+}): Promise<CommunityReplayView[]> {
+  await assertAcademyDbReady();
+  const db = getDb();
+
+  const enrollRows = await db
+    .select({ editionId: academyEnrollments.editionId })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, args.userId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    );
+  const enrolledEditionIds = enrollRows.map((r) => r.editionId);
+  if (!enrolledEditionIds.length) return [];
+
+  const rows = await db
+    .select({
+      slug: academySessions.slug,
+      titleFr: academySessions.titleFr,
+      titleEn: academySessions.titleEn,
+      endsAt: academySessions.endsAt,
+      startsAt: academySessions.startsAt,
+      replayUrl: academySessions.replayUrl,
+      replayR2Key: academySessions.replayR2Key,
+      editionSlug: academyEditions.slug,
+      programSlug: academyPrograms.slug,
+    })
+    .from(academySessions)
+    .innerJoin(academyEditions, eq(academySessions.editionId, academyEditions.id))
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(inArray(academySessions.editionId, enrolledEditionIds))
+    .orderBy(desc(academySessions.startsAt))
+    .limit(32);
+
+  const out: CommunityReplayView[] = [];
+  for (const r of rows) {
+    const ended = isSessionEnded({ startsAt: r.startsAt, endsAt: r.endsAt });
+    if (!ended) continue;
+    const replayUrl = resolveAcademyReplayPlayUrl({
+      replayUrl: r.replayUrl,
+      replayR2Key: r.replayR2Key,
+    });
+    if (!replayUrl) continue;
+    out.push({
+      sessionSlug: r.slug,
+      editionSlug: r.editionSlug,
+      programSlug: r.programSlug,
+      title: pickLocale(r, args.locale),
+      endedAt: r.endsAt?.toISOString() ?? r.startsAt.toISOString(),
+      replayUrl,
+    });
+  }
+  return out;
+}
+
 export async function checkInSession(args: {
   userId: string;
   sessionId: string;

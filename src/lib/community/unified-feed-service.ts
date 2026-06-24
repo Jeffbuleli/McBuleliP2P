@@ -82,6 +82,37 @@ export async function listUnifiedFeed(args: {
 
   const items: UnifiedFeedItem[] = [];
 
+  /** « Tout » = publications récentes uniquement (pas tout le réseau mélangé). */
+  if (category === "all") {
+    const { posts, nextCursor } = await listFeedPosts({
+      viewerId: args.viewerId,
+      limit: limit + 1,
+      cursor: args.cursor,
+      sort: "recent",
+    });
+    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
+      id: p.id,
+      kind: p.contentKind === "formation" ? "formation" : "news",
+      title: p.formationMeta?.title ?? null,
+      body: p.body,
+      publishedAt: p.publishedAt,
+      author: p.author,
+      href: communityPostAppPath(p.id),
+      likeCount: p.likeCount,
+      commentCount: p.commentCount,
+      shareCount: p.shareCount,
+      viewCount: p.viewCount ?? 0,
+      likedByMe: p.likedByMe,
+      media: p.media,
+      meta: { contentKind: p.contentKind ?? "news" },
+      formationMeta: p.formationMeta,
+    }));
+    return {
+      items: mapped.slice(0, limit),
+      nextCursor,
+    };
+  }
+
   if (category === "for_you") {
     const { posts, nextCursor } = await listFeedPosts({
       viewerId: args.viewerId,
@@ -172,7 +203,7 @@ export async function listUnifiedFeed(args: {
     };
   }
 
-  if (category === "all" || category === "news") {
+  if (category === "news") {
     const { posts } = await listFeedPosts({
       viewerId: args.viewerId,
       limit: perSource,
@@ -241,7 +272,7 @@ export async function listUnifiedFeed(args: {
     };
   }
 
-  if (category === "all" || category === "discussions") {
+  if (category === "discussions") {
     const { discussions } = await listDiscussions({
       viewerId: args.viewerId,
       limit: perSource,
@@ -271,7 +302,7 @@ export async function listUnifiedFeed(args: {
     }
   }
 
-  if (category === "all" || category === "blogs") {
+  if (category === "blogs") {
     const { posts } = await listPublishedBlogs({ limit: perSource });
     for (const p of posts) {
       items.push({
@@ -293,7 +324,7 @@ export async function listUnifiedFeed(args: {
     }
   }
 
-  if (category === "all" || category === "questions") {
+  if (category === "questions") {
     const questions = await listQuestions({ limit: perSource, sort: "open" });
     for (const q of questions) {
       items.push({
@@ -313,7 +344,7 @@ export async function listUnifiedFeed(args: {
     }
   }
 
-  if (category === "all" || category === "signals") {
+  if (category === "signals") {
     const { signals } = await listTradingSignals({
       limit: perSource,
       status: "open",

@@ -23,12 +23,12 @@ export function CommunityImageMosaic({
   onReplace?: (id: string) => void;
   postId?: string;
   feedInline?: boolean;
-  onImageClick?: (src: string) => void;
+  onImageClick?: (index: number) => void;
   className?: string;
 }) {
   if (!images.length) return null;
 
-  const slot = (img: MosaicImage, slotClass: string, overlay?: string) => {
+  const slot = (img: MosaicImage, index: number, slotClass: string, overlay?: string) => {
     const inner = (
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -52,7 +52,7 @@ export function CommunityImageMosaic({
             className="block h-full w-full"
             onClick={(e) => {
               e.stopPropagation();
-              onImageClick(img.src);
+              onImageClick(index);
             }}
           >
             {inner}
@@ -96,7 +96,7 @@ export function CommunityImageMosaic({
   if (images.length === 1) {
     return (
       <div className={`overflow-hidden rounded-xl ${className}`}>
-        {slot(images[0], "max-h-80 min-h-[160px] w-full")}
+        {slot(images[0], 0, "max-h-80 min-h-[160px] w-full")}
       </div>
     );
   }
@@ -104,7 +104,7 @@ export function CommunityImageMosaic({
   if (images.length === 2) {
     return (
       <div className={`grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl ${className}`}>
-        {images.map((img) => slot(img, "min-h-[140px]"))}
+        {images.map((img, idx) => slot(img, idx, "min-h-[140px]"))}
       </div>
     );
   }
@@ -112,9 +112,9 @@ export function CommunityImageMosaic({
   if (images.length === 3) {
     return (
       <div className={`grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl ${className}`}>
-        {slot(images[0], "row-span-2 min-h-[200px]")}
-        {slot(images[1], "min-h-[100px]")}
-        {slot(images[2], "min-h-[100px]")}
+        {slot(images[0], 0, "row-span-2 min-h-[200px]")}
+        {slot(images[1], 1, "min-h-[100px]")}
+        {slot(images[2], 2, "min-h-[100px]")}
       </div>
     );
   }
@@ -124,7 +124,7 @@ export function CommunityImageMosaic({
       {images.slice(0, 4).map((img, idx) => {
         const isLast = idx === 3 && images.length > 4;
         const overlay = isLast ? `+${images.length - 4}` : undefined;
-        return slot(img, "min-h-[120px]", overlay);
+        return slot(img, idx, "min-h-[120px]", overlay);
       })}
     </div>
   );

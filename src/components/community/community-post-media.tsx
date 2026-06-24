@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CommunityImageLightbox } from "@/components/community/community-image-lightbox";
 import { CommunityImageMosaic } from "@/components/community/community-image-mosaic";
 import { CommunityLinkEmbed } from "@/components/community/community-link-embed";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
@@ -31,7 +32,7 @@ export function CommunityPostMedia({
   /** Pas de navigation — mosaic Facebook + lightbox inline. */
   feedInline?: boolean;
 }) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const first = media[0];
 
   if (first) {
@@ -71,32 +72,17 @@ export function CommunityPostMedia({
             images={images}
             postId={feedInline ? undefined : postId}
             feedInline={feedInline}
-            onImageClick={feedInline ? (src) => setLightbox(src) : undefined}
+            onImageClick={feedInline ? (index) => setLightboxIndex(index) : undefined}
           />
         </div>
-        {lightbox ? (
-          <div
-            className="fixed inset-0 z-[95] flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setLightbox(null)}
-            role="dialog"
-            aria-modal
-          >
-            <button
-              type="button"
-              className="absolute right-4 top-4 text-2xl text-white"
-              onClick={() => setLightbox(null)}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={lightbox}
-              alt=""
-              className="max-h-[90vh] max-w-full rounded-lg object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+        {lightboxIndex !== null ? (
+          <CommunityImageLightbox
+            images={images}
+            index={lightboxIndex}
+            onIndexChange={setLightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            fr={fr}
+          />
         ) : null}
       </>
     );

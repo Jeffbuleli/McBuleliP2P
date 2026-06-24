@@ -22,13 +22,25 @@ export function CommunityVideoPlayer({
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(false);
+  const [scrubbing, setScrubbing] = useState(false);
 
   const isReels = variant === "reels";
+
+  const seekFromClientX = (clientX: number) => {
+    const v = ref.current;
+    const bar = progressRef.current;
+    if (!v || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    v.currentTime = ratio * duration;
+    setCurrent(v.currentTime);
+  };
 
   useEffect(() => {
     if (!isReels || !wrapRef.current) return;
@@ -72,6 +84,18 @@ export function CommunityVideoPlayer({
     if (v.paused) void v.play().then(() => setPlaying(true));
   };
 
+  useEffect(() => {
+    if (!scrubbing) return;
+    const onMove = (e: PointerEvent) => seekFromClientX(e.clientX);
+    const onUp = () => setScrubbing(false);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [scrubbing, duration]);
+
   if (isReels) {
     return (
       <div
@@ -113,14 +137,33 @@ export function CommunityVideoPlayer({
           </button>
         ) : null}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8">
-          <div className="h-0.5 overflow-hidden rounded-full bg-white/30">
-            <div
-              className="h-full bg-white transition-all"
-              style={{
-                width: duration ? `${(current / duration) * 100}%` : "0%",
-              }}
-            />
+        <div
+          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div
+            ref={progressRef}
+            role="slider"
+            aria-valuemin={0}
+            aria-valuemax={duration || 0}
+            aria-valuenow={current}
+            aria-label={fr ? "Progression" : "Progress"}
+            className="flex h-5 cursor-pointer items-end"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              setScrubbing(true);
+              seekFromClientX(e.clientX);
+            }}
+          >
+            <div className="h-1 w-full overflow-hidden rounded-full bg-white/30">
+              <div
+                className="h-full bg-white transition-all"
+                style={{
+                  width: duration ? `${(current / duration) * 100}%` : "0%",
+                }}
+              />
+            </div>
           </div>
           <p className="mt-1 text-[10px] font-medium tabular-nums text-white/80">
             {fmt(current)} / {fmt(duration || 0)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
@@ -45,6 +45,24 @@ type FormationPost = {
   formationMeta: FormationPostMeta | null;
 };
 
+type AcademyProgram = {
+  slug: string;
+  title: string;
+  summary: string | null;
+  level: string;
+  priceUsdt: string | null;
+  requiresKyc: boolean;
+};
+
+type ReplayRow = {
+  sessionSlug: string;
+  editionSlug: string;
+  programSlug: string;
+  title: string;
+  endedAt: string | null;
+  replayUrl: string;
+};
+
 const TABS = [
   { id: "programs" as const, labelFr: "Programmes", labelEn: "Programs" },
   { id: "upcoming" as const, labelFr: "À venir", labelEn: "Upcoming" },
@@ -60,6 +78,8 @@ export function CommunityFormationsClient() {
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEventRow[]>([]);
   const [editions, setEditions] = useState<Edition[]>([]);
   const [formationPosts, setFormationPosts] = useState<FormationPost[]>([]);
+  const [programs, setPrograms] = useState<AcademyProgram[]>([]);
+  const [replays, setReplays] = useState<ReplayRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
@@ -72,16 +92,18 @@ export function CommunityFormationsClient() {
           upcomingEvents?: UpcomingEventRow[];
           editions?: Edition[];
           formationPosts?: FormationPost[];
+          programs?: AcademyProgram[];
+          replays?: ReplayRow[];
         }) => {
           setSessions(d.upcomingSessions ?? []);
           setUpcomingEvents(d.upcomingEvents ?? []);
           setEditions(d.editions ?? []);
+          setPrograms(d.programs ?? []);
+          setReplays(d.replays ?? []);
           const posts = (d.formationPosts ?? []).filter(
             (p: FormationPost) => p.formationMeta,
           );
           setFormationPosts(posts);
-          const liveNow = (d.upcomingSessions ?? []).some((s) => s.isLiveNow);
-          if (liveNow) setTab("live");
         },
       )
       .catch(() => {})
@@ -121,18 +143,35 @@ export function CommunityFormationsClient() {
       {loading ? (
         <p className="py-12 text-center text-sm text-[#78716c]">…</p>
       ) : tab === "programs" ? (
-        formationPosts.length === 0 ? (
+        programs.length === 0 && formationPosts.length === 0 ? (
           <CommunityEmptyState
             illustration={<EmptyTrainingIllustration />}
             title={fr ? "Aucun programme publié" : "No published programs"}
             body={
               fr
-                ? "Les événements Academy publiés apparaîtront ici."
-                : "Published Academy events will appear here."
+                ? "Les parcours Academy publiés apparaîtront ici."
+                : "Published Academy programs will appear here."
             }
           />
         ) : (
           <ul className="mt-3 space-y-4">
+            {programs.map((p) => (
+              <li key={p.slug} className="fd-card p-4">
+                <span className="rounded-full bg-[#eaf5ee] px-2 py-0.5 text-[9px] font-bold uppercase text-[#305f33]">
+                  {p.level}
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#0c0a09]">{p.title}</p>
+                {p.summary ? (
+                  <p className="mt-1 line-clamp-2 text-xs text-[#78716c]">{p.summary}</p>
+                ) : null}
+                <Link
+                  href={`/app/academy?program=${encodeURIComponent(p.slug)}`}
+                  className="mt-3 inline-flex rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
+                >
+                  {fr ? "Voir le programme" : "View program"}
+                </Link>
+              </li>
+            ))}
             {formationPosts.map((p) =>
               p.formationMeta ? (
                 <li key={p.id}>
@@ -227,19 +266,51 @@ export function CommunityFormationsClient() {
           </ul>
         )
       ) : (
-        <CommunityEmptyState
-          illustration={<EmptyTrainingIllustration />}
-          title={fr ? "Replays Academy" : "Academy replays"}
-          body={fr ? "Disponibles dans vos classes Academy." : "Available in your Academy classes."}
-          action={
-            <Link
-              href="/app/academy"
-              className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
-            >
-              {fr ? "Academy →" : "Academy →"}
-            </Link>
-          }
-        />
+        replays.length === 0 ? (
+          <CommunityEmptyState
+            illustration={<EmptyTrainingIllustration />}
+            title={fr ? "Aucun replay disponible" : "No replays available"}
+            body={
+              fr
+                ? "Inscrivez-vous à une formation pour accéder aux replays de vos sessions."
+                : "Enroll in a program to access replays from your sessions."
+            }
+            action={
+              <Link
+                href="/app/academy"
+                className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
+              >
+                {fr ? "Academy →" : "Academy →"}
+              </Link>
+            }
+          />
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {replays.map((r) => (
+              <li key={`${r.editionSlug}-${r.sessionSlug}`}>
+                <a
+                  href={r.replayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="fd-card block px-4 py-3"
+                >
+                  <span className="text-[10px] font-bold uppercase text-[#78716c]">
+                    {fr ? "Replay" : "Replay"}
+                  </span>
+                  <p className="text-sm font-bold text-[#0c0a09]">{r.title}</p>
+                  {r.endedAt ? (
+                    <p className="text-xs text-[#78716c]">
+                      {formatUpcomingSessionDate(r.endedAt, fr)}
+                    </p>
+                  ) : null}
+                  <span className="mt-2 inline-flex text-xs font-bold text-[#305f33]">
+                    {fr ? "Regarder →" : "Watch →"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
       )}
     </div>
   );
