@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { communityEnabled } from "@/lib/community/config";
+import { ensureCommunitySchema } from "@/lib/community/community-schema";
 import { grantCommunityStoryPublished } from "@/lib/community/rewards-service";
 import {
   createCommunityStory,
@@ -25,6 +26,7 @@ export async function GET() {
   }
 
   try {
+    await ensureCommunitySchema();
     await expireOldStories();
     const viewerId = await getSessionUserId();
     const result = await listActiveStoryRings({ viewerId });

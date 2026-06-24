@@ -14,8 +14,121 @@ export function ensureCommunitySchema(): Promise<void> {
   return schemaReady;
 }
 
+/** Force re-run after a partial / failed migration (dev & recovery). */
+export function resetCommunitySchemaCache(): void {
+  schemaReady = null;
+}
+
 async function runEnsureCommunitySchema(): Promise<void> {
   const db = getDb();
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS community_media (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      owner_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      bucket varchar(64) NOT NULL,
+      object_key varchar(512) NOT NULL,
+      public_url varchar(1024) NOT NULL,
+      file_type varchar(16) NOT NULL,
+      mime_type varchar(128) NOT NULL,
+      size_bytes integer NOT NULL,
+      width integer,
+      height integer,
+      duration_sec integer,
+      stream_id varchar(64),
+      variants jsonb,
+      status varchar(16) NOT NULL DEFAULT 'pending',
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS community_posts (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      author_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body text NOT NULL,
+      post_type varchar(16) NOT NULL DEFAULT 'text',
+      status varchar(16) NOT NULL DEFAULT 'published',
+      media_ids jsonb,
+      like_count integer NOT NULL DEFAULT 0,
+      comment_count integer NOT NULL DEFAULT 0,
+      share_count integer NOT NULL DEFAULT 0,
+      published_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS content_kind varchar(16) NOT NULL DEFAULT 'news'
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS meta jsonb
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_feed_idx
+    ON community_posts (status, published_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_author_idx
+    ON community_posts (author_id, created_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_content_kind_idx
+    ON community_posts (content_kind, published_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_trending_idx
+    ON community_posts (status, published_at, like_count, comment_count, view_count)
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS community_stories (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      author_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      story_type varchar(16) NOT NULL,
+      body text,
+      media_id uuid REFERENCES community_media(id) ON DELETE SET NULL,
+      media_url text,
+      bg_color varchar(32),
+      status varchar(16) NOT NULL DEFAULT 'active',
+      expires_at timestamptz NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_stories_author_expires_idx
+    ON community_stories (author_id, expires_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_stories_feed_idx
+    ON community_stories (status, expires_at)
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS community_story_views (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      story_id uuid NOT NULL REFERENCES community_stories(id) ON DELETE CASCADE,
+      viewer_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT community_story_views_unique UNIQUE(story_id, viewer_id)
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS community_story_reactions (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      story_id uuid NOT NULL REFERENCES community_stories(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      emoji varchar(16) NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT community_story_reactions_unique UNIQUE(story_id, user_id)
+    )
+  `);
 
   await db.execute(sql`
     ALTER TABLE community_user_profiles
@@ -89,23 +202,6 @@ async function runEnsureCommunitySchema(): Promise<void> {
       created_at timestamptz NOT NULL DEFAULT now(),
       PRIMARY KEY (user_id, muted_user_id)
     )
-  `);
-
-  await db.execute(sql`
-    ALTER TABLE community_posts
-    ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0
-  `);
-  await db.execute(sql`
-    ALTER TABLE community_posts
-    ADD COLUMN IF NOT EXISTS content_kind varchar(16) NOT NULL DEFAULT 'news'
-  `);
-  await db.execute(sql`
-    ALTER TABLE community_posts
-    ADD COLUMN IF NOT EXISTS meta jsonb
-  `);
-  await db.execute(sql`
-    CREATE INDEX IF NOT EXISTS community_posts_content_kind_idx
-    ON community_posts (content_kind, published_at)
   `);
 
   await db.execute(sql`

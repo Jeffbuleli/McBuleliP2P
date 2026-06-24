@@ -207,6 +207,7 @@ async function listForYouFeedPosts(args: {
   cursor?: string | null;
   limit?: number;
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
+  await ensureFeedReady();
   const limit = Math.min(args.limit ?? COMMUNITY_FEED_PAGE_SIZE, 40);
   const db = getDb();
   const viewerId = args.viewerId!;
