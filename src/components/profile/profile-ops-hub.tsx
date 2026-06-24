@@ -67,6 +67,26 @@ function OpsIcon({ icon }: { icon: OpsHubIcon }) {
           <path d="M9 5V8M15 5V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       );
+    case "deposits":
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M12 3v14M8 13l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M4 21h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case "kyc":
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z" stroke="currentColor" strokeWidth="2" />
+          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      );
+    case "support":
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M4 6h16v10H7l-3 3V6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        </svg>
+      );
   }
 }
 

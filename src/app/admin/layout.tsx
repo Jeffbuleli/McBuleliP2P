@@ -38,7 +38,7 @@ export default async function AdminLayout({
 
   return (
     <div className="admin-theme home-theme min-h-dvh">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <header className="fd-app-topbar mb-5 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">

@@ -11,7 +11,9 @@ export function isValidAddressForNetwork(
 ): boolean {
   const a = address.trim();
   if (network === PI_MAIN_NETWORK_ID) {
-    return /^[A-Za-z0-9._-]{20,128}$/.test(a);
+    const a = address.trim();
+    // Pi Network mainnet (G…) and alternate (M…) wallet addresses
+    return /^[GM][A-Za-z0-9]{19,127}$/.test(a);
   }
   if (network === "TRC20") return TRON.test(a);
   if (network === "ERC20" || network === "BEP20") return EVM.test(a);

@@ -67,14 +67,18 @@ export function ProfileNotificationPrefs() {
   const load = useCallback(async () => {
     setLoading(true);
     setErr(null);
-    const res = await fetch("/api/profile/notification-prefs");
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setErr(clientErrorText(t, data.error ?? "profile_invalid_input"));
-      setPrefs(null);
-      return;
+    try {
+      const res = await fetch("/api/profile/notification-prefs");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(clientErrorText(t, data.error ?? "profile_load_failed"));
+        setPrefs(null);
+        return;
+      }
+      setPrefs(data.prefs as NotificationPrefs);
+    } finally {
+      setLoading(false);
     }
-    setPrefs(data.prefs as NotificationPrefs);
   }, [t]);
 
   useEffect(() => {

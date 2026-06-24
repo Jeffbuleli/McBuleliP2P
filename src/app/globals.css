@@ -506,12 +506,16 @@ html {
 
 .admin-table-scroll {
   border-radius: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
   width: 100%;
+  min-width: 36rem;
   border-collapse: collapse;
   font-size: 0.8125rem;
+  table-layout: auto;
 }
 
 .admin-table thead {
@@ -534,6 +538,8 @@ html {
   vertical-align: middle;
   border-bottom: 1px solid rgba(48, 95, 51, 0.08);
   color: var(--fd-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .admin-table tbody tr:last-child td {

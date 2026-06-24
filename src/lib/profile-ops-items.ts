@@ -17,7 +17,10 @@ export type OpsHubIcon =
   | "p2p"
   | "users"
   | "finance"
-  | "bots";
+  | "bots"
+  | "deposits"
+  | "kyc"
+  | "support";
 
 export type OpsHubItem = {
   id: string;
@@ -58,6 +61,15 @@ export function buildProfileOpsHubItems(
 
   if (showW) {
     items.push({
+      id: "deposits",
+      href: "/admin/deposits",
+      labelKey: "profile_ops_deposits",
+      descKey: "profile_ops_deposits_desc",
+      tone: "mint",
+      icon: "deposits",
+      badge: null,
+    });
+    items.push({
       id: "withdrawals",
       href: "/admin/withdrawals?status=PENDING_AGENT&assignFilter=all",
       labelKey: "profile_ops_withdrawals",
@@ -82,6 +94,26 @@ export function buildProfileOpsHubItems(
   }
 
   if (isSuper) {
+    items.push({
+      id: "kyc",
+      href: "/admin/kyc",
+      labelKey: "profile_ops_kyc",
+      descKey: "profile_ops_kyc_desc",
+      tone: "amber",
+      icon: "kyc",
+      badge: null,
+    });
+
+    items.push({
+      id: "support",
+      href: "/admin/support",
+      labelKey: "profile_ops_support",
+      descKey: "profile_ops_support_desc",
+      tone: "sky",
+      icon: "support",
+      badge: null,
+    });
+
     items.push({
       id: "users",
       href: "/admin/users",

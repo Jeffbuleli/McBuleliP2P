@@ -23,6 +23,18 @@ export async function getSecurityStatus(
   userId: string,
 ): Promise<SecurityStatusPayload | null> {
   const db = getDb();
+  let antiPhishingSet = false;
+  try {
+    const [ap] = await db
+      .select({ hash: users.antiPhishingCodeHash })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    antiPhishingSet = Boolean(ap?.hash);
+  } catch {
+    antiPhishingSet = false;
+  }
+
   const [u] = await db
     .select({
       email: users.email,
@@ -32,7 +44,6 @@ export async function getSecurityStatus(
       waVerifiedAt: users.waVerifiedAt,
       recoveryWaPhone: users.recoveryWaPhone,
       kycStatus: users.kycStatus,
-      antiPhishingCodeHash: users.antiPhishingCodeHash,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -58,7 +69,7 @@ export async function getSecurityStatus(
     kycApproved: u.kycStatus === "approved",
     openWaConfigured,
     openWaNumber: waNumber,
-    antiPhishingSet: Boolean(u.antiPhishingCodeHash),
+    antiPhishingSet,
   };
 }
 

@@ -55,18 +55,23 @@ export async function listLoginEvents(
   userId: string,
   limit = 20,
 ): Promise<LoginEventRow[]> {
-  const db = getDb();
-  return db
-    .select({
-      id: userLoginEvents.id,
-      method: userLoginEvents.method,
-      ipAddress: userLoginEvents.ipAddress,
-      deviceLabel: userLoginEvents.deviceLabel,
-      success: userLoginEvents.success,
-      createdAt: userLoginEvents.createdAt,
-    })
-    .from(userLoginEvents)
-    .where(eq(userLoginEvents.userId, userId))
-    .orderBy(desc(userLoginEvents.createdAt))
-    .limit(limit);
+  try {
+    const db = getDb();
+    return await db
+      .select({
+        id: userLoginEvents.id,
+        method: userLoginEvents.method,
+        ipAddress: userLoginEvents.ipAddress,
+        deviceLabel: userLoginEvents.deviceLabel,
+        success: userLoginEvents.success,
+        createdAt: userLoginEvents.createdAt,
+      })
+      .from(userLoginEvents)
+      .where(eq(userLoginEvents.userId, userId))
+      .orderBy(desc(userLoginEvents.createdAt))
+      .limit(limit);
+  } catch (err) {
+    console.warn("[login-events] list failed", err);
+    return [];
+  }
 }

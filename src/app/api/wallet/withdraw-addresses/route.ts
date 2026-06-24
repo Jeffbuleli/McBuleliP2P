@@ -3,6 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb, withdrawalAddressWhitelist } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { isValidAddressForNetwork } from "@/lib/address-format";
+import { PI_MAIN_NETWORK_ID } from "@/lib/pi-constants";
 import type { NetworkId } from "@/lib/networks";
 
 const COOLDOWN_HOURS = 24;
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  const asset = raw?.asset === "USDT" ? "USDT" : null;
+  const assetRaw = raw?.asset;
+  const asset =
+    assetRaw === "USDT" ? "USDT" : assetRaw === "PI" ? "PI" : null;
   const network = typeof raw?.network === "string" ? raw.network : null;
   const address = typeof raw?.address === "string" ? raw.address.trim() : "";
   const label = typeof raw?.label === "string" ? raw.label.trim().slice(0, 64) : null;
@@ -47,7 +50,17 @@ export async function POST(req: Request) {
   if (!asset || !network || !address) {
     return NextResponse.json({ message: "withdraw_address_invalid" }, { status: 400 });
   }
-  if (!isValidAddressForNetwork(address, network as NetworkId)) {
+
+  const networkId =
+    asset === "PI"
+      ? PI_MAIN_NETWORK_ID
+      : (network as NetworkId);
+
+  if (asset === "PI" && network !== PI_MAIN_NETWORK_ID) {
+    return NextResponse.json({ message: "withdraw_address_invalid" }, { status: 400 });
+  }
+
+  if (!isValidAddressForNetwork(address, networkId)) {
     return NextResponse.json({ message: "withdraw_address_invalid" }, { status: 400 });
   }
 

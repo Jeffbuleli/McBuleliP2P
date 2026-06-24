@@ -95,7 +95,7 @@ export default function AdminWithdrawalsPage() {
       cell: (r) => (
         <Link
           href={`/admin/withdrawals/${r.id}`}
-          className="font-medium text-[color:var(--fd-primary)] hover:underline"
+          className="block max-w-[12rem] break-all font-medium text-[color:var(--fd-primary)] hover:underline"
         >
           {r.userEmail}
         </Link>

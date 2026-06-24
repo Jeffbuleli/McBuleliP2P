@@ -128,7 +128,7 @@ export default function AdminKycPage() {
           <div>
             <Link
               href={`/admin/users/${r.id}?tab=kyc`}
-              className="font-semibold text-[color:var(--fd-primary)] hover:underline"
+              className="block max-w-[14rem] break-all font-semibold text-[color:var(--fd-primary)] hover:underline"
             >
               {r.email}
             </Link>
@@ -172,8 +172,8 @@ export default function AdminKycPage() {
         id: "didit",
         header: t("admin_kyc_col_didit"),
         cell: (r) => (
-          <div className="max-w-[10rem]">
-            <p className="truncate text-xs font-medium">{r.diditSessionStatus ?? "—"}</p>
+          <div className="min-w-[8rem] max-w-[14rem]">
+            <p className="text-xs font-medium break-all">{r.diditSessionStatus ?? "—"}</p>
             {r.diditSessionId ? (
               <button
                 type="button"

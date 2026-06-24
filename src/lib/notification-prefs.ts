@@ -46,13 +46,18 @@ export function normalizeNotificationPrefs(
 }
 
 export async function getNotificationPrefs(userId: string): Promise<NotificationPrefs> {
-  const db = getDb();
-  const [row] = await db
-    .select({ notificationPrefs: users.notificationPrefs })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return normalizeNotificationPrefs(row?.notificationPrefs ?? null);
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({ notificationPrefs: users.notificationPrefs })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return normalizeNotificationPrefs(row?.notificationPrefs ?? null);
+  } catch (err) {
+    console.warn("[notification-prefs] read failed", err);
+    return { ...DEFAULT_NOTIFICATION_PREFS };
+  }
 }
 
 export async function saveNotificationPrefs(

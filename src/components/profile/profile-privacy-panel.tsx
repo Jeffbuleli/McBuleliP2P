@@ -16,9 +16,12 @@ export function ProfilePrivacyPanel() {
     setOk(null);
     try {
       const res = await fetch("/api/profile/data-export");
+      const contentType = res.headers.get("content-type") ?? "";
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setErr(clientErrorText(t, data.error ?? "profile_invalid_input"));
+        const data = contentType.includes("application/json")
+          ? await res.json().catch(() => ({}))
+          : {};
+        setErr(clientErrorText(t, data.error ?? "profile_load_failed"));
         return;
       }
       const blob = await res.blob();

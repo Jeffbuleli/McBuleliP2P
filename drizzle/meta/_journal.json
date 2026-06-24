@@ -568,6 +568,20 @@
       "when": 1786000000000,
       "tag": "0088_p2p_phase4_disputes_velocity",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1786100000000,
+      "tag": "0089_user_notification_prefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1786200000000,
+      "tag": "0090_profile_security_phase4",
+      "breakpoints": true
     }
   ]
 }

@@ -23,7 +23,6 @@ export async function buildProfileDataExport(userId: string) {
       referralCode: users.referralCode,
       createdAt: users.createdAt,
       notificationPrefs: users.notificationPrefs,
-      antiPhishingSet: users.antiPhishingCodeHash,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -53,6 +52,17 @@ export async function buildProfileDataExport(userId: string) {
     .limit(50);
 
   const loginHistory = await listLoginEvents(userId, 50);
+  let antiPhishingSet = false;
+  try {
+    const [ap] = await db
+      .select({ hash: users.antiPhishingCodeHash })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    antiPhishingSet = Boolean(ap?.hash);
+  } catch {
+    antiPhishingSet = false;
+  }
 
   return {
     exportedAt: new Date().toISOString(),
@@ -67,7 +77,7 @@ export async function buildProfileDataExport(userId: string) {
       whatsAppVerified: Boolean(u.waVerifiedAt),
       referralCode: u.referralCode,
       memberSince: u.createdAt.toISOString(),
-      antiPhishingSet: Boolean(u.antiPhishingSet),
+      antiPhishingSet,
     },
     community: community
       ? { handle: community.handle, bio: community.bio }

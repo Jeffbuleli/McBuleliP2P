@@ -154,7 +154,7 @@ export function ProfileSecurityPanel() {
       const res = await fetch("/api/auth/security");
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(clientErrorText(t, data.error ?? "profile_invalid_input"));
+        setErr(clientErrorText(t, data.error ?? "profile_load_failed"));
         return;
       }
       setStatus(data as SecurityStatus);
@@ -369,7 +369,7 @@ export function ProfileSecurityPanel() {
   if (!status) {
     return (
       <section className="fd-card p-4 text-sm text-red-600">
-        {err ?? t("profile_invalid_input")}
+        {err ?? t("profile_load_failed")}
       </section>
     );
   }

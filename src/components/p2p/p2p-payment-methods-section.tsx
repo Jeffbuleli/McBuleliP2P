@@ -33,7 +33,12 @@ function kindTone(kind: string | null): string {
   return "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]";
 }
 
-export function P2pPaymentMethodsSection() {
+export function P2pPaymentMethodsSection({
+  hideDestructiveActions = false,
+}: {
+  /** Profile page: hide delete / disable — edit only */
+  hideDestructiveActions?: boolean;
+} = {}) {
   const { t, locale } = useI18n();
   const [defs, setDefs] = useState<Def[]>([]);
   const [mine, setMine] = useState<Mine[]>([]);
@@ -325,23 +330,27 @@ export function P2pPaymentMethodsSection() {
                           >
                             {t("p2p_payment_edit")}
                           </button>
+                          {!hideDestructiveActions ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void remove(m.id)}
+                              className="rounded-lg border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-700"
+                            >
+                              {t("p2p_payment_delete")}
+                            </button>
+                          ) : null}
+                        </div>
+                        {!hideDestructiveActions ? (
                           <button
                             type="button"
                             disabled={busy}
-                            onClick={() => void remove(m.id)}
-                            className="rounded-lg border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-700"
+                            onClick={() => void toggleActive(m)}
+                            className="mt-1 w-full text-right text-[9px] font-semibold text-[color:var(--fd-muted)] underline"
                           >
-                            {t("p2p_payment_delete")}
+                            {m.active ? t("p2p_payment_disable") : t("p2p_payment_enable")}
                           </button>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void toggleActive(m)}
-                          className="mt-1 w-full text-right text-[9px] font-semibold text-[color:var(--fd-muted)] underline"
-                        >
-                          {m.active ? t("p2p_payment_disable") : t("p2p_payment_enable")}
-                        </button>
+                        ) : null}
                       </td>
                     </tr>
                   );
