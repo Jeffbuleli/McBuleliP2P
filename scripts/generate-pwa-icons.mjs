@@ -3,7 +3,6 @@
  * Run: npm run icons:pwa
  */
 import sharp from "sharp";
-import toIco from "to-ico";
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,6 +35,31 @@ async function writeAppIcon(outPath, size, logoScale = 0.82) {
     .toFile(outPath);
 }
 
+/** Embed PNG buffers in a Windows ICO container (no third-party ICO libs). */
+function pngBuffersToIco(pngBuffers) {
+  const count = pngBuffers.length;
+  const header = Buffer.alloc(6 + count * 16);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(count, 4);
+  let offset = 6 + count * 16;
+  pngBuffers.forEach((buf, i) => {
+    const width = buf.readUInt32BE(16);
+    const height = buf.readUInt32BE(20);
+    const entry = 6 + i * 16;
+    header.writeUInt8(width >= 256 ? 0 : width, entry);
+    header.writeUInt8(height >= 256 ? 0 : height, entry + 1);
+    header.writeUInt8(0, entry + 2);
+    header.writeUInt8(0, entry + 3);
+    header.writeUInt16LE(1, entry + 4);
+    header.writeUInt16LE(32, entry + 6);
+    header.writeUInt32LE(buf.length, entry + 8);
+    header.writeUInt32LE(offset, entry + 12);
+    offset += buf.length;
+  });
+  return Buffer.concat([header, ...pngBuffers]);
+}
+
 async function writeFaviconIco(outPath) {
   const sizes = [16, 32, 48];
   const pngBuffers = [];
@@ -46,8 +70,7 @@ async function writeFaviconIco(outPath) {
     await writeAppIcon(tmp, size, 0.9);
     pngBuffers.push(await readFile(tmp));
   }
-  const ico = await toIco(pngBuffers);
-  await writeFile(outPath, ico);
+  await writeFile(outPath, pngBuffersToIco(pngBuffers));
   for (const tmp of tmpPaths) {
     await unlink(tmp).catch(() => {});
   }

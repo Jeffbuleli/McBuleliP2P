@@ -43,7 +43,7 @@
     "framer-motion": "^12.40.0",
     "html5-qrcode": "^2.3.8",
     "jose": "^6.2.3",
-    "next": "16.2.4",
+    "next": "16.2.9",
     "openai": "^6.39.1",
     "otplib": "^13.4.0",
     "postgres": "^3.4.9",
@@ -63,11 +63,13 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "16.2.9",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "to-ico": "^1.1.5",
     "tsx": "^4.22.3",
     "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
