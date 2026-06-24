@@ -500,6 +500,13 @@
       "breakpoints": true
     },
     {
+      "idx": 71,
+      "version": "7",
+      "when": 1785100000000,
+      "tag": "0079_deposit_launch_rewards",
+      "breakpoints": true
+    },
+    {
       "idx": 72,
       "version": "7",
       "when": 1785200000000,
@@ -532,6 +539,34 @@
       "version": "7",
       "when": 1785600000000,
       "tag": "0084_community_story_engagement",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1785700000000,
+      "tag": "0085_p2p_schema_completion",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1785800000000,
+      "tag": "0086_p2p_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1785900000000,
+      "tag": "0087_p2p_auto_release",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1786000000000,
+      "tag": "0088_p2p_phase4_disputes_velocity",
       "breakpoints": true
     }
   ]
