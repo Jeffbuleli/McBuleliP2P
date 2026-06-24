@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityModuleHeader } from "@/components/community/community-module-header";
 import { CommunityFilterTabs } from "@/components/community/community-filter-tabs";
 import { CommunityLiveBanner } from "@/components/community/community-live-banner";
@@ -11,11 +9,15 @@ import {
   CommunityEmptyState,
   EmptyTrainingIllustration,
 } from "@/components/community/community-empty-illustrations";
+import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import {
-  academyCohortHref,
-  academySessionContinueHref,
-} from "@/lib/academy-route-paths";
+  CommunityUpcomingEventCard,
+  type UpcomingEventRow,
+} from "@/components/community/community-upcoming-event-card";
+import { academySessionContinueHref } from "@/lib/academy-route-paths";
+import { formatUpcomingSessionDate } from "@/lib/community/formation-post-meta";
 import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
+import Link from "next/link";
 
 type FormationTab = "programs" | "upcoming" | "live" | "replays";
 
@@ -34,6 +36,8 @@ type Edition = {
   startsAt: string | null;
   enrolled: boolean;
   programSlug: string;
+  priceUsdt?: string | null;
+  requiresKyc?: boolean;
 };
 
 type FormationPost = {
@@ -53,48 +57,62 @@ export function CommunityFormationsClient() {
   const fr = locale === "fr";
   const [tab, setTab] = useState<FormationTab>("programs");
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEventRow[]>([]);
   const [editions, setEditions] = useState<Edition[]>([]);
   const [formationPosts, setFormationPosts] = useState<FormationPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
     fetch("/api/community/formations")
       .then((r) => r.json())
       .then(
         (d: {
           upcomingSessions?: Session[];
+          upcomingEvents?: UpcomingEventRow[];
           editions?: Edition[];
           formationPosts?: FormationPost[];
         }) => {
           setSessions(d.upcomingSessions ?? []);
+          setUpcomingEvents(d.upcomingEvents ?? []);
           setEditions(d.editions ?? []);
-          const posts = (d.formationPosts ?? []).filter((p) => p.formationMeta);
+          const posts = (d.formationPosts ?? []).filter(
+            (p: FormationPost) => p.formationMeta,
+          );
           setFormationPosts(posts);
           const liveNow = (d.upcomingSessions ?? []).some((s) => s.isLiveNow);
           if (liveNow) setTab("live");
-          else if (posts.length === 0) setTab("upcoming");
         },
       )
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const liveSessions = sessions.filter((s) => s.isLiveNow);
-  const upcomingSessions = sessions.filter((s) => !s.isLiveNow);
+  const enrolledSessions = sessions.filter((s) => !s.isLiveNow);
+
+  const eventSlugs = new Set(upcomingEvents.map((e) => e.eventSlug));
+  const extraEditions = editions.filter(
+    (e) =>
+      !upcomingEvents.some((ev) => ev.editionSlug === e.slug) &&
+      !e.enrolled,
+  );
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <CommunityModuleHeader title={fr ? "Lives & Formations" : "Live & Training"} />
-
       <CommunityLiveBanner fr={fr} />
 
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-[#e8f3ee] px-3 py-2">
         <img src="/academy/event-live.svg" alt="" className="h-9 w-9" />
         <p className="text-xs text-[#305f33]">
           {fr
-            ? "Lives, replays et parcours Academy — hub communauté McBuleli"
-            : "Lives, replays and Academy paths — McBuleli community hub"}
+            ? "Inscrivez-vous aux lives à venir — directement depuis cette liste."
+            : "Enroll in upcoming lives — right from this list."}
         </p>
       </div>
 
@@ -109,16 +127,8 @@ export function CommunityFormationsClient() {
             title={fr ? "Aucun programme publié" : "No published programs"}
             body={
               fr
-                ? "Les événements Academy publiés apparaîtront ici en cartes Formation."
-                : "Published Academy events will appear here as training cards."
-            }
-            action={
-              <Link
-                href="/app/academy"
-                className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
-              >
-                {fr ? "Parcours complet →" : "Full journey →"}
-              </Link>
+                ? "Les événements Academy publiés apparaîtront ici."
+                : "Published Academy events will appear here."
             }
           />
         ) : (
@@ -141,11 +151,7 @@ export function CommunityFormationsClient() {
           <CommunityEmptyState
             illustration={<EmptyTrainingIllustration />}
             title={fr ? "Aucun live en cours" : "No live session now"}
-            body={
-              fr
-                ? "Revenez plus tard ou consultez les sessions à venir."
-                : "Check back later or see upcoming sessions."
-            }
+            body={fr ? "Consultez l'onglet À venir." : "Check the Upcoming tab."}
           />
         ) : (
           <ul className="mt-3 space-y-2">
@@ -155,9 +161,7 @@ export function CommunityFormationsClient() {
                   href={academySessionContinueHref(s)}
                   className="fd-card block border-l-4 border-[#305f33] px-4 py-3"
                 >
-                  <span className="text-[10px] font-bold uppercase text-[#305f33]">
-                    LIVE
-                  </span>
+                  <span className="text-[10px] font-bold uppercase text-[#305f33]">LIVE</span>
                   <p className="text-sm font-bold text-[#0c0a09]">{s.title}</p>
                 </Link>
               </li>
@@ -165,80 +169,77 @@ export function CommunityFormationsClient() {
           </ul>
         )
       ) : tab === "upcoming" ? (
-        upcomingSessions.length === 0 && editions.length === 0 ? (
+        upcomingEvents.length === 0 &&
+        enrolledSessions.length === 0 &&
+        extraEditions.length === 0 ? (
           <CommunityEmptyState
             illustration={<EmptyTrainingIllustration />}
-            title={fr ? "Aucune session à venir" : "No upcoming sessions"}
-            body={
-              fr
-                ? "Parcourez l'Academy McBuleli pour vous inscrire."
-                : "Browse McBuleli Academy to enroll."
-            }
-            action={
-              <Link
-                href="/app/academy"
-                className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
-              >
-                {fr ? "Parcours complet →" : "Full journey →"}
-              </Link>
-            }
+            title={fr ? "Aucun événement à venir" : "No upcoming events"}
+            body={fr ? "Revenez bientôt." : "Check back soon."}
           />
         ) : (
-          <ul className="mt-3 space-y-2">
-            {upcomingSessions.map((s) => (
-              <li key={`${s.editionSlug}-${s.sessionSlug}`}>
-                <Link
-                  href={academySessionContinueHref(s)}
-                  className="fd-card block px-4 py-3"
-                >
-                  <p className="text-sm font-bold text-[#0c0a09]">{s.title}</p>
-                  <p className="text-xs text-[#78716c]">
-                    {new Date(s.startsAt).toLocaleString(fr ? "fr-FR" : "en-US")}
-                  </p>
-                </Link>
-              </li>
+          <ul className="mt-3 space-y-3">
+            {upcomingEvents.map((ev) => (
+              <CommunityUpcomingEventCard
+                key={ev.eventSlug}
+                event={ev}
+                fr={fr}
+                onChanged={load}
+              />
             ))}
-            {editions.map((e) => (
-              <li key={e.slug}>
-                <Link
-                  href={academyCohortHref(e.slug, e.programSlug)}
-                  className="fd-card block px-4 py-3"
-                >
-                  <p className="text-sm font-bold text-[#0c0a09]">{e.title}</p>
+            {enrolledSessions
+              .filter((s) => !eventSlugs.has(s.sessionSlug))
+              .map((s) => (
+                <li key={`${s.editionSlug}-${s.sessionSlug}`} className="fd-card p-4">
+                  <span className="rounded-full bg-[#eaf5ee] px-2 py-0.5 text-[9px] font-bold text-[#305f33]">
+                    {fr ? "Inscrit" : "Enrolled"}
+                  </span>
+                  <p className="mt-1 text-sm font-bold text-[#0c0a09]">{s.title}</p>
                   <p className="text-xs text-[#78716c]">
-                    {e.enrolled
-                      ? fr
-                        ? "Inscrit"
-                        : "Enrolled"
-                      : fr
-                        ? "S'inscrire"
-                        : "Enroll"}
+                    {formatUpcomingSessionDate(s.startsAt, fr)}
                   </p>
-                </Link>
-              </li>
+                  <Link
+                    href={academySessionContinueHref(s)}
+                    className="mt-3 inline-flex rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
+                  >
+                    {fr ? "Ouvrir" : "Open"}
+                  </Link>
+                </li>
+              ))}
+            {extraEditions.map((e) => (
+              <CommunityUpcomingEventCard
+                key={e.slug}
+                event={{
+                  eventSlug: e.slug,
+                  title: e.title,
+                  startsAt: e.startsAt ?? new Date().toISOString(),
+                  editionSlug: e.slug,
+                  programSlug: e.programSlug,
+                  editionTitle: e.title,
+                  enrolled: e.enrolled,
+                  priceUsdt: e.priceUsdt ?? null,
+                  requiresKyc: e.requiresKyc ?? false,
+                }}
+                fr={fr}
+                onChanged={load}
+              />
             ))}
           </ul>
         )
       ) : (
-        <div className="mt-3">
-          <CommunityEmptyState
-            illustration={<EmptyTrainingIllustration />}
-            title={fr ? "Replays Academy" : "Academy replays"}
-            body={
-              fr
-                ? "Les replays sont disponibles dans vos classes Academy."
-                : "Replays are available in your Academy classes."
-            }
-            action={
-              <Link
-                href="/app/academy"
-                className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
-              >
-                {fr ? "Parcours complet →" : "Full journey →"}
-              </Link>
-            }
-          />
-        </div>
+        <CommunityEmptyState
+          illustration={<EmptyTrainingIllustration />}
+          title={fr ? "Replays Academy" : "Academy replays"}
+          body={fr ? "Disponibles dans vos classes Academy." : "Available in your Academy classes."}
+          action={
+            <Link
+              href="/app/academy"
+              className="inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
+            >
+              {fr ? "Academy →" : "Academy →"}
+            </Link>
+          }
+        />
       )}
     </div>
   );

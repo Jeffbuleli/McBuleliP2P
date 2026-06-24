@@ -30,14 +30,14 @@ function ChartSymbolIcon({
 }) {
   const url = marketIconUrl(symbol);
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded-full bg-stone-100">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-100">
       {url ? (
         <Image
           src={url}
           alt=""
-          width={22}
-          height={22}
-          className="h-[1.375rem] w-[1.375rem] object-contain"
+          width={28}
+          height={28}
+          className="h-full w-full object-cover"
         />
       ) : (
         <span className="flex h-5 w-5 items-center justify-center text-[10px] font-bold text-stone-400">

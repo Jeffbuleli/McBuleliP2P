@@ -413,3 +413,68 @@ export async function grantCommunityTraderFollow(args: {
     meta: { traderId: args.traderId },
   });
 }
+
+export type CommunityStoryKind = "text" | "image" | "video";
+
+/** Publication statut 24h. */
+export async function grantCommunityStoryPublished(args: {
+  userId: string;
+  storyId: string;
+  kind: CommunityStoryKind;
+}) {
+  const grantType =
+    args.kind === "video"
+      ? REWARD_GRANT.COMMUNITY_STORY_VIDEO
+      : args.kind === "image"
+        ? REWARD_GRANT.COMMUNITY_STORY_IMAGE
+        : REWARD_GRANT.COMMUNITY_STORY_TEXT;
+
+  return grantWithDailyCap({
+    userId: args.userId,
+    grantType,
+    idempotencyKey: `community_story:${args.storyId}`,
+    meta: { storyId: args.storyId, kind: args.kind },
+  });
+}
+
+/** Voir un statut (spectateur). */
+export async function grantCommunityStoryViewed(args: {
+  viewerId: string;
+  storyId: string;
+  authorId: string;
+}) {
+  if (args.viewerId === args.authorId) {
+    const bal = await import("@/lib/reward-points-service").then((m) =>
+      m.getRewardPointsBalance(args.viewerId),
+    );
+    return { granted: false, points: 0, balance: bal, reason: "self_action" as const };
+  }
+
+  return grantWithDailyCap({
+    userId: args.viewerId,
+    grantType: REWARD_GRANT.COMMUNITY_STORY_VIEW,
+    idempotencyKey: `community_story_view:${args.storyId}:${args.viewerId}`,
+    meta: { storyId: args.storyId, authorId: args.authorId },
+  });
+}
+
+/** Quelqu'un a vu votre statut. */
+export async function grantCommunityStoryViewReceived(args: {
+  authorId: string;
+  storyId: string;
+  viewerId: string;
+}) {
+  if (args.authorId === args.viewerId) {
+    const bal = await import("@/lib/reward-points-service").then((m) =>
+      m.getRewardPointsBalance(args.authorId),
+    );
+    return { granted: false, points: 0, balance: bal, reason: "self_action" as const };
+  }
+
+  return grantWithDailyCap({
+    userId: args.authorId,
+    grantType: REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED,
+    idempotencyKey: `community_story_view_author:${args.storyId}:${args.viewerId}`,
+    meta: { storyId: args.storyId, viewerId: args.viewerId },
+  });
+}

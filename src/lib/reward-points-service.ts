@@ -337,6 +337,21 @@ export async function getRewardPointsSummary(
     [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: grantRows.some(
       (r) => r.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW,
     ),
+    [REWARD_GRANT.COMMUNITY_STORY_TEXT]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_TEXT,
+    ),
+    [REWARD_GRANT.COMMUNITY_STORY_IMAGE]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_IMAGE,
+    ),
+    [REWARD_GRANT.COMMUNITY_STORY_VIDEO]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_VIDEO,
+    ),
+    [REWARD_GRANT.COMMUNITY_STORY_VIEW]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_VIEW,
+    ),
+    [REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED,
+    ),
   };
 
   return {

@@ -6,6 +6,7 @@ import {
   getDb,
   users,
 } from "@/db";
+import { normalizeStoryTextBg } from "@/lib/community/story-text-colors";
 
 export type CommunityStoryItem = {
   id: string;
@@ -91,7 +92,10 @@ export async function listActiveStoryRings(args: {
         type: row.storyType as CommunityStoryItem["type"],
         body: row.body,
         mediaUrl: row.mediaUrl,
-        bgColor: row.bgColor,
+        bgColor:
+          row.storyType === "text"
+            ? normalizeStoryTextBg(row.bgColor)
+            : row.bgColor,
         createdAt: row.createdAt.toISOString(),
         expiresAt: row.expiresAt.toISOString(),
       });
@@ -159,6 +163,8 @@ export async function createCommunityStory(args: {
     }
 
     const expiresAt = new Date(Date.now() + STORY_TTL_MS);
+    const bgColor =
+      args.type === "text" ? normalizeStoryTextBg(args.bgColor) : null;
     const [row] = await db
       .insert(communityStories)
       .values({
@@ -167,7 +173,7 @@ export async function createCommunityStory(args: {
         body: args.body?.trim() ?? null,
         mediaId: args.mediaId ?? null,
         mediaUrl,
-        bgColor: args.bgColor ?? null,
+        bgColor,
         expiresAt,
       })
       .returning({ id: communityStories.id });
@@ -194,6 +200,55 @@ export async function expireOldStories(): Promise<void> {
       );
   } catch (e) {
     if (isMissingTable(e)) return;
+    throw e;
+  }
+}
+
+export async function getActiveStoryAuthor(
+  storyId: string,
+): Promise<{ authorId: string } | null> {
+  try {
+    const db = getDb();
+    const now = new Date();
+    const [row] = await db
+      .select({ authorId: communityStories.authorId })
+      .from(communityStories)
+      .where(
+        and(
+          eq(communityStories.id, storyId),
+          eq(communityStories.status, "active"),
+          gt(communityStories.expiresAt, now),
+        ),
+      )
+      .limit(1);
+    return row ? { authorId: row.authorId } : null;
+  } catch (e) {
+    if (isMissingTable(e)) return null;
+    throw e;
+  }
+}
+
+export async function deleteCommunityStory(args: {
+  storyId: string;
+  authorId: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const db = getDb();
+    const [row] = await db
+      .update(communityStories)
+      .set({ status: "deleted" })
+      .where(
+        and(
+          eq(communityStories.id, args.storyId),
+          eq(communityStories.authorId, args.authorId),
+          eq(communityStories.status, "active"),
+        ),
+      )
+      .returning({ id: communityStories.id });
+    if (!row) return { ok: false, error: "story_not_found" };
+    return { ok: true };
+  } catch (e) {
+    if (isMissingTable(e)) return { ok: false, error: "stories_unavailable" };
     throw e;
   }
 }

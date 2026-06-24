@@ -316,23 +316,14 @@ export function CommunityPostCard({
 
   const textBlock =
     !post.formationMeta && displayBody.length > 0 ? (
-      linkToDetail ? (
-        <Link href={detailHref} className="block">
-          <CommunityExpandableText
-            text={displayBody}
-            fr={fr}
-            withMentions
-            className={COMMUNITY_BODY_TEXT}
-          />
-        </Link>
-      ) : (
+      <div className="block">
         <CommunityExpandableText
           text={displayBody}
           fr={fr}
           withMentions
           className={COMMUNITY_BODY_TEXT}
         />
-      )
+      </div>
     ) : null;
 
   return (
@@ -350,7 +341,7 @@ export function CommunityPostCard({
           postType={post.postType}
           body={post.body}
           fr={fr}
-          postId={post.id}
+          feedInline
         />
       </div>
 

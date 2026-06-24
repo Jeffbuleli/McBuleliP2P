@@ -267,7 +267,7 @@ function MarketCoinIcon({ symbol, light }: { symbol: string; light?: boolean }) 
   }
   return (
     <span
-      className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-visible rounded-full ring-1 ${
+      className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ${
         light ? "bg-white ring-[color:var(--fd-border)]" : "bg-stone-800 ring-stone-600"
       }`}
     >
@@ -275,9 +275,9 @@ function MarketCoinIcon({ symbol, light }: { symbol: string; light?: boolean }) 
         src={url}
         alt=""
         aria-hidden
-        width={28}
-        height={28}
-        className="h-7 w-7 object-contain"
+        width={36}
+        height={36}
+        className="h-full w-full object-cover"
       />
     </span>
   );

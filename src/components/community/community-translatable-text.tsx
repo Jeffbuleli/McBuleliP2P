@@ -93,7 +93,11 @@ export function CommunityTranslatableText({
         <span className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#78716c]">
           <button
             type="button"
-            onClick={onTranslate}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void onTranslate();
+            }}
             disabled={loading}
             aria-label={fr ? "Traduire" : "Translate"}
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold text-[#305f33] hover:bg-[#e8f3ee] disabled:opacity-50"

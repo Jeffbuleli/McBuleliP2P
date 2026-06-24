@@ -91,6 +91,19 @@ export function rewardLedgerLabel(
   if (row.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW) {
     return t("points_ledger_community_trader_follow");
   }
+  if (
+    row.grantType === REWARD_GRANT.COMMUNITY_STORY_TEXT ||
+    row.grantType === REWARD_GRANT.COMMUNITY_STORY_IMAGE ||
+    row.grantType === REWARD_GRANT.COMMUNITY_STORY_VIDEO
+  ) {
+    return "Community status";
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_STORY_VIEW) {
+    return "Status viewed";
+  }
+  if (row.grantType === REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED) {
+    return "Status view received";
+  }
   if (row.note === "spend:p2p_fee_discount_15") {
     return t("points_ledger_spend_p2p_fee");
   }

@@ -4,14 +4,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CommunityStoryRing } from "@/lib/community/stories-service";
+import {
+  COMMUNITY_STORY_TEXT_BG,
+  normalizeStoryTextBg,
+} from "@/lib/community/story-text-colors";
 
-const TEXT_BG = ["#305f33", "#3d8f5a", "#229ed9", "#7c3aed", "#db2777"] as const;
+const TEXT_BG = COMMUNITY_STORY_TEXT_BG;
+
+function mapStoryError(code: string | undefined, fr: boolean): string {
+  if (code === "stories_unavailable" || code === "story_server_error") {
+    return fr
+      ? "Statuts indisponibles — migration base de données requise."
+      : "Statuses unavailable — database migration required.";
+  }
+  if (code === "story_limit_reached") {
+    return fr ? "Limite : 8 statuts / 24 h" : "Limit: 8 statuses / 24h";
+  }
+  if (code === "body_required") {
+    return fr ? "Écrivez un message" : "Write a message";
+  }
+  if (code === "invalid_media" || code === "media_required") {
+    return fr ? "Média invalide" : "Invalid media";
+  }
+  if (code === "community_media_invalid_mime") {
+    return fr ? "Format non supporté (JPEG, PNG, WebP, MP4)" : "Unsupported format (JPEG, PNG, WebP, MP4)";
+  }
+  if (code === "r2_not_configured" || code === "r2_upload_failed" || code === "upload_failed") {
+    return fr ? "Upload impossible — stockage R2" : "Upload failed — R2 storage";
+  }
+  if (code === "Unauthorized") {
+    return fr ? "Connectez-vous pour publier" : "Sign in to publish";
+  }
+  return fr ? "Échec de publication" : "Publish failed";
+}
 
 export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
   const [rings, setRings] = useState<CommunityStoryRing[]>([]);
   const [loading, setLoading] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewer, setViewer] = useState<{ ringIdx: number; storyIdx: number } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -29,12 +61,24 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
   const openRing = (ringIdx: number) => {
     setViewer({ ringIdx, storyIdx: 0 });
   };
 
   return (
     <>
+      {toast ? (
+        <div className="fixed left-1/2 top-20 z-[100] -translate-x-1/2 rounded-full bg-[#305f33] px-4 py-2 text-xs font-bold text-white shadow-lg">
+          {toast}
+        </div>
+      ) : null}
+
       <div className="mb-3 -mx-1 overflow-x-auto px-1 scrollbar-none">
         <div className="flex gap-3 pb-1">
           <button
@@ -98,8 +142,11 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
         <StoryComposer
           fr={fr}
           onClose={() => setComposerOpen(false)}
-          onPosted={() => {
+          onPosted={(bp) => {
             setComposerOpen(false);
+            if (bp > 0) {
+              setToast(fr ? `+${bp} BP — statut publié !` : `+${bp} BP — status posted!`);
+            }
             void load();
           }}
         />
@@ -113,6 +160,13 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
           storyIdx={viewer.storyIdx}
           onClose={() => setViewer(null)}
           onNavigate={(ringIdx, storyIdx) => setViewer({ ringIdx, storyIdx })}
+          onDeleted={() => {
+            setViewer(null);
+            void load();
+          }}
+          onViewBp={(bp) => {
+            if (bp > 0) setToast(fr ? `+${bp} BP` : `+${bp} BP`);
+          }}
         />
       ) : null}
     </>
@@ -126,9 +180,9 @@ function StoryComposer({
 }: {
   fr: boolean;
   onClose: () => void;
-  onPosted: () => void;
+  onPosted: (bpGranted: number) => void;
 }) {
-  const [mode, setMode] = useState<"text" | "photo">("text");
+  const [mode, setMode] = useState<"text" | "media">("text");
   const [body, setBody] = useState("");
   const [bg, setBg] = useState<string>(TEXT_BG[0]);
   const [busy, setBusy] = useState(false);
@@ -144,41 +198,45 @@ function StoryComposer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "text", body, bgColor: bg }),
       });
+      const j = (await res.json().catch(() => ({}))) as { error?: string; bpGranted?: number };
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        setErr(j.error ?? "error");
+        setErr(mapStoryError(j.error, fr));
         return;
       }
-      onPosted();
+      onPosted(j.bpGranted ?? 0);
     } finally {
       setBusy(false);
     }
   };
 
-  const postPhoto = async (file: File) => {
+  const postMedia = async (file: File) => {
     setBusy(true);
     setErr(null);
     try {
+      const isVideo = file.type.startsWith("video/");
       const form = new FormData();
       form.set("file", file);
       form.set("kind", "stories");
       const up = await fetch("/api/community/media/upload", { method: "POST", body: form });
       const upJson = (await up.json().catch(() => ({}))) as { id?: string; error?: string };
       if (!up.ok || !upJson.id) {
-        setErr(upJson.error ?? "upload_failed");
+        setErr(mapStoryError(upJson.error, fr));
         return;
       }
       const res = await fetch("/api/community/stories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "image", mediaId: upJson.id }),
+        body: JSON.stringify({
+          type: isVideo ? "video" : "image",
+          mediaId: upJson.id,
+        }),
       });
+      const j = (await res.json().catch(() => ({}))) as { error?: string; bpGranted?: number };
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        setErr(j.error ?? "error");
+        setErr(mapStoryError(j.error, fr));
         return;
       }
-      onPosted();
+      onPosted(j.bpGranted ?? 0);
     } finally {
       setBusy(false);
     }
@@ -188,16 +246,21 @@ function StoryComposer({
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center">
       <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-[#0c0a09]">
-            {fr ? "Nouveau statut (24h)" : "New status (24h)"}
-          </h3>
+          <div>
+            <h3 className="text-sm font-bold text-[#0c0a09]">
+              {fr ? "Nouveau statut (24h)" : "New status (24h)"}
+            </h3>
+            <p className="text-[10px] text-[#78716c]">
+              {fr ? "Gagnez des BP en publiant" : "Earn BP by posting"}
+            </p>
+          </div>
           <button type="button" onClick={onClose} className="text-sm text-[#78716c]">
             ✕
           </button>
         </div>
 
         <div className="mb-3 flex gap-2">
-          {(["text", "photo"] as const).map((m) => (
+          {(["text", "media"] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -206,20 +269,25 @@ function StoryComposer({
                 mode === m ? "bg-[#305f33] text-white" : "bg-[#f5f5f4] text-[#57534e]"
               }`}
             >
-              {m === "text" ? (fr ? "Texte" : "Text") : fr ? "Photo" : "Photo"}
+              {m === "text" ? (fr ? "Texte" : "Text") : fr ? "Photo / Vidéo" : "Photo / Video"}
             </button>
           ))}
         </div>
 
         {mode === "text" ? (
           <>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value.slice(0, 280))}
-              placeholder={fr ? "Quoi de neuf ?" : "What's new?"}
-              rows={4}
-              className="w-full resize-none rounded-xl border border-[#dce8e0] p-3 text-sm"
-            />
+            <div
+              className="flex min-h-[160px] items-center justify-center rounded-2xl p-4 shadow-inner"
+              style={{ backgroundColor: bg }}
+            >
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value.slice(0, 280))}
+                placeholder={fr ? "Quoi de neuf ?" : "What's new?"}
+                rows={4}
+                className="w-full resize-none bg-transparent text-center text-lg font-semibold text-white placeholder:text-white/60 focus:outline-none"
+              />
+            </div>
             <div className="mt-2 flex gap-2">
               {TEXT_BG.map((c) => (
                 <button
@@ -246,11 +314,11 @@ function StoryComposer({
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) void postPhoto(f);
+                if (f) void postMedia(f);
               }}
             />
             <button
@@ -259,7 +327,7 @@ function StoryComposer({
               onClick={() => fileRef.current?.click()}
               className="w-full rounded-xl border-2 border-dashed border-[#dce8e0] py-10 text-sm font-semibold text-[#305f33]"
             >
-              {busy ? "…" : fr ? "Choisir une photo" : "Choose a photo"}
+              {busy ? "…" : fr ? "Choisir photo ou vidéo" : "Choose photo or video"}
             </button>
           </>
         )}
@@ -277,6 +345,8 @@ function StoryViewer({
   storyIdx,
   onClose,
   onNavigate,
+  onDeleted,
+  onViewBp,
 }: {
   fr: boolean;
   rings: CommunityStoryRing[];
@@ -284,9 +354,26 @@ function StoryViewer({
   storyIdx: number;
   onClose: () => void;
   onNavigate: (ringIdx: number, storyIdx: number) => void;
+  onDeleted: () => void;
+  onViewBp: (bp: number) => void;
 }) {
   const ring = rings[ringIdx];
   const story = ring?.stories[storyIdx];
+  const viewedRef = useRef<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!story?.id || ring.isMe) return;
+    if (viewedRef.current.has(story.id)) return;
+    viewedRef.current.add(story.id);
+    void fetch(`/api/community/stories/${story.id}/view`, { method: "POST" })
+      .then((r) => r.json())
+      .then((j: { viewerBp?: number }) => {
+        if (typeof j.viewerBp === "number" && j.viewerBp > 0) onViewBp(j.viewerBp);
+      })
+      .catch(() => {});
+  }, [story?.id, ring?.isMe, onViewBp]);
+
   if (!ring || !story) return null;
 
   const next = () => {
@@ -308,6 +395,17 @@ function StoryViewer({
     }
   };
 
+  const deleteStory = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/community/stories/${story.id}`, { method: "DELETE" });
+      if (res.ok) onDeleted();
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[90] flex flex-col bg-black">
       <div className="flex gap-1 px-3 pt-3">
@@ -323,9 +421,21 @@ function StoryViewer({
         <Link href={`/app/community/u/${encodeURIComponent(ring.handle)}`} className="flex items-center gap-2">
           <span className="text-sm font-bold">{ring.displayName || ring.handle}</span>
         </Link>
-        <button type="button" onClick={onClose} aria-label="Close" className="text-lg">
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          {ring.isMe ? (
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => void deleteStory()}
+              className="rounded-lg bg-white/15 px-2 py-1 text-[10px] font-bold uppercase"
+            >
+              {deleting ? "…" : fr ? "Supprimer" : "Delete"}
+            </button>
+          ) : null}
+          <button type="button" onClick={onClose} aria-label="Close" className="text-lg">
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="relative flex flex-1 items-center justify-center px-4">
@@ -335,7 +445,7 @@ function StoryViewer({
         {story.type === "text" ? (
           <div
             className="flex max-h-[70vh] w-full max-w-sm items-center justify-center rounded-2xl p-8 text-center text-lg font-semibold text-white"
-            style={{ backgroundColor: story.bgColor ?? TEXT_BG[0] }}
+            style={{ backgroundColor: normalizeStoryTextBg(story.bgColor) }}
           >
             {story.body}
           </div>
@@ -356,7 +466,7 @@ function StoryViewer({
       </div>
 
       <p className="pb-6 text-center text-[10px] text-white/60">
-        {fr ? "Expire dans 24h" : "Expires in 24h"}
+        {fr ? "Expire dans 24h · +BP si quelqu'un regarde" : "Expires in 24h · +BP when viewed"}
       </p>
     </div>
   );

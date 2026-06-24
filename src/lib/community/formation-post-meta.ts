@@ -122,6 +122,17 @@ export function browserTimezone(): string {
   }
 }
 
+/** Compact date for Lives « À venir » lists. */
+export function formatUpcomingSessionDate(iso: string, fr: boolean): string {
+  return new Intl.DateTimeFormat(fr ? "fr-FR" : "en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
 export function formationSummaryBody(meta: FormationPostMeta, fr: boolean): string {
   const when = formatFormationDate(meta.startDate, meta.timezone, fr);
   return fr

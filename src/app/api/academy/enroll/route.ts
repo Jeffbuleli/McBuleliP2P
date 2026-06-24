@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { enrollInEdition } from "@/lib/academy-service";
+import { enrollInEdition, withdrawFromEdition } from "@/lib/academy-service";
 import { getSessionUserId } from "@/lib/session";
 
 const bodySchema = z.object({
@@ -41,4 +41,35 @@ export async function POST(req: Request) {
     enrollmentId: result.enrollmentId,
     alreadyEnrolled: result.alreadyEnrolled,
   });
+}
+
+export async function DELETE(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let json: unknown;
+  try {
+    json = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(json);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Validation failed" }, { status: 400 });
+  }
+
+  const result = await withdrawFromEdition({
+    userId,
+    editionSlug: parsed.data.editionSlug,
+    programSlug: parsed.data.programSlug,
+  });
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.code }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true });
 }

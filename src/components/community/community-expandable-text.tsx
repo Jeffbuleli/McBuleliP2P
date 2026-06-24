@@ -34,7 +34,11 @@ export function CommunityExpandableText({
       {needsMore && !expanded ? (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setExpanded(true);
+          }}
           className="ml-1 font-semibold text-[#78716c] hover:text-[#305f33]"
         >
           {fr ? "Voir plus" : "See more"}

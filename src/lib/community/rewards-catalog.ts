@@ -135,6 +135,46 @@ export const COMMUNITY_REWARDS_CATALOG: CommunityRewardCatalogItem[] = [
     labelEn: "Join a live training session",
     icon: "live",
   },
+  {
+    id: REWARD_GRANT.COMMUNITY_STORY_TEXT,
+    points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_STORY_TEXT],
+    dailyCap: COMMUNITY_REWARD_DAILY_CAPS[REWARD_GRANT.COMMUNITY_STORY_TEXT] ?? null,
+    labelFr: "Publier un statut (texte)",
+    labelEn: "Publish a text status",
+    icon: "post",
+  },
+  {
+    id: REWARD_GRANT.COMMUNITY_STORY_IMAGE,
+    points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_STORY_IMAGE],
+    dailyCap: COMMUNITY_REWARD_DAILY_CAPS[REWARD_GRANT.COMMUNITY_STORY_IMAGE] ?? null,
+    labelFr: "Publier un statut (photo)",
+    labelEn: "Publish a photo status",
+    icon: "post",
+  },
+  {
+    id: REWARD_GRANT.COMMUNITY_STORY_VIDEO,
+    points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_STORY_VIDEO],
+    dailyCap: COMMUNITY_REWARD_DAILY_CAPS[REWARD_GRANT.COMMUNITY_STORY_VIDEO] ?? null,
+    labelFr: "Publier un statut (vidéo)",
+    labelEn: "Publish a video status",
+    icon: "post",
+  },
+  {
+    id: REWARD_GRANT.COMMUNITY_STORY_VIEW,
+    points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_STORY_VIEW],
+    dailyCap: COMMUNITY_REWARD_DAILY_CAPS[REWARD_GRANT.COMMUNITY_STORY_VIEW] ?? null,
+    labelFr: "Voir un statut communautaire",
+    labelEn: "View a community status",
+    icon: "post",
+  },
+  {
+    id: REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED,
+    points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED],
+    dailyCap: COMMUNITY_REWARD_DAILY_CAPS[REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED] ?? null,
+    labelFr: "Quelqu'un voit votre statut",
+    labelEn: "Someone views your status",
+    icon: "post",
+  },
 ];
 
 export function communityRewardsMeta() {

@@ -1027,6 +1027,139 @@ export async function enrollInEdition(args: {
   }
 }
 
+export async function withdrawFromEdition(args: {
+  userId: string;
+  editionSlug: string;
+  programSlug?: string;
+}): Promise<{ ok: true } | { ok: false; code: string }> {
+  await ensureAcademyLaunchSeed();
+  const db = getDb();
+
+  const detail = await getEditionDetail({
+    userId: args.userId,
+    editionSlug: args.editionSlug,
+    programSlug: args.programSlug,
+    locale: "fr",
+  });
+  if (!detail) return { ok: false, code: "academy_edition_not_found" };
+  if (!detail.edition.enrolled || !detail.edition.enrollmentId) {
+    return { ok: false, code: "academy_not_enrolled" };
+  }
+
+  const paid = detail.program.priceUsdt
+    ? numFromNumeric(detail.program.priceUsdt)
+    : 0;
+  if (paid > 0) {
+    return { ok: false, code: "academy_withdraw_paid" };
+  }
+
+  const [att] = await db
+    .select({ id: academyAttendance.id })
+    .from(academyAttendance)
+    .where(eq(academyAttendance.enrollmentId, detail.edition.enrollmentId))
+    .limit(1);
+  if (att) return { ok: false, code: "academy_withdraw_has_attendance" };
+
+  await db
+    .update(academyEnrollments)
+    .set({ status: "withdrawn" })
+    .where(eq(academyEnrollments.id, detail.edition.enrollmentId));
+
+  return { ok: true };
+}
+
+export type CommunityUpcomingEventView = {
+  eventSlug: string;
+  title: string;
+  startsAt: string;
+  editionSlug: string;
+  programSlug: string;
+  editionTitle: string;
+  enrolled: boolean;
+  priceUsdt: string | null;
+  requiresKyc: boolean;
+};
+
+/** Tous les événements Academy à venir visibles communauté (inscription sur place). */
+export async function listCommunityUpcomingEvents(args: {
+  userId: string;
+  locale: Locale;
+}): Promise<CommunityUpcomingEventView[]> {
+  await assertAcademyDbReady();
+  const db = getDb();
+  const now = new Date();
+
+  const enrollRows = await db
+    .select({ editionId: academyEnrollments.editionId })
+    .from(academyEnrollments)
+    .where(
+      and(
+        eq(academyEnrollments.userId, args.userId),
+        eq(academyEnrollments.status, "active"),
+      ),
+    );
+  const enrolledEditionIds = new Set(enrollRows.map((r) => r.editionId));
+
+  const rows = await db
+    .select({
+      slug: academyTrainingEvents.slug,
+      title: academyTrainingEvents.title,
+      startDate: academyTrainingEvents.startDate,
+      endDate: academyTrainingEvents.endDate,
+      editionId: academyEditions.id,
+      editionSlug: academyEditions.slug,
+      editionTitleFr: academyEditions.titleFr,
+      editionTitleEn: academyEditions.titleEn,
+      programSlug: academyPrograms.slug,
+      priceUsdt: academyPrograms.priceUsdt,
+      requiresKyc: academyPrograms.requiresKyc,
+    })
+    .from(academyTrainingEvents)
+    .innerJoin(
+      academyEditions,
+      eq(academyTrainingEvents.editionId, academyEditions.id),
+    )
+    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
+    .where(
+      and(
+        inArray(academyTrainingEvents.status, ["PUBLISHED", "LIVE"]),
+        inArray(academyEditions.status, ["open", "active"]),
+        eq(academyTrainingEvents.visibility, "COMMUNITY"),
+        sql`${academyTrainingEvents.endDate} >= ${now}`,
+      ),
+    )
+    .orderBy(asc(academyTrainingEvents.startDate))
+    .limit(24);
+
+  const out: CommunityUpcomingEventView[] = [];
+  for (const r of rows) {
+    const ended = isSessionEnded({
+      startsAt: r.startDate,
+      endsAt: r.endDate,
+    });
+    const liveNow = isSessionLiveNow({
+      startsAt: r.startDate,
+      endsAt: r.endDate,
+    });
+    if (ended && !liveNow) continue;
+    out.push({
+      eventSlug: r.slug,
+      title: r.title,
+      startsAt: r.startDate.toISOString(),
+      editionSlug: r.editionSlug,
+      programSlug: r.programSlug,
+      editionTitle: pickLocale(
+        { titleFr: r.editionTitleFr, titleEn: r.editionTitleEn },
+        args.locale,
+      ),
+      enrolled: enrolledEditionIds.has(r.editionId),
+      priceUsdt: r.priceUsdt?.toString() ?? null,
+      requiresKyc: r.requiresKyc ?? false,
+    });
+  }
+  return out;
+}
+
 export async function checkInSession(args: {
   userId: string;
   sessionId: string;

@@ -13,14 +13,17 @@ export function CommunityImageMosaic({
   onRemove,
   onReplace,
   postId,
+  feedInline = false,
+  onImageClick,
   className = "",
 }: {
   images: MosaicImage[];
   editable?: boolean;
   onRemove?: (id: string) => void;
   onReplace?: (id: string) => void;
-  /** When set, each tile links to the individual media page. */
   postId?: string;
+  feedInline?: boolean;
+  onImageClick?: (src: string) => void;
   className?: string;
 }) {
   if (!images.length) return null;
@@ -35,7 +38,7 @@ export function CommunityImageMosaic({
             {overlay}
           </span>
         ) : null}
-        {postId && !editable && !overlay ? (
+        {postId && !editable && !overlay && !feedInline ? (
           <span className="absolute inset-0 bg-black/0 transition hover:bg-black/10" />
         ) : null}
       </>
@@ -43,7 +46,18 @@ export function CommunityImageMosaic({
 
     const tile = (
       <div className={`relative overflow-hidden ${slotClass}`}>
-        {postId && !editable ? (
+        {feedInline && onImageClick ? (
+          <button
+            type="button"
+            className="block h-full w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onImageClick(img.src);
+            }}
+          >
+            {inner}
+          </button>
+        ) : postId && !editable && !feedInline ? (
           <Link
             href={`/app/community/post/${postId}/media/${img.id}`}
             className="block h-full w-full"

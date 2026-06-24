@@ -54,44 +54,45 @@ export function CommunityUnifiedCard({
     <article className={`${COMMUNITY_CARD} transition active:scale-[0.995]`}>
       <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
       <div className="px-4 pt-4">
-        <Link href={item.href} className="block">
-          <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <Link href={item.href} className="min-w-0 flex-1">
             <CommunityAuthorHeader
               author={item.author}
               publishedAt={item.publishedAt}
               fr={fr}
             />
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <CommunityPostTypeChip kind={item.kind} fr={fr} />
-              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
-                <IconGlobe size={11} />
-                {fr ? "Public" : "Public"}
-              </span>
-            </div>
+          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <CommunityPostTypeChip kind={item.kind} fr={fr} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
+              <IconGlobe size={11} />
+              {fr ? "Public" : "Public"}
+            </span>
           </div>
+        </div>
 
-          {item.title ? (
-            <h3 className="mb-1 text-[15px] font-bold leading-snug text-[#0c0a09]">
-              {item.title}
-            </h3>
-          ) : null}
+        {item.title ? (
+          <h3 className="mb-1 text-[15px] font-bold leading-snug text-[#0c0a09]">
+            {item.title}
+          </h3>
+        ) : null}
 
-          {displayBody.length > 0 ? (
-            <CommunityExpandableText
-              text={displayBody}
-              fr={fr}
-              withMentions
-              maxChars={item.title ? 120 : 180}
-              className={COMMUNITY_BODY_TEXT}
-            />
-          ) : null}
-        </Link>
+        {displayBody.length > 0 ? (
+          <CommunityExpandableText
+            text={displayBody}
+            fr={fr}
+            withMentions
+            maxChars={item.title ? 120 : 180}
+            className={COMMUNITY_BODY_TEXT}
+          />
+        ) : null}
 
         <CommunityPostMedia
           media={item.media}
           postType={postType}
           body={item.body}
           fr={fr}
+          feedInline
         />
       </div>
 

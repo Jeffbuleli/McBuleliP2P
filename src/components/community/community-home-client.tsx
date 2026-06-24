@@ -334,6 +334,7 @@ export function CommunityHomeClient() {
                     <CommunityPostCard
                       key={`search-${hit.id}`}
                       post={searchToPost(hit)}
+                      linkToDetail={false}
                       onUpdate={() => {}}
                     />
                   ))}
@@ -381,6 +382,8 @@ export function CommunityHomeClient() {
               <CommunityPostCard
                 key={`post-${item.id}`}
                 post={toFeedPost(item)}
+                linkToDetail={false}
+                trackImpression
                 onUpdate={(patch) => {
                   setItems((list) =>
                     list.map((i) =>

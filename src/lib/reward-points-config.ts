@@ -31,6 +31,11 @@ export const REWARD_GRANT = {
   COMMUNITY_SIGNAL_PUBLISH: "community_signal_publish",
   COMMUNITY_SIGNAL_WIN: "community_signal_win",
   COMMUNITY_TRADER_FOLLOW: "community_trader_follow",
+  COMMUNITY_STORY_TEXT: "community_story_text",
+  COMMUNITY_STORY_IMAGE: "community_story_image",
+  COMMUNITY_STORY_VIDEO: "community_story_video",
+  COMMUNITY_STORY_VIEW: "community_story_view",
+  COMMUNITY_STORY_VIEW_RECEIVED: "community_story_view_received",
 } as const;
 
 export type RewardGrantType =
@@ -65,6 +70,11 @@ export const REWARD_POINTS: Record<RewardGrantType, number> = {
   [REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH]: 35,
   [REWARD_GRANT.COMMUNITY_SIGNAL_WIN]: 45,
   [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: 2,
+  [REWARD_GRANT.COMMUNITY_STORY_TEXT]: 15,
+  [REWARD_GRANT.COMMUNITY_STORY_IMAGE]: 25,
+  [REWARD_GRANT.COMMUNITY_STORY_VIDEO]: 35,
+  [REWARD_GRANT.COMMUNITY_STORY_VIEW]: 2,
+  [REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED]: 5,
 };
 
 /** Max BP credited per user per calendar month (UTC). */
@@ -88,6 +98,11 @@ export const COMMUNITY_REWARD_DAILY_CAPS: Partial<
   [REWARD_GRANT.COMMUNITY_LIVE_JOIN]: 5,
   [REWARD_GRANT.COMMUNITY_SIGNAL_PUBLISH]: 5,
   [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: 20,
+  [REWARD_GRANT.COMMUNITY_STORY_TEXT]: 8,
+  [REWARD_GRANT.COMMUNITY_STORY_IMAGE]: 8,
+  [REWARD_GRANT.COMMUNITY_STORY_VIDEO]: 5,
+  [REWARD_GRANT.COMMUNITY_STORY_VIEW]: 40,
+  [REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED]: 80,
 };
 
 /** Future on-chain claim ratio — active in Phase 3 claim portal. */

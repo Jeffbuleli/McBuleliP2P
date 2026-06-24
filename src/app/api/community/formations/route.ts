@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAcademyHub } from "@/lib/academy-service";
+import { getAcademyHub, listCommunityUpcomingEvents } from "@/lib/academy-service";
 import { communityEnabled } from "@/lib/community/config";
 import { listFormationPosts } from "@/lib/community/feed-service";
 import { getLocale } from "@/lib/get-locale";
@@ -19,7 +19,7 @@ export async function GET() {
 
   try {
     const locale = await getLocale();
-    const [hub, formations] = await Promise.all([
+    const [hub, formations, upcomingEvents] = await Promise.all([
       getAcademyHub({
         userId: user.id,
         locale,
@@ -27,16 +27,20 @@ export async function GET() {
           user.role === "agent" || user.role === "super_admin" ? "staff" : "learner",
       }),
       listFormationPosts({ viewerId: user.id, limit: 12 }),
+      listCommunityUpcomingEvents({ userId: user.id, locale }),
     ]);
 
     return NextResponse.json({
       upcomingSessions: hub.upcomingSessions,
+      upcomingEvents,
       editions: hub.editions.map((e) => ({
         slug: e.slug,
         title: e.title,
         startsAt: e.startsAt,
         enrolled: e.enrolled,
         programSlug: e.programSlug,
+        priceUsdt: e.priceUsdt,
+        requiresKyc: e.requiresKyc,
       })),
       formationPosts: formations.posts.map((p) => ({
         id: p.id,
@@ -51,6 +55,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({
       upcomingSessions: [],
+      upcomingEvents: [],
       editions: [],
       formationPosts: [],
     });
