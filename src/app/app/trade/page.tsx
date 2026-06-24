@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Trade hub — Bots first, then Futures. */
+/** Trade hub — Futures/Demo first. */
 export default function TradeHubRedirectPage() {
-  redirect("/app/trade/bots");
+  redirect("/app/trade/futures");
 }

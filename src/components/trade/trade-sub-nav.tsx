@@ -40,7 +40,6 @@ export function TradeSubNav() {
       className="mb-3 grid grid-cols-2 gap-2"
       aria-label={t("trade_ui_tabs_aria")}
     >
-      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"), <TradeIconBots className="h-5 w-5" />, "mint")}
       {tab(
         "/app/trade/futures",
         isFutures,
@@ -48,6 +47,7 @@ export function TradeSubNav() {
         <TradeIconFutures className="h-5 w-5" />,
         "mint",
       )}
+      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"), <TradeIconBots className="h-5 w-5" />, "mint")}
     </nav>
   );
 }

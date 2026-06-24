@@ -249,44 +249,56 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
         </div>
       ) : null}
 
-      <div className="flex-1 space-y-2 overflow-y-auto bg-[#fafaf9] px-4 py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-[#f5f7f6] to-[#fafaf9] px-3 py-4">
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`flex ${m.own ? "justify-end" : "justify-start"}`}
+            className={`flex items-end gap-2 ${m.own ? "flex-row-reverse" : "flex-row"}`}
           >
-            <div
-              className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
-                m.own
-                  ? "rounded-br-md bg-[#305f33] text-white"
-                  : "rounded-bl-md border border-[#f0f4f2] bg-white text-[#44403c]"
-              }`}
-            >
-              {m.hidden ? (
-                <p className="flex items-center gap-1 text-xs italic opacity-80">
-                  <IconWarning size={14} />
-                  {fr
-                    ? "Message masqué (sécurité anti-arnaque)"
-                    : "Message hidden (anti-scam)"}
-                </p>
-              ) : (
-                <>
-                  {m.attachmentUrl && m.messageType === "image" ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={m.attachmentUrl}
-                      alt=""
-                      className="mb-1 max-h-48 rounded-lg object-cover"
-                    />
-                  ) : null}
-                  {m.body ? (
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                  ) : null}
-                </>
-              )}
+            {!m.own ? (
+              <PeerAvatar peer={meta.peer} />
+            ) : (
+              <span className="h-8 w-8 shrink-0" aria-hidden />
+            )}
+            <div className={`flex max-w-[78%] flex-col ${m.own ? "items-end" : "items-start"}`}>
+              {!m.own ? (
+                <span className="mb-1 px-1 text-[10px] font-semibold text-[#78716c]">
+                  {meta.peer.displayName}
+                </span>
+              ) : null}
+              <div
+                className={`w-full rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
+                  m.own
+                    ? "rounded-br-md bg-gradient-to-br from-[#3d8f5a] to-[#305f33] text-white"
+                    : "rounded-bl-md border border-[#e8f3ee] bg-white text-[#1c1917]"
+                }`}
+              >
+                {m.hidden ? (
+                  <p className="flex items-center gap-1 text-xs italic opacity-80">
+                    <IconWarning size={14} />
+                    {fr
+                      ? "Message masqué (sécurité anti-arnaque)"
+                      : "Message hidden (anti-scam)"}
+                  </p>
+                ) : (
+                  <>
+                    {m.attachmentUrl && m.messageType === "image" ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.attachmentUrl}
+                        alt=""
+                        className="mb-1 max-h-52 w-full rounded-xl object-cover"
+                      />
+                    ) : null}
+                    {m.body ? (
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</p>
+                    ) : null}
+                  </>
+                )}
+              </div>
               <p
-                className={`mt-1 text-[9px] ${
-                  m.own ? "text-white/70" : "text-[#a8a29e]"
+                className={`mt-1 px-1 text-[9px] tabular-nums ${
+                  m.own ? "text-[#78716c]" : "text-[#a8a29e]"
                 }`}
               >
                 {new Date(m.createdAt).toLocaleTimeString(
@@ -368,5 +380,27 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
         </div>
       </footer>
     </div>
+  );
+}
+
+function PeerAvatar({
+  peer,
+}: {
+  peer: ThreadMeta["peer"];
+}) {
+  if (peer.avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={peer.avatarUrl}
+        alt=""
+        className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm"
+      />
+    );
+  }
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f3ee] text-xs font-bold text-[#305f33] ring-2 ring-white shadow-sm">
+      {peer.displayName.slice(0, 1).toUpperCase()}
+    </span>
   );
 }

@@ -6,7 +6,6 @@ import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
 
 export type WalletRealmLabels = {
   crypto: string;
-  fiat: string;
   swap: string;
 };
 
@@ -21,7 +20,7 @@ export function WalletRealmToggle({
   const onWallet = variant === "wallet" && pathname === "/app/wallet";
 
   return (
-    <div className="wallet-realm-toggle mt-4 grid grid-cols-3 gap-2">
+    <div className="wallet-realm-toggle mt-4 grid grid-cols-2 gap-2">
       <Link
         href="/app/wallet"
         onClick={(e) => {
@@ -34,13 +33,6 @@ export function WalletRealmToggle({
         aria-current={onWallet ? "page" : undefined}
       >
         {labels.crypto}
-      </Link>
-      <Link
-        href="/app/wallet/fiat"
-        className={`wallet-realm-btn wallet-realm-btn-fiat ${pathname.startsWith("/app/wallet/fiat") ? "wallet-realm-btn-active" : ""}`}
-        aria-current={pathname.startsWith("/app/wallet/fiat") ? "page" : undefined}
-      >
-        {labels.fiat}
       </Link>
       <Link
         href="/app/wallet/swap"

@@ -2708,6 +2708,32 @@ export const communityPosts = pgTable(
   ],
 );
 
+export const communityStories = pgTable(
+  "community_stories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    storyType: varchar("story_type", { length: 16 }).notNull(),
+    body: text("body"),
+    mediaId: uuid("media_id").references(() => communityMedia.id, {
+      onDelete: "set null",
+    }),
+    mediaUrl: text("media_url"),
+    bgColor: varchar("bg_color", { length: 32 }),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("community_stories_author_expires_idx").on(t.authorId, t.expiresAt),
+    index("community_stories_feed_idx").on(t.status, t.expiresAt),
+  ],
+);
+
 /** Academy Events & Trainings — SSOT for posters, community, live, calendar. */
 export const academyTrainingEvents = pgTable(
   "academy_training_events",

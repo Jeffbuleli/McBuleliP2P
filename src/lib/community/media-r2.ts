@@ -90,7 +90,7 @@ function getR2Client(cfg: CommunityR2Config): S3Client {
 }
 
 export function communityMediaKey(
-  kind: "avatars" | "posts" | "blogs" | "covers",
+  kind: "avatars" | "posts" | "blogs" | "covers" | "stories",
   ownerId: string,
   fileName: string,
 ): string {

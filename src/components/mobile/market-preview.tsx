@@ -16,11 +16,13 @@ export function MarketPreview({
   initialTickers,
   showViewLink = true,
   appearance = "dark",
+  layout = "list",
 }: {
   locale: Locale;
   initialTickers: MarketTicker[] | null;
   showViewLink?: boolean;
   appearance?: UiAppearance;
+  layout?: "list" | "cards";
 }) {
   const d = getDictionary(locale);
   const isLight = appearance === "light";
@@ -120,6 +122,58 @@ export function MarketPreview({
         >
           {d.market_loading}
         </p>
+      ) : layout === "cards" ? (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {tickers.map((ticker) => (
+            <Link
+              key={ticker.symbol}
+              href="/app/market"
+              prefetch={false}
+              className={
+                isLight
+                  ? "flex min-h-[88px] flex-col rounded-2xl border border-[color:var(--fd-border)] bg-white p-3 shadow-sm transition active:scale-[0.98] hover:border-[color:var(--fd-primary)]/30 hover:bg-[color:var(--fd-mint)]/30"
+                  : "flex min-h-[88px] flex-col rounded-2xl border border-stone-700/60 bg-stone-900/40 p-3 transition active:scale-[0.98] hover:border-emerald-700/40"
+              }
+            >
+              <span className="flex items-center gap-2">
+                <MarketCoinIcon symbol={ticker.symbol} light={isLight} />
+                <span
+                  className={`truncate text-sm font-bold ${
+                    isLight ? "text-[color:var(--fd-text)]" : "text-stone-100"
+                  }`}
+                >
+                  {ticker.symbol.replace("USDT", "")}
+                </span>
+                {ticker.source === "okx" ? (
+                  <span className="ml-auto shrink-0 rounded bg-violet-100 px-1 py-0.5 text-[8px] font-bold uppercase text-violet-800">
+                    OKX
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className={`mt-2 text-base font-bold tabular-nums ${
+                  isLight ? "text-[color:var(--fd-text)]" : "text-stone-50"
+                }`}
+              >
+                {formatPrice(ticker.lastPrice)}
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums ${
+                  ticker.changePct >= 0
+                    ? isLight
+                      ? "text-emerald-700"
+                      : "text-emerald-400"
+                    : isLight
+                      ? "text-rose-600"
+                      : "text-rose-400"
+                }`}
+              >
+                {ticker.changePct >= 0 ? "+" : ""}
+                {ticker.changePct.toFixed(2)}%
+              </span>
+            </Link>
+          ))}
+        </div>
       ) : (
         <ul
           className={`flex max-h-[min(55vh,420px)] flex-col gap-0 overflow-y-auto overscroll-contain ${
@@ -213,17 +267,17 @@ function MarketCoinIcon({ symbol, light }: { symbol: string; light?: boolean }) 
   }
   return (
     <span
-      className={`relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ${
-        light ? "ring-[color:var(--fd-border)]" : "ring-stone-600"
+      className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-visible rounded-full ring-1 ${
+        light ? "bg-white ring-[color:var(--fd-border)]" : "bg-stone-800 ring-stone-600"
       }`}
     >
       <Image
         src={url}
         alt=""
         aria-hidden
-        width={32}
-        height={32}
-        className="object-cover"
+        width={28}
+        height={28}
+        className="h-7 w-7 object-contain"
       />
     </span>
   );

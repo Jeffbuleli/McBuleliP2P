@@ -22,7 +22,7 @@ export async function presignCommunityImageUpload(args: {
   ownerId: string;
   mimeType: string;
   sizeBytes: number;
-  kind?: "posts" | "blogs" | "covers" | "avatars";
+  kind?: "posts" | "blogs" | "covers" | "avatars" | "stories";
 }): Promise<
   | { ok: true; id: string; uploadUrl: string; publicUrl: string }
   | { ok: false; error: string }
@@ -93,7 +93,7 @@ export async function uploadCommunityImageBuffer(args: {
   ownerId: string;
   buffer: Uint8Array;
   mimeType: string;
-  kind?: "posts" | "blogs" | "covers" | "avatars";
+  kind?: "posts" | "blogs" | "covers" | "avatars" | "stories";
 }): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
   if (args.buffer.length > COMMUNITY_IMAGE_MAX_BYTES) {
     return { ok: false, error: "community_image_too_large" };
@@ -175,7 +175,7 @@ export async function uploadCommunityVideoBuffer(args: {
   ownerId: string;
   buffer: Uint8Array;
   mimeType: string;
-  kind?: "posts" | "blogs" | "covers";
+  kind?: "posts" | "blogs" | "covers" | "stories";
 }): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
   if (args.buffer.length > COMMUNITY_VIDEO_MAX_BYTES) {
     return { ok: false, error: "community_video_too_large" };

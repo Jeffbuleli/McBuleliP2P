@@ -135,31 +135,14 @@ export function WalletOverview({
           {hidden ? mask() : totalUsdDisplay}
         </p>
 
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={() => openMoney("deposit")}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[color:var(--fd-primary)] px-3 py-2.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
-          >
-            <DepositIcon />
-            {labels.wallet_action_deposit}
-          </button>
-          <button
-            type="button"
-            onClick={() => openMoney("withdraw")}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[color:var(--fd-primary)]/30 bg-white px-3 py-2.5 text-sm font-bold text-[color:var(--fd-primary)] active:scale-[0.98]"
-          >
-            <WithdrawIcon />
-            {labels.wallet_action_withdraw}
-          </button>
-        </div>
-
         <WalletQuickLinks
           labels={{
+            deposit: labels.wallet_action_deposit,
             swap: labels.wallet_swap_title,
-            send: labels.wallet_action_send,
-            fiat: labels.wallet_section_fiat,
+            withdraw: labels.wallet_action_withdraw,
           }}
+          onDeposit={() => openMoney("deposit")}
+          onWithdraw={() => openMoney("withdraw")}
         />
       </section>
 
@@ -257,18 +240,3 @@ function EyeIcon() {
   );
 }
 
-function DepositIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function WithdrawIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 20V8M7 13l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}

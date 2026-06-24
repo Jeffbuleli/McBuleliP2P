@@ -29,19 +29,18 @@ function ChartSymbolIcon({
   symbol: (typeof CHART_SYMBOLS)[number];
 }) {
   const url = marketIconUrl(symbol);
-  const dim = 24;
   return (
-    <span className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-800">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded-full bg-stone-100">
       {url ? (
         <Image
           src={url}
           alt=""
-          width={dim}
-          height={dim}
-          className="h-6 w-6 object-cover"
+          width={22}
+          height={22}
+          className="h-[1.375rem] w-[1.375rem] object-contain"
         />
       ) : (
-        <span className="flex h-6 w-6 items-center justify-center text-[10px] font-bold text-stone-400">
+        <span className="flex h-5 w-5 items-center justify-center text-[10px] font-bold text-stone-400">
           ?
         </span>
       )}
@@ -64,6 +63,10 @@ type UiAppearance = "light" | "dark";
 
 function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
   const { t, locale } = useI18n();
+  const statLabels =
+    locale === "fr"
+      ? { open: "Ouv.", high: "Haut", low: "Bas", close: "Clôt." }
+      : { open: "Open", high: "High", low: "Low", close: "Close" };
   const isLight = appearance === "light";
   const uid = useId();
   const chartFillId = useMemo(
@@ -192,6 +195,17 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
       ? data.points[cursorIdx].p
       : (data?.lastPrice ?? null);
 
+  const rangeStats = useMemo(() => {
+    if (!data?.points.length) return null;
+    const vals = data.points.map((p) => p.p);
+    return {
+      high: Math.max(...vals),
+      low: Math.min(...vals),
+      open: vals[0],
+      close: vals[vals.length - 1],
+    };
+  }, [data]);
+
   return (
     <section
       className={
@@ -209,11 +223,11 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
               type="button"
               aria-label={s.replace("USDT", "")}
               onClick={() => setSymbol(s)}
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full p-1 transition active:scale-95 ${
+              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-visible rounded-full transition active:scale-95 ${
                 symbol === s
                   ? isLight
-                    ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/40"
-                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
+                    ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/50 ring-offset-2 ring-offset-white"
+                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-stone-950"
                   : isLight
                     ? "border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] hover:bg-[color:var(--fd-mint)]"
                     : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
@@ -308,6 +322,38 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
               {data.changePct.toFixed(2)}%
             </p>
           </div>
+
+          {rangeStats ? (
+            <div
+              className={`mb-3 grid grid-cols-2 gap-2 rounded-xl p-2.5 text-[10px] sm:grid-cols-4 ${
+                isLight
+                  ? "bg-[color:var(--fd-mint)]/40 ring-1 ring-[color:var(--fd-border)]"
+                  : "bg-stone-900/50 ring-1 ring-stone-700/40"
+              }`}
+            >
+              {(
+                [
+                  ["open", rangeStats.open],
+                  ["high", rangeStats.high],
+                  ["low", rangeStats.low],
+                  ["close", rangeStats.close],
+                ] as const
+              ).map(([key, val]) => (
+                <div key={key} className="min-w-0 text-center sm:text-left">
+                  <p className={isLight ? "text-[color:var(--fd-muted)]" : "text-stone-500"}>
+                    {statLabels[key]}
+                  </p>
+                  <p
+                    className={`truncate font-bold tabular-nums ${
+                      isLight ? "text-[color:var(--fd-text)]" : "text-stone-100"
+                    }`}
+                  >
+                    {formatUsd(val)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <div
             className={

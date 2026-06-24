@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/app/wallet/fiat",
+        destination: "/app/wallet",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         has: [{ type: "host", value: "mcbuleli.online" }],
         destination: "https://mcbuleli.org/:path*",

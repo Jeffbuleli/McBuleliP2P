@@ -10,7 +10,7 @@ export const maxDuration = 30;
 const postZ = z.object({
   mime: z.enum(COMMUNITY_IMAGE_MIMES),
   sizeBytes: z.number().int().min(1).max(COMMUNITY_IMAGE_MAX_BYTES),
-  kind: z.enum(["posts", "blogs", "covers", "avatars"]).optional(),
+  kind: z.enum(["posts", "blogs", "covers", "avatars", "stories"]).optional(),
 });
 
 export async function POST(req: Request) {

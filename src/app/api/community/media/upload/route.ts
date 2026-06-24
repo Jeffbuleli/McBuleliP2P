@@ -12,7 +12,7 @@ import { getSessionUserId } from "@/lib/session";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const KINDS = ["posts", "blogs", "covers", "avatars"] as const;
+const KINDS = ["posts", "blogs", "covers", "avatars", "stories"] as const;
 
 export async function POST(req: Request) {
   try {

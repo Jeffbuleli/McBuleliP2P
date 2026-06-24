@@ -109,8 +109,8 @@ function CoinIcon({ symbol }: { symbol: string }) {
     );
   }
   return (
-    <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full ring-1 ring-[color:var(--fd-border)]">
-      <Image src={url} alt="" width={20} height={20} className="object-cover" />
+    <span className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-visible rounded-full bg-white ring-1 ring-[color:var(--fd-border)]">
+      <Image src={url} alt="" width={20} height={20} className="h-5 w-5 object-contain" />
     </span>
   );
 }

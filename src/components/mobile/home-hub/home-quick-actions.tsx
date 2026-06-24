@@ -17,7 +17,7 @@ type Action = {
 const ACTIONS: Action[] = [
   { id: "deposit", sheet: "deposit", labelFr: "Dépôt", labelEn: "Deposit", accent: true },
   { href: "/app/p2p", id: "p2p", labelFr: "P2P", labelEn: "P2P" },
-  { href: "/app/trade/bots", id: "trade", labelFr: "Trade", labelEn: "Trade" },
+  { href: "/app/trade", id: "trade", labelFr: "Trade", labelEn: "Trade" },
   { href: "/app/community", id: "community", labelFr: "Communauté", labelEn: "Community" },
   { href: "/app/community/formations", id: "lives", labelFr: "Lives", labelEn: "Live" },
   { href: "/app/community/signals", id: "signals", labelFr: "Signaux", labelEn: "Signals" },

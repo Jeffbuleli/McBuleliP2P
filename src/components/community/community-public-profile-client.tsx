@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CommunityDmLink } from "@/components/community/community-dm-link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
@@ -173,21 +174,10 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
             ← {fr ? "Communauté" : "Community"}
           </Link>
-          <Link
-            href="/app/community/inbox"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33]"
-            aria-label={fr ? "Messages" : "Inbox"}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M22 12h-4l-3 9L9 3l-3 9H2"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
+          <CommunityDmLink
+            fr={fr}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33] transition active:scale-95"
+          />
         </div>
       </div>
 

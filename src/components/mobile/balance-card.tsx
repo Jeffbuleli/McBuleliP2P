@@ -45,7 +45,6 @@ export function BalanceCard({
         variant="home"
         labels={{
           crypto: d.wallet_section_crypto,
-          fiat: d.wallet_section_fiat,
           swap: d.wallet_swap_title,
         }}
       />

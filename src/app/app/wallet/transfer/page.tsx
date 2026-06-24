@@ -42,6 +42,11 @@ function TransferForm() {
   const [done, setDone] = useState(false);
   const [processingOpen, setProcessingOpen] = useState(false);
 
+  const assetParam = sp.get("asset");
+  const assetLocked =
+    Boolean(assetParam) &&
+    (TRANSFER_ASSETS as readonly string[]).includes(assetParam!);
+
   useEffect(() => {
     const a = sp.get("asset");
     if (a && (TRANSFER_ASSETS as readonly string[]).includes(a)) {
@@ -125,29 +130,43 @@ function TransferForm() {
   return (
     <>
       <WalletFlowShell title={t("wallet_transfer_title")} subtitle={subtitle}>
-        <FlowCard>
-          <p className="mb-2 text-center text-xs font-bold uppercase text-[color:var(--fd-muted)]">
-            {t("wallet_transfer_asset")}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {TRANSFER_ASSETS.map((a) => {
-              const active = asset === a;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setAsset(a)}
-                  className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${
-                    active ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
-                  }`}
-                >
-                  <WalletAssetIcon asset={a} size={32} />
-                  <span className="text-[10px] font-bold">{a}</span>
-                </button>
-              );
-            })}
-          </div>
-        </FlowCard>
+        {assetLocked ? (
+          <FlowCard>
+            <div className="flex items-center justify-center gap-3 rounded-xl bg-[color:var(--fd-mint)] px-4 py-3 ring-1 ring-[color:var(--fd-primary)]/20">
+              <WalletAssetIcon asset={asset} size={36} />
+              <div className="text-left">
+                <p className="text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
+                  {t("wallet_transfer_asset")}
+                </p>
+                <p className="text-base font-extrabold text-[color:var(--fd-text)]">{asset}</p>
+              </div>
+            </div>
+          </FlowCard>
+        ) : (
+          <FlowCard>
+            <p className="mb-2 text-center text-xs font-bold uppercase text-[color:var(--fd-muted)]">
+              {t("wallet_transfer_asset")}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {TRANSFER_ASSETS.map((a) => {
+                const active = asset === a;
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAsset(a)}
+                    className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${
+                      active ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]" : "bg-stone-50"
+                    }`}
+                  >
+                    <WalletAssetIcon asset={a} size={32} />
+                    <span className="text-[10px] font-bold">{a}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </FlowCard>
+        )}
 
         {done ? (
           <StatusOutcomeBanner

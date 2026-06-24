@@ -128,7 +128,7 @@ export function FiatTxStatusScreen({
 
   return (
     <div className="wallet-theme pb-10">
-      <WalletSubpageHeader title={title} backHref="/app/wallet/fiat" />
+      <WalletSubpageHeader title={title} backHref="/app/wallet" />
 
       <WalletFormCard>
         <div className="flex items-center gap-2 text-[color:var(--fd-primary)]">

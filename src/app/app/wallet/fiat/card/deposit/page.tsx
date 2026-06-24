@@ -19,7 +19,7 @@ export default async function WalletFiatCardDepositPage() {
 
   return (
     <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
-      <WalletSubpageHeader title={d.wallet_fiat_card_deposit_title} backHref="/app/wallet/fiat" />
+      <WalletSubpageHeader title={d.wallet_fiat_card_deposit_title} backHref="/app/wallet" />
       <WalletFiatCardDepositClient fiatPaused={fiatPaused} />
       <div className="mt-auto">
         <McBuleliPoweredFooter />

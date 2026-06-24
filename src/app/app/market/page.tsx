@@ -3,6 +3,7 @@ import { getLocale } from "@/lib/get-locale";
 import { fetchMarketTickers } from "@/lib/market-tickers";
 import { MarketPreview } from "@/components/mobile/market-preview";
 import { PriceChartLazy } from "@/components/dashboard/price-chart-lazy";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import { getDictionary } from "@/i18n/messages";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export default async function MarketPage() {
   const tickers = await fetchMarketTickers();
 
   return (
-    <div className="flex flex-col gap-3 pb-4">
+    <div className="flex flex-col gap-3 pb-2">
       <div className="flex items-center gap-2 px-0.5">
         <Link
           href="/app"
@@ -25,13 +26,26 @@ export default async function MarketPage() {
       </div>
 
       <header className="px-0.5">
-        <h1 className="text-xl font-extrabold text-[color:var(--fd-text)]">{d.market_preview}</h1>
-        <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">{d.market_live_hint}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--fd-primary)]">
+          McBuleli
+        </p>
+        <h1 className="text-2xl font-black tracking-tight text-[color:var(--fd-text)]">
+          {d.view_market}
+        </h1>
+        <p className="mt-1 text-xs text-[color:var(--fd-muted)]">{d.market_live_hint}</p>
       </header>
 
       <PriceChartLazy appearance="light" deferUntilVisible />
 
-      <MarketPreview locale={locale} initialTickers={tickers} showViewLink={false} appearance="light" />
+      <MarketPreview
+        locale={locale}
+        initialTickers={tickers}
+        showViewLink={false}
+        appearance="light"
+        layout="cards"
+      />
+
+      <McBuleliPoweredFooter />
     </div>
   );
 }

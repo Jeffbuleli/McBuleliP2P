@@ -19,7 +19,7 @@ export default async function WalletFiatWithdrawPage() {
 
   return (
     <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
-      <WalletSubpageHeader title={d.wallet_fiat_withdraw_title} backHref="/app/wallet/fiat" />
+      <WalletSubpageHeader title={d.wallet_fiat_withdraw_title} backHref="/app/wallet" />
       <WalletFiatWithdrawClient fiatPaused={fiatPaused} />
       <div className="mt-auto">
         <McBuleliPoweredFooter />
