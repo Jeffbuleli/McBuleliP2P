@@ -1,4 +1,5 @@
 import { and, eq, gte, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { getDb, rewardPointGrants } from "@/db";
 import {
   COMMUNITY_REWARD_DAILY_CAPS,
@@ -21,6 +22,19 @@ function dayStartUtc(): Date {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   );
+}
+
+/** Fits reward_point_grants.idempotency_key varchar(96). */
+function storyPairIdempotency(
+  prefix: string,
+  storyId: string,
+  userId: string,
+): string {
+  const digest = createHash("sha256")
+    .update(`${storyId}\0${userId}`)
+    .digest("hex")
+    .slice(0, 40);
+  return `${prefix}:${digest}`;
 }
 
 async function countGrantsToday(
@@ -453,7 +467,7 @@ export async function grantCommunityStoryViewed(args: {
   return grantWithDailyCap({
     userId: args.viewerId,
     grantType: REWARD_GRANT.COMMUNITY_STORY_VIEW,
-    idempotencyKey: `community_story_view:${args.storyId}:${args.viewerId}`,
+    idempotencyKey: storyPairIdempotency("story_v", args.storyId, args.viewerId),
     meta: { storyId: args.storyId, authorId: args.authorId },
   });
 }
@@ -474,7 +488,7 @@ export async function grantCommunityStoryViewReceived(args: {
   return grantWithDailyCap({
     userId: args.authorId,
     grantType: REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED,
-    idempotencyKey: `community_story_view_author:${args.storyId}:${args.viewerId}`,
+    idempotencyKey: storyPairIdempotency("story_v_rx", args.storyId, args.viewerId),
     meta: { storyId: args.storyId, viewerId: args.viewerId },
   });
 }

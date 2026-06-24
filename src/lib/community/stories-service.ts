@@ -1,3 +1,4 @@
+import "server-only";
 import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import {
   communityMedia,
@@ -9,35 +10,23 @@ import {
   users,
 } from "@/db";
 import { normalizeStoryTextBg } from "@/lib/community/story-text-colors";
+import type {
+  CommunityStoryItem,
+  CommunityStoryRing,
+  StoryEngagement,
+  StoryReactionCount,
+  StoryReactionEmoji,
+} from "@/lib/community/story-types";
+import { STORY_REACTION_EMOJIS } from "@/lib/community/story-types";
 
-export const STORY_REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "👏", "🔥"] as const;
-export type StoryReactionEmoji = (typeof STORY_REACTION_EMOJIS)[number];
-
-export type CommunityStoryItem = {
-  id: string;
-  type: "text" | "image" | "video";
-  body: string | null;
-  mediaUrl: string | null;
-  bgColor: string | null;
-  createdAt: string;
-  expiresAt: string;
+export type {
+  CommunityStoryItem,
+  CommunityStoryRing,
+  StoryEngagement,
+  StoryReactionCount,
+  StoryReactionEmoji,
 };
-
-export type StoryReactionCount = { emoji: string; count: number };
-
-export type CommunityStoryRing = {
-  userId: string;
-  handle: string;
-  displayName: string;
-  avatarUrl: string | null;
-  isMe: boolean;
-  hasUnseen: boolean;
-  previewType: "text" | "image" | "video";
-  previewUrl: string | null;
-  previewBg: string | null;
-  previewText: string | null;
-  stories: CommunityStoryItem[];
-};
+export { STORY_REACTION_EMOJIS };
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_DAY = 8;
@@ -313,12 +302,6 @@ export async function deleteCommunityStory(args: {
     throw e;
   }
 }
-
-export type StoryEngagement = {
-  viewCount: number;
-  reactions: StoryReactionCount[];
-  myReaction: string | null;
-};
 
 export async function recordStoryView(
   storyId: string,

@@ -1,3 +1,4 @@
+import "server-only";
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db";
 
@@ -17,6 +18,18 @@ export function ensureCommunitySchema(): Promise<void> {
 /** Force re-run after a partial / failed migration (dev & recovery). */
 export function resetCommunitySchemaCache(): void {
   schemaReady = null;
+}
+
+async function safeSql(
+  db: ReturnType<typeof getDb>,
+  label: string,
+  statement: ReturnType<typeof sql>,
+): Promise<void> {
+  try {
+    await db.execute(statement);
+  } catch (e) {
+    console.warn(`[community-schema] skipped ${label}:`, e);
+  }
 }
 
 async function runEnsureCommunitySchema(): Promise<void> {
@@ -130,18 +143,30 @@ async function runEnsureCommunitySchema(): Promise<void> {
     )
   `);
 
-  await db.execute(sql`
+  await safeSql(
+    db,
+    "community_user_profiles.cover_media_id",
+    sql`
     ALTER TABLE community_user_profiles
     ADD COLUMN IF NOT EXISTS cover_media_id uuid
-  `);
-  await db.execute(sql`
+  `,
+  );
+  await safeSql(
+    db,
+    "community_user_profiles.verified_blue",
+    sql`
     ALTER TABLE community_user_profiles
     ADD COLUMN IF NOT EXISTS verified_blue boolean NOT NULL DEFAULT false
-  `);
-  await db.execute(sql`
+  `,
+  );
+  await safeSql(
+    db,
+    "community_user_profiles.last_active_at",
+    sql`
     ALTER TABLE community_user_profiles
     ADD COLUMN IF NOT EXISTS last_active_at timestamptz
-  `);
+  `,
+  );
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS community_dm_threads (
@@ -229,14 +254,22 @@ async function runEnsureCommunitySchema(): Promise<void> {
     ALTER TABLE community_media
     ADD COLUMN IF NOT EXISTS share_count integer NOT NULL DEFAULT 0
   `);
-  await db.execute(sql`
+  await safeSql(
+    db,
+    "community_comments.media_id",
+    sql`
     ALTER TABLE community_comments
     ADD COLUMN IF NOT EXISTS media_id uuid REFERENCES community_media(id) ON DELETE CASCADE
-  `);
-  await db.execute(sql`
+  `,
+  );
+  await safeSql(
+    db,
+    "community_comments.media_idx",
+    sql`
     CREATE INDEX IF NOT EXISTS community_comments_media_idx
     ON community_comments (media_id, created_at)
-  `);
+  `,
+  );
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS community_translation_cache (

@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CommunityStoryRing, StoryEngagement } from "@/lib/community/stories-service";
-import { STORY_REACTION_EMOJIS } from "@/lib/community/stories-service";
+import type { CommunityStoryRing, StoryEngagement } from "@/lib/community/story-types";
+import { STORY_REACTION_EMOJIS } from "@/lib/community/story-types";
 import {
   COMMUNITY_STORY_TEXT_BG,
   normalizeStoryTextBg,
