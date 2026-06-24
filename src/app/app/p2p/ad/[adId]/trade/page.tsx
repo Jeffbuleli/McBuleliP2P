@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -23,6 +24,9 @@ import {
   type P2pSide,
 } from "@/lib/p2p-config";
 import { P2pPaymentPickChips } from "@/components/p2p/p2p-payment-pick";
+import { P2pInfoCard } from "@/components/p2p/p2p-info-card";
+import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
+import { P2pIllusBuy, P2pIllusSell, P2pIllusVerify } from "@/components/p2p/p2p-illustrations";
 import { TransactionStepper } from "@/components/wallet/transaction-progress";
 import { p2pTradePreviewSteps } from "@/lib/p2p-progress-steps";
 import { p2pAdTradeLimits } from "@/lib/p2p-ui";
@@ -40,6 +44,7 @@ type AdDetail = {
   terms: string | null;
   countryCode: string | null;
   makerName: string;
+  makerUserId?: string;
   makerAvatarUrl: string | null;
   makerRating: { avg: number; count: number } | null;
   makerTradeCount?: number;
@@ -169,11 +174,29 @@ export default function P2pTradePage() {
   }
 
   const icon = ASSET_ICON[ad.asset];
+  const takerBuys = ad.side === "sell";
   return (
     <P2pFlowShell title={t("p2p_take_trade")} subtitle={`${ad.asset}/${ad.fiatCurrency}`}>
       <div className="fd-card overflow-hidden p-0">
         <TransactionStepper steps={p2pTradePreviewSteps(ad.fiatCurrency)} />
       </div>
+
+      <P2pInfoCard
+        compact
+        variant={takerBuys ? "buy" : "sell"}
+        illustration={takerBuys ? <P2pIllusBuy className="h-8 w-8" /> : <P2pIllusSell className="h-8 w-8" />}
+        title={takerBuys ? t("p2p_card_buy_flow_title") : t("p2p_card_sell_flow_title")}
+        subtitle={takerBuys ? t("p2p_card_buy_flow_sub") : t("p2p_card_sell_flow_sub")}
+      />
+      <P2pInfoCard
+        compact
+        variant="warn"
+        illustration={<P2pIllusVerify className="h-8 w-8" />}
+        title={t("p2p_card_check_title")}
+        subtitle={t("p2p_card_check_sub")}
+      />
+
+      <P2pSafetyTips />
 
       <FlowSection title={`${ad.asset}/${ad.fiatCurrency}`}>
         <div className="flex items-start gap-3">
@@ -197,7 +220,15 @@ export default function P2pTradePage() {
               {Number(ad.price).toLocaleString(locNum, { maximumFractionDigits: 8 })}
               <span className="text-sm font-normal text-[color:var(--fd-muted)]">/{ad.asset}</span>
             </p>
-            <p className="truncate text-xs font-bold text-[color:var(--fd-text)]">{ad.makerName}</p>
+            <p className="truncate text-xs font-bold text-[color:var(--fd-text)]">
+              {ad.makerUserId ? (
+                <Link href={`/app/p2p/merchant/${ad.makerUserId}`} className="hover:underline">
+                  {ad.makerName}
+                </Link>
+              ) : (
+                ad.makerName
+              )}
+            </p>
             <p className="flex items-center gap-2 text-[10px] font-semibold text-[color:var(--fd-muted)]">
               {ad.makerRating && ad.makerRating.count > 0 ? (
                 <span className="inline-flex items-center gap-0.5 text-amber-600">
@@ -242,6 +273,14 @@ export default function P2pTradePage() {
           </div>
         </div>
       </FlowSection>
+
+      {ad.terms?.trim() ? (
+        <FlowSection title={t("p2p_ad_terms")}>
+          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[color:var(--fd-text)]">
+            {ad.terms.trim()}
+          </p>
+        </FlowSection>
+      ) : null}
 
       {ad.paymentOptions.length > 1 ? (
         <FlowSection title={t("p2p_choose_payment")}>

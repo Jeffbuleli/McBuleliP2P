@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
+import { checkKycGate } from "@/lib/kyc-guard";
 import {
   isAllowedP2pQuoteFiat,
   P2P_COUNTRY_CODES,
@@ -38,6 +39,10 @@ export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const kyc = await checkKycGate(userId, "p2p_ad");
+  if (!kyc.ok) {
+    return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
   const json = await req.json().catch(() => null);
   const parsed = createZ.safeParse(json);

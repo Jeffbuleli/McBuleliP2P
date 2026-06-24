@@ -10,7 +10,7 @@ import { KycPostLoginSheet } from "@/components/kyc/kyc-post-login-sheet";
 import { KycStatusPoller } from "@/components/kyc/kyc-status-poller";
 import { AppIconBadgeSync } from "@/components/pwa/app-icon-badge-sync";
 import { useScrollChrome } from "@/hooks/use-scroll-chrome";
-import { bottomNavAutoHide, isCommunityRoute } from "@/lib/app-chrome";
+import { bottomNavAutoHide, isCommunityRoute, isP2pHubRoute } from "@/lib/app-chrome";
 
 export function AppShell({
   email,
@@ -28,6 +28,7 @@ export function AppShell({
   const onHome = pathname === "/app";
   const onWalletFlow = pathname.startsWith("/app/wallet");
   const onP2p = pathname.startsWith("/app/p2p");
+  const onP2pHub = isP2pHubRoute(pathname);
   const onSupport = pathname.startsWith("/app/support");
   const onAcademy = pathname.startsWith("/app/academy");
   const onAvecGroupFlow =
@@ -39,6 +40,7 @@ export function AppShell({
     pathname.startsWith("/app/wallet/deposit") ||
     pathname.startsWith("/app/wallet/withdraw") ||
     pathname === "/app/wallet/transfer" ||
+    onP2pHub ||
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support") ||
@@ -66,7 +68,7 @@ export function AppShell({
         </div>
       ) : null}
       <main
-        className={`flex-1 px-4 ${lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
+        className={`flex-1 px-4 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
       >
         {children}
       </main>

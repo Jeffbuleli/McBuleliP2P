@@ -4,6 +4,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { P2pConfirmDialog } from "@/components/p2p/p2p-confirm-dialog";
+import { P2pConfirmSheet } from "@/components/p2p/p2p-confirm-sheet";
+import { P2pProcedureBanner } from "@/components/p2p/p2p-procedure-banner";
+import { P2pReportSheet } from "@/components/p2p/p2p-report-sheet";
+import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
 import { P2pOrderSummary } from "@/components/p2p/p2p-order-summary";
 import { P2pOrderTimeline } from "@/components/p2p/p2p-order-timeline";
 import {
@@ -11,7 +15,7 @@ import {
   p2pStatusBadgeClasses,
   p2pStatusLabelKey,
 } from "@/components/p2p/p2p-status-badge";
-import { P2pIconAlert, P2pIconStar } from "@/components/p2p/p2p-icons";
+import { P2pIconStar } from "@/components/p2p/p2p-icons";
 import type { Messages } from "@/i18n/messages";
 import { interpolate } from "@/i18n/messages";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -32,6 +36,11 @@ import { prepareP2pProofFile } from "@/lib/p2p-proof-image";
 import { StatusOutcomeBanner } from "@/components/wallet/transaction-progress";
 import { P2pOrderChat, type P2pChatMessage } from "@/components/p2p/p2p-order-chat";
 import { P2pPaymentPickChips } from "@/components/p2p/p2p-payment-pick";
+import { P2pInfoCard } from "@/components/p2p/p2p-info-card";
+import { P2pIllusPayFiat, P2pIllusVerify } from "@/components/p2p/p2p-illustrations";
+import { p2pPaymentNameMismatch } from "@/lib/p2p-name-match";
+import { extractMomoPhoneFromPaymentDetail } from "@/lib/p2p-momo-qr";
+import { P2pMomoPayQr } from "@/components/p2p/p2p-momo-pay-qr";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import {
   parsePaymentSnapshotLines,
@@ -51,6 +60,7 @@ type OrderDetail = {
   status: string;
   expiresAt: string;
   paidMarkedAt: string | null;
+  autoReleaseAt: string | null;
   releasedAt: string | null;
   cancelledAt: string | null;
   paymentSnapshot: string;
@@ -68,10 +78,13 @@ type OrderDetail = {
   paymentProofImage: { id: string; mime: string; sizeBytes: number; dataUrl: string | null } | null;
   disputeReason: string | null;
   disputedAt: string | null;
+  disputeResponseDueAt: string | null;
   refundedAt: string | null;
   platformFeeCrypto: string | null;
   buyerReceivedCrypto: string | null;
   counterpartyId: string;
+  counterpartyVerifiedName: string | null;
+  counterpartyKycApproved: boolean;
   hasRated: boolean;
   canRate: boolean;
   chatAllowsNewMessages: boolean;
@@ -105,7 +118,15 @@ export function P2pOrderScreen() {
   const [ratingComment, setRatingComment] = useState("");
 
   const [modal, setModal] = useState<null | "paid" | "release" | "cancel" | "dispute">(null);
+  const [showReport, setShowReport] = useState(false);
+  const [reportOk, setReportOk] = useState(false);
+  const [paidChecks, setPaidChecks] = useState<Record<string, boolean>>({});
+  const [releaseChecks, setReleaseChecks] = useState<Record<string, boolean>>({});
   const [payLineId, setPayLineId] = useState("0");
+  const [disputeEvidence, setDisputeEvidence] = useState<
+    { id: string; dataUrl: string }[]
+  >([]);
+  const [disputeEvidenceBusy, setDisputeEvidenceBusy] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/p2p/orders/${orderId}`);
@@ -128,6 +149,18 @@ export function P2pOrderScreen() {
     }
     const proof = data.proof as OrderDetail["paymentProofImage"];
     setOrder((cur) => (cur ? { ...cur, paymentProofImage: proof ?? null } : cur));
+  }, [orderId]);
+
+  const loadDisputeEvidence = useCallback(async () => {
+    const res = await fetch(`/api/p2p/orders/${orderId}/dispute-evidence`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    setDisputeEvidence(
+      ((data.items as { id: string; dataUrl: string }[]) ?? []).map((x) => ({
+        id: x.id,
+        dataUrl: x.dataUrl,
+      })),
+    );
   }, [orderId]);
 
   const loadMessages = useCallback(async () => {
@@ -160,6 +193,11 @@ export function P2pOrderScreen() {
   }, [orderId, order?.status, loadProof]);
 
   useEffect(() => {
+    if (!orderId || !order || order.status !== "disputed") return;
+    void loadDisputeEvidence();
+  }, [orderId, order?.status, loadDisputeEvidence]);
+
+  useEffect(() => {
     if (!orderId) return;
     const id = window.setInterval(() => void loadMessages(), 10000);
     return () => window.clearInterval(id);
@@ -173,6 +211,12 @@ export function P2pOrderScreen() {
 
   useEffect(() => {
     if (!order || order.status !== "awaiting_payment") return;
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [order]);
+
+  useEffect(() => {
+    if (!order || order.status !== "paid" || !order.autoReleaseAt) return;
     const id = window.setInterval(() => setNowTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [order]);
@@ -193,6 +237,17 @@ export function P2pOrderScreen() {
         ? `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`
         : `${mm}:${String(ss).padStart(2, "0")}`;
     return { expired: false as const, label };
+  }, [order, nowTick]);
+
+  const releaseCountdown = useMemo(() => {
+    if (!order || order.status !== "paid" || !order.autoReleaseAt) return null;
+    const end = new Date(order.autoReleaseAt).getTime();
+    const left = end - Date.now();
+    if (left <= 0) return { expired: true as const, label: "" };
+    const s = Math.floor(left / 1000);
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return { expired: false as const, label: `${mm}:${String(ss).padStart(2, "0")}` };
   }, [order, nowTick]);
 
   async function postAction(
@@ -219,6 +274,21 @@ export function P2pOrderScreen() {
       router.refresh();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function uploadDisputeEvidence(file: File) {
+    setDisputeEvidenceBusy(true);
+    try {
+      const prepared = await prepareP2pProofFile(file);
+      const res = await fetch(`/api/p2p/orders/${orderId}/dispute-evidence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(prepared),
+      });
+      if (res.ok) void loadDisputeEvidence();
+    } finally {
+      setDisputeEvidenceBusy(false);
     }
   }
 
@@ -332,6 +402,42 @@ export function P2pOrderScreen() {
     [payLines],
   );
   const activePayLine = payLines[Number(payLineId)] ?? payLines[0] ?? order?.paymentSnapshot ?? "";
+  const momoPhone = useMemo(() => {
+    const detail = paymentSnapshotLineDetail(activePayLine) || activePayLine;
+    return extractMomoPhoneFromPaymentDetail(detail);
+  }, [activePayLine]);
+
+  const paidChecklist = useMemo(
+    () => [
+      { id: "account", label: t("p2p_check_paid_account") },
+      { id: "amount", label: t("p2p_check_paid_amount") },
+      { id: "inorder", label: t("p2p_check_paid_inorder") },
+    ],
+    [t],
+  );
+
+  const releaseChecklist = useMemo(
+    () => [
+      { id: "fiat", label: t("p2p_check_release_account") },
+      { id: "name", label: t("p2p_check_release_name") },
+      { id: "external", label: t("p2p_check_release_no_external") },
+    ],
+    [t],
+  );
+
+  function togglePaidCheck(id: string) {
+    setPaidChecks((c) => ({ ...c, [id]: !c[id] }));
+  }
+
+  function toggleReleaseCheck(id: string) {
+    setReleaseChecks((c) => ({ ...c, [id]: !c[id] }));
+  }
+
+  const nameMismatch = useMemo(() => {
+    if (!order) return false;
+    const ref = order.paymentReference || paymentRef;
+    return p2pPaymentNameMismatch(ref, order.counterpartyVerifiedName);
+  }, [order, paymentRef]);
 
   if (err) {
     return (
@@ -383,6 +489,20 @@ export function P2pOrderScreen() {
       >
         <P2pOrderTimeline status={order.status} quoteCurrency={order.fiatCurrency} />
 
+        <P2pProcedureBanner
+          ctx={{
+            status: order.status,
+            youArePayer: order.youArePayer,
+            youAreSeller: order.youAreSeller,
+            youAreBuyer: order.youAreBuyer,
+            cryptoQuote,
+          }}
+        />
+
+        {!cryptoQuote && ["awaiting_payment", "paid", "disputed"].includes(order.status) ? (
+          <P2pSafetyTips className="mt-1" />
+        ) : null}
+
         {order.status === "released" ? (
           <StatusOutcomeBanner
             variant="success"
@@ -421,18 +541,67 @@ export function P2pOrderScreen() {
         </div>
       ) : null}
 
+      {order.status === "paid" && releaseCountdown && !cryptoQuote ? (
+        <div className="fd-card flex items-center gap-3 px-3 py-2.5">
+          <span className="font-mono text-2xl font-bold tabular-nums text-[color:var(--fd-text)]">
+            {releaseCountdown.expired ? "—" : releaseCountdown.label}
+          </span>
+          <p className="text-[10px] leading-snug text-[color:var(--fd-muted)]">
+            {order.youAreSeller
+              ? t("p2p_release_countdown_seller")
+              : t("p2p_release_countdown_buyer")}
+          </p>
+        </div>
+      ) : null}
+
+      {order.status === "awaiting_payment" && order.youArePayer && !cryptoQuote ? (
+        <P2pInfoCard
+          compact
+          variant="warn"
+          illustration={<P2pIllusPayFiat className="h-8 w-8" />}
+          title={t("p2p_card_momo_title")}
+          subtitle={t("p2p_card_inorder_sub")}
+        />
+      ) : null}
+
+      {order.status === "paid" && order.youAreSeller && !cryptoQuote ? (
+        <P2pInfoCard
+          compact
+          variant="warn"
+          illustration={<P2pIllusVerify className="h-8 w-8" />}
+          title={t("p2p_card_verify_title")}
+          subtitle={t("p2p_card_verify_sub")}
+        />
+      ) : null}
+
       {showPaymentAndCrypto && !cryptoQuote ? (
         <FlowSection title={t("p2p_section_payment")}>
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
             <UserAvatarMark
               email={order.counterpartyName}
               avatarUrl={order.counterpartyAvatarUrl}
               sizeClass="h-8 w-8"
               variant="profile"
             />
-            <span className="truncate text-sm font-bold text-[color:var(--fd-text)]">
+            <div className="min-w-0">
+            <span className="truncate text-sm font-bold text-[color:var(--fd-text)] block">
               {order.counterpartyName}
             </span>
+            {order.counterpartyVerifiedName && order.counterpartyKycApproved ? (
+              <span className="text-[10px] font-semibold text-[color:var(--fd-primary)]">
+                {t("p2p_verified_name")}: {order.counterpartyVerifiedName}
+              </span>
+            ) : null}
+            </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowReport(true)}
+              className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700"
+            >
+              {t("p2p_report_btn")}
+            </button>
           </div>
           <P2pPaymentPickChips
             options={payPickOptions}
@@ -443,7 +612,37 @@ export function P2pOrderScreen() {
           <p className="whitespace-pre-wrap rounded-2xl border border-[color:var(--fd-border)] bg-stone-50/80 p-3 text-xs font-medium text-[color:var(--fd-text)]">
             {paymentSnapshotLineDetail(activePayLine) || activePayLine}
           </p>
+          {order.status === "awaiting_payment" &&
+          order.youArePayer &&
+          momoPhone &&
+          !cryptoQuote ? (
+            <div className="mt-3">
+              <P2pMomoPayQr
+                phone={momoPhone}
+                amount={order.fiatAmount}
+                currency={order.fiatCurrency}
+                orderId={order.id}
+                payeeName={order.counterpartyVerifiedName ?? order.counterpartyName}
+              />
+            </div>
+          ) : null}
         </FlowSection>
+      ) : null}
+
+      {nameMismatch && order.youAreSeller && order.status === "paid" ? (
+        <P2pInfoCard
+          compact
+          variant="warn"
+          illustration={<P2pIllusVerify className="h-8 w-8" />}
+          title={t("p2p_name_mismatch_title")}
+          subtitle={t("p2p_name_mismatch_sub")}
+        />
+      ) : null}
+
+      {reportOk ? (
+        <p className="text-center text-[10px] font-semibold text-[color:var(--fd-primary)]">
+          {t("p2p_report_sent")}
+        </p>
       ) : null}
 
       {order.status === "released" &&
@@ -460,9 +659,41 @@ export function P2pOrderScreen() {
       ) : null}
 
       {order.status === "disputed" && order.disputeReason ? (
-        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100">
-          <strong>{t("p2p_order_status_disputed")}:</strong> {order.disputeReason}
-        </p>
+        <div className="mt-4 space-y-2">
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100">
+            <strong>{t("p2p_order_status_disputed")}:</strong> {order.disputeReason}
+          </p>
+          {order.disputeResponseDueAt ? (
+            <p className="text-[10px] font-semibold text-[color:var(--fd-muted)]">
+              {interpolate(t("p2p_dispute_response_due"), {
+                when: new Date(order.disputeResponseDueAt).toLocaleString(loc, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              })}
+            </p>
+          ) : null}
+          {disputeEvidence.length > 0 ? (
+            <ul className="flex gap-2 overflow-x-auto pb-1">
+              {disputeEvidence.map((ev) => (
+                <li key={ev.id} className="shrink-0">
+                  <img
+                    src={ev.dataUrl}
+                    alt=""
+                    className="h-16 w-16 rounded-lg object-cover ring-1 ring-[color:var(--fd-border)]"
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <FlowUploadZone
+            label={t("p2p_dispute_evidence_add")}
+            busy={disputeEvidenceBusy}
+            onPick={(f) => void uploadDisputeEvidence(f)}
+          />
+        </div>
       ) : null}
 
       {order.paymentProofImage?.dataUrl &&
@@ -485,15 +716,6 @@ export function P2pOrderScreen() {
       ) : null}
 
       <FlowSection>
-        {order.youAreSeller && !cryptoQuote && order.status === "paid" ? (
-          <FlowError>
-            <span className="inline-flex items-center gap-2">
-              <P2pIconAlert className="h-4 w-4 shrink-0" />
-              {t("p2p_trust_release_warning_fiat")}
-            </span>
-          </FlowError>
-        ) : null}
-
         {order.status === "awaiting_payment" && order.youArePayer && !cryptoQuote ? (
           <div className="space-y-3">
             <FlowField label={t("p2p_payment_ref")}>
@@ -520,14 +742,20 @@ export function P2pOrderScreen() {
                 />
               </div>
             ) : null}
-            <FlowPrimaryBtn disabled={busy} onClick={() => setModal("paid")}>
+            <FlowPrimaryBtn disabled={busy} onClick={() => {
+              setPaidChecks({});
+              setModal("paid");
+            }}>
               {t("p2p_mark_paid_payer")}
             </FlowPrimaryBtn>
           </div>
         ) : null}
 
         {order.status === "paid" && order.youAreSeller && !cryptoQuote ? (
-          <FlowPrimaryBtn disabled={busy} onClick={() => setModal("release")}>
+          <FlowPrimaryBtn disabled={busy} onClick={() => {
+            setReleaseChecks({});
+            setModal("release");
+          }}>
             {t("p2p_order_release_fiat")}
           </FlowPrimaryBtn>
         ) : null}
@@ -622,15 +850,21 @@ export function P2pOrderScreen() {
           placeholder={t("p2p_chat_placeholder")}
           sendLabel={t("p2p_chat_send")}
           closedHint={t("p2p_chat_closed")}
+          chatAntiScamHint={t("p2p_chat_antiscam_hint")}
           sticky
           listRef={chatListRef}
         />
       ) : null}
 
-      <P2pConfirmDialog
+      <P2pConfirmSheet
         open={modal === "paid"}
+        variant="buy"
+        illustration={<P2pIllusPayFiat />}
         title={t("p2p_confirm_mark_paid_title")}
-        body={t("p2p_confirm_mark_paid_body")}
+        subtitle={t("p2p_confirm_mark_paid_body")}
+        checklist={paidChecklist}
+        checked={paidChecks}
+        onToggle={togglePaidCheck}
         confirmLabel={t("p2p_order_mark_paid")}
         cancelLabel={t("p2p_confirm_common_cancel")}
         busy={busy}
@@ -644,17 +878,18 @@ export function P2pOrderScreen() {
         }
       />
 
-      <P2pConfirmDialog
+      <P2pConfirmSheet
         open={modal === "release"}
+        variant="warn"
+        illustration={<P2pIllusVerify />}
         title={t("p2p_confirm_release_title")}
-        body={
-          <span>
-            {t("p2p_confirm_release_body")}{" "}
-            <strong className="text-stone-900 dark:text-stone-100">
-              {order.cryptoAmount} {order.asset}
-            </strong>
-          </span>
-        }
+        subtitle={interpolate(t("p2p_confirm_release_amount"), {
+          amount: order.cryptoAmount,
+          asset: order.asset,
+        })}
+        checklist={releaseChecklist}
+        checked={releaseChecks}
+        onToggle={toggleReleaseCheck}
         confirmLabel={t("p2p_order_release")}
         cancelLabel={t("p2p_confirm_common_cancel")}
         busy={busy}
@@ -693,6 +928,14 @@ export function P2pOrderScreen() {
             className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
           />
         }
+      />
+
+      <P2pReportSheet
+        open={showReport}
+        reportedUserId={order.counterpartyId}
+        orderId={order.id}
+        onClose={() => setShowReport(false)}
+        onSubmitted={() => setReportOk(true)}
       />
     </div>
   );

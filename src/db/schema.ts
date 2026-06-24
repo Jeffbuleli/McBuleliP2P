@@ -416,12 +416,20 @@ export const p2pOrders = pgTable(
     paymentProofNote: text("payment_proof_note"),
     disputeReason: text("dispute_reason"),
     disputedAt: timestamp("disputed_at", { withTimezone: true }),
+    /** Staff / counterparty should respond before this time (dispute SLA). */
+    disputeResponseDueAt: timestamp("dispute_response_due_at", { withTimezone: true }),
     platformFeeCrypto: numeric("platform_fee_crypto", { precision: 36, scale: 18 }),
     buyerReceivedCrypto: numeric("buyer_received_crypto", {
       precision: 36,
       scale: 18,
     }),
     refundedAt: timestamp("refunded_at", { withTimezone: true }),
+    /** Set when payer is notified that the payment window is about to close. */
+    expiryReminderSentAt: timestamp("expiry_reminder_sent_at", { withTimezone: true }),
+    /** Seller must release by this time or crypto auto-releases to buyer. */
+    autoReleaseAt: timestamp("auto_release_at", { withTimezone: true }),
+    /** Seller reminder before auto-release. */
+    releaseReminderSentAt: timestamp("release_reminder_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -483,6 +491,26 @@ export const p2pOrderPaymentProofs = pgTable(
   ],
 );
 
+export const p2pDisputeEvidence = pgTable(
+  "p2p_dispute_evidence",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => p2pOrders.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    dataUrl: text("data_url").notNull(),
+    mime: varchar("mime", { length: 64 }).notNull(),
+    sizeBytes: integer("size_bytes").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("p2p_dispute_evidence_order_idx").on(t.orderId, t.createdAt)],
+);
+
 export const p2pOrderRatings = pgTable(
   "p2p_order_ratings",
   {
@@ -505,6 +533,30 @@ export const p2pOrderRatings = pgTable(
   (t) => [
     uniqueIndex("p2p_order_ratings_order_from_uidx").on(t.orderId, t.fromUserId),
     index("p2p_order_ratings_to_user_idx").on(t.toUserId),
+  ],
+);
+
+export const p2pUserReports = pgTable(
+  "p2p_user_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reporterId: uuid("reporter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reportedUserId: uuid("reported_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => p2pOrders.id, { onDelete: "set null" }),
+    reason: varchar("reason", { length: 32 }).notNull(),
+    details: text("details"),
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("p2p_user_reports_status_idx").on(t.status, t.createdAt),
+    index("p2p_user_reports_reported_idx").on(t.reportedUserId, t.createdAt),
   ],
 );
 

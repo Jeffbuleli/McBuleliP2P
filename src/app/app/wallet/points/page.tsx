@@ -215,7 +215,7 @@ export default function WalletPointsPage() {
         key: REWARD_GRANT.P2P_TRADE_COMPLETED,
         label: t("points_earn_p2p"),
         points: rates[REWARD_GRANT.P2P_TRADE_COMPLETED] ?? 0,
-        href: "/app/trade/p2p",
+        href: "/app/p2p",
       },
       {
         key: REWARD_GRANT.TRAINING_SESSION_ATTENDED,

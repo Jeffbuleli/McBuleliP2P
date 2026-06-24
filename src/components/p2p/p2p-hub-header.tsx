@@ -1,19 +1,76 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { P2pIconEscrow, P2pIconSwap } from "@/components/p2p/p2p-icons";
+import { P2pRulesPanel } from "@/components/p2p/p2p-rules-panel";
+import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
+import { P2pIconEscrow } from "@/components/p2p/p2p-icons";
 
-export function P2pHubHeader() {
+function P2pHubLogo({ size }: { size: number }) {
+  const inner = Math.round(size * 0.72);
+  return (
+    <span
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)] ring-1 ring-[color:var(--fd-primary)]/10"
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src="/brand/logo-256.png"
+        alt=""
+        width={inner}
+        height={inner}
+        className="object-contain"
+        unoptimized
+      />
+    </span>
+  );
+}
+
+export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
-  const [showLegal, setShowLegal] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+
+  if (compact) {
+    return (
+      <header className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-2.5 py-2">
+        <div className="flex items-center gap-2">
+          <P2pHubLogo size={32} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate text-sm font-bold text-[color:var(--fd-text)]">{t("p2p_title")}</h1>
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[color:var(--fd-mint)] px-1.5 py-px text-[8px] font-extrabold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                <P2pIconEscrow className="h-2.5 w-2.5" />
+                {t("p2p_market_escrow_badge")}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowRules((v) => !v)}
+            className={`flex h-8 shrink-0 items-center rounded-full border px-2.5 text-[10px] font-bold transition-colors ${
+              showRules
+                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+            }`}
+            aria-expanded={showRules}
+          >
+            {t("p2p_rules_toggle")}
+          </button>
+        </div>
+        {showRules ? (
+          <div className="mt-2 space-y-2 border-t border-[color:var(--fd-border)] pt-2">
+            <P2pRulesPanel />
+            <P2pSafetyTips />
+          </div>
+        ) : null}
+      </header>
+    );
+  }
 
   return (
     <header className="fd-card overflow-hidden p-0 shadow-sm">
       <div className="flex items-start gap-3 border-b border-[color:var(--fd-border)] bg-gradient-to-r from-[color:var(--fd-mint)] via-[color:var(--fd-card)] to-[color:var(--fd-card)] px-3 py-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--fd-mint-deep)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-border)]">
-          <P2pIconSwap className="h-5 w-5" />
-        </span>
+        <P2pHubLogo size={44} />
         <div className="min-w-0 flex-1">
           <h1 className="text-base font-bold text-[color:var(--fd-text)]">{t("p2p_title")}</h1>
           <p className="mt-0.5 text-[11px] font-medium text-[color:var(--fd-muted)]">
@@ -26,18 +83,23 @@ export function P2pHubHeader() {
         </div>
         <button
           type="button"
-          onClick={() => setShowLegal((v) => !v)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[color:var(--fd-border)] bg-white text-xs font-bold text-[color:var(--fd-muted)]"
-          aria-expanded={showLegal}
-          title={t("p2p_legal_info")}
+          onClick={() => setShowRules((v) => !v)}
+          className={`flex h-9 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${
+            showRules
+              ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+              : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+          }`}
+          aria-expanded={showRules}
+          title={t("p2p_rules_toggle")}
         >
-          ?
+          {t("p2p_rules_toggle")}
         </button>
       </div>
-      {showLegal ? (
-        <p className="px-3 py-2 text-[10px] leading-snug text-[color:var(--fd-muted)]">
-          {t("p2p_disclaimer")}
-        </p>
+      {showRules ? (
+        <div className="space-y-3 border-t border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-2.5">
+          <P2pRulesPanel />
+          <P2pSafetyTips />
+        </div>
       ) : null}
     </header>
   );

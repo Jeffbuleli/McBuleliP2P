@@ -18,6 +18,9 @@ import {
   P2pFlowShell,
 } from "@/components/p2p/p2p-flow-ui";
 import { ServiceFeeConsent } from "@/components/wallet/service-fee-consent";
+import { P2pInfoCard } from "@/components/p2p/p2p-info-card";
+import { P2pIllusEscrow, P2pIllusKyc } from "@/components/p2p/p2p-illustrations";
+import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
 import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
@@ -316,6 +319,25 @@ export default function P2pNewAdPage() {
 
   return (
     <P2pFlowShell title={pageTitle} subtitle={pageSubtitle}>
+      <div className="grid grid-cols-2 gap-1.5">
+        <P2pInfoCard
+          compact
+          variant="info"
+          illustration={<P2pIllusKyc className="h-8 w-8" />}
+          title={t("p2p_card_kyc_title")}
+          subtitle={t("p2p_card_kyc_sub")}
+        />
+        <P2pInfoCard
+          compact
+          variant={side === "sell" ? "sell" : "buy"}
+          illustration={<P2pIllusEscrow className="h-8 w-8" />}
+          title={t("p2p_card_escrow_title")}
+          subtitle={t("p2p_card_escrow_sub")}
+        />
+      </div>
+
+      <P2pSafetyTips />
+
       <FlowKvCard
         rows={[
           {

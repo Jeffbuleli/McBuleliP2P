@@ -131,6 +131,24 @@ export function paymentWindowMinutes(): number {
   return Number.isFinite(n) && n >= 10 && n <= 240 ? n : 45;
 }
 
+/** Minutes before payment window closes when payer gets an in-app reminder. */
+export function p2pExpiryReminderLeadMinutes(): number {
+  const n = Number(process.env.P2P_EXPIRY_REMINDER_MINUTES ?? "10");
+  return Number.isFinite(n) && n >= 3 && n <= 60 ? Math.floor(n) : 10;
+}
+
+/** Minutes after buyer marks paid before crypto auto-releases to buyer. */
+export function p2pReleaseWindowMinutes(): number {
+  const n = Number(process.env.P2P_RELEASE_WINDOW_MINUTES ?? "30");
+  return Number.isFinite(n) && n >= 15 && n <= 120 ? Math.floor(n) : 30;
+}
+
+/** Minutes before auto-release when seller gets a reminder. */
+export function p2pReleaseReminderLeadMinutes(): number {
+  const n = Number(process.env.P2P_RELEASE_REMINDER_MINUTES ?? "10");
+  return Number.isFinite(n) && n >= 3 && n <= 60 ? Math.floor(n) : 10;
+}
+
 /** Basis points (100 = 1%). Capped at 500 (5%) for safety. */
 export function p2pFeeBpsConfigured(): number {
   const n = Number(process.env.P2P_FEE_BPS ?? "0");
@@ -158,4 +176,22 @@ export function minCryptoForAsset(asset: P2pCryptoAsset): number {
       ? Number(process.env.P2P_MIN_CRYPTO_USDT ?? "1")
       : Number(process.env.P2P_MIN_CRYPTO_PI ?? "1");
   return Number.isFinite(raw) && raw > 0 ? raw : 1;
+}
+
+/** Max new orders per user per rolling 24h (0 = unlimited). */
+export function p2pMaxOrdersPerUserPerDay(): number {
+  const n = Number(process.env.P2P_MAX_ORDERS_PER_DAY ?? "20");
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 20;
+}
+
+/** Hours for staff/counterparty to respond after a dispute opens. */
+export function p2pDisputeResponseHours(): number {
+  const n = Number(process.env.P2P_DISPUTE_RESPONSE_HOURS ?? "24");
+  return Number.isFinite(n) && n >= 6 && n <= 168 ? Math.floor(n) : 24;
+}
+
+/** Max dispute evidence images per order. */
+export function p2pMaxDisputeEvidenceFiles(): number {
+  const n = Number(process.env.P2P_DISPUTE_EVIDENCE_MAX ?? "5");
+  return Number.isFinite(n) && n >= 1 && n <= 10 ? Math.floor(n) : 5;
 }

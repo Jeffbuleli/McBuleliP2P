@@ -155,6 +155,27 @@ function notifMeta(
         href: p2pHref,
         pill: { variant: "failed", label: t("status_ui_failed") },
       };
+    case "p2p_order_expiring":
+      return {
+        title: t("notif_p2p_order_expiring_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "p2p_release_reminder":
+      return {
+        title: t("notif_p2p_release_reminder_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    case "p2p_order_auto_released":
+      return {
+        title: t("notif_p2p_auto_released_title", { asset }),
+        body: p2pBody(),
+        href: p2pHref,
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
     case "p2p_order_disputed":
       return {
         title: t("notif_p2p_order_disputed_title", { asset }),
@@ -399,7 +420,7 @@ function NotifIconWrap({ kind }: { kind: string }) {
         kind === "p2p_order_dispute_released" ||
         kind === "p2p_order_dispute_refunded"
       ? "bg-emerald-100 text-emerald-800"
-      : kind === "p2p_order_cancelled" || kind === "p2p_order_expired"
+      : kind === "p2p_order_cancelled" || kind === "p2p_order_expired" || kind === "p2p_order_expiring" || kind === "p2p_release_reminder"
         ? "bg-rose-100 text-rose-800"
         : kind === "p2p_order_disputed"
           ? "bg-amber-100 text-amber-900"

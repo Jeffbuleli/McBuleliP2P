@@ -13,6 +13,9 @@ export type P2pNotificationKind =
   | "p2p_order_released"
   | "p2p_order_cancelled"
   | "p2p_order_expired"
+  | "p2p_order_expiring"
+  | "p2p_release_reminder"
+  | "p2p_order_auto_released"
   | "p2p_order_disputed"
   | "p2p_order_dispute_released"
   | "p2p_order_dispute_refunded"
@@ -135,6 +138,25 @@ export async function notifyP2pOrderExpired(o: P2pOrderNotifyCtx): Promise<void>
   await notify(o.makerId, "p2p_order_expired", payload);
   if (o.takerId !== o.makerId) {
     await notify(o.takerId, "p2p_order_expired", payload);
+  }
+}
+
+/** Payment window closing soon — notify payer only. */
+export async function notifyP2pOrderExpiring(o: P2pOrderNotifyCtx): Promise<void> {
+  await notify(o.payerUserId, "p2p_order_expiring", orderPayload(o));
+}
+
+/** Auto-release approaching — notify seller. */
+export async function notifyP2pReleaseReminder(o: P2pOrderNotifyCtx): Promise<void> {
+  await notify(o.sellerUserId, "p2p_release_reminder", orderPayload(o));
+}
+
+/** Cron auto-released crypto to buyer — notify both parties. */
+export async function notifyP2pOrderAutoReleased(o: P2pOrderNotifyCtx): Promise<void> {
+  const payload = orderPayload(o, { autoReleased: true });
+  await notify(o.buyerUserId, "p2p_order_auto_released", payload);
+  if (o.sellerUserId !== o.buyerUserId) {
+    await notify(o.sellerUserId, "p2p_order_auto_released", payload);
   }
 }
 

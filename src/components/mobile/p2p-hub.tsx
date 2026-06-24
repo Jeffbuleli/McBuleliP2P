@@ -10,7 +10,12 @@ import { P2pHubHeader } from "@/components/p2p/p2p-hub-header";
 import { P2pMarketAdCard } from "@/components/p2p/p2p-market-ad-card";
 import { P2pMyAdCard } from "@/components/p2p/p2p-my-ad-card";
 import { P2pOrderListRow } from "@/components/p2p/p2p-order-list-row";
+import { P2pMakerDashboard } from "@/components/p2p/p2p-maker-dashboard";
+import type { P2pMakerDashboardData } from "@/components/p2p/p2p-maker-dashboard";
+import { P2pAdEditSheet } from "@/components/p2p/p2p-ad-edit-sheet";
+import type { P2pMyAd } from "@/components/p2p/p2p-my-ad-card";
 import { FlowMarketViewTabs, FlowSelect, FlowTabBar } from "@/components/p2p/p2p-flow-ui";
+import type { P2pMarketSort } from "@/lib/p2p-market-sort";
 import type { P2pMarketView, P2pPaymentKindFilter } from "@/lib/p2p-market-view";
 import {
   P2P_COUNTRY_CODES,
@@ -32,9 +37,14 @@ type MarketAd = {
   countryCode: string | null;
   createdAt: string;
   makerName: string;
+  makerUserId?: string;
   makerAvatarUrl?: string | null;
+  makerKycApproved?: boolean;
+  makerVerifiedMerchant?: boolean;
   makerRating: { avg: number; count: number } | null;
   makerTradeCount?: number;
+  makerReleaseMedianMinutes?: number | null;
+  makerOnline?: boolean;
   reserveRemainingCrypto?: string | null;
   boostedUntil: string | null;
   boostAmountPi: string;
@@ -96,8 +106,11 @@ export function P2PHub() {
   const [country, setCountry] = useState("");
   const [boostedOnly, setBoostedOnly] = useState(false);
   const [trustedOnly, setTrustedOnly] = useState(false);
+  const [marketSort, setMarketSort] = useState<P2pMarketSort>("default");
   const [marketAds, setMarketAds] = useState<MarketAd[] | null>(null);
   const [myAds, setMyAds] = useState<MyAd[] | null>(null);
+  const [makerDashboard, setMakerDashboard] = useState<P2pMakerDashboardData | null>(null);
+  const [editAd, setEditAd] = useState<P2pMyAd | null>(null);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [boostBusyId, setBoostBusyId] = useState<string | null>(null);
@@ -114,6 +127,7 @@ export function P2PHub() {
       if (paymentKind !== "all") q.set("paymentKind", paymentKind);
       if (boostedOnly) q.set("boosted", "1");
       if (trustedOnly) q.set("trusted", "1");
+      if (marketSort !== "default") q.set("sort", marketSort);
       const res = await fetch(`/api/p2p/market?${q.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -124,16 +138,25 @@ export function P2PHub() {
     } finally {
       setLoading(false);
     }
-  }, [asset, fiat, marketView, country, paymentKind, boostedOnly, trustedOnly]);
+  }, [asset, fiat, marketView, country, paymentKind, boostedOnly, trustedOnly, marketSort]);
 
   const loadAds = useCallback(async () => {
-    const res = await fetch("/api/p2p/ads");
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
+    const [adsRes, dashRes] = await Promise.all([
+      fetch("/api/p2p/ads"),
+      fetch("/api/p2p/me/dashboard"),
+    ]);
+    const data = await adsRes.json().catch(() => ({}));
+    const dash = await dashRes.json().catch(() => ({}));
+    if (!adsRes.ok) {
       setMyAds([]);
-      return;
+    } else {
+      setMyAds(data.ads as MyAd[]);
     }
-    setMyAds(data.ads as MyAd[]);
+    if (dashRes.ok && dash.dashboard) {
+      setMakerDashboard(dash.dashboard as P2pMakerDashboardData);
+    } else {
+      setMakerDashboard(null);
+    }
   }, []);
 
   const boostFeeUsdt = useMemo(() => p2pBoostFeeUsdt(), []);
@@ -220,13 +243,14 @@ export function P2PHub() {
   );
 
   return (
-    <div className="-mx-1 space-y-3 pb-10 pt-1">
-      <P2pHubHeader />
-
-      <FlowTabBar options={tabOptions} value={tab} onChange={selectTab} />
+    <div className="-mx-1 space-y-2 pb-8">
+      <div className="sticky top-0 z-20 -mx-1 space-y-1.5 bg-[var(--fd-bg)] px-1 pb-1">
+        <P2pHubHeader compact />
+        <FlowTabBar options={tabOptions} value={tab} onChange={selectTab} />
+      </div>
 
       {tab === "market" ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <FlowMarketViewTabs
             value={marketView}
             onChange={setMarketView}
@@ -270,6 +294,18 @@ export function P2PHub() {
                   {countryLabel(locale, c)}
                 </option>
               ))}
+            </FlowSelect>
+            <FlowSelect
+              value={marketSort}
+              onChange={(e) => setMarketSort(e.target.value as P2pMarketSort)}
+              className="!min-h-0 !py-1.5 !text-[11px] !rounded-xl flex-1 min-w-[5rem]"
+              aria-label={t("p2p_sort_label")}
+            >
+              <option value="default">{t("p2p_sort_default")}</option>
+              <option value="price">{t("p2p_sort_price")}</option>
+              <option value="reputation">{t("p2p_sort_reputation")}</option>
+              <option value="release">{t("p2p_sort_release")}</option>
+              <option value="boosted">{t("p2p_sort_boosted")}</option>
             </FlowSelect>
             {(
               [
@@ -350,6 +386,7 @@ export function P2PHub() {
 
       {tab === "ads" ? (
         <div className="space-y-3">
+          {makerDashboard ? <P2pMakerDashboard data={makerDashboard} /> : null}
           <Link
             href="/app/p2p/ad/new"
             className="fd-btn-soft flex min-h-[52px] w-full items-center justify-center rounded-2xl text-base font-bold active:scale-[0.98]"
@@ -373,10 +410,17 @@ export function P2PHub() {
                   onResume={() => void patchAd(a.id, "active")}
                   onBoost={() => void boostAd(a.id)}
                   onClose={() => void patchAd(a.id, "closed")}
+                  onEdit={() => setEditAd(a)}
                 />
               ))}
             </ul>
           )}
+          <P2pAdEditSheet
+            ad={editAd}
+            open={editAd != null}
+            onClose={() => setEditAd(null)}
+            onSaved={() => void loadAds()}
+          />
           {boostMsg ? (
             <p className="text-center text-xs text-[color:var(--fd-muted)]">{boostMsg}</p>
           ) : null}

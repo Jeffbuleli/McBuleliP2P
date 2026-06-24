@@ -1,6 +1,7 @@
 "use client";
 
 import { ChatAvatarBubble } from "@/components/profile/user-avatar-mark";
+import { useI18n } from "@/components/i18n-provider";
 import { FlowInput } from "@/components/p2p/p2p-flow-ui";
 
 export type P2pChatMessage = {
@@ -17,6 +18,7 @@ function ChatBubbles({
   messages,
   closedHint,
   locale,
+  officialLabel,
   listRef,
   maxH,
   scrollId,
@@ -24,6 +26,7 @@ function ChatBubbles({
   messages: P2pChatMessage[];
   closedHint?: string;
   locale: string;
+  officialLabel: string;
   listRef?: (el: HTMLDivElement | null) => void;
   maxH: string;
   scrollId?: string;
@@ -63,8 +66,8 @@ function ChatBubbles({
                     >
                       {m.senderMasked}
                       {m.senderRole === "agent" || m.senderRole === "super_admin" ? (
-                        <span className="ml-1 rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] uppercase">
-                          Support
+                        <span className="ml-1 rounded-full bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-blue-700">
+                          {officialLabel}
                         </span>
                       ) : null}
                     </span>
@@ -100,6 +103,7 @@ export function P2pOrderChat({
   placeholder,
   sendLabel,
   closedHint,
+  chatAntiScamHint,
   sticky,
   listRef,
 }: {
@@ -114,9 +118,13 @@ export function P2pOrderChat({
   placeholder: string;
   sendLabel: string;
   closedHint?: string;
+  chatAntiScamHint?: string;
   sticky?: boolean;
   listRef?: (el: HTMLDivElement | null) => void;
 }) {
+  const { t } = useI18n();
+  const officialLabel = t("p2p_chat_official");
+
   if (sticky) {
     return (
       <div
@@ -126,12 +134,16 @@ export function P2pOrderChat({
         <div className="fd-card overflow-hidden rounded-t-2xl p-0 shadow-[0_-6px_28px_rgba(28,25,23,0.1)]">
           <div className="border-b border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/50 px-3 py-2">
             <h2 className="text-xs font-bold text-[color:var(--fd-primary)]">{title}</h2>
+            {chatAntiScamHint ? (
+              <p className="text-[9px] text-[color:var(--fd-muted)]">{chatAntiScamHint}</p>
+            ) : null}
           </div>
           <div className="px-2 pt-2">
             <ChatBubbles
               messages={messages}
               closedHint={closedHint}
               locale={locale}
+              officialLabel={officialLabel}
               listRef={listRef}
               maxH="max-h-40"
               scrollId="p2p-chat-scroll"
@@ -174,7 +186,13 @@ export function P2pOrderChat({
     <section className="fd-card p-3">
       <h2 className="text-sm font-bold text-[color:var(--fd-text)]">{title}</h2>
       <div className="mt-2">
-        <ChatBubbles messages={messages} closedHint={closedHint} locale={locale} maxH="max-h-52" />
+        <ChatBubbles
+          messages={messages}
+          closedHint={closedHint}
+          locale={locale}
+          officialLabel={officialLabel}
+          maxH="max-h-52"
+        />
       </div>
       {canSend ? (
         <div className="mt-3 flex gap-2">

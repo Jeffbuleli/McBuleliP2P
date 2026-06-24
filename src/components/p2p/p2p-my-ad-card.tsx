@@ -19,6 +19,7 @@ export type P2pMyAd = {
   price: string;
   minFiat: string;
   maxFiat: string;
+  terms?: string | null;
   status: string;
   boostedUntil: string | null;
 };
@@ -32,6 +33,7 @@ export function P2pMyAdCard({
   onResume,
   onBoost,
   onClose,
+  onEdit,
 }: {
   ad: P2pMyAd;
   fmt: (n: string, cur: string) => string;
@@ -41,6 +43,7 @@ export function P2pMyAdCard({
   onResume: () => void;
   onBoost: () => void;
   onClose: () => void;
+  onEdit?: () => void;
 }) {
   const { t } = useI18n();
   const isSell = ad.side === "sell";
@@ -99,6 +102,15 @@ export function P2pMyAdCard({
           </p>
         ) : null}
         <div className="flex flex-wrap gap-2 pt-1">
+          {ad.status !== "closed" && onEdit ? (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
+            >
+              {t("p2p_ad_edit")}
+            </button>
+          ) : null}
           {ad.status === "active" ? (
             <button
               type="button"

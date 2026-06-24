@@ -23,11 +23,16 @@ export type P2pMarketAd = {
   paymentMethods: string;
   terms: string | null;
   countryCode: string | null;
+  makerUserId?: string;
   makerName: string;
   makerAvatarUrl?: string | null;
   makerKycApproved?: boolean;
+  makerVerifiedMerchant?: boolean;
   makerRating: { avg: number; count: number } | null;
   makerTradeCount?: number;
+  makerReleaseMedianMinutes?: number | null;
+  makerLastActiveAt?: string | null;
+  makerOnline?: boolean;
   reserveRemainingCrypto?: string | null;
   reserveTotalCrypto?: string | null;
 };
@@ -169,10 +174,29 @@ export function P2pMarketAdCard({
               variant="profile"
             />
             <div className="min-w-0 flex-1">
-              <p className="flex min-w-0 items-center gap-1 truncate text-xs font-bold text-[color:var(--fd-text)]">
-                <span className="truncate">{ad.makerName}</span>
-                {ad.makerKycApproved ? <KycVerifiedBadge compact /> : null}
-              </p>
+              {ad.makerUserId ? (
+                <Link
+                  href={`/app/p2p/merchant/${ad.makerUserId}`}
+                  className="flex min-w-0 items-center gap-1 truncate text-xs font-bold text-[color:var(--fd-text)] hover:underline"
+                >
+                  <span className="truncate">{ad.makerName}</span>
+                  {ad.makerOnline ? (
+                    <span
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
+                      title={t("p2p_merchant_online")}
+                    />
+                  ) : null}
+                  {ad.makerKycApproved ? <KycVerifiedBadge compact /> : null}
+                  {ad.makerVerifiedMerchant ? (
+                    <P2pIconEscrow className="h-3 w-3 shrink-0 text-[color:var(--fd-primary)]" />
+                  ) : null}
+                </Link>
+              ) : (
+                <p className="flex min-w-0 items-center gap-1 truncate text-xs font-bold text-[color:var(--fd-text)]">
+                  <span className="truncate">{ad.makerName}</span>
+                  {ad.makerKycApproved ? <KycVerifiedBadge compact /> : null}
+                </p>
+              )}
               <p className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] font-semibold text-[color:var(--fd-muted)]">
                 {rating && rating.count > 0 ? (
                   <span className="inline-flex items-center gap-0.5 text-amber-600">
@@ -181,6 +205,13 @@ export function P2pMarketAdCard({
                   </span>
                 ) : null}
                 <span>{t("p2p_maker_trades", { count: trades })}</span>
+                {ad.makerReleaseMedianMinutes != null ? (
+                  <span>
+                    {interpolate(t("p2p_merchant_release_median_short"), {
+                      time: `${Math.round(ad.makerReleaseMedianMinutes)}m`,
+                    })}
+                  </span>
+                ) : null}
               </p>
             </div>
           </div>
@@ -199,6 +230,13 @@ export function P2pMarketAdCard({
             </ul>
           ) : null}
         </div>
+
+        {ad.terms?.trim() ? (
+          <p className="mt-2 line-clamp-2 text-[10px] leading-snug text-[color:var(--fd-muted)]">
+            <span className="font-bold text-[color:var(--fd-text)]">{t("p2p_ad_terms")}: </span>
+            {ad.terms.trim()}
+          </p>
+        ) : null}
 
         <Link
           href={`/app/p2p/ad/${ad.id}/trade`}

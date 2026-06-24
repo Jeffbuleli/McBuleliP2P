@@ -8,6 +8,7 @@ import {
   type P2pMarketView,
   type P2pPaymentKindFilter,
 } from "@/lib/p2p-market-view";
+import { isP2pMarketSort } from "@/lib/p2p-market-sort";
 
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -36,6 +37,8 @@ export async function GET(req: Request) {
   const paymentContains = searchParams.get("payment") ?? undefined;
   const boostedOnly = searchParams.get("boosted") === "1";
   const trustedOnly = searchParams.get("trusted") === "1";
+  const sortParam = searchParams.get("sort") ?? "default";
+  const sort = isP2pMarketSort(sortParam) ? sortParam : "default";
 
   const makerSide: P2pSide | undefined = view
     ? makerSideForMarketView(view)
@@ -53,6 +56,8 @@ export async function GET(req: Request) {
     fiatQuotesOnly: view === "sell",
     boostedOnly,
     trustedOnly,
+    sort,
+    marketView: view,
   });
-  return NextResponse.json({ ads, view: view ?? null });
+  return NextResponse.json({ ads, view: view ?? null, sort });
 }

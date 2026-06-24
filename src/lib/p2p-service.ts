@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { randomUUID } from "node:crypto";
 import {
   getDb,
   p2pAds,
+  p2pDisputeEvidence,
   p2pPaymentMethodDefs,
   p2pOrderMessages,
   p2pOrderPaymentProofs,
@@ -12,6 +13,8 @@ import {
   userP2pPaymentMethods,
   users,
 } from "@/db";
+import { moderateP2pChatText } from "@/lib/p2p-chat-moderation";
+import { p2pLegalDisplayName } from "@/lib/p2p-name-match";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import {
@@ -19,13 +22,19 @@ import {
   isP2pCryptoQuoteCurrency,
   minCryptoForAsset,
   paymentWindowMinutes,
+  p2pExpiryReminderLeadMinutes,
+  p2pReleaseWindowMinutes,
+  p2pReleaseReminderLeadMinutes,
   p2pAllowedQuoteFiats,
   p2pFeeBpsConfigured,
   p2pBoostDurationDays,
   p2pBoostFeeUsdt,
   p2pCryptoQuotePairsEnabled,
+  p2pDisputeResponseHours,
   p2pListingFeeAmount,
   p2pListingFeeAsset,
+  p2pMaxDisputeEvidenceFiles,
+  p2pMaxOrdersPerUserPerDay,
   p2pQuoteFiatRestrictionEnabled,
   type P2pAdStatus,
   type P2pCryptoAsset,
@@ -38,8 +47,16 @@ import { isKycApproved } from "@/lib/kyc-policy";
 import { effectiveP2pCountryCode } from "@/lib/p2p-country-code";
 import {
   adMatchesPaymentKind,
+  type P2pMarketView,
   type P2pPaymentKindFilter,
 } from "@/lib/p2p-market-view";
+import { sortP2pMarketAds, type P2pMarketSort } from "@/lib/p2p-market-sort";
+import {
+  isP2pVerifiedMerchant,
+  isP2pUserOnline,
+  loadP2pLastActiveMap,
+  loadSellerReleaseMedianMap,
+} from "@/lib/p2p-merchant-service";
 import { getP2pCatalogMethodLabel } from "@/lib/p2p-payment-method-catalog";
 import {
   fetchOrderNotifyCtx,
@@ -49,6 +66,9 @@ import {
   notifyP2pOrderCreated,
   notifyP2pOrderDisputed,
   notifyP2pOrderExpired,
+  notifyP2pOrderExpiring,
+  notifyP2pReleaseReminder,
+  notifyP2pOrderAutoReleased,
   notifyP2pOrderMessage,
   notifyP2pOrderPaid,
   notifyP2pOrderProof,
@@ -277,7 +297,7 @@ export function tradeRoles(args: {
   };
 }
 
-export async function processExpiredP2pOrders(): Promise<void> {
+export async function processExpiredP2pOrders(): Promise<number> {
   const db = getDb();
   const now = new Date();
   const expired = await db
@@ -342,6 +362,146 @@ export async function processExpiredP2pOrders(): Promise<void> {
 
   // Best-effort purge of old proof attachments for closed orders.
   await purgeClosedP2pPaymentProofs();
+  return expired.length;
+}
+
+/** Warn payers before the payment window closes (cron-driven). */
+export async function processExpiringP2pOrderReminders(): Promise<number> {
+  const db = getDb();
+  const now = new Date();
+  const leadMs = p2pExpiryReminderLeadMinutes() * 60 * 1000;
+  const horizon = new Date(now.getTime() + leadMs);
+
+  const due = await db
+    .select({ id: p2pOrders.id })
+    .from(p2pOrders)
+    .where(
+      and(
+        eq(p2pOrders.status, ST_AWAIT),
+        gt(p2pOrders.expiresAt, now),
+        lte(p2pOrders.expiresAt, horizon),
+        isNull(p2pOrders.expiryReminderSentAt),
+      ),
+    );
+
+  let sent = 0;
+  for (const row of due) {
+    const marked = await db
+      .update(p2pOrders)
+      .set({ expiryReminderSentAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(p2pOrders.id, row.id),
+          eq(p2pOrders.status, ST_AWAIT),
+          isNull(p2pOrders.expiryReminderSentAt),
+        ),
+      )
+      .returning({ id: p2pOrders.id });
+    if (marked.length === 0) continue;
+    const ctx = await fetchOrderNotifyCtx(row.id);
+    if (ctx) {
+      void notifyP2pOrderExpiring(ctx);
+      sent += 1;
+    }
+  }
+  return sent;
+}
+
+/** Remind sellers before crypto auto-releases to the buyer. */
+export async function processP2pReleaseReminders(): Promise<number> {
+  const db = getDb();
+  const now = new Date();
+  const leadMs = p2pReleaseReminderLeadMinutes() * 60 * 1000;
+  const horizon = new Date(now.getTime() + leadMs);
+
+  const due = await db
+    .select({ id: p2pOrders.id })
+    .from(p2pOrders)
+    .where(
+      and(
+        eq(p2pOrders.status, ST_PAID),
+        isNotNull(p2pOrders.autoReleaseAt),
+        gt(p2pOrders.autoReleaseAt, now),
+        lte(p2pOrders.autoReleaseAt, horizon),
+        isNull(p2pOrders.releaseReminderSentAt),
+      ),
+    );
+
+  let sent = 0;
+  for (const row of due) {
+    const marked = await db
+      .update(p2pOrders)
+      .set({ releaseReminderSentAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(p2pOrders.id, row.id),
+          eq(p2pOrders.status, ST_PAID),
+          isNull(p2pOrders.releaseReminderSentAt),
+        ),
+      )
+      .returning({ id: p2pOrders.id });
+    if (marked.length === 0) continue;
+    const ctx = await fetchOrderNotifyCtx(row.id);
+    if (ctx) {
+      void notifyP2pReleaseReminder(ctx);
+      sent += 1;
+    }
+  }
+  return sent;
+}
+
+/** Auto-release escrowed crypto to buyer when seller does not release in time. */
+export async function processAutoReleaseP2pOrders(): Promise<number> {
+  const db = getDb();
+  const now = new Date();
+
+  const due = await db
+    .select({ id: p2pOrders.id })
+    .from(p2pOrders)
+    .where(
+      and(
+        eq(p2pOrders.status, ST_PAID),
+        isNotNull(p2pOrders.autoReleaseAt),
+        lte(p2pOrders.autoReleaseAt, now),
+      ),
+    );
+
+  let released = 0;
+  for (const row of due) {
+    try {
+      await db.transaction(async (tx) => {
+        const [o] = await tx
+          .select()
+          .from(p2pOrders)
+          .where(and(eq(p2pOrders.id, row.id), eq(p2pOrders.status, ST_PAID)))
+          .limit(1);
+        if (!o?.autoReleaseAt || o.autoReleaseAt > now) return;
+        await finalizeReleaseToBuyer(tx, o, now, ST_PAID);
+      });
+      const ctx = await fetchOrderNotifyCtx(row.id);
+      if (ctx) {
+        void notifyP2pOrderAutoReleased(ctx);
+        void import("@/lib/reward-points-service").then(({ tryGrantP2pTradeCompletedPoints }) =>
+          tryGrantP2pTradeCompletedPoints({
+            userId: ctx.buyerUserId,
+            orderId: row.id,
+          }).catch((err) => {
+            console.warn("[p2p] reward points grant skipped", err);
+          }),
+        );
+      }
+      released += 1;
+    } catch (err) {
+      console.warn("[p2p] auto-release failed", row.id, err);
+    }
+  }
+  return released;
+}
+
+/** Paid-order automation — reminders + auto-release (cron + lazy fallback). */
+export async function processP2pPaidOrderAutomation(): Promise<void> {
+  await processP2pReleaseReminders();
+  await processAutoReleaseP2pOrders();
 }
 
 function proofRetentionDays(): number {
@@ -523,6 +683,119 @@ export async function getP2pPaymentProof(args: {
   };
 }
 
+async function checkP2pOrderVelocity(
+  userId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const max = p2pMaxOrdersPerUserPerDay();
+  if (max <= 0) return { ok: true };
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const db = getDb();
+  const rows = await db
+    .select({ id: p2pOrders.id })
+    .from(p2pOrders)
+    .where(and(eq(p2pOrders.takerId, userId), gte(p2pOrders.createdAt, since)));
+
+  if (rows.length >= max) return { ok: false, message: "p2p_velocity_limit" };
+  return { ok: true };
+}
+
+export async function addP2pDisputeEvidence(args: {
+  orderId: string;
+  userId: string;
+  dataUrl: string;
+  mime: string;
+  sizeBytes: number;
+}): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const db = getDb();
+  const [o] = await db
+    .select({
+      id: p2pOrders.id,
+      makerId: p2pOrders.makerId,
+      takerId: p2pOrders.takerId,
+      status: p2pOrders.status,
+    })
+    .from(p2pOrders)
+    .where(eq(p2pOrders.id, args.orderId))
+    .limit(1);
+  if (!o) return { ok: false, message: "p2p_order_not_found" };
+  if (o.makerId !== args.userId && o.takerId !== args.userId) {
+    return { ok: false, message: "p2p_order_not_found" };
+  }
+  if (o.status !== ST_DISPUTED) return { ok: false, message: "p2p_action_not_allowed" };
+
+  const dataUrl = args.dataUrl.trim();
+  const mime = args.mime.trim().toLowerCase();
+  const sizeBytes = Math.max(0, Math.floor(args.sizeBytes || 0));
+  if (!dataUrl.startsWith("data:image/")) return { ok: false, message: "p2p_proof_invalid" };
+  const mimeNorm = normalizeP2pProofMime(mime, dataUrl);
+  if (!mimeNorm) return { ok: false, message: "p2p_proof_invalid" };
+  const maxBytes = Number(process.env.P2P_PROOF_MAX_BYTES ?? "250000");
+  const limit = Number.isFinite(maxBytes) && maxBytes > 50_000 ? Math.floor(maxBytes) : 250_000;
+  if (sizeBytes <= 0 || sizeBytes > limit) return { ok: false, message: "p2p_proof_too_large" };
+
+  const existing = await db
+    .select({ id: p2pDisputeEvidence.id })
+    .from(p2pDisputeEvidence)
+    .where(eq(p2pDisputeEvidence.orderId, args.orderId));
+  if (existing.length >= p2pMaxDisputeEvidenceFiles()) {
+    return { ok: false, message: "p2p_dispute_evidence_max" };
+  }
+
+  const [row] = await db
+    .insert(p2pDisputeEvidence)
+    .values({
+      orderId: args.orderId,
+      userId: args.userId,
+      dataUrl,
+      mime: mimeNorm,
+      sizeBytes,
+    })
+    .returning({ id: p2pDisputeEvidence.id });
+
+  if (!row) return { ok: false, message: "p2p_action_not_allowed" };
+  return { ok: true, id: row.id };
+}
+
+export async function listP2pDisputeEvidence(args: {
+  orderId: string;
+  userId: string;
+}): Promise<
+  | {
+      ok: true;
+      items: { id: string; mime: string; sizeBytes: number; dataUrl: string; createdAt: string }[];
+    }
+  | { ok: false; message: string }
+> {
+  const db = getDb();
+  const [o] = await db
+    .select({ makerId: p2pOrders.makerId, takerId: p2pOrders.takerId })
+    .from(p2pOrders)
+    .where(eq(p2pOrders.id, args.orderId))
+    .limit(1);
+  if (!o) return { ok: false, message: "p2p_order_not_found" };
+  if (o.makerId !== args.userId && o.takerId !== args.userId) {
+    return { ok: false, message: "p2p_order_not_found" };
+  }
+
+  const rows = await db
+    .select()
+    .from(p2pDisputeEvidence)
+    .where(eq(p2pDisputeEvidence.orderId, args.orderId))
+    .orderBy(asc(p2pDisputeEvidence.createdAt));
+
+  return {
+    ok: true,
+    items: rows.map((r) => ({
+      id: r.id,
+      mime: r.mime,
+      sizeBytes: r.sizeBytes,
+      dataUrl: r.dataUrl,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  };
+}
+
 async function loadP2pTradeCountMap(userIds: string[]): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   const uniq = [...new Set(userIds)].filter(Boolean);
@@ -587,6 +860,8 @@ export async function listMarketAds(filters: {
   fiatQuotesOnly?: boolean;
   boostedOnly?: boolean;
   trustedOnly?: boolean;
+  sort?: P2pMarketSort;
+  marketView?: P2pMarketView;
 }): Promise<
   {
     id: string;
@@ -601,10 +876,16 @@ export async function listMarketAds(filters: {
     terms: string | null;
     countryCode: string | null;
     createdAt: string;
+    makerUserId: string;
     makerName: string;
     makerAvatarUrl: string | null;
+    makerKycApproved: boolean;
+    makerVerifiedMerchant: boolean;
     makerRating: { avg: number; count: number } | null;
     makerTradeCount: number;
+    makerReleaseMedianMinutes: number | null;
+    makerLastActiveAt: string | null;
+    makerOnline: boolean;
     boostedUntil: string | null;
     boostAmountPi: string;
     reserveTotalCrypto: string | null;
@@ -649,32 +930,52 @@ export async function listMarketAds(filters: {
     .orderBy(desc(p2pAds.createdAt));
 
   const userIds = rows.map((r) => r.ad.userId);
-  const rep = await loadReputationMap(userIds);
-  const trades = await loadP2pTradeCountMap(userIds);
+  const [rep, trades, lastActive, releaseMedian] = await Promise.all([
+    loadReputationMap(userIds),
+    loadP2pTradeCountMap(userIds),
+    loadP2pLastActiveMap(userIds),
+    loadSellerReleaseMedianMap(userIds),
+  ]);
 
-  const mapped = rows.map(({ ad, u }) => ({
-    id: ad.id,
-    side: ad.side,
-    asset: ad.asset,
-    fiatCurrency: ad.fiatCurrency,
-    price: ad.price.toString(),
-    minFiat: ad.minFiat.toString(),
-    maxFiat: ad.maxFiat.toString(),
-    paymentMethods: ad.paymentMethods,
-    paymentMethodCodes: (ad.paymentMethodCodes as string[] | null) ?? null,
-    terms: ad.terms,
-    countryCode: ad.countryCode,
-    createdAt: ad.createdAt.toISOString(),
-    makerName: p2pDisplayName(u),
-    makerAvatarUrl: u.avatarUrl ?? null,
-    makerKycApproved: isKycApproved(u.kycStatus),
-    makerRating: rep.get(ad.userId) ?? null,
-    makerTradeCount: trades.get(ad.userId) ?? 0,
-    boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
-    boostAmountPi: ad.boostAmountPi.toString(),
-    reserveTotalCrypto: ad.reserveTotalCrypto?.toString() ?? null,
-    reserveRemainingCrypto: ad.reserveRemainingCrypto?.toString() ?? null,
-  }));
+  const mapped = rows.map(({ ad, u }) => {
+    const kycApproved = isKycApproved(u.kycStatus);
+    const rating = rep.get(ad.userId) ?? null;
+    const tradeCount = trades.get(ad.userId) ?? 0;
+    const lastAt = lastActive.get(ad.userId) ?? null;
+    return {
+      id: ad.id,
+      side: ad.side,
+      asset: ad.asset,
+      fiatCurrency: ad.fiatCurrency,
+      price: ad.price.toString(),
+      minFiat: ad.minFiat.toString(),
+      maxFiat: ad.maxFiat.toString(),
+      paymentMethods: ad.paymentMethods,
+      paymentMethodCodes: (ad.paymentMethodCodes as string[] | null) ?? null,
+      terms: ad.terms,
+      countryCode: ad.countryCode,
+      createdAt: ad.createdAt.toISOString(),
+      makerUserId: ad.userId,
+      makerName: p2pDisplayName(u),
+      makerAvatarUrl: u.avatarUrl ?? null,
+      makerKycApproved: kycApproved,
+      makerVerifiedMerchant: isP2pVerifiedMerchant({
+        kycApproved,
+        ratingAvg: rating?.avg ?? 0,
+        ratingCount: rating?.count ?? 0,
+        completedTrades: tradeCount,
+      }),
+      makerRating: rating,
+      makerTradeCount: tradeCount,
+      makerReleaseMedianMinutes: releaseMedian.get(ad.userId) ?? null,
+      makerLastActiveAt: lastAt,
+      makerOnline: isP2pUserOnline(lastAt),
+      boostedUntil: ad.boostedUntil ? ad.boostedUntil.toISOString() : null,
+      boostAmountPi: ad.boostAmountPi.toString(),
+      reserveTotalCrypto: ad.reserveTotalCrypto?.toString() ?? null,
+      reserveRemainingCrypto: ad.reserveRemainingCrypto?.toString() ?? null,
+    };
+  });
 
   const kindFiltered =
     filters.paymentKind && filters.paymentKind !== "all"
@@ -699,43 +1000,12 @@ export async function listMarketAds(filters: {
       })
     : kindFiltered;
 
-  // Score-based sort: Boost + Trust + Price + Freshness.
-  const prices = filtered
-    .map((a) => Number(a.price))
-    .filter((n) => Number.isFinite(n) && n > 0);
-  const minP = prices.length ? Math.min(...prices) : 0;
-  const maxP = prices.length ? Math.max(...prices) : 0;
-  const denom = maxP > minP ? maxP - minP : 0;
-  const nowMs = Date.now();
+  const sort = filters.sort ?? "default";
+  const marketView: P2pMarketView =
+    filters.marketView ??
+    (filters.side === "sell" ? "buy" : filters.side === "buy" ? "sell" : "buy");
 
-  function score(a: (typeof filtered)[number]) {
-    const boostedActive =
-      a.boostedUntil != null && new Date(a.boostedUntil).getTime() > nowMs;
-    const boostAmt = Math.max(0, Number(a.boostAmountPi) || 0);
-    const boostScore = boostedActive ? 1000 + 100 * Math.log(1 + boostAmt) : 0;
-
-    const r = a.makerRating;
-    const avg = r?.avg ?? 0;
-    const cnt = r?.count ?? 0;
-    const repScore = Math.max(0, Math.min(5, avg)) * 20 + Math.min(50, Math.max(0, cnt)) * 0.6;
-
-    const p = Number(a.price);
-    let priceNorm = 0.5; // neutral when only 1 ad
-    if (Number.isFinite(p) && p > 0 && denom > 0) {
-      const raw = (p - minP) / denom; // 0..1
-      // SELL: lower is better; BUY: higher is better
-      priceNorm = a.side === "sell" ? 1 - raw : raw;
-    }
-    const priceScore = 100 * Math.max(0, Math.min(1, priceNorm));
-
-    const createdMs = new Date(a.createdAt).getTime();
-    const ageHours = Math.max(0, (nowMs - createdMs) / (1000 * 60 * 60));
-    const freshScore = 20 * Math.exp(-ageHours / 24);
-
-    return boostScore + repScore + priceScore + freshScore;
-  }
-
-  return [...filtered].sort((a, b) => score(b) - score(a));
+  return sortP2pMarketAds(filtered, sort, marketView);
 }
 
 export async function getAdForTaker(args: {
@@ -757,6 +1027,7 @@ export async function getAdForTaker(args: {
         terms: string | null;
         countryCode: string | null;
         makerName: string;
+        makerUserId: string;
         makerAvatarUrl: string | null;
         makerKycApproved: boolean;
         makerRating: { avg: number; count: number } | null;
@@ -820,6 +1091,7 @@ export async function getAdForTaker(args: {
       terms: row.ad.terms,
       countryCode: row.ad.countryCode,
       makerName: p2pDisplayName(row.u),
+      makerUserId: row.ad.userId,
       makerAvatarUrl: row.u.avatarUrl ?? null,
       makerKycApproved: isKycApproved(row.u.kycStatus),
       makerRating: rep.get(row.ad.userId) ?? null,
@@ -1197,6 +1469,121 @@ export async function updateAdStatus(args: {
   }
 }
 
+export async function updateAdDetails(args: {
+  userId: string;
+  adId: string;
+  priceStr?: string;
+  minFiatStr?: string;
+  maxFiatStr?: string;
+  terms?: string | null;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const db = getDb();
+  const [cur] = await db
+    .select()
+    .from(p2pAds)
+    .where(and(eq(p2pAds.id, args.adId), eq(p2pAds.userId, args.userId)))
+    .limit(1);
+  if (!cur) return { ok: false, message: "p2p_ad_not_found" };
+  if (cur.status === AD_CLOSED) return { ok: false, message: "p2p_ad_inactive" };
+
+  const price = args.priceStr != null ? Number(args.priceStr) : Number(cur.price);
+  const minF = args.minFiatStr != null ? Number(args.minFiatStr) : Number(cur.minFiat);
+  const maxF = args.maxFiatStr != null ? Number(args.maxFiatStr) : Number(cur.maxFiat);
+  const terms = args.terms !== undefined ? (args.terms?.trim() || null) : cur.terms;
+
+  if (!Number.isFinite(price) || price <= 0) return { ok: false, message: "p2p_invalid_price" };
+  if (!Number.isFinite(minF) || !Number.isFinite(maxF) || minF <= 0 || maxF < minF) {
+    return { ok: false, message: "p2p_invalid_limits" };
+  }
+  const minCryptoOrder = minF / price;
+  const platMinCrypto = minCryptoForAsset(cur.asset as P2pCryptoAsset);
+  if (minCryptoOrder + 1e-12 < platMinCrypto) {
+    return { ok: false, message: "p2p_min_below_platform" };
+  }
+
+  const now = new Date();
+  try {
+    await db.transaction(async (tx) => {
+      const [locked] = await tx
+        .select()
+        .from(p2pAds)
+        .where(and(eq(p2pAds.id, args.adId), eq(p2pAds.userId, args.userId)))
+        .limit(1);
+      if (!locked || locked.status === AD_CLOSED) throw new Error("p2p_ad_not_found");
+
+      let reserveTotal = locked.reserveTotalCrypto;
+      let reserveRemaining = locked.reserveRemainingCrypto;
+
+      if (locked.side === "sell") {
+        const oldTotal = Number(locked.reserveTotalCrypto ?? 0);
+        const oldRem = Number(locked.reserveRemainingCrypto ?? 0);
+        const lockedInOrders = Math.max(0, oldTotal - oldRem);
+        const newTotal = Number(fmtWalletAmount(maxF / price));
+        if (!Number.isFinite(newTotal) || newTotal <= 0) throw new Error("p2p_invalid_limits");
+        const newRem = newTotal - lockedInOrders;
+        if (newRem < -1e-18) throw new Error("p2p_max_below_open_orders");
+
+        const delta = newTotal - oldTotal;
+        const wa = asWalletCrypto(locked.asset as P2pCryptoAsset);
+        if (delta > 1e-18) {
+          const debitAmt = fmtWalletAmount(delta);
+          await debitUserAsset(tx, args.userId, wa, debitAmt);
+          await insertWalletLedgerLines(tx, [
+            {
+              batchId: randomUUID(),
+              userId: args.userId,
+              entryType: "p2p_ad_reserve_lock",
+              asset: locked.asset as P2pCryptoAsset,
+              amount: `-${debitAmt}`,
+              feeUsdEquivalent: "0",
+              meta: { adId: locked.id, reason: "edit_increase" },
+            },
+          ]);
+        } else if (delta < -1e-18) {
+          const creditAmt = fmtWalletAmount(oldRem - Math.max(0, newRem));
+          if (Number(creditAmt) > 1e-18) {
+            await creditUserAsset(tx, args.userId, wa, creditAmt);
+            await insertWalletLedgerLines(tx, [
+              {
+                batchId: randomUUID(),
+                userId: args.userId,
+                entryType: "p2p_ad_reserve_unlock",
+                asset: locked.asset as P2pCryptoAsset,
+                amount: creditAmt,
+                feeUsdEquivalent: "0",
+                meta: { adId: locked.id, reason: "edit_decrease" },
+              },
+            ]);
+          }
+        }
+        reserveTotal = fmtWalletAmount(newTotal);
+        reserveRemaining = fmtWalletAmount(Math.max(0, newRem));
+      }
+
+      await tx
+        .update(p2pAds)
+        .set({
+          price: price.toString(),
+          minFiat: minF.toString(),
+          maxFiat: maxF.toString(),
+          terms,
+          reserveTotalCrypto: reserveTotal,
+          reserveRemainingCrypto: reserveRemaining,
+          updatedAt: now,
+        })
+        .where(eq(p2pAds.id, locked.id));
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.startsWith("p2p_")) return { ok: false, message: msg };
+    if (msg === "wallet_not_found" || msg === "wallet_insufficient_balance") {
+      return { ok: false, message: "p2p_sell_insufficient_balance" };
+    }
+    return { ok: false, message: "p2p_action_not_allowed" };
+  }
+}
+
 export async function createOrder(args: {
   takerId: string;
   adId: string;
@@ -1208,6 +1595,9 @@ export async function createOrder(args: {
   if (!Number.isFinite(fiatAmount) || fiatAmount <= 0) {
     return { ok: false, message: "p2p_invalid_amount" };
   }
+
+  const vel = await checkP2pOrderVelocity(args.takerId);
+  if (!vel.ok) return vel;
 
   const db = getDb();
   try {
@@ -1478,6 +1868,7 @@ export async function getOrderDetailForUser(args: {
         status: P2pOrderStatus;
         expiresAt: string;
         paidMarkedAt: string | null;
+        autoReleaseAt: string | null;
         releasedAt: string | null;
         cancelledAt: string | null;
         paymentSnapshot: string;
@@ -1494,10 +1885,13 @@ export async function getOrderDetailForUser(args: {
         paymentProofNote: string | null;
         disputeReason: string | null;
         disputedAt: string | null;
+        disputeResponseDueAt: string | null;
         refundedAt: string | null;
         platformFeeCrypto: string | null;
         buyerReceivedCrypto: string | null;
         counterpartyId: string;
+        counterpartyVerifiedName: string | null;
+        counterpartyKycApproved: boolean;
         hasRated: boolean;
         canRate: boolean;
         chatAllowsNewMessages: boolean;
@@ -1507,6 +1901,7 @@ export async function getOrderDetailForUser(args: {
   | { ok: false; message: string }
 > {
   await processExpiredP2pOrders();
+  await processP2pPaidOrderAutomation();
   const db = getDb();
   const [hit] = await db
     .select({
@@ -1531,6 +1926,9 @@ export async function getOrderDetailForUser(args: {
       displayName: users.displayName,
       piUsername: users.piUsername,
       avatarUrl: users.avatarUrl,
+      legalFirstName: users.legalFirstName,
+      legalLastName: users.legalLastName,
+      kycStatus: users.kycStatus,
     })
     .from(users)
     .where(eq(users.id, o.makerId))
@@ -1541,6 +1939,9 @@ export async function getOrderDetailForUser(args: {
       displayName: users.displayName,
       piUsername: users.piUsername,
       avatarUrl: users.avatarUrl,
+      legalFirstName: users.legalFirstName,
+      legalLastName: users.legalLastName,
+      kycStatus: users.kycStatus,
     })
     .from(users)
     .where(eq(users.id, o.takerId))
@@ -1588,6 +1989,7 @@ export async function getOrderDetailForUser(args: {
       status: o.status as P2pOrderStatus,
       expiresAt: o.expiresAt.toISOString(),
       paidMarkedAt: o.paidMarkedAt?.toISOString() ?? null,
+      autoReleaseAt: o.autoReleaseAt?.toISOString() ?? null,
       releasedAt: o.releasedAt?.toISOString() ?? null,
       cancelledAt: o.cancelledAt?.toISOString() ?? null,
       paymentSnapshot: o.paymentSnapshot,
@@ -1604,10 +2006,20 @@ export async function getOrderDetailForUser(args: {
       paymentProofNote: o.paymentProofNote ?? null,
       disputeReason: o.disputeReason ?? null,
       disputedAt: o.disputedAt?.toISOString() ?? null,
+      disputeResponseDueAt: o.disputeResponseDueAt?.toISOString() ?? null,
       refundedAt: o.refundedAt?.toISOString() ?? null,
       platformFeeCrypto: o.platformFeeCrypto?.toString() ?? null,
       buyerReceivedCrypto: o.buyerReceivedCrypto?.toString() ?? null,
       counterpartyId,
+      counterpartyVerifiedName: counterpartyRow
+        ? p2pLegalDisplayName({
+            legalFirstName: counterpartyRow.legalFirstName,
+            legalLastName: counterpartyRow.legalLastName,
+            displayName: counterpartyRow.displayName,
+            kycStatus: counterpartyRow.kycStatus,
+          })
+        : null,
+      counterpartyKycApproved: (counterpartyRow?.kycStatus ?? "none") === "approved",
       hasRated: !!existingRating,
       canRate: st === ST_RELEASED && !existingRating,
       chatAllowsNewMessages,
@@ -1652,12 +2064,15 @@ export async function markOrderPaid(args: {
   const now = new Date();
   const reference = args.paymentReference?.trim() || null;
   const proofNote = args.paymentProofNote?.trim() || null;
+  const autoReleaseAt = new Date(now.getTime() + p2pReleaseWindowMinutes() * 60 * 1000);
 
   const res = await db
     .update(p2pOrders)
     .set({
       status: ST_PAID,
       paidMarkedAt: now,
+      autoReleaseAt,
+      releaseReminderSentAt: null,
       updatedAt: now,
       paymentReference: reference,
       paymentProofNote: proofNote,
@@ -1810,12 +2225,14 @@ export async function openOrderDispute(args: {
 
   const db = getDb();
   const now = new Date();
+  const responseDue = new Date(now.getTime() + p2pDisputeResponseHours() * 60 * 60 * 1000);
   const res = await db
     .update(p2pOrders)
     .set({
       status: ST_DISPUTED,
       disputeReason: reason,
       disputedAt: now,
+      disputeResponseDueAt: responseDue,
       updatedAt: now,
     })
     .where(
@@ -2132,6 +2549,11 @@ export async function postP2pOrderMessage(args: {
   if (text.length < 1) return { ok: false, message: "p2p_chat_empty" };
   if (text.length > 2000) return { ok: false, message: "p2p_chat_too_long" };
 
+  const mod = moderateP2pChatText(text);
+  if (!mod.allowed) {
+    return { ok: false, message: mod.reason === "scam_keyword" || mod.reason === "p2p_scam_keyword" ? "p2p_chat_scam_blocked" : "p2p_chat_blocked" };
+  }
+
   const db = getDb();
   const [o] = await db
     .select()
@@ -2149,7 +2571,7 @@ export async function postP2pOrderMessage(args: {
   await db.insert(p2pOrderMessages).values({
     orderId: args.orderId,
     userId: args.userId,
-    body: text,
+    body: mod.sanitizedBody,
   });
 
   const msgCtx = await fetchOrderNotifyCtx(args.orderId);
