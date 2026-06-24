@@ -29,8 +29,17 @@ export type CommunityStoryRing = {
   stories: CommunityStoryItem[];
 };
 
+export type StoryEngagementUser = {
+  userId: string;
+  handle: string;
+  displayName: string;
+  avatarUrl: string | null;
+};
+
 export type StoryEngagement = {
   viewCount: number;
   reactions: StoryReactionCount[];
   myReaction: string | null;
+  viewers?: StoryEngagementUser[];
+  reactors?: (StoryEngagementUser & { emoji: string })[];
 };

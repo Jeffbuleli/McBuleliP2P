@@ -5,15 +5,18 @@ import { prepareCommunityImageBlob } from "@/lib/community-image";
 
 export async function uploadCommunityVideo(
   file: File,
-  kind: "posts" | "blogs" | "covers" = "posts",
+  kind: "posts" | "blogs" | "covers" | "avatars" | "stories" = "posts",
 ): Promise<{ id: string; url: string }> {
-  return uploadCommunityVideoWithProgress(file, kind);
+  return uploadCommunityVideoWithProgress(
+    file,
+    kind === "avatars" ? "posts" : kind,
+  );
 }
 
 /** Video upload with progress — pre-upload before publishing. */
 export function uploadCommunityVideoWithProgress(
   file: File,
-  kind: "posts" | "blogs" | "covers" = "posts",
+  kind: "posts" | "blogs" | "covers" | "stories" = "posts",
   onProgress?: (pct: number) => void,
 ): Promise<{ id: string; url: string }> {
   return new Promise((resolve, reject) => {
@@ -56,7 +59,7 @@ export function uploadCommunityVideoWithProgress(
 /** Upload image via serveur uniquement — évite les orphelins presign/pending sur R2. */
 export async function uploadCommunityImage(
   file: File,
-  kind: "posts" | "blogs" | "covers" | "avatars" = "posts",
+  kind: "posts" | "blogs" | "covers" | "avatars" | "stories" = "posts",
 ): Promise<{ id: string; url: string }> {
   const prep = await prepareCommunityImageBlob(file);
   const form = new FormData();

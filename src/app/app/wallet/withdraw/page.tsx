@@ -33,7 +33,11 @@ export default function WithdrawPage() {
   const { t } = useI18n();
   const router = useRouter();
   const sp = useSearchParams();
-  const [wAsset, setWAsset] = useState<WAsset>("USDT");
+  const assetParam = sp.get("asset");
+  const assetLocked = assetParam === "USDT" || assetParam === "PI";
+  const [wAsset, setWAsset] = useState<WAsset>(
+    assetParam === "PI" ? "PI" : "USDT",
+  );
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
@@ -252,43 +256,51 @@ export default function WithdrawPage() {
   return (
     <WalletFlowShell
       title={t("withdraw_title")}
-      subtitle={t("withdraw_pick_asset")}
+      subtitle={
+        assetLocked
+          ? wAsset === "USDT"
+            ? t("deposit_step_usdt_network")
+            : t("deposit_network_pi_main")
+          : t("withdraw_pick_asset")
+      }
     >
-      <FlowCard>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setWAsset("USDT")}
-            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
-              wAsset === "USDT"
-                ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]"
-                : "bg-stone-50"
-            }`}
-          >
-            <Image src="/assets/crypto/usdt.png" alt="" width={40} height={40} className="rounded-full" />
-            <span className="text-xs font-bold">USDT</span>
-            <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
-              {t("asset_usdt_full")}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setWAsset("PI")}
-            className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
-              wAsset === "PI" ? "bg-violet-50 ring-2 ring-violet-500" : "bg-stone-50"
-            }`}
-          >
-            <Image src="/assets/crypto/pi.png" alt="" width={40} height={40} className="rounded-full" />
-            <span className="text-xs font-bold">Pi</span>
-            <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
-              {t("asset_pi_network")}
-            </span>
-          </button>
-        </div>
-      </FlowCard>
+      {!assetLocked ? (
+        <FlowCard>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setWAsset("USDT")}
+              className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
+                wAsset === "USDT"
+                  ? "bg-emerald-50 ring-2 ring-[color:var(--fd-primary)]"
+                  : "bg-stone-50"
+              }`}
+            >
+              <Image src="/assets/crypto/usdt.png" alt="" width={40} height={40} className="rounded-full" />
+              <span className="text-xs font-bold">USDT</span>
+              <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
+                {t("asset_usdt_full")}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWAsset("PI")}
+              className={`flex flex-col items-center gap-1.5 rounded-xl p-3 transition ${
+                wAsset === "PI" ? "bg-violet-50 ring-2 ring-violet-500" : "bg-stone-50"
+              }`}
+            >
+              <Image src="/assets/crypto/pi.png" alt="" width={40} height={40} className="rounded-full" />
+              <span className="text-xs font-bold">Pi</span>
+              <span className="text-center text-[9px] text-[color:var(--fd-muted)]">
+                {t("asset_pi_network")}
+              </span>
+            </button>
+          </div>
+        </FlowCard>
+      ) : null}
 
       {wAsset === "USDT" ? (
-        <div className="mt-3">
+        <div className={assetLocked ? "" : "mt-3"}>
           <NetworkPicker
             label={t("deposit_step_usdt_network")}
             value={network}

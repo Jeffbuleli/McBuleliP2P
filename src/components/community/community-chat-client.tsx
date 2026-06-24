@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -39,9 +40,11 @@ function messagesFingerprint(list: DmMessageView[]): string {
 export function CommunityChatClient({ threadId }: { threadId: string }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const searchParams = useSearchParams();
   const [meta, setMeta] = useState<ThreadMeta | null>(null);
   const [messages, setMessages] = useState<DmMessageView[]>([]);
   const [text, setText] = useState("");
+  const [storyRefId, setStoryRefId] = useState<string | null>(null);
   const [typing, setTyping] = useState(false);
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,6 +69,13 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
       });
     }
   }, [threadId]);
+
+  useEffect(() => {
+    const draft = searchParams.get("draft");
+    const storyId = searchParams.get("storyId");
+    if (draft) setText(draft);
+    if (storyId) setStoryRefId(storyId);
+  }, [searchParams]);
 
   useEffect(() => {
     fetch("/api/community/dm/threads")
@@ -325,6 +335,21 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
       </div>
 
       <footer className="border-t border-[#f0f4f2] bg-white px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {storyRefId ? (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-[#f0f7f3] px-3 py-2 text-xs text-[#305f33]">
+            <span className="flex-1 font-semibold">
+              {fr ? "Réponse privée à un statut" : "Private reply to a status"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStoryRefId(null)}
+              className="text-[#78716c]"
+              aria-label={fr ? "Retirer la référence" : "Remove reference"}
+            >
+              ✕
+            </button>
+          </div>
+        ) : null}
         <div className="flex items-end gap-2">
           <label
             className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#f0f7f3] text-[#305f33]"

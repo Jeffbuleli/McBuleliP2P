@@ -14,6 +14,7 @@ import type {
   CommunityStoryItem,
   CommunityStoryRing,
   StoryEngagement,
+  StoryEngagementUser,
   StoryReactionCount,
   StoryReactionEmoji,
 } from "@/lib/community/story-types";
@@ -330,6 +331,12 @@ export async function getStoryEngagement(args: {
 }): Promise<StoryEngagement> {
   try {
     const db = getDb();
+    const [storyRow] = await db
+      .select({ authorId: communityStories.authorId })
+      .from(communityStories)
+      .where(eq(communityStories.id, args.storyId))
+      .limit(1);
+
     const [viewRow] = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(communityStoryViews)
@@ -359,6 +366,64 @@ export async function getStoryEngagement(args: {
       myReaction = mine?.emoji ?? null;
     }
 
+    const isAuthor =
+      !!args.viewerId && storyRow?.authorId === args.viewerId;
+
+    let viewers: StoryEngagementUser[] | undefined;
+    let reactors: (StoryEngagementUser & { emoji: string })[] | undefined;
+
+    if (isAuthor) {
+      const viewerRows = await db
+        .select({
+          userId: communityStoryViews.viewerId,
+          handle: communityUserProfiles.handle,
+          displayName: communityUserProfiles.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(communityStoryViews)
+        .innerJoin(users, eq(users.id, communityStoryViews.viewerId))
+        .leftJoin(
+          communityUserProfiles,
+          eq(communityUserProfiles.userId, communityStoryViews.viewerId),
+        )
+        .where(eq(communityStoryViews.storyId, args.storyId))
+        .orderBy(desc(communityStoryViews.createdAt))
+        .limit(50);
+
+      viewers = viewerRows.map((r) => ({
+        userId: r.userId,
+        handle: r.handle ?? "user",
+        displayName: r.displayName ?? r.handle ?? "User",
+        avatarUrl: r.avatarUrl,
+      }));
+
+      const reactorRows = await db
+        .select({
+          userId: communityStoryReactions.userId,
+          emoji: communityStoryReactions.emoji,
+          handle: communityUserProfiles.handle,
+          displayName: communityUserProfiles.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(communityStoryReactions)
+        .innerJoin(users, eq(users.id, communityStoryReactions.userId))
+        .leftJoin(
+          communityUserProfiles,
+          eq(communityUserProfiles.userId, communityStoryReactions.userId),
+        )
+        .where(eq(communityStoryReactions.storyId, args.storyId))
+        .orderBy(desc(communityStoryReactions.createdAt))
+        .limit(50);
+
+      reactors = reactorRows.map((r) => ({
+        userId: r.userId,
+        emoji: r.emoji,
+        handle: r.handle ?? "user",
+        displayName: r.displayName ?? r.handle ?? "User",
+        avatarUrl: r.avatarUrl,
+      }));
+    }
+
     return {
       viewCount: Number(viewRow?.n ?? 0),
       reactions: reactionRows.map((r) => ({
@@ -366,6 +431,8 @@ export async function getStoryEngagement(args: {
         count: Number(r.n ?? 0),
       })),
       myReaction,
+      viewers,
+      reactors,
     };
   } catch (e) {
     if (isMissingTable(e)) {
