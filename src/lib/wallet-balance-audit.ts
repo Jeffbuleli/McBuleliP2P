@@ -187,6 +187,10 @@ function classifyLedgerTrust(
     return { trusted: true, reason: "launch_reward_reversal" };
   }
 
+  if (line.entryType === "top_trader_week_prize") {
+    return { trusted: true, reason: "top_trader_week_prize" };
+  }
+
   if (line.entryType === "swap_reversal") {
     return { trusted: true, reason: "swap_reversal" };
   }

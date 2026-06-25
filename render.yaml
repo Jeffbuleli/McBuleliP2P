@@ -136,6 +136,20 @@ services:
         sync: false
 
   - type: cron
+    name: mcbuleli-top-trader-payout
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "0 1 * * 0"
+    buildCommand: "true"
+    startCommand: node scripts/cron-top-trader-payout.mjs
+    envVars:
+      - key: MCBULELI_API_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
     name: mcbuleli-ai-relay
     runtime: python
     region: oregon

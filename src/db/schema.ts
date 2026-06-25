@@ -1034,9 +1034,10 @@ export const tradeFuturesPositions = pgTable(
     closePrice: numeric("close_price", { precision: 36, scale: 18 }),
     realizedPnlUsdt: numeric("realized_pnl_usdt", { precision: 36, scale: 18 }),
     feeCloseUsdt: numeric("fee_close_usdt", { precision: 36, scale: 18 }),
-    closeReason: varchar("close_reason", { length: 16 }),
+    closeReason: varchar("close_reason", { length: 24 }),
     meta: jsonb("meta").$type<Record<string, unknown> | null>(),
     isDemo: boolean("is_demo").notNull().default(false),
+    isCompetition: boolean("is_competition").notNull().default(false),
   },
   (t) => [
     index("trade_futures_positions_user_idx").on(t.userId),
@@ -2756,6 +2757,61 @@ export const academyCredentials = pgTable(
 );
 
 // ─── Community Hub (métadonnées — médias sur Cloudflare R2 / Stream) ───
+
+/** Top Trader weekly competition opt-in + daily quotas (GMT). */
+export const topTraderParticipants = pgTable(
+  "top_trader_participants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    weekStartAt: timestamp("week_start_at", { withTimezone: true }).notNull(),
+    optedInAt: timestamp("opted_in_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    tradesOpenedToday: integer("trades_opened_today").notNull().default(0),
+    tradesTodayDate: date("trades_today_date"),
+    refillUsed: boolean("refill_used").notNull().default(false),
+  },
+  (t) => [
+    uniqueIndex("top_trader_participants_user_week_idx").on(
+      t.userId,
+      t.weekStartAt,
+    ),
+    index("top_trader_participants_week_idx").on(t.weekStartAt),
+  ],
+);
+
+/** Top Trader weekly winner payout ledger (cron). */
+export const topTraderWeekPayouts = pgTable(
+  "top_trader_week_payouts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    weekStartAt: timestamp("week_start_at", { withTimezone: true }).notNull(),
+    weekEndAt: timestamp("week_end_at", { withTimezone: true }).notNull(),
+    weekLabel: varchar("week_label", { length: 16 }).notNull(),
+    winnerUserId: uuid("winner_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    weeklyPnlUsdt: numeric("weekly_pnl_usdt", { precision: 36, scale: 18 }),
+    prizeUsdt: numeric("prize_usdt", { precision: 36, scale: 18 })
+      .notNull()
+      .default("10"),
+    tradeCount: integer("trade_count").notNull().default(0),
+    status: varchar("status", { length: 24 }).notNull().default("paid"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    ledgerBatchId: uuid("ledger_batch_id"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("top_trader_week_payouts_week_start_idx").on(t.weekStartAt),
+    index("top_trader_week_payouts_winner_idx").on(t.winnerUserId),
+  ],
+);
 
 export const communityUserProfiles = pgTable(
   "community_user_profiles",

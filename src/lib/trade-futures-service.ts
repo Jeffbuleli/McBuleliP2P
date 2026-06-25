@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { getDb, tradeFuturesPositions, users } from "@/db";
 import {
@@ -32,6 +32,17 @@ import { assertCanOpenLiveFutures } from "@/lib/trade-live-governance";
 import { assertHouseCapacityForNewPosition } from "@/lib/trade-house-risk";
 import { applyLiveWinHaircut } from "@/lib/trade-house-haircut";
 import { tradeHouseTreasuryUserId } from "@/lib/trade-house-reserve";
+import {
+  TOP_TRADER_MAX_POSITION_HOURS,
+  getTopTraderProgramInfo,
+} from "@/lib/community/top-trader-competition";
+import {
+  assertCanOpenCompetitionTrade,
+  assertAndRecordCompetitionTradeInTx,
+  isActiveTopTraderParticipant,
+} from "@/lib/community/top-trader-participant-service";
+
+const COMPETITION_MAX_AGE_MS = TOP_TRADER_MAX_POSITION_HOURS * 60 * 60 * 1000;
 
 async function countClosedFutures(
   userId: string,
@@ -62,7 +73,9 @@ export async function processFuturesRiskForAllUsers(): Promise<{
   usersWithOpenPositions: number;
   processedOk: number;
   processedFailed: number;
+  competitionMaxAgeClosed: number;
 }> {
+  const maxAge = await enforceTopTraderMaxAgePositions();
   const db = getDb();
   const open = await db
     .select({ userId: tradeFuturesPositions.userId })
@@ -85,7 +98,53 @@ export async function processFuturesRiskForAllUsers(): Promise<{
     usersWithOpenPositions: userIds.length,
     processedOk,
     processedFailed,
+    competitionMaxAgeClosed: maxAge.closed,
   };
+}
+
+export async function enforceTopTraderMaxAgePositions(): Promise<{
+  closed: number;
+  failed: number;
+}> {
+  const db = getDb();
+  const cutoff = new Date(Date.now() - COMPETITION_MAX_AGE_MS);
+
+  const stale = await db
+    .select({
+      id: tradeFuturesPositions.id,
+      userId: tradeFuturesPositions.userId,
+      symbol: tradeFuturesPositions.symbol,
+    })
+    .from(tradeFuturesPositions)
+    .where(
+      and(
+        eq(tradeFuturesPositions.status, "open"),
+        eq(tradeFuturesPositions.isDemo, true),
+        eq(tradeFuturesPositions.isCompetition, true),
+        lt(tradeFuturesPositions.openedAt, cutoff),
+      ),
+    )
+    .limit(200);
+
+  let closed = 0;
+  let failed = 0;
+  for (const p of stale) {
+    const t = await fetchSymbolTicker(p.symbol);
+    if (!t) {
+      failed += 1;
+      continue;
+    }
+    const r = await closeFuturesPositionInternal(
+      p.id,
+      p.userId,
+      t.lastPrice,
+      "tt_max_age",
+    );
+    if (r.ok) closed += 1;
+    else failed += 1;
+  }
+
+  return { closed, failed };
 }
 
 export async function processFuturesRisk(userId: string): Promise<void> {
@@ -101,6 +160,18 @@ export async function processFuturesRisk(userId: string): Promise<void> {
     );
 
   for (const p of open) {
+    if (
+      p.isCompetition &&
+      p.isDemo &&
+      Date.now() - p.openedAt.getTime() > COMPETITION_MAX_AGE_MS
+    ) {
+      const t = await fetchSymbolTicker(p.symbol);
+      if (t) {
+        await closeFuturesPositionInternal(p.id, userId, t.lastPrice, "tt_max_age");
+      }
+      continue;
+    }
+
     const t = await fetchSymbolTicker(p.symbol);
     if (!t) continue;
     const mark = t.lastPrice;
@@ -138,7 +209,7 @@ async function closeFuturesPositionInternal(
   positionId: string,
   userId: string,
   mark: number,
-  reason: "manual" | "liquidated" | "stop_loss" | "take_profit",
+  reason: "manual" | "liquidated" | "stop_loss" | "take_profit" | "tt_max_age",
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const db = getDb();
   const feeRate = TRADE_FEE_RATE;
@@ -204,7 +275,9 @@ async function closeFuturesPositionInternal(
                 ? "stop_loss"
                 : reason === "liquidated"
                   ? "liquidated"
-                  : "manual",
+                  : reason === "tt_max_age"
+                    ? "tt_max_age"
+                    : "manual",
           meta:
             haircutUsdt > 0
               ? { ...prevMeta, haircutUsdt, haircutReason: "house_reserve" }
@@ -503,6 +576,15 @@ export async function openFuturesPosition(args: {
   }
   const entry = ticker.lastPrice;
 
+  const isCompetition =
+    isDemo && (await isActiveTopTraderParticipant(userId));
+  if (isCompetition) {
+    const compGate = await assertCanOpenCompetitionTrade(userId);
+    if (!compGate.ok) {
+      return { ok: false, message: compGate.message };
+    }
+  }
+
   if (!isDemo) {
     const houseGate = await assertHouseCapacityForNewPosition({
       marginUsdt,
@@ -626,11 +708,21 @@ export async function openFuturesPosition(args: {
           feeOpenUsdt: fmtTradeAmount(feeOpen),
           status: "open",
           isDemo,
+          isCompetition,
           meta: { batchOpen: batchId },
         })
         .returning({ id: tradeFuturesPositions.id });
 
       const ins = inserted[0];
+      if (isCompetition) {
+        const program = getTopTraderProgramInfo();
+        await assertAndRecordCompetitionTradeInTx(
+          tx,
+          userId,
+          new Date(program.weekStartAt),
+        );
+      }
+
       if (!isDemo) {
         await insertWalletLedgerLines(tx, [
           {
@@ -677,6 +769,10 @@ export async function openFuturesPosition(args: {
     if (msg === "live_disabled")
       return { ok: false, message: "trade_live_not_enabled" };
     if (msg === "max_positions") return { ok: false, message: "trade_max_positions" };
+    if (msg === "top_trader_opt_in_required")
+      return { ok: false, message: "top_trader_opt_in_required" };
+    if (msg === "top_trader_daily_limit")
+      return { ok: false, message: "top_trader_daily_limit" };
     return { ok: false, message: "trade_open_failed" };
   }
 }

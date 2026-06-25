@@ -411,6 +411,19 @@ function notifMeta(
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
+    case "top_trader_week_winner": {
+      return {
+        title: t("notif_top_trader_winner_title", {
+          weekLabel: str("weekLabel") || "S?",
+        }),
+        body: t("notif_top_trader_winner_body", {
+          prizeUsdt: str("prizeUsdt") || "10",
+          pnlUsdt: str("weeklyPnlUsdt") || "0",
+        }),
+        href: str("href") || "/app/community/traders?tab=top_trader",
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
     default:
       return {
         title: row.kind,

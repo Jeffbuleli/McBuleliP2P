@@ -164,6 +164,21 @@ export function IconEye({ size = 14, className = "" }: IconProps) {
   );
 }
 
+export function IconTrophy({ size = 18, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M6 4h12v3c0 3.5-2.5 6.5-6 7.5C8.5 13.5 6 10.5 6 7V4z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M9 18h6M10 21h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8 4H5a1 1 0 00-1 1v1a3 3 0 003 3M16 4h3a1 1 0 011 1v1a3 3 0 01-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconSearch({ size = 18, className = "" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>

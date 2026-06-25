@@ -45,6 +45,7 @@ export type NotificationKind =
   | "community_like"
   | "community_trader_follow"
   | "community_bot_copy_started"
+  | "top_trader_week_winner"
   | "trade_live_enabled"
   | "trade_live_disabled";
 

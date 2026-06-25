@@ -502,6 +502,7 @@ export function FuturesTradingClient({
     if (r === "take_profit") return t("trade_ui_reason_take_profit");
     if (r === "liquidated") return t("trade_ui_reason_liquidated");
     if (r === "manual") return t("trade_ui_reason_manual");
+    if (r === "tt_max_age") return t("trade_ui_reason_tt_max_age");
     return r && r.length ? r : "—";
   }
 

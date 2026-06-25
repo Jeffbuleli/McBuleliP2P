@@ -13,6 +13,7 @@ const ENTRY_LABEL_KEYS: Record<string, keyof Messages> = {
   fiat_withdraw: "wallet_entry_fiat_withdraw",
   fiat_withdraw_refund: "wallet_entry_fiat_withdraw_refund",
   deposit_launch_reward: "wallet_entry_deposit_launch_reward",
+  top_trader_week_prize: "wallet_entry_top_trader_week_prize",
   p2p_ad_reserve_lock: "wallet_entry_p2p_ad_reserve_lock",
   p2p_ad_reserve_unlock: "wallet_entry_p2p_ad_reserve_unlock",
   p2p_platform_fee: "wallet_entry_p2p_platform_fee",

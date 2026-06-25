@@ -46,6 +46,12 @@ export function futuresApiMessage(
     trade_house_circuit: d.trade_house_circuit,
     trade_house_capacity: d.trade_house_capacity,
     trade_house_leverage_cap: d.trade_house_leverage_cap,
+    top_trader_opt_in_required: d.top_trader_opt_in_required,
+    top_trader_daily_limit: d.top_trader_daily_limit,
+    top_trader_refill_used: d.top_trader_refill_used,
+    top_trader_not_active: d.top_trader_not_active,
+    top_trader_not_started: d.top_trader_not_started,
+    top_trader_ended: d.top_trader_ended,
   };
 
   return map[c] ?? c.replace(/_/g, " ");
