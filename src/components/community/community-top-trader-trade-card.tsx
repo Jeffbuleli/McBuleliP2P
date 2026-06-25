@@ -1,135 +1,200 @@
 "use client";
 
-import type { TopTraderCompetitionTrade } from "@/lib/community/top-trader-types";
+import Link from "next/link";
+import type {
+  TopTraderCompetitionTrade,
+  TopTraderFeedTrade,
+} from "@/lib/community/top-trader-types";
 import {
-  TopTraderCandleIllustration,
-} from "@/components/community/community-top-trader-illustrations";
+  closeReasonLabel,
+  closeReasonTone,
+  fmtDurationMin,
+  fmtTradeDt,
+  fmtTradePrice,
+  fmtTradeTime,
+  notionalUsdt,
+  pnlBgClass,
+  pnlToneClass,
+  sideClass,
+} from "@/lib/community/top-trader-ui-helpers";
 
-function reasonLabel(r: string | null, fr: boolean): string {
-  if (r === "stop_loss") return fr ? "Stop loss" : "Stop loss";
-  if (r === "take_profit") return fr ? "Take profit" : "Take profit";
-  if (r === "liquidated") return fr ? "Liquidation" : "Liquidated";
-  if (r === "manual") return fr ? "Clôture manuelle" : "Manual close";
-  if (r === "tt_max_age") return fr ? "Limite 24h" : "24h limit";
-  return r ?? "—";
+type TradeOwner = {
+  displayName: string;
+  handle: string | null;
+  avatarUrl: string | null;
+  showKycBadge?: boolean;
+};
+
+function TraderAvatar({
+  owner,
+  size = "md",
+}: {
+  owner: TradeOwner;
+  size?: "sm" | "md";
+}) {
+  const cls = size === "sm" ? "h-8 w-8 text-xs" : "h-9 w-9 text-sm";
+  if (owner.avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={owner.avatarUrl}
+        alt=""
+        className={`${cls} shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm`}
+      />
+    );
+  }
+  return (
+    <span
+      className={`${cls} flex shrink-0 items-center justify-center rounded-full bg-[#e8f3ee] font-extrabold text-[#305f33] ring-2 ring-white shadow-sm`}
+    >
+      {owner.displayName.slice(0, 1).toUpperCase()}
+    </span>
+  );
 }
 
-function fmtPrice(n: number): string {
-  if (n >= 1000) return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
-  return n.toFixed(2);
-}
+function TradeCardInner({
+  fr,
+  trade,
+  owner,
+  compact,
+}: {
+  fr: boolean;
+  trade: TopTraderCompetitionTrade;
+  owner?: TradeOwner | null;
+  compact?: boolean;
+}) {
+  const pnl = trade.realizedPnlUsdt;
+  const up = pnl >= 0;
+  const pair = trade.symbol.replace("USDT", "/USDT");
+  const fees = trade.feeOpenUsdt + trade.feeCloseUsdt;
+  const notional = notionalUsdt(trade.marginUsdt, trade.leverage);
+  const reasonTone = closeReasonTone(trade.closeReason);
+  const profileHref = owner?.handle ? `/app/community/u/${owner.handle}` : null;
 
-function fmtDt(iso: string, fr: boolean): string {
-  return new Date(iso).toLocaleString(fr ? "fr-FR" : "en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
-}
+  return (
+    <article
+      className={`rounded-2xl border-2 shadow-sm ${pnlBgClass(pnl)} ${
+        compact ? "px-3 py-2.5" : "px-3.5 py-3"
+      }`}
+    >
+      {owner ? (
+        <header className="mb-2.5 flex items-center gap-2 border-b border-black/5 pb-2">
+          <TraderAvatar owner={owner} size="sm" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1">
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  className="truncate text-xs font-bold text-[#0c0a09] hover:underline"
+                >
+                  {owner.displayName}
+                </Link>
+              ) : (
+                <span className="truncate text-xs font-bold text-[#0c0a09]">
+                  {owner.displayName}
+                </span>
+              )}
+              {owner.showKycBadge ? (
+                <svg width="10" height="10" viewBox="0 0 24 24" className="shrink-0 text-[#305f33]" aria-hidden>
+                  <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15" />
+                  <path d="M8 12l3 3 5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              ) : null}
+            </div>
+            {owner.handle ? (
+              <p className="truncate text-[10px] text-[#78716c]">@{owner.handle}</p>
+            ) : null}
+          </div>
+          <time className="shrink-0 text-[10px] font-semibold tabular-nums text-[#a8a29e]">
+            {fmtTradeTime(trade.closedAt, fr)}
+          </time>
+        </header>
+      ) : null}
 
-function fmtDuration(min: number, fr: boolean): string {
-  if (min < 60) return `${min} min`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-extrabold text-[#0c0a09]">
+            {pair}{" "}
+            <span className={sideClass(trade.side)}>{trade.side.toUpperCase()}</span>{" "}
+            <span className="text-[11px] font-bold text-[#78716c]">{trade.leverage}×</span>
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-[#78716c]">
+            {fr ? "Entrée" : "Entry"} {fmtTradePrice(trade.entryPrice)} · {fr ? "Sortie" : "Exit"}{" "}
+            {fmtTradePrice(trade.closePrice)}
+            {trade.stopLossPrice != null ? ` · SL ${fmtTradePrice(trade.stopLossPrice)}` : ""}
+            {trade.takeProfitPrice != null ? ` · TP ${fmtTradePrice(trade.takeProfitPrice)}` : ""}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={`text-base font-extrabold tabular-nums ${pnlToneClass(pnl)}`}>
+            {up ? "+" : ""}
+            {pnl.toFixed(2)}
+          </p>
+          <p className="text-[10px] font-bold text-[#78716c]">USDT</p>
+        </div>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+        <span className={pnlToneClass(pnl)}>
+          ROE {trade.roePct >= 0 ? "+" : ""}
+          {trade.roePct.toFixed(1)}%
+        </span>
+        <span className="text-[#78716c]">
+          {fr ? "Marge" : "Margin"} {trade.marginUsdt.toFixed(2)} · {fr ? "Engagé" : "Notional"}{" "}
+          {notional.toFixed(0)}
+        </span>
+        <span className="text-[#78716c]">
+          {fmtDurationMin(trade.durationMin, fr)} · {fr ? "Frais" : "Fees"} {fees.toFixed(2)}
+        </span>
+      </div>
+
+      <footer className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/5 pt-2">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+            reasonTone === "gain"
+              ? "bg-[#dce8e0] text-[#305f33]"
+              : reasonTone === "loss"
+                ? "bg-[#fde8d8] text-[#b45309]"
+                : "bg-[#f5f5f4] text-[#57534e]"
+          }`}
+        >
+          {closeReasonLabel(trade.closeReason, fr)}
+        </span>
+        <span className="text-[10px] tabular-nums text-[#a8a29e]">
+          {fmtTradeDt(trade.closedAt, fr)} GMT
+        </span>
+      </footer>
+    </article>
+  );
 }
 
 export function CommunityTopTraderTradeCard({
   fr,
   trade,
+  owner,
+  compact,
 }: {
   fr: boolean;
   trade: TopTraderCompetitionTrade;
+  owner?: TradeOwner | null;
+  compact?: boolean;
 }) {
-  const pnl = trade.realizedPnlUsdt;
-  const up = pnl >= 0;
-  const sideUp = trade.side === "long";
-  const pair = trade.symbol.replace("USDT", "/USDT");
-  const fees = trade.feeOpenUsdt + trade.feeCloseUsdt;
+  return <TradeCardInner fr={fr} trade={trade} owner={owner} compact={compact} />;
+}
 
+export function CommunityTopTraderFeedTradeCard({
+  fr,
+  trade,
+}: {
+  fr: boolean;
+  trade: TopTraderFeedTrade;
+}) {
+  const { displayName, handle, avatarUrl, showKycBadge, ...base } = trade;
   return (
-    <article
-      className={`rounded-xl border px-3 py-3 ${
-        up
-          ? "border-[#bce4c9] bg-gradient-to-br from-[#f0faf4] to-white"
-          : "border-[#fcd9b6] bg-gradient-to-br from-[#fff7ed] to-white"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <TopTraderCandleIllustration up={sideUp} className="h-7 w-7" />
-          <div>
-            <p className="text-sm font-extrabold text-[#0c0a09]">
-              {pair}{" "}
-              <span className={sideUp ? "text-[#305f33]" : "text-[#b45309]"}>
-                {trade.side.toUpperCase()}
-              </span>{" "}
-              <span className="text-[11px] font-bold text-[#78716c]">{trade.leverage}x</span>
-            </p>
-            <p className="text-[10px] text-[#a8a29e]">
-              {fmtDt(trade.closedAt, fr)} GMT
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className={`text-base font-extrabold tabular-nums ${up ? "text-[#305f33]" : "text-[#b45309]"}`}>
-            {up ? "+" : ""}
-            {pnl.toFixed(2)}
-          </p>
-          <p className="text-[10px] font-semibold text-[#78716c]">USDT</p>
-        </div>
-      </div>
-
-      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] sm:grid-cols-4">
-        <div>
-          <dt className="text-[#a8a29e]">{fr ? "Entrée" : "Entry"}</dt>
-          <dd className="font-bold tabular-nums text-[#0c0a09]">{fmtPrice(trade.entryPrice)}</dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">{fr ? "Sortie" : "Exit"}</dt>
-          <dd className="font-bold tabular-nums text-[#0c0a09]">{fmtPrice(trade.closePrice)}</dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">{fr ? "Marge" : "Margin"}</dt>
-          <dd className="font-bold tabular-nums text-[#0c0a09]">{trade.marginUsdt.toFixed(2)}</dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">ROE</dt>
-          <dd className={`font-bold tabular-nums ${up ? "text-[#305f33]" : "text-[#b45309]"}`}>
-            {trade.roePct >= 0 ? "+" : ""}
-            {trade.roePct.toFixed(1)}%
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">SL</dt>
-          <dd className="font-semibold tabular-nums text-[#57534e]">
-            {trade.stopLossPrice != null ? fmtPrice(trade.stopLossPrice) : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">TP</dt>
-          <dd className="font-semibold tabular-nums text-[#57534e]">
-            {trade.takeProfitPrice != null ? fmtPrice(trade.takeProfitPrice) : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">{fr ? "Durée" : "Duration"}</dt>
-          <dd className="font-semibold text-[#57534e]">
-            {fmtDuration(trade.durationMin, fr)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[#a8a29e]">{fr ? "Frais" : "Fees"}</dt>
-          <dd className="font-semibold tabular-nums text-[#57534e]">{fees.toFixed(2)}</dd>
-        </div>
-      </dl>
-
-      <div className="mt-2 flex items-center justify-between border-t border-black/5 pt-2 text-[10px]">
-        <span className="text-[#a8a29e]">{fr ? "Motif" : "Reason"}</span>
-        <span className="font-semibold text-[#57534e]">{reasonLabel(trade.closeReason, fr)}</span>
-      </div>
-    </article>
+    <TradeCardInner
+      fr={fr}
+      trade={base}
+      owner={{ displayName, handle, avatarUrl, showKycBadge }}
+    />
   );
 }

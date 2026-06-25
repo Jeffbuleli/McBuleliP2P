@@ -52,6 +52,27 @@ export type TopTraderCompetitionTrade = {
   durationMin: number;
 };
 
+/** Closed competition trade with trader identity (public feed). */
+export type TopTraderFeedTrade = TopTraderCompetitionTrade & {
+  displayName: string;
+  handle: string | null;
+  avatarUrl: string | null;
+  showKycBadge: boolean;
+};
+
+/** Best trader for one GMT calendar day within the competition week. */
+export type TopTraderDailyLeader = {
+  dayKey: string;
+  weekday: number;
+  weekdayLabel: string;
+  userId: string | null;
+  displayName: string | null;
+  handle: string | null;
+  avatarUrl: string | null;
+  dailyPnlUsdt: number;
+  tradeCount: number;
+};
+
 export type TopTraderWeekWinnerView = {
   weekLabel: string;
   weekStartAt: string;

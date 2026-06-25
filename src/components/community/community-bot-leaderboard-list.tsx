@@ -121,38 +121,45 @@ export function CommunityBotLeaderboardList({
   }
 
   return (
-    <ul className="space-y-3">
-      {bots.map((b, idx) => (
+    <ul className="space-y-2">
+      {bots.map((b, idx) => {
+        const rank = idx + 1;
+        const isTop3 = rank <= 3;
+        return (
         <li key={`${b.userId}-${b.planId}`}>
-          <article className="fd-card px-4 py-3">
+          <article
+            className={`fd-card overflow-hidden px-4 py-3 shadow-sm ${
+              isTop3 ? "ring-1 ring-[#305f33]/15" : ""
+            }`}
+          >
             <div className="flex items-start gap-3">
-              <BotRankIcon rank={idx + 1} />
+              <BotRankIcon rank={rank} />
               <div className="min-w-0 flex-1">
-                <Link href={`/app/community/u/${b.handle}`} className="text-sm font-bold text-[#0c0a09]">
+                <Link href={`/app/community/u/${b.handle}`} className="text-sm font-bold text-[#0c0a09] hover:underline">
                   {b.displayName}
                 </Link>
                 <p className="text-xs text-[#78716c]">@{b.handle}</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase text-[#305f33]">
+                <p className="mt-1 inline-block rounded-full bg-[#f0faf4] px-2 py-0.5 text-[9px] font-bold uppercase text-[#305f33] ring-1 ring-[#dce8e0]">
                   {b.planId.replace("_", " ")} · {b.billing}
                 </p>
-                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <div>
+                <dl className="mt-2.5 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
+                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
                     <dt className="text-[#a8a29e]">{fr ? "Trades" : "Trades"}</dt>
-                    <dd className="font-semibold">{b.tradeCount}</dd>
+                    <dd className="text-sm font-extrabold tabular-nums">{b.tradeCount}</dd>
                   </div>
-                  <div>
+                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
                     <dt className="text-[#a8a29e]">Win rate</dt>
-                    <dd className="font-semibold">
+                    <dd className="text-sm font-extrabold tabular-nums">
                       {b.winRate != null ? `${b.winRate}%` : "—"}
                     </dd>
                   </div>
-                  <div>
+                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
                     <dt className="text-[#a8a29e]">{fr ? "Durée" : "Runtime"}</dt>
-                    <dd className="font-semibold">{b.runtimeDays}d</dd>
+                    <dd className="text-sm font-extrabold tabular-nums">{b.runtimeDays}d</dd>
                   </div>
-                  <div>
+                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
                     <dt className="text-[#a8a29e]">{fr ? "Copieurs" : "Copiers"}</dt>
-                    <dd className="font-semibold">{b.copyFollowerCount}</dd>
+                    <dd className="text-sm font-extrabold tabular-nums">{b.copyFollowerCount}</dd>
                   </div>
                 </dl>
               </div>
@@ -193,7 +200,8 @@ export function CommunityBotLeaderboardList({
             </div>
           </article>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

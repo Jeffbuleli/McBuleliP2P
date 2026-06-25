@@ -38,6 +38,7 @@ import {
   TradeStatRow,
   tradeFieldCls,
 } from "@/components/trade/trade-flow-ui";
+import { FuturesTradeHistoryCard } from "@/components/trade/futures-trade-history-card";
 import { TradeIconAlert, TradeIconBadge, TradeIconShield } from "@/components/trade/trade-icons";
 import type { TradeLiveGovernanceSnapshot } from "@/lib/trade-live-governance";
 import { futuresApiMessage, liveEnableMessage } from "@/lib/trade-futures-ui-helpers";
@@ -944,56 +945,17 @@ export function FuturesTradingClient({
           <p className="text-sm text-[color:var(--fd-muted)]">{t("trade_ui_history_empty")}</p>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="fd-table-minimal min-w-[300px]">
-                <thead>
-                  <tr>
-                    <th>Pair</th>
-                    <th>Side</th>
-                    <th className="text-right">{t("trade_ui_hist_pnl")}</th>
-                    <th>{t("trade_ui_hist_cause")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((x) => {
-                    const pnl = Number(x.realizedPnlUsdt);
-                    const closed = new Date(x.closedAt);
-                    const closedStr = closed.toLocaleString(locTag, {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    });
-                    return (
-                      <tr key={x.id}>
-                        <td className="font-semibold">
-                          {x.symbol.replace("USDT", "")}
-                          <span className="mt-0.5 block text-[10px] font-normal text-[color:var(--fd-muted)]">
-                            {x.leverage}× · {closedStr}
-                          </span>
-                        </td>
-                        <td
-                          className={`font-semibold uppercase ${
-                            x.side === "long" ? "text-emerald-600" : "text-rose-600"
-                          }`}
-                        >
-                          {x.side}
-                        </td>
-                        <td
-                          className={`text-right font-mono font-semibold tabular-nums ${
-                            pnl >= 0 ? "text-emerald-600" : "text-rose-600"
-                          }`}
-                        >
-                          {pnl >= 0 ? "+" : ""}
-                          {pnl.toFixed(2)}
-                        </td>
-                        <td className="text-[color:var(--fd-muted)]">
-                          {reasonLabel(x.closeReason)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ul className="space-y-2">
+              {history.map((x) => (
+                <li key={x.id}>
+                  <FuturesTradeHistoryCard
+                    row={x}
+                    fr={locale === "fr"}
+                    reasonLabelFn={reasonLabel}
+                  />
+                </li>
+              ))}
+            </ul>
             <TradeHistoryPager
               page={histPage}
               pageSize={histPageSize}

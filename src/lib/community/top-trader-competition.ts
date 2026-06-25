@@ -9,12 +9,16 @@ import { isFollowingTrader } from "@/lib/community/follows-service";
 
 export type {
   TopTraderCompetitionTrade,
+  TopTraderDailyLeader,
+  TopTraderFeedTrade,
   TopTraderLeaderboardEntry,
   TopTraderProgramInfo,
   TopTraderProgramStatus,
 } from "@/lib/community/top-trader-types";
 import type {
   TopTraderCompetitionTrade,
+  TopTraderDailyLeader,
+  TopTraderFeedTrade,
   TopTraderLeaderboardEntry,
   TopTraderProgramInfo,
   TopTraderProgramStatus,
@@ -276,33 +280,120 @@ export async function getTopTraderWeekTrades(args: {
     .limit(limit);
 
   return rows
-    .filter((r) => r.closedAt && r.closePrice && r.realizedPnlUsdt != null)
+    .map((r) => mapCompetitionTradeRow(r))
+    .filter((t): t is TopTraderCompetitionTrade => Boolean(t));
+}
+
+function mapCompetitionTradeRow(r: {
+  id: string;
+  userId: string;
+  symbol: string;
+  side: string;
+  leverage: number;
+  marginUsdt: string;
+  entryPrice: string;
+  closePrice: string | null;
+  stopLossPrice: string | null;
+  takeProfitPrice: string | null;
+  realizedPnlUsdt: string | null;
+  feeOpenUsdt: string;
+  feeCloseUsdt: string | null;
+  closeReason: string | null;
+  openedAt: Date;
+  closedAt: Date | null;
+}): TopTraderCompetitionTrade | null {
+  if (!r.closedAt || !r.closePrice || r.realizedPnlUsdt == null) return null;
+  const margin = Number(r.marginUsdt);
+  const pnl = Number(r.realizedPnlUsdt);
+  const opened = r.openedAt.getTime();
+  const closed = r.closedAt.getTime();
+  return {
+    id: r.id,
+    userId: r.userId,
+    symbol: r.symbol,
+    side: r.side,
+    leverage: r.leverage,
+    marginUsdt: margin,
+    entryPrice: Number(r.entryPrice),
+    closePrice: Number(r.closePrice),
+    stopLossPrice: r.stopLossPrice ? Number(r.stopLossPrice) : null,
+    takeProfitPrice: r.takeProfitPrice ? Number(r.takeProfitPrice) : null,
+    realizedPnlUsdt: pnl,
+    feeOpenUsdt: Number(r.feeOpenUsdt),
+    feeCloseUsdt: Number(r.feeCloseUsdt ?? 0),
+    roePct: margin > 0 ? (pnl / margin) * 100 : 0,
+    closeReason: r.closeReason,
+    openedAt: r.openedAt.toISOString(),
+    closedAt: r.closedAt.toISOString(),
+    durationMin: Math.max(0, Math.round((closed - opened) / 60_000)),
+  };
+}
+
+export async function getTopTraderWeekFeedTrades(args?: {
+  limit?: number;
+}): Promise<TopTraderFeedTrade[]> {
+  const program = getTopTraderProgramInfo();
+  const db = getDb();
+  const limit = Math.min(Math.max(args?.limit ?? 40, 1), 80);
+  const weekStart = new Date(program.weekStartAt);
+  const weekEnd = new Date(program.weekEndAt);
+
+  const rows = await db
+    .select({
+      id: tradeFuturesPositions.id,
+      userId: tradeFuturesPositions.userId,
+      symbol: tradeFuturesPositions.symbol,
+      side: tradeFuturesPositions.side,
+      leverage: tradeFuturesPositions.leverage,
+      marginUsdt: tradeFuturesPositions.marginUsdt,
+      entryPrice: tradeFuturesPositions.entryPrice,
+      closePrice: tradeFuturesPositions.closePrice,
+      stopLossPrice: tradeFuturesPositions.stopLossPrice,
+      takeProfitPrice: tradeFuturesPositions.takeProfitPrice,
+      realizedPnlUsdt: tradeFuturesPositions.realizedPnlUsdt,
+      feeOpenUsdt: tradeFuturesPositions.feeOpenUsdt,
+      feeCloseUsdt: tradeFuturesPositions.feeCloseUsdt,
+      closeReason: tradeFuturesPositions.closeReason,
+      openedAt: tradeFuturesPositions.openedAt,
+      closedAt: tradeFuturesPositions.closedAt,
+      handle: communityUserProfiles.handle,
+      displayName: communityUserProfiles.displayName,
+      showKycBadge: communityUserProfiles.showKycBadge,
+      avatarUrl: users.avatarUrl,
+      kycStatus: users.kycStatus,
+      userDisplayName: users.displayName,
+    })
+    .from(tradeFuturesPositions)
+    .leftJoin(
+      communityUserProfiles,
+      eq(communityUserProfiles.userId, tradeFuturesPositions.userId),
+    )
+    .leftJoin(users, eq(users.id, tradeFuturesPositions.userId))
+    .where(
+      and(
+        eq(tradeFuturesPositions.isDemo, true),
+        eq(tradeFuturesPositions.isCompetition, true),
+        inArray(tradeFuturesPositions.status, ["closed", "liquidated"]),
+        gte(tradeFuturesPositions.closedAt, weekStart),
+        lte(tradeFuturesPositions.closedAt, weekEnd),
+      ),
+    )
+    .orderBy(desc(tradeFuturesPositions.closedAt))
+    .limit(limit);
+
+  return rows
     .map((r) => {
-      const margin = Number(r.marginUsdt);
-      const pnl = Number(r.realizedPnlUsdt);
-      const opened = r.openedAt.getTime();
-      const closed = r.closedAt!.getTime();
+      const base = mapCompetitionTradeRow(r);
+      if (!base) return null;
       return {
-        id: r.id,
-        userId: r.userId,
-        symbol: r.symbol,
-        side: r.side,
-        leverage: r.leverage,
-        marginUsdt: margin,
-        entryPrice: Number(r.entryPrice),
-        closePrice: Number(r.closePrice),
-        stopLossPrice: r.stopLossPrice ? Number(r.stopLossPrice) : null,
-        takeProfitPrice: r.takeProfitPrice ? Number(r.takeProfitPrice) : null,
-        realizedPnlUsdt: pnl,
-        feeOpenUsdt: Number(r.feeOpenUsdt),
-        feeCloseUsdt: Number(r.feeCloseUsdt ?? 0),
-        roePct: margin > 0 ? (pnl / margin) * 100 : 0,
-        closeReason: r.closeReason,
-        openedAt: r.openedAt.toISOString(),
-        closedAt: r.closedAt!.toISOString(),
-        durationMin: Math.max(0, Math.round((closed - opened) / 60_000)),
-      };
-    });
+        ...base,
+        displayName: r.displayName ?? r.userDisplayName ?? "Trader",
+        handle: r.handle ?? null,
+        avatarUrl: r.avatarUrl ?? null,
+        showKycBadge: Boolean(r.showKycBadge && r.kycStatus === "approved"),
+      } satisfies TopTraderFeedTrade;
+    })
+    .filter((t): t is TopTraderFeedTrade => Boolean(t));
 }
 
 export async function resolveUserIdByHandle(handle: string): Promise<string | null> {
