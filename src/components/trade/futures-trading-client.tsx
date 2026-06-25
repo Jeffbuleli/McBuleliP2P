@@ -800,6 +800,7 @@ export function FuturesTradingClient({
                     : 0;
                 const liq = Number(p.liquidationPrice);
                 const markNow = p.markPrice;
+                const qty = positionQtyBase(marginNum, p.leverage, Number(p.entryPrice));
                 const dist =
                   Number.isFinite(liq) && Number.isFinite(markNow) && markNow > 0
                     ? ((markNow - liq) / markNow) * (p.side === "long" ? 1 : -1) * 100
