@@ -582,6 +582,20 @@
       "when": 1786200000000,
       "tag": "0090_profile_security_phase4",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1786300000000,
+      "tag": "0091_bot_copy_follows",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1786400000000,
+      "tag": "0092_trade_live_governance",
+      "breakpoints": true
     }
   ]
 }
