@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { getSessionUserId } from "@/lib/session";
 import {
   BOT_PLANS,
@@ -63,6 +64,13 @@ export async function POST(req: Request) {
 
   const { environment, apiKey, apiSecret, planId } = parsed.data;
   const env = environment as BotEnvironment;
+
+  if (env === "live") {
+    const kyc = await checkKycGate(userId, "trade_bots");
+    if (!kyc.ok) {
+      return NextResponse.json({ error: kyc.error }, { status: 403 });
+    }
+  }
 
   const privileged = await isSuperAdminUserId(userId);
   if (!privileged) {

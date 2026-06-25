@@ -49,3 +49,21 @@ export async function notifyCommunityTraderFollow(args: {
     },
   });
 }
+
+export async function notifyCommunityBotCopyStarted(args: {
+  leadId: string;
+  followerId: string;
+  planId: string;
+  billing: string;
+}) {
+  if (args.leadId === args.followerId) return;
+  await createUserNotification({
+    userId: args.leadId,
+    kind: "community_bot_copy_started",
+    payload: {
+      fromUserId: args.followerId,
+      planId: args.planId,
+      billing: args.billing,
+    },
+  });
+}

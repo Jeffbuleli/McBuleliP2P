@@ -9,6 +9,7 @@ import {
 } from "@/db";
 import { listUserBadges, type CommunityBadgeView } from "@/lib/community/badges-service";
 import { isFollowingTrader } from "@/lib/community/follows-service";
+import { parseCommunityProfileMeta } from "@/lib/community/profile-meta";
 
 export type TraderLeaderboardEntry = {
   userId: string;
@@ -22,6 +23,7 @@ export type TraderLeaderboardEntry = {
   closedSignals: number;
   signalWinRate: number | null;
   demoPnlUsdt: number;
+  livePnlUsdt: number;
   badges: CommunityBadgeView[];
   isFollowing: boolean;
   copyTradingEnabled: boolean;
@@ -112,8 +114,26 @@ export async function getTraderLeaderboard(args: {
     )
     .groupBy(tradeFuturesPositions.userId);
 
+  const livePnlRows = await db
+    .select({
+      userId: tradeFuturesPositions.userId,
+      total: sql<string>`coalesce(sum(${tradeFuturesPositions.realizedPnlUsdt}::numeric), 0)`,
+    })
+    .from(tradeFuturesPositions)
+    .where(
+      and(
+        inArray(tradeFuturesPositions.userId, userIds),
+        inArray(tradeFuturesPositions.status, ["closed", "liquidated"]),
+        eq(tradeFuturesPositions.isDemo, false),
+      ),
+    )
+    .groupBy(tradeFuturesPositions.userId);
+
   const pnlMap = new Map(
     pnlRows.map((r) => [r.userId, Number(r.total)]),
+  );
+  const livePnlMap = new Map(
+    livePnlRows.map((r) => [r.userId, Number(r.total)]),
   );
 
   const entries: TraderLeaderboardEntry[] = [];
@@ -123,7 +143,7 @@ export async function getTraderLeaderboard(args: {
       stats.closed > 0 ? Math.round((stats.wins / stats.closed) * 100) : null;
     const badges = await listUserBadges(p.userId);
     const following = await isFollowingTrader(args.viewerId, p.userId);
-    const meta = (p.meta ?? {}) as Record<string, unknown>;
+    const meta = parseCommunityProfileMeta(p.meta);
 
     entries.push({
       userId: p.userId,
@@ -137,6 +157,7 @@ export async function getTraderLeaderboard(args: {
       closedSignals: stats.closed,
       signalWinRate: winRate,
       demoPnlUsdt: pnlMap.get(p.userId) ?? 0,
+      livePnlUsdt: livePnlMap.get(p.userId) ?? 0,
       badges,
       isFollowing: following,
       copyTradingEnabled: meta.copyTradingEnabled === true,

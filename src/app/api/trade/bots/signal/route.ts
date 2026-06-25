@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { isBotPlanId } from "@/lib/bot-config";
 import { billingToKeyEnvironment } from "@/lib/bot-config";
-import { resolveBotSubscription } from "@/lib/bot-privilege";
+import { botAccessAllows, resolveBotSubscription } from "@/lib/bot-privilege";
 import {
   evaluateTradeSignal,
   fetchMarketContext,
@@ -48,6 +48,11 @@ export async function GET(req: Request) {
     billingParam === "demo" || billingParam === "live"
       ? billingParam
       : sub.billing;
+
+  const allowed = await botAccessAllows(userId, planId, billing);
+  if (!allowed) {
+    return NextResponse.json({ error: "bots_subscription_required" }, { status: 409 });
+  }
 
   const env = billingToKeyEnvironment(billing);
   const market = planId === "futures_um" ? "futures" : "spot";

@@ -82,7 +82,11 @@ export async function tickFuturesUmInstance(args: {
   billing: BotBillingMode;
   config: Record<string, unknown>;
   lastExecutedAt: Date | null;
+  signalInstanceId?: string;
+  readOnlySignal?: boolean;
 }): Promise<{ ran: boolean; skipped?: string }> {
+  const signalId = args.signalInstanceId ?? args.instanceId;
+  const readOnlySignal = args.readOnlySignal ?? false;
   const allowed = await botAccessAllows(args.userId, args.planId, args.billing);
   if (!allowed) {
     return { ran: false, skipped: "no_active_subscription" };
@@ -153,7 +157,7 @@ export async function tickFuturesUmInstance(args: {
     if (onConfig) {
       if (cfg.aiAssistMode) {
         const aiSig = await getAiSignal(
-          args.instanceId,
+          signalId,
           cfg.aiSignalMaxAgeMs ?? 120_000,
         );
         const xExit = evaluateAiPositionExit({
@@ -573,7 +577,7 @@ export async function tickFuturesUmInstance(args: {
 
     if (cfg.aiAssistMode) {
       await refreshAiSignalFromTaIfStale({
-        instanceId: args.instanceId,
+        instanceId: readOnlySignal ? signalId : args.instanceId,
         environment: env,
         symbol: cfg.symbol,
         side: cfg.side,
@@ -582,9 +586,9 @@ export async function tickFuturesUmInstance(args: {
       });
     }
 
-    const prevSmooth = await getSmoothedScoreState(args.instanceId);
+    const prevSmooth = await getSmoothedScoreState(signalId);
     const aiSignal = await getAiSignal(
-      args.instanceId,
+      signalId,
       cfg.aiSignalMaxAgeMs ?? 120_000,
     );
 
@@ -652,7 +656,9 @@ export async function tickFuturesUmInstance(args: {
       return { ran: false, skipped: trace.reason_code };
     }
 
-    await setSmoothedScoreState(args.instanceId, decision.technical.score);
+    if (!readOnlySignal) {
+      await setSmoothedScoreState(args.instanceId, decision.technical.score);
+    }
 
     const execLev = decision.execution.leverage ?? decision.risk.leverage;
     const execMargin = decision.execution.marginUsdt ?? margin;

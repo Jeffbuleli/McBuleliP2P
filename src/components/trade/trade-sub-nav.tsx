@@ -2,15 +2,20 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { TradeIconBadge, TradeIconBots, TradeIconFutures } from "@/components/trade/trade-icons";
 
 export function TradeSubNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
-  const isFutures = pathname.includes("/trade/futures");
-  const isBots = pathname.includes("/trade/bots");
+  const marketPanel = searchParams.get("panel");
+  const isMarket = pathname.startsWith("/app/market");
+  const isFutures =
+    pathname.includes("/trade/futures") || (isMarket && marketPanel === "futures");
+  const isBots =
+    pathname.includes("/trade/bots") || (isMarket && marketPanel === "bots");
 
   const tab = (
     href: string,
@@ -41,13 +46,19 @@ export function TradeSubNav() {
       aria-label={t("trade_ui_tabs_aria")}
     >
       {tab(
-        "/app/trade/futures",
+        "/app/market?panel=futures",
         isFutures,
         t("trade_ui_tab_futures"),
         <TradeIconFutures className="h-5 w-5" />,
         "mint",
       )}
-      {tab("/app/trade/bots", isBots, t("trade_ui_tab_bots"), <TradeIconBots className="h-5 w-5" />, "mint")}
+      {tab(
+        "/app/market?panel=bots",
+        isBots,
+        t("trade_ui_tab_bots"),
+        <TradeIconBots className="h-5 w-5" />,
+        "mint",
+      )}
     </nav>
   );
 }

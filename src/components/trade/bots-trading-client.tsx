@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import type { BotPlanId } from "@/lib/bot-config";
 import type { Messages } from "@/i18n/messages";
@@ -37,6 +38,21 @@ import {
   type BotTabRunState,
 } from "@/components/trade/bot-strategy-icons";
 import { BotCoordinationRail } from "@/components/trade/bot-coordination-rail";
+import { BotSignalPreview } from "@/components/trade/bot-signal-preview";
+import { BotInstanceStatsCard } from "@/components/trade/bot-instance-stats-card";
+import {
+  BotTemplatePicker,
+  type BotTemplateView,
+} from "@/components/trade/bot-template-picker";
+import { BotCommunityActions } from "@/components/trade/bot-community-actions";
+import { BotCopyFollowPanel } from "@/components/trade/bot-copy-follow-panel";
+import {
+  buildTemplateFormPatch,
+  getBotTemplate,
+  type BotTemplateId,
+} from "@/lib/bot-templates";
+import { BotsCronAlert } from "@/components/trade/bots-cron-alert";
+import { BotsHubHero } from "@/components/trade/bots-hub-hero";
 import { BotsAiGuideButton } from "@/components/trade/bots-page-chrome";
 import { BotsSetupWizard } from "@/components/trade/bots-setup-wizard";
 import {
@@ -113,6 +129,8 @@ type Overview = {
   cronConfigured?: boolean;
   cronHealth?: CronHealthSnapshot;
   isSuperAdmin?: boolean;
+  templates?: BotTemplateView[];
+  demoTrialEligible?: Record<BotPlanId, boolean>;
 };
 
 function botTabRunState(
@@ -185,6 +203,7 @@ function applyCoordinatedStyleDefaults(
 
 export function BotsTradingClient() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const [data, setData] = useState<Overview | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -221,7 +240,10 @@ export function BotsTradingClient() {
   const [accountBilling, setAccountBilling] = useState<"demo" | "live">("demo");
   const [keysHubMsg, setKeysHubMsg] = useState<string | null>(null);
   const [futOpenRows, setFutOpenRows] = useState<BotOpenPositionRow[]>([]);
+  const [activeTemplateId, setActiveTemplateId] = useState<BotTemplateId | null>(null);
+  const [tplMsg, setTplMsg] = useState<string | null>(null);
   const billingDefaultApplied = useRef(false);
+  const templateFromUrlApplied = useRef(false);
 
   const loadLogs = useCallback(async (planId: BotPlanId, billing: "demo" | "live") => {
     const logRes = await fetch(
@@ -276,6 +298,86 @@ export function BotsTradingClient() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const applyTemplate = useCallback(
+    async (templateId: BotTemplateId) => {
+      const template = getBotTemplate(templateId);
+      if (!template) return;
+      setActiveTab(template.planId);
+      setActiveTemplateId(templateId);
+      setTplMsg(null);
+
+      let mark: number | undefined;
+      if (template.planId === "grid_spot") {
+        try {
+          const res = await fetch(
+            `/api/trade/ticker?symbol=${template.symbol}`,
+            { cache: "no-store" },
+          );
+          const json = await res.json().catch(() => ({}));
+          const last = Number(json?.lastPrice ?? json?.price);
+          if (Number.isFinite(last) && last > 0) mark = last;
+        } catch {
+          /* fallback defaults in buildTemplateFormPatch */
+        }
+      }
+
+      const patch = buildTemplateFormPatch(template, mark);
+      setFutStyle(patch.style);
+      if (patch.dca) {
+        setDcaSymbol(patch.dca.symbol);
+        setDcaAmount(patch.dca.quoteAmountUsdt);
+        setDcaInterval(patch.dca.intervalHours);
+      }
+      if (patch.grid) {
+        setGridSymbol(patch.grid.symbol);
+        setGridLow(patch.grid.priceLow);
+        setGridHigh(patch.grid.priceHigh);
+        setGridCount(patch.grid.gridCount);
+        setGridQuote(patch.grid.quotePerGrid);
+        setGridRefresh(patch.grid.refreshHours);
+      }
+      if (patch.futures) {
+        setFutSymbol(patch.futures.symbol);
+        setFutSide(patch.futures.side);
+        setFutLeverage(patch.futures.leverage);
+        setFutMargin(patch.futures.marginUsdt);
+        setFutInterval(patch.futures.intervalHours);
+        setFutSl(patch.futures.stopLossPct);
+        setFutTp(patch.futures.takeProfitPct);
+      }
+      setTplMsg(t("bots_tpl_applied"));
+    },
+    [t],
+  );
+
+  useEffect(() => {
+    if (!data || templateFromUrlApplied.current) return;
+
+    const billingParam = searchParams.get("billing");
+    if (billingParam === "demo" || billingParam === "live") {
+      setAccountBilling(billingParam);
+    }
+
+    const raw = searchParams.get("template");
+    if (raw && getBotTemplate(raw)) {
+      templateFromUrlApplied.current = true;
+      void applyTemplate(raw as BotTemplateId);
+      return;
+    }
+
+    const symbol = searchParams.get("symbol");
+    const side = searchParams.get("side");
+    const plan = searchParams.get("plan");
+    if (symbol && plan === "futures_um") {
+      templateFromUrlApplied.current = true;
+      setActiveTab("futures_um");
+      const sym = symbol.toUpperCase();
+      setFutSymbol(sym);
+      if (side?.toUpperCase() === "SHORT") setFutSide("SHORT");
+      else setFutSide("LONG");
+    }
+  }, [data, searchParams, applyTemplate]);
 
   useEffect(() => {
     if (!data || billingDefaultApplied.current) return;
@@ -516,7 +618,68 @@ export function BotsTradingClient() {
         expiresAt: "2099-12-31T23:59:59.000Z",
       };
     }
-    return data?.subscriptions.find((s) => s.planId === planId);
+    return data?.subscriptions.find(
+      (s) => s.planId === planId && s.billing === billing,
+    );
+  }
+
+  function subOnOtherBilling(planId: BotPlanId) {
+    return data?.subscriptions.find(
+      (s) => s.planId === planId && s.billing !== accountBilling,
+    );
+  }
+
+  function billingSubBanner(planId: BotPlanId) {
+    if (activeSub(planId)) return null;
+    const other = subOnOtherBilling(planId);
+    if (!other) return null;
+    return (
+      <BotFlowError>
+        {t("bots_billing_sub_required", {
+          env: billingEnvLabel(accountBilling, t),
+          other: billingEnvLabel(other.billing, t),
+        })}
+      </BotFlowError>
+    );
+  }
+
+  function canStartPlan(
+    sub: Subscription | undefined,
+    keysOk: boolean,
+    inst: BotInstance | undefined,
+    cronHealth?: CronHealthSnapshot,
+  ) {
+    if (!sub || !keysOk) return false;
+    if (!instEnvAligned(inst)) return false;
+    if (cronHealth && (!cronHealth.configured || cronHealth.stale)) {
+      return false;
+    }
+    return true;
+  }
+
+  function startBlockReason(
+    planId: BotPlanId,
+    sub: Subscription | undefined,
+    keysOk: boolean,
+    inst: BotInstance | undefined,
+    cronHealth?: CronHealthSnapshot,
+    extra?: boolean,
+  ): string | null {
+    if (extra) return t("bots_start_block_position");
+    if (!sub) return t("bots_start_block_sub");
+    if (!keysOk) {
+      return planId === "futures_um"
+        ? t("bots_keys_required_futures")
+        : t("bots_keys_required_spot");
+    }
+    if (!instEnvAligned(inst)) return t("bots_start_block_billing");
+    if (cronHealth && !cronHealth.configured) return t("bots_cron_blocked_off");
+    if (cronHealth?.stale) {
+      return t("bots_cron_blocked_stale", {
+        ago: String(cronHealth.minutesSinceLastRun ?? "?"),
+      });
+    }
+    return null;
   }
 
   function credFor(env: "demo" | "live") {
@@ -571,7 +734,7 @@ export function BotsTradingClient() {
               quoteAmountUsdt: dcaAmount.trim().replace(",", "."),
               intervalHours: dcaInterval,
             },
-            "day",
+            futStyle,
           ),
         }),
       });
@@ -586,6 +749,20 @@ export function BotsTradingClient() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function templateIdForPlan(planId: BotPlanId): BotTemplateId | null {
+    if (activeTemplateId) {
+      const t = getBotTemplate(activeTemplateId);
+      if (t?.planId === planId) return activeTemplateId;
+    }
+    if (planId === "dca_spot") {
+      return futStyle === "swing" ? "dca_swing_eth" : "dca_day_btc";
+    }
+    if (planId === "grid_spot") {
+      return futStyle === "swing" ? "grid_swing_sol" : "grid_day_btc";
+    }
+    return futStyle === "swing" ? "fut_swing_eth_long" : "fut_day_btc_long";
   }
 
   const dcaSub = activeSub("dca_spot");
@@ -728,7 +905,7 @@ export function BotsTradingClient() {
               quotePerGrid: gridQuote.trim().replace(",", "."),
               refreshHours: gridRefresh,
             },
-            "day",
+            futStyle,
           ),
         }),
       });
@@ -748,18 +925,18 @@ export function BotsTradingClient() {
   if (!data) {
     if (err) {
       return (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {err}
         </p>
       );
     }
     return (
       <div className="space-y-4 pt-6 animate-pulse" aria-busy="true">
-        <div className="h-8 w-56 rounded-lg bg-stone-200 dark:bg-stone-800" />
-        <div className="h-20 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
-        <div className="h-36 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
-        <div className="h-36 rounded-2xl bg-stone-100 dark:bg-stone-800/80" />
-        <p className="text-center text-sm text-stone-500">{t("bots_loading")}</p>
+        <div className="h-8 w-56 rounded-lg bg-[color:var(--fd-mint)]/60" />
+        <div className="h-20 rounded-2xl bg-[color:var(--fd-mint)]/40" />
+        <div className="h-36 rounded-2xl bg-[color:var(--fd-mint)]/40" />
+        <div className="h-36 rounded-2xl bg-[color:var(--fd-mint)]/40" />
+        <p className="text-center text-sm text-[color:var(--fd-muted)]">{t("bots_loading")}</p>
       </div>
     );
   }
@@ -775,6 +952,8 @@ export function BotsTradingClient() {
             <BotsAiGuideButton t={t} />
           </div>
         </div>
+        <BotsHubHero t={t} />
+        <BotsCronAlert health={data.cronHealth} t={t} />
         {!data.keysEncryptionConfigured ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             {t("bots_encryption_missing")}
@@ -841,10 +1020,16 @@ export function BotsTradingClient() {
 
       {activeTab === "dca_spot" && !dcaSub ? (
         <BotFlowCard className="mt-4 text-center">
+          {billingSubBanner("dca_spot")}
           <BotPlanIcon planId="dca_spot" className="mx-auto h-10 w-10 text-[color:var(--fd-primary)]" />
           <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
             {t("bots_plan_dca")}
           </h2>
+          {data.demoTrialEligible?.dca_spot && accountBilling === "demo" ? (
+            <p className="mt-1 text-xs font-bold text-[color:var(--fd-primary)]">
+              {t("bots_demo_trial_badge")}
+            </p>
+          ) : null}
           <BotFlowBtn
             variant="violet"
             className="mx-auto mt-4 w-full max-w-xs"
@@ -859,10 +1044,16 @@ export function BotsTradingClient() {
 
       {activeTab === "grid_spot" && !gridSub ? (
         <BotFlowCard className="mt-4 text-center">
+          {billingSubBanner("grid_spot")}
           <BotPlanIcon planId="grid_spot" className="mx-auto h-10 w-10 text-violet-700" />
           <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
             {t("bots_plan_grid")}
           </h2>
+          {data.demoTrialEligible?.grid_spot && accountBilling === "demo" ? (
+            <p className="mt-1 text-xs font-bold text-[color:var(--fd-primary)]">
+              {t("bots_demo_trial_badge")}
+            </p>
+          ) : null}
           <BotFlowBtn
             variant="violet"
             className="mx-auto mt-4 w-full max-w-xs"
@@ -876,10 +1067,16 @@ export function BotsTradingClient() {
 
       {activeTab === "futures_um" && !futSub ? (
         <BotFlowCard className="mt-4 text-center">
+          {billingSubBanner("futures_um")}
           <BotPlanIcon planId="futures_um" className="mx-auto h-10 w-10 text-amber-800" />
           <h2 className="mt-2 text-base font-bold text-[color:var(--fd-text)]">
             {t("bots_plan_futures")}
           </h2>
+          {data.demoTrialEligible?.futures_um && accountBilling === "demo" ? (
+            <p className="mt-1 text-xs font-bold text-[color:var(--fd-primary)]">
+              {t("bots_demo_trial_badge")}
+            </p>
+          ) : null}
           <BotFlowBtn
             variant="violet"
             className="mx-auto mt-4 w-full max-w-xs"
@@ -913,10 +1110,38 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
+          {(data.templates?.length ?? 0) > 0 ? (
+            <div className="mt-3">
+              <BotTemplatePicker
+                planId="dca_spot"
+                templates={data.templates ?? []}
+                activeId={activeTemplateId}
+                onSelect={(id) => void applyTemplate(id)}
+                t={t}
+              />
+              {tplMsg && activeTab === "dca_spot" ? (
+                <p className="mt-1 text-[11px] font-medium text-[color:var(--fd-primary)]">{tplMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="mt-3">
+            <BotInstanceStatsCard planId="dca_spot" billing={accountBilling} t={t} />
+          </div>
+          <div className="mt-3">
+            <BotCommunityActions
+              planId="dca_spot"
+              billing={accountBilling}
+              templateId={templateIdForPlan("dca_spot")}
+              t={t}
+            />
+            <div className="mt-2">
+              <BotCopyFollowPanel planId="dca_spot" billing={accountBilling} t={t} />
+            </div>
+          </div>
           <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
             <div className="space-y-3">
               {billingMismatchBanner(dcaInst)}
-              <BotFlowField label={t("bots_dca_symbol")}>
+              <BotFlowField label={t("bots_symbol_label")}>
                 <BotFlowSelect
                   value={dcaSymbol}
                   onChange={(e) => setDcaSymbol(e.target.value)}
@@ -949,6 +1174,12 @@ export function BotsTradingClient() {
                   </BotFlowSelect>
                 </BotFlowField>
               </BotFormGrid>
+              <BotSignalPreview
+                planId="dca_spot"
+                symbol={dcaSymbol}
+                billing={accountBilling}
+                t={t}
+              />
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
@@ -973,6 +1204,8 @@ export function BotsTradingClient() {
             <BotRunControls
               status={dcaInst?.status ?? "none"}
               busy={busy}
+              startDisabled={!canStartPlan(dcaSub, dcaKeysOk, dcaInst, data.cronHealth)}
+              blockHint={startBlockReason("dca_spot", dcaSub, dcaKeysOk, dcaInst, data.cronHealth)}
               startLabel={t("bots_dca_start")}
               pauseLabel={t("bots_dca_pause")}
               runningLabel={t("bots_coord_running")}
@@ -1008,10 +1241,38 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
+          {(data.templates?.length ?? 0) > 0 ? (
+            <div className="mt-3">
+              <BotTemplatePicker
+                planId="grid_spot"
+                templates={data.templates ?? []}
+                activeId={activeTemplateId}
+                onSelect={(id) => void applyTemplate(id)}
+                t={t}
+              />
+              {tplMsg && activeTab === "grid_spot" ? (
+                <p className="mt-1 text-[11px] font-medium text-violet-800">{tplMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="mt-3">
+            <BotInstanceStatsCard planId="grid_spot" billing={accountBilling} t={t} />
+          </div>
+          <div className="mt-3">
+            <BotCommunityActions
+              planId="grid_spot"
+              billing={accountBilling}
+              templateId={templateIdForPlan("grid_spot")}
+              t={t}
+            />
+            <div className="mt-2">
+              <BotCopyFollowPanel planId="grid_spot" billing={accountBilling} t={t} />
+            </div>
+          </div>
           <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
             <div className="space-y-3">
               {billingMismatchBanner(gridInst)}
-              <BotFlowField label={t("bots_dca_symbol")}>
+              <BotFlowField label={t("bots_symbol_label")}>
                 <BotFlowSelect
                   value={gridSymbol}
                   onChange={(e) => setGridSymbol(e.target.value)}
@@ -1055,6 +1316,12 @@ export function BotsTradingClient() {
                   ))}
                 </BotFlowSelect>
               </BotFlowField>
+              <BotSignalPreview
+                planId="grid_spot"
+                symbol={gridSymbol}
+                billing={accountBilling}
+                t={t}
+              />
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
@@ -1080,6 +1347,8 @@ export function BotsTradingClient() {
               status={gridInst?.status ?? "none"}
               busy={busy}
               variant="violet"
+              startDisabled={!canStartPlan(gridSub, gridKeysOk, gridInst, data.cronHealth)}
+              blockHint={startBlockReason("grid_spot", gridSub, gridKeysOk, gridInst, data.cronHealth)}
               startLabel={t("bots_grid_start")}
               pauseLabel={t("bots_grid_pause")}
               runningLabel={t("bots_coord_running")}
@@ -1127,10 +1396,38 @@ export function BotsTradingClient() {
               t={t}
             />
           </div>
+          {(data.templates?.length ?? 0) > 0 ? (
+            <div className="mt-3">
+              <BotTemplatePicker
+                planId="futures_um"
+                templates={data.templates ?? []}
+                activeId={activeTemplateId}
+                onSelect={(id) => void applyTemplate(id)}
+                t={t}
+              />
+              {tplMsg && activeTab === "futures_um" ? (
+                <p className="mt-1 text-[11px] font-medium text-amber-900">{tplMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="mt-3">
+            <BotInstanceStatsCard planId="futures_um" billing={accountBilling} t={t} />
+          </div>
+          <div className="mt-3">
+            <BotCommunityActions
+              planId="futures_um"
+              billing={accountBilling}
+              templateId={templateIdForPlan("futures_um")}
+              t={t}
+            />
+            <div className="mt-2">
+              <BotCopyFollowPanel planId="futures_um" billing={accountBilling} t={t} />
+            </div>
+          </div>
           <BotFlowCategory title={t("bots_category_basics")} className="mt-3">
             <div className="space-y-3">
             {billingMismatchBanner(futInst)}
-            <BotFlowField label={t("bots_dca_symbol")}>
+            <BotFlowField label={t("bots_symbol_label")}>
               <BotFlowSelect
                 value={futSymbol}
                 onChange={(e) => setFutSymbol(e.target.value)}
@@ -1232,6 +1529,12 @@ export function BotsTradingClient() {
                   <option value="swing">{t("bots_coord_style_swing")}</option>
                 </BotFlowSelect>
               </BotFlowField>
+              <BotSignalPreview
+                planId="futures_um"
+                symbol={futSymbol}
+                billing={accountBilling}
+                t={t}
+              />
             </div>
           </BotFlowCategory>
           <BotFlowCategory title={t("bots_category_coordination")} className="mt-3">
@@ -1268,6 +1571,18 @@ export function BotsTradingClient() {
             status={futInst?.status ?? "none"}
             busy={busy}
             variant="amber"
+            startDisabled={
+              !canStartPlan(futSub, futKeysOk, futInst, data.cronHealth) ||
+              futHasUnmanagedOpen
+            }
+            blockHint={startBlockReason(
+              "futures_um",
+              futSub,
+              futKeysOk,
+              futInst,
+              data.cronHealth,
+              futHasUnmanagedOpen,
+            )}
             monitoringOpen={instEnvAligned(futInst) && futHasConfigOpen}
             monitoringLabel={t("bots_status_position_open")}
             startLabel={t("bots_futures_start")}
@@ -1331,12 +1646,16 @@ export function BotsTradingClient() {
           onApiKeyChange={setApiKey}
           onApiSecretChange={setApiSecret}
           onTestAndSave={() => void connectKeys()}
+          demoTrialActive={
+            wizardBilling === "demo" &&
+            Boolean(data.demoTrialEligible?.[wizardPlan])
+          }
           t={t}
         />
       ) : null}
 
       {err ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {err}
         </p>
       ) : null}

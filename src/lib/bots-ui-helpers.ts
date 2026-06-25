@@ -72,7 +72,7 @@ export function decisionCategoryClass(category: string | undefined): string {
     violet: "border-l-violet-500 bg-violet-950/40",
     amber: "border-l-amber-500 bg-amber-950/40",
     rose: "border-l-rose-500 bg-rose-950/40",
-    stone: "border-l-stone-500 bg-stone-900/40",
+    stone: "border-l-stone-400 bg-stone-100",
   };
   return map[accent] ?? map.stone;
 }
@@ -162,13 +162,34 @@ export function botsApiMessage(
 ): string {
   const trimmed = code?.trim();
   if (!trimmed) return t("bots_err_generic");
-  if (
-    trimmed.startsWith("bots_") ||
-    trimmed.startsWith("smart_")
-  ) {
-    const msg = t(trimmed as keyof Messages);
-    if (msg && msg !== trimmed) return msg;
+  if (trimmed === "kyc_required") return t("kyc_required");
+  if (trimmed === "kyc_country_unsupported") return t("kyc_country_unsupported");
+
+  const candidates = [
+    trimmed,
+    trimmed.toLowerCase(),
+    trimmed.startsWith("bots_") ? trimmed : `bots_${trimmed.toLowerCase()}`,
+  ];
+  for (const key of candidates) {
+    if (
+      key.startsWith("bots_") ||
+      key.startsWith("smart_") ||
+      key.startsWith("keys_")
+    ) {
+      const msg = t(key as keyof Messages);
+      if (msg && msg !== key) return msg;
+    }
   }
+
+  if (
+    trimmed.includes("BOT_KEYS_ENCRYPTION") ||
+    trimmed.includes("keys_encryption")
+  ) {
+    const enc = t("bots_encryption_not_configured");
+    if (enc && enc !== "bots_encryption_not_configured") return enc;
+    return t("bots_encryption_missing");
+  }
+
   return formatBotRuntimeError(trimmed, t);
 }
 
@@ -218,8 +239,9 @@ export function formatBotRuntimeError(
     const mapped = SMART_ERROR_I18N[s];
     if (mapped) return t(mapped);
   }
-  if (s.startsWith("bots_")) {
-    return t(s as keyof Messages);
+  if (s.startsWith("bots_") || s.startsWith("keys_")) {
+    const msg = t(s as keyof Messages);
+    if (msg && msg !== s) return msg;
   }
 
   const exact = SERVER_ERROR_I18N[s];

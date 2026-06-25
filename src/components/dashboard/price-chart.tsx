@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -30,13 +31,13 @@ function ChartSymbolIcon({
 }) {
   const url = marketIconUrl(symbol);
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-100">
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-100">
       {url ? (
         <Image
           src={url}
           alt=""
-          width={28}
-          height={28}
+          width={32}
+          height={32}
           className="h-full w-full object-cover"
         />
       ) : (
@@ -63,6 +64,9 @@ type UiAppearance = "light" | "dark";
 
 function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
   const { t, locale } = useI18n();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const statLabels =
     locale === "fr"
       ? { open: "Ouv.", high: "Haut", low: "Bas", close: "Clôt." }
@@ -81,6 +85,32 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
   const [liveStale, setLiveStale] = useState(false);
   const [cursorIdx, setCursorIdx] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const pickSymbol = useCallback(
+    (next: string) => {
+      setSymbol(next);
+      if (pathname?.startsWith("/app/market")) {
+        const q = new URLSearchParams(searchParams.toString());
+        q.set("symbol", next);
+        const qs = q.toString();
+        router.replace(qs ? `/app/market?${qs}` : "/app/market", {
+          scroll: false,
+        });
+      }
+    },
+    [pathname, router, searchParams],
+  );
+
+  useEffect(() => {
+    const urlSym = searchParams.get("symbol");
+    if (
+      urlSym &&
+      (CHART_SYMBOLS as readonly string[]).includes(urlSym) &&
+      urlSym !== symbol
+    ) {
+      setSymbol(urlSym);
+    }
+  }, [searchParams, symbol]);
 
   const load = useCallback(
     async (mode: "full" | "poll") => {
@@ -210,24 +240,24 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
     <section
       className={
         isLight
-          ? "fd-card overflow-hidden p-4"
+          ? "fd-card p-4"
           : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
       }
     >
-      {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d — then price / % (same idea as before Pi) */}
-      <div className="mb-3 flex min-w-0 flex-nowrap items-center gap-x-1.5 overflow-x-auto">
-        <div className="flex shrink-0 items-center gap-1">
+      {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d — then price / % */}
+      <div className="mb-3 flex min-w-0 flex-nowrap items-center gap-x-1.5 overflow-x-auto px-0.5 py-1">
+        <div className="flex shrink-0 items-center gap-1.5">
           {CHART_SYMBOLS.map((s) => (
             <button
               key={s}
               type="button"
               aria-label={s.replace("USDT", "")}
-              onClick={() => setSymbol(s)}
-              className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-visible rounded-full transition active:scale-95 ${
+              onClick={() => pickSymbol(s)}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-95 ${
                 symbol === s
                   ? isLight
-                    ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/50 ring-offset-2 ring-offset-white"
-                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-stone-950"
+                    ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/55"
+                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
                   : isLight
                     ? "border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] hover:bg-[color:var(--fd-mint)]"
                     : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
@@ -243,7 +273,7 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
               ? "fd-live-pill shrink-0"
               : "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
           }
-          title={t("market_live_hint")}
+          title={t("market_live")}
         >
           <span className="relative flex h-1.5 w-1.5">
             <span
@@ -429,7 +459,7 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
           </div>
 
           <Link
-            href="/app/trade"
+            href="/app/market?panel=futures"
             className={
               isLight
                 ? "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)] py-3 text-sm font-semibold text-[color:var(--fd-primary)] transition hover:bg-[color:var(--fd-mint-deep)]"

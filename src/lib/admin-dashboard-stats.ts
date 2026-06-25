@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { getDb, groupSavingsGroups, p2pOrders, users, withdrawals } from "@/db";
 import { WithdrawalStatus } from "@/lib/status";
+import { getAdminFuturesTradeStats } from "@/lib/trade-futures-stats";
 
 export type AdminDashboardStats = {
   withdrawalsPendingAgent: number;
@@ -13,6 +14,9 @@ export type AdminDashboardStats = {
   totalUsers: number;
   totalAgents: number;
   totalSuperAdmins: number;
+  futuresLiveOpen: number;
+  futuresLiquidations24h: number;
+  futuresFees24hUsdt: number;
 };
 
 function intFromCount(v: unknown): number {
@@ -84,6 +88,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     .from(users)
     .where(eq(users.role, "super_admin"));
 
+  const futures = await getAdminFuturesTradeStats();
+
   return {
     withdrawalsPendingAgent: intFromCount(wPend?.c),
     withdrawalsPendingUnassigned: intFromCount(wUn?.c),
@@ -95,5 +101,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     totalUsers: intFromCount(totalU?.c),
     totalAgents: intFromCount(totalAgents?.c),
     totalSuperAdmins: intFromCount(totalSuper?.c),
+    futuresLiveOpen: futures.liveOpenPositions,
+    futuresLiquidations24h: futures.liquidations24h,
+    futuresFees24hUsdt: futures.platformFees24hUsdt,
   };
 }

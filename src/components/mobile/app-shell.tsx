@@ -36,6 +36,7 @@ export function AppShell({
     pathname !== "/app/wallet/groups" &&
     !pathname.endsWith("/new");
   const onCommunity = isCommunityRoute(pathname);
+  const onMarket = pathname.startsWith("/app/market");
   const hideTopBarForFlow =
     pathname.startsWith("/app/wallet/deposit") ||
     pathname.startsWith("/app/wallet/withdraw") ||
@@ -49,7 +50,14 @@ export function AppShell({
   const navAutoHide = bottomNavAutoHide(pathname);
   const navHidden = useScrollChrome(navAutoHide);
   const lightMainBg =
-    onProfile || onWalletFlow || onHome || onP2p || onSupport || onAcademy || onCommunity;
+    onProfile ||
+    onWalletFlow ||
+    onHome ||
+    onP2p ||
+    onSupport ||
+    onAcademy ||
+    onCommunity ||
+    onMarket;
   const shellPb =
     navAutoHide && navHidden
       ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"

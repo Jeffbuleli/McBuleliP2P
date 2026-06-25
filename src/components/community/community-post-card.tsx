@@ -10,6 +10,7 @@ import {
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
 import { CommunityCommentThread } from "@/components/community/community-comment-thread";
 import { CommunityFormationCard } from "@/components/community/community-formation-card";
+import { CommunityBotTemplateCard } from "@/components/community/community-bot-template-card";
 import { CommunityExpandableText } from "@/components/community/community-expandable-text";
 import { IconGlobe, IconMore } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
@@ -314,8 +315,13 @@ export function CommunityPostCard({
       </div>
     ) : null;
 
+  const botTemplateBlock =
+    post.botTemplateMeta ? (
+      <CommunityBotTemplateCard meta={post.botTemplateMeta} fr={fr} />
+    ) : null;
+
   const textBlock =
-    !post.formationMeta && displayBody.length > 0 ? (
+    !post.formationMeta && !post.botTemplateMeta && displayBody.length > 0 ? (
       <div className="block">
         <CommunityExpandableText
           text={displayBody}
@@ -335,6 +341,7 @@ export function CommunityPostCard({
       <div className="px-4 pt-4">
         {header}
         {formationBlock}
+        {botTemplateBlock}
         {textBlock}
         <CommunityPostMedia
           media={post.media}

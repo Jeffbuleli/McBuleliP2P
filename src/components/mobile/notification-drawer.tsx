@@ -403,6 +403,14 @@ function notifMeta(
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
+    case "community_bot_copy_started": {
+      return {
+        title: t("notif_community_bot_copy_started_title"),
+        body: t("notif_community_bot_copy_started_body"),
+        href: "/app/community/traders",
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
     default:
       return {
         title: row.kind,

@@ -58,6 +58,7 @@ function stepStatusIcon(state: StepState, botRunning?: boolean, botPaused?: bool
 
 function CoordTile({
   ariaLabel,
+  label,
   tone,
   Icon,
   state,
@@ -65,6 +66,7 @@ function CoordTile({
   botPaused,
 }: {
   ariaLabel: string;
+  label: string;
   tone: StepState;
   Icon: StepIcon;
   state: StepState;
@@ -82,6 +84,9 @@ function CoordTile({
         <Icon size={22} className="bot-coord-tile__glyph" />
         {stepStatusIcon(state, botRunning, botPaused)}
       </div>
+      <span className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {label}
+      </span>
     </div>
   );
 }
@@ -189,6 +194,7 @@ export function BotCoordinationRail({
     ? [
         {
           key: "cron",
+          label: t("bots_coord_label_cron"),
           aria: cronAria,
           tone: cronTone,
           Icon: IconCron,
@@ -196,6 +202,7 @@ export function BotCoordinationRail({
         },
         {
           key: "analysis",
+          label: t("bots_coord_label_analysis"),
           aria: analysisAria,
           tone: analysisTone,
           Icon: IconAnalysis,
@@ -203,6 +210,7 @@ export function BotCoordinationRail({
         },
         {
           key: "bot",
+          label: t("bots_coord_label_bot"),
           aria: botAria,
           tone: botTone,
           Icon: IconBot,
@@ -214,6 +222,7 @@ export function BotCoordinationRail({
     : [
         {
           key: "cron",
+          label: t("bots_coord_label_cron"),
           aria: cronAria,
           tone: cronTone,
           Icon: IconCron,
@@ -221,6 +230,7 @@ export function BotCoordinationRail({
         },
         {
           key: "bot",
+          label: t("bots_coord_label_bot"),
           aria: botAria,
           tone: botTone,
           Icon: IconBot,
@@ -242,6 +252,7 @@ export function BotCoordinationRail({
             ) : null}
             <CoordTile
               ariaLabel={step.aria}
+              label={step.label}
               tone={step.tone}
               Icon={step.Icon}
               state={step.state}

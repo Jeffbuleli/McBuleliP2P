@@ -3,7 +3,9 @@ import { listDiscussions } from "@/lib/community/discussion-service";
 import { listFeedPosts, listFormationPosts } from "@/lib/community/feed-service";
 import { asMediaItemView, type MediaItemView } from "@/lib/community/media-types";
 import type { CommunityContentKind } from "@/lib/community/post-types";
+import type { BotTemplatePostMeta } from "@/lib/community/bot-template-post-meta";
 import type { FormationPostMeta } from "@/lib/community/formation-post-meta";
+import type { FeedPostView } from "@/lib/community/feed-service";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 import { listQuestions } from "@/lib/community/qa-service";
 import { listTradingSignals } from "@/lib/community/signals-service";
@@ -37,7 +39,32 @@ export type UnifiedFeedItem = {
   media: MediaItemView[];
   meta?: Record<string, string>;
   formationMeta?: FormationPostMeta | null;
+  botTemplateMeta?: BotTemplatePostMeta | null;
 };
+
+function feedPostToUnifiedItem(p: FeedPostView): UnifiedFeedItem {
+  const contentKind = p.contentKind ?? "news";
+  const kind: CommunityContentKind =
+    contentKind === "formation" ? "formation" : "news";
+  return {
+    id: p.id,
+    kind,
+    title: p.formationMeta?.title ?? null,
+    body: p.body,
+    publishedAt: p.publishedAt,
+    author: p.author,
+    href: communityPostAppPath(p.id),
+    likeCount: p.likeCount,
+    commentCount: p.commentCount,
+    shareCount: p.shareCount,
+    viewCount: p.viewCount ?? 0,
+    likedByMe: p.likedByMe,
+    media: p.media,
+    meta: { contentKind },
+    formationMeta: p.formationMeta,
+    botTemplateMeta: p.botTemplateMeta,
+  };
+}
 
 function cursorKey(iso: string, id: string): string {
   return Buffer.from(JSON.stringify({ t: iso, id }), "utf8").toString(
@@ -90,23 +117,7 @@ export async function listUnifiedFeed(args: {
       cursor: args.cursor,
       sort: "recent",
     });
-    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
-      id: p.id,
-      kind: p.contentKind === "formation" ? "formation" : "news",
-      title: p.formationMeta?.title ?? null,
-      body: p.body,
-      publishedAt: p.publishedAt,
-      author: p.author,
-      href: communityPostAppPath(p.id),
-      likeCount: p.likeCount,
-      commentCount: p.commentCount,
-      shareCount: p.shareCount,
-      viewCount: p.viewCount ?? 0,
-      likedByMe: p.likedByMe,
-      media: p.media,
-      meta: { contentKind: p.contentKind ?? "news" },
-      formationMeta: p.formationMeta,
-    }));
+    const mapped: UnifiedFeedItem[] = posts.map(feedPostToUnifiedItem);
     return {
       items: mapped.slice(0, limit),
       nextCursor,
@@ -120,23 +131,7 @@ export async function listUnifiedFeed(args: {
       cursor: args.cursor,
       sort: "for_you",
     });
-    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
-      id: p.id,
-      kind: p.contentKind === "formation" ? "formation" : "news",
-      title: p.formationMeta?.title ?? null,
-      body: p.body,
-      publishedAt: p.publishedAt,
-      author: p.author,
-      href: communityPostAppPath(p.id),
-      likeCount: p.likeCount,
-      commentCount: p.commentCount,
-      shareCount: p.shareCount,
-      viewCount: p.viewCount ?? 0,
-      likedByMe: p.likedByMe,
-      media: p.media,
-      meta: { contentKind: p.contentKind ?? "news" },
-      formationMeta: p.formationMeta,
-    }));
+    const mapped: UnifiedFeedItem[] = posts.map(feedPostToUnifiedItem);
     return {
       items: mapped.slice(0, limit),
       nextCursor,
@@ -150,23 +145,7 @@ export async function listUnifiedFeed(args: {
       cursor: args.cursor,
       sort: "following",
     });
-    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
-      id: p.id,
-      kind: p.contentKind === "formation" ? "formation" : "news",
-      title: p.formationMeta?.title ?? null,
-      body: p.body,
-      publishedAt: p.publishedAt,
-      author: p.author,
-      href: communityPostAppPath(p.id),
-      likeCount: p.likeCount,
-      commentCount: p.commentCount,
-      shareCount: p.shareCount,
-      viewCount: p.viewCount ?? 0,
-      likedByMe: p.likedByMe,
-      media: p.media,
-      meta: { contentKind: p.contentKind ?? "news" },
-      formationMeta: p.formationMeta,
-    }));
+    const mapped: UnifiedFeedItem[] = posts.map(feedPostToUnifiedItem);
     return {
       items: mapped.slice(0, limit),
       nextCursor,
@@ -180,23 +159,7 @@ export async function listUnifiedFeed(args: {
       cursor: args.cursor,
       sort: "trending",
     });
-    const mapped: UnifiedFeedItem[] = posts.map((p) => ({
-      id: p.id,
-      kind: p.contentKind === "formation" ? "formation" : "news",
-      title: p.formationMeta?.title ?? null,
-      body: p.body,
-      publishedAt: p.publishedAt,
-      author: p.author,
-      href: communityPostAppPath(p.id),
-      likeCount: p.likeCount,
-      commentCount: p.commentCount,
-      shareCount: p.shareCount,
-      viewCount: p.viewCount ?? 0,
-      likedByMe: p.likedByMe,
-      media: p.media,
-      meta: { contentKind: p.contentKind ?? "news" },
-      formationMeta: p.formationMeta,
-    }));
+    const mapped: UnifiedFeedItem[] = posts.map(feedPostToUnifiedItem);
     return {
       items: mapped.slice(0, limit),
       nextCursor,
@@ -211,25 +174,7 @@ export async function listUnifiedFeed(args: {
     });
     for (const p of posts) {
       if (category === "news" && p.contentKind === "formation") continue;
-      const kind: CommunityContentKind =
-        p.contentKind === "formation" ? "formation" : "news";
-      items.push({
-        id: p.id,
-        kind,
-        title: p.formationMeta?.title ?? null,
-        body: p.body,
-        publishedAt: p.publishedAt,
-        author: p.author,
-        href: communityPostAppPath(p.id),
-        likeCount: p.likeCount,
-        commentCount: p.commentCount,
-        shareCount: p.shareCount,
-        viewCount: p.viewCount ?? 0,
-        likedByMe: p.likedByMe,
-        media: p.media,
-        meta: { contentKind: p.contentKind ?? "news" },
-        formationMeta: p.formationMeta,
-      });
+      items.push(feedPostToUnifiedItem(p));
     }
   }
 
@@ -240,23 +185,7 @@ export async function listUnifiedFeed(args: {
       cursor: args.cursor,
     });
     for (const p of posts) {
-      items.push({
-        id: p.id,
-        kind: "formation",
-        title: p.formationMeta?.title ?? null,
-        body: p.body,
-        publishedAt: p.publishedAt,
-        author: p.author,
-        href: communityPostAppPath(p.id),
-        likeCount: p.likeCount,
-        commentCount: p.commentCount,
-        shareCount: p.shareCount,
-        viewCount: p.viewCount ?? 0,
-        likedByMe: p.likedByMe,
-        media: p.media,
-        meta: { contentKind: "formation" },
-        formationMeta: p.formationMeta,
-      });
+      items.push(feedPostToUnifiedItem(p));
     }
     const slice = items
       .filter((i) => afterCursor(i.publishedAt, i.id, cursor))

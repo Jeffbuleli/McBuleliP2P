@@ -44,6 +44,9 @@ export const BOT_PLANS: Record<BotPlanId, BotPlanDef> = {
 
 export const BOT_SUBSCRIPTION_DAYS = 30;
 
+/** Free demo trial length (first subscribe per plan). */
+export const BOT_DEMO_TRIAL_DAYS = 7;
+
 export function isBotPlanId(v: string): v is BotPlanId {
   return (BOT_PLAN_IDS as readonly string[]).includes(v);
 }

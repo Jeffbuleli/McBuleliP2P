@@ -13,7 +13,7 @@ export default async function ProfileApiKeysPage() {
   const locale = await getLocale();
   const d = getDictionary(locale);
   const userId = await getSessionUserId();
-  let tradeLiveEnabled = true;
+  let tradeLiveEnabled = false;
   let isSuperAdmin = false;
   if (userId) {
     const db = getDb();
@@ -22,7 +22,7 @@ export default async function ProfileApiKeysPage() {
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
-    tradeLiveEnabled = row?.tradeLiveEnabled ?? true;
+    tradeLiveEnabled = row?.tradeLiveEnabled ?? false;
     isSuperAdmin = await isSuperAdminUserId(userId);
   }
 

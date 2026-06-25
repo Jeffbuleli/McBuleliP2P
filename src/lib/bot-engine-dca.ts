@@ -30,7 +30,11 @@ export async function tickDcaSpotInstance(args: {
   billing: BotBillingMode;
   config: Record<string, unknown>;
   lastExecutedAt: Date | null;
+  signalInstanceId?: string;
+  readOnlySignal?: boolean;
 }): Promise<{ ran: boolean; skipped?: string }> {
+  const signalId = args.signalInstanceId ?? args.instanceId;
+  const readOnlySignal = args.readOnlySignal ?? false;
   const allowed = await botAccessAllows(args.userId, args.planId, args.billing);
   if (!allowed) {
     return { ran: false, skipped: "no_active_subscription" };
@@ -75,7 +79,7 @@ export async function tickDcaSpotInstance(args: {
     timeframe: dca.timeframe,
   };
 
-  const prevSmooth = await getSmoothedScoreState(args.instanceId);
+  const prevSmooth = await getSmoothedScoreState(signalId);
   const decision = await runSpotDecisionOrchestrator({
     environment: env,
     symbol: dca.symbol,
@@ -99,7 +103,9 @@ export async function tickDcaSpotInstance(args: {
     return { ran: false, skipped: decision.trace.reason_code };
   }
 
-  await setSmoothedScoreState(args.instanceId, decision.technical.score);
+  if (!readOnlySignal) {
+    await setSmoothedScoreState(args.instanceId, decision.technical.score);
+  }
   const execQuote = decision.execution.quoteUsdt ?? quoteQty;
 
   try {

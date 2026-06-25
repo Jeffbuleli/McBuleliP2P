@@ -68,7 +68,11 @@ export async function loadHomeHubData(args: {
     userPromise,
     getPortfolioSnapshotForUser(userId, locale),
     getStakingValuationUsd(userId),
-    loadP2pHomeActivity({ userId, limit: 3 }),
+    loadP2pHomeActivity({ userId, limit: 3 }).catch(() => ({
+      items: [],
+      inProgressCount: 0,
+      disputedCount: 0,
+    })),
     fetchMarketTickers(),
     getAcademyLiveBadge({ userId, locale, viewerRole }).catch(() => ({
       live: false,

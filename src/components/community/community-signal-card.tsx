@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { signalToBotHref } from "@/lib/community/signal-to-bot-link";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 
 type Props = {
@@ -102,9 +104,29 @@ export function CommunitySignalCard({
 
       <p className="mt-2 text-[10px] text-[#a8a29e]">
         {fr
-          ? "Signal éducatif — pas un conseil financier. Copy trading auto bientôt."
-          : "Educational signal — not financial advice. Auto copy trading coming soon."}
+          ? "Signal éducatif — pas un conseil financier."
+          : "Educational signal — not financial advice."}
       </p>
+
+      <Link
+        href={signalToBotHref({
+          symbol: signal.symbol,
+          side: signal.side,
+          signalId: signal.id,
+        })}
+        className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-[#305f33] px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98]"
+      >
+        <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
+          <path
+            d="M13 3L4 14h7l-1 7 9-12h-7l1-6z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+        {fr ? "Tester en démo bot" : "Try in demo bot"}
+      </Link>
 
       {isOwner && signal.status === "open" && onClose ? (
         <div className="mt-3 flex flex-wrap gap-2">

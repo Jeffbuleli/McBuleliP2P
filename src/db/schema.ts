@@ -79,7 +79,10 @@ export const users = pgTable("users", {
     .notNull()
     .default("10000"),
   /** When false, API rejects live (real wallet) futures/options orders until user opts in. */
-  tradeLiveEnabled: boolean("trade_live_enabled").notNull().default(true),
+  tradeLiveEnabled: boolean("trade_live_enabled").notNull().default(false),
+  /** Set by OPS when live trading is revoked (shown to user). */
+  tradeLiveDisabledReason: text("trade_live_disabled_reason"),
+  tradeLiveDisabledAt: timestamp("trade_live_disabled_at", { withTimezone: true }),
   /** Unique share code for referral links (nullable until backfilled). */
   referralCode: varchar("referral_code", { length: 16 }),
   referredByUserId: uuid("referred_by_user_id"),
@@ -977,6 +980,31 @@ export const withdrawalAddressWhitelist = pgTable(
 );
 
 /** Idempotent handling of mobile-money webhook deliveries. */
+/** Audit log for custodial futures/options live mode enable/disable. */
+export const tradeLiveEvents = pgTable(
+  "trade_live_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    action: varchar("action", { length: 32 }).notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    reason: text("reason"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    ip: varchar("ip", { length: 64 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("trade_live_events_user_idx").on(t.userId),
+    index("trade_live_events_action_idx").on(t.action),
+  ],
+);
+
 /** Custodial USDⓈ-M-style futures (isolated margin in USDT). */
 export const tradeFuturesPositions = pgTable(
   "trade_futures_positions",
@@ -1780,6 +1808,45 @@ export const botExecutionLog = pgTable(
   },
   (t) => [
     index("bot_execution_log_instance_idx").on(t.instanceId, t.createdAt),
+  ],
+);
+
+/** Phase 4 — copy performance: follower mirrors lead bot signals (own keys). */
+export const botCopyFollows = pgTable(
+  "bot_copy_follows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    leadUserId: uuid("lead_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    leadInstanceId: uuid("lead_instance_id")
+      .notNull()
+      .references(() => botInstances.id, { onDelete: "cascade" }),
+    planId: varchar("plan_id", { length: 32 }).notNull(),
+    billing: varchar("billing", { length: 8 }).notNull(),
+    sizingRatio: numeric("sizing_ratio", { precision: 5, scale: 4 })
+      .notNull()
+      .default("0.5"),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("bot_copy_follows_pair_uidx").on(
+      t.followerId,
+      t.leadUserId,
+      t.planId,
+      t.billing,
+    ),
+    index("bot_copy_follows_lead_idx").on(t.leadUserId, t.status),
+    index("bot_copy_follows_follower_idx").on(t.followerId, t.status),
   ],
 );
 

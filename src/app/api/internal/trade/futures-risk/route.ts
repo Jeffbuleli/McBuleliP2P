@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
-import { getDb, tradeFuturesPositions } from "@/db";
-import { processFuturesRisk } from "@/lib/trade-futures-service";
+import { processFuturesRiskForAllUsers } from "@/lib/trade-futures-service";
+import { getHouseRiskSnapshot } from "@/lib/trade-house-risk";
+import { maybeSendHouseStressAlert } from "@/lib/trade-house-alerts";
 import { getCronSecret } from "@/lib/pool-env";
 
 export const dynamic = "force-dynamic";
@@ -12,31 +12,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const db = getDb();
-  const open = await db
-    .select({ userId: tradeFuturesPositions.userId })
-    .from(tradeFuturesPositions)
-    .where(eq(tradeFuturesPositions.status, "open"))
-    .limit(5000);
-
-  const userIds = Array.from(new Set(open.map((r) => r.userId)));
-
-  let ok = 0;
-  let failed = 0;
-  for (const userId of userIds) {
-    try {
-      await processFuturesRisk(userId);
-      ok += 1;
-    } catch {
-      failed += 1;
-    }
-  }
-
-  return NextResponse.json({
-    ok: true,
-    usersWithOpenPositions: userIds.length,
-    processedOk: ok,
-    processedFailed: failed,
-  });
+  const result = await processFuturesRiskForAllUsers();
+  const snap = await getHouseRiskSnapshot();
+  void maybeSendHouseStressAlert(snap).catch(() => undefined);
+  return NextResponse.json({ ok: true, ...result, houseAlertLevel: snap.alertLevel });
 }
 

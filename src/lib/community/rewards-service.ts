@@ -492,3 +492,20 @@ export async function grantCommunityStoryViewReceived(args: {
     meta: { storyId: args.storyId, viewerId: args.viewerId },
   });
 }
+
+/** Lead trader earns BP when a follower starts bot copy performance. */
+export async function grantBotCopyLeadReward(args: {
+  leadUserId: string;
+  followerId: string;
+  followId: string;
+}) {
+  return grantWithDailyCap({
+    userId: args.leadUserId,
+    grantType: REWARD_GRANT.BOT_COPY_LEAD,
+    idempotencyKey: `bot_copy_lead:${args.followId}`,
+    meta: {
+      followerId: args.followerId,
+      followId: args.followId,
+    },
+  });
+}

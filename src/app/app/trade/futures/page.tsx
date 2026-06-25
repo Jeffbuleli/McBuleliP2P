@@ -1,5 +1,27 @@
-import { FuturesTradingClient } from "@/components/trade/futures-trading-client";
+import { redirect } from "next/navigation";
 
-export default function TradeFuturesPage() {
-  return <FuturesTradingClient />;
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function toMarketSearchParams(sp: SearchParams): string {
+  const q = new URLSearchParams();
+  q.set("panel", "futures");
+  for (const [key, value] of Object.entries(sp)) {
+    if (value == null) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) q.append(key, v);
+    } else {
+      q.set(key, value);
+    }
+  }
+  return q.toString();
+}
+
+/** Legacy URL — keeps deep-links and bookmarks working. */
+export default async function TradeFuturesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = await searchParams;
+  redirect(`/app/market?${toMarketSearchParams(sp)}`);
 }

@@ -6,7 +6,10 @@ import { listUserBinanceCredentials } from "@/lib/bot-credentials-service";
 import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
 import { listUserBotInstances } from "@/lib/bot-instance-service";
 import { getTradeModeSnapshot } from "@/lib/trade-mode";
-import { BOT_DCA_INTERVAL_HOURS, BOT_DCA_SYMBOLS } from "@/lib/bot-dca-config";
+import { BOT_DCA_INTERVAL_HOURS } from "@/lib/bot-dca-config";
+import { BOT_TRADE_SYMBOLS } from "@/lib/bot-symbols";
+import { BOT_TEMPLATES } from "@/lib/bot-templates";
+import { getDemoTrialEligibility } from "@/lib/bot-subscription-service";
 import { BOT_GRID_REFRESH_HOURS } from "@/lib/bot-grid-config";
 import {
   BOT_FUTURES_INTERVAL_HOURS,
@@ -34,12 +37,14 @@ export async function GET() {
     );
   }
 
-  const [subscriptions, instances, tradeMode, isSuperAdmin] = await Promise.all([
-    listActiveBotSubscriptions(userId),
-    listUserBotInstances(userId),
-    getTradeModeSnapshot(userId),
-    isSuperAdminUserId(userId),
-  ]);
+  const [subscriptions, instances, tradeMode, isSuperAdmin, demoTrialEligible] =
+    await Promise.all([
+      listActiveBotSubscriptions(userId),
+      listUserBotInstances(userId),
+      getTradeModeSnapshot(userId),
+      isSuperAdminUserId(userId),
+      getDemoTrialEligibility(userId),
+    ]);
 
   const traderProfiles = instances
     .filter((i) => i.planId === "futures_um" && i.status === "active")
@@ -94,18 +99,27 @@ export async function GET() {
     subscriptions,
     instances: instancesEnriched,
     dcaOptions: {
-      symbols: [...BOT_DCA_SYMBOLS],
+      symbols: [...BOT_TRADE_SYMBOLS],
       intervalHours: [...BOT_DCA_INTERVAL_HOURS],
     },
     gridOptions: {
-      symbols: [...BOT_DCA_SYMBOLS],
+      symbols: [...BOT_TRADE_SYMBOLS],
       refreshHours: [...BOT_GRID_REFRESH_HOURS],
     },
     futuresOptions: {
-      symbols: [...BOT_DCA_SYMBOLS],
+      symbols: [...BOT_TRADE_SYMBOLS],
       intervalHours: [...BOT_FUTURES_INTERVAL_HOURS],
       leverage: [...BOT_FUTURES_LEVERAGE],
     },
+    templates: BOT_TEMPLATES.map((t) => ({
+      id: t.id,
+      planId: t.planId,
+      style: t.style,
+      symbol: t.symbol,
+      labelKey: t.labelKey,
+      tagKey: t.tagKey,
+    })),
+    demoTrialEligible,
     smartOptions: {
       timeframes: [...BOT_CANDLE_TIMEFRAMES],
       minSignalScores: [25, 35, 45, 55],

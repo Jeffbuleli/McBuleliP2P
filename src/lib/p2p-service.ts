@@ -298,6 +298,15 @@ export function tradeRoles(args: {
 }
 
 export async function processExpiredP2pOrders(): Promise<number> {
+  try {
+    return await processExpiredP2pOrdersInner();
+  } catch (e) {
+    console.error("[p2p] processExpiredP2pOrders failed:", e);
+    return 0;
+  }
+}
+
+async function processExpiredP2pOrdersInner(): Promise<number> {
   const db = getDb();
   const now = new Date();
   const expired = await db

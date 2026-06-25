@@ -9,6 +9,7 @@ import { getNotificationPrefs } from "@/lib/notification-prefs";
 import { getP2pMerchantProfile } from "@/lib/p2p-merchant-service";
 import { getProfileDashboard } from "@/lib/profile-stats";
 import { getReferralSnapshot } from "@/lib/referral-service";
+import { getTradeLiveGovernance } from "@/lib/trade-live-governance";
 
 export async function getAdminUser360(userId: string, locale: Locale) {
   const db = getDb();
@@ -55,6 +56,7 @@ export async function getAdminUser360(userId: string, locale: Locale) {
     community,
     referral,
     notificationPrefs,
+    tradeGovernance,
   ] = await Promise.all([
     getProfileDashboard(userId, locale),
     getKycStatusPayload(userId),
@@ -63,6 +65,7 @@ export async function getAdminUser360(userId: string, locale: Locale) {
     getOwnCommunityProfile(userId).catch(() => null),
     getReferralSnapshot(userId).catch(() => null),
     getNotificationPrefs(userId),
+    getTradeLiveGovernance(userId),
   ]);
 
   let referrerEmail: string | null = null;
@@ -122,5 +125,6 @@ export async function getAdminUser360(userId: string, locale: Locale) {
     community,
     referral,
     notificationPrefs,
+    tradeGovernance,
   };
 }

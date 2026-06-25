@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import {
   TRADE_FEE_RATE,
   TRADE_LEVERAGES,
   TRADE_MIN_MARGIN_USDT,
   TRADE_SYMBOLS,
+  isTradeSymbol,
   tradeMaxMarginUsdt,
 } from "@/lib/trade-config";
 import {
@@ -37,6 +39,13 @@ import {
   tradeFieldCls,
 } from "@/components/trade/trade-flow-ui";
 import { TradeIconAlert, TradeIconBadge, TradeIconShield } from "@/components/trade/trade-icons";
+import type { TradeLiveGovernanceSnapshot } from "@/lib/trade-live-governance";
+import { futuresApiMessage, liveEnableMessage } from "@/lib/trade-futures-ui-helpers";
+import {
+  TradeGraduationCard,
+  TradeLiveGovernanceStrip,
+} from "@/components/trade/trade-live-governance-ui";
+import { TradeCommunityBridge } from "@/components/trade/trade-community-bridge";
 
 const TradeMiniChart = dynamic(
   () =>
@@ -81,8 +90,13 @@ type HistoryRow = {
   closedAt: string;
 };
 
-export function FuturesTradingClient() {
+export function FuturesTradingClient({
+  embedInMarketHub = false,
+}: {
+  embedInMarketHub?: boolean;
+} = {}) {
   const { t, locale } = useI18n();
+  const searchParams = useSearchParams();
   const locTag = locale === "fr" ? "fr-FR" : "en-US";
   const [symbol, setSymbol] = useState<(typeof TRADE_SYMBOLS)[number]>("BTCUSDT");
   const [tf, setTf] = useState<TradeTf>("1h");
@@ -98,6 +112,9 @@ export function FuturesTradingClient() {
   const [usdtBal, setUsdtBal] = useState<number | null>(null);
   const [tradeMode, setTradeMode] = useState<TradeAppMode>("demo");
   const [tradeLiveEnabled, setTradeLiveEnabled] = useState(false);
+  const [governance, setGovernance] = useState<TradeLiveGovernanceSnapshot | null>(
+    null,
+  );
   const [demoUsdt, setDemoUsdt] = useState(10000);
   const [demoEffectiveUsdt, setDemoEffectiveUsdt] = useState(10000);
   const [demoPiTestUsd, setDemoPiTestUsd] = useState(0);
@@ -117,6 +134,19 @@ export function FuturesTradingClient() {
   const [editTp, setEditTp] = useState("");
   const [editBusy, setEditBusy] = useState(false);
   const [guided, setGuided] = useState(true);
+  const [priceSource, setPriceSource] = useState<string>("binance_futures");
+
+  const urlSymbol = searchParams.get("symbol");
+  useEffect(() => {
+    if (urlSymbol && isTradeSymbol(urlSymbol)) {
+      setSymbol(urlSymbol);
+    }
+  }, [urlSymbol]);
+
+  const liveMarginMax =
+    tradeMode === "live" && governance
+      ? governance.liveMarginCapUsdt
+      : tradeMaxMarginUsdt();
 
   const margin = Number(marginStr.replace(",", "."));
   const stopLoss =
@@ -237,8 +267,12 @@ export function FuturesTradingClient() {
       const j = (await res.json()) as {
         lastPrice: number;
         changePct24h: number;
+        source?: string;
       };
-      if (res.ok) setTicker(j);
+      if (res.ok) {
+        setTicker(j);
+        if (j.source) setPriceSource(j.source);
+      }
     } catch {
       /* ignore */
     }
@@ -253,6 +287,7 @@ export function FuturesTradingClient() {
         demoPiTestUsd?: string;
         piTest?: string;
         tradeLiveEnabled?: boolean;
+        governance?: TradeLiveGovernanceSnapshot;
       };
       if (res.ok) {
         const pure = Number(j.demoUsdt ?? "0");
@@ -262,6 +297,7 @@ export function FuturesTradingClient() {
         setDemoPiTestUsd(Number(j.demoPiTestUsd ?? "0"));
         setPiTestAmt(Number(j.piTest ?? "0"));
         setTradeLiveEnabled(Boolean(j.tradeLiveEnabled));
+        if (j.governance) setGovernance(j.governance);
       }
     } catch {
       /* ignore */
@@ -375,20 +411,18 @@ export function FuturesTradingClient() {
               : null,
         }),
       });
-      const j = (await res.json()) as { error?: string; message?: string };
+      const j = (await res.json()) as {
+        error?: string;
+        message?: string;
+        meta?: Record<string, unknown>;
+      };
       if (!res.ok) {
         setMsg(
-          j.error === "trade_live_not_enabled"
-            ? t("trade_error_live_not_enabled")
-            : j.error === "trade_invalid_stop"
-              ? t("trade_invalid_stop")
-            : j.error === "trade_invalid_tp"
-              ? t("trade_invalid_tp")
-              : j.error === "trade_pi_price_unavailable"
-                ? t("trade_pi_price_unavailable")
-              : j.error === "trade_insufficient_usdt"
-                ? t("trade_error_insufficient_practice")
-              : (j.message ?? j.error ?? "error"),
+          futuresApiMessage(j.error ?? j.message, locale, {
+            ...j.meta,
+            cap: governance?.liveMarginCapUsdt,
+            max: maxLev,
+          }),
         );
         return;
       }
@@ -414,7 +448,10 @@ export function FuturesTradingClient() {
         body: JSON.stringify({ positionId: id }),
       });
       const j = (await res.json()) as { error?: string };
-      if (!res.ok) setMsg(j.error ?? "error");
+      if (!res.ok) {
+        setMsg(futuresApiMessage(j.error, locale));
+        return;
+      }
       await pollPositions();
       await pollHistory();
       await pollWallet();
@@ -468,11 +505,22 @@ export function FuturesTradingClient() {
     return r && r.length ? r : "—";
   }
 
-  async function enableLive() {
+  async function enableLive(): Promise<{ ok: boolean; error?: string }> {
     setEnableBusy(true);
     try {
       const res = await fetch("/api/trade/live-enable", { method: "POST" });
-      if (res.ok) await loadTradeMode();
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        meta?: Record<string, unknown>;
+      };
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: liveEnableMessage(j.error, locale, j.meta),
+        };
+      }
+      await loadTradeMode();
+      return { ok: true };
     } finally {
       setEnableBusy(false);
     }
@@ -496,6 +544,7 @@ export function FuturesTradingClient() {
         mode={tradeMode}
         onModeChange={setTradeMode}
         tradeLiveEnabled={tradeLiveEnabled}
+        governance={governance}
         demoUsdt={demoUsdt}
         demoEffectiveUsdt={demoEffectiveUsdt}
         demoPiTestUsd={demoPiTestUsd}
@@ -506,6 +555,16 @@ export function FuturesTradingClient() {
           await loadTradeMode();
         }}
       />
+
+      {tradeMode === "live" && tradeLiveEnabled && governance ? (
+        <TradeLiveGovernanceStrip governance={governance} />
+      ) : null}
+
+      {tradeMode === "live" && !tradeLiveEnabled && governance ? (
+        <TradeGraduationCard governance={governance} />
+      ) : null}
+
+      <TradeCommunityBridge mode={tradeMode} />
 
       <TradeFlowCard className="!py-2">
         <div className="flex items-center justify-between gap-2">
@@ -573,7 +632,9 @@ export function FuturesTradingClient() {
         </div>
       </TradeFlowCard>
 
-      <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
+      {!embedInMarketHub ? (
+        <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
+      ) : null}
 
       <TradeFlowCard>
         <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-[color:var(--fd-mint)] px-3 py-2">
@@ -703,7 +764,7 @@ export function FuturesTradingClient() {
             (tradeMode === "live" && !tradeLiveEnabled) ||
             !Number.isFinite(margin) ||
             margin < TRADE_MIN_MARGIN_USDT ||
-            margin > tradeMaxMarginUsdt()
+            margin > liveMarginMax
           }
           onClick={() => setConfirmOpen(true)}
         >
@@ -963,6 +1024,9 @@ export function FuturesTradingClient() {
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
               {t("trade_ui_confirm_body")}
             </p>
+            <p className="mt-2 rounded-xl bg-[color:var(--fd-mint)] px-3 py-2 text-xs font-semibold text-[color:var(--fd-text)]">
+              {t("trade_ui_confirm_custodial")}
+            </p>
             {msg ? (
               <p className="mt-3 rounded-2xl border-2 border-rose-500/30 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
                 {msg}
@@ -973,9 +1037,21 @@ export function FuturesTradingClient() {
                 {symbol} · {side.toUpperCase()} · {leverage}× · {margin} USDT
               </p>
               {preview && (
-                <p className="font-mono text-[color:var(--fd-muted)]">
-                  Liq ≈ {preview.liq.toFixed(2)}
-                </p>
+                <>
+                  <p className="font-mono text-[color:var(--fd-muted)]">
+                    Liq ≈ {preview.liq.toFixed(2)}
+                  </p>
+                  <p className="text-[11px] text-[color:var(--fd-muted)]">
+                    {t("trade_ui_confirm_price_source")}: {priceSource}
+                  </p>
+                  <p className="text-[11px] font-bold text-rose-700">
+                    {t("trade_ui_confirm_max_loss")}: −
+                    {(margin + preview.feeOpen).toFixed(2)} USDT
+                  </p>
+                  <p className="text-[11px] text-[color:var(--fd-muted)]">
+                    {t("trade_ui_confirm_open_fee")}: {preview.feeOpen.toFixed(4)} USDT
+                  </p>
+                </>
               )}
               {stopLoss != null && Number.isFinite(stopLoss) ? (
                 <p className="font-mono font-bold text-rose-600">

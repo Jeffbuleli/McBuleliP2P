@@ -91,6 +91,9 @@ export function rewardLedgerLabel(
   if (row.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW) {
     return t("points_ledger_community_trader_follow");
   }
+  if (row.grantType === REWARD_GRANT.BOT_COPY_LEAD) {
+    return t("points_ledger_bot_copy_lead");
+  }
   if (
     row.grantType === REWARD_GRANT.COMMUNITY_STORY_TEXT ||
     row.grantType === REWARD_GRANT.COMMUNITY_STORY_IMAGE ||

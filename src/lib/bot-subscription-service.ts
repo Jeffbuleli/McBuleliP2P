@@ -5,6 +5,7 @@ import {
   BOT_PLANS,
   BOT_PLAN_IDS,
   BOT_SUBSCRIPTION_DAYS,
+  BOT_DEMO_TRIAL_DAYS,
   type BotBillingMode,
   type BotPlanId,
   isBotPlanId,
@@ -103,6 +104,38 @@ export async function listActiveBotSubscriptions(
   return mapped;
 }
 
+export async function userDemoTrialEligible(
+  userId: string,
+  planId: BotPlanId,
+): Promise<boolean> {
+  if (await isSuperAdminUserId(userId)) return false;
+  const db = getDb();
+  const [row] = await db
+    .select({ id: botSubscriptions.id })
+    .from(botSubscriptions)
+    .where(
+      and(
+        eq(botSubscriptions.userId, userId),
+        eq(botSubscriptions.planId, planId),
+        eq(botSubscriptions.billing, "demo"),
+      ),
+    )
+    .limit(1);
+  return !row;
+}
+
+export async function getDemoTrialEligibility(
+  userId: string,
+): Promise<Record<BotPlanId, boolean>> {
+  const out = {} as Record<BotPlanId, boolean>;
+  await Promise.all(
+    BOT_PLAN_IDS.map(async (planId) => {
+      out[planId] = await userDemoTrialEligible(userId, planId);
+    }),
+  );
+  return out;
+}
+
 export async function purchaseBotSubscription(args: {
   userId: string;
   planId: BotPlanId;
@@ -114,18 +147,27 @@ export async function purchaseBotSubscription(args: {
     return { ok: false, message: "bots_invalid_plan" };
   }
   const plan = BOT_PLANS[args.planId];
+  const privileged = await isSuperAdminUserId(args.userId);
   let price = planPriceUsdt(args.planId, args.billing);
-  if (!Number.isFinite(price) || price <= 0) {
+  const demoTrial =
+    args.billing === "demo" &&
+    !privileged &&
+    (await userDemoTrialEligible(args.userId, args.planId));
+  if (demoTrial) {
+    price = 0;
+  }
+  if (!demoTrial && (!Number.isFinite(price) || price <= 0)) {
     return { ok: false, message: "bots_invalid_price" };
   }
-  const privileged = await isSuperAdminUserId(args.userId);
   if (!privileged) {
     const { consumeBotRenewalDiscountPerk } = await import(
       "@/lib/reward-point-perks"
     );
-    price *= await consumeBotRenewalDiscountPerk(args.userId);
+    if (!demoTrial) {
+      price *= await consumeBotRenewalDiscountPerk(args.userId);
+    }
   }
-  const priceStr = privileged ? "0" : fmtWalletAmount(price);
+  const priceStr = privileged || demoTrial ? "0" : fmtWalletAmount(price);
   const existing = await getActiveBotSubscription(args.userId, args.planId);
   if (existing && !privileged) {
     return { ok: false, message: "bots_subscription_already_active" };
@@ -135,13 +177,12 @@ export async function purchaseBotSubscription(args: {
   }
 
   const db = getDb();
-  const expiresAt = new Date(
-    Date.now() + BOT_SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000,
-  );
+  const subDays = demoTrial ? BOT_DEMO_TRIAL_DAYS : BOT_SUBSCRIPTION_DAYS;
+  const expiresAt = new Date(Date.now() + subDays * 24 * 60 * 60 * 1000);
 
   try {
     const subscription = await db.transaction(async (tx) => {
-      if (!privileged && args.billing === "demo") {
+      if (!privileged && !demoTrial && args.billing === "demo") {
         const [u] = await tx
           .select({ tradeDemoUsdtBalance: users.tradeDemoUsdtBalance })
           .from(users)

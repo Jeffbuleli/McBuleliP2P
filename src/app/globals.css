@@ -934,6 +934,7 @@ html {
   --fd-live: #e85d04;
   --fd-sell: #c2410c;
   --fd-sell-mint: #fde8d4;
+  color-scheme: light;
   background: linear-gradient(165deg, #e4f4e8 0%, #f2f9f4 38%, #ffffff 100%);
   min-height: 100%;
 }
@@ -1128,10 +1129,10 @@ html {
   border-radius: 0.875rem;
   border: 1px solid var(--fd-border);
   background: #fff;
-  padding: 0.5rem;
+  padding: 0.5rem 0.35rem 0.4rem;
   min-width: 0;
   flex: 1;
-  min-height: 3.25rem;
+  min-height: 4.25rem;
 }
 .trade-bots-theme .bot-coord-tile__icon-wrap {
   position: relative;

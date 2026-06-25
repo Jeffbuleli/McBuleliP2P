@@ -96,12 +96,26 @@ export default async function AdminHomePage() {
           ) : null}
 
           {showFinance ? (
-            <AdminKpiCard
-              href="/admin/finance"
-              label={d.admin_nav_finance}
-              value="→"
-              sub={d.admin_finance_blurb}
-            />
+            <>
+              <AdminKpiCard
+                href="/admin/finance"
+                label={d.admin_nav_finance}
+                value="→"
+                sub={d.admin_finance_blurb}
+              />
+              <AdminKpiCard
+                href="/app/market?panel=futures"
+                label={d.admin_kpi_futures_live_open}
+                value={stats.futuresLiveOpen}
+                sub={`${stats.futuresLiquidations24h} ${d.admin_kpi_futures_liq_24h}`}
+              />
+              <AdminKpiCard
+                href="/app/market?panel=futures"
+                label={d.admin_kpi_futures_fees_24h}
+                value={`${stats.futuresFees24hUsdt.toFixed(2)}`}
+                sub="USDT"
+              />
+            </>
           ) : null}
 
           {showPlatformExpenses ? (

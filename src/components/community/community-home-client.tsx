@@ -38,8 +38,9 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
         : item.media.length
           ? "image"
           : "text",
-    contentKind: item.kind === "formation" ? "formation" : (item.meta?.contentKind ?? "news"),
+    contentKind: item.meta?.contentKind ?? (item.kind === "formation" ? "formation" : "news"),
     formationMeta: item.formationMeta ?? null,
+    botTemplateMeta: item.botTemplateMeta ?? null,
     likeCount: item.likeCount,
     commentCount: item.commentCount,
     shareCount: item.shareCount,

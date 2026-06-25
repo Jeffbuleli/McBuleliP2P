@@ -40,7 +40,7 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
           </div>
         </div>
         <Link
-          href="/app/trade"
+          href="/app/market?panel=futures"
           className="shrink-0 text-xs font-extrabold text-[color:var(--fd-primary)]"
         >
           {d.trade_view_hub} →
@@ -49,13 +49,13 @@ export function TradeHubPreview({ locale }: { locale: Locale }) {
 
       <div className="grid grid-cols-2 gap-2">
         {tile(
-          "/app/trade/futures",
+          "/app/market?panel=futures",
           d.trade_ui_tab_futures,
           <TradeIconFutures className="h-5 w-5" />,
           true,
         )}
         {tile(
-          "/app/trade/bots",
+          "/app/market?panel=bots",
           d.trade_ui_tab_bots,
           <TradeIconBots className="h-5 w-5" />,
           false,

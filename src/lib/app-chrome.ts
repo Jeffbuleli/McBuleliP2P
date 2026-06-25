@@ -12,7 +12,16 @@ export function isP2pHubRoute(pathname: string): boolean {
   return pathname === "/app/p2p";
 }
 
+/** Market hub — long scroll; hide bottom nav like community feed. */
+export function isMarketHubRoute(pathname: string): boolean {
+  return pathname.startsWith("/app/market");
+}
+
 /** Routes where the bottom nav auto-hides on scroll-down (feed-style pages). */
 export function bottomNavAutoHide(pathname: string): boolean {
-  return isCommunityRoute(pathname) || isP2pHubRoute(pathname);
+  return (
+    isCommunityRoute(pathname) ||
+    isP2pHubRoute(pathname) ||
+    isMarketHubRoute(pathname)
+  );
 }

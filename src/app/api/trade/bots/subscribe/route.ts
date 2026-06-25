@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { getSessionUserId } from "@/lib/session";
 import { purchaseBotSubscription } from "@/lib/bot-subscription-service";
 
@@ -17,6 +18,13 @@ export async function POST(req: Request) {
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "bots_invalid_body" }, { status: 400 });
+  }
+
+  if (parsed.data.billing === "live") {
+    const kyc = await checkKycGate(userId, "trade_bots");
+    if (!kyc.ok) {
+      return NextResponse.json({ error: kyc.error }, { status: 403 });
+    }
   }
 
   const r = await purchaseBotSubscription({

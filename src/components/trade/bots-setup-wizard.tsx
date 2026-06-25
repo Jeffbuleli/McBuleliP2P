@@ -67,6 +67,7 @@ export function BotsSetupWizard({
   onApiKeyChange,
   onApiSecretChange,
   onTestAndSave,
+  demoTrialActive = false,
   t,
 }: {
   planId: BotPlanId;
@@ -89,6 +90,7 @@ export function BotsSetupWizard({
   onApiKeyChange: (v: string) => void;
   onApiSecretChange: (v: string) => void;
   onTestAndSave: () => void;
+  demoTrialActive?: boolean;
   t: (key: keyof Messages, vars?: Record<string, string | number>) => string;
 }) {
   const liveBlocked = billing === "live" && !tradeLiveEnabled && !isSuperAdmin;
@@ -182,7 +184,16 @@ export function BotsSetupWizard({
 
           {step === 2 ? (
             <div className="space-y-3">
-              <p className="bots-wizard__lead">{t("bots_subscribe_confirm")}</p>
+              <p className="bots-wizard__lead">
+                {demoTrialActive
+                  ? t("bots_demo_trial_confirm")
+                  : t("bots_subscribe_confirm")}
+              </p>
+              {demoTrialActive ? (
+                <p className="rounded-xl border border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)]/50 px-3 py-2 text-xs font-bold text-[color:var(--fd-primary)]">
+                  {t("bots_demo_trial_badge")}
+                </p>
+              ) : null}
               <button
                 type="button"
                 disabled={busy}

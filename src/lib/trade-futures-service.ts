@@ -28,6 +28,10 @@ import { creditTradeDemoUsdt } from "@/lib/trade-demo-balance";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset, debitUserAsset } from "@/lib/wallet-move-assets";
 import { numFromNumeric } from "@/lib/wallet-types";
+import { assertCanOpenLiveFutures } from "@/lib/trade-live-governance";
+import { assertHouseCapacityForNewPosition } from "@/lib/trade-house-risk";
+import { applyLiveWinHaircut } from "@/lib/trade-house-haircut";
+import { tradeHouseTreasuryUserId } from "@/lib/trade-house-reserve";
 
 async function countClosedFutures(
   userId: string,
@@ -52,6 +56,36 @@ export function maxLeverageForUser(closedTrades: number): number {
     return TRADE_BEGINNER_MAX_LEVERAGE;
   }
   return 10;
+}
+
+export async function processFuturesRiskForAllUsers(): Promise<{
+  usersWithOpenPositions: number;
+  processedOk: number;
+  processedFailed: number;
+}> {
+  const db = getDb();
+  const open = await db
+    .select({ userId: tradeFuturesPositions.userId })
+    .from(tradeFuturesPositions)
+    .where(eq(tradeFuturesPositions.status, "open"))
+    .limit(5000);
+
+  const userIds = Array.from(new Set(open.map((r) => r.userId)));
+  let processedOk = 0;
+  let processedFailed = 0;
+  for (const userId of userIds) {
+    try {
+      await processFuturesRisk(userId);
+      processedOk += 1;
+    } catch {
+      processedFailed += 1;
+    }
+  }
+  return {
+    usersWithOpenPositions: userIds.length,
+    processedOk,
+    processedFailed,
+  };
 }
 
 export async function processFuturesRisk(userId: string): Promise<void> {
@@ -136,10 +170,24 @@ async function closeFuturesPositionInternal(
 
       const notionalClose = qty * mark;
       const feeClose = feeRate * notionalClose;
-      const proceeds = margin + unreal - feeClose;
+      let haircutUsdt = 0;
+      let realizedPnl = unreal - feeClose;
+
+      if (!p.isDemo && reason !== "liquidated" && unreal > 0) {
+        const netWin = unreal - feeClose;
+        if (netWin > 0) {
+          const h = applyLiveWinHaircut(netWin);
+          haircutUsdt = h.haircutUsdt;
+          realizedPnl = h.netWinAfterHaircut;
+        }
+      }
+
+      const proceeds = margin + realizedPnl;
       const credit = Math.max(0, proceeds);
       const isDemo = Boolean(p.isDemo);
       const priceSource = (await fetchSymbolTicker(p.symbol))?.source ?? "unknown";
+      const prevMeta =
+        p.meta && typeof p.meta === "object" ? { ...p.meta } : {};
 
       await tx
         .update(tradeFuturesPositions)
@@ -147,7 +195,7 @@ async function closeFuturesPositionInternal(
           status: reason === "liquidated" ? "liquidated" : "closed",
           closedAt: new Date(),
           closePrice: fmtTradeAmount(mark),
-          realizedPnlUsdt: fmtTradeAmount(unreal - feeClose),
+          realizedPnlUsdt: fmtTradeAmount(realizedPnl),
           feeCloseUsdt: fmtTradeAmount(feeClose),
           closeReason:
             reason === "take_profit"
@@ -157,6 +205,10 @@ async function closeFuturesPositionInternal(
                 : reason === "liquidated"
                   ? "liquidated"
                   : "manual",
+          meta:
+            haircutUsdt > 0
+              ? { ...prevMeta, haircutUsdt, haircutReason: "house_reserve" }
+              : p.meta,
         })
         .where(eq(tradeFuturesPositions.id, positionId));
 
@@ -165,6 +217,34 @@ async function closeFuturesPositionInternal(
           await creditTradeDemoUsdt(tx, userId, fmtTradeAmount(credit));
         } else {
           await creditUserAsset(tx, userId, "USDT", fmtTradeAmount(credit));
+        }
+      }
+
+      if (!isDemo && haircutUsdt > 1e-18) {
+        const treasuryId = tradeHouseTreasuryUserId();
+        if (treasuryId) {
+          await creditUserAsset(
+            tx,
+            treasuryId,
+            "USDT",
+            fmtTradeAmount(haircutUsdt),
+          );
+          const batchId = randomUUID();
+          await insertWalletLedgerLines(tx, [
+            {
+              batchId,
+              userId: treasuryId,
+              entryType: "trade_futures_haircut",
+              asset: "USDT",
+              amount: fmtTradeAmount(haircutUsdt),
+              meta: {
+                positionId,
+                fromUserId: userId,
+                haircutUsdt,
+                mark,
+              },
+            },
+          ]);
         }
       }
 
@@ -185,6 +265,7 @@ async function closeFuturesPositionInternal(
               mark,
               unrealized: unreal,
               feeClose,
+              haircutUsdt,
               reason,
               priceSource,
             },
@@ -406,11 +487,34 @@ export async function openFuturesPosition(args: {
     return { ok: false, message: "trade_invalid_margin" };
   }
 
+  if (!isDemo) {
+    const liveGate = await assertCanOpenLiveFutures({
+      userId,
+      marginUsdt,
+    });
+    if (!liveGate.ok) {
+      return { ok: false, message: liveGate.message };
+    }
+  }
+
   const ticker = await fetchSymbolTicker(symbol);
   if (!ticker || ticker.stale) {
     return { ok: false, message: "trade_price_unavailable" };
   }
   const entry = ticker.lastPrice;
+
+  if (!isDemo) {
+    const houseGate = await assertHouseCapacityForNewPosition({
+      marginUsdt,
+      leverage: levRaw,
+      side,
+      entryPrice: entry,
+    });
+    if (!houseGate.ok) {
+      return { ok: false, message: houseGate.message };
+    }
+  }
+
   const liq = liquidationPrice({ entry, side, leverage: levRaw });
   const qty = positionQtyBase(marginUsdt, levRaw, entry);
   const notional = notionalUsdt(marginUsdt, levRaw);

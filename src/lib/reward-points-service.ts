@@ -337,6 +337,9 @@ export async function getRewardPointsSummary(
     [REWARD_GRANT.COMMUNITY_TRADER_FOLLOW]: grantRows.some(
       (r) => r.grantType === REWARD_GRANT.COMMUNITY_TRADER_FOLLOW,
     ),
+    [REWARD_GRANT.BOT_COPY_LEAD]: grantRows.some(
+      (r) => r.grantType === REWARD_GRANT.BOT_COPY_LEAD,
+    ),
     [REWARD_GRANT.COMMUNITY_STORY_TEXT]: grantRows.some(
       (r) => r.grantType === REWARD_GRANT.COMMUNITY_STORY_TEXT,
     ),

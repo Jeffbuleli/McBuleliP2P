@@ -32,6 +32,8 @@ export function BotRunControls({
   onStart,
   onPause,
   variant = "emerald",
+  startDisabled = false,
+  blockHint,
 }: {
   status: "active" | "paused" | "none";
   busy: boolean;
@@ -44,6 +46,10 @@ export function BotRunControls({
   onStart: () => void;
   onPause: () => void;
   variant?: Variant;
+  /** Block Start (missing keys, billing mismatch, cron down, etc.) */
+  startDisabled?: boolean;
+  /** Shown under controls when Start is blocked */
+  blockHint?: string | null;
 }) {
   const active = status === "active";
   const btnVariant =
@@ -85,7 +91,7 @@ export function BotRunControls({
         {!active ? (
           <BotFlowBtn
             variant={btnVariant}
-            disabled={busy}
+            disabled={busy || startDisabled}
             onClick={onStart}
             className="bot-run-controls__btn !flex !w-[min(100%,13rem)] !flex-none gap-2 rounded-full shadow-md"
           >
@@ -104,6 +110,11 @@ export function BotRunControls({
           </BotFlowBtn>
         )}
       </div>
+      {!active && startDisabled && blockHint ? (
+        <p className="text-center text-[11px] font-medium text-[color:var(--fd-muted)]">
+          {blockHint}
+        </p>
+      ) : null}
     </div>
   );
 }

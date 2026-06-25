@@ -88,6 +88,10 @@ import {
   parseFormationPostMeta,
   type FormationPostMeta,
 } from "@/lib/community/formation-post-meta";
+import {
+  parseBotTemplatePostMeta,
+  type BotTemplatePostMeta,
+} from "@/lib/community/bot-template-post-meta";
 import { moderateCommunityText } from "@/lib/community/moderation-service";
 import {
   grantCommunityComment,
@@ -113,6 +117,7 @@ export type FeedPostView = {
   postType: string;
   contentKind: string;
   formationMeta?: FormationPostMeta | null;
+  botTemplateMeta?: BotTemplatePostMeta | null;
   likeCount: number;
   commentCount: number;
   shareCount: number;
@@ -124,6 +129,16 @@ export type FeedPostView = {
   likedByMe: boolean;
   bpEarned?: number;
 };
+
+function resolveBotTemplateMeta(row: {
+  contentKind: string | null;
+  meta: unknown;
+}): BotTemplatePostMeta | null {
+  if (row.contentKind === "bot_template") {
+    return parseBotTemplatePostMeta(row.meta);
+  }
+  return null;
+}
 
 function resolveFormationMeta(row: {
   contentKind: string | null;
@@ -163,6 +178,7 @@ function rowToFeedPost(
     postType: r.postType,
     contentKind: r.contentKind ?? "news",
     formationMeta: resolveFormationMeta(r),
+    botTemplateMeta: resolveBotTemplateMeta(r),
     status: r.status,
     likeCount: r.likeCount,
     commentCount: r.commentCount,

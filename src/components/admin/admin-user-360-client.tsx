@@ -71,6 +71,14 @@ type User360 = {
     totalEarnedUsdt: number;
   } | null;
   notificationPrefs: Record<string, boolean>;
+  tradeGovernance: {
+    tradeLiveEnabled: boolean;
+    tradeLiveDisabledReason: string | null;
+    demoClosedTrades: number;
+    liveClosedTrades: number;
+    liveOpenMarginUsdt: number;
+    liveMarginCapUsdt: number;
+  } | null;
 };
 
 const TABS: { id: TabId; labelKey: "admin_user360_tab_overview" | "admin_user360_tab_kyc" | "admin_user360_tab_wallet" | "admin_user360_tab_p2p" | "admin_user360_tab_security" | "admin_user360_tab_staff" }[] = [
@@ -102,6 +110,8 @@ export function AdminUser360Client() {
 
   const [data, setData] = useState<User360 | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [tradeBusy, setTradeBusy] = useState(false);
+  const [tradeReason, setTradeReason] = useState("");
 
   const load = useCallback(async () => {
     setErr(null);
@@ -122,6 +132,25 @@ export function AdminUser360Client() {
   const setTab = (id: TabId) => {
     router.replace(`/admin/users/${userId}?tab=${id}`);
   };
+
+  async function setTradeLive(enabled: boolean) {
+    setTradeBusy(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/trade-live`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled,
+          reason: enabled ? null : tradeReason.trim(),
+        }),
+      });
+      if (!res.ok) return;
+      setTradeReason("");
+      await load();
+    } finally {
+      setTradeBusy(false);
+    }
+  }
 
   const kpis = useMemo(() => {
     if (!data) return [];
@@ -224,6 +253,61 @@ export function AdminUser360Client() {
             value={data.referral?.code ?? u.referralCode ?? "—"}
           />
           <InfoRow label="Pi" value={u.piLinked ? u.piUsername ?? "—" : "—"} />
+          {data.tradeGovernance ? (
+            <>
+              <InfoRow
+                label={t("admin_user360_trade_live")}
+                value={
+                  data.tradeGovernance.tradeLiveEnabled
+                    ? t("admin_user360_trade_live_on")
+                    : t("admin_user360_trade_live_off")
+                }
+              />
+              <InfoRow
+                label={t("admin_user360_trade_demo_closed")}
+                value={String(data.tradeGovernance.demoClosedTrades)}
+              />
+              <InfoRow
+                label={t("admin_user360_trade_live_closed")}
+                value={String(data.tradeGovernance.liveClosedTrades)}
+              />
+              {data.tradeGovernance.tradeLiveDisabledReason ? (
+                <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800">
+                  {data.tradeGovernance.tradeLiveDisabledReason}
+                </p>
+              ) : null}
+              <div className="mt-3 space-y-2 border-t border-[color:var(--fd-border)] pt-3">
+                {!data.tradeGovernance.tradeLiveEnabled ? (
+                  <button
+                    type="button"
+                    disabled={tradeBusy}
+                    onClick={() => void setTradeLive(true)}
+                    className={adminCls.btnSecondary}
+                  >
+                    {t("admin_user360_trade_restore")}
+                  </button>
+                ) : (
+                  <>
+                    <textarea
+                      value={tradeReason}
+                      onChange={(e) => setTradeReason(e.target.value)}
+                      placeholder={t("admin_user360_trade_reason_placeholder")}
+                      className="w-full rounded-xl border border-[color:var(--fd-border)] p-2 text-xs"
+                      rows={2}
+                    />
+                    <button
+                      type="button"
+                      disabled={tradeBusy || tradeReason.trim().length < 4}
+                      onClick={() => void setTradeLive(false)}
+                      className="rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-40"
+                    >
+                      {t("admin_user360_trade_revoke")}
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/app/p2p/merchant/${u.id}`} className={adminCls.btnSecondary}>
               {t("profile_row_merchant")}

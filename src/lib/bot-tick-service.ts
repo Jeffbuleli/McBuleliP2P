@@ -7,6 +7,7 @@ import { tickDcaSpotInstance } from "@/lib/bot-engine-dca";
 import { tickGridSpotInstance } from "@/lib/bot-engine-grid";
 import { tickFuturesUmInstance } from "@/lib/bot-engine-futures";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
+import { resolveBotCopyTickOverlay } from "@/lib/community/bot-copy-follow-service";
 
 /** Skips that are normal between runs — not written to the user activity log. */
 const SILENT_SKIP = new Set([
@@ -81,6 +82,24 @@ async function runBotsTickUnlocked(): Promise<{
 
   for (const inst of instances) {
     try {
+      const copyOverlay = await resolveBotCopyTickOverlay({
+        followerId: inst.userId,
+        followerInstanceId: inst.id,
+        planId: inst.planId,
+        billing: inst.billing,
+        config: inst.config,
+      }).catch((e) => {
+        console.error("[bot-copy] overlay failed:", e);
+        return null;
+      });
+      const tickConfig = copyOverlay?.config ?? inst.config;
+      const signalOpts = copyOverlay
+        ? {
+            signalInstanceId: copyOverlay.signalInstanceId,
+            readOnlySignal: copyOverlay.readOnlySignal,
+          }
+        : {};
+
       let r: { ran: boolean; skipped?: string } | null = null;
       if (inst.planId === "dca_spot") {
         r = await tickDcaSpotInstance({
@@ -88,8 +107,9 @@ async function runBotsTickUnlocked(): Promise<{
           userId: inst.userId,
           planId: inst.planId,
           billing: inst.billing,
-          config: inst.config,
+          config: tickConfig,
           lastExecutedAt: inst.lastExecutedAt,
+          ...signalOpts,
         });
       } else if (inst.planId === "grid_spot") {
         r = await tickGridSpotInstance({
@@ -97,8 +117,9 @@ async function runBotsTickUnlocked(): Promise<{
           userId: inst.userId,
           planId: inst.planId,
           billing: inst.billing,
-          config: inst.config,
+          config: tickConfig,
           lastExecutedAt: inst.lastExecutedAt,
+          ...signalOpts,
         });
       } else if (inst.planId === "futures_um") {
         r = await tickFuturesUmInstance({
@@ -106,8 +127,9 @@ async function runBotsTickUnlocked(): Promise<{
           userId: inst.userId,
           planId: inst.planId,
           billing: inst.billing,
-          config: inst.config,
+          config: tickConfig,
           lastExecutedAt: inst.lastExecutedAt,
+          ...signalOpts,
         });
       } else {
         skipped += 1;

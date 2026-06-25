@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkKycGate } from "@/lib/kyc-guard";
 import { getSessionUserId } from "@/lib/session";
 import {
   BOT_PLANS,
@@ -129,8 +130,34 @@ export async function POST(req: Request) {
   }
 
   const plan = BOT_PLANS[planId as BotPlanId];
-  if (status === "active" && plan.requiresSpot) {
-    /* keys checked at tick */
+
+  if (status === "active") {
+    if (billing === "live") {
+      const kyc = await checkKycGate(userId, "trade_bots");
+      if (!kyc.ok) {
+        return NextResponse.json({ error: kyc.error }, { status: 403 });
+      }
+    }
+
+    const env = billingToKeyEnvironment(billing);
+    const credMeta = (await listUserBinanceCredentials(userId)).find(
+      (c) => c.environment === env,
+    );
+    if (!credMeta?.validatedAt) {
+      return NextResponse.json({ error: "bots_err_no_keys" }, { status: 409 });
+    }
+    if (plan.requiresSpot && !credMeta.spotOk) {
+      return NextResponse.json(
+        { error: "bots_keys_required_spot" },
+        { status: 409 },
+      );
+    }
+    if (plan.requiresFutures && !credMeta.futuresOk) {
+      return NextResponse.json(
+        { error: "bots_keys_required_futures" },
+        { status: 409 },
+      );
+    }
   }
 
   const instance = await upsertBotInstance({

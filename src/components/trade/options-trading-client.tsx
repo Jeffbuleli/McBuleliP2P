@@ -17,6 +17,8 @@ import {
   type TradeAppMode,
 } from "@/components/trade/trade-mode-bar";
 import type { Messages } from "@/i18n/messages";
+import type { TradeLiveGovernanceSnapshot } from "@/lib/trade-live-governance";
+import { liveEnableMessage } from "@/lib/trade-futures-ui-helpers";
 
 function expiryLabelKey(sec: number): keyof Messages {
   switch (sec) {
@@ -60,7 +62,7 @@ type OrderRow = {
 };
 
 export function OptionsTradingClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [symbol, setSymbol] = useState<(typeof TRADE_SYMBOLS)[number]>("BTCUSDT");
   const [tf, setTf] = useState<TradeTf>("1h");
   const [ticker, setTicker] = useState<{ lastPrice: number } | null>(null);
@@ -70,6 +72,9 @@ export function OptionsTradingClient() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [tradeMode, setTradeMode] = useState<TradeAppMode>("demo");
   const [tradeLiveEnabled, setTradeLiveEnabled] = useState(false);
+  const [governance, setGovernance] = useState<TradeLiveGovernanceSnapshot | null>(
+    null,
+  );
   const [demoUsdt, setDemoUsdt] = useState(10000);
   const [demoEffectiveUsdt, setDemoEffectiveUsdt] = useState(10000);
   const [demoPiTestUsd, setDemoPiTestUsd] = useState(0);
@@ -108,6 +113,7 @@ export function OptionsTradingClient() {
         demoPiTestUsd?: string;
         piTest?: string;
         tradeLiveEnabled?: boolean;
+        governance?: TradeLiveGovernanceSnapshot;
       };
       if (res.ok) {
         const pure = Number(j.demoUsdt ?? "0");
@@ -117,6 +123,7 @@ export function OptionsTradingClient() {
         setDemoPiTestUsd(Number(j.demoPiTestUsd ?? "0"));
         setPiTestAmt(Number(j.piTest ?? "0"));
         setTradeLiveEnabled(Boolean(j.tradeLiveEnabled));
+        if (j.governance) setGovernance(j.governance);
       }
     } catch {
       /* ignore */
@@ -218,11 +225,22 @@ export function OptionsTradingClient() {
     return settled.slice(0, 25);
   }, [orders]);
 
-  async function enableLive() {
+  async function enableLive(): Promise<{ ok: boolean; error?: string }> {
     setEnableBusy(true);
     try {
       const res = await fetch("/api/trade/live-enable", { method: "POST" });
-      if (res.ok) await loadTradeMode();
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        meta?: Record<string, unknown>;
+      };
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: liveEnableMessage(j.error, locale, j.meta),
+        };
+      }
+      await loadTradeMode();
+      return { ok: true };
     } finally {
       setEnableBusy(false);
     }
@@ -241,6 +259,7 @@ export function OptionsTradingClient() {
         mode={tradeMode}
         onModeChange={setTradeMode}
         tradeLiveEnabled={tradeLiveEnabled}
+        governance={governance}
         demoUsdt={demoUsdt}
         demoEffectiveUsdt={demoEffectiveUsdt}
         demoPiTestUsd={demoPiTestUsd}

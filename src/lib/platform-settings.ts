@@ -5,13 +5,14 @@ export const PlatformSettingKey = {
   PI_RECEIVE_ADDRESS_REAL: "pi_receive_address_real",
   PI_RECEIVE_ADDRESS_TEST: "pi_receive_address_test",
   BOTS_CRON_LAST_RUN: "bots_cron_last_run",
+  TRADE_HOUSE_ALERT_LAST: "trade_house_alert_last",
 } as const;
 
 export type PlatformSettingKeyType =
   (typeof PlatformSettingKey)[keyof typeof PlatformSettingKey];
 
 export async function getPlatformSetting(
-  key: PlatformSettingKeyType | typeof PlatformSettingKey.BOTS_CRON_LAST_RUN,
+  key: PlatformSettingKeyType,
 ): Promise<string | null> {
   const db = getDb();
   const [row] = await db
@@ -23,7 +24,7 @@ export async function getPlatformSetting(
 }
 
 export async function setPlatformSetting(
-  key: PlatformSettingKeyType | typeof PlatformSettingKey.BOTS_CRON_LAST_RUN,
+  key: PlatformSettingKeyType,
   value: string,
 ): Promise<void> {
   const db = getDb();

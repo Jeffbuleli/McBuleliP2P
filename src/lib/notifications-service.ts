@@ -43,7 +43,10 @@ export type NotificationKind =
   | "event_reminder"
   | "community_comment"
   | "community_like"
-  | "community_trader_follow";
+  | "community_trader_follow"
+  | "community_bot_copy_started"
+  | "trade_live_enabled"
+  | "trade_live_disabled";
 
 const KYC_NOTIFICATION_KINDS = new Set<NotificationKind>([
   "kyc_pending",

@@ -51,4 +51,17 @@ export async function register() {
 
   setTimeout(() => void tick(), 20_000);
   setInterval(() => void tick(), intervalMs);
+
+  if (process.env.FUTURES_RISK_INLINE === "1") {
+    const riskUrl = `${base}/api/internal/trade/futures-risk`;
+    const riskTick = () =>
+      fetch(riskUrl, {
+        method: "POST",
+        headers: { "x-cron-secret": secret },
+      }).catch((e) => {
+        console.error("[futures-risk:inline]", e);
+      });
+    setTimeout(() => void riskTick(), 45_000);
+    setInterval(() => void riskTick(), 60_000);
+  }
 }

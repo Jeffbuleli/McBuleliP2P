@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { botSmartFields } from "@/lib/bot-smart-config";
+import { BOT_TRADE_SYMBOLS } from "@/lib/bot-symbols";
 
-export const BOT_DCA_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
+/** @deprecated use BOT_TRADE_SYMBOLS */
+export const BOT_DCA_SYMBOLS = BOT_TRADE_SYMBOLS;
 export const BOT_DCA_INTERVAL_HOURS = [1, 4, 12, 24] as const;
 
 export const botDcaConfigSchema = z.object({

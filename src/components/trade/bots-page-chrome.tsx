@@ -32,16 +32,23 @@ export type BotsDisclaimerLabels = {
   orders: string;
   custody: string;
   nfa: string;
+  ordersShort?: string;
+  custodyShort?: string;
+  nfaShort?: string;
 };
 
 export function BotsDisclaimerStrip({ labels }: { labels: BotsDisclaimerLabels }) {
   return (
     <div
-      className="mt-6 flex items-center justify-center gap-3 rounded-xl border border-[color:var(--fd-border)]/80 bg-white/80 px-3 py-2.5"
+      className="mt-4 space-y-2 rounded-xl border border-[color:var(--fd-border)]/80 bg-white/90 px-3 py-3"
       role="note"
       aria-label={labels.aria}
     >
-      <DisclaimerChip
+      <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {labels.aria}
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <DisclaimerChip
         icon={
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
@@ -62,6 +69,7 @@ export function BotsDisclaimerStrip({ labels }: { labels: BotsDisclaimerLabels }
           </svg>
         }
         title={labels.orders}
+        short={labels.ordersShort ?? labels.orders}
         tone="mint"
       />
       <DisclaimerChip
@@ -76,6 +84,7 @@ export function BotsDisclaimerStrip({ labels }: { labels: BotsDisclaimerLabels }
           </svg>
         }
         title={labels.custody}
+        short={labels.custodyShort ?? labels.custody}
         tone="stone"
       />
       <DisclaimerChip
@@ -91,8 +100,10 @@ export function BotsDisclaimerStrip({ labels }: { labels: BotsDisclaimerLabels }
           </svg>
         }
         title={labels.nfa}
+        short={labels.nfaShort ?? labels.nfa}
         tone="amber"
       />
+      </div>
     </div>
   );
 }
@@ -100,10 +111,12 @@ export function BotsDisclaimerStrip({ labels }: { labels: BotsDisclaimerLabels }
 function DisclaimerChip({
   icon,
   title,
+  short,
   tone,
 }: {
   icon: ReactNode;
   title: string;
+  short: string;
   tone: "mint" | "stone" | "amber";
 }) {
   const bg =
@@ -113,11 +126,9 @@ function DisclaimerChip({
         ? "bg-amber-50 text-amber-800"
         : "bg-stone-50 text-stone-600";
   return (
-    <span
-      className={`flex h-9 w-9 items-center justify-center rounded-lg ${bg}`}
-      title={title}
-    >
-      {icon}
+    <span className={`flex flex-col items-center gap-1 rounded-lg px-1 py-2 ${bg}`}>
+      <span className="flex h-8 w-8 items-center justify-center">{icon}</span>
+      <span className="text-[9px] font-semibold leading-tight">{short}</span>
       <span className="sr-only">{title}</span>
     </span>
   );
