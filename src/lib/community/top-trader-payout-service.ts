@@ -74,7 +74,17 @@ async function loadWeekCandidates(args: {
     .innerJoin(users, eq(users.id, communityUserProfiles.userId))
     .where(inArray(communityUserProfiles.userId, userIds));
 
-  const profileMap = new Map(profileRows.map((p) => [p.userId, p]));
+  const profileMap = new Map<
+    string,
+    {
+      userId: string;
+      handle: string | null;
+      displayName: string;
+      avatarUrl: string | null;
+      kycStatus: string;
+      userDisplayName: string | null;
+    }
+  >(profileRows.map((p) => [p.userId, p]));
 
   const missingIds = userIds.filter((id) => !profileMap.has(id));
   if (missingIds.length) {
