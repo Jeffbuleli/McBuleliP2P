@@ -5,7 +5,7 @@ import type {
   TopTraderCompetitionTrade,
   TopTraderLeaderboardEntry,
   TopTraderProgramInfo,
-} from "@/lib/community/top-trader-competition";
+} from "@/lib/community/top-trader-types";
 import type { TopTraderParticipantStatus } from "@/lib/community/top-trader-participant-service";
 import type { TopTraderWeekWinnerView } from "@/lib/community/top-trader-payout-service";
 import { CommunityTopTraderProgramCard } from "@/components/community/community-top-trader-program-card";

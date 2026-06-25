@@ -102,6 +102,20 @@ export function LandingTopBar() {
             <div className="hidden sm:block">
               <LangSwitch />
             </div>
+            <Link
+              href="/login"
+              prefetch={false}
+              className="hidden min-h-10 items-center justify-center rounded-xl px-3.5 text-[13px] font-bold text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)] sm:inline-flex"
+            >
+              {t("landing_cta_login")}
+            </Link>
+            <Link
+              href="/register"
+              prefetch={false}
+              className="hidden min-h-10 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-4 text-[13px] font-extrabold text-white shadow-md shadow-[color:var(--fd-primary)]/20 transition active:scale-[0.99] sm:inline-flex"
+            >
+              {t("landing_cta_primary")}
+            </Link>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}

@@ -127,14 +127,11 @@ function MarketHubInner({
         </p>
       </header>
 
-      <div
-        className={`rounded-2xl border border-[color:var(--fd-border)] bg-white shadow-sm ${
-          panel === "quotes" ? "overflow-visible" : "max-h-[11rem] overflow-hidden"
-        }`}
-      >
+      <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white shadow-sm">
         <PriceChartLazy
           appearance="light"
           deferUntilVisible={panel === "quotes"}
+          density={panel === "quotes" ? "default" : "compact"}
         />
       </div>
 

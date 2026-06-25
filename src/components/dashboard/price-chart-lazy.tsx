@@ -31,9 +31,11 @@ function ChartPlaceholder() {
 export function PriceChartLazy({
   appearance = "dark",
   deferUntilVisible = false,
+  density = "default",
 }: {
   appearance?: UiAppearance;
   deferUntilVisible?: boolean;
+  density?: "default" | "compact";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(!deferUntilVisible);
@@ -58,7 +60,7 @@ export function PriceChartLazy({
   return (
     <div ref={ref}>
       {visible ? (
-        <PriceChartDynamic appearance={appearance} />
+        <PriceChartDynamic appearance={appearance} density={density} />
       ) : (
         <ChartPlaceholder />
       )}

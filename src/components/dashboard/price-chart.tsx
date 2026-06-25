@@ -62,7 +62,13 @@ const HEIGHT = 140;
 
 type UiAppearance = "light" | "dark";
 
-function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
+function PriceChart({
+  appearance = "dark",
+  density = "default",
+}: {
+  appearance?: UiAppearance;
+  density?: "default" | "compact";
+}) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
@@ -72,6 +78,7 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
       ? { open: "Ouv.", high: "Haut", low: "Bas", close: "Clôt." }
       : { open: "Open", high: "High", low: "Low", close: "Close" };
   const isLight = appearance === "light";
+  const isCompact = density === "compact";
   const uid = useId();
   const chartFillId = useMemo(
     () => `mc-fill-${uid.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -355,11 +362,17 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
 
           {rangeStats ? (
             <div
-              className={`mb-3 grid grid-cols-2 gap-2 rounded-xl p-2.5 text-[10px] sm:grid-cols-4 ${
-                isLight
-                  ? "bg-[color:var(--fd-mint)]/40 ring-1 ring-[color:var(--fd-border)]"
-                  : "bg-stone-900/50 ring-1 ring-stone-700/40"
-              }`}
+              className={
+                isCompact
+                  ? `mb-3 flex gap-2 overflow-x-auto pb-0.5 scrollbar-none ${
+                      isLight ? "" : ""
+                    }`
+                  : `mb-3 grid grid-cols-2 gap-2 rounded-xl p-2.5 text-[10px] sm:grid-cols-4 ${
+                      isLight
+                        ? "bg-[color:var(--fd-mint)]/40 ring-1 ring-[color:var(--fd-border)]"
+                        : "bg-stone-900/50 ring-1 ring-stone-700/40"
+                    }`
+              }
             >
               {(
                 [
@@ -369,14 +382,25 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
                   ["close", rangeStats.close],
                 ] as const
               ).map(([key, val]) => (
-                <div key={key} className="min-w-0 text-center sm:text-left">
+                <div
+                  key={key}
+                  className={
+                    isCompact
+                      ? `shrink-0 rounded-lg px-2 py-1.5 text-[10px] ${
+                          isLight
+                            ? "bg-[color:var(--fd-mint)]/50 ring-1 ring-[color:var(--fd-border)]"
+                            : "bg-stone-900/50 ring-1 ring-stone-700/40"
+                        }`
+                      : "min-w-0 text-center sm:text-left"
+                  }
+                >
                   <p className={isLight ? "text-[color:var(--fd-muted)]" : "text-stone-500"}>
                     {statLabels[key]}
                   </p>
                   <p
-                    className={`truncate font-bold tabular-nums ${
-                      isLight ? "text-[color:var(--fd-text)]" : "text-stone-100"
-                    }`}
+                    className={`whitespace-nowrap font-bold tabular-nums ${
+                      isCompact ? "text-[11px]" : ""
+                    } ${isLight ? "text-[color:var(--fd-text)]" : "text-stone-100"}`}
                   >
                     {formatUsd(val)}
                   </p>
@@ -395,7 +419,7 @@ function PriceChart({ appearance = "dark" }: { appearance?: UiAppearance }) {
             <svg
               ref={svgRef}
               viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-              className="h-[160px] w-full touch-none select-none"
+              className={`w-full touch-none select-none ${isCompact ? "h-[120px]" : "h-[160px]"}`}
               preserveAspectRatio="none"
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);

@@ -135,6 +135,9 @@ export default async function AdminLayout({
               <AdminNavLink href="/admin/trade/futures" variant="bots" icon="finance">
                 {d.admin_nav_trade_solvency}
               </AdminNavLink>
+              <AdminNavLink href="/admin/community/top-trader" variant="support" icon="users">
+                {d.admin_nav_top_trader}
+              </AdminNavLink>
               <AdminNavLink href="/admin/audit" variant="audit" icon="audit">
                 {d.admin_nav_audit}
               </AdminNavLink>

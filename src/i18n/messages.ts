@@ -3607,6 +3607,25 @@ export const en = {
   admin_trade_solvency_refresh: "Refresh",
   admin_trade_solvency_loading: "Loading solvency data…",
   admin_trade_solvency_error: "Could not load futures solvency data.",
+  admin_nav_top_trader: "Top Trader",
+  admin_top_trader_title: "Top Trader payouts",
+  admin_top_trader_subtitle:
+    "Weekly demo competition winners, prize credits, and manual payout trigger.",
+  admin_top_trader_run_payout: "Run weekly payout",
+  admin_top_trader_run_confirm:
+    "Run the Top Trader weekly payout for the last completed GMT week?",
+  admin_top_trader_col_week: "Week",
+  admin_top_trader_col_winner: "Winner",
+  admin_top_trader_col_pnl: "Weekly PnL",
+  admin_top_trader_col_prize: "Prize",
+  admin_top_trader_col_status: "Status",
+  admin_top_trader_col_paid: "Paid at",
+  admin_top_trader_refresh: "Refresh",
+  admin_top_trader_loading: "Loading Top Trader payouts…",
+  admin_top_trader_error: "Could not load Top Trader admin data.",
+  admin_top_trader_program_status: "Program",
+  admin_top_trader_pending_week: "Last completed week",
+  admin_top_trader_view_community: "View in Community",
   trade_house_circuit:
     "Live futures are temporarily paused — platform risk capacity reached. Try practice mode or check back later.",
   trade_house_capacity:
@@ -7855,6 +7874,25 @@ export const fr: Messages = {
   admin_trade_solvency_refresh: "Actualiser",
   admin_trade_solvency_loading: "Chargement des données de solvabilité…",
   admin_trade_solvency_error: "Impossible de charger les données de solvabilité Futures.",
+  admin_nav_top_trader: "Top Trader",
+  admin_top_trader_title: "Paiements Top Trader",
+  admin_top_trader_subtitle:
+    "Gagnants hebdo démo, crédits de prix et déclenchement manuel du payout.",
+  admin_top_trader_run_payout: "Lancer le payout hebdo",
+  admin_top_trader_run_confirm:
+    "Lancer le payout Top Trader pour la dernière semaine GMT terminée ?",
+  admin_top_trader_col_week: "Semaine",
+  admin_top_trader_col_winner: "Gagnant",
+  admin_top_trader_col_pnl: "PnL hebdo",
+  admin_top_trader_col_prize: "Prix",
+  admin_top_trader_col_status: "Statut",
+  admin_top_trader_col_paid: "Payé le",
+  admin_top_trader_refresh: "Actualiser",
+  admin_top_trader_loading: "Chargement des paiements Top Trader…",
+  admin_top_trader_error: "Impossible de charger les données admin Top Trader.",
+  admin_top_trader_program_status: "Programme",
+  admin_top_trader_pending_week: "Dernière semaine terminée",
+  admin_top_trader_view_community: "Voir en Communauté",
   trade_house_circuit:
     "Futures réel en pause — capacité de risque plateforme atteinte. Essayez l’entraînement ou revenez plus tard.",
   trade_house_capacity:

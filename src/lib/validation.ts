@@ -27,8 +27,8 @@ export const registerSchema = loginSchema.extend({
   countryCode: z
     .string()
     .trim()
-    .length(2)
-    .regex(/^[A-Z]{2}$/)
+    .transform((v) => v.toUpperCase())
+    .refine((v) => v === "OTHER" || /^[A-Z]{2}$/.test(v), "Invalid country code")
     .optional(),
   referralCode: z.string().trim().min(4).max(16).optional(),
 });

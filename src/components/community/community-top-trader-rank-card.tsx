@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { TopTraderLeaderboardEntry } from "@/lib/community/top-trader-competition";
+import type { TopTraderLeaderboardEntry } from "@/lib/community/top-trader-types";
 import { TopTraderMedalSvg } from "@/components/community/community-top-trader-illustrations";
 
 function pnlClass(n: number): string {

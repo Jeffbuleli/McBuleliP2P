@@ -1,6 +1,6 @@
 "use client";
 
-import type { TopTraderCompetitionTrade } from "@/lib/community/top-trader-competition";
+import type { TopTraderCompetitionTrade } from "@/lib/community/top-trader-types";
 import {
   TopTraderCandleIllustration,
 } from "@/components/community/community-top-trader-illustrations";

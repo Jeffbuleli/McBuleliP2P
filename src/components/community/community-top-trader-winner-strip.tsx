@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { TopTraderWeekWinnerView } from "@/lib/community/top-trader-payout-service";
+import type { TopTraderWeekWinnerView } from "@/lib/community/top-trader-types";
 import { TopTraderMedalSvg } from "@/components/community/community-top-trader-illustrations";
 
 export function CommunityTopTraderWinnerStrip({

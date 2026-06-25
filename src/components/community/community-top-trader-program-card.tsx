@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { TopTraderProgramInfo } from "@/lib/community/top-trader-competition";
+import type { TopTraderProgramInfo } from "@/lib/community/top-trader-types";
 import type { TopTraderParticipantStatus } from "@/lib/community/top-trader-participant-service";
 import { CommunityPoweredByStrip } from "@/components/community/community-powered-by-strip";
 import { TopTraderHeroIllustration } from "@/components/community/community-top-trader-illustrations";
-import { TOP_TRADER_DAILY_TRADES } from "@/lib/community/top-trader-competition";
 
 function formatCountdown(ms: number, fr: boolean): string {
   if (ms <= 0) return fr ? "Terminé" : "Ended";
@@ -135,11 +134,11 @@ export function CommunityTopTraderProgramCard({
               </p>
               <TradeQuotaDots
                 remaining={participant.tradesRemainingToday}
-                total={TOP_TRADER_DAILY_TRADES}
+                total={program.dailyTrades}
               />
             </div>
             <p className="mt-1 text-[10px] tabular-nums text-[#78716c]">
-              {participant.tradesRemainingToday}/{TOP_TRADER_DAILY_TRADES}{" "}
+              {participant.tradesRemainingToday}/{program.dailyTrades}{" "}
               {fr ? "aujourd'hui GMT" : "today GMT"}
               {participant.refillUsed
                 ? ` · ${fr ? "recharge utilisée" : "refill used"}`

@@ -7,6 +7,14 @@ export async function LandingPartnersSection() {
   const locale = await getLocale();
   const d = getDictionary(locale);
 
+  const items = LANDING_PARTNERS.map((p) => ({
+    id: p.id,
+    logo: p.logo,
+    label: d[p.labelKey as keyof typeof d] as string,
+  }));
+
+  const marqueeRow = [...items, ...items];
+
   return (
     <section
       id="partners"
@@ -25,28 +33,30 @@ export async function LandingPartnersSection() {
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {LANDING_PARTNERS.map((p) => {
-          const label = d[p.labelKey as keyof typeof d] as string;
-          return (
+      <div className="landing-partners-marquee mt-6 overflow-hidden py-2">
+        <div className="landing-partners-marquee-track flex w-max items-center gap-10 px-4">
+          {marqueeRow.map((p, i) => (
             <div
-              key={p.id}
-              className="flex flex-col items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-white p-3 shadow-sm transition hover:border-[color:var(--fd-primary)]/20"
+              key={`${p.id}-${i}`}
+              className="group flex shrink-0 flex-col items-center gap-2"
+              title={p.label}
             >
-              <div className="relative flex h-12 w-full items-center justify-center">
+              <div className="relative flex h-12 w-28 items-center justify-center opacity-80 transition group-hover:opacity-100">
                 <Image
                   src={p.logo}
-                  alt={label}
-                  width={96}
-                  height={40}
-                  className="max-h-10 w-auto max-w-[96px] object-contain"
+                  alt={p.label}
+                  width={112}
+                  height={48}
+                  className="max-h-10 w-auto max-w-[112px] object-contain"
                   unoptimized
                 />
               </div>
-              <p className="text-center text-[10px] font-semibold text-[color:var(--fd-muted)]">{label}</p>
+              <p className="max-w-[7rem] truncate text-center text-[9px] font-semibold text-[color:var(--fd-muted)] opacity-0 transition group-hover:opacity-100">
+                {p.label}
+              </p>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       <p className="mt-4 text-center text-[10px] text-[color:var(--fd-muted)]">{d.landing_partners_footnote}</p>

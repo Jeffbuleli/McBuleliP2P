@@ -7,6 +7,19 @@ import {
 } from "@/db";
 import { isFollowingTrader } from "@/lib/community/follows-service";
 
+export type {
+  TopTraderCompetitionTrade,
+  TopTraderLeaderboardEntry,
+  TopTraderProgramInfo,
+  TopTraderProgramStatus,
+} from "@/lib/community/top-trader-types";
+import type {
+  TopTraderCompetitionTrade,
+  TopTraderLeaderboardEntry,
+  TopTraderProgramInfo,
+  TopTraderProgramStatus,
+} from "@/lib/community/top-trader-types";
+
 /** Program ends last Sunday of July 2026, 00:59 GMT. */
 export const PROGRAM_END = new Date("2026-07-26T00:59:59.000Z");
 export const PROGRAM_START = new Date("2026-06-23T00:00:00.000Z");
@@ -14,58 +27,6 @@ export const TOP_TRADER_PRIZE_USDT = 10;
 export const TOP_TRADER_DEMO_BALANCE = 10_000;
 export const TOP_TRADER_DAILY_TRADES = 5;
 export const TOP_TRADER_MAX_POSITION_HOURS = 24;
-
-export type TopTraderProgramStatus = "active" | "ended" | "upcoming";
-
-export type TopTraderProgramInfo = {
-  status: TopTraderProgramStatus;
-  prizeUsdt: number;
-  programStartAt: string;
-  programEndAt: string;
-  weekStartAt: string;
-  weekEndAt: string;
-  weekLabel: string;
-  msUntilWeekEnd: number;
-  msUntilProgramEnd: number;
-  demoBalance: number;
-  dailyTrades: number;
-  maxPositionHours: number;
-};
-
-export type TopTraderLeaderboardEntry = {
-  rank: number;
-  userId: string;
-  handle: string | null;
-  displayName: string;
-  avatarUrl: string | null;
-  showKycBadge: boolean;
-  weeklyPnlUsdt: number;
-  tradeCount: number;
-  winCount: number;
-  winRatePct: number | null;
-  isFollowing: boolean;
-};
-
-export type TopTraderCompetitionTrade = {
-  id: string;
-  userId: string;
-  symbol: string;
-  side: string;
-  leverage: number;
-  marginUsdt: number;
-  entryPrice: number;
-  closePrice: number;
-  stopLossPrice: number | null;
-  takeProfitPrice: number | null;
-  realizedPnlUsdt: number;
-  feeOpenUsdt: number;
-  feeCloseUsdt: number;
-  roePct: number;
-  closeReason: string | null;
-  openedAt: string;
-  closedAt: string;
-  durationMin: number;
-};
 
 function startOfWeekGmt(d: Date): Date {
   const x = new Date(d);
