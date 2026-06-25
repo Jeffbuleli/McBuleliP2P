@@ -11,6 +11,7 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   AuthMarketingShell,
   AuthPageFooter,
+  authAltBtnPiClass,
   authInputClass,
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
@@ -206,7 +207,7 @@ function LoginForm() {
 
   if (loading || piBusy) {
     return (
-      <AuthMarketingShell showBrandHeader={false}>
+      <AuthMarketingShell showBrandHeader={false} mode="login">
         <AuthWaitingScreen message={piBusy ? t("auth_pi_signing") : t("signing")} />
       </AuthMarketingShell>
     );
@@ -214,6 +215,7 @@ function LoginForm() {
 
   return (
     <AuthMarketingShell
+      mode="login"
       footer={
         <AuthPageFooter
           prefix={t("no_account")}
@@ -222,8 +224,7 @@ function LoginForm() {
         />
       }
     >
-      <div className="fd-card rounded-[1.75rem] p-5">
-        <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -245,7 +246,7 @@ function LoginForm() {
               </span>
               <Link
                 href="/forgot-password"
-                className="text-xs font-semibold text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
+                className="text-xs font-semibold text-[#305F33] underline-offset-4 hover:text-[#78350f] hover:underline"
               >
                 {t("login_forgot")}
               </Link>
@@ -265,38 +266,33 @@ function LoginForm() {
               {error}
             </p>
           ) : null}
-          <button type="submit" className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]">
+          <button type="submit" className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99]">
             {t("signin")}
           </button>
         </form>
 
-        <div className="auth-divider relative my-6">
+        <div className="auth-divider relative my-5">
           <div className="auth-divider-line absolute inset-0 flex items-center" aria-hidden>
-            <div className="w-full border-t border-[color:var(--fd-border)]" />
+            <div className="w-full border-t border-stone-200" />
           </div>
-          <div className="auth-divider-label relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--fd-muted)]">
-            <span className="bg-[color:var(--fd-card)] px-3">{t("auth_or")}</span>
+          <div className="auth-divider-label relative flex justify-center text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">
+            <span className="bg-white px-2">{t("auth_or")}</span>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void startPiAuth()}
-          className="auth-btn-outline flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl px-4 disabled:opacity-60"
-        >
-          <span>{t("auth_pi_continue")}</span>
-          <Image
-            src="/assets/crypto/pi.png"
-            alt=""
-            width={28}
-            height={28}
-            className="h-7 w-7 shrink-0 rounded-full"
-          />
-        </button>
+        <div className="flex flex-col gap-2.5">
+          <button
+            type="button"
+            onClick={() => void startPiAuth()}
+            disabled={piBusy}
+            className={authAltBtnPiClass}
+          >
+            <Image src="/assets/crypto/pi.png" alt="" width={24} height={24} className="h-6 w-6 rounded-full" />
+            <span>{t("auth_pi_continue")}</span>
+          </button>
 
-        <PasskeyLoginButton email={email} polished />
-
-      </div>
+          <PasskeyLoginButton email={email} redirectTo={nextPath} polished />
+        </div>
     </AuthMarketingShell>
   );
 }
@@ -305,7 +301,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <AuthMarketingShell showBrandHeader={false}>
+        <AuthMarketingShell showBrandHeader={false} mode="login">
           <AuthWaitingScreen />
         </AuthMarketingShell>
       }

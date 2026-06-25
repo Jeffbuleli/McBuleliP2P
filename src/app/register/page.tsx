@@ -6,7 +6,7 @@ import { safeAppRedirectPath } from "@/lib/safe-app-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
-import { countryLabel } from "@/lib/country-label";
+import { countrySelectLabel } from "@/lib/country-label";
 import {
   AuthMarketingShell,
   AuthPageFooter,
@@ -31,7 +31,7 @@ const COUNTRY_OPTIONS = [
   { code: "RW", en: "Rwanda", fr: "Rwanda" },
   { code: "UG", en: "Uganda", fr: "Ouganda" },
   { code: "ZA", en: "South Africa", fr: "Afrique du Sud" },
-  { code: "OTHER", en: "Other", fr: "Autre" },
+  { code: "OTHER", en: "Other country", fr: "Autre pays" },
 ] as const;
 
 function RegisterForm() {
@@ -54,11 +54,14 @@ function RegisterForm() {
   }, [emailParam]);
 
   const countries = useMemo(() => {
-    return [...COUNTRY_OPTIONS].sort((a, b) => {
+    const regular = COUNTRY_OPTIONS.filter((c) => c.code !== "OTHER");
+    const other = COUNTRY_OPTIONS.find((c) => c.code === "OTHER");
+    const sorted = [...regular].sort((a, b) => {
       const la = locale === "fr" ? a.fr : a.en;
       const lb = locale === "fr" ? b.fr : b.en;
       return la.localeCompare(lb);
     });
+    return other ? [...sorted, other] : sorted;
   }, [locale]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -120,7 +123,7 @@ function RegisterForm() {
 
   if (loading) {
     return (
-      <AuthMarketingShell showBrandHeader={false}>
+      <AuthMarketingShell showBrandHeader={false} mode="register">
         <AuthWaitingScreen message={t("registering")} />
       </AuthMarketingShell>
     );
@@ -128,22 +131,22 @@ function RegisterForm() {
 
   return (
     <AuthMarketingShell
+      mode="register"
       footer={
         <AuthPageFooter
           prefix={t("has_account")}
-          linkHref="/login"
+          linkHref={`/login?next=${encodeURIComponent(nextPath)}`}
           linkLabel={t("home_login")}
         />
       }
     >
       {referralCode.trim() ? (
-        <p className="mb-3 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-3 py-2 text-center text-xs font-bold text-[color:var(--fd-primary)]">
+        <p className="mb-3 rounded-xl border border-[#305F33]/15 bg-[#305F33]/5 px-3 py-2 text-center text-xs font-bold text-[#305F33]">
           {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
 
-      <div className="fd-card rounded-[1.75rem] p-5">
-        <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -186,10 +189,11 @@ function RegisterForm() {
               <option value="">{t("register_country_ph")}</option>
               {countries.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {countryLabel(locale, c.code)}
+                  {countrySelectLabel(locale, c.code)}
                 </option>
               ))}
             </select>
+            <span className="text-[11px] text-stone-500">{t("register_country_help")}</span>
           </label>
 
           <label className={authLabelClass}>
@@ -228,12 +232,11 @@ function RegisterForm() {
 
           <button
             type="submit"
-            className="mt-1 min-h-[52px] rounded-2xl bg-[color:var(--fd-primary)] py-3 text-base font-bold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99]"
+            className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99]"
           >
             {t("register_btn")}
           </button>
         </form>
-      </div>
     </AuthMarketingShell>
   );
 }
@@ -242,7 +245,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <AuthMarketingShell showBrandHeader={false}>
+        <AuthMarketingShell showBrandHeader={false} mode="register">
           <AuthWaitingScreen />
         </AuthMarketingShell>
       }

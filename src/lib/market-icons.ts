@@ -13,9 +13,11 @@ const SLUG: Record<string, string> = {
 };
 
 export function marketIconUrl(symbol: string): string | null {
-  const base = symbol.replace(/USDT$/i, "").toUpperCase();
-  /** Brand asset — Pi is not in spothq set. */
-  if (base === "PI") return "/assets/crypto/pi.png";
+  const upper = symbol.toUpperCase();
+  const base = upper.replace(/USDT$/i, "");
+  /** Brand assets — not in spothq set. */
+  if (base === "PI" || upper === "PI") return "/assets/crypto/pi.png";
+  if (base === "USDT" || upper === "USDT") return "/assets/crypto/usdt.png";
   const slug = SLUG[base];
   if (!slug) return null;
   return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${slug}.png`;

@@ -14,7 +14,7 @@ export function AuthWaitingScreen({ message }: { message?: string }) {
       aria-busy="true"
     >
       <div className="relative">
-        <div className="flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_28px_rgba(48,95,51,0.18)] ring-2 ring-[color:var(--fd-primary)]/25">
+        <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-2 ring-[#305F33]/20">
           <Image
             src="/brand/logo.png"
             alt=""
@@ -25,7 +25,7 @@ export function AuthWaitingScreen({ message }: { message?: string }) {
           />
         </div>
         <span
-          className="absolute -bottom-0.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-[color:var(--fd-primary)]/40 animate-pulse"
+          className="absolute -bottom-0.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-[#305F33]/40 animate-pulse"
           aria-hidden
         />
       </div>

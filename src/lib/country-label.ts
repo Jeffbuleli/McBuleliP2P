@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/locale";
 
-function flagEmoji(countryCode: string): string {
+export function flagEmoji(countryCode: string): string {
   const cc = countryCode.toUpperCase();
   if (!/^[A-Z]{2}$/.test(cc)) return "🏳️";
   const base = 0x1f1e6;
@@ -13,8 +13,8 @@ export function countryLabel(locale: Locale, countryCode: string): string {
   const cc = (countryCode ?? "").trim().toUpperCase();
   if (!cc) return "—";
   if (cc === "OTHER") {
-    const name = locale === "fr" ? "Autre" : "Other";
-    return `🏳️ ${name} (OTHER)`;
+    const name = locale === "fr" ? "Autre pays" : "Other country";
+    return `🌍 ${name}`;
   }
 
   // Prefer full name via Intl.DisplayNames when available.
@@ -61,11 +61,24 @@ export function countryLabel(locale: Locale, countryCode: string): string {
   return `${flagEmoji(cc)} ${name} (${cc})`;
 }
 
+/** Compact label for register / profile country `<select>` options. */
+export function countrySelectLabel(locale: Locale, countryCode: string): string {
+  const cc = (countryCode ?? "").trim().toUpperCase();
+  if (!cc) return "—";
+  if (cc === "OTHER") {
+    return locale === "fr" ? "🌍 Autre pays" : "🌍 Other country";
+  }
+
+  const full = countryLabel(locale, cc);
+  // Drop trailing " (XX)" — flag + name is enough in dropdowns.
+  return full.replace(/\s*\([A-Z]{2,6}\)\s*$/, "");
+}
+
 /** Compact region label for AVEC top bar (no flag / ISO suffix). */
 export function countryShortLabel(locale: Locale, countryCode: string): string {
   const cc = (countryCode ?? "").trim().toUpperCase();
   if (!cc) return "";
-  if (cc === "OTHER") return locale === "fr" ? "Autre" : "Other";
+  if (cc === "OTHER") return locale === "fr" ? "Autre pays" : "Other country";
 
   const cityByCode: Record<string, { en: string; fr: string }> = {
     CD: { en: "Congo-Kinshasa", fr: "Congo-Kinshasa" },

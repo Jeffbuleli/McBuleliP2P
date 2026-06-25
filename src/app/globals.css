@@ -305,6 +305,69 @@ html {
   color: var(--fd-primary);
 }
 
+@keyframes landing-ticker-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes landing-partners-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.landing-ticker-marquee-track {
+  animation: landing-ticker-marquee 45s linear infinite;
+}
+
+.landing-partners-marquee-track {
+  animation: landing-partners-marquee 55s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-ticker-marquee-track,
+  .landing-partners-marquee-track {
+    animation: none;
+  }
+}
+
+.landing-eco-line {
+  animation: landing-eco-pulse 3s ease-in-out infinite;
+}
+
+@keyframes landing-eco-pulse {
+  0%,
+  100% {
+    stroke-opacity: 0.18;
+  }
+  50% {
+    stroke-opacity: 0.42;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-eco-line {
+    animation: none;
+  }
+}
+
+/* Rockie-style public landing v2 */
+.landing-v2 {
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern" 1;
+}
+
+.landing-v2 .auth-lang-float {
+  z-index: 50;
+}
+
 /* Marketing / auth — same light surface as app home */
 .fd-public-light {
   color: var(--fd-text);
@@ -351,6 +414,17 @@ html {
   appearance: none;
   -webkit-appearance: none;
 }
+.auth-v2.fd-public-light input.auth-input,
+.auth-v2.fd-public-light select.auth-input {
+  border-color: #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+}
+.auth-v2.fd-public-light input.auth-input:focus,
+.auth-v2.fd-public-light select.auth-input:focus {
+  border-color: #305f33;
+  box-shadow: 0 0 0 3px rgba(48, 95, 51, 0.14);
+}
 .fd-public-light input.auth-input::placeholder {
   color: color-mix(in srgb, var(--fd-muted) 70%, transparent);
 }
@@ -376,6 +450,15 @@ html {
   color: #fff;
   cursor: pointer;
 }
+.auth-v2.fd-public-light .auth-btn-primary,
+.auth-v2.fd-public-light button[type="submit"]:not(.auth-btn-outline) {
+  background: #305f33;
+  box-shadow: 0 4px 14px rgba(48, 95, 51, 0.22);
+}
+.auth-v2.fd-public-light .auth-btn-primary:hover,
+.auth-v2.fd-public-light button[type="submit"]:not(.auth-btn-outline):hover {
+  background: #244a27;
+}
 .fd-public-light .auth-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -396,6 +479,27 @@ html {
   font-weight: 600;
   color: var(--fd-text);
   cursor: pointer;
+}
+.auth-v2.fd-public-light .auth-btn-outline {
+  border-color: rgba(120, 53, 15, 0.18);
+  background: #fff;
+  color: #57534e;
+}
+.auth-v2.fd-public-light .auth-btn-outline:hover {
+  border-color: rgba(48, 95, 51, 0.28);
+  background: rgba(48, 95, 51, 0.04);
+}
+.auth-v2.fd-public-light .auth-divider-line {
+  border-top-color: rgba(120, 53, 15, 0.12);
+}
+.auth-v2.fd-public-light .auth-divider-label {
+  background: #fff;
+  color: #a8a29e;
+}
+.auth-v2.fd-public-light .auth-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #57534e;
 }
 .fd-public-light .auth-btn-outline:disabled {
   opacity: 0.6;

@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+export function loginHrefFor(appPath: string): string {
+  return `/login?next=${encodeURIComponent(appPath)}`;
+}
+
+/** Resolves to `appPath` when session is valid, otherwise login with `next`. */
+export function useSessionAppHref(appPath: string): string {
+  const fallback = useMemo(() => loginHrefFor(appPath), [appPath]);
+  const [href, setHref] = useState(fallback);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHref(fallback);
+    void fetch("/api/auth/session", { credentials: "same-origin" })
+      .then((res) => {
+        if (!cancelled) setHref(res.ok ? appPath : fallback);
+      })
+      .catch(() => {
+        if (!cancelled) setHref(fallback);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [appPath, fallback]);
+
+  return href;
+}
+
+/** Entry CTA: app home when signed in, register otherwise. */
+export function useSessionEntryHref(appPath = "/app/wallet"): string {
+  const registerFallback = `/register?next=${encodeURIComponent(appPath)}`;
+  const [href, setHref] = useState(registerFallback);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHref(registerFallback);
+    void fetch("/api/auth/session", { credentials: "same-origin" })
+      .then((res) => {
+        if (!cancelled) setHref(res.ok ? appPath : registerFallback);
+      })
+      .catch(() => {
+        if (!cancelled) setHref(registerFallback);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [appPath, registerFallback]);
+
+  return href;
+}
