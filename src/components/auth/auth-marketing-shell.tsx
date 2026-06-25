@@ -26,7 +26,7 @@ export function AuthPageFooter({
   const { t } = useI18n();
 
   return (
-    <div className="mb-4 flex items-center gap-2.5">
+    <div className="flex items-center justify-center gap-2.5 px-4 py-6">
       <Link
         href="/"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-[#305F33] shadow-sm transition hover:border-[#305F33]/30 hover:bg-[#305F33]/5 active:scale-95"
@@ -35,7 +35,7 @@ export function AuthPageFooter({
       >
         <BackHomeIcon className="h-4 w-4" />
       </Link>
-      <p className="min-w-0 text-xs text-stone-500">
+      <p className="text-xs text-stone-500">
         {prefix ? <span>{prefix} </span> : null}
         <Link href={linkHref} className="font-bold text-[#305F33] hover:underline">
           {linkLabel}
@@ -64,27 +64,25 @@ export function AuthMarketingShell({
   const headline = mode === "register" ? t("auth_register_headline") : t("auth_login_headline");
 
   return (
-    <div className="auth-v2 fd-public-light notranslate min-h-dvh bg-[#fafaf9] text-stone-900">
-      <header className="border-b border-stone-200/80 bg-white/95 px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <Image
-              src="/brand/logo-256.png"
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 shrink-0 rounded-full ring-2 ring-[#305F33]/20"
-              priority
-            />
-            <span className="truncate text-base font-extrabold tracking-tight text-stone-900">{t("brand")}</span>
-          </div>
+    <div className="auth-v2 fd-public-light notranslate flex min-h-dvh flex-col bg-[#fafaf9] text-stone-900">
+      <header className="relative px-4 pb-2 pt-5 sm:px-6 sm:pt-6">
+        <div className="absolute right-4 top-4 sm:right-6 sm:top-5">
           <LangSwitch />
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Image
+            src="/brand/logo-256.png"
+            alt=""
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-full ring-2 ring-[#305F33]/20"
+            priority
+          />
+          <span className="text-base font-extrabold tracking-tight text-stone-900">{t("brand")}</span>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-5 sm:px-6 sm:py-6">
-        {footer}
-
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6">
         {showBrandHeader ? (
           <h1 className="mb-4 text-center text-xl font-black text-stone-900">{headline}</h1>
         ) : null}
@@ -93,6 +91,8 @@ export function AuthMarketingShell({
           {children}
         </div>
       </div>
+
+      {footer}
     </div>
   );
 }
