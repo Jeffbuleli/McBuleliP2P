@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   TopTraderCompetitionTrade,
   TopTraderDailyLeader,
@@ -35,6 +35,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
   const [feedTrades, setFeedTrades] = useState<TopTraderFeedTrade[]>([]);
   const [dailyLeaders, setDailyLeaders] = useState<TopTraderDailyLeader[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
+  const feedLoadedRef = useRef(false);
   const [viewer, setViewer] = useState<{
     rank: number;
     weeklyPnlUsdt: number;
@@ -60,8 +61,8 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
     }
   }, []);
 
-  const loadFeed = useCallback(async () => {
-    setFeedLoading(true);
+  const loadFeed = useCallback(async (silent = false) => {
+    if (!silent && !feedLoadedRef.current) setFeedLoading(true);
     try {
       const res = await fetch(
         `/api/community/top-trader/feed?limit=50&locale=${fr ? "fr" : "en"}`,
@@ -70,11 +71,11 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
       const j = await res.json();
       setFeedTrades((j.trades ?? []) as TopTraderFeedTrade[]);
       setDailyLeaders((j.dailyLeaders ?? []) as TopTraderDailyLeader[]);
-      if (!program && j.program) setProgram(j.program as TopTraderProgramInfo);
+      feedLoadedRef.current = true;
     } finally {
       setFeedLoading(false);
     }
-  }, [fr, program]);
+  }, [fr]);
 
   const loadMyTrades = useCallback(async () => {
     try {
@@ -117,7 +118,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
       const res = await fetch("/api/community/top-trader/opt-in", { method: "POST" });
       if (!res.ok) return;
       await loadLeaderboard();
-      await loadFeed();
+      await loadFeed(true);
     } finally {
       setOptInBusy(false);
     }
@@ -224,8 +225,8 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
           {fr ? "Activité compétition" : "Competition activity"}
         </h3>
 
-        {feedLoading ? (
-          <p className="py-6 text-center text-sm text-[#78716c]">…</p>
+        {feedLoading && !feedLoadedRef.current ? (
+          <div className="fd-card h-24 animate-pulse bg-[#f5f5f4]" aria-hidden />
         ) : feedTrades.length === 0 ? (
           <div className="fd-card flex flex-col items-center px-4 py-8 text-center shadow-sm">
             <TopTraderEmptyIllustration className="mb-3 h-20 w-20" />

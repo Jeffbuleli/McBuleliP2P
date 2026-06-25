@@ -23,6 +23,8 @@ export type FuturesHistoryRow = {
   stopLossPrice: string | null;
   takeProfitPrice: string | null;
   realizedPnlUsdt: string;
+  feeOpenUsdt?: string;
+  feeCloseUsdt?: string;
   closeReason: string | null;
   openedAt: string;
   closedAt: string;
@@ -45,13 +47,17 @@ export function FuturesTradeHistoryCard({
   reasonLabelFn?: (r: string | null) => string;
 }) {
   const pnl = Number(row.realizedPnlUsdt);
-  const up = pnl >= 0;
+  const feeOpen = Number(row.feeOpenUsdt ?? 0);
+  const feeClose = Number(row.feeCloseUsdt ?? 0);
+  const marketPnl = pnl + feeClose;
+  const netPnl = pnl - feeOpen;
+  const up = netPnl >= 0;
   const margin = Number(row.marginUsdt);
   const entry = Number(row.entryPrice);
   const exit = row.closePrice != null ? Number(row.closePrice) : null;
   const sl = row.stopLossPrice != null && row.stopLossPrice !== "" ? Number(row.stopLossPrice) : null;
   const tp = row.takeProfitPrice != null && row.takeProfitPrice !== "" ? Number(row.takeProfitPrice) : null;
-  const roe = margin > 0 ? (pnl / margin) * 100 : 0;
+  const roe = margin > 0 ? (netPnl / margin) * 100 : 0;
   const pair = row.symbol.replace("USDT", "/USDT");
   const notional = notionalUsdt(margin, row.leverage);
   const reasonTone = closeReasonTone(row.closeReason);
@@ -60,7 +66,7 @@ export function FuturesTradeHistoryCard({
     : closeReasonLabel(row.closeReason, fr);
 
   return (
-    <article className={`rounded-2xl border-2 p-3 shadow-sm ${pnlBgClass(pnl)}`}>
+    <article className={`rounded-2xl border-2 p-3 shadow-sm ${pnlBgClass(netPnl)}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-extrabold text-[color:var(--fd-text)]">
@@ -76,19 +82,42 @@ export function FuturesTradeHistoryCard({
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className={`text-base font-extrabold tabular-nums ${pnlToneClass(pnl)}`}>
+          <p className={`text-base font-extrabold tabular-nums ${pnlToneClass(netPnl)}`}>
             {up ? "+" : ""}
-            {pnl.toFixed(2)}
+            {netPnl.toFixed(2)}
           </p>
-          <p className="text-[10px] font-bold text-[color:var(--fd-muted)]">USDT</p>
+          <p className="text-[10px] font-bold text-[color:var(--fd-muted)]">
+            {fr ? "PnL net" : "Net PnL"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
+        <div className="rounded-lg bg-black/[0.03] px-2 py-1">
+          <p className="text-[color:var(--fd-muted)]">{fr ? "PnL prix" : "Price PnL"}</p>
+          <p className={`font-bold tabular-nums ${pnlToneClass(marketPnl)}`}>
+            {marketPnl >= 0 ? "+" : ""}
+            {marketPnl.toFixed(2)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-black/[0.03] px-2 py-1">
+          <p className="text-[color:var(--fd-muted)]">{fr ? "Frais ouv." : "Open fee"}</p>
+          <p className="font-bold tabular-nums text-[color:var(--fd-text)]">−{feeOpen.toFixed(2)}</p>
+        </div>
+        <div className="rounded-lg bg-black/[0.03] px-2 py-1">
+          <p className="text-[color:var(--fd-muted)]">{fr ? "Frais clô." : "Close fee"}</p>
+          <p className="font-bold tabular-nums text-[color:var(--fd-text)]">−{feeClose.toFixed(2)}</p>
+        </div>
+        <div className="rounded-lg bg-black/[0.03] px-2 py-1">
+          <p className="text-[color:var(--fd-muted)]">ROE</p>
+          <p className={`font-bold tabular-nums ${pnlToneClass(roe)}`}>
+            {roe >= 0 ? "+" : ""}
+            {roe.toFixed(1)}%
+          </p>
         </div>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[color:var(--fd-muted)]">
-        <span className={pnlToneClass(pnl)}>
-          ROE {roe >= 0 ? "+" : ""}
-          {roe.toFixed(1)}%
-        </span>
         <span>
           {fr ? "Marge" : "Margin"} {margin.toFixed(2)} · {fr ? "Engagé" : "Notional"} {notional.toFixed(0)}
         </span>

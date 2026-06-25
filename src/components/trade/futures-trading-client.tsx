@@ -14,8 +14,11 @@ import {
   tradeMaxMarginUsdt,
 } from "@/lib/trade-config";
 import {
+  estimatedCloseFeeUsdt,
   feeOnNotional,
+  futuresRoundTripFeeRate,
   liquidationPrice,
+  netPnlAfterCloseFee,
   notionalUsdt,
   positionQtyBase,
   unrealizedPnlUsdt,
@@ -733,6 +736,15 @@ export function FuturesTradingClient({
               value={`${preview.feeOpen.toLocaleString(locTag, { maximumFractionDigits: 4 })} USDT`}
             />
             <TradeStatRow
+              label={t("trade_ui_est_close_fee")}
+              value={`${estimatedCloseFeeUsdt(preview.qty, mark).toLocaleString(locTag, { maximumFractionDigits: 4 })} USDT`}
+            />
+            <p className="pt-1 text-[10px] leading-snug text-[color:var(--fd-muted)]">
+              {t("trade_ui_fee_rate_line")
+                .replace("{bps}", String(TRADE_FEE_RATE * 10_000))
+                .replace("{round}", (futuresRoundTripFeeRate() * 100).toFixed(2))}
+            </p>
+            <TradeStatRow
               label={t("trade_ui_est_max_loss")}
               value={`-${Math.max(0, margin).toLocaleString(locTag, { maximumFractionDigits: 2 })} USDT`}
               valueClassName="text-rose-600"
@@ -792,6 +804,8 @@ export function FuturesTradingClient({
                   Number.isFinite(liq) && Number.isFinite(markNow) && markNow > 0
                     ? ((markNow - liq) / markNow) * (p.side === "long" ? 1 : -1) * 100
                     : 0;
+                const estCloseFee = estimatedCloseFeeUsdt(qty, markNow);
+                const netUpnl = netPnlAfterCloseFee(p.unrealizedPnlUsdt, qty, markNow);
                 return (
               <li
                 key={p.id}
@@ -832,6 +846,17 @@ export function FuturesTradingClient({
                     >
                       uPnL {p.unrealizedPnlUsdt >= 0 ? "+" : ""}
                       {p.unrealizedPnlUsdt.toFixed(2)} USDT
+                    </p>
+                    <p
+                      className={`text-[11px] font-semibold tabular-nums ${
+                        netUpnl >= 0 ? "text-emerald-600" : "text-rose-600"
+                      }`}
+                    >
+                      {t("trade_ui_net_upnl")}: {netUpnl >= 0 ? "+" : ""}
+                      {netUpnl.toFixed(2)} USDT
+                      <span className="ml-1 font-normal text-[color:var(--fd-muted)]">
+                        (−{estCloseFee.toFixed(2)} {t("trade_ui_est_close_fee").toLowerCase()})
+                      </span>
                     </p>
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[color:var(--fd-muted)]">
                       <span>
@@ -1013,6 +1038,10 @@ export function FuturesTradingClient({
                   </p>
                   <p className="text-[11px] text-[color:var(--fd-muted)]">
                     {t("trade_ui_confirm_open_fee")}: {preview.feeOpen.toFixed(4)} USDT
+                  </p>
+                  <p className="text-[11px] text-[color:var(--fd-muted)]">
+                    {t("trade_ui_est_close_fee")}:{" "}
+                    {estimatedCloseFeeUsdt(preview.qty, mark).toFixed(4)} USDT
                   </p>
                 </>
               )}

@@ -152,8 +152,8 @@ export function pnlToneClass(n: number): string {
 
 export function pnlBgClass(n: number): string {
   return n >= 0
-    ? "border-[#bce4c9] bg-gradient-to-br from-[#f0faf4] to-white"
-    : "border-[#fcd9b6] bg-gradient-to-br from-[#fff7ed] to-white";
+    ? "border-[#bce4c9] bg-[#f0faf4]"
+    : "border-[#fcd9b6] bg-[#fff7ed]";
 }
 
 export function sideClass(side: string): string {

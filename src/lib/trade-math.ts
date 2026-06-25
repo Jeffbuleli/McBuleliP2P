@@ -40,6 +40,26 @@ export function feeOnNotional(notionalUsdt: number): number {
   return notionalUsdt * TRADE_FEE_RATE;
 }
 
+/** Close fee at mark/exit price (same formula as server close). */
+export function estimatedCloseFeeUsdt(qtyBase: number, exitPrice: number): number {
+  if (!Number.isFinite(qtyBase) || !Number.isFinite(exitPrice) || exitPrice <= 0) return 0;
+  return TRADE_FEE_RATE * qtyBase * exitPrice;
+}
+
+/** uPnL minus estimated close fee (aligns with wallet credit excl. margin return). */
+export function netPnlAfterCloseFee(
+  unrealizedUsdt: number,
+  qtyBase: number,
+  markPrice: number,
+): number {
+  return unrealizedUsdt - estimatedCloseFeeUsdt(qtyBase, markPrice);
+}
+
+/** Round-trip fee rate (open + close on same notional). */
+export function futuresRoundTripFeeRate(): number {
+  return TRADE_FEE_RATE * 2;
+}
+
 export function notionalUsdt(marginUsdt: number, leverage: number): number {
   return marginUsdt * leverage;
 }
