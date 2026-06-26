@@ -6,7 +6,7 @@ import { fiatFreshpayTransactions, getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { hasFreshpayCardKeys } from "@/lib/env";
 import { freshpayCreateCardOrder, formatCardOrderAmount } from "@/lib/freshpay/card-provider";
-import { formatCardBillToPhone } from "@/lib/freshpay/normalize-phone";
+import { resolveCardBillToPhone } from "@/lib/freshpay/normalize-phone";
 import {
   isFreshpaySupportedCurrency,
   isFreshpaySupportedForCountry,
@@ -18,7 +18,6 @@ import { logFiatApiError } from "@/lib/fiat-api-errors";
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
   grossAmount: z.string().min(1),
-  phoneNumber: z.string().min(6).optional(),
 });
 
 function userIdentity(u: {
@@ -55,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const { asset, grossAmount, phoneNumber } = parsed.data;
+  const { asset, grossAmount } = parsed.data;
   if (!isFreshpaySupportedCurrency(asset)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
@@ -83,13 +82,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
-  const billPhone = formatCardBillToPhone(phoneNumber?.trim() || u.phone);
-  if (!billPhone) {
-    return NextResponse.json({ error: "wallet_fiat_invalid_phone" }, { status: 400 });
-  }
-
   const reference = randomUUID();
   const identity = userIdentity(u);
+  const billPhone = resolveCardBillToPhone(u.phone);
 
   try {
     const r = await freshpayCreateCardOrder({

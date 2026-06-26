@@ -28,7 +28,6 @@ export default function WalletFiatCardDepositClient({ fiatPaused = false }: { fi
   const [step, setStep] = useState(0);
   const [asset, setAsset] = useState<"USD" | "CDF">("USD");
   const [gross, setGross] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +49,7 @@ export default function WalletFiatCardDepositClient({ fiatPaused = false }: { fi
       const res = await fetch("/api/wallet/fiat/card/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asset, grossAmount: gross, phoneNumber }),
+        body: JSON.stringify({ asset, grossAmount: gross }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
@@ -121,28 +120,13 @@ export default function WalletFiatCardDepositClient({ fiatPaused = false }: { fi
               className={`${walletInputClass} text-lg font-bold tabular-nums disabled:opacity-60`}
             />
           </WalletFieldLabel>
-          <WalletFieldLabel label={t("wallet_phone_number")}>
-            <input
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              inputMode="tel"
-              placeholder="09xxxxxxxx"
-              disabled={locked}
-              className={`${walletInputClass} disabled:opacity-60`}
-            />
-          </WalletFieldLabel>
           {summary ? (
             <WalletStatusBanner tone="info">
               {t("wallet_fiat_net")}: {summary.net.toLocaleString(loc)} {asset} · {t("wallet_fiat_fee", { pct })}
             </WalletStatusBanner>
           ) : null}
           <p className="text-[10px] text-[color:var(--fd-muted)]">{t("wallet_fiat_card_checkout_hint")}</p>
-          <button
-            type="button"
-            className={walletPrimaryBtnClass}
-            disabled={locked || !summary || phoneNumber.trim().length < 6}
-            onClick={() => setStep(1)}
-          >
+          <button type="button" className={walletPrimaryBtnClass} disabled={locked || !summary} onClick={() => setStep(1)}>
             →
           </button>
         </>

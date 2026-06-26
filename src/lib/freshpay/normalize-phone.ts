@@ -28,3 +28,8 @@ export function formatCardBillToPhone(input: string | null | undefined): string 
   if (!/^243[89]\d{8}$/.test(normalized)) return null;
   return `+${normalized}`;
 }
+
+/** Cybersource billing phone (E.164). MoMo uses customer_number in the gateway — not this field. */
+export function resolveCardBillToPhone(input: string | null | undefined): string {
+  return formatCardBillToPhone(input) ?? "+243810000000";
+}

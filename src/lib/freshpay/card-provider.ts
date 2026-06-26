@@ -6,7 +6,7 @@ import {
   getFreshpayCardApiSecret,
   getFreshpayCardCallbackSecret,
 } from "@/lib/env";
-import { formatCardBillToPhone } from "@/lib/freshpay/normalize-phone";
+import { resolveCardBillToPhone } from "@/lib/freshpay/normalize-phone";
 
 export type CardOrderResponse = {
   status?: string;
@@ -63,10 +63,7 @@ export async function freshpayCreateCardOrder(args: {
   const base = getFreshpayCardApiBaseUrl();
   const timestamp = new Date().toISOString();
   const amount = formatCardOrderAmount(args.amount, args.currency);
-  const billPhone = formatCardBillToPhone(args.phone);
-  if (!billPhone) {
-    return { ok: false, message: "bill_to_phone: Invalid phone number format" };
-  }
+  const billPhone = resolveCardBillToPhone(args.phone);
 
   const payload = {
     amount,
@@ -102,7 +99,7 @@ export async function freshpayCreateCardOrder(args: {
   const json = (await res.json().catch(() => ({}))) as CardOrderResponse;
   if (!res.ok || json.status !== "success" || !json.data?.links) {
     const msg = cardApiErrorMessage(json, res.status);
-    return { ok: false, message: msg };
+    return { ok: false, message: `${base}: ${msg}` };
   }
 
   return {
