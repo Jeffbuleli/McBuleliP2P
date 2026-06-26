@@ -6,6 +6,12 @@ import { passkeyLoginOptions, passkeyLoginVerify } from "@/lib/auth/passkeys";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
 import { recordLoginEvent } from "@/lib/login-events";
+import {
+  checkRateLimit,
+  rateLimitedResponse,
+  rateLimitKeyIp,
+} from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 const optionsZ = z.object({ email: z.string().email().optional() });
 
@@ -22,12 +28,27 @@ export async function POST(req: Request) {
 const verifyZ = z.object({
   challengeId: z.string().uuid(),
   response: z.unknown(),
+  turnstileToken: z.string().trim().min(1).optional(),
 });
 
 export async function PUT(req: Request) {
+  const ipLimit = checkRateLimit({
+    key: rateLimitKeyIp("auth:passkey-login", req),
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!ipLimit.ok) {
+    return rateLimitedResponse(ipLimit.retryAfterSec);
+  }
+
   const parsed = verifyZ.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+  }
+
+  const captcha = await verifyTurnstileToken(parsed.data.turnstileToken, req);
+  if (!captcha.ok) {
+    return NextResponse.json({ error: captcha.message }, { status: captcha.status });
   }
 
   const result = await passkeyLoginVerify({

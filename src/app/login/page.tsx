@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { safeAppRedirectPath } from "@/lib/safe-app-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
@@ -17,7 +17,7 @@ import {
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
 import { PasskeyLoginButton } from "@/components/auth/passkey-login-button";
-import { TurnstileWidget } from "@/components/auth/turnstile-widget";
+import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
 import { paymentIdFromPiSdk, piInit, resolvePiSdkSandbox, isPiBrowser } from "@/lib/pi-browser";
 
 const TURNSTILE_SITE_KEY =
@@ -60,6 +60,15 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
+
+  useEffect(() => {
+    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
+  }, []);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -234,6 +243,14 @@ function LoginForm() {
       }
     >
       <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={onTurnstileToken}
+              onExpire={onTurnstileExpire}
+              className="flex justify-center"
+            />
+          ) : null}
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -275,17 +292,9 @@ function LoginForm() {
               {error}
             </p>
           ) : null}
-          {TURNSTILE_SITE_KEY ? (
-            <TurnstileWidget
-              siteKey={TURNSTILE_SITE_KEY}
-              onToken={(token) => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken(null)}
-              className="flex justify-center"
-            />
-          ) : null}
           <button
             type="submit"
-            disabled={Boolean(TURNSTILE_SITE_KEY && !turnstileToken)}
+            disabled={!turnstileReady}
             className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99] disabled:opacity-60"
           >
             {t("signin")}
@@ -305,14 +314,20 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => void startPiAuth()}
-            disabled={piBusy}
+            disabled={piBusy || !turnstileReady}
             className={authAltBtnPiClass}
           >
             <Image src="/assets/crypto/pi.png" alt="" width={24} height={24} className="h-6 w-6 rounded-full" />
             <span>{t("auth_pi_continue")}</span>
           </button>
 
-          <PasskeyLoginButton email={email} redirectTo={nextPath} polished />
+          <PasskeyLoginButton
+            email={email}
+            redirectTo={nextPath}
+            polished
+            turnstileToken={turnstileToken}
+            disabled={!turnstileReady}
+          />
         </div>
     </AuthMarketingShell>
   );

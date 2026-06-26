@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { safeAppRedirectPath } from "@/lib/safe-app-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
@@ -14,7 +14,7 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
-import { TurnstileWidget } from "@/components/auth/turnstile-widget";
+import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
 
 const TURNSTILE_SITE_KEY =
   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
@@ -53,6 +53,15 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
+
+  useEffect(() => {
+    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
+  }, []);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -153,6 +162,14 @@ function RegisterForm() {
       ) : null}
 
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={onTurnstileToken}
+              onExpire={onTurnstileExpire}
+              className="flex justify-center"
+            />
+          ) : null}
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -236,18 +253,9 @@ function RegisterForm() {
             </p>
           ) : null}
 
-          {TURNSTILE_SITE_KEY ? (
-            <TurnstileWidget
-              siteKey={TURNSTILE_SITE_KEY}
-              onToken={(token) => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken(null)}
-              className="flex justify-center"
-            />
-          ) : null}
-
           <button
             type="submit"
-            disabled={Boolean(TURNSTILE_SITE_KEY && !turnstileToken)}
+            disabled={!turnstileReady}
             className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99] disabled:opacity-60"
           >
             {t("register_btn")}

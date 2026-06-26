@@ -31,12 +31,16 @@ export function PasskeyLoginButton({
   redirectTo = "/app",
   className,
   polished = false,
+  turnstileToken,
+  disabled = false,
 }: {
   email?: string;
   /** Post-login path (sanitized by caller). */
   redirectTo?: string;
   className?: string;
   polished?: boolean;
+  turnstileToken?: string | null;
+  disabled?: boolean;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
@@ -65,6 +69,7 @@ export function PasskeyLoginButton({
         body: JSON.stringify({
           challengeId: optData.challengeId,
           response: assertion,
+          ...(turnstileToken ? { turnstileToken } : {}),
         }),
       });
       const verifyData = await verifyRes.json().catch(() => ({}));
@@ -87,7 +92,7 @@ export function PasskeyLoginButton({
       <button
         type="button"
         onClick={() => void onClick()}
-        disabled={busy}
+        disabled={busy || disabled}
         className={className ?? (polished ? defaultPolishedClass : undefined) ??
           "inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-4 text-sm font-semibold text-[color:var(--fd-text)] disabled:opacity-60"}
       >

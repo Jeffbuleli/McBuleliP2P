@@ -13,6 +13,7 @@ declare global {
           "expired-callback"?: () => void;
           "error-callback"?: () => void;
           theme?: "light" | "dark" | "auto";
+          appearance?: "always" | "execute" | "interaction-only";
         },
       ) => string;
       reset: (widgetId?: string) => void;
@@ -52,6 +53,11 @@ function loadTurnstileScript(): Promise<void> {
   return scriptPromise;
 }
 
+/** Start loading Turnstile early (e.g. on login mount) — do not await in render. */
+export function preloadTurnstileScript(): void {
+  void loadTurnstileScript();
+}
+
 export function TurnstileWidget({
   siteKey,
   onToken,
@@ -65,22 +71,35 @@ export function TurnstileWidget({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const onTokenRef = useRef(onToken);
+  const onExpireRef = useRef(onExpire);
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  onTokenRef.current = onToken;
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setFailed(false);
     void loadTurnstileScript()
       .then(() => {
         if (cancelled || !containerRef.current || !window.turnstile) return;
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
           theme: "auto",
-          callback: (token) => onToken(token),
-          "expired-callback": () => onExpire?.(),
+          appearance: "always",
+          callback: (token) => onTokenRef.current(token),
+          "expired-callback": () => onExpireRef.current?.(),
           "error-callback": () => setFailed(true),
         });
+        setLoading(false);
       })
-      .catch(() => setFailed(true));
+      .catch(() => {
+        setFailed(true);
+        setLoading(false);
+      });
 
     return () => {
       cancelled = true;
@@ -89,7 +108,7 @@ export function TurnstileWidget({
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, onToken, onExpire]);
+  }, [siteKey]);
 
   if (failed) {
     return (
@@ -99,5 +118,14 @@ export function TurnstileWidget({
     );
   }
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={className}>
+      {loading ? (
+        <p className="text-center text-xs text-stone-500" aria-live="polite">
+          Loading security check…
+        </p>
+      ) : null}
+      <div ref={containerRef} className={loading ? "min-h-[65px]" : undefined} />
+    </div>
+  );
 }
