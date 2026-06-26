@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { hasFreshpayCardKeys } from "@/lib/env";
-import { freshpayCreateCardOrder } from "@/lib/freshpay/card-provider";
+import { freshpayCreateCardOrder, formatCardOrderAmount } from "@/lib/freshpay/card-provider";
+import { formatCardBillToPhone } from "@/lib/freshpay/normalize-phone";
 import {
   isFreshpaySupportedCurrency,
   isFreshpaySupportedForCountry,
@@ -17,6 +18,7 @@ import { logFiatApiError } from "@/lib/fiat-api-errors";
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
   grossAmount: z.string().min(1),
+  phoneNumber: z.string().min(6).optional(),
 });
 
 function userIdentity(u: {
@@ -53,12 +55,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
 
-  const { asset, grossAmount } = parsed.data;
+  const { asset, grossAmount, phoneNumber } = parsed.data;
   if (!isFreshpaySupportedCurrency(asset)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
-  const gross = Number(grossAmount);
+  const gross = formatCardOrderAmount(Number(grossAmount), asset);
   if (!Number.isFinite(gross) || gross <= 0) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
@@ -81,6 +83,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
+  const billPhone = formatCardBillToPhone(phoneNumber?.trim() || u.phone);
+  if (!billPhone) {
+    return NextResponse.json({ error: "wallet_fiat_invalid_phone" }, { status: 400 });
+  }
+
   const reference = randomUUID();
   const identity = userIdentity(u);
 
@@ -90,6 +97,7 @@ export async function POST(req: Request) {
       amount: gross,
       currency: asset,
       ...identity,
+      phone: billPhone,
     });
 
     if (!r.ok) {
@@ -103,7 +111,7 @@ export async function POST(req: Request) {
             status: "FAILED",
             reference,
             currency: asset,
-            amount: grossAmount,
+            amount: String(gross),
             provider: "card",
             failureMessage: r.message,
             meta: { rail: "card", providerLabel: "Card" },
@@ -124,7 +132,7 @@ export async function POST(req: Request) {
         reference,
         providerTxId: r.transactionUuid,
         currency: asset,
-        amount: grossAmount,
+        amount: String(gross),
         provider: "card",
         meta: {
           rail: "card",

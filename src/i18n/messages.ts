@@ -1533,6 +1533,7 @@ export const en = {
   lp_pool_no_rewards: "✕ No rewards",
   lp_pool_withdraw_failed: "✕ Withdraw failed",
   wallet_fiat_invalid_amount: "Invalid amount.",
+  wallet_fiat_invalid_phone: "Enter a valid DRC mobile number (09… or +243…).",
   wallet_fiat_withdraw_failed: "Withdrawal could not be completed.",
   wallet_fiat_unconfigured: "Mobile money is temporarily unavailable.",
   wallet_fiat_paused:
@@ -5787,6 +5788,7 @@ export const fr: Messages = {
   lp_pool_no_rewards: "✕ Aucun reward",
   lp_pool_withdraw_failed: "✕ Retrait échoué",
   wallet_fiat_invalid_amount: "Montant invalide.",
+  wallet_fiat_invalid_phone: "Saisissez un numéro mobile RDC valide (09… ou +243…).",
   wallet_fiat_withdraw_failed: "Retrait impossible.",
   wallet_fiat_unconfigured: "Le mobile money est temporairement indisponible.",
   wallet_fiat_paused:

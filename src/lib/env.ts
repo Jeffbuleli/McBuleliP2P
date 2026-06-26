@@ -1,3 +1,5 @@
+import { resolveFreshpayEnvMode } from "@/lib/freshpay/env-mode";
+
 export function getJwtSecret(): string {
   const s = process.env.JWT_SECRET;
   if (!s || s.length < 16) {
@@ -126,8 +128,7 @@ export function getFreshpayHmacKey(): string {
 export function getFreshpayGatewayUrl(): string {
   const override = process.env.FRESHPAY_API_BASE_URL?.trim();
   if (override) return override.replace(/\/+$/, "");
-  const env = (process.env.FRESHPAY_ENV ?? "sandbox").trim().toLowerCase();
-  return env === "prod" || env === "production"
+  return resolveFreshpayEnvMode("momo") === "production"
     ? "https://paydrc.gofreshbakery.net/api/v5/"
     : "https://api.gofreshpay.com/api/v1/gateway";
 }
@@ -135,8 +136,7 @@ export function getFreshpayGatewayUrl(): string {
 export function getFreshpayCardApiBaseUrl(): string {
   const override = process.env.FRESHPAY_CARD_API_BASE_URL?.trim();
   if (override) return override.replace(/\/+$/, "");
-  const env = (process.env.FRESHPAY_ENV ?? "sandbox").trim().toLowerCase();
-  return env === "prod" || env === "production"
+  return resolveFreshpayEnvMode("card") === "production"
     ? "https://card.gofreshpay.com"
     : "https://test.card.gofreshpay.com";
 }

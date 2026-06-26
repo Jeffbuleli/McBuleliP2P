@@ -6,6 +6,7 @@ import {
   getFreshpayCardApiSecret,
   getFreshpayCardCallbackSecret,
 } from "@/lib/env";
+import { formatCardBillToPhone } from "@/lib/freshpay/normalize-phone";
 
 export type CardOrderResponse = {
   status?: string;
@@ -17,13 +18,37 @@ export type CardOrderResponse = {
     currency?: string;
     message?: string;
   };
-  error?: { message?: string; code?: string };
+  error?: {
+    message?: string;
+    code?: string;
+    details?: { field?: string; issue?: string } | string;
+  };
 };
 
-function signCardPayload(payload: Record<string, unknown>, timestamp: string): string {
+export function formatCardOrderAmount(amount: number, currency: "USD" | "CDF"): number {
+  if (!Number.isFinite(amount) || amount <= 0) return amount;
+  if (currency === "CDF") return Math.round(amount);
+  return Math.round(amount * 100) / 100;
+}
+
+function cardApiErrorMessage(json: CardOrderResponse, status: number): string {
+  const details = json.error?.details;
+  if (details && typeof details === "object") {
+    const field = details.field?.trim();
+    const issue = details.issue?.trim();
+    if (field && issue) return `${field}: ${issue}`;
+    if (issue) return issue;
+  }
+  if (typeof details === "string" && details.trim()) return details.trim();
+  const code = json.error?.code?.trim();
+  const message = json.error?.message ?? json.data?.message;
+  if (code && message) return `${code}: ${message}`;
+  return message ?? `HTTP ${status}`;
+}
+
+function signCardPayload(body: string, timestamp: string): string {
   const secret = getFreshpayCardApiSecret();
-  const body = JSON.stringify(payload) + timestamp;
-  return createHmac("sha256", secret).update(body).digest("hex");
+  return createHmac("sha256", secret).update(body + timestamp).digest("hex");
 }
 
 export async function freshpayCreateCardOrder(args: {
@@ -37,14 +62,20 @@ export async function freshpayCreateCardOrder(args: {
 }): Promise<{ ok: true; checkoutUrl: string; transactionUuid: string } | { ok: false; message: string }> {
   const base = getFreshpayCardApiBaseUrl();
   const timestamp = new Date().toISOString();
+  const amount = formatCardOrderAmount(args.amount, args.currency);
+  const billPhone = formatCardBillToPhone(args.phone);
+  if (!billPhone) {
+    return { ok: false, message: "bill_to_phone: Invalid phone number format" };
+  }
+
   const payload = {
-    amount: args.amount,
+    amount,
     currency: args.currency,
     merchant_reference: args.reference,
     bill_to_forename: args.firstname,
     bill_to_surname: args.lastname,
     bill_to_email: args.email,
-    bill_to_phone: args.phone ?? "+243000000000",
+    bill_to_phone: billPhone,
     bill_to_address_line1: "Kinshasa",
     bill_to_address_city: "Kinshasa",
     bill_to_address_state: "KN",
@@ -54,7 +85,8 @@ export async function freshpayCreateCardOrder(args: {
     return_url: getAppAbsoluteUrl(`/app/wallet/fiat/status/${encodeURIComponent(args.reference)}?card=1`),
   };
 
-  const signature = signCardPayload(payload, timestamp);
+  const body = JSON.stringify(payload);
+  const signature = signCardPayload(body, timestamp);
   const res = await fetch(`${base}/api/v1/payment/orders`, {
     method: "POST",
     headers: {
@@ -64,12 +96,12 @@ export async function freshpayCreateCardOrder(args: {
       "X-Timestamp": timestamp,
       "X-Signature": signature,
     },
-    body: JSON.stringify(payload),
+    body,
   });
 
   const json = (await res.json().catch(() => ({}))) as CardOrderResponse;
   if (!res.ok || json.status !== "success" || !json.data?.links) {
-    const msg = json.error?.message ?? json.data?.message ?? `HTTP ${res.status}`;
+    const msg = cardApiErrorMessage(json, res.status);
     return { ok: false, message: msg };
   }
 
@@ -82,7 +114,8 @@ export async function freshpayCreateCardOrder(args: {
 
 function cardAuthHeaders(payload: Record<string, unknown>): Record<string, string> {
   const timestamp = new Date().toISOString();
-  const signature = signCardPayload(payload, timestamp);
+  const body = JSON.stringify(payload);
+  const signature = signCardPayload(body, timestamp);
   return {
     Accept: "application/json",
     "X-API-Key": getFreshpayCardApiKey(),

@@ -21,3 +21,10 @@ export function formatFreshpayCustomerNumber(normalized243: string): string {
   }
   return s;
 }
+
+/** Cybersource card orders require E.164 bill_to_phone (e.g. +243812345678). */
+export function formatCardBillToPhone(input: string | null | undefined): string | null {
+  const normalized = normalizeCodPhoneNumber(input ?? "");
+  if (!/^243[89]\d{8}$/.test(normalized)) return null;
+  return `+${normalized}`;
+}
