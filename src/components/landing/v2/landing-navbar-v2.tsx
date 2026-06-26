@@ -75,6 +75,13 @@ export function LandingNavbarV2() {
           <div className="flex items-center gap-1.5">
             <LangSwitch />
             <Link
+              href="/login"
+              prefetch={false}
+              className="hidden rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-bold text-stone-700 transition hover:border-[#305F33]/30 hover:text-[#305F33] sm:inline-flex"
+            >
+              {t("landing_cta_login")}
+            </Link>
+            <Link
               href={entryHref}
               prefetch={false}
               className="hidden rounded-xl bg-[#305F33] px-4 py-2 text-sm font-extrabold text-white shadow-md shadow-emerald-900/15 transition hover:bg-[#244a27] sm:inline-flex"

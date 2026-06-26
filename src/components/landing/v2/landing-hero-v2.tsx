@@ -15,7 +15,7 @@ export function LandingHeroV2({ d }: { d: HeroDict }) {
       <div className="pointer-events-none absolute -right-24 top-0 h-64 w-64 rounded-full bg-[#305F33]/8 blur-3xl" aria-hidden />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="text-center lg:text-left">
+        <div className="text-left">
           <p className="text-[10px] font-bold uppercase tracking-wide text-[#305F33]">PWA · Mobile first</p>
           <h1 className="mt-2 text-balance text-2xl font-black leading-tight text-stone-900 sm:text-3xl">
             {d.landing_v2_hero_title}
@@ -24,15 +24,15 @@ export function LandingHeroV2({ d }: { d: HeroDict }) {
           <LandingHeroCta />
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 lg:flex lg:justify-start">
           <LandingHeroPhoneBlock />
         </div>
 
         <div className="mt-8 border-t border-stone-200/80 pt-5">
-          <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.18em] text-stone-400 lg:text-left">
+          <p className="text-left text-[10px] font-extrabold uppercase tracking-[0.18em] text-stone-400">
             {d.landing_v2_partners_label}
           </p>
-          <div className="-mx-1 mt-3 flex justify-center gap-4 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:justify-start [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-1 mt-3 flex justify-start gap-4 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {LANDING_HERO_PARTNERS.map((p) => (
               <Image
                 key={p.id}
