@@ -7,9 +7,9 @@ import { resolveEmailLocale } from "@/lib/email/locale";
 import {
   checkRateLimit,
   rateLimitedResponse,
-  rateLimitKeyEmail,
   rateLimitKeyIp,
 } from "@/lib/rate-limit";
+import { rateLimitKeyEmail } from "@/lib/rate-limit-email";
 
 const bodyZ = z.object({
   email: z.string().trim().min(3).max(255).email(),

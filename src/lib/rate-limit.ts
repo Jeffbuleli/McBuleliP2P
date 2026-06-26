@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-
+/** Edge-safe rate limiter (no Node built-ins — used by middleware). */
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
@@ -44,11 +43,6 @@ export function rateLimitKeyIp(scope: string, req: Request): string {
 
 export function rateLimitKeyIpRaw(scope: string, ip: string): string {
   return `${scope}:ip:${ip.slice(0, 64) || "unknown"}`;
-}
-
-export function rateLimitKeyEmail(scope: string, email: string): string {
-  const hash = createHash("sha256").update(email.toLowerCase()).digest("hex");
-  return `${scope}:email:${hash.slice(0, 32)}`;
 }
 
 export function rateLimitedResponse(retryAfterSec: number): Response {
