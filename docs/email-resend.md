@@ -8,6 +8,8 @@
 
 Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur `McBuleli <noreply@mcbuleli.org>` · reply-to `hi@mcbuleli.org`
 
+**DNS (SPF/DKIM/DMARC)** : [dns-email-security.md](./dns-email-security.md)
+
 ## Quota Free (transactionnel)
 
 | Limite | Valeur |

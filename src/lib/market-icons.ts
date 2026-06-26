@@ -1,4 +1,4 @@
-/** CDN icons (spothq) — Binance spot symbols like BTCUSDT → `btc`. */
+/** Local icons (spothq MIT) under public/assets/crypto — no external CDN in CSP. */
 const SLUG: Record<string, string> = {
   BTC: "btc",
   ETH: "eth",
@@ -20,5 +20,5 @@ export function marketIconUrl(symbol: string): string | null {
   if (base === "USDT" || upper === "USDT") return "/assets/crypto/usdt.png";
   const slug = SLUG[base];
   if (!slug) return null;
-  return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${slug}.png`;
+  return `/assets/crypto/${slug}.png`;
 }

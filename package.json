@@ -28,6 +28,7 @@
     "admin:user": "node scripts/admin-user-account.cjs",
     "email:avadapay": "tsx scripts/send-avadapay-partnership-email.ts",
     "launch:generate-social": "node scripts/generate-launch-social-pngs.mjs",
+    "security:smoke": "node scripts/security-pentest-smoke.mjs",
     "cron:academy-reminders": "node scripts/cron-academy-reminders.mjs",
     "cron:academy-journey-nudge": "node scripts/cron-academy-journey-nudge.mjs"
   },

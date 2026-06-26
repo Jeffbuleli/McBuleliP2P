@@ -7,7 +7,7 @@ export function buildContentSecurityPolicy(): string {
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' https://raw.githubusercontent.com https://media.mcbuleli.org data: blob:",
+    "img-src 'self' https://media.mcbuleli.org data: blob:",
     "font-src 'self' data:",
     [
       "connect-src 'self'",

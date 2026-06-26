@@ -63,7 +63,7 @@ curl -sI https://mcbuleli.org | grep -i -E "(security|policy|frame|content-type|
 - **Financial audit log** — table `financial_audit_log` (migration `0095_financial_audit_log.sql`). Run `npm run db:migrate:render` after deploy.
 - **Jitsi access log** — `jitsi_access_log` (migration `0096_jitsi_access_log.sql`).
 
-**Rate limiting at edge (recommended):** [cloudflare-waf.md](./cloudflare-waf.md)
+**Rate limiting at edge (recommandé) :** [cloudflare-waf.md](./cloudflare-waf.md) — sur plan **Free**, 1 seule règle edge (priorité login) ; OWASP managed rules nécessitent **Pro**.
 
 ## 4. Jitsi (`live.mcbuleli.org`)
 
@@ -96,8 +96,9 @@ For compliance-grade immutable logs (2y retention), export ledger + audit tables
 | Item | Action |
 |------|--------|
 | `robots.txt` | No `Disallow` paths that reveal `/app`, `/admin`, `/api` — use `noindex` on private layouts instead |
-| Cloudflare | WAF OWASP rules, DDoS protection, IPv6 — voir [cloudflare-waf.md](./cloudflare-waf.md) |
-| Render firewall | Allow only Cloudflare IP ranges ([published list](https://www.cloudflare.com/ips/)) |
+| Cloudflare | Free : 1 rate limit (login), Bot Fight, custom rules (5) — **Managed OWASP = Pro** — voir [cloudflare-waf.md](./cloudflare-waf.md) |
+| SPF/DKIM/DMARC | Configurer dans Cloudflare DNS — voir [dns-email-security.md](./dns-email-security.md) |
+| Render origin lockdown | **Inbound IP rules** web = Scale/Enterprise seulement — sinon masquer `*.onrender.com` + Cloudflare proxied |
 | Secrets | Only in Render env — never in repo |
 | Dependencies | Dependabot `.github/dependabot.yml`; run `npm audit` regularly |
 

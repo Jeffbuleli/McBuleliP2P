@@ -8,8 +8,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "raw.githubusercontent.com",
-        pathname: "/spothq/cryptocurrency-icons/**",
+        hostname: "media.mcbuleli.org",
       },
     ],
   },
