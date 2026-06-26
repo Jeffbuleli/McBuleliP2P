@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { openFuturesPosition } from "@/lib/trade-futures-service";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit } from "@/lib/financial-audit";
 
 const bodyZ = z.object({
   mode: z.enum(["demo", "live"]),
@@ -19,6 +21,8 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = enforceApiRateLimit("trade_futures", userId, req);
+  if (limited) return limited;
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);
   if (!parsed.success) {
@@ -43,5 +47,20 @@ export async function POST(req: Request) {
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
+  recordFinancialAudit({
+    userId,
+    action: "trade_futures_open",
+    req,
+    resourceType: "trade_position",
+    resourceId: r.positionId,
+    asset: "USDT",
+    amount: String(parsed.data.marginUsdt),
+    meta: {
+      mode: parsed.data.mode,
+      symbol: parsed.data.symbol,
+      side: parsed.data.side,
+      leverage: parsed.data.leverage,
+    },
+  });
   return NextResponse.json({ ok: true, positionId: r.positionId });
 }

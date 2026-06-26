@@ -1582,6 +1582,57 @@ export const platformAdminAuditLog = pgTable(
   ],
 );
 
+/** Immutable trail for user financial actions (withdrawals, P2P, transfers, trade). */
+export const financialAuditLog = pgTable(
+  "financial_audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    action: varchar("action", { length: 64 }).notNull(),
+    resourceType: varchar("resource_type", { length: 32 }),
+    resourceId: varchar("resource_id", { length: 64 }),
+    asset: varchar("asset", { length: 16 }),
+    amount: numeric("amount", { precision: 36, scale: 18 }),
+    ipAddress: varchar("ip_address", { length: 64 }),
+    userAgent: varchar("user_agent", { length: 512 }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("financial_audit_log_user_idx").on(t.userId),
+    index("financial_audit_log_created_idx").on(t.createdAt),
+    index("financial_audit_log_action_idx").on(t.action),
+  ],
+);
+
+/** Who joined live.mcbuleli.org (JWT issued via McBuleli app). */
+export const jitsiAccessLog = pgTable(
+  "jitsi_access_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    room: varchar("room", { length: 128 }).notNull(),
+    editionId: uuid("edition_id"),
+    sessionSlug: varchar("session_slug", { length: 64 }),
+    mode: varchar("mode", { length: 16 }).notNull(),
+    moderator: boolean("moderator").notNull().default(false),
+    ipAddress: varchar("ip_address", { length: 64 }),
+    userAgent: varchar("user_agent", { length: 512 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("jitsi_access_log_user_idx").on(t.userId),
+    index("jitsi_access_log_room_idx").on(t.room),
+    index("jitsi_access_log_created_idx").on(t.createdAt),
+  ],
+);
+
 /**
  * Operating expenses (OPEX) — not user-wallet ledger lines.
  * Workflow: draft → submitted → approved | rejected → paid (optional).

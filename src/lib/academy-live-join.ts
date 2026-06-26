@@ -23,6 +23,7 @@ import {
 } from "@/lib/academy-live-session";
 import { resolveAcademyLiveRoleForEdition } from "@/lib/academy-live-role";
 import type { UserRoleType } from "@/lib/roles";
+import { recordJitsiAccess } from "@/lib/jitsi-access-audit";
 
 /** True when URL targets our JWT-gated Jitsi host (env or edition live base). */
 export function isSelfHostedLiveUrl(
@@ -52,6 +53,7 @@ export async function resolveGatedLiveJoinUrl(args: {
   programSlug?: string;
   mode: LiveJoinMode;
   appRole: UserRoleType | null | undefined;
+  req?: Request | null;
 }): Promise<{ ok: true; url: string } | { ok: false; code: string }> {
   const wantsHost = args.mode === "host";
   const canJoin = await canUserJoinAcademyLive({
@@ -135,6 +137,20 @@ export async function resolveGatedLiveJoinUrl(args: {
       ? `?program=${encodeURIComponent(args.programSlug.trim())}`
       : "";
     url = appendMcbLiveReturnUrl(url, getAppAbsoluteUrl(`${companionPath}${q}`));
+  }
+
+  const roomName =
+    jitsiRoomFromJoinUrl(url) ?? liveRoomNameFromSessionSlug(args.sessionSlug);
+  if (onSelfHosted) {
+    recordJitsiAccess({
+      userId: args.userId,
+      room: roomName,
+      editionId: args.editionId,
+      sessionSlug: args.sessionSlug,
+      mode: effectiveMode === "host" ? "host" : effectiveMode === "audio" ? "audio" : "learner",
+      moderator: jitsiModeratorForMode(effectiveMode),
+      req: args.req,
+    });
   }
 
   return { ok: true, url };

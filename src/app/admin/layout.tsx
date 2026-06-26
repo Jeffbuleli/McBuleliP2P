@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session-user";
 import {
@@ -11,6 +12,10 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { AdminNavLink } from "@/components/admin/admin-ui";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({
   children,

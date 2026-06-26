@@ -28,6 +28,9 @@ import { applyUsdtWithdrawalAutomation } from "@/lib/wallet-withdraw-automation"
 import { hasRecentStepUp, userNeedsStepUp } from "@/lib/auth/step-up";
 import { runWithdrawalWorker } from "@/lib/wallet-withdraw-queue";
 import { scheduleBackgroundTask } from "@/lib/email/schedule-email";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit } from "@/lib/financial-audit";
+import { assertWithdrawalDailyLimit } from "@/lib/withdrawal-daily-limit";
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -49,6 +52,9 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const limited = enforceApiRateLimit("withdrawal", userId, req);
+  if (limited) return limited;
 
   const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const totpCode = typeof raw?.totpCode === "string" ? raw.totpCode : null;
@@ -147,6 +153,22 @@ export async function POST(req: Request) {
   const kyc = await checkKycGate(userId, "withdraw");
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
+  }
+
+  const daily = await assertWithdrawalDailyLimit({
+    userId,
+    asset: body.asset,
+    amountNum: Number(net),
+  });
+  if (!daily.ok) {
+    return NextResponse.json(
+      {
+        message: daily.code,
+        limit: daily.limit,
+        used: daily.used,
+      },
+      { status: 403 },
+    );
   }
 
   const networkCex =
@@ -336,6 +358,17 @@ export async function POST(req: Request) {
       : automation?.messageKey === "withdraw_auto_medium"
         ? "withdraw_auto_medium"
         : "withdraw_manual_review";
+
+  recordFinancialAudit({
+    userId,
+    action: "withdrawal_create",
+    req,
+    resourceType: "withdrawal",
+    resourceId: w.id,
+    asset: body.asset,
+    amount: net,
+    meta: { network: body.network, status: finalWithdrawal.status },
+  });
 
   return NextResponse.json({
     withdrawal: finalWithdrawal,

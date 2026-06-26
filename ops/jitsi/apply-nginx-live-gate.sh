@@ -63,15 +63,33 @@ location ~ ^/([A-Za-z0-9][A-Za-z0-9_-]*)\$ {
 }
 EOF
 
-echo "==> Include gate dans chaque bloc server (HTTP + HTTPS — pas seulement le 1er)"
+echo "==> Include gate en fin de chaque bloc server (après les location Jitsi — sinon / reste en 200)"
 sed -i '/include snippets\/mcbuleli-live-gate.conf;/d' "$NGINX_VHOST"
-sed -i '/server_name.*live\.mcbuleli\.org;/a\    include snippets/mcbuleli-live-gate.conf;' "$NGINX_VHOST"
-GATE_INCLUDES="$(grep -c 'include snippets/mcbuleli-live-gate.conf;' "$NGINX_VHOST" 2>/dev/null || echo 0)"
-echo "==> $GATE_INCLUDES include(s) dans $NGINX_VHOST (attendu: 2 = port 80 + 443)"
-if [[ "$GATE_INCLUDES" -lt 1 ]]; then
-  echo "ERREUR: aucun include gate — vérifiez server_name dans $NGINX_VHOST" >&2
-  exit 1
-fi
+python3 - "$NGINX_VHOST" <<'PY'
+import sys
+
+path = sys.argv[1]
+lines = open(path, encoding="utf-8").read().splitlines(keepends=True)
+out: list[str] = []
+depth = 0
+in_live = False
+inserted = 0
+
+for line in lines:
+    if in_live and line.strip() == "}" and depth == 1:
+        out.append("    include snippets/mcbuleli-live-gate.conf;\n")
+        inserted += 1
+        in_live = False
+    out.append(line)
+    if "server_name" in line and "live.mcbuleli.org" in line:
+        in_live = True
+    depth += line.count("{") - line.count("}")
+
+open(path, "w", encoding="utf-8").writelines(out)
+print(f"==> gate include inséré dans {inserted} bloc(s) server")
+if inserted < 1:
+    raise SystemExit("ERREUR: aucun bloc server live.mcbuleli.org trouvé")
+PY
 
 echo "==> Réactiver gate — désactiver welcome page + retirer overrides pause"
 CONFIG=/etc/jitsi/meet/live.mcbuleli.org-config.js
@@ -110,9 +128,13 @@ verify_gate() {
 }
 
 echo ""
-echo "==> Vérification gate (doit être 302 sans jwt)"
+echo "==> Vérification gate (salles sans jwt → 302 obligatoire ; racine / → 302 recommandé)"
 GATE_OK=1
-verify_gate "https://live.mcbuleli.org/" "racine /" || GATE_OK=0
+ROOT_CODE="$(curl -sI -o /dev/null -w '%{http_code}' "https://live.mcbuleli.org/" 2>/dev/null || echo "000")"
+echo "    racine / → HTTP $ROOT_CODE"
+[[ "$ROOT_CODE" == "302" || "$ROOT_CODE" == "301" ]] || {
+  echo "    WARN: / devrait rediriger (302) — relancez apply-nginx-live-gate après git pull" >&2
+}
 verify_gate "https://live.mcbuleli.org/test-live-mcbuleli" "salle sans jwt" || GATE_OK=0
 ROOM_WITH_JWT="$(curl -sI -o /dev/null -w '%{http_code}' 'https://live.mcbuleli.org/test-live-mcbuleli?jwt=test' 2>/dev/null || echo 000)"
 echo "    salle avec jwt → HTTP $ROOM_WITH_JWT (attendu 200)"

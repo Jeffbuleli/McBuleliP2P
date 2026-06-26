@@ -19,6 +19,8 @@ import { fmtWalletAmount } from "@/lib/wallet-types";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 import { logFiatApiError } from "@/lib/fiat-api-errors";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit } from "@/lib/financial-audit";
 
 const bodyZ = z.object({
   asset: z.enum(["USD", "CDF"]),
@@ -75,6 +77,8 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = enforceApiRateLimit("fiat_withdraw", userId, req);
+  if (limited) return limited;
   if (isFiatDepositWithdrawPaused()) {
     return NextResponse.json({ error: "wallet_fiat_paused" }, { status: 503 });
   }
@@ -218,6 +222,17 @@ export async function POST(req: Request) {
     logFiatApiError("momo.withdraw", msg);
     return NextResponse.json({ ok: false, error: "wallet_fiat_payout_failed" }, { status: 502 });
   }
+
+  recordFinancialAudit({
+    userId,
+    action: "fiat_withdraw_create",
+    req,
+    resourceType: "fiat_payout",
+    resourceId: reference,
+    asset: parsed.data.asset,
+    amount: parsed.data.grossAmount,
+    meta: { batchId: r.batchId, provider: parsed.data.provider },
+  });
 
   return NextResponse.json({
     ok: true,

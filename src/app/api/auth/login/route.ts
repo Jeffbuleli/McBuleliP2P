@@ -12,9 +12,24 @@ import { loginSchema } from "@/lib/validation";
 import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
 import { recordLoginEvent } from "@/lib/login-events";
+import {
+  checkRateLimit,
+  rateLimitedResponse,
+  rateLimitKeyIp,
+} from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(req: Request) {
   try {
+    const ipLimit = checkRateLimit({
+      key: rateLimitKeyIp("auth:login", req),
+      limit: 5,
+      windowMs: 60_000,
+    });
+    if (!ipLimit.ok) {
+      return rateLimitedResponse(ipLimit.retryAfterSec);
+    }
+
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
     if (!parsed.success) {
@@ -28,6 +43,15 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    const captcha = await verifyTurnstileToken(parsed.data.turnstileToken, req);
+    if (!captcha.ok) {
+      return NextResponse.json(
+        { message: captcha.message },
+        { status: captcha.status },
+      );
+    }
+
     const { email, password } = parsed.data;
     const db = getDb();
     const user = await findUserByAuthEmail(email);

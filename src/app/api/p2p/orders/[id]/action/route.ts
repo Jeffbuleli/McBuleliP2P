@@ -7,6 +7,8 @@ import {
   openOrderDispute,
   releaseOrder,
 } from "@/lib/p2p-service";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit, type FinancialAuditAction } from "@/lib/financial-audit";
 
 const bodyZ = z.discriminatedUnion("action", [
   z.object({
@@ -30,6 +32,8 @@ export async function POST(
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = enforceApiRateLimit("p2p_action", userId, req);
+  if (limited) return limited;
   const { id } = await ctx.params;
   const json = await req.json().catch(() => null);
   const parsed = bodyZ.safeParse(json);
@@ -67,5 +71,22 @@ export async function POST(
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
+
+  const auditAction: FinancialAuditAction =
+    parsed.data.action === "mark_paid"
+      ? "p2p_order_mark_paid"
+      : parsed.data.action === "open_dispute"
+        ? "p2p_order_dispute"
+        : parsed.data.action === "release"
+          ? "p2p_order_release"
+          : "p2p_order_cancel";
+  recordFinancialAudit({
+    userId,
+    action: auditAction,
+    req,
+    resourceType: "p2p_order",
+    resourceId: id,
+  });
+
   return NextResponse.json({ ok: true });
 }

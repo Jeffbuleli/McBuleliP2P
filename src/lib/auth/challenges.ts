@@ -15,7 +15,7 @@ export type AuthChallengePurpose =
 
 const TTL_MINUTES: Record<AuthChallengePurpose, number> = {
   email_verify: 24 * 60,
-  password_reset: 60,
+  password_reset: 15,
   email_change: 60,
   wa_verify: 10,
   wa_recovery_otp: 15,
@@ -24,6 +24,25 @@ const TTL_MINUTES: Record<AuthChallengePurpose, number> = {
   passkey_login: 5,
   passkey_step_up: 5,
 };
+
+/** Mark unused challenges as consumed (e.g. invalidate prior password-reset links). */
+export async function invalidateActiveAuthChallenges(args: {
+  userId: string;
+  purpose: AuthChallengePurpose;
+}): Promise<void> {
+  const db = getDb();
+  await db
+    .update(authChallenges)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(authChallenges.userId, args.userId),
+        eq(authChallenges.purpose, args.purpose),
+        isNull(authChallenges.usedAt),
+        gt(authChallenges.expiresAt, new Date()),
+      ),
+    );
+}
 
 export async function createAuthChallenge(args: {
   userId: string | null;

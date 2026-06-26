@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -5,6 +6,10 @@ import { AppShell } from "@/components/mobile/app-shell";
 import { getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { safeAppRedirectPath } from "@/lib/safe-app-path";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AppLayout({
   children,

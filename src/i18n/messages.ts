@@ -557,7 +557,7 @@ export const en = {
   forgot_title: "Password reset",
   forgot_body:
     "Password reset links are not enabled yet. Contact support and we'll verify your account securely.",
-  forgot_body_new: "Enter your email and we'll send a secure reset link (valid 1 hour).",
+  forgot_body_new: "Enter your email and we'll send a secure reset link (valid 15 minutes).",
   forgot_sent: "If this email exists, a reset link was sent. Check your inbox.",
   forgot_submit: "Send reset link",
   forgot_sending: "Sending…",
@@ -4802,7 +4802,7 @@ export const fr: Messages = {
   forgot_title: "Réinitialisation",
   forgot_body:
     "Les liens de réinitialisation ne sont pas encore activés. Contactez le support pour une vérification sécurisée.",
-  forgot_body_new: "Entrez votre e-mail — nous enverrons un lien sécurisé (valide 1 h).",
+  forgot_body_new: "Entrez votre e-mail — nous enverrons un lien sécurisé (valide 15 min).",
   forgot_sent: "Si ce compte existe, un lien a été envoyé. Vérifiez votre boîte mail.",
   forgot_submit: "Envoyer le lien",
   forgot_sending: "Envoi…",

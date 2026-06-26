@@ -14,6 +14,7 @@ const email = z
 export const loginSchema = z.object({
   email: email,
   password: z.string().min(8).max(128),
+  turnstileToken: z.string().trim().min(1).optional(),
 });
 
 export const registerSchema = loginSchema.extend({
@@ -21,7 +22,7 @@ export const registerSchema = loginSchema.extend({
     .string()
     .trim()
     .min(2, "Pseudo too short")
-    .max(32, "Pseudo too long")
+    .max(30, "Pseudo too long")
     .regex(/^[\p{L}\p{N}._ -]+$/u, "Invalid characters in pseudo"),
   /** ISO 3166-1 alpha-2, or OTHER if the user is outside the quick list. */
   countryCode: z

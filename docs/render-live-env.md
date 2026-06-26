@@ -27,7 +27,10 @@ NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
 JITSI_APP_ID=mcbuleli_live
 JITSI_JWT_SECRET=<identique au secret Prosody sur le VPS>
 JITSI_JWT_SUB=live.mcbuleli.org
+JITSI_JWT_TTL_SEC=7200
 ```
+
+Voir [jitsi-security.md](./jitsi-security.md) et `sudo bash ops/jitsi/harden-security.sh` sur le VPS.
 
 Optionnel :
 

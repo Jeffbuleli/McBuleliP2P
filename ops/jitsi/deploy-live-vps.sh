@@ -37,6 +37,12 @@ fi
 bash "$WORKDIR/ops/jitsi/apply-mcbuleli-brand.sh"
 # Re-apply force-join after branding (brand may touch prejoin)
 bash "$WORKDIR/ops/jitsi/fix-config-force-join.sh" 2>/dev/null || true
+if [[ -f "$WORKDIR/ops/jitsi/harden-security.sh" ]]; then
+  bash "$WORKDIR/ops/jitsi/harden-security.sh"
+else
+  echo "==> harden-security.sh not in repo yet — run after git pull:"
+  echo "    sudo bash $WORKDIR/ops/jitsi/harden-security.sh"
+fi
 
 echo ""
 echo "==> Vérifications"

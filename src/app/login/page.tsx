@@ -17,7 +17,11 @@ import {
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
 import { PasskeyLoginButton } from "@/components/auth/passkey-login-button";
+import { TurnstileWidget } from "@/components/auth/turnstile-widget";
 import { paymentIdFromPiSdk, piInit, resolvePiSdkSandbox, isPiBrowser } from "@/lib/pi-browser";
+
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 const PI_AUTH_TIMEOUT_MS = 55_000;
 
@@ -55,6 +59,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -84,7 +89,11 @@ function LoginForm() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({
+            email,
+            password,
+            ...(turnstileToken ? { turnstileToken } : {}),
+          }),
           credentials: "same-origin",
         },
         28_000,
@@ -266,7 +275,19 @@ function LoginForm() {
               {error}
             </p>
           ) : null}
-          <button type="submit" className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99]">
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              className="flex justify-center"
+            />
+          ) : null}
+          <button
+            type="submit"
+            disabled={Boolean(TURNSTILE_SITE_KEY && !turnstileToken)}
+            className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99] disabled:opacity-60"
+          >
             {t("signin")}
           </button>
         </form>

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { executeInternalTransfer } from "@/lib/wallet-internal-transfer";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit } from "@/lib/financial-audit";
 
 const bodyZ = z
   .object({
@@ -21,6 +23,8 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = enforceApiRateLimit("wallet_transfer", userId, req);
+  if (limited) return limited;
   const kyc = await checkKycGate(userId, "wallet_transfer");
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
@@ -45,5 +49,18 @@ export async function POST(req: Request) {
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
+  recordFinancialAudit({
+    userId,
+    action: "wallet_transfer",
+    req,
+    resourceType: "transfer",
+    resourceId: r.batchId,
+    asset: parsed.data.asset,
+    amount: parsed.data.amount,
+    meta: {
+      recipientEmail: parsed.data.recipientEmail ?? null,
+      recipientUserId: parsed.data.recipientUserId ?? null,
+    },
+  });
   return NextResponse.json({ ok: true, batchId: r.batchId });
 }

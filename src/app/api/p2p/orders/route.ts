@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { createOrder, listUserOrders } from "@/lib/p2p-service";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
+import { recordFinancialAudit } from "@/lib/financial-audit";
 
 const postZ = z.object({
   adId: z.string().uuid(),
@@ -24,6 +26,8 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = enforceApiRateLimit("p2p_order", userId, req);
+  if (limited) return limited;
   const kyc = await checkKycGate(userId, "p2p_trade");
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
@@ -42,5 +46,13 @@ export async function POST(req: Request) {
   if (!r.ok) {
     return NextResponse.json({ error: r.message }, { status: 400 });
   }
+  recordFinancialAudit({
+    userId,
+    action: "p2p_order_create",
+    req,
+    resourceType: "p2p_order",
+    resourceId: r.orderId,
+    meta: { adId: parsed.data.adId, fiatAmount: parsed.data.fiatAmount },
+  });
   return NextResponse.json({ ok: true, orderId: r.orderId });
 }

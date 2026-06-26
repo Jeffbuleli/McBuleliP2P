@@ -13,9 +13,24 @@ import { sessionCookieName, signSessionToken } from "@/lib/jwt";
 import { sendEmailVerification } from "@/lib/auth/email-verification";
 import { resolveEmailLocale } from "@/lib/email/locale";
 import { getSessionCookieWriteOptions } from "@/lib/session-cookie";
+import {
+  checkRateLimit,
+  rateLimitedResponse,
+  rateLimitKeyIp,
+} from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(req: Request) {
   try {
+    const ipLimit = checkRateLimit({
+      key: rateLimitKeyIp("auth:register", req),
+      limit: 3,
+      windowMs: 10 * 60_000,
+    });
+    if (!ipLimit.ok) {
+      return rateLimitedResponse(ipLimit.retryAfterSec);
+    }
+
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
@@ -29,6 +44,15 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    const captcha = await verifyTurnstileToken(parsed.data.turnstileToken, req);
+    if (!captcha.ok) {
+      return NextResponse.json(
+        { message: captcha.message },
+        { status: captcha.status },
+      );
+    }
+
     const { email, password, referralCode, countryCode, displayName } = parsed.data;
     const db = getDb();
 

@@ -11,6 +11,7 @@ import {
 import { resolveGatedLiveJoinUrl } from "@/lib/academy-live-join";
 import { getSessionUser } from "@/lib/session-user";
 import type { LiveJoinMode } from "@/lib/academy-live";
+import { enforceApiRateLimit } from "@/lib/api-rate-limit";
 
 const querySchema = z.object({
   editionSlug: z.string().trim().min(1).max(64),
@@ -26,6 +27,9 @@ export async function GET(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const limited = enforceApiRateLimit("jitsi_join", user.id, req);
+  if (limited) return limited;
 
   const url = new URL(req.url);
   const parsed = querySchema.safeParse({
@@ -95,6 +99,7 @@ export async function GET(req: Request) {
     sessionTitle: row.sessionTitleFr,
     mode: parsed.data.mode as LiveJoinMode,
     appRole: user.role,
+    req,
   });
 
   if (!out.ok) {

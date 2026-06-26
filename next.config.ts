@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { securityResponseHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   serverExternalPackages: ["ccxt", "technicalindicators", "postgres"],
   images: {
     remotePatterns: [
@@ -10,6 +12,15 @@ const nextConfig: NextConfig = {
         pathname: "/spothq/cryptocurrency-icons/**",
       },
     ],
+  },
+  async headers() {
+    const entries = Object.entries(securityResponseHeaders());
+    return [
+      {
+        source: "/:path*",
+        headers: entries.map(([key, value]) => ({ key, value })),
+      },
+    ];
   },
   async redirects() {
     return [

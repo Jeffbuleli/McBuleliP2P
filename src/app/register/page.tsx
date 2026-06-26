@@ -14,6 +14,10 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
+import { TurnstileWidget } from "@/components/auth/turnstile-widget";
+
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 const COUNTRY_OPTIONS = [
   { code: "CD", en: "DR Congo", fr: "RDC" },
@@ -48,6 +52,7 @@ function RegisterForm() {
   const [referralCode, setReferralCode] = useState(initialReferralCode);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -82,6 +87,7 @@ function RegisterForm() {
             ...(referralCode.trim()
               ? { referralCode: referralCode.trim().toUpperCase() }
               : {}),
+            ...(turnstileToken ? { turnstileToken } : {}),
           }),
           credentials: "same-origin",
         },
@@ -170,7 +176,7 @@ function RegisterForm() {
               autoComplete="nickname"
               required
               minLength={2}
-              maxLength={32}
+              maxLength={30}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className={authInputClass}
@@ -230,9 +236,19 @@ function RegisterForm() {
             </p>
           ) : null}
 
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              className="flex justify-center"
+            />
+          ) : null}
+
           <button
             type="submit"
-            className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99]"
+            disabled={Boolean(TURNSTILE_SITE_KEY && !turnstileToken)}
+            className="auth-btn-primary mt-1 min-h-[52px] rounded-2xl active:scale-[0.99] disabled:opacity-60"
           >
             {t("register_btn")}
           </button>

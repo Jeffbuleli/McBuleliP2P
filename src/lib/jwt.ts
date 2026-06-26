@@ -27,11 +27,26 @@ export async function verifySessionToken(token: string): Promise<string> {
   return v.userId;
 }
 
+const ALLOWED_JWT_ALGORITHMS = ["HS256"] as const;
+
 export async function verifySessionTokenFull(
   token: string,
 ): Promise<VerifiedSession> {
   const secret = new TextEncoder().encode(getJwtSecret());
-  const { payload } = await jwtVerify(token, secret);
+  const { payload, protectedHeader } = await jwtVerify(token, secret, {
+    algorithms: [...ALLOWED_JWT_ALGORITHMS],
+  });
+  if (
+    protectedHeader.alg &&
+    !ALLOWED_JWT_ALGORITHMS.includes(
+      protectedHeader.alg as (typeof ALLOWED_JWT_ALGORITHMS)[number],
+    )
+  ) {
+    throw new Error("Invalid session");
+  }
+  if (protectedHeader.kid) {
+    throw new Error("Invalid session");
+  }
   const sub = payload.sub;
   if (!sub || typeof sub !== "string") {
     throw new Error("Invalid session");

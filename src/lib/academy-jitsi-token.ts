@@ -10,6 +10,13 @@ export function isAcademyJitsiJwtEnabled(): boolean {
   return Boolean(secret && secret.length >= 16);
 }
 
+/** JWT lifetime for Jitsi Prosody (default 2 h). */
+export function jitsiJwtTtlSec(): number {
+  const raw = Number(process.env.JITSI_JWT_TTL_SEC ?? "7200");
+  if (!Number.isFinite(raw) || raw < 300) return 7200;
+  return Math.min(Math.floor(raw), 24 * 60 * 60);
+}
+
 function jitsiJwtSub(): string {
   return (
     process.env.JITSI_JWT_SUB?.trim() ||
@@ -32,7 +39,7 @@ export async function signAcademyJitsiToken(args: {
     throw new Error("jitsi_jwt_not_configured");
   }
   const key = new TextEncoder().encode(secret);
-  const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? 12 * 60 * 60);
+  const exp = Math.floor(Date.now() / 1000) + (args.ttlSec ?? jitsiJwtTtlSec());
   const roomClaim = args.room.trim() || "*";
   return new SignJWT({
     room: roomClaim,
