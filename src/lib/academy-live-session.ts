@@ -1,4 +1,5 @@
 import type { LiveJoinMode } from "@/lib/academy-live";
+import { isLiveSessionJoinOpen } from "@/lib/academy-live";
 import { canUserHostAcademyLive } from "@/lib/academy-live-service";
 import {
   markResolvedLiveSessionStarted,
@@ -20,11 +21,25 @@ export async function assertLearnerMayEnterLive(args: {
   mode: LiveJoinMode;
 }): Promise<
   | { ok: true; sessionId: string }
-  | { ok: false; code: "academy_live_waiting_host" | "academy_edition_not_found" }
+  | {
+      ok: false;
+      code:
+        | "academy_live_waiting_host"
+        | "academy_edition_not_found"
+        | "academy_live_session_ended";
+    }
 > {
   const row = await resolveLiveSessionByEdition(args);
   if (!row) {
     return { ok: false, code: "academy_edition_not_found" };
+  }
+  if (
+    !isLiveSessionJoinOpen({
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+    })
+  ) {
+    return { ok: false, code: "academy_live_session_ended" };
   }
   if (!learnerMayEnterLive({ liveStartedAt: row.liveStartedAt, mode: args.mode })) {
     return { ok: false, code: "academy_live_waiting_host" };

@@ -26,10 +26,12 @@ export function AcademyOpenClassroomBar({
   backHref,
   tutorEnabled,
   waitingForHost,
+  sessionEnded = false,
 }: {
   canJoin: boolean;
   isHost: boolean;
   waitingForHost?: boolean;
+  sessionEnded?: boolean;
   joinVideoHref: string;
   joinAudioHref: string;
   joinHostHref: string;
@@ -85,7 +87,11 @@ export function AcademyOpenClassroomBar({
           </>
         ) : (
           <span className="flex-1 py-2 text-center text-[10px] font-semibold text-[color:var(--fd-muted)]">
-            {waitingForHost ? t("academy_oc_waiting_host") : t("academy_oc_waiting")}
+            {sessionEnded
+              ? t("academy_oc_live_ended")
+              : waitingForHost
+                ? t("academy_oc_waiting_host")
+                : t("academy_oc_waiting")}
           </span>
         )}
 

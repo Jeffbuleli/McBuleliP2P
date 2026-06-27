@@ -17,10 +17,57 @@ export type ResolvedLiveSession = {
   sessionSlug: string;
   sessionLiveUrl: string | null;
   sessionTitle: string;
+  startsAt: Date;
+  endsAt: Date | null;
   liveStartedAt: Date | null;
   recordKind: "academy_session" | "training_event";
   recordId: string;
+  attendanceSessionId: string;
 };
+
+type AcademyRow = {
+  editionId: string;
+  editionSlug: string;
+  liveBaseUrl: string | null;
+  programSlug: string;
+  sessionSlug: string;
+  sessionLiveUrl: string | null;
+  sessionTitle: string;
+  startsAt: Date;
+  endsAt: Date | null;
+  liveStartedAt: Date | null;
+  recordId: string;
+};
+
+type TrainingRow = AcademyRow & {
+  legacySessionId: string | null;
+};
+
+function mapAcademyRow(row: AcademyRow): ResolvedLiveSession {
+  return {
+    ...row,
+    recordKind: "academy_session",
+    attendanceSessionId: row.recordId,
+  };
+}
+
+function mapTrainingRow(row: TrainingRow): ResolvedLiveSession {
+  return {
+    editionId: row.editionId,
+    editionSlug: row.editionSlug,
+    programSlug: row.programSlug,
+    liveBaseUrl: row.liveBaseUrl,
+    sessionSlug: row.sessionSlug,
+    sessionLiveUrl: row.sessionLiveUrl,
+    sessionTitle: row.sessionTitle,
+    startsAt: row.startsAt,
+    endsAt: row.endsAt,
+    liveStartedAt: row.liveStartedAt,
+    recordKind: "training_event",
+    recordId: row.recordId,
+    attendanceSessionId: row.legacySessionId ?? row.recordId,
+  };
+}
 
 async function findTrainingEventRow(args: {
   sessionKey: string;
@@ -48,8 +95,11 @@ async function findTrainingEventRow(args: {
       sessionSlug: academyTrainingEvents.slug,
       sessionLiveUrl: academyTrainingEvents.liveRoomUrl,
       sessionTitle: academyTrainingEvents.title,
+      startsAt: academyTrainingEvents.startDate,
+      endsAt: academyTrainingEvents.endDate,
       liveStartedAt: academyTrainingEvents.liveStartedAt,
       recordId: academyTrainingEvents.id,
+      legacySessionId: academyTrainingEvents.legacySessionId,
     })
     .from(academyTrainingEvents)
     .innerJoin(
@@ -61,18 +111,7 @@ async function findTrainingEventRow(args: {
     .limit(1);
 
   if (!row) return null;
-  return {
-    editionId: row.editionId,
-    editionSlug: row.editionSlug,
-    programSlug: row.programSlug,
-    liveBaseUrl: row.liveBaseUrl,
-    sessionSlug: row.sessionSlug,
-    sessionLiveUrl: row.sessionLiveUrl,
-    sessionTitle: row.sessionTitle,
-    liveStartedAt: row.liveStartedAt,
-    recordKind: "training_event",
-    recordId: row.recordId,
-  };
+  return mapTrainingRow(row);
 }
 
 async function findAcademySessionRow(args: {
@@ -89,6 +128,8 @@ async function findAcademySessionRow(args: {
     sessionSlug: academySessions.slug,
     sessionLiveUrl: academySessions.liveUrl,
     sessionTitle: academySessions.titleFr,
+    startsAt: academySessions.startsAt,
+    endsAt: academySessions.endsAt,
     liveStartedAt: academySessions.liveStartedAt,
     recordId: academySessions.id,
   };
@@ -113,7 +154,7 @@ async function findAcademySessionRow(args: {
       )
       .limit(1);
     if (!row) return null;
-    return { ...row, recordKind: "academy_session" as const };
+    return mapAcademyRow(row);
   }
 
   const roomKey = liveRoomNameFromSessionSlug(args.sessionKey);
@@ -137,7 +178,7 @@ async function findAcademySessionRow(args: {
           : undefined) ??
         rows[0];
 
-  return { ...picked, recordKind: "academy_session" as const };
+  return mapAcademyRow(picked);
 }
 
 /** Resolve a live room from academy sessions or training events (formations). */
@@ -180,6 +221,8 @@ export async function resolveLiveSessionByEdition(args: {
       sessionSlug: academySessions.slug,
       sessionLiveUrl: academySessions.liveUrl,
       sessionTitle: academySessions.titleFr,
+      startsAt: academySessions.startsAt,
+      endsAt: academySessions.endsAt,
       liveStartedAt: academySessions.liveStartedAt,
       recordId: academySessions.id,
     })
@@ -194,12 +237,7 @@ export async function resolveLiveSessionByEdition(args: {
     )
     .limit(1);
 
-  if (academy) {
-    return {
-      ...academy,
-      recordKind: "academy_session",
-    };
-  }
+  if (academy) return mapAcademyRow(academy);
 
   const [event] = await db
     .select({
@@ -210,8 +248,11 @@ export async function resolveLiveSessionByEdition(args: {
       sessionSlug: academyTrainingEvents.slug,
       sessionLiveUrl: academyTrainingEvents.liveRoomUrl,
       sessionTitle: academyTrainingEvents.title,
+      startsAt: academyTrainingEvents.startDate,
+      endsAt: academyTrainingEvents.endDate,
       liveStartedAt: academyTrainingEvents.liveStartedAt,
       recordId: academyTrainingEvents.id,
+      legacySessionId: academyTrainingEvents.legacySessionId,
     })
     .from(academyTrainingEvents)
     .innerJoin(academyEditions, eq(academyTrainingEvents.editionId, academyEditions.id))
@@ -226,10 +267,7 @@ export async function resolveLiveSessionByEdition(args: {
     .limit(1);
 
   if (!event) return null;
-  return {
-    ...event,
-    recordKind: "training_event",
-  };
+  return mapTrainingRow(event);
 }
 
 export async function markResolvedLiveSessionStarted(

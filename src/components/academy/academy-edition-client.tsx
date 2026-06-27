@@ -109,9 +109,25 @@ export function AcademyEditionClient({
     }
   }, [editionSlug, programSlug]);
 
+  const isBroadcasting = (s: SessionRow) =>
+    s.livePhase === "main" || s.livePhase === "setup";
+
   useEffect(() => {
     void load();
-  }, [load]);
+    const hasLive = detail?.sessions.some(isBroadcasting);
+    if (!hasLive) return;
+    const id = setInterval(() => void load(), 30_000);
+    return () => clearInterval(id);
+  }, [load, detail?.sessions]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.sessionStorage.getItem("academy_tab");
+    if (saved === "replays" || saved === "events" || saved === "modules" || saved === "chat") {
+      setTab(saved);
+      window.sessionStorage.removeItem("academy_tab");
+    }
+  }, [detail?.edition.slug]);
 
   useEffect(() => {
     if (tab === "modules" && !modulesLoaded) void loadModules();
@@ -171,7 +187,7 @@ export function AcademyEditionClient({
     return <p className="text-sm text-[color:var(--fd-muted)]">…</p>;
   }
 
-  const liveCount = detail.sessions.filter((s) => s.isLiveNow).length;
+  const liveCount = detail.sessions.filter(isBroadcasting).length;
   const modulesDone = modules.filter((m) => m.completed).length;
 
   return (
@@ -238,11 +254,14 @@ export function AcademyEditionClient({
             <p className="mt-2 text-xs text-[color:var(--fd-muted)]">{t("academy_events_empty")}</p>
           ) : (
             <ul className="mt-2 space-y-2">
-              {detail.sessions.map((s) => (
+              {detail.sessions.map((s) => {
+                const broadcasting = isBroadcasting(s);
+                const ended = s.livePhase === "ended";
+                return (
                 <li
                   key={s.id}
                   className={`rounded-xl border bg-white p-3 ${
-                    s.isLiveNow ? "border-[#305f33] border-l-4" : "border-[color:var(--fd-border)]"
+                    broadcasting ? "border-[#305f33] border-l-4" : "border-[color:var(--fd-border)]"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -252,9 +271,13 @@ export function AcademyEditionClient({
                       <p className="mt-0.5 text-xs text-[color:var(--fd-muted)]">
                         {new Date(s.startsAt).toLocaleString(fr ? "fr-FR" : "en-US")}
                       </p>
-                      {s.isLiveNow ? (
+                      {broadcasting ? (
                         <span className="mt-1 inline-block text-[10px] font-bold uppercase text-[#305f33]">
                           LIVE
+                        </span>
+                      ) : ended ? (
+                        <span className="mt-1 inline-block text-[10px] font-bold uppercase text-stone-500">
+                          {t("academy_live_phase_ended")}
                         </span>
                       ) : null}
                     </div>
@@ -264,19 +287,25 @@ export function AcademyEditionClient({
                       editionSlug,
                       programSlug,
                       sessionSlug: s.slug,
-                      isLiveNow: s.isLiveNow,
+                      isLiveNow: broadcasting,
                     })}
                     className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-extrabold ${
-                      s.isLiveNow
+                      broadcasting
                         ? "bg-[#305f33] text-white"
-                        : "border border-[#305f33]/30 text-[#305f33]"
+                        : ended
+                          ? "border border-stone-300 text-stone-700"
+                          : "border border-[#305f33]/30 text-[#305f33]"
                     }`}
                   >
                     <AcademyIcon
-                      name={s.isLiveNow ? "live" : "calendar"}
-                      className={`h-4 w-4 ${s.isLiveNow ? "!text-white" : ""}`}
+                      name={broadcasting ? "live" : ended ? "video" : "calendar"}
+                      className={`h-4 w-4 ${broadcasting ? "!text-white" : ""}`}
                     />
-                    {s.isLiveNow ? "McBuleli Live →" : t("academy_classroom_open_session")}
+                    {broadcasting
+                      ? "McBuleli Live →"
+                      : ended
+                        ? t("academy_live_stats_title")
+                        : t("academy_classroom_open_session")}
                   </Link>
                   {s.checkedIn ? (
                     <p className="mt-2 text-xs font-bold text-[color:var(--fd-primary)]">
@@ -291,13 +320,14 @@ export function AcademyEditionClient({
                     >
                       {t("academy_check_in")}
                     </button>
-                  ) : !s.isLiveNow ? (
+                  ) : !broadcasting && !ended ? (
                     <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
                       {t("academy_checkin_closed")}
                     </p>
                   ) : null}
                 </li>
-              ))}
+              );
+              })}
             </ul>
           )}
         </section>

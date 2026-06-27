@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import { AcademyLiveChat } from "@/components/academy/academy-live-chat";
@@ -14,7 +14,9 @@ import { AcademyIcon } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 import {
   formatLiveCountdown,
+  isLiveSessionJoinOpen,
   liveSessionRemainingSec,
+  pickLiveEndWarningMinute,
   type LivePhase,
 } from "@/lib/academy-live";
 import type { AcademyLiveRole } from "@/lib/academy-live-role";
@@ -28,6 +30,10 @@ import {
   AcademyLiveStatusBanner,
   AcademyLiveTipsGrid,
 } from "@/components/academy/academy-live-companion-guide";
+import {
+  AcademyLiveEndingSoonBanner,
+  AcademyLiveSessionStats,
+} from "@/components/academy/academy-live-session-stats";
 import { buildLiveEnterAppPath } from "@/lib/academy-live-enter-path";
 
 type SessionLive = {
@@ -68,12 +74,29 @@ export function AcademyLiveRoomClient({
   const [panel, setPanel] = useState<OpenClassroomPanel>(null);
   const [tick, setTick] = useState(0);
   const [err, setErr] = useState<string | null>(null);
+  const [activeEndWarning, setActiveEndWarning] = useState<15 | 10 | 5 | null>(null);
+  const announcedEndWarnings = useRef(new Set<number>());
+
+  const sessionEnded =
+    !!session &&
+    (session.livePhase === "ended" ||
+      liveSessionRemainingSec({
+        startsAt: new Date(session.startsAt),
+        endsAt: session.endsAt ? new Date(session.endsAt) : null,
+      }).kind === "ended");
+
+  const joinWindowOpen =
+    !!session &&
+    isLiveSessionJoinOpen({
+      startsAt: new Date(session.startsAt),
+      endsAt: session.endsAt ? new Date(session.endsAt) : null,
+    });
 
   const canJoinEnabled =
     !!session &&
     enrolled &&
+    joinWindowOpen &&
     session.isLiveNow &&
-    session.livePhase !== "ended" &&
     session.livePhase !== "upcoming";
 
   const isHost = liveRole === "host";
@@ -133,6 +156,7 @@ export function AcademyLiveRoomClient({
 
   useEffect(() => {
     void load();
+    if (sessionEnded) return;
     const waitingGuest =
       session?.isLiveNow &&
       !session.liveStartedAt &&
@@ -140,12 +164,30 @@ export function AcademyLiveRoomClient({
     const ms = waitingGuest ? 5_000 : 30_000;
     const id = setInterval(() => void load(), ms);
     return () => clearInterval(id);
-  }, [load, liveRole, session?.isLiveNow, session?.liveStartedAt]);
+  }, [load, liveRole, session?.isLiveNow, session?.liveStartedAt, sessionEnded]);
 
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!session || sessionEnded) {
+      setActiveEndWarning(null);
+      return;
+    }
+    if (session.livePhase !== "main" && session.livePhase !== "setup") return;
+    const remaining = liveSessionRemainingSec({
+      startsAt: new Date(session.startsAt),
+      endsAt: session.endsAt ? new Date(session.endsAt) : null,
+    });
+    if (remaining.kind !== "until_end") return;
+    const picked = pickLiveEndWarningMinute(remaining.seconds);
+    if (picked != null && !announcedEndWarnings.current.has(picked)) {
+      announcedEndWarnings.current.add(picked);
+      setActiveEndWarning(picked);
+    }
+  }, [session, sessionEnded, tick]);
 
   async function checkIn() {
     if (!session) return;
@@ -231,6 +273,39 @@ export function AcademyLiveRoomClient({
   }
 
   const phase = session.livePhase;
+  const timing = liveSessionRemainingSec({
+    startsAt: new Date(session.startsAt),
+    endsAt: session.endsAt ? new Date(session.endsAt) : null,
+  });
+  void tick;
+
+  if (sessionEnded) {
+    return (
+      <div className={`space-y-3 pb-[calc(10.5rem+env(safe-area-inset-bottom))] ${academyCls.root}`}>
+        <Link href={backHref} className="text-sm font-semibold text-[color:var(--fd-primary)]">
+          ← {editionTitle || t("academy_title")}
+        </Link>
+        <AcademyLiveSessionStats
+          editionSlug={editionSlug}
+          sessionSlug={sessionSlug}
+          programSlug={programSlug}
+        />
+        <AcademyOpenClassroomBar
+          canJoin={false}
+          isHost={isHost}
+          joinVideoHref={joinVideo}
+          joinAudioHref={joinAudio}
+          joinHostHref={joinHost}
+          activePanel={panel}
+          onPanel={setPanel}
+          backHref={backHref}
+          tutorEnabled={false}
+          sessionEnded
+        />
+      </div>
+    );
+  }
+
   const phaseLabel =
     phase === "setup"
       ? t("academy_live_phase_setup")
@@ -267,12 +342,6 @@ export function AcademyLiveRoomClient({
   });
   const joinHostLive = buildLiveEnterAppPath({ ...enterBase, mode: "host" });
   const joinAudioLive = buildLiveEnterAppPath({ ...enterBase, mode: "audio" });
-
-  const timing = liveSessionRemainingSec({
-    startsAt: new Date(session.startsAt),
-    endsAt: session.endsAt ? new Date(session.endsAt) : null,
-  });
-  void tick;
 
   const remainingLabel =
     timing.kind === "until_start"
@@ -341,6 +410,10 @@ export function AcademyLiveRoomClient({
 
       {waitingForHost ? <AcademyLiveStatusBanner variant="waiting_host" /> : null}
 
+      {activeEndWarning ? (
+        <AcademyLiveEndingSoonBanner minutesLeft={activeEndWarning} />
+      ) : null}
+
       {!enrolled ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {t("academy_live_enroll_required")}
@@ -406,6 +479,7 @@ export function AcademyLiveRoomClient({
         backHref={backHref}
         tutorEnabled={tutorEnabled}
         waitingForHost={waitingForHost}
+        sessionEnded={false}
       />
     </div>
   );

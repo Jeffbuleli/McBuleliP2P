@@ -8,6 +8,10 @@ import {
 /** First minutes of each session: règlement, micro, caméra, partage d'écran. */
 export const ACADEMY_LIVE_SETUP_MIN = 20;
 
+/** Annonces chat / bannière avant la fin du créneau. */
+export const LIVE_END_WARNING_MINUTES = [15, 10, 5] as const;
+export type LiveEndWarningMinute = (typeof LIVE_END_WARNING_MINUTES)[number];
+
 export type LivePhase = "upcoming" | "warmup" | "setup" | "main" | "ended";
 
 export type LiveJoinMode = "learner" | "host" | "audio";
@@ -217,4 +221,43 @@ export function isSessionLiveNow(args: {
   const start = args.startsAt.getTime();
   const end = args.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
   return now >= start - win && now <= end + win;
+}
+
+/** Session en direct (setup ou corps de séance) — pas la fenêtre de présence après la fin. */
+export function isSessionLiveBroadcast(args: {
+  startsAt: Date;
+  endsAt: Date | null;
+  now?: number;
+}): boolean {
+  const phase = getLivePhase(args);
+  return phase === "setup" || phase === "main";
+}
+
+export function isSessionInCheckInWindow(args: {
+  startsAt: Date;
+  endsAt: Date | null;
+  windowMin?: number;
+}): boolean {
+  return isSessionLiveNow(args);
+}
+
+/** Minute restante (arrondi sup.) pour annoncer 15 / 10 / 5 min une seule fois. */
+export function pickLiveEndWarningMinute(
+  remainingSec: number,
+): LiveEndWarningMinute | null {
+  if (remainingSec <= 0) return null;
+  const minsLeft = Math.ceil(remainingSec / 60);
+  for (const threshold of LIVE_END_WARNING_MINUTES) {
+    if (minsLeft === threshold) return threshold;
+  }
+  return null;
+}
+
+export function isLiveSessionJoinOpen(args: {
+  startsAt: Date;
+  endsAt: Date | null;
+  now?: number;
+}): boolean {
+  const phase = getLivePhase(args);
+  return phase === "warmup" || phase === "setup" || phase === "main";
 }

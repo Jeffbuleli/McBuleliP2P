@@ -51,6 +51,7 @@ import {
   buildLiveJoinUrl,
   getLivePhase,
   isSessionEnded,
+  isSessionLiveBroadcast,
   isSessionLiveNow,
   liveSessionRemainingSec,
   setupEndsAtIso,
@@ -60,6 +61,10 @@ import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { logAcademyLearningEvent } from "@/lib/academy-learning-events";
 import { assertAcademyDbReady } from "@/lib/academy-db-ready";
 import { resolveAcademyReplayPlayUrl } from "@/lib/academy-replay-url";
+import {
+  isWithinCheckInWindow,
+  resolveAttendanceSessionId,
+} from "@/lib/academy-live-stats";
 import { assertEnrolledInEdition } from "@/lib/academy-cohort-messaging";
 import {
   canonicalEmailForDedup,
@@ -275,7 +280,7 @@ async function loadHubUpcomingFromTrainingEvents(args: {
     ) {
       continue;
     }
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startDate,
       endsAt: s.endDate,
     });
@@ -283,7 +288,11 @@ async function loadHubUpcomingFromTrainingEvents(args: {
       startsAt: s.startDate,
       endsAt: s.endDate,
     });
-    if (ended && !liveNow) continue;
+    const inWindow = isSessionLiveNow({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    if (ended && !inWindow) continue;
     upcoming.push({
       editionSlug: s.editionSlug,
       programSlug: s.programSlug,
@@ -329,7 +338,7 @@ async function loadHubUpcomingFromLegacySessions(args: {
     ) {
       continue;
     }
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
@@ -337,7 +346,11 @@ async function loadHubUpcomingFromLegacySessions(args: {
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
-    if (ended && !liveNow) continue;
+    const inWindow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    if (ended && !inWindow) continue;
     upcoming.push({
       editionSlug: s.editionSlug,
       programSlug: s.programSlug,
@@ -762,7 +775,7 @@ export async function getEditionDetail(args: {
       now >= start - winMs &&
       now <= end + winMs &&
       !attended.has(s.id);
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
@@ -1148,11 +1161,15 @@ export async function listCommunityUpcomingEvents(args: {
       startsAt: r.startDate,
       endsAt: r.endDate,
     });
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: r.startDate,
       endsAt: r.endDate,
     });
-    if (ended && !liveNow) continue;
+    const inWindow = isSessionLiveNow({
+      startsAt: r.startDate,
+      endsAt: r.endDate,
+    });
+    if (ended && !inWindow) continue;
     out.push({
       eventSlug: r.slug,
       title: r.title,
@@ -1289,7 +1306,7 @@ export async function listCommunityUpcomingSessions(args: {
     ) {
       continue;
     }
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startDate,
       endsAt: s.endDate,
     });
@@ -1297,7 +1314,11 @@ export async function listCommunityUpcomingSessions(args: {
       startsAt: s.startDate,
       endsAt: s.endDate,
     });
-    if (ended && !liveNow) continue;
+    const inWindow = isSessionLiveNow({
+      startsAt: s.startDate,
+      endsAt: s.endDate,
+    });
+    if (ended && !inWindow) continue;
     const key = `${s.editionSlug}:${s.slug}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1337,7 +1358,7 @@ export async function listCommunityUpcomingSessions(args: {
     ) {
       continue;
     }
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
@@ -1345,7 +1366,11 @@ export async function listCommunityUpcomingSessions(args: {
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });
-    if (ended && !liveNow) continue;
+    const inWindow = isSessionLiveNow({
+      startsAt: s.startsAt,
+      endsAt: s.endsAt,
+    });
+    if (ended && !inWindow) continue;
     const key = `${s.editionSlug}:${s.slug}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1445,12 +1470,8 @@ export async function checkInSession(args: {
   | { ok: false; code: string }
 > {
   const db = getDb();
-  const [session] = await db
-    .select()
-    .from(academySessions)
-    .where(eq(academySessions.id, args.sessionId))
-    .limit(1);
-  if (!session) return { ok: false, code: "academy_session_not_found" };
+  const resolved = await resolveAttendanceSessionId(args.sessionId);
+  if (!resolved.ok) return { ok: false, code: resolved.code };
 
   const [enrollment] = await db
     .select({ id: academyEnrollments.id })
@@ -1458,18 +1479,19 @@ export async function checkInSession(args: {
     .where(
       and(
         eq(academyEnrollments.userId, args.userId),
-        eq(academyEnrollments.editionId, session.editionId),
+        eq(academyEnrollments.editionId, resolved.editionId),
         eq(academyEnrollments.status, "active"),
       ),
     )
     .limit(1);
   if (!enrollment) return { ok: false, code: "academy_not_enrolled" };
 
-  const now = Date.now();
-  const start = session.startsAt.getTime();
-  const end = session.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
-  const winMs = ACADEMY_CHECKIN_WINDOW_MIN * 60 * 1000;
-  if (now < start - winMs || now > end + winMs) {
+  if (
+    !isWithinCheckInWindow({
+      startsAt: resolved.startsAt,
+      endsAt: resolved.endsAt,
+    })
+  ) {
     return { ok: false, code: "academy_checkin_window_closed" };
   }
 
@@ -1479,7 +1501,7 @@ export async function checkInSession(args: {
     .where(
       and(
         eq(academyAttendance.enrollmentId, enrollment.id),
-        eq(academyAttendance.sessionId, session.id),
+        eq(academyAttendance.sessionId, resolved.sessionId),
       ),
     )
     .limit(1);
@@ -1489,7 +1511,7 @@ export async function checkInSession(args: {
 
   await db.insert(academyAttendance).values({
     enrollmentId: enrollment.id,
-    sessionId: session.id,
+    sessionId: resolved.sessionId,
     userId: args.userId,
     method: "live_button",
   });
@@ -1497,8 +1519,8 @@ export async function checkInSession(args: {
   const grant = await tryGrantRewardPoints({
     userId: args.userId,
     grantType: REWARD_GRANT.TRAINING_SESSION_ATTENDED,
-    idempotencyKey: `training_session:${session.id}`,
-    meta: { sessionSlug: session.slug },
+    idempotencyKey: `training_session:${resolved.sessionId}`,
+    meta: { sessionSlug: resolved.slug },
   });
 
   const attendanceCount = await db
@@ -1510,7 +1532,7 @@ export async function checkInSession(args: {
   if (count >= 2) {
     await issueCredentialIfMissing({
       userId: args.userId,
-      editionId: session.editionId,
+      editionId: resolved.editionId,
       slug: "participant-assidu",
       kind: "badge",
       titleFr: "Participant assidu — McBuleli Academy",
@@ -2551,7 +2573,7 @@ async function findFirstGlobalLiveSession(args: {
     .limit(24);
 
   for (const s of eventRows) {
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startDate,
       endsAt: s.endDate,
     });
@@ -2585,7 +2607,7 @@ async function findFirstGlobalLiveSession(args: {
     .limit(24);
 
   for (const s of sessionRows) {
-    const liveNow = isSessionLiveNow({
+    const liveNow = isSessionLiveBroadcast({
       startsAt: s.startsAt,
       endsAt: s.endsAt,
     });

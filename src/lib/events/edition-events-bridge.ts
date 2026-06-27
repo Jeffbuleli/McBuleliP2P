@@ -3,6 +3,7 @@ import {
   buildLiveJoinUrl,
   getLivePhase,
   isSessionEnded,
+  isSessionLiveBroadcast,
   isSessionLiveNow,
   liveSessionRemainingSec,
   setupEndsAtIso,
@@ -40,7 +41,7 @@ export async function loadEditionEventsAsSessions(args: {
       now >= start - winMs &&
       now <= end + winMs &&
       !args.attendedSessionIds.has(sessionId);
-    const liveNow = isSessionLiveNow({ startsAt: ev.startDate, endsAt: ev.endDate });
+    const liveNow = isSessionLiveBroadcast({ startsAt: ev.startDate, endsAt: ev.endDate });
     const ended = isSessionEnded({ startsAt: ev.startDate, endsAt: ev.endDate });
     const livePhase = getLivePhase({ startsAt: ev.startDate, endsAt: ev.endDate });
     const replayUrl = resolveAcademyReplayPlayUrl({
