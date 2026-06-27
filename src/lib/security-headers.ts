@@ -11,7 +11,6 @@ export function buildContentSecurityPolicy(): string {
     "font-src 'self' data:",
     [
       "connect-src 'self'",
-      "https://api.mcbuleli.org",
       "wss://live.mcbuleli.org",
       "https://api.minepi.com",
       "https://sandbox.minepi.com",
@@ -37,7 +36,7 @@ export function securityResponseHeaders(): Record<string, string> {
     "Permissions-Policy":
       "camera=(), microphone=(), geolocation=(), payment=(self)",
     "Cross-Origin-Opener-Policy": "same-origin",
-    "Cross-Origin-Embedder-Policy": "require-corp",
+    // No COEP require-corp — blocks Turnstile, Didit, and Jitsi iframes (no CORP from those origins).
     "Cross-Origin-Resource-Policy": "same-origin",
   };
 }

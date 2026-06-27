@@ -43,6 +43,16 @@ Prioriser **login** (le reste est déjà limité dans l’app) :
 | Period | 1 minute |
 | Action | Block |
 
+**Erreurs fréquentes :**
+
+| Mauvaise config | Problème |
+|-----------------|----------|
+| Période **10 secondes** au lieu de **1 minute** | Blocage après 2–3 essais de connexion (trop strict) |
+| Expression sur `/login` (page HTML) | Bloque le chargement de la page, pas seulement les tentatives |
+| Expression trop large (`*`, tout `/api/*`) | Peut perturber Turnstile / assets Next.js |
+
+L’app limite déjà **`POST /api/auth/login` à 5 req / IP / minute** (`src/lib/rate-limit.ts`). La règle Cloudflare est un **secours edge** (10/min), pas un doublon agressif.
+
 > Register, forgot-password, wallet/P2P : déjà couverts par `src/lib/rate-limit.ts` et le middleware — pas besoin de 4 règles edge tant que le plan reste Free.
 
 ### 4. Custom rules — **5 règles** incluses (Free)
