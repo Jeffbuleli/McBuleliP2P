@@ -277,7 +277,7 @@ export const en = {
   kyc_country_unsupported: "Set a supported country in profile settings",
   kyc_identity_heading: "Legal identity",
   kyc_identity_hint:
-    "Didit may misread your ID. Correct your legal name here, then resubmit if needed — used for P2P name matching.",
+    "Didit may misread your ID. Correct your legal name here before resubmitting — used for P2P name matching.",
   kyc_identity_first: "Legal first name",
   kyc_identity_last: "Legal last name",
   kyc_identity_birth: "Date of birth",
@@ -286,9 +286,23 @@ export const en = {
   kyc_identity_resubmit: "Resubmit verification",
   kyc_identity_locked: "Identity locked while verification is in progress",
   kyc_identity_locked_hint:
-    "Correct any OCR typos below, then tap Resubmit. You will scan your ID and take a new selfie; changes apply only after approval.",
+    "Identity is locked while verification is in progress.",
   kyc_identity_approved_edit:
-    "Name typo? Edit the fields below, then Resubmit — not Save. A new Didit check is required.",
+    "Name typo? Request a correction — our team will update it in Didit. You cannot resubmit verification yourself.",
+  kyc_identity_approved_ops_hint:
+    "Your legal name is used for P2P matching. If Didit misread your ID, request a correction — McBuleli OPS will fix it in Didit Console.",
+  kyc_identity_correction_request_heading: "Request a name correction",
+  kyc_identity_correction_request_hint:
+    "Enter the correct legal name as on your ID. Our team will update Didit and your profile — no new selfie required.",
+  kyc_identity_correction_proposed_first: "Correct first name",
+  kyc_identity_correction_proposed_last: "Correct last name",
+  kyc_identity_correction_note: "Note for the team (optional)",
+  kyc_identity_correction_request_btn: "Request correction",
+  kyc_identity_correction_pending:
+    "Correction request sent — McBuleli OPS is processing it via Didit.",
+  kyc_identity_correction_done: "Your legal identity was updated by our team.",
+  kyc_identity_correction_unavailable: "Name correction is not available right now",
+  kyc_identity_correction_pending_error: "A correction request is already in progress",
   kyc_identity_resubmit_unavailable: "Resubmit is not available right now",
   profile_tile_kyc: "Verify identity",
   profile_tile_kyc_sub: "ID + selfie",
@@ -4078,6 +4092,16 @@ export const en = {
   admin_kyc_status_manual_review: "Manual review",
   admin_kyc_reset_stale: "Reset stale (>1h)",
   admin_kyc_reset_stale_done: "{reset} reset of {scanned} scanned",
+  admin_kyc_identity_correction_status: "Identity correction",
+  admin_kyc_identity_correction_requested: "Requested",
+  admin_kyc_identity_correction_corrected: "Modified",
+  admin_kyc_identity_correction_user_request: "User correction request",
+  admin_kyc_identity_correction_ops_heading: "OPS — correct identity in Didit",
+  admin_kyc_identity_correction_ops_hint:
+    "Update the name in Didit Console, then enter the corrected legal name here and confirm.",
+  admin_kyc_identity_correction_confirm: "Mark identity corrected",
+  admin_kyc_identity_correction_saved: "Legal identity updated and marked as modified.",
+  admin_kyc_correction_requested_badge: "Name correction",
   admin_dashboard_kpi_title: "Snapshot",
   admin_dashboard_kpi_sub: "Live counts from the database — no extra setup.",
   admin_kpi_w_pending: "Withdrawals · waiting for agent",
@@ -4525,7 +4549,7 @@ export const fr: Messages = {
   kyc_country_unsupported: "Définissez un pays pris en charge dans le profil",
   kyc_identity_heading: "Identité légale",
   kyc_identity_hint:
-    "Didit peut mal lire votre pièce. Corrigez le nom légal ici, puis resoumettez si besoin — utilisé pour le P2P.",
+    "Didit peut mal lire votre pièce. Corrigez le nom légal ici avant de resoumettre — utilisé pour le P2P.",
   kyc_identity_first: "Prénom légal",
   kyc_identity_last: "Nom légal",
   kyc_identity_birth: "Date de naissance",
@@ -4534,9 +4558,23 @@ export const fr: Messages = {
   kyc_identity_resubmit: "Resoumettre la vérification",
   kyc_identity_locked: "Identité verrouillée pendant la vérification en cours",
   kyc_identity_locked_hint:
-    "Corrigez les fautes OCR ci-dessous, puis cliquez Resoumettre. Nouveau scan de pièce + selfie ; les changements ne s’appliquent qu’après approbation.",
+    "Identité verrouillée pendant la vérification en cours.",
   kyc_identity_approved_edit:
-    "Nom mal orthographié ? Modifiez les champs ci-dessous, puis Resoumettre — pas Enregistrer. Une nouvelle vérification Didit est obligatoire.",
+    "Nom mal orthographié ? Demandez une correction — l’équipe mettra à jour Didit. Vous ne pouvez pas resoumettre vous-même.",
+  kyc_identity_approved_ops_hint:
+    "Votre nom légal sert au matching P2P. Si Didit a mal lu votre pièce, demandez une correction — l’équipe McBuleli OPS corrige dans la console Didit.",
+  kyc_identity_correction_request_heading: "Demander une correction de nom",
+  kyc_identity_correction_request_hint:
+    "Indiquez le nom légal exact sur votre pièce. L’équipe mettra à jour Didit et votre profil — pas de nouveau selfie.",
+  kyc_identity_correction_proposed_first: "Prénom correct",
+  kyc_identity_correction_proposed_last: "Nom correct",
+  kyc_identity_correction_note: "Note pour l’équipe (optionnel)",
+  kyc_identity_correction_request_btn: "Demander la correction",
+  kyc_identity_correction_pending:
+    "Demande envoyée — l’équipe McBuleli OPS traite la correction via Didit.",
+  kyc_identity_correction_done: "Votre identité légale a été mise à jour par notre équipe.",
+  kyc_identity_correction_unavailable: "La correction de nom n’est pas disponible pour le moment",
+  kyc_identity_correction_pending_error: "Une demande de correction est déjà en cours",
   kyc_identity_resubmit_unavailable: "Resoumission indisponible pour le moment",
   profile_tile_kyc: "Vérifier identité",
   profile_tile_kyc_sub: "Pièce + selfie",
@@ -8367,6 +8405,16 @@ export const fr: Messages = {
   admin_kyc_status_manual_review: "Revue manuelle",
   admin_kyc_reset_stale: "Réinitialiser bloqués (>1h)",
   admin_kyc_reset_stale_done: "{reset} réinitialisé(s) sur {scanned} scanné(s)",
+  admin_kyc_identity_correction_status: "Correction identité",
+  admin_kyc_identity_correction_requested: "Demandée",
+  admin_kyc_identity_correction_corrected: "Modifiée",
+  admin_kyc_identity_correction_user_request: "Demande utilisateur",
+  admin_kyc_identity_correction_ops_heading: "OPS — corriger l’identité dans Didit",
+  admin_kyc_identity_correction_ops_hint:
+    "Mettez à jour le nom dans la console Didit, puis saisissez le nom légal corrigé ici et confirmez.",
+  admin_kyc_identity_correction_confirm: "Marquer identité corrigée",
+  admin_kyc_identity_correction_saved: "Identité légale mise à jour et marquée comme modifiée.",
+  admin_kyc_correction_requested_badge: "Correction nom",
   admin_dashboard_kpi_title: "Vue d’ensemble",
   admin_dashboard_kpi_sub: "Compteurs en direct — sans configuration supplémentaire.",
   admin_kpi_w_pending: "Retraits · en attente d’agent",

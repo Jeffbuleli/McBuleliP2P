@@ -42,6 +42,14 @@ type User360 = {
     rejectionNote: string | null;
     diditSessionId: string | null;
     diditSessionStatus: string | null;
+    identityCorrection: {
+      status: "requested" | "corrected" | null;
+      requestedAt: string | null;
+      proposedFirstName: string | null;
+      proposedLastName: string | null;
+      note: string | null;
+      correctedAt: string | null;
+    } | null;
     legal: {
       legalFirstName: string | null;
       legalLastName: string | null;
@@ -81,6 +89,11 @@ type User360 = {
   } | null;
 };
 
+const DIDIT_CONSOLE = "https://business.didit.me/fr/console";
+
+const inputCls =
+  "mt-1 w-full rounded-lg border border-[color:var(--fd-border)] bg-white px-3 py-2 text-sm";
+
 const TABS: { id: TabId; labelKey: "admin_user360_tab_overview" | "admin_user360_tab_kyc" | "admin_user360_tab_wallet" | "admin_user360_tab_p2p" | "admin_user360_tab_security" | "admin_user360_tab_staff" }[] = [
   { id: "overview", labelKey: "admin_user360_tab_overview" },
   { id: "kyc", labelKey: "admin_user360_tab_kyc" },
@@ -112,6 +125,10 @@ export function AdminUser360Client() {
   const [err, setErr] = useState<string | null>(null);
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeReason, setTradeReason] = useState("");
+  const [kycFirstName, setKycFirstName] = useState("");
+  const [kycLastName, setKycLastName] = useState("");
+  const [kycBusy, setKycBusy] = useState(false);
+  const [kycMsg, setKycMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -123,6 +140,11 @@ export function AdminUser360Client() {
       return;
     }
     setData(body as User360);
+    const kyc = (body as User360).kyc;
+    if (kyc) {
+      setKycFirstName(kyc.legal.legalFirstName ?? "");
+      setKycLastName(kyc.legal.legalLastName ?? "");
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -149,6 +171,30 @@ export function AdminUser360Client() {
       await load();
     } finally {
       setTradeBusy(false);
+    }
+  }
+
+  async function applyKycIdentityCorrection() {
+    setKycBusy(true);
+    setKycMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/kyc-identity-correction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalFirstName: kycFirstName.trim(),
+          legalLastName: kycLastName.trim(),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setKycMsg(body.message ?? "—");
+        return;
+      }
+      setKycMsg(t("admin_kyc_identity_correction_saved"));
+      await load();
+    } finally {
+      setKycBusy(false);
     }
   }
 
@@ -330,6 +376,16 @@ export function AdminUser360Client() {
       {tab === "kyc" && data.kyc ? (
         <section className={adminCls.card}>
           <InfoRow label={t("admin_kyc_col_status")} value={data.kyc.kycStatus} />
+          {data.kyc.identityCorrection?.status ? (
+            <InfoRow
+              label={t("admin_kyc_identity_correction_status")}
+              value={
+                data.kyc.identityCorrection.status === "requested"
+                  ? t("admin_kyc_identity_correction_requested")
+                  : t("admin_kyc_identity_correction_corrected")
+              }
+            />
+          ) : null}
           <InfoRow label={t("admin_kyc_help_review")} value={data.kyc.helpTier} />
           <InfoRow
             label={t("kyc_identity_first")}
@@ -347,6 +403,19 @@ export function AdminUser360Client() {
             label={t("kyc_identity_document")}
             value={data.kyc.legal.documentNumber ?? "—"}
           />
+          {data.kyc.identityCorrection?.status === "requested" ? (
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+              <p className="font-semibold">{t("admin_kyc_identity_correction_user_request")}</p>
+              <p className="mt-1">
+                {[data.kyc.identityCorrection.proposedFirstName, data.kyc.identityCorrection.proposedLastName]
+                  .filter(Boolean)
+                  .join(" ")}
+              </p>
+              {data.kyc.identityCorrection.note ? (
+                <p className="mt-1 text-amber-900">{data.kyc.identityCorrection.note}</p>
+              ) : null}
+            </div>
+          ) : null}
           {data.kyc.rejectionNote ? (
             <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800">
               {data.kyc.rejectionNote}
@@ -356,6 +425,61 @@ export function AdminUser360Client() {
             <p className="mt-2 font-mono text-[10px] text-[color:var(--fd-muted)]">
               Didit: {data.kyc.diditSessionId}
             </p>
+          ) : null}
+          {data.kyc.kycStatus === "approved" ? (
+            <div className="mt-4 space-y-3 border-t border-[color:var(--fd-border)] pt-4">
+              <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+                {t("admin_kyc_identity_correction_ops_heading")}
+              </p>
+              <p className="text-xs text-[color:var(--fd-muted)]">
+                {t("admin_kyc_identity_correction_ops_hint")}
+              </p>
+              <a
+                href={DIDIT_CONSOLE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={adminCls.btnSecondary}
+              >
+                {t("admin_kyc_didit_console")}
+              </a>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs">
+                  <span className="font-semibold text-[color:var(--fd-muted)]">
+                    {t("kyc_identity_first")}
+                  </span>
+                  <input
+                    value={kycFirstName}
+                    onChange={(e) => setKycFirstName(e.target.value)}
+                    className={inputCls}
+                    maxLength={128}
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-semibold text-[color:var(--fd-muted)]">
+                    {t("kyc_identity_last")}
+                  </span>
+                  <input
+                    value={kycLastName}
+                    onChange={(e) => setKycLastName(e.target.value)}
+                    className={inputCls}
+                    maxLength={128}
+                  />
+                </label>
+              </div>
+              {kycMsg ? (
+                <p className="text-xs text-[color:var(--fd-muted)]">{kycMsg}</p>
+              ) : null}
+              <button
+                type="button"
+                disabled={kycBusy || !kycFirstName.trim() || !kycLastName.trim()}
+                onClick={() => void applyKycIdentityCorrection()}
+                className={adminCls.btnPrimary}
+              >
+                {kycBusy
+                  ? "…"
+                  : t("admin_kyc_identity_correction_confirm")}
+              </button>
+            </div>
           ) : null}
         </section>
       ) : null}

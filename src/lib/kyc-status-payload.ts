@@ -1,3 +1,4 @@
+import type { KycIdentityCorrection } from "@/lib/kyc-identity";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import {
@@ -23,8 +24,11 @@ export type KycStatusPayload = {
   rejectionNote: string | null;
   sanctionsBlocked: boolean;
   canRetryKyc: boolean;
-  /** Approved users can resubmit after correcting legal identity (Didit OCR errors). */
+  /** Rejected / not started users can resubmit after correcting legal identity. */
   canResubmitKyc: boolean;
+  /** Approved users request an OPS correction in Didit Console (no self-resubmit). */
+  canRequestIdentityCorrection: boolean;
+  identityCorrection: KycIdentityCorrection | null;
   canRefreshStatus: boolean;
   diditSessionId: string | null;
   diditSessionStatus: string | null;
@@ -42,6 +46,7 @@ export function buildKycStatusPayload(args: {
   diditSessionId?: string | null;
   diditSessionStatus?: string | null;
   legalIdentity?: KycLegalIdentity | null;
+  identityCorrection?: KycIdentityCorrection | null;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = kycEligibleCountry(args.countryCode);
@@ -57,7 +62,17 @@ export function buildKycStatusPayload(args: {
     !sanctionsBlocked &&
     kycStatus !== "manual_review";
   const canResubmitKyc =
-    corridor && approved && !sanctionsBlocked && diditConfigured();
+    corridor &&
+    !approved &&
+    !sanctionsBlocked &&
+    diditConfigured() &&
+    (kycStatus === "rejected" || kycStatus === "none");
+  const identityCorrection = args.identityCorrection ?? null;
+  const canRequestIdentityCorrection =
+    corridor &&
+    approved &&
+    !sanctionsBlocked &&
+    identityCorrection?.status !== "requested";
 
   const hasSessionId = Boolean(args.diditSessionId?.trim());
   const canRefreshStatus =
@@ -78,6 +93,8 @@ export function buildKycStatusPayload(args: {
     sanctionsBlocked,
     canRetryKyc,
     canResubmitKyc,
+    canRequestIdentityCorrection,
+    identityCorrection,
     canRefreshStatus,
     diditSessionId: args.diditSessionId ?? null,
     diditSessionStatus: args.diditSessionStatus?.trim() || null,
@@ -106,6 +123,12 @@ export async function getKycStatusPayload(
       documentNumber: users.documentNumber,
       documentType: users.documentType,
       documentCountry: users.documentCountry,
+      kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
+      kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
+      kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
+      kycIdentityProposedLastName: users.kycIdentityProposedLastName,
+      kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
+      kycIdentityCorrectedAt: users.kycIdentityCorrectedAt,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -118,6 +141,19 @@ export async function getKycStatusPayload(
     row.legalLastName ||
     row.documentNumber ||
     row.birthDate;
+
+  const correctionStatus = row.kycIdentityCorrectionStatus;
+  const identityCorrection: KycIdentityCorrection | null =
+    correctionStatus === "requested" || correctionStatus === "corrected"
+      ? {
+          status: correctionStatus,
+          requestedAt: row.kycIdentityCorrectionRequestedAt?.toISOString() ?? null,
+          proposedFirstName: row.kycIdentityProposedFirstName ?? null,
+          proposedLastName: row.kycIdentityProposedLastName ?? null,
+          note: row.kycIdentityCorrectionNote ?? null,
+          correctedAt: row.kycIdentityCorrectedAt?.toISOString() ?? null,
+        }
+      : null;
 
   return buildKycStatusPayload({
     countryCode: row.countryCode,
@@ -136,5 +172,6 @@ export async function getKycStatusPayload(
           documentCountry: row.documentCountry ?? null,
         }
       : null,
+    identityCorrection,
   });
 }

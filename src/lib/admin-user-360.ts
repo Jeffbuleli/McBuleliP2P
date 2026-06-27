@@ -41,6 +41,12 @@ export async function getAdminUser360(userId: string, locale: Locale) {
       kycRejectionNote: users.kycRejectionNote,
       diditSessionId: users.diditSessionId,
       diditSessionStatus: users.diditSessionStatus,
+      kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
+      kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
+      kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
+      kycIdentityProposedLastName: users.kycIdentityProposedLastName,
+      kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
+      kycIdentityCorrectedAt: users.kycIdentityCorrectedAt,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -118,6 +124,7 @@ export async function getAdminUser360(userId: string, locale: Locale) {
             documentType: user.documentType,
             documentCountry: user.documentCountry,
           },
+          identityCorrection: kyc.identityCorrection,
         }
       : null,
     security,

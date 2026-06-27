@@ -45,6 +45,25 @@ export const users = pgTable("users", {
   documentNumber: varchar("document_number", { length: 64 }),
   documentType: varchar("document_type", { length: 32 }),
   documentCountry: varchar("document_country", { length: 8 }),
+  /** null | requested | corrected — OPS updates legal name in Didit Console. */
+  kycIdentityCorrectionStatus: varchar("kyc_identity_correction_status", {
+    length: 16,
+  }),
+  kycIdentityCorrectionRequestedAt: timestamp(
+    "kyc_identity_correction_requested_at",
+    { withTimezone: true },
+  ),
+  kycIdentityCorrectionNote: text("kyc_identity_correction_note"),
+  kycIdentityProposedFirstName: varchar("kyc_identity_proposed_first_name", {
+    length: 128,
+  }),
+  kycIdentityProposedLastName: varchar("kyc_identity_proposed_last_name", {
+    length: 128,
+  }),
+  kycIdentityCorrectedAt: timestamp("kyc_identity_corrected_at", {
+    withTimezone: true,
+  }),
+  kycIdentityCorrectedBy: uuid("kyc_identity_corrected_by"),
   balance: numeric("balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),

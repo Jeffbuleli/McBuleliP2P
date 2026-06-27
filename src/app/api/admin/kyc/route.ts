@@ -45,6 +45,7 @@ export async function GET(req: Request) {
       diditSessionStatus: users.diditSessionStatus,
       legalFirstName: users.legalFirstName,
       legalLastName: users.legalLastName,
+      kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -80,6 +81,9 @@ export async function GET(req: Request) {
     approved: mapped.filter((r) => r.kycStatus === "approved").length,
     rejected: mapped.filter((r) => r.kycStatus === "rejected").length,
     needsHelp: mapped.filter((r) => adminKycNeedsHelp(r.helpTier)).length,
+    correctionRequested: mapped.filter(
+      (r) => r.kycIdentityCorrectionStatus === "requested",
+    ).length,
   };
 
   return NextResponse.json({ rows: filtered, totals });

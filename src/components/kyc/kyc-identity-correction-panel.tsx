@@ -26,6 +26,19 @@ export function KycIdentityCorrectionPanel({
   const [documentNumber, setDocumentNumber] = useState(
     data.legalIdentity?.documentNumber ?? "",
   );
+  const [proposedFirstName, setProposedFirstName] = useState(
+    data.identityCorrection?.proposedFirstName ??
+      data.legalIdentity?.legalFirstName ??
+      "",
+  );
+  const [proposedLastName, setProposedLastName] = useState(
+    data.identityCorrection?.proposedLastName ??
+      data.legalIdentity?.legalLastName ??
+      "",
+  );
+  const [correctionNote, setCorrectionNote] = useState(
+    data.identityCorrection?.note ?? "",
+  );
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -36,10 +49,21 @@ export function KycIdentityCorrectionPanel({
     setLastName(data.legalIdentity?.legalLastName ?? "");
     setBirthDate(data.legalIdentity?.birthDate ?? "");
     setDocumentNumber(data.legalIdentity?.documentNumber ?? "");
-  }, [data.legalIdentity]);
+    if (data.identityCorrection?.proposedFirstName) {
+      setProposedFirstName(data.identityCorrection.proposedFirstName);
+    }
+    if (data.identityCorrection?.proposedLastName) {
+      setProposedLastName(data.identityCorrection.proposedLastName);
+    }
+    if (data.identityCorrection?.note) {
+      setCorrectionNote(data.identityCorrection.note);
+    }
+  }, [data.legalIdentity, data.identityCorrection]);
 
   const showPanel =
-    data.approved || data.canResubmitKyc || Boolean(identity?.legalFirstName || identity?.legalLastName);
+    data.approved ||
+    data.canResubmitKyc ||
+    Boolean(identity?.legalFirstName || identity?.legalLastName);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/profile/kyc-identity");
@@ -57,7 +81,8 @@ export function KycIdentityCorrectionPanel({
     data.kycStatus === "pending" || data.kycStatus === "manual_review";
   const patchBlocked = data.approved || verificationInProgress;
   const canSaveDraft = !patchBlocked;
-  const fieldsReadOnly = verificationInProgress;
+  const fieldsReadOnly = verificationInProgress || data.approved;
+  const correction = data.identityCorrection;
 
   if (!showPanel) return null;
 
@@ -110,12 +135,39 @@ export function KycIdentityCorrectionPanel({
     router.refresh();
   }
 
+  async function requestCorrection() {
+    setBusy(true);
+    setErr(null);
+    setOk(false);
+    const res = await fetch("/api/profile/kyc-identity/correction-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        proposedFirstName: proposedFirstName.trim(),
+        proposedLastName: proposedLastName.trim(),
+        note: correctionNote.trim() || null,
+      }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      setErr(clientErrorText(t, body.error ?? "profile_invalid_input"));
+      return;
+    }
+    setOk(true);
+    onUpdated();
+  }
+
   return (
     <section className="fd-card mt-3 space-y-3 p-4">
       <div>
         <p className="text-sm font-bold text-[#1c1917]">{t("kyc_identity_heading")}</p>
         <p className="mt-1 text-xs text-[var(--fd-muted)]">
-          {patchBlocked ? t("kyc_identity_locked_hint") : t("kyc_identity_hint")}
+          {data.approved
+            ? t("kyc_identity_approved_ops_hint")
+            : patchBlocked
+              ? t("kyc_identity_locked_hint")
+              : t("kyc_identity_hint")}
         </p>
       </div>
 
@@ -123,9 +175,17 @@ export function KycIdentityCorrectionPanel({
         <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           {t("kyc_identity_locked")}
         </p>
-      ) : data.approved ? (
-        <p className="rounded-xl border border-sky-200/80 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-          {t("kyc_identity_approved_edit")}
+      ) : null}
+
+      {correction?.status === "requested" ? (
+        <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {t("kyc_identity_correction_pending")}
+        </p>
+      ) : null}
+
+      {correction?.status === "corrected" ? (
+        <p className="rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+          {t("kyc_identity_correction_done")}
         </p>
       ) : null}
 
@@ -144,11 +204,11 @@ export function KycIdentityCorrectionPanel({
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-              className={`${inputCls} mt-1`}
-              maxLength={128}
-              required
-              readOnly={fieldsReadOnly}
-              disabled={fieldsReadOnly}
+            className={`${inputCls} mt-1`}
+            maxLength={128}
+            required
+            readOnly={fieldsReadOnly}
+            disabled={fieldsReadOnly}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -158,11 +218,11 @@ export function KycIdentityCorrectionPanel({
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-              className={`${inputCls} mt-1`}
-              maxLength={128}
-              required
-              readOnly={fieldsReadOnly}
-              disabled={fieldsReadOnly}
+            className={`${inputCls} mt-1`}
+            maxLength={128}
+            required
+            readOnly={fieldsReadOnly}
+            disabled={fieldsReadOnly}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -200,6 +260,60 @@ export function KycIdentityCorrectionPanel({
         </p>
       ) : null}
 
+      {data.approved && data.canRequestIdentityCorrection ? (
+        <div className="space-y-3 rounded-xl border border-sky-200/80 bg-sky-50/60 p-3">
+          <p className="text-xs font-semibold text-sky-950">
+            {t("kyc_identity_correction_request_heading")}
+          </p>
+          <p className="text-[11px] text-sky-900">{t("kyc_identity_correction_request_hint")}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-[11px] font-semibold text-[var(--fd-muted)]">
+                {t("kyc_identity_correction_proposed_first")}
+              </span>
+              <input
+                value={proposedFirstName}
+                onChange={(e) => setProposedFirstName(e.target.value)}
+                className={`${inputCls} mt-1`}
+                maxLength={128}
+                required
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-semibold text-[var(--fd-muted)]">
+                {t("kyc_identity_correction_proposed_last")}
+              </span>
+              <input
+                value={proposedLastName}
+                onChange={(e) => setProposedLastName(e.target.value)}
+                className={`${inputCls} mt-1`}
+                maxLength={128}
+                required
+              />
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-[11px] font-semibold text-[var(--fd-muted)]">
+              {t("kyc_identity_correction_note")}
+            </span>
+            <textarea
+              value={correctionNote}
+              onChange={(e) => setCorrectionNote(e.target.value)}
+              className={`${inputCls} mt-1 min-h-[4rem] resize-y`}
+              maxLength={500}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void requestCorrection()}
+            className="rounded-xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
+          >
+            {t("kyc_identity_correction_request_btn")}
+          </button>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         {canSaveDraft ? (
           <button
@@ -211,7 +325,7 @@ export function KycIdentityCorrectionPanel({
             {busy ? t("profile_avatar_uploading") : t("profile_save")}
           </button>
         ) : null}
-        {data.canResubmitKyc || data.approved ? (
+        {data.canResubmitKyc ? (
           <button
             type="button"
             disabled={busy}

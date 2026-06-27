@@ -20,6 +20,7 @@ export const PlatformAdminAuditAction = {
   MCB_CLAIM_COMPLETE: "mcb_claim.complete",
   MCB_CLAIM_REJECT: "mcb_claim.reject",
   TRADE_LIVE_UPDATE: "trade.live_update",
+  KYC_IDENTITY_CORRECTION: "kyc.identity_correction",
 } as const;
 
 export async function writePlatformAdminAudit(args: {
