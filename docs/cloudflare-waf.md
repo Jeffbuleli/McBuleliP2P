@@ -33,25 +33,39 @@ DDoS L3/L4 est inclus sur tous les plans (pas de réglage OWASP sans Pro).
 
 **Security → Security rules → Rate limiting rules → Create rule**
 
-Prioriser **login** (le reste est déjà limité dans l’app) :
+> **Plan Free — contrainte Cloudflare (normal)**  
+> Période de comptage et durée de blocage : **10 secondes uniquement** (pas de 1 minute).  
+> Pro+ permet 15 s → 1 min (comptage) et blocages jusqu’à 1 h.  
+> Doc : [Rate limiting parameters](https://developers.cloudflare.com/waf/rate-limiting-rules/parameters/).
 
-| Champ | Valeur |
-|-------|--------|
-| Rule name | `McBuleli auth login` |
+**Recommandation Free : désactiver la règle edge** et s’appuyer sur l’app (plus souple et déjà en place) :
+
+| Endpoint | Limite app (Render) |
+|----------|---------------------|
+| `POST /api/auth/login` | **5 req / IP / minute** + Turnstile |
+| `POST /api/auth/register` | **3 req / IP / 10 min** + Turnstile |
+| `POST /api/auth/forgot-password` | **10/min IP + 3/h email** + Turnstile |
+
+Si vous gardez quand même **1 règle Free** (secours anti-burst) :
+
+| Champ | Valeur Free |
+|-------|-------------|
+| Rule name | `McBuleli auth login burst` |
 | Expression | `(http.request.uri.path eq "/api/auth/login") and (http.request.method eq "POST")` |
-| Requests | 10 |
-| Period | 1 minute |
+| Requests | **5** |
+| Period | **10 seconds** (seule option Free) |
 | Action | Block |
+| Duration | **10 seconds** (seule option Free) |
+
+Effet : max 5 tentatives login en 10 s, puis blocage **10 s** seulement — pas 15 min (impossible en Free).
 
 **Erreurs fréquentes :**
 
 | Mauvaise config | Problème |
 |-----------------|----------|
-| Période **10 secondes** au lieu de **1 minute** | Blocage après 2–3 essais de connexion (trop strict) |
-| Expression sur `/login` (page HTML) | Bloque le chargement de la page, pas seulement les tentatives |
+| Expression sur `/login` (page HTML) | Bloque la page entière |
 | Expression trop large (`*`, tout `/api/*`) | Peut perturber Turnstile / assets Next.js |
-
-L’app limite déjà **`POST /api/auth/login` à 5 req / IP / minute** (`src/lib/rate-limit.ts`). La règle Cloudflare est un **secours edge** (10/min), pas un doublon agressif.
+| Compter sur CF Free pour « 5/min puis 15 min bloc » | **Impossible** sans Pro — c’est l’app qui le fait |
 
 > Register, forgot-password, wallet/P2P : déjà couverts par `src/lib/rate-limit.ts` et le middleware — pas besoin de 4 règles edge tant que le plan reste Free.
 
