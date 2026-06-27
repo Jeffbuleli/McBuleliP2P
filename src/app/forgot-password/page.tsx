@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AuthMarketingShell,
   AuthPageFooter,
@@ -10,7 +10,11 @@ import {
 } from "@/components/auth/auth-marketing-shell";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthRecoveryAlternatives } from "@/components/auth/auth-recovery-alternatives";
+import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
 import { clientErrorText } from "@/lib/client-error-text";
+
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 export default function ForgotPasswordPage() {
   const { t } = useI18n();
@@ -18,6 +22,16 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
+
+  useEffect(() => {
+    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,11 +41,14 @@ export default function ForgotPasswordPage() {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          ...(turnstileToken ? { turnstileToken } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(clientErrorText(t, data.error ?? "profile_invalid_input"));
+        setErr(clientErrorText(t, data.error ?? data.message ?? "profile_invalid_input"));
         return;
       }
       setSent(true);
@@ -53,6 +70,14 @@ export default function ForgotPasswordPage() {
         </p>
         {!sent ? (
           <form onSubmit={(e) => void onSubmit(e)} className="mt-5 space-y-3">
+            {TURNSTILE_SITE_KEY ? (
+              <TurnstileWidget
+                siteKey={TURNSTILE_SITE_KEY}
+                onToken={onTurnstileToken}
+                onExpire={onTurnstileExpire}
+                className="flex justify-center"
+              />
+            ) : null}
             <label className={authLabelClass}>
               {t("email")}
               <input
@@ -67,7 +92,7 @@ export default function ForgotPasswordPage() {
             {err ? <p className="text-xs text-red-600">{err}</p> : null}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileReady}
               className="inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-5 text-sm font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99] disabled:opacity-60"
             >
               {loading ? t("forgot_sending") : t("forgot_submit")}

@@ -10,9 +10,11 @@ import {
   rateLimitKeyIp,
 } from "@/lib/rate-limit";
 import { rateLimitKeyEmail } from "@/lib/rate-limit-email";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 const bodyZ = z.object({
   email: z.string().trim().min(3).max(255).email(),
+  turnstileToken: z.string().trim().min(1).optional(),
 });
 
 export async function POST(req: Request) {
@@ -38,6 +40,11 @@ export async function POST(req: Request) {
   });
   if (!emailLimit.ok) {
     return rateLimitedResponse(emailLimit.retryAfterSec);
+  }
+
+  const captcha = await verifyTurnstileToken(parsed.data.turnstileToken, req);
+  if (!captcha.ok) {
+    return NextResponse.json({ error: captcha.message }, { status: captcha.status });
   }
 
   const locale = await resolveEmailLocale(req);

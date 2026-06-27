@@ -33,7 +33,7 @@ curl -sI https://mcbuleli.org | grep -i -E "(security|policy|frame|content-type|
 |---------|----------------|
 | Login rate limit | 5 req / IP / min — `/api/auth/login` |
 | Register rate limit | 3 req / IP / 10 min — `/api/auth/register` |
-| Forgot password | 3 req / email / hour + IP cap — `/api/auth/forgot-password` |
+| Forgot password | 3 req / email / hour + 10 / IP / min + Turnstile — `/api/auth/forgot-password` |
 | CAPTCHA | Cloudflare Turnstile on login + register (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) |
 | JWT | HS256 only; `kid` rejected; session cookie (see `src/lib/jwt.ts`) |
 | Password reset | 15 min TTL; prior tokens invalidated on new request |
