@@ -8,6 +8,7 @@ import {
   getDb,
   users,
 } from "@/db";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
 import { listUserBadges } from "@/lib/community/badges-service";
 import {
@@ -25,6 +26,16 @@ import {
   isValidCommunityHandle,
   normalizeUsernameBase,
 } from "@/lib/community/username";
+
+function displayAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return normalizePublicMediaUrl(url) ?? url;
+}
+
+function displayMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return normalizePublicMediaUrl(url) ?? url;
+}
 
 async function allocateHandle(
   db: ReturnType<typeof getDb>,
@@ -99,7 +110,7 @@ export async function ensureCommunityProfile(
       displayName: existing.displayName,
       showKycBadge:
         existing.showKycBadge && u?.kycStatus === "approved",
-      avatarUrl: u?.avatarUrl ?? null,
+      avatarUrl: displayAvatarUrl(u?.avatarUrl),
       reputationScore: existing.reputationScore,
       reputationLevel: level.id,
       memberSince: existing.createdAt.toISOString(),
@@ -143,7 +154,7 @@ export async function ensureCommunityProfile(
     handle: created?.handle ?? handle,
     displayName: created?.displayName ?? displayName,
     showKycBadge: u?.kycStatus === "approved",
-    avatarUrl: u?.avatarUrl ?? null,
+    avatarUrl: displayAvatarUrl(u?.avatarUrl),
   };
 }
 
@@ -184,7 +195,7 @@ export async function getAuthorsMap(
         handle: p.handle,
         displayName: p.displayName,
         showKycBadge: p.showKycBadge && u?.kycStatus === "approved",
-        avatarUrl: u?.avatarUrl ?? null,
+        avatarUrl: displayAvatarUrl(u?.avatarUrl),
         reputationScore: p.reputationScore,
         reputationLevel: level.id,
         memberSince: p.createdAt.toISOString(),
@@ -198,7 +209,7 @@ export async function getAuthorsMap(
         displayName:
           u.displayName?.trim() || u.email.split("@")[0] || "Membre",
         showKycBadge: u.kycStatus === "approved",
-        avatarUrl: u.avatarUrl ?? null,
+        avatarUrl: displayAvatarUrl(u.avatarUrl),
       });
     }
   }
@@ -311,7 +322,7 @@ async function resolveCoverUrl(
       ),
     )
     .limit(1);
-  return m?.publicUrl ?? null;
+  return displayMediaUrl(m?.publicUrl);
 }
 
 export async function getPublicProfileByHandle(
@@ -378,7 +389,7 @@ export async function getPublicProfileByHandle(
     verifiedBlue: profile.verifiedBlue || subs.length > 0,
     isAdmin:
       u?.role === UserRole.AGENT || u?.role === UserRole.SUPER_ADMIN,
-    avatarUrl: u?.avatarUrl ?? null,
+    avatarUrl: displayAvatarUrl(u?.avatarUrl),
     coverUrl,
     reputationScore: profile.reputationScore,
     reputationLevel: level.id,

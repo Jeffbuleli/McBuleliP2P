@@ -2,12 +2,19 @@
  * Central security response headers (middleware + next.config backup).
  * CSP domains must match legitimate third-party embeds (Turnstile, Didit KYC, Jitsi, Pi, R2).
  */
+import { mediaPublicOrigins } from "@/lib/media-url";
+
 export function buildContentSecurityPolicy(): string {
+  const mediaOrigins = mediaPublicOrigins();
+  const imgSources = ["'self'", "data:", "blob:", ...mediaOrigins];
+  const mediaSources = ["'self'", "blob:", ...mediaOrigins];
+
   return [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' https://media.mcbuleli.org data: blob:",
+    `img-src ${imgSources.join(" ")}`,
+    `media-src ${mediaSources.join(" ")}`,
     "font-src 'self' data:",
     [
       "connect-src 'self'",
@@ -17,7 +24,7 @@ export function buildContentSecurityPolicy(): string {
       "https://challenges.cloudflare.com",
       "https://verification.didit.me",
       "https://verify.didit.me",
-      "https://media.mcbuleli.org",
+      ...mediaOrigins,
     ].join(" "),
     "frame-src 'self' https://challenges.cloudflare.com https://verification.didit.me https://verify.didit.me https://live.mcbuleli.org",
     "object-src 'none'",

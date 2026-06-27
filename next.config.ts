@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { mediaPublicHostnames } from "./src/lib/media-url";
 import { securityResponseHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
@@ -6,9 +7,13 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["ccxt", "technicalindicators", "postgres"],
   images: {
     remotePatterns: [
+      ...mediaPublicHostnames().map((hostname) => ({
+        protocol: "https" as const,
+        hostname,
+      })),
       {
         protocol: "https",
-        hostname: "media.mcbuleli.org",
+        hostname: "**.r2.dev",
       },
     ],
   },

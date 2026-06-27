@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import {
   KycVerifiedBadge,
   ReputationLevelBadge,
@@ -24,18 +25,14 @@ export function CommunityAuthorHeader({
     <div className="flex min-w-0 items-start gap-3">
       <Link
         href={`/app/community/u/${author.handle}`}
-        className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#e8f3ee] to-[#d4ebe0] font-bold text-[#305f33] ${COMMUNITY_AVATAR_RING}`}
+        className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full ${COMMUNITY_AVATAR_RING}`}
       >
-        {author.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={author.avatarUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          author.displayName.slice(0, 1).toUpperCase()
-        )}
+        <CommunityAvatar
+          label={author.displayName}
+          avatarUrl={author.avatarUrl}
+          sizeClass={size}
+          textClass={compact ? "text-[10px]" : "text-sm"}
+        />
       </Link>
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-center gap-1.5">

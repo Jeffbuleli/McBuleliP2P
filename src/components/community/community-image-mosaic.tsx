@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+import { CommunityMediaImage } from "@/components/community/community-media-image";
 
 export type MosaicImage = {
   id: string;
@@ -31,8 +30,7 @@ export function CommunityImageMosaic({
   const slot = (img: MosaicImage, index: number, slotClass: string, overlay?: string) => {
     const inner = (
       <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={img.src} alt="" className="h-full w-full object-cover" />
+        <CommunityMediaImage src={img.src} className="h-full w-full" />
         {overlay ? (
           <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/50 text-2xl font-bold text-white">
             {overlay}

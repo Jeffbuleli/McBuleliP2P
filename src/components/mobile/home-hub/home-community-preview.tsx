@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import type { TraderLeaderboardEntry } from "@/lib/community/leaderboard-service";
 import { postDisplayText } from "@/lib/community/link-embed";
 import type { UnifiedFeedItem } from "@/lib/community/unified-feed-service";
@@ -45,14 +46,12 @@ export function HomeCommunityPreview({
                 href={`/app/community/u/${t.handle}`}
                 className="flex min-w-[5.5rem] shrink-0 flex-col items-center rounded-xl border border-[color:var(--fd-border)] bg-white px-2 py-2 transition active:scale-[0.98]"
               >
-                <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-sm font-bold text-[color:var(--fd-primary)]">
-                  {t.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={t.avatarUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    t.displayName.slice(0, 1).toUpperCase()
-                  )}
-                </span>
+                <CommunityAvatar
+                  label={t.displayName}
+                  avatarUrl={t.avatarUrl}
+                  sizeClass="h-10 w-10"
+                  textClass="text-sm"
+                />
                 <span className="mt-1 max-w-full truncate text-[10px] font-bold text-[color:var(--fd-text)]">
                   {t.displayName}
                 </span>
@@ -74,18 +73,12 @@ export function HomeCommunityPreview({
                 className="block rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 transition active:scale-[0.99]"
               >
                 <div className="flex items-start gap-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
-                    {post.author.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={post.author.avatarUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      post.author.displayName.slice(0, 1).toUpperCase()
-                    )}
-                  </span>
+                  <CommunityAvatar
+                    label={post.author.displayName}
+                    avatarUrl={post.author.avatarUrl}
+                    sizeClass="h-9 w-9"
+                    textClass="text-xs"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-bold text-[color:var(--fd-text)]">
                       {post.author.displayName}

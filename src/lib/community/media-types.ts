@@ -1,4 +1,5 @@
 import { communityImageVariant } from "@/lib/community/data-saver";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 
 export type MediaItemView = {
@@ -47,5 +48,7 @@ export function asMediaItemView(item: {
 }
 
 export function mediaDisplayUrl(media: MediaItemView): string {
-  return communityImageVariant(media.variants, media.url) ?? media.url;
+  const base = normalizePublicMediaUrl(media.url) ?? media.url;
+  const picked = communityImageVariant(media.variants, base) ?? base;
+  return normalizePublicMediaUrl(picked) ?? picked;
 }

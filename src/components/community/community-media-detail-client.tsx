@@ -7,6 +7,7 @@ import {
   CommunityActionBar,
   CommunityEngagementSummary,
 } from "@/components/community/community-action-bar";
+import { CommunityMediaImage } from "@/components/community/community-media-image";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
@@ -176,8 +177,11 @@ export function CommunityMediaDetailClient({
         </div>
 
         <div className="mt-3 overflow-hidden bg-[#0c0a09]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imgSrc} alt="" className="max-h-[70vh] w-full object-contain" />
+          <CommunityMediaImage
+            src={imgSrc}
+            className="max-h-[70vh] w-full"
+            objectFit="contain"
+          />
         </div>
 
         <CommunityEngagementSummary

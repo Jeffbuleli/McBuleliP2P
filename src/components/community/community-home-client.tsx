@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityCategoryNav } from "@/components/community/community-category-nav";
 import { CommunityHomeHeader } from "@/components/community/community-home-header";
 import {
@@ -294,14 +295,12 @@ export function CommunityHomeClient() {
                       href={`/app/community/u/${p.handle}`}
                       className="flex items-center gap-3 rounded-2xl border border-[#dce8e0] bg-white px-4 py-3 shadow-sm transition active:scale-[0.99]"
                     >
-                      <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[#e8f3ee] text-sm font-bold text-[#305f33] ring-2 ring-white">
-                        {p.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          p.displayName.slice(0, 1).toUpperCase()
-                        )}
-                      </span>
+                      <CommunityAvatar
+                        label={p.displayName}
+                        avatarUrl={p.avatarUrl}
+                        sizeClass="h-11 w-11"
+                        className="ring-2 ring-white"
+                      />
                       <div className="min-w-0">
                         <p className="truncate font-bold text-[#0c0a09]">{p.displayName}</p>
                         <p className="text-xs text-[#78716c]">@{p.handle} · {p.reputationScore} BP</p>

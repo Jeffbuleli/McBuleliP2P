@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
@@ -102,18 +103,11 @@ export function CommunityInboxClient() {
                 className="flex items-center gap-3 rounded-2xl border border-[#f0f4f2] bg-white px-4 py-3 shadow-[0_2px_12px_rgba(12,10,9,0.04)] active:scale-[0.99]"
               >
                 <div className="relative shrink-0">
-                  {t.peer.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={t.peer.avatarUrl}
-                      alt=""
-                      className="h-12 w-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f3ee] text-sm font-bold text-[#305f33]">
-                      {t.peer.displayName.slice(0, 1)}
-                    </div>
-                  )}
+                  <CommunityAvatar
+                    label={t.peer.displayName}
+                    avatarUrl={t.peer.avatarUrl}
+                    sizeClass="h-12 w-12"
+                  />
                   {t.peer.online ? (
                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-[#22c55e]" />
                   ) : null}

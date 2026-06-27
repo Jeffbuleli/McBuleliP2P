@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 import {
   communityComments,
   communityLikes,
@@ -78,7 +79,7 @@ export async function getPostMediaViews(
 
   return rows.map((r) => ({
     id: r.id,
-    url: r.publicUrl,
+    url: normalizePublicMediaUrl(r.publicUrl) ?? r.publicUrl,
     variants: r.variants,
     fileType: r.fileType,
     mimeType: r.mimeType,

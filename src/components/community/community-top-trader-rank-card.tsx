@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import type { TopTraderLeaderboardEntry } from "@/lib/community/top-trader-types";
 import { TopTraderMedalSvg } from "@/components/community/community-top-trader-illustrations";
 
@@ -40,18 +41,12 @@ export function CommunityTopTraderRankCard({
         className="flex w-full items-start gap-3 px-4 py-3 text-left active:bg-[#fafaf9]"
       >
         <div className="relative shrink-0">
-          {entry.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={entry.avatarUrl}
-              alt=""
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-[#e8f3ee]"
-            />
-          ) : (
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f3ee] text-sm font-extrabold text-[#305f33] ring-2 ring-[#dce8e0]">
-              {entry.displayName.slice(0, 1).toUpperCase()}
-            </span>
-          )}
+          <CommunityAvatar
+            label={entry.displayName}
+            avatarUrl={entry.avatarUrl}
+            sizeClass="h-10 w-10"
+            className="ring-2 ring-[#e8f3ee]"
+          />
           <span className="absolute -bottom-1 -right-1">
             <TopTraderMedalSvg rank={entry.rank} className="h-5 w-5" />
           </span>

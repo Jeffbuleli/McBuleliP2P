@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 import { getPublicPostForShare } from "@/lib/community/feed-service";
 import {
   communityPostAppPath,
@@ -39,8 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${post.authorDisplayName} (@${post.authorHandle})`;
   const description =
     post.body.length > 200 ? `${post.body.slice(0, 197)}…` : post.body;
-  const images = post.imageUrl
-    ? [{ url: post.imageUrl, width: 1200, height: 630, alt: title }]
+  const imageUrl = normalizePublicMediaUrl(post.imageUrl);
+  const images = imageUrl
+    ? [{ url: imageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: `${origin}/opengraph-image`, width: 1200, height: 630 }];
 
   return {
@@ -85,21 +86,22 @@ export default async function CommunityPostSharePage({ params }: Props) {
     );
   }
 
+  const imageUrl = normalizePublicMediaUrl(post.imageUrl);
+
   return (
     <main className="mx-auto min-h-screen max-w-lg bg-[#fafaf9] px-4 py-8">
       <div className="mb-4">
         <CommunityShareAuthLinks returnPath={returnPath} />
       </div>
       <article className="overflow-hidden rounded-2xl border border-[#e8f3ee] bg-white shadow-sm">
-        {post.imageUrl ? (
+        {imageUrl ? (
           <div className="relative aspect-[16/10] w-full bg-black">
-            <Image
-              src={post.imageUrl}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
               alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 512px) 100vw, 512px"
-              unoptimized
+              className="h-full w-full object-cover"
+              loading="lazy"
             />
           </div>
         ) : null}

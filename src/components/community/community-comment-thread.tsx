@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
 import { IconComment, IconLike, IconReply, IconSend } from "@/components/community/community-icons";
@@ -55,14 +56,14 @@ function CommentAvatar({
   return (
     <Link
       href={`/app/community/u/${author.handle}`}
-      className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#e8f3ee] to-[#d4ebe0] font-bold text-[#305f33] ${COMMUNITY_AVATAR_RING}`}
+      className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full ${COMMUNITY_AVATAR_RING}`}
     >
-      {author.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={author.avatarUrl} alt="" className="h-full w-full object-cover" />
-      ) : (
-        author.displayName.slice(0, 1).toUpperCase()
-      )}
+      <CommunityAvatar
+        label={author.displayName}
+        avatarUrl={author.avatarUrl}
+        sizeClass={size}
+        textClass={small ? "text-[9px]" : "text-[11px]"}
+      />
     </Link>
   );
 }

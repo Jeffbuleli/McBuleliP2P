@@ -9,6 +9,7 @@ import {
   getDb,
   users,
 } from "@/db";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 import { normalizeStoryTextBg } from "@/lib/community/story-text-colors";
 import type {
   CommunityStoryItem,
@@ -28,6 +29,16 @@ export type {
   StoryReactionEmoji,
 };
 export { STORY_REACTION_EMOJIS };
+
+function displayMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return normalizePublicMediaUrl(url) ?? url;
+}
+
+function displayAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return normalizePublicMediaUrl(url) ?? url;
+}
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_DAY = 8;
@@ -103,11 +114,12 @@ export async function listActiveStoryRings(args: {
           userId: row.authorId,
           handle,
           displayName,
-          avatarUrl: row.avatarUrl ?? null,
+          avatarUrl: displayAvatarUrl(row.avatarUrl),
           isMe: args.viewerId === row.authorId,
           hasUnseen: false,
           previewType: latest.type,
-          previewUrl: latest.type !== "text" ? latest.mediaUrl : null,
+          previewUrl:
+            latest.type !== "text" ? displayMediaUrl(latest.mediaUrl) : null,
           previewBg:
             latest.type === "text"
               ? normalizeStoryTextBg(latest.bgColor)
@@ -122,7 +134,7 @@ export async function listActiveStoryRings(args: {
         id: row.id,
         type: row.storyType as CommunityStoryItem["type"],
         body: row.body,
-        mediaUrl: row.mediaUrl,
+        mediaUrl: displayMediaUrl(row.mediaUrl),
         bgColor:
           row.storyType === "text"
             ? normalizeStoryTextBg(row.bgColor)

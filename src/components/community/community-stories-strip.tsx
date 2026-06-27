@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CommunityAvatar } from "@/components/community/community-avatar";
+import { CommunityMediaImage } from "@/components/community/community-media-image";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
 import { COMMUNITY_STORY_VIDEO_MAX_SEC } from "@/lib/community/config";
 import type {
@@ -261,13 +262,7 @@ function StoryRingCard({
             preload="metadata"
           />
         ) : (
-          <Image
-            src={ring.previewUrl}
-            alt=""
-            fill
-            className="object-cover"
-            unoptimized
-          />
+          <CommunityMediaImage src={ring.previewUrl} fill objectFit="cover" />
         )
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#305f33] to-[#229ed9]" />
@@ -285,20 +280,12 @@ function StoryRingCard({
         }`}
       >
         <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white">
-          {ring.avatarUrl ? (
-            <Image
-              src={ring.avatarUrl}
-              alt=""
-              width={32}
-              height={32}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
-          ) : (
-            <span className="text-[10px] font-bold text-[#305f33]">
-              {label.slice(0, 1).toUpperCase()}
-            </span>
-          )}
+          <CommunityAvatar
+            label={label}
+            avatarUrl={ring.avatarUrl}
+            sizeClass="h-8 w-8"
+            textClass="text-[10px]"
+          />
         </span>
       </div>
     </button>
@@ -540,12 +527,10 @@ function StoryComposer({
                 />
               ) : (
                 <div className="relative mx-auto aspect-[9/16] max-h-[min(52vh,480px)] w-full max-w-[280px]">
-                  <Image
+                  <CommunityMediaImage
                     src={mediaDraft.previewUrl}
-                    alt=""
                     fill
-                    className="object-contain"
-                    unoptimized
+                    objectFit="contain"
                   />
                 </div>
               )}
@@ -806,11 +791,12 @@ function StoryViewer({
       <div className="flex items-center justify-between px-4 py-2 text-white">
         <Link href={`/app/community/u/${encodeURIComponent(ring.handle)}`} className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white/20">
-            {ring.avatarUrl ? (
-              <Image src={ring.avatarUrl} alt="" width={32} height={32} className="h-full w-full object-cover" unoptimized />
-            ) : (
-              <span className="text-xs font-bold">{(ring.displayName || ring.handle).slice(0, 1)}</span>
-            )}
+            <CommunityAvatar
+              label={ring.displayName || ring.handle}
+              avatarUrl={ring.avatarUrl}
+              sizeClass="h-8 w-8"
+              textClass="text-xs"
+            />
           </span>
           <span className="text-sm font-bold">{ring.displayName || ring.handle}</span>
         </Link>
@@ -861,13 +847,7 @@ function StoryViewer({
             </div>
           ) : (
             <div className="relative mx-auto aspect-[9/16] max-h-[min(58vh,520px)] w-full max-w-[min(92vw,340px)] overflow-hidden rounded-2xl bg-black/30">
-              <Image
-                src={story.mediaUrl}
-                alt=""
-                fill
-                className="object-contain"
-                unoptimized
-              />
+              <CommunityMediaImage src={story.mediaUrl} fill objectFit="contain" />
             </div>
           )
         ) : null}
@@ -1014,20 +994,12 @@ function StoryInsightUserRow({
       className="flex min-w-0 flex-1 items-center gap-2"
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eaf5ee]">
-        {user.avatarUrl ? (
-          <Image
-            src={user.avatarUrl}
-            alt=""
-            width={32}
-            height={32}
-            className="h-full w-full object-cover"
-            unoptimized
-          />
-        ) : (
-          <span className="text-[10px] font-bold text-[#305f33]">
-            {label.slice(0, 1).toUpperCase()}
-          </span>
-        )}
+        <CommunityAvatar
+          label={label}
+          avatarUrl={user.avatarUrl}
+          sizeClass="h-8 w-8"
+          textClass="text-[10px]"
+        />
       </span>
       <span className="min-w-0">
         <span className="block truncate text-xs font-bold">{label}</span>

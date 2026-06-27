@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityDmLink } from "@/components/community/community-dm-link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { useI18n } from "@/components/i18n-provider";
 import {
   AdminGoldBadge,
@@ -187,7 +189,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           style={
             profile.coverUrl
               ? {
-                  backgroundImage: `linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.45)), url(${profile.coverUrl})`,
+                  backgroundImage: `linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.45)), url(${resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }
@@ -196,18 +198,13 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         />
         <div className="-mt-12 px-4 pb-5">
           <div className="relative mx-auto w-fit">
-            {profile.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatarUrl}
-                alt=""
-                className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-md"
-              />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-[#e8f3ee] text-3xl font-bold text-[#305f33] shadow-md">
-                {profile.displayName.slice(0, 1).toUpperCase()}
-              </div>
-            )}
+            <CommunityAvatar
+              label={profile.displayName}
+              avatarUrl={profile.avatarUrl}
+              sizeClass="h-24 w-24"
+              textClass="text-3xl"
+              className="rounded-full border-4 border-white shadow-md"
+            />
             <OnlineDot online={profile.online} />
           </div>
 
