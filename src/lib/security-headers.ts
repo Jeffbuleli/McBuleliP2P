@@ -2,7 +2,7 @@
  * Central security response headers (middleware + next.config backup).
  * CSP domains must match legitimate third-party embeds (Turnstile, Didit KYC, Jitsi, Pi, R2).
  */
-import { mediaPublicOrigins } from "@/lib/media-url";
+import { mediaPublicOrigins } from "./media-url-config";
 
 export function buildContentSecurityPolicy(): string {
   const mediaOrigins = mediaPublicOrigins();

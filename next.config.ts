@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { mediaPublicHostnames } from "./src/lib/media-url";
+import { mediaPublicHostnames } from "./src/lib/media-url-config";
 import { securityResponseHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
