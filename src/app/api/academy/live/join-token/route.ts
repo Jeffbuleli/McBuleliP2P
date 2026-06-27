@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
-import {
-  academyEditions,
-  academyPrograms,
-  academySessions,
-  getDb,
-  users,
-} from "@/db";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
 import { resolveGatedLiveJoinUrl } from "@/lib/academy-live-join";
+import { resolveLiveSessionRecord } from "@/lib/academy-live-resolve";
 import { getSessionUser } from "@/lib/session-user";
 import type { LiveJoinMode } from "@/lib/academy-live";
 import { enforceApiRateLimit } from "@/lib/api-rate-limit";
@@ -45,38 +40,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Validation failed" }, { status: 400 });
   }
 
-  const db = getDb();
-  const [row] = await db
-    .select({
-      editionId: academyEditions.id,
-      editionSlug: academyEditions.slug,
-      liveBaseUrl: academyEditions.liveBaseUrl,
-      programSlug: academyPrograms.slug,
-      sessionSlug: academySessions.slug,
-      sessionLiveUrl: academySessions.liveUrl,
-      sessionTitleFr: academySessions.titleFr,
-    })
-    .from(academySessions)
-    .innerJoin(academyEditions, eq(academySessions.editionId, academyEditions.id))
-    .innerJoin(academyPrograms, eq(academyEditions.programId, academyPrograms.id))
-    .where(
-      parsed.data.program
-        ? and(
-            eq(academyEditions.slug, parsed.data.editionSlug),
-            eq(academyPrograms.slug, parsed.data.program),
-            eq(academySessions.slug, parsed.data.sessionSlug),
-          )
-        : and(
-            eq(academyEditions.slug, parsed.data.editionSlug),
-            eq(academySessions.slug, parsed.data.sessionSlug),
-          ),
-    )
-    .limit(1);
+  const row = await resolveLiveSessionRecord({
+    editionSlug: parsed.data.editionSlug,
+    programSlug: parsed.data.program,
+    sessionSlug: parsed.data.sessionSlug,
+  });
 
   if (!row) {
     return NextResponse.json({ error: "academy_edition_not_found" }, { status: 404 });
   }
 
+  const db = getDb();
   const [profile] = await db
     .select({ displayName: users.displayName, email: users.email })
     .from(users)
@@ -96,7 +70,7 @@ export async function GET(req: Request) {
     sessionSlug: row.sessionSlug,
     sessionLiveUrl: row.sessionLiveUrl,
     liveBaseUrl: row.liveBaseUrl,
-    sessionTitle: row.sessionTitleFr,
+    sessionTitle: row.sessionTitle,
     mode: parsed.data.mode as LiveJoinMode,
     appRole: user.role,
     req,

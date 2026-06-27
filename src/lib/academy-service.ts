@@ -754,7 +754,7 @@ export async function getEditionDetail(args: {
     attendedSessionIds: attended,
   });
 
-  const sessionViews: AcademySessionView[] = eventSessions ?? sessions.map((s) => {
+  const legacySessionViews: AcademySessionView[] = sessions.map((s) => {
     const start = s.startsAt.getTime();
     const end = s.endsAt?.getTime() ?? start + 2 * 60 * 60 * 1000;
     const canCheckIn =
@@ -808,6 +808,17 @@ export async function getEditionDetail(args: {
       canCheckIn,
     };
   });
+
+  const sessionViews: AcademySessionView[] = (() => {
+    if (!eventSessions?.length) return legacySessionViews;
+    const bySlug = new Map<string, AcademySessionView>();
+    for (const s of legacySessionViews) bySlug.set(s.slug, s);
+    for (const s of eventSessions) bySlug.set(s.slug, s);
+    return [...bySlug.values()].sort(
+      (a, b) =>
+        new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+  })();
 
   const quizzes = await db
     .select()
