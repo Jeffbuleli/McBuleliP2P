@@ -2,7 +2,12 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { safeAppRedirectPath } from "@/lib/safe-app-path";
+import {
+  clearAuthReturnPath,
+  loginHrefFor,
+  resolveAuthReturnPath,
+  storeAuthReturnPath,
+} from "@/lib/auth-return-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -43,7 +48,7 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const refParam = searchParams.get("ref")?.trim() ?? "";
   const emailParam = searchParams.get("email")?.trim() ?? "";
-  const nextPath = safeAppRedirectPath(searchParams.get("next"));
+  const nextPath = resolveAuthReturnPath(searchParams.get("next"));
   const initialReferralCode = refParam ? refParam.toUpperCase() : "";
   const [email, setEmail] = useState(emailParam);
   const [displayName, setDisplayName] = useState("");
@@ -66,6 +71,24 @@ function RegisterForm() {
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
   }, [emailParam]);
+
+  useEffect(() => {
+    storeAuthReturnPath(nextPath);
+  }, [nextPath]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/auth/session", { credentials: "same-origin" })
+      .then((res) => {
+        if (!cancelled && res.ok) {
+          window.location.replace(nextPath);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [nextPath]);
 
   const countries = useMemo(() => {
     const regular = COUNTRY_OPTIONS.filter((c) => c.code !== "OTHER");
@@ -126,6 +149,7 @@ function RegisterForm() {
         setLoading(false);
         return;
       }
+      clearAuthReturnPath();
       window.location.replace(nextPath);
     } catch (err) {
       const aborted =
@@ -150,7 +174,7 @@ function RegisterForm() {
       footer={
         <AuthPageFooter
           prefix={t("has_account")}
-          linkHref={`/login?next=${encodeURIComponent(nextPath)}`}
+          linkHref={loginHrefFor(nextPath)}
           linkLabel={t("home_login")}
         />
       }

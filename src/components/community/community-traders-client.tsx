@@ -10,6 +10,7 @@ import { CommunityFilterTabs } from "@/components/community/community-filter-tab
 import { CommunityTopTraderPanel } from "@/components/community/community-top-trader-panel";
 import { CommunityTraderRankCard } from "@/components/community/community-trader-rank-card";
 import type { TraderLeaderboardEntry } from "@/lib/community/leaderboard-service";
+import { fetchAppApi } from "@/lib/client-app-fetch";
 
 type RankTab = "top_trader" | "contributors" | "trainers" | "analysts" | "bots";
 
@@ -53,7 +54,7 @@ export function CommunityTradersClient() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/community/traders/leaderboard");
+      const res = await fetchAppApi("/api/community/traders/leaderboard");
       const j = await res.json();
       setTraders((j.traders ?? []) as TraderLeaderboardEntry[]);
     } finally {

@@ -1,6 +1,7 @@
 "use client";
 
 import { startAuthentication } from "@simplewebauthn/browser";
+import { clearAuthReturnPath } from "@/lib/auth-return-path";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { authAltBtnPasskeyClass } from "@/components/auth/auth-marketing-shell";
@@ -77,6 +78,7 @@ export function PasskeyLoginButton({
         setErr(clientErrorText(t, verifyData.error ?? "profile_invalid_input"));
         return;
       }
+      clearAuthReturnPath();
       window.location.replace(redirectTo);
     } catch (e) {
       setErr(passkeyClientErrorText(t, e));

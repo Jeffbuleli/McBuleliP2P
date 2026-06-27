@@ -6,7 +6,7 @@ import { useState } from "react";
 import { LangSwitch } from "@/components/lang-switch";
 import { useI18n } from "@/components/i18n-provider";
 import { SessionAppLink } from "@/components/landing/session-app-link";
-import { useSessionEntryHref } from "@/hooks/use-session-app-href";
+import { loginHrefFor, useSessionEntryHref } from "@/hooks/use-session-app-href";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -28,6 +28,7 @@ export function LandingNavbarV2() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const entryHref = useSessionEntryHref("/app/wallet");
+  const loginHref = loginHrefFor("/app/wallet");
 
   const nav = [
     { href: "/#rates", label: t("landing_v2_flash_title") },
@@ -75,7 +76,7 @@ export function LandingNavbarV2() {
           <div className="flex items-center gap-1.5">
             <LangSwitch />
             <Link
-              href="/login"
+              href={loginHref}
               prefetch={false}
               className="hidden rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-bold text-stone-700 transition hover:border-[#305F33]/30 hover:text-[#305F33] sm:inline-flex"
             >
@@ -134,7 +135,7 @@ export function LandingNavbarV2() {
               {t("landing_nav_open_app")}
             </SessionAppLink>
             <Link
-              href="/login"
+              href={loginHref}
               prefetch={false}
               onClick={() => setOpen(false)}
               className="mt-2 py-2 text-center text-xs font-semibold text-stone-500 hover:text-[#305F33]"

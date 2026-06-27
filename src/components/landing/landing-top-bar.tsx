@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LangSwitch } from "@/components/lang-switch";
 import { useI18n } from "@/components/i18n-provider";
+import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -38,9 +39,11 @@ function MenuIcon({ className }: { className?: string }) {
   );
 }
 
-export function LandingTopBar() {
+export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPath?: string }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const loginHref = loginHrefFor(authReturnPath);
+  const registerHref = registerHrefFor(authReturnPath);
 
   const deskNav = [
     { href: "/#market", label: t("landing_nav_market") },
@@ -103,14 +106,14 @@ export function LandingTopBar() {
               <LangSwitch />
             </div>
             <Link
-              href="/login"
+              href={loginHref}
               prefetch={false}
               className="hidden min-h-10 items-center justify-center rounded-xl px-3.5 text-[13px] font-bold text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)] sm:inline-flex"
             >
               {t("landing_cta_login")}
             </Link>
             <Link
-              href="/register"
+              href={registerHref}
               prefetch={false}
               className="hidden min-h-10 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-4 text-[13px] font-extrabold text-white shadow-md shadow-[color:var(--fd-primary)]/20 transition active:scale-[0.99] sm:inline-flex"
             >
@@ -145,7 +148,7 @@ export function LandingTopBar() {
                 {t("brand")}
               </Link>
               <Link
-                href="/register"
+                href={registerHref}
                 className="rounded-xl px-3 py-2 text-sm font-semibold text-[color:var(--fd-text)] hover:bg-[color:var(--fd-mint)]"
                 role="menuitem"
                 onClick={() => setOpen(false)}
@@ -153,7 +156,7 @@ export function LandingTopBar() {
                 {t("landing_cta_primary")}
               </Link>
               <Link
-                href="/login"
+                href={loginHref}
                 className="rounded-xl px-3 py-2 text-sm font-semibold text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]"
                 role="menuitem"
                 onClick={() => setOpen(false)}

@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { safeAppRedirectPath } from "@/lib/safe-app-path";
+import {
+  clearAuthReturnPath,
+  loginHrefFor,
+  registerHrefFor,
+  resolveAuthReturnPath,
+  storeAuthReturnPath,
+} from "@/lib/auth-return-path";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
@@ -53,7 +59,7 @@ function LoginForm() {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get("email")?.trim() ?? "";
-  const nextPath = safeAppRedirectPath(searchParams.get("next"));
+  const nextPath = resolveAuthReturnPath(searchParams.get("next"));
   const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +79,10 @@ function LoginForm() {
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
   }, [emailParam]);
+
+  useEffect(() => {
+    storeAuthReturnPath(nextPath);
+  }, [nextPath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +131,7 @@ function LoginForm() {
         setError(msg === "Could not complete request." ? `HTTP ${res.status}` : msg);
         return;
       }
+      clearAuthReturnPath();
       // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
       window.location.replace(nextPath);
     } catch (err) {
@@ -208,6 +219,7 @@ function LoginForm() {
         setError(formatAuthClientError(data));
         return;
       }
+      clearAuthReturnPath();
       window.location.replace(nextPath);
     } catch (e) {
       const msg =
@@ -237,7 +249,7 @@ function LoginForm() {
       footer={
         <AuthPageFooter
           prefix={t("no_account")}
-          linkHref={`/register?next=${encodeURIComponent(nextPath)}`}
+          linkHref={registerHrefFor(nextPath)}
           linkLabel={t("home_register")}
         />
       }

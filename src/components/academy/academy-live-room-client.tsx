@@ -21,6 +21,7 @@ import type { AcademyLiveRole } from "@/lib/academy-live-role";
 import { isAcademyLiveEmbedEnabled } from "@/lib/academy-live-embed";
 import { AcademyLiveEmbed } from "@/components/academy/academy-live-embed";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { redirectToLoginWithReturn } from "@/lib/auth-return-path";
 import { useAcademyLiveJoinUrls } from "@/hooks/use-academy-live-join-urls";
 import {
   AcademyLiveCompanionGuide,
@@ -102,10 +103,9 @@ export function AcademyLiveRoomClient({
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (res.status === 401) {
-        const next = encodeURIComponent(
+        redirectToLoginWithReturn(
           `/app/academy/${editionSlug}/live/${sessionSlug}?program=${encodeURIComponent(programSlug)}`,
         );
-        window.location.href = `/login?next=${next}`;
         return;
       }
       setErr(t("academy_error_load"));

@@ -5,13 +5,13 @@ import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 import { getSessionUserId } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { redirectToLoginPreservingPath } from "@/lib/auth-return-path-server";
 
 export const dynamic = "force-dynamic";
 
 export default async function WalletFiatDepositPage() {
   const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
+  if (!userId) await redirectToLoginPreservingPath();
 
   const locale = await getLocale();
   const d = getDictionary(locale);

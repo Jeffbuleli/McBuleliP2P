@@ -7,6 +7,8 @@ import {
   communityPostAppPath,
   communityPostSharePath,
 } from "@/lib/community/share-url";
+import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
+import { CommunityShareAuthLinks } from "@/components/community/community-share-auth-links";
 import {
   CANONICAL_PRODUCTION_ORIGIN,
   getMetadataOrigin,
@@ -68,7 +70,9 @@ export default async function CommunityPostSharePage({ params }: Props) {
   if (userId) redirect(communityPostAppPath(id));
 
   const post = await getPublicPostForShare(id);
-  const appHref = `/login?next=${encodeURIComponent(communityPostAppPath(id))}`;
+  const returnPath = post?.appReturnPath ?? communityPostAppPath(id);
+  const loginHref = loginHrefFor(returnPath);
+  const registerHref = registerHrefFor(returnPath);
 
   if (!post) {
     return (
@@ -83,6 +87,9 @@ export default async function CommunityPostSharePage({ params }: Props) {
 
   return (
     <main className="mx-auto min-h-screen max-w-lg bg-[#fafaf9] px-4 py-8">
+      <div className="mb-4">
+        <CommunityShareAuthLinks returnPath={returnPath} />
+      </div>
       <article className="overflow-hidden rounded-2xl border border-[#e8f3ee] bg-white shadow-sm">
         {post.imageUrl ? (
           <div className="relative aspect-[16/10] w-full bg-black">
@@ -109,12 +116,20 @@ export default async function CommunityPostSharePage({ params }: Props) {
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#44403c]">
             {post.body}
           </p>
-          <Link
-            href={appHref}
-            className="mt-6 flex min-h-[48px] items-center justify-center rounded-xl bg-[#305f33] text-sm font-bold text-white"
-          >
-            Ouvrir dans McBuleli
-          </Link>
+          <div className="mt-6 flex flex-col gap-2">
+            <Link
+              href={loginHref}
+              className="flex min-h-[48px] items-center justify-center rounded-xl bg-[#305f33] text-sm font-bold text-white"
+            >
+              Ouvrir dans McBuleli
+            </Link>
+            <Link
+              href={registerHref}
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-[#dce8e0] text-sm font-semibold text-[#305f33]"
+            >
+              Créer un compte gratuit
+            </Link>
+          </div>
         </div>
       </article>
     </main>

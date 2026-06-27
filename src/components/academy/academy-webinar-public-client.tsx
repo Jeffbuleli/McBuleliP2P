@@ -6,6 +6,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { AcademyIcon } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
+import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 
 type Webinar = {
   publicSlug: string;
@@ -61,7 +62,7 @@ export function AcademyWebinarPublicClient({
         15_000,
       );
       if (res.status === 401) {
-        window.location.href = `/login?next=${encodeURIComponent(nextPath)}`;
+        window.location.href = loginHrefFor(nextPath);
         return;
       }
       const j = await res.json().catch(() => ({}));
@@ -131,10 +132,10 @@ export function AcademyWebinarPublicClient({
             {t("academy_webinar_account_hint")}
           </p>
           <div className="flex justify-center gap-3 text-xs font-bold">
-            <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="text-[#305f33]">
+            <Link href={loginHrefFor(nextPath)} className="text-[#305f33]">
               {t("home_login")}
             </Link>
-            <Link href={`/register?next=${encodeURIComponent(nextPath)}`} className="text-[#305f33]">
+            <Link href={registerHrefFor(nextPath)} className="text-[#305f33]">
               {t("home_register")}
             </Link>
           </div>

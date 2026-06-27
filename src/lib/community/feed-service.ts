@@ -109,6 +109,8 @@ export type PublicPostShareView = {
   authorDisplayName: string;
   imageUrl: string | null;
   publishedAt: string;
+  /** In-app path to open after login (formation join or post detail). */
+  appReturnPath: string;
 };
 
 export type FeedPostView = {
@@ -1395,6 +1397,11 @@ export async function getPublicPostForShare(
   if (!author) return null;
 
   const media = await getPostMediaViews(postId, row.mediaIds, null);
+  const formationMeta = resolveFormationMeta(row);
+  const appReturnPath =
+    formationMeta?.joinPath?.startsWith("/app/")
+      ? formationMeta.joinPath
+      : `/app/community/post/${row.id}`;
   return {
     id: row.id,
     body: row.body,
@@ -1402,6 +1409,7 @@ export async function getPublicPostForShare(
     authorDisplayName: author.displayName,
     imageUrl: media[0]?.url ?? null,
     publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
+    appReturnPath,
   };
 }
 

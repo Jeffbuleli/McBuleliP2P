@@ -24,6 +24,7 @@ import {
   groupFeedTradesByDay,
   groupUserTradesByDay,
 } from "@/lib/community/top-trader-ui-helpers";
+import { fetchAppApi } from "@/lib/client-app-fetch";
 
 export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
   const [program, setProgram] = useState<TopTraderProgramInfo | null>(null);
@@ -50,7 +51,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
   const loadLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/community/top-trader");
+      const res = await fetchAppApi("/api/community/top-trader");
       const j = await res.json();
       setProgram((j.program ?? null) as TopTraderProgramInfo | null);
       setTraders((j.traders ?? []) as TopTraderLeaderboardEntry[]);
@@ -65,7 +66,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
   const loadFeed = useCallback(async (silent = false) => {
     if (!silent && !feedLoadedRef.current) setFeedLoading(true);
     try {
-      const res = await fetch(
+      const res = await fetchAppApi(
         `/api/community/top-trader/feed?limit=24&locale=${fr ? "fr" : "en"}`,
       );
       if (!res.ok) return;
@@ -80,7 +81,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
 
   const loadMyTrades = useCallback(async () => {
     try {
-      const res = await fetch("/api/community/top-trader/trades?limit=15");
+      const res = await fetchAppApi("/api/community/top-trader/trades?limit=15");
       if (!res.ok) return;
       const j = await res.json();
       setMyTrades((j.trades ?? []) as TopTraderCompetitionTrade[]);

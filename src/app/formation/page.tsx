@@ -20,7 +20,7 @@ export default async function FormationPage() {
 
   return (
     <div className="home-theme fd-public-light min-h-dvh">
-      <LandingTopBar />
+      <LandingTopBar authReturnPath="/app/academy" />
       <div className="relative mx-auto max-w-lg px-3 pb-10 pt-2 sm:max-w-xl lg:max-w-2xl">
         <LandingLaunchHero />
         <div className="fd-card mt-6 rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-5 sm:p-7">

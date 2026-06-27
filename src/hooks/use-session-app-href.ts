@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 
-export function loginHrefFor(appPath: string): string {
-  return `/login?next=${encodeURIComponent(appPath)}`;
-}
+export { loginHrefFor, registerHrefFor };
 
 /** Resolves to `appPath` when session is valid, otherwise login with `next`. */
 export function useSessionAppHref(appPath: string): string {
@@ -31,7 +30,7 @@ export function useSessionAppHref(appPath: string): string {
 
 /** Entry CTA: app home when signed in, register otherwise. */
 export function useSessionEntryHref(appPath = "/app/wallet"): string {
-  const registerFallback = `/register?next=${encodeURIComponent(appPath)}`;
+  const registerFallback = registerHrefFor(appPath);
   const [href, setHref] = useState(registerFallback);
 
   useEffect(() => {
