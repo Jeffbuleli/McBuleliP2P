@@ -22,6 +22,7 @@
     "test:events": "tsx --test src/lib/events/__tests__/events.test.ts",
     "resend:sync-templates": "node scripts/email-optimize-assets.mjs && tsx scripts/resend-sync-templates.ts",
     "resend:export-broadcasts": "tsx scripts/export-marketing-broadcasts.mjs",
+    "resend:send-broadcast": "tsx scripts/send-marketing-broadcast.mjs",
     "db:backfill-email-canonical": "tsx scripts/backfill-email-canonical.mjs",
     "db:backfill-reward-points": "tsx scripts/backfill-reward-points.mjs",
     "icons:pwa": "node scripts/generate-pwa-icons.mjs",

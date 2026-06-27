@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-03T15:58:18.976Z",
+  "generatedAt": "2026-06-27T12:29:26.355Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -144,6 +144,18 @@
       "name": "McBuleli · academy_journey (EN)",
       "subject": "Continue your crypto journey on McBuleli Academy",
       "html": "mcbuleli-academy_journey-en.html"
+    },
+    {
+      "slug": "mcbuleli-formation_crypto_reminder-fr",
+      "name": "McBuleli · formation_crypto_reminder (FR)",
+      "subject": "Rappel — Formation CRYPTO · samedi 27 juin à 19h30",
+      "html": "mcbuleli-formation_crypto_reminder-fr.html"
+    },
+    {
+      "slug": "mcbuleli-formation_crypto_reminder-en",
+      "name": "McBuleli · formation_crypto_reminder (EN)",
+      "subject": "Reminder — CRYPTO training · Saturday 27 June 7:30 PM",
+      "html": "mcbuleli-formation_crypto_reminder-en.html"
     }
   ]
 }

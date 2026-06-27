@@ -7,6 +7,6 @@ Withdraw to whitelisted addresses when you're ready to cash out.
 • Multi-network deposits
 • Clear fees
 • Security alerts by email
-Deposit USDT: https://mcbuleli.org/app/deposit?asset=USDT&utm_source=email&utm_medium=broadcast&utm_campaign=wallet_usdt
+Deposit USDT: https://mcbuleli.org/app/wallet/deposit?asset=USDT&utm_source=email&utm_medium=broadcast&utm_campaign=wallet_usdt
 hi@mcbuleli.org
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

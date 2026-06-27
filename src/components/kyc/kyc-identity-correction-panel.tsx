@@ -53,9 +53,11 @@ export function KycIdentityCorrectionPanel({
     if (!data.legalIdentity) void load();
   }, [data.legalIdentity, load]);
 
-  const identityLocked =
-    data.approved || data.kycStatus === "pending" || data.kycStatus === "manual_review";
-  const canSaveDraft = !identityLocked;
+  const verificationInProgress =
+    data.kycStatus === "pending" || data.kycStatus === "manual_review";
+  const patchBlocked = data.approved || verificationInProgress;
+  const canSaveDraft = !patchBlocked;
+  const fieldsReadOnly = verificationInProgress;
 
   if (!showPanel) return null;
 
@@ -113,13 +115,17 @@ export function KycIdentityCorrectionPanel({
       <div>
         <p className="text-sm font-bold text-[#1c1917]">{t("kyc_identity_heading")}</p>
         <p className="mt-1 text-xs text-[var(--fd-muted)]">
-          {identityLocked ? t("kyc_identity_locked_hint") : t("kyc_identity_hint")}
+          {patchBlocked ? t("kyc_identity_locked_hint") : t("kyc_identity_hint")}
         </p>
       </div>
 
-      {identityLocked ? (
+      {verificationInProgress ? (
         <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           {t("kyc_identity_locked")}
+        </p>
+      ) : data.approved ? (
+        <p className="rounded-xl border border-sky-200/80 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+          {t("kyc_identity_approved_edit")}
         </p>
       ) : null}
 
@@ -141,8 +147,8 @@ export function KycIdentityCorrectionPanel({
               className={`${inputCls} mt-1`}
               maxLength={128}
               required
-              readOnly={identityLocked}
-              disabled={identityLocked}
+              readOnly={fieldsReadOnly}
+              disabled={fieldsReadOnly}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -155,8 +161,8 @@ export function KycIdentityCorrectionPanel({
               className={`${inputCls} mt-1`}
               maxLength={128}
               required
-              readOnly={identityLocked}
-              disabled={identityLocked}
+              readOnly={fieldsReadOnly}
+              disabled={fieldsReadOnly}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -168,8 +174,8 @@ export function KycIdentityCorrectionPanel({
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className={`${inputCls} mt-1`}
-            readOnly={identityLocked}
-            disabled={identityLocked}
+            readOnly={fieldsReadOnly}
+            disabled={fieldsReadOnly}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -181,8 +187,8 @@ export function KycIdentityCorrectionPanel({
             onChange={(e) => setDocumentNumber(e.target.value)}
             className={`${inputCls} mt-1`}
             maxLength={64}
-            readOnly={identityLocked}
-            disabled={identityLocked}
+            readOnly={fieldsReadOnly}
+            disabled={fieldsReadOnly}
           />
         </label>
       </div>

@@ -14,7 +14,8 @@ export type MarketingBroadcastKind =
   | "changelog"
   | "crypto_discovery"
   | "launch_academy"
-  | "academy_journey";
+  | "academy_journey"
+  | "formation_crypto_reminder";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -237,6 +238,27 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/app/academy",
     campaign: "academy_journey",
   },
+  formation_crypto_reminder: {
+    subject: "Reminder — CRYPTO training · Saturday 27 June 7:30 PM",
+    preheader: "McBuleli Live with ceo — join us tonight.",
+    headline: "CRYPTO training — tonight",
+    paragraphs: [
+      "You registered for our live CRYPTO session. We go live in a few hours — bring your questions.",
+      "Host: ceo · Platform: McBuleli Live (in your browser, no install).",
+    ],
+    dateHighlight: "Saturday 27 June 2026 · 7:30 PM (GMT+1) · Live",
+    heroIllustration: "depositUsdt",
+    bullets: [
+      "USDT & digital wallets — plain language",
+      "Live Q&A with the McBuleli team",
+      "One click from this email",
+    ],
+    reassurance: "Free · McBuleli Academy · Powered by McBuleli Live",
+    ctaLabel: "Join the live session",
+    ctaPath:
+      "/community/p/a66af481-eb44-4946-aa05-f7b942e0b9fd",
+    campaign: "formation_crypto_jun27",
+  },
 };
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
@@ -432,6 +454,27 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/app/academy",
     campaign: "academy_journey",
   },
+  formation_crypto_reminder: {
+    subject: "Rappel — Formation CRYPTO · samedi 27 juin à 19h30",
+    preheader: "McBuleli Live avec ceo — on vous attend ce soir.",
+    headline: "Formation CRYPTO — ce soir",
+    paragraphs: [
+      "Vous êtes inscrit à notre session live CRYPTO. On démarre dans quelques heures — préparez vos questions.",
+      "Animateur : ceo · Plateforme : McBuleli Live (dans le navigateur, sans installation).",
+    ],
+    dateHighlight: "Samedi 27 juin 2026 · 19h30 (GMT+1) · Live",
+    heroIllustration: "depositUsdt",
+    bullets: [
+      "USDT & portefeuille digital — en langage clair",
+      "Questions / réponses en direct avec l'équipe McBuleli",
+      "Un clic depuis cet email",
+    ],
+    reassurance: "Gratuit · McBuleli Academy · Propulsé par McBuleli Live",
+    ctaLabel: "Rejoindre le live",
+    ctaPath:
+      "/community/p/a66af481-eb44-4946-aa05-f7b942e0b9fd",
+    campaign: "formation_crypto_jun27",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -447,6 +490,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "crypto_discovery",
   "launch_academy",
   "academy_journey",
+  "formation_crypto_reminder",
 ];
 
 function buildDef(
