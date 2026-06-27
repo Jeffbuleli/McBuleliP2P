@@ -10,8 +10,8 @@ import {
   getDb,
   trainingRegistrations,
   users,
-} from "../../src/db/index.ts";
-import { ACADEMY_EDITION_JUNE_2026 } from "../../src/lib/academy-config.ts";
+} from "../../src/db";
+import { ACADEMY_EDITION_JUNE_2026 } from "../../src/lib/academy-config";
 
 const DEFAULT_POST_ID = "a66af481-eb44-4946-aa05-f7b942e0b9fd";
 
