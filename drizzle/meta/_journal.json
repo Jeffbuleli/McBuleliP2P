@@ -610,6 +610,27 @@
       "when": 1786600000000,
       "tag": "0094_top_trader_week_payouts",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1786700000000,
+      "tag": "0095_financial_audit_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1786800000000,
+      "tag": "0096_jitsi_access_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1786900000000,
+      "tag": "0097_kyc_identity_correction",
+      "breakpoints": true
     }
   ]
 }

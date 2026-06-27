@@ -1,4 +1,5 @@
 import type { KycIdentityCorrection } from "@/lib/kyc-identity";
+import { isMissingKycIdentityCorrectionColumnsError } from "@/lib/kyc-identity-correction-schema";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import {
@@ -47,6 +48,8 @@ export function buildKycStatusPayload(args: {
   diditSessionStatus?: string | null;
   legalIdentity?: KycLegalIdentity | null;
   identityCorrection?: KycIdentityCorrection | null;
+  /** False when DB migration 0097 is not applied yet. */
+  identityCorrectionEnabled?: boolean;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = kycEligibleCountry(args.countryCode);
@@ -69,6 +72,7 @@ export function buildKycStatusPayload(args: {
     (kycStatus === "rejected" || kycStatus === "none");
   const identityCorrection = args.identityCorrection ?? null;
   const canRequestIdentityCorrection =
+    (args.identityCorrectionEnabled ?? true) &&
     corridor &&
     approved &&
     !sanctionsBlocked &&
@@ -109,30 +113,69 @@ export async function getKycStatusPayload(
   userId: string,
 ): Promise<KycStatusPayload | null> {
   const db = getDb();
-  const [row] = await db
-    .select({
-      kycStatus: users.kycStatus,
-      countryCode: users.countryCode,
-      kycUpdatedAt: users.kycUpdatedAt,
-      kycRejectionNote: users.kycRejectionNote,
-      diditSessionId: users.diditSessionId,
-      diditSessionStatus: users.diditSessionStatus,
-      legalFirstName: users.legalFirstName,
-      legalLastName: users.legalLastName,
-      birthDate: users.birthDate,
-      documentNumber: users.documentNumber,
-      documentType: users.documentType,
-      documentCountry: users.documentCountry,
-      kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
-      kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
-      kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
-      kycIdentityProposedLastName: users.kycIdentityProposedLastName,
-      kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
-      kycIdentityCorrectedAt: users.kycIdentityCorrectedAt,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const baseSelect = {
+    kycStatus: users.kycStatus,
+    countryCode: users.countryCode,
+    kycUpdatedAt: users.kycUpdatedAt,
+    kycRejectionNote: users.kycRejectionNote,
+    diditSessionId: users.diditSessionId,
+    diditSessionStatus: users.diditSessionStatus,
+    legalFirstName: users.legalFirstName,
+    legalLastName: users.legalLastName,
+    birthDate: users.birthDate,
+    documentNumber: users.documentNumber,
+    documentType: users.documentType,
+    documentCountry: users.documentCountry,
+  } as const;
+
+  let row:
+    | ({
+        kycStatus: string;
+        countryCode: string | null;
+        kycUpdatedAt: Date | null;
+        kycRejectionNote: string | null;
+        diditSessionId: string | null;
+        diditSessionStatus: string | null;
+        legalFirstName: string | null;
+        legalLastName: string | null;
+        birthDate: string | null;
+        documentNumber: string | null;
+        documentType: string | null;
+        documentCountry: string | null;
+        kycIdentityCorrectionStatus?: string | null;
+        kycIdentityCorrectionRequestedAt?: Date | null;
+        kycIdentityProposedFirstName?: string | null;
+        kycIdentityProposedLastName?: string | null;
+        kycIdentityCorrectionNote?: string | null;
+        kycIdentityCorrectedAt?: Date | null;
+      })
+    | undefined;
+
+  let identityCorrectionEnabled = true;
+
+  try {
+    [row] = await db
+      .select({
+        ...baseSelect,
+        kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
+        kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
+        kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
+        kycIdentityProposedLastName: users.kycIdentityProposedLastName,
+        kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
+        kycIdentityCorrectedAt: users.kycIdentityCorrectedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+  } catch (e) {
+    if (!isMissingKycIdentityCorrectionColumnsError(e)) throw e;
+    identityCorrectionEnabled = false;
+    [row] = await db
+      .select(baseSelect)
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+  }
 
   if (!row) return null;
 
@@ -142,7 +185,7 @@ export async function getKycStatusPayload(
     row.documentNumber ||
     row.birthDate;
 
-  const correctionStatus = row.kycIdentityCorrectionStatus;
+  const correctionStatus = row.kycIdentityCorrectionStatus ?? null;
   const identityCorrection: KycIdentityCorrection | null =
     correctionStatus === "requested" || correctionStatus === "corrected"
       ? {
@@ -173,5 +216,6 @@ export async function getKycStatusPayload(
         }
       : null,
     identityCorrection,
+    identityCorrectionEnabled,
   });
 }
