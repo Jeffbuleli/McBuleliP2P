@@ -284,6 +284,10 @@ export const en = {
   kyc_identity_document: "Document number",
   kyc_identity_doc_type: "Document type",
   kyc_identity_resubmit: "Resubmit verification",
+  kyc_identity_locked: "Identity locked after verification",
+  kyc_identity_locked_hint:
+    "Legal name and document cannot be edited without a new Didit verification. Use Resubmit to correct OCR errors.",
+  kyc_identity_resubmit_unavailable: "Resubmit is not available right now",
   profile_tile_kyc: "Verify identity",
   profile_tile_kyc_sub: "ID + selfie",
   notif_kyc_pending_title: "KYC in progress",
@@ -4526,6 +4530,10 @@ export const fr: Messages = {
   kyc_identity_document: "N° de document",
   kyc_identity_doc_type: "Type de document",
   kyc_identity_resubmit: "Resoumettre la vérification",
+  kyc_identity_locked: "Identité verrouillée après vérification",
+  kyc_identity_locked_hint:
+    "Le nom légal et le document ne peuvent pas être modifiés sans une nouvelle vérification Didit. Utilisez Resoumettre pour corriger une erreur OCR.",
+  kyc_identity_resubmit_unavailable: "Resoumission indisponible pour le moment",
   profile_tile_kyc: "Vérifier identité",
   profile_tile_kyc_sub: "Pièce + selfie",
   notif_kyc_pending_title: "KYC en cours",

@@ -47,7 +47,7 @@ export function CommunityTradersClient() {
     if (tab === "analysts") {
       return [...traders].sort((a, b) => b.followerCount - a.followerCount);
     }
-    return traders;
+    return traders.slice(0, 20);
   }, [tab, traders]);
 
   const load = async () => {

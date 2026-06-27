@@ -637,9 +637,7 @@ export function FuturesTradingClient({
         </div>
       </TradeFlowCard>
 
-      {!embedInMarketHub ? (
-        <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
-      ) : null}
+      <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
 
       <TradeFlowCard>
         <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-[color:var(--fd-mint)] px-3 py-2">

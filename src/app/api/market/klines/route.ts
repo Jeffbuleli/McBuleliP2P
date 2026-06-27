@@ -12,6 +12,10 @@ const RANGE_MAP = {
   "7d": { interval: "4h", limit: 42 },
 } as const;
 
+const FAPI_RANGE_MAP = RANGE_MAP;
+
+const BINANCE_FAPI = "https://fapi.binance.com";
+
 /** OKX public candles — Pi trades as PI-USDT on OKX, not Binance spot. */
 const OKX_PI_INST = "PI-USDT";
 const PI_CHART_SYMBOL = "PIUSDT";
@@ -30,12 +34,14 @@ export async function GET(req: Request) {
   const rangeRaw = url.searchParams.get("range") ?? "24h";
   const range =
     rangeRaw in RANGE_MAP ? (rangeRaw as ChartRange) : ("24h" as ChartRange);
+  const feed = url.searchParams.get("feed") === "futures" ? "futures" : "spot";
 
   if (symbol === PI_CHART_SYMBOL) {
     return okxPiKlines(range);
   }
 
-  const { interval, limit } = RANGE_MAP[range];
+  const { interval, limit } =
+    feed === "futures" ? FAPI_RANGE_MAP[range] : RANGE_MAP[range];
 
   const qs = new URLSearchParams({
     symbol,
@@ -44,13 +50,14 @@ export async function GET(req: Request) {
   });
 
   try {
-    const res = await fetch(
-      `${BINANCE_API_PUBLIC}/api/v3/klines?${qs}`,
-      {
-        ...binancePublicFetchInit,
-        signal: AbortSignal.timeout(15_000),
-      },
-    );
+    const klineBase =
+      feed === "futures"
+        ? `${BINANCE_FAPI}/fapi/v1/klines`
+        : `${BINANCE_API_PUBLIC}/api/v3/klines`;
+    const res = await fetch(`${klineBase}?${qs}`, {
+      ...binancePublicFetchInit,
+      signal: AbortSignal.timeout(15_000),
+    });
     if (!res.ok) {
       return NextResponse.json(
         { message: "Market data unavailable." },
@@ -93,6 +100,7 @@ export async function GET(req: Request) {
         points,
         lastPrice: last,
         changePct,
+        priceSource: feed === "futures" ? "binance_futures" : "binance_spot",
       },
       {
         headers: {

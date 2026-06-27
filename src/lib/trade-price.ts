@@ -7,12 +7,44 @@ export type SymbolTicker = {
   /** When true, the returned price is from a recent cached snapshot. */
   stale?: boolean;
   /** Price source: spot (binance), futures mark/index, or cache fallback. */
-  source?: "binance_spot" | "binance_futures" | "cache";
+  source?: "binance_spot" | "binance_futures" | "okx" | "cache";
 };
 
 export async function fetchSymbolTicker(symbol: string): Promise<SymbolTicker | null> {
   const sym = symbol.toUpperCase();
   const now = Date.now();
+
+  if (sym === "PIUSDT") {
+    try {
+      const res = await fetch(
+        "https://www.okx.com/api/v5/market/ticker?instId=PI-USDT",
+        { cache: "no-store", signal: AbortSignal.timeout(12_000) },
+      );
+      const json = (await res.json()) as {
+        code?: string;
+        data?: Array<{ last?: string; open24h?: string }>;
+      };
+      if (res.ok && json.code === "0" && json.data?.[0]?.last) {
+        const row = json.data[0];
+        const lastPrice = Number(row.last);
+        const open24h = Number(row.open24h);
+        if (Number.isFinite(lastPrice) && lastPrice > 0) {
+          const changePct24h =
+            Number.isFinite(open24h) && open24h > 0
+              ? ((lastPrice - open24h) / open24h) * 100
+              : 0;
+          return {
+            symbol: sym,
+            lastPrice,
+            changePct24h,
+            source: "okx",
+          };
+        }
+      }
+    } catch {
+      /* fall through to generic path */
+    }
+  }
 
   // In-memory cache: last known safe price per symbol.
   // Safe for serverless/runtime; best-effort fallback for brief feed hiccups.

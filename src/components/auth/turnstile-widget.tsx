@@ -150,6 +150,11 @@ export function TurnstileWidget({
   }
 
   return (
-    <div ref={containerRef} className={`min-h-[65px] ${className ?? ""}`} aria-busy="true" />
+    <div
+      className={`flex min-h-[65px] items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-white/90 p-2 shadow-sm [&_iframe]:rounded-xl ${className ?? ""}`}
+      aria-busy="true"
+    >
+      <div ref={containerRef} className="flex w-full justify-center" />
+    </div>
   );
 }

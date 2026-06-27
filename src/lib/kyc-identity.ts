@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, users } from "@/db";
 import { resetUserKycForResubmit } from "@/lib/kyc-service";
+import { isKycApproved } from "@/lib/kyc-policy";
 
 export type KycLegalIdentity = {
   legalFirstName: string | null;
@@ -51,7 +52,7 @@ export async function getUserKycLegalIdentity(
   };
 }
 
-export async function updateUserKycLegalIdentity(
+async function applyUserKycLegalIdentityPatch(
   userId: string,
   patch: z.infer<typeof kycIdentityPatchZ>,
 ): Promise<KycLegalIdentity | null> {
@@ -79,12 +80,48 @@ export async function updateUserKycLegalIdentity(
   return getUserKycLegalIdentity(userId);
 }
 
+export async function updateUserKycLegalIdentity(
+  userId: string,
+  patch: z.infer<typeof kycIdentityPatchZ>,
+): Promise<KycLegalIdentity | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ kycStatus: users.kycStatus })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!row) return null;
+
+  const status = row.kycStatus ?? "none";
+  /** Didit-verified identity is locked locally — changes require a new Didit session (POST resubmit). */
+  if (
+    isKycApproved(status) ||
+    status === "pending" ||
+    status === "manual_review"
+  ) {
+    throw new Error("kyc_identity_locked");
+  }
+
+  return applyUserKycLegalIdentityPatch(userId, patch);
+}
+
 export async function resubmitUserKycIdentity(
   userId: string,
   patch?: z.infer<typeof kycIdentityPatchZ>,
 ): Promise<void> {
+  const db = getDb();
+  const [row] = await db
+    .select({ kycStatus: users.kycStatus })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  const status = row?.kycStatus ?? "none";
+  if (status !== "approved" && status !== "rejected" && status !== "none") {
+    throw new Error("kyc_identity_resubmit_unavailable");
+  }
+
   if (patch && Object.keys(patch).length) {
-    await updateUserKycLegalIdentity(userId, patch);
+    await applyUserKycLegalIdentityPatch(userId, patch);
   }
   await resetUserKycForResubmit(userId);
 }

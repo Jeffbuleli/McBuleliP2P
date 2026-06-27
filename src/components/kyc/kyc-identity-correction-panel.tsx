@@ -53,6 +53,10 @@ export function KycIdentityCorrectionPanel({
     if (!data.legalIdentity) void load();
   }, [data.legalIdentity, load]);
 
+  const identityLocked =
+    data.approved || data.kycStatus === "pending" || data.kycStatus === "manual_review";
+  const canSaveDraft = !identityLocked;
+
   if (!showPanel) return null;
 
   async function save() {
@@ -108,8 +112,16 @@ export function KycIdentityCorrectionPanel({
     <section className="fd-card mt-3 space-y-3 p-4">
       <div>
         <p className="text-sm font-bold text-[#1c1917]">{t("kyc_identity_heading")}</p>
-        <p className="mt-1 text-xs text-[var(--fd-muted)]">{t("kyc_identity_hint")}</p>
+        <p className="mt-1 text-xs text-[var(--fd-muted)]">
+          {identityLocked ? t("kyc_identity_locked_hint") : t("kyc_identity_hint")}
+        </p>
       </div>
+
+      {identityLocked ? (
+        <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {t("kyc_identity_locked")}
+        </p>
+      ) : null}
 
       {err ? (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{err}</p>
@@ -126,9 +138,11 @@ export function KycIdentityCorrectionPanel({
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className={`${inputCls} mt-1`}
-            maxLength={128}
-            required
+              className={`${inputCls} mt-1`}
+              maxLength={128}
+              required
+              readOnly={identityLocked}
+              disabled={identityLocked}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -138,9 +152,11 @@ export function KycIdentityCorrectionPanel({
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className={`${inputCls} mt-1`}
-            maxLength={128}
-            required
+              className={`${inputCls} mt-1`}
+              maxLength={128}
+              required
+              readOnly={identityLocked}
+              disabled={identityLocked}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -152,6 +168,8 @@ export function KycIdentityCorrectionPanel({
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className={`${inputCls} mt-1`}
+            readOnly={identityLocked}
+            disabled={identityLocked}
           />
         </label>
         <label className="block sm:col-span-1">
@@ -163,6 +181,8 @@ export function KycIdentityCorrectionPanel({
             onChange={(e) => setDocumentNumber(e.target.value)}
             className={`${inputCls} mt-1`}
             maxLength={64}
+            readOnly={identityLocked}
+            disabled={identityLocked}
           />
         </label>
       </div>
@@ -175,14 +195,16 @@ export function KycIdentityCorrectionPanel({
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void save()}
-          className="rounded-xl border border-[var(--fd-border)] px-4 py-2.5 text-xs font-semibold text-[#1c1917] disabled:opacity-60"
-        >
-          {busy ? t("profile_avatar_uploading") : t("profile_save")}
-        </button>
+        {canSaveDraft ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void save()}
+            className="rounded-xl border border-[var(--fd-border)] px-4 py-2.5 text-xs font-semibold text-[#1c1917] disabled:opacity-60"
+          >
+            {busy ? t("profile_avatar_uploading") : t("profile_save")}
+          </button>
+        ) : null}
         {data.canResubmitKyc || data.approved ? (
           <button
             type="button"

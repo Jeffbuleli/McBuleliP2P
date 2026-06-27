@@ -66,6 +66,7 @@ Same as before: withdraw, transfer, P2P, AVEC, live trade, fiat mobile money.
 
 | Issue | Fix |
 |-------|-----|
+| Blank KYC modal (white overlay) | CSP must allow `frame-src https://verify.didit.me` (SDK iframe), not only `verification.didit.me` |
 | Blank KYC / not configured | `KYC_ENABLED`, `DIDIT_API_KEY`, `DIDIT_WORKFLOW_ID`, migration 0038 |
 | SDK opens but status stuck pending | Configure webhook + `DIDIT_WEBHOOK_SECRET`; check Render logs for `[didit webhook]` |
 | Declined — blurry document | Retake voter card photos (front + back), good light |

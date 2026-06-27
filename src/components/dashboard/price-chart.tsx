@@ -119,6 +119,9 @@ function PriceChart({
     }
   }, [searchParams, symbol]);
 
+  const panel = searchParams.get("panel");
+  const priceFeed = panel === "futures" ? "futures" : "spot";
+
   const load = useCallback(
     async (mode: "full" | "poll") => {
       if (mode === "full") {
@@ -134,7 +137,7 @@ function PriceChart({
       }
       try {
         const res = await fetch(
-          `/api/market/klines?symbol=${encodeURIComponent(symbol)}&range=${range}`,
+          `/api/market/klines?symbol=${encodeURIComponent(symbol)}&range=${range}&feed=${priceFeed}`,
           { cache: "no-store" },
         );
         const json = (await res.json().catch(() => ({}))) as Record<
@@ -170,7 +173,7 @@ function PriceChart({
         if (mode === "full") setLoading(false);
       }
     },
-    [symbol, range, locale],
+    [symbol, range, locale, priceFeed],
   );
 
   useEffect(() => {

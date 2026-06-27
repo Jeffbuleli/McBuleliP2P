@@ -50,6 +50,19 @@ export function DiditVerifyButton({
         throw new Error(code);
       }
 
+      let sessionUrl: URL;
+      try {
+        sessionUrl = new URL(json.url);
+      } catch {
+        throw new Error("didit_session_failed");
+      }
+      if (
+        !sessionUrl.hostname.endsWith(".didit.me") &&
+        sessionUrl.hostname !== "didit.me"
+      ) {
+        throw new Error("didit_session_failed");
+      }
+
       const sessionId = json.sessionId;
       callbacksRef.current.onStarted?.({
         sessionId,
@@ -72,7 +85,7 @@ export function DiditVerifyButton({
       };
 
       DiditSdk.shared.startVerification({
-        url: json.url,
+        url: sessionUrl.toString(),
         configuration: { closeModalOnComplete: true },
       });
     } catch (e) {

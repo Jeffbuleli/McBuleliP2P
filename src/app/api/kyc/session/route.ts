@@ -13,6 +13,7 @@ import {
 } from "@/lib/didit/kyc-session-store";
 import { getDb, users } from "@/db";
 import { eq } from "drizzle-orm";
+import { kycEligibleCountry, kycEnabled } from "@/lib/kyc-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,9 @@ export async function POST() {
   }
   if (!diditApiConfigured()) {
     return NextResponse.json({ error: "didit_not_configured" }, { status: 503 });
+  }
+  if (!kycEnabled()) {
+    return NextResponse.json({ error: "kyc_disabled" }, { status: 503 });
   }
 
   const db = getDb();
@@ -37,6 +41,10 @@ export async function POST() {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+
+  if (!kycEligibleCountry(u?.countryCode)) {
+    return NextResponse.json({ error: "kyc_country_unsupported" }, { status: 400 });
+  }
 
   const existingId = u?.diditSessionId?.trim();
   if (

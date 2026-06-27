@@ -126,7 +126,7 @@ export async function getTopTraderLeaderboard(args: {
 }> {
   const program = getTopTraderProgramInfo();
   const db = getDb();
-  const limit = Math.min(Math.max(args.limit ?? 30, 1), 50);
+  const limit = Math.min(Math.max(args.limit ?? 15, 1), 30);
 
   if (program.status === "upcoming") {
     return { program, traders: [], viewer: null };

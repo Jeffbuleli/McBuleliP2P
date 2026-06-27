@@ -126,7 +126,7 @@ export function ProfileSettingsList({
       ? t("profile_status_pending")
       : kycRejected
         ? t("profile_kyc_rejected")
-        : t("profile_status_off");
+        : t("profile_kyc_not_verified");
 
   const paymentBadge =
     meta.paymentMethodsCount > 0

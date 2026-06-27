@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import {
-  BINANCE_API_PUBLIC,
-  binancePublicFetchInit,
-} from "@/lib/binance-public";
+import { binancePublicFetchInit } from "@/lib/binance-public";
 import { getOkxPiUsdtCandleSeries } from "@/lib/okx-pi-candles";
 
 export const dynamic = "force-dynamic";
 
-/** Mini-chart for PI/USDT uses OKX candles (reference); other pairs use Binance spot klines. */
+const BINANCE_FAPI = "https://fapi.binance.com";
+
+/** Mini-chart for PI/USDT uses OKX candles (reference); other pairs use Binance USDT-M futures klines (aligns with mark price). */
 const PI_TRADE_CHART = "PIUSDT";
 
 const TF_MAP = {
@@ -71,7 +70,7 @@ export async function GET(req: Request) {
 
   try {
     const res = await fetch(
-      `${BINANCE_API_PUBLIC}/api/v3/klines?${qs}`,
+      `${BINANCE_FAPI}/fapi/v1/klines?${qs}`,
       binancePublicFetchInit,
     );
     if (!res.ok) {
@@ -103,7 +102,7 @@ export async function GET(req: Request) {
     const changePct = first !== 0 ? ((last - first) / first) * 100 : 0;
 
     return NextResponse.json(
-      { symbol, tf, points, lastPrice: last, changePct },
+      { symbol, tf, points, lastPrice: last, changePct, priceSource: "binance_futures" },
       { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
   } catch {

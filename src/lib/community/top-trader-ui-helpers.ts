@@ -79,6 +79,18 @@ export function groupFeedTradesByDay(
   return groups;
 }
 
+export function capTopTraderDayGroups<T extends { trades: unknown[] }>(
+  groups: T[],
+  opts?: { maxDays?: number; maxTradesPerDay?: number },
+): T[] {
+  const maxDays = opts?.maxDays ?? 3;
+  const maxTradesPerDay = opts?.maxTradesPerDay ?? 8;
+  return groups.slice(0, maxDays).map((g) => ({
+    ...g,
+    trades: g.trades.slice(0, maxTradesPerDay),
+  }));
+}
+
 export function groupUserTradesByDay(
   trades: TopTraderCompetitionTrade[],
   fr: boolean,

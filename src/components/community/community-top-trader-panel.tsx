@@ -20,6 +20,7 @@ import {
 import { CommunityTopTraderWinnerStrip } from "@/components/community/community-top-trader-winner-strip";
 import { TopTraderEmptyIllustration } from "@/components/community/community-top-trader-illustrations";
 import {
+  capTopTraderDayGroups,
   groupFeedTradesByDay,
   groupUserTradesByDay,
 } from "@/lib/community/top-trader-ui-helpers";
@@ -65,7 +66,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
     if (!silent && !feedLoadedRef.current) setFeedLoading(true);
     try {
       const res = await fetch(
-        `/api/community/top-trader/feed?limit=50&locale=${fr ? "fr" : "en"}`,
+        `/api/community/top-trader/feed?limit=24&locale=${fr ? "fr" : "en"}`,
       );
       if (!res.ok) return;
       const j = await res.json();
@@ -98,17 +99,17 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
 
   const feedGroups = useMemo(() => {
     if (!program || !feedTrades.length) return [];
-    return groupFeedTradesByDay(feedTrades, program, fr);
+    return capTopTraderDayGroups(groupFeedTradesByDay(feedTrades, program, fr));
   }, [feedTrades, program, fr]);
 
   const myTradeGroups = useMemo(
-    () => groupUserTradesByDay(myTrades, fr),
+    () => capTopTraderDayGroups(groupUserTradesByDay(myTrades, fr), { maxDays: 2, maxTradesPerDay: 6 }),
     [myTrades, fr],
   );
 
   const expandedEntry = traders.find((t) => t.userId === expandedUserId) ?? null;
   const expandedTradeGroups = useMemo(
-    () => groupUserTradesByDay(trades, fr),
+    () => capTopTraderDayGroups(groupUserTradesByDay(trades, fr), { maxDays: 2, maxTradesPerDay: 6 }),
     [trades, fr],
   );
 
@@ -277,7 +278,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
           </p>
         ) : (
           <ul className="space-y-2">
-            {traders.map((entry) => (
+            {traders.slice(0, 15).map((entry) => (
               <li key={entry.userId}>
                 <CommunityTopTraderRankCard
                   fr={fr}
