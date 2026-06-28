@@ -9,8 +9,8 @@ import {
   writePlatformAdminAudit,
 } from "@/lib/admin-audit";
 import {
-  adminKycIdentityCorrectionZ,
-  applyAdminKycIdentityCorrection,
+  adminKycIdentityReverificationZ,
+  triggerAdminDiditIdentityReverification,
 } from "@/lib/kyc-identity";
 
 export async function POST(
@@ -26,7 +26,7 @@ export async function POST(
     throw e;
   }
 
-  const parsed = adminKycIdentityCorrectionZ.safeParse(
+  const parsed = adminKycIdentityReverificationZ.safeParse(
     await req.json().catch(() => null),
   );
   if (!parsed.success) {
@@ -40,10 +40,10 @@ export async function POST(
   }
 
   try {
-    const result = await applyAdminKycIdentityCorrection({
+    const result = await triggerAdminDiditIdentityReverification({
       targetUserId,
       adminUserId: me.id,
-      body: parsed.data,
+      comment: parsed.data.comment,
     });
 
     await writePlatformAdminAudit({
@@ -52,10 +52,9 @@ export async function POST(
       resourceType: "user",
       resourceId: targetUserId,
       meta: {
-        legalFirstName: parsed.data.legalFirstName,
-        legalLastName: parsed.data.legalLastName,
-        previousProposedFirstName: result.correction.proposedFirstName,
-        previousProposedLastName: result.correction.proposedLastName,
+        diditSessionStatus: result.diditSessionStatus,
+        correctionStatus: result.correction.status,
+        comment: parsed.data.comment ?? null,
       },
     });
 

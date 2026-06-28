@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
@@ -181,6 +182,19 @@ export function KycIdentityCorrectionPanel({
         <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           {t("kyc_identity_correction_pending")}
         </p>
+      ) : null}
+
+      {correction?.status === "reverification" || data.identityReverificationPending ? (
+        <div className="space-y-2 rounded-xl border border-sky-200/80 bg-sky-50 px-3 py-3 text-xs text-sky-950">
+          <p className="font-semibold">{t("kyc_identity_reverification_heading")}</p>
+          <p>{t("kyc_identity_reverification_hint")}</p>
+          <Link
+            href="/app/profile/kyc?start=1"
+            className="inline-flex rounded-xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-xs font-semibold text-white"
+          >
+            {t("kyc_identity_reverification_cta")}
+          </Link>
+        </div>
       ) : null}
 
       {correction?.status === "corrected" ? (

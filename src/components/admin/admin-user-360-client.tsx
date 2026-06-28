@@ -43,7 +43,7 @@ type User360 = {
     diditSessionId: string | null;
     diditSessionStatus: string | null;
     identityCorrection: {
-      status: "requested" | "corrected" | null;
+      status: "requested" | "reverification" | "corrected" | null;
       requestedAt: string | null;
       proposedFirstName: string | null;
       proposedLastName: string | null;
@@ -174,24 +174,21 @@ export function AdminUser360Client() {
     }
   }
 
-  async function applyKycIdentityCorrection() {
+  async function sendDiditIdentityReverification() {
     setKycBusy(true);
     setKycMsg(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}/kyc-identity-correction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          legalFirstName: kycFirstName.trim(),
-          legalLastName: kycLastName.trim(),
-        }),
+        body: JSON.stringify({ comment: null }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setKycMsg(body.message ?? "—");
         return;
       }
-      setKycMsg(t("admin_kyc_identity_correction_saved"));
+      setKycMsg(t("admin_kyc_identity_reverification_sent"));
       await load();
     } finally {
       setKycBusy(false);
@@ -382,7 +379,9 @@ export function AdminUser360Client() {
               value={
                 data.kyc.identityCorrection.status === "requested"
                   ? t("admin_kyc_identity_correction_requested")
-                  : t("admin_kyc_identity_correction_corrected")
+                  : data.kyc.identityCorrection.status === "reverification"
+                    ? t("admin_kyc_identity_reverification_pending")
+                    : t("admin_kyc_identity_correction_corrected")
               }
             />
           ) : null}
@@ -403,19 +402,6 @@ export function AdminUser360Client() {
             label={t("kyc_identity_document")}
             value={data.kyc.legal.documentNumber ?? "—"}
           />
-          {data.kyc.identityCorrection?.status === "requested" ? (
-            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-              <p className="font-semibold">{t("admin_kyc_identity_correction_user_request")}</p>
-              <p className="mt-1">
-                {[data.kyc.identityCorrection.proposedFirstName, data.kyc.identityCorrection.proposedLastName]
-                  .filter(Boolean)
-                  .join(" ")}
-              </p>
-              {data.kyc.identityCorrection.note ? (
-                <p className="mt-1 text-amber-900">{data.kyc.identityCorrection.note}</p>
-              ) : null}
-            </div>
-          ) : null}
           {data.kyc.rejectionNote ? (
             <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800">
               {data.kyc.rejectionNote}
@@ -426,7 +412,10 @@ export function AdminUser360Client() {
               Didit: {data.kyc.diditSessionId}
             </p>
           ) : null}
-          {data.kyc.kycStatus === "approved" ? (
+          {data.kyc.kycStatus === "approved" &&
+          data.kyc.diditSessionId &&
+          data.kyc.identityCorrection?.status !== "reverification" &&
+          data.kyc.identityCorrection?.status !== "corrected" ? (
             <div className="mt-4 space-y-3 border-t border-[color:var(--fd-border)] pt-4">
               <p className="text-sm font-semibold text-[color:var(--fd-text)]">
                 {t("admin_kyc_identity_correction_ops_heading")}
@@ -442,44 +431,38 @@ export function AdminUser360Client() {
               >
                 {t("admin_kyc_didit_console")}
               </a>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs">
-                  <span className="font-semibold text-[color:var(--fd-muted)]">
-                    {t("kyc_identity_first")}
-                  </span>
-                  <input
-                    value={kycFirstName}
-                    onChange={(e) => setKycFirstName(e.target.value)}
-                    className={inputCls}
-                    maxLength={128}
-                  />
-                </label>
-                <label className="block text-xs">
-                  <span className="font-semibold text-[color:var(--fd-muted)]">
-                    {t("kyc_identity_last")}
-                  </span>
-                  <input
-                    value={kycLastName}
-                    onChange={(e) => setKycLastName(e.target.value)}
-                    className={inputCls}
-                    maxLength={128}
-                  />
-                </label>
-              </div>
+              {data.kyc.identityCorrection?.status === "requested" ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                  <p className="font-semibold">{t("admin_kyc_identity_correction_user_request")}</p>
+                  <p className="mt-1">
+                    {[
+                      data.kyc.identityCorrection.proposedFirstName,
+                      data.kyc.identityCorrection.proposedLastName,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </p>
+                  {data.kyc.identityCorrection.note ? (
+                    <p className="mt-1 text-amber-900">{data.kyc.identityCorrection.note}</p>
+                  ) : null}
+                </div>
+              ) : null}
               {kycMsg ? (
                 <p className="text-xs text-[color:var(--fd-muted)]">{kycMsg}</p>
               ) : null}
               <button
                 type="button"
-                disabled={kycBusy || !kycFirstName.trim() || !kycLastName.trim()}
-                onClick={() => void applyKycIdentityCorrection()}
+                disabled={kycBusy}
+                onClick={() => void sendDiditIdentityReverification()}
                 className={adminCls.btnPrimary}
               >
-                {kycBusy
-                  ? "…"
-                  : t("admin_kyc_identity_correction_confirm")}
+                {kycBusy ? "…" : t("admin_kyc_identity_reverification_confirm")}
               </button>
             </div>
+          ) : data.kyc.identityCorrection?.status === "reverification" ? (
+            <p className="mt-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-950">
+              {t("admin_kyc_identity_reverification_pending")}
+            </p>
           ) : null}
         </section>
       ) : null}

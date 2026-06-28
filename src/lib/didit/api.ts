@@ -112,3 +112,46 @@ export function rejectionNoteFromDiditResource(
   if (outcome !== "rejected") return null;
   return rejectionNoteFromDiditDecision(body);
 }
+
+/** Ask the user to redo ID capture on an approved session (name / OCR correction). */
+export async function requestDiditSessionResubmission(args: {
+  sessionId: string;
+  comment?: string;
+  emailAddress?: string | null;
+  sendEmail?: boolean;
+}): Promise<DiditSessionResource> {
+  const apiKey = diditApiKey();
+  if (!apiKey) throw new Error("didit_api_not_configured");
+
+  const body: Record<string, unknown> = {
+    new_status: "Resubmitted",
+    comment:
+      args.comment?.trim() ||
+      "Identity correction — please complete verification again with your government ID.",
+  };
+  const email = args.emailAddress?.trim();
+  if (args.sendEmail && email) {
+    body.send_email = true;
+    body.email_address = email;
+  }
+
+  const res = await fetch(
+    `${API_BASE}/session/${encodeURIComponent(args.sessionId)}/update-status/`,
+    {
+      method: "PATCH",
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`didit_resubmit_${res.status}:${detail.slice(0, 300)}`);
+  }
+
+  return (await res.json()) as DiditSessionResource;
+}

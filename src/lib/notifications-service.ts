@@ -37,6 +37,7 @@ export type NotificationKind =
   | "kyc_approved"
   | "kyc_rejected"
   | "kyc_manual_review"
+  | "kyc_identity_reverification"
   | "academy_session_reminder"
   | "academy_announcement"
   | "academy_cohort_invite"
@@ -54,6 +55,7 @@ const KYC_NOTIFICATION_KINDS = new Set<NotificationKind>([
   "kyc_approved",
   "kyc_rejected",
   "kyc_manual_review",
+  "kyc_identity_reverification",
 ]);
 
 /** Same KYC kind within this window → skip insert (cron/poll/webhook retries). */

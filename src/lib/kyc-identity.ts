@@ -1,8 +1,11 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, users } from "@/db";
+import { requestDiditSessionResubmission } from "@/lib/didit/api";
+import { syncKycSessionStatus } from "@/lib/didit/kyc-session-store";
 import { resetUserKycForResubmit } from "@/lib/kyc-service";
 import { isKycApproved } from "@/lib/kyc-policy";
+import { createUserNotification } from "@/lib/notifications-service";
 
 export type KycLegalIdentity = {
   legalFirstName: string | null;
@@ -13,7 +16,7 @@ export type KycLegalIdentity = {
   documentCountry: string | null;
 };
 
-export type KycIdentityCorrectionStatus = "requested" | "corrected";
+export type KycIdentityCorrectionStatus = "requested" | "reverification" | "corrected";
 
 export type KycIdentityCorrection = {
   status: KycIdentityCorrectionStatus | null;
@@ -42,10 +45,12 @@ export const kycIdentityCorrectionRequestZ = z.object({
   note: z.string().trim().max(500).optional().nullable(),
 });
 
-export const adminKycIdentityCorrectionZ = z.object({
-  legalFirstName: z.string().trim().min(1).max(128),
-  legalLastName: z.string().trim().min(1).max(128),
+export const adminKycIdentityReverificationZ = z.object({
+  comment: z.string().trim().max(500).optional().nullable(),
 });
+
+/** @deprecated use adminKycIdentityReverificationZ */
+export const adminKycIdentityCorrectionZ = adminKycIdentityReverificationZ;
 
 function mapIdentityCorrection(row: {
   kycIdentityCorrectionStatus: string | null;
@@ -57,7 +62,12 @@ function mapIdentityCorrection(row: {
 }): KycIdentityCorrection {
   const status = row.kycIdentityCorrectionStatus as KycIdentityCorrectionStatus | null;
   return {
-    status: status === "requested" || status === "corrected" ? status : null,
+    status:
+      status === "requested" ||
+      status === "reverification" ||
+      status === "corrected"
+        ? status
+        : null,
     requestedAt: row.kycIdentityCorrectionRequestedAt?.toISOString() ?? null,
     proposedFirstName: row.kycIdentityProposedFirstName ?? null,
     proposedLastName: row.kycIdentityProposedLastName ?? null,
@@ -182,7 +192,10 @@ export async function requestUserKycIdentityCorrection(
   if (!row || !isKycApproved(row.kycStatus)) {
     throw new Error("kyc_identity_correction_unavailable");
   }
-  if (row.kycIdentityCorrectionStatus === "requested") {
+  if (
+    row.kycIdentityCorrectionStatus === "requested" ||
+    row.kycIdentityCorrectionStatus === "reverification"
+  ) {
     throw new Error("kyc_identity_correction_pending_error");
   }
 
@@ -210,14 +223,22 @@ export async function requestUserKycIdentityCorrection(
   return mapIdentityCorrection(updated);
 }
 
-export async function applyAdminKycIdentityCorrection(args: {
+export async function triggerAdminDiditIdentityReverification(args: {
   targetUserId: string;
   adminUserId: string;
-  body: z.infer<typeof adminKycIdentityCorrectionZ>;
-}): Promise<{ identity: KycLegalIdentity | null; correction: KycIdentityCorrection }> {
+  comment?: string | null;
+}): Promise<{ correction: KycIdentityCorrection; diditSessionStatus: string }> {
   const db = getDb();
   const [row] = await db
-    .select({ kycStatus: users.kycStatus })
+    .select({
+      kycStatus: users.kycStatus,
+      diditSessionId: users.diditSessionId,
+      kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
+      email: users.email,
+      proposedFirstName: users.kycIdentityProposedFirstName,
+      proposedLastName: users.kycIdentityProposedLastName,
+      kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
+    })
     .from(users)
     .where(eq(users.id, args.targetUserId))
     .limit(1);
@@ -225,25 +246,47 @@ export async function applyAdminKycIdentityCorrection(args: {
   if (!row || !isKycApproved(row.kycStatus)) {
     throw new Error("kyc_identity_correction_unavailable");
   }
+  const sessionId = row.diditSessionId?.trim();
+  if (!sessionId) {
+    throw new Error("kyc_identity_didit_session_missing");
+  }
+  if (row.kycIdentityCorrectionStatus === "reverification") {
+    throw new Error("kyc_identity_reverification_pending");
+  }
+
+  const noteParts = [
+    args.comment?.trim(),
+    row.proposedFirstName || row.proposedLastName
+      ? `Requested name: ${[row.proposedFirstName, row.proposedLastName].filter(Boolean).join(" ")}`
+      : null,
+    row.kycIdentityCorrectionNote?.trim() ?? null,
+  ].filter(Boolean);
+  const comment = noteParts.join(" — ") || undefined;
+
+  const didit = await requestDiditSessionResubmission({
+    sessionId,
+    comment,
+    emailAddress: row.email,
+    sendEmail: true,
+  });
+  const diditStatus =
+    typeof didit.status === "string" ? didit.status : "Resubmitted";
+  const verificationUrl = typeof didit.url === "string" ? didit.url : null;
 
   const now = new Date();
   const [updated] = await db
     .update(users)
     .set({
-      legalFirstName: args.body.legalFirstName.trim().slice(0, 128),
-      legalLastName: args.body.legalLastName.trim().slice(0, 128),
-      kycIdentityCorrectionStatus: "corrected",
-      kycIdentityCorrectedAt: now,
+      kycStatus: "pending",
+      kycUpdatedAt: now,
+      kycRejectionNote: null,
+      diditSessionId: sessionId,
+      diditSessionStatus: diditStatus,
+      kycIdentityCorrectionStatus: "reverification",
       kycIdentityCorrectedBy: args.adminUserId,
     })
     .where(eq(users.id, args.targetUserId))
     .returning({
-      legalFirstName: users.legalFirstName,
-      legalLastName: users.legalLastName,
-      birthDate: users.birthDate,
-      documentNumber: users.documentNumber,
-      documentType: users.documentType,
-      documentCountry: users.documentCountry,
       kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
       kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
       kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
@@ -254,17 +297,71 @@ export async function applyAdminKycIdentityCorrection(args: {
 
   if (!updated) throw new Error("kyc_identity_correction_unavailable");
 
+  try {
+    await syncKycSessionStatus({
+      diditSessionId: sessionId,
+      status: diditStatus,
+      rawDecision: didit,
+    });
+    if (verificationUrl) {
+      const { recordKycSessionCreated } = await import("@/lib/didit/kyc-session-store");
+      await recordKycSessionCreated({
+        userId: args.targetUserId,
+        diditSessionId: sessionId,
+        status: diditStatus,
+        verificationUrl,
+      });
+    }
+  } catch (err) {
+    console.warn("[kyc] reverification session sync skipped", err);
+  }
+
+  await createUserNotification({
+    userId: args.targetUserId,
+    kind: "kyc_identity_reverification",
+    payload: { sessionId },
+  });
+
   return {
-    identity: {
-      legalFirstName: updated.legalFirstName ?? null,
-      legalLastName: updated.legalLastName ?? null,
-      birthDate: updated.birthDate ?? null,
-      documentNumber: updated.documentNumber ?? null,
-      documentType: updated.documentType ?? null,
-      documentCountry: updated.documentCountry ?? null,
-    },
     correction: mapIdentityCorrection(updated),
+    diditSessionStatus: diditStatus,
   };
+}
+
+/** After a successful Didit re-verification, close the OPS correction loop. */
+export async function completeIdentityCorrectionAfterReverify(
+  userId: string,
+): Promise<void> {
+  const db = getDb();
+  const [row] = await db
+    .select({ status: users.kycIdentityCorrectionStatus })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (row?.status !== "reverification") return;
+
+  await db
+    .update(users)
+    .set({
+      kycIdentityCorrectionStatus: "corrected",
+      kycIdentityCorrectedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
+/** @deprecated Didit requires re-verification — use triggerAdminDiditIdentityReverification */
+export async function applyAdminKycIdentityCorrection(args: {
+  targetUserId: string;
+  adminUserId: string;
+  body: z.infer<typeof adminKycIdentityReverificationZ>;
+}): Promise<{ identity: KycLegalIdentity | null; correction: KycIdentityCorrection }> {
+  const out = await triggerAdminDiditIdentityReverification({
+    targetUserId: args.targetUserId,
+    adminUserId: args.adminUserId,
+    comment: args.body.comment,
+  });
+  const identity = await getUserKycLegalIdentity(args.targetUserId);
+  return { identity, correction: out.correction };
 }
 
 export async function resubmitUserKycIdentity(

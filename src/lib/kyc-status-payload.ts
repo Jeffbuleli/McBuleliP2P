@@ -27,8 +27,10 @@ export type KycStatusPayload = {
   canRetryKyc: boolean;
   /** Rejected / not started users can resubmit after correcting legal identity. */
   canResubmitKyc: boolean;
-  /** Approved users request an OPS correction in Didit Console (no self-resubmit). */
+  /** Approved users request an OPS correction — Didit re-verification (no manual rename). */
   canRequestIdentityCorrection: boolean;
+  /** User must complete a Didit re-verification after OPS triggered resubmission. */
+  identityReverificationPending: boolean;
   identityCorrection: KycIdentityCorrection | null;
   canRefreshStatus: boolean;
   diditSessionId: string | null;
@@ -76,7 +78,10 @@ export function buildKycStatusPayload(args: {
     corridor &&
     approved &&
     !sanctionsBlocked &&
-    identityCorrection?.status !== "requested";
+    identityCorrection?.status !== "requested" &&
+    identityCorrection?.status !== "reverification";
+  const identityReverificationPending =
+    identityCorrection?.status === "reverification";
 
   const hasSessionId = Boolean(args.diditSessionId?.trim());
   const canRefreshStatus =
@@ -98,6 +103,7 @@ export function buildKycStatusPayload(args: {
     canRetryKyc,
     canResubmitKyc,
     canRequestIdentityCorrection,
+    identityReverificationPending,
     identityCorrection,
     canRefreshStatus,
     diditSessionId: args.diditSessionId ?? null,
@@ -187,7 +193,9 @@ export async function getKycStatusPayload(
 
   const correctionStatus = row.kycIdentityCorrectionStatus ?? null;
   const identityCorrection: KycIdentityCorrection | null =
-    correctionStatus === "requested" || correctionStatus === "corrected"
+    correctionStatus === "requested" ||
+    correctionStatus === "reverification" ||
+    correctionStatus === "corrected"
       ? {
           status: correctionStatus,
           requestedAt: row.kycIdentityCorrectionRequestedAt?.toISOString() ?? null,
