@@ -177,8 +177,8 @@ function mapEnrollError(code: string | undefined, fr: boolean): string {
 function mapWithdrawError(code: string | undefined, fr: boolean): string {
   if (code === "academy_withdraw_paid") {
     return fr
-      ? "Parcours payant — contactez le support pour vous retirer"
-      : "Paid program — contact support to withdraw";
+      ? "Parcours payant - contactez le support pour vous retirer"
+      : "Paid program - contact support to withdraw";
   }
   if (code === "academy_withdraw_has_attendance") {
     return fr ? "Déjà présent à une session" : "Already attended a session";

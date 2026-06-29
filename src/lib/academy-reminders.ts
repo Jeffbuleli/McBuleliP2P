@@ -114,11 +114,11 @@ export async function runAcademySessionReminders(): Promise<{
         const subject =
           kind === "1h"
             ? isFr
-              ? `Rappel — live dans 1h : ${titleFr}`
-              : `Reminder — live in 1h: ${titleEn}`
+              ? `Rappel - live dans 1h : ${titleFr}`
+              : `Reminder - live in 1h: ${titleEn}`
             : isFr
-              ? `Rappel — live demain : ${titleFr}`
-              : `Reminder — live tomorrow: ${titleEn}`;
+              ? `Rappel - live demain : ${titleFr}`
+              : `Reminder - live tomorrow: ${titleEn}`;
         const body = isFr
           ? `<p>Bonjour,</p><p>Votre session <strong>${titleFr}</strong> (${editionTitleFr}) commence le ${new Date(startsIso).toLocaleString("fr-FR")}.</p><p><a href="https://mcbuleli.org${cohortHref}">Ouvrir McBuleli Academy</a></p>`
           : `<p>Hello,</p><p>Your session <strong>${titleEn}</strong> (${editionTitleEn}) starts at ${new Date(startsIso).toLocaleString("en-US")}.</p><p><a href="https://mcbuleli.org${cohortHref}">Open McBuleli Academy</a></p>`;

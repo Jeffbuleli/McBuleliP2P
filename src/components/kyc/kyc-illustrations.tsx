@@ -28,7 +28,7 @@ function stepBase({ size = 24, className = "", ...rest }: P) {
   };
 }
 
-/** Step 0 — tap to begin */
+/** Step 0 - tap to begin */
 export function KycHeroLaunch({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -55,7 +55,7 @@ export function KycHeroLaunch({ className }: { className?: string }) {
   );
 }
 
-/** Step 1 — national ID / voter card */
+/** Step 1 - national ID / voter card */
 export function KycHeroIdDoc({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -76,7 +76,7 @@ export function KycHeroIdDoc({ className }: { className?: string }) {
   );
 }
 
-/** Step 2 — selfie / liveness */
+/** Step 2 - selfie / liveness */
 export function KycHeroSelfie({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -96,7 +96,7 @@ export function KycHeroSelfie({ className }: { className?: string }) {
   );
 }
 
-/** Fresh start — ID + shield */
+/** Fresh start - ID + shield */
 export function KycHeroStart({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -150,7 +150,7 @@ export function KycHeroStart({ className }: { className?: string }) {
   );
 }
 
-/** Waiting — elegant hourglass */
+/** Waiting - elegant hourglass */
 export function KycHeroWaiting({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -181,7 +181,7 @@ export function KycHeroWaiting({ className }: { className?: string }) {
   );
 }
 
-/** Manual review — document under lens */
+/** Manual review - document under lens */
 export function KycHeroReview({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -202,7 +202,7 @@ export function KycHeroReview({ className }: { className?: string }) {
   );
 }
 
-/** Verified — shield glow */
+/** Verified - shield glow */
 export function KycHeroSuccess({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -233,7 +233,7 @@ export function KycHeroSuccess({ className }: { className?: string }) {
   );
 }
 
-/** Blocked — lock shield */
+/** Blocked - lock shield */
 export function KycHeroBlocked({ className }: { className?: string }) {
   const s = base({ size: 112, className });
   return (
@@ -270,7 +270,7 @@ export function KycHeroError({ className }: { className?: string }) {
   );
 }
 
-/** Step 0 — profile / personal details (inside verification flow) */
+/** Step 0 - profile / personal details (inside verification flow) */
 export function KycIconProfile({ className }: { className?: string }) {
   const s = stepBase({ size: 24, className });
   return (

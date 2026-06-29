@@ -1,4 +1,4 @@
-/** Minimal SVG icons — fiat hub (no provider branding). */
+/** Minimal SVG icons - fiat hub (no provider branding). */
 
 export function IconFiatHub({ className = "h-6 w-6" }: { className?: string }) {
   return (

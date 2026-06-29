@@ -1,7 +1,7 @@
 import { binanceEndpointsFor } from "@/lib/binance-endpoints";
 import type { BotEnvironment } from "@/lib/bot-config";
 
-/** Server wallet rails (deposit address, deposit history) — demo.binance.com vs binance.com. */
+/** Server wallet rails (deposit address, deposit history) - demo.binance.com vs binance.com. */
 export function binanceWalletEnvironment(): BotEnvironment {
   const explicit = process.env.BINANCE_ENV?.trim().toLowerCase();
   if (explicit === "demo" || explicit === "testnet") return "demo";
@@ -37,7 +37,7 @@ export type WalletRestrictionsHint = {
   enableReading?: boolean;
   enableWithdrawals?: boolean;
   ipRestrict?: boolean;
-  /** True when /api/v3/account works — typical BOT LIVE validation. */
+  /** True when /api/v3/account works - typical BOT LIVE validation. */
   spotOk?: boolean;
 };
 

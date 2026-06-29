@@ -5,7 +5,7 @@ export function fmtTradeAmount(n: number): string {
   return n.toFixed(18);
 }
 
-/** Isolated linear perp — liquidation approximation (MMR included). */
+/** Isolated linear perp - liquidation approximation (MMR included). */
 export function liquidationPrice(params: {
   entry: number;
   side: "long" | "short";

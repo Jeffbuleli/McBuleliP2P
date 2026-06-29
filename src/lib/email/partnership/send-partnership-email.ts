@@ -1,8 +1,9 @@
 import { sendEmail } from "@/lib/email/send";
+import type { ResendFileAttachment } from "@/lib/email/send";
 import {
   getPartnershipTemplate,
   type PartnershipTemplateId,
-} from "@/lib/email/partnership/avadapay-templates";
+} from "@/lib/email/partnership/partnership-registry";
 import {
   PARTNERSHIP_EMAIL_LAYOUT,
   partnershipEmailFrom,
@@ -14,6 +15,7 @@ import { renderPartnershipEmail } from "@/lib/email/partnership/render-partnersh
 export async function sendPartnershipEmail(args: {
   to: string;
   templateId: PartnershipTemplateId;
+  fileAttachments?: ResendFileAttachment[];
 }): Promise<boolean> {
   const template = getPartnershipTemplate(args.templateId);
   const { html, text, subject } = renderPartnershipEmail({
@@ -27,8 +29,9 @@ export async function sendPartnershipEmail(args: {
     subject,
     html,
     text,
-    from: partnershipEmailFrom(),
+    from: partnershipEmailFrom(template),
     replyTo: partnershipEmailReplyTo(),
+    fileAttachments: args.fileAttachments,
   });
 }
 

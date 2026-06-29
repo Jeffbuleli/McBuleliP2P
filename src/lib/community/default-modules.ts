@@ -9,7 +9,7 @@ export type CommunityModuleCard = {
   available: boolean;
 };
 
-/** Liste statique — affichée même si l'API overview échoue ou tables absentes. */
+/** Liste statique - affichée même si l'API overview échoue ou tables absentes. */
 export function getDefaultCommunityModules(): CommunityModuleCard[] {
   return [
     {

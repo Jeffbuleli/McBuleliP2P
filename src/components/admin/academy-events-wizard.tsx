@@ -145,7 +145,7 @@ export function AcademyEventsWizard({
       setTitle("");
       setDescription("");
       setStartsAt("");
-      setMsg("Brouillon créé — cliquez Publier pour activer le live");
+      setMsg("Brouillon créé - cliquez Publier pour activer le live");
       await loadEvents();
       onCreated?.();
     } finally {
@@ -168,8 +168,8 @@ export function AcademyEventsWizard({
       }
       setMsg(
         evVisibility === "COMMUNITY"
-          ? "Publié — carte Formation visible dans le fil Community"
-          : "Publié — visible dans la classe cohorte uniquement",
+          ? "Publié - carte Formation visible dans le fil Community"
+          : "Publié - visible dans la classe cohorte uniquement",
       );
       await loadEvents();
       onCreated?.();
@@ -257,7 +257,7 @@ export function AcademyEventsWizard({
         <div>
           <p className="text-sm font-extrabold">{editionTitle}</p>
           <p className="text-[10px] text-[color:var(--fd-muted)]">
-            Créer un live (pas la cohorte — voir onglet Paramètres)
+            Créer un live (pas la cohorte - voir onglet Paramètres)
           </p>
         </div>
       </div>
@@ -270,7 +270,7 @@ export function AcademyEventsWizard({
         onChange={(e) => setTitle(e.target.value)}
       />
       <textarea
-        placeholder="Description (optionnelle — affichée sur la carte Community)"
+        placeholder="Description (optionnelle - affichée sur la carte Community)"
         className={`${adminCls.input} min-h-[72px] resize-y`}
         value={description}
         onChange={(e) => setDescription(e.target.value)}

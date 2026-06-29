@@ -51,7 +51,7 @@ export async function signAcademyJitsiToken(args: {
         email: `${args.userId}@users.mcbuleli.org`,
         moderator: args.moderator,
         affiliation: args.moderator ? "owner" : "member",
-        // Prosody token_lobby_bypass (si installé) — invités dans la même MUC que le host
+        // Prosody token_lobby_bypass (si installé) - invités dans la même MUC que le host
         lobby_bypass: true,
       },
     },
@@ -66,7 +66,7 @@ export async function signAcademyJitsiToken(args: {
 }
 
 /**
- * Paramètre hash Jitsi (#config.x=…) — les strings doivent être du JSON valide
+ * Paramètre hash Jitsi (#config.x=…) - les strings doivent être du JSON valide
  * (ex. %22focus.live...%22), sinon parseURLParams → SyntaxError → ping-only.
  */
 export function jitsiHashParam(

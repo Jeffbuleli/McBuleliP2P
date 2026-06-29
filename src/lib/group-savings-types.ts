@@ -1,7 +1,7 @@
 /** McBuleli supports AVEC (village savings & credit associations) only. */
 export type GroupSavingsType = "avec";
 
-/** Legacy rows may still read `likelimba` from DB — not creatable via API. */
+/** Legacy rows may still read `likelimba` from DB - not creatable via API. */
 export type GroupSavingsTypeLegacy = GroupSavingsType | "likelimba";
 
 /** Typical AVEC: 15–25 members (RDC practice). */

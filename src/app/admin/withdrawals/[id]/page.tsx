@@ -44,7 +44,7 @@ export default function AdminWithdrawalDetailPage() {
     const res = await fetch(`/api/admin/withdrawals/${id}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "—");
+      setMsg(data.message ?? "-");
       setW(null);
       return;
     }
@@ -65,7 +65,7 @@ export default function AdminWithdrawalDetailPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "—");
+      setMsg(data.message ?? "-");
       return;
     }
     setW(data.withdrawal);
@@ -88,7 +88,7 @@ export default function AdminWithdrawalDetailPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "—");
+      setMsg(data.message ?? "-");
       return;
     }
     router.push("/admin/withdrawals");
@@ -103,7 +103,7 @@ export default function AdminWithdrawalDetailPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "—");
+      setMsg(data.message ?? "-");
       return;
     }
     router.push("/admin/withdrawals");
@@ -116,7 +116,7 @@ export default function AdminWithdrawalDetailPage() {
     return (
       <div className={adminCls.page}>
         <p className={adminCls.error}>
-          {msg ?? "—"}{" "}
+          {msg ?? "-"}{" "}
           <Link href="/admin/withdrawals" className={adminCls.back}>
             {t("admin_back")}
           </Link>

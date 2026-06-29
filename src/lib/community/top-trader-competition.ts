@@ -22,6 +22,7 @@ import type {
   TopTraderLeaderboardEntry,
   TopTraderProgramInfo,
   TopTraderProgramStatus,
+  TopTraderProgramWeek,
 } from "@/lib/community/top-trader-types";
 
 /** Program ends last Sunday of July 2026, 00:59 GMT. */
@@ -86,6 +87,53 @@ export function getCompletedWeekForPayout(now = new Date()): {
   };
 }
 
+export function listTopTraderProgramWeeks(now = new Date()): TopTraderProgramWeek[] {
+  const current = getTopTraderProgramInfo(now);
+  const currentWeekStart = new Date(current.weekStartAt).getTime();
+  const weeks: TopTraderProgramWeek[] = [];
+
+  let weekStart = startOfWeekGmt(PROGRAM_START);
+  if (weekStart < PROGRAM_START) weekStart = new Date(PROGRAM_START);
+
+  while (
+    weekStart.getTime() <= currentWeekStart &&
+    weekStart.getTime() <= PROGRAM_END.getTime()
+  ) {
+    let weekEnd = endOfWeekGmt(weekStart);
+    if (weekEnd > PROGRAM_END) weekEnd = new Date(PROGRAM_END);
+
+    const weekNum =
+      Math.floor(
+        (weekStart.getTime() - PROGRAM_START.getTime()) / (7 * 24 * 60 * 60 * 1000),
+      ) + 1;
+
+    weeks.push({
+      weekLabel: `S${weekNum}`,
+      weekStartAt: weekStart.toISOString(),
+      weekEndAt: weekEnd.toISOString(),
+      isCurrent: weekStart.getTime() === currentWeekStart,
+    });
+
+    const next = new Date(weekStart);
+    next.setUTCDate(next.getUTCDate() + 7);
+    weekStart = next;
+  }
+
+  return weeks.reverse();
+}
+
+export function resolveTopTraderProgramWeek(
+  weekStartAt: string | null | undefined,
+  now = new Date(),
+): TopTraderProgramWeek {
+  const weeks = listTopTraderProgramWeeks(now);
+  if (weekStartAt) {
+    const match = weeks.find((w) => w.weekStartAt === weekStartAt);
+    if (match) return match;
+  }
+  return weeks.find((w) => w.isCurrent) ?? weeks[0]!;
+}
+
 export function getTopTraderProgramInfo(now = new Date()): TopTraderProgramInfo {
   const status: TopTraderProgramStatus =
     now < PROGRAM_START ? "upcoming" : now > PROGRAM_END ? "ended" : "active";
@@ -119,21 +167,24 @@ export function getTopTraderProgramInfo(now = new Date()): TopTraderProgramInfo 
 export async function getTopTraderLeaderboard(args: {
   viewerId: string | null;
   limit?: number;
+  weekStartAt?: string | null;
 }): Promise<{
   program: TopTraderProgramInfo;
+  selectedWeek: TopTraderProgramWeek;
   traders: TopTraderLeaderboardEntry[];
   viewer: { rank: number; weeklyPnlUsdt: number; tradeCount: number } | null;
 }> {
   const program = getTopTraderProgramInfo();
+  const selectedWeek = resolveTopTraderProgramWeek(args.weekStartAt);
   const db = getDb();
   const limit = Math.min(Math.max(args.limit ?? 15, 1), 30);
 
   if (program.status === "upcoming") {
-    return { program, traders: [], viewer: null };
+    return { program, selectedWeek, traders: [], viewer: null };
   }
 
-  const weekStart = new Date(program.weekStartAt);
-  const weekEnd = new Date(program.weekEndAt);
+  const weekStart = new Date(selectedWeek.weekStartAt);
+  const weekEnd = new Date(selectedWeek.weekEndAt);
 
   const pnlRows = await db
     .select({
@@ -158,7 +209,7 @@ export async function getTopTraderLeaderboard(args: {
       sql`count(*)::int asc`,
     );
 
-  if (!pnlRows.length) return { program, traders: [], viewer: null };
+  if (!pnlRows.length) return { program, selectedWeek, traders: [], viewer: null };
 
   const viewerRow = args.viewerId
     ? pnlRows.find((r) => r.userId === args.viewerId)
@@ -250,7 +301,7 @@ export async function getTopTraderLeaderboard(args: {
     });
   }
 
-  return { program, traders, viewer };
+  return { program, selectedWeek, traders, viewer };
 }
 
 export async function getTopTraderWeekTrades(args: {

@@ -16,8 +16,16 @@ import { fmtTradeAmount } from "@/lib/trade-math";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 
-export type { AdminTopTraderPayoutRow, TopTraderWeekWinnerView } from "@/lib/community/top-trader-types";
-import type { AdminTopTraderPayoutRow, TopTraderWeekWinnerView } from "@/lib/community/top-trader-types";
+export type {
+  AdminTopTraderPayoutRow,
+  TopTraderWeekHistoryEntry,
+  TopTraderWeekWinnerView,
+} from "@/lib/community/top-trader-types";
+import type {
+  AdminTopTraderPayoutRow,
+  TopTraderWeekHistoryEntry,
+  TopTraderWeekWinnerView,
+} from "@/lib/community/top-trader-types";
 
 type WeekCandidate = {
   userId: string;
@@ -371,6 +379,56 @@ export async function listAdminTopTraderPayouts(
       winnerHandle: p?.handle ?? null,
       meta: r.meta ?? null,
       createdAt: r.createdAt.toISOString(),
+    };
+  });
+}
+
+export async function listTopTraderWeekHistory(
+  limit = 12,
+): Promise<TopTraderWeekHistoryEntry[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(topTraderWeekPayouts)
+    .orderBy(desc(topTraderWeekPayouts.weekStartAt))
+    .limit(limit);
+
+  if (!rows.length) return [];
+
+  const userIds = rows
+    .map((r) => r.winnerUserId)
+    .filter((id): id is string => Boolean(id));
+
+  const profileRows = userIds.length
+    ? await db
+        .select({
+          userId: communityUserProfiles.userId,
+          handle: communityUserProfiles.handle,
+          displayName: communityUserProfiles.displayName,
+          avatarUrl: users.avatarUrl,
+          userDisplayName: users.displayName,
+        })
+        .from(communityUserProfiles)
+        .innerJoin(users, eq(users.id, communityUserProfiles.userId))
+        .where(inArray(communityUserProfiles.userId, userIds))
+    : [];
+
+  const profileMap = new Map(profileRows.map((p) => [p.userId, p]));
+
+  return rows.map((r) => {
+    const p = r.winnerUserId ? profileMap.get(r.winnerUserId) : undefined;
+    return {
+      weekLabel: r.weekLabel,
+      weekStartAt: r.weekStartAt.toISOString(),
+      weekEndAt: r.weekEndAt.toISOString(),
+      status: r.status,
+      winnerUserId: r.winnerUserId,
+      displayName: p?.displayName ?? p?.userDisplayName ?? null,
+      handle: p?.handle ?? null,
+      avatarUrl: p?.avatarUrl ?? null,
+      weeklyPnlUsdt: r.weeklyPnlUsdt != null ? Number(r.weeklyPnlUsdt) : null,
+      prizeUsdt: Number(r.prizeUsdt ?? TOP_TRADER_PRIZE_USDT),
+      tradeCount: r.tradeCount,
     };
   });
 }

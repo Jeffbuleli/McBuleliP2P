@@ -4,10 +4,10 @@ import { jitsiHashParam } from "@/lib/academy-jitsi-token";
 export const ACADEMY_JITSI_APP_NAME = "McBuleli";
 export const ACADEMY_JITSI_PROVIDER = "McBuleli";
 
-/** Watermark coin vidéo — PNG dérivé de mcbuleli-meet-watermark-source.png (VPS). */
+/** Watermark coin vidéo - PNG dérivé de mcbuleli-meet-watermark-source.png (VPS). */
 export const ACADEMY_JITSI_WATERMARK_PATH = "/images/watermark.png";
 
-/** Source logo (forme officielle) — traité par make-meet-watermark.py sur le VPS. */
+/** Source logo (forme officielle) - traité par make-meet-watermark.py sur le VPS. */
 export const ACADEMY_JITSI_LOGO_URL =
   "https://mcbuleli.org/brand/mcbuleli-meet-watermark-source.png";
 

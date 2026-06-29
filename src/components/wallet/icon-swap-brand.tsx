@@ -1,4 +1,4 @@
-/** Curved bidirectional swap arrows — uses currentColor for pill harmony. */
+/** Curved bidirectional swap arrows - uses currentColor for pill harmony. */
 export function IconSwapBrand({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>

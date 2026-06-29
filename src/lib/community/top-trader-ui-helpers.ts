@@ -119,7 +119,7 @@ export function closeReasonLabel(r: string | null, fr: boolean): string {
   if (r === "liquidated") return fr ? "Liquidation" : "Liquidated";
   if (r === "manual") return fr ? "Clôture manuelle" : "Manual close";
   if (r === "tt_max_age") return fr ? "Limite 24h" : "24h limit";
-  return r ?? "—";
+  return r ?? "-";
 }
 
 export function closeReasonTone(r: string | null): "gain" | "loss" | "neutral" {

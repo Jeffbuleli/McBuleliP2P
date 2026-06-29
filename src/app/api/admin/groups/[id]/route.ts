@@ -54,7 +54,7 @@ export async function GET(
         nextBillingAt: g.nextBillingAt ? g.nextBillingAt.toISOString() : null,
         createdAt: g.createdAt.toISOString(),
         createdByUserId: g.createdByUserId,
-        createdByEmail: creator?.email ?? "—",
+        createdByEmail: creator?.email ?? "-",
         rejectionReason: g.rejectionReason,
       },
     });

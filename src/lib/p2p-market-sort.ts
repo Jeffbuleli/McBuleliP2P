@@ -49,7 +49,7 @@ function defaultScore(a: MarketAdRow, minP: number, maxP: number, nowMs: number)
   return boostScore + repScore + priceScore + freshScore;
 }
 
-/** Sort market ads — price favors taker (low on BUY/sell ads, high on SELL/buy ads). */
+/** Sort market ads - price favors taker (low on BUY/sell ads, high on SELL/buy ads). */
 export function sortP2pMarketAds<T extends MarketAdRow>(
   ads: T[],
   sort: P2pMarketSort,

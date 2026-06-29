@@ -1,6 +1,6 @@
 /**
  * Fetch with a hard deadline via AbortController.
- * Prefer this over AbortSignal.timeout — unsupported on older Safari / some WebViews,
+ * Prefer this over AbortSignal.timeout - unsupported on older Safari / some WebViews,
  * where login could hang indefinitely with no error.
  */
 import { maybeRedirectUnauthorized } from "@/lib/auth-return-path";

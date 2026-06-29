@@ -1,4 +1,4 @@
-/** Canonical Academy URLs — single source for hub, cohort, live, events. */
+/** Canonical Academy URLs - single source for hub, cohort, live, events. */
 
 export type AcademySessionLink = {
   editionSlug: string;
@@ -26,7 +26,7 @@ export function academyLiveHref(
   return `/app/academy/${editionSlug}/live/${sessionSlug}${academyProgramQuery(programSlug)}`;
 }
 
-/** Continuer / rejoindre une session — toujours la salle live companion. */
+/** Continuer / rejoindre une session - toujours la salle live companion. */
 export function academySessionContinueHref(session: AcademySessionLink): string {
   return academyLiveHref(
     session.editionSlug,

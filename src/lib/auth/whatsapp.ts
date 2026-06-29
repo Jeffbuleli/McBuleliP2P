@@ -71,7 +71,7 @@ export async function processInboundWhatsAppMessage(args: {
   };
 }
 
-/** Outbound recovery OTP via OpenWA — rate-limited caller responsibility. */
+/** Outbound recovery OTP via OpenWA - rate-limited caller responsibility. */
 export async function sendWhatsAppOtp(args: {
   chatId: string;
   otp: string;
@@ -92,7 +92,7 @@ export async function sendWhatsAppOtp(args: {
       },
       body: JSON.stringify({
         chatId: args.chatId,
-        text: `McBuleli — code de récupération : ${args.otp}. Valide 15 min. Ne partagez jamais ce code.`,
+        text: `McBuleli - code de récupération : ${args.otp}. Valide 15 min. Ne partagez jamais ce code.`,
       }),
     },
   ).catch((err) => {

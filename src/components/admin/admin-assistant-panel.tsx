@@ -116,7 +116,7 @@ export function AdminAssistantPanel() {
 
   return (
     <div className={adminCls.page}>
-      <h1 className={adminCls.h1}>AI Assistant — Knowledge & Analytics</h1>
+      <h1 className={adminCls.h1}>AI Assistant - Knowledge & Analytics</h1>
       <p className={adminCls.muted}>
         Manage FAQ articles used by the McBuleli virtual assistant (RAG retrieval).
       </p>

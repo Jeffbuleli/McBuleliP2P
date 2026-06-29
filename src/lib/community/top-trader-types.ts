@@ -1,4 +1,4 @@
-/** Shared Top Trader types — safe for client `import type` (no DB). */
+/** Shared Top Trader types - safe for client `import type` (no DB). */
 
 export type TopTraderProgramStatus = "active" | "ended" | "upcoming";
 
@@ -70,6 +70,27 @@ export type TopTraderDailyLeader = {
   handle: string | null;
   avatarUrl: string | null;
   dailyPnlUsdt: number;
+  tradeCount: number;
+};
+
+export type TopTraderProgramWeek = {
+  weekLabel: string;
+  weekStartAt: string;
+  weekEndAt: string;
+  isCurrent: boolean;
+};
+
+export type TopTraderWeekHistoryEntry = {
+  weekLabel: string;
+  weekStartAt: string;
+  weekEndAt: string;
+  status: string;
+  winnerUserId: string | null;
+  displayName: string | null;
+  handle: string | null;
+  avatarUrl: string | null;
+  weeklyPnlUsdt: number | null;
+  prizeUsdt: number;
   tradeCount: number;
 };
 

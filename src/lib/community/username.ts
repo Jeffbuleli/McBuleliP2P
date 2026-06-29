@@ -1,4 +1,4 @@
-/** Community handle — lettres, chiffres, underscore ; suffixe _2, _3 si collision. */
+/** Community handle - lettres, chiffres, underscore ; suffixe _2, _3 si collision. */
 
 const HANDLE_RE = /^[a-z][a-z0-9_]{2,31}$/;
 

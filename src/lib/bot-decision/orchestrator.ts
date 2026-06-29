@@ -1,5 +1,5 @@
 /**
- * Decision Orchestrator — priority: Technical → Risk → AI → Execution plan.
+ * Decision Orchestrator - priority: Technical → Risk → AI → Execution plan.
  * AI cannot veto strong technical setups except blocking_event (macro/crash).
  */
 
@@ -119,7 +119,7 @@ export async function runFuturesDecisionOrchestrator(
         score: technical.score,
         category: "AI",
         reason_code: code,
-        reason_message: "AI flagged major market event — trade paused",
+        reason_message: "AI flagged major market event - trade paused",
         debug: { layer: "AI", ai_notes: ai.ai_notes, blocking_event: true },
       }),
       technical,
@@ -210,7 +210,7 @@ export type SpotOrchestratorInput = {
   previousSmoothedScore?: number | null;
 };
 
-/** DCA / Grid — Technical → Risk (no AI gate on spot). */
+/** DCA / Grid - Technical → Risk (no AI gate on spot). */
 export async function runSpotDecisionOrchestrator(
   input: SpotOrchestratorInput,
 ): Promise<SpotPipelineResult> {

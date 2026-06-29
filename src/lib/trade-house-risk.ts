@@ -17,7 +17,7 @@ import {
 import { fetchSymbolTicker } from "@/lib/trade-price";
 import { numFromNumeric } from "@/lib/wallet-types";
 
-/** @deprecated Use async reserve via computeTradeHouseReserveUsdt — floor only. */
+/** @deprecated Use async reserve via computeTradeHouseReserveUsdt - floor only. */
 export function tradeHouseReserveUsdt(): number {
   return tradeHouseReserveFloorUsdt();
 }

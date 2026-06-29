@@ -25,7 +25,7 @@ Positionnement RDC : **fintech + mobile money**, pas promotion crypto. Les retra
 
 ## Avant envoi — personnaliser
 
-Éditer les placeholders dans `src/lib/email/partnership/avadapay-templates.ts` :
+Éditer les placeholders dans `src/lib/email/partnership/partnership-placeholders.ts` :
 
 - Raison sociale, RCCM, nom/signataire, téléphone
 - Volume estimé retraits/mois

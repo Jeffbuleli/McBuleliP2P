@@ -114,13 +114,32 @@ export async function assertEmailAvailable(args: {
   return { ok: true, email: typo.email, emailCanonical };
 }
 
-/** Resolve user for login / forgot-password — exact email first, then canonical alias. */
-export async function findUserByAuthEmail(email: string) {
+/** Columns required for login / forgot-password - avoids 500 when local DB lags behind schema. */
+const authUserSelect = {
+  id: users.id,
+  email: users.email,
+  emailCanonical: users.emailCanonical,
+  passwordHash: users.passwordHash,
+  role: users.role,
+  sessionVersion: users.sessionVersion,
+};
+
+export type AuthUserRow = {
+  id: string;
+  email: string;
+  emailCanonical: string | null;
+  passwordHash: string;
+  role: string;
+  sessionVersion: number;
+};
+
+/** Resolve user for login / forgot-password - exact email first, then canonical alias. */
+export async function findUserByAuthEmail(email: string): Promise<AuthUserRow | null> {
   const normalized = normalizeAuthEmail(email);
   const db = getDb();
 
   const [byExact] = await db
-    .select()
+    .select(authUserSelect)
     .from(users)
     .where(sql`lower(${users.email}) = ${normalized}`)
     .limit(1);
@@ -128,7 +147,7 @@ export async function findUserByAuthEmail(email: string) {
 
   const canonical = canonicalEmailForDedup(normalized);
   const [byCanonical] = await db
-    .select()
+    .select(authUserSelect)
     .from(users)
     .where(eq(users.emailCanonical, canonical))
     .limit(1);

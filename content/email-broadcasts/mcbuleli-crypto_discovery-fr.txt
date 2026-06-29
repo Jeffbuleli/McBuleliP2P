@@ -1,14 +1,14 @@
 McBuleli
-Pas du Bitcoin à la roulette. USDT stable, P2P Mobile Money, épargne AVEC — sur McBuleli.
+Pas du Bitcoin à la roulette. USDT stable, P2P Mobile Money, épargne AVEC - sur McBuleli.
 Bonjour {{{contact.first_name|ami}}},
 La crypto, sans la peur
-Arnaques, Bitcoin qui monte et descend — on comprend la méfiance.
+Arnaques, Bitcoin qui monte et descend - on comprend la méfiance.
 McBuleli, c'est clair : USDT stable, échanges P2P protégés, dépôt et retrait simples.
-USDT ≈ 1 dollar — Ce n'est pas du Bitcoin. L'USDT reste stable — envoyez et recevez sans mauvaise surprise.
-P2P + Mobile Money — Achetez ou vendez avec Orange, M-Pesa, etc. L'argent reste sous séquestre jusqu'à la fin du deal.
-Dépôt & retrait crypto — Votre adresse personnelle, frais visibles, alertes email — vous gardez la main.
-Épargne AVEC — Épargnez à plusieurs, règles claires, gouvernance et prêts entre membres.
-McBuleli n'est pas une banque — transparence, support WhatsApp, vérification Didit.
+USDT ≈ 1 dollar - Ce n'est pas du Bitcoin. L'USDT reste stable - envoyez et recevez sans mauvaise surprise.
+P2P + Mobile Money - Achetez ou vendez avec Orange, M-Pesa, etc. L'argent reste sous séquestre jusqu'à la fin du deal.
+Dépôt & retrait crypto - Votre adresse personnelle, frais visibles, alertes email - vous gardez la main.
+Épargne AVEC - Épargnez à plusieurs, règles claires, gouvernance et prêts entre membres.
+McBuleli n'est pas une banque - transparence, support WhatsApp, vérification Didit.
 Créer mon compte gratuit: https://mcbuleli.org/register?ref=RGZDWHUH&utm_source=email&utm_medium=broadcast&utm_campaign=crypto_discovery
 hi@mcbuleli.org
 Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}

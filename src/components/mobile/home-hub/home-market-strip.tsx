@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Locale } from "@/i18n/locale";
 import { getDictionary } from "@/i18n/messages";
+import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { TICKERS_POLL_MS } from "@/lib/market-live";
 import { marketIconUrl } from "@/lib/market-icons";
 import type { MarketTicker } from "@/lib/market-tickers";
@@ -41,33 +42,34 @@ export function HomeMarketStrip({
   if (!tickers?.length) return null;
 
   return (
-    <section className="fd-card overflow-hidden p-3">
+    <HudFrame accent="cyan" className={`${HUD_PANEL_LG} overflow-hidden p-3`}>
+      <section aria-label={d.market_preview}>
       <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
         <div className="flex items-center gap-2">
-          <h2 className="fd-section-title text-sm">{d.market_preview}</h2>
+          <h2 className="fd-section-title text-sm text-cyan-200">{d.market_preview}</h2>
           <span className="fd-live-pill">{d.market_live}</span>
         </div>
         <Link
           href="/app/market"
           prefetch={false}
-          className="shrink-0 rounded-full bg-[color:var(--fd-primary)] px-3 py-1.5 text-[10px] font-bold text-white shadow-sm active:scale-[0.98]"
+          className="shrink-0 rounded-full border border-cyan-400/40 bg-cyan-500/12 px-3 py-1.5 text-[10px] font-bold text-cyan-300 shadow-sm transition active:scale-[0.98]"
         >
           {d.view_market} →
         </Link>
       </div>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 app-scrollbar">
         {tickers.map((ticker) => (
           <Link
             key={ticker.symbol}
             href="/app/market"
             prefetch={false}
-            className="flex min-w-[7.5rem] shrink-0 flex-col rounded-xl border border-[color:var(--fd-border)] bg-white px-2.5 py-2 transition active:scale-[0.98]"
+            className="flex min-w-[7.5rem] shrink-0 flex-col rounded-xl border border-white/10 bg-[#0a1018]/85 px-2.5 py-2 transition active:scale-[0.98] hover:border-cyan-400/25"
           >
             <span className="flex items-center gap-1.5 text-[11px] font-bold text-[color:var(--fd-text)]">
               <CoinIcon symbol={ticker.symbol} />
               {ticker.symbol.replace("USDT", "")}
               {ticker.source === "okx" ? (
-                <span className="rounded bg-violet-100 px-1 py-0.5 text-[8px] font-bold uppercase text-violet-800">
+                <span className="rounded bg-violet-500/20 px-1 py-0.5 text-[8px] font-bold uppercase text-violet-300">
                   OKX
                 </span>
               ) : null}
@@ -77,7 +79,7 @@ export function HomeMarketStrip({
             </span>
             <span
               className={`text-[10px] font-bold tabular-nums ${
-                ticker.changePct >= 0 ? "text-emerald-700" : "text-rose-600"
+                ticker.changePct >= 0 ? "text-emerald-400" : "text-rose-400"
               }`}
             >
               {ticker.changePct >= 0 ? "+" : ""}
@@ -86,7 +88,8 @@ export function HomeMarketStrip({
           </Link>
         ))}
       </div>
-    </section>
+      </section>
+    </HudFrame>
   );
 }
 
@@ -109,8 +112,8 @@ function CoinIcon({ symbol }: { symbol: string }) {
     );
   }
   return (
-    <span className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[color:var(--fd-border)]">
-      <Image src={url} alt="" width={24} height={24} className="h-full w-full object-cover" />
+    <span className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0a1018] ring-1 ring-cyan-400/25">
+      <Image src={url} alt="" width={24} height={24} className="h-full w-full object-cover" unoptimized />
     </span>
   );
 }

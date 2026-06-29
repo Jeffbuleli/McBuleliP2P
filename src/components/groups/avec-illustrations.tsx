@@ -29,7 +29,7 @@ export function IlluTreasury({ className }: { className?: string }) {
   );
 }
 
-/** Hexagon vote — collective decision */
+/** Hexagon vote - collective decision */
 export function IlluCollectiveVote({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>
@@ -49,7 +49,7 @@ export function IlluCollectiveVote({ className }: { className?: string }) {
   );
 }
 
-/** Meeting — ascending bars + rhythm line */
+/** Meeting - ascending bars + rhythm line */
 export function IlluMeeting({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>
@@ -69,7 +69,7 @@ export function IlluMeeting({ className }: { className?: string }) {
   );
 }
 
-/** Members — ring of nodes */
+/** Members - ring of nodes */
 export function IlluMembersRing({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>
@@ -96,7 +96,7 @@ export function IlluMembersRing({ className }: { className?: string }) {
   );
 }
 
-/** Activity — flowing ledger blocks */
+/** Activity - flowing ledger blocks */
 export function IlluActivityFlow({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>
@@ -115,7 +115,7 @@ export function IlluActivityFlow({ className }: { className?: string }) {
   );
 }
 
-/** Reports — document + mini chart */
+/** Reports - document + mini chart */
 export function IlluReports({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>
@@ -128,7 +128,7 @@ export function IlluReports({ className }: { className?: string }) {
   );
 }
 
-/** Loans — arc + balance scale geometry */
+/** Loans - arc + balance scale geometry */
 export function IlluLoans({ className }: { className?: string }) {
   return (
     <svg {...s(className, 100, 72)}>

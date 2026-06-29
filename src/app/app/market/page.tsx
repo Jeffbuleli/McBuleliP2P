@@ -5,13 +5,13 @@ import { fetchMarketTickers } from "@/lib/market-tickers";
 
 export const dynamic = "force-dynamic";
 
-/** Unified market hub: quotes, futures manual, bots — one chart, one entry point. */
+/** Unified market hub: quotes, futures manual, bots - one chart, one entry point. */
 export default async function MarketPage() {
   const locale = await getLocale();
   const tickers = await fetchMarketTickers();
 
   return (
-    <div className="wallet-theme flex flex-col gap-3 pb-2">
+    <div className="market-theme flex flex-col gap-3 pb-2">
       <MarketHubClient locale={locale} initialTickers={tickers} />
       <McBuleliPoweredFooter />
     </div>

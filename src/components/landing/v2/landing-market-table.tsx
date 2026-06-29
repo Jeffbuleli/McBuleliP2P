@@ -6,6 +6,7 @@ import type { MarketTicker } from "@/lib/market-tickers";
 import { TICKERS_POLL_MS } from "@/lib/market-live";
 import { marketIconUrl } from "@/lib/market-icons";
 import { useI18n } from "@/components/i18n-provider";
+import { HudTabButton, HudTabGroup } from "@/components/landing/landing-hud-ui";
 import { AssetAvatar } from "@/components/landing/v2/landing-asset-avatar";
 
 type TabId = "all" | "p2p" | "wallet" | "earn";
@@ -52,12 +53,12 @@ function MiniSparkline({ up, flat }: { up: boolean; flat?: boolean }) {
 
 function ChangeCell({ pct, label }: { pct?: number; label?: string }) {
   if (label) {
-    return <span className="font-bold text-slate-600">{label}</span>;
+    return <span className="font-bold text-stone-400">{label}</span>;
   }
   const v = pct ?? 0;
   const up = v >= 0;
   return (
-    <span className={`font-bold tabular-nums ${up ? "text-emerald-600" : "text-rose-600"}`}>
+    <span className={`font-bold tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}>
       {up ? "+" : ""}
       {v.toFixed(2)}%
     </span>
@@ -151,7 +152,7 @@ export function LandingMarketTable({
       name: "Pi Network",
       symbol: "PI",
       icon: marketIconUrl("PIUSDT"),
-      price: pi ? formatPrice(pi.symbol, pi.lastPrice) : t("landing_v2_price_p2p"),
+      price: pi ? formatPrice(pi.symbol, pi.lastPrice) : "-",
       changePct: pi?.changePct ?? 0,
       showSparkline: true,
       payment: t("landing_v2_pay_airtel"),
@@ -165,7 +166,7 @@ export function LandingMarketTable({
       name: t("landing_svc_staking_t"),
       symbol: "STAKE",
       badge: "ST",
-      badgeClass: "bg-emerald-100 text-emerald-800",
+      badgeClass: "bg-emerald-500/15 text-emerald-300",
       icon: null,
       price: t("landing_v2_yield_label"),
       changeLabel: t("landing_v2_market_metric_apy"),
@@ -181,7 +182,7 @@ export function LandingMarketTable({
       name: "AVEC",
       symbol: "AVEC",
       badge: "AV",
-      badgeClass: "bg-amber-100 text-amber-900",
+      badgeClass: "bg-amber-500/15 text-amber-300",
       icon: null,
       price: t("landing_v2_avec_yield"),
       changeLabel: t("landing_v2_market_metric_collective"),
@@ -205,38 +206,31 @@ export function LandingMarketTable({
   const filtered = rows.filter((r) => tab === "all" || r.tabs.includes(tab));
 
   return (
-    <section id="market" className="scroll-mt-20 bg-[#fafaf9] px-4 py-10 sm:px-6 sm:py-14">
+    <section id="market" className="scroll-mt-20 px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-stone-900 sm:text-2xl">{t("landing_v2_market_title")}</h2>
+            <h2 className="text-xl font-black text-white sm:text-2xl">{t("landing_v2_market_title")}</h2>
             <p className="mt-1 text-xs text-stone-500 sm:text-sm">{t("landing_market_sub")}</p>
           </div>
-          <SessionAppLink href="/app/market" className="text-sm font-bold text-[#305F33] hover:underline">
+          <SessionAppLink href="/app/market" className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-400 transition hover:text-cyan-300">
             {t("landing_v2_market_see_all")} →
           </SessionAppLink>
         </div>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+        <HudTabGroup className="mt-4 max-w-full">
           {tabs.map((x) => (
-            <button
-              key={x.id}
-              type="button"
-              onClick={() => setTab(x.id)}
-              className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition ${
-                tab === x.id ? "bg-[#305F33] text-white shadow-md shadow-emerald-900/15" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
+            <HudTabButton key={x.id} active={tab === x.id} onClick={() => setTab(x.id)}>
               {x.label}
-            </button>
+            </HudTabButton>
           ))}
-        </div>
+        </HudTabGroup>
 
-        <div className="mt-3 overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm">
+        <div className="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0a1018]/80 shadow-[0_0_40px_-16px_rgba(34,211,238,0.2)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/80 text-xs font-bold uppercase tracking-wide text-slate-400">
+                <tr className="border-b border-white/8 bg-white/5 text-xs font-bold uppercase tracking-wide text-stone-500">
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">{t("landing_v2_col_asset")}</th>
                   <th className="px-4 py-3">{t("landing_v2_col_price")}</th>
@@ -251,8 +245,8 @@ export function LandingMarketTable({
                   const up = (row.changePct ?? 0) >= 0;
                   const flat = Boolean(row.changeLabel);
                   return (
-                    <tr key={row.id} className="border-b border-stone-50 transition hover:bg-[#305F33]/[0.03]">
-                      <td className="px-4 py-4 font-semibold tabular-nums text-slate-400">{index + 1}</td>
+                    <tr key={row.id} className="border-b border-white/5 transition hover:bg-cyan-500/5">
+                      <td className="px-4 py-4 font-semibold tabular-nums text-stone-600">{index + 1}</td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <AssetAvatar
@@ -262,12 +256,12 @@ export function LandingMarketTable({
                             badgeClass={row.badgeClass}
                           />
                           <div>
-                            <p className="font-bold text-slate-900">{row.name}</p>
-                            <p className="text-xs text-slate-400">{row.symbol}</p>
+                            <p className="font-bold text-stone-100">{row.name}</p>
+                            <p className="text-xs text-stone-500">{row.symbol}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-bold tabular-nums text-slate-900">{row.price}</td>
+                      <td className="px-4 py-4 font-bold tabular-nums text-white">{row.price}</td>
                       <td className="px-4 py-4">
                         <ChangeCell pct={row.changePct} label={row.changeLabel} />
                       </td>
@@ -275,14 +269,14 @@ export function LandingMarketTable({
                         {row.showSparkline ? (
                           <MiniSparkline up={up} flat={flat} />
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-stone-600">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-slate-600">{row.payment}</td>
+                      <td className="px-4 py-4 text-stone-400">{row.payment}</td>
                       <td className="px-4 py-4 text-right">
                         <SessionAppLink
                           href={row.href}
-                          className="inline-flex rounded-lg bg-[#305F33]/10 px-3 py-1.5 text-xs font-bold text-[#305F33] transition hover:bg-[#305F33]/15"
+                          className="inline-flex rounded-lg border border-emerald-400/20 bg-emerald-500/[0.06] px-3 py-1.5 text-xs font-bold text-emerald-400 transition hover:border-emerald-400/35 hover:bg-emerald-500/12"
                         >
                           {row.action}
                         </SessionAppLink>

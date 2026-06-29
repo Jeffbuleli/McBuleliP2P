@@ -5,7 +5,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { AcademyIcon } from "@/components/academy/academy-icon";
 import { academyCls } from "@/components/academy/academy-ui";
 
-/** Client redirect — preserves Jitsi #config hash (Next.js redirect() strips it). */
+/** Client redirect - preserves Jitsi #config hash (Next.js redirect() strips it). */
 export function AcademyLiveEnterRedirect({ url }: { url: string }) {
   const { t } = useI18n();
 

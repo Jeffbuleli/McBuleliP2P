@@ -26,6 +26,7 @@ import {
   COMMUNITY_BODY_TEXT,
   COMMUNITY_CARD,
   COMMUNITY_CARD_ACCENT,
+  COMMUNITY_OWNER_MENU,
 } from "@/lib/community/community-ui";
 
 export function CommunityPostCard({
@@ -246,7 +247,7 @@ export function CommunityPostCard({
           }
           fr={fr}
         />
-        <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-stone-500">
           <IconGlobe size={11} />
           {post.status === "hidden"
             ? fr
@@ -261,17 +262,17 @@ export function CommunityPostCard({
             <button
               type="button"
               onClick={() => setOwnerOpen((v) => !v)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#57534e] hover:bg-[#f0f2f5]"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-white/5"
               aria-label={fr ? "Options" : "Options"}
             >
               <IconMore size={18} />
             </button>
             {ownerOpen ? (
-              <div className="absolute right-0 z-10 mt-1 min-w-[140px] rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
+              <div className={COMMUNITY_OWNER_MENU}>
                 {post.status === "hidden" ? (
                   <button
                     type="button"
-                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-[#305f33]"
+                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-emerald-400"
                     onClick={() => void ownerAction("unhide")}
                   >
                     {fr ? "Afficher" : "Unhide"}
@@ -279,7 +280,7 @@ export function CommunityPostCard({
                 ) : (
                   <button
                     type="button"
-                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-[#57534e]"
+                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-stone-300"
                     onClick={() => void ownerAction("hide")}
                   >
                     {fr ? "Masquer" : "Hide"}
@@ -287,7 +288,7 @@ export function CommunityPostCard({
                 )}
                 <button
                   type="button"
-                  className="block w-full px-3 py-2 text-left text-xs font-semibold text-red-600"
+                  className="block w-full px-3 py-2 text-left text-xs font-semibold text-red-400"
                   onClick={() => void ownerAction("delete")}
                 >
                   {fr ? "Supprimer" : "Delete"}
@@ -390,7 +391,7 @@ export function CommunityPostCard({
         <button
           type="button"
           onClick={reportPost}
-          className="text-[10px] text-[#a8a29e] active:scale-95"
+          className="text-[10px] text-stone-500 active:scale-95"
         >
           {fr ? "Signaler" : "Report"}
         </button>

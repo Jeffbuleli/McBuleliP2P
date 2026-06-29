@@ -104,8 +104,8 @@ export function CommunitySignalCard({
 
       <p className="mt-2 text-[10px] text-[#a8a29e]">
         {fr
-          ? "Signal éducatif — pas un conseil financier."
-          : "Educational signal — not financial advice."}
+          ? "Signal éducatif - pas un conseil financier."
+          : "Educational signal - not financial advice."}
       </p>
 
       <Link

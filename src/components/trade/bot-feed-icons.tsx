@@ -16,7 +16,7 @@ function base({ size = 18, className = "", ...props }: IconProps) {
   };
 }
 
-/* —— Feed actions —— */
+/* -- Feed actions -- */
 export function IconFeedOpen(p: IconProps) {
   const s = base({ size: 16, ...p });
   return (
@@ -216,7 +216,7 @@ function IconFeedDot(p: IconProps) {
   );
 }
 
-/* —— Decision / reason —— */
+/* -- Decision / reason -- */
 export function IconCatTechnical(p: IconProps) {
   const s = base({ size: 20, ...p });
   return (
@@ -321,7 +321,7 @@ function IconVolatility(p: IconProps) {
   );
 }
 
-/* —— Chips (metadata pills) —— */
+/* -- Chips (metadata pills) -- */
 export type BotChipKind =
   | "symbol"
   | "side_long"

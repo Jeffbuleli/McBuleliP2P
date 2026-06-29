@@ -3,20 +3,35 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { BotLeaderboardEntry } from "@/lib/community/bot-leaderboard-service";
+import {
+  COMMUNITY_CARD,
+  COMMUNITY_CARD_ACCENT,
+  COMMUNITY_EMPTY_BOX,
+  COMMUNITY_FOLLOW_BTN,
+  COMMUNITY_FOLLOW_BTN_OFF,
+  COMMUNITY_FOLLOW_BTN_ON,
+  COMMUNITY_LEADERBOARD_HANDLE,
+  COMMUNITY_LEADERBOARD_NAME,
+  COMMUNITY_PRIMARY_BTN,
+  COMMUNITY_STAT_CELL,
+  COMMUNITY_STAT_LABEL,
+  COMMUNITY_STAT_VALUE,
+  COMMUNITY_BADGE_PILL,
+  communityRankTone,
+} from "@/lib/community/community-ui";
 
 function BotRankIcon({ rank }: { rank: number }) {
-  const tone =
-    rank === 1 ? "#305f33" : rank === 2 ? "#57534e" : rank === 3 ? "#b45309" : "#78716c";
+  const tone = communityRankTone(rank);
   return (
-    <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
-      <circle cx="16" cy="16" r="14" fill={tone} opacity="0.12" />
+    <svg viewBox="0 0 32 32" className="h-8 w-8 shrink-0" aria-hidden>
+      <circle cx="16" cy="16" r="14" fill={tone.bg} stroke={tone.border} strokeWidth="1" />
       <text
         x="16"
         y="16"
         textAnchor="middle"
         dominantBaseline="central"
-        className="fill-current text-sm font-bold"
-        style={{ fill: tone }}
+        className="text-sm font-bold"
+        style={{ fill: tone.text }}
       >
         {rank}
       </text>
@@ -27,11 +42,13 @@ function BotRankIcon({ rank }: { rank: number }) {
 export function CommunityBotLeaderboardList({
   fr,
   billing,
+  listLimit = 20,
   onFollow,
   busyHandle,
 }: {
   fr: boolean;
   billing: "demo" | "live";
+  listLimit?: number;
   onFollow: (handle: string, isFollowing: boolean) => void;
   busyHandle: string | null;
 }) {
@@ -98,22 +115,21 @@ export function CommunityBotLeaderboardList({
   }
 
   if (loading) {
-    return <p className="py-8 text-center text-sm text-[#78716c]">…</p>;
+    return <p className="py-8 text-center text-sm text-stone-500">…</p>;
   }
 
   if (!bots.length) {
     return (
-      <div className="fd-card px-4 py-8 text-center text-sm text-[#57534e]">
-        <p>{fr ? "Aucun bot classé." : "No ranked bots yet."}</p>
-        <p className="mt-2 text-[11px] text-[#78716c]">
+      <div className={`${COMMUNITY_EMPTY_BOX} text-sm text-stone-400`}>
+        <p className="font-semibold text-stone-300">
+          {fr ? "Aucun bot classé." : "No ranked bots yet."}
+        </p>
+        <p className="mt-2 text-[11px] text-stone-500">
           {fr
             ? "Activez « Classement bots » et partagez une stratégie."
             : "Enable bot leaderboard and share a strategy."}
         </p>
-        <Link
-          href="/app/market?panel=bots"
-          className="mt-3 inline-block rounded-xl bg-[#305f33] px-4 py-2 text-xs font-bold text-white"
-        >
+        <Link href="/app/market?panel=bots" className={`${COMMUNITY_PRIMARY_BTN} mt-4`}>
           {fr ? "Ouvrir les bots" : "Open bots"}
         </Link>
       </div>
@@ -122,84 +138,83 @@ export function CommunityBotLeaderboardList({
 
   return (
     <ul className="space-y-2">
-      {bots.map((b, idx) => {
+      {bots.slice(0, listLimit).map((b, idx) => {
         const rank = idx + 1;
         const isTop3 = rank <= 3;
         return (
-        <li key={`${b.userId}-${b.planId}`}>
-          <article
-            className={`fd-card overflow-hidden px-4 py-3 shadow-sm ${
-              isTop3 ? "ring-1 ring-[#305f33]/15" : ""
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <BotRankIcon rank={rank} />
-              <div className="min-w-0 flex-1">
-                <Link href={`/app/community/u/${b.handle}`} className="text-sm font-bold text-[#0c0a09] hover:underline">
-                  {b.displayName}
-                </Link>
-                <p className="text-xs text-[#78716c]">@{b.handle}</p>
-                <p className="mt-1 inline-block rounded-full bg-[#f0faf4] px-2 py-0.5 text-[9px] font-bold uppercase text-[#305f33] ring-1 ring-[#dce8e0]">
-                  {b.planId.replace("_", " ")} · {b.billing}
-                </p>
-                <dl className="mt-2.5 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
-                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
-                    <dt className="text-[#a8a29e]">{fr ? "Trades" : "Trades"}</dt>
-                    <dd className="text-sm font-extrabold tabular-nums">{b.tradeCount}</dd>
-                  </div>
-                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
-                    <dt className="text-[#a8a29e]">Win rate</dt>
-                    <dd className="text-sm font-extrabold tabular-nums">
-                      {b.winRate != null ? `${b.winRate}%` : "—"}
-                    </dd>
-                  </div>
-                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
-                    <dt className="text-[#a8a29e]">{fr ? "Durée" : "Runtime"}</dt>
-                    <dd className="text-sm font-extrabold tabular-nums">{b.runtimeDays}d</dd>
-                  </div>
-                  <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
-                    <dt className="text-[#a8a29e]">{fr ? "Copieurs" : "Copiers"}</dt>
-                    <dd className="text-sm font-extrabold tabular-nums">{b.copyFollowerCount}</dd>
-                  </div>
-                </dl>
-              </div>
-              <div className="flex shrink-0 flex-col gap-1.5">
-                {b.copyTradingEnabled ? (
+          <li key={`${b.userId}-${b.planId}`}>
+            <article
+              className={`${COMMUNITY_CARD} overflow-hidden px-4 py-3 ${
+                isTop3 ? "ring-1 ring-cyan-400/15" : ""
+              }`}
+            >
+              <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
+              <div className="relative flex items-start gap-3">
+                <BotRankIcon rank={rank} />
+                <div className="min-w-0 flex-1">
+                  <Link href={`/app/community/u/${b.handle}`} className={COMMUNITY_LEADERBOARD_NAME}>
+                    {b.displayName}
+                  </Link>
+                  <p className={COMMUNITY_LEADERBOARD_HANDLE}>@{b.handle}</p>
+                  <p className={`mt-1 inline-block ${COMMUNITY_BADGE_PILL} uppercase`}>
+                    {b.planId.replace("_", " ")} · {b.billing}
+                  </p>
+                  <dl className="mt-2.5 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
+                    <div className={COMMUNITY_STAT_CELL}>
+                      <dt className={COMMUNITY_STAT_LABEL}>{fr ? "Trades" : "Trades"}</dt>
+                      <dd className={COMMUNITY_STAT_VALUE}>{b.tradeCount}</dd>
+                    </div>
+                    <div className={COMMUNITY_STAT_CELL}>
+                      <dt className={COMMUNITY_STAT_LABEL}>Win rate</dt>
+                      <dd className={COMMUNITY_STAT_VALUE}>
+                        {b.winRate != null ? `${b.winRate}%` : "-"}
+                      </dd>
+                    </div>
+                    <div className={COMMUNITY_STAT_CELL}>
+                      <dt className={COMMUNITY_STAT_LABEL}>{fr ? "Durée" : "Runtime"}</dt>
+                      <dd className={COMMUNITY_STAT_VALUE}>{b.runtimeDays}d</dd>
+                    </div>
+                    <div className={COMMUNITY_STAT_CELL}>
+                      <dt className={COMMUNITY_STAT_LABEL}>{fr ? "Copieurs" : "Copiers"}</dt>
+                      <dd className={COMMUNITY_STAT_VALUE}>{b.copyFollowerCount}</dd>
+                    </div>
+                  </dl>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1.5">
+                  {b.copyTradingEnabled ? (
+                    <button
+                      type="button"
+                      disabled={busyCopyUserId === b.userId}
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition active:scale-[0.97] disabled:opacity-50 ${
+                        b.isCopying
+                          ? "border border-amber-400/35 bg-amber-500/10 text-amber-300"
+                          : "border border-amber-400/40 bg-amber-500/15 text-amber-200"
+                      }`}
+                      onClick={() => void toggleCopy(b, b.isCopying)}
+                    >
+                      {b.isCopying
+                        ? fr
+                          ? "Arrêter copy"
+                          : "Stop copy"
+                        : fr
+                          ? "Copy perf."
+                          : "Copy perf."}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
-                    disabled={busyCopyUserId === b.userId}
-                    className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
-                      b.isCopying
-                        ? "border border-amber-500 text-amber-800"
-                        : "bg-amber-600 text-white"
+                    disabled={busyHandle === b.handle}
+                    className={`${COMMUNITY_FOLLOW_BTN} ${
+                      b.isFollowing ? COMMUNITY_FOLLOW_BTN_ON : COMMUNITY_FOLLOW_BTN_OFF
                     }`}
-                    onClick={() => void toggleCopy(b, b.isCopying)}
+                    onClick={() => onFollow(b.handle, b.isFollowing)}
                   >
-                    {b.isCopying
-                      ? fr
-                        ? "Arrêter copy"
-                        : "Stop copy"
-                      : fr
-                        ? "Copy perf."
-                        : "Copy perf."}
+                    {b.isFollowing ? (fr ? "Suivi" : "Following") : fr ? "Suivre" : "Follow"}
                   </button>
-                ) : null}
-                <button
-                  type="button"
-                  disabled={busyHandle === b.handle}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
-                    b.isFollowing
-                      ? "border border-[#d6d3d1] text-[#57534e]"
-                      : "bg-[#305f33] text-white"
-                  }`}
-                  onClick={() => onFollow(b.handle, b.isFollowing)}
-                >
-                  {b.isFollowing ? (fr ? "Suivi" : "Following") : fr ? "Suivre" : "Follow"}
-                </button>
+                </div>
               </div>
-            </div>
-          </article>
-        </li>
+            </article>
+          </li>
         );
       })}
     </ul>

@@ -1,5 +1,7 @@
 "use client";
 
+import { COMMUNITY_CHIP, COMMUNITY_CHIP_ACTIVE } from "@/lib/community/community-ui";
+
 export type FilterTab<T extends string> = { id: T; labelFr: string; labelEn: string };
 
 export function CommunityFilterTabs<T extends string>({
@@ -20,11 +22,7 @@ export function CommunityFilterTabs<T extends string>({
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-            active === tab.id
-              ? "bg-[#305f33] text-white"
-              : "bg-[#f5f5f4] text-[#57534e]"
-          }`}
+          className={active === tab.id ? COMMUNITY_CHIP_ACTIVE : COMMUNITY_CHIP}
         >
           {fr ? tab.labelFr : tab.labelEn}
         </button>

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { IconInbox } from "@/components/community/community-icons";
+import { COMMUNITY_DM_BTN } from "@/lib/community/community-ui";
 import { useDmUnreadCount } from "@/hooks/use-dm-unread-count";
 
 export function CommunityDmLink({
   fr,
-  className = "relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#dce8e0] bg-white text-[#305f33] transition active:scale-95",
+  className = COMMUNITY_DM_BTN,
   iconSize = 17,
 }: {
   fr: boolean;
@@ -29,9 +30,9 @@ export function CommunityDmLink({
             : "Inbox"
       }
     >
-      <IconInbox size={iconSize} />
+      <IconInbox size={iconSize} className="drop-shadow-[0_0_6px_rgba(34,211,238,0.35)]" />
       {unread > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-[#dc2626] px-1 text-[9px] font-extrabold leading-none text-white ring-2 ring-white">
+        <span className="absolute -right-1 -top-1 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border border-rose-400/40 bg-rose-500 px-1 text-[9px] font-extrabold leading-none text-white shadow-[0_0_10px_rgba(244,63,94,0.45)] ring-2 ring-[rgba(10,16,24,0.95)]">
           {unread > 99 ? "99+" : unread}
         </span>
       ) : null}

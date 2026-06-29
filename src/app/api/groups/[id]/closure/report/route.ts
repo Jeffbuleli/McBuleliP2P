@@ -46,7 +46,7 @@ export async function GET(
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>${esc(groupName)} — Cycle ${cycleNumber}</title>
+  <title>${esc(groupName)} - Cycle ${cycleNumber}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #1c1917; }
     h1 { font-size: 1.25rem; }
@@ -61,7 +61,7 @@ export async function GET(
   </style>
 </head>
 <body>
-  <h1>${esc(groupName)} — Clôture cycle ${cycleNumber}</h1>
+  <h1>${esc(groupName)} - Clôture cycle ${cycleNumber}</h1>
   <p class="meta">Exécutée le ${esc(dateStr)} · McBuleli AVEC</p>
   <div class="totals">
     <p><strong>Parts totales :</strong> ${snapshot.totalShares}</p>
@@ -81,7 +81,7 @@ export async function GET(
     </thead>
     <tbody>${rows}</tbody>
   </table>
-  <footer>Powered by McBuleli · Document généré pour archivage — imprimer en PDF via le navigateur.</footer>
+  <footer>Powered by McBuleli · Document généré pour archivage - imprimer en PDF via le navigateur.</footer>
 </body>
 </html>`;
 

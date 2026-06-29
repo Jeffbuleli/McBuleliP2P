@@ -19,7 +19,7 @@ export function getAppOrigin(): string {
   return "";
 }
 
-/** OG / Twitter / favicon absolute URLs — prefer canonical domain in production. */
+/** OG / Twitter / favicon absolute URLs - prefer canonical domain in production. */
 export function getMetadataOrigin(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
   if (fromEnv) return fromEnv;

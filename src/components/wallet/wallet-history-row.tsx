@@ -74,7 +74,10 @@ export function WalletHistoryRow({
 
   return (
     <li>
-      <Link href={href} className="wallet-hist-row fd-card flex items-center gap-3 p-3 active:scale-[0.99]">
+      <Link
+        href={href}
+        className="wallet-hist-row flex items-center gap-3 rounded-xl border border-white/10 bg-[#0a1018]/85 p-3 transition active:scale-[0.99] hover:border-cyan-400/20"
+      >
         <span
           className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconTone(visual)}`}
         >
@@ -95,10 +98,10 @@ export function WalletHistoryRow({
               alt=""
               width={14}
               height={14}
-              className="absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-white"
+              className="absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-[#0a1018]"
             />
           ) : isFiat ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-2 ring-white">
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-2 ring-[#0a1018]">
               <WalletAssetIcon asset={item.asset as "USD" | "CDF"} size={16} />
             </span>
           ) : null}

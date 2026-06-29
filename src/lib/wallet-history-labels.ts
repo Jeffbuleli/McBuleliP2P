@@ -90,7 +90,7 @@ function fiatHistoryTitle(
   return asset === "CDF" ? t("wallet_hist_deposit_cdf") : t("wallet_hist_deposit_usd");
 }
 
-/** Channel subtitle — Airtel, M-Pesa, Visa… */
+/** Channel subtitle - Airtel, M-Pesa, Visa… */
 export function activityChannelLabel(
   item: Pick<WalletActivityItem, "kind" | "provider" | "providerLabel" | "fiatRail">,
   locale: "en" | "fr" = "en",
@@ -102,7 +102,7 @@ export function activityChannelLabel(
   return null;
 }
 
-/** Minimal label for history rows — channel shown separately with SVG. */
+/** Minimal label for history rows - channel shown separately with SVG. */
 export function activityShortTitle(
   t: (k: keyof Messages) => string,
   item: Pick<WalletActivityItem, "kind" | "entryType" | "fiatOp" | "fiatRail" | "asset">,

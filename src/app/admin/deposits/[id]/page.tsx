@@ -42,7 +42,7 @@ export default function AdminDepositDetailPage() {
     const res = await fetch(`/api/admin/deposits/${id}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.message ?? "—");
+      setMsg(data.message ?? "-");
       setD(null);
       return;
     }
@@ -81,7 +81,7 @@ export default function AdminDepositDetailPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMsg(data.message ?? "—");
+        setMsg(data.message ?? "-");
         return;
       }
       router.push("/admin/deposits");
@@ -102,7 +102,7 @@ export default function AdminDepositDetailPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMsg(data.message ?? "—");
+        setMsg(data.message ?? "-");
         return;
       }
       router.push("/admin/deposits");
@@ -118,7 +118,7 @@ export default function AdminDepositDetailPage() {
     return (
       <div className={adminCls.page}>
         <p className={adminCls.error}>
-          {msg ?? "—"}{" "}
+          {msg ?? "-"}{" "}
           <Link href="/admin/deposits" className={adminCls.back}>
             {t("admin_back")}
           </Link>

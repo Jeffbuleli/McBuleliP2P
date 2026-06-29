@@ -216,7 +216,7 @@ export function AvecClosurePanel({
         <div className="min-w-0 flex-1">
           <p className={avecCls.sectionTitle}>{t("avec_closure_title")}</p>
           <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-900">
-            {statusLabel} · #{state?.cycleNumber ?? "—"}
+            {statusLabel} · #{state?.cycleNumber ?? "-"}
           </p>
         </div>
       </div>

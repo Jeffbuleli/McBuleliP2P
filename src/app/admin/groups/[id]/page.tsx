@@ -184,11 +184,11 @@ export default function AdminGroupDetailPage() {
         </div>
         <p className={`mt-2 text-sm ${adminCls.muted}`}>
           {formatUsdt(row.contributionAmountUsdt)} USDT · {row.cycleDurationDays}d ·{" "}
-          {row.countryCode ? countryLabel(locale, row.countryCode) : "—"}
+          {row.countryCode ? countryLabel(locale, row.countryCode) : "-"}
         </p>
         <p className={`mt-1 text-xs ${adminCls.muted}`}>
           Next billing:{" "}
-          {row.nextBillingAt ? new Date(row.nextBillingAt).toLocaleString() : "—"}
+          {row.nextBillingAt ? new Date(row.nextBillingAt).toLocaleString() : "-"}
         </p>
       </div>
 
@@ -237,7 +237,7 @@ export default function AdminGroupDetailPage() {
           {invoices === null ? (
             <p className={`mt-2 ${adminCls.muted}`}>…</p>
           ) : invoices.length === 0 ? (
-            <p className={`mt-2 ${adminCls.muted}`}>—</p>
+            <p className={`mt-2 ${adminCls.muted}`}>-</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {invoices.map((x: any) => (
@@ -248,7 +248,7 @@ export default function AdminGroupDetailPage() {
                   </div>
                   <p className={`mt-1 text-xs ${adminCls.muted}`}>
                     {Number(x.amountUsdt).toFixed(2)} USDT ·{" "}
-                    {x.paidAt ? new Date(x.paidAt).toLocaleString() : "—"}
+                    {x.paidAt ? new Date(x.paidAt).toLocaleString() : "-"}
                   </p>
                   {x.failureReason ? (
                     <p className="mt-1 text-[11px] text-rose-700">{x.failureReason}</p>
@@ -264,7 +264,7 @@ export default function AdminGroupDetailPage() {
           {audit === null ? (
             <p className={`mt-2 ${adminCls.muted}`}>…</p>
           ) : audit.length === 0 ? (
-            <p className={`mt-2 ${adminCls.muted}`}>—</p>
+            <p className={`mt-2 ${adminCls.muted}`}>-</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {audit.map((x: any) => (

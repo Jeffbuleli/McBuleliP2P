@@ -63,7 +63,7 @@ export default function LedgerActivityDetailPage() {
 
   if (!entry) {
     return (
-      <div className="wallet-theme pb-8">
+      <div className="wallet-theme px-4 pb-8">
         <WalletSubpageHeader title={t("wallet_tx_details")} backHref="/app/wallet/history" />
         <p className="text-center text-[color:var(--fd-muted)]">…</p>
       </div>
@@ -122,7 +122,7 @@ export default function LedgerActivityDetailPage() {
   });
 
   return (
-    <div className="wallet-theme pb-8">
+    <div className="wallet-theme px-4 pb-8">
       <WalletSubpageHeader
         title={t("wallet_tx_details")}
         subtitle={label}

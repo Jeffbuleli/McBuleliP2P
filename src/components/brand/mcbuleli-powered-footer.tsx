@@ -1,28 +1,21 @@
-import Image from "next/image";
 import Link from "next/link";
+import { McBuleliLogoMark } from "@/components/brand/mcbuleli-logo-mark";
 
 const X_URL = "https://x.com/McBuleli";
 
-export function McBuleliPoweredFooter() {
+export function McBuleliPoweredFooter({ compact = true }: { compact?: boolean }) {
+  const textCls = compact ? "text-[10px]" : "text-xs";
+
   return (
-    <footer className="mt-8 flex flex-col items-center gap-1.5 pb-4 pt-2">
-      <div className="flex items-center gap-2 text-[10px] text-[color:var(--fd-muted)]">
-        <span>Powered by</span>
-        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)]">
-          <Image
-            src="/brand/logo.png"
-            alt=""
-            width={20}
-            height={20}
-            className="h-5 w-5 object-contain"
-            unoptimized
-          />
-        </span>
+    <footer className={`flex flex-col items-center ${compact ? "gap-1 py-2" : "gap-1.5 pb-4 pt-2"} mt-8`}>
+      <div className={`flex items-center gap-2 ${textCls} text-[color:var(--fd-muted)]`}>
+        <span className="leading-none">Powered by</span>
+        <McBuleliLogoMark size={compact ? 18 : 24} />
         <Link
           href={X_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-extrabold text-[color:var(--fd-primary)] hover:underline"
+          className={`font-extrabold leading-none text-emerald-400 hover:underline ${textCls}`}
         >
           McBuleli
         </Link>

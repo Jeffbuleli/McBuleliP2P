@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
 import { FIAT_ASSET_LABEL, type WalletFiatAsset } from "@/lib/wallet-fiat-assets";
@@ -12,10 +11,10 @@ import { ActivityListControls } from "@/components/wallet/activity-list-controls
 import { WalletHistoryRow } from "@/components/wallet/wallet-history-row";
 import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
 import {
-  IconArrowDown,
-  IconArrowUp,
-  IconSend,
-} from "@/components/icons/flow-icons";
+  WalletAssetActionChip,
+  WalletAssetActionRow,
+} from "@/components/wallet/wallet-asset-action-chip";
+import { IconArrowDown, IconArrowUp, IconSend } from "@/components/icons/flow-icons";
 
 type FeedResponse = {
   balance: { display: string; valueUsd: string } | null;
@@ -54,20 +53,21 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
   }, [load]);
 
   const subtitle = FIAT_ASSET_LABEL[asset][lang];
+  const swapTo = asset === "USD" ? "USDT" : "USD";
 
   return (
-    <div className="wallet-theme pb-8">
+    <div className="wallet-theme px-4 pb-8">
       <WalletSubpageHeader title={asset} subtitle={subtitle} backHref="/app/wallet" />
 
       <section className="wallet-hero mt-2 p-4">
         <div className="flex items-center gap-3">
           <WalletAssetIcon asset={asset} size={48} />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400/80">
               {t("wallet_asset_balance")}
             </p>
             <p className="mt-0.5 text-[1.65rem] font-bold tabular-nums text-[color:var(--fd-text)]">
-              {hidden ? "••••" : (data?.balance?.display ?? "—")}
+              {hidden ? "••••" : (data?.balance?.display ?? "-")}
             </p>
             <p className="text-sm tabular-nums text-[color:var(--fd-muted)]">
               {hidden ? "••••" : (data?.balance?.valueUsd ?? "")}
@@ -77,37 +77,40 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
         <button
           type="button"
           onClick={() => setHidden((h) => !h)}
-          className="mt-2 text-[10px] font-semibold text-[color:var(--fd-primary)]"
+          className="mt-2 text-[10px] font-semibold text-emerald-300"
         >
           {hidden ? t("show_balance") : t("hide_balance")}
         </button>
       </section>
 
-      <div className="mt-4 flex justify-between gap-2">
-        <ActionChip
+      <WalletAssetActionRow>
+        <WalletAssetActionChip
           href={fiatDepositHref(asset)}
           label={t("wallet_action_deposit")}
           icon={<IconArrowDown className="h-5 w-5" />}
-          accent="amber"
+          tone="deposit"
         />
-        <ActionChip
+        <WalletAssetActionChip
           href={`/app/wallet/transfer?asset=${asset}`}
           label={t("wallet_action_send")}
           icon={<IconSend className="h-5 w-5" />}
+          tone="send"
         />
-        <ActionChip
+        <WalletAssetActionChip
           href={fiatWithdrawHref(asset)}
           label={t("wallet_action_withdraw")}
           icon={<IconArrowUp className="h-5 w-5" />}
+          tone="withdraw"
         />
-        <ActionChip
-          href={`/app/wallet/swap?from=${asset}&to=USDT`}
+        <WalletAssetActionChip
+          href={`/app/wallet/swap?from=${asset}&to=${swapTo}`}
           label={t("wallet_swap_title")}
           icon={<IconSwapBrand className="h-5 w-5" />}
+          tone="swap"
         />
-      </div>
+      </WalletAssetActionRow>
 
-      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+      <p className="mt-6 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
         {t("wallet_recent_activity")}
       </p>
 
@@ -131,11 +134,11 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
       {loading ? (
         <div className="mt-3 space-y-2" aria-hidden>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-2xl bg-[color:var(--fd-mint)]/50" />
+            <div key={i} className="h-16 animate-pulse rounded-xl border border-white/8 bg-cyan-500/8" />
           ))}
         </div>
       ) : !data?.items.length ? (
-        <p className="fd-card mt-3 py-8 text-center text-sm text-[color:var(--fd-muted)]">
+        <p className="mt-3 rounded-xl border border-white/10 bg-[#0a1018]/85 py-8 text-center text-sm text-[color:var(--fd-muted)]">
           {t("wallet_history_empty")}
         </p>
       ) : (
@@ -146,32 +149,5 @@ export function FiatAssetDetailScreen({ asset }: { asset: WalletFiatAsset }) {
         </ul>
       )}
     </div>
-  );
-}
-
-function ActionChip({
-  href,
-  label,
-  icon,
-  accent,
-}: {
-  href: string;
-  label: string;
-  icon: ReactNode;
-  accent?: "amber";
-}) {
-  const circle =
-    accent === "amber"
-      ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-900"
-      : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-[color:var(--fd-primary)]";
-  return (
-    <Link href={href} className="flex min-w-0 flex-1 flex-col items-center gap-1.5 active:scale-95">
-      <span className={`flex h-11 w-11 items-center justify-center rounded-full shadow-sm ${circle}`}>
-        {icon}
-      </span>
-      <span className="max-w-[4rem] truncate text-center text-[9px] font-bold text-[color:var(--fd-text)]">
-        {label}
-      </span>
-    </Link>
   );
 }

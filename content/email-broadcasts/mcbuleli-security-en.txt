@@ -1,5 +1,5 @@
 McBuleli
-Passkeys & 2FA — protect your balance in two taps.
+Passkeys & 2FA - protect your balance in two taps.
 Hi {{{contact.first_name|there}}},
 Lock down your account
 Add a passkey or authenticator app. Withdrawals and sensitive changes can require a quick step-up check.

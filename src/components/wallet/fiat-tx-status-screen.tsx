@@ -127,7 +127,7 @@ export function FiatTxStatusScreen({
   }
 
   return (
-    <div className="wallet-theme pb-10">
+    <div className="wallet-theme px-4 pb-10">
       <WalletSubpageHeader title={title} backHref="/app/wallet" />
 
       <WalletFormCard>
@@ -146,7 +146,7 @@ export function FiatTxStatusScreen({
         />
 
         {tx ? (
-          <div className="flex items-center gap-3 rounded-2xl bg-[color:var(--fd-mint)]/35 p-3">
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0a1018]/85 p-3">
             <FiatChannelIcon
               channel={resolveFiatChannelId({ provider: tx.provider, rail })}
               className="h-9 w-9 text-[11px]"

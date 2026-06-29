@@ -1,14 +1,14 @@
 /**
  * Optional in-process bot scheduler (Render single web instance).
  * Set BOT_CRON_INLINE=1 and CRON_SECRET on production.
- * Calls the same HTTP route as Render Cron — no heavy imports at boot.
+ * Calls the same HTTP route as Render Cron - no heavy imports at boot.
  */
 export async function register() {
   if (process.env.NODE_ENV === "production") {
     const cronSecret = process.env.CRON_SECRET?.trim() ?? "";
     if (cronSecret.length < 12) {
       console.warn(
-        "[cron] CRON_SECRET missing on Web service — wallet/bots crons will fail until set (see docs/wallet-cron-render.md)",
+        "[cron] CRON_SECRET missing on Web service - wallet/bots crons will fail until set (see docs/wallet-cron-render.md)",
       );
     }
   }
@@ -18,7 +18,7 @@ export async function register() {
 
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret || secret.length < 12) {
-    console.warn("[bots-cron:inline] CRON_SECRET missing — inline scheduler disabled");
+    console.warn("[bots-cron:inline] CRON_SECRET missing - inline scheduler disabled");
     return;
   }
 

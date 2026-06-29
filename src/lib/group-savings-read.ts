@@ -83,7 +83,7 @@ function normalizeBase(row: {
   };
 }
 
-/** Safe read — works before/after drizzle 0029/0030 on production DB. */
+/** Safe read - works before/after drizzle 0029/0030 on production DB. */
 export async function fetchGroupById(groupId: string): Promise<GroupSavingsRow | null> {
   const db = getDb();
   try {

@@ -20,7 +20,7 @@ function isMissingRelationError(err: unknown): boolean {
   return code === "42P01";
 }
 
-/** Safe read — returns [] when FreshPay tables are not migrated yet. */
+/** Safe read - returns [] when FreshPay tables are not migrated yet. */
 export async function fetchFiatFreshpayRows(args: {
   userId: string;
   currency?: string;
@@ -61,7 +61,7 @@ export async function fetchFiatFreshpayRows(args: {
   }
 }
 
-/** Pending fiat tx counts for treasury — zeroed when table is missing. */
+/** Pending fiat tx counts for treasury - zeroed when table is missing. */
 export async function countPendingFiatFreshpay(args: {
   failedSince: Date;
 }): Promise<{ processing: number; failed24h: number }> {

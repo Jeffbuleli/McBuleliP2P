@@ -412,7 +412,7 @@ export async function executeLoanFromGovernance(args: {
   return { ok: true, executed: exec.executed };
 }
 
-/** Member (non-manager) requests a loan for themselves — managers must accept then approve 2/3. */
+/** Member (non-manager) requests a loan for themselves - managers must accept then approve 2/3. */
 export async function requestMemberLoan(args: {
   groupId: string;
   actorUserId: string;

@@ -270,7 +270,7 @@ export async function completeCommunityImageUpload(args: {
   return { ok: true, id: row.id, url: row.publicUrl };
 }
 
-/** Fallback inline (sans R2) — petites images uniquement. */
+/** Fallback inline (sans R2) - petites images uniquement. */
 export async function createCommunityImageMedia(args: {
   ownerId: string;
   dataUrl: string;

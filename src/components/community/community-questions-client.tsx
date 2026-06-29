@@ -78,8 +78,8 @@ export function CommunityQuestionsClient() {
               : "Title (min. 10) and details (min. 20) required"
             : data.error === "timeout"
               ? fr
-                ? "Délai dépassé — réessayez"
-                : "Timed out — try again"
+                ? "Délai dépassé - réessayez"
+                : "Timed out - try again"
               : (data.error ?? "failed"),
         );
         return;
@@ -93,7 +93,7 @@ export function CommunityQuestionsClient() {
         setTimeout(() => setBpToast(null), 3000);
       }
     } catch {
-      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
+      setError(fr ? "Erreur serveur - réessayez" : "Server error - try again");
     } finally {
       setPublishing(false);
     }

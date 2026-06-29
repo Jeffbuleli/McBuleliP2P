@@ -37,7 +37,7 @@ export async function maybeSendHouseStressAlert(
 
   const pct = Math.round(snap.stressUtilizationPct * 100);
   const subject = snap.circuitTripped
-    ? `[McBuleli OPS] Futures live CIRCUIT — stress ${pct}%`
+    ? `[McBuleli OPS] Futures live CIRCUIT - stress ${pct}%`
     : `[McBuleli OPS] Futures house stress ${pct}%`;
 
   const body = [

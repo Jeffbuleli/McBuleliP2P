@@ -8,7 +8,7 @@ function wrapSvg(inner: string, size = 200): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 200 200" role="img" aria-hidden="true">${inner}</svg>`;
 }
 
-/** McBuleli mark — always renders (no external image). */
+/** McBuleli mark - always renders (no external image). */
 export function emailLogoSvg(size = 48): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 48 48" role="img" aria-label="McBuleli">
   <rect width="48" height="48" rx="10" fill="${P}"/>

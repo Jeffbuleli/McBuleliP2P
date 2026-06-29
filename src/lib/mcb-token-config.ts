@@ -13,7 +13,7 @@ export type McbClaimStatus =
 
 export const MCB_CHAIN_LABEL = "BEP20 (BNB Smart Chain)";
 
-/** BNB Smart Chain mainnet — BEP-20 tokens live here. */
+/** BNB Smart Chain mainnet - BEP-20 tokens live here. */
 export const MCB_BSC_CHAIN_ID = 56;
 
 export const MCB_TOKEN_STANDARD = "BEP-20" as const;

@@ -15,15 +15,7 @@ let embeddingBackfillStarted = false;
 export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
   if (seeded) return;
   const db = getDb();
-  const [row] = await db
-    .select({ id: aiAssistantKnowledge.id })
-    .from(aiAssistantKnowledge)
-    .limit(1);
-  if (row) {
-    seeded = true;
-    void backfillMissingEmbeddings();
-    return;
-  }
+
   for (const item of ASSISTANT_KNOWLEDGE_SEED) {
     await db
       .insert(aiAssistantKnowledge)
@@ -37,8 +29,21 @@ export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
         priority: item.priority,
         published: true,
       })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: [aiAssistantKnowledge.slug, aiAssistantKnowledge.locale],
+        set: {
+          category: item.category,
+          title: item.title,
+          content: item.content,
+          tags: item.tags,
+          priority: item.priority,
+          published: true,
+          updatedAt: new Date(),
+          embedding: null,
+        },
+      });
   }
+
   seeded = true;
   void backfillMissingEmbeddings();
 }

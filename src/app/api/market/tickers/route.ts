@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { fetchMarketTickers } from "@/lib/market-tickers";
 
-/** 24h ticker snapshot — Binance spot + OKX Pi; client polls for live updates. */
+/** 24h ticker snapshot - Binance spot (api.binance.com or data-api.binance.vision) + OKX Pi. */
 export async function GET() {
   try {
     const tickers = await fetchMarketTickers();
-    if (!tickers) {
+    if (!tickers?.length) {
       return NextResponse.json(
         { message: "Market data unavailable." },
         { status: 502 },
       );
     }
     return NextResponse.json(
-      { tickers },
+      { tickers, fetchedAt: new Date().toISOString() },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30",
         },
       },
     );

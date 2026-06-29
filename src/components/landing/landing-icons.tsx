@@ -1,4 +1,4 @@
-/** Lightweight SVG icons — single stroke style, Lucide-like */
+/** Lightweight SVG icons - single stroke style, Lucide-like */
 
 import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 

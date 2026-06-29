@@ -7,14 +7,14 @@ export async function LandingAvecStaking() {
   const d = getDictionary(locale);
 
   return (
-    <section id="avec" className="scroll-mt-20 bg-white px-4 py-10 sm:px-6 sm:py-14">
+    <section id="avec" className="scroll-mt-20 px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-2xl">
-          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#78350f]">
+          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-fuchsia-400/80">
             {d.landing_v2_avec_eyebrow}
           </p>
-          <h2 className="mt-2 text-xl font-black text-stone-900 sm:text-2xl">{d.landing_v2_avec_title}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-stone-600">{d.landing_v2_avec_sub}</p>
+          <h2 className="mt-2 text-xl font-black text-white sm:text-2xl">{d.landing_v2_avec_title}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-stone-400">{d.landing_v2_avec_sub}</p>
         </div>
 
         <LandingAvecCards
@@ -36,12 +36,12 @@ export async function LandingAvecStaking() {
 
         <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           {[
-            { label: d.landing_v2_stat_escrow, color: "bg-[#305F33]/8 text-[#305F33] ring-[#305F33]/15" },
-            { label: d.landing_v2_stat_mobile, color: "bg-stone-100 text-stone-800 ring-stone-200" },
-            { label: d.landing_v2_stat_kyc, color: "bg-emerald-50 text-emerald-800 ring-emerald-100" },
-            { label: d.landing_v2_stat_support, color: "bg-[#78350f]/8 text-[#78350f] ring-[#78350f]/15" },
+            { label: d.landing_v2_stat_escrow, color: "border border-emerald-500/25 bg-emerald-500/10 text-emerald-400" },
+            { label: d.landing_v2_stat_mobile, color: "border border-cyan-500/20 bg-cyan-500/5 text-cyan-300" },
+            { label: d.landing_v2_stat_kyc, color: "border border-teal-500/20 bg-teal-500/5 text-teal-300" },
+            { label: d.landing_v2_stat_support, color: "border border-fuchsia-500/20 bg-fuchsia-500/5 text-fuchsia-300" },
           ].map((s) => (
-            <div key={s.label} className={`rounded-xl px-2.5 py-3 text-center text-[11px] font-extrabold ring-1 sm:text-xs ${s.color}`}>
+            <div key={s.label} className={`rounded-xl px-2.5 py-3 text-center font-mono text-[10px] font-bold uppercase tracking-wider sm:text-[11px] ${s.color}`}>
               {s.label}
             </div>
           ))}

@@ -5,6 +5,7 @@ import {
   COMMUNITY_CATEGORY_NAV,
   type CommunityCategoryId,
 } from "@/lib/community/nav-config";
+import { COMMUNITY_CHIP, COMMUNITY_CHIP_ACTIVE, COMMUNITY_CHIP_LIVE } from "@/lib/community/community-ui";
 import { useAcademyLiveBadge } from "@/hooks/use-academy-live-badge";
 
 export function CommunityCategoryNav({
@@ -34,15 +35,11 @@ export function CommunityCategoryNav({
             <Link
               key={item.id}
               href={item.href}
-              className={`relative shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition active:scale-95 ${
-                isLiveTraining
-                  ? "border border-rose-200 bg-rose-50 text-rose-700"
-                  : "border border-[#e8f3ee] bg-white text-[#57534e]"
-              }`}
+              className={isLiveTraining ? COMMUNITY_CHIP_LIVE : COMMUNITY_CHIP}
             >
               {isLiveTraining ? (
                 <span
-                  className="mr-1.5 inline-flex h-1.5 w-1.5 rounded-full bg-rose-500 align-middle"
+                  className="mr-1.5 inline-flex h-1.5 w-1.5 rounded-full bg-rose-400 align-middle shadow-[0_0_8px_rgba(251,113,133,0.8)]"
                   aria-hidden
                 />
               ) : null}
@@ -56,11 +53,7 @@ export function CommunityCategoryNav({
             key={item.id}
             type="button"
             onClick={() => onChange(item.id)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition active:scale-95 ${
-              isActive
-                ? "bg-[#305f33] text-white"
-                : "border border-[#e8f3ee] bg-white text-[#57534e]"
-            }`}
+            className={isActive ? COMMUNITY_CHIP_ACTIVE : COMMUNITY_CHIP}
           >
             {label}
           </button>

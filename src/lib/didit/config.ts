@@ -1,4 +1,4 @@
-/** Didit KYC — https://docs.didit.me/ */
+/** Didit KYC - https://docs.didit.me/ */
 
 export function diditApiKey(): string {
   return process.env.DIDIT_API_KEY?.trim() ?? "";

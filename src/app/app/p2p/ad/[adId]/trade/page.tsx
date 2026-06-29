@@ -302,7 +302,7 @@ export default function P2pTradePage() {
           className="text-lg tabular-nums"
         />
         <div className="mt-3">
-          <FlowAmountBox label={ad.asset} amount={`≈ ${estCrypto ?? "—"}`} unit={ad.asset} />
+          <FlowAmountBox label={ad.asset} amount={`≈ ${estCrypto ?? "-"}`} unit={ad.asset} />
         </div>
       </FlowSection>
 

@@ -22,6 +22,10 @@ import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
+import {
+  COMMUNITY_PROFILE_STAT,
+  COMMUNITY_PROFILE_STAT_ACCENT,
+} from "@/lib/community/community-ui";
 
 function StatCard({
   label,
@@ -33,15 +37,9 @@ function StatCard({
   accent?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl border px-3 py-3 text-center shadow-sm ${
-        accent
-          ? "border-[#c5dfd0] bg-gradient-to-b from-[#f0faf4] to-white"
-          : "border-[#e8f3ee] bg-white"
-      }`}
-    >
-      <p className="text-lg font-bold tabular-nums text-[#0c0a09]">{value}</p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
+    <div className={accent ? COMMUNITY_PROFILE_STAT_ACCENT : COMMUNITY_PROFILE_STAT}>
+      <p className="text-lg font-bold tabular-nums text-stone-50">{value}</p>
+      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
         {label}
       </p>
     </div>
@@ -176,10 +174,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
             ← {fr ? "Communauté" : "Community"}
           </Link>
-          <CommunityDmLink
-            fr={fr}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33] transition active:scale-95"
-          />
+          <CommunityDmLink fr={fr} />
         </div>
       </div>
 
@@ -329,7 +324,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
             value={
               profile.signalStats.signalWinRate !== null
                 ? `${profile.signalStats.signalWinRate}%`
-                : "—"
+                : "-"
             }
           />
         </section>

@@ -57,7 +57,7 @@ export function AvecLoanDecisionMessage({
         <div>
           <dt className="text-[color:var(--fd-muted)]">{t("group_payout_approved_by")}</dt>
           <dd className="mt-0.5 font-semibold leading-snug">
-            {meta.approvers.map((a) => a.displayName).join(" · ") || "—"}
+            {meta.approvers.map((a) => a.displayName).join(" · ") || "-"}
           </dd>
         </div>
       </dl>

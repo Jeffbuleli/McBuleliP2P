@@ -1,4 +1,4 @@
-/** Log provider/technical errors server-side — never expose `detail` to end users. */
+/** Log provider/technical errors server-side - never expose `detail` to end users. */
 export function logFiatApiError(scope: string, detail: string | null | undefined): void {
   if (detail?.trim()) {
     console.error(`[fiat:${scope}]`, detail.trim());

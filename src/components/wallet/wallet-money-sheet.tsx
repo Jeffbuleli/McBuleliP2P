@@ -87,7 +87,7 @@ export function WalletMoneySheet({
               label: t("wallet_fiat_rail_card"),
               hint: t("wallet_fiat_card_checkout_hint"),
               icon: (
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-400/35 bg-violet-500/15 text-violet-300">
                   <CardIcon />
                 </span>
               ),
@@ -124,7 +124,7 @@ export function WalletMoneySheet({
             icon: (
               <span className="relative">
                 <WalletAssetIcon asset="USD" size={36} className="h-9 w-9" />
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/80 text-white">
                   <IconMobileMoney className="h-2.5 w-2.5" />
                 </span>
               </span>
@@ -136,7 +136,7 @@ export function WalletMoneySheet({
             icon: (
               <span className="relative">
                 <WalletAssetIcon asset="CDF" size={36} className="h-9 w-9" />
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/80 text-white">
                   <IconMobileMoney className="h-2.5 w-2.5" />
                 </span>
               </span>
@@ -156,15 +156,15 @@ export function WalletMoneySheet({
     <div className="fixed inset-0 z-[9998] flex flex-col justify-end">
       <button
         type="button"
-        className="absolute inset-0 bg-stone-900/40"
+        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
         aria-label={locale === "fr" ? "Fermer" : "Close"}
         onClick={onClose}
       />
       <div
-        className="notif-drawer-panel relative mx-auto max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-5 shadow-[0_-12px_48px_rgba(28,25,23,0.18)]"
+        className="notif-drawer-panel app-futuristic-portal relative mx-auto max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-5 shadow-[0_-12px_48px_rgba(0,0,0,0.45)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
         <p className="text-center text-lg font-bold text-[color:var(--fd-text)]">{title}</p>
         <p className="mt-1 text-center text-xs text-[color:var(--fd-muted)]">
           {t("wallet_fiat_hub_tagline")}
@@ -182,7 +182,7 @@ export function WalletMoneySheet({
                     <Link
                       href={opt.href}
                       onClick={onClose}
-                      className="flex items-center gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-white p-3 active:scale-[0.99] active:bg-[color:var(--fd-mint)]/40"
+                      className="wallet-money-option flex items-center gap-3 p-3 transition active:scale-[0.99]"
                     >
                       <span className="shrink-0">{opt.icon}</span>
                       <span className="min-w-0 flex-1">
@@ -195,7 +195,7 @@ export function WalletMoneySheet({
                           </p>
                         ) : null}
                       </span>
-                      <span className="shrink-0 text-[color:var(--fd-primary)]" aria-hidden>
+                      <span className="shrink-0 text-cyan-400/80" aria-hidden>
                         →
                       </span>
                     </Link>

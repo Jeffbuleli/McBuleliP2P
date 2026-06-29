@@ -9,8 +9,8 @@ const ASSETS = [
     titleFr: "Accueil mobile (PWA)",
     titleEn: "Mobile homepage (PWA)",
     size: "1080×1350",
-    hintFr: "Bannière pleine largeur — rien ne se coupe",
-    hintEn: "Full-width banner — no cropping",
+    hintFr: "Bannière pleine largeur - rien ne se coupe",
+    hintEn: "Full-width banner - no cropping",
   },
   {
     file: "social-story.png",
@@ -79,8 +79,8 @@ export default async function LaunchAssetsPage() {
       <div className="mx-auto max-w-2xl px-4 pt-6">
         <p className="text-sm leading-relaxed text-[color:var(--fd-muted)]">
           {fr
-            ? "PNG haute définition — téléchargez et publiez directement. Les fichiers SVG restent dans public/launch/ pour édition sur Mac."
-            : "High-definition PNGs — download and publish directly. SVG sources remain in public/launch/ for editing on Mac."}
+            ? "PNG haute définition - téléchargez et publiez directement. Les fichiers SVG restent dans public/launch/ pour édition sur Mac."
+            : "High-definition PNGs - download and publish directly. SVG sources remain in public/launch/ for editing on Mac."}
         </p>
 
         <div className="mt-6 space-y-8">

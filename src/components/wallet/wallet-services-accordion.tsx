@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 
 export function WalletServicesAccordion({
   title,
@@ -14,25 +15,27 @@ export function WalletServicesAccordion({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <section className="mt-4 pb-6">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3 text-left active:scale-[0.99]"
-        aria-expanded={open}
-      >
-        <span className="text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-          {title}
-        </span>
-        <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] transition-transform ${open ? "rotate-180" : ""}`}
-          aria-hidden
+    <HudFrame accent="cyan" className={`${HUD_PANEL_LG} mx-4 mt-4`}>
+      <section aria-label={title}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 border-0 bg-transparent px-4 py-3 text-left active:scale-[0.99]"
+          aria-expanded={open}
         >
-          <ChevronDown />
-        </span>
-      </button>
-      {open ? <div className="mt-2 flex flex-col gap-2">{children}</div> : null}
-    </section>
+          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-400/80">
+            {title}
+          </span>
+          <span
+            className={`flex h-7 w-7 items-center justify-center rounded-full border border-cyan-400/35 bg-cyan-500/12 text-cyan-300 transition-transform ${open ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            <ChevronDown />
+          </span>
+        </button>
+        {open ? <div className="flex flex-col gap-2 px-3 pb-3">{children}</div> : null}
+      </section>
+    </HudFrame>
   );
 }
 

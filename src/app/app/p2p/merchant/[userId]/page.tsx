@@ -163,14 +163,14 @@ export default function P2pMerchantPage() {
       <div className="grid grid-cols-2 gap-2">
         <Metric
           label={t("p2p_merchant_completion")}
-          value={profile.completionRatePct != null ? `${profile.completionRatePct}%` : "—"}
+          value={profile.completionRatePct != null ? `${profile.completionRatePct}%` : "-"}
         />
         <Metric
           label={t("p2p_merchant_release_label")}
           value={
             profile.medianReleaseMinutes != null
               ? fmtMinutes(profile.medianReleaseMinutes, loc)
-              : "—"
+              : "-"
           }
         />
       </div>

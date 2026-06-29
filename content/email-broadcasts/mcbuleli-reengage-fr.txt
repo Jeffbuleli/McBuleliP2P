@@ -1,5 +1,5 @@
 McBuleli
-Votre portefeuille vous attend — solde & taux à jour.
+Votre portefeuille vous attend - solde & taux à jour.
 Bonjour {{{contact.first_name|ami}}},
 Toujours avec nous ?
 Les marchés bougent vite. Reconnectez-vous pour voir votre solde, ordres et récompenses staking.

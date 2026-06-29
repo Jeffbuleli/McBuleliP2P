@@ -129,7 +129,7 @@ export function BotInstanceStatsCard({
         <StatCell
           label={t("bots_stats_winrate")}
           value={
-            stats.winRate != null ? `${stats.winRate}%` : "—"
+            stats.winRate != null ? `${stats.winRate}%` : "-"
           }
           accent={
             stats.winRate != null && stats.winRate >= 50 ? "up" : stats.winRate != null ? "down" : "muted"

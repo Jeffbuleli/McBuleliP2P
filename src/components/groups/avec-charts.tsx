@@ -1,6 +1,6 @@
 "use client";
 
-/** Minimal SVG charts — no external lib. */
+/** Minimal SVG charts - no external lib. */
 
 /** Filled ring: value / max (e.g. members 14/25). */
 export function AvecProgressRing({

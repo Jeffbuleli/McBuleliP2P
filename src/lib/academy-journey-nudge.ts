@@ -26,7 +26,7 @@ import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
 const NUDGE_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 const STALE_ACTIVITY_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** P1b — email aux inscrits cohorte avec progression < 60 % et peu d'activité récente. */
+/** P1b - email aux inscrits cohorte avec progression < 60 % et peu d'activité récente. */
 export async function runAcademyJourneyNudges(): Promise<{
   scanned: number;
   sent: number;

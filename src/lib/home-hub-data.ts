@@ -13,6 +13,8 @@ import { homeDisplayName, homeGreetingLine } from "@/lib/home-greeting";
 import { isKycApproved, kycEnabled } from "@/lib/kyc-policy";
 import { fetchMarketTickers, type MarketTicker } from "@/lib/market-tickers";
 import { loadP2pHomeActivity, type P2pHomeActivity } from "@/lib/p2p-activity";
+import { loadRecentActivity } from "@/lib/dashboard-activity";
+import type { ActivityRow } from "@/components/mobile/recent-activity";
 import {
   emptyPortfolioSnapshot,
   formatPortfolioTotalWithStaking,
@@ -31,6 +33,7 @@ export type HomeHubData = {
   trendingPosts: UnifiedFeedItem[];
   topTraders: TraderLeaderboardEntry[];
   p2p: P2pHomeActivity & { showFullCard: boolean };
+  walletActivity: ActivityRow[];
   liveBadge: AcademyLiveBadgeView;
   showOnboarding: boolean;
 };
@@ -64,6 +67,7 @@ export async function loadHomeHubData(args: {
     liveBadge,
     feedResult,
     traders,
+    walletActivity,
   ] = await Promise.all([
     userPromise,
     getPortfolioSnapshotForUser(userId, locale),
@@ -89,6 +93,7 @@ export async function loadHomeHubData(args: {
           () => [] as TraderLeaderboardEntry[],
         )
       : Promise.resolve([] as TraderLeaderboardEntry[]),
+    loadRecentActivity(userId, locale, 5).catch(() => [] as ActivityRow[]),
   ]);
 
   const portfolio = snapshot ?? emptyPortfolioSnapshot(locale);
@@ -127,6 +132,7 @@ export async function loadHomeHubData(args: {
     ),
     topTraders: traders,
     p2p: { ...p2pHome, showFullCard: p2pShowFullCard },
+    walletActivity,
     liveBadge,
     showOnboarding,
   };

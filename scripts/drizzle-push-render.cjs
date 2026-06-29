@@ -87,6 +87,7 @@ const childArgs = [
   "--schema=./src/db/schema.ts",
   "--url",
   process.env.DATABASE_URL,
+  "--force",
   ...drizzleArgs,
 ];
 

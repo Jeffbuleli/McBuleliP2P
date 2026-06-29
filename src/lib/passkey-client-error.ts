@@ -2,7 +2,7 @@ import type { Messages } from "@/i18n/messages";
 
 type TFn = (k: keyof Messages) => string;
 
-/** User-friendly passkey / WebAuthn errors — never show raw browser messages or spec URLs. */
+/** User-friendly passkey / WebAuthn errors - never show raw browser messages or spec URLs. */
 export function passkeyClientErrorText(t: TFn, err: unknown): string {
   if (!(err instanceof Error)) {
     return t("auth_passkey_failed");

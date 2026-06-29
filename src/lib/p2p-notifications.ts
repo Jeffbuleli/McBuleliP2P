@@ -103,17 +103,17 @@ async function notify(
   });
 }
 
-/** New order started — notify ad owner (maker). */
+/** New order started - notify ad owner (maker). */
 export async function notifyP2pOrderCreated(o: P2pOrderNotifyCtx): Promise<void> {
   await notify(o.makerId, "p2p_order_created", orderPayload(o));
 }
 
-/** Payer marked fiat paid — notify seller (must release). */
+/** Payer marked fiat paid - notify seller (must release). */
 export async function notifyP2pOrderPaid(o: P2pOrderNotifyCtx): Promise<void> {
   await notify(o.sellerUserId, "p2p_order_paid", orderPayload(o));
 }
 
-/** Payment proof uploaded — notify seller. */
+/** Payment proof uploaded - notify seller. */
 export async function notifyP2pOrderProof(o: P2pOrderNotifyCtx): Promise<void> {
   await notify(o.sellerUserId, "p2p_order_proof", orderPayload(o));
 }
@@ -123,7 +123,7 @@ export async function notifyP2pOrderReleased(o: P2pOrderNotifyCtx): Promise<void
   await notify(o.buyerUserId, "p2p_order_released", orderPayload(o));
 }
 
-/** Order cancelled — notify the other party. */
+/** Order cancelled - notify the other party. */
 export async function notifyP2pOrderCancelled(
   o: P2pOrderNotifyCtx,
   actorUserId: string,
@@ -132,7 +132,7 @@ export async function notifyP2pOrderCancelled(
   await notify(other, "p2p_order_cancelled", orderPayload(o));
 }
 
-/** Payment window expired — notify both traders. */
+/** Payment window expired - notify both traders. */
 export async function notifyP2pOrderExpired(o: P2pOrderNotifyCtx): Promise<void> {
   const payload = orderPayload(o);
   await notify(o.makerId, "p2p_order_expired", payload);
@@ -141,17 +141,17 @@ export async function notifyP2pOrderExpired(o: P2pOrderNotifyCtx): Promise<void>
   }
 }
 
-/** Payment window closing soon — notify payer only. */
+/** Payment window closing soon - notify payer only. */
 export async function notifyP2pOrderExpiring(o: P2pOrderNotifyCtx): Promise<void> {
   await notify(o.payerUserId, "p2p_order_expiring", orderPayload(o));
 }
 
-/** Auto-release approaching — notify seller. */
+/** Auto-release approaching - notify seller. */
 export async function notifyP2pReleaseReminder(o: P2pOrderNotifyCtx): Promise<void> {
   await notify(o.sellerUserId, "p2p_release_reminder", orderPayload(o));
 }
 
-/** Cron auto-released crypto to buyer — notify both parties. */
+/** Cron auto-released crypto to buyer - notify both parties. */
 export async function notifyP2pOrderAutoReleased(o: P2pOrderNotifyCtx): Promise<void> {
   const payload = orderPayload(o, { autoReleased: true });
   await notify(o.buyerUserId, "p2p_order_auto_released", payload);
@@ -160,7 +160,7 @@ export async function notifyP2pOrderAutoReleased(o: P2pOrderNotifyCtx): Promise<
   }
 }
 
-/** Dispute opened — notify counterparty. */
+/** Dispute opened - notify counterparty. */
 export async function notifyP2pOrderDisputed(
   o: P2pOrderNotifyCtx,
   actorUserId: string,
@@ -169,7 +169,7 @@ export async function notifyP2pOrderDisputed(
   await notify(other, "p2p_order_disputed", orderPayload(o));
 }
 
-/** Admin resolved dispute — release to buyer. */
+/** Admin resolved dispute - release to buyer. */
 export async function notifyP2pDisputeReleased(o: P2pOrderNotifyCtx): Promise<void> {
   const payload = orderPayload(o);
   await notify(o.buyerUserId, "p2p_order_dispute_released", payload);
@@ -178,7 +178,7 @@ export async function notifyP2pDisputeReleased(o: P2pOrderNotifyCtx): Promise<vo
   }
 }
 
-/** Admin resolved dispute — refund seller. */
+/** Admin resolved dispute - refund seller. */
 export async function notifyP2pDisputeRefunded(o: P2pOrderNotifyCtx): Promise<void> {
   const payload = orderPayload(o);
   await notify(o.sellerUserId, "p2p_order_dispute_refunded", payload);
@@ -187,7 +187,7 @@ export async function notifyP2pDisputeRefunded(o: P2pOrderNotifyCtx): Promise<vo
   }
 }
 
-/** Trade chat message — notify counterparty. */
+/** Trade chat message - notify counterparty. */
 export async function notifyP2pOrderMessage(
   o: P2pOrderNotifyCtx,
   senderUserId: string,
@@ -197,7 +197,7 @@ export async function notifyP2pOrderMessage(
   await notify(other, "p2p_order_message", orderPayload(o, { preview: preview.slice(0, 120) }));
 }
 
-/** Support message on dispute — notify both traders. */
+/** Support message on dispute - notify both traders. */
 export async function notifyP2pSupportMessage(
   o: P2pOrderNotifyCtx,
   preview: string,

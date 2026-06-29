@@ -114,7 +114,7 @@ export function evaluateTradeSignal(ctx: MarketContext): TradeSignal {
     const atrPct = (ind.atr14 / price) * 100;
     if (atrPct > 3.5) {
       score = Math.round(score * 0.7);
-      reasons.push("High volatility — score dampened");
+      reasons.push("High volatility - score dampened");
     }
   }
 

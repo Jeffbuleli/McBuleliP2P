@@ -1,6 +1,6 @@
 export type NetworkId = "TRC20" | "ERC20" | "BEP20";
 
-/** Deposit provider — Binance (USDT) or OKX (Pi Network). */
+/** Deposit provider - Binance (USDT) or OKX (Pi Network). */
 export type CexId = "binance" | "okx";
 
 export type NetworkSpec = {

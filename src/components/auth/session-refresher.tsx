@@ -15,7 +15,7 @@ export function SessionRefresher() {
       try {
         await fetch("/api/auth/session", { credentials: "same-origin" });
       } catch {
-        /* offline — retry later */
+        /* offline - retry later */
       }
       if (!cancelled) {
         timer = setTimeout(refresh, REFRESH_MS);

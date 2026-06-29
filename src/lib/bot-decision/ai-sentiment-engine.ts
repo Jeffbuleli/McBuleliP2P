@@ -1,5 +1,5 @@
 /**
- * Layer 2 — AI / Sentiment modulator (never sole veto on normal setups).
+ * Layer 2 - AI / Sentiment modulator (never sole veto on normal setups).
  * GPT/X/news adjust size & leverage; block only on major events.
  */
 
@@ -85,7 +85,7 @@ export function runAiSentimentEngine(args: {
       risk_modifier: techStrong ? -0.05 : -0.1,
       leverage_modifier: techStrong ? 0.92 : 0.85,
       warning_level: "MEDIUM",
-      ai_notes: ["no_recent_ai_signal — technical leads"],
+      ai_notes: ["no_recent_ai_signal - technical leads"],
       blocking_event: false,
       caution_only: true,
     };
@@ -133,24 +133,24 @@ export function runAiSentimentEngine(args: {
       risk_modifier = -0.15;
       leverage_modifier = 0.72;
       warning = "MEDIUM";
-      notes.push("ai_mild_opposition — reduced size (technical strong)");
+      notes.push("ai_mild_opposition - reduced size (technical strong)");
     } else {
       risk_modifier = -0.25;
       leverage_modifier = 0.6;
       warning = "MEDIUM";
-      notes.push("ai_opposes — reduced leverage");
+      notes.push("ai_opposes - reduced leverage");
     }
   } else if (sig.action === "HOLD") {
     if (techStrong) {
       leverage_modifier = 0.78;
       risk_modifier = -0.1;
       warning = "MEDIUM";
-      notes.push("worker_hold — technical override with sizing");
+      notes.push("worker_hold - technical override with sizing");
     } else {
       leverage_modifier = 0.65;
       risk_modifier = -0.2;
       warning = "MEDIUM";
-      notes.push("worker_hold — caution sizing");
+      notes.push("worker_hold - caution sizing");
     }
   }
 

@@ -122,7 +122,7 @@ export function AdminTopTraderClient({ d }: { d: Dict }) {
               {r.winnerHandle ? ` @${r.winnerHandle}` : ""}
             </Link>
           ) : (
-            <span className="text-[color:var(--fd-muted)]">—</span>
+            <span className="text-[color:var(--fd-muted)]">-</span>
           ),
       },
       {
@@ -130,7 +130,7 @@ export function AdminTopTraderClient({ d }: { d: Dict }) {
         header: d.admin_top_trader_col_pnl,
         cell: (r) => (
           <span className="tabular-nums">
-            {r.weeklyPnlUsdt != null ? `${usdt(r.weeklyPnlUsdt)} USDT` : "—"}
+            {r.weeklyPnlUsdt != null ? `${usdt(r.weeklyPnlUsdt)} USDT` : "-"}
           </span>
         ),
       },
@@ -157,7 +157,7 @@ export function AdminTopTraderClient({ d }: { d: Dict }) {
               {new Date(r.paidAt).toLocaleString()}
             </span>
           ) : (
-            "—"
+            "-"
           ),
       },
     ];
@@ -207,7 +207,7 @@ export function AdminTopTraderClient({ d }: { d: Dict }) {
                   </p>
                 </>
               ) : (
-                <p className="mt-1 text-sm text-[color:var(--fd-muted)]">—</p>
+                <p className="mt-1 text-sm text-[color:var(--fd-muted)]">-</p>
               )}
             </div>
           </div>
@@ -241,7 +241,7 @@ export function AdminTopTraderClient({ d }: { d: Dict }) {
             rows={data.payouts}
             columns={columns}
             rowKey={(r) => r.id}
-            emptyMessage="—"
+            emptyMessage="-"
           />
         </>
       ) : null}

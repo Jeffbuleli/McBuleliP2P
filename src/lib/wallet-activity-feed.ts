@@ -8,7 +8,7 @@ import { DepositStatus, WithdrawalStatus } from "@/lib/status";
 import type { WalletCryptoAsset } from "@/lib/wallet-crypto-assets";
 import type { WalletFiatAsset } from "@/lib/wallet-fiat-assets";
 
-/** Max rows pulled per source before merge — keeps older ops visible in history. */
+/** Max rows pulled per source before merge - keeps older ops visible in history. */
 const GLOBAL_HISTORY_SOURCE_LIMIT = 3000;
 
 export type ActivityStatus = "processing" | "completed" | "failed";
@@ -61,7 +61,7 @@ function fiatStatusToActivity(status: string): ActivityStatus {
   return "processing";
 }
 
-/** Ledger fiat lines duplicate fiat_tx rows — hide from user history. */
+/** Ledger fiat lines duplicate fiat_tx rows - hide from user history. */
 function skipFiatLedgerInHistory(entryType: string | null | undefined): boolean {
   const et = entryType ?? "";
   return et === "fiat_deposit" || et === "fiat_withdraw" || et === "fiat_withdraw_refund";

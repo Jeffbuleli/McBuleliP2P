@@ -25,7 +25,7 @@ export function getPgClient(): ReturnType<typeof postgres> {
 }
 
 /**
- * Lazy DB — avoids requiring DATABASE_URL during `next build` when no env is present.
+ * Lazy DB - avoids requiring DATABASE_URL during `next build` when no env is present.
  * API routes must call this; it throws if DATABASE_URL is missing at request time.
  */
 export function getDb() {

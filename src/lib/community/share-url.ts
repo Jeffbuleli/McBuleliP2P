@@ -1,11 +1,11 @@
 import { getAppAbsoluteUrl } from "@/lib/app-url";
 
-/** Public share URL — crawlable OG metadata at /community/p/[id]. */
+/** Public share URL - crawlable OG metadata at /community/p/[id]. */
 export function communityPostSharePath(postId: string): string {
   return `/community/p/${postId}`;
 }
 
-/** In-app deep link — preserved through login redirect. */
+/** In-app deep link - preserved through login redirect. */
 export function communityPostAppPath(postId: string): string {
   return `/app/community/post/${postId}`;
 }

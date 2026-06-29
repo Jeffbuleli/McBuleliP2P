@@ -4,7 +4,7 @@ import { P2P_COUNTRY_CODES, type P2pCountryCode } from "@/lib/p2p-config";
 const INVALID_PLACEHOLDERS = new Set([
   "",
   "-",
-  "—",
+  "-",
   "–",
   "_",
   ".",

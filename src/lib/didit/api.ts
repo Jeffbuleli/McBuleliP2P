@@ -127,7 +127,7 @@ export async function requestDiditSessionResubmission(args: {
     new_status: "Resubmitted",
     comment:
       args.comment?.trim() ||
-      "Identity correction — please complete verification again with your government ID.",
+      "Identity correction - please complete verification again with your government ID.",
   };
   const email = args.emailAddress?.trim();
   if (args.sendEmail && email) {

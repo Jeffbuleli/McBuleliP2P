@@ -4,7 +4,7 @@ import type { Messages } from "@/i18n/messages";
 import type { BotOpenPositionRow } from "@/lib/bot-positions-types";
 
 function fmtNum(v: string | undefined, maxFrac = 2) {
-  if (!v) return "—";
+  if (!v) return "-";
   const n = Number.parseFloat(String(v).replace(/,/g, ""));
   if (!Number.isFinite(n)) return v;
   return n.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
@@ -106,7 +106,7 @@ export function BotFuturesPositionCard({
         <StatChip label={t("bots_pos_mark")} value={fmtNum(row.markPrice)} />
         <StatChip
           label={t("bots_futures_size")}
-          value={row.size ? row.size : "—"}
+          value={row.size ? row.size : "-"}
         />
       </div>
     </li>

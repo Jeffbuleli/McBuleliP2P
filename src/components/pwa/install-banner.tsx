@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { useI18n } from "@/components/i18n-provider";
 import {
   dismissInstallPrompt,
@@ -27,6 +28,12 @@ const AUTH_PATHS = new Set([
   "/confirm-email-change",
   "/account/recovery",
 ]);
+
+const PWA_BTN_PRIMARY =
+  "min-h-[44px] flex-1 rounded-xl border border-emerald-400/35 bg-emerald-500/[0.06] px-4 text-sm font-bold text-emerald-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/12 active:scale-[0.99]";
+
+const PWA_BTN_SECONDARY =
+  "min-h-[44px] rounded-xl border border-white/12 bg-white/[0.03] px-4 text-sm font-bold text-stone-300 transition hover:border-cyan-500/25 hover:bg-cyan-500/5 active:scale-[0.99] sm:min-w-[120px]";
 
 export function PwaInstallBanner() {
   const pathname = usePathname();
@@ -157,45 +164,36 @@ export function PwaInstallBanner() {
       ? "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] pb-2"
       : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]";
 
+  const title = showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title");
+
   return (
     <div
       className={`fixed inset-x-0 z-[60] px-3 pt-2 ${dockBottom}`}
       role="dialog"
-      aria-label={showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
+      aria-label={title}
     >
-      <div className="mx-auto max-w-lg rounded-2xl border border-emerald-800/40 bg-stone-950/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-md">
-        <p className="text-sm font-bold text-stone-50">
-          {showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
-        </p>
+      <HudFrame
+        accent="green"
+        className={`mx-auto max-w-lg ${HUD_PANEL_LG} bg-[#0a1018]/95 p-4 shadow-2xl shadow-black/50`}
+      >
+        <p className="text-sm font-bold text-stone-50">{title}</p>
         <p className="mt-1 text-xs leading-relaxed text-stone-400">{body}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {showOpenInApp ? (
-            <button
-              type="button"
-              onClick={onOpenInApp}
-              className="min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 text-sm font-semibold text-white active:scale-[0.99]"
-            >
+            <button type="button" onClick={onOpenInApp} className={PWA_BTN_PRIMARY}>
               {t("pwa_open_in_app_cta")}
             </button>
           ) : null}
           {!showOpenInApp && !ios && deferred ? (
-            <button
-              type="button"
-              onClick={() => void onInstall()}
-              className="min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 text-sm font-semibold text-white active:scale-[0.99]"
-            >
+            <button type="button" onClick={() => void onInstall()} className={PWA_BTN_PRIMARY}>
               {t("pwa_install_cta")}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="min-h-[44px] rounded-xl border border-stone-600 bg-stone-900/80 px-4 text-sm font-semibold text-stone-200 active:scale-[0.99] sm:min-w-[120px]"
-          >
+          <button type="button" onClick={onDismiss} className={PWA_BTN_SECONDARY}>
             {t("pwa_install_later")}
           </button>
         </div>
-      </div>
+      </HudFrame>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 McBuleli
-Épargnez ensemble — gouvernance, prêts, objectifs communs.
+Épargnez ensemble - gouvernance, prêts, objectifs communs.
 Bonjour {{{contact.first_name|ami}}},
 Les groupes AVEC sur McBuleli
-Créez ou rejoignez un cercle d'épargne avec des règles visibles par tous. Cotisations, paiements et votes — au même endroit.
+Créez ou rejoignez un cercle d'épargne avec des règles visibles par tous. Cotisations, paiements et votes - au même endroit.
 Pensé pour les communautés qui se connaissent déjà.
 • Registre transparent
 • Gouvernance

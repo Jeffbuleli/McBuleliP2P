@@ -15,7 +15,7 @@ export type TreasuryCoverage = {
 export type TreasuryFlowWindow = {
   inUsd: number;
   outUsd: number;
-  /** Ledger reversals of phantom deposits — not real PSP outflows. */
+  /** Ledger reversals of phantom deposits - not real PSP outflows. */
   phantomReversedUsd: number;
   count: number;
 };

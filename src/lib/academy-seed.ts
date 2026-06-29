@@ -48,8 +48,8 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
         slug: ACADEMY_PROGRAM_LAUNCH,
         level: "discovery",
         priceUsdt: null,
-        titleFr: "Formation McBuleli — Crypto, Trading, IA & P2P",
-        titleEn: "McBuleli Training — Crypto, Trading, AI & P2P",
+        titleFr: "Formation McBuleli - Crypto, Trading, IA & P2P",
+        titleEn: "McBuleli Training - Crypto, Trading, AI & P2P",
         summaryFr:
           "Parcours gratuit de lancement : soirée live du 8 juin et sessions du 15 au 30 juin.",
         summaryEn:
@@ -97,24 +97,24 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
       },
       {
         slug: "samedi-15-juin",
-        titleFr: "Session 1 — Crypto & wallet",
-        titleEn: "Session 1 — Crypto & wallet",
+        titleFr: "Session 1 - Crypto & wallet",
+        titleEn: "Session 1 - Crypto & wallet",
         startsAt: new Date("2026-06-15T17:30:00.000Z"),
         endsAt: new Date("2026-06-15T19:00:00.000Z"),
         sortOrder: 1,
       },
       {
         slug: "samedi-22-juin",
-        titleFr: "Session 2 — Trading & IA",
-        titleEn: "Session 2 — Trading & AI",
+        titleFr: "Session 2 - Trading & IA",
+        titleEn: "Session 2 - Trading & AI",
         startsAt: new Date("2026-06-22T17:30:00.000Z"),
         endsAt: new Date("2026-06-22T19:00:00.000Z"),
         sortOrder: 2,
       },
       {
         slug: "samedi-29-juin",
-        titleFr: "Session 3 — P2P & écosystème McBuleli",
-        titleEn: "Session 3 — P2P & McBuleli ecosystem",
+        titleFr: "Session 3 - P2P & écosystème McBuleli",
+        titleEn: "Session 3 - P2P & McBuleli ecosystem",
         startsAt: new Date("2026-06-29T17:30:00.000Z"),
         endsAt: new Date("2026-06-29T19:00:00.000Z"),
         sortOrder: 3,
@@ -139,8 +139,8 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
       .values({
         editionId: edition.id,
         slug: ACADEMY_QUIZ_FUNDAMENTALS,
-        titleFr: "Quiz — Fondamentaux",
-        titleEn: "Quiz — Fundamentals",
+        titleFr: "Quiz - Fondamentaux",
+        titleEn: "Quiz - Fundamentals",
         passPercent: 70,
         maxAttempts: 3,
       })
@@ -253,7 +253,7 @@ export async function ensureAcademyLaunchSeed(): Promise<void> {
   await ensureAllEditionEventsSynced();
 }
 
-/** Live de test — toujours dans la fenêtre « en direct » pour valider le flux McBuleli Meet. */
+/** Live de test - toujours dans la fenêtre « en direct » pour valider le flux McBuleli Meet. */
 async function ensureAcademyTestLiveSession(
   db: ReturnType<typeof getDb>,
 ): Promise<void> {
@@ -301,7 +301,7 @@ async function ensureAcademyTestLiveSession(
         .set({ startsAt, endsAt, liveStartedAt: null })
         .where(eq(academySessions.id, existing.id));
     } else {
-      // Fenêtre active : prolonger la fin seulement — ne pas effacer live_started_at
+      // Fenêtre active : prolonger la fin seulement - ne pas effacer live_started_at
       const currentEnd = existing.endsAt!.getTime();
       if (endsAt.getTime() > currentEnd) {
         await db
@@ -347,8 +347,8 @@ async function seedProProgram(
       slug: ACADEMY_PROGRAM_PRO,
       level: "pro",
       priceUsdt: fmtWalletAmount(49),
-      titleFr: "Crypto & Trading — niveau Pro",
-      titleEn: "Crypto & Trading — Pro level",
+      titleFr: "Crypto & Trading - niveau Pro",
+      titleEn: "Crypto & Trading - Pro level",
       summaryFr:
         "Formation approfondie payante en USDT (wallet McBuleli). KYC requis.",
       summaryEn:

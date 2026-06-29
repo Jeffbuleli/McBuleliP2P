@@ -80,7 +80,7 @@ const TIP_ICONS = [
   ["signal", "academy_live_tip_data"],
 ] as const;
 
-/** Conseils live — icônes + libellés courts. */
+/** Conseils live - icônes + libellés courts. */
 export function AcademyLiveTipsGrid() {
   const { t } = useI18n();
   return (

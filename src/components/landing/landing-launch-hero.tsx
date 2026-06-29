@@ -7,6 +7,7 @@ import {
   launchCopy,
   PORTRAIT_PATH,
 } from "@/lib/launch-campaign";
+import { HudFrame } from "@/components/about/about-ui";
 import {
   LaunchIconAi,
   LaunchIconCrypto,
@@ -31,24 +32,24 @@ function LaunchHeroContent({ c }: { c: ReturnType<typeof launchCopy> }) {
           width={44}
           height={44}
           unoptimized
-          className="h-11 w-11 shrink-0 rounded-full bg-white object-contain p-0.5 shadow-sm ring-2 ring-white/25"
+          className="h-11 w-11 shrink-0 rounded-full object-contain p-0.5 ring-2 ring-cyan-400/30"
         />
-        <p className="min-w-0 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-[#e8f3ee] sm:text-[11px]">
+        <p className="min-w-0 font-mono text-[10px] font-bold uppercase leading-tight tracking-[0.18em] text-cyan-400/90 sm:text-[11px]">
           {c.eyebrow}
         </p>
       </div>
 
       <h2
         id="launch-hero-title"
-        className="mt-3 text-balance text-xl font-black leading-[1.12] text-white sm:mt-2 sm:text-2xl lg:text-3xl"
+        className="mt-3 text-balance bg-linear-to-r from-white via-cyan-100 to-emerald-300/90 bg-clip-text text-xl font-black leading-[1.12] text-transparent sm:mt-2 sm:text-2xl lg:text-3xl"
       >
         {c.title}
       </h2>
-      <p className="mt-1 text-sm font-bold leading-snug text-[#c5e8d0] sm:text-base">
+      <p className="mt-1 font-mono text-xs font-bold uppercase tracking-[0.12em] text-emerald-400/90 sm:text-sm">
         {c.subtitle}
       </p>
 
-      <p className="mt-3 inline-flex max-w-full items-center rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-extrabold leading-tight text-white ring-1 ring-white/20 sm:text-xs">
+      <p className="mt-3 inline-flex max-w-full items-center border border-fuchsia-500/25 bg-fuchsia-500/8 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-fuchsia-300 sm:text-[11px]">
         {c.dateLine}
       </p>
 
@@ -58,78 +59,82 @@ function LaunchHeroContent({ c }: { c: ReturnType<typeof launchCopy> }) {
           return (
             <li
               key={label}
-              className="flex items-center gap-2 rounded-xl bg-white/10 px-2.5 py-2 text-[11px] font-bold text-white ring-1 ring-white/15 sm:rounded-lg sm:px-2 sm:py-1"
+              className="flex items-center gap-2 border border-white/10 bg-white/[0.03] px-2.5 py-2 font-mono text-[10px] font-bold uppercase tracking-wide text-stone-300 sm:px-2 sm:py-1.5"
             >
-              <Icon className="h-4 w-4 shrink-0 text-[#c5e8d0]" />
+              <Icon className="h-4 w-4 shrink-0 text-cyan-400" />
               <span className="truncate">{label}</span>
             </li>
           );
         })}
       </ul>
 
-      <p className="mt-2.5 text-[11px] font-medium leading-relaxed text-[#e8f3ee]/90 sm:text-xs">
+      <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-stone-500 sm:text-[11px]">
         {c.trainingLine}
       </p>
 
-      <span className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33] shadow-md transition group-hover:bg-[#e8f3ee] sm:mt-3 sm:w-fit sm:justify-start sm:py-2.5">
-        {c.cta}
-        <span className="ml-2 opacity-70" aria-hidden>
-          →
-        </span>
+      <span className="mt-4 inline-flex w-full min-h-[46px] items-center justify-center rounded-2xl bg-emerald-500/10 px-6 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300 ring-1 ring-emerald-400/30 transition group-hover:bg-emerald-500/15 sm:w-auto">
+        {c.cta} →
       </span>
-      <p className="mt-2 pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-[#e8f3ee]/75 sm:pb-0 sm:text-left sm:text-[9px]">
+      <p className="mt-2 pb-1 text-center font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600 sm:pb-0 sm:text-left">
         {c.freeBadge}
       </p>
     </>
   );
 }
 
-export async function LandingLaunchHero() {
+export async function LandingLaunchHero({ linkHref = FORMATION_PATH }: { linkHref?: string | null }) {
   const locale = await getLocale();
   const c = launchCopy(locale);
 
-  return (
-    <section className="mt-5 w-full" aria-labelledby="launch-hero-title">
-      <Link
-        href={FORMATION_PATH}
-        prefetch={false}
-        className="group block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--fd-primary)] focus-visible:ring-offset-2 rounded-[1.25rem]"
-      >
-        <article
-          className="relative w-full overflow-hidden rounded-[1.25rem] border border-[color:var(--fd-primary)]/25 bg-[#1a2e1c] shadow-lg shadow-[color:var(--fd-primary)]/15 transition group-hover:border-[color:var(--fd-primary)]/45 group-hover:shadow-xl"
-        >
+  const article = (
+    <article className="relative w-full overflow-hidden border border-fuchsia-500/20 bg-[#0a1018]/90 shadow-[0_0_48px_-16px_rgba(217,70,239,0.25)] transition group-hover:border-fuchsia-500/35">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(217,70,239,0.06)_0%,transparent_40%,rgba(34,211,238,0.05)_100%)]"
+        aria-hidden
+      />
+
+      <div className="relative flex flex-col sm:flex-row sm:min-h-[280px]">
+        <div className="relative z-10 flex flex-col px-4 pt-5 pb-4 sm:min-w-0 sm:flex-1 sm:justify-center sm:px-6 sm:py-6 lg:px-8">
+          <LaunchHeroContent c={c} />
+        </div>
+
+        <div className="relative z-0 h-[min(58vw,260px)] w-full shrink-0 sm:h-auto sm:w-[38%] lg:w-[36%]">
           <div
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(61,122,66,0.35)_0%,transparent_45%,rgba(26,46,28,0.5)_100%)]"
+            className="absolute inset-0 bg-linear-to-t from-[#050810] via-transparent to-transparent sm:bg-linear-to-l sm:from-[#050810] sm:via-transparent sm:to-transparent"
             aria-hidden
           />
+          <Image
+            src={PORTRAIT_PATH}
+            alt="Jeff Buleli - McBuleli"
+            fill
+            priority
+            unoptimized
+            className="object-cover object-[center_15%] opacity-95 saturate-[0.92]"
+            sizes="(max-width: 639px) 100vw, 38vw"
+          />
+          <p className="absolute bottom-2.5 left-0 right-0 z-10 text-center font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-cyan-300/90 drop-shadow-sm">
+            Jeff Buleli · CEO
+          </p>
+        </div>
+      </div>
+    </article>
+  );
 
-          {/* Mobile-first : texte puis portrait · Desktop : côte à côte */}
-          <div className="relative flex flex-col sm:flex-row sm:aspect-[16/9]">
-            <div className="relative z-10 flex flex-col px-4 pt-5 pb-4 sm:min-w-0 sm:flex-1 sm:justify-center sm:px-6 sm:py-6 lg:px-8">
-              <LaunchHeroContent c={c} />
-            </div>
-
-            <div className="relative z-0 h-[min(58vw,260px)] w-full shrink-0 sm:h-auto sm:w-[38%] lg:w-[36%]">
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-[#1a2e1c] via-[#305f33]/25 to-transparent sm:bg-gradient-to-l sm:from-[#1a2e1c] sm:via-transparent sm:to-transparent"
-                aria-hidden
-              />
-              <Image
-                src={PORTRAIT_PATH}
-                alt="Jeff Buleli — McBuleli"
-                fill
-                priority
-                unoptimized
-                className="object-cover object-[center_10%]"
-                sizes="(max-width: 639px) 100vw, 38vw"
-              />
-              <p className="absolute bottom-2.5 left-0 right-0 z-10 text-center text-[10px] font-bold text-white drop-shadow-sm">
-                Jeff Buleli · CEO
-              </p>
-            </div>
-          </div>
-        </article>
-      </Link>
+  return (
+    <section className="mt-5 w-full" aria-labelledby="launch-hero-title">
+      <HudFrame accent="magenta" label={locale === "fr" ? "Formation · juillet" : "Training · july"}>
+        {linkHref ? (
+          <Link
+            href={linkHref}
+            prefetch={false}
+            className="group block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050810]"
+          >
+            {article}
+          </Link>
+        ) : (
+          <div className="w-full">{article}</div>
+        )}
+      </HudFrame>
     </section>
   );
 }

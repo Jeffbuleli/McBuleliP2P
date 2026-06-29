@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
+import { HudOutlineLink, HudPrimaryLink, HudSecondaryLink } from "@/components/landing/landing-hud-ui";
 import { useSessionEntryHref } from "@/hooks/use-session-app-href";
 
 export function LandingHeroCta({ marketAnchor = "#rates" }: { marketAnchor?: string }) {
@@ -10,27 +10,9 @@ export function LandingHeroCta({ marketAnchor = "#rates" }: { marketAnchor?: str
 
   return (
     <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
-      <Link
-        href={entryHref}
-        prefetch={false}
-        className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-[#305F33] px-7 text-sm font-extrabold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-[#244a27] active:scale-[0.99]"
-      >
-        {t("landing_v2_cta_start")}
-      </Link>
-      <Link
-        href="/login"
-        prefetch={false}
-        className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border-2 border-stone-200 bg-white px-6 text-sm font-bold text-stone-800 transition hover:border-[#305F33]/35 hover:text-[#305F33]"
-      >
-        {t("landing_cta_login")}
-      </Link>
-      <Link
-        href={marketAnchor}
-        prefetch={false}
-        className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-bold text-stone-700 transition hover:border-[#305F33]/30 hover:text-[#305F33]"
-      >
-        {t("landing_cta_market")}
-      </Link>
+      <HudPrimaryLink href={entryHref}>{t("landing_v2_cta_start")}</HudPrimaryLink>
+      <HudSecondaryLink href="/login">{t("landing_cta_login")}</HudSecondaryLink>
+      <HudOutlineLink href={marketAnchor}>{t("landing_cta_market")}</HudOutlineLink>
     </div>
   );
 }

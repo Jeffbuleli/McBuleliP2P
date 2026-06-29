@@ -71,9 +71,9 @@ export async function ensureAcademyModulesSeed(): Promise<void> {
       summaryFr: "USDT stable, wallet McBuleli, dépôt/retrait.",
       summaryEn: "Stable USDT, McBuleli wallet, deposit & withdraw.",
       bodyFr:
-        "Le crypto utile commence par **USDT** (≈ 1 $). Sur McBuleli : adresse perso, frais visibles, alertes email. Pas de Bitcoin roulette — on apprend à **sécuriser** et **tester petit**.",
+        "Le crypto utile commence par **USDT** (≈ 1 $). Sur McBuleli : adresse perso, frais visibles, alertes email. Pas de Bitcoin roulette - on apprend à **sécuriser** et **tester petit**.",
       bodyEn:
-        "Useful crypto starts with **USDT** (≈ $1). On McBuleli: your address, clear fees, email alerts. Skip Bitcoin roulette — learn to **secure** and **start small**.",
+        "Useful crypto starts with **USDT** (≈ $1). On McBuleli: your address, clear fees, email alerts. Skip Bitcoin roulette - learn to **secure** and **start small**.",
       visualKey: "crypto",
       unlockAfterSlug: null as string | null,
       ecosystemHref: "/app/wallet",
@@ -86,9 +86,9 @@ export async function ensureAcademyModulesSeed(): Promise<void> {
       summaryFr: "Lire un graphique, gérer le risque.",
       summaryEn: "Read a chart, manage risk.",
       bodyFr:
-        "Trader ≠ parier. Règles : **taille de position**, stop mental, journal simple. McBuleli propose démo/bots plus tard — d'abord comprendre pourquoi les prix bougent.",
+        "Trader ≠ parier. Règles : **taille de position**, stop mental, journal simple. McBuleli propose démo/bots plus tard - d'abord comprendre pourquoi les prix bougent.",
       bodyEn:
-        "Trading ≠ gambling. Rules: **position size**, mental stop, simple journal. McBuleli offers demo/bots later — first understand why prices move.",
+        "Trading ≠ gambling. Rules: **position size**, mental stop, simple journal. McBuleli offers demo/bots later - first understand why prices move.",
       visualKey: "trading",
       unlockAfterSlug: "crypto",
       ecosystemHref: "/app/trade",
@@ -176,9 +176,9 @@ export async function ensureAcademyProModulesSeed(): Promise<void> {
       summaryFr: "Taille de position, drawdown, journal.",
       summaryEn: "Position size, drawdown, trading journal.",
       bodyFr:
-        "En Pro on formalise : **1–2 %** du capital par trade, stop-loss planifié, pas de revenge trading. Le wallet McBuleli sert à **capitaliser** — pas à doubler en une nuit.",
+        "En Pro on formalise : **1–2 %** du capital par trade, stop-loss planifié, pas de revenge trading. Le wallet McBuleli sert à **capitaliser** - pas à doubler en une nuit.",
       bodyEn:
-        "Pro level means rules: **1–2 %** per trade, planned stop-loss, no revenge trading. McBuleli wallet is for **building capital** — not doubling overnight.",
+        "Pro level means rules: **1–2 %** per trade, planned stop-loss, no revenge trading. McBuleli wallet is for **building capital** - not doubling overnight.",
       visualKey: "trading",
       unlockAfterSlug: null as string | null,
       ecosystemHref: "/app/trade",

@@ -10,7 +10,7 @@ export function extractMomoPhoneFromPaymentDetail(detail: string): string | null
   return best.startsWith("+") ? `+${digits}` : digits;
 }
 
-/** QR payload — scannable payment summary for MoMo / bank off-platform. */
+/** QR payload - scannable payment summary for MoMo / bank off-platform. */
 export function buildP2pMomoQrPayload(args: {
   phone: string;
   amount: string;

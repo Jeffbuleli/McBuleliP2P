@@ -1,6 +1,6 @@
 /**
  * Pi Developer Portal always requests `/validation-key.txt` at the **registered**
- * app URL — same path for Mainnet and Testnet apps; only the key string differs.
+ * app URL - same path for Mainnet and Testnet apps; only the key string differs.
  *
  * Same deployment can serve www (Mainnet checklist) and *.onrender.com (Testnet checklist):
  * pick the key from `Host`.

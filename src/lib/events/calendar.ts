@@ -30,7 +30,7 @@ export function buildGoogleCalendarUrl(event: Pick<EventRecord, "title" | "descr
     action: "TEMPLATE",
     text: event.title,
     dates: `${toGoogleUtc(event.startDate)}/${toGoogleUtc(event.endDate)}`,
-    details: `${event.description}\n\nMcBuleli Live — https://mcbuleli.org/app/events/${event.slug}`,
+    details: `${event.description}\n\nMcBuleli Live - https://mcbuleli.org/app/events/${event.slug}`,
     location: "McBuleli Live (online)",
   });
   return `${base}?${params.toString()}`;

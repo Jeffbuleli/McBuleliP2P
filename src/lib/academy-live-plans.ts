@@ -1,5 +1,5 @@
 /**
- * Forfaits « Live Studio » — config produit (Phase A monetization).
+ * Forfaits « Live Studio » - config produit (Phase A monetization).
  * Débit wallet : même pattern que bot_subscription / academy enroll.
  */
 export const ACADEMY_LIVE_PLAN_IDS = ["starter", "community", "campus"] as const;
@@ -16,7 +16,7 @@ export type AcademyLivePlanDef = {
   sessionsPerPeriod: number;
 };
 
-/** Prix volontairement bas — ajuster après métriques VPS. */
+/** Prix volontairement bas - ajuster après métriques VPS. */
 export const ACADEMY_LIVE_PLANS: Record<AcademyLivePlanId, AcademyLivePlanDef> = {
   starter: {
     id: "starter",

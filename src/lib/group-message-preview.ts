@@ -7,7 +7,7 @@ export function formatGroupMessagePreview(
   messageType?: string,
 ): string {
   const raw = preview?.trim() ?? "";
-  if (!raw) return "—";
+  if (!raw) return "-";
 
   if (
     raw.startsWith("PAYOUT_PENDING") ||
@@ -61,7 +61,7 @@ export function formatGroupMessagePreview(
     return t("notif_avec_payout_rejected", {
       amount: amount ?? "",
       name: beneficiary ?? "",
-      reason: reason ?? "—",
+      reason: reason ?? "-",
     });
   }
 
@@ -70,7 +70,7 @@ export function formatGroupMessagePreview(
     return t("notif_avec_loan_rejected", {
       amount: amount ?? "",
       name: borrower ?? "",
-      reason: reason ?? "—",
+      reason: reason ?? "-",
     });
   }
 

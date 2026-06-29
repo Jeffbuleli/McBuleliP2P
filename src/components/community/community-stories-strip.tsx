@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityMediaImage } from "@/components/community/community-media-image";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
+import { resolveMediaSrc } from "@/lib/media-url";
 import { COMMUNITY_STORY_VIDEO_MAX_SEC } from "@/lib/community/config";
 import type {
   CommunityStoryRing,
@@ -17,6 +18,12 @@ import {
   COMMUNITY_STORY_TEXT_BG,
   normalizeStoryTextBg,
 } from "@/lib/community/story-text-colors";
+import {
+  COMMUNITY_MODAL_PANEL,
+  COMMUNITY_STORY_CREATE,
+  COMMUNITY_STORY_RING,
+  COMMUNITY_STORY_SKELETON,
+} from "@/lib/community/community-ui";
 import {
   uploadCommunityImage,
   uploadCommunityVideoWithProgress,
@@ -53,8 +60,8 @@ async function readVideoDurationSec(file: File): Promise<number> {
 function mapStoryError(code: string | undefined, fr: boolean): string {
   if (code === "stories_unavailable" || code === "story_server_error") {
     return fr
-      ? "Statuts indisponibles — migration base de données requise."
-      : "Statuses unavailable — database migration required.";
+      ? "Statuts indisponibles - migration base de données requise."
+      : "Statuses unavailable - database migration required.";
   }
   if (code === "story_limit_reached") {
     return fr ? "Limite : 8 statuts / 24 h" : "Limit: 8 statuses / 24h";
@@ -74,7 +81,7 @@ function mapStoryError(code: string | undefined, fr: boolean): string {
       : `Video too long (max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s)`;
   }
   if (code === "r2_not_configured" || code === "r2_upload_failed" || code === "upload_failed") {
-    return fr ? "Upload impossible — stockage R2" : "Upload failed — R2 storage";
+    return fr ? "Upload impossible - stockage R2" : "Upload failed - R2 storage";
   }
   if (code === "Unauthorized") {
     return fr ? "Connectez-vous pour publier" : "Sign in to publish";
@@ -88,6 +95,10 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewer, setViewer] = useState<{ ringIdx: number; storyIdx: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [viewerAvatar, setViewerAvatar] = useState<{
+    url: string | null;
+    label: string;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -105,6 +116,28 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then(
+        (d: {
+          user?: {
+            avatarUrl?: string | null;
+            displayName?: string | null;
+            email?: string;
+          } | null;
+        }) => {
+          if (!d.user) return;
+          const raw = d.user.avatarUrl ?? null;
+          setViewerAvatar({
+            url: raw ? resolveMediaSrc(raw) ?? raw : null,
+            label: d.user.displayName || d.user.email || "?",
+          });
+        },
+      )
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -157,10 +190,30 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
-            className="relative h-[168px] w-[108px] shrink-0 overflow-hidden rounded-xl border-2 border-dashed border-[#305f33]/35 bg-[#eaf5ee]"
+            className={COMMUNITY_STORY_CREATE}
           >
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#305f33]">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl font-bold shadow-sm">
+            <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl" aria-hidden>
+              {viewerAvatar?.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={viewerAvatar.url}
+                  alt=""
+                  className="absolute left-1/2 top-[42%] h-[78%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-[0.18] blur-[0.3px]"
+                />
+              ) : viewerAvatar ? (
+                <span className="absolute left-1/2 top-[42%] flex h-[78%] w-[78%] -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-[0.14]">
+                  <CommunityAvatar
+                    label={viewerAvatar.label}
+                    avatarUrl={null}
+                    sizeClass="h-full w-full text-4xl"
+                    textClass="text-4xl"
+                  />
+                </span>
+              ) : null}
+              <span className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(5,8,16,0.15)_0%,rgba(5,8,16,0.78)_72%)]" />
+            </span>
+            <span className="absolute inset-0 z-[1] flex flex-col items-center justify-center gap-2 text-cyan-300">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-cyan-400/25 bg-[rgba(10,16,24,0.9)] text-xl font-bold shadow-[0_0_16px_rgba(34,211,238,0.15)]">
                 +
               </span>
               <span className="px-2 text-center text-[10px] font-bold leading-tight">
@@ -174,7 +227,7 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-[168px] w-[108px] shrink-0 animate-pulse rounded-xl bg-[#e7e5e4]"
+                  className={COMMUNITY_STORY_SKELETON}
                 />
               ))}
             </>
@@ -198,7 +251,7 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
           onPosted={(bp) => {
             setComposerOpen(false);
             if (bp > 0) {
-              setToast(fr ? `+${bp} BP — statut publié !` : `+${bp} BP — status posted!`);
+              setToast(fr ? `+${bp} BP - statut publié !` : `+${bp} BP - status posted!`);
             }
             void load();
           }}
@@ -241,7 +294,7 @@ function StoryRingCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative h-[168px] w-[108px] shrink-0 overflow-hidden rounded-xl bg-[#1c1917] shadow-md ring-1 ring-black/10 transition active:scale-[0.98]"
+      className={COMMUNITY_STORY_RING}
     >
       {ring.previewType === "text" ? (
         <div
@@ -448,13 +501,13 @@ function StoryComposer({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center">
-      <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl">
+      <div className={COMMUNITY_MODAL_PANEL}>
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-[#0c0a09]">
+            <h3 className="text-sm font-bold text-stone-100">
               {fr ? "Nouveau statut (24h)" : "New status (24h)"}
             </h3>
-            <p className="text-[10px] text-[#78716c]">
+            <p className="text-[10px] text-stone-400">
               {fr ? "Gagnez des BP en publiant" : "Earn BP by posting"}
             </p>
           </div>
@@ -550,8 +603,8 @@ function StoryComposer({
             ) : null}
             <p className="mt-2 text-center text-[10px] text-[#78716c]">
               {fr
-                ? "Vérifiez avant publication — vous pouvez changer le fichier."
-                : "Review before posting — you can change the file."}
+                ? "Vérifiez avant publication - vous pouvez changer le fichier."
+                : "Review before posting - you can change the file."}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -599,8 +652,8 @@ function StoryComposer({
             </button>
             <p className="mt-2 text-center text-[10px] text-[#78716c]">
               {fr
-                ? `Vidéo max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s — aperçu avant publication`
-                : `Video max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s — preview before posting`}
+                ? `Vidéo max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s - aperçu avant publication`
+                : `Video max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s - preview before posting`}
             </p>
           </>
         )}

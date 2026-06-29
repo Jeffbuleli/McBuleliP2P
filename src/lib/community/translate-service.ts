@@ -92,9 +92,9 @@ Return JSON: {"translatedText":"..."}`,
 
 function fallbackTranslate(text: string, target: TranslateLocale): string {
   if (target === "en") {
-    return `${text}\n\n[Translation unavailable — configure OPENAI_API_KEY on the server.]`;
+    return `${text}\n\n[Translation unavailable - configure OPENAI_API_KEY on the server.]`;
   }
-  return `${text}\n\n[Traduction indisponible — configurez OPENAI_API_KEY sur le serveur.]`;
+  return `${text}\n\n[Traduction indisponible - configurez OPENAI_API_KEY sur le serveur.]`;
 }
 
 export async function translateCommunityText(args: {

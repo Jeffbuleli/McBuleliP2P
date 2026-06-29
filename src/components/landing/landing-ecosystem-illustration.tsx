@@ -1,4 +1,4 @@
-/** Hero ecosystem map — wallet hub with colored product spokes. */
+/** Hero ecosystem map - wallet hub with colored product spokes. */
 
 import type { ReactNode } from "react";
 import { LP } from "@/components/landing/landing-svg-palette";

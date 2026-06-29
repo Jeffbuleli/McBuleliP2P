@@ -1,5 +1,5 @@
 /**
- * Layer 1 — Technical Engine (primary direction).
+ * Layer 1 - Technical Engine (primary direction).
  * Rule-based multi-factor score; no AI in this layer.
  */
 

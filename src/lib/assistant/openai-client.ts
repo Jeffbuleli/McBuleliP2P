@@ -144,22 +144,22 @@ function fallbackAssistantReply(
     return "To withdraw USDT: **Wallet → Withdraw**. Enter address, network, and net amount. Platform fee is ~2 USDT. Track status in your withdrawal history. Enable 2FA for security.";
   }
   if (/p2p|escrow|mobile money/i.test(lower)) {
-    return "McBuleli P2P uses **escrow** — the seller's crypto is locked until you confirm mobile money payment. Never pay outside the platform. Browse offers at **P2P Marketplace** in the app.";
+    return "McBuleli P2P uses **escrow** - the seller's crypto is locked until you confirm mobile money payment. Never pay outside the platform. Browse offers at **P2P Marketplace** in the app.";
   }
   if (/kyc|verify|identit/i.test(lower)) {
     return "Complete KYC in **Profile → KYC** using Didit. Have your ID ready. Verification unlocks higher limits and more features.";
   }
   if (/bot|trading|trade/i.test(lower)) {
-    return "McBuleli offers **AI Trading Bots** under Trade → Bots. Start small — crypto trading involves risk of loss. I can explain setup if you'd like.";
+    return "McBuleli offers **AI Trading Bots** under Trade → Bots. Start small - crypto trading involves risk of loss. I can explain setup if you'd like.";
   }
   if (/avec|tontine|group|épargne/i.test(lower)) {
-    return "**AVEC** is group savings for communities — like a digital tontine. Find it under **Groups** in the app. Members contribute and can access internal loans.";
+    return "**AVEC** is group savings for communities - like a digital tontine. Find it under **Groups** in the app. Members contribute and can access internal loans.";
   }
   if (/stak/i.test(lower)) {
     return "**Staking** lets you earn rewards on locked crypto. Check **Staking** in the app for current programs, APY, and minimums.";
   }
   if (/crypto|blockchain|wallet|usdt|beginner|débutant/i.test(lower)) {
-    return "Welcome! **Crypto** is digital money. **USDT** stays near $1 — good for saving and transfers. Your **McBuleli wallet** holds USDT and Pi. Start with a small deposit and explore P2P when ready. What would you like to learn first? 💚";
+    return "Welcome! **Crypto** is digital money. **USDT** stays near $1 - good for saving and transfers. Your **McBuleli wallet** holds USDT and Pi. Start with a small deposit and explore P2P when ready. What would you like to learn first? 💚";
   }
   if (/security|password|2fa|passkey/i.test(lower)) {
     return "Secure your account in **Profile → Security**: strong password, **2FA** (authenticator app), **passkey**, and WhatsApp recovery. McBuleli never asks for your password in chat.";

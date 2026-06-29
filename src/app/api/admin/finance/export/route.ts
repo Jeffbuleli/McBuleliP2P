@@ -53,9 +53,9 @@ export async function GET(req: Request) {
   };
   const csv =
     financeReportToFullCsv(report, userLabels, groupLabels) +
-    "\n\n# Phase 2 — recent user-wallet lines\n\n" +
+    "\n\n# Phase 2 - recent user-wallet lines\n\n" +
     financeRecentUserLedgerToCsv(recentUser, userLabels) +
-    "\n\n# Phase 2 — recent group treasury lines\n\n" +
+    "\n\n# Phase 2 - recent group treasury lines\n\n" +
     financeRecentGroupLedgerToCsv(recentGroup, groupLabels);
   const filename = `mcbuleli-finance-cashflow-${days}d-${locale}.csv`;
 

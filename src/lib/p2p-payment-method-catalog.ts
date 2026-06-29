@@ -1,5 +1,5 @@
 /**
- * P2P payment networks by country — aligned with common Binance P2P / regional MoMo corridors.
+ * P2P payment networks by country - aligned with common Binance P2P / regional MoMo corridors.
  * Used when `p2p_payment_method_defs` has no DB rows (no seed in repo).
  */
 
@@ -24,7 +24,7 @@ function m(
   return { countryCode, code, label, kind, sortOrder };
 }
 
-/** Static catalog — McBuleli P2P corridors. */
+/** Static catalog - McBuleli P2P corridors. */
 export const P2P_PAYMENT_METHOD_CATALOG: P2pMethodCatalogEntry[] = [
   // DR Congo (PawaPay-aligned mobile)
   m("CD", "AIRTEL_COD", "Airtel Money", "mobile", 10),

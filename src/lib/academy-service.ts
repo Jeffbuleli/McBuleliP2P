@@ -1535,8 +1535,8 @@ export async function checkInSession(args: {
       editionId: resolved.editionId,
       slug: "participant-assidu",
       kind: "badge",
-      titleFr: "Participant assidu — McBuleli Academy",
-      titleEn: "Active participant — McBuleli Academy",
+      titleFr: "Participant assidu - McBuleli Academy",
+      titleEn: "Active participant - McBuleli Academy",
     });
   }
 
@@ -1837,7 +1837,7 @@ export async function getCredentialByVerifyCode(
       title: pickLocale(row.cred, locale),
       kind: row.cred.kind,
       issuedAt: row.cred.issuedAt.toISOString(),
-      holderDisplay: row.displayName?.trim() || row.email.split("@")[0] || "—",
+      holderDisplay: row.displayName?.trim() || row.email.split("@")[0] || "-",
     };
   }
   return {
@@ -1845,7 +1845,7 @@ export async function getCredentialByVerifyCode(
     title: pickLocale(row.cred, locale),
     kind: row.cred.kind,
     issuedAt: row.cred.issuedAt.toISOString(),
-    holderDisplay: row.displayName?.trim() || row.email.split("@")[0] || "—",
+    holderDisplay: row.displayName?.trim() || row.email.split("@")[0] || "-",
   };
 }
 

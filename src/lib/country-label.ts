@@ -11,7 +11,7 @@ export function flagEmoji(countryCode: string): string {
 
 export function countryLabel(locale: Locale, countryCode: string): string {
   const cc = (countryCode ?? "").trim().toUpperCase();
-  if (!cc) return "—";
+  if (!cc) return "-";
   if (cc === "OTHER") {
     const name = locale === "fr" ? "Autre pays" : "Other country";
     return `🌍 ${name}`;
@@ -64,13 +64,13 @@ export function countryLabel(locale: Locale, countryCode: string): string {
 /** Compact label for register / profile country `<select>` options. */
 export function countrySelectLabel(locale: Locale, countryCode: string): string {
   const cc = (countryCode ?? "").trim().toUpperCase();
-  if (!cc) return "—";
+  if (!cc) return "-";
   if (cc === "OTHER") {
     return locale === "fr" ? "🌍 Autre pays" : "🌍 Other country";
   }
 
   const full = countryLabel(locale, cc);
-  // Drop trailing " (XX)" — flag + name is enough in dropdowns.
+  // Drop trailing " (XX)" - flag + name is enough in dropdowns.
   return full.replace(/\s*\([A-Z]{2,6}\)\s*$/, "");
 }
 

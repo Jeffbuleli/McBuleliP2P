@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MarketTicker } from "@/lib/market-tickers";
 import { TICKERS_POLL_MS } from "@/lib/market-live";
 import { useI18n } from "@/components/i18n-provider";
+import { HudTabButton, HudTabGroup } from "@/components/landing/landing-hud-ui";
 import { PARTNER_LOGO } from "@/lib/partner-logos";
 import { AssetAvatar, formatLandingUsd } from "@/components/landing/v2/landing-asset-avatar";
 
@@ -25,7 +26,7 @@ type FlashCard = {
 function ChangeBadge({ pct, label }: { pct?: number; label?: string }) {
   if (label) {
     return (
-      <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+      <span className="inline-flex rounded-full bg-white/5 px-2 py-0.5 text-[11px] font-bold text-stone-400">
         {label}
       </span>
     );
@@ -35,7 +36,7 @@ function ChangeBadge({ pct, label }: { pct?: number; label?: string }) {
   return (
     <span
       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${
-        up ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600"
+        up ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"
       }`}
     >
       {up ? "+" : ""}
@@ -47,10 +48,10 @@ function ChangeBadge({ pct, label }: { pct?: number; label?: string }) {
 function FlashCardView({ card }: { card: FlashCard }) {
   return (
     <article
-      className={`min-w-[11.5rem] flex-1 rounded-2xl border bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-sm transition sm:min-w-0 ${
+      className={`min-w-[11.5rem] flex-1 rounded-2xl border bg-[#0a1018]/90 p-4 backdrop-blur-sm transition sm:min-w-0 ${
         card.featured
-          ? "border-blue-200 shadow-md shadow-blue-100/50 ring-1 ring-blue-100"
-          : "border-slate-100 hover:border-slate-200 hover:shadow-md"
+          ? "border-cyan-500/30 shadow-[0_0_30px_-12px_rgba(34,211,238,0.4)]"
+          : "border-white/8 hover:border-cyan-500/20"
       }`}
     >
       <div className="flex items-center gap-2.5">
@@ -60,9 +61,9 @@ function FlashCardView({ card }: { card: FlashCard }) {
           badge={card.badge}
           badgeClass={card.badgeClass}
         />
-        <p className="text-sm font-bold leading-tight text-slate-700">{card.pair}</p>
+        <p className="text-sm font-bold leading-tight text-stone-200">{card.pair}</p>
       </div>
-      <p className="mt-3 text-2xl font-black tracking-tight text-slate-900">{card.price}</p>
+      <p className="mt-3 text-2xl font-black tracking-tight text-white">{card.price}</p>
       <div className="mt-2">
         <ChangeBadge pct={card.changePct} label={card.changeLabel} />
       </div>
@@ -109,7 +110,7 @@ export function LandingFlashRates({
         {
           id: "btc",
           pair: "BTC / USD",
-          price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "—",
+          price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "-",
           changePct: btc?.changePct ?? 0,
           symbol: "BTC",
           featured: true,
@@ -117,7 +118,7 @@ export function LandingFlashRates({
         {
           id: "eth",
           pair: "ETH / USD",
-          price: eth ? formatLandingUsd("ETHUSDT", eth.lastPrice) : "—",
+          price: eth ? formatLandingUsd("ETHUSDT", eth.lastPrice) : "-",
           changePct: eth?.changePct ?? 0,
           symbol: "ETH",
         },
@@ -131,7 +132,7 @@ export function LandingFlashRates({
         {
           id: "pi",
           pair: "Pi / USD",
-          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : t("landing_v2_price_p2p"),
+          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : "-",
           changePct: pi?.changePct ?? 0,
           symbol: "PI",
         },
@@ -183,7 +184,7 @@ export function LandingFlashRates({
         {
           id: "w-pi",
           pair: t("landing_v2_flash_wallet_pi"),
-          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : "—",
+          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : "-",
           changeLabel: t("landing_v2_flash_wallet_bal"),
           symbol: "PI",
         },
@@ -193,7 +194,7 @@ export function LandingFlashRates({
           price: "CDF",
           changeLabel: t("landing_v2_flash_wallet_bal"),
           badge: "FC",
-          badgeClass: "bg-blue-50 text-blue-800",
+          badgeClass: "bg-cyan-500/15 text-cyan-300",
         },
         {
           id: "w-multi",
@@ -201,7 +202,7 @@ export function LandingFlashRates({
           price: "USDT · Pi · Fiat",
           changeLabel: t("landing_v2_flash_wallet_bal"),
           badge: "3",
-          badgeClass: "bg-violet-50 text-violet-800",
+          badgeClass: "bg-fuchsia-500/15 text-fuchsia-300",
         },
       ];
     }
@@ -227,12 +228,12 @@ export function LandingFlashRates({
         price: t("landing_v2_avec_yield"),
         changeLabel: t("landing_v2_market_metric_collective"),
         badge: "AV",
-        badgeClass: "bg-amber-50 text-amber-900",
+        badgeClass: "bg-amber-500/15 text-amber-300",
       },
       {
         id: "e-btc",
         pair: "BTC / USD",
-        price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "—",
+        price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "-",
         changePct: btc?.changePct ?? 0,
         symbol: "BTC",
       },
@@ -248,32 +249,23 @@ export function LandingFlashRates({
 
   return (
     <section id="rates" className="relative z-10 scroll-mt-20 -mt-4 px-4 sm:-mt-8 sm:px-6" aria-labelledby="flash-rates-h">
-      <div className="mx-auto max-w-7xl rounded-2xl border border-stone-200/80 bg-white p-4 shadow-lg shadow-stone-300/25 sm:rounded-3xl sm:p-6">
+      <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0a1018]/80 p-4 shadow-[0_0_40px_-16px_rgba(34,211,238,0.25)] sm:rounded-3xl sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="flash-rates-h" className="text-lg font-black text-slate-900 sm:text-xl">
+            <h2 id="flash-rates-h" className="text-lg font-black text-white sm:text-xl">
               {t("landing_v2_flash_title")}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">{t("landing_v2_flash_sub")}</p>
+            <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t("landing_v2_flash_sub")}</p>
           </div>
-          <div className="flex gap-1 overflow-x-auto pb-1">
+          <HudTabGroup className="max-w-full">
             {tabs.map((x) => (
-              <button
-                key={x.id}
-                type="button"
-                onClick={() => setTab(x.id)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                  tab === x.id
-                    ? "bg-[#305F33] text-white shadow-md shadow-emerald-900/15"
-                    : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                }`}
-              >
+              <HudTabButton key={x.id} active={tab === x.id} onClick={() => setTab(x.id)}>
                 {x.label}
-              </button>
+              </HudTabButton>
             ))}
-          </div>
+          </HudTabGroup>
         </div>
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 sm:overflow-visible">
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-1 landing-scrollbar sm:grid sm:grid-cols-4 sm:overflow-visible">
           {cards.map((card) => (
             <FlashCardView key={`${tab}-${card.id}`} card={card} />
           ))}

@@ -186,7 +186,7 @@ export function AiAssistSignalStrip({
   );
 }
 
-/** @deprecated Use AiAssistSignalStrip — kept for futures-trader-profile-panel */
+/** @deprecated Use AiAssistSignalStrip - kept for futures-trader-profile-panel */
 export function AiAssistStatusBadge(props: {
   instanceId?: string | null;
   enabled: boolean;

@@ -20,7 +20,7 @@ export type MarketingBroadcastCopy = {
   bullets?: string[];
   /** Optional hero illustration below headline */
   heroIllustration?: EmailIllustration;
-  /** Icon + title + one line — educational blocks */
+  /** Icon + title + one line - educational blocks */
   features?: MarketingFeatureRow[];
   /** Trust line above CTA */
   reassurance?: string;
@@ -121,7 +121,7 @@ export type RenderMarketingEmailArgs = {
 };
 
 /**
- * Minimal McBuleli marketing layout — optional hero + feature illustrations.
+ * Minimal McBuleli marketing layout - optional hero + feature illustrations.
  * For Resend Broadcasts (unlimited marketing sends).
  */
 export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): string {
@@ -250,7 +250,7 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
       : "Hi,";
 
   const featureLines =
-    copy.features?.flatMap((f) => [`${f.title} — ${f.text}`, ""]) ?? [];
+    copy.features?.flatMap((f) => [`${f.title} - ${f.text}`, ""]) ?? [];
 
   const lines = [
     "McBuleli",

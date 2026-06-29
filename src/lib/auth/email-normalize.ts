@@ -1,5 +1,5 @@
 /**
- * Auth email normalization — prevents duplicate accounts via case, Gmail aliases, and common domain typos.
+ * Auth email normalization - prevents duplicate accounts via case, Gmail aliases, and common domain typos.
  */
 
 const GMAIL_LIKE = new Set(["gmail.com", "googlemail.com"]);

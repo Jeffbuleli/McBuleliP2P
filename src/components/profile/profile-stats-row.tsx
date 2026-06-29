@@ -28,12 +28,12 @@ export function ProfileStatsRow({
             <ProfileIconStar className="h-3.5 w-3.5 text-amber-500" />
           </span>
         ) : (
-          "—"
+          "-"
         ),
     },
     {
       label: d.profile_stat_completion_short,
-      value: dash.completionPct != null ? `${dash.completionPct}%` : "—",
+      value: dash.completionPct != null ? `${dash.completionPct}%` : "-",
     },
     {
       label: d.profile_stat_age_short,

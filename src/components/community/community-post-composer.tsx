@@ -17,6 +17,13 @@ import {
   uploadCommunityImage,
   uploadCommunityVideoWithProgress,
 } from "@/lib/community-media-upload";
+import {
+  COMMUNITY_COMPOSER_PANEL,
+  COMMUNITY_MEDIA_FRAME,
+  COMMUNITY_PICKER_CARD,
+  COMMUNITY_PUBLISH_BTN,
+  COMMUNITY_TEXTAREA,
+} from "@/lib/community/community-ui";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 
 type ImageSlot = {
@@ -42,16 +49,16 @@ function mapPublishError(code: string | undefined, fr: boolean): string {
   }
   if (code === "community_content_blocked") {
     return fr
-      ? "Publication refusée — respectez la charte."
-      : "Post blocked — follow community guidelines.";
+      ? "Publication refusée - respectez la charte."
+      : "Post blocked - follow community guidelines.";
   }
   if (code === "invalid_media") {
     return fr ? "Média invalide" : "Invalid media";
   }
   if (code === "r2_upload_failed" || code === "r2_credentials_invalid") {
     return fr
-      ? "Stockage R2 indisponible — vérifiez les clés S3 sur Render."
-      : "R2 storage unavailable — check S3 API keys on Render.";
+      ? "Stockage R2 indisponible - vérifiez les clés S3 sur Render."
+      : "R2 storage unavailable - check S3 API keys on Render.";
   }
   if (code?.includes("COMMUNITY_R2_SECRET") || code?.includes("API token")) {
     return fr
@@ -215,8 +222,8 @@ export function CommunityPostComposer({
       setError(
         code === "timeout"
           ? fr
-            ? "Délai dépassé — réessayez"
-            : "Timed out — try again"
+            ? "Délai dépassé - réessayez"
+            : "Timed out - try again"
           : fr
             ? "Échec upload vidéo"
             : "Video upload failed",
@@ -296,10 +303,10 @@ export function CommunityPostComposer({
   if (!open) return null;
 
   return (
-    <section className="mb-4 rounded-2xl border border-[#f0f4f2] bg-white p-4 shadow-sm">
+    <section className={COMMUNITY_COMPOSER_PANEL}>
       {step === "pick" ? (
         <>
-          <p className="mb-3 text-sm font-bold text-[#0c0a09]">
+          <p className="mb-3 text-sm font-bold text-stone-100">
             {fr ? "Que souhaitez-vous publier ?" : "What would you like to publish?"}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -310,16 +317,13 @@ export function CommunityPostComposer({
                   key={`${item.mode}-${item.kind}`}
                   type="button"
                   onClick={() => pickCategory(item)}
-                  className="rounded-xl border border-[#e8f3ee] px-3 py-3 text-left active:scale-[0.99]"
-                  style={{ backgroundColor: style.backgroundColor }}
+                  className={COMMUNITY_PICKER_CARD}
+                  style={{ borderColor: `${style.color}33`, backgroundColor: style.backgroundColor }}
                 >
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: style.color }}
-                  >
+                  <span className="text-sm font-bold" style={{ color: style.color }}>
                     {fr ? item.labelFr : item.labelEn}
                   </span>
-                  <p className="mt-1 text-[11px] text-[#57534e]">
+                  <p className="mt-1 text-[11px] text-stone-400">
                     {fr ? item.hintFr : item.hintEn}
                   </p>
                 </button>
@@ -329,7 +333,7 @@ export function CommunityPostComposer({
           <button
             type="button"
             onClick={onClose}
-            className="mt-3 w-full rounded-xl border border-[#e8f3ee] py-2 text-sm font-semibold text-[#57534e]"
+            className="mt-3 w-full rounded-xl border border-white/10 py-2 text-sm font-semibold text-stone-400"
           >
             {fr ? "Annuler" : "Cancel"}
           </button>
@@ -341,7 +345,7 @@ export function CommunityPostComposer({
             <button
               type="button"
               onClick={resetCompose}
-              className="text-xs font-semibold text-[#78716c] hover:text-[#305f33]"
+              className="text-xs font-semibold text-stone-400 hover:text-emerald-300"
             >
               {fr ? "← Changer catégorie" : "← Change category"}
             </button>
@@ -352,11 +356,11 @@ export function CommunityPostComposer({
             onChange={(e) => setBody(e.target.value)}
             rows={4}
             placeholder={fr ? cfg?.placeholderFr : cfg?.placeholderEn}
-            className="w-full resize-none rounded-xl border border-[#e8f3ee] bg-white px-3 py-2 text-sm"
+            className={COMMUNITY_TEXTAREA}
           />
           <p
             className={`mt-1 text-[11px] ${
-              body.trim().length >= minChars ? "text-[#78716c]" : "text-amber-700"
+              body.trim().length >= minChars ? "text-stone-500" : "text-amber-400"
             }`}
           >
             {body.trim().length}/{minChars}
@@ -374,7 +378,7 @@ export function CommunityPostComposer({
           ) : null}
 
           {videoSlot ? (
-            <div className="relative mt-3 overflow-hidden rounded-xl bg-[#0c0a09]">
+            <div className={`relative mt-3 ${COMMUNITY_MEDIA_FRAME} bg-[#0a1018]`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <video
                 src={videoSlot.previewUrl}
@@ -391,18 +395,18 @@ export function CommunityPostComposer({
                     </p>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/25">
                       <div
-                        className="h-full rounded-full bg-[#305f33] transition-all"
+                        className="h-full rounded-full bg-emerald-400 transition-all"
                         style={{ width: `${videoSlot.progress}%` }}
                       />
                     </div>
                   </>
                 ) : videoSlot.status === "ready" ? (
                   <p className="text-xs font-semibold text-emerald-300">
-                    {fr ? "Vidéo prête — publiez !" : "Video ready — post now!"}
+                    {fr ? "Vidéo prête - publiez !" : "Video ready - post now!"}
                   </p>
                 ) : (
                   <p className="text-xs font-semibold text-red-300">
-                    {fr ? "Échec upload — réessayez" : "Upload failed — retry"}
+                    {fr ? "Échec upload - réessayez" : "Upload failed - retry"}
                   </p>
                 )}
               </div>
@@ -446,8 +450,10 @@ export function CommunityPostComposer({
                 setReplaceImageId(null);
                 imageInputRef.current?.click();
               }}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 disabled:opacity-40 ${
-                imageSlots.length ? "bg-[#e8f3ee] text-[#305f33]" : "bg-white text-[#305f33]"
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 active:scale-95 disabled:opacity-40 ${
+                imageSlots.length
+                  ? "bg-emerald-400/12 text-emerald-300"
+                  : "bg-[rgba(5,8,16,0.55)] text-cyan-300"
               }`}
               aria-label={fr ? "Ajouter une image" : "Add image"}
             >
@@ -457,15 +463,17 @@ export function CommunityPostComposer({
               type="button"
               disabled={!!imageSlots.length || !!videoSlot || publishing}
               onClick={() => videoInputRef.current?.click()}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl border border-[#e8f3ee] active:scale-95 disabled:opacity-40 ${
-                videoSlot ? "bg-[#e8f3ee] text-[#305f33]" : "bg-white text-[#305f33]"
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 active:scale-95 disabled:opacity-40 ${
+                videoSlot
+                  ? "bg-emerald-400/12 text-emerald-300"
+                  : "bg-[rgba(5,8,16,0.55)] text-cyan-300"
               }`}
               aria-label={fr ? "Ajouter une vidéo" : "Add video"}
             >
               <IconVideo size={20} />
             </button>
             {imageSlots.length > 0 && imageSlots.length < 4 ? (
-              <span className="text-[11px] text-[#78716c]">
+              <span className="text-[11px] text-stone-500">
                 {fr
                   ? `${imageSlots.length}/4 photos`
                   : `${imageSlots.length}/4 photos`}
@@ -479,13 +487,13 @@ export function CommunityPostComposer({
                 videoSlot?.status === "uploading"
               }
               onClick={() => void publish()}
-              className="ml-auto min-h-[44px] rounded-xl bg-[#305f33] px-5 text-sm font-bold text-white disabled:opacity-50 active:scale-95"
+              className={`${COMMUNITY_PUBLISH_BTN} ml-auto mb-0 mt-0 min-h-[44px] w-auto px-5 disabled:opacity-50`}
             >
               {publishing ? "…" : fr ? "Publier" : "Post"}
             </button>
           </div>
 
-          {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
+          {error ? <p className="mt-2 text-xs text-red-400">{error}</p> : null}
         </>
       )}
     </section>

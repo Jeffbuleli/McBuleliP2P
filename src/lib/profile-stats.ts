@@ -28,7 +28,7 @@ export type ProfileDashboard = {
   totalCompletedTrades: number;
   /** Average stars received on P2P (0 if none). */
   reputationScore: number;
-  /** released / (released + cancelled + expired + disputed?) — simplified: completion among terminal orders */
+  /** released / (released + cancelled + expired + disputed?) - simplified: completion among terminal orders */
   completionPct: number | null;
   portfolio: Awaited<ReturnType<typeof getPortfolioSnapshotForUser>>;
   communityHandle: string | null;

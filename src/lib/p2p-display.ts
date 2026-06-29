@@ -12,7 +12,7 @@ export function maskTraderEmail(email: string): string {
   return `${local.slice(0, 2)}***@${domain}`;
 }
 
-/** Public P2P label — never exposes email on marketplace. */
+/** Public P2P label - never exposes email on marketplace. */
 export function p2pDisplayName(u: P2pPublicUser): string {
   const dn = (u.displayName ?? "").trim();
   if (dn) return dn;

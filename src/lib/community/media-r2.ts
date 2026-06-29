@@ -1,5 +1,5 @@
 /**
- * Cloudflare R2 — presigned upload (S3-compatible API).
+ * Cloudflare R2 - presigned upload (S3-compatible API).
  * @see https://developers.cloudflare.com/r2/
  */
 
@@ -39,12 +39,12 @@ export function communityR2CredentialWarnings(): string[] {
   const accessKey = process.env.COMMUNITY_R2_ACCESS_KEY_ID?.trim() ?? "";
   if (secret.startsWith("cfat_") || secret.startsWith("Bearer ")) {
     warnings.push(
-      "COMMUNITY_R2_SECRET_ACCESS_KEY looks like a Cloudflare API token — use the R2 S3 secret access key from « Manage R2 API Tokens ».",
+      "COMMUNITY_R2_SECRET_ACCESS_KEY looks like a Cloudflare API token - use the R2 S3 secret access key from « Manage R2 API Tokens ».",
     );
   }
   if (accessKey && accessKey.length < 16) {
     warnings.push(
-      "COMMUNITY_R2_ACCESS_KEY_ID looks too short — use the S3 access key id from R2 API tokens, not a token label.",
+      "COMMUNITY_R2_ACCESS_KEY_ID looks too short - use the S3 access key id from R2 API tokens, not a token label.",
     );
   }
   return warnings;

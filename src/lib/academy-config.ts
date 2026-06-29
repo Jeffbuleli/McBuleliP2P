@@ -1,8 +1,8 @@
-/** McBuleli Academy — catalog slugs & attendance windows. */
+/** McBuleli Academy - catalog slugs & attendance windows. */
 
 export const ACADEMY_PROGRAM_LAUNCH = "launch-crypto-trading-ia-p2p";
 export const ACADEMY_PROGRAM_PRO = "crypto-trading-pro";
-/** Community lives — participants free, host pays Live Studio plan. */
+/** Community lives - participants free, host pays Live Studio plan. */
 export const ACADEMY_PROGRAM_LIVE_STUDIO = "live-studio";
 export const ACADEMY_EDITION_JUNE_2026 = "juin-2026";
 export const ACADEMY_EDITION_PRO_Q3 = "q3-2026";

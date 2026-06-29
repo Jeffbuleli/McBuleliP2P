@@ -1,5 +1,5 @@
 /**
- * DRC mobile numbers for FreshPay — normalize to `243XXXXXXXXX` (no '+').
+ * DRC mobile numbers for FreshPay - normalize to `243XXXXXXXXX` (no '+').
  */
 export function normalizeCodPhoneNumber(input: string): string {
   let s = (input ?? "").trim();
@@ -29,7 +29,7 @@ export function formatCardBillToPhone(input: string | null | undefined): string 
   return `+${normalized}`;
 }
 
-/** Cybersource billing phone (E.164). MoMo uses customer_number in the gateway — not this field. */
+/** Cybersource billing phone (E.164). MoMo uses customer_number in the gateway - not this field. */
 export function resolveCardBillToPhone(input: string | null | undefined): string {
   return formatCardBillToPhone(input) ?? "+243810000000";
 }

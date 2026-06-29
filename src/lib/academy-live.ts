@@ -46,7 +46,7 @@ export function jitsiRoomFromJoinUrl(url: string): string | null {
   }
 }
 
-/** Zoom/YouTube/etc. — skip Jitsi hash params. */
+/** Zoom/YouTube/etc. - skip Jitsi hash params. */
 export function isJitsiMeetRoomUrl(url: string): boolean {
   const trimmed = url.trim();
   if (!trimmed) return false;
@@ -161,13 +161,13 @@ export function buildJitsiLowBandwidthHash(
   const resolved: LiveJoinMode =
     typeof mode === "boolean" ? (mode ? "host" : "learner") : mode;
   const isHost = resolved === "host";
-  // Pas de 2e écran « Rejoindre » — McBuleli ouvre la salle, Jitsi entre directement.
-  // hosts.domain/muc/focus : config.js serveur (fix-config-force-join) — pas dans le hash
+  // Pas de 2e écran « Rejoindre » - McBuleli ouvre la salle, Jitsi entre directement.
+  // hosts.domain/muc/focus : config.js serveur (fix-config-force-join) - pas dans le hash
   // (valeurs nues → JSON.parse SyntaxError → conference.join() jamais appelé)
   const params: string[] = [
     jitsiHashParam("config.prejoinPageEnabled", false),
     jitsiHashParam("config.prejoinConfig.enabled", false),
-    // Pas enableLobby=false — casse conference.isLobbySupported() (crash Toolbox)
+    // Pas enableLobby=false - casse conference.isLobbySupported() (crash Toolbox)
     jitsiHashParam("config.disableLobby", true),
     jitsiHashParam("config.securityUi.hideLobbyButton", true),
     jitsiHashParam("config.enableUserRolesBasedOnToken", false),
@@ -202,7 +202,7 @@ export function setupEndsAtIso(startsAt: Date, setupMin?: number): string {
   return new Date(startsAt.getTime() + min * 60 * 1000).toISOString();
 }
 
-/** Session ended — replay may be available. */
+/** Session ended - replay may be available. */
 export function isSessionEnded(args: {
   startsAt: Date;
   endsAt: Date | null;
@@ -223,7 +223,7 @@ export function isSessionLiveNow(args: {
   return now >= start - win && now <= end + win;
 }
 
-/** Session en direct (setup ou corps de séance) — pas la fenêtre de présence après la fin. */
+/** Session en direct (setup ou corps de séance) - pas la fenêtre de présence après la fin. */
 export function isSessionLiveBroadcast(args: {
   startsAt: Date;
   endsAt: Date | null;

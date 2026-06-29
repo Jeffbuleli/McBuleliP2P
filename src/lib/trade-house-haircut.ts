@@ -1,4 +1,4 @@
-/** Haircut on large live futures wins — protects custodial reserve (B-book). */
+/** Haircut on large live futures wins - protects custodial reserve (B-book). */
 
 export function tradeHouseWinHaircutThresholdUsdt(): number {
   const n = Number(process.env.TRADE_HOUSE_WIN_HAIRCUT_THRESHOLD_USDT ?? "250");

@@ -39,9 +39,9 @@ function fmt(n: number, locale: string) {
 }
 
 function safeWindowTs(v: string): string {
-  if (!v) return "—";
+  if (!v) return "-";
   const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toISOString().slice(0, 16).replace("T", " ");
 }
 
@@ -389,7 +389,7 @@ export default function WalletPoolPage() {
         {!data ? (
           <p className="mt-3 text-sm text-stone-500">…</p>
         ) : data.positions.length === 0 ? (
-          <p className="mt-3 text-sm text-stone-500">—</p>
+          <p className="mt-3 text-sm text-stone-500">-</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {data.positions.map((p) => {
@@ -418,7 +418,7 @@ export default function WalletPoolPage() {
                         <span className="font-mono font-semibold">{p.rewardsAvailableUsdt}</span> USDT ·{" "}
                         {t("pool_next_payout")}:{" "}
                         <span className="font-mono">
-                          {nextPayout ? nextPayout.toISOString().slice(0, 10) : "—"}
+                          {nextPayout ? nextPayout.toISOString().slice(0, 10) : "-"}
                         </span>
                       </p>
                     </div>

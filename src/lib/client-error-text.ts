@@ -36,7 +36,7 @@ const PLAIN_MESSAGE_MAP: Record<string, keyof Messages> = {
   "Not found": "group_not_found",
 };
 
-/** Map API error keys to i18n — never show raw DB / snake_case codes in UI. */
+/** Map API error keys to i18n - never show raw DB / snake_case codes in UI. */
 export function clientErrorText(
   t: (k: keyof Messages, vars?: Record<string, string | number>) => string,
   key: string,

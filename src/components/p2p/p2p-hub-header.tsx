@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { P2pRulesPanel } from "@/components/p2p/p2p-rules-panel";
-import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
+import { P2pRulesSection } from "@/components/p2p/p2p-rules-section";
 import { P2pIconEscrow } from "@/components/p2p/p2p-icons";
+import { HudCornerBrackets, type HudCornerTone } from "@/components/ui/hud-corners";
+import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 
 function P2pHubLogo({ size }: { size: number }) {
   const inner = Math.round(size * 0.72);
@@ -15,25 +16,32 @@ function P2pHubLogo({ size }: { size: number }) {
       style={{ width: size, height: size }}
     >
       <Image
-        src="/brand/logo-256.png"
+        src={BRAND_LOGO_256}
         alt=""
         width={inner}
         height={inner}
-        className="object-contain"
+        className="h-full w-full object-cover"
         unoptimized
       />
     </span>
   );
 }
 
-export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
+export function P2pHubHeader({
+  compact = false,
+  marketCornerTone = "neutral",
+}: {
+  compact?: boolean;
+  marketCornerTone?: HudCornerTone;
+}) {
   const { t } = useI18n();
   const [showRules, setShowRules] = useState(false);
 
   if (compact) {
     return (
-      <header className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-2.5 py-2">
-        <div className="flex items-center gap-2">
+      <header className="relative overflow-hidden rounded-xl border border-cyan-400/20 bg-[#0a1018]/90 px-2.5 py-2 backdrop-blur-sm">
+        <HudCornerBrackets tone={marketCornerTone} size="sm" />
+        <div className="relative flex items-center gap-2">
           <P2pHubLogo size={32} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
@@ -47,10 +55,10 @@ export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
           <button
             type="button"
             onClick={() => setShowRules((v) => !v)}
-            className={`flex h-8 shrink-0 items-center rounded-full border px-2.5 text-[10px] font-bold transition-colors ${
+            className={`flex h-8 shrink-0 items-center rounded-full border px-2.5 text-[10px] font-bold transition-colors active:scale-[0.98] ${
               showRules
-                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
-                : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+                ? "border-emerald-400/45 bg-emerald-500/15 text-emerald-300"
+                : "border-white/12 bg-[#050810]/85 text-[color:var(--fd-muted)]"
             }`}
             aria-expanded={showRules}
           >
@@ -58,9 +66,8 @@ export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
           </button>
         </div>
         {showRules ? (
-          <div className="mt-2 space-y-2 border-t border-[color:var(--fd-border)] pt-2">
-            <P2pRulesPanel />
-            <P2pSafetyTips />
+          <div className="relative mt-2 border-t border-[color:var(--fd-border)] pt-2">
+            <P2pRulesSection cornerTone={marketCornerTone} />
           </div>
         ) : null}
       </header>
@@ -84,10 +91,10 @@ export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           onClick={() => setShowRules((v) => !v)}
-          className={`flex h-9 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${
+          className={`flex h-9 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors active:scale-[0.98] ${
             showRules
-              ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
-              : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+              ? "border-emerald-400/45 bg-emerald-500/15 text-emerald-300"
+              : "border-white/12 bg-[#050810]/85 text-[color:var(--fd-muted)]"
           }`}
           aria-expanded={showRules}
           title={t("p2p_rules_toggle")}
@@ -96,9 +103,8 @@ export function P2pHubHeader({ compact = false }: { compact?: boolean }) {
         </button>
       </div>
       {showRules ? (
-        <div className="space-y-3 border-t border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-2.5">
-          <P2pRulesPanel />
-          <P2pSafetyTips />
+        <div className="relative border-t border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-2.5">
+          <P2pRulesSection cornerTone={marketCornerTone} />
         </div>
       ) : null}
     </header>

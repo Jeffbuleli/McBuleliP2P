@@ -5,6 +5,7 @@ import { CommunityHelpTrigger } from "@/components/community/community-help-shee
 import { CommunitySearchBar } from "@/components/community/community-search-bar";
 import { CommunityStoriesStrip } from "@/components/community/community-stories-strip";
 import { CommunityDmLink } from "@/components/community/community-dm-link";
+import { COMMUNITY_BP_BADGE, COMMUNITY_TITLE } from "@/lib/community/community-ui";
 
 export function CommunityHomeHeader({
   fr,
@@ -22,16 +23,13 @@ export function CommunityHomeHeader({
   return (
     <div className="mb-3">
       <div className="flex items-center justify-between gap-2 px-0.5">
-        <h1 className="text-lg font-extrabold tracking-tight text-[#0c0a09]">
+        <h1 className={COMMUNITY_TITLE}>
           {fr ? "Communauté" : "Community"}
         </h1>
         <div className="flex shrink-0 items-center gap-1.5">
           <CommunityDmLink fr={fr} />
           {bp !== null ? (
-            <Link
-              href="/app/wallet/points"
-              className="flex h-9 items-center rounded-xl bg-[#eaf5ee] px-2.5 text-[11px] font-bold tabular-nums text-[#305f33] ring-1 ring-[#305f33]/10 transition active:scale-95"
-            >
+            <Link href="/app/wallet/points" className={COMMUNITY_BP_BADGE}>
               {bp} BP
             </Link>
           ) : null}

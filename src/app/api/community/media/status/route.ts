@@ -44,6 +44,6 @@ export async function GET() {
       publicBaseUrl: Boolean(process.env.COMMUNITY_R2_PUBLIC_BASE_URL),
     },
     customDomainRequired:
-      "Map cdn.mcbuleli.org (or pub-xxx.r2.dev) as R2 public URL — separate from mcbuleli.org → Render.",
+      "Map cdn.mcbuleli.org (or pub-xxx.r2.dev) as R2 public URL - separate from mcbuleli.org → Render.",
   });
 }

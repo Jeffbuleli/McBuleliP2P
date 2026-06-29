@@ -320,7 +320,7 @@ export async function sendGroupMessage(args: {
     .values({
       groupId: args.groupId,
       senderUserId: args.userId,
-      body: body || "—",
+      body: body || "-",
       messageType,
       attachmentUrl: args.attachmentUrl ?? null,
       attachmentExpiresAt,

@@ -49,10 +49,10 @@ function u(path: string, campaign: string): string {
 
 const EN: Record<MarketingBroadcastKind, CampaignSource> = {
   welcome: {
-    preheader: "Your crypto wallet for Africa — fund, trade, earn.",
+    preheader: "Your crypto wallet for Africa - fund, trade, earn.",
     headline: "Welcome to McBuleli",
     paragraphs: [
-      "One app for USDT, Pi, mobile-money P2P, and group savings — built for speed and clarity.",
+      "One app for USDT, Pi, mobile-money P2P, and group savings - built for speed and clarity.",
       "Verify your email, complete KYC when you're ready, and fund your wallet in minutes.",
     ],
     bullets: ["Wallet · P2P escrow · Staking · AVEC groups"],
@@ -61,11 +61,11 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "welcome",
   },
   staking: {
-    preheader: "Put idle USDT & Pi to work — clear rates, flexible terms.",
+    preheader: "Put idle USDT & Pi to work - clear rates, flexible terms.",
     headline: "Earn on what you hold",
     paragraphs: [
       "Staking is live on McBuleli. Choose a term, see your rate upfront, and track rewards in the app.",
-      "No noise — just yield you can understand.",
+      "No noise - just yield you can understand.",
     ],
     bullets: ["USDT & Pi supported", "Transparent APR", "Manage from Wallet → Earn"],
     ctaLabel: "Start staking",
@@ -73,7 +73,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "staking",
   },
   p2p: {
-    preheader: "Buy & sell crypto with escrow — mobile money friendly.",
+    preheader: "Buy & sell crypto with escrow - mobile money friendly.",
     headline: "P2P that protects both sides",
     paragraphs: [
       "Trade with real people, not guesswork. Funds stay in escrow until the deal is done.",
@@ -85,7 +85,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "p2p",
   },
   wallet_usdt: {
-    preheader: "Deposit USDT on TRC20, BEP20 & more — withdraw when you need.",
+    preheader: "Deposit USDT on TRC20, BEP20 & more - withdraw when you need.",
     headline: "Your USDT hub",
     paragraphs: [
       "Send USDT to your personal deposit address. We match amounts automatically when auto-detect is on.",
@@ -97,10 +97,10 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "wallet_usdt",
   },
   avec: {
-    preheader: "Save together — governance, loans, and shared goals.",
+    preheader: "Save together - governance, loans, and shared goals.",
     headline: "AVEC groups on McBuleli",
     paragraphs: [
-      "Create or join a savings circle with rules everyone can see. Contributions, payouts, and votes — in one place.",
+      "Create or join a savings circle with rules everyone can see. Contributions, payouts, and votes - in one place.",
       "Built for communities that already trust each other.",
     ],
     bullets: ["Transparent ledger", "Group governance", "Social aid & loans"],
@@ -109,18 +109,18 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "avec",
   },
   kyc: {
-    preheader: "Unlock higher limits — quick verification with Didit.",
+    preheader: "Unlock higher limits - quick verification with Didit.",
     headline: "Verify once, move freely",
     paragraphs: [
       "KYC takes a few minutes and unlocks higher deposit, withdrawal, and P2P limits.",
-      "Your data stays on our secure flow — we never ask for passwords by email.",
+      "Your data stays on our secure flow - we never ask for passwords by email.",
     ],
     ctaLabel: "Complete KYC",
     ctaPath: "/app/profile",
     campaign: "kyc",
   },
   security: {
-    preheader: "Passkeys & 2FA — protect your balance in two taps.",
+    preheader: "Passkeys & 2FA - protect your balance in two taps.",
     headline: "Lock down your account",
     paragraphs: [
       "Add a passkey or authenticator app. Withdrawals and sensitive changes can require a quick step-up check.",
@@ -131,7 +131,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "security",
   },
   reengage: {
-    preheader: "Your wallet is waiting — check balance & latest rates.",
+    preheader: "Your wallet is waiting - check balance & latest rates.",
     headline: "Still with us?",
     paragraphs: [
       "Markets move fast. Log in to see your balance, open orders, and staking rewards.",
@@ -142,19 +142,19 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "reengage",
   },
   changelog: {
-    preheader: "What's new on McBuleli — features & fixes.",
+    preheader: "What's new on McBuleli - features & fixes.",
     headline: "Product update",
     paragraphs: [
       "We shipped improvements to wallet, P2P, and earn this month. Faster deposits, clearer statuses, and a smoother mobile experience.",
-      "Open the app for full details — this email stays short on purpose.",
+      "Open the app for full details - this email stays short on purpose.",
     ],
     ctaLabel: "See what's new",
     ctaPath: "/app/wallet",
     campaign: "changelog",
   },
   crypto_discovery: {
-    subject: "Crypto made simple — USDT, Mobile Money & group savings",
-    preheader: "Not Bitcoin roulette. Stable USDT, P2P with Mobile Money, AVEC groups — on McBuleli.",
+    subject: "Crypto made simple - USDT, Mobile Money & group savings",
+    preheader: "Not Bitcoin roulette. Stable USDT, P2P with Mobile Money, AVEC groups - on McBuleli.",
     headline: "Crypto without the fear",
     paragraphs: [
       "Scams and Bitcoin swings scared you off? Fair enough.",
@@ -165,7 +165,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
       {
         icon: "depositUsdt",
         title: "USDT ≈ 1 US dollar",
-        text: "Not Bitcoin. USDT stays stable — send and receive without nasty surprises.",
+        text: "Not Bitcoin. USDT stays stable - send and receive without nasty surprises.",
       },
       {
         icon: "verify",
@@ -175,7 +175,7 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
       {
         icon: "withdrawUsdt",
         title: "Deposit & withdraw",
-        text: "Your own address, visible fees, email alerts — you stay in control.",
+        text: "Your own address, visible fees, email alerts - you stay in control.",
       },
       {
         icon: "depositPi",
@@ -183,18 +183,18 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
         text: "Save together with clear rules, governance, and loans between members.",
       },
     ],
-    reassurance: "McBuleli is not a bank — transparent trades, WhatsApp support, Didit KYC.",
+    reassurance: "McBuleli is not a bank - transparent trades, WhatsApp support, Didit KYC.",
     ctaLabel: "Create my free account",
     ctaPath: "/register",
     campaign: "crypto_discovery",
     referralCode: "RGZDWHUH",
   },
   launch_academy: {
-    subject: "McBuleli launch — free training (Crypto, Trading, AI, P2P)",
+    subject: "McBuleli launch - free training (Crypto, Trading, AI, P2P)",
     preheader: "8 June 7 PM GMT+1 · free sessions 15–30 June · register now.",
     headline: "Official McBuleli launch",
     paragraphs: [
-      "We're opening McBuleli with a live online session — then two weeks of free training for you.",
+      "We're opening McBuleli with a live online session - then two weeks of free training for you.",
     ],
     dateHighlight: "8 June 2026 · 7 PM (GMT+1) · Live",
     bannerImageUrl: `${emailAssetBaseUrl()}/launch/social-landscape.png`,
@@ -227,10 +227,10 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
   },
   academy_journey: {
     subject: "Continue your crypto journey on McBuleli Academy",
-    preheader: "You're enrolled — one tap to pick up where you left off.",
+    preheader: "You're enrolled - one tap to pick up where you left off.",
     headline: "Your progress is waiting",
     paragraphs: [
-      "You joined the McBuleli Academy cohort. Complete a short module or join the next live — it only takes a few minutes.",
+      "You joined the McBuleli Academy cohort. Complete a short module or join the next live - it only takes a few minutes.",
       "Learn → practice on Wallet & P2P → grow with the community.",
     ],
     bullets: ["Micro-lessons", "Live sessions", "IA mentor"],
@@ -239,17 +239,17 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "academy_journey",
   },
   formation_crypto_reminder: {
-    subject: "Reminder — CRYPTO training · Saturday 27 June 7:30 PM",
-    preheader: "McBuleli Live with ceo — join us tonight.",
-    headline: "CRYPTO training — tonight",
+    subject: "Reminder - CRYPTO training · Saturday 27 June 7:30 PM",
+    preheader: "McBuleli Live with ceo - join us tonight.",
+    headline: "CRYPTO training - tonight",
     paragraphs: [
-      "You registered for our live CRYPTO session. We go live in a few hours — bring your questions.",
+      "You registered for our live CRYPTO session. We go live in a few hours - bring your questions.",
       "Host: ceo · Platform: McBuleli Live (in your browser, no install).",
     ],
     dateHighlight: "Saturday 27 June 2026 · 7:30 PM (GMT+1) · Live",
     heroIllustration: "depositUsdt",
     bullets: [
-      "USDT & digital wallets — plain language",
+      "USDT & digital wallets - plain language",
       "Live Q&A with the McBuleli team",
       "One click from this email",
     ],
@@ -263,10 +263,10 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
   welcome: {
-    preheader: "Votre portefeuille crypto pour l'Afrique — déposer, échanger, gagner.",
+    preheader: "Votre portefeuille crypto pour l'Afrique - déposer, échanger, gagner.",
     headline: "Bienvenue sur McBuleli",
     paragraphs: [
-      "Une app pour l'USDT, le Pi, le P2P mobile money et l'épargne de groupe — simple et rapide.",
+      "Une app pour l'USDT, le Pi, le P2P mobile money et l'épargne de groupe - simple et rapide.",
       "Confirmez votre email, faites le KYC quand vous voulez, et alimentez votre portefeuille en quelques minutes.",
     ],
     bullets: ["Portefeuille · P2P séquestre · Staking · Groupes AVEC"],
@@ -275,11 +275,11 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "welcome",
   },
   staking: {
-    preheader: "Faites travailler vos USDT & Pi — taux clairs, durées flexibles.",
+    preheader: "Faites travailler vos USDT & Pi - taux clairs, durées flexibles.",
     headline: "Gagnez sur vos avoirs",
     paragraphs: [
       "Le staking est disponible sur McBuleli. Choisissez une durée, voyez le taux dès le départ, suivez les gains dans l'app.",
-      "Pas de bruit — du rendement lisible.",
+      "Pas de bruit - du rendement lisible.",
     ],
     bullets: ["USDT & Pi", "APR transparent", "Wallet → Gagner"],
     ctaLabel: "Commencer le staking",
@@ -287,7 +287,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "staking",
   },
   p2p: {
-    preheader: "Achetez & vendez avec séquestre — compatible mobile money.",
+    preheader: "Achetez & vendez avec séquestre - compatible mobile money.",
     headline: "Le P2P qui protège les deux parties",
     paragraphs: [
       "Échangez avec de vrais utilisateurs. Les fonds restent sous séquestre jusqu'à la fin du deal.",
@@ -299,7 +299,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "p2p",
   },
   wallet_usdt: {
-    preheader: "Dépôt USDT TRC20, BEP20… — retrait quand vous voulez.",
+    preheader: "Dépôt USDT TRC20, BEP20… - retrait quand vous voulez.",
     headline: "Votre hub USDT",
     paragraphs: [
       "Envoyez des USDT sur votre adresse personnelle. Montant détecté automatiquement quand l'auto-detect est actif.",
@@ -311,10 +311,10 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "wallet_usdt",
   },
   avec: {
-    preheader: "Épargnez ensemble — gouvernance, prêts, objectifs communs.",
+    preheader: "Épargnez ensemble - gouvernance, prêts, objectifs communs.",
     headline: "Les groupes AVEC sur McBuleli",
     paragraphs: [
-      "Créez ou rejoignez un cercle d'épargne avec des règles visibles par tous. Cotisations, paiements et votes — au même endroit.",
+      "Créez ou rejoignez un cercle d'épargne avec des règles visibles par tous. Cotisations, paiements et votes - au même endroit.",
       "Pensé pour les communautés qui se connaissent déjà.",
     ],
     bullets: ["Registre transparent", "Gouvernance", "Aide sociale & prêts"],
@@ -323,18 +323,18 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "avec",
   },
   kyc: {
-    preheader: "Plafonds plus hauts — vérification rapide Didit.",
+    preheader: "Plafonds plus hauts - vérification rapide Didit.",
     headline: "Vérifiez une fois, agissez librement",
     paragraphs: [
       "Le KYC prend quelques minutes et débloque dépôts, retraits et P2P à plus fort volume.",
-      "Vos données restent dans notre flux sécurisé — jamais de mot de passe par email.",
+      "Vos données restent dans notre flux sécurisé - jamais de mot de passe par email.",
     ],
     ctaLabel: "Compléter le KYC",
     ctaPath: "/app/profile",
     campaign: "kyc",
   },
   security: {
-    preheader: "Passkeys & 2FA — protégez votre solde en deux gestes.",
+    preheader: "Passkeys & 2FA - protégez votre solde en deux gestes.",
     headline: "Sécurisez votre compte",
     paragraphs: [
       "Ajoutez une passkey ou une app d'authentification. Retraits et changements sensibles = validation rapide.",
@@ -345,7 +345,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "security",
   },
   reengage: {
-    preheader: "Votre portefeuille vous attend — solde & taux à jour.",
+    preheader: "Votre portefeuille vous attend - solde & taux à jour.",
     headline: "Toujours avec nous ?",
     paragraphs: [
       "Les marchés bougent vite. Reconnectez-vous pour voir votre solde, ordres et récompenses staking.",
@@ -356,22 +356,22 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "reengage",
   },
   changelog: {
-    preheader: "Nouveautés McBuleli — fonctions & correctifs.",
+    preheader: "Nouveautés McBuleli - fonctions & correctifs.",
     headline: "Mise à jour produit",
     paragraphs: [
       "Améliorations portefeuille, P2P et earn ce mois-ci. Dépôts plus fluides, statuts plus clairs, meilleure expérience mobile.",
-      "Ouvrez l'app pour le détail — cet email reste volontairement court.",
+      "Ouvrez l'app pour le détail - cet email reste volontairement court.",
     ],
     ctaLabel: "Voir les nouveautés",
     ctaPath: "/app/wallet",
     campaign: "changelog",
   },
   crypto_discovery: {
-    subject: "Crypto enfin simple — USDT, Mobile Money & AVEC",
-    preheader: "Pas du Bitcoin à la roulette. USDT stable, P2P Mobile Money, épargne AVEC — sur McBuleli.",
+    subject: "Crypto enfin simple - USDT, Mobile Money & AVEC",
+    preheader: "Pas du Bitcoin à la roulette. USDT stable, P2P Mobile Money, épargne AVEC - sur McBuleli.",
     headline: "La crypto, sans la peur",
     paragraphs: [
-      "Arnaques, Bitcoin qui monte et descend — on comprend la méfiance.",
+      "Arnaques, Bitcoin qui monte et descend - on comprend la méfiance.",
       "McBuleli, c'est clair : USDT stable, échanges P2P protégés, dépôt et retrait simples.",
     ],
     heroIllustration: "depositUsdt",
@@ -379,7 +379,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
       {
         icon: "depositUsdt",
         title: "USDT ≈ 1 dollar",
-        text: "Ce n'est pas du Bitcoin. L'USDT reste stable — envoyez et recevez sans mauvaise surprise.",
+        text: "Ce n'est pas du Bitcoin. L'USDT reste stable - envoyez et recevez sans mauvaise surprise.",
       },
       {
         icon: "verify",
@@ -389,7 +389,7 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
       {
         icon: "withdrawUsdt",
         title: "Dépôt & retrait crypto",
-        text: "Votre adresse personnelle, frais visibles, alertes email — vous gardez la main.",
+        text: "Votre adresse personnelle, frais visibles, alertes email - vous gardez la main.",
       },
       {
         icon: "depositPi",
@@ -398,14 +398,14 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
       },
     ],
     reassurance:
-      "McBuleli n'est pas une banque — transparence, support WhatsApp, vérification Didit.",
+      "McBuleli n'est pas une banque - transparence, support WhatsApp, vérification Didit.",
     ctaLabel: "Créer mon compte gratuit",
     ctaPath: "/register",
     campaign: "crypto_discovery",
     referralCode: "RGZDWHUH",
   },
   launch_academy: {
-    subject: "Lancement McBuleli — formation gratuite (Crypto, Trading, IA, P2P)",
+    subject: "Lancement McBuleli - formation gratuite (Crypto, Trading, IA, P2P)",
     preheader: "8 juin 19h GMT+1 · sessions gratuites 15–30 juin · inscrivez-vous.",
     headline: "Lancement officiel McBuleli",
     paragraphs: [
@@ -442,11 +442,11 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "launch_academy",
   },
   academy_journey: {
-    subject: "Continuez votre parcours crypto — McBuleli Academy",
-    preheader: "Vous êtes inscrit — reprenez en un clic.",
+    subject: "Continuez votre parcours crypto - McBuleli Academy",
+    preheader: "Vous êtes inscrit - reprenez en un clic.",
     headline: "Votre progression vous attend",
     paragraphs: [
-      "Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live — quelques minutes suffisent.",
+      "Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live - quelques minutes suffisent.",
       "Apprendre → pratiquer sur Wallet & P2P → grandir avec la communauté.",
     ],
     bullets: ["Micro-leçons", "Sessions live", "Mentor IA"],
@@ -455,17 +455,17 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     campaign: "academy_journey",
   },
   formation_crypto_reminder: {
-    subject: "Rappel — Formation CRYPTO · samedi 27 juin à 19h30",
-    preheader: "McBuleli Live avec ceo — on vous attend ce soir.",
-    headline: "Formation CRYPTO — ce soir",
+    subject: "Rappel - Formation CRYPTO · samedi 27 juin à 19h30",
+    preheader: "McBuleli Live avec ceo - on vous attend ce soir.",
+    headline: "Formation CRYPTO - ce soir",
     paragraphs: [
-      "Vous êtes inscrit à notre session live CRYPTO. On démarre dans quelques heures — préparez vos questions.",
+      "Vous êtes inscrit à notre session live CRYPTO. On démarre dans quelques heures - préparez vos questions.",
       "Animateur : ceo · Plateforme : McBuleli Live (dans le navigateur, sans installation).",
     ],
     dateHighlight: "Samedi 27 juin 2026 · 19h30 (GMT+1) · Live",
     heroIllustration: "depositUsdt",
     bullets: [
-      "USDT & portefeuille digital — en langage clair",
+      "USDT & portefeuille digital - en langage clair",
       "Questions / réponses en direct avec l'équipe McBuleli",
       "Un clic depuis cet email",
     ],

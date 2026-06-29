@@ -1,5 +1,5 @@
 /**
- * Custodial fixed-term staking — APR is fixed at subscription (industry-standard practice).
+ * Custodial fixed-term staking - APR is fixed at subscription (industry-standard practice).
  * Optional env overrides:
  *   STAKING_MIN_USDT, STAKING_MIN_PI
  *   STAKING_USDT_TERMS='[{"days":30,"apr":4.5},{"days":90,"apr":7}]'

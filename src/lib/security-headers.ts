@@ -5,27 +5,39 @@
 import { mediaPublicOrigins } from "./media-url-config";
 
 export function buildContentSecurityPolicy(): string {
+  const isDev = process.env.NODE_ENV === "development";
   const mediaOrigins = mediaPublicOrigins();
   const imgSources = ["'self'", "data:", "blob:", ...mediaOrigins];
   const mediaSources = ["'self'", "blob:", ...mediaOrigins];
 
+  // React / Next dev (Turbopack) needs unsafe-eval for HMR and dev overlays - never in production.
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    ...(isDev ? ["'unsafe-eval'"] : []),
+    "https://challenges.cloudflare.com",
+  ].join(" ");
+
+  const connectSrc = [
+    "'self'",
+    "wss://live.mcbuleli.org",
+    "https://api.minepi.com",
+    "https://sandbox.minepi.com",
+    "https://challenges.cloudflare.com",
+    "https://verification.didit.me",
+    "https://verify.didit.me",
+    ...mediaOrigins,
+    ...(isDev ? ["ws:", "wss:"] : []),
+  ].join(" ");
+
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+    `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${imgSources.join(" ")}`,
     `media-src ${mediaSources.join(" ")}`,
     "font-src 'self' data:",
-    [
-      "connect-src 'self'",
-      "wss://live.mcbuleli.org",
-      "https://api.minepi.com",
-      "https://sandbox.minepi.com",
-      "https://challenges.cloudflare.com",
-      "https://verification.didit.me",
-      "https://verify.didit.me",
-      ...mediaOrigins,
-    ].join(" "),
+    `connect-src ${connectSrc}`,
     "frame-src 'self' https://challenges.cloudflare.com https://verification.didit.me https://verify.didit.me https://live.mcbuleli.org",
     "object-src 'none'",
     "base-uri 'self'",
@@ -44,7 +56,7 @@ export function securityResponseHeaders(): Record<string, string> {
     "Permissions-Policy":
       "camera=(), microphone=(), geolocation=(), payment=(self)",
     "Cross-Origin-Opener-Policy": "same-origin",
-    // No COEP require-corp — blocks Turnstile, Didit, and Jitsi iframes (no CORP from those origins).
+    // No COEP require-corp - blocks Turnstile, Didit, and Jitsi iframes (no CORP from those origins).
     "Cross-Origin-Resource-Policy": "same-origin",
   };
 }

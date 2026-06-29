@@ -290,7 +290,7 @@ export function OptionsTradingClient() {
         </label>
         <div className="text-right">
           <p className="font-mono text-lg font-bold tabular-nums">
-            {mark > 0 ? mark.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+            {mark > 0 ? mark.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "-"}
           </p>
         </div>
       </div>
@@ -306,7 +306,7 @@ export function OptionsTradingClient() {
           <span className="font-mono text-stone-900 dark:text-stone-100">
             {availStake != null
               ? availStake.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : "—"}
+              : "-"}
           </span>
         </p>
         <p className="mb-3 text-xs leading-relaxed text-stone-600 dark:text-stone-300">

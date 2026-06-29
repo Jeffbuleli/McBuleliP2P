@@ -1,4 +1,4 @@
-/** Saturated chip tones — profile light UI (wallet mint unchanged). */
+/** Saturated chip tones - profile light UI (wallet mint unchanged). */
 export type ProfileChipTone =
   | "mint"
   | "sky"

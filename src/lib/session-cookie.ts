@@ -30,7 +30,7 @@ export function getSessionCookieWriteOptions(
   };
 }
 
-/** Expire session cookie — attributes must match how the cookie was set. */
+/** Expire session cookie - attributes must match how the cookie was set. */
 export function getSessionCookieClearOptions() {
   const production = process.env.NODE_ENV === "production";
   const raw = process.env.SESSION_COOKIE_SAMESITE?.trim().toLowerCase();

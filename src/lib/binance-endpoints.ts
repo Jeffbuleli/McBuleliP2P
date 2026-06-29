@@ -2,7 +2,7 @@ import type { BotEnvironment } from "@/lib/bot-config";
 
 export type BinanceEndpointSet = {
   spotRest: string;
-  /** Classic USDⓈ-M (fapi) — demo uses Binance Futures Demo. */
+  /** Classic USDⓈ-M (fapi) - demo uses Binance Futures Demo. */
   futuresRest: string;
   /** Portfolio Margin unified account (live). */
   portfolioRest: string;

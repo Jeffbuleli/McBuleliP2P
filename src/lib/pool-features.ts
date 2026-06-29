@@ -1,5 +1,5 @@
 /**
- * Liquidity pool — new deposits disabled by default (product sunset).
+ * Liquidity pool - new deposits disabled by default (product sunset).
  * Set POOL_ENABLED=true on Web + crons only if you re-enable the LP program.
  */
 export function poolNewDepositsEnabled(): boolean {

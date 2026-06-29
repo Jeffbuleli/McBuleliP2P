@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AuthMarketingShell,
   AuthPageFooter,
+  authBtnSecondaryClass,
+  authErrorClass,
   authInputClass,
   authLabelClass,
+  authTextMutedClass,
 } from "@/components/auth/auth-marketing-shell";
+import { AuthTurnstileField, useAuthTurnstile } from "@/components/auth/auth-turnstile-field";
 import { useI18n } from "@/components/i18n-provider";
 import { AuthRecoveryAlternatives } from "@/components/auth/auth-recovery-alternatives";
-import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
 import { clientErrorText } from "@/lib/client-error-text";
-
-const TURNSTILE_SITE_KEY =
-  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 export default function ForgotPasswordPage() {
   const { t } = useI18n();
@@ -22,16 +22,8 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-
-  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
-  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
-  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
-  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
-
-  useEffect(() => {
-    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
-  }, []);
+  const { turnstileToken, turnstileReady, onTurnstileToken, onTurnstileExpire } =
+    useAuthTurnstile();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,58 +51,42 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthMarketingShell
-      footer={
-        <AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />
-      }
+      mode="forgot"
+      footer={<AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />}
     >
-      <div className="fd-card rounded-[1.75rem] p-5">
-        <h1 className="text-lg font-bold text-[color:var(--fd-text)]">{t("forgot_title")}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
-          {sent ? t("forgot_sent") : t("forgot_body_new")}
-        </p>
-        {!sent ? (
-          <form onSubmit={(e) => void onSubmit(e)} className="mt-5 space-y-3">
-            {TURNSTILE_SITE_KEY ? (
-              <TurnstileWidget
-                siteKey={TURNSTILE_SITE_KEY}
-                onToken={onTurnstileToken}
-                onExpire={onTurnstileExpire}
-                className="flex justify-center"
-              />
-            ) : null}
-            <label className={authLabelClass}>
-              {t("email")}
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={authInputClass}
-                required
-                autoComplete="email"
-              />
-            </label>
-            {err ? <p className="text-xs text-red-600">{err}</p> : null}
-            <button
-              type="submit"
-              disabled={loading || !turnstileReady}
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-5 text-sm font-semibold text-white shadow-lg shadow-[color:var(--fd-primary)]/20 active:scale-[0.99] disabled:opacity-60"
-            >
-              {loading ? t("forgot_sending") : t("forgot_submit")}
-            </button>
-            <AuthRecoveryAlternatives />
-          </form>
-        ) : (
-          <>
-            <Link
-              href="/login"
-              className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] px-5 text-sm font-semibold text-[color:var(--fd-text)]"
-            >
-              {t("forgot_back_login")}
-            </Link>
-            <AuthRecoveryAlternatives />
-          </>
-        )}
-      </div>
+      <p className={authTextMutedClass}>{sent ? t("forgot_sent") : t("forgot_body_new")}</p>
+      {!sent ? (
+        <form onSubmit={(e) => void onSubmit(e)} className="auth-form mt-5 space-y-4">
+          <AuthTurnstileField onToken={onTurnstileToken} onExpire={onTurnstileExpire} />
+          <label className={authLabelClass}>
+            {t("email")}
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={authInputClass}
+              required
+              autoComplete="email"
+            />
+          </label>
+          {err ? <p className={authErrorClass}>{err}</p> : null}
+          <button
+            type="submit"
+            disabled={loading || !turnstileReady}
+            className="auth-btn-primary min-h-[52px] rounded-xl active:scale-[0.99] disabled:opacity-60"
+          >
+            {loading ? t("forgot_sending") : t("forgot_submit")}
+          </button>
+          <AuthRecoveryAlternatives variant="dark" />
+        </form>
+      ) : (
+        <div className="mt-5 space-y-4">
+          <Link href="/login" className={authBtnSecondaryClass}>
+            {t("forgot_back_login")}
+          </Link>
+          <AuthRecoveryAlternatives variant="dark" />
+        </div>
+      )}
     </AuthMarketingShell>
   );
 }

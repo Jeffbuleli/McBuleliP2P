@@ -12,7 +12,7 @@ type Msg = {
   own: boolean;
 };
 
-/** Chat live léger — polling court, pas d'invites, UI minimale. */
+/** Chat live léger - polling court, pas d'invites, UI minimale. */
 export function AcademyLiveChat({
   editionSlug,
   programSlug,

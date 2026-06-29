@@ -1,6 +1,8 @@
 "use client";
 
 import { SessionAppLink } from "@/components/landing/session-app-link";
+import { HudFrame } from "@/components/about/about-ui";
+import { LANDING_CTA_COMPACT } from "@/components/landing/landing-hud-ui";
 
 function AvecCard({
   title,
@@ -8,7 +10,7 @@ function AvecCard({
   tag,
   desc,
   appPath,
-  gradient,
+  accent,
   icon,
 }: {
   title: string;
@@ -16,27 +18,33 @@ function AvecCard({
   tag: string;
   desc: string;
   appPath: string;
-  gradient: string;
+  accent: "amber" | "green";
   icon: string;
 }) {
   return (
-    <article className={`relative overflow-hidden rounded-3xl border border-white/70 p-5 shadow-lg ring-1 ring-black/[0.03] sm:p-6 ${gradient}`}>
-      <div className="relative z-10">
-        <span className="inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-stone-700">
-          {tag}
-        </span>
-        <h3 className="mt-3 text-lg font-black text-stone-900 sm:text-xl">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-stone-700">{desc}</p>
-        <p className="mt-4 text-2xl font-black text-stone-900 sm:text-3xl">{yieldLabel}</p>
-        <SessionAppLink
-          href={appPath}
-          className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#305F33] px-5 text-sm font-extrabold text-white shadow-md transition hover:bg-[#244a27]"
-        >
-          {icon} →
-        </SessionAppLink>
-      </div>
-      <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/30 blur-2xl" aria-hidden />
-    </article>
+    <HudFrame accent={accent === "amber" ? "magenta" : "green"}>
+      <article className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#0a1018]/90 p-5 sm:p-6">
+        <div className="relative z-10">
+          <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wide text-stone-400">
+            {tag}
+          </span>
+          <h3 className="mt-3 text-lg font-black text-white sm:text-xl">{title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-stone-400">{desc}</p>
+          <p
+            className={`mt-4 inline-flex rounded-full border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] sm:text-[11px] ${
+              accent === "amber"
+                ? "border-fuchsia-500/25 bg-fuchsia-500/8 text-fuchsia-300"
+                : "border-cyan-500/25 bg-cyan-500/8 text-cyan-300"
+            }`}
+          >
+            {yieldLabel}
+          </p>
+          <SessionAppLink href={appPath} className={`mt-5 ${LANDING_CTA_COMPACT}`}>
+            {icon} →
+          </SessionAppLink>
+        </div>
+      </article>
+    </HudFrame>
   );
 }
 
@@ -61,16 +69,8 @@ export function LandingAvecCards({
 }) {
   return (
     <div className="mt-8 grid gap-5 md:grid-cols-2">
-      <AvecCard
-        {...groups}
-        appPath="/app/wallet/groups"
-        gradient="bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-white"
-      />
-      <AvecCard
-        {...staking}
-        appPath="/app/wallet/staking"
-        gradient="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white"
-      />
+      <AvecCard {...groups} appPath="/app/wallet/groups" accent="amber" />
+      <AvecCard {...staking} appPath="/app/wallet/staking" accent="green" />
     </div>
   );
 }

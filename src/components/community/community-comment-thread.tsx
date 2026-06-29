@@ -8,9 +8,15 @@ import { CommunityTranslatableText } from "@/components/community/community-tran
 import { IconComment, IconLike, IconReply, IconSend } from "@/components/community/community-icons";
 import {
   COMMUNITY_AVATAR_RING,
+  COMMUNITY_COMMENT_ACTION,
+  COMMUNITY_COMMENT_ACTION_ACTIVE,
+  COMMUNITY_COMMENT_AUTHOR,
+  COMMUNITY_COMMENT_META,
   COMMUNITY_COMMENT_REPLY,
   COMMUNITY_COMMENT_ROOT,
+  COMMUNITY_COMMENT_TEXT,
   COMMUNITY_COMPOSER_SHELL,
+  COMMUNITY_SEND_BTN,
 } from "@/lib/community/community-ui";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommentView } from "@/lib/community/feed-service";
@@ -98,7 +104,7 @@ function CommentNode({
     <li className={`relative ${depth > 0 ? "mt-3" : "mt-4"}`}>
       {depth > 0 ? (
         <span
-          className="absolute -left-4 top-0 h-full w-0.5 rounded-full bg-gradient-to-b from-[#b8d4c4] to-transparent"
+          className="absolute -left-4 top-0 h-full w-0.5 rounded-full bg-gradient-to-b from-cyan-400/40 to-transparent"
           aria-hidden
         />
       ) : null}
@@ -106,15 +112,15 @@ function CommentNode({
         <CommentAvatar author={comment.author} small={isReply} />
         <div className="min-w-0 flex-1">
           <div className={`inline-block max-w-full ${bubbleClass}`}>
-            <p className="text-[13px] leading-[1.55] text-[#0c0a09]">
+            <p className={COMMUNITY_COMMENT_TEXT}>
               <Link
                 href={`/app/community/u/${comment.author.handle}`}
-                className="font-bold text-[#305f33] hover:underline"
+                className={COMMUNITY_COMMENT_AUTHOR}
               >
                 {comment.author.displayName}
               </Link>
             </p>
-            <div className="mt-0.5 text-[13px] leading-[1.55] text-[#292524]">
+            <div className={`mt-0.5 ${COMMUNITY_COMMENT_TEXT}`}>
               <CommunityTranslatableText
                 text={comment.body}
                 fr={fr}
@@ -122,16 +128,16 @@ function CommentNode({
               />
             </div>
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 px-1 text-[11px] font-semibold text-[#78716c]">
+          <div className={COMMUNITY_COMMENT_META}>
             <span>{formatRelativeTime(comment.createdAt, fr)}</span>
             <button
               type="button"
               aria-label={fr ? "J'aime" : "Like"}
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 transition active:scale-95 ${
+              className={
                 comment.likedByMe
-                  ? "bg-[#eaf5ee] text-[#305f33]"
-                  : "hover:bg-[#f0f2f5]"
-              }`}
+                  ? COMMUNITY_COMMENT_ACTION_ACTIVE
+                  : COMMUNITY_COMMENT_ACTION
+              }
               onClick={() => onLike(comment.id)}
             >
               <IconLike size={14} filled={comment.likedByMe} />
@@ -141,7 +147,7 @@ function CommentNode({
               <button
                 type="button"
                 aria-label={fr ? "Répondre" : "Reply"}
-                className="inline-flex items-center gap-1 rounded-full px-2 py-1 hover:bg-[#f0f2f5] active:scale-95"
+                className={COMMUNITY_COMMENT_ACTION}
                 onClick={() => onReply(comment.id)}
               >
                 <IconReply size={14} />
@@ -165,7 +171,7 @@ function CommentNode({
                 disabled={busy || replyText.trim().length < 2}
                 onClick={onSubmitReply}
                 aria-label={fr ? "Envoyer" : "Send"}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#305f33] to-[#3d8f5a] text-white shadow-md disabled:opacity-50"
+                className={COMMUNITY_SEND_BTN}
               >
                 <IconSend size={18} />
               </button>
@@ -282,15 +288,15 @@ export function CommunityCommentThread({
   );
 
   return (
-    <div className="border-t border-[#dce8e0] bg-gradient-to-b from-[#f8fbf9] to-[#f4f7f5] px-3 py-4">
+    <div className="border-t border-white/8 bg-[rgba(5,8,16,0.45)] px-3 py-4">
       <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eaf5ee] text-[#305f33]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
           <IconComment size={15} />
         </span>
-        <p className="text-sm font-bold text-[#0c0a09]">
+        <p className="text-sm font-bold text-stone-100">
           {fr ? "Commentaires" : "Comments"}
           {totalComments > 0 ? (
-            <span className="ml-1.5 font-semibold text-[#78716c]">
+            <span className="ml-1.5 font-semibold text-stone-400">
               ({totalComments})
             </span>
           ) : null}
@@ -298,12 +304,12 @@ export function CommunityCommentThread({
       </div>
 
       {loading ? (
-        <p className="py-4 text-center text-xs text-[#a8a29e]">…</p>
+        <p className="py-4 text-center text-xs text-stone-500">…</p>
       ) : comments.length === 0 ? (
-        <p className="mb-4 rounded-xl border border-dashed border-[#dce8e0] bg-white/60 py-6 text-center text-xs text-[#78716c]">
+        <p className="mb-4 rounded-xl border border-dashed border-white/10 bg-white/5 py-6 text-center text-xs text-stone-400">
           {fr
-            ? "Aucun commentaire — lancez la discussion."
-            : "No comments yet — start the conversation."}
+            ? "Aucun commentaire - lancez la discussion."
+            : "No comments yet - start the conversation."}
         </p>
       ) : (
         <ul className="mb-4 max-h-96 overflow-y-auto pr-1">
@@ -325,7 +331,7 @@ export function CommunityCommentThread({
         </ul>
       )}
       {error ? (
-        <p className="mb-2 text-center text-xs font-medium text-red-600">{error}</p>
+        <p className="mb-2 text-center text-xs font-medium text-red-400">{error}</p>
       ) : null}
       <div className={COMMUNITY_COMPOSER_SHELL}>
         <CommunityMentionInput
@@ -341,7 +347,7 @@ export function CommunityCommentThread({
           disabled={busy || text.trim().length < 2}
           onClick={() => void submit(text)}
           aria-label={fr ? "Envoyer" : "Send"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#305f33] to-[#3d8f5a] text-white shadow-md disabled:opacity-40"
+          className={`${COMMUNITY_SEND_BTN} h-10 w-10 disabled:opacity-40`}
         >
           <IconSend size={18} />
         </button>

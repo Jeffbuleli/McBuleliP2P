@@ -1,4 +1,4 @@
-/** Fixed platform fee (USDT) on external withdrawals — added on top of net amount. */
+/** Fixed platform fee (USDT) on external withdrawals - added on top of net amount. */
 export const EXTERNAL_WITHDRAW_FEE_USDT = 2;
 
 /** Binance catalogue default when API unavailable ([cryptoFee](https://www.binance.com/en/fee/cryptoFee)). */

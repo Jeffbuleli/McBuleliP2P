@@ -27,6 +27,7 @@ import type { TradingSignalView } from "@/lib/community/signals-service";
 import { CommunitySignalCard } from "@/components/community/community-signal-card";
 import { IconChart, IconHashtag, IconUser } from "@/components/community/community-icons";
 import { CommunityLiveBanner } from "@/components/community/community-live-banner";
+import { COMMUNITY_PUBLISH_BTN } from "@/lib/community/community-ui";
 import { communityPostAppPath } from "@/lib/community/share-url";
 
 function toFeedPost(item: UnifiedFeedItem): FeedPostView {
@@ -223,7 +224,7 @@ export function CommunityHomeClient() {
 
       {searchQ ? (
         <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-[#44403c]">
+          <p className="text-sm font-semibold text-stone-300">
             {searchLoading
               ? fr
                 ? "Recherche…"
@@ -235,7 +236,7 @@ export function CommunityHomeClient() {
           <button
             type="button"
             onClick={clearSearch}
-            className="shrink-0 text-xs font-bold text-[#305f33]"
+            className="shrink-0 text-xs font-bold text-emerald-400"
           >
             {fr ? "Effacer" : "Clear"}
           </button>
@@ -247,7 +248,7 @@ export function CommunityHomeClient() {
           {!showComposer ? (
             <button
               type="button"
-              className="mb-3 mt-3 w-full rounded-xl bg-[#305f33] py-2.5 text-sm font-bold text-white active:scale-[0.99]"
+              className={COMMUNITY_PUBLISH_BTN}
               onClick={() => setShowComposer(true)}
             >
               {fr ? "+ Publier" : "+ Publish"}
@@ -368,8 +369,8 @@ export function CommunityHomeClient() {
                 : "Follow traders from their profile or the leaderboard to see their posts here."
               : category === "for_you"
                 ? fr
-                  ? "Suivez des membres, likez et commentez — votre fil Pour vous s'adapte à vos intérêts."
-                  : "Follow members, like and comment — your For you feed adapts to your interests."
+                  ? "Suivez des membres, likez et commentez - votre fil Pour vous s'adapte à vos intérêts."
+                  : "Follow members, like and comment - your For you feed adapts to your interests."
                 : fr
                   ? "Soyez le premier à partager avec la communauté."
                   : "Be the first to share with the community."

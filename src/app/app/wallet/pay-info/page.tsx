@@ -24,13 +24,13 @@ export default async function WalletPayInfoPage() {
           </h2>
           <ul className="mt-2 space-y-2 text-xs text-[color:var(--fd-text)]">
             <li className="rounded-xl bg-stone-50 px-3 py-2">
-              <strong>{d.wallet_transfer_mode_email}</strong> — {d.wallet_pay_info_email}
+              <strong>{d.wallet_transfer_mode_email}</strong> - {d.wallet_pay_info_email}
             </li>
             <li className="rounded-xl bg-stone-50 px-3 py-2">
-              <strong>QR</strong> — {d.wallet_pay_info_qr}
+              <strong>QR</strong> - {d.wallet_pay_info_qr}
             </li>
             <li className="rounded-xl bg-stone-50 px-3 py-2">
-              <strong>UUID</strong> — {d.wallet_pay_info_uuid}
+              <strong>UUID</strong> - {d.wallet_pay_info_uuid}
             </li>
           </ul>
         </section>

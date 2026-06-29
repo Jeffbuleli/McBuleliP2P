@@ -1,4 +1,4 @@
-/** Edge-safe rate limiter (no Node built-ins — used by middleware). */
+/** Edge-safe rate limiter (no Node built-ins - used by middleware). */
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();

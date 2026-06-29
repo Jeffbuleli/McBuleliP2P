@@ -21,6 +21,7 @@ type P2pInfoCardProps = {
   className?: string;
 };
 
+/** Small rounded rule/tip card - no HUD corner brackets (large panels only). */
 export function P2pInfoCard({
   variant,
   illustration,

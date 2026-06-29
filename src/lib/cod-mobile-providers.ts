@@ -1,5 +1,5 @@
 /**
- * DRC mobile money — FreshPay method identifiers & MSISDN prefix map.
+ * DRC mobile money - FreshPay method identifiers & MSISDN prefix map.
  */
 export type MobileProviderOption = { provider: string; label: string; method: string };
 
@@ -10,7 +10,7 @@ export const COD_MOBILE_FALLBACK: MobileProviderOption[] = [
   { provider: "africell", label: "Afrimoney", method: "africell" },
 ];
 
-/** Official DRC prefixes — longest match first (without leading 0). */
+/** Official DRC prefixes - longest match first (without leading 0). */
 export const COD_MOBILE_PREFIX_MAP: { prefix: string; method: string }[] = [
   // Vodacom M-Pesa
   { prefix: "81", method: "mpesa" },
@@ -69,7 +69,7 @@ export function detectCodMobileMethodFromPhone(input: string): string | null {
   return null;
 }
 
-/** FreshPay rejects when `method` ≠ phone network — prefer detected network. */
+/** FreshPay rejects when `method` ≠ phone network - prefer detected network. */
 export function resolveFreshpayMethod(
   phone: string,
   selectedProvider: string,

@@ -1,6 +1,7 @@
 "use client";
 
 import { FiatChannelIcon, resolveFiatChannelId } from "@/components/wallet/fiat-channel-icon";
+import { flowPickBtnClass } from "@/components/wallet/wallet-flow-shell";
 
 export function FiatProviderPicker({
   providers,
@@ -24,13 +25,9 @@ export function FiatProviderPicker({
             type="button"
             disabled={disabled}
             onClick={() => onChange(p.provider)}
-            className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
-              active
-                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] ring-1 ring-[color:var(--fd-primary)]/25"
-                : "border-[color:var(--fd-border)] bg-white"
-            }`}
+            className={`flex items-center gap-2 text-left disabled:opacity-45 ${flowPickBtnClass(active)}`}
           >
-            <FiatChannelIcon channel={channel} className="h-8 w-8" />
+            <FiatChannelIcon channel={channel} className="h-8 w-8 shrink-0" />
             <span className="min-w-0 truncate text-xs font-bold text-[color:var(--fd-text)]">
               {p.label}
             </span>

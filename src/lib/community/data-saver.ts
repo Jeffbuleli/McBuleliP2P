@@ -1,4 +1,4 @@
-/** Mode économie de données — activé par défaut (localStorage). */
+/** Mode économie de données - activé par défaut (localStorage). */
 
 const KEY = "mcbuleli_data_saver";
 

@@ -312,7 +312,7 @@ export function ProfileSecurityExtras() {
                 {events.map((e) => (
                   <li key={e.id} className="rounded-lg bg-stone-50 px-3 py-2 text-[11px]">
                     <p className="font-semibold text-[#1c1917]">
-                      {e.deviceLabel ?? e.method} · {e.ipAddress ?? "—"}
+                      {e.deviceLabel ?? e.method} · {e.ipAddress ?? "-"}
                     </p>
                     <p className="text-[var(--fd-muted)]">{formatWhen(e.createdAt)}</p>
                   </li>

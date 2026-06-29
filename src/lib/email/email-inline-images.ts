@@ -15,6 +15,12 @@ export type ResendInlineAttachment = {
   content_type: string;
 };
 
+export type ResendFileAttachment = {
+  filename: string;
+  content: string;
+  content_type?: string;
+};
+
 const PUBLIC = join(process.cwd(), "public");
 
 const ILLUSTRATION_FILES: Record<EmailIllustration, string> = {
@@ -40,7 +46,7 @@ function readPngAttachment(relativePath: string, contentId: string): ResendInlin
   };
 }
 
-/** Resend CID inline images — works in Gmail, Outlook, mobile (unlike data: URIs). */
+/** Resend CID inline images - works in Gmail, Outlook, mobile (unlike data: URIs). */
 export function buildMcBuleliInlineAttachments(
   illustration: EmailIllustration,
 ): ResendInlineAttachment[] {

@@ -12,7 +12,7 @@ export function paymentIdFromPiSdk(payment: unknown): string | null {
 /**
  * `Pi.createPayment` requires the `payments` scope. That scope is granted by
  * `Pi.authenticate(["username", "payments"], ...)`. Email/password sessions do
- * not grant it — call this before `createPayment` (e.g. on the wallet page).
+ * not grant it - call this before `createPayment` (e.g. on the wallet page).
  */
 export async function piAuthenticateForPayments(
   Pi: NonNullable<Window["Pi"]>,
@@ -102,7 +102,7 @@ export function loadPiSdk(): Promise<NonNullable<Window["Pi"]>> {
 
 /**
  * Pi SDK `sandbox` flag must match the environment where the page runs.
- * Pi Developer / Pi Browser opens many apps at `sandbox.minepi.com/...` — if
+ * Pi Developer / Pi Browser opens many apps at `sandbox.minepi.com/...` - if
  * we init with `sandbox: false` there, `Pi.authenticate` often hangs or fails.
  *
  * Explicit env wins: `NEXT_PUBLIC_PI_SANDBOX=0` forces production init even on

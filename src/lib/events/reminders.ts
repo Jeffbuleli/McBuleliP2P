@@ -141,8 +141,8 @@ export async function runEventReminders(): Promise<{
       if (process.env.RESEND_API_KEY && process.env.RESEND_ALLOW_SEND === "true" && p.email) {
         const isFr = preferFrenchEmail(p.countryCode);
         const subject = isFr
-          ? `Rappel formation — ${event.title}`
-          : `Training reminder — ${event.title}`;
+          ? `Rappel formation - ${event.title}`
+          : `Training reminder - ${event.title}`;
         const body = isFr
           ? `Bonjour,\n\nFormation : ${event.title}\nDate : ${when}\nPlateforme : McBuleli Live\n\nRejoindre : https://mcbuleli.org${href}\n`
           : `Hello,\n\nTraining: ${event.title}\nWhen: ${when}\nPlatform: McBuleli Live\n\nJoin: https://mcbuleli.org${href}\n`;

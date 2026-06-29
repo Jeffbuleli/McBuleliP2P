@@ -12,6 +12,15 @@ import type { MarketTicker } from "@/lib/market-tickers";
 import type { Locale } from "@/i18n/locale";
 import { getDictionary } from "@/i18n/messages";
 import { TradeIconBots, TradeIconFutures } from "@/components/trade/trade-icons";
+import {
+  MARKET_CTA_LINK,
+  MARKET_HUD_CARD,
+  MARKET_SUBTITLE,
+  MARKET_TAB_BTN,
+  MARKET_TAB_BTN_ACTIVE,
+  MARKET_TAB_NAV,
+  MARKET_TITLE,
+} from "@/lib/market/market-ui";
 
 export type MarketHubPanel = "quotes" | "futures" | "bots";
 
@@ -38,9 +47,9 @@ const BotsTradingClient = dynamic(
 function PanelSkeleton() {
   return (
     <div className="space-y-3 pt-2 animate-pulse" aria-busy>
-      <div className="h-10 rounded-xl bg-[color:var(--fd-mint)]/50" />
-      <div className="h-32 rounded-2xl bg-[color:var(--fd-mint)]/35" />
-      <div className="h-48 rounded-2xl bg-[color:var(--fd-mint)]/35" />
+      <div className={`${MARKET_HUD_CARD} h-10`} />
+      <div className={`${MARKET_HUD_CARD} h-32`} />
+      <div className={`${MARKET_HUD_CARD} h-48`} />
     </div>
   );
 }
@@ -105,20 +114,18 @@ function MarketHubInner({
     },
   ];
 
-  const themeClass =
+  const panelThemeClass =
     panel === "bots"
-      ? "trade-bots-theme -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
+      ? "trade-bots-theme market-panel-shell -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
       : panel === "futures"
-        ? "trade-futures-theme -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
+        ? "trade-futures-theme market-panel-shell -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
         : "";
 
   return (
     <div className="flex flex-col gap-3 pb-2">
       <header className="px-0.5">
-        <h1 className="text-2xl font-black tracking-tight text-[color:var(--fd-text)]">
-          {t("market_hub_title")}
-        </h1>
-        <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+        <h1 className={MARKET_TITLE}>{t("market_hub_title")}</h1>
+        <p className={MARKET_SUBTITLE}>
           {panel === "quotes"
             ? d.market_live_hint
             : panel === "futures"
@@ -127,18 +134,11 @@ function MarketHubInner({
         </p>
       </header>
 
-      <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white shadow-sm">
-        <PriceChartLazy
-          appearance="light"
-          deferUntilVisible={panel === "quotes"}
-          density={panel === "quotes" ? "default" : "compact"}
-        />
-      </div>
+      {panel === "quotes" ? (
+        <PriceChartLazy appearance="hud" deferUntilVisible density="default" />
+      ) : null}
 
-      <nav
-        className="sticky top-[calc(env(safe-area-inset-top)+3.25rem)] z-30 -mx-1 rounded-2xl border border-[color:var(--fd-border)] bg-white/95 p-1 shadow-sm backdrop-blur-sm"
-        aria-label={t("market_hub_title")}
-      >
+      <nav className={MARKET_TAB_NAV} aria-label={t("market_hub_title")}>
         <div className="grid grid-cols-3 gap-1">
           {tabs.map((tab) => {
             const on = panel === tab.id;
@@ -148,15 +148,9 @@ function MarketHubInner({
                 type="button"
                 onClick={() => setPanel(tab.id)}
                 aria-current={on ? "page" : undefined}
-                className={`flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-bold transition ${
-                  on
-                    ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] shadow-sm"
-                    : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/30"
-                }`}
+                className={on ? MARKET_TAB_BTN_ACTIVE : MARKET_TAB_BTN}
               >
-                <span className={on ? "text-[color:var(--fd-primary)]" : ""}>
-                  {tab.icon}
-                </span>
+                <span>{tab.icon}</span>
                 <span className="truncate">{tab.label}</span>
               </button>
             );
@@ -170,14 +164,14 @@ function MarketHubInner({
             locale={locale}
             initialTickers={initialTickers}
             showViewLink={false}
-            appearance="light"
+            appearance="hud"
             layout="cards"
           />
-          <p className="text-center text-[11px] text-[color:var(--fd-muted)]">
+          <p className="text-center text-[11px] text-stone-500">
             {t("market_hub_trade_cta")}{" "}
             <button
               type="button"
-              className="font-bold text-[color:var(--fd-primary)]"
+              className={MARKET_CTA_LINK}
               onClick={() => setPanel("futures")}
             >
               {t("trade_ui_tab_futures")}
@@ -185,7 +179,7 @@ function MarketHubInner({
             {" · "}
             <button
               type="button"
-              className="font-bold text-[color:var(--fd-primary)]"
+              className={MARKET_CTA_LINK}
               onClick={() => setPanel("bots")}
             >
               {t("trade_ui_tab_bots")}
@@ -193,7 +187,7 @@ function MarketHubInner({
           </p>
         </>
       ) : (
-        <div className={themeClass}>
+        <div className={panelThemeClass}>
           {panel === "futures" ? (
             <FuturesTradingClient embedInMarketHub />
           ) : (
@@ -216,8 +210,8 @@ function MarketHubInner({
       )}
 
       {panel !== "quotes" ? (
-        <p className="text-center text-[11px] text-[color:var(--fd-muted)]">
-          <Link href="/app/market" className="font-bold text-[color:var(--fd-primary)]">
+        <p className="text-center text-[11px] text-stone-500">
+          <Link href="/app/market" className={MARKET_CTA_LINK}>
             ← {t("market_tab_quotes")}
           </Link>
         </p>

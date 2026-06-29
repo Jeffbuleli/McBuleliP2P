@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  BINANCE_API_PUBLIC,
   binancePublicFetchInit,
+  fetchBinancePublicJson,
 } from "@/lib/binance-public";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ const FAPI_RANGE_MAP = RANGE_MAP;
 
 const BINANCE_FAPI = "https://fapi.binance.com";
 
-/** OKX public candles — Pi trades as PI-USDT on OKX, not Binance spot. */
+/** OKX public candles - Pi trades as PI-USDT on OKX, not Binance spot. */
 const OKX_PI_INST = "PI-USDT";
 const PI_CHART_SYMBOL = "PIUSDT";
 
@@ -27,6 +27,49 @@ const OKX_RANGE_MAP = {
 } as const;
 
 export type ChartRange = keyof typeof RANGE_MAP;
+
+function formatKlineResponse(
+  raw: unknown[],
+  symbol: string,
+  range: ChartRange,
+  feed: "futures" | "spot",
+) {
+  const points: { t: number; p: number }[] = [];
+  for (const row of raw) {
+    if (!Array.isArray(row) || row.length < 5) continue;
+    const openTime = Number(row[0]);
+    const close = Number(row[4]);
+    if (!Number.isFinite(openTime) || !Number.isFinite(close)) continue;
+    points.push({ t: openTime, p: close });
+  }
+
+  if (points.length < 2) {
+    return NextResponse.json(
+      { message: "Not enough data." },
+      { status: 502 },
+    );
+  }
+
+  const first = points[0].p;
+  const last = points[points.length - 1].p;
+  const changePct = first !== 0 ? ((last - first) / first) * 100 : 0;
+
+  return NextResponse.json(
+    {
+      symbol,
+      range,
+      points,
+      lastPrice: last,
+      changePct,
+      priceSource: feed === "futures" ? "binance_futures" : "binance_spot",
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -50,64 +93,37 @@ export async function GET(req: Request) {
   });
 
   try {
-    const klineBase =
-      feed === "futures"
-        ? `${BINANCE_FAPI}/fapi/v1/klines`
-        : `${BINANCE_API_PUBLIC}/api/v3/klines`;
-    const res = await fetch(`${klineBase}?${qs}`, {
-      ...binancePublicFetchInit,
+    if (feed === "futures") {
+      const res = await fetch(`${BINANCE_FAPI}/fapi/v1/klines?${qs}`, {
+        ...binancePublicFetchInit,
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) {
+        return NextResponse.json(
+          { message: "Market data unavailable." },
+          { status: 502 },
+        );
+      }
+      const raw = (await res.json()) as unknown[];
+      if (!Array.isArray(raw)) {
+        return NextResponse.json(
+          { message: "Invalid response." },
+          { status: 502 },
+        );
+      }
+      return formatKlineResponse(raw, symbol, range, feed);
+    }
+
+    const raw = await fetchBinancePublicJson(`/api/v3/klines?${qs}`, {
       signal: AbortSignal.timeout(15_000),
     });
-    if (!res.ok) {
+    if (!raw) {
       return NextResponse.json(
         { message: "Market data unavailable." },
         { status: 502 },
       );
     }
-    const raw = (await res.json()) as unknown[];
-    if (!Array.isArray(raw)) {
-      return NextResponse.json(
-        { message: "Invalid response." },
-        { status: 502 },
-      );
-    }
-
-    const points: { t: number; p: number }[] = [];
-    for (const row of raw) {
-      if (!Array.isArray(row) || row.length < 5) continue;
-      const openTime = Number(row[0]);
-      const close = Number(row[4]);
-      if (!Number.isFinite(openTime) || !Number.isFinite(close)) continue;
-      points.push({ t: openTime, p: close });
-    }
-
-    if (points.length < 2) {
-      return NextResponse.json(
-        { message: "Not enough data." },
-        { status: 502 },
-      );
-    }
-
-    const first = points[0].p;
-    const last = points[points.length - 1].p;
-    const changePct =
-      first !== 0 ? ((last - first) / first) * 100 : 0;
-
-    return NextResponse.json(
-      {
-        symbol,
-        range,
-        points,
-        lastPrice: last,
-        changePct,
-        priceSource: feed === "futures" ? "binance_futures" : "binance_spot",
-      },
-      {
-        headers: {
-          "Cache-Control": "no-store, max-age=0",
-        },
-      },
-    );
+    return formatKlineResponse(raw, symbol, range, feed);
   } catch {
     return NextResponse.json(
       { message: "Network error." },

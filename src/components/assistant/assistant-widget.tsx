@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useI18n } from "@/components/i18n-provider";
 import { AssistantAvatar } from "@/components/assistant/assistant-avatar";
+import { HudCornerBrackets } from "@/components/ui/hud-corners";
 import {
   AssistantMessageBubble,
   AssistantTypingIndicator,
@@ -461,7 +462,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
 
   return (
     <>
-      {/* Floating launcher — bottom-left to avoid bottom-nav / page CTAs on the right */}
+      {/* Floating launcher - bottom-left to avoid bottom-nav / page CTAs on the right */}
       <div
         className={`pointer-events-none fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-3 z-[45] transition-transform duration-300 ease-out sm:bottom-6 sm:left-5 ${
           chromeHidden ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"
@@ -478,12 +479,12 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
               whileTap={{ scale: 0.95 }}
               onClick={() => setOpen(true)}
               aria-label={m.openAssistant}
-              className="pointer-events-auto relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-[#305f33] to-[#1a3520] shadow-lg shadow-[#305f33]/35 backdrop-blur-md"
+              className="pointer-events-auto relative flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/30 bg-[#0a1018]/95 shadow-lg shadow-cyan-500/15 backdrop-blur-md"
             >
               <AssistantAvatar size={34} pulse={idlePulse} />
               {idlePulse ? (
                 <motion.span
-                  className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#6ee7a0] text-[8px] font-black text-[#1a3520]"
+                  className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-400 text-[8px] font-black text-[#050810]"
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
                 >
@@ -515,24 +516,26 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.98 }}
               transition={{ type: "spring", damping: 26, stiffness: 320 }}
-              className="relative flex h-[min(92dvh,640px)] w-full flex-col overflow-hidden border border-white/10 bg-gradient-to-b from-[#0f1410]/95 via-[#121a14]/98 to-[#0a0e0b]/98 shadow-2xl shadow-black/60 backdrop-blur-xl sm:mb-0 sm:mr-0 sm:h-[min(82dvh,680px)] sm:max-w-[420px] sm:rounded-3xl"
+              className="relative flex h-[min(92dvh,640px)] w-full flex-col overflow-hidden border border-cyan-400/20 bg-gradient-to-b from-[#050810]/98 via-[#0a1018]/98 to-[#050810]/98 shadow-2xl shadow-black/60 backdrop-blur-xl sm:mb-0 sm:mr-0 sm:h-[min(82dvh,680px)] sm:max-w-[420px] sm:rounded-none"
             >
-              {/* Glow particles */}
+              <HudCornerBrackets tone="spectral" size="md" animated />
               <div
-                className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[#305f33]/20 blur-3xl"
+                className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl"
                 aria-hidden
               />
               <div
-                className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-[#6ee7a0]/10 blur-3xl"
+                className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-3xl"
                 aria-hidden
               />
 
               {/* Header */}
-              <header className="relative flex items-center gap-3 border-b border-white/10 px-4 py-3">
-                <AssistantAvatar size={36} pulse={loading} />
+              <header className="relative flex items-center gap-3 border-b border-cyan-400/15 px-4 py-3">
+                <AssistantAvatar size={38} pulse={loading} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white">{m.name}</p>
-                  <p className="truncate text-[11px] text-[#6ee7a0]/80">{m.tagline}</p>
+                  <p className="truncate text-sm font-bold text-stone-100">{m.name}</p>
+                  <p className="truncate font-mono text-[10px] uppercase tracking-[0.14em] text-cyan-400/75">
+                    {m.tagline}
+                  </p>
                 </div>
                 <div className="flex items-center gap-1">
                   {(["en", "fr", "sw"] as AssistantLocale[]).map((l) => (
@@ -542,8 +545,8 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                       onClick={() => onAssistantLocaleChange(l)}
                       className={`rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
                         assistantLocale === l
-                          ? "bg-[#305f33] text-white"
-                          : "text-stone-400 hover:text-white"
+                          ? "border border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                          : "text-stone-400 hover:text-stone-200"
                       }`}
                     >
                       {l}
@@ -561,7 +564,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
               </header>
 
               {localeNotice ? (
-                <p className="border-b border-[#305f33]/30 bg-[#305f33]/10 px-4 py-2 text-center text-[11px] text-[#6ee7a0]">
+                <p className="border-b border-emerald-400/20 bg-emerald-500/10 px-4 py-2 text-center text-[11px] text-emerald-300">
                   {localeNotice}
                 </p>
               ) : null}
@@ -575,13 +578,13 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-2xl border border-[#305f33]/25 bg-[#305f33]/10 p-4"
+                    className="rounded-none border border-cyan-400/20 bg-[#0a1018]/80 p-4"
                   >
-                    <p className="text-base font-bold text-white">{m.welcome}</p>
+                    <p className="text-base font-bold text-stone-100">{m.welcome}</p>
                     <p className="mt-2 text-[13px] leading-relaxed text-stone-300">
                       {m.welcomeSub}
                     </p>
-                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#6ee7a0]">
+                    <p className="mt-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-400/80">
                       {m.quickActions}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -590,7 +593,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                           key={key}
                           type="button"
                           onClick={() => onQuickAction(key)}
-                          className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-stone-200 transition hover:border-[#305f33]/50 hover:bg-[#305f33]/20"
+                          className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-stone-200 transition hover:border-cyan-400/35 hover:bg-cyan-500/10"
                         >
                           {quickActionLabel(assistantLocale, key)}
                         </button>
@@ -620,7 +623,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
               ) : null}
 
               {/* Input */}
-              <footer className="border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <footer className="relative border-t border-cyan-400/15 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -633,12 +636,12 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={m.placeholder}
                     disabled={loading}
-                    className="min-h-[44px] flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-stone-500 focus:border-[#305f33]/60 focus:ring-2 focus:ring-[#305f33]/20"
+                    className="min-h-[44px] flex-1 rounded-xl border border-white/10 bg-[#050810]/85 px-4 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-cyan-400/35 focus:ring-2 focus:ring-cyan-400/15"
                   />
                   <button
                     type="submit"
                     disabled={loading || !draft.trim()}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl bg-[#305f33] px-4 text-sm font-bold text-white shadow-lg shadow-[#305f33]/30 disabled:opacity-50"
+                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 text-sm font-bold text-emerald-300 shadow-lg shadow-emerald-500/10 disabled:opacity-50"
                   >
                     {m.send}
                   </button>
@@ -646,7 +649,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                 <Link
                   href="/app/support"
                   onClick={() => setOpen(false)}
-                  className="mt-2 block text-center text-[11px] font-medium text-[#6ee7a0]/80 hover:text-[#6ee7a0]"
+                  className="mt-2 block text-center text-[11px] font-medium text-cyan-400/80 hover:text-cyan-300"
                 >
                   {m.humanSupport} →
                 </Link>

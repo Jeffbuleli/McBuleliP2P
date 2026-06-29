@@ -1,12 +1,12 @@
 import { MIN_DEPOSIT_USDT_FIRST } from "@/lib/usdt-deposit-constants";
 
 /**
- * Referral (parrainage) — product defaults.
+ * Referral (parrainage) - product defaults.
  * Fiat: share of **platform fee** on first qualifying deposit; USDT on-chain: fixed $1 (see below).
  * Subsequent deposits: 0% to referrer.
  */
 
-/** USD — minimum first *fiat* first deposit to count as qualifying (Pawapay, etc.). */
+/** USD - minimum first *fiat* first deposit to count as qualifying (Pawapay, etc.). */
 export const REFERRAL_MIN_FIRST_DEPOSIT_USD = 10;
 
 /** On-chain USDT: same floor as first deposit minimum (`MIN_DEPOSIT_USDT_FIRST`). */
@@ -25,7 +25,7 @@ export const REFERRAL_FIRST_DEPOSIT_FEE_SHARE_TO_REFERRER = 0.5;
 export const REFERRAL_SUBSEQUENT_DEPOSIT_FEE_SHARE_TO_REFERRER = 0;
 
 /**
- * On-chain **PI**: credited 100% with no separate fee line — **notional** rate for referral math.
+ * On-chain **PI**: credited 100% with no separate fee line - **notional** rate for referral math.
  * **USDT** on-chain: fixed reward via `REFERRAL_USDT_FIRST_*` (not this rate).
  */
 export const REFERRAL_CRYPTO_DEPOSIT_NOTIONAL_FEE_RATE = 0.05;

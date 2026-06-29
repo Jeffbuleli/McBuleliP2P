@@ -1,4 +1,4 @@
-/** Exchange-style defaults — conservative caps for retail. */
+/** Exchange-style defaults - conservative caps for retail. */
 
 export const TRADE_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "PIUSDT"] as const;
 export type TradeSymbol = (typeof TRADE_SYMBOLS)[number];

@@ -8,7 +8,7 @@ type PageResult<T> = {
 };
 
 /**
- * Pagination infinie communauté — refs stables pour éviter les boucles
+ * Pagination infinie communauté - refs stables pour éviter les boucles
  * IntersectionObserver ↔ loadMore quand loading/done/cursor changent.
  */
 export function useCommunityPaginatedLoad<T>(options: {

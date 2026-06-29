@@ -1,6 +1,6 @@
 import type { WalletAsset } from "@/lib/wallet-types";
 
-/** Mobile money fiat deposit / withdrawal — platform fee (shown to user). */
+/** Mobile money fiat deposit / withdrawal - platform fee (shown to user). */
 export const FIAT_FEE_RATE = 0.05;
 
 /** USDT ↔ USD/CDF and other standard pairs. */

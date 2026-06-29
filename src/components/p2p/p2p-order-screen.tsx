@@ -533,7 +533,7 @@ export function P2pOrderScreen() {
       {order.status === "awaiting_payment" && countdown && !cryptoQuote ? (
         <div className="fd-card flex items-center gap-3 px-4 py-3">
           <span className="font-mono text-3xl font-bold tabular-nums text-[color:var(--fd-text)]">
-            {countdown.expired ? "—" : countdown.label}
+            {countdown.expired ? "-" : countdown.label}
           </span>
           <p className="text-xs text-[color:var(--fd-muted)]">
             {countdown.expired ? t("p2p_countdown_expired") : t("p2p_countdown_label")}
@@ -544,7 +544,7 @@ export function P2pOrderScreen() {
       {order.status === "paid" && releaseCountdown && !cryptoQuote ? (
         <div className="fd-card flex items-center gap-3 px-3 py-2.5">
           <span className="font-mono text-2xl font-bold tabular-nums text-[color:var(--fd-text)]">
-            {releaseCountdown.expired ? "—" : releaseCountdown.label}
+            {releaseCountdown.expired ? "-" : releaseCountdown.label}
           </span>
           <p className="text-[10px] leading-snug text-[color:var(--fd-muted)]">
             {order.youAreSeller

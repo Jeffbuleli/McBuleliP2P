@@ -107,7 +107,7 @@ export async function applyKycFromProvider(args: {
   const before = await getUserKycRow(args.userId);
   const previousStatus = before?.kycStatus ?? "none";
 
-  /** Approved KYC is terminal — ignore stale Didit session lifecycle events. */
+  /** Approved KYC is terminal - ignore stale Didit session lifecycle events. */
   if (previousStatus === "approved") {
     return "approved";
   }
@@ -211,7 +211,7 @@ export async function getUserKycRow(userId: string) {
 const MCBULELI_USER_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/** Didit vendor_data — McBuleli user UUID. Non-UUID values are ignored (Didit console fixtures). */
+/** Didit vendor_data - McBuleli user UUID. Non-UUID values are ignored (Didit console fixtures). */
 export async function resolveUserIdFromVendorData(
   vendorData: string | null | undefined,
 ): Promise<string | null> {

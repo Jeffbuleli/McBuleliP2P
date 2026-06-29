@@ -1,5 +1,5 @@
 /**
- * Buleli Points (BP) — off-chain utility rewards.
+ * Buleli Points (BP) - off-chain utility rewards.
  */
 
 export const REWARD_GRANT = {
@@ -12,7 +12,7 @@ export const REWARD_GRANT = {
   TRAINING_ENROLLED: "training_enrolled",
   TRAINING_SESSION_ATTENDED: "training_session_attended",
   TRAINING_QUIZ_PASSED: "training_quiz_passed",
-  /** Community Hub — convertibles en McB (Phase 3 claim). */
+  /** Community Hub - convertibles en McB (Phase 3 claim). */
   COMMUNITY_PROFILE_SETUP: "community_profile_setup",
   COMMUNITY_FIRST_POST: "community_first_post",
   COMMUNITY_POST_TEXT: "community_post_text",
@@ -108,7 +108,7 @@ export const COMMUNITY_REWARD_DAILY_CAPS: Partial<
   [REWARD_GRANT.COMMUNITY_STORY_VIEW_RECEIVED]: 80,
 };
 
-/** Future on-chain claim ratio — active in Phase 3 claim portal. */
+/** Future on-chain claim ratio - active in Phase 3 claim portal. */
 export const REWARD_BP_PER_MCB_CLAIM = 100;
 
 export const REWARD_SPEND = {

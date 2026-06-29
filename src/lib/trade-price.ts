@@ -1,4 +1,7 @@
-import { BINANCE_API_PUBLIC, binancePublicFetchInit } from "@/lib/binance-public";
+import {
+  binancePublicFetchInit,
+  fetchBinancePublicJson,
+} from "@/lib/binance-public";
 
 export type SymbolTicker = {
   symbol: string;
@@ -128,16 +131,13 @@ export async function fetchSymbolTicker(symbol: string): Promise<SymbolTicker | 
   } catch {
     // 2) Spot fallback (display + best-effort mark) for cases where futures endpoint is unavailable.
     try {
-      const res = await fetch(
-        `${BINANCE_API_PUBLIC}/api/v3/ticker/24hr?symbol=${encodeURIComponent(sym)}`,
-        binancePublicFetchInit,
+      const rows = await fetchBinancePublicJson(
+        `/api/v3/ticker/24hr?symbol=${encodeURIComponent(sym)}`,
       );
-      if (!res.ok) throw new Error("spot_unavailable");
-      const data = (await res.json()) as {
-        symbol: string;
-        lastPrice: string;
-        priceChangePercent: string;
-      };
+      const data = rows?.[0] as
+        | { symbol?: string; lastPrice?: string; priceChangePercent?: string }
+        | undefined;
+      if (!data?.lastPrice) throw new Error("spot_unavailable");
       const lastPrice = Number(data.lastPrice);
       const changePct24h = Number(data.priceChangePercent);
       if (!Number.isFinite(lastPrice) || lastPrice <= 0) throw new Error("bad_spot");

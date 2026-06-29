@@ -519,7 +519,7 @@ export async function tickFuturesUmInstance(args: {
     if (onOther) {
       await setBotInstanceError(
         args.instanceId,
-        `Open position on ${onOther.symbol} — close it or set the bot to that pair`,
+        `Open position on ${onOther.symbol} - close it or set the bot to that pair`,
       );
       return { ran: false, skipped: "other_symbol_open" };
     }

@@ -9,7 +9,7 @@ import { tickFuturesUmInstance } from "@/lib/bot-engine-futures";
 import type { BotBillingMode, BotPlanId } from "@/lib/bot-config";
 import { resolveBotCopyTickOverlay } from "@/lib/community/bot-copy-follow-service";
 
-/** Skips that are normal between runs — not written to the user activity log. */
+/** Skips that are normal between runs - not written to the user activity log. */
 const SILENT_SKIP = new Set([
   "interval_not_elapsed",
   "position_open",

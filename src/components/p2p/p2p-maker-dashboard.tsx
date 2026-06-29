@@ -54,14 +54,14 @@ export function P2pMakerDashboard({ data }: { data: P2pMakerDashboardData }) {
                 {data.rating.avg.toFixed(1)}
               </span>
             ) : (
-              "—"
+              "-"
             )
           }
         />
         <Stat
           label={t("p2p_merchant_completion")}
           value={
-            data.completionRatePct != null ? `${data.completionRatePct}%` : "—"
+            data.completionRatePct != null ? `${data.completionRatePct}%` : "-"
           }
         />
       </div>
@@ -97,7 +97,7 @@ export function P2pMakerDashboard({ data }: { data: P2pMakerDashboardData }) {
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-xl bg-stone-50/90 px-2.5 py-2">
+    <div className="rounded-xl border border-white/8 bg-[#0a1018]/75 px-2.5 py-2">
       <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
         {label}
       </p>

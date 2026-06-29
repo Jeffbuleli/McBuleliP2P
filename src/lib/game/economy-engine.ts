@@ -97,7 +97,7 @@ export async function runEconomyTick(): Promise<{
       },
       {
         eventKey: "heavy_rain_katanga",
-        title: "Heavy rain — muddy roads in Katanga",
+        title: "Heavy rain - muddy roads in Katanga",
         effects: { transport_cost: 1.12 },
       },
       {

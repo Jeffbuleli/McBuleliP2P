@@ -78,7 +78,7 @@ async function readBalance(
 }
 
 /**
- * Idempotent grant — unique on (userId, idempotencyKey).
+ * Idempotent grant - unique on (userId, idempotencyKey).
  */
 export async function tryGrantRewardPoints(args: {
   userId: string;

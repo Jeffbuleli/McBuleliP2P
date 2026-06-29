@@ -4,7 +4,7 @@ import { getCronSecret } from "@/lib/pool-env";
 
 export const dynamic = "force-dynamic";
 
-/** Sunday 01:00 GMT — credit weekly Top Trader prize. */
+/** Sunday 01:00 GMT - credit weekly Top Trader prize. */
 export async function POST(req: Request) {
   const secret = req.headers.get("x-cron-secret") ?? "";
   if (secret !== getCronSecret()) {

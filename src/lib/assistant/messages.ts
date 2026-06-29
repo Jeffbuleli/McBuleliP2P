@@ -1,4 +1,4 @@
-/** AI Assistant UI strings — EN / FR / SW (Swahili). */
+/** AI Assistant UI strings - EN / FR / SW (Swahili). */
 export type AssistantLocale = "en" | "fr" | "sw";
 
 export type AssistantMessages = {
@@ -32,14 +32,16 @@ export type AssistantMessages = {
   qa_avec: string;
   qa_staking: string;
   qa_kyc: string;
+  qa_swap: string;
+  qa_bp: string;
 };
 
 export const assistantEn: AssistantMessages = {
   name: "McBuleli AI",
-  tagline: "Your fintech guide",
-  welcome: "Welcome to McBuleli 👋",
+  tagline: "Wallet · P2P · Trade · Academy",
+  welcome: "Hello - I'm McBuleli AI",
   welcomeSub:
-    "I can help you understand crypto, USDT, trading, mobile money and all McBuleli services. What would you like help with today?",
+    "I know the full McBuleli app: wallet (USDT, Pi, CDF), P2P escrow, swap, bots, staking, AVEC, Community, Academy, and Buleli Points. What can I help you with?",
   placeholder: "Ask anything about McBuleli…",
   send: "Send",
   thinking: "Thinking…",
@@ -66,14 +68,16 @@ export const assistantEn: AssistantMessages = {
   qa_avec: "AVEC Savings",
   qa_staking: "Staking",
   qa_kyc: "KYC Guide",
+  qa_swap: "Swap crypto",
+  qa_bp: "Buleli Points",
 };
 
 export const assistantFr: AssistantMessages = {
   name: "McBuleli IA",
-  tagline: "Votre guide fintech",
-  welcome: "Bienvenue sur McBuleli 👋",
+  tagline: "Wallet · P2P · Trade · Academy",
+  welcome: "Bonjour - je suis McBuleli IA",
   welcomeSub:
-    "Je peux vous aider à comprendre la crypto, l'USDT, le trading, le mobile money et tous les services McBuleli. Comment puis-je vous aider aujourd'hui ?",
+    "Je connais toute l'app McBuleli : portefeuille (USDT, Pi, CDF), escrow P2P, swap, bots, staking, AVEC, Communauté, Academy et Buleli Points. Comment puis-je vous aider ?",
   placeholder: "Posez une question sur McBuleli…",
   send: "Envoyer",
   thinking: "Réflexion…",
@@ -100,14 +104,16 @@ export const assistantFr: AssistantMessages = {
   qa_avec: "Épargne AVEC",
   qa_staking: "Staking",
   qa_kyc: "Guide KYC",
+  qa_swap: "Swap crypto",
+  qa_bp: "Buleli Points",
 };
 
 export const assistantSw: AssistantMessages = {
   name: "McBuleli AI",
-  tagline: "Mwongozo wako wa fedha",
-  welcome: "Karibu McBuleli 👋",
+  tagline: "Pochi · P2P · Biashara · Academy",
+  welcome: "Habari - mimi ni McBuleli AI",
   welcomeSub:
-    "Naweza kukusaidia kuelewa crypto, USDT, biashara, pesa ya simu na huduma zote za McBuleli. Ungependa msaada gani leo?",
+    "Najua app nzima ya McBuleli: pochi (USDT, Pi, CDF), escrow P2P, swap, boti, staking, AVEC, Jumuiya, Academy na Buleli Points. Naweza kukusaidia nini?",
   placeholder: "Uliza chochote kuhusu McBuleli…",
   send: "Tuma",
   thinking: "Inafikiri…",
@@ -134,6 +140,8 @@ export const assistantSw: AssistantMessages = {
   qa_avec: "Akiba AVEC",
   qa_staking: "Staking",
   qa_kyc: "Mwongozo wa KYC",
+  qa_swap: "Swap crypto",
+  qa_bp: "Buleli Points",
 };
 
 export function getAssistantMessages(locale: AssistantLocale): AssistantMessages {
@@ -161,18 +169,22 @@ export type QuickActionKey =
   | "security"
   | "avec"
   | "staking"
-  | "kyc";
+  | "kyc"
+  | "swap"
+  | "bp";
 
 export const QUICK_ACTION_KEYS: QuickActionKey[] = [
   "crypto",
   "usdt",
-  "trading",
-  "mobile",
-  "bot",
   "p2p",
+  "swap",
+  "bot",
+  "mobile",
+  "trading",
   "security",
   "avec",
   "staking",
+  "bp",
   "kyc",
 ];
 
@@ -192,6 +204,8 @@ export function quickActionLabel(
     avec: m.qa_avec,
     staking: m.qa_staking,
     kyc: m.qa_kyc,
+    swap: m.qa_swap,
+    bp: m.qa_bp,
   };
   return map[key];
 }
@@ -212,6 +226,8 @@ export function quickActionPrompt(
       avec: "What is AVEC group savings on McBuleli?",
       staking: "How does staking work on McBuleli?",
       kyc: "Why is KYC important and how do I complete it?",
+      swap: "How do I swap between USDT and Pi in the wallet?",
+      bp: "What are Buleli Points and how do I earn McB?",
     },
     fr: {
       crypto: "Expliquez les bases de la crypto pour un débutant en Afrique.",
@@ -224,6 +240,8 @@ export function quickActionPrompt(
       avec: "Qu'est-ce que l'épargne collective AVEC sur McBuleli ?",
       staking: "Comment fonctionne le staking sur McBuleli ?",
       kyc: "Pourquoi le KYC est important et comment le compléter ?",
+      swap: "Comment échanger USDT et Pi dans le portefeuille ?",
+      bp: "Que sont les Buleli Points et comment obtenir des McB ?",
     },
     sw: {
       crypto: "Eleza misingi ya crypto kwa mwanzo kabisa barani Afrika.",
@@ -236,6 +254,8 @@ export function quickActionPrompt(
       avec: "Akiba ya kikundi AVEC ni nini kwenye McBuleli?",
       staking: "Staking inavyofanya kazi kwenye McBuleli vipi?",
       kyc: "Kwa nini KYC ni muhimu na ninakamilisha vipi?",
+      swap: "Ninabadilisha USDT na Pi kwenye pochi vipi?",
+      bp: "Buleli Points ni nini na ninapata McB vipi?",
     },
   };
   return prompts[locale][key];

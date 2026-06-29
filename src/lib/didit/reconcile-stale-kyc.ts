@@ -25,7 +25,7 @@ export async function reconcileUserKycState(userId: string): Promise<boolean> {
   const sessionId = row.diditSessionId?.trim();
   const stale = isKycPendingStale(row.kycUpdatedAt);
 
-  /** Legacy Metamap / failed session create — pending with no Didit session. */
+  /** Legacy Metamap / failed session create - pending with no Didit session. */
   if (!sessionId) {
     if (stale) {
       await resetUserKycForRetry(userId);

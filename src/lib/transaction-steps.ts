@@ -41,7 +41,7 @@ function withStates(
 }
 
 export type DepositProgressContext = {
-  /** USDT auto-detect session active — show scanning step while awaiting transfer. */
+  /** USDT auto-detect session active - show scanning step while awaiting transfer. */
   autoDetect?: boolean;
 };
 

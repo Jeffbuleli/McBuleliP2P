@@ -105,6 +105,56 @@ const ROUTES: RouteDef[] = [
     },
   },
   {
+    href: "/app/wallet/swap",
+    keywords: ["swap", "échanger", "exchange", "convert", "usdt", "pi"],
+    labels: {
+      en: "Wallet swap",
+      fr: "Swap portefeuille",
+      sw: "Swap pochi",
+    },
+    reasons: {
+      en: "Convert USDT ↔ Pi inside McBuleli",
+      fr: "Convertir USDT ↔ Pi dans l'app",
+      sw: "Badilisha USDT ↔ Pi ndani ya app",
+    },
+  },
+  {
+    href: "/app/wallet/history",
+    keywords: ["history", "historique", "transaction", "activity", "ledger"],
+    labels: {
+      en: "Wallet history",
+      fr: "Historique wallet",
+      sw: "Historia ya pochi",
+    },
+    reasons: {
+      en: "Filter deposits, withdrawals, swaps",
+      fr: "Filtrer dépôts, retraits, swaps",
+      sw: "Chuja amana, kutoa, swap",
+    },
+  },
+  {
+    href: "/app/wallet/points",
+    keywords: [
+      "buleli points",
+      "bp",
+      "mcb",
+      "rewards",
+      "points",
+      "claim",
+      "jeton",
+    ],
+    labels: {
+      en: "Buleli Points",
+      fr: "Buleli Points",
+      sw: "Buleli Points",
+    },
+    reasons: {
+      en: "View BP balance and McB claim",
+      fr: "Voir solde BP et claim McB",
+      sw: "Angalia BP na claim McB",
+    },
+  },
+  {
     href: "/app/p2p",
     keywords: [
       "p2p",
@@ -159,6 +209,28 @@ const ROUTES: RouteDef[] = [
       en: "Explore staking programs",
       fr: "Explorer les programmes de staking",
       sw: "Chunguza programu za staking",
+    },
+  },
+  {
+    href: "/app/academy",
+    keywords: [
+      "academy",
+      "formation",
+      "training",
+      "cohort",
+      "live session",
+      "quiz",
+      "cours",
+    ],
+    labels: {
+      en: "McBuleli Academy",
+      fr: "McBuleli Academy",
+      sw: "McBuleli Academy",
+    },
+    reasons: {
+      en: "Training cohorts, live sessions, quizzes",
+      fr: "Cohortes, lives, quiz de formation",
+      sw: "Mafunzo, vikao live, jaribio",
     },
   },
   {

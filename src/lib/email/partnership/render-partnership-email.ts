@@ -2,8 +2,8 @@ import {
   EMAIL_BRAND,
   partnershipPublicBaseUrl,
 } from "@/lib/email/config";
-import type { PartnershipTemplate } from "@/lib/email/partnership/avadapay-templates";
-import { PARTNERSHIP_PLACEHOLDERS } from "@/lib/email/partnership/avadapay-templates";
+import { PARTNERSHIP_PLACEHOLDERS } from "@/lib/email/partnership/partnership-placeholders";
+import type { PartnershipTemplate } from "@/lib/email/partnership/partnership-types";
 import type { PartnershipEmailLayout } from "@/lib/email/partnership/partnership-email-config";
 import { PARTNERSHIP_EMAIL_LAYOUT } from "@/lib/email/partnership/partnership-email-config";
 
@@ -50,7 +50,7 @@ function renderConversationSignature(locale: "fr" | "en"): string {
   return `<p style="margin:24px 0 0;font-size:15px;line-height:1.6;color:#1c1917;">
 ${regards}<br /><br />
 <strong>${escHtml(p.contactName)}</strong><br />
-${escHtml(p.contactRole)} — ${escHtml(p.companyLegalName)}<br />
+${escHtml(p.contactRole)} - ${escHtml(p.companyLegalName)}<br />
 <a href="mailto:${escHtml(p.contactEmail)}" style="color:#305f33;text-decoration:none;">${escHtml(p.contactEmail)}</a>
  · ${escHtml(p.contactPhone)}<br />
 RCCM ${escHtml(p.registrationId)}<br />
@@ -58,7 +58,7 @@ ${siteLabel} : <a href="${escHtml(url)}" style="color:#305f33;text-decoration:un
 </p>`;
 }
 
-/** Plain business letter — best chance at Gmail Primary. */
+/** Plain business letter - best chance at Gmail Primary. */
 function renderConversationHtml(args: {
   template: PartnershipTemplate;
   actionUrl: string;
@@ -109,7 +109,7 @@ function renderConversationText(args: {
     regards,
     "",
     p.contactName,
-    `${p.contactRole} — ${p.companyLegalName}`,
+    `${p.contactRole} - ${p.companyLegalName}`,
     `${p.contactEmail} · ${p.contactPhone}`,
     `RCCM ${p.registrationId}`,
     p.website,

@@ -1,41 +1,32 @@
 "use client";
 
-import Image from "next/image";
 import { useI18n } from "@/components/i18n-provider";
+import { McBuleliLogoMark } from "@/components/brand/mcbuleli-logo-mark";
 
 /** Branded splash while auth / app shell loads (logo + name). */
 export function AuthWaitingScreen({ message }: { message?: string }) {
   const { t } = useI18n();
+  const status = message ?? "Loading…";
+
   return (
     <div
-      className="flex min-h-[min(70vh,32rem)] flex-col items-center justify-center gap-5 py-10"
+      className="flex min-h-[min(56vh,28rem)] flex-col items-center justify-center gap-6 py-10"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="relative">
-        <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-2 ring-[#305F33]/20">
-          <Image
-            src="/brand/logo.png"
-            alt=""
-            width={56}
-            height={56}
-            className="h-14 w-14 object-contain"
-            priority
-          />
-        </div>
-        <span
-          className="absolute -bottom-0.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-[#305F33]/40 animate-pulse"
-          aria-hidden
-        />
-      </div>
+      <McBuleliLogoMark size={72} corners animated />
+
       <div className="text-center">
-        <p className="text-2xl font-black tracking-tight text-[color:var(--fd-text)]">
-          {t("brand")}
+        <p className="text-xl font-black tracking-tight text-stone-100">{t("brand")}</p>
+        <p className="mt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-400/75">
+          {status}
         </p>
-        {message ? (
-          <p className="mt-2 text-sm font-medium text-[color:var(--fd-muted)]">{message}</p>
-        ) : null}
+        <div className="mt-4 flex items-center justify-center gap-1.5" aria-hidden>
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400/80 [animation-delay:0ms]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400/70 [animation-delay:180ms]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fuchsia-400/65 [animation-delay:360ms]" />
+        </div>
       </div>
     </div>
   );

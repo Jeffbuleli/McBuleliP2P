@@ -26,7 +26,7 @@ export const CASH_FLOW_BUCKETS = [
 
 export type CashFlowBucket = (typeof CASH_FLOW_BUCKETS)[number];
 
-/** Group treasury ledger (`group_wallet_ledger_entries`) — separate from user wallet. */
+/** Group treasury ledger (`group_wallet_ledger_entries`) - separate from user wallet. */
 export const GROUP_TREASURY_BUCKETS = [
   "contribution_in",
   "payout_out",

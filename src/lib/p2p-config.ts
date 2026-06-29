@@ -1,5 +1,5 @@
 /**
- * P2P marketplace configuration — aligned with common OTC/P2P marketplace patterns:
+ * P2P marketplace configuration - aligned with common OTC/P2P marketplace patterns:
  * fixed-price ads, escrowed crypto on-platform, fiat settled off-platform with maker instructions.
  */
 
@@ -42,12 +42,12 @@ export function isP2pFiat(s: string): s is P2pFiatCurrency {
 
 /**
  * McBuleli default: only CDF & USD as **quote** currencies (MoMo / cash off-platform).
- * Escrow stays USDT/PI only — custodial USD/CDF wallet balances are never used for P2P settlement.
+ * Escrow stays USDT/PI only - custodial USD/CDF wallet balances are never used for P2P settlement.
  *
  * Override with `NEXT_PUBLIC_P2P_QUOTE_FIATS` (comma-separated ISO codes).
  * Set to `ALL`, `FULL`, or `*` to allow every {@link P2P_FIAT_CURRENCIES} code again.
  */
-/** Fiat off-platform only — no PI/USDT ⇄ USDT/PI swap ads on P2P. */
+/** Fiat off-platform only - no PI/USDT ⇄ USDT/PI swap ads on P2P. */
 const P2P_QUOTE_FIAT_DEFAULT: P2pFiatCurrency[] = ["CDF", "USD"];
 
 export function p2pQuoteFiatRestrictionEnabled(): boolean {
@@ -104,7 +104,7 @@ export function p2pBoostDurationDays(): number {
   return Number.isFinite(n) && n >= 1 ? Math.min(90, Math.floor(n)) : 7;
 }
 
-/** ISO 3166-1 alpha-2 — primary corridors McBuleli serves first. */
+/** ISO 3166-1 alpha-2 - primary corridors McBuleli serves first. */
 export const P2P_COUNTRY_CODES = [
   "CD",
   "CG",

@@ -1,4 +1,4 @@
-/** McBuleli KYC UI steps — OCR in SDK (no manual profile form). */
+/** McBuleli KYC UI steps - OCR in SDK (no manual profile form). */
 
 export type KycUiStepId = "id" | "liveness" | "decision";
 
