@@ -16,7 +16,7 @@ function toMarketSearchParams(sp: SearchParams): string {
   return q.toString();
 }
 
-/** Legacy URL - keeps deep-links and bookmarks working. */
+/** Legacy URL — keeps deep-links and bookmarks working. */
 export default async function TradeFuturesPage({
   searchParams,
 }: {

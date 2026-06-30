@@ -36,7 +36,7 @@ export function AdminAuditTable({ rows }: { rows: AdminAuditRow[] }) {
       sortable: true,
       sortValue: (r) => r.actorEmail ?? "",
       cell: (r) => (
-        <span className="max-w-[140px] break-all font-mono text-xs">{r.actorEmail ?? "-"}</span>
+        <span className="max-w-[140px] break-all font-mono text-xs">{r.actorEmail ?? "—"}</span>
       ),
     },
     {
@@ -55,7 +55,7 @@ export function AdminAuditTable({ rows }: { rows: AdminAuditRow[] }) {
       sortValue: (r) => `${r.resourceType ?? ""}:${r.resourceId ?? ""}`,
       cell: (r) => (
         <span className="max-w-[120px] break-all font-mono text-[11px] text-[color:var(--fd-muted)]">
-          {r.resourceType ?? "-"}
+          {r.resourceType ?? "—"}
           {r.resourceId ? (
             <>
               <br />
@@ -70,7 +70,7 @@ export function AdminAuditTable({ rows }: { rows: AdminAuditRow[] }) {
       header: t("admin_audit_details"),
       cell: (r) => (
         <span className="max-w-md font-mono text-[11px] text-[color:var(--fd-muted)]">
-          {r.meta ? JSON.stringify(r.meta) : "-"}
+          {r.meta ? JSON.stringify(r.meta) : "—"}
         </span>
       ),
     },

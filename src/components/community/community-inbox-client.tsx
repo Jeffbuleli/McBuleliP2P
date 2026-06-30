@@ -9,13 +9,6 @@ import {
   BlueCheckBadge,
   KycVerifiedBadge,
 } from "@/components/community/community-badges";
-import {
-  COMMUNITY_AVATAR_RING,
-  COMMUNITY_BACK_LINK,
-  COMMUNITY_EMPTY_BOX,
-  COMMUNITY_LIST_ROW,
-  COMMUNITY_MODULE_TITLE,
-} from "@/lib/community/community-ui";
 import type { DmThreadListItem } from "@/lib/community/dm-service";
 
 function PeerBadges({
@@ -79,23 +72,23 @@ export function CommunityInboxClient() {
     <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <Link href="/app/community" className={COMMUNITY_BACK_LINK}>
+          <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
             ← {fr ? "Communauté" : "Community"}
           </Link>
-          <h1 className={`mt-1 ${COMMUNITY_MODULE_TITLE}`}>
+          <h1 className="mt-1 text-lg font-bold text-[#0c0a09]">
             {fr ? "Messages" : "Inbox"}
           </h1>
         </div>
       </div>
 
       {loading ? (
-        <p className="py-12 text-center text-sm text-stone-400">…</p>
+        <p className="py-12 text-center text-sm text-[#78716c]">…</p>
       ) : threads.length === 0 ? (
-        <div className={COMMUNITY_EMPTY_BOX}>
-          <p className="text-sm font-medium text-stone-300">
+        <div className="rounded-2xl border border-dashed border-[#e8f3ee] bg-white px-6 py-14 text-center shadow-sm">
+          <p className="text-sm font-medium text-[#57534e]">
             {fr ? "Aucune conversation" : "No conversations yet"}
           </p>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-[#a8a29e]">
             {fr
               ? "Visitez un profil et appuyez sur Message."
               : "Visit a profile and tap Message."}
@@ -105,31 +98,34 @@ export function CommunityInboxClient() {
         <ul className="space-y-2">
           {threads.map((t) => (
             <li key={t.id}>
-              <Link href={`/app/community/inbox/${t.id}`} className={COMMUNITY_LIST_ROW}>
-                <div className={`relative shrink-0 ${COMMUNITY_AVATAR_RING} rounded-full`}>
+              <Link
+                href={`/app/community/inbox/${t.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-[#f0f4f2] bg-white px-4 py-3 shadow-[0_2px_12px_rgba(12,10,9,0.04)] active:scale-[0.99]"
+              >
+                <div className="relative shrink-0">
                   <CommunityAvatar
                     label={t.peer.displayName}
                     avatarUrl={t.peer.avatarUrl}
                     sizeClass="h-12 w-12"
                   />
                   {t.peer.online ? (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a1018] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-[#22c55e]" />
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-bold text-stone-50">
+                    <p className="truncate text-sm font-bold text-[#0c0a09]">
                       {t.peer.displayName}
                       <PeerBadges peer={t.peer} fr={fr} />
                     </p>
-                    <time className="shrink-0 text-[10px] text-stone-500">
+                    <time className="shrink-0 text-[10px] text-[#a8a29e]">
                       {new Date(t.lastMessageAt).toLocaleTimeString(
                         fr ? "fr-FR" : "en-US",
                         { hour: "2-digit", minute: "2-digit" },
                       )}
                     </time>
                   </div>
-                  <p className="truncate text-xs text-stone-400">
+                  <p className="truncate text-xs text-[#78716c]">
                     @{t.peer.handle}
                     {t.isRequest
                       ? fr
@@ -137,12 +133,12 @@ export function CommunityInboxClient() {
                         : " · Request"
                       : ""}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-stone-300">
-                    {t.lastMessagePreview ?? "-"}
+                  <p className="mt-0.5 truncate text-xs text-[#57534e]">
+                    {t.lastMessagePreview ?? "—"}
                   </p>
                 </div>
                 {t.unreadCount > 0 ? (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-[0_0_12px_rgba(244,63,94,0.45)]">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c41e3a] px-1.5 text-[10px] font-bold text-white">
                     {t.unreadCount}
                   </span>
                 ) : null}

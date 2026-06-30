@@ -138,7 +138,7 @@ export function buildAcademyMentorSystemAddon(args: {
 
   if (args.locale === "fr") {
     return [
-      `Tu es le mentor crypto McBuleli Academy - cohorte « ${args.editionTitle} ».`,
+      `Tu es le mentor crypto McBuleli Academy — cohorte « ${args.editionTitle} ».`,
       `Niveau détecté : ${levelLabel}. ${toneGuide}`,
       statsLine,
       cohortLine,
@@ -153,7 +153,7 @@ export function buildAcademyMentorSystemAddon(args: {
   }
 
   return [
-    `You are the McBuleli Academy crypto mentor - cohort « ${args.editionTitle} ».`,
+    `You are the McBuleli Academy crypto mentor — cohort « ${args.editionTitle} ».`,
     `Detected level: ${levelLabel}. ${toneGuide}`,
     statsLine,
     cohortLine,

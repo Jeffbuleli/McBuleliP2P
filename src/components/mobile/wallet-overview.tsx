@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { WalletAsset } from "@/lib/wallet-types";
 import { IconHistory } from "@/components/wallet/wallet-action-grid";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { WalletQuickLinks } from "@/components/wallet/wallet-quick-links";
 import { WalletAssetIcon, assetDetailHref } from "@/components/wallet/wallet-asset-icon";
 import { WalletMoneySheet } from "@/components/wallet/wallet-money-sheet";
@@ -109,9 +108,8 @@ export function WalletOverview({
   }, [assetRows, q]);
 
   return (
-    <div className="flex flex-col gap-0 px-4 pb-2">
-      <HudFrame accent="green" className={`wallet-hero wallet-hero-total mt-1 ${HUD_PANEL_LG} p-4`}>
-        <section aria-label={labels.wallet_est_total}>
+    <div className="flex flex-col gap-0 pb-2">
+      <section className="wallet-hero wallet-hero-total mt-1 p-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-brown)]/80">
             {labels.wallet_est_total}
@@ -146,18 +144,14 @@ export function WalletOverview({
           onDeposit={() => openMoney("deposit")}
           onWithdraw={() => openMoney("withdraw")}
         />
-        </section>
-      </HudFrame>
+      </section>
 
-      <Link
-        href="/app/wallet/history"
-        className="wallet-history-banner mx-0 mt-3 flex items-center gap-3 px-4 py-3 transition active:scale-[0.99]"
-      >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/12 text-cyan-300">
+      <Link href="/app/wallet/history" className="wallet-history-banner mx-0 mt-3 flex items-center gap-3 px-4 py-3 active:scale-[0.99]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-[color:var(--fd-primary)] shadow-sm">
           <IconHistory className="h-5 w-5" />
         </span>
-        <span className="flex-1 text-sm font-bold text-emerald-300">{labels.wallet_link_history}</span>
-        <span className="text-cyan-400/80">→</span>
+        <span className="flex-1 text-sm font-bold text-[color:var(--fd-primary-dark)]">{labels.wallet_link_history}</span>
+        <span className="text-[color:var(--fd-primary)]">→</span>
       </Link>
 
       <section id="wallet-assets" className="mt-4 scroll-mt-4">
@@ -173,27 +167,27 @@ export function WalletOverview({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={labels.wallet_search_placeholder}
-            className="w-full rounded-xl border border-white/10 bg-[#0a1018]/85 py-2.5 pl-10 pr-3 text-sm text-[color:var(--fd-text)] outline-none ring-cyan-400/25 placeholder:text-[color:var(--fd-muted)] focus:border-cyan-400/35 focus:ring-2"
+            className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] py-2.5 pl-10 pr-3 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 placeholder:text-[color:var(--fd-muted)] focus:ring-2"
           />
         </label>
 
         <ul className="flex flex-col gap-2">
           {rows.length === 0 ? (
-            <li className="wallet-asset-row px-4 py-6 text-center text-sm text-[color:var(--fd-muted)]">
+            <li className="fd-card px-4 py-6 text-center text-sm text-[color:var(--fd-muted)]">
               {labels.wallet_no_match}
             </li>
           ) : (
             rows.map((row) => (
-              <li key={row.asset} className="wallet-asset-row p-3">
+              <li key={row.asset} className="wallet-asset-row fd-card p-3">
                 <Link href={assetDetailHref(row.asset)} className="flex items-center gap-3 active:opacity-90">
-                  <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-cyan-400/20">
+                  <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
                     <WalletAssetIcon asset={row.asset} size={44} className="h-full w-full" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-bold text-[color:var(--fd-text)]">{row.title}</p>
                       {row.pending ? (
-                        <span className="shrink-0 rounded-full border border-amber-400/35 bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300">
+                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800">
                           {row.pending.label}
                         </span>
                       ) : null}

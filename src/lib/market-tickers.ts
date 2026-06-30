@@ -1,10 +1,13 @@
-import { fetchBinancePublicJson } from "@/lib/binance-public";
+import {
+  BINANCE_API_PUBLIC,
+  binancePublicFetchInit,
+} from "@/lib/binance-public";
 
 export type MarketTicker = {
   symbol: string;
   lastPrice: string;
   changePct: number;
-  /** Price feed - Pi uses OKX public ticker; majors use Binance spot. */
+  /** Price feed — Pi uses OKX public ticker; majors use Binance spot. */
   source?: "binance" | "okx";
 };
 
@@ -28,25 +31,30 @@ async function fetchBinanceTickers(): Promise<MarketTicker[] | null> {
   const symbols = [...MARKET_PREVIEW_SYMBOLS];
   const encoded = encodeURIComponent(JSON.stringify(symbols));
 
-  const data = await fetchBinancePublicJson(`/api/v3/ticker/24hr?symbols=${encoded}`);
-  if (!data) return null;
-
-  return data
-    .map((row): MarketTicker | null => {
-      const t = row as {
-        symbol?: string;
-        lastPrice?: string;
-        priceChangePercent?: string;
-      };
-      if (!t.symbol || !t.lastPrice) return null;
-      return {
-        symbol: t.symbol,
-        lastPrice: t.lastPrice,
-        changePct: Number(t.priceChangePercent),
-        source: "binance" as const,
-      };
-    })
-    .filter((t): t is MarketTicker => t !== null);
+  try {
+    const res = await fetch(
+      `${BINANCE_API_PUBLIC}/api/v3/ticker/24hr?symbols=${encoded}`,
+      {
+        ...binancePublicFetchInit,
+        signal: AbortSignal.timeout(12_000),
+      },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as Array<{
+      symbol: string;
+      lastPrice: string;
+      priceChangePercent: string;
+    }>;
+    if (!Array.isArray(data)) return null;
+    return data.map((t) => ({
+      symbol: t.symbol,
+      lastPrice: t.lastPrice,
+      changePct: Number(t.priceChangePercent),
+      source: "binance" as const,
+    }));
+  } catch {
+    return null;
+  }
 }
 
 async function fetchOkxPiTicker(): Promise<MarketTicker | null> {
@@ -80,10 +88,7 @@ async function fetchOkxPiTicker(): Promise<MarketTicker | null> {
 }
 
 /** BTC, ETH, Pi (OKX), then other Binance majors. */
-export function mergeMarketTickers(
-  binance: MarketTicker[] | null,
-  pi: MarketTicker | null,
-): MarketTicker[] {
+function mergeTickers(binance: MarketTicker[] | null, pi: MarketTicker | null): MarketTicker[] {
   const rest = (binance ?? []).filter((t) => t.symbol !== PI_TICKER_SYMBOL);
   const head: MarketTicker[] = [];
   for (const sym of ["BTCUSDT", "ETHUSDT"] as const) {
@@ -100,6 +105,6 @@ export function mergeMarketTickers(
 
 export async function fetchMarketTickers(): Promise<MarketTicker[] | null> {
   const [binance, pi] = await Promise.all([fetchBinanceTickers(), fetchOkxPiTicker()]);
-  const merged = mergeMarketTickers(binance, pi);
-  return merged.length > 0 ? merged : null;
+  if (!binance?.length && !pi) return null;
+  return mergeTickers(binance, pi);
 }

@@ -5,7 +5,7 @@ import { backfillAllUserRewardPoints } from "@/lib/reward-points-service";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-/** One-shot / periodic reconcile - credits missing BP for all eligible users. */
+/** One-shot / periodic reconcile — credits missing BP for all eligible users. */
 export async function POST(req: Request) {
   const secret = req.headers.get("x-cron-secret") ?? "";
   if (secret !== getCronSecret()) {

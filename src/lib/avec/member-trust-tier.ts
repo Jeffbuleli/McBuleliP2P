@@ -1,4 +1,4 @@
-/** Informational engagement tier - does not affect vote weight (1 member = 1 vote). */
+/** Informational engagement tier — does not affect vote weight (1 member = 1 vote). */
 export type MemberTrustTier = "new" | "active" | "trusted";
 
 export function memberTrustTier(args: {

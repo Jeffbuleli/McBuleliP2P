@@ -17,15 +17,14 @@ import {
   FlowTextarea,
   P2pFlowShell,
 } from "@/components/p2p/p2p-flow-ui";
-import { P2pRulesSection, P2pSideBadge } from "@/components/p2p/p2p-rules-section";
 import { ServiceFeeConsent } from "@/components/wallet/service-fee-consent";
-import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
-import { WalletIconDropdown } from "@/components/wallet/wallet-icon-dropdown";
+import { P2pInfoCard } from "@/components/p2p/p2p-info-card";
+import { P2pIllusEscrow, P2pIllusKyc } from "@/components/p2p/p2p-illustrations";
+import { P2pSafetyTips } from "@/components/p2p/p2p-safety-tips";
 import { countryLabel } from "@/lib/country-label";
 import { clientErrorText } from "@/lib/client-error-text";
 import {
   makerSideForMarketView,
-  p2pHudToneForMakerSide,
   type P2pMarketView,
 } from "@/lib/p2p-market-view";
 import {
@@ -51,9 +50,6 @@ export default function P2pNewAdPage() {
   const [side, setSide] = useState<P2pSide>(() =>
     lockedView ? makerSideForMarketView(lockedView) : "sell",
   );
-  const sideTone = p2pHudToneForMakerSide(side);
-  const isMakerBuy = side === "buy";
-
   const [asset, setAsset] = useState<P2pCryptoAsset>("USDT");
   const quoteFiats = useMemo(
     () => p2pAllowedQuoteFiats().filter((f) => f !== "USDT" && f !== "PI"),
@@ -63,6 +59,7 @@ export default function P2pNewAdPage() {
   const listingFee = p2pListingFeeAmount();
   const listingFeeAsset = p2pListingFeeAsset();
   const platformMinCrypto = minCryptoForAsset(asset);
+  const isBuyMarketPost = lockedView === "buy" || (!lockedView && side === "sell");
 
   useEffect(() => {
     if (lockedView) {
@@ -320,19 +317,28 @@ export default function P2pNewAdPage() {
       ? t("p2p_post_subtitle_sell")
       : t("p2p_post_subtitle");
 
-  const accentText = isMakerBuy ? "text-emerald-300" : "text-amber-300";
-
   return (
-    <P2pFlowShell
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      cornerTone={sideTone}
-      headerBadge={<P2pSideBadge side={side} />}
-    >
-      <P2pRulesSection cornerTone={sideTone} />
+    <P2pFlowShell title={pageTitle} subtitle={pageSubtitle}>
+      <div className="grid grid-cols-2 gap-1.5">
+        <P2pInfoCard
+          compact
+          variant="info"
+          illustration={<P2pIllusKyc className="h-8 w-8" />}
+          title={t("p2p_card_kyc_title")}
+          subtitle={t("p2p_card_kyc_sub")}
+        />
+        <P2pInfoCard
+          compact
+          variant={side === "sell" ? "sell" : "buy"}
+          illustration={<P2pIllusEscrow className="h-8 w-8" />}
+          title={t("p2p_card_escrow_title")}
+          subtitle={t("p2p_card_escrow_sub")}
+        />
+      </div>
+
+      <P2pSafetyTips />
 
       <FlowKvCard
-        cornerTone={sideTone}
         rows={[
           {
             k: t("p2p_listing_fee_short"),
@@ -346,9 +352,8 @@ export default function P2pNewAdPage() {
       />
 
       {!lockedView ? (
-        <FlowSection title={t("p2p_side_label")} cornerTone={sideTone}>
+        <FlowSection title={t("p2p_side_label")}>
           <FlowSegment
-            variant="side"
             value={side}
             onChange={setSide}
             options={[
@@ -359,48 +364,31 @@ export default function P2pNewAdPage() {
         </FlowSection>
       ) : null}
 
-      <FlowSection title={t("p2p_asset_label")} cornerTone={sideTone}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FlowField label={t("p2p_asset_label")}>
-            <WalletIconDropdown
-              hideLabel
-              label=""
-              value={asset}
-              onChange={(id) => setAsset(id as P2pCryptoAsset)}
-              options={[
-                {
-                  id: "USDT",
-                  label: "USDT",
-                  icon: <WalletAssetIcon asset="USDT" size={22} />,
-                },
-                {
-                  id: "PI",
-                  label: "PI",
-                  icon: <WalletAssetIcon asset="PI" size={22} />,
-                },
-              ]}
-            />
-          </FlowField>
-          <FlowField label={t("p2p_fiat_label")}>
-            <WalletIconDropdown
-              hideLabel
-              label=""
-              value={fiat}
-              onChange={(id) => setFiat(id as P2pFiatCurrency)}
-              options={quoteFiats.map((f) => ({
-                id: f,
-                label: f,
-                icon:
-                  f === "USD" || f === "CDF" ? (
-                    <WalletAssetIcon asset={f} size={22} />
-                  ) : undefined,
-              }))}
-            />
-          </FlowField>
-        </div>
+      <FlowSection title={t("p2p_asset_label")}>
+        <FlowField label={t("p2p_asset_label")}>
+          <FlowSelect
+            value={asset}
+            onChange={(e) => setAsset(e.target.value as P2pCryptoAsset)}
+          >
+            <option value="USDT">USDT</option>
+            <option value="PI">PI</option>
+          </FlowSelect>
+        </FlowField>
+        <FlowField label={t("p2p_fiat_label")}>
+          <FlowSelect
+            value={fiat}
+            onChange={(e) => setFiat(e.target.value as P2pFiatCurrency)}
+          >
+            {quoteFiats.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </FlowSelect>
+        </FlowField>
       </FlowSection>
 
-      <FlowSection title={t("p2p_price_label")} cornerTone={sideTone}>
+      <FlowSection title={t("p2p_price_label")}>
         <FlowField label={t("p2p_price_per_unit")}>
           <FlowInput value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" />
         </FlowField>
@@ -418,7 +406,7 @@ export default function P2pNewAdPage() {
           </FlowField>
         </div>
         {side === "sell" && escrowCrypto != null ? (
-          <p className={`mt-2 text-[11px] font-semibold ${accentText}`}>
+          <p className="mt-2 text-[11px] font-semibold text-[color:var(--fd-primary)]">
             {t("p2p_escrow_lock_line", {
               amount: String(escrowCrypto),
               asset,
@@ -438,7 +426,6 @@ export default function P2pNewAdPage() {
       {!cryptoQuote ? (
         <FlowSection
           title={t("p2p_payment_detail")}
-          cornerTone={sideTone}
           action={<FlowProfileLink label={t("p2p_payment_methods_title")} />}
         >
           {!paymentDefs.length ? (
@@ -466,11 +453,11 @@ export default function P2pNewAdPage() {
         </FlowSection>
       ) : null}
 
-      <FlowSection title={t("p2p_terms_optional")} cornerTone={sideTone}>
+      <FlowSection title={t("p2p_terms_optional")}>
         <FlowTextarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={2} />
       </FlowSection>
 
-      <FlowSection title={t("p2p_country_label")} cornerTone={sideTone}>
+      <FlowSection title={t("p2p_country_label")}>
         <FlowSelect value={country} onChange={(e) => setCountry(e.target.value)}>
           {P2P_COUNTRY_CODES.map((c) => (
             <option key={c} value={c}>
@@ -512,7 +499,7 @@ export default function P2pNewAdPage() {
       <FlowPrimaryBtn
         disabled={publishDisabled}
         onClick={() => void submit()}
-        variant={isMakerBuy ? "primary" : "sell"}
+        variant={isBuyMarketPost ? "primary" : "sell"}
       >
         {loading ? "…" : t("p2p_create_ad")}
       </FlowPrimaryBtn>

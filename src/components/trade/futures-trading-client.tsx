@@ -507,7 +507,7 @@ export function FuturesTradingClient({
     if (r === "liquidated") return t("trade_ui_reason_liquidated");
     if (r === "manual") return t("trade_ui_reason_manual");
     if (r === "tt_max_age") return t("trade_ui_reason_tt_max_age");
-    return r && r.length ? r : "-";
+    return r && r.length ? r : "—";
   }
 
   async function enableLive(): Promise<{ ok: boolean; error?: string }> {
@@ -534,7 +534,7 @@ export function FuturesTradingClient({
   const changeStr =
     ticker != null
       ? `${ticker.changePct24h >= 0 ? "+" : ""}${ticker.changePct24h.toFixed(2)}%`
-      : "-";
+      : "—";
 
   const displayBal =
     tradeMode === "demo"
@@ -599,37 +599,6 @@ export function FuturesTradingClient({
         ) : null}
       </TradeFlowCard>
 
-      {embedInMarketHub ? (
-        <TradeMiniChart
-          symbol={symbol}
-          tf={tf}
-          onTfChange={setTf}
-          variant="hud"
-          lastPrice={mark > 0 ? mark : ticker?.lastPrice ?? null}
-          changePct24h={ticker?.changePct24h ?? null}
-          headerSlot={
-            <label className="block">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-stone-500">
-                {t("trade_ui_pair")}
-              </span>
-              <TradeFlowSelect
-                value={symbol}
-                onChange={(e) =>
-                  setSymbol(e.target.value as (typeof TRADE_SYMBOLS)[number])
-                }
-                className="mt-1"
-              >
-                {TRADE_SYMBOLS.map((s) => (
-                  <option key={s} value={s}>
-                    {s.replace("USDT", "")}/USDT
-                  </option>
-                ))}
-              </TradeFlowSelect>
-            </label>
-          }
-        />
-      ) : (
-        <>
       <TradeFlowCard>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <label className="min-w-[8rem] flex-1">
@@ -655,7 +624,7 @@ export function FuturesTradingClient({
               {t("trade_ui_live")}
             </p>
             <p className="font-mono text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
-              {mark > 0 ? mark.toLocaleString(locTag, { maximumFractionDigits: 2 }) : "-"}
+              {mark > 0 ? mark.toLocaleString(locTag, { maximumFractionDigits: 2 }) : "—"}
             </p>
             <p
               className={`text-xs font-semibold tabular-nums ${
@@ -669,8 +638,6 @@ export function FuturesTradingClient({
       </TradeFlowCard>
 
       <TradeMiniChart symbol={symbol} tf={tf} onTfChange={setTf} />
-        </>
-      )}
 
       <TradeFlowCard>
         <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-[color:var(--fd-mint)] px-3 py-2">
@@ -680,7 +647,7 @@ export function FuturesTradingClient({
           <span className="font-mono text-sm font-extrabold tabular-nums text-[color:var(--fd-text)]">
             {displayBal != null
               ? displayBal.toLocaleString(locTag, { maximumFractionDigits: 2 })
-              : "-"}{" "}
+              : "—"}{" "}
             USDT
           </span>
         </div>
@@ -733,7 +700,7 @@ export function FuturesTradingClient({
             <TradeFlowInput
               type="text"
               inputMode="decimal"
-              placeholder="-"
+              placeholder="—"
               value={stopStr}
               onChange={(e) => setStopStr(e.target.value)}
               className="font-mono"
@@ -743,7 +710,7 @@ export function FuturesTradingClient({
             <TradeFlowInput
               type="text"
               inputMode="decimal"
-              placeholder="-"
+              placeholder="—"
               value={tpStr}
               onChange={(e) => setTpStr(e.target.value)}
               className="font-mono"
@@ -961,7 +928,7 @@ export function FuturesTradingClient({
                         value={editSl}
                         onChange={(e) => setEditSl(e.target.value)}
                         inputMode="decimal"
-                        placeholder="-"
+                        placeholder="—"
                         className={tradeFieldCls}
                       />
                     </label>
@@ -971,7 +938,7 @@ export function FuturesTradingClient({
                         value={editTp}
                         onChange={(e) => setEditTp(e.target.value)}
                         inputMode="decimal"
-                        placeholder="-"
+                        placeholder="—"
                         className={tradeFieldCls}
                       />
                     </label>

@@ -12,7 +12,7 @@ export type P2pCronTickResult = {
   autoReleased: number;
 };
 
-/** Server cron entry - expire, remind, auto-release P2P orders. */
+/** Server cron entry — expire, remind, auto-release P2P orders. */
 export async function runP2pCronTick(): Promise<P2pCronTickResult> {
   const paymentRemindersSent = await processExpiringP2pOrderReminders();
   const releaseRemindersSent = await processP2pReleaseReminders();

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { WalletMoneySheet } from "@/components/wallet/wallet-money-sheet";
 
 type Action = {
@@ -24,15 +23,6 @@ const ACTIONS: Action[] = [
   { href: "/app/community/signals", id: "signals", labelFr: "Signaux", labelEn: "Signals" },
 ];
 
-const ICON_TONE: Record<string, string> = {
-  deposit: "text-emerald-400",
-  p2p: "text-cyan-400",
-  trade: "text-amber-400",
-  community: "text-fuchsia-400",
-  lives: "text-violet-400",
-  signals: "text-sky-400",
-};
-
 export function HomeQuickActions({
   fr,
   liveActive,
@@ -43,73 +33,71 @@ export function HomeQuickActions({
   const [depositOpen, setDepositOpen] = useState(false);
 
   return (
-    <div>
-      <HudFrame accent="green" className={`${HUD_PANEL_LG} p-3`}>
-        <section aria-label={fr ? "Actions rapides" : "Quick actions"}>
-          <h2 className="mb-2 px-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400/80">
-            {fr ? "Actions rapides" : "Quick actions"}
-          </h2>
-          <div className="grid grid-cols-3 gap-2">
-            {ACTIONS.map((action) => {
-              const isLiveTile = action.id === "lives" && liveActive;
-              const label = fr ? action.labelFr : action.labelEn;
-              const tileClass = `relative flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition active:scale-[0.98] ${
-                action.accent
-                  ? "border-emerald-400/45 bg-emerald-500/12"
-                  : isLiveTile
-                    ? "border-rose-500/35 bg-rose-500/10"
-                    : "border-white/10 bg-[#0a1018]/70 hover:border-white/20"
-              }`;
+    <>
+      <section className="fd-card p-3" aria-label={fr ? "Actions rapides" : "Quick actions"}>
+        <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {fr ? "Actions rapides" : "Quick actions"}
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          {ACTIONS.map((action) => {
+            const isLiveTile = action.id === "lives" && liveActive;
+            const label = fr ? action.labelFr : action.labelEn;
+            const tileClass = `relative flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition active:scale-[0.98] ${
+              action.accent
+                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)]"
+                : isLiveTile
+                  ? "border-rose-200 bg-rose-50"
+                  : "border-[color:var(--fd-border)] bg-white hover:bg-[color:var(--fd-mint)]/40"
+            }`;
 
-              if (action.sheet === "deposit") {
-                return (
-                  <button
-                    key={action.id}
-                    type="button"
-                    onClick={() => setDepositOpen(true)}
-                    className={tileClass}
-                  >
-                    <ActionIcon actionId={action.id} accent={action.accent} live={isLiveTile} />
-                    <span
-                      className={`text-[11px] font-extrabold leading-tight ${
-                        action.accent ? "text-emerald-300" : "text-[color:var(--fd-text)]"
-                      }`}
-                    >
-                      {label}
-                    </span>
-                  </button>
-                );
-              }
-
+            if (action.sheet === "deposit") {
               return (
-                <Link key={action.id} href={action.href!} className={tileClass}>
-                  {isLiveTile ? (
-                    <span
-                      className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-[#050810]"
-                      aria-hidden
-                    />
-                  ) : null}
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => setDepositOpen(true)}
+                  className={tileClass}
+                >
                   <ActionIcon actionId={action.id} accent={action.accent} live={isLiveTile} />
                   <span
                     className={`text-[11px] font-extrabold leading-tight ${
-                      action.accent
-                        ? "text-emerald-300"
-                        : isLiveTile
-                          ? "text-rose-300"
-                          : "text-[color:var(--fd-text)]"
+                      action.accent ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-text)]"
                     }`}
                   >
                     {label}
                   </span>
-                </Link>
+                </button>
               );
-            })}
-          </div>
-        </section>
-      </HudFrame>
+            }
+
+            return (
+              <Link key={action.id} href={action.href!} className={tileClass}>
+                {isLiveTile ? (
+                  <span
+                    className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"
+                    aria-hidden
+                  />
+                ) : null}
+                <ActionIcon actionId={action.id} accent={action.accent} live={isLiveTile} />
+                <span
+                  className={`text-[11px] font-extrabold leading-tight ${
+                    action.accent
+                      ? "text-[color:var(--fd-primary)]"
+                      : isLiveTile
+                        ? "text-rose-700"
+                        : "text-[color:var(--fd-text)]"
+                  }`}
+                >
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       <WalletMoneySheet open={depositOpen} mode="deposit" onClose={() => setDepositOpen(false)} />
-    </div>
+    </>
   );
 }
 
@@ -123,10 +111,10 @@ function ActionIcon({
   live?: boolean;
 }) {
   const cls = accent
-    ? "text-emerald-400"
+    ? "text-[color:var(--fd-primary)]"
     : live
-      ? "text-rose-400"
-      : ICON_TONE[actionId] ?? "text-cyan-400";
+      ? "text-rose-600"
+      : "text-[color:var(--fd-primary)]";
 
   if (actionId === "deposit") {
     return (

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useI18n } from "@/components/i18n-provider";
 import { cryptoDepositHref, cryptoWithdrawHref } from "@/lib/wallet-money-routes";
 
-/** Pi wallet - manual deposit & withdraw only (no preset Pi Pay amounts). */
+/** Pi wallet — manual deposit & withdraw only (no preset Pi Pay amounts). */
 export function PiManualWalletSection() {
   const { t } = useI18n();
 

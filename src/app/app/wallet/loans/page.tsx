@@ -123,7 +123,7 @@ export default function WalletLoansPage() {
             {t("loans_kpi_limit")}
           </p>
           <p className="mt-1 text-base font-bold tabular-nums text-emerald-950 dark:text-emerald-100">
-            {snap && snap.ok ? `${fmt(limit)} USDT` : "-"}
+            {snap && snap.ok ? `${fmt(limit)} USDT` : "—"}
           </p>
           <p className="mt-1 text-[11px] text-stone-500 dark:text-stone-500">
             {snap && snap.ok ? `LTV ${Math.round(snap.ltv * 100)}%` : ""}
@@ -134,7 +134,7 @@ export default function WalletLoansPage() {
             {t("loans_kpi_outstanding")}
           </p>
           <p className="mt-1 text-base font-bold tabular-nums text-amber-950 dark:text-amber-100">
-            {snap && snap.ok ? `${fmt(outstanding)} USDT` : "-"}
+            {snap && snap.ok ? `${fmt(outstanding)} USDT` : "—"}
           </p>
           <p className="mt-1 text-[11px] text-stone-500 dark:text-stone-500">
             {snap && snap.ok && snap.openAprAnnual != null

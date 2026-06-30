@@ -302,7 +302,7 @@ export default function WalletPointsPage() {
 
   const claimMcbPreview = useMemo(() => {
     const bp = Number(claimBp);
-    if (!claimData || !Number.isFinite(bp) || bp <= 0) return "-";
+    if (!claimData || !Number.isFinite(bp) || bp <= 0) return "—";
     return (bp / claimData.config.bpPerMcb).toString();
   }, [claimBp, claimData]);
 

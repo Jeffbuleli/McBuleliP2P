@@ -8,7 +8,7 @@ export const DepositStatus = {
   FAILED: "FAILED",
 } as const;
 
-/** Withdrawal lifecycle - manual queue, then claim, then complete/reject. */
+/** Withdrawal lifecycle — manual queue, then claim, then complete/reject. */
 export const WithdrawalStatus = {
   /** Awaiting an agent to take the ticket */
   PENDING_AGENT: "PENDING_AGENT",
@@ -16,7 +16,7 @@ export const WithdrawalStatus = {
   QUEUED: "QUEUED",
   /** Medium risk delayed batch before execution */
   DELAYED_BATCH: "DELAYED_BATCH",
-  /** An agent claimed it - others must not process the same payout */
+  /** An agent claimed it — others must not process the same payout */
   PROCESSING: "PROCESSING",
   COMPLETED: "COMPLETED",
   REJECTED: "REJECTED",

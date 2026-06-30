@@ -1,5 +1,5 @@
 /**
- * P2P order chat - anti-scam heuristics (extends DM rules).
+ * P2P order chat — anti-scam heuristics (extends DM rules).
  */
 
 import { moderateDmText, type DmModerationResult } from "@/lib/community/dm-moderation";

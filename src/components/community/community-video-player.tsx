@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IconPlay } from "@/components/community/community-icons";
-import { COMMUNITY_VIDEO_FRAME } from "@/lib/community/community-ui";
 
 function fmt(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -101,7 +100,7 @@ export function CommunityVideoPlayer({
     return (
       <div
         ref={wrapRef}
-        className={`${COMMUNITY_VIDEO_FRAME} relative mx-auto aspect-[9/16] max-h-[min(72vh,540px)] w-full max-w-[280px] shadow-[0_0_24px_rgba(34,211,238,0.08)]`}
+        className="relative mx-auto aspect-[9/16] max-h-[min(72vh,540px)] w-full max-w-[280px] overflow-hidden rounded-2xl bg-black shadow-lg ring-1 ring-black/10"
         onClick={() => {
           if (muted) unmute();
           else toggle();
@@ -176,7 +175,7 @@ export function CommunityVideoPlayer({
 
   return (
     <div
-      className={`${COMMUNITY_VIDEO_FRAME} relative aspect-video w-full`}
+      className="relative aspect-video w-full overflow-hidden rounded-xl bg-black"
       onClick={() => {
         if (!playing) toggle();
         else setShowControls((s) => !s);

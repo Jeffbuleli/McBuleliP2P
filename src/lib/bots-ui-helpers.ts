@@ -92,13 +92,13 @@ export function botTickSkipLabel(
       msg && msg !== key
         ? msg
         : trace.reason_message ?? code;
-    return `${t("bots_log_ignored")}${formatIgnoredLabel(code)} - ${labeled}`;
+    return `${t("bots_log_ignored")}${formatIgnoredLabel(code)} — ${labeled}`;
   }
   const mapped = TICK_SKIP_I18N[reason];
   if (mapped) {
     const msg = t(mapped);
     if (reason === reason.toUpperCase() && reason.includes("_")) {
-      return `${t("bots_log_ignored")}${formatIgnoredLabel(reason)} - ${msg}`;
+      return `${t("bots_log_ignored")}${formatIgnoredLabel(reason)} — ${msg}`;
     }
     return msg;
   }
@@ -116,7 +116,7 @@ export function botTickSkipLabel(
   const legacyKey = `bots_reason_${legacy.reason_code.toLowerCase()}` as keyof Messages;
   const legacyMsg = t(legacyKey);
   if (legacyMsg && legacyMsg !== legacyKey) {
-    return `${t("bots_log_ignored")}${formatIgnoredLabel(legacy.reason_code)} - ${legacyMsg}`;
+    return `${t("bots_log_ignored")}${formatIgnoredLabel(legacy.reason_code)} — ${legacyMsg}`;
   }
   return `${t("bots_log_ignored")}${formatIgnoredLabel(reason)}`;
 }
@@ -222,7 +222,7 @@ export function botLogActionLabel(
   return key ? t(key) : t("bots_log_other");
 }
 
-/** User-facing text for lastError or log detail - never raw Binance JSON. */
+/** User-facing text for lastError or log detail — never raw Binance JSON. */
 export function formatBotRuntimeError(
   raw: string | null | undefined,
   t: (k: keyof Messages) => string,

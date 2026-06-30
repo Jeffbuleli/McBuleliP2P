@@ -1,5 +1,5 @@
 /**
- * Layer 4 - Execution helpers (Binance error mapping, validation).
+ * Layer 4 — Execution helpers (Binance error mapping, validation).
  */
 
 import type { ExecutionReasonCode } from "@/lib/bot-decision/reason-codes";

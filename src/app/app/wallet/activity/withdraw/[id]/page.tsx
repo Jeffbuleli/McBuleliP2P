@@ -62,7 +62,7 @@ export default function WithdrawActivityDetailPage() {
 
   if (loading) {
     return (
-      <div className="wallet-theme px-4 pb-8">
+      <div className="pb-8">
         <WalletSubpageHeader title={t("withdraw_title")} backHref="/app/wallet" />
         <p className="text-center text-[color:var(--fd-muted)]">…</p>
       </div>
@@ -71,9 +71,9 @@ export default function WithdrawActivityDetailPage() {
 
   if (!w) {
     return (
-      <div className="wallet-theme px-4 pb-8">
+      <div className="pb-8">
         <WalletSubpageHeader title={t("withdraw_title")} backHref="/app/wallet" />
-        <p className="text-rose-400">-</p>
+        <p className="text-rose-800">—</p>
         <FlowHubLink label={t("wallet_title")} />
       </div>
     );
@@ -110,7 +110,7 @@ export default function WithdrawActivityDetailPage() {
   }
 
   return (
-    <div className="wallet-theme px-4 pb-8">
+    <div className="pb-8">
       <WalletSubpageHeader
         title={t("wallet_tx_details")}
         subtitle={`${w.asset} · ${w.id.slice(0, 8)}`}
@@ -171,7 +171,7 @@ export default function WithdrawActivityDetailPage() {
             type="button"
             onClick={() => void cancelWithdrawal()}
             disabled={cancelling}
-            className="rounded-xl border border-rose-400/35 bg-rose-500/12 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-60"
+            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-800 disabled:opacity-60"
           >
             {t("withdraw_cancel")}
           </button>

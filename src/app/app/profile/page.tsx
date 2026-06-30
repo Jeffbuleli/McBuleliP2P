@@ -28,11 +28,11 @@ export default async function ProfilePage() {
         month: "short",
         year: "numeric",
       }).format(dash.createdAt)
-    : "-";
+    : "—";
 
   if (!dash) {
     return (
-      <p className="py-8 text-center text-sm text-[var(--fd-muted)]">-</p>
+      <p className="py-8 text-center text-sm text-[var(--fd-muted)]">—</p>
     );
   }
 

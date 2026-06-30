@@ -36,7 +36,7 @@ function kindTone(kind: string | null): string {
 export function P2pPaymentMethodsSection({
   hideDestructiveActions = false,
 }: {
-  /** Profile page: hide delete / disable - edit only */
+  /** Profile page: hide delete / disable — edit only */
   hideDestructiveActions?: boolean;
 } = {}) {
   const { t, locale } = useI18n();

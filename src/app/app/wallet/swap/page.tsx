@@ -179,7 +179,7 @@ export default function WalletSwapPage() {
   const canSubmit = Boolean(quote && amount.trim() && !loading);
 
   return (
-    <div className="wallet-theme flex min-h-[70vh] flex-col px-4 pb-4">
+    <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
       <WalletSubpageHeader title={t("wallet_swap_title")} backHref="/app/wallet" />
 
       <div className="wallet-swap-shell">
@@ -231,7 +231,7 @@ export default function WalletSwapPage() {
             <p className="min-w-0 flex-1 text-[1.65rem] font-black tabular-nums text-[color:var(--fd-text)]">
               {quote
                 ? quote.toAmount.toLocaleString(loc, { maximumFractionDigits: from === "CDF" ? 0 : 8 })
-                : "-"}
+                : "—"}
             </p>
             <AssetPicker assets={SWAP_ASSETS} selected={to} onPick={pickTo} exclude={from} />
           </div>

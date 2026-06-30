@@ -181,7 +181,7 @@ export async function syncEditionEventsFromSessions(editionId: string): Promise<
       .values({
         slug: s.slug,
         title: s.titleFr,
-        description: `${editionRow.edition.titleFr} - ${s.titleFr}`,
+        description: `${editionRow.edition.titleFr} — ${s.titleFr}`,
         category: "cohort-live",
         trainerId: trainer.id,
         trainerName: trainer.name,

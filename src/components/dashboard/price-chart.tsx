@@ -26,18 +26,12 @@ const CHART_SYMBOLS = ["BTCUSDT", "ETHUSDT", "PIUSDT"] as const;
 
 function ChartSymbolIcon({
   symbol,
-  hud = false,
 }: {
   symbol: (typeof CHART_SYMBOLS)[number];
-  hud?: boolean;
 }) {
   const url = marketIconUrl(symbol);
   return (
-    <span
-      className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ${
-        hud ? "bg-[rgba(5,8,16,0.65)] ring-1 ring-white/10" : "bg-stone-100"
-      }`}
-    >
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-100">
       {url ? (
         <Image
           src={url}
@@ -66,7 +60,7 @@ type KlineResponse = {
 const WIDTH = 320;
 const HEIGHT = 140;
 
-type UiAppearance = "light" | "dark" | "hud";
+type UiAppearance = "light" | "dark";
 
 function PriceChart({
   appearance = "dark",
@@ -84,7 +78,6 @@ function PriceChart({
       ? { open: "Ouv.", high: "Haut", low: "Bas", close: "Clôt." }
       : { open: "Open", high: "High", low: "Low", close: "Close" };
   const isLight = appearance === "light";
-  const isHud = appearance === "hud";
   const isCompact = density === "compact";
   const uid = useId();
   const chartFillId = useMemo(
@@ -256,27 +249,13 @@ function PriceChart({
   return (
     <section
       className={
-        isHud
-          ? "market-hud-card group relative overflow-hidden rounded-2xl border border-white/10 bg-[rgba(8,12,22,0.94)] p-4 shadow-[0_8px_40px_rgba(0,0,0,0.45)]"
-          : isLight
-            ? "fd-card p-4"
-            : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
+        isLight
+          ? "fd-card p-4"
+          : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
       }
     >
-      {isHud ? (
-        <>
-          <span
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"
-            aria-hidden
-          />
-          <span
-            className="pointer-events-none absolute inset-0 opacity-60 before:pointer-events-none before:absolute before:left-2 before:top-2 before:h-3 before:w-3 before:border-l before:border-t before:border-cyan-400/50 after:pointer-events-none after:absolute after:bottom-2 after:right-2 after:h-3 after:w-3 after:border-b after:border-r after:border-emerald-400/40"
-            aria-hidden
-          />
-        </>
-      ) : null}
-      {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d - then price / % */}
-      <div className={`mb-3 flex min-w-0 flex-nowrap items-center gap-x-1.5 overflow-x-auto px-0.5 py-1 ${isHud ? "relative" : ""}`}>
+      {/* Single scan line: BTC · ETH · Pi · LIVE · 1h 24h 7d — then price / % */}
+      <div className="mb-3 flex min-w-0 flex-nowrap items-center gap-x-1.5 overflow-x-auto px-0.5 py-1">
         <div className="flex shrink-0 items-center gap-1.5">
           {CHART_SYMBOLS.map((s) => (
             <button
@@ -288,17 +267,13 @@ function PriceChart({
                 symbol === s
                   ? isLight
                     ? "bg-[color:var(--fd-mint)] ring-2 ring-[color:var(--fd-primary)]/55"
-                    : isHud
-                      ? "bg-cyan-400/10 shadow-[0_0_16px_rgba(34,211,238,0.15)] ring-2 ring-cyan-400/55"
-                      : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
+                    : "bg-emerald-950/50 shadow-md shadow-emerald-900/25 ring-2 ring-emerald-500/70"
                   : isLight
                     ? "border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] hover:bg-[color:var(--fd-mint)]"
-                    : isHud
-                      ? "border border-white/10 bg-[rgba(5,8,16,0.55)] hover:border-cyan-400/25"
-                      : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
+                    : "border border-stone-600/60 bg-stone-900/50 hover:border-stone-500 hover:bg-stone-900/80"
               }`}
             >
-              <ChartSymbolIcon symbol={s} hud={isHud} />
+              <ChartSymbolIcon symbol={s} />
             </button>
           ))}
         </div>
@@ -306,9 +281,7 @@ function PriceChart({
           className={
             isLight
               ? "fd-live-pill shrink-0"
-              : isHud
-                ? "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
-                : "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+              : "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
           }
           title={t("market_live")}
         >
@@ -336,14 +309,10 @@ function PriceChart({
                 range === r
                   ? isLight
                     ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
-                    : isHud
-                      ? "bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/35"
-                      : "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
+                    : "bg-emerald-600/25 text-emerald-200 ring-1 ring-emerald-500/40"
                   : isLight
                     ? "text-[color:var(--fd-muted)] hover:text-[color:var(--fd-text)]"
-                    : isHud
-                      ? "text-stone-500 hover:text-stone-300"
-                      : "text-stone-500 hover:text-stone-300"
+                    : "text-stone-500 hover:text-stone-300"
               }`}
             >
               {r === "1h"
@@ -357,7 +326,7 @@ function PriceChart({
       </div>
 
       {loading ? (
-        <ChartSkeleton light={isLight} hud={isHud} />
+        <ChartSkeleton light={isLight} />
       ) : error || !data ? (
         <p
           className={
@@ -376,7 +345,7 @@ function PriceChart({
                 isLight ? "text-[color:var(--fd-text)]" : "text-stone-50"
               }`}
             >
-              {displayPrice != null ? formatUsd(displayPrice) : "-"}
+              {displayPrice != null ? formatUsd(displayPrice) : "—"}
             </p>
             <p
               className={`shrink-0 text-sm font-bold tabular-nums ${
@@ -404,9 +373,7 @@ function PriceChart({
                   : `mb-3 grid grid-cols-2 gap-2 rounded-xl p-2.5 text-[10px] sm:grid-cols-4 ${
                       isLight
                         ? "bg-[color:var(--fd-mint)]/40 ring-1 ring-[color:var(--fd-border)]"
-                        : isHud
-                          ? "border border-white/8 bg-[rgba(5,8,16,0.45)]"
-                          : "bg-stone-900/50 ring-1 ring-stone-700/40"
+                        : "bg-stone-900/50 ring-1 ring-stone-700/40"
                     }`
               }
             >
@@ -425,9 +392,7 @@ function PriceChart({
                       ? `shrink-0 rounded-lg px-2 py-1.5 text-[10px] ${
                           isLight
                             ? "bg-[color:var(--fd-mint)]/50 ring-1 ring-[color:var(--fd-border)]"
-                            : isHud
-                              ? "border border-white/8 bg-[rgba(5,8,16,0.55)]"
-                              : "bg-stone-900/50 ring-1 ring-stone-700/40"
+                            : "bg-stone-900/50 ring-1 ring-stone-700/40"
                         }`
                       : "min-w-0 text-center sm:text-left"
                   }
@@ -451,9 +416,7 @@ function PriceChart({
             className={
               isLight
                 ? "relative touch-pan-x rounded-xl bg-[color:var(--fd-mint)]/50 ring-1 ring-[color:var(--fd-border)]"
-                : isHud
-                  ? "relative touch-pan-x overflow-hidden rounded-xl border border-cyan-400/15 bg-[rgba(2,6,14,0.85)]"
-                  : "relative touch-pan-x rounded-xl bg-stone-900/60 ring-1 ring-stone-700/40"
+                : "relative touch-pan-x rounded-xl bg-stone-900/60 ring-1 ring-stone-700/40"
             }
           >
             <svg
@@ -482,15 +445,15 @@ function PriceChart({
                   />
                 </linearGradient>
               </defs>
-              {[0.2, 0.4, 0.6, 0.8].map((gy) => (
+              {[0.25, 0.5, 0.75].map((gy) => (
                 <line
                   key={gy}
                   x1="8"
                   x2={WIDTH - 8}
                   y1={8 + gy * (HEIGHT - 16)}
                   y2={8 + gy * (HEIGHT - 16)}
-                  stroke={isHud ? "#22d3ee" : "#10b981"}
-                  strokeOpacity={isHud ? "0.08" : "0.07"}
+                  stroke="#10b981"
+                  strokeOpacity="0.07"
                 />
               ))}
               {fillPathD ? (
@@ -527,9 +490,7 @@ function PriceChart({
             className={
               isLight
                 ? "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)] py-3 text-sm font-semibold text-[color:var(--fd-primary)] transition hover:bg-[color:var(--fd-mint-deep)]"
-                : isHud
-                  ? "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-400/35 bg-emerald-500/12 py-3 text-sm font-semibold text-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.1)] transition hover:border-emerald-400/50"
-                  : "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-stone-600/70 bg-stone-900/60 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-700/40 hover:bg-stone-900/90"
+                : "mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-stone-600/70 bg-stone-900/60 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-700/40 hover:bg-stone-900/90"
             }
           >
             {t("view_trade")}
@@ -541,34 +502,28 @@ function PriceChart({
 }
 
 function formatUsd(n: number) {
-  if (!Number.isFinite(n)) return "-";
+  if (!Number.isFinite(n)) return "—";
   if (n >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 1 });
   if (n >= 1) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
   return n.toLocaleString(undefined, { maximumFractionDigits: 6 });
 }
 
-function ChartSkeleton({ light, hud }: { light?: boolean; hud?: boolean }) {
+function ChartSkeleton({ light }: { light?: boolean }) {
   return (
     <div className="animate-pulse space-y-3" aria-hidden>
       <div className="flex justify-between">
         <div
-          className={`h-8 w-28 rounded-lg ${
-            light ? "bg-[color:var(--fd-mint)]" : hud ? "bg-cyan-400/10" : "bg-stone-800"
-          }`}
+          className={`h-8 w-28 rounded-lg ${light ? "bg-[color:var(--fd-mint)]" : "bg-stone-800"}`}
         />
         <div
-          className={`h-6 w-16 rounded-lg ${
-            light ? "bg-[color:var(--fd-mint)]" : hud ? "bg-cyan-400/10" : "bg-stone-800"
-          }`}
+          className={`h-6 w-16 rounded-lg ${light ? "bg-[color:var(--fd-mint)]" : "bg-stone-800"}`}
         />
       </div>
       <div
         className={`h-[160px] rounded-xl ring-1 ${
           light
             ? "bg-[color:var(--fd-mint)]/60 ring-[color:var(--fd-border)]"
-            : hud
-              ? "border border-cyan-400/15 bg-[rgba(2,6,14,0.85)]"
-              : "bg-gradient-to-t from-stone-900 via-stone-900/90 to-emerald-950/20 ring-stone-700/40"
+            : "bg-gradient-to-t from-stone-900 via-stone-900/90 to-emerald-950/20 ring-stone-700/40"
         }`}
       />
     </div>

@@ -640,8 +640,8 @@ export function MiningSimulatorClient() {
         </h2>
         <p className="mb-2 text-[10px] text-[#78716c]">
           {fr
-            ? "Outils, licences et upgrades - payés en McB uniquement."
-            : "Tools, licenses & upgrades - McB only."}
+            ? "Outils, licences et upgrades — payés en McB uniquement."
+            : "Tools, licenses & upgrades — McB only."}
         </p>
         <div className="mb-2 flex flex-wrap gap-1">
           {(["tool", "upgrade", "consumable", "license"] as const).map((cat) => (
@@ -704,7 +704,7 @@ export function MiningSimulatorClient() {
                       const applied = Array.isArray(body.applied)
                         ? (body.applied as string[]).join(", ")
                         : "";
-                      return applied ? `${label} - ${applied}` : label;
+                      return applied ? `${label} — ${applied}` : label;
                     },
                   )
                 }
@@ -998,7 +998,7 @@ export function MiningSimulatorClient() {
           <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#1c1917]">
-                {fr ? "Planifier transport" : "Plan transport"} - {transportStock.mineralKey}
+                {fr ? "Planifier transport" : "Plan transport"} — {transportStock.mineralKey}
               </h3>
               <button
                 type="button"
@@ -1100,7 +1100,7 @@ export function MiningSimulatorClient() {
                 {quote.weatherDelay ? (
                   <p className="mt-2 flex items-center gap-1 text-[#b45309]">
                     <IconGameWarningSm />
-                    {fr ? "Retard météo - routes boueuses" : "Weather delay - muddy roads"}
+                    {fr ? "Retard météo — routes boueuses" : "Weather delay — muddy roads"}
                   </p>
                 ) : null}
                 {quote.purityBonus ? (
@@ -1158,8 +1158,8 @@ export function MiningSimulatorClient() {
 
       <p className="mt-6 text-center text-[10px] text-[#a8a29e]">
         {fr
-          ? "Client Godot 4 bientôt - API prête pour le jeu 3D"
-          : "Godot 4 client coming - API ready for 3D game"}
+          ? "Client Godot 4 bientôt — API prête pour le jeu 3D"
+          : "Godot 4 client coming — API ready for 3D game"}
       </p>
     </div>
   );

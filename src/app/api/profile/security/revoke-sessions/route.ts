@@ -9,7 +9,7 @@ const bodyZ = z.object({
   totpCode: z.string().optional(),
 });
 
-/** Invalidate all sessions except current - re-issues cookie for this device. */
+/** Invalidate all sessions except current — re-issues cookie for this device. */
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {

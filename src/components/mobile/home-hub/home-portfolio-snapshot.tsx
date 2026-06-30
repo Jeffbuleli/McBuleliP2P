@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Locale } from "@/i18n/locale";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { getDictionary } from "@/i18n/messages";
 
 function formatHidden() {
@@ -24,8 +23,7 @@ export function HomePortfolioSnapshot({
   const [hidden, setHidden] = useState(false);
 
   return (
-    <HudFrame accent="green" className={`wallet-hero wallet-hero-total ${HUD_PANEL_LG} p-4`}>
-      <section aria-label={d.balance_estimated_total}>
+    <section className="wallet-hero wallet-hero-total p-4" aria-label={d.balance_estimated_total}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-brown)]/80">
           {d.balance_estimated_total}
@@ -49,7 +47,7 @@ export function HomePortfolioSnapshot({
         {assetChips.map((chip) => (
           <span
             key={chip.code}
-            className="rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)]/80 px-2.5 py-1 text-[10px] font-bold tabular-nums text-[color:var(--fd-text)]"
+            className="rounded-full border border-[color:var(--fd-border)] bg-white/80 px-2.5 py-1 text-[10px] font-bold tabular-nums text-[color:var(--fd-text)]"
           >
             <span className="text-[color:var(--fd-muted)]">{chip.code}</span>{" "}
             {hidden ? "••••" : chip.balance.replace(/\s+(USDT|Pi|USD|CDF)$/, "")}
@@ -59,12 +57,11 @@ export function HomePortfolioSnapshot({
 
       <Link
         href="/app/wallet"
-        className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-400/45 bg-emerald-500/15 text-sm font-bold text-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.12)] transition active:scale-[0.99] hover:bg-emerald-500/25"
+        className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl bg-[color:var(--fd-primary)] text-sm font-bold text-white shadow-md transition active:scale-[0.99]"
       >
         {fr ? "Voir le portefeuille →" : "View wallet →"}
       </Link>
-      </section>
-    </HudFrame>
+    </section>
   );
 }
 

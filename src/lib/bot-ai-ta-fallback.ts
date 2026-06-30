@@ -83,7 +83,7 @@ export async function refreshAiSignalFromTaIfStale(args: {
   const confidence = Math.min(100, Math.max(0, Math.abs(Math.round(score))));
   const summary = signal ? signalSummary(signal) : "TA sync";
   const reasons = [
-    "TA sync - Python relay inactive; enable mcbuleli-ai-relay on Render",
+    "TA sync — Python relay inactive; enable mcbuleli-ai-relay on Render",
     summary,
     ...(signal?.reasons?.slice(0, 4) ?? []),
   ];

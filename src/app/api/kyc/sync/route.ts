@@ -16,7 +16,7 @@ const bodyZ = z.object({
   sessionStatus: z.string().optional(),
 });
 
-/** Client callback after Didit SDK events - sets pending until webhook confirms. */
+/** Client callback after Didit SDK events — sets pending until webhook confirms. */
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {

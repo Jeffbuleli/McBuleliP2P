@@ -70,12 +70,12 @@ export function requiresCommitteeLoan(amountUsdt: number): boolean {
   return classifyLoanTier(amountUsdt) === "B";
 }
 
-/** McBuleli AVEC - single platform model: large payouts → collective vote. */
+/** McBuleli AVEC — single platform model: large payouts → collective vote. */
 export function requiresCollectivePayout(amountUsdt: number): boolean {
   return amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt;
 }
 
-/** @deprecated Use requiresCollectivePayout - governance_mode is ignored. */
+/** @deprecated Use requiresCollectivePayout — governance_mode is ignored. */
 export function requiresGovernancePayout(args: {
   governanceMode?: GovernanceMode | string | null;
   amountUsdt: number;

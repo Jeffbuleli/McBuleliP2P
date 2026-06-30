@@ -1,4 +1,4 @@
-/** FreshPay / PayDRC gateway - normalized types (provider-agnostic at wallet layer). */
+/** FreshPay / PayDRC gateway — normalized types (provider-agnostic at wallet layer). */
 
 export type FreshpayAction = "debit" | "credit" | "verify";
 

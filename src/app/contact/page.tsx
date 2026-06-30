@@ -9,7 +9,7 @@ export default async function ContactPage() {
 
   return (
     <PublicPageShell titleKey="legal_contact_title" leadKey="legal_contact_lead">
-      <SupportContactPanel variant="dark" />
+      <SupportContactPanel />
       <p className="mt-4 text-xs text-stone-500">{d.legal_contact_note}</p>
     </PublicPageShell>
   );

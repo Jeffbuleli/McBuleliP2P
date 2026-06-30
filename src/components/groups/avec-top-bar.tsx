@@ -77,7 +77,7 @@ export function AvecTopBar({
   );
 }
 
-/** @deprecated Brand chip - kept for rare embeds; AVEC pages use group layout only. */
+/** @deprecated Brand chip — kept for rare embeds; AVEC pages use group layout only. */
 export function AvecBrandMark() {
   const { t } = useI18n();
   return (

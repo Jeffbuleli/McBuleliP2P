@@ -261,7 +261,7 @@ export async function triggerAdminDiditIdentityReverification(args: {
       : null,
     row.kycIdentityCorrectionNote?.trim() ?? null,
   ].filter(Boolean);
-  const comment = noteParts.join(" - ") || undefined;
+  const comment = noteParts.join(" — ") || undefined;
 
   const didit = await requestDiditSessionResubmission({
     sessionId,
@@ -349,7 +349,7 @@ export async function completeIdentityCorrectionAfterReverify(
     .where(eq(users.id, userId));
 }
 
-/** @deprecated Didit requires re-verification - use triggerAdminDiditIdentityReverification */
+/** @deprecated Didit requires re-verification — use triggerAdminDiditIdentityReverification */
 export async function applyAdminKycIdentityCorrection(args: {
   targetUserId: string;
   adminUserId: string;

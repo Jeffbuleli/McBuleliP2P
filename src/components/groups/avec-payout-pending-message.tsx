@@ -29,8 +29,8 @@ export function parsePayoutPendingMeta(
     return {
       requestId: p[1] ?? "",
       amountUsdt: amount,
-      beneficiaryDisplay: p[3] ?? "-",
-      initiatedByDisplay: p[4] ?? "-",
+      beneficiaryDisplay: p[3] ?? "—",
+      initiatedByDisplay: p[4] ?? "—",
       requiredApprovals: Number.isFinite(required) ? required : 2,
       approvalCount: Number.isFinite(count) ? count : 0,
     };

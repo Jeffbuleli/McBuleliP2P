@@ -1,7 +1,6 @@
 import { partnershipPublicBaseUrl } from "@/lib/email/config";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
-import { PARTNERSHIP_PLACEHOLDERS } from "@/lib/email/partnership/partnership-placeholders";
-import type { PartnershipTemplate } from "@/lib/email/partnership/partnership-types";
+import { PARTNERSHIP_PLACEHOLDERS } from "@/lib/email/partnership/avadapay-templates";
 
 /** @deprecated use partnershipPublicBaseUrl */
 export function partnershipEmailBaseUrl(): string {
@@ -14,14 +13,12 @@ export type PartnershipEmailLayout = "conversation" | "marketing";
 export const PARTNERSHIP_EMAIL_LAYOUT: PartnershipEmailLayout =
   "conversation";
 
-/** Visible sender - hi@ by default; ceo@ when template requests it. */
-export function partnershipEmailFrom(template?: PartnershipTemplate): string {
+/** Visible sender — hi@ (not noreply). */
+export function partnershipEmailFrom(): string {
   const override = process.env.PARTNERSHIP_EMAIL_FROM?.trim();
   if (override) return override;
-  const { contactName, contactEmail } = PARTNERSHIP_PLACEHOLDERS;
-  const useCeo = template?.fromAddress === "ceo";
-  const email = useCeo ? contactEmail : SUPPORT_EMAIL;
-  return `${contactName} - McBuleli <${email}>`;
+  const { contactName } = PARTNERSHIP_PLACEHOLDERS;
+  return `${contactName} — McBuleli <${SUPPORT_EMAIL}>`;
 }
 
 /** Replies to CEO; ceo@ appears in signature. */

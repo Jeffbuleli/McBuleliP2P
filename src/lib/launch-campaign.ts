@@ -1,9 +1,9 @@
-/** McBuleli official launch - online academy campaign (Jun 2026). */
+/** McBuleli official launch — online academy campaign (Jun 2026). */
 
-export const LAUNCH_WEBINAR_ISO = "2026-07-04T16:30:00.000Z"; // 18:30 GMT+1
-export const TRAINING_START = "2026-07-04";
-export const TRAINING_END = "2026-07-25";
-export const TRAINING_SLOT = "18:30-20:00";
+export const LAUNCH_WEBINAR_ISO = "2026-06-08T18:00:00.000Z"; // 19:00 GMT+1
+export const TRAINING_START = "2026-06-15";
+export const TRAINING_END = "2026-06-30";
+export const TRAINING_SLOT = "18:30–20:00";
 export const TRAINING_WEEKDAYS = "saturday" as const;
 
 export const FORMATION_PATH = "/formation";
@@ -46,24 +46,24 @@ export type LaunchCopy = {
 export function launchCopy(locale: "fr" | "en"): LaunchCopy {
   if (locale === "fr") {
     return {
-      eyebrow: "Programme juillet · McBuleli Academy",
+      eyebrow: "Lancement officiel · McBuleli",
       title: "Formation en ligne",
       subtitle: "Crypto · Trading · IA · P2P",
-      dateLine: `Chaque samedi de juillet · ${TRAINING_SLOT} (GMT+1)`,
+      dateLine: "8 juin 2026 · 19h (GMT+1)",
       topics: ["Crypto", "Trading", "IA", "P2P"],
       cta: "S'inscrire gratuitement",
-      trainingLine: "4, 11, 18 & 25 juillet · sessions live · accès gratuit",
-      freeBadge: "Gratuit · juillet 2026",
+      trainingLine: `15–30 juin · chaque samedi ${TRAINING_SLOT}`,
+      freeBadge: "Gratuit · 2 semaines",
     };
   }
   return {
-    eyebrow: "July program · McBuleli Academy",
+    eyebrow: "Official launch · McBuleli",
     title: "Online training",
     subtitle: "Crypto · Trading · AI · P2P",
-    dateLine: `Every Saturday in July · ${TRAINING_SLOT} (GMT+1)`,
+    dateLine: "8 June 2026 · 7 PM (GMT+1)",
     topics: ["Crypto", "Trading", "AI", "P2P"],
     cta: "Register free",
-    trainingLine: "Jul 4, 11, 18 & 25 · live sessions · free access",
-    freeBadge: "Free · July 2026",
+    trainingLine: `15–30 June · every Saturday ${TRAINING_SLOT}`,
+    freeBadge: "Free · 2 weeks",
   };
 }

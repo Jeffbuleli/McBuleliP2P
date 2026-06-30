@@ -21,19 +21,9 @@ export function WalletQuickLinks({
 }) {
   return (
     <div className="mt-3 grid grid-cols-3 gap-2">
-      <QuickAction
-        label={labels.deposit}
-        onClick={onDeposit}
-        tone="deposit"
-        icon={<DepositIcon />}
-      />
-      <QuickLink href="/app/wallet/swap" label={labels.swap} tone="swap" icon={<IconSwapBrand className="h-4 w-4" />} />
-      <QuickAction
-        label={labels.withdraw}
-        onClick={onWithdraw}
-        tone="withdraw"
-        icon={<WithdrawIcon />}
-      />
+      <QuickAction label={labels.deposit} onClick={onDeposit} accent icon={<DepositIcon />} />
+      <QuickLink href="/app/wallet/swap" label={labels.swap} icon={<IconSwapBrand className="h-4 w-4" />} />
+      <QuickAction label={labels.withdraw} onClick={onWithdraw} icon={<WithdrawIcon />} />
     </div>
   );
 }
@@ -42,20 +32,18 @@ function QuickLink({
   href,
   label,
   icon,
-  tone,
 }: {
   href: string;
   label: string;
   icon: ReactNode;
-  tone: "swap";
 }) {
   return (
     <Link
       href={href}
-      className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition active:scale-[0.98] ${TONE[tone]}`}
+      className="flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl border border-[color:var(--fd-border)] bg-white px-1 py-2 text-center active:scale-[0.98] active:bg-[color:var(--fd-mint)]/50"
     >
-      <span>{icon}</span>
-      <span className="text-[10px] font-bold leading-tight">{label}</span>
+      <span className="text-[color:var(--fd-primary)]">{icon}</span>
+      <span className="text-[10px] font-bold leading-tight text-[color:var(--fd-text)]">{label}</span>
     </Link>
   );
 }
@@ -64,32 +52,32 @@ function QuickAction({
   label,
   onClick,
   icon,
-  tone,
+  accent,
 }: {
   label: string;
   onClick: () => void;
   icon: ReactNode;
-  tone: "deposit" | "withdraw";
+  accent?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition active:scale-[0.98] ${TONE[tone]}`}
+      className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-center active:scale-[0.98] ${
+        accent
+          ? "border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-primary)] text-white shadow-sm"
+          : "border border-[color:var(--fd-border)] bg-white text-[color:var(--fd-primary)] active:bg-[color:var(--fd-mint)]/50"
+      }`}
     >
-      {icon}
-      <span className="text-[10px] font-bold leading-tight">{label}</span>
+      <span className={accent ? "text-white" : "text-[color:var(--fd-primary)]"}>{icon}</span>
+      <span
+        className={`text-[10px] font-bold leading-tight ${accent ? "text-white" : "text-[color:var(--fd-text)]"}`}
+      >
+        {label}
+      </span>
     </button>
   );
 }
-
-const TONE = {
-  deposit:
-    "border-emerald-400/45 bg-emerald-500/18 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.1)] hover:bg-emerald-500/28",
-  swap: "border-cyan-400/35 bg-[#0a1018]/75 text-cyan-300 hover:border-cyan-400/50 hover:bg-cyan-500/10",
-  withdraw:
-    "border-amber-400/35 bg-[#0a1018]/75 text-amber-300 hover:border-amber-400/50 hover:bg-amber-500/10",
-} as const;
 
 function DepositIcon() {
   return (

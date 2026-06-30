@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 
 let schemaReady: Promise<void> | null = null;
 
-/** Idempotent DDL - profils Community + DM avant migrate manuel sur Render. */
+/** Idempotent DDL — profils Community + DM avant migrate manuel sur Render. */
 export function ensureCommunitySchema(): Promise<void> {
   if (!schemaReady) {
     schemaReady = runEnsureCommunitySchema().catch((e) => {

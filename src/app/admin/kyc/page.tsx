@@ -72,7 +72,7 @@ export default function AdminKycPage() {
     const res = await fetch(`/api/admin/kyc?${params}`, { cache: "no-store" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr(data.message ?? "-");
+      setErr(data.message ?? "—");
       setRows([]);
       return;
     }
@@ -104,7 +104,7 @@ export default function AdminKycPage() {
       const res = await fetch("/api/admin/kyc/reset-stale", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setResetMsg(data.message ?? "-");
+        setResetMsg(data.message ?? "—");
         return;
       }
       setResetMsg(
@@ -152,7 +152,7 @@ export default function AdminKycPage() {
         header: t("admin_kyc_col_country"),
         sortable: true,
         sortValue: (r) => r.countryCode ?? "",
-        cell: (r) => r.countryCode ?? "-",
+        cell: (r) => r.countryCode ?? "—",
       },
       {
         id: "status",
@@ -180,7 +180,7 @@ export default function AdminKycPage() {
         header: t("admin_kyc_col_didit"),
         cell: (r) => (
           <div className="min-w-[8rem] max-w-[14rem]">
-            <p className="text-xs font-medium break-all">{r.diditSessionStatus ?? "-"}</p>
+            <p className="text-xs font-medium break-all">{r.diditSessionStatus ?? "—"}</p>
             {r.diditSessionId ? (
               <button
                 type="button"
@@ -209,7 +209,7 @@ export default function AdminKycPage() {
                 dateStyle: "short",
                 timeStyle: "short",
               })
-            : "-",
+            : "—",
       },
       {
         id: "help",

@@ -5,7 +5,6 @@ import { CommunityImageLightbox } from "@/components/community/community-image-l
 import { CommunityImageMosaic } from "@/components/community/community-image-mosaic";
 import { CommunityLinkEmbed } from "@/components/community/community-link-embed";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
-import { COMMUNITY_MEDIA_FRAME, COMMUNITY_VIDEO_FRAME } from "@/lib/community/community-ui";
 import { findEmbeddableUrl } from "@/lib/community/link-embed";
 import { communityImageVariant } from "@/lib/community/data-saver";
 
@@ -30,7 +29,7 @@ export function CommunityPostMedia({
   body?: string;
   fr: boolean;
   postId?: string;
-  /** Pas de navigation - mosaic Facebook + lightbox inline. */
+  /** Pas de navigation — mosaic Facebook + lightbox inline. */
   feedInline?: boolean;
 }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -48,7 +47,7 @@ export function CommunityPostMedia({
         : null;
       return (
         <div
-          className={`mt-3 ${COMMUNITY_VIDEO_FRAME}`}
+          className="mt-3"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
@@ -68,7 +67,7 @@ export function CommunityPostMedia({
 
     return (
       <>
-        <div className={`mt-3 ${COMMUNITY_MEDIA_FRAME}`} onClick={(e) => e.stopPropagation()}>
+        <div className="mt-3" onClick={(e) => e.stopPropagation()}>
           <CommunityImageMosaic
             images={images}
             postId={feedInline ? undefined : postId}

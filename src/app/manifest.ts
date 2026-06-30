@@ -3,11 +3,11 @@ import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    /** Stable id on canonical origin - avoids treating www/legacy as a new app when possible */
+    /** Stable id on canonical origin — avoids treating www/legacy as a new app when possible */
     id: `${CANONICAL_PRODUCTION_ORIGIN}/`,
     name: "McBuleli",
     short_name: "McBuleli",
-    description: "P2P crypto & mobile money - escrow wallet for Africa",
+    description: "P2P crypto & mobile money — escrow wallet for Africa",
     start_url: "/",
     scope: "/",
     display: "standalone",

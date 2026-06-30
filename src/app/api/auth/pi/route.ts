@@ -92,7 +92,7 @@ export async function POST(req: Request) {
       .where(eq(users.id, userId));
   }
 
-  // Fix invalid/empty country codes (e.g. "-", "-") so P2P payment methods match.
+  // Fix invalid/empty country codes (e.g. "—", "-") so P2P payment methods match.
   const [crow] = await db
     .select({ countryCode: users.countryCode })
     .from(users)

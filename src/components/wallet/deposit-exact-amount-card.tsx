@@ -40,16 +40,16 @@ export function DepositExactAmountCard({
       : null;
 
   return (
-    <FlowCard className="mt-3 border-cyan-400/30 bg-cyan-500/8">
+    <FlowCard className="mt-3 border-indigo-200/80 bg-gradient-to-b from-indigo-50/90 to-white">
       <div className="flex items-start gap-3">
         <IllustrationExactAmount className="h-14 w-14 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-400/80">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-700">
             {t("deposit_exact_amount_title")}
           </p>
           <p className="mt-1 font-mono text-2xl font-bold tabular-nums leading-tight text-[color:var(--fd-text)]">
             {payable}
-            <span className="ml-1.5 text-base font-semibold text-cyan-300">{asset}</span>
+            <span className="ml-1.5 text-base font-semibold text-indigo-800">{asset}</span>
           </p>
           {timer ? (
             <p className="mt-1 text-[11px] font-semibold text-[color:var(--fd-muted)]">
@@ -62,7 +62,7 @@ export function DepositExactAmountCard({
       <button
         type="button"
         onClick={() => void copyAmount()}
-        className="mt-4 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl border border-cyan-400/45 bg-cyan-500/18 text-base font-bold text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-[0.98]"
+        className="mt-4 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-indigo-600 text-base font-bold text-white shadow-sm active:scale-[0.98]"
       >
         <IconCopy className="h-5 w-5" />
         {copied ? t("copy_done") : t("deposit_copy_amount")}

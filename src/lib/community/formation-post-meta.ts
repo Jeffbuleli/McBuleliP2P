@@ -136,6 +136,6 @@ export function formatUpcomingSessionDate(iso: string, fr: boolean): string {
 export function formationSummaryBody(meta: FormationPostMeta, fr: boolean): string {
   const when = formatFormationDate(meta.startDate, meta.timezone, fr);
   return fr
-    ? `${meta.title} - ${when} · ${meta.trainerName} · McBuleli Live`
-    : `${meta.title} - ${when} · ${meta.trainerName} · McBuleli Live`;
+    ? `${meta.title} — ${when} · ${meta.trainerName} · McBuleli Live`
+    : `${meta.title} — ${when} · ${meta.trainerName} · McBuleli Live`;
 }

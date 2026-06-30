@@ -43,8 +43,8 @@ export function CommunityRewardsCard() {
           </h2>
           <p className="text-xs text-[#78716c]">
             {fr
-              ? `Participez, cumulez des BP - ${data.bpPerMcb} BP = 1 McB (bientôt).`
-              : `Engage and earn BP - ${data.bpPerMcb} BP = 1 McB (coming soon).`}
+              ? `Participez, cumulez des BP — ${data.bpPerMcb} BP = 1 McB (bientôt).`
+              : `Engage and earn BP — ${data.bpPerMcb} BP = 1 McB (coming soon).`}
           </p>
           {data.balance != null ? (
             <p className="mt-1 text-xs font-semibold text-[#305f33]">

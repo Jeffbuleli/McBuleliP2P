@@ -1,14 +1,14 @@
 McBuleli
-Not Bitcoin roulette. Stable USDT, P2P with Mobile Money, AVEC groups - on McBuleli.
+Not Bitcoin roulette. Stable USDT, P2P with Mobile Money, AVEC groups — on McBuleli.
 Hi {{{contact.first_name|there}}},
 Crypto without the fear
 Scams and Bitcoin swings scared you off? Fair enough.
 McBuleli keeps it clear: stable USDT, protected P2P trades, and simple deposit & withdraw.
-USDT ≈ 1 US dollar - Not Bitcoin. USDT stays stable - send and receive without nasty surprises.
-P2P + Mobile Money - Buy or sell with Orange, M-Pesa, and more. Funds stay in escrow until the deal is done.
-Deposit & withdraw - Your own address, visible fees, email alerts - you stay in control.
-AVEC group savings - Save together with clear rules, governance, and loans between members.
-McBuleli is not a bank - transparent trades, WhatsApp support, Didit KYC.
+USDT ≈ 1 US dollar — Not Bitcoin. USDT stays stable — send and receive without nasty surprises.
+P2P + Mobile Money — Buy or sell with Orange, M-Pesa, and more. Funds stay in escrow until the deal is done.
+Deposit & withdraw — Your own address, visible fees, email alerts — you stay in control.
+AVEC group savings — Save together with clear rules, governance, and loans between members.
+McBuleli is not a bank — transparent trades, WhatsApp support, Didit KYC.
 Create my free account: https://mcbuleli.org/register?ref=RGZDWHUH&utm_source=email&utm_medium=broadcast&utm_campaign=crypto_discovery
 hi@mcbuleli.org
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -71,7 +71,7 @@ export async function listAiAssistInstances(): Promise<AiAssistInstanceRow[]> {
         }
       }
     } catch {
-      /* position probe failed - worker still runs without open context */
+      /* position probe failed — worker still runs without open context */
     }
 
     out.push({

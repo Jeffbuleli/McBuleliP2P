@@ -504,7 +504,7 @@ export function AvecLoansPanel({
             <li key={h.id} className="text-[9px] text-[color:var(--fd-muted)]">
               {h.borrowerDisplay} · {h.principalUsdt.toFixed(0)} USDT ·{" "}
               {h.status === "rejected" ? "✕" : "✓"}
-              {h.rejectionReason ? ` - ${h.rejectionReason}` : ""}
+              {h.rejectionReason ? ` — ${h.rejectionReason}` : ""}
             </li>
           ))}
         </ul>

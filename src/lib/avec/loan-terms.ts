@@ -11,7 +11,7 @@ export const AVEC_LOAN_PENALTY_DAYS_LATE = 7;
 /** Maximum loan duration (days from disbursement). */
 export const AVEC_LOAN_MAX_DAYS = 90;
 
-/** @deprecated use AVEC_LOAN_INTEREST_PCT_TOTAL - kept for DB column compatibility */
+/** @deprecated use AVEC_LOAN_INTEREST_PCT_TOTAL — kept for DB column compatibility */
 export const AVEC_DEFAULT_LOAN_INTEREST_PCT_MONTH = AVEC_LOAN_INTEREST_PCT_TOTAL;
 export const AVEC_DEFAULT_LOAN_PENALTY_PCT = AVEC_LOAN_PENALTY_PCT;
 export const AVEC_DEFAULT_LOAN_TERM_DAYS = AVEC_LOAN_MAX_DAYS;

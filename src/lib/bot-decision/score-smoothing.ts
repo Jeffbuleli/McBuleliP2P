@@ -1,5 +1,5 @@
 /**
- * EMA smoothing for technical scores - avoids -40 → +40 jumps between ticks.
+ * EMA smoothing for technical scores — avoids -40 → +40 jumps between ticks.
  */
 
 const DEFAULT_ALPHA = 0.38;

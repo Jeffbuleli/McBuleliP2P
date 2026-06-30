@@ -47,7 +47,7 @@ export async function assertLearnerMayEnterLive(args: {
   return { ok: true, sessionId: row.recordId };
 }
 
-/** Host « Démarrer le live » - ouvre la vidéo et débloque les invités. */
+/** Host « Démarrer le live » — ouvre la vidéo et débloque les invités. */
 export async function markLiveSessionStartedByHost(args: {
   userId: string;
   editionId: string;

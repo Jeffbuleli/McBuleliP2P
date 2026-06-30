@@ -27,8 +27,8 @@ export const COMMUNITY_REWARDS_CATALOG: CommunityRewardCatalogItem[] = [
     id: REWARD_GRANT.COMMUNITY_FIRST_POST,
     points: REWARD_POINTS[REWARD_GRANT.COMMUNITY_FIRST_POST],
     dailyCap: 1,
-    labelFr: "Bonus - première publication",
-    labelEn: "Bonus - first post",
+    labelFr: "Bonus — première publication",
+    labelEn: "Bonus — first post",
     icon: "post",
   },
   {

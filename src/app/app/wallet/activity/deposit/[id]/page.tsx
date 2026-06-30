@@ -92,12 +92,12 @@ export default function DepositActivityDetailPage() {
       setTxid("");
       return;
     }
-    setMsg(data.message ?? data.error ?? "-");
+    setMsg(data.message ?? data.error ?? "—");
   }
 
   if (loading) {
     return (
-      <div className="wallet-theme px-4 pb-8">
+      <div className="pb-8">
         <WalletSubpageHeader title={t("wallet_tx_details")} backHref="/app/wallet/history" />
         <p className="text-center text-[color:var(--fd-muted)]">…</p>
       </div>
@@ -106,9 +106,9 @@ export default function DepositActivityDetailPage() {
 
   if (!deposit) {
     return (
-      <div className="wallet-theme px-4 pb-8">
+      <div className="pb-8">
         <WalletSubpageHeader title={t("wallet_tx_details")} backHref="/app/wallet/history" />
-        <p className="text-rose-400">-</p>
+        <p className="text-rose-800">—</p>
         <FlowHubLink label={t("wallet_history_title")} href="/app/wallet/history" />
       </div>
     );
@@ -136,7 +136,7 @@ export default function DepositActivityDetailPage() {
   const showTxid = deposit.status === DepositStatus.AWAITING_TXID;
 
   return (
-    <div className="wallet-theme px-4 pb-8">
+    <div className="pb-8">
       <WalletSubpageHeader
         title={t("wallet_tx_details")}
         subtitle={`${deposit.asset} · ${deposit.id.slice(0, 8)}`}
@@ -158,7 +158,7 @@ export default function DepositActivityDetailPage() {
           />
         </div>
       ) : (
-        <p className="mt-3 text-center text-sm font-semibold text-cyan-300">
+        <p className="mt-3 text-center text-sm font-semibold text-[color:var(--fd-primary)]">
           {depositStatusLabel(t, deposit.status, autoDetect)}
         </p>
       )}
@@ -194,13 +194,13 @@ export default function DepositActivityDetailPage() {
       ) : null}
 
       {showTxid ? (
-        <div className="mt-4 rounded-xl border border-white/10 bg-[#0a1018]/90 p-4 space-y-3">
+        <div className="fd-card mt-4 space-y-3 p-4">
           <label className="block text-sm font-semibold text-[color:var(--fd-text)]">
             {t("deposit_txid")}
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/12 bg-[#050810] px-3 py-2.5 font-mono text-sm text-[color:var(--fd-text)] outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/15"
+              className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
             />
           </label>
           <FlowPrimaryBtn
@@ -213,7 +213,7 @@ export default function DepositActivityDetailPage() {
       ) : null}
 
       {msg ? (
-        <p className="mt-2 text-center text-sm font-semibold text-rose-400">{msg}</p>
+        <p className="mt-2 text-center text-sm font-semibold text-rose-800">{msg}</p>
       ) : null}
 
       <FlowHubLink label={t("wallet_history_title")} href="/app/wallet/history" />

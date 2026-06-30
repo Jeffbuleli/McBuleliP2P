@@ -13,7 +13,7 @@ export function ProfileWalletStrip({
   locale: Locale;
 }) {
   const d = getDictionary(locale);
-  const total = portfolio?.totalEquivDisplay ?? "-";
+  const total = portfolio?.totalEquivDisplay ?? "—";
 
   return (
     <Link href="/app/wallet" className="fd-card flex items-center gap-3.5 p-4 active:scale-[0.99]">

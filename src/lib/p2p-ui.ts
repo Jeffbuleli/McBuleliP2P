@@ -1,5 +1,5 @@
 /**
- * P2P UI helpers - copy keys and amounts aligned with OTC/P2P standards:
+ * P2P UI helpers — copy keys and amounts aligned with OTC/P2P standards:
  * - Fiat quote (USD/CDF/…): payer sends via local methods off-platform; proof + mark paid.
  * - Crypto quote (USDT/PI): payer debits McBuleli wallet; atomic release.
  */
@@ -28,7 +28,7 @@ export function p2pTakerFlowHintKey(
   return wallet ? "p2p_flow_taker_sell_wallet" : "p2p_flow_taker_sell_fiat";
 }
 
-/** Active order - viewer role + quote type. */
+/** Active order — viewer role + quote type. */
 export function p2pOrderFlowHintKey(args: {
   youAreBuyer: boolean;
   quoteCurrency: string;

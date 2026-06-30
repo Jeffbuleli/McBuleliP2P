@@ -3,7 +3,7 @@
 import nextDynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
-type UiAppearance = "light" | "dark" | "hud";
+type UiAppearance = "light" | "dark";
 
 const PriceChartDynamic = nextDynamic(
   () => import("@/components/dashboard/price-chart"),
@@ -11,7 +11,7 @@ const PriceChartDynamic = nextDynamic(
     ssr: false,
     loading: () => (
       <div
-        className="market-hud-card h-56 animate-pulse rounded-2xl border border-white/10 bg-[rgba(8,12,22,0.94)]"
+        className="fd-card h-56 animate-pulse bg-[color:var(--fd-mint)]/40"
         aria-hidden
       />
     ),
@@ -21,7 +21,7 @@ const PriceChartDynamic = nextDynamic(
 function ChartPlaceholder() {
   return (
     <div
-      className="market-hud-card h-56 rounded-2xl border border-white/10 bg-[rgba(8,12,22,0.7)]"
+      className="fd-card h-56 bg-[color:var(--fd-mint)]/40"
       aria-hidden
     />
   );

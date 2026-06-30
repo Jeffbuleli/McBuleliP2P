@@ -1,4 +1,4 @@
-/** Client - compression image feed (économie données). */
+/** Client — compression image feed (économie données). */
 
 const MAX_EDGE = 1080;
 const TARGET_MAX_BYTES = 280_000;

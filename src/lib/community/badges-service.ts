@@ -31,7 +31,7 @@ async function ensureBadge(userId: string, slug: string): Promise<void> {
       badgeId: badge.id,
     });
   } catch {
-    /* unique - already earned */
+    /* unique — already earned */
   }
 }
 

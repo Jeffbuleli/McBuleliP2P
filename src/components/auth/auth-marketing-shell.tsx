@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { LangSwitch } from "@/components/lang-switch";
-import { LandingFuturisticBg } from "@/components/landing/landing-futuristic-bg";
 import { useI18n } from "@/components/i18n-provider";
 
 function BackHomeIcon({ className }: { className?: string }) {
@@ -31,7 +29,7 @@ export function AuthPageFooter({
     <div className="flex items-center justify-center gap-2.5 px-4 py-6">
       <Link
         href="/"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/5 text-cyan-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 active:scale-95"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-[#305F33] shadow-sm transition hover:border-[#305F33]/30 hover:bg-[#305F33]/5 active:scale-95"
         aria-label={t("auth_back_home")}
         title={t("auth_back_home")}
       >
@@ -39,7 +37,7 @@ export function AuthPageFooter({
       </Link>
       <p className="text-xs text-stone-500">
         {prefix ? <span>{prefix} </span> : null}
-        <Link href={linkHref} className="font-bold text-emerald-400 hover:text-emerald-300 hover:underline">
+        <Link href={linkHref} className="font-bold text-[#305F33] hover:underline">
           {linkLabel}
         </Link>
       </p>
@@ -47,9 +45,9 @@ export function AuthPageFooter({
   );
 }
 
-export const authInputClass =
-  "auth-input w-full min-h-[48px] rounded-xl border border-white/20 bg-[#050810] px-3 py-2.5 text-sm text-stone-100 outline-none focus:border-cyan-400/45 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.14)]";
+const authInputClass = "auth-input";
 export const authLabelClass = "auth-label auth-field flex flex-col gap-1.5";
+export { authInputClass };
 
 export function AuthMarketingShell({
   children,
@@ -60,26 +58,16 @@ export function AuthMarketingShell({
   children: ReactNode;
   footer?: ReactNode;
   showBrandHeader?: boolean;
-  mode?: "login" | "register" | "forgot" | "reset" | "recovery";
+  mode?: "login" | "register";
 }) {
   const { t } = useI18n();
-  const headline =
-    mode === "register"
-      ? t("auth_register_headline")
-      : mode === "forgot"
-        ? t("forgot_title")
-        : mode === "reset"
-          ? t("reset_title")
-          : mode === "recovery"
-            ? t("recovery_title")
-            : t("auth_login_headline");
+  const headline = mode === "register" ? t("auth_register_headline") : t("auth_login_headline");
 
   return (
-    <div className="auth-v2 auth-futuristic notranslate relative flex min-h-dvh flex-col overflow-hidden">
-      <LandingFuturisticBg />
-      <header className="relative z-10 px-4 pb-2 pt-5 sm:px-6 sm:pt-6">
+    <div className="auth-v2 fd-public-light notranslate flex min-h-dvh flex-col bg-[#fafaf9] text-stone-900">
+      <header className="relative px-4 pb-2 pt-5 sm:px-6 sm:pt-6">
         <div className="absolute right-4 top-4 sm:right-6 sm:top-5">
-          <LangSwitch variant="dark" />
+          <LangSwitch />
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <Image
@@ -87,44 +75,34 @@ export function AuthMarketingShell({
             alt=""
             width={48}
             height={48}
-            className="h-12 w-12 rounded-full ring-2 ring-emerald-500/30"
+            className="h-12 w-12 rounded-full ring-2 ring-[#305F33]/20"
             priority
           />
-          <span className="text-base font-extrabold tracking-tight text-stone-100">{t("brand")}</span>
+          <span className="text-base font-extrabold tracking-tight text-stone-900">{t("brand")}</span>
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6">
         {showBrandHeader ? (
-          <h1 className="mb-4 text-center text-xl font-black text-white sm:text-2xl">{headline}</h1>
+          <h1 className="mb-4 text-center text-xl font-black text-stone-900">{headline}</h1>
         ) : null}
 
-        <HudFrame accent="cyan" className={`${HUD_PANEL_LG} p-4 sm:p-5`}>
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-lg shadow-stone-300/25 sm:p-5">
           {children}
-        </HudFrame>
+        </div>
       </div>
 
-      <div className="relative z-10">{footer}</div>
+      {footer}
     </div>
   );
 }
 
+/** Shared outline button style for Pi / Passkey on auth cards. */
 export const authAltBtnClass =
-  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.03] px-4 text-sm font-bold text-stone-200 transition hover:border-cyan-500/25 hover:bg-cyan-500/5 active:scale-[0.99] disabled:opacity-60";
+  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-stone-200 bg-white px-4 text-sm font-bold text-stone-800 shadow-sm transition hover:border-[#305F33]/25 hover:bg-[#305F33]/[0.03] active:scale-[0.99] disabled:opacity-60";
 
 export const authAltBtnPiClass =
-  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 text-sm font-bold text-amber-200 transition hover:border-amber-400/40 hover:bg-amber-500/12 active:scale-[0.99] disabled:opacity-60";
+  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 text-sm font-bold text-[#78350f] shadow-sm transition hover:border-amber-300 hover:bg-amber-50 active:scale-[0.99] disabled:opacity-60";
 
 export const authAltBtnPasskeyClass =
-  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 text-sm font-bold text-emerald-300 transition hover:border-emerald-400/40 hover:bg-emerald-500/12 active:scale-[0.99] disabled:opacity-60";
-
-export const authErrorClass =
-  "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300";
-
-export const authBtnSecondaryClass =
-  "inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-white/12 bg-white/[0.03] px-5 text-sm font-bold text-stone-200 transition hover:border-cyan-500/25 hover:bg-cyan-500/5 active:scale-[0.99] disabled:opacity-60";
-
-export const authTextMutedClass = "text-sm leading-relaxed text-stone-400";
-
-export const authLinkMutedClass =
-  "text-xs font-semibold text-stone-500 underline-offset-4 hover:text-cyan-400 hover:underline";
+  "flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl border border-[#305F33]/20 bg-[#305F33]/5 px-4 text-sm font-bold text-[#305F33] shadow-sm transition hover:border-[#305F33]/35 hover:bg-[#305F33]/10 active:scale-[0.99] disabled:opacity-60";

@@ -16,13 +16,13 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
         type="button"
         onClick={() => setLocale(target)}
         title={code}
-        className={`flex items-center justify-center rounded-full px-2.5 py-1.5 transition ${
+        className={`flex items-center justify-center rounded-lg px-2.5 py-1.5 transition ${
           active
             ? dark
-              ? "bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-400/35"
+              ? "bg-emerald-500 text-stone-950 ring-2 ring-emerald-400/60"
               : "bg-[color:var(--fd-primary)] text-white ring-2 ring-[color:var(--fd-primary)]/30"
             : dark
-              ? "text-stone-500 hover:bg-white/5 hover:text-stone-300"
+              ? "bg-stone-800/90 text-stone-200 hover:bg-stone-700"
               : "border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] text-[color:var(--fd-text)] hover:bg-[color:var(--fd-mint-deep)]"
         }`}
         aria-pressed={active}
@@ -37,7 +37,7 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
     <div
       className={`flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
         dark
-          ? "border border-white/12 bg-[#0a1018]/90"
+          ? "border border-stone-600/80 bg-stone-900/90"
           : "border border-[color:var(--fd-border)] bg-white/95"
       }`}
       role="group"

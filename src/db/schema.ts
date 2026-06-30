@@ -19,7 +19,7 @@ import {
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  /** Lowercase + provider rules (Gmail dots) - unique; blocks typo duplicates at signup. */
+  /** Lowercase + provider rules (Gmail dots) — unique; blocks typo duplicates at signup. */
   emailCanonical: varchar("email_canonical", { length: 255 }),
   passwordHash: text("password_hash").notNull(),
   /** user | agent | super_admin */
@@ -34,7 +34,7 @@ export const users = pgTable("users", {
   kycStatus: varchar("kyc_status", { length: 16 }).notNull().default("none"),
   kycUpdatedAt: timestamp("kyc_updated_at", { withTimezone: true }),
   kycRejectionNote: text("kyc_rejection_note"),
-  /** Didit verification session UUID - https://docs.didit.me/ */
+  /** Didit verification session UUID — https://docs.didit.me/ */
   diditSessionId: varchar("didit_session_id", { length: 128 }),
   /** Didit session status (Not Started, In Progress, Approved, …). */
   diditSessionStatus: varchar("didit_session_status", { length: 32 }),
@@ -45,7 +45,7 @@ export const users = pgTable("users", {
   documentNumber: varchar("document_number", { length: 64 }),
   documentType: varchar("document_type", { length: 32 }),
   documentCountry: varchar("document_country", { length: 8 }),
-  /** null | requested | corrected - OPS updates legal name in Didit Console. */
+  /** null | requested | corrected — OPS updates legal name in Didit Console. */
   kycIdentityCorrectionStatus: varchar("kyc_identity_correction_status", {
     length: 16,
   }),
@@ -72,7 +72,7 @@ export const users = pgTable("users", {
     .notNull()
     .default("0"),
   /**
-   * Pi Test sandbox (super-admin training only). Per-user - not on-chain Pi.
+   * Pi Test sandbox (super-admin training only). Per-user — not on-chain Pi.
    * Legacy global `platform_settings.pi_test_balance` is no longer used for wallet UI.
    */
   piTestBalance: numeric("pi_test_balance", { precision: 36, scale: 18 })
@@ -82,15 +82,15 @@ export const users = pgTable("users", {
   piUid: varchar("pi_uid", { length: 128 }),
   /** Pi username (best-effort display; set on Pi login). */
   piUsername: varchar("pi_username", { length: 64 }),
-  /** Fiat pocket - USD (mobile money, internal). */
+  /** Fiat pocket — USD (mobile money, internal). */
   usdBalance: numeric("usd_balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
-  /** Fiat pocket - CDF (mobile money, internal). */
+  /** Fiat pocket — CDF (mobile money, internal). */
   cdfBalance: numeric("cdf_balance", { precision: 36, scale: 18 })
     .notNull()
     .default("0"),
-  /** Virtual USDT for futures/options practice - not withdrawable. */
+  /** Virtual USDT for futures/options practice — not withdrawable. */
   tradeDemoUsdtBalance: numeric("trade_demo_usdt_balance", {
     precision: 36,
     scale: 18,
@@ -105,14 +105,14 @@ export const users = pgTable("users", {
   /** Unique share code for referral links (nullable until backfilled). */
   referralCode: varchar("referral_code", { length: 16 }),
   referredByUserId: uuid("referred_by_user_id"),
-  /** USDT earned via referral program (transfer to main wallet - future). */
+  /** USDT earned via referral program (transfer to main wallet — future). */
   referralUsdtBalance: numeric("referral_usdt_balance", {
     precision: 36,
     scale: 18,
   })
     .notNull()
     .default("0"),
-  /** Buleli Points (BP) - off-chain utility rewards; future McB claim. */
+  /** Buleli Points (BP) — off-chain utility rewards; future McB claim. */
   buleliPointsBalance: integer("buleli_points_balance").notNull().default(0),
   /**
    * Agent-only allowlist of admin modules. `null` = all modules (legacy).
@@ -277,8 +277,8 @@ export const piTestLedgerEntries = pgTable(
   ],
 );
 
-/** Fixed-term custodial staking - APR fixed at subscription; principal locked until maturity. */
-/** P2P marketplace - fiat ↔ crypto via escrowed crypto on-platform. */
+/** Fixed-term custodial staking — APR fixed at subscription; principal locked until maturity. */
+/** P2P marketplace — fiat ↔ crypto via escrowed crypto on-platform. */
 export const p2pAds = pgTable(
   "p2p_ads",
   {
@@ -613,7 +613,7 @@ export const userStakes = pgTable(
   ],
 );
 
-/** LP Pool - funds locked to back internal liquidity (USDT). */
+/** LP Pool — funds locked to back internal liquidity (USDT). */
 export const lpPoolPositions = pgTable(
   "lp_pool_positions",
   {
@@ -735,7 +735,7 @@ export const lpPoolPositionRewardBalances = pgTable(
   },
 );
 
-/** Loans (USDT) - secured by LP pool principal (v1). */
+/** Loans (USDT) — secured by LP pool principal (v1). */
 export const loans = pgTable(
   "loans",
   {
@@ -840,7 +840,7 @@ export const withdrawals = pgTable(
     memoTo: text("memo_to"),
     amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
     fee: numeric("fee", { precision: 36, scale: 18 }).notNull().default("0"),
-    /** CEX network fee (Binance) - paid from user `fee`. */
+    /** CEX network fee (Binance) — paid from user `fee`. */
     providerFee: numeric("provider_fee", { precision: 36, scale: 18 })
       .notNull()
       .default("0"),
@@ -1099,7 +1099,7 @@ export const tradeSimpleOptions = pgTable(
   ],
 );
 
-/** AVEC - governed village savings & credit (USDT treasury + Ops approval). */
+/** AVEC — governed village savings & credit (USDT treasury + Ops approval). */
 export const groupSavingsGroups = pgTable(
   "group_savings_groups",
   {
@@ -1148,7 +1148,7 @@ export const groupSavingsGroups = pgTable(
     cycleNumber: integer("cycle_number").notNull().default(1),
     cycleStartedAt: timestamp("cycle_started_at", { withTimezone: true }),
     cycleClosedAt: timestamp("cycle_closed_at", { withTimezone: true }),
-    /** legacy | hybrid | full - collective governance mode */
+    /** legacy | hybrid | full — collective governance mode */
     governanceMode: varchar("governance_mode", { length: 16 })
       .notNull()
       .default("legacy"),
@@ -1653,7 +1653,7 @@ export const jitsiAccessLog = pgTable(
 );
 
 /**
- * Operating expenses (OPEX) - not user-wallet ledger lines.
+ * Operating expenses (OPEX) — not user-wallet ledger lines.
  * Workflow: draft → submitted → approved | rejected → paid (optional).
  */
 export const platformExpenses = pgTable(
@@ -1744,7 +1744,7 @@ export const freshpayWebhookEvents = pgTable(
   ],
 );
 
-/** First-deposit launch rewards - 5 MoMo + 5 USDT slots, +5 USDT each, 72h window. */
+/** First-deposit launch rewards — 5 MoMo + 5 USDT slots, +5 USDT each, 72h window. */
 export const depositLaunchRewards = pgTable(
   "deposit_launch_rewards",
   {
@@ -1815,7 +1815,7 @@ export const userBinanceApiCredentials = pgTable(
     credentialsCiphertext: text("credentials_ciphertext").notNull(),
     spotOk: boolean("spot_ok").notNull().default(false),
     futuresOk: boolean("futures_ok").notNull().default(false),
-    /** fapi | papi - set when futuresOk after validation */
+    /** fapi | papi — set when futuresOk after validation */
     futuresApiKind: varchar("futures_api_kind", { length: 8 }),
     lastValidationError: text("last_validation_error"),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
@@ -1882,7 +1882,7 @@ export const botExecutionLog = pgTable(
   ],
 );
 
-/** Phase 4 - copy performance: follower mirrors lead bot signals (own keys). */
+/** Phase 4 — copy performance: follower mirrors lead bot signals (own keys). */
 export const botCopyFollows = pgTable(
   "bot_copy_follows",
   {
@@ -1921,7 +1921,7 @@ export const botCopyFollows = pgTable(
   ],
 );
 
-/** Paid bot plan (DCA / Grid / Futures) - demo or live billing. */
+/** Paid bot plan (DCA / Grid / Futures) — demo or live billing. */
 export const botSubscriptions = pgTable(
   "bot_subscriptions",
   {
@@ -1950,7 +1950,7 @@ export const botSubscriptions = pgTable(
   ],
 );
 
-/** Idempotent earn row - unique on (userId, idempotencyKey). */
+/** Idempotent earn row — unique on (userId, idempotencyKey). */
 export const rewardPointGrants = pgTable(
   "reward_point_grants",
   {
@@ -1975,7 +1975,7 @@ export const rewardPointGrants = pgTable(
   ],
 );
 
-/** Active spend perks (fee discounts) - Phase 2. */
+/** Active spend perks (fee discounts) — Phase 2. */
 export const rewardPointPerks = pgTable(
   "reward_point_perks",
   {
@@ -2070,7 +2070,7 @@ export const userNotifications = pgTable(
   ],
 );
 
-/** Global support chat - one open thread per end-user at a time. */
+/** Global support chat — one open thread per end-user at a time. */
 export const supportThreads = pgTable(
   "support_threads",
   {
@@ -2192,7 +2192,7 @@ export const kycResults = pgTable(
   (t) => [index("kyc_results_user_id_idx").on(t.userId)],
 );
 
-/** Didit webhook idempotency - dedupe on event_id (V3). */
+/** Didit webhook idempotency — dedupe on event_id (V3). */
 export const diditWebhookEvents = pgTable("didit_webhook_events", {
   eventId: varchar("event_id", { length: 64 }).primaryKey(),
   processedAt: timestamp("processed_at", { withTimezone: true })
@@ -2296,7 +2296,7 @@ export const waInboundEvents = pgTable(
   (t) => [index("wa_inbound_events_created_idx").on(t.createdAt)],
 );
 
-/** McBuleli AI Virtual Assistant - conversation sessions. */
+/** McBuleli AI Virtual Assistant — conversation sessions. */
 export const aiAssistantConversations = pgTable(
   "ai_assistant_conversations",
   {
@@ -2536,7 +2536,7 @@ export const academySessions = pgTable(
     replayUrl: text("replay_url"),
     replayR2Key: varchar("replay_r2_key", { length: 256 }),
     replayPublishedAt: timestamp("replay_published_at", { withTimezone: true }),
-    /** Host a cliqué « Démarrer le live » - invités peuvent entrer la vidéo. */
+    /** Host a cliqué « Démarrer le live » — invités peuvent entrer la vidéo. */
     liveStartedAt: timestamp("live_started_at", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
   },
@@ -2796,7 +2796,7 @@ export const academyQuizAttempts = pgTable(
   ],
 );
 
-/** Badges & certificates - public verify via verify_code. */
+/** Badges & certificates — public verify via verify_code. */
 export const academyCredentials = pgTable(
   "academy_credentials",
   {
@@ -2826,7 +2826,7 @@ export const academyCredentials = pgTable(
   ],
 );
 
-// ─── Community Hub (métadonnées - médias sur Cloudflare R2 / Stream) ───
+// ─── Community Hub (métadonnées — médias sur Cloudflare R2 / Stream) ───
 
 /** Top Trader weekly competition opt-in + daily quotas (GMT). */
 export const topTraderParticipants = pgTable(
@@ -3043,7 +3043,7 @@ export const communityStoryReactions = pgTable(
   ],
 );
 
-/** Academy Events & Trainings - SSOT for posters, community, live, calendar. */
+/** Academy Events & Trainings — SSOT for posters, community, live, calendar. */
 export const academyTrainingEvents = pgTable(
   "academy_training_events",
   {
@@ -3380,7 +3380,7 @@ export const communityUserBlocks = pgTable(
   ],
 );
 
-/** Phase 3 - signaux trading communautaires (pas d'exécution auto). */
+/** Phase 3 — signaux trading communautaires (pas d'exécution auto). */
 export const communityTradingSignals = pgTable(
   "community_trading_signals",
   {
@@ -3523,7 +3523,7 @@ export const communityDmTyping = pgTable(
   (t) => [primaryKey({ columns: [t.threadId, t.userId] })],
 );
 
-/** Phase 3 - copy-trading : suivi trader (exécution auto = futur). */
+/** Phase 3 — copy-trading : suivi trader (exécution auto = futur). */
 export const communityTraderFollows = pgTable(
   "community_trader_follows",
   {

@@ -1,4 +1,4 @@
-/** Client - upload images/videos via serveur Render → R2 (pas de presign navigateur). */
+/** Client — upload images/videos via serveur Render → R2 (pas de presign navigateur). */
 
 import { fetchJson } from "@/lib/community/fetch-json";
 import { prepareCommunityImageBlob } from "@/lib/community-image";
@@ -13,7 +13,7 @@ export async function uploadCommunityVideo(
   );
 }
 
-/** Video upload with progress - pre-upload before publishing. */
+/** Video upload with progress — pre-upload before publishing. */
 export function uploadCommunityVideoWithProgress(
   file: File,
   kind: "posts" | "blogs" | "covers" | "stories" = "posts",
@@ -56,7 +56,7 @@ export function uploadCommunityVideoWithProgress(
   });
 }
 
-/** Upload image via serveur uniquement - évite les orphelins presign/pending sur R2. */
+/** Upload image via serveur uniquement — évite les orphelins presign/pending sur R2. */
 export async function uploadCommunityImage(
   file: File,
   kind: "posts" | "blogs" | "covers" | "avatars" | "stories" = "posts",

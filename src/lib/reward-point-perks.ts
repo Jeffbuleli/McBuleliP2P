@@ -73,7 +73,7 @@ export async function applyP2pFeeDiscountInTx(
   return discounted;
 }
 
-/** Bot renewal discount - returns price multiplier (e.g. 0.9 for 10% off). */
+/** Bot renewal discount — returns price multiplier (e.g. 0.9 for 10% off). */
 export async function consumeBotRenewalDiscountPerk(
   userId: string,
 ): Promise<number> {

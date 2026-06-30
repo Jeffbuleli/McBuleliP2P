@@ -15,8 +15,6 @@ import type { P2pMakerDashboardData } from "@/components/p2p/p2p-maker-dashboard
 import { P2pAdEditSheet } from "@/components/p2p/p2p-ad-edit-sheet";
 import type { P2pMyAd } from "@/components/p2p/p2p-my-ad-card";
 import { FlowMarketViewTabs, FlowSelect, FlowTabBar } from "@/components/p2p/p2p-flow-ui";
-import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
-import { WalletIconDropdown } from "@/components/wallet/wallet-icon-dropdown";
 import type { P2pMarketSort } from "@/lib/p2p-market-sort";
 import type { P2pMarketView, P2pPaymentKindFilter } from "@/lib/p2p-market-view";
 import {
@@ -25,8 +23,6 @@ import {
   type P2pCryptoAsset,
   type P2pSide,
 } from "@/lib/p2p-config";
-import { fetchP2pMarketPresence } from "@/lib/p2p-market-presence";
-import { hudCornerToneFromMarket, type HudCornerTone } from "@/components/ui/hud-corners";
 
 type MarketAd = {
   id: string;
@@ -119,15 +115,6 @@ export function P2PHub() {
   const [loading, setLoading] = useState(false);
   const [boostBusyId, setBoostBusyId] = useState<string | null>(null);
   const [boostMsg, setBoostMsg] = useState<string | null>(null);
-  const [marketCornerTone, setMarketCornerTone] = useState<HudCornerTone>("neutral");
-
-  useEffect(() => {
-    void fetchP2pMarketPresence().then((p) => {
-      setMarketCornerTone(
-        hudCornerToneFromMarket(p.hasMakerBuyAds, p.hasMakerSellAds),
-      );
-    });
-  }, []);
 
   const loadMarket = useCallback(async () => {
     setLoading(true);
@@ -257,8 +244,8 @@ export function P2PHub() {
 
   return (
     <div className="-mx-1 space-y-2 pb-8">
-      <div className="sticky top-0 z-20 -mx-1 space-y-1.5 bg-[#050810]/92 px-1 pb-1 backdrop-blur-md">
-        <P2pHubHeader compact marketCornerTone={marketCornerTone} />
+      <div className="sticky top-0 z-20 -mx-1 space-y-1.5 bg-[var(--fd-bg)] px-1 pb-1">
+        <P2pHubHeader compact />
         <FlowTabBar options={tabOptions} value={tab} onChange={selectTab} />
       </div>
 
@@ -272,27 +259,15 @@ export function P2PHub() {
           />
 
           <div className="fd-card flex flex-wrap items-center gap-1.5 p-2">
-            <div className="min-w-[5.5rem] flex-1">
-              <WalletIconDropdown
-                hideLabel
-                label=""
-                value={asset}
-                onChange={(id) => setAsset(id as P2pCryptoAsset | "")}
-                options={[
-                  { id: "", label: t("p2p_filter_asset") },
-                  {
-                    id: "USDT",
-                    label: "USDT",
-                    icon: <WalletAssetIcon asset="USDT" size={18} />,
-                  },
-                  {
-                    id: "PI",
-                    label: "PI",
-                    icon: <WalletAssetIcon asset="PI" size={18} />,
-                  },
-                ]}
-              />
-            </div>
+            <FlowSelect
+              value={asset}
+              onChange={(e) => setAsset(e.target.value as P2pCryptoAsset | "")}
+              className="!min-h-0 !py-1.5 !text-[11px] !rounded-xl flex-1 min-w-[4.5rem]"
+            >
+              <option value="">{t("p2p_filter_asset")}</option>
+              <option value="USDT">USDT</option>
+              <option value="PI">PI</option>
+            </FlowSelect>
             <FlowSelect
               value={fiat}
               onChange={(e) => setFiat(e.target.value)}
@@ -340,17 +315,20 @@ export function P2PHub() {
               ] as const
             ).map((chip) => {
               const on = paymentKind === chip.id;
-              const accent = on
-                ? marketView === "buy"
-                  ? "p2p-chip-on-buy"
-                  : "p2p-chip-on-sell"
-                : "p2p-chip-off";
+              const accent =
+                marketView === "buy"
+                  ? on
+                    ? "bg-[color:var(--fd-primary)] text-white"
+                    : "bg-white text-[color:var(--fd-muted)]"
+                  : on
+                    ? "bg-[color:var(--fd-sell)] text-white"
+                    : "bg-white text-[color:var(--fd-muted)]";
               return (
                 <button
                   key={chip.id}
                   type="button"
                   onClick={() => setPaymentKind(chip.id)}
-                  className={`rounded-full px-2 py-1 text-[10px] font-semibold transition active:scale-[0.98] ${accent}`}
+                  className={`rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-[color:var(--fd-border)] ${accent}`}
                 >
                   {chip.label}
                 </button>
@@ -365,10 +343,10 @@ export function P2PHub() {
             <button
               type="button"
               onClick={() => setBoostedOnly((v) => !v)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition active:scale-[0.98] ${
+              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
                 boostedOnly
-                  ? "border border-amber-400/45 bg-amber-500/18 text-amber-300"
-                  : "p2p-chip-off"
+                  ? "bg-amber-50 text-amber-800 ring-amber-300"
+                  : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]"
               }`}
             >
               {t("p2p_filter_boosted")}
@@ -376,12 +354,12 @@ export function P2PHub() {
             <button
               type="button"
               onClick={() => setTrustedOnly((v) => !v)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition active:scale-[0.98] ${
+              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
                 trustedOnly
                   ? marketView === "buy"
-                    ? "p2p-chip-on-buy"
-                    : "p2p-chip-on-sell"
-                  : "p2p-chip-off"
+                    ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-[color:var(--fd-primary)]/30"
+                    : "bg-[color:var(--fd-sell-mint)] text-[color:var(--fd-sell)] ring-[color:var(--fd-sell)]/30"
+                  : "bg-white text-[color:var(--fd-muted)] ring-[color:var(--fd-border)]"
               }`}
             >
               {t("p2p_filter_trusted")}

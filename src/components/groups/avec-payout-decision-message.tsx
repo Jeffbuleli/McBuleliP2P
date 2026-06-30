@@ -27,7 +27,7 @@ export function AvecPayoutDecisionMessage({
   const approverNames =
     meta.approvers.length > 0
       ? meta.approvers.map((a) => a.displayName).join(" · ")
-      : "-";
+      : "—";
 
   return (
     <div className="mx-auto w-full max-w-sm rounded-2xl border-2 border-[color:var(--fd-primary)]/25 bg-gradient-to-br from-[color:var(--fd-mint)] to-[color:var(--fd-card)] p-3 shadow-sm">

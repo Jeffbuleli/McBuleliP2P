@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
-/** Cold DB / bcrypt - generous timeout so Neon can wake on first login. */
+/** Cold DB / bcrypt — generous timeout so Neon can wake on first login. */
 export const maxDuration = 60;
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
@@ -68,13 +68,8 @@ export async function POST(req: Request) {
         .update(users)
         .set({ role: UserRole.SUPER_ADMIN })
         .where(eq(users.id, user.id))
-        .returning({
-          id: users.id,
-          email: users.email,
-          role: users.role,
-          sessionVersion: users.sessionVersion,
-        });
-      if (up) sessionUser = { ...user, ...up };
+        .returning();
+      if (up) sessionUser = up;
     }
 
     const token = await signSessionToken(

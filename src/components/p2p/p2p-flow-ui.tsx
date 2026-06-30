@@ -5,31 +5,27 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTML
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { IconCheck } from "@/components/icons/flow-icons";
 import type { P2pMarketView } from "@/lib/p2p-market-view";
-import { HudCornerBrackets, type HudCornerTone } from "@/components/ui/hud-corners";
 
 export function P2pFlowShell({
   title,
   subtitle,
   backHref = "/app/p2p",
   headerBadge,
-  cornerTone,
   children,
 }: {
   title: string;
   subtitle?: string;
   backHref?: string;
   headerBadge?: ReactNode;
-  cornerTone?: HudCornerTone;
   children: ReactNode;
 }) {
   return (
-    <div className="wallet-theme px-4 pb-10">
+    <div className="wallet-theme -mx-1 pb-10">
       <WalletSubpageHeader
         title={title}
         subtitle={subtitle}
         backHref={backHref}
         badge={headerBadge}
-        cornerTone={cornerTone}
       />
       <div className="space-y-3">{children}</div>
     </div>
@@ -41,20 +37,17 @@ export function FlowSection({
   hint,
   children,
   action,
-  cornerTone,
 }: {
   title?: string;
   hint?: string;
   children: ReactNode;
   action?: ReactNode;
-  cornerTone?: HudCornerTone;
 }) {
   const hasHeader = Boolean(title || hint || action);
   return (
-    <section className="fd-card relative overflow-visible p-4">
-      {cornerTone ? <HudCornerBrackets tone={cornerTone} size="xs" /> : null}
+    <section className="fd-card p-4">
       {hasHeader ? (
-        <div className="relative mb-3 flex items-start justify-between gap-2">
+        <div className="mb-3 flex items-start justify-between gap-2">
           <div>
             {title ? (
               <h2 className="text-sm font-bold text-[color:var(--fd-text)]">{title}</h2>
@@ -64,7 +57,7 @@ export function FlowSection({
           {action}
         </div>
       ) : null}
-      <div className="relative">{children}</div>
+      {children}
     </section>
   );
 }
@@ -88,7 +81,7 @@ export function FlowField({
 }
 
 const inputCls =
-  "p2p-flow-input w-full rounded-xl border px-3 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-cyan-400/12";
+  "w-full rounded-2xl border border-[color:var(--fd-border)] bg-white px-3 py-3 text-sm text-[color:var(--fd-text)] outline-none ring-[color:var(--fd-primary)]/30 focus:ring-2";
 
 export function FlowInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputCls} ${props.className ?? ""}`} />;
@@ -99,7 +92,7 @@ export function FlowTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>)
 }
 
 export function FlowSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`p2p-flow-select ${inputCls} ${props.className ?? ""}`} />;
+  return <select {...props} className={`${inputCls} ${props.className ?? ""}`} />;
 }
 
 export function FlowMarketViewTabs({
@@ -127,12 +120,12 @@ export function FlowMarketViewTabs({
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`flex-1 rounded-xl px-2 py-3 text-sm font-extrabold uppercase tracking-wide transition active:scale-[0.98] ${
+            className={`flex-1 rounded-xl px-2 py-3 text-sm font-extrabold uppercase tracking-wide transition ${
               on
                 ? isBuy
-                  ? "border border-emerald-400/45 bg-emerald-500/18 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.1)]"
-                  : "border border-amber-400/45 bg-amber-500/18 text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.1)]"
-                : "text-[color:var(--fd-muted)] hover:bg-white/5"
+                  ? "bg-[color:var(--fd-primary)] text-white shadow-sm"
+                  : "bg-[color:var(--fd-sell)] text-white shadow-sm"
+                : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/50"
             }`}
           >
             {o.label}
@@ -161,10 +154,10 @@ export function FlowTabBar<T extends string>({
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition active:scale-[0.98] sm:text-sm ${
+            className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm ${
               on
-                ? "border border-emerald-400/45 bg-emerald-500/18 text-emerald-300"
-                : "text-[color:var(--fd-muted)] hover:bg-white/5"
+                ? "bg-[color:var(--fd-primary)] text-white shadow-sm"
+                : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)]/50"
             }`}
           >
             {o.label}
@@ -179,43 +172,28 @@ export function FlowSegment<T extends string>({
   options,
   value,
   onChange,
-  variant = "side",
 }: {
   options: { id: T; label: string }[];
   value: T;
   onChange: (v: T) => void;
-  /** BUY = emerald, SELL = amber. */
-  variant?: "side" | "neutral";
 }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       {options.map((o) => {
         const on = value === o.id;
-        const isBuySide = variant === "side" && o.id === "buy";
-        const isSellSide = variant === "side" && o.id === "sell";
-        const activeCls = on
-          ? isBuySide
-            ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.08)]"
-            : isSellSide
-              ? "border-amber-400/50 bg-amber-500/15 text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.08)]"
-              : "border-emerald-400/45 bg-emerald-500/12 text-emerald-300"
-          : "border-white/10 bg-[#0a1018]/85 text-[color:var(--fd-muted)] hover:border-white/18";
-        const checkCls = on
-          ? isBuySide
-            ? "text-emerald-300"
-            : isSellSide
-              ? "text-amber-300"
-              : "text-emerald-300"
-          : "text-[color:var(--fd-muted)]";
         return (
           <button
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`relative rounded-xl border py-3 text-sm font-bold transition active:scale-[0.98] ${activeCls}`}
+            className={`relative rounded-2xl border-2 py-3 text-sm font-bold transition ${
+              on
+                ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
+            }`}
           >
             {on ? (
-              <span className={`absolute right-2 top-2 ${checkCls}`}>
+              <span className="absolute right-2 top-2 text-[color:var(--fd-primary)]">
                 <IconCheck className="h-3.5 w-3.5" />
               </span>
             ) : null}
@@ -256,10 +234,10 @@ export function FlowPaymentTable({
     );
   }
   return (
-    <div className="p2p-flow-payment overflow-hidden rounded-xl border border-white/10">
+    <div className="overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
       <table className="w-full border-collapse text-left text-xs">
         <thead>
-          <tr className="border-b border-white/10 bg-[#050810]/80 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          <tr className="bg-stone-100/90 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
             <th className="px-3 py-2">{colMethod}</th>
             <th className="px-3 py-2 text-center">{colStatus}</th>
             <th className="w-10 px-2 py-2" />
@@ -273,24 +251,24 @@ export function FlowPaymentTable({
             return (
               <tr
                 key={d.code}
-                className={`border-t border-white/8 ${
+                className={`border-t border-[color:var(--fd-border)] ${
                   on
                     ? ready
-                      ? "bg-emerald-500/10"
-                      : "bg-amber-500/10"
-                    : "bg-[#0a1018]/50"
+                      ? "bg-[color:var(--fd-mint)]/35"
+                      : "bg-amber-50/90"
+                    : "bg-white"
                 }`}
               >
                 <td className="px-3 py-2.5 font-semibold text-[color:var(--fd-text)]">{d.label}</td>
                 <td className="px-3 py-2.5 text-center">
                   {ready ? (
-                    <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                       {statusOk}
                     </span>
                   ) : (
                     <Link
                       href="/app/profile/payments"
-                      className="inline-flex rounded-full border border-amber-400/35 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300 underline"
+                      className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 underline"
                     >
                       {verifyLabel}
                     </Link>
@@ -303,8 +281,8 @@ export function FlowPaymentTable({
                     aria-pressed={on}
                     className={`mx-auto flex h-8 w-8 items-center justify-center rounded-xl border-2 transition ${
                       on
-                        ? "border-emerald-400/45 bg-emerald-500/20 text-emerald-300"
-                        : "border-white/12 bg-[#050810]/85 text-[color:var(--fd-muted)]"
+                        ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-primary)] text-white"
+                        : "border-[color:var(--fd-border)] bg-white text-[color:var(--fd-muted)]"
                     }`}
                   >
                     {on ? <IconCheck className="h-3.5 w-3.5" /> : null}
@@ -453,22 +431,15 @@ export function FlowPrimaryBtn({
 
 export function FlowError({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-center text-xs font-semibold text-rose-300">
+    <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs font-semibold text-rose-800">
       {children}
     </p>
   );
 }
 
-export function FlowKvCard({
-  rows,
-  cornerTone,
-}: {
-  rows: { k: string; v: string }[];
-  cornerTone?: HudCornerTone;
-}) {
+export function FlowKvCard({ rows }: { rows: { k: string; v: string }[] }) {
   return (
-    <div className="fd-card relative divide-y divide-white/8 overflow-hidden p-0">
-      {cornerTone ? <HudCornerBrackets tone={cornerTone} size="xs" /> : null}
+    <div className="fd-card divide-y divide-[color:var(--fd-border)] p-0">
       {rows.map((r) => (
         <div key={r.k} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
           <span className="text-[color:var(--fd-muted)]">{r.k}</span>

@@ -235,7 +235,7 @@ function applySwapBatch(
   return true;
 }
 
-/** Replay ledger with trust filter - only credits from verified PSP / confirmed crypto chains. */
+/** Replay ledger with trust filter — only credits from verified PSP / confirmed crypto chains. */
 export async function replayTrustedBalances(userId: string): Promise<Record<WalletAsset, number>> {
   const db = getDb();
   const rows = await db
@@ -427,7 +427,7 @@ export async function traceUserBalanceProvenance(userId: string): Promise<UserBa
     const applied =
       trusted && applyAmount(ctx.balances, line.asset, line.amount);
     if (trusted && !applied && line.amount < 0) {
-      /* debit skipped - insufficient trusted balance */
+      /* debit skipped — insufficient trusted balance */
     } else if (trusted) {
       applyAmount(ctx.balances, line.asset, line.amount);
     }
@@ -553,7 +553,7 @@ export async function auditAllUsersWithOrphans(): Promise<BalanceAuditRow[]> {
   return out;
 }
 
-/** Remove orphan balance (stored > expected) - never inflates balances. */
+/** Remove orphan balance (stored > expected) — never inflates balances. */
 export async function reconcileUserOrphanBalances(
   userId: string,
   opts: { dryRun?: boolean } = {},

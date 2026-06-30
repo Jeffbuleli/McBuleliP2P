@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useI18n } from "@/components/i18n-provider";
 
 declare global {
   interface Window {
@@ -84,37 +83,27 @@ function loadTurnstileScript(): Promise<void> {
   });
 }
 
-/** Start loading Turnstile early (e.g. on login mount) - do not await in render. */
+/** Start loading Turnstile early (e.g. on login mount) — do not await in render. */
 export function preloadTurnstileScript(): void {
   void loadTurnstileScript();
 }
-
-const SHELL_LIGHT =
-  "flex min-h-[65px] items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-white/90 p-2 shadow-sm [&_iframe]:rounded-xl";
-
-const SHELL_DARK =
-  "flex min-h-[65px] items-center justify-center overflow-hidden rounded-xl border border-white/12 bg-[#050810] p-2 [&_iframe]:max-w-full [&_iframe]:rounded-lg";
 
 export function TurnstileWidget({
   siteKey,
   onToken,
   onExpire,
   className,
-  variant = "light",
 }: {
   siteKey: string;
   onToken: (token: string) => void;
   onExpire?: () => void;
   className?: string;
-  variant?: "light" | "dark";
 }) {
-  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
   const onExpireRef = useRef(onExpire);
   const [failed, setFailed] = useState(false);
-  const dark = variant === "dark";
 
   onTokenRef.current = onToken;
   onExpireRef.current = onExpire;
@@ -130,7 +119,7 @@ export function TurnstileWidget({
         }
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
-          theme: dark ? "dark" : "auto",
+          theme: "auto",
           appearance: "always",
           callback: (token) => onTokenRef.current(token),
           "expired-callback": () => onExpireRef.current?.(),
@@ -150,25 +139,19 @@ export function TurnstileWidget({
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, dark]);
+  }, [siteKey]);
 
   if (failed) {
     return (
-      <p
-        className={
-          dark
-            ? "rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200"
-            : "text-xs text-amber-700"
-        }
-      >
-        {t("auth_turnstile_failed")}
+      <p className="text-xs text-amber-700">
+        Captcha could not load. Refresh the page or try again later.
       </p>
     );
   }
 
   return (
     <div
-      className={`${dark ? SHELL_DARK : SHELL_LIGHT} ${className ?? ""}`}
+      className={`flex min-h-[65px] items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-white/90 p-2 shadow-sm [&_iframe]:rounded-xl ${className ?? ""}`}
       aria-busy="true"
     >
       <div ref={containerRef} className="flex w-full justify-center" />

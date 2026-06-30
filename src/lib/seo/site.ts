@@ -32,10 +32,10 @@ type HomeSeoCopy = {
 
 const HOME_SEO: Record<Locale, HomeSeoCopy> = {
   en: {
-    title: "McBuleli - USDT Wallet, P2P & Mobile Money in DR Congo & Africa",
+    title: "McBuleli — USDT Wallet, P2P & Mobile Money in DR Congo & Africa",
     description:
       "Buy and sell USDT & Pi with mobile money in DR Congo and across Africa. P2P escrow, custodial wallet, fixed-term staking, AVEC group savings, AI trading bots and Didit KYC on mcbuleli.org.",
-    ogTitle: "McBuleli - Africa-first crypto wallet & P2P",
+    ogTitle: "McBuleli — Africa-first crypto wallet & P2P",
     heading: "Built for DR Congo & Africa",
     intro:
       "McBuleli helps you move between crypto and mobile money with escrow-protected P2P, a secure custodial wallet, and savings tools designed for African communities.",
@@ -44,28 +44,28 @@ const HOME_SEO: Record<Locale, HomeSeoCopy> = {
       "P2P marketplace with escrow until mobile money is confirmed",
       "Fixed-term staking, AVEC village savings and liquidity pool",
       "AI trading bots, futures, options and verified KYC (Didit)",
-      "Human support - available 24/7 for DR Congo and the wider region",
+      "Human support — available 24/7 for DR Congo and the wider region",
     ],
     regions:
-      "Serving users in DR Congo (RDC), East Africa, West Africa and the diaspora - Orange Money, M-Pesa, Airtel Money and bank transfers where supported.",
+      "Serving users in DR Congo (RDC), East Africa, West Africa and the diaspora — Orange Money, M-Pesa, Airtel Money and bank transfers where supported.",
   },
   fr: {
-    title: "McBuleli - Portefeuille USDT, P2P & Mobile money en RDC et Afrique",
+    title: "McBuleli — Portefeuille USDT, P2P & Mobile money en RDC et Afrique",
     description:
       "Achetez et vendez USDT & Pi avec le mobile money en RDC et en Afrique. Escrow P2P, portefeuille custodial, staking, épargne AVEC, bots IA et KYC Didit sur mcbuleli.org.",
-    ogTitle: "McBuleli - Wallet crypto & P2P pour l'Afrique",
+    ogTitle: "McBuleli — Wallet crypto & P2P pour l'Afrique",
     heading: "Conçu pour la RDC & l'Afrique",
     intro:
       "McBuleli facilite les échanges entre crypto et mobile money avec un P2P protégé par escrow, un portefeuille sécurisé et des outils d'épargne adaptés aux communautés africaines.",
     bullets: [
-      "Portefeuille USDT & Pi - dépôt, retrait et historique",
+      "Portefeuille USDT & Pi — dépôt, retrait et historique",
       "Marketplace P2P avec escrow jusqu'à confirmation du mobile money",
       "Staking à terme fixe, épargne AVEC et pool de liquidité",
       "Bots IA, futures, options et KYC vérifié (Didit)",
-      "Support humain - disponible 24h/24 pour la RDC et la région",
+      "Support humain — disponible 24h/24 pour la RDC et la région",
     ],
     regions:
-      "Utilisateurs en RDC, Afrique de l'Est, Afrique de l'Ouest et diaspora - Orange Money, M-Pesa, Airtel Money et virements selon disponibilité.",
+      "Utilisateurs en RDC, Afrique de l'Est, Afrique de l'Ouest et diaspora — Orange Money, M-Pesa, Airtel Money et virements selon disponibilité.",
   },
 };
 

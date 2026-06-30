@@ -9,7 +9,7 @@ import { marketIconUrl } from "@/lib/market-icons";
 import { getDictionary } from "@/i18n/messages";
 import type { Locale } from "@/i18n/locale";
 
-type UiAppearance = "light" | "dark" | "hud";
+type UiAppearance = "light" | "dark";
 
 export function MarketPreview({
   locale,
@@ -26,7 +26,6 @@ export function MarketPreview({
 }) {
   const d = getDictionary(locale);
   const isLight = appearance === "light";
-  const isHud = appearance === "hud";
   const [tickers, setTickers] = useState<MarketTicker[] | null>(initialTickers);
   const [stale, setStale] = useState(false);
 
@@ -66,31 +65,21 @@ export function MarketPreview({
   return (
     <section
       className={
-        isHud
-          ? "market-hud-card group relative overflow-hidden rounded-2xl border border-white/10 bg-[rgba(8,12,22,0.94)] p-4 shadow-[0_8px_40px_rgba(0,0,0,0.45)]"
-          : isLight
-            ? "fd-card overflow-hidden p-4"
-            : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
+        isLight
+          ? "fd-card overflow-hidden p-4"
+          : "overflow-hidden rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
       }
     >
-      {isHud ? (
-        <span
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"
-          aria-hidden
-        />
-      ) : null}
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h2 className={isLight ? "fd-section-title" : isHud ? "text-sm font-bold text-stone-50" : "text-sm font-bold text-stone-50"}>
+          <h2 className={isLight ? "fd-section-title" : "text-sm font-bold text-stone-50"}>
             {d.market_preview}
           </h2>
           <span
             className={
               isLight
                 ? "fd-live-pill"
-                : isHud
-                  ? "inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
-                  : "inline-flex items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+                : "inline-flex items-center gap-1 rounded-full border border-emerald-800/35 bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
             }
             title={d.market_live_hint}
           >
@@ -143,9 +132,7 @@ export function MarketPreview({
               className={
                 isLight
                   ? "flex min-h-[88px] flex-col rounded-2xl border border-[color:var(--fd-border)] bg-white p-3 shadow-sm transition active:scale-[0.98] hover:border-[color:var(--fd-primary)]/30 hover:bg-[color:var(--fd-mint)]/30"
-                  : isHud
-                    ? "flex min-h-[88px] flex-col rounded-2xl border border-white/10 bg-[rgba(5,8,16,0.55)] p-3 transition active:scale-[0.98] hover:border-cyan-400/25 hover:bg-cyan-400/5"
-                    : "flex min-h-[88px] flex-col rounded-2xl border border-stone-700/60 bg-stone-900/40 p-3 transition active:scale-[0.98] hover:border-emerald-700/40"
+                  : "flex min-h-[88px] flex-col rounded-2xl border border-stone-700/60 bg-stone-900/40 p-3 transition active:scale-[0.98] hover:border-emerald-700/40"
               }
             >
               <span className="flex items-center gap-2">

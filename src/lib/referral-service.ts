@@ -50,7 +50,7 @@ export async function ensureUserReferralCode(userId: string): Promise<string> {
         .limit(1);
       if (again?.code) return again.code;
     } catch {
-      /* unique referral_code collision - retry */
+      /* unique referral_code collision — retry */
     }
   }
   throw new Error("referral_code_generation_failed");

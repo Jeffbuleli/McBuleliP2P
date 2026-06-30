@@ -73,7 +73,7 @@ function redactLinks(text: string): string {
   return text.replace(URL_RE, "[lien masqué]");
 }
 
-/** In-memory rate limit - per user per minute. */
+/** In-memory rate limit — per user per minute. */
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 export function checkDmRateLimit(userId: string, maxPerMinute = 25): boolean {

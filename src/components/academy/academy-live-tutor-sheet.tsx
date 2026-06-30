@@ -6,7 +6,7 @@ import { academyCls } from "@/components/academy/academy-ui";
 import { fetchWithDeadline } from "@/lib/fetch-with-deadline";
 import { RenderAssistantMarkdown } from "@/lib/assistant/render-markdown";
 
-/** FAB / sheet IA - discret, syllabus cohorte uniquement. */
+/** FAB / sheet IA — discret, syllabus cohorte uniquement. */
 export function AcademyLiveTutorSheet({
   editionSlug,
   programSlug,

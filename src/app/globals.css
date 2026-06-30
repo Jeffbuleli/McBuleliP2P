@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-/* Tie `dark:*` utilities to `.dark` on the root - default Tailwind v4 uses
+/* Tie `dark:*` utilities to `.dark` on the root — default Tailwind v4 uses
  * prefers-color-scheme only, so OS light mode showed bg-white + light body text. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* McBuleli fintech - dark-first (green growth + brown stability) */
+/* McBuleli fintech — dark-first (green growth + brown stability) */
 :root {
   --brand-green: #22c55e;
   --brand-green-dim: #166534;
@@ -57,7 +57,7 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* McBuleli Academy - light cards; fixes body inheriting light text on white inputs */
+/* McBuleli Academy — light cards; fixes body inheriting light text on white inputs */
 .academy-theme {
   color: var(--fd-text);
   -webkit-font-smoothing: antialiased;
@@ -81,12 +81,12 @@ html {
 }
 
 .community-theme {
-  color: rgba(250, 250, 249, 0.94);
-  background: transparent;
+  color: var(--fd-text);
+  background: var(--fd-bg);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Congo Mining simulator - light inputs on white cards (avoid inherited light text) */
+/* Congo Mining simulator — light inputs on white cards (avoid inherited light text) */
 .game-theme {
   color: #1c1917;
   -webkit-font-smoothing: antialiased;
@@ -109,7 +109,7 @@ html {
   box-shadow: 0 0 0 1000px #ffffff inset;
 }
 
-/* Profile section - light, card-first UI */
+/* Profile section — light, card-first UI */
 .profile-theme {
   color: var(--fd-text);
   -webkit-font-smoothing: antialiased;
@@ -271,7 +271,7 @@ html {
   letter-spacing: -0.01em;
 }
 
-/* Home hub - same light tokens as wallet */
+/* Home hub — same light tokens as wallet */
 .home-theme {
   color: var(--fd-text);
   -webkit-font-smoothing: antialiased;
@@ -368,14 +368,14 @@ html {
   z-index: 50;
 }
 
-/* Marketing / auth - same light surface as app home */
+/* Marketing / auth — same light surface as app home */
 .fd-public-light {
   color: var(--fd-text);
   background: var(--fd-bg);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
-/* Auth pages - structural CSS (works even if utility chunks load late) */
+/* Auth pages — structural CSS (works even if utility chunks load late) */
 .fd-public-light .auth-form {
   display: flex;
   flex-direction: column;
@@ -532,113 +532,7 @@ html {
   z-index: 10;
 }
 
-/* Landing - thin cyan scrollbars on horizontal tab strips */
-.landing-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.4) rgba(255, 255, 255, 0.06);
-}
-.landing-scrollbar::-webkit-scrollbar {
-  height: 5px;
-  width: 5px;
-}
-.landing-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 9999px;
-}
-.landing-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.38);
-  border-radius: 9999px;
-}
-.landing-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.55);
-}
-
-/* Auth + public legal - futuristic dark shell (matches landing / about) */
-.auth-futuristic,
-.fd-public-futuristic {
-  color: #fafaf9;
-  background: #050810;
-  min-height: 100dvh;
-  -webkit-font-smoothing: antialiased;
-}
-.auth-futuristic .auth-label,
-.fd-public-futuristic .auth-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #a8a29e;
-}
-.auth-v2.auth-futuristic input.auth-input,
-.auth-v2.auth-futuristic select.auth-input,
-.auth-futuristic input.auth-input,
-.auth-futuristic select.auth-input,
-.fd-public-futuristic input.auth-input,
-.fd-public-futuristic select.auth-input {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 48px;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #050810;
-  padding: 0.75rem;
-  font-size: 1rem;
-  color: #fafaf9;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-}
-.auth-v2.auth-futuristic input.auth-input:focus,
-.auth-v2.auth-futuristic select.auth-input:focus,
-.auth-futuristic input.auth-input:focus,
-.auth-futuristic select.auth-input:focus,
-.fd-public-futuristic input.auth-input:focus,
-.fd-public-futuristic select.auth-input:focus {
-  border-color: rgba(34, 211, 238, 0.45);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14);
-}
-.auth-futuristic input.auth-input::placeholder {
-  color: #57534e;
-}
-.auth-v2.auth-futuristic .auth-btn-primary,
-.auth-v2.auth-futuristic button[type="submit"]:not(.auth-btn-outline),
-.auth-futuristic .auth-btn-primary,
-.auth-futuristic button[type="submit"]:not(.auth-btn-outline) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 52px;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-  border-radius: 0.75rem;
-  background: rgba(16, 185, 129, 0.1);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #6ee7b7;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-.auth-v2.auth-futuristic .auth-btn-primary:hover:not(:disabled),
-.auth-v2.auth-futuristic button[type="submit"]:not(.auth-btn-outline):hover:not(:disabled),
-.auth-futuristic .auth-btn-primary:hover:not(:disabled),
-.auth-futuristic button[type="submit"]:not(.auth-btn-outline):hover:not(:disabled) {
-  border-color: rgba(110, 231, 183, 0.55);
-  background: rgba(16, 185, 129, 0.16);
-}
-.auth-v2.auth-futuristic .auth-btn-primary:disabled,
-.auth-v2.auth-futuristic button[type="submit"]:disabled,
-.auth-futuristic .auth-btn-primary:disabled,
-.auth-futuristic button[type="submit"]:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.auth-futuristic .auth-divider-line {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-.auth-futuristic .auth-divider-label {
-  background: #0a1018;
-  color: #57534e;
-}
-
-/* Auth inputs - keep white background when iOS/Android autofill is applied */
+/* Auth inputs — keep white background when iOS/Android autofill is applied */
 .fd-public-light input.auth-input:-webkit-autofill,
 .fd-public-light input.auth-input:-webkit-autofill:hover,
 .fd-public-light input.auth-input:-webkit-autofill:focus,
@@ -663,7 +557,7 @@ html {
     0 12px 28px rgba(28, 25, 23, 0.05);
 }
 
-/* Admin Room - light ops console */
+/* Admin Room — light ops console */
 .admin-theme {
   color: var(--fd-text);
   background: var(--fd-bg);
@@ -802,7 +696,7 @@ html {
   background: rgba(254, 242, 242, 0.55);
 }
 
-/* In-app sticky title bar - light glass */
+/* In-app sticky title bar — light glass */
 .fd-app-topbar {
   border-radius: 1rem;
   border: 1px solid rgba(48, 95, 51, 0.16);
@@ -813,7 +707,7 @@ html {
   backdrop-filter: blur(10px);
 }
 
-/* Wallet section - reuses profile tokens */
+/* Wallet section — reuses profile tokens */
 .wallet-theme {
   color: var(--fd-text);
   -webkit-font-smoothing: antialiased;
@@ -833,7 +727,7 @@ html {
     0 12px 28px rgba(28, 25, 23, 0.05);
 }
 
-/* P2P - softer palette + light card lift (optical depth) */
+/* P2P — softer palette + light card lift (optical depth) */
 .p2p-theme {
   --fd-primary: #4a7350;
   --fd-primary-dark: #3d5f42;
@@ -1131,7 +1025,7 @@ html {
   flex-shrink: 0;
 }
 
-/* Trade - vivid Fondeka (bots + futures) */
+/* Trade — vivid Fondeka (bots + futures) */
 .trade-futures-theme,
 .trade-bots-theme {
   --fd-primary: #2a7d3e;
@@ -1229,7 +1123,7 @@ html {
   border-color: var(--fd-primary);
 }
 
-/* Bots - minimalist data rows & tables (no emoji/game UI) */
+/* Bots — minimalist data rows & tables (no emoji/game UI) */
 .trade-bots-theme .bot-data-list,
 .trade-futures-theme .bot-data-list {
   display: flex;
@@ -1748,7 +1642,7 @@ html {
     0 3px 14px rgba(48, 95, 51, 0.26);
 }
 
-/* Total balance - large mobile PWA actions (Deposit / Withdraw / Send) */
+/* Total balance — large mobile PWA actions (Deposit / Withdraw / Send) */
 .home-theme .wallet-balance-actions,
 .wallet-theme .wallet-balance-actions {
   display: grid;
@@ -1822,7 +1716,7 @@ html {
   color: var(--fd-primary-dark);
 }
 
-/* Wallet v2 - crypto/fiat split, green + brown */
+/* Wallet v2 — crypto/fiat split, green + brown */
 .wallet-theme .wallet-hero-total {
   background: linear-gradient(155deg, #e8f3ee 0%, #f8faf9 42%, #fff8f0 100%);
   border: 1px solid rgba(48, 95, 51, 0.16);
@@ -1996,9 +1890,6 @@ html {
 }
 .wallet-theme .wallet-asset-row {
   border: 1px solid rgba(48, 95, 51, 0.1);
-  border-radius: 1.1rem;
-  background: var(--fd-card);
-  box-shadow: 0 6px 20px rgba(48, 95, 51, 0.1);
 }
 .wallet-theme .wallet-swap-shell {
   position: relative;
@@ -2212,847 +2103,4 @@ html {
 .tx-outcome-success,
 .tx-outcome-failed {
   animation: tx-outcome-pulse 0.45s ease-out;
-}
-
-/* In-app shell - futuristic HUD (home, wallet, profile, chrome) */
-.app-futuristic,
-.app-futuristic-portal {
-  --fd-primary: #34d399;
-  --fd-primary-dark: #6ee7b7;
-  --fd-mint: rgba(52, 211, 153, 0.12);
-  --fd-mint-deep: rgba(52, 211, 153, 0.08);
-  --fd-bg: #050810;
-  --fd-card: rgba(10, 16, 24, 0.92);
-  --fd-text: rgba(250, 250, 249, 0.94);
-  --fd-muted: rgba(148, 163, 184, 0.88);
-  --fd-border: rgba(34, 211, 238, 0.14);
-  --fd-amber: #fbbf24;
-  --fd-copper: #f59e0b;
-  --fd-brown: #fcd34d;
-  color: var(--fd-text);
-}
-
-.app-futuristic .fd-app-topbar {
-  border-radius: 0;
-  border: 1px solid rgba(34, 211, 238, 0.18);
-  background: rgba(8, 12, 24, 0.88);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 8px 32px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-}
-
-.app-futuristic .fd-nav-glow {
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(8, 12, 24, 0.94);
-  box-shadow:
-    0 0 24px rgba(34, 211, 238, 0.08),
-    0 12px 40px rgba(0, 0, 0, 0.45);
-}
-
-.app-futuristic .fd-nav-active {
-  color: #34d399;
-  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.45));
-}
-
-.app-futuristic .fd-nav-idle {
-  color: rgba(148, 163, 184, 0.75);
-}
-
-.app-futuristic .fd-nav-label-active {
-  color: rgba(250, 250, 249, 0.95);
-}
-
-.app-futuristic .home-scroll,
-.app-futuristic .wallet-scroll,
-.app-futuristic .profile-scroll {
-  background: transparent;
-}
-
-.app-futuristic .home-theme .fd-card,
-.app-futuristic .wallet-theme .fd-card,
-.app-futuristic .profile-theme .fd-card {
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.9);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 8px 28px rgba(0, 0, 0, 0.35);
-}
-
-.app-futuristic .home-theme .wallet-hero,
-.app-futuristic .wallet-theme .wallet-hero {
-  border-radius: 0;
-  background: linear-gradient(
-    165deg,
-    rgba(52, 211, 153, 0.1) 0%,
-    rgba(8, 12, 24, 0.95) 52%,
-    rgba(10, 16, 24, 0.98) 100%
-  );
-  border: 1px solid rgba(34, 211, 238, 0.16);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-.app-futuristic .home-theme .fd-live-pill {
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
-}
-
-.app-futuristic .home-theme .fd-section-muted,
-.app-futuristic .wallet-theme .fd-section-muted,
-.app-futuristic .profile-theme .fd-section-muted {
-  color: var(--fd-muted);
-}
-
-.app-futuristic .notif-drawer-panel .bg-emerald-100 {
-  background: rgba(52, 211, 153, 0.15);
-}
-.app-futuristic .notif-drawer-panel .text-emerald-800 {
-  color: #6ee7b7;
-}
-.app-futuristic .notif-drawer-panel .bg-rose-100 {
-  background: rgba(244, 63, 94, 0.15);
-}
-.app-futuristic .notif-drawer-panel .text-rose-800 {
-  color: #fda4af;
-}
-.app-futuristic .notif-drawer-panel .bg-amber-100 {
-  background: rgba(251, 191, 36, 0.15);
-}
-.app-futuristic .notif-drawer-panel .text-amber-900 {
-  color: #fcd34d;
-}
-.app-futuristic .notif-drawer-panel .bg-sky-100 {
-  background: rgba(56, 189, 248, 0.15);
-}
-.app-futuristic .notif-drawer-panel .text-sky-800 {
-  color: #7dd3fc;
-}
-
-.app-futuristic .profile-theme .fd-hero,
-.app-futuristic .profile-theme .fd-stat-bar {
-  border-radius: 0;
-  background: linear-gradient(
-    165deg,
-    rgba(52, 211, 153, 0.1) 0%,
-    rgba(8, 12, 24, 0.95) 52%,
-    rgba(10, 16, 24, 0.98) 100%
-  );
-  border: 1px solid rgba(34, 211, 238, 0.16);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-.app-futuristic .profile-theme .fd-tile {
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.9);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.app-futuristic .profile-theme .fd-pill-ok {
-  background: rgba(52, 211, 153, 0.15);
-  color: #6ee7b7;
-}
-
-.app-futuristic .profile-theme .fd-pill-warn {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fcd34d;
-}
-
-.app-futuristic .profile-theme .fd-pill-muted {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--fd-muted);
-}
-
-/* App - thin cyan scrollbars (vertical + horizontal strips) */
-.app-futuristic,
-.app-futuristic-portal {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.32) rgba(255, 255, 255, 0.04);
-}
-.app-futuristic::-webkit-scrollbar,
-.app-futuristic-portal::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.app-futuristic::-webkit-scrollbar-track,
-.app-futuristic-portal::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 9999px;
-}
-.app-futuristic::-webkit-scrollbar-thumb,
-.app-futuristic-portal::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.35);
-  border-radius: 9999px;
-}
-.app-futuristic::-webkit-scrollbar-thumb:hover,
-.app-futuristic-portal::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.52);
-}
-
-.app-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.38) rgba(255, 255, 255, 0.06);
-}
-.app-scrollbar::-webkit-scrollbar {
-  height: 4px;
-  width: 4px;
-}
-.app-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 9999px;
-}
-.app-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.4);
-  border-radius: 9999px;
-}
-.app-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.58);
-}
-
-/* Wallet - futuristic overrides inside app shell */
-.app-futuristic .wallet-theme .wallet-hero-total {
-  border-radius: 0;
-  background: linear-gradient(
-    165deg,
-    rgba(52, 211, 153, 0.1) 0%,
-    rgba(8, 12, 24, 0.95) 52%,
-    rgba(10, 16, 24, 0.98) 100%
-  );
-  border: 1px solid rgba(34, 211, 238, 0.16);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 8px 32px rgba(0, 0, 0, 0.4);
-}
-.app-futuristic .wallet-theme .wallet-history-banner {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(10, 16, 24, 0.88);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.app-futuristic .wallet-theme .wallet-asset-row {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(10, 16, 24, 0.88);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.app-futuristic .wallet-theme .wallet-asset-row .bg-amber-100 {
-  background: rgba(251, 191, 36, 0.15);
-}
-.app-futuristic .wallet-theme .wallet-asset-row .text-amber-800 {
-  color: #fcd34d;
-}
-
-.app-futuristic .wallet-theme .wallet-hist-icon-receive {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.25);
-}
-.app-futuristic .wallet-theme .wallet-hist-icon-send {
-  background: rgba(244, 114, 182, 0.12);
-  color: #f9a8d4;
-  border: 1px solid rgba(244, 114, 182, 0.22);
-}
-.app-futuristic .wallet-theme .wallet-hist-icon-withdraw {
-  background: rgba(251, 191, 36, 0.12);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.22);
-}
-.app-futuristic .wallet-theme .wallet-hist-icon-swap {
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
-  border: 1px solid rgba(34, 211, 238, 0.22);
-}
-.app-futuristic .wallet-theme .wallet-hist-icon-p2p {
-  background: rgba(192, 132, 252, 0.12);
-  color: #d8b4fe;
-  border: 1px solid rgba(192, 132, 252, 0.22);
-}
-.app-futuristic .wallet-theme .wallet-hist-icon-other {
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
-  border: 1px solid rgba(52, 211, 153, 0.22);
-}
-
-.app-futuristic .wallet-theme .wallet-form-card {
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.9);
-  padding: 1rem;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-}
-.app-futuristic .wallet-theme .wallet-input {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: #050810;
-  color: var(--fd-text);
-}
-.app-futuristic .wallet-theme .wallet-btn-primary {
-  border: 1px solid rgba(52, 211, 153, 0.45);
-  background: rgba(52, 211, 153, 0.15);
-  color: #6ee7b7;
-}
-.app-futuristic .wallet-theme .wallet-btn-ghost {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 16, 24, 0.85);
-  color: var(--fd-muted);
-}
-.app-futuristic .wallet-theme .wallet-status-banner-success {
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
-  border: 1px solid rgba(52, 211, 153, 0.25);
-}
-.app-futuristic .wallet-theme .wallet-status-banner-error {
-  background: rgba(244, 63, 94, 0.12);
-  color: #fda4af;
-  border: 1px solid rgba(244, 63, 94, 0.25);
-}
-.app-futuristic .wallet-theme .wallet-status-banner-warn {
-  background: rgba(251, 191, 36, 0.12);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.25);
-}
-.app-futuristic .wallet-theme .wallet-status-banner-info {
-  background: rgba(34, 211, 238, 0.1);
-  color: #67e8f9;
-  border: 1px solid rgba(34, 211, 238, 0.22);
-}
-
-.app-futuristic-portal .wallet-money-option {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(10, 16, 24, 0.88);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.app-futuristic-portal .wallet-money-option:active {
-  background: rgba(34, 211, 238, 0.08);
-  border-color: rgba(34, 211, 238, 0.35);
-}
-
-.app-futuristic .wallet-theme .wallet-swap-card {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(10, 16, 24, 0.88);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.app-futuristic .wallet-theme .wallet-swap-card-pay {
-  background: rgba(10, 16, 24, 0.92);
-  border-color: rgba(52, 211, 153, 0.25);
-  z-index: 1;
-}
-.app-futuristic .wallet-theme .wallet-swap-card-receive {
-  margin-top: -0.35rem;
-  padding-top: 1.35rem;
-  background: rgba(10, 16, 24, 0.85);
-  border-color: rgba(34, 211, 238, 0.18);
-  z-index: 0;
-}
-.app-futuristic .wallet-theme .wallet-swap-flip {
-  border: 2px solid rgba(8, 12, 24, 0.95);
-  background: linear-gradient(145deg, rgba(52, 211, 153, 0.22) 0%, rgba(34, 211, 238, 0.16) 100%);
-  color: #67e8f9;
-  box-shadow:
-    0 4px 16px rgba(34, 211, 238, 0.2),
-    0 0 0 1px rgba(34, 211, 238, 0.15) inset;
-}
-.app-futuristic .wallet-theme .wallet-swap-chip {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 16, 24, 0.85);
-  color: #6ee7b7;
-}
-.app-futuristic .wallet-theme .wallet-swap-chip:active {
-  background: rgba(52, 211, 153, 0.12);
-  border-color: rgba(52, 211, 153, 0.35);
-}
-.app-futuristic .wallet-theme .wallet-swap-asset-btn {
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  background: rgba(10, 16, 24, 0.9);
-  color: var(--fd-text);
-}
-.app-futuristic .wallet-theme .wallet-swap-asset-menu {
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background: rgba(8, 12, 24, 0.96);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-.app-futuristic .wallet-theme .wallet-swap-asset-option {
-  color: var(--fd-text);
-}
-.app-futuristic .wallet-theme .wallet-swap-asset-option:hover {
-  background: rgba(34, 211, 238, 0.08);
-}
-.app-futuristic .wallet-theme .wallet-swap-asset-option-active {
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
-}
-.app-futuristic .wallet-theme .wallet-swap-volatile {
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  background: rgba(251, 191, 36, 0.1);
-}
-.app-futuristic .wallet-theme .wallet-swap-volatile p {
-  color: #fcd34d;
-}
-.app-futuristic .wallet-theme .wallet-swap-volatile p:last-child {
-  color: rgba(252, 211, 77, 0.8);
-}
-
-/* P2P - futuristic HUD inside app shell */
-.app-futuristic .wallet-theme.p2p-theme {
-  --fd-primary: #34d399;
-  --fd-primary-dark: #6ee7b7;
-  --fd-mint: rgba(52, 211, 153, 0.12);
-  --fd-mint-deep: rgba(52, 211, 153, 0.08);
-  --fd-bg: #050810;
-  --fd-card: rgba(10, 16, 24, 0.92);
-  --fd-text: rgba(250, 250, 249, 0.94);
-  --fd-muted: rgba(148, 163, 184, 0.88);
-  --fd-border: rgba(34, 211, 238, 0.14);
-  --fd-sell: #fbbf24;
-  --fd-sell-mint: rgba(251, 191, 36, 0.12);
-  --fd-sell-deep: rgba(251, 191, 36, 0.18);
-  --fd-brown: #f59e0b;
-}
-.app-futuristic .wallet-theme.p2p-theme .fd-card {
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.9);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 8px 28px rgba(0, 0, 0, 0.35);
-}
-.app-futuristic .wallet-theme.p2p-theme .fd-btn-soft {
-  border: 1px solid rgba(52, 211, 153, 0.45);
-  background: rgba(52, 211, 153, 0.15);
-  color: #6ee7b7;
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.1);
-}
-.app-futuristic .wallet-theme.p2p-theme .fd-btn-sell {
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  background: rgba(251, 191, 36, 0.18);
-  color: #fcd34d;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.1);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-input,
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-select {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: #050810;
-  color: var(--fd-text);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-input:focus,
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-select:focus {
-  border-color: rgba(34, 211, 238, 0.4);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-chip-on-buy {
-  border: 1px solid rgba(52, 211, 153, 0.45);
-  background: rgba(52, 211, 153, 0.18);
-  color: #6ee7b7;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-chip-on-sell {
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  background: rgba(251, 191, 36, 0.18);
-  color: #fcd34d;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-chip-off {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.85);
-  color: var(--fd-muted);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-maker-row {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5, 8, 16, 0.65);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-ad-header-buy {
-  background: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.15);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-ad-header-sell {
-  background: rgba(251, 191, 36, 0.08);
-  border-color: rgba(251, 191, 36, 0.15);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card {
-  border-radius: 0.875rem;
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.88);
-  overflow: hidden;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card__illus {
-  border-radius: 0.625rem;
-  border: 1px solid rgba(34, 211, 238, 0.12);
-  background: rgba(5, 8, 16, 0.65);
-  overflow: hidden;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card__illus .p2p-hud-illus {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--buy {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(52, 211, 153, 0.2);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--buy .p2p-info-card__illus {
-  background: rgba(52, 211, 153, 0.12);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--sell {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.14) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(251, 191, 36, 0.2);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--sell .p2p-info-card__illus {
-  background: rgba(251, 191, 36, 0.12);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--info {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(34, 211, 238, 0.18);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--info .p2p-info-card__illus {
-  background: rgba(34, 211, 238, 0.1);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--warn {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(251, 191, 36, 0.18);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-info-card--warn .p2p-info-card__illus {
-  background: rgba(251, 191, 36, 0.1);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-safety-card {
-  min-width: 9.5rem;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-safety-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.25) transparent;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner {
-  border-radius: 0.875rem;
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.9);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner__illus {
-  border: 1px solid rgba(34, 211, 238, 0.12);
-  background: rgba(5, 8, 16, 0.65);
-  overflow: hidden;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner__illus .p2p-hud-illus {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--buy {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(52, 211, 153, 0.2);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--buy .p2p-procedure-banner__illus {
-  border-color: rgba(52, 211, 153, 0.22);
-  background: rgba(52, 211, 153, 0.08);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--sell {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.14) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(251, 191, 36, 0.2);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--sell .p2p-procedure-banner__illus {
-  border-color: rgba(251, 191, 36, 0.22);
-  background: rgba(251, 191, 36, 0.08);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--info {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(34, 211, 238, 0.18);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--info .p2p-procedure-banner__illus {
-  border-color: rgba(34, 211, 238, 0.2);
-  background: rgba(34, 211, 238, 0.08);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--warn {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(10, 16, 24, 0.92) 72%);
-  border-color: rgba(251, 191, 36, 0.18);
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-procedure-banner--warn .p2p-procedure-banner__illus {
-  border-color: rgba(251, 191, 36, 0.2);
-  background: rgba(251, 191, 36, 0.08);
-}
-@keyframes p2p-hud-illus-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-.p2p-hud-illus-pulse {
-  animation: p2p-hud-illus-pulse 2.2s ease-in-out infinite;
-}
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-input,
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-select,
-.app-futuristic .wallet-theme.p2p-theme .p2p-flow-payment textarea {
-  border-radius: 0.75rem;
-}
-
-/* HUD corner bracket pulse - waiting screen & live market accents */
-@keyframes hud-corner-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(0.94);
-    filter: drop-shadow(0 0 0 transparent);
-  }
-  45% {
-    opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 5px currentColor);
-  }
-}
-.hud-corner-bracket--pulse {
-  animation: hud-corner-pulse 2.2s ease-in-out infinite;
-  transform-origin: center;
-}
-.hud-corner-bracket--d0 {
-  animation-delay: 0s;
-}
-.hud-corner-bracket--d1 {
-  animation-delay: 0.55s;
-}
-.hud-corner-bracket--d2 {
-  animation-delay: 1.1s;
-}
-.hud-corner-bracket--d3 {
-  animation-delay: 1.65s;
-}
-
-/* Community - futuristic HUD social feed */
-.app-futuristic .community-theme .community-chip--active {
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.14);
-  color: #6ee7b7;
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.08);
-}
-.app-futuristic .community-theme .community-chip--live {
-  border-color: rgba(251, 113, 133, 0.35);
-  background: rgba(251, 113, 133, 0.1);
-  color: #fda4af;
-}
-.app-futuristic .community-theme .community-chip:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-.app-futuristic .community-theme .community-action-pill--active {
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
-}
-.app-futuristic .community-theme .community-card {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.92);
-}
-.app-futuristic .community-theme .community-card::before,
-.app-futuristic .community-theme .community-card::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-  opacity: 0.55;
-}
-.app-futuristic .community-theme .community-card::before {
-  top: 6px;
-  left: 6px;
-  border-top: 1px solid rgba(34, 211, 238, 0.45);
-  border-left: 1px solid rgba(34, 211, 238, 0.45);
-}
-.app-futuristic .community-theme .community-card::after {
-  right: 6px;
-  bottom: 6px;
-  border-right: 1px solid rgba(52, 211, 153, 0.35);
-  border-bottom: 1px solid rgba(52, 211, 153, 0.35);
-}
-.app-futuristic .community-theme .community-story-create:hover {
-  border-color: rgba(34, 211, 238, 0.45);
-  box-shadow: 0 0 24px rgba(34, 211, 238, 0.08);
-}
-.app-futuristic .community-theme .community-story-ring:hover {
-  border-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
-}
-.app-futuristic .community-theme .community-story-skeleton {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(10, 16, 24, 0.75);
-}
-.app-futuristic .community-theme .community-media-frame img,
-.app-futuristic .community-theme .community-media-frame video {
-  display: block;
-  width: 100%;
-}
-.app-futuristic .community-theme .community-video-frame .h-full {
-  min-height: 100%;
-}
-.app-futuristic .community-theme .community-profile-stat--accent {
-  border-color: rgba(52, 211, 153, 0.25);
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12) 0%, rgba(10, 16, 24, 0.92) 72%);
-}
-.app-futuristic .community-theme .community-publish-btn:hover {
-  background: rgba(52, 211, 153, 0.2);
-}
-.app-futuristic .community-theme .community-search-input:focus {
-  outline: none;
-  border-color: rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.1);
-}
-.app-futuristic .community-theme .community-search-top-btn:hover {
-  border-color: rgba(34, 211, 238, 0.35);
-  background: rgba(34, 211, 238, 0.12);
-}
-.app-futuristic .community-theme .community-modal-panel textarea,
-.app-futuristic .community-theme .community-modal-panel input {
-  color: #f8fafc;
-  background: rgba(5, 8, 16, 0.65);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-.app-futuristic .community-theme .community-input:focus,
-.app-futuristic .community-theme .community-textarea:focus {
-  outline: none;
-  border-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.08);
-}
-.app-futuristic .community-theme .fd-card {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.88);
-  color: rgba(250, 250, 249, 0.94);
-}
-.app-futuristic .community-theme .community-list-row:hover {
-  border-color: rgba(34, 211, 238, 0.22);
-  box-shadow: 0 0 24px rgba(34, 211, 238, 0.06);
-}
-.app-futuristic .community-theme .community-card-link:hover {
-  border-color: rgba(34, 211, 238, 0.2);
-}
-.app-futuristic .community-theme .community-dm-btn:hover {
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
-}
-.app-futuristic .community-theme .community-stat-cell {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(5, 8, 16, 0.55);
-}
-.app-futuristic .community-theme .community-stat-cell:hover {
-  border-color: rgba(34, 211, 238, 0.18);
-}
-.app-futuristic .community-theme .community-picker-card:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-/* Market hub - pure futuristic HUD */
-.market-theme {
-  --fd-primary: #34d399;
-  --fd-primary-dark: #10b981;
-  --fd-mint: rgba(52, 211, 153, 0.08);
-  --fd-mint-deep: rgba(52, 211, 153, 0.14);
-  --fd-text: #f8fafc;
-  --fd-muted: #94a3b8;
-  --fd-border: rgba(255, 255, 255, 0.1);
-  color-scheme: dark;
-}
-
-.app-futuristic .market-theme .market-tab-btn--active {
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  background: rgba(34, 211, 238, 0.08);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
-}
-
-.app-futuristic .market-theme .market-tab-btn:hover {
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.app-futuristic .market-theme .market-hud-card::before,
-.app-futuristic .market-theme .market-hud-card::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-  opacity: 0.55;
-}
-.app-futuristic .market-theme .market-hud-card::before {
-  top: 6px;
-  left: 6px;
-  border-top: 1px solid rgba(34, 211, 238, 0.45);
-  border-left: 1px solid rgba(34, 211, 238, 0.45);
-}
-.app-futuristic .market-theme .market-hud-card::after {
-  right: 6px;
-  bottom: 6px;
-  border-right: 1px solid rgba(52, 211, 153, 0.35);
-  border-bottom: 1px solid rgba(52, 211, 153, 0.35);
-}
-
-.app-futuristic .market-theme .trade-futures-theme,
-.app-futuristic .market-theme .trade-bots-theme {
-  --fd-primary: #34d399;
-  --fd-primary-dark: #10b981;
-  --fd-mint: rgba(52, 211, 153, 0.08);
-  --fd-mint-deep: rgba(52, 211, 153, 0.14);
-  --fd-text: #f8fafc;
-  --fd-muted: #94a3b8;
-  --fd-border: rgba(255, 255, 255, 0.1);
-  color-scheme: dark;
-  background: transparent;
-  min-height: 0;
-}
-
-.app-futuristic .market-theme .trade-futures-theme .fd-card,
-.app-futuristic .market-theme .trade-bots-theme .fd-card {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.92);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  color: #f8fafc;
-}
-
-.app-futuristic .market-theme .trade-futures-theme .trade-btn-primary,
-.app-futuristic .market-theme .trade-bots-theme .trade-btn-primary {
-  border: 1px solid rgba(52, 211, 153, 0.35);
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.28) 0%, rgba(16, 185, 129, 0.22) 100%);
-  color: #ecfdf5;
-  box-shadow: 0 0 24px rgba(52, 211, 153, 0.12);
-}
-
-.app-futuristic .market-theme .trade-futures-theme input,
-.app-futuristic .market-theme .trade-futures-theme select,
-.app-futuristic .market-theme .trade-bots-theme input,
-.app-futuristic .market-theme .trade-bots-theme select {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(5, 8, 16, 0.65);
-  color: #f8fafc;
-}
-
-.app-futuristic .market-theme .trade-futures-theme .trade-summary-panel,
-.app-futuristic .market-theme .trade-bots-theme .trade-summary-panel {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(5, 8, 16, 0.55);
-}
-
-.app-futuristic .market-theme .trade-futures-theme .bg-amber-50,
-.app-futuristic .market-theme .trade-futures-theme .bg-white {
-  background: rgba(5, 8, 16, 0.55) !important;
-}
-.app-futuristic .market-theme .trade-futures-theme .text-amber-900,
-.app-futuristic .market-theme .trade-futures-theme .text-amber-700 {
-  color: #fcd34d !important;
-}
-.app-futuristic .market-theme .trade-futures-theme .border-amber-400\/50 {
-  border-color: rgba(251, 191, 36, 0.35) !important;
-}
-
-.app-futuristic .market-theme .trade-futures-theme .rounded-2xl.bg-\[color\:var\(--fd-mint\)\] {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5, 8, 16, 0.55) !important;
-}
-
-.app-futuristic .market-theme .fd-card {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(10, 16, 24, 0.88);
-  color: rgba(250, 250, 249, 0.94);
 }

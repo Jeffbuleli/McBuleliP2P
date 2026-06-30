@@ -14,7 +14,7 @@ export const WORLD_REGIONS: WorldRegion[] = [
   {
     key: "katanga",
     name: "Katanga Copperbelt",
-    nameFr: "Ceinture du cuivre - Katanga",
+    nameFr: "Ceinture du cuivre — Katanga",
     biome: "savanna_mining",
     riskLevel: 0.35,
     minerals: ["cobalt", "copper", "gold"],
@@ -60,7 +60,7 @@ export function generateStarterSites(args: {
     const richness = 0.35 + (hash[i]! % 40) / 100;
     return {
       siteKey: `site_${args.regionKey}_${i + 1}`,
-      name: `${region.nameFr.split("-")[0]?.trim() ?? region.name} - ${mineralKey}`,
+      name: `${region.nameFr.split("—")[0]?.trim() ?? region.name} — ${mineralKey}`,
       mineralKey,
       richness: Math.round(richness * 100) / 100,
     };

@@ -1,4 +1,4 @@
-/** Session lifetime - cookie maxAge and JWT exp (default 90 days). */
+/** Session lifetime — cookie maxAge and JWT exp (default 90 days). */
 export function sessionMaxAgeSeconds(): number {
   const days = Number(process.env.SESSION_MAX_AGE_DAYS ?? "90");
   const safe = Number.isFinite(days) && days > 0 ? days : 90;

@@ -2,7 +2,6 @@
 
 import { useI18n } from "@/components/i18n-provider";
 import { IconCheck, IconClock, IconSpinner, IconX } from "@/components/icons/flow-icons";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import type { StepState, TxStep } from "@/lib/transaction-steps";
 import { progressPercent } from "@/lib/transaction-steps";
 
@@ -11,27 +10,27 @@ function StepDot({ state }: { state: StepState }) {
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all";
   if (state === "done") {
     return (
-      <span className={`${base} border-emerald-400 bg-emerald-500/25 text-emerald-300`}>
+      <span className={`${base} border-[color:var(--fd-primary)] bg-[color:var(--fd-primary)] text-white`}>
         <IconCheck className="h-4 w-4" />
       </span>
     );
   }
   if (state === "active") {
     return (
-      <span className={`${base} border-cyan-400 bg-cyan-500/15 text-cyan-300`}>
+      <span className={`${base} border-[color:var(--fd-primary)] bg-white text-[color:var(--fd-primary)]`}>
         <IconSpinner className="h-4 w-4" />
       </span>
     );
   }
   if (state === "failed") {
     return (
-      <span className={`${base} border-rose-400 bg-rose-500/20 text-rose-300`}>
+      <span className={`${base} border-rose-500 bg-rose-500 text-white`}>
         <IconX className="h-4 w-4" />
       </span>
     );
   }
   return (
-    <span className={`${base} border-white/12 bg-[#0a1018]/80 text-[color:var(--fd-muted)]`}>
+    <span className={`${base} border-[color:var(--fd-border)] bg-stone-50 text-[color:var(--fd-muted)]`}>
       <IconClock className="h-4 w-4 opacity-50" />
     </span>
   );
@@ -48,42 +47,40 @@ export function TransactionStepper({
   const pct = progressPercent(steps);
 
   return (
-    <HudFrame accent="cyan" className={`${HUD_PANEL_LG} overflow-hidden`}>
-      <div className="p-4">
-        {!compact ? (
-          <div className="mb-3 flex items-center justify-between text-xs font-semibold text-[color:var(--fd-muted)]">
-            <span>{t("tx_progress")}</span>
-            <span className="tabular-nums text-cyan-300">{pct}%</span>
-          </div>
-        ) : null}
-        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
+    <div className="fd-card overflow-hidden p-4">
+      {!compact ? (
+        <div className="mb-3 flex items-center justify-between text-xs font-semibold text-[color:var(--fd-muted)]">
+          <span>{t("tx_progress")}</span>
+          <span className="tabular-nums text-[color:var(--fd-primary)]">{pct}%</span>
         </div>
-        <ol className="flex justify-between gap-1">
-          {steps.map((step) => (
-            <li key={step.id} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <StepDot state={step.state} />
-              <span
-                className={`max-w-[4.5rem] text-center text-[9px] font-semibold leading-tight ${
-                  step.state === "active"
-                    ? "text-cyan-300"
-                    : step.state === "done"
-                      ? "text-emerald-300"
-                      : step.state === "failed"
-                        ? "text-rose-400"
-                        : "text-[color:var(--fd-muted)]"
-                }`}
-              >
-                {t(step.labelKey)}
-              </span>
-            </li>
-          ))}
-        </ol>
+      ) : null}
+      <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-[color:var(--fd-border)]">
+        <div
+          className="h-full rounded-full bg-[color:var(--fd-primary)] transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
       </div>
-    </HudFrame>
+      <ol className="flex justify-between gap-1">
+        {steps.map((step) => (
+          <li key={step.id} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+            <StepDot state={step.state} />
+            <span
+              className={`max-w-[4.5rem] text-center text-[9px] font-semibold leading-tight ${
+                step.state === "active"
+                  ? "text-[color:var(--fd-primary)]"
+                  : step.state === "done"
+                    ? "text-[color:var(--fd-text)]"
+                    : step.state === "failed"
+                      ? "text-rose-700"
+                      : "text-[color:var(--fd-muted)]"
+              }`}
+            >
+              {t(step.labelKey)}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -96,42 +93,42 @@ export function StatusOutcomeBanner({
   title: string;
   detail?: string;
 }) {
-  const accent = variant === "success" ? "green" : variant === "failed" ? "magenta" : "amber";
   const styles =
     variant === "success"
-      ? "border-emerald-400/30 bg-emerald-500/10 tx-outcome-success"
+      ? "border-emerald-200 bg-emerald-50 tx-outcome-success"
       : variant === "failed"
-        ? "border-rose-400/30 bg-rose-500/10 tx-outcome-failed"
-        : "border-amber-400/30 bg-amber-500/10";
+        ? "border-rose-200 bg-rose-50 tx-outcome-failed"
+        : "border-amber-200 bg-amber-50";
 
   return (
-    <HudFrame accent={accent} className={`${HUD_PANEL_LG} ${styles}`}>
-      <div className="flex items-center gap-3 p-4" role="status">
-        <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-            variant === "success"
-              ? "border border-emerald-400/35 bg-emerald-500/20 text-emerald-300"
-              : variant === "failed"
-                ? "border border-rose-400/35 bg-rose-500/20 text-rose-300"
-                : "border border-amber-400/35 bg-amber-500/20 text-amber-300"
-          }`}
-        >
-          {variant === "success" ? (
-            <IconCheck className="h-6 w-6" />
-          ) : variant === "failed" ? (
-            <IconX className="h-6 w-6" />
-          ) : (
-            <IconClock className="h-6 w-6" />
-          )}
-        </span>
-        <div className="min-w-0">
-          <p className="font-bold text-[color:var(--fd-text)]">{title}</p>
-          {detail ? (
-            <p className="mt-0.5 text-sm tabular-nums text-[color:var(--fd-muted)]">{detail}</p>
-          ) : null}
-        </div>
+    <div
+      className={`fd-card flex items-center gap-3 border p-4 ${styles}`}
+      role="status"
+    >
+      <span
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+          variant === "success"
+            ? "bg-emerald-600 text-white"
+            : variant === "failed"
+              ? "bg-rose-600 text-white"
+              : "bg-amber-500 text-white"
+        }`}
+      >
+        {variant === "success" ? (
+          <IconCheck className="h-6 w-6" />
+        ) : variant === "failed" ? (
+          <IconX className="h-6 w-6" />
+        ) : (
+          <IconClock className="h-6 w-6" />
+        )}
+      </span>
+      <div className="min-w-0">
+        <p className="font-bold text-[color:var(--fd-text)]">{title}</p>
+        {detail ? (
+          <p className="mt-0.5 text-sm tabular-nums text-[color:var(--fd-muted)]">{detail}</p>
+        ) : null}
       </div>
-    </HudFrame>
+    </div>
   );
 }
 
@@ -144,12 +141,12 @@ export function StatusPill({
 }) {
   const cls =
     variant === "success"
-      ? "border border-emerald-400/30 bg-emerald-500/15 text-emerald-300"
+      ? "bg-emerald-100 text-emerald-900"
       : variant === "failed"
-        ? "border border-rose-400/30 bg-rose-500/15 text-rose-300"
+        ? "bg-rose-100 text-rose-900"
         : variant === "processing"
-          ? "border border-cyan-400/30 bg-cyan-500/15 text-cyan-300"
-          : "border border-amber-400/30 bg-amber-500/15 text-amber-300";
+          ? "bg-sky-100 text-sky-900"
+          : "bg-amber-100 text-amber-900";
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>
       {variant === "success" ? (

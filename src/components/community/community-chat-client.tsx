@@ -10,17 +10,6 @@ import {
   KycVerifiedBadge,
 } from "@/components/community/community-badges";
 import { IconAttach, IconSend, IconWarning } from "@/components/community/community-icons";
-import {
-  COMMUNITY_AVATAR_RING,
-  COMMUNITY_BACK_LINK,
-  COMMUNITY_CHAT_BODY,
-  COMMUNITY_CHAT_FOOTER,
-  COMMUNITY_CHAT_HEADER,
-  COMMUNITY_MEDIA_FRAME,
-  COMMUNITY_OWNER_MENU,
-  COMMUNITY_SEND_BTN,
-  COMMUNITY_TEXTAREA,
-} from "@/lib/community/community-ui";
 import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { DmMessageView } from "@/lib/community/dm-service";
 
@@ -190,7 +179,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
 
   if (!meta) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-stone-400">
+      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#78716c]">
         …
       </div>
     );
@@ -198,12 +187,15 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
 
   return (
     <div className="community-theme mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-lg flex-col">
-      <header className={COMMUNITY_CHAT_HEADER}>
-        <Link href="/app/community/inbox" className={COMMUNITY_BACK_LINK}>
+      <header className="flex items-center gap-3 border-b border-[#f0f4f2] bg-white px-4 py-3 shadow-sm">
+        <Link
+          href="/app/community/inbox"
+          className="text-sm font-semibold text-[#305f33]"
+        >
           ←
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-stone-50">
+          <p className="truncate text-sm font-bold text-[#0c0a09]">
             {meta.peer.displayName}
             {meta.peer.isAdmin ? (
               <span className="ml-1"><AdminGoldBadge fr={fr} /></span>
@@ -215,7 +207,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
               <span className="ml-1"><BlueCheckBadge fr={fr} /></span>
             ) : null}
           </p>
-          <p className="text-[11px] text-stone-400">
+          <p className="text-[11px] text-[#78716c]">
             @{meta.peer.handle}
             {meta.peer.online
               ? fr
@@ -228,23 +220,23 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-400 hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#57534e]"
             aria-label="Menu"
           >
             ⋮
           </button>
           {menuOpen ? (
-            <div className={`${COMMUNITY_OWNER_MENU} w-44`}>
+            <div className="absolute right-0 top-10 z-20 w-44 rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
               <button
                 type="button"
-                className="block w-full px-4 py-2 text-left text-sm text-stone-300 hover:bg-white/5"
+                className="block w-full px-4 py-2 text-left text-sm text-[#57534e] hover:bg-[#fafafa]"
                 onClick={() => void reportThread()}
               >
                 {fr ? "Signaler" : "Report"}
               </button>
               <button
                 type="button"
-                className="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-400/10"
+                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                 onClick={() => void blockPeer()}
               >
                 {fr ? "Bloquer" : "Block"}
@@ -255,8 +247,8 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
       </header>
 
       {meta.isRequest ? (
-        <div className="border-b border-amber-400/20 bg-amber-400/10 px-4 py-3 text-center text-xs text-amber-200">
-          {fr ? "Demande de message - " : "Message request - "}
+        <div className="border-b border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-center text-xs text-[#92400e]">
+          {fr ? "Demande de message — " : "Message request — "}
           <button
             type="button"
             className="font-bold underline"
@@ -267,7 +259,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
         </div>
       ) : null}
 
-      <div className={COMMUNITY_CHAT_BODY}>
+      <div className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-[#f5f7f6] to-[#fafaf9] px-3 py-4">
         {messages.map((m) => (
           <div
             key={m.id}
@@ -280,15 +272,15 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
             )}
             <div className={`flex max-w-[78%] flex-col ${m.own ? "items-end" : "items-start"}`}>
               {!m.own ? (
-                <span className="mb-1 px-1 text-[10px] font-semibold text-stone-400">
+                <span className="mb-1 px-1 text-[10px] font-semibold text-[#78716c]">
                   {meta.peer.displayName}
                 </span>
               ) : null}
               <div
                 className={`w-full rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                   m.own
-                    ? "rounded-br-md border border-emerald-400/25 bg-gradient-to-br from-emerald-500/35 to-emerald-600/20 text-stone-50"
-                    : "rounded-bl-md border border-white/10 bg-[rgba(10,16,24,0.88)] text-stone-100"
+                    ? "rounded-br-md bg-gradient-to-br from-[#3d8f5a] to-[#305f33] text-white"
+                    : "rounded-bl-md border border-[#e8f3ee] bg-white text-[#1c1917]"
                 }`}
               >
                 {m.hidden ? (
@@ -301,14 +293,12 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
                 ) : (
                   <>
                     {m.attachmentUrl && m.messageType === "image" ? (
-                      <div className={`${COMMUNITY_MEDIA_FRAME} mb-1`}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={m.attachmentUrl}
-                          alt=""
-                          className="max-h-52 w-full object-cover"
-                        />
-                      </div>
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.attachmentUrl}
+                        alt=""
+                        className="mb-1 max-h-52 w-full rounded-xl object-cover"
+                      />
                     ) : null}
                     {m.body ? (
                       <p className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</p>
@@ -318,7 +308,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
               </div>
               <p
                 className={`mt-1 px-1 text-[9px] tabular-nums ${
-                  m.own ? "text-stone-500" : "text-stone-600"
+                  m.own ? "text-[#78716c]" : "text-[#a8a29e]"
                 }`}
               >
                 {new Date(m.createdAt).toLocaleTimeString(
@@ -337,23 +327,23 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
           </div>
         ))}
         {typing ? (
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-[#78716c]">
             {fr ? "écrit…" : "typing…"}
           </p>
         ) : null}
         <div ref={bottomRef} />
       </div>
 
-      <footer className={COMMUNITY_CHAT_FOOTER}>
+      <footer className="border-t border-[#f0f4f2] bg-white px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {storyRefId ? (
-          <div className="mb-2 flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300">
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-[#f0f7f3] px-3 py-2 text-xs text-[#305f33]">
             <span className="flex-1 font-semibold">
               {fr ? "Réponse privée à un statut" : "Private reply to a status"}
             </span>
             <button
               type="button"
               onClick={() => setStoryRefId(null)}
-              className="text-stone-400"
+              className="text-[#78716c]"
               aria-label={fr ? "Retirer la référence" : "Remove reference"}
             >
               ✕
@@ -362,7 +352,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
         ) : null}
         <div className="flex items-end gap-2">
           <label
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#f0f7f3] text-[#305f33]"
             aria-label={fr ? "Joindre une image" : "Attach image"}
           >
             <input
@@ -401,14 +391,14 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
                   ? "Message…"
                   : "Message…"
             }
-            className={`${COMMUNITY_TEXTAREA} max-h-24 min-h-[44px] flex-1`}
+            className="max-h-24 min-h-[44px] flex-1 resize-none rounded-xl border border-[#e8f3ee] bg-[#fafaf9] px-3 py-2.5 text-sm"
           />
           <button
             type="button"
             disabled={busy || !text.trim() || meta.status !== "active"}
             onClick={() => void send()}
             aria-label={fr ? "Envoyer" : "Send"}
-            className={`${COMMUNITY_SEND_BTN} h-11 w-11 disabled:opacity-50`}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#305f33] text-white disabled:opacity-50"
           >
             <IconSend />
           </button>
@@ -429,12 +419,12 @@ function PeerAvatar({
       <img
         src={peer.avatarUrl}
         alt=""
-        className={`h-8 w-8 shrink-0 rounded-full object-cover ${COMMUNITY_AVATAR_RING}`}
+        className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm"
       />
     );
   }
   return (
-    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-xs font-bold text-emerald-300 ${COMMUNITY_AVATAR_RING}`}>
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f3ee] text-xs font-bold text-[#305f33] ring-2 ring-white shadow-sm">
       {peer.displayName.slice(0, 1).toUpperCase()}
     </span>
   );

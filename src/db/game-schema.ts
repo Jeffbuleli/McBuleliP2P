@@ -15,7 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./schema";
 
-/** McBuleli Congo Mining Simulator - player state (links Community user). */
+/** McBuleli Congo Mining Simulator — player state (links Community user). */
 export const gamePlayers = pgTable(
   "game_players",
   {

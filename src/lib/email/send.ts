@@ -4,9 +4,7 @@ import {
   emailFromAddress,
   emailReplyTo,
 } from "@/lib/email/config";
-import type { ResendInlineAttachment, ResendFileAttachment } from "@/lib/email/email-inline-images";
-
-export type { ResendFileAttachment } from "@/lib/email/email-inline-images";
+import type { ResendInlineAttachment } from "@/lib/email/email-inline-images";
 
 export { appBaseUrl };
 
@@ -57,11 +55,11 @@ export function resendSendBlockedReason(): string | null {
 
 function devPreview(args: Record<string, unknown>): boolean {
   if (process.env.NODE_ENV === "production") {
-    console.warn("[email] RESEND_API_KEY missing - email not sent", args);
+    console.warn("[email] RESEND_API_KEY missing — email not sent", args);
     return false;
   }
   console.warn(
-    "[email] not sent - set RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env",
+    "[email] not sent — set RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env",
     args,
   );
   return false;
@@ -73,8 +71,6 @@ export async function sendEmail(args: {
   html: string;
   text?: string;
   inlineAttachments?: ResendInlineAttachment[];
-  /** PDF/PNG file attachments (no CID - regular attachments). */
-  fileAttachments?: ResendFileAttachment[];
   /** Override default noreply@ (e.g. partnership outreach from hi@). */
   from?: string;
   replyTo?: string;
@@ -93,23 +89,12 @@ export async function sendEmail(args: {
     });
   }
 
-  const inlineAttachments = args.inlineAttachments?.map((a) => ({
+  const attachments = args.inlineAttachments?.map((a) => ({
     filename: a.filename,
     content: a.content,
     content_id: a.content_id,
     content_type: a.content_type,
   }));
-
-  const fileAttachments = args.fileAttachments?.map((a) => ({
-    filename: a.filename,
-    content: a.content,
-    ...(a.content_type ? { content_type: a.content_type } : {}),
-  }));
-
-  const attachments = [
-    ...(inlineAttachments ?? []),
-    ...(fileAttachments ?? []),
-  ];
 
   const res = await resendFetch("/emails", {
     method: "POST",
@@ -123,7 +108,7 @@ export async function sendEmail(args: {
       headers: {
         "X-Entity-Ref-ID": crypto.randomUUID(),
       },
-      ...(attachments.length ? { attachments } : {}),
+      ...(attachments?.length ? { attachments } : {}),
     }),
   });
 
@@ -174,7 +159,7 @@ export async function sendResendTemplate(args: {
   return true;
 }
 
-/** @deprecated use sendEmail - kept for auth imports */
+/** @deprecated use sendEmail — kept for auth imports */
 export const sendAuthEmail = sendEmail;
 
 export function emailVerifyLink(token: string): string {
@@ -205,7 +190,7 @@ export async function upsertResendTemplate(args: {
   const variableDefs = args.variables.map((key) => ({
     key,
     type: "string" as const,
-    fallback_value: key === "ACTION_URL" ? appBaseUrl() : "-",
+    fallback_value: key === "ACTION_URL" ? appBaseUrl() : "—",
   }));
 
   const patch = await resendFetch(`/templates/${encodeURIComponent(args.alias)}`, {

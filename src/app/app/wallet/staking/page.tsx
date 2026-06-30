@@ -291,7 +291,7 @@ export default function WalletStakingPage() {
                     {asset}
                   </>
                 ) : (
-                  "-"
+                  "—"
                 )}
               </p>
             </div>
@@ -306,7 +306,7 @@ export default function WalletStakingPage() {
                     {asset}
                   </>
                 ) : (
-                  "-"
+                  "—"
                 )}
               </p>
             </div>

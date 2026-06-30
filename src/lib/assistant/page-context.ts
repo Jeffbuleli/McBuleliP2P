@@ -3,16 +3,12 @@ export function detectPageContext(pathname: string): string | null {
   const p = pathname.toLowerCase();
   if (p.includes("/deposit")) return "deposit";
   if (p.includes("/withdraw")) return "withdraw";
-  if (p.includes("/wallet/swap")) return "swap";
-  if (p.includes("/wallet/history")) return "wallet_history";
-  if (p.includes("/wallet/points")) return "rewards";
   if (p.includes("/wallet")) return "wallet";
   if (p.includes("/p2p")) return "p2p";
   if (p.includes("/trade/bots")) return "ai_bot";
   if (p.includes("/trade/futures")) return "futures";
   if (p.includes("/trade/options")) return "options";
   if (p.includes("/trade")) return "trading";
-  if (p.includes("/market")) return "market";
   if (p.includes("/groups") || p.includes("/avec")) return "avec";
   if (p.includes("/staking")) return "staking";
   if (p.includes("/profile/kyc")) return "kyc";
@@ -33,9 +29,9 @@ export function pageContextHint(
   if (!ctx) return "";
   const hints: Record<string, Record<"en" | "fr" | "sw", string>> = {
     deposit: {
-      en: "User is on crypto/fiat deposit. Explain asset choice (USDT needs network + TXID; Pi needs TXID; fiat uses MoMo/card where enabled).",
-      fr: "L'utilisateur est sur le dépôt. Expliquez le choix d'actif (USDT = réseau + TXID ; Pi = TXID ; fiat = MoMo/carte si activé).",
-      sw: "Mtumiaji yuko kwenye amana. Eleza chaguo la mali (USDT = mtandao + TXID; Pi = TXID; fiat = MoMo/kadi).",
+      en: "User is on the USDT/Pi deposit page. Explain deposit steps, TXID confirmation, and network choice simply.",
+      fr: "L'utilisateur est sur la page de dépôt. Expliquez les étapes, la confirmation TXID et le choix du réseau simplement.",
+      sw: "Mtumiaji yuko kwenye ukurasa wa amana. Eleza hatua za amana, uthibitisho wa TXID na mtandao kwa urahisi.",
     },
     withdraw: {
       en: "User is on the withdrawal page. Explain net amount, fees (~2 USDT), minimums, and status tracking.",
@@ -43,39 +39,19 @@ export function pageContextHint(
       sw: "Mtumiaji yuko kwenye ukurasa wa kutoa. Eleza kiasi halisi, ada (~2 USDT), kiwango cha chini na ufuatiliaji.",
     },
     wallet: {
-      en: "User is on the wallet hub (futuristic HUD). Help with balances, quick actions (Deposit, Swap, Withdraw), assets USDT/Pi/USD/CDF, and history.",
-      fr: "L'utilisateur est sur le portefeuille (interface HUD). Aidez avec soldes, actions rapides (Dépôt, Swap, Retrait), actifs USDT/Pi/USD/CDF et historique.",
-      sw: "Mtumiaji yuko kwenye pochi (HUD). Saidia kuhusu salio, vitendo vya haraka (Amana, Swap, Kutoa), mali USDT/Pi/USD/CDF na historia.",
-    },
-    swap: {
-      en: "User is on Wallet Swap. Explain converting between USDT and Pi in-app, rates, and confirming the swap.",
-      fr: "L'utilisateur est sur Swap. Expliquez la conversion USDT/Pi dans l'app, le taux et la confirmation.",
-      sw: "Mtumiaji yuko kwenye Swap. Eleza kubadilisha USDT/Pi ndani ya app, viwango na uthibitisho.",
-    },
-    wallet_history: {
-      en: "User is viewing wallet transaction history. Help filter by type/asset and explain status labels.",
-      fr: "L'utilisateur consulte l'historique wallet. Aidez à filtrer par type/actif et expliquer les statuts.",
-      sw: "Mtumiaji anaangalia historia ya pochi. Saidia kuchuja na kueleza hali za muamala.",
-    },
-    rewards: {
-      en: "User is on Buleli Points / McB rewards. Explain earning BP, monthly cap, spending, and McB claim (KYC required). No price promises.",
-      fr: "L'utilisateur est sur Buleli Points / McB. Expliquez le gain de BP, plafond mensuel, dépenses et claim McB (KYC requis). Pas de promesse de prix.",
-      sw: "Mtumiaji yuko kwenye Buleli Points / McB. Eleza kupata BP, kikomo cha mwezi, matumizi na claim McB (KYC inahitajika).",
+      en: "User is viewing their crypto wallet. Help with balances, history, and next steps.",
+      fr: "L'utilisateur consulte son portefeuille. Aidez avec soldes, historique et prochaines étapes.",
+      sw: "Mtumiaji anaangalia pochi yake. Saidia kuhusu salio, historia na hatua zinazofuata.",
     },
     p2p: {
-      en: "User is on P2P marketplace. Explain Buy/Sell tabs, escrow, mobile money payment, Rules safety cards, and dispute flow.",
-      fr: "L'utilisateur est sur le P2P. Expliquez onglets Acheter/Vendre, escrow, paiement mobile money, cartes Règles et litiges.",
-      sw: "Mtumiaji yuko kwenye P2P. Eleza vichupo Buy/Sell, escrow, malipo ya pesa ya simu, sheria za usalama na migogoro.",
+      en: "User is on P2P marketplace. Explain escrow, mobile money payment, and dispute safety.",
+      fr: "L'utilisateur est sur le marketplace P2P. Expliquez l'escrow, le paiement mobile money et les litiges.",
+      sw: "Mtumiaji yuko kwenye soko la P2P. Eleza escrow, malipo ya pesa ya simu na usalama wa migogoro.",
     },
     ai_bot: {
-      en: "User is exploring AI Trading Bots. Explain Day/Swing presets, DCA/Grid/Futures, AI assist mode, API key setup, and loss risk.",
-      fr: "L'utilisateur explore les bots IA. Expliquez profils Day/Swing, DCA/Grid/Futures, mode assist IA, clés API et risque de perte.",
-      sw: "Mtumiaji anachunguza boti za AI. Eleza Day/Swing, DCA/Grid/Futures, hali ya AI assist, funguo za API na hatari.",
-    },
-    market: {
-      en: "User is on Market section. Explain available tools and link to wallet/trade as needed - not investment advice.",
-      fr: "L'utilisateur est sur Marché. Expliquez les outils disponibles - pas de conseil d'investissement.",
-      sw: "Mtumiaji yuko kwenye Soko. Eleza zana zinazopatikana - si ushauri wa uwekezaji.",
+      en: "User is exploring AI Trading Bot. Explain setup, risks, and that crypto trading involves loss risk.",
+      fr: "L'utilisateur explore le bot IA. Expliquez la configuration, les risques — le trading comporte des pertes possibles.",
+      sw: "Mtumiaji anachunguza Boti ya AI. Eleza usanidi, hatari — biashara ya crypto ina hatari ya hasara.",
     },
     trading: {
       en: "User is in the trading section. Explain tools available and risk disclaimers.",
@@ -103,13 +79,13 @@ export function pageContextHint(
       sw: "Mtumiaji yuko kwenye mipangilio ya usalama. Eleza 2FA, passkeys, na urejeshaji wa WhatsApp.",
     },
     community: {
-      en: "User is in McBuleli Community Hub. Explain feed, blogs, Q&A, trading signals (educational only), trader leaderboard, Buleli Points rewards - not financial advice.",
-      fr: "L'utilisateur est dans le Hub Communauté McBuleli. Expliquez fil, blogs, Q&R, signaux (éducatifs), classement traders, Buleli Points - pas de conseil financier.",
+      en: "User is in McBuleli Community Hub. Explain feed, blogs, Q&A, trading signals (educational only), trader leaderboard, Buleli Points rewards — not financial advice.",
+      fr: "L'utilisateur est dans le Hub Communauté McBuleli. Expliquez fil, blogs, Q&R, signaux (éducatifs), classement traders, Buleli Points — pas de conseil financier.",
       sw: "Mtumiaji yuko kwenye Jumuiya ya McBuleli. Eleza mipasho, blogu, maswali, ishara za biashara (elimu tu), na Buleli Points.",
     },
     academy: {
-      en: "User is in McBuleli Academy (training cohort). Help with syllabus, live sessions, quiz, Buleli Points - not personalized investment advice.",
-      fr: "L'utilisateur est dans McBuleli Academy (cohorte). Aidez sur le syllabus, les lives, le quiz, les Buleli Points - pas de conseil d'investissement personnalisé.",
+      en: "User is in McBuleli Academy (training cohort). Help with syllabus, live sessions, quiz, Buleli Points — not personalized investment advice.",
+      fr: "L'utilisateur est dans McBuleli Academy (cohorte). Aidez sur le syllabus, les lives, le quiz, les Buleli Points — pas de conseil d'investissement personnalisé.",
       sw: "Mtumiaji yuko katika McBuleli Academy. Saidia kuhusu mada, vikao live, jaribio la maswali, Buleli Points.",
     },
     support: {

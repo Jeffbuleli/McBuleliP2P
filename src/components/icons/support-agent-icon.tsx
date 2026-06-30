@@ -1,5 +1,5 @@
 /**
- * Minimal headset + mic - matches landing icon stroke style.
+ * Minimal headset + mic — matches landing icon stroke style.
  */
 export function SupportAgentIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (

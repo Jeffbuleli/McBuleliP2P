@@ -115,12 +115,12 @@ export default function PiReceiveAddressSettingsClient() {
         <p className={`mt-1 text-[11px] ${adminCls.muted}`}>
           Balance is stored per user (<span className="font-mono">users.pi_test_balance</span>),
           separate from real Pi (<span className="font-mono">users.pi_balance</span>). Operations
-          (send, withdraw, transfers) use each asset&apos;s own balance - the wallet total is the sum of
+          (send, withdraw, transfers) use each asset&apos;s own balance — the wallet total is the sum of
           the rows below it.
         </p>
 
         <label className={`mt-3 block text-xs font-medium ${adminCls.muted}`}>
-          Target user ID (optional - empty = your admin account)
+          Target user ID (optional — empty = your admin account)
           <input
             value={targetUserId}
             onChange={(e) => setTargetUserId(e.target.value)}

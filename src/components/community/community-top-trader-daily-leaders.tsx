@@ -56,7 +56,7 @@ export function CommunityTopTraderDailyLeaders({
                   </p>
                 </>
               ) : (
-                <p className="mt-3 text-[9px] text-[#a8a29e]">-</p>
+                <p className="mt-3 text-[9px] text-[#a8a29e]">—</p>
               )}
             </div>
           );

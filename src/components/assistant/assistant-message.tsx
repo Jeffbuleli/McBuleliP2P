@@ -37,10 +37,10 @@ export function AssistantMessageBubble({
           </div>
         ) : null}
         <div
-          className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+          className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
             isUser
-              ? "rounded-br-sm border border-emerald-400/30 bg-emerald-500/15 text-emerald-50"
-              : "rounded-bl-sm border border-cyan-400/15 bg-[#0a1018]/90 text-stone-100"
+              ? "rounded-br-md bg-[#305f33] text-white shadow-md shadow-[#305f33]/25"
+              : "rounded-bl-md border border-white/10 bg-white/8 text-stone-100 backdrop-blur-sm"
           }`}
         >
           {isUser ? (
@@ -71,12 +71,12 @@ export function AssistantTypingIndicator({ locale }: { locale: AssistantLocale }
   return (
     <div className="flex items-center gap-2 px-1 py-2">
       <AssistantBotLogo size={28} className="h-7 w-7 shrink-0" />
-      <div className="flex items-center gap-1 rounded-xl rounded-bl-sm border border-cyan-400/15 bg-[#0a1018]/90 px-3 py-2">
+      <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/10 bg-white/8 px-3 py-2 backdrop-blur-sm">
         <span className="text-xs text-stone-400">{m.thinking}</span>
         {[0, 1, 2].map((i) => (
           <motion.span
             key={i}
-            className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"
+            className="inline-block h-1.5 w-1.5 rounded-full bg-[#6ee7a0]"
             animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
             transition={{
               duration: 0.9,
@@ -103,7 +103,7 @@ export function AssistantActionLinks({
   if (!items.length) return null;
   return (
     <div className="ml-9 w-full max-w-[88%] space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-cyan-400/85">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6ee7a0]/90">
         {m.directAccess}
       </p>
       {items.map((r) => (
@@ -111,13 +111,13 @@ export function AssistantActionLinks({
           key={r.href}
           href={r.href}
           onClick={() => onNavigate?.()}
-          className="flex items-center justify-between gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2.5 transition hover:border-cyan-400/35 hover:bg-cyan-500/10"
+          className="flex items-center justify-between gap-2 rounded-xl border border-[#305f33]/40 bg-[#305f33]/15 px-3 py-2.5 transition hover:border-[#6ee7a0]/40 hover:bg-[#305f33]/25"
         >
           <div className="min-w-0">
-            <p className="text-xs font-bold text-emerald-300">{r.label}</p>
+            <p className="text-xs font-bold text-[#6ee7a0]">{r.label}</p>
             <p className="text-[11px] text-stone-400">{r.reason}</p>
           </div>
-          <span className="shrink-0 text-sm font-bold text-cyan-400">→</span>
+          <span className="shrink-0 text-sm font-bold text-[#6ee7a0]">→</span>
         </Link>
       ))}
     </div>

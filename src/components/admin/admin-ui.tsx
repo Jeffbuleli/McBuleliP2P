@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminNavIcon, type AdminNavIconKey } from "@/components/admin/admin-icons";
 
-/** Shared light admin (Console) design tokens - matches app home-theme. */
+/** Shared light admin (Console) design tokens — matches app home-theme. */
 export const adminCls = {
   page: "space-y-6",
   section: "space-y-4",

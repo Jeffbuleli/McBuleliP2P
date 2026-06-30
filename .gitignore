@@ -69,10 +69,7 @@ next-env.d.ts
 /godot/.import/
 /godot/*.tmp
 
-# Local legal scans (RCCM, ID NAT) — see content/legal-private/README.md
-/content/legal-private/*
-!/content/legal-private/README.md
-!/content/legal-private/.gitignore
+# Local uploads (do not commit)
 ID NAT.png
 RCCM1.png
 RCCM2.png

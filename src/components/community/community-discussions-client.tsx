@@ -11,16 +11,6 @@ import {
 } from "@/components/community/community-empty-illustrations";
 import { useCommunityPaginatedLoad } from "@/hooks/use-community-paginated-load";
 import { fetchJson } from "@/lib/community/fetch-json";
-import {
-  COMMUNITY_CARD_LINK,
-  COMMUNITY_CHIP,
-  COMMUNITY_CHIP_ACTIVE,
-  COMMUNITY_DASHED_BTN,
-  COMMUNITY_FORM_PANEL,
-  COMMUNITY_INPUT,
-  COMMUNITY_PUBLISH_BTN,
-  COMMUNITY_TEXTAREA,
-} from "@/lib/community/community-ui";
 import type {
   DiscussionCategoryView,
   DiscussionListItem,
@@ -118,7 +108,7 @@ export function CommunityDiscussionsClient() {
       setCategoryId("");
       setShowComposer(false);
     } catch {
-      setError(fr ? "Erreur serveur - réessayez" : "Server error - try again");
+      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
     } finally {
       setPublishing(false);
     }
@@ -133,7 +123,9 @@ export function CommunityDiscussionsClient() {
       <div className="mt-3 flex flex-wrap gap-1.5">
         <button
           type="button"
-          className={!category ? COMMUNITY_CHIP_ACTIVE : COMMUNITY_CHIP}
+          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+            !category ? "bg-[#305f33] text-white" : "bg-[#f5f5f4] text-[#57534e]"
+          }`}
           onClick={() => setCategory("")}
         >
           {fr ? "Toutes" : "All"}
@@ -142,7 +134,11 @@ export function CommunityDiscussionsClient() {
           <button
             key={c.id}
             type="button"
-            className={category === c.slug ? COMMUNITY_CHIP_ACTIVE : COMMUNITY_CHIP}
+            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+              category === c.slug
+                ? "bg-[#305f33] text-white"
+                : "bg-[#f5f5f4] text-[#57534e]"
+            }`}
             onClick={() => setCategory(c.slug)}
           >
             {fr ? c.labelFr : c.labelEn}
@@ -152,7 +148,7 @@ export function CommunityDiscussionsClient() {
 
       <button
         type="button"
-        className={`${COMMUNITY_DASHED_BTN} mb-3 mt-3`}
+        className="mb-3 mt-3 w-full rounded-xl border border-dashed border-[#305f33] py-2.5 text-sm font-bold text-[#305f33]"
         onClick={() => setShowComposer((v) => !v)}
       >
         {showComposer
@@ -165,15 +161,15 @@ export function CommunityDiscussionsClient() {
       </button>
 
       {showComposer ? (
-        <div className={`${COMMUNITY_FORM_PANEL} mb-4`}>
+        <div className="fd-card mb-4 space-y-2 px-4 py-3">
           <input
-            className={COMMUNITY_INPUT}
+            className="w-full rounded-xl border border-[#e7e5e4] px-3 py-2 text-sm"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={fr ? "Sujet (min. 8)" : "Topic (min. 8)"}
           />
           <select
-            className={COMMUNITY_INPUT}
+            className="w-full rounded-xl border border-[#e7e5e4] px-3 py-2 text-sm"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
           >
@@ -185,17 +181,17 @@ export function CommunityDiscussionsClient() {
             ))}
           </select>
           <textarea
-            className={COMMUNITY_TEXTAREA}
+            className="w-full rounded-xl border border-[#e7e5e4] px-3 py-2 text-sm"
             rows={3}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder={fr ? "Votre message (min. 20)" : "Your message (min. 20)"}
           />
-          {error ? <p className="text-xs text-red-400">{error}</p> : null}
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <button
             type="button"
             disabled={publishing}
-            className={COMMUNITY_PUBLISH_BTN}
+            className="w-full rounded-xl bg-[#305f33] py-2 text-sm font-bold text-white disabled:opacity-50"
             onClick={() => void publish()}
           >
             {publishing ? "…" : fr ? "Publier" : "Post"}
@@ -219,10 +215,10 @@ export function CommunityDiscussionsClient() {
             <li key={d.id}>
               <Link
                 href={`/app/community/discussions/${d.id}`}
-                className={COMMUNITY_CARD_LINK}
+                className="fd-card block px-4 py-3"
               >
-                <p className="text-sm font-bold text-stone-50">{d.title}</p>
-                <p className="mt-1 text-xs text-stone-400">
+                <p className="text-sm font-bold text-[#0c0a09]">{d.title}</p>
+                <p className="mt-1 text-xs text-[#78716c]">
                   @{d.author.handle}
                   {d.category
                     ? ` · ${fr ? d.category.labelFr : d.category.labelEn}`
@@ -237,7 +233,7 @@ export function CommunityDiscussionsClient() {
       )}
 
       <div ref={sentinelRef} className="h-6" />
-      {loading ? <p className="py-4 text-center text-xs text-stone-500">…</p> : null}
+      {loading ? <p className="py-4 text-center text-xs text-[#78716c]">…</p> : null}
     </div>
   );
 }

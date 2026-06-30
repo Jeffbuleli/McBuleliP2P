@@ -1,5 +1,5 @@
 /**
- * OKX public REST - PI-USDT candles (reference chart; aligns with McBuleli market PI chart).
+ * OKX public REST — PI-USDT candles (reference chart; aligns with McBuleli market PI chart).
  * Docs: GET /api/v5/market/candles
  */
 export const OKX_PI_USDT_INST_ID = "PI-USDT";

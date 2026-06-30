@@ -68,8 +68,8 @@ export async function buildOpenBadgeForVerifyCode(
     name: title,
     description:
       locale === "fr"
-        ? "Badge McBuleli Academy - formation crypto, trading, IA et P2P."
-        : "McBuleli Academy badge - crypto, trading, AI and P2P training.",
+        ? "Badge McBuleli Academy — formation crypto, trading, IA et P2P."
+        : "McBuleli Academy badge — crypto, trading, AI and P2P training.",
     image: badgeImage,
     credentialSubject: {
       type: ["AchievementSubject"],

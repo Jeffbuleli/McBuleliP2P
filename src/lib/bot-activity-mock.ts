@@ -34,7 +34,7 @@ function fmtTime(d: Date): string {
   });
 }
 
-/** Deterministic mock feed - no DB, no trading logic. */
+/** Deterministic mock feed — no DB, no trading logic. */
 export function buildMockBotActivityFeed(now = Date.now()): {
   status: BotLiveStatus;
   activities: BotLiveActivity[];

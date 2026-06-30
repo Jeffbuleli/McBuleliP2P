@@ -33,7 +33,7 @@ export function mapFreshpayVerifyStatus(
 ): "COMPLETED" | "FAILED" | "PROCESSING" | null {
   if (!remote) return null;
 
-  // Funds move only when Trans_Status is terminal - never from initiation Status alone.
+  // Funds move only when Trans_Status is terminal — never from initiation Status alone.
   const transRaw =
     "Trans_Status" in remote && remote.Trans_Status != null
       ? String(remote.Trans_Status).trim()
@@ -139,7 +139,7 @@ function buildGatewayBody(fields: Record<string, string>): Record<string, string
   return fields;
 }
 
-/** C2B - debit customer mobile wallet (deposit). */
+/** C2B — debit customer mobile wallet (deposit). */
 export async function freshpayPayIn(args: FreshpayPayInArgs): Promise<{
   accepted: boolean;
   response: FreshpayInitResponse;
@@ -162,7 +162,7 @@ export async function freshpayPayIn(args: FreshpayPayInArgs): Promise<{
   return { accepted: isFreshpayInitAccepted(response), response };
 }
 
-/** B2C - credit customer mobile wallet (withdrawal). */
+/** B2C — credit customer mobile wallet (withdrawal). */
 export async function freshpayPayOut(args: FreshpayPayOutArgs): Promise<{
   accepted: boolean;
   response: FreshpayInitResponse;
@@ -185,7 +185,7 @@ export async function freshpayPayOut(args: FreshpayPayOutArgs): Promise<{
   return { accepted: isFreshpayInitAccepted(response), response };
 }
 
-/** Status check - use merchant reference or provider transaction id. */
+/** Status check — use merchant reference or provider transaction id. */
 export async function freshpayVerify(reference: string): Promise<FreshpayVerifyResponse> {
   return gatewayPost({
     ...merchantFields(),
@@ -211,7 +211,7 @@ export function parseFreshpayCallback(req: Request, body: { data?: string }): Fr
   return decryptFreshpayPayload(encrypted) as FreshpayCallbackPayload;
 }
 
-/** Provider facade - swap rail without touching wallet engine callers. */
+/** Provider facade — swap rail without touching wallet engine callers. */
 export const FreshPayProvider = {
   payIn: freshpayPayIn,
   payOut: freshpayPayOut,

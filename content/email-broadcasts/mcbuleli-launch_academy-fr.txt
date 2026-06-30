@@ -3,10 +3,10 @@ McBuleli
 Bonjour {{{contact.first_name|ami}}},
 Lancement officiel McBuleli
 Nous lançons McBuleli avec une soirée en ligne, puis deux semaines de formation gratuite pour vous.
-Crypto - Comprendre l'USDT et le portefeuille digital, sans jargon inutile.
-Trading - Les bases pour lire un marché et gérer le risque.
-IA - Outils IA concrets pour le quotidien.
-P2P - Échanges protégés et corridors mobile money.
+Crypto — Comprendre l'USDT et le portefeuille digital, sans jargon inutile.
+Trading — Les bases pour lire un marché et gérer le risque.
+IA — Outils IA concrets pour le quotidien.
+P2P — Échanges protégés et corridors mobile money.
 8 juin 2026 · 19h (GMT+1) · Live
 15–30 juin · chaque samedi 18h30–20h · Gratuit · Powered by McBuleli
 S'inscrire gratuitement: https://mcbuleli.org/formation?utm_source=email&utm_medium=broadcast&utm_campaign=launch_academy

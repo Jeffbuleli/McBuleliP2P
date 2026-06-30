@@ -1,4 +1,4 @@
-/** Client-safe - detect raw Binance API text that must not be shown to end users. */
+/** Client-safe — detect raw Binance API text that must not be shown to end users. */
 export function isTechnicalBinanceMessage(msg: string): boolean {
   const m = msg.trim();
   if (!m) return false;

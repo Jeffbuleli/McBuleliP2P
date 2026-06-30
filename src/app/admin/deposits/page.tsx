@@ -35,7 +35,7 @@ export default function AdminDepositsPage() {
       const res = await fetch(`/api/admin/deposits?status=${encodeURIComponent(status)}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.message ?? "-");
+        setErr(data.message ?? "—");
         setRows([]);
         return;
       }
@@ -93,7 +93,7 @@ export default function AdminDepositsPage() {
             ? `${r.declaredAmountUsdt} USDT`
             : r.amount
               ? r.amount
-              : "-"}
+              : "—"}
         </span>
       ),
     },

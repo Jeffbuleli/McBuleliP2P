@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getDictionary } from "@/i18n/messages";
 import type { Locale } from "@/i18n/locale";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 
 export type ActivityRow = {
   id: string;
@@ -25,60 +24,58 @@ export function RecentActivity({
   const d = getDictionary(locale);
 
   return (
-    <HudFrame accent="green" className={`${HUD_PANEL_LG} p-4`}>
-      <section aria-label={d.recent_activity}>
-        <h2 className="mb-3 fd-section-title text-emerald-200">{d.recent_activity}</h2>
-        {items.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[color:var(--fd-muted)]">
-            {d.recent_empty}
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {items.map((row) => (
-              <li
-                key={`${row.kind}-${row.id}`}
-                className="flex min-h-[52px] items-center gap-3 rounded-xl border border-white/10 bg-[#0a1018]/85 px-3 py-2.5"
+    <section className="rounded-[1.75rem] border border-stone-700/50 bg-stone-950/65 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <h2 className="mb-3 text-sm font-bold text-stone-50">{d.recent_activity}</h2>
+      {items.length === 0 ? (
+        <p className="py-6 text-center text-sm text-stone-400">
+          {d.recent_empty}
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-0">
+          {items.map((row) => (
+            <li
+              key={`${row.kind}-${row.id}`}
+              className="flex min-h-[52px] items-center gap-3 border-b border-stone-800/80 py-3 last:border-0"
+            >
+              <span
+                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                  row.kind === "deposit"
+                    ? "bg-emerald-950/50 text-emerald-200 ring-1 ring-emerald-700/30"
+                    : "bg-rose-950/40 text-rose-100 ring-1 ring-rose-700/30"
+                }`}
               >
-                <span
-                  className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                    row.kind === "deposit"
-                      ? "border border-emerald-400/30 bg-emerald-500/12 text-emerald-300"
-                      : "border border-rose-400/30 bg-rose-500/12 text-rose-300"
-                  }`}
-                >
-                  {row.kind === "deposit" ? <InIcon /> : <OutIcon />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[color:var(--fd-text)]">
-                    {row.kind === "deposit" ? d.deposit : d.withdraw}
-                  </p>
-                  <p className="truncate text-[11px] text-[color:var(--fd-muted)]">
-                    {row.networkLabel}
-                  </p>
-                  <p className="text-xs">
-                    <StatusBadge locale={locale} tone={row.tone} raw={row.status} />
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold tabular-nums text-[color:var(--fd-text)]">
-                    {row.amount != null ? `${row.amount}` : "-"}{" "}
-                    <span className="text-xs font-medium text-[color:var(--fd-muted)]">
-                      {activityAssetUnit(row.asset)}
-                    </span>
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Link
-          href="/app/wallet/history"
-          className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/12 py-3 text-center text-sm font-semibold text-emerald-300 transition active:scale-[0.99] hover:bg-emerald-500/20"
-        >
-          {d.wallet_see_all}
-        </Link>
-      </section>
-    </HudFrame>
+                {row.kind === "deposit" ? <InIcon /> : <OutIcon />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-stone-50">
+                  {row.kind === "deposit" ? d.deposit : d.withdraw}
+                </p>
+                <p className="truncate text-[11px] text-stone-400">
+                  {row.networkLabel}
+                </p>
+                <p className="text-xs text-stone-400">
+                  <StatusBadge locale={locale} tone={row.tone} raw={row.status} />
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold tabular-nums text-stone-50">
+                  {row.amount != null ? `${row.amount}` : "—"}{" "}
+                  <span className="text-xs font-medium text-stone-400">
+                    {activityAssetUnit(row.asset)}
+                  </span>
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link
+        href="/app/wallet"
+        className="mt-3 block min-h-[44px] rounded-xl border border-emerald-700/30 bg-emerald-950/30 py-3 text-center text-sm font-semibold text-emerald-200 transition hover:bg-emerald-950/45 active:scale-[0.99]"
+      >
+        {d.wallet_see_all}
+      </Link>
+    </section>
   );
 }
 
@@ -106,10 +103,10 @@ function StatusBadge({
         : d.status_ui_failed;
   const cls =
     tone === "success"
-      ? "text-emerald-400"
+      ? "text-emerald-600 dark:text-emerald-400"
       : tone === "pending"
-        ? "text-amber-400"
-        : "text-rose-400";
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-rose-600 dark:text-rose-400";
   return (
     <span className={cls}>
       {label} · {raw}

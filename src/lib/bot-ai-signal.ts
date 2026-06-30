@@ -206,7 +206,7 @@ export type AiSignalStatus = {
   maxAgeMs: number;
 };
 
-/** UI / diagnostics - returns last signal even when stale. */
+/** UI / diagnostics — returns last signal even when stale. */
 export async function getAiSignalStatus(
   instanceId: string,
   maxAgeMs = DEFAULT_MAX_AGE_MS,
@@ -226,7 +226,7 @@ export type AiAssistGateResult =
   | { ok: false; reason: string };
 
 /**
- * Legacy AI gate - modulator only (no paralysis on HOLD / mild opposition).
+ * Legacy AI gate — modulator only (no paralysis on HOLD / mild opposition).
  * Primary entry path uses `runFuturesDecisionOrchestrator`.
  */
 export function runAiAssistGate(args: {

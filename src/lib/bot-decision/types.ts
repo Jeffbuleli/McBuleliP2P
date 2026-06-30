@@ -32,7 +32,7 @@ export type AiModulatorOutput = {
   warning_level: "LOW" | "MEDIUM" | "HIGH";
   ai_notes: string[];
   blocking_event: boolean;
-  /** Soft caution only - does not veto when technical is strong */
+  /** Soft caution only — does not veto when technical is strong */
   caution_only: boolean;
 };
 

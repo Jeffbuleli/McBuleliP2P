@@ -1,4 +1,4 @@
-/** RAG syllabus for Academy tutor - category `academy`. */
+/** RAG syllabus for Academy tutor — category `academy`. */
 export const ACADEMY_KNOWLEDGE_SEED = [
   {
     slug: "academy-mcbuleli-overview",

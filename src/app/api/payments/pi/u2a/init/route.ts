@@ -16,7 +16,7 @@ const bodyZ = z.object({
   amount: z.string().min(1),
   memo: z.string().min(1),
   meta: z.record(z.string(), z.unknown()).optional(),
-  /** Matches Pi SDK `sandbox` / `resolvePiSdkSandbox()` - selects server API key + ledger asset. */
+  /** Matches Pi SDK `sandbox` / `resolvePiSdkSandbox()` — selects server API key + ledger asset. */
   sandbox: z.boolean().optional(),
 });
 

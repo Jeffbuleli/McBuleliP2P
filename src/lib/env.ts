@@ -27,7 +27,7 @@ export function getAmountTolerance(): number {
   return Number.isFinite(v) ? v : 1e-8;
 }
 
-/** USDT deposit/withdraw rails - only BINANCE_WALLET_* (not BINANCE_API_*). */
+/** USDT deposit/withdraw rails — only BINANCE_WALLET_* (not BINANCE_API_*). */
 export function hasBinanceWalletKeys(): boolean {
   const key = process.env.BINANCE_WALLET_API_KEY?.trim();
   const secret = process.env.BINANCE_WALLET_API_SECRET?.trim();
@@ -45,7 +45,7 @@ export function getBinanceWalletCredentials(): { key: string; secret: string } {
   return { key, secret };
 }
 
-/** @deprecated Use hasBinanceWalletKeys - wallet no longer reads BINANCE_API_*. */
+/** @deprecated Use hasBinanceWalletKeys — wallet no longer reads BINANCE_API_*. */
 export function hasBinanceKeys(): boolean {
   return hasBinanceWalletKeys();
 }
@@ -58,12 +58,12 @@ export function hasOkxKeys(): boolean {
   );
 }
 
-// ── FreshPay / MOKO - two independent rails (do not mix credentials) ───────────
+// ── FreshPay / MOKO — two independent rails (do not mix credentials) ───────────
 //
-// 1) Mobile money (Airtel, Orange, M-Pesa…) - PayDRC gateway JSON API
+// 1) Mobile money (Airtel, Orange, M-Pesa…) — PayDRC gateway JSON API
 //    merchant_id + merchant_secrete in body; callbacks = AES + HMAC on encrypted `data`
 //
-// 2) Card (Cybersource hosted checkout) - NOT wired in McBuleli yet
+// 2) Card (Cybersource hosted checkout) — NOT wired in McBuleli yet
 //    X-API-Key + HMAC headers; callbacks = plain JSON + Callback Secret
 
 /** Mobile money pay-in / pay-out / verify (gateway JSON). */
@@ -82,7 +82,7 @@ export function hasFreshpayMobileMoneyCallbackKeys(): boolean {
   );
 }
 
-/** @deprecated Alias - mobile money gateway only (not card). */
+/** @deprecated Alias — mobile money gateway only (not card). */
 export function hasFreshpayKeys(): boolean {
   return hasFreshpayMobileMoneyKeys();
 }
@@ -92,7 +92,7 @@ export function hasPawapayKeys(): boolean {
   return hasFreshpayMobileMoneyKeys();
 }
 
-/** Card rail (Cybersource hosted checkout) - future use. */
+/** Card rail (Cybersource hosted checkout) — future use. */
 export function hasFreshpayCardKeys(): boolean {
   return Boolean(
     process.env.FRESHPAY_CARD_API_KEY?.trim() &&

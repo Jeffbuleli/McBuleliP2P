@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "OpenWA", "drizzle.config.ts", "**/__tests__/**"]
+  "exclude": ["node_modules", "OpenWA", "drizzle.config.ts"]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import type { WalletActivityItem } from "@/lib/wallet-activity-feed";
@@ -10,16 +10,14 @@ import { WalletHistoryRow } from "@/components/wallet/wallet-history-row";
 import { HistoryVisualIcon, IconInbox } from "@/components/icons/flow-icons";
 import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
 import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
-import { WalletIconDropdown } from "@/components/wallet/wallet-icon-dropdown";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 
-const REALM_OPTIONS = [
+const REALM_CHIPS = [
   { id: "", key: "wallet_history_all" as const },
   { id: "crypto", key: "wallet_section_crypto" as const },
   { id: "fiat", key: "wallet_section_fiat" as const },
 ] as const;
 
-const TYPE_OPTIONS = [
+const TYPE_CHIPS = [
   { id: "", key: "wallet_history_all" as const, visual: "other" as const },
   { id: "receive", key: "wallet_history_cat_receive" as const, visual: "receive" as const },
   { id: "send", key: "wallet_history_cat_send" as const, visual: "send" as const },
@@ -39,11 +37,6 @@ type FeedResponse = {
   pageSize: number;
   totalPages: number;
 };
-
-function typeOptionIcon(id: string, visual: (typeof TYPE_OPTIONS)[number]["visual"]) {
-  if (id === "swap") return <IconSwapBrand className="h-5 w-5 shrink-0" />;
-  return <HistoryVisualIcon visual={visual} className="h-5 w-5 shrink-0" />;
-}
 
 export default function WalletHistoryPage() {
   const { t, locale } = useI18n();
@@ -89,51 +82,8 @@ export default function WalletHistoryPage() {
     void load();
   }, [load]);
 
-  const assetOptions =
+  const assetChips =
     realm === "fiat" ? FIAT_ASSETS : realm === "crypto" ? CRYPTO_ASSETS : ALL_ASSETS;
-
-  const realmDropdownOptions = useMemo(
-    () =>
-      REALM_OPTIONS.map((c) => ({
-        id: c.id,
-        label: t(c.key),
-        icon:
-          c.id === "crypto" ? (
-            <WalletAssetIcon asset="USDT" size={22} />
-          ) : c.id === "fiat" ? (
-            <WalletAssetIcon asset="USD" size={22} />
-          ) : (
-            <HistoryVisualIcon visual="other" className="h-5 w-5 shrink-0" />
-          ),
-      })),
-    [t],
-  );
-
-  const typeDropdownOptions = useMemo(
-    () =>
-      TYPE_OPTIONS.map((c) => ({
-        id: c.id,
-        label: t(c.key),
-        icon: typeOptionIcon(c.id, c.visual),
-      })),
-    [t],
-  );
-
-  const assetDropdownOptions = useMemo(
-    () => [
-      {
-        id: "",
-        label: t("wallet_history_all"),
-        icon: <HistoryVisualIcon visual="other" className="h-5 w-5 shrink-0" />,
-      },
-      ...assetOptions.map((a) => ({
-        id: a,
-        label: a,
-        icon: <WalletAssetIcon asset={a} size={22} />,
-      })),
-    ],
-    [assetOptions, t],
-  );
 
   function pickAsset(next: string) {
     setAsset(next);
@@ -154,39 +104,94 @@ export default function WalletHistoryPage() {
   }
 
   return (
-    <div className="wallet-theme px-4 pb-10">
+    <div className="wallet-theme pb-10">
       <WalletSubpageHeader title={t("wallet_history_title")} backHref="/app/wallet" />
 
-      <HudFrame accent="cyan" className={`${HUD_PANEL_LG} relative z-20 mb-4 overflow-visible`}>
-        <div className="grid gap-3 overflow-visible p-3 sm:grid-cols-3">
-          <WalletIconDropdown
-            label={t("wallet_history_realm_label")}
-            labelClass="text-amber-400/80"
-            value={realm}
-            onChange={pickRealm}
-            options={realmDropdownOptions}
-          />
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {t("wallet_history_realm_label")}
+      </p>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {REALM_CHIPS.map((c) => {
+          const active = realm === c.id;
+          return (
+            <button
+              key={c.id || "all"}
+              type="button"
+              onClick={() => pickRealm(c.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                active
+                  ? "bg-[color:var(--fd-brown)] text-white"
+                  : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
+              }`}
+            >
+              {t(c.key)}
+            </button>
+          );
+        })}
+      </div>
 
-          <WalletIconDropdown
-            label={t("wallet_history_type_label")}
-            labelClass="text-cyan-400/80"
-            value={category}
-            onChange={(next) => {
-              setCategory(next);
-              setPage(1);
-            }}
-            options={typeDropdownOptions}
-          />
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {t("wallet_history_type_label")}
+      </p>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {TYPE_CHIPS.map((c) => {
+          const active = category === c.id;
+          return (
+            <button
+              key={c.id || "all-type"}
+              type="button"
+              onClick={() => {
+                setCategory(c.id);
+                setPage(1);
+              }}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                active
+                  ? "bg-[color:var(--fd-primary)] text-white"
+                  : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
+              }`}
+            >
+              {c.id === "swap" ? (
+                <IconSwapBrand className="h-3.5 w-3.5" />
+              ) : c.id ? (
+                <HistoryVisualIcon visual={c.visual} className="h-3.5 w-3.5" />
+              ) : null}
+              {t(c.key)}
+            </button>
+          );
+        })}
+      </div>
 
-          <WalletIconDropdown
-            label={t("wallet_history_asset")}
-            labelClass="text-emerald-400/80"
-            value={asset}
-            onChange={pickAsset}
-            options={assetDropdownOptions}
-          />
-        </div>
-      </HudFrame>
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+        {t("wallet_history_asset")}
+      </p>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => pickAsset("")}
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            !asset
+              ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
+              : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
+          }`}
+        >
+          {t("wallet_history_all")}
+        </button>
+        {assetChips.map((a) => (
+          <button
+            key={a}
+            type="button"
+            onClick={() => pickAsset(a)}
+            className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold ${
+              asset === a
+                ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
+                : "bg-[color:var(--fd-card)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]"
+            }`}
+          >
+            <WalletAssetIcon asset={a} size={22} className="ring-1 ring-white" />
+            {a}
+          </button>
+        ))}
+      </div>
 
       <ActivityListControls
         sort={sort}
@@ -208,21 +213,16 @@ export default function WalletHistoryPage() {
       {loading ? (
         <div className="mt-3 space-y-2" aria-hidden>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl border border-white/8 bg-cyan-500/8" />
+            <div key={i} className="h-16 animate-pulse rounded-2xl bg-[color:var(--fd-mint)]/50" />
           ))}
         </div>
       ) : !data?.items.length ? (
-        <HudFrame accent="cyan" className={`${HUD_PANEL_LG} mt-3`}>
-          <div className="flex flex-col items-center p-8 text-center">
-            <span
-              className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/12 text-cyan-300"
-              aria-hidden
-            >
-              <IconInbox className="h-7 w-7" />
-            </span>
-            <p className="text-sm font-semibold text-[color:var(--fd-muted)]">{t("wallet_history_empty")}</p>
-          </div>
-        </HudFrame>
+        <div className="fd-card mt-3 flex flex-col items-center p-8 text-center">
+          <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]" aria-hidden>
+            <IconInbox className="h-7 w-7" />
+          </span>
+          <p className="text-sm font-semibold text-[color:var(--fd-muted)]">{t("wallet_history_empty")}</p>
+        </div>
       ) : (
         <ul className="mt-3 flex flex-col gap-2">
           {data.items.map((item) => (

@@ -507,7 +507,7 @@ export async function processAutoReleaseP2pOrders(): Promise<number> {
   return released;
 }
 
-/** Paid-order automation - reminders + auto-release (cron + lazy fallback). */
+/** Paid-order automation — reminders + auto-release (cron + lazy fallback). */
 export async function processP2pPaidOrderAutomation(): Promise<void> {
   await processP2pReleaseReminders();
   await processAutoReleaseP2pOrders();
@@ -1338,7 +1338,7 @@ export async function createAd(args: {
 
 }
 
-/** Boost ad ranking - fee debited from main USDT balance. */
+/** Boost ad ranking — fee debited from main USDT balance. */
 export async function boostP2pAd(args: {
   userId: string;
   adId: string;

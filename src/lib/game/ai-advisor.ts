@@ -17,7 +17,7 @@ Respond in the same language as the user's question (French or English).`;
 function fallbackAdvice(question: string): string {
   const q = question.toLowerCase();
   if (q.includes("cobalt") || q.includes("cobalt")) {
-    return "Le cobalt est volatil - diversifiez vers cuivre quand les prix montent. Gardez 20% McB pour le carburant.";
+    return "Le cobalt est volatil — diversifiez vers cuivre quand les prix montent. Gardez 20% McB pour le carburant.";
   }
   if (q.includes("transport") || q.includes("moto")) {
     return "Ne surchargez pas la moto. Transportez par petits lots fréquents pour réduire les pertes sur routes boueuses.";

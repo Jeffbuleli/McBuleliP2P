@@ -1,8 +1,8 @@
 McBuleli
-Save together - governance, loans, and shared goals.
+Save together — governance, loans, and shared goals.
 Hi {{{contact.first_name|there}}},
 AVEC groups on McBuleli
-Create or join a savings circle with rules everyone can see. Contributions, payouts, and votes - in one place.
+Create or join a savings circle with rules everyone can see. Contributions, payouts, and votes — in one place.
 Built for communities that already trust each other.
 • Transparent ledger
 • Group governance

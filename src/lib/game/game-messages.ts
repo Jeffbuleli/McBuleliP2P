@@ -82,7 +82,7 @@ export function formatGameSuccess(
   if (Array.isArray(body.applied) && body.applied.length > 0) {
     const label = typeof body.label === "string" ? body.label : "";
     const applied = (body.applied as string[]).join(", ");
-    return label ? `${label} - ${applied}` : applied;
+    return label ? `${label} — ${applied}` : applied;
   }
   if (typeof body.roleLabelFr === "string" && fr) {
     return fr ? `Promu : ${body.roleLabelFr}` : `Promoted to ${String(body.roleLabel ?? body.roleLabelFr)}`;

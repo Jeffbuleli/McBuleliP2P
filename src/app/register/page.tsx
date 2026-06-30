@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
   clearAuthReturnPath,
   loginHrefFor,
@@ -19,7 +19,10 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
-import { AuthTurnstileField, useAuthTurnstile } from "@/components/auth/auth-turnstile-field";
+import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
+
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 const COUNTRY_OPTIONS = [
   { code: "CD", en: "DR Congo", fr: "RDC" },
@@ -54,8 +57,16 @@ function RegisterForm() {
   const [referralCode, setReferralCode] = useState(initialReferralCode);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { turnstileToken, turnstileReady, onTurnstileToken, onTurnstileExpire } =
-    useAuthTurnstile();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
+
+  useEffect(() => {
+    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
+  }, []);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -169,13 +180,20 @@ function RegisterForm() {
       }
     >
       {referralCode.trim() ? (
-        <p className="mb-3 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-center text-xs font-bold text-emerald-300">
+        <p className="mb-3 rounded-xl border border-[#305F33]/15 bg-[#305F33]/5 px-3 py-2 text-center text-xs font-bold text-[#305F33]">
           {t("register_ref_active", { code: referralCode.trim().toUpperCase() })}
         </p>
       ) : null}
 
-      <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
-          <AuthTurnstileField onToken={onTurnstileToken} onExpire={onTurnstileExpire} />
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={onTurnstileToken}
+              onExpire={onTurnstileExpire}
+              className="flex justify-center"
+            />
+          ) : null}
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -254,7 +272,7 @@ function RegisterForm() {
           </label>
 
           {error ? (
-            <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               {error}
             </p>
           ) : null}

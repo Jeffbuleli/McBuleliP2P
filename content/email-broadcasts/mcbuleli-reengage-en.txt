@@ -1,5 +1,5 @@
 McBuleli
-Your wallet is waiting - check balance & latest rates.
+Your wallet is waiting — check balance & latest rates.
 Hi {{{contact.first_name|there}}},
 Still with us?
 Markets move fast. Log in to see your balance, open orders, and staking rewards.

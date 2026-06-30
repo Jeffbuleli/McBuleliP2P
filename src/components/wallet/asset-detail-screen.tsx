@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   CRYPTO_ASSET_NETWORK_LABEL,
@@ -17,11 +17,10 @@ import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { ActivityListControls } from "@/components/wallet/activity-list-controls";
 import { WalletActivityRow } from "@/components/wallet/wallet-activity-row";
 import {
-  WalletAssetActionChip,
-  WalletAssetActionRow,
-} from "@/components/wallet/wallet-asset-action-chip";
-import { IconSwapBrand } from "@/components/wallet/icon-swap-brand";
-import { IconArrowDown, IconArrowUp, IconSend } from "@/components/icons/flow-icons";
+  IconArrowDown,
+  IconArrowUp,
+  IconSend,
+} from "@/components/icons/flow-icons";
 
 type FeedResponse = {
   balance: { display: string; valueUsd: string } | null;
@@ -69,10 +68,9 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
   const depositHref = cryptoDepositHref(asset);
   const withdrawHref = cryptoWithdrawHref(asset);
   const transferHref = `/app/wallet/transfer?asset=${asset}`;
-  const swapTo = asset === "USDT" ? "PI" : "USDT";
 
   return (
-    <div className="wallet-theme px-4 pb-8">
+    <div className="pb-8">
       <WalletSubpageHeader
         title={asset}
         subtitle={networkLabel}
@@ -80,11 +78,11 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
       />
 
       <section className="wallet-hero mt-2 p-4">
-        <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400/80">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {t("wallet_asset_balance")}
         </p>
         <p className="mt-1 text-[1.65rem] font-bold tabular-nums text-[color:var(--fd-text)]">
-          {hidden ? "••••" : (data?.balance?.display ?? "-")}
+          {hidden ? "••••" : (data?.balance?.display ?? "—")}
         </p>
         <p className="text-sm tabular-nums text-[color:var(--fd-muted)]">
           {hidden ? "••••" : (data?.balance?.valueUsd ?? "")}
@@ -92,7 +90,7 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
         <button
           type="button"
           onClick={() => setHidden((h) => !h)}
-          className="mt-1 text-[10px] font-semibold text-emerald-300"
+          className="mt-1 text-[10px] font-semibold text-[color:var(--fd-primary)]"
         >
           {hidden ? t("show_balance") : t("hide_balance")}
         </button>
@@ -101,51 +99,45 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
       {data?.openDeposit ? (
         <Link
           href={cryptoDepositDetailHref(data.openDeposit.id)}
-          className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-3 transition active:scale-[0.99]"
+          className="fd-card mt-3 flex items-center gap-3 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)]/80 p-3 active:scale-[0.99]"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/45 bg-emerald-500/20 text-emerald-300">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--fd-primary)] text-white">
             <IconArrowDown className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-[color:var(--fd-text)]">
               {t("wallet_open_deposit_title")}
             </p>
-            <p className="text-xs text-emerald-300">{t("wallet_activity_resume")}</p>
+            <p className="text-xs text-[color:var(--fd-primary)]">
+              {t("wallet_activity_resume")}
+            </p>
           </div>
-          <span className="text-cyan-400/80" aria-hidden>
+          <span className="text-[color:var(--fd-primary)]" aria-hidden>
             →
           </span>
         </Link>
       ) : null}
 
-      <WalletAssetActionRow>
-        <WalletAssetActionChip
+      <div className="mt-4 flex justify-between gap-2">
+        <ActionChip
           href={depositHref}
           label={t("wallet_action_deposit")}
           icon={<IconArrowDown className="h-5 w-5" />}
-          tone="deposit"
+          accent="amber"
         />
-        <WalletAssetActionChip
+        <ActionChip
           href={transferHref}
           label={t("wallet_action_send")}
           icon={<IconSend className="h-5 w-5" />}
-          tone="send"
         />
-        <WalletAssetActionChip
+        <ActionChip
           href={withdrawHref}
           label={t("wallet_action_withdraw")}
           icon={<IconArrowUp className="h-5 w-5" />}
-          tone="withdraw"
         />
-        <WalletAssetActionChip
-          href={`/app/wallet/swap?from=${asset}&to=${swapTo}`}
-          label={t("wallet_swap_title")}
-          icon={<IconSwapBrand className="h-5 w-5" />}
-          tone="swap"
-        />
-      </WalletAssetActionRow>
+      </div>
 
-      <p className="mt-6 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
         {t("wallet_recent_activity")}
       </p>
 
@@ -169,11 +161,11 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
       {loading ? (
         <div className="mt-3 space-y-2" aria-hidden>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl border border-white/8 bg-cyan-500/8" />
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-[color:var(--fd-mint)]/50" />
           ))}
         </div>
       ) : !data?.items.length ? (
-        <p className="mt-3 rounded-xl border border-white/10 bg-[#0a1018]/85 py-8 text-center text-sm text-[color:var(--fd-muted)]">
+        <p className="fd-card mt-3 py-8 text-center text-sm text-[color:var(--fd-muted)]">
           {t("wallet_history_empty")}
         </p>
       ) : (
@@ -190,5 +182,37 @@ export function AssetDetailScreen({ asset }: { asset: WalletCryptoAsset }) {
         </p>
       ) : null}
     </div>
+  );
+}
+
+function ActionChip({
+  href,
+  label,
+  icon,
+  accent,
+}: {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  accent?: "amber";
+}) {
+  const circle =
+    accent === "amber"
+      ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-900"
+      : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-[color:var(--fd-primary)]";
+  return (
+    <Link
+      href={href}
+      className="flex min-w-0 flex-1 flex-col items-center gap-1.5 active:scale-95"
+    >
+      <span
+        className={`flex h-12 w-12 items-center justify-center rounded-full shadow-sm ${circle}`}
+      >
+        {icon}
+      </span>
+      <span className="max-w-[4.5rem] truncate text-center text-[10px] font-bold text-[color:var(--fd-text)]">
+        {label}
+      </span>
+    </Link>
   );
 }

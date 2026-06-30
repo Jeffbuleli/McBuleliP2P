@@ -121,7 +121,7 @@ export function buildWalletDetailRows(args: {
       { label: L.network, value: network },
       {
         label: L.depositAddress,
-        value: v("ADDRESS", args.address ?? "-"),
+        value: v("ADDRESS", args.address ?? "—"),
       },
     ];
   }
@@ -135,7 +135,7 @@ export function buildWalletDetailRows(args: {
           : `${args.amount} ${args.asset}`,
       },
       { label: L.network, value: network },
-      { label: L.txid, value: v("TXID", args.txid ?? "-") },
+      { label: L.txid, value: v("TXID", args.txid ?? "—") },
     ];
   }
 
@@ -146,19 +146,19 @@ export function buildWalletDetailRows(args: {
         ? `${v("AMOUNT", "")} ${v("ASSET", "")}`
         : `${args.amount} ${args.asset}`,
     },
-    { label: L.fee, value: v("FEE", args.fee ?? "-") },
-    { label: L.total, value: v("TOTAL", args.total ?? "-") },
+    { label: L.fee, value: v("FEE", args.fee ?? "—") },
+    { label: L.total, value: v("TOTAL", args.total ?? "—") },
     { label: L.network, value: network },
-    { label: L.address, value: v("ADDRESS", args.address ?? "-") },
+    { label: L.address, value: v("ADDRESS", args.address ?? "—") },
   ];
 
   if (isWithdrawRejectedKind(args.kind)) {
-    rows.push({ label: L.reason, value: v("REASON", args.reason ?? "-") });
+    rows.push({ label: L.reason, value: v("REASON", args.reason ?? "—") });
     return rows;
   }
 
   if (!isWithdrawQueuedKind(args.kind) && !isWithdrawClaimedKind(args.kind)) {
-    rows.push({ label: L.txid, value: v("TXID", args.txid ?? "-") });
+    rows.push({ label: L.txid, value: v("TXID", args.txid ?? "—") });
   }
   return rows;
 }

@@ -1,5 +1,5 @@
 /**
- * Nakama integration stub - Godot 4 client connects directly in production.
+ * Nakama integration stub — Godot 4 client connects directly in production.
  * Backend uses this for session validation and match metadata.
  */
 

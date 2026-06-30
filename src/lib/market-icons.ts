@@ -1,4 +1,4 @@
-/** Local icons (spothq MIT) under public/assets/crypto - no external CDN in CSP. */
+/** Local icons (spothq MIT) under public/assets/crypto — no external CDN in CSP. */
 const SLUG: Record<string, string> = {
   BTC: "btc",
   ETH: "eth",
@@ -15,7 +15,7 @@ const SLUG: Record<string, string> = {
 export function marketIconUrl(symbol: string): string | null {
   const upper = symbol.toUpperCase();
   const base = upper.replace(/USDT$/i, "");
-  /** Brand assets - not in spothq set. */
+  /** Brand assets — not in spothq set. */
   if (base === "PI" || upper === "PI") return "/assets/crypto/pi.png";
   if (base === "USDT" || upper === "USDT") return "/assets/crypto/usdt.png";
   const slug = SLUG[base];

@@ -1,5 +1,5 @@
 /**
- * @deprecated Use `p2p-payment-method-catalog` - kept for imports.
+ * @deprecated Use `p2p-payment-method-catalog` — kept for imports.
  */
 import {
   getP2pPaymentMethodsForCountry,

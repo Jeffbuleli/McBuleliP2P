@@ -38,7 +38,7 @@ export function CommunityAuthorHeader({
         <div className="flex flex-wrap items-center gap-1.5">
           <Link
             href={`/app/community/u/${author.handle}`}
-            className="truncate text-[15px] font-bold tracking-[-0.02em] text-stone-50 hover:text-emerald-300"
+            className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0c0a09] hover:text-[#305f33]"
           >
             {author.displayName}
           </Link>
@@ -50,13 +50,13 @@ export function CommunityAuthorHeader({
         <p className={`mt-0.5 ${COMMUNITY_META_TEXT}`}>
           <Link
             href={`/app/community/u/${author.handle}`}
-            className="font-semibold text-stone-400 hover:text-cyan-300"
+            className="font-semibold text-[#57534e] hover:text-[#305f33]"
           >
             @{author.handle}
           </Link>
           {publishedAt ? (
             <>
-              <span className="text-stone-600"> · </span>
+              <span className="text-[#d6d3d1]"> · </span>
               <time dateTime={publishedAt}>{formatRelativeTime(publishedAt, fr)}</time>
             </>
           ) : null}

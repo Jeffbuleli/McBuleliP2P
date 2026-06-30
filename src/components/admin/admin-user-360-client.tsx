@@ -135,7 +135,7 @@ export function AdminUser360Client() {
     const res = await fetch(`/api/admin/users/${userId}`);
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr(body.message ?? "-");
+      setErr(body.message ?? "—");
       setData(null);
       return;
     }
@@ -185,7 +185,7 @@ export function AdminUser360Client() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setKycMsg(body.message ?? "-");
+        setKycMsg(body.message ?? "—");
         return;
       }
       setKycMsg(t("admin_kyc_identity_reverification_sent"));
@@ -200,7 +200,7 @@ export function AdminUser360Client() {
     return [
       {
         label: t("admin_user360_kpi_portfolio"),
-        value: data.overview?.portfolio?.totalEquivDisplay ?? "-",
+        value: data.overview?.portfolio?.totalEquivDisplay ?? "—",
       },
       {
         label: t("admin_user360_kpi_trades"),
@@ -208,13 +208,13 @@ export function AdminUser360Client() {
       },
       {
         label: t("admin_user360_kpi_kyc"),
-        value: data.kyc?.kycStatus ?? "-",
+        value: data.kyc?.kycStatus ?? "—",
       },
       {
         label: t("admin_user360_kpi_rating"),
         value: data.p2p?.rating
           ? `${data.p2p.rating.avg.toFixed(1)} (${data.p2p.rating.count})`
-          : "-",
+          : "—",
       },
     ];
   }, [data, t]);
@@ -280,7 +280,7 @@ export function AdminUser360Client() {
 
       {tab === "overview" ? (
         <section className={adminCls.card}>
-          <InfoRow label={t("profile_display_name")} value={u.displayName?.trim() || "-"} />
+          <InfoRow label={t("profile_display_name")} value={u.displayName?.trim() || "—"} />
           <InfoRow
             label={t("profile_row_community")}
             value={
@@ -288,14 +288,14 @@ export function AdminUser360Client() {
                 ? `@${data.community.handle}`
                 : data.overview?.communityHandle
                   ? `@${data.overview.communityHandle}`
-                  : "-"
+                  : "—"
             }
           />
           <InfoRow
             label={t("profile_referral_code")}
-            value={data.referral?.code ?? u.referralCode ?? "-"}
+            value={data.referral?.code ?? u.referralCode ?? "—"}
           />
-          <InfoRow label="Pi" value={u.piLinked ? u.piUsername ?? "-" : "-"} />
+          <InfoRow label="Pi" value={u.piLinked ? u.piUsername ?? "—" : "—"} />
           {data.tradeGovernance ? (
             <>
               <InfoRow
@@ -388,19 +388,19 @@ export function AdminUser360Client() {
           <InfoRow label={t("admin_kyc_help_review")} value={data.kyc.helpTier} />
           <InfoRow
             label={t("kyc_identity_first")}
-            value={data.kyc.legal.legalFirstName ?? "-"}
+            value={data.kyc.legal.legalFirstName ?? "—"}
           />
           <InfoRow
             label={t("kyc_identity_last")}
-            value={data.kyc.legal.legalLastName ?? "-"}
+            value={data.kyc.legal.legalLastName ?? "—"}
           />
           <InfoRow
             label={t("kyc_identity_birth")}
-            value={data.kyc.legal.birthDate ?? "-"}
+            value={data.kyc.legal.birthDate ?? "—"}
           />
           <InfoRow
             label={t("kyc_identity_document")}
-            value={data.kyc.legal.documentNumber ?? "-"}
+            value={data.kyc.legal.documentNumber ?? "—"}
           />
           {data.kyc.rejectionNote ? (
             <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800">
@@ -471,7 +471,7 @@ export function AdminUser360Client() {
         <section className={adminCls.card}>
           <InfoRow
             label={t("profile_wallet_heading")}
-            value={data.overview?.portfolio?.totalEquivDisplay ?? "-"}
+            value={data.overview?.portfolio?.totalEquivDisplay ?? "—"}
           />
           <InfoRow label="BP" value={String(u.buleliPointsBalance)} />
           <InfoRow
@@ -479,7 +479,7 @@ export function AdminUser360Client() {
             value={
               data.referral
                 ? `${data.referral.referralBalanceUsdt.toFixed(2)} USDT`
-                : "-"
+                : "—"
             }
           />
         </section>
@@ -490,11 +490,11 @@ export function AdminUser360Client() {
           <InfoRow label={t("profile_stat_trades")} value={String(data.p2p.completedTrades)} />
           <InfoRow
             label={t("profile_stat_reputation")}
-            value={`${data.p2p.rating?.avg.toFixed(1) ?? "-"} / ${data.p2p.rating?.count ?? 0}`}
+            value={`${data.p2p.rating?.avg.toFixed(1) ?? "—"} / ${data.p2p.rating?.count ?? 0}`}
           />
           <InfoRow
             label={t("admin_user360_merchant")}
-            value={data.p2p.verifiedMerchant ? t("profile_status_verified") : "-"}
+            value={data.p2p.verifiedMerchant ? t("profile_status_verified") : "—"}
           />
           <InfoRow
             label={t("admin_user360_active_ads")}

@@ -18,7 +18,7 @@ export default async function WalletFiatDepositPage() {
   const fiatPaused = isFiatDepositWithdrawPaused();
 
   return (
-    <div className="wallet-theme flex min-h-[70vh] flex-col px-4 pb-4">
+    <div className="wallet-theme flex min-h-[70vh] flex-col pb-4">
       <WalletSubpageHeader title={d.wallet_fiat_deposit_title} backHref="/app/wallet" />
       <WalletFiatDepositClient fiatPaused={fiatPaused} />
       <div className="mt-auto">

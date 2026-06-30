@@ -1,4 +1,4 @@
-/** Community Hub - limites et feature flags. */
+/** Community Hub — limites et feature flags. */
 
 export function communityEnabled(): boolean {
   return process.env.COMMUNITY_ENABLED !== "false";

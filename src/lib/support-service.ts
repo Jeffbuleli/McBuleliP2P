@@ -951,7 +951,7 @@ export async function listSupportThreadsForStaffPaginated(
     sort?: SupportThreadSort;
     order?: "asc" | "desc";
     page?: number;
-    /** Page size - only 10, 20 or 30 are accepted. */
+    /** Page size — only 10, 20 or 30 are accepted. */
     limit?: number;
   } = {},
 ): Promise<SupportThreadsPage> {
@@ -1057,7 +1057,7 @@ export async function listSupportThreadsForStaffPaginated(
         status: t.status,
         urgency,
         lastMessageAt: t.lastMessageAt.toISOString(),
-        preview: previewRaw.length > 0 ? previewRaw : "-",
+        preview: previewRaw.length > 0 ? previewRaw : "—",
         unreadCount,
         assignedToUserId: t.assignedToUserId ?? null,
         lastSenderIsUser,

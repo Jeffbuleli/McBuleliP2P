@@ -3,7 +3,6 @@
 import {
   AuthMarketingShell,
   AuthPageFooter,
-  authTextMutedClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AccountRecoveryForm } from "@/components/auth/account-recovery-form";
 import { useI18n } from "@/components/i18n-provider";
@@ -13,12 +12,18 @@ export default function AccountRecoveryPage() {
 
   return (
     <AuthMarketingShell
-      mode="recovery"
-      footer={<AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />}
+      footer={
+        <AuthPageFooter linkHref="/login" linkLabel={t("forgot_back_login")} />
+      }
     >
-      <p className={authTextMutedClass}>{t("recovery_sub")}</p>
-      <div className="mt-5">
-        <AccountRecoveryForm />
+      <div className="fd-card rounded-[1.75rem] p-5">
+        <h1 className="text-lg font-bold text-[color:var(--fd-text)]">{t("recovery_title")}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+          {t("recovery_sub")}
+        </p>
+        <div className="mt-5">
+          <AccountRecoveryForm />
+        </div>
       </div>
     </AuthMarketingShell>
   );

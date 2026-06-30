@@ -346,7 +346,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
         return;
       }
       setSyncMsg(
-        `OK - ${j.enrolled ?? 0} inscrits Academy · ${j.noAccount ?? 0} sans compte`,
+        `OK — ${j.enrolled ?? 0} inscrits Academy · ${j.noAccount ?? 0} sans compte`,
       );
       await loadOverview();
       if (selected) await loadEnrollments(selected);
@@ -601,7 +601,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
           <SectionHead
             icon="calendar"
             title={selectedEdition?.titleFr ?? "Cohorte"}
-            hint="Statut, tuteur IA, salle live - n’ouvre pas la Community"
+            hint="Statut, tuteur IA, salle live — n’ouvre pas la Community"
           />
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
@@ -702,11 +702,11 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
             <SectionHead
               icon="live"
               title="Archive legacy"
-              hint="Lecture seule - gérez les événements via l'assistant ci-dessus"
+              hint="Lecture seule — gérez les événements via l'assistant ci-dessus"
             />
             {!liveBaseEffective ? (
               <p className="mt-3 text-xs font-semibold text-amber-800">
-                Serveur live non configuré - onglet Cohorte ou variables Render.
+                Serveur live non configuré — onglet Cohorte ou variables Render.
               </p>
             ) : null}
           </div>
@@ -761,7 +761,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
                     ) : null}
                     <AdvancedBlock summary="Replay & lien (archive)">
                       <p className="mb-2 text-[10px] font-semibold text-amber-800">
-                        Lecture seule - gérez les replays via les événements SSOT.
+                        Lecture seule — gérez les replays via les événements SSOT.
                       </p>
                       <label className="block text-xs">
                         <span className="font-bold text-[color:var(--fd-text)]">
@@ -862,7 +862,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
         <div className={adminCls.card}>
           <div className="flex items-center justify-between gap-2">
             <div>
-              <h2 className={adminCls.h2}>Membres de la cohorte - {selected}</h2>
+              <h2 className={adminCls.h2}>Membres de la cohorte — {selected}</h2>
               <p className={`mt-1 ${adminCls.muted}`}>
                 Comptes McBuleli inscrits à cette édition · {total} total
               </p>
@@ -886,7 +886,7 @@ export function AcademyAdminClient({ embedded = false }: { embedded?: boolean })
                 {enrollments.map((r) => (
                   <tr key={r.id} className="border-b border-[color:var(--fd-border)]/60">
                     <td className="py-2 pr-2">{r.email}</td>
-                    <td className="py-2 pr-2">{r.displayName ?? "-"}</td>
+                    <td className="py-2 pr-2">{r.displayName ?? "—"}</td>
                     <td className="py-2 whitespace-nowrap">
                       {new Date(r.enrolledAt).toLocaleString()}
                     </td>

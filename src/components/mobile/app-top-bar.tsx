@@ -1,20 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { NotificationDrawer } from "@/components/mobile/notification-drawer";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 import { useUnreadCountsContext } from "@/components/mobile/unread-counts-provider";
-import { McBuleliLogoMark } from "@/components/brand/mcbuleli-logo-mark";
 import { supportInboxHref } from "@/lib/support-nav";
 
 function TopBarCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#050810]">
+    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -67,8 +66,6 @@ export function AppTopBar({
   isSupportStaff?: boolean;
 }) {
   const { t } = useI18n();
-  const pathname = usePathname();
-  const onWalletHome = pathname === "/app/wallet";
   const [innerScroll, setInnerScroll] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { unreadNotif, unreadSupport, refresh } = useUnreadCountsContext();
@@ -95,7 +92,17 @@ export function AppTopBar({
           className="flex min-h-[44px] min-w-0 flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
           aria-label={t("brand")}
         >
-          <McBuleliLogoMark size={onWalletHome ? 42 : 38} />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
+            <Image
+              src="/brand/logo-256.png"
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
+              priority
+              unoptimized
+            />
+          </span>
           <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
             {t("brand")}
           </span>
@@ -105,7 +112,7 @@ export function AppTopBar({
           <TopBarActionButton
             href={supportHref}
             badge={unreadSupport}
-            className="border border-cyan-400/35 bg-cyan-500/15 text-cyan-200 shadow-md shadow-cyan-500/10 hover:bg-cyan-500/25"
+            className="bg-[color:var(--fd-primary)] text-white shadow-md shadow-[color:var(--fd-primary)]/25 hover:opacity-95"
             aria-label={t("support_open_chat")}
             title={t("support_title")}
           >
@@ -114,7 +121,7 @@ export function AppTopBar({
 
           <TopBarActionButton
             badge={unreadNotif}
-            className="border border-fuchsia-400/25 bg-[color:var(--fd-card)] text-fuchsia-300 shadow-sm hover:bg-fuchsia-500/10"
+            className="border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] text-[color:var(--fd-primary)] shadow-sm hover:bg-[color:var(--fd-mint)]"
             aria-label={t("notifications_title")}
             onClick={() => setNotifOpen(true)}
           >

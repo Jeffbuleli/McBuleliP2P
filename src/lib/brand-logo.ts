@@ -1,4 +1,4 @@
-/** Chemins logo - utiliser logo-256/512 pour affichage net (éviter upscale du 228px). */
+/** Chemins logo — utiliser logo-256/512 pour affichage net (éviter upscale du 228px). */
 
 export const BRAND_LOGO_PATH = "/brand/logo.png";
 export const BRAND_LOGO_256 = "/brand/logo-256.png";

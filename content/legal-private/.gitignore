@@ -1,4 +1,0 @@
-# Ignore all legal scans; keep this README tracked.
-*
-!README.md
-!.gitignore

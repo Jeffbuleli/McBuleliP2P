@@ -1,12 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LangSwitch } from "@/components/lang-switch";
-import { LandingFuturisticBg } from "@/components/landing/landing-futuristic-bg";
-import { HUD_PANEL_LG, HudFrame } from "@/components/ui/hud-frame";
 import { getDictionary } from "@/i18n/messages";
 import { getLocale } from "@/lib/get-locale";
-
-const BULLET_ACCENTS = ["cyan", "magenta", "green", "cyan", "magenta"] as const;
 
 export async function PublicPageShell({
   titleKey,
@@ -21,40 +17,43 @@ export async function PublicPageShell({
   const d = getDictionary(locale);
 
   return (
-    <div className="fd-public-futuristic relative min-h-dvh overflow-hidden text-stone-100">
-      <LandingFuturisticBg />
-      <header className="relative z-20 border-b border-white/6 bg-[#050810]/80 backdrop-blur-xl">
+    <div className="min-h-dvh bg-[#fafaf9] text-stone-900">
+      <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/brand/logo-256.png"
-              alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full ring-2 ring-emerald-500/25"
-            />
+            <Image src="/brand/logo-256.png" alt="" width={32} height={32} className="h-8 w-8 rounded-full ring-2 ring-[#305F33]/20" />
             <span className="text-sm font-extrabold">{d.brand}</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="hidden font-mono text-[10px] font-semibold uppercase tracking-wider text-cyan-400/90 hover:text-cyan-300 sm:inline"
-            >
+            <Link href="/" className="text-xs font-semibold text-[#305F33] hover:underline">
               ← {d.auth_back_home}
             </Link>
-            <LangSwitch variant="dark" />
+            <LangSwitch />
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-2xl px-4 py-8 pb-14">
-        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-          {d[titleKey] as string}
-        </h1>
+      <main className="mx-auto max-w-2xl px-4 py-8 pb-14">
+        <h1 className="text-2xl font-black tracking-tight text-stone-900">{d[titleKey] as string}</h1>
         {leadKey ? (
-          <p className="mt-2 text-sm leading-relaxed text-stone-400">{d[leadKey] as string}</p>
+          <p className="mt-2 text-sm leading-relaxed text-stone-600">{d[leadKey] as string}</p>
         ) : null}
         <div className="mt-6">{children}</div>
+
+        <nav className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t border-stone-200 pt-6 text-xs font-semibold text-[#305F33]">
+          <Link href="/about" className="hover:underline">
+            {d.landing_footer_about}
+          </Link>
+          <Link href="/contact" className="hover:underline">
+            {d.landing_footer_contact}
+          </Link>
+          <Link href="/terms" className="hover:underline">
+            {d.landing_footer_terms}
+          </Link>
+          <Link href="/privacy" className="hover:underline">
+            {d.landing_footer_privacy}
+          </Link>
+        </nav>
       </main>
     </div>
   );
@@ -63,19 +62,10 @@ export async function PublicPageShell({
 export function PublicBulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
-      {items.map((item, i) => (
-        <li key={item}>
-          <HudFrame
-            accent={BULLET_ACCENTS[i % BULLET_ACCENTS.length]}
-            className={`${HUD_PANEL_LG} px-4 py-3`}
-          >
-            <div className="flex gap-3 text-sm leading-relaxed text-stone-300">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 font-mono text-[10px] font-bold text-cyan-300">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span>{item}</span>
-            </div>
-          </HudFrame>
+      {items.map((item) => (
+        <li key={item} className="flex gap-3 rounded-xl border border-stone-200/80 bg-white px-4 py-3 text-sm leading-relaxed text-stone-700 shadow-sm">
+          <span className="mt-0.5 shrink-0 font-black text-[#305F33]">·</span>
+          <span>{item}</span>
         </li>
       ))}
     </ul>

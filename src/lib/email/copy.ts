@@ -17,7 +17,7 @@ const COPY = {
       subject: "Confirmez votre email",
       preheader: "Un clic pour activer votre compte McBuleli.",
       title: "Vérifiez votre email",
-      body: "Bienvenue - confirmez votre adresse pour accéder au portefeuille et aux retraits.",
+      body: "Bienvenue — confirmez votre adresse pour accéder au portefeuille et aux retraits.",
       cta: "Confirmer mon email",
       expiry: "Ce lien expire dans 24 h.",
       footerHelp: "Besoin d'aide ?",
@@ -27,7 +27,7 @@ const COPY = {
       subject: "Confirm your email",
       preheader: "One tap to activate your McBuleli account.",
       title: "Verify your email",
-      body: "Welcome - confirm your address to access your wallet and withdrawals.",
+      body: "Welcome — confirm your address to access your wallet and withdrawals.",
       cta: "Confirm email",
       expiry: "This link expires in 24 hours.",
       footerHelp: "Need help?",
@@ -407,5 +407,5 @@ export function getEmailCopy(key: EmailCopyKey, locale: EmailLocale): EmailCopyB
 }
 
 export function emailSubject(key: EmailCopyKey, locale: EmailLocale): string {
-  return `McBuleli - ${getEmailCopy(key, locale).subject}`;
+  return `McBuleli — ${getEmailCopy(key, locale).subject}`;
 }

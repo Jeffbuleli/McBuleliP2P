@@ -37,16 +37,7 @@ export function friendlyAuthError(error: unknown): string {
   if (msg.includes("does not exist") && msg.toLowerCase().includes("database")) {
     return "Database does not exist. Create it (e.g. createdb mcbuleli) or fix DATABASE_URL.";
   }
-  /** Postgres undefined_table - tables never migrated */
-  if (
-    msg.includes("42703") ||
-    (msg.includes("column") && msg.includes("does not exist"))
-  ) {
-    return [
-      "Database schema is out of date for your local DATABASE_URL.",
-      "From the project folder run: npm run db:push -- --force",
-    ].join(" ");
-  }
+  /** Postgres undefined_table — tables never migrated */
   if (
     msg.includes("42P01") ||
     (msg.includes("relation") && msg.includes("does not exist")) ||
@@ -56,7 +47,7 @@ export function friendlyAuthError(error: unknown): string {
       "Database tables are missing for the DATABASE_URL your server uses.",
       "Local: from the project folder run npm run db:push (loads .env).",
       "Deployed (Render): copy DATABASE_URL from the Render dashboard and run once:",
-      'DATABASE_URL="…" npx drizzle-kit push - that URL must match production.',
+      'DATABASE_URL="…" npx drizzle-kit push — that URL must match production.',
     ].join(" ");
   }
   if (msg.includes("JWT_SECRET")) {

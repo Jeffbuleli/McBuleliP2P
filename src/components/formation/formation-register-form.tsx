@@ -3,12 +3,6 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import {
-  authBtnSecondaryClass,
-  authErrorClass,
-  authInputClass,
-  authLabelClass,
-} from "@/components/auth/auth-marketing-shell";
 
 type Copy = {
   title: string;
@@ -44,9 +38,9 @@ const COPY: Record<"fr" | "en", Copy> = {
   fr: {
     title: "Formation gratuite McBuleli",
     intro:
-      "Inscrivez-vous pour le lancement et les sessions du 15 au 30 juin (chaque samedi 18h30-20h00, GMT+1).",
+      "Inscrivez-vous pour le lancement et les sessions du 15 au 30 juin (chaque samedi 18h30–20h00, GMT+1).",
     webinar: "Soirée de lancement : 8 juin 2026 à 19h (GMT+1)",
-    schedule: "Crypto · Trading · IA · P2P - powered by McBuleli",
+    schedule: "Crypto · Trading · IA · P2P — powered by McBuleli",
     fullName: "Nom complet",
     email: "E-mail",
     phone: "WhatsApp / téléphone",
@@ -70,14 +64,14 @@ const COPY: Record<"fr" | "en", Copy> = {
     accountBody:
       "Utilisez le même e-mail pour rejoindre les lives, le chat de cohorte et les badges dans l'app.",
     accountCta: "Créer mon compte",
-    accountLogin: "J'ai déjà un compte - me connecter",
+    accountLogin: "J'ai déjà un compte — me connecter",
   },
   en: {
     title: "Free McBuleli training",
     intro:
-      "Register for the launch and sessions from 15-30 June (every Saturday 6:30-8:00 PM GMT+1).",
+      "Register for the launch and sessions from 15–30 June (every Saturday 6:30–8:00 PM GMT+1).",
     webinar: "Launch session: 8 June 2026 at 7 PM (GMT+1)",
-    schedule: "Crypto · Trading · AI · P2P - powered by McBuleli",
+    schedule: "Crypto · Trading · AI · P2P — powered by McBuleli",
     fullName: "Full name",
     email: "Email",
     phone: "WhatsApp / phone",
@@ -102,11 +96,9 @@ const COPY: Record<"fr" | "en", Copy> = {
     accountBody:
       "Use the same email to join live sessions, cohort chat and badges in the app.",
     accountCta: "Create my account",
-    accountLogin: "I already have an account - sign in",
+    accountLogin: "I already have an account — sign in",
   },
 };
-
-const labelClass = `${authLabelClass} text-xs font-bold text-stone-400`;
 
 export function FormationRegisterForm({
   locale,
@@ -178,34 +170,54 @@ export function FormationRegisterForm({
   ] as const;
 
   return (
-    <form onSubmit={onSubmit} className="auth-form mt-6 space-y-4">
-      <label className={labelClass}>
-        {c.fullName}
-        <input name="fullName" required className={authInputClass} />
+    <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <label className="block">
+        <span className="text-xs font-bold text-[color:var(--fd-muted)]">{c.fullName}</span>
+        <input
+          name="fullName"
+          required
+          className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm"
+        />
       </label>
-      <label className={labelClass}>
-        {c.email}
-        <input name="email" type="email" required className={authInputClass} />
+      <label className="block">
+        <span className="text-xs font-bold text-[color:var(--fd-muted)]">{c.email}</span>
+        <input
+          name="email"
+          type="email"
+          required
+          className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm"
+        />
       </label>
-      <label className={labelClass}>
-        {c.phone}
-        <input name="phone" type="tel" required className={authInputClass} />
+      <label className="block">
+        <span className="text-xs font-bold text-[color:var(--fd-muted)]">{c.phone}</span>
+        <input
+          name="phone"
+          type="tel"
+          required
+          className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm"
+        />
       </label>
-      <label className={labelClass}>
-        {c.city}
-        <input name="city" className={authInputClass} />
+      <label className="block">
+        <span className="text-xs font-bold text-[color:var(--fd-muted)]">{c.city}</span>
+        <input
+          name="city"
+          className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm"
+        />
       </label>
-      <label className={labelClass}>
-        {c.level}
-        <select name="experienceLevel" className={authInputClass}>
-          <option value="">-</option>
+      <label className="block">
+        <span className="text-xs font-bold text-[color:var(--fd-muted)]">{c.level}</span>
+        <select
+          name="experienceLevel"
+          className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm"
+        >
+          <option value="">{locale === "fr" ? "—" : "—"}</option>
           <option value="beginner">{c.levelBeginner}</option>
           <option value="intermediate">{c.levelIntermediate}</option>
           <option value="advanced">{c.levelAdvanced}</option>
         </select>
       </label>
       <fieldset>
-        <legend className="text-xs font-bold text-stone-400">{c.interests}</legend>
+        <legend className="text-xs font-bold text-[color:var(--fd-muted)]">{c.interests}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {interestOpts.map(({ v, label }) => (
             <button
@@ -214,8 +226,8 @@ export function FormationRegisterForm({
               onClick={() => toggleInterest(v)}
               className={`rounded-full px-3 py-1 text-xs font-bold ring-1 transition ${
                 interests.includes(v)
-                  ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/35"
-                  : "bg-white/[0.03] text-stone-300 ring-white/12 hover:ring-cyan-500/25"
+                  ? "bg-[color:var(--fd-primary)] text-white ring-[color:var(--fd-primary)]"
+                  : "bg-[color:var(--fd-card)] text-[color:var(--fd-text)] ring-[color:var(--fd-border)]"
               }`}
             >
               {label}
@@ -223,19 +235,14 @@ export function FormationRegisterForm({
           ))}
         </div>
       </fieldset>
-      <label className="flex items-center gap-2 text-sm text-stone-400">
-        <input
-          name="whatsappOptIn"
-          type="checkbox"
-          defaultChecked
-          className="rounded border-white/20 bg-[#050810] text-emerald-500"
-        />
+      <label className="flex items-center gap-2 text-sm">
+        <input name="whatsappOptIn" type="checkbox" defaultChecked className="rounded" />
         <span>{c.whatsapp}</span>
       </label>
       <button
         type="submit"
         disabled={loading}
-        className="auth-btn-primary w-full rounded-xl py-3 text-sm font-extrabold disabled:opacity-60"
+        className="w-full rounded-2xl bg-[color:var(--fd-primary)] py-3 text-sm font-extrabold text-white shadow-lg disabled:opacity-60"
       >
         {loading ? "…" : c.submit}
       </button>
@@ -244,27 +251,29 @@ export function FormationRegisterForm({
           <p
             className={`rounded-xl px-3 py-2 text-sm font-semibold ${
               status === "ok"
-                ? "border border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-                : "border border-amber-500/25 bg-amber-500/10 text-amber-200"
+                ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                : "bg-amber-50 text-amber-900"
             }`}
           >
             {status === "ok" ? c.success : c.successDup}
           </p>
           {!isLoggedIn && submittedEmail ? (
-            <div className="border border-emerald-500/25 bg-emerald-500/8 p-4">
-              <p className="text-sm font-extrabold text-emerald-300">{c.accountTitle}</p>
-              <p className="mt-1 text-xs leading-relaxed text-stone-400">{c.accountBody}</p>
-              <p className="mt-2 font-mono text-[10px] text-stone-500">{submittedEmail}</p>
+            <div className="rounded-2xl border-2 border-[#305f33] bg-[#e8f3ee] p-4">
+              <p className="text-sm font-extrabold text-[#305f33]">{c.accountTitle}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#1a2e1c]">{c.accountBody}</p>
+              <p className="mt-2 text-[10px] font-semibold text-[color:var(--fd-muted)]">
+                {submittedEmail}
+              </p>
               <div className="mt-3 flex flex-col gap-2">
                 <Link
                   href={`/register?email=${encodeURIComponent(submittedEmail)}&next=${encodeURIComponent("/app/academy")}`}
-                  className="inline-flex justify-center rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-2.5 text-sm font-extrabold text-emerald-300"
+                  className="inline-flex justify-center rounded-xl bg-[#305f33] px-4 py-2.5 text-sm font-extrabold text-white"
                 >
                   {c.accountCta} →
                 </Link>
                 <Link
                   href={`/login?email=${encodeURIComponent(submittedEmail)}&next=${encodeURIComponent("/app/academy")}`}
-                  className={`text-center ${authBtnSecondaryClass} min-h-[44px] text-xs`}
+                  className="text-center text-xs font-bold text-[#305f33] underline"
                 >
                   {c.accountLogin}
                 </Link>
@@ -273,8 +282,10 @@ export function FormationRegisterForm({
           ) : null}
         </div>
       ) : null}
-      {status === "err" || status === "db" ? (
-        <p className={authErrorClass}>{status === "db" ? c.errorDb : c.error}</p>
+      {status === "err" ? (
+        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">
+          {c.error}
+        </p>
       ) : null}
     </form>
   );

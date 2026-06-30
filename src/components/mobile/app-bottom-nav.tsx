@@ -64,13 +64,13 @@ export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
                     aria-hidden
                   >
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-70" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-[#050810]" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
                   </span>
                 ) : null}
               </span>
               <span
                 className={`max-w-[4.75rem] truncate text-[10px] leading-tight ${
-                  active ? "fd-nav-label-active font-bold" : "font-semibold"
+                  active ? "font-bold text-[#0c0a09]" : "font-semibold"
                 }`}
               >
                 {label}

@@ -11,7 +11,6 @@ import { countryLabel } from "@/lib/country-label";
 import type { P2pMarketView } from "@/lib/p2p-market-view";
 import { P2pIconEscrow, P2pIconStar } from "@/components/p2p/p2p-icons";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
-import { HudCornerBrackets } from "@/components/ui/hud-corners";
 
 export type P2pMarketAd = {
   id: string;
@@ -86,15 +85,15 @@ export function P2pMarketAdCard({
   const rating = ad.makerRating;
   const payMethods = useMemo(() => splitPaymentMethods(ad.paymentMethods), [ad.paymentMethods]);
 
-  const headerBg = isBuyTab ? "p2p-ad-header-buy" : "p2p-ad-header-sell";
+  const headerBg = isBuyTab
+    ? "bg-[color:var(--fd-mint)]/45"
+    : "bg-[color:var(--fd-sell-mint)]/70";
   const badgeCls = isBuyTab
-    ? "border border-emerald-400/35 bg-emerald-500/15 text-emerald-300"
-    : "border border-amber-400/35 bg-amber-500/15 text-amber-300";
+    ? "bg-[color:var(--fd-mint-deep)] text-[color:var(--fd-primary)]"
+    : "bg-[color:var(--fd-sell-deep)] text-[color:var(--fd-sell)]";
   const btnCls = isBuyTab ? "fd-btn-soft" : "fd-btn-sell";
-  const stockCls = isBuyTab ? "text-emerald-300" : "text-amber-300";
-  const logoBg = isBuyTab
-    ? "border border-emerald-400/25 bg-emerald-500/10"
-    : "border border-amber-400/25 bg-amber-500/10";
+  const stockCls = isBuyTab ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-sell)]";
+  const logoBg = isBuyTab ? "bg-[color:var(--fd-mint)]" : "bg-[color:var(--fd-sell-mint)]";
 
   const locNum = locale === "fr" ? "fr-FR" : "en-US";
   const fmtLimit = (n: string) => {
@@ -117,8 +116,7 @@ export function P2pMarketAdCard({
       : null;
 
   return (
-    <li className="fd-card relative overflow-hidden p-0">
-      <HudCornerBrackets tone={marketView === "buy" ? "buy" : "sell"} size="md" />
+    <li className="fd-card overflow-hidden p-0">
       <div
         className={`flex items-center justify-between gap-2 border-b border-[color:var(--fd-border)] px-3 py-1.5 ${headerBg}`}
       >
@@ -166,8 +164,8 @@ export function P2pMarketAdCard({
           ) : null}
         </div>
 
-          <div className="mt-2.5 flex items-start justify-between gap-3">
-          <div className="p2p-maker-row flex min-w-0 flex-1 items-center gap-2 rounded-xl px-2 py-1.5">
+        <div className="mt-2.5 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-stone-50/90 px-2 py-1.5">
             <UserAvatarMark
               email={ad.makerName}
               avatarUrl={ad.makerAvatarUrl}

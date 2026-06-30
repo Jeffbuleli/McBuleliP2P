@@ -17,7 +17,7 @@ import type { EmailLocale } from "@/lib/email/locale";
 /** Closed demo futures required before self-serve live enable (unless Academy bypass). */
 export const TRADE_LIVE_MIN_DEMO_CLOSED = 3;
 
-/** Per-position margin cap (USDT) - tier 1 vs tier 2 after experienced threshold. */
+/** Per-position margin cap (USDT) — tier 1 vs tier 2 after experienced threshold. */
 export const TRADE_LIVE_MARGIN_TIER1_USDT = 500;
 export const TRADE_LIVE_MARGIN_TIER2_USDT = 2000;
 export const TRADE_LIVE_EXPERIENCED_CLOSED = 10;
@@ -253,8 +253,8 @@ async function notifyTradeLiveEnabled(args: {
     ? "Trading réel activé sur McBuleli"
     : "Real trading enabled on McBuleli";
   const body = fr
-    ? "Vous avez activé le mode réel pour les futures custodial. Les ordres débitent votre wallet USDT sur la plateforme - ce n’est pas un compte exchange externe. Vous pouvez repasser en mode entraînement à tout moment."
-    : "You enabled real mode for custodial futures. Orders debit your on-platform USDT wallet - this is not an external exchange account. You can switch back to practice anytime.";
+    ? "Vous avez activé le mode réel pour les futures custodial. Les ordres débitent votre wallet USDT sur la plateforme — ce n’est pas un compte exchange externe. Vous pouvez repasser en mode entraînement à tout moment."
+    : "You enabled real mode for custodial futures. Orders debit your on-platform USDT wallet — this is not an external exchange account. You can switch back to practice anytime.";
 
   const { html, text } = renderMcBuleliEmail({
     copy: {

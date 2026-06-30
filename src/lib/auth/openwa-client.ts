@@ -1,4 +1,4 @@
-/** OpenWA session model - https://github.com/rmyndharis/OpenWA (Swagger /api/sessions). */
+/** OpenWA session model — https://github.com/rmyndharis/OpenWA (Swagger /api/sessions). */
 export type OpenWaSession = {
   id: string;
   name: string;
@@ -112,7 +112,7 @@ export async function getOpenWaSession(
   return out.ok ? out.data : null;
 }
 
-/** POST /api/sessions - body matches Swagger (name + optional config). */
+/** POST /api/sessions — body matches Swagger (name + optional config). */
 export async function createOpenWaSession(args: {
   name: string;
   autoReconnect?: boolean;
@@ -168,7 +168,7 @@ export async function registerOpenWaWebhook(args: {
   return out.ok;
 }
 
-/** McBuleli WhatsApp number for wa.me - env override, else live session phone. */
+/** McBuleli WhatsApp number for wa.me — env override, else live session phone. */
 export async function getOpenWaMcBuleliPhone(): Promise<string | null> {
   const fromEnv = normalizePhone(process.env.OPENWA_MCBULELI_NUMBER);
   if (fromEnv) return fromEnv;

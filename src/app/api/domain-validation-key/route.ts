@@ -7,7 +7,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Legacy mirror of `/validation-key.txt` - same Host-based key selection.
+ * Legacy mirror of `/validation-key.txt` — same Host-based key selection.
  */
 export async function GET(req: Request) {
   const host = req.headers.get("host");

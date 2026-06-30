@@ -151,7 +151,7 @@ export function AvecSettingsSections({
             </span>
             <span className="text-[10px] text-[color:var(--fd-muted)]">
               {t("group_dash_next_billing")}:{" "}
-              {nextBillingAt ? new Date(nextBillingAt).toLocaleDateString(loc) : "-"}
+              {nextBillingAt ? new Date(nextBillingAt).toLocaleDateString(loc) : "—"}
             </span>
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
@@ -166,7 +166,7 @@ export function AvecSettingsSections({
           {invoices === null ? (
             <p className="mt-2 text-[color:var(--fd-muted)]">…</p>
           ) : sortedInvoices.length === 0 ? (
-            <p className="mt-2 text-xs text-[color:var(--fd-muted)]">-</p>
+            <p className="mt-2 text-xs text-[color:var(--fd-muted)]">—</p>
           ) : (
             <>
               <ul className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">
@@ -198,7 +198,7 @@ export function AvecSettingsSections({
                     <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
                       {x.attemptedAt
                         ? new Date(x.attemptedAt).toLocaleString(loc)
-                        : "-"}
+                        : "—"}
                     </p>
                   </li>
                 ))}
@@ -420,7 +420,7 @@ export function AvecSettingsSections({
           {audit === null ? (
             <p className="mt-2 text-[color:var(--fd-muted)]">…</p>
           ) : sortedAudit.length === 0 ? (
-            <p className="mt-2 text-xs text-[color:var(--fd-muted)]">-</p>
+            <p className="mt-2 text-xs text-[color:var(--fd-muted)]">—</p>
           ) : (
             <>
               <ul className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">

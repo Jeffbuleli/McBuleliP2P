@@ -52,7 +52,7 @@ export default function AdminUsersPage() {
     const res = await fetch("/api/admin/users");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setErr(data.message ?? "-");
+      setErr(data.message ?? "—");
       setUsers([]);
       return;
     }
@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      alert(data.message ?? "-");
+      alert(data.message ?? "—");
       return;
     }
     const data = await res.json();
@@ -124,7 +124,7 @@ export default function AdminUsersPage() {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      alert(data.message ?? "-");
+      alert(data.message ?? "—");
       return;
     }
     const data = await res.json();
@@ -248,7 +248,7 @@ export default function AdminUsersPage() {
         rows={users}
         columns={columns}
         rowKey={(u) => u.id}
-        emptyMessage="-"
+        emptyMessage="—"
         initialSortId="email"
         totalLabel={t("admin_table_total", { count: users.length })}
       />

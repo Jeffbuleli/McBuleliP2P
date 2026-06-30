@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   clearAuthReturnPath,
   loginHrefFor,
@@ -22,9 +22,12 @@ import {
   authLabelClass,
 } from "@/components/auth/auth-marketing-shell";
 import { AuthWaitingScreen } from "@/components/auth/auth-waiting-screen";
-import { AuthTurnstileField, useAuthTurnstile } from "@/components/auth/auth-turnstile-field";
 import { PasskeyLoginButton } from "@/components/auth/passkey-login-button";
+import { TurnstileWidget, preloadTurnstileScript } from "@/components/auth/turnstile-widget";
 import { paymentIdFromPiSdk, piInit, resolvePiSdkSandbox, isPiBrowser } from "@/lib/pi-browser";
+
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
 const PI_AUTH_TIMEOUT_MS = 55_000;
 
@@ -62,8 +65,16 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [piBusy, setPiBusy] = useState(false);
-  const { turnstileToken, turnstileReady, onTurnstileToken, onTurnstileExpire } =
-    useAuthTurnstile();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileReady = !turnstileRequired || Boolean(turnstileToken);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const onTurnstileExpire = useCallback(() => setTurnstileToken(null), []);
+
+  useEffect(() => {
+    if (TURNSTILE_SITE_KEY) preloadTurnstileScript();
+  }, []);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -244,7 +255,14 @@ function LoginForm() {
       }
     >
       <form onSubmit={onSubmit} className="auth-form flex flex-col gap-4">
-          <AuthTurnstileField onToken={onTurnstileToken} onExpire={onTurnstileExpire} />
+          {TURNSTILE_SITE_KEY ? (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={onTurnstileToken}
+              onExpire={onTurnstileExpire}
+              className="flex justify-center"
+            />
+          ) : null}
           <label className={authLabelClass}>
             {t("email")}
             <input
@@ -261,12 +279,12 @@ function LoginForm() {
           </label>
           <div className="auth-field flex flex-col gap-2">
             <div className="auth-field-header flex items-center justify-between gap-3">
-              <span className="auth-label text-sm font-medium text-stone-300">
+              <span className="auth-label text-sm font-medium text-[color:var(--fd-text)]">
                 {t("password")}
               </span>
               <Link
                 href="/forgot-password"
-                className="text-xs font-semibold text-cyan-400 underline-offset-4 hover:text-cyan-300 hover:underline"
+                className="text-xs font-semibold text-[#305F33] underline-offset-4 hover:text-[#78350f] hover:underline"
               >
                 {t("login_forgot")}
               </Link>
@@ -282,7 +300,7 @@ function LoginForm() {
             />
           </div>
           {error ? (
-            <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+            <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               {error}
             </p>
           ) : null}
@@ -297,10 +315,10 @@ function LoginForm() {
 
         <div className="auth-divider relative my-5">
           <div className="auth-divider-line absolute inset-0 flex items-center" aria-hidden>
-            <div className="w-full border-t border-white/8" />
+            <div className="w-full border-t border-stone-200" />
           </div>
-          <div className="auth-divider-label relative flex justify-center text-[10px] font-bold uppercase tracking-[0.2em] text-stone-600">
-            <span className="bg-[#0a1018] px-2">{t("auth_or")}</span>
+          <div className="auth-divider-label relative flex justify-center text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">
+            <span className="bg-white px-2">{t("auth_or")}</span>
           </div>
         </div>
 

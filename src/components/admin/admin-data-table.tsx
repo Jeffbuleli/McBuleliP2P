@@ -21,7 +21,7 @@ export function AdminDataTable<T>({
   rows,
   columns,
   rowKey,
-  emptyMessage = "-",
+  emptyMessage = "—",
   pageSizeOptions = [10, 20, 30],
   totalLabel,
   initialSortId,

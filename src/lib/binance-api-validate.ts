@@ -55,7 +55,7 @@ export function classifyBinanceAuthError(
   return "bots_error_binance_generic";
 }
 
-/** Live only - GET /sapi/v1/account/apiRestrictions */
+/** Live only — GET /sapi/v1/account/apiRestrictions */
 export async function fetchBinanceApiRestrictions(
   environment: BotEnvironment,
   creds: StoredBinanceCredentials,

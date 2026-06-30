@@ -17,13 +17,13 @@ export const maxDuration = 60;
 
 const bodyZ = z.object({
   payment: z.unknown(),
-  /** Must match Pi SDK sandbox flag - often no DB row yet for incomplete callbacks. */
+  /** Must match Pi SDK sandbox flag — often no DB row yet for incomplete callbacks. */
   sandbox: z.boolean().optional(),
 });
 
 /**
  * Finishes an in-flight U2A payment (used from Pi.authenticate onIncompletePaymentFound).
- * Must not silently ignore failures - errors propagate to the client callback.
+ * Must not silently ignore failures — errors propagate to the client callback.
  */
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null);

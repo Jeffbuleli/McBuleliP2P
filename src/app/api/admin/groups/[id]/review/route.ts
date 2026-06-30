@@ -83,7 +83,7 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   }
 
-  const reason = parsed.data.rejectionReason?.trim() || "-";
+  const reason = parsed.data.rejectionReason?.trim() || "—";
   await db
     .update(groupSavingsGroups)
     .set({

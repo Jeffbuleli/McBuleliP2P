@@ -30,6 +30,6 @@ export function groupCreationProgressSteps(status: string): TxStep[] {
   if (status === "rejected" || status === "suspended" || status === "closed") {
     return withStates(labels, 1, true);
   }
-  // pending - waiting on Ops
+  // pending — waiting on Ops
   return withStates(labels, 1);
 }

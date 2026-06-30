@@ -8,12 +8,7 @@ import {
   IconTelegram,
 } from "@/components/community/community-icons";
 import {
-  COMMUNITY_ACTION_BAR_WRAP,
   COMMUNITY_ACTION_PILL,
-  COMMUNITY_ACTION_PILL_ACTIVE,
-  COMMUNITY_ENGAGEMENT_BAR,
-  COMMUNITY_ENGAGEMENT_PILL,
-  COMMUNITY_ENGAGEMENT_PILL_LIKE,
 } from "@/lib/community/community-ui";
 
 function formatCount(n: number): string {
@@ -60,11 +55,11 @@ export function CommunityEngagementSummary({
       : "read";
 
   return (
-    <div className={COMMUNITY_ENGAGEMENT_BAR}>
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#edf2ef] bg-gradient-to-r from-[#fafcfa] to-white px-4 py-2.5 text-xs font-semibold text-[#78716c]">
       <div className="flex flex-wrap items-center gap-2.5">
         {likeCount > 0 ? (
-          <span className={COMMUNITY_ENGAGEMENT_PILL_LIKE}>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/25 text-emerald-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ee] px-2 py-0.5 text-[#305f33]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#305f33] text-white shadow-sm">
               <IconLike size={11} filled />
             </span>
             {formatCount(likeCount)}
@@ -72,7 +67,7 @@ export function CommunityEngagementSummary({
         ) : null}
         {showViews ? (
           <span
-            className={COMMUNITY_ENGAGEMENT_PILL}
+            className="inline-flex items-center gap-1 rounded-full bg-[#f4f6f4] px-2 py-0.5"
             title={
               fr
                 ? "1 lecture = 1 membre ayant vu la publication"
@@ -86,7 +81,7 @@ export function CommunityEngagementSummary({
       </div>
       <div className="flex flex-wrap items-center gap-2.5">
         {commentCount > 0 ? (
-          <span className={COMMUNITY_ENGAGEMENT_PILL}>
+          <span className="rounded-full bg-[#f4f6f4] px-2 py-0.5">
             {formatCount(commentCount)}{" "}
             {fr
               ? commentCount > 1
@@ -98,7 +93,7 @@ export function CommunityEngagementSummary({
           </span>
         ) : null}
         {shareCount > 0 ? (
-          <span className={COMMUNITY_ENGAGEMENT_PILL}>
+          <span className="rounded-full bg-[#f4f6f4] px-2 py-0.5">
             {formatCount(shareCount)}{" "}
             {fr
               ? shareCount > 1
@@ -138,13 +133,17 @@ export function CommunityActionBar({
   onTelegramShare?: () => void;
 }) {
   return (
-    <div className={COMMUNITY_ACTION_BAR_WRAP}>
+    <div className="flex gap-1.5 border-t border-[#edf2ef] bg-white/80 px-2.5 py-2.5 backdrop-blur-sm">
       <button
         type="button"
         disabled={busy}
         onClick={onLike}
         aria-label={fr ? "J'aime" : "Like"}
-        className={likedByMe ? COMMUNITY_ACTION_PILL_ACTIVE : COMMUNITY_ACTION_PILL}
+        className={`${COMMUNITY_ACTION_PILL} ${
+          likedByMe
+            ? "bg-[#eaf5ee] text-[#305f33] ring-1 ring-[#305f33]/20"
+            : ""
+        }`}
       >
         <IconLike size={20} filled={likedByMe} />
         {likeCount > 0 ? <span>{formatCount(likeCount)}</span> : null}
@@ -172,7 +171,7 @@ export function CommunityActionBar({
           type="button"
           onClick={onTelegramShare}
           aria-label="Telegram"
-          className="flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-xl border border-sky-400/25 bg-sky-400/10 text-sky-300 active:scale-[0.97]"
+          className="flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e8f6fc] to-[#d4edfa] text-[#229ed9] ring-1 ring-[#229ed9]/20 active:scale-[0.97]"
         >
           <IconTelegram size={20} />
         </button>

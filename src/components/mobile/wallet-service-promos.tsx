@@ -25,12 +25,12 @@ function Chevron() {
   );
 }
 
-const SERVICE_ROW =
-  "flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#0a1018]/85 p-3 transition active:scale-[0.99] hover:border-cyan-400/20 sm:gap-3";
-
 function StakingPromoCard({ promo }: { promo: StakingPromoDTO }) {
   return (
-    <Link href={promo.href} className={`${SERVICE_ROW} overflow-hidden px-2.5 py-2.5 sm:px-3`}>
+    <Link
+      href={promo.href}
+      className="fd-card flex items-center gap-2 overflow-hidden px-2.5 py-2.5 active:scale-[0.99] sm:gap-3 sm:px-3"
+    >
       <StakingHeroIllustration className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" />
       <div className="min-w-0 shrink-0">
         <p className="text-sm font-bold leading-tight text-[color:var(--fd-text)]">
@@ -40,12 +40,12 @@ function StakingPromoCard({ promo }: { promo: StakingPromoDTO }) {
           {promo.activeLine}
         </p>
       </div>
-      <div className="ml-auto flex min-w-0 flex-1 items-stretch justify-end gap-0 divide-x divide-white/10 overflow-hidden rounded-lg border border-white/10 bg-emerald-500/8">
+      <div className="ml-auto flex min-w-0 flex-1 items-stretch justify-end gap-0 divide-x divide-[color:var(--fd-border)] overflow-hidden rounded-lg border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/25">
         <div className="min-w-0 flex-1 px-2 py-1.5 text-center sm:px-2.5">
           <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)] sm:text-[9px]">
             {promo.lockedLabel}
           </p>
-          <p className="truncate text-[11px] font-bold tabular-nums text-emerald-300 sm:text-xs">
+          <p className="truncate text-[11px] font-bold tabular-nums text-[color:var(--fd-primary)] sm:text-xs">
             {promo.lockedDisplay}
           </p>
         </div>
@@ -65,9 +65,12 @@ function StakingPromoCard({ promo }: { promo: StakingPromoDTO }) {
 
 function CompactPromoCard({ promo }: { promo: ServicePromoDTO }) {
   return (
-    <Link href={promo.href} className={SERVICE_ROW}>
+    <Link
+      href={promo.href}
+      className="fd-card flex items-center gap-2.5 p-3 active:scale-[0.99]"
+    >
       <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/12 text-cyan-300"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 to-emerald-100 text-cyan-900 ring-1 ring-white/80"
         aria-hidden
       >
         <WalletIconPool />
@@ -89,13 +92,16 @@ function AvecPromoCard({
   promo: ServicePromoDTO & { rightPrimary: string; rightSecondary?: string };
 }) {
   return (
-    <Link href={promo.href} className={`${SERVICE_ROW} gap-3 p-3.5`}>
+    <Link
+      href={promo.href}
+      className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
+    >
       <AvecCompactIllustration className="h-12 w-12 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{promo.title}</p>
           {Number(promo.rightPrimary) > 0 ? (
-            <span className="rounded-full border border-amber-400/35 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-amber-300">
+            <span className="rounded-full bg-[color:var(--fd-primary)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
               {promo.rightPrimary}
             </span>
           ) : null}
@@ -122,13 +128,16 @@ function PointsPromoCard({
   title: string;
 }) {
   return (
-    <Link href="/app/wallet/points" className={`${SERVICE_ROW} gap-3 p-3.5`}>
+    <Link
+      href="/app/wallet/points"
+      className="fd-card flex items-center gap-3 p-3.5 active:scale-[0.99]"
+    >
       <BuleliPointsCompactIllustration className="h-12 w-12 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>
           {balance > 0 ? (
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-fuchsia-300">
+            <span className="rounded-full bg-[color:var(--fd-primary)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
               {balance}
             </span>
           ) : null}

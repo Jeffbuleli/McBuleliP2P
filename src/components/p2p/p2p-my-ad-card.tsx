@@ -11,9 +11,6 @@ const ASSET_ICON: Record<string, string> = {
   PI: "/assets/crypto/pi.png",
 };
 
-const P2P_BTN =
-  "rounded-xl border border-white/12 bg-[#0a1018]/85 px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)] transition active:scale-[0.98]";
-
 export type P2pMyAd = {
   id: string;
   side: string;
@@ -80,10 +77,10 @@ export function P2pMyAdCard({
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
             ad.status === "active"
-              ? "border border-emerald-400/35 bg-emerald-500/15 text-emerald-300"
+              ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/25"
               : ad.status === "paused"
-                ? "border border-amber-400/35 bg-amber-500/15 text-amber-300"
-                : "border border-white/10 bg-[#0a1018]/85 text-[color:var(--fd-muted)]"
+                ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
+                : "bg-stone-100 text-stone-500 ring-1 ring-stone-200"
           }`}
         >
           {statusLabel}
@@ -92,7 +89,7 @@ export function P2pMyAdCard({
 
       <div className="space-y-2 p-3">
         <p className="text-[10px] text-[color:var(--fd-muted)]">
-          {fmt(ad.minFiat, ad.fiatCurrency)} - {fmt(ad.maxFiat, ad.fiatCurrency)}
+          {fmt(ad.minFiat, ad.fiatCurrency)} — {fmt(ad.maxFiat, ad.fiatCurrency)}
         </p>
         {ad.boostedUntil && new Date(ad.boostedUntil).getTime() > Date.now() ? (
           <p className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
@@ -109,7 +106,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onEdit}
-              className={P2P_BTN}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
             >
               {t("p2p_ad_edit")}
             </button>
@@ -118,7 +115,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onPause}
-              className={P2P_BTN}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
             >
               {t("p2p_ad_pause")}
             </button>
@@ -128,7 +125,7 @@ export function P2pMyAdCard({
               type="button"
               disabled={boostBusy}
               onClick={onBoost}
-              className="rounded-xl border border-amber-400/35 bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-300 disabled:opacity-60"
+              className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 disabled:opacity-60"
             >
               {boostBusy
                 ? t("p2p_boost_busy")
@@ -139,7 +136,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onResume}
-              className={P2P_BTN}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[color:var(--fd-text)]"
             >
               {t("p2p_ad_resume")}
             </button>
@@ -148,7 +145,7 @@ export function P2pMyAdCard({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-rose-400/35 bg-rose-500/12 px-3 py-1.5 text-xs font-semibold text-rose-300"
+              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800"
             >
               {t("p2p_ad_close")}
             </button>

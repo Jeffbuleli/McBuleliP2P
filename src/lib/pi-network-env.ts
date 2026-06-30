@@ -17,7 +17,7 @@ export class PiNetworkTestApiKeyMissingError extends Error {
   }
 }
 
-/** Pi App Platform Server API Key - server-side only (approve / complete payments). Mainnet / production. */
+/** Pi App Platform Server API Key — server-side only (approve / complete payments). Mainnet / production. */
 export function getPiNetworkApiKey(): string {
   const s = process.env.PI_NETWORK_API_KEY?.trim();
   if (!s) {

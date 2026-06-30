@@ -1,4 +1,4 @@
-/** Inline SVG - Buleli Points (BP) coin badge (McBuleli green + gold utility). */
+/** Inline SVG — Buleli Points (BP) coin badge (McBuleli green + gold utility). */
 
 type IllProps = { className?: string };
 

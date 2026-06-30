@@ -1,9 +1,9 @@
 McBuleli
-Unlock higher limits - quick verification with Didit.
+Unlock higher limits — quick verification with Didit.
 Hi {{{contact.first_name|there}}},
 Verify once, move freely
 KYC takes a few minutes and unlocks higher deposit, withdrawal, and P2P limits.
-Your data stays on our secure flow - we never ask for passwords by email.
+Your data stays on our secure flow — we never ask for passwords by email.
 Complete KYC: https://mcbuleli.org/app/profile?utm_source=email&utm_medium=broadcast&utm_campaign=kyc
 hi@mcbuleli.org
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CommunityMediaImage } from "@/components/community/community-media-image";
-import { COMMUNITY_MEDIA_FRAME } from "@/lib/community/community-ui";
 
 export type MosaicImage = {
   id: string;
@@ -94,7 +93,7 @@ export function CommunityImageMosaic({
 
   if (images.length === 1) {
     return (
-      <div className={`${COMMUNITY_MEDIA_FRAME} ${className}`}>
+      <div className={`overflow-hidden rounded-xl ${className}`}>
         {slot(images[0], 0, "max-h-80 min-h-[160px] w-full")}
       </div>
     );

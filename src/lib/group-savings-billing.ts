@@ -97,7 +97,7 @@ export async function processGroupSubscriptionBilling(args: {
 
   const bal = await getGroupUsdtBalance(args.groupId);
   if (bal + 1e-18 < GROUP_SUBSCRIPTION_FEE_USDT) {
-    // Grace after Ops activation - treasury may still be empty.
+    // Grace after Ops activation — treasury may still be empty.
     const reviewedMs = g.reviewedAt?.getTime() ?? 0;
     if (reviewedMs > 0 && now.getTime() - reviewedMs < 7 * 86_400_000) {
       return { ok: true, status: "skipped" };

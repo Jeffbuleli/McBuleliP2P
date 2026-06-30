@@ -14,9 +14,9 @@ import type { KycLegalIdentity } from "@/lib/kyc-identity";
 
 export type KycStatusPayload = {
   enabled: boolean;
-  /** @deprecated Alias - true when KYC is enabled and country is eligible (global Didit). */
+  /** @deprecated Alias — true when KYC is enabled and country is eligible (global Didit). */
   corridor: boolean;
-  /** User country is set and not OTHER - required to start Didit. */
+  /** User country is set and not OTHER — required to start Didit. */
   inCorridorCountry: boolean;
   kycStatus: string;
   approved: boolean;
@@ -27,7 +27,7 @@ export type KycStatusPayload = {
   canRetryKyc: boolean;
   /** Rejected / not started users can resubmit after correcting legal identity. */
   canResubmitKyc: boolean;
-  /** Approved users request an OPS correction - Didit re-verification (no manual rename). */
+  /** Approved users request an OPS correction — Didit re-verification (no manual rename). */
   canRequestIdentityCorrection: boolean;
   /** User must complete a Didit re-verification after OPS triggered resubmission. */
   identityReverificationPending: boolean;

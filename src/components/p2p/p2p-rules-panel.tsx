@@ -9,7 +9,7 @@ import {
 } from "@/components/p2p/p2p-illustrations";
 import { P2pInfoCard, P2pInfoCardGrid } from "@/components/p2p/p2p-info-card";
 
-/** Compact illustrated P2P rules - replaces long legal paragraphs. */
+/** Compact illustrated P2P rules — replaces long legal paragraphs. */
 export function P2pRulesPanel() {
   const { t } = useI18n();
 

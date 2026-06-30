@@ -30,7 +30,7 @@ function notifMeta(
 } {
   const p = row.payload ?? {};
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
-  const asset = str("asset") || "-";
+  const asset = str("asset") || "—";
   const amount = str("amount") || str("net") || "";
   const orderId = str("orderId");
   const p2pHref = orderId ? `/app/p2p/order/${orderId}` : "/app/p2p";
@@ -45,7 +45,7 @@ function notifMeta(
   const p2pPreviewBody = () => {
     const preview = str("preview");
     const base = p2pBody();
-    return preview ? `${base} - ${preview}` : base;
+    return preview ? `${base} — ${preview}` : base;
   };
 
   switch (row.kind) {
@@ -75,7 +75,7 @@ function notifMeta(
         title: t("notif_withdrawal_rejected_title", { asset }),
         body: t("notif_withdrawal_rejected_body", {
           asset,
-          reason: str("reason") || "-",
+          reason: str("reason") || "—",
         }),
         href: "/app/wallet/history",
         pill: { variant: "failed", label: t("status_ui_failed") },
@@ -85,7 +85,7 @@ function notifMeta(
         title: t("notif_deposit_confirmed_title", { asset }),
         body: t("notif_deposit_confirmed_body", {
           asset,
-          amount: amount || "-",
+          amount: amount || "—",
         }),
         href: "/app/wallet/history",
         pill: { variant: "success", label: t("status_ui_success") },
@@ -216,7 +216,7 @@ function notifMeta(
         title: t("notif_support_message_title"),
         body: t("notif_support_message_body", {
           fromLabel: str("fromLabel") || t("support_typing_agents"),
-          preview: str("preview") || "-",
+          preview: str("preview") || "—",
         }),
         href: supportInboxHref({
           isStaff: !!opts?.isSupportStaff,
@@ -245,7 +245,7 @@ function notifMeta(
         title: t("notif_admin_withdrawal_order_title"),
         body: t("notif_admin_withdrawal_order_body", {
           asset,
-          amount: amount || "-",
+          amount: amount || "—",
         }),
         href: str("withdrawalId")
           ? `/admin/withdrawals/${encodeURIComponent(str("withdrawalId"))}`
@@ -264,7 +264,7 @@ function notifMeta(
           );
       return {
         title: t("notif_group_message_title"),
-        body: t("notif_group_message_body", { preview: preview || "-" }),
+        body: t("notif_group_message_body", { preview: preview || "—" }),
         href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
         pill: { variant: "processing", label: t("status_ui_processing") },
       };
@@ -377,7 +377,7 @@ function notifMeta(
     case "academy_cohort_invite": {
       const edition =
         str("editionTitleFr") || str("editionTitleEn") || t("academy_title");
-      const inviter = str("inviterLabel") || "-";
+      const inviter = str("inviterLabel") || "—";
       return {
         title: t("notif_academy_cohort_invite_title"),
         body: t("notif_academy_cohort_invite_body", { inviter, edition }),
@@ -386,7 +386,7 @@ function notifMeta(
       };
     }
     case "community_comment": {
-      const preview = str("preview") || "-";
+      const preview = str("preview") || "—";
       return {
         title: t("notif_community_comment_title"),
         body: preview,
@@ -540,10 +540,10 @@ export function NotificationDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="notif-drawer-title"
-        className="notif-drawer-panel app-futuristic-portal relative mx-auto max-h-[82vh] w-full max-w-lg rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-[0_-12px_48px_rgba(0,0,0,0.45)]"
+        className="notif-drawer-panel relative mx-auto max-h-[82vh] w-full max-w-lg rounded-t-3xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-[0_-12px_48px_rgba(28,25,23,0.18)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20" />
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-stone-300" />
         <div className="flex items-start justify-between gap-3 border-b border-[color:var(--fd-border)] px-4 pb-3 pt-4">
           <div>
             <h2 id="notif-drawer-title" className="text-lg font-bold text-[color:var(--fd-text)]">

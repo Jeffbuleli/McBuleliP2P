@@ -59,7 +59,7 @@ export async function resolveUsdtFeeSplitForQuote(args: {
   });
 }
 
-/** PI / manual rails - full user fee stays with McBuleli. */
+/** PI / manual rails — full user fee stays with McBuleli. */
 export function piWithdrawFeeSplit(userFee: string): WithdrawFeeSplit {
   return {
     providerFee: feeToNumericString(0),

@@ -45,7 +45,7 @@ export default async function ProfileReferralsPage() {
           }}
         />
       ) : (
-        <p className="text-sm text-[var(--fd-muted)]">-</p>
+        <p className="text-sm text-[var(--fd-muted)]">—</p>
       )}
     </>
   );

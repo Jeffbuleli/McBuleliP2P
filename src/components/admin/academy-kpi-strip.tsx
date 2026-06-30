@@ -32,7 +32,7 @@ export function AcademyKpiStrip({ editions, enrollments, events, eventKpis, live
       label: "USDT",
       value: (eventKpis?.revenueUsdt ?? 0).toFixed(0),
     },
-    { icon: "video" as const, label: "McBuleli Live", value: liveOk ? "OK" : "-" },
+    { icon: "video" as const, label: "McBuleli Live", value: liveOk ? "OK" : "—" },
   ];
 
   return (

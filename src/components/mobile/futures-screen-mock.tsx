@@ -1,6 +1,6 @@
 import type { Messages } from "@/i18n/messages";
 
-/** Educational mock - stylized like USDⓈ-M perpetual mobile apps (not interactive). */
+/** Educational mock — stylized like USDⓈ-M perpetual mobile apps (not interactive). */
 export function FuturesScreenMock({ d }: { d: Messages }) {
   const askRows = [
     { p: "80 119.2", a: "4.27" },

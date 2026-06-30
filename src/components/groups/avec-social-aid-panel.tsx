@@ -239,7 +239,7 @@ export function AvecSocialAidPanel({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-xs text-[color:var(--fd-muted)]">-</p>
+        <p className="mt-3 text-xs text-[color:var(--fd-muted)]">—</p>
       )}
 
       {info ? <p className="mt-2 text-xs font-semibold text-emerald-800">{info}</p> : null}

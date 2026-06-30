@@ -20,15 +20,17 @@ export function DepositStatusChip({ variant }: { variant: Variant }) {
 
   const styles =
     variant === "auto"
-      ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
       : variant === "ambiguous"
-        ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
-        : "border-white/12 bg-[#0a1018]/85 text-[color:var(--fd-muted)]";
+        ? "border-amber-200 bg-amber-50 text-amber-950"
+        : "border-stone-200 bg-stone-50 text-stone-800";
 
   const Illustration = variant === "auto" ? IllustrationAutoScan : IllustrationReview;
 
   return (
-    <div className={`mt-2 flex items-center gap-2.5 rounded-xl border px-3 py-2 ${styles}`}>
+    <div
+      className={`mt-2 flex items-center gap-2.5 rounded-xl border px-3 py-2 ${styles}`}
+    >
       <Illustration className="h-10 w-10 shrink-0" />
       <p className="text-xs font-semibold leading-snug">{t(key)}</p>
     </div>

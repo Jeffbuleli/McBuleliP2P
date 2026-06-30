@@ -12,7 +12,6 @@ import {
 } from "@/components/p2p/p2p-illustrations";
 import type { Messages } from "@/i18n/messages";
 import { P2pInfoCard } from "@/components/p2p/p2p-info-card";
-import type { HudCornerTone } from "@/components/ui/hud-corners";
 
 const TIPS: {
   id: string;
@@ -33,25 +32,15 @@ const ILLUS = "h-8 w-8";
 
 type Props = {
   className?: string;
-  /** Tints section title only - cards stay rounded neutrals. */
-  accentTone?: HudCornerTone;
 };
 
-/** OKX-style anti-scam carousel - horizontal compact cards. */
-export function P2pSafetyTips({ className = "", accentTone }: Props) {
+/** OKX-style anti-scam carousel — horizontal compact cards. */
+export function P2pSafetyTips({ className = "" }: Props) {
   const { t } = useI18n();
 
   return (
     <section className={className} aria-label={t("p2p_safety_title")}>
-      <h2
-        className={`mb-1.5 px-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.18em] ${
-          accentTone === "sell"
-            ? "text-amber-400/85"
-            : accentTone === "buy"
-              ? "text-emerald-400/85"
-              : "text-[color:var(--fd-muted)]"
-        }`}
-      >
+      <h2 className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
         {t("p2p_safety_title")}
       </h2>
       <div className="p2p-safety-scroll flex gap-1.5 overflow-x-auto pb-0.5">

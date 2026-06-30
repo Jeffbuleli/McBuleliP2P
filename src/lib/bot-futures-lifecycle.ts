@@ -45,7 +45,7 @@ export function isInReentryCooldown(args: {
   };
 }
 
-/** Min time between new futures entries (uses last open only - not closes or cron ticks). */
+/** Min time between new futures entries (uses last open only — not closes or cron ticks). */
 export async function getFuturesEntryIntervalBlock(args: {
   instanceId: string;
   intervalHours: number;

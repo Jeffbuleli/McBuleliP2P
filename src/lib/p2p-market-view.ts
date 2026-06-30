@@ -12,11 +12,6 @@ export function marketViewFromMakerSide(side: P2pSide): P2pMarketView {
   return side === "sell" ? "buy" : "sell";
 }
 
-/** HUD corner tone: BUY = emerald, SELL = amber (matches side / tab label). */
-export function p2pHudToneForMakerSide(side: P2pSide): "buy" | "sell" {
-  return side === "buy" ? "buy" : "sell";
-}
-
 export type P2pPaymentKindFilter = "all" | "mobile" | "bank";
 
 const MOBILE_HINTS = [

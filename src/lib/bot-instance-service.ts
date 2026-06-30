@@ -159,7 +159,7 @@ export async function markBotInstanceSuccess(instanceId: string) {
     .where(eq(botInstances.id, instanceId));
 }
 
-/** Binance/config error - does not block the next cron attempt. */
+/** Binance/config error — does not block the next cron attempt. */
 export async function setBotInstanceError(
   instanceId: string,
   error: string,

@@ -1,5 +1,5 @@
 McBuleli
-Achetez & vendez avec séquestre - compatible mobile money.
+Achetez & vendez avec séquestre — compatible mobile money.
 Bonjour {{{contact.first_name|ami}}},
 Le P2P qui protège les deux parties
 Échangez avec de vrais utilisateurs. Les fonds restent sous séquestre jusqu'à la fin du deal.

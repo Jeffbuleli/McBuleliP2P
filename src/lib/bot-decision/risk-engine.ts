@@ -1,5 +1,5 @@
 /**
- * Layer 3 - Risk management (sizing, leverage, hard limits).
+ * Layer 3 — Risk management (sizing, leverage, hard limits).
  */
 
 import type { AiModulatorOutput } from "@/lib/bot-decision/types";
@@ -132,7 +132,7 @@ export function applyRiskToMargin(
   return Math.max(10, marginUsdt * risk.position_size_multiplier);
 }
 
-/** Spot DCA/Grid - size only (no leverage). */
+/** Spot DCA/Grid — size only (no leverage). */
 export function runSpotRiskEngine(input: {
   technical: TechnicalEngineOutput;
   baseQuoteUsdt: number;

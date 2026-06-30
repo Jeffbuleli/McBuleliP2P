@@ -84,7 +84,7 @@ async function grantWithDailyCap(args: {
   return { granted: r.granted, points: r.points, balance: r.balance };
 }
 
-/** Profil communauté complété (pseudo + bio) - une fois. */
+/** Profil communauté complété (pseudo + bio) — une fois. */
 export async function grantCommunityProfileSetup(userId: string) {
   return grantWithDailyCap({
     userId,
@@ -93,7 +93,7 @@ export async function grantCommunityProfileSetup(userId: string) {
   });
 }
 
-/** Premier post publié - bonus unique. */
+/** Premier post publié — bonus unique. */
 export async function grantCommunityFirstPostBonus(
   userId: string,
   postId: string,

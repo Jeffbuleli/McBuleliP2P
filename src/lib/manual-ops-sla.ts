@@ -11,7 +11,7 @@ export function withdrawalSlaHours(): number {
   return parsePositiveHours(process.env.WITHDRAWAL_SLA_HOURS, 24);
 }
 
-/** PI / manual deposit stuck in PENDING_VALIDATION - informational only. */
+/** PI / manual deposit stuck in PENDING_VALIDATION — informational only. */
 export function depositValidationSlaHours(): number {
   return parsePositiveHours(process.env.DEPOSIT_VALIDATION_SLA_HOURS, 48);
 }

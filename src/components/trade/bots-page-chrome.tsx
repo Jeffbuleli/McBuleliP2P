@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { Messages } from "@/i18n/messages";
 import { IconAnalysis } from "@/components/trade/bot-visual-icons";
 
-/** Guide IA + bot - icon button for page header. */
+/** Guide IA + bot — icon button for page header. */
 export function BotsAiGuideButton({
   t,
 }: {

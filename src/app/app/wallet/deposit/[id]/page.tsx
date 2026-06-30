@@ -16,7 +16,6 @@ import type { Messages } from "@/i18n/messages";
 import { IconCopy } from "@/components/icons/flow-icons";
 import { DepositExactAmountCard } from "@/components/wallet/deposit-exact-amount-card";
 import { DepositStatusChip } from "@/components/wallet/deposit-status-chip";
-import { walletInputClass } from "@/components/wallet/wallet-form";
 import {
   FlowCard,
   FlowHubLink,
@@ -68,9 +67,6 @@ function depositStatusLine(t: (k: keyof Messages) => string, status: string, aut
   return status;
 }
 
-const COPY_BTN =
-  "mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-cyan-400/35 bg-cyan-500/10 text-sm font-bold text-cyan-300 active:scale-[0.98]";
-
 export default function DepositDetailPage() {
   const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
@@ -87,7 +83,7 @@ export default function DepositDetailPage() {
     const res = await fetch(`/api/deposits/${id}`);
     const data = await res.json();
     if (!res.ok) {
-      setMsg(data.error ?? "-");
+      setMsg(data.error ?? "—");
       setDeposit(null);
       return;
     }
@@ -130,7 +126,7 @@ export default function DepositDetailPage() {
     const res = await fetch(`/api/deposits/${id}/sent`, { method: "POST" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(data.error ?? "-");
+      setMsg(data.error ?? "—");
       return;
     }
     setDeposit(data.deposit);
@@ -153,7 +149,7 @@ export default function DepositDetailPage() {
     }
     if (data.status === "failed") {
       setDeposit(data.deposit);
-      setMsg(data.reason ?? "-");
+      setMsg(data.reason ?? "—");
       router.push(`/app/wallet/activity/deposit/${id}`);
       return;
     }
@@ -162,7 +158,7 @@ export default function DepositDetailPage() {
       router.push(`/app/wallet/activity/deposit/${id}`);
       return;
     }
-    setMsg(data.message ?? data.error ?? "-");
+    setMsg(data.message ?? data.error ?? "—");
   }
 
   if (loading) {
@@ -176,9 +172,7 @@ export default function DepositDetailPage() {
   if (!deposit) {
     return (
       <WalletFlowShell title={t("deposit_detail_title")}>
-        <FlowCard className="border-rose-400/30 bg-rose-500/10">
-          <p className="text-rose-300">{msg ?? "-"}</p>
-        </FlowCard>
+        <p className="text-rose-800">{msg ?? "—"}</p>
         <FlowHubLink label={t("wallet_title")} />
       </WalletFlowShell>
     );
@@ -257,7 +251,7 @@ export default function DepositDetailPage() {
       ) : null}
 
       <FlowCard className="mt-3 flex flex-col items-center gap-3">
-        <div className="relative rounded-2xl border border-white/12 bg-white p-3">
+        <div className="relative rounded-2xl bg-white p-3 shadow-inner">
           <QRCode value={deposit.addressShown} size={200} />
           {isPiMain ? (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -266,10 +260,8 @@ export default function DepositDetailPage() {
           ) : null}
         </div>
         <span
-          className={`rounded-full border px-3 py-1 text-xs font-bold ${
-            isPiMain
-              ? "border-violet-400/35 bg-violet-500/15 text-violet-300"
-              : "border-emerald-400/35 bg-emerald-500/15 text-emerald-300"
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            isPiMain ? "bg-violet-100 text-violet-900" : "bg-emerald-100 text-[color:var(--fd-primary)]"
           }`}
         >
           {deposit.asset} · {networkLabel}
@@ -277,13 +269,17 @@ export default function DepositDetailPage() {
       </FlowCard>
 
       <FlowCard className="mt-3">
-        <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {t("deposit_copy")}
         </p>
         <p className="mt-1 break-all font-mono text-sm text-[color:var(--fd-text)]">
           {deposit.addressShown}
         </p>
-        <button type="button" onClick={() => void copy(deposit.addressShown)} className={COPY_BTN}>
+        <button
+          type="button"
+          onClick={() => void copy(deposit.addressShown)}
+          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border-2 border-[color:var(--fd-primary)] bg-white text-sm font-bold text-[color:var(--fd-primary)] active:scale-[0.98]"
+        >
           <IconCopy className="h-4 w-4" />
           {t("deposit_copy")}
         </button>
@@ -291,7 +287,7 @@ export default function DepositDetailPage() {
 
       {deposit.declaredAmountUsdt && deposit.asset === "PI" ? (
         <FlowCard className="mt-3">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+          <p className="text-xs font-bold text-[color:var(--fd-muted)]">
             {t("deposit_declared_amount_pi_label")}
           </p>
           <p className="mt-1 text-lg font-bold tabular-nums text-[color:var(--fd-text)]">
@@ -306,15 +302,13 @@ export default function DepositDetailPage() {
       ) : null}
 
       {deposit.memoShown ? (
-        <FlowCard className="mt-3 border-rose-400/30 bg-rose-500/10">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-rose-300">
-            {t("deposit_memo_title")}
-          </p>
-          <p className="mt-1 font-mono text-sm text-rose-200">{deposit.memoShown}</p>
+        <FlowCard className="mt-3 border-rose-200 bg-rose-50/50">
+          <p className="text-xs font-bold text-rose-900">{t("deposit_memo_title")}</p>
+          <p className="mt-1 font-mono text-sm">{deposit.memoShown}</p>
           <button
             type="button"
             onClick={() => void copy(deposit.memoShown!)}
-            className="mt-2 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-rose-400/40 bg-rose-500/20 text-sm font-bold text-rose-200 active:scale-[0.98]"
+            className="mt-2 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-rose-800 text-sm font-bold text-white"
           >
             <IconCopy className="h-4 w-4" />
             {t("deposit_copy")}
@@ -337,7 +331,7 @@ export default function DepositDetailPage() {
             <input
               value={txid}
               onChange={(e) => setTxid(e.target.value)}
-              className={`${walletInputClass} mt-2 font-mono`}
+              className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
             />
           </label>
           <FlowPrimaryBtn
@@ -350,7 +344,7 @@ export default function DepositDetailPage() {
       ) : null}
 
       {msg ? (
-        <p className="mt-2 text-center text-sm font-semibold text-emerald-300">{msg}</p>
+        <p className="mt-2 text-center text-sm font-semibold text-[color:var(--fd-primary)]">{msg}</p>
       ) : null}
 
       {deposit.status === DepositStatus.CONFIRMED ? (

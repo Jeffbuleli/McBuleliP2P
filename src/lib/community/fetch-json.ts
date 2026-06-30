@@ -1,4 +1,4 @@
-/** Client - fetch avec timeout et parse JSON sûr (évite « Unexpected end of JSON input »). */
+/** Client — fetch avec timeout et parse JSON sûr (évite « Unexpected end of JSON input »). */
 
 export async function fetchJson<T extends Record<string, unknown> = Record<string, unknown>>(
   input: RequestInfo,

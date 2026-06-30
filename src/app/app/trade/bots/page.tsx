@@ -16,7 +16,7 @@ function toMarketSearchParams(sp: SearchParams): string {
   return q.toString();
 }
 
-/** Legacy URL - keeps Academy / Community / OPS deep-links working. */
+/** Legacy URL — keeps Academy / Community / OPS deep-links working. */
 export default async function TradeBotsPage({
   searchParams,
 }: {

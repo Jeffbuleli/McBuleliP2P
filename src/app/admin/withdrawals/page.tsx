@@ -177,7 +177,7 @@ export default function AdminWithdrawalsPage() {
         rows={rows}
         columns={columns}
         rowKey={(r) => r.id}
-        emptyMessage="-"
+        emptyMessage="—"
         initialSortId="when"
         initialSortDir="desc"
         totalLabel={t("admin_table_total", { count: rows.length })}

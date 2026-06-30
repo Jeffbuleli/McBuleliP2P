@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { NetworkId } from "@/lib/networks";
@@ -8,8 +9,6 @@ import { clientErrorText } from "@/lib/client-error-text";
 import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { useI18n } from "@/components/i18n-provider";
 import { IconAlert } from "@/components/icons/flow-icons";
-import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
-import { WalletErrorBanner, walletInputClass } from "@/components/wallet/wallet-form";
 import {
   FlowBackLink,
   FlowCard,
@@ -18,7 +17,7 @@ import {
   WalletFlowShell,
 } from "@/components/wallet/wallet-flow-shell";
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
 type PickAsset = "USDT" | "PI";
 
 export default function DepositWizardPage() {
@@ -26,21 +25,18 @@ export default function DepositWizardPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const [step, setStep] = useState<Step>(1);
-  const [asset, setAsset] = useState<PickAsset | null>(null);
+  const [asset, setAsset] = useState<PickAsset>("USDT");
 
   useEffect(() => {
     const a = sp.get("asset");
     if (a === "PI") {
       setAsset("PI");
-      setStep(1);
+      setStep(3);
     } else if (a === "USDT") {
       setAsset("USDT");
-      setStep(1);
-    } else {
-      router.replace("/app/wallet");
+      setStep(2);
     }
-  }, [sp, router]);
-
+  }, [sp]);
   const [network, setNetwork] = useState<NetworkId>("TRC20");
   const [acceptedRisk, setAcceptedRisk] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,7 +50,6 @@ export default function DepositWizardPage() {
   const [declaredAmountUsdt, setDeclaredAmountUsdt] = useState("");
   const [declaredAmountPi, setDeclaredAmountPi] = useState("");
   const [userNote, setUserNote] = useState("");
-
   useEffect(() => {
     void (async () => {
       setRoutesLoading(true);
@@ -87,15 +82,17 @@ export default function DepositWizardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
+  const anyEnabled = enabledUsdt === true || enabledPi === true;
   const routesReady = !routesLoading;
-  const routeEnabled =
-    asset === "USDT" ? enabledUsdt === true : asset === "PI" ? enabledPi === true : false;
+  const noneEnabled = routesReady && !anyEnabled;
 
   const unavailableMsg = (() => {
-    if (!routesReady || !asset) return null;
-    if (routeEnabled) return null;
+    if (!noneEnabled) return null;
     if (!isAdmin) return t("deposit_unavailable");
-    if (asset === "USDT") return t("deposit_unavailable_usdt");
+    if (enabledUsdt === false && enabledPi === false) {
+      return t("deposit_unavailable_both");
+    }
+    if (enabledUsdt === false) return t("deposit_unavailable_usdt");
     return t("deposit_unavailable_pi");
   })();
 
@@ -105,7 +102,6 @@ export default function DepositWizardPage() {
   }
 
   async function createIntent() {
-    if (!asset) return;
     setError(null);
     setLoading(true);
     try {
@@ -143,9 +139,14 @@ export default function DepositWizardPage() {
           );
           return;
         }
-        if (msg.startsWith("deposit_") || msg.startsWith("wallet_binance_")) {
+        if (
+          msg.startsWith("deposit_") ||
+          msg.startsWith("wallet_binance_")
+        ) {
           const adminDetail =
-            isAdmin && typeof rec.adminDetail === "string" ? rec.adminDetail.trim() : "";
+            isAdmin && typeof rec.adminDetail === "string"
+              ? rec.adminDetail.trim()
+              : "";
           const base = clientErrorText(t, msg);
           setError(adminDetail ? `${base}\n\n${adminDetail}` : base);
           return;
@@ -164,9 +165,7 @@ export default function DepositWizardPage() {
   }
 
   const declaredAmount =
-    asset === "USDT"
-      ? declaredAmountUsdt.trim().replace(",", ".")
-      : declaredAmountPi.trim().replace(",", ".");
+    asset === "USDT" ? declaredAmountUsdt.trim().replace(",", ".") : declaredAmountPi.trim().replace(",", ".");
   const declaredNum = Number(declaredAmount);
   const hasValidAmount = Number.isFinite(declaredNum) && declaredNum > 0;
 
@@ -175,66 +174,92 @@ export default function DepositWizardPage() {
       ? `${t("deposit_confirm_chk_usdt")} ${network}`
       : t("deposit_confirm_chk_pi");
 
-  const totalSteps = asset === "PI" ? 1 : 2;
-  const headerStep = asset === "PI" ? 1 : step;
-  const showNetwork = asset === "USDT" && step === 1;
-  const showAmount = (asset === "USDT" && step === 2) || asset === "PI";
-
-  if (!asset) {
-    return (
-      <WalletFlowShell title={t("deposit")}>
-        <p className="text-center text-[color:var(--fd-muted)]">…</p>
-      </WalletFlowShell>
-    );
-  }
+  const stepSubtitle = `${t("deposit_step")} ${step}/3`;
 
   return (
     <WalletFlowShell
       title={t("deposit")}
-      subtitle={`${t("deposit_step")} ${headerStep}/${totalSteps}`}
-      step={headerStep}
-      totalSteps={totalSteps}
+      subtitle={stepSubtitle}
+      step={step}
+      totalSteps={3}
     >
       {routesLoading ? (
-        <FlowCard>
-          <p className="text-sm text-[color:var(--fd-muted)]">{t("deposit_loading")}</p>
-        </FlowCard>
+        <p className="fd-card px-3 py-2 text-sm text-[color:var(--fd-muted)]">
+          {t("deposit_loading")}
+        </p>
       ) : null}
       {routesError ? (
-        <FlowCard className="border-rose-400/30 bg-rose-500/10">
-          <p className="text-sm text-rose-300">{routesError}</p>
-        </FlowCard>
+        <p className="fd-card px-3 py-2 text-sm text-rose-800">{routesError}</p>
       ) : null}
       {unavailableMsg ? (
-        <FlowCard className="border-rose-400/30 bg-rose-500/10">
-          <p className="text-sm text-rose-300">{unavailableMsg}</p>
-        </FlowCard>
+        <p className="fd-card px-3 py-2 text-sm text-rose-800">{unavailableMsg}</p>
       ) : null}
-      {routesReady && isAdmin && asset === "USDT" && enabledUsdt && usdtNeedsSetup ? (
-        <FlowCard className="border-amber-400/30 bg-amber-500/10">
-          <p className="text-sm text-amber-300">{t("deposit_binance_setup_hint")}</p>
-        </FlowCard>
+      {routesReady && isAdmin && enabledUsdt && usdtNeedsSetup ? (
+        <p className="fd-card border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          {t("deposit_binance_setup_hint")}
+        </p>
       ) : null}
+      {step === 1 && (
+        <section>
+          <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {t("deposit_pick_asset")}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled={!routesReady || enabledUsdt !== true}
+              onClick={() => {
+                setAsset("USDT");
+                setStep(2);
+              }}
+              className="fd-card flex flex-col items-center gap-2 p-4 active:scale-[0.98] disabled:opacity-45"
+            >
+              <Image src="/assets/crypto/usdt.png" alt="" width={48} height={48} className="rounded-full" />
+              <span className="text-sm font-bold text-[color:var(--fd-text)]">USDT</span>
+              <span className="text-center text-[10px] leading-tight text-[color:var(--fd-muted)]">
+                {t("asset_usdt_full")}
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={!routesReady || enabledPi !== true}
+              onClick={() => {
+                setAsset("PI");
+                setStep(3);
+              }}
+              className="fd-card flex flex-col items-center gap-2 p-4 active:scale-[0.98] disabled:opacity-45"
+            >
+              <Image src="/assets/crypto/pi.png" alt="" width={48} height={48} className="rounded-full" />
+              <span className="text-sm font-bold text-[color:var(--fd-text)]">Pi</span>
+              <span className="text-center text-[10px] leading-tight text-[color:var(--fd-muted)]">
+                {t("asset_pi_network")}
+              </span>
+            </button>
+          </div>
+        </section>
+      )}
 
-      {showNetwork ? (
+      {step === 2 && asset === "USDT" && (
         <section>
           <NetworkPicker
             label={t("deposit_step_usdt_network")}
             value={network}
             onChange={pickNetwork}
           />
-          <p className="mt-3 text-center text-xs font-semibold text-emerald-300">{network}</p>
-          <FlowPrimaryBtn onClick={() => setStep(2)}>{t("continue")}</FlowPrimaryBtn>
-          <FlowHubLink label={t("wallet_title")} />
+          <p className="mt-3 text-center text-xs font-semibold text-[color:var(--fd-primary)]">
+            {network}
+          </p>
+          <FlowPrimaryBtn onClick={() => setStep(3)}>{t("continue")}</FlowPrimaryBtn>
+          <FlowBackLink onClick={() => setStep(1)} label={t("back")} />
         </section>
-      ) : null}
+      )}
 
-      {showAmount ? (
+      {step === 3 && (
         <section className="space-y-3">
           {asset === "USDT" ? (
             <FlowCard>
               <label className="block">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_declared_amount_label")}
                 </span>
                 <input
@@ -242,30 +267,30 @@ export default function DepositWizardPage() {
                   onChange={(e) => setDeclaredAmountUsdt(e.target.value)}
                   inputMode="decimal"
                   placeholder="1"
-                  className={`${walletInputClass} mt-2 text-lg font-bold`}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-lg font-bold tabular-nums text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
               </label>
               <label className="mt-3 block">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_user_note_label")}
                 </span>
                 <input
                   value={userNote}
                   onChange={(e) => setUserNote(e.target.value)}
-                  className={`${walletInputClass} mt-2`}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
               </label>
             </FlowCard>
           ) : (
             <FlowCard>
               <div className="mb-3 flex items-center gap-3">
-                <WalletAssetIcon asset="PI" size={44} />
+                <Image src="/assets/crypto/pi.png" alt="" width={44} height={44} className="rounded-full" />
                 <p className="text-sm font-bold text-[color:var(--fd-text)]">
                   Pi · {t("deposit_network_pi_main")}
                 </p>
               </div>
               <label className="block">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_declared_amount_pi_label")}
                 </span>
                 <input
@@ -273,26 +298,26 @@ export default function DepositWizardPage() {
                   onChange={(e) => setDeclaredAmountPi(e.target.value)}
                   inputMode="decimal"
                   placeholder="10"
-                  className={`${walletInputClass} mt-2 text-lg font-bold`}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-lg font-bold tabular-nums text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
               </label>
               <label className="mt-3 block">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-muted)]">
+                <span className="text-xs font-bold uppercase text-[color:var(--fd-muted)]">
                   {t("deposit_pi_memo_label")}
                 </span>
                 <input
                   value={userNote}
                   onChange={(e) => setUserNote(e.target.value)}
                   placeholder={t("deposit_pi_memo_placeholder")}
-                  className={`${walletInputClass} mt-2`}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:ring-2 focus:ring-[color:var(--fd-primary)]/30"
                 />
               </label>
             </FlowCard>
           )}
 
           {hasValidAmount ? (
-            <FlowCard className="border-emerald-400/30 bg-emerald-500/8">
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400/80">
+            <FlowCard className="border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)]/40">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
                 {t("deposit_recap_title")}
               </p>
               <dl className="mt-2 space-y-1.5 text-sm text-[color:var(--fd-text)]">
@@ -324,23 +349,23 @@ export default function DepositWizardPage() {
             </FlowCard>
           ) : null}
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-[#0a1018]/90 p-4">
+          <label className="fd-card flex cursor-pointer items-center gap-3 p-4">
             <input
               type="checkbox"
               checked={acceptedRisk}
               onChange={(e) => setAcceptedRisk(e.target.checked)}
-              className="size-5 shrink-0 accent-emerald-400"
+              className="size-5 shrink-0 accent-[color:var(--fd-primary)]"
             />
             <span className="flex items-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]">
-              <IconAlert className="h-5 w-5 shrink-0 text-amber-400" />
+              <IconAlert className="h-5 w-5 shrink-0 text-amber-700" />
               {confirmText}
             </span>
           </label>
 
           {error ? (
-            <WalletErrorBanner>
-              <span className="whitespace-pre-wrap">{error}</span>
-            </WalletErrorBanner>
+            <p className="whitespace-pre-wrap rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+              {error}
+            </p>
           ) : null}
 
           <FlowPrimaryBtn
@@ -348,7 +373,8 @@ export default function DepositWizardPage() {
               !acceptedRisk ||
               loading ||
               !routesReady ||
-              !routeEnabled ||
+              (asset === "USDT" && enabledUsdt !== true) ||
+              (asset === "PI" && enabledPi !== true) ||
               (asset === "USDT" &&
                 (!declaredAmountUsdt.trim() ||
                   Number(declaredAmountUsdt.trim().replace(",", ".")) <= 0)) ||
@@ -360,13 +386,15 @@ export default function DepositWizardPage() {
           >
             {loading ? t("deposit_loading") : t("deposit_show_addr")}
           </FlowPrimaryBtn>
-          {asset === "USDT" ? (
-            <FlowBackLink onClick={() => setStep(1)} label={t("back")} />
-          ) : (
-            <FlowHubLink label={t("wallet_title")} />
-          )}
+          <FlowBackLink
+            onClick={() => setStep(asset === "USDT" ? 2 : 1)}
+            label={t("back")}
+          />
         </section>
-      ) : null}
+      )}
+
+      <FlowHubLink label={t("wallet_title")} />
     </WalletFlowShell>
   );
 }
+

@@ -10,7 +10,6 @@ import { KycPostLoginSheet } from "@/components/kyc/kyc-post-login-sheet";
 import { KycStatusPoller } from "@/components/kyc/kyc-status-poller";
 import { AppIconBadgeSync } from "@/components/pwa/app-icon-badge-sync";
 import { useScrollChrome } from "@/hooks/use-scroll-chrome";
-import { LandingFuturisticBg } from "@/components/landing/landing-futuristic-bg";
 import { bottomNavAutoHide, isCommunityRoute, isP2pHubRoute } from "@/lib/app-chrome";
 
 export function AppShell({
@@ -67,9 +66,8 @@ export function AppShell({
   return (
     <UnreadCountsProvider>
     <div
-      className={`app-futuristic dark relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[#050810] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out ${shellPb}`}
+      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[var(--fd-bg)] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out ${shellPb}`}
     >
-      <LandingFuturisticBg />
       {showTopBar ? (
         <div className="sticky top-0 z-40 px-3 pt-2">
           <div className="fd-app-topbar px-2 py-1.5">

@@ -1,5 +1,5 @@
 McBuleli
-Dépôt USDT TRC20, BEP20… - retrait quand vous voulez.
+Dépôt USDT TRC20, BEP20… — retrait quand vous voulez.
 Bonjour {{{contact.first_name|ami}}},
 Votre hub USDT
 Envoyez des USDT sur votre adresse personnelle. Montant détecté automatiquement quand l'auto-detect est actif.

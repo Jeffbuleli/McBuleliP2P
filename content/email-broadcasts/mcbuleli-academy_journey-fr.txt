@@ -1,8 +1,8 @@
 McBuleli
-Vous êtes inscrit - reprenez en un clic.
+Vous êtes inscrit — reprenez en un clic.
 Bonjour {{{contact.first_name|ami}}},
 Votre progression vous attend
-Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live - quelques minutes suffisent.
+Vous êtes inscrit à la cohorte McBuleli Academy. Terminez un micro-module ou rejoignez le prochain live — quelques minutes suffisent.
 Apprendre → pratiquer sur Wallet & P2P → grandir avec la communauté.
 • Micro-leçons
 • Sessions live

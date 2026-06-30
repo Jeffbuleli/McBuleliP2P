@@ -150,8 +150,8 @@ export function CommunitySignalsClient() {
 
       <p className="mb-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900">
         {fr
-          ? "Signaux éducatifs uniquement - pas un conseil financier. Aucune exécution automatique."
-          : "Educational signals only - not financial advice. No automatic execution."}
+          ? "Signaux éducatifs uniquement — pas un conseil financier. Aucune exécution automatique."
+          : "Educational signals only — not financial advice. No automatic execution."}
       </p>
 
       <CommunityFilterTabs tabs={SIGNAL_TABS} active={tab} onChange={setTab} fr={fr} />

@@ -32,11 +32,11 @@ function mapFeedError(code: string | undefined, fr: boolean): string {
   }
   if (code === "community_content_blocked") {
     return fr
-      ? "Publication refusée - respectez la charte communauté."
-      : "Post blocked - please follow community guidelines.";
+      ? "Publication refusée — respectez la charte communauté."
+      : "Post blocked — please follow community guidelines.";
   }
   if (code === "invalid_media") {
-    return fr ? "Image invalide - réessayez" : "Invalid image - try again";
+    return fr ? "Image invalide — réessayez" : "Invalid image — try again";
   }
   if (code === "community_image_too_large") {
     return fr ? "Image trop lourde" : "Image too large";
@@ -53,13 +53,13 @@ function mapFeedError(code: string | undefined, fr: boolean): string {
       : "R2 storage not configured on server";
   }
   if (code === "timeout") {
-    return fr ? "Délai dépassé - réessayez" : "Timed out - try again";
+    return fr ? "Délai dépassé — réessayez" : "Timed out — try again";
   }
   if (code === "network_error") {
-    return fr ? "Connexion impossible - vérifiez le réseau" : "Network error - check connection";
+    return fr ? "Connexion impossible — vérifiez le réseau" : "Network error — check connection";
   }
   if (code === "invalid_json" || code?.startsWith("http_")) {
-    return fr ? "Erreur serveur - réessayez" : "Server error - try again";
+    return fr ? "Erreur serveur — réessayez" : "Server error — try again";
   }
   return code ?? (fr ? "Échec" : "Failed");
 }

@@ -1,5 +1,5 @@
 /**
- * Standardized decision trace codes - McBuleli quant pipeline.
+ * Standardized decision trace codes — McBuleli quant pipeline.
  * Maps internal gate strings to stable reason_code enums for logs & UI.
  */
 
@@ -21,7 +21,7 @@ export type TechnicalReasonCode =
   | "LOW_VOLUME"
   | "MARKET_DATA_UNAVAILABLE";
 
-/** AI / sentiment - blocking codes are rare (major events only) */
+/** AI / sentiment — blocking codes are rare (major events only) */
 export type AiReasonCode =
   | "EXTREME_NEGATIVE_SENTIMENT"
   | "HIGH_NEWS_RISK"

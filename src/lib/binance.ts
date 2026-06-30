@@ -87,7 +87,7 @@ export type PlatformBinanceApiRestrictions = {
   enableFutures: boolean;
 };
 
-/** Platform .env key - same fields bots read on live user keys. */
+/** Platform .env key — same fields bots read on live user keys. */
 export async function fetchPlatformBinanceApiRestrictions(): Promise<PlatformBinanceApiRestrictions | null> {
   try {
     return (await signedGet("/sapi/v1/account/apiRestrictions", {})) as PlatformBinanceApiRestrictions;
@@ -189,7 +189,7 @@ export async function binanceWithdraw(args: {
   address: string;
   amount: string;
   tag?: string;
-  /** Client id for idempotency - maps to Binance `withdrawOrderId`. */
+  /** Client id for idempotency — maps to Binance `withdrawOrderId`. */
   withdrawOrderId?: string;
   /** 0 = spot wallet (default), 1 = funding wallet. */
   walletType?: 0 | 1;
@@ -247,7 +247,7 @@ async function isInternalFromMcBuleliHistory(args: {
   return false;
 }
 
-/** Binance USDT withdraw amount - max 8 decimals, no trailing zeros. */
+/** Binance USDT withdraw amount — max 8 decimals, no trailing zeros. */
 export function formatBinanceUsdtAmount(amount: string | number): string {
   const n = Number(amount);
   if (!Number.isFinite(n) || n <= 0) {
@@ -259,8 +259,8 @@ export function formatBinanceUsdtAmount(amount: string | number): string {
 
 /**
  * Amount passed to `POST /sapi/v1/capital/withdraw/apply`.
- * External on-chain: Binance deducts network fee from the apply amount - send net + fee
- * so the destination receives exactly `net`. Internal: fee is 0 - send net only.
+ * External on-chain: Binance deducts network fee from the apply amount — send net + fee
+ * so the destination receives exactly `net`. Internal: fee is 0 — send net only.
  */
 export async function binanceUsdtWithdrawApplyAmount(args: {
   network: NetworkId;

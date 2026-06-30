@@ -7,12 +7,12 @@ export function isCommunityNavRoute(pathname: string): boolean {
   return isCommunityRoute(pathname) || pathname.startsWith("/app/academy");
 }
 
-/** P2P hub - market list benefits from full viewport while scrolling ads. */
+/** P2P hub — market list benefits from full viewport while scrolling ads. */
 export function isP2pHubRoute(pathname: string): boolean {
   return pathname === "/app/p2p";
 }
 
-/** Market hub - long scroll; hide bottom nav like community feed. */
+/** Market hub — long scroll; hide bottom nav like community feed. */
 export function isMarketHubRoute(pathname: string): boolean {
   return pathname.startsWith("/app/market");
 }
