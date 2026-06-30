@@ -42,7 +42,7 @@
     "bcryptjs": "^3.0.3",
     "ccxt": "^4.5.54",
     "drizzle-orm": "^0.45.2",
-    "framer-motion": "^12.40.0",
+    "framer-motion": "^12.42.0",
     "html5-qrcode": "^2.3.8",
     "jose": "^6.2.3",
     "next": "16.2.9",
