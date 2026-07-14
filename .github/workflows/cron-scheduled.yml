@@ -1,0 +1,104 @@
+name: Cron scheduled (infrequent)
+
+# Jobs that tolerate GitHub Actions schedule jitter.
+# High-frequency / money / trading stay on VPS — ops/vps/crontab + docs/vps-migration.md
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+    - cron: "0 9 * * *"
+    - cron: "0 1 * * 0"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which cron to run"
+        required: true
+        default: all-15m
+        type: choice
+        options:
+          - all-15m
+          - wallet-retry
+          - academy-reminders
+          - game-tick
+          - events-reminders
+          - nudge
+          - payout
+
+concurrency:
+  group: mcbuleli-cron-${{ github.event.schedule || inputs.job }}
+  cancel-in-progress: false
+
+env:
+  CRON_SECRET: ${{ secrets.CRON_SECRET }}
+  MCBULELI_API_URL: ${{ secrets.MCBULELI_API_URL }}
+
+jobs:
+  every-15m:
+    if: >
+      (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *')
+      || (github.event_name == 'workflow_dispatch' && (
+           inputs.job == 'all-15m'
+           || inputs.job == 'wallet-retry'
+           || inputs.job == 'academy-reminders'
+           || inputs.job == 'game-tick'
+           || inputs.job == 'events-reminders'
+         ))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: wallet-retry
+            script: scripts/cron-wallet-retry-failed-jobs.mjs
+          - id: academy-reminders
+            script: scripts/cron-academy-reminders.mjs
+          - id: game-tick
+            script: scripts/cron-game-tick.mjs
+          - id: events-reminders
+            script: scripts/cron-events-reminders.mjs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run ${{ matrix.id }}
+        if: >
+          github.event_name == 'schedule'
+          || inputs.job == 'all-15m'
+          || inputs.job == matrix.id
+        run: |
+          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
+          node "${{ matrix.script }}"
+
+  journey-nudge:
+    if: >
+      (github.event_name == 'schedule' && github.event.schedule == '0 9 * * *')
+      || (github.event_name == 'workflow_dispatch' && inputs.job == 'nudge')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Academy journey nudge
+        run: |
+          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
+          node scripts/cron-academy-journey-nudge.mjs
+
+  top-trader-payout:
+    if: >
+      (github.event_name == 'schedule' && github.event.schedule == '0 1 * * 0')
+      || (github.event_name == 'workflow_dispatch' && inputs.job == 'payout')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Top trader weekly payout
+        run: |
+          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
+          node scripts/cron-top-trader-payout.mjs
