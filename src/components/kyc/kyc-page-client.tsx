@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { KycIdentityCorrectionPanel } from "@/components/kyc/kyc-identity-correction-panel";
+import { KycIdentityPanel } from "@/components/kyc/kyc-identity-panel";
 import { KycFlowPanel } from "@/components/kyc/kyc-flow-panel";
-import { fetchKycStatus } from "@/lib/kyc-client-sync";
 import {
   isDiditSessionResumableForUi,
   normalizeDiditSessionStatus,
@@ -30,11 +29,6 @@ export function KycPageClient({
         hasSession &&
         isDiditSessionResumableForUi(didit)));
 
-  const refresh = useCallback(async () => {
-    const payload = await fetchKycStatus();
-    if (payload) setData(payload);
-  }, []);
-
   return (
     <>
       <KycFlowPanel
@@ -43,7 +37,7 @@ export function KycPageClient({
         autoStartSdk={autoStartSdk}
         onDataChange={setData}
       />
-      {data ? <KycIdentityCorrectionPanel data={data} onUpdated={refresh} /> : null}
+      {data ? <KycIdentityPanel data={data} /> : null}
     </>
   );
 }

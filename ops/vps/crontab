@@ -1,0 +1,30 @@
+# McBuleli high-frequency crons — install on VPS (NOT GitHub Actions)
+#
+# Requires Node 22+ and repo checkout at /opt/mcbuleli (or set MCBULELI_REPO).
+# Env file: /opt/mcbuleli/ops/vps/cron.env
+#
+#   CRON_SECRET=...
+#   MCBULELI_API_URL=https://mcbuleli.org
+#
+# Install:
+#   sudo crontab -u mcbuleli /opt/mcbuleli/ops/vps/crontab
+#   # or: crontab ops/vps/crontab  (as the deploy user)
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MCBULELI_REPO=/opt/mcbuleli
+CRON_ENV=/opt/mcbuleli/ops/vps/cron.env
+LOG_DIR=/var/log/mcbuleli
+
+# Wallet money paths
+* * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-wallet-withdraw-worker.mjs >>$LOG_DIR/withdraw.log 2>&1
+*/2 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-wallet-deposit-scan.mjs >>$LOG_DIR/deposit-scan.log 2>&1
+
+# Trading + P2P + KYC + governance
+*/5 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-bots-tick.mjs >>$LOG_DIR/bots-tick.log 2>&1
+*/5 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-p2p-expire.mjs >>$LOG_DIR/p2p-expire.log 2>&1
+*/10 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-kyc-sync-pending.mjs >>$LOG_DIR/kyc-sync.log 2>&1
+*/10 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-governance-tick.mjs >>$LOG_DIR/governance.log 2>&1
+
+# Daily DB backup (local retention handled by backup-db.sh)
+15 3 * * * /opt/mcbuleli/ops/vps/backup-db.sh >>$LOG_DIR/backup.log 2>&1

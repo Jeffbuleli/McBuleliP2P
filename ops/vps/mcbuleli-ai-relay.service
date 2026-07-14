@@ -1,0 +1,18 @@
+[Unit]
+Description=McBuleli AI trading relay (SIGNAL_ONLY loop)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mcbuleli
+Group=mcbuleli
+WorkingDirectory=/opt/mcbuleli/services/mcbuleli-ai-trading
+EnvironmentFile=/opt/mcbuleli/ops/vps/ai-relay.env
+# Prefer continuous loop over */1 cron (Render used cron every minute)
+ExecStart=/opt/mcbuleli/services/mcbuleli-ai-trading/.venv/bin/python scripts/relay_loop.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

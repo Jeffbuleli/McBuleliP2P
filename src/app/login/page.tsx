@@ -132,8 +132,12 @@ function LoginForm() {
         return;
       }
       clearAuthReturnPath();
-      // Full navigation so the session cookie is always sent on the next load (avoids stuck RSC shell).
-      window.location.replace(nextPath);
+      const payload = data as { user?: { emailVerified?: boolean } };
+      const dest =
+        payload.user?.emailVerified === false
+          ? "/verify-email/pending"
+          : nextPath;
+      window.location.replace(dest);
     } catch (err) {
       const aborted =
         (err instanceof DOMException || err instanceof Error) &&

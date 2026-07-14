@@ -180,12 +180,6 @@ export async function applyKycFromProvider(args: {
       void tryGrantKycApprovedPoints(args.userId).catch((err) => {
         console.warn("[kyc] reward points grant skipped", err);
       });
-      const { completeIdentityCorrectionAfterReverify } = await import(
-        "@/lib/kyc-identity"
-      );
-      await completeIdentityCorrectionAfterReverify(args.userId).catch((err) => {
-        console.warn("[kyc] identity correction finalize skipped", err);
-      });
     }
   }
 

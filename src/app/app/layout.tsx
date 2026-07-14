@@ -4,6 +4,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/mobile/app-shell";
 import { getDb, users } from "@/db";
+import {
+  userNeedsEmailVerification,
+  VERIFY_EMAIL_PENDING_PATH,
+} from "@/lib/auth/email-verified-gate";
 import { getSessionUserId } from "@/lib/session";
 import { safeAppRedirectPath } from "@/lib/safe-app-path";
 
@@ -25,10 +29,25 @@ export default async function AppLayout({
 
   const db = getDb();
   const [u] = await db
-    .select({ email: users.email, avatarUrl: users.avatarUrl, role: users.role })
+    .select({
+      email: users.email,
+      avatarUrl: users.avatarUrl,
+      role: users.role,
+      emailVerifiedAt: users.emailVerifiedAt,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+
+  if (
+    u &&
+    userNeedsEmailVerification({
+      email: u.email,
+      emailVerifiedAt: u.emailVerifiedAt,
+    })
+  ) {
+    redirect(VERIFY_EMAIL_PENDING_PATH);
+  }
 
   return (
     <AppShell

@@ -50,7 +50,14 @@ export async function POST(req: Request) {
       diditSessionStatus: sessionStatus ?? "In Progress",
     });
   } else if (event === "cancelled") {
-    await resetUserKycForRetry(userId);
+    /** Keep the Didit session — users often close the modal by mistake and must Continue. */
+    if (sid && row?.kycStatus !== "approved") {
+      await setUserKycPending({
+        userId,
+        diditSessionId: sid,
+        diditSessionStatus: sessionStatus ?? row?.diditSessionStatus ?? "Not Started",
+      });
+    }
   }
 
   if (event === "finished" && sid) {

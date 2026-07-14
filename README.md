@@ -17,15 +17,23 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 2. Open a row → **Take charge** → status becomes **Processing**, others see **busy**.
 3. Send funds externally → paste **TXID** → **✓ Sent**, or **✕ Refund**.
 
-## Setup
+## Setup (local — équipe)
 
-1. Copy `.env.example` → `.env`. Set **`JWT_SECRET`** (≥ 16 chars). **`SUPER_ADMIN_EMAILS`** for bootstrap admins.
+1. Copy `.env.example` → `.env`. Set **`JWT_SECRET`** (≥ 16 chars).  
+   **`NEXT_PUBLIC_APP_URL=http://localhost:3000`** for local preview.
+2. `npm install` && `npm run db:push` (Postgres local)
+3. **`npm run dev`** → open **http://localhost:3000/**
+4. Optional: `npm run verify:binance`
 
-2. `npm install` && `npm run db:push`
+See **[docs/team-workflow.md](docs/team-workflow.md)** — local → GitHub → VPS (no laptop rsync to prod).
 
-3. `npm run dev`
+## Deploy (prod VPS)
 
-4. Optional: `npm run verify:binance` — validates Binance keys.
+- Source of truth: **GitHub `main` only**
+- On VPS: `bash ops/vps/deploy.sh` (or GitHub Action **Deploy VPS** after merge)
+- Do **not** copy files from a laptop onto production
+
+Legacy Render notes below are historical; active ops live in `ops/vps/` + `docs/vps-migration.md`.
 
 ## Roles
 
@@ -37,7 +45,12 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 
 ## Deploy
 
-Set **`DATABASE_URL`**, **`JWT_SECRET`**, **`SUPER_ADMIN_EMAILS`**, **`BINANCE_*`** on Render. Run **`npm run db:push:render`** (or `db:push`) on production DB once.
+| Env | How |
+|-----|-----|
+| **Local** | `npm run dev` → http://localhost:3000 |
+| **Prod VPS** | Merge `main` on GitHub → `ops/vps/deploy.sh` or Action **Deploy VPS** |
+
+Set **`DATABASE_URL`**, **`JWT_SECRET`**, wallet/KYC secrets in `ops/vps/.env` on the server only (never commit).
 
 ## License
 

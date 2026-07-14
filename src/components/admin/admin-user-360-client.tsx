@@ -42,14 +42,6 @@ type User360 = {
     rejectionNote: string | null;
     diditSessionId: string | null;
     diditSessionStatus: string | null;
-    identityCorrection: {
-      status: "requested" | "reverification" | "corrected" | null;
-      requestedAt: string | null;
-      proposedFirstName: string | null;
-      proposedLastName: string | null;
-      note: string | null;
-      correctedAt: string | null;
-    } | null;
     legal: {
       legalFirstName: string | null;
       legalLastName: string | null;
@@ -91,9 +83,6 @@ type User360 = {
 
 const DIDIT_CONSOLE = "https://business.didit.me/fr/console";
 
-const inputCls =
-  "mt-1 w-full rounded-lg border border-[color:var(--fd-border)] bg-white px-3 py-2 text-sm";
-
 const TABS: { id: TabId; labelKey: "admin_user360_tab_overview" | "admin_user360_tab_kyc" | "admin_user360_tab_wallet" | "admin_user360_tab_p2p" | "admin_user360_tab_security" | "admin_user360_tab_staff" }[] = [
   { id: "overview", labelKey: "admin_user360_tab_overview" },
   { id: "kyc", labelKey: "admin_user360_tab_kyc" },
@@ -125,10 +114,6 @@ export function AdminUser360Client() {
   const [err, setErr] = useState<string | null>(null);
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeReason, setTradeReason] = useState("");
-  const [kycFirstName, setKycFirstName] = useState("");
-  const [kycLastName, setKycLastName] = useState("");
-  const [kycBusy, setKycBusy] = useState(false);
-  const [kycMsg, setKycMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -140,11 +125,6 @@ export function AdminUser360Client() {
       return;
     }
     setData(body as User360);
-    const kyc = (body as User360).kyc;
-    if (kyc) {
-      setKycFirstName(kyc.legal.legalFirstName ?? "");
-      setKycLastName(kyc.legal.legalLastName ?? "");
-    }
   }, [userId]);
 
   useEffect(() => {
@@ -171,27 +151,6 @@ export function AdminUser360Client() {
       await load();
     } finally {
       setTradeBusy(false);
-    }
-  }
-
-  async function sendDiditIdentityReverification() {
-    setKycBusy(true);
-    setKycMsg(null);
-    try {
-      const res = await fetch(`/api/admin/users/${userId}/kyc-identity-correction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment: null }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setKycMsg(body.message ?? "—");
-        return;
-      }
-      setKycMsg(t("admin_kyc_identity_reverification_sent"));
-      await load();
-    } finally {
-      setKycBusy(false);
     }
   }
 
@@ -373,18 +332,6 @@ export function AdminUser360Client() {
       {tab === "kyc" && data.kyc ? (
         <section className={adminCls.card}>
           <InfoRow label={t("admin_kyc_col_status")} value={data.kyc.kycStatus} />
-          {data.kyc.identityCorrection?.status ? (
-            <InfoRow
-              label={t("admin_kyc_identity_correction_status")}
-              value={
-                data.kyc.identityCorrection.status === "requested"
-                  ? t("admin_kyc_identity_correction_requested")
-                  : data.kyc.identityCorrection.status === "reverification"
-                    ? t("admin_kyc_identity_reverification_pending")
-                    : t("admin_kyc_identity_correction_corrected")
-              }
-            />
-          ) : null}
           <InfoRow label={t("admin_kyc_help_review")} value={data.kyc.helpTier} />
           <InfoRow
             label={t("kyc_identity_first")}
@@ -412,17 +359,8 @@ export function AdminUser360Client() {
               Didit: {data.kyc.diditSessionId}
             </p>
           ) : null}
-          {data.kyc.kycStatus === "approved" &&
-          data.kyc.diditSessionId &&
-          data.kyc.identityCorrection?.status !== "reverification" &&
-          data.kyc.identityCorrection?.status !== "corrected" ? (
-            <div className="mt-4 space-y-3 border-t border-[color:var(--fd-border)] pt-4">
-              <p className="text-sm font-semibold text-[color:var(--fd-text)]">
-                {t("admin_kyc_identity_correction_ops_heading")}
-              </p>
-              <p className="text-xs text-[color:var(--fd-muted)]">
-                {t("admin_kyc_identity_correction_ops_hint")}
-              </p>
+          {data.kyc.diditSessionId ? (
+            <div className="mt-4 border-t border-[color:var(--fd-border)] pt-4">
               <a
                 href={DIDIT_CONSOLE}
                 target="_blank"
@@ -431,38 +369,7 @@ export function AdminUser360Client() {
               >
                 {t("admin_kyc_didit_console")}
               </a>
-              {data.kyc.identityCorrection?.status === "requested" ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                  <p className="font-semibold">{t("admin_kyc_identity_correction_user_request")}</p>
-                  <p className="mt-1">
-                    {[
-                      data.kyc.identityCorrection.proposedFirstName,
-                      data.kyc.identityCorrection.proposedLastName,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  </p>
-                  {data.kyc.identityCorrection.note ? (
-                    <p className="mt-1 text-amber-900">{data.kyc.identityCorrection.note}</p>
-                  ) : null}
-                </div>
-              ) : null}
-              {kycMsg ? (
-                <p className="text-xs text-[color:var(--fd-muted)]">{kycMsg}</p>
-              ) : null}
-              <button
-                type="button"
-                disabled={kycBusy}
-                onClick={() => void sendDiditIdentityReverification()}
-                className={adminCls.btnPrimary}
-              >
-                {kycBusy ? "…" : t("admin_kyc_identity_reverification_confirm")}
-              </button>
             </div>
-          ) : data.kyc.identityCorrection?.status === "reverification" ? (
-            <p className="mt-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-950">
-              {t("admin_kyc_identity_reverification_pending")}
-            </p>
           ) : null}
         </section>
       ) : null}

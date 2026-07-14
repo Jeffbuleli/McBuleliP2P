@@ -79,7 +79,13 @@ export function PasskeyLoginButton({
         return;
       }
       clearAuthReturnPath();
-      window.location.replace(redirectTo);
+      const verified = Boolean(
+        (verifyData as { user?: { emailVerified?: boolean } }).user
+          ?.emailVerified,
+      );
+      window.location.replace(
+        verified ? redirectTo : "/verify-email/pending",
+      );
     } catch (e) {
       setErr(passkeyClientErrorText(t, e));
     } finally {

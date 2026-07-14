@@ -3,6 +3,8 @@ import { mediaPublicHostnames } from "./src/lib/media-url-config";
 import { securityResponseHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
+  // Required by ops/vps/Dockerfile (standalone Node server)
+  output: "standalone",
   poweredByHeader: false,
   serverExternalPackages: ["ccxt", "technicalindicators", "postgres"],
   images: {

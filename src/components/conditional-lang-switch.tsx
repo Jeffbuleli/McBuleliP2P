@@ -9,6 +9,7 @@ const AUTH_SHELL_PATHS = new Set([
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  "/verify-email/pending",
   "/confirm-email-change",
   "/account/recovery",
 ]);

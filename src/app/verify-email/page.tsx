@@ -37,7 +37,7 @@ function VerifyEmailInner() {
           return;
         }
         setStatus("ok");
-        setTimeout(() => router.replace("/app/wallet"), 1500);
+        setTimeout(() => router.replace("/app"), 1200);
       })
       .catch(() => {
         setStatus("err");

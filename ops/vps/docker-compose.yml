@@ -1,0 +1,57 @@
+# McBuleliP2P — VPS stack (web + Postgres)
+# Usage (from ops/vps):
+#   cp .env.example .env   # fill secrets
+#   docker compose up -d db
+#   ../vps/restore-db.sh ../../backups/mcbuleli_....dump
+#   docker compose up -d web
+
+name: mcbuleli
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mcbuleli}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-mcbuleli}
+    volumes:
+      # Postgres 18+ images expect the mount at /var/lib/postgresql (not .../data)
+      - mcbuleli_pgdata:/var/lib/postgresql
+    ports:
+      # Bind localhost only — app uses internal network
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mcbuleli} -d ${POSTGRES_DB:-mcbuleli}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ../..
+      dockerfile: ops/vps/Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mcbuleli.org}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+        NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL: ${NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL:-https://live.mcbuleli.org}
+        NEXT_PUBLIC_ACADEMY_LIVE_EMBED: ${NEXT_PUBLIC_ACADEMY_LIVE_EMBED:-false}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mcbuleli}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mcbuleli}
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    ports:
+      - "127.0.0.1:3000:3000"
+    # Upload / avatar persistence (if used on disk)
+    volumes:
+      - mcbuleli_uploads:/app/public/uploads
+
+volumes:
+  mcbuleli_pgdata:
+  mcbuleli_uploads:

@@ -25,7 +25,6 @@ type Row = {
   diditSessionStatus: string | null;
   legalFirstName: string | null;
   legalLastName: string | null;
-  kycIdentityCorrectionStatus: string | null;
   helpTier: AdminKycHelpTier;
 };
 
@@ -37,7 +36,6 @@ type Totals = {
   approved: number;
   rejected: number;
   needsHelp: number;
-  correctionRequested: number;
 };
 
 function statusKey(s: string): keyof Messages {
@@ -139,11 +137,6 @@ export default function AdminKycPage() {
                 {[r.legalFirstName, r.legalLastName].filter(Boolean).join(" ")}
               </p>
             )}
-            {r.kycIdentityCorrectionStatus === "requested" ? (
-              <span className="mt-1 inline-block rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-900">
-                {t("admin_kyc_correction_requested_badge")}
-              </span>
-            ) : null}
           </div>
         ),
       },
@@ -279,11 +272,6 @@ export default function AdminKycPage() {
           },
           { label: t("admin_kyc_status_approved"), value: totals?.approved ?? 0 },
           { label: t("admin_kyc_filter_help"), value: totals?.needsHelp ?? 0, tone: "warn" },
-          {
-            label: t("admin_kyc_correction_requested_badge"),
-            value: totals?.correctionRequested ?? 0,
-            tone: "warn",
-          },
         ]}
       />
 

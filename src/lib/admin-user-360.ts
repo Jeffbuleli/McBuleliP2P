@@ -118,7 +118,6 @@ export async function getAdminUser360(userId: string, locale: Locale) {
             documentType: user.documentType,
             documentCountry: user.documentCountry,
           },
-          identityCorrection: kyc.identityCorrection,
         }
       : null,
     security,

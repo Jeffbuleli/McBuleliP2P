@@ -1,6 +1,5 @@
-# Optional Render Blueprint — import in Dashboard → Blueprints.
-# Web service (McBuleli Next.js) is usually created separately.
-# Either enable BOT_CRON_INLINE=1 on the web service OR use mcbuleli-bots-tick below.
+# LEGACY Render Blueprint — migrating off Render → VPS + GitHub Actions.
+# See docs/vps-migration.md · ops/vps/ · .github/workflows/cron-scheduled.yml
 #
 # Cron jobs do NOT inherit Web env vars. Set CRON_SECRET + MCBULELI_API_URL on each cron
 # (same CRON_SECRET as Web). See docs/wallet-cron-render.md

@@ -112,7 +112,11 @@ export async function POST(req: Request) {
     );
 
     const token = await signSessionToken(created.id, 0);
-    const res = NextResponse.json({ user: created, emailVerificationSent: true });
+    const res = NextResponse.json({
+      user: created,
+      emailVerificationSent: true,
+      emailVerified: false,
+    });
     res.cookies.set(
       sessionCookieName(),
       token,

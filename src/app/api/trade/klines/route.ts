@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { binancePublicFetchInit } from "@/lib/binance-public";
-import { getOkxPiUsdtCandleSeries } from "@/lib/okx-pi-candles";
+import {
+  binanceUsdtSymbolToOkxInstId,
+  fetchOkxSpotCandleSeries,
+} from "@/lib/okx-public";
 
 export const dynamic = "force-dynamic";
 
 const BINANCE_FAPI = "https://fapi.binance.com";
-
-/** Mini-chart for PI/USDT uses OKX candles (reference); other pairs use Binance USDT-M futures klines (aligns with mark price). */
-const PI_TRADE_CHART = "PIUSDT";
 
 const TF_MAP = {
   "1m": { interval: "1m", limit: 180 },
@@ -19,8 +19,8 @@ const TF_MAP = {
   "1d": { interval: "1d", limit: 120 },
 } as const;
 
-/** OKX `bar` values for PI-USDT (same spans as Binance limits above). */
-const TF_MAP_OKX_PI = {
+/** OKX `bar` values (same spans as Binance limits above). */
+const TF_MAP_OKX = {
   "1m": { bar: "1m", limit: 180 },
   "5m": { bar: "5m", limit: 288 },
   "15m": { bar: "15m", limit: 192 },
@@ -38,30 +38,32 @@ export async function GET(req: Request) {
   const tfRaw = url.searchParams.get("tf") ?? "1h";
   const tf = tfRaw in TF_MAP ? (tfRaw as TradeTf) : ("1h" as TradeTf);
 
-  if (symbol === PI_TRADE_CHART) {
-    const { bar, limit } = TF_MAP_OKX_PI[tf];
-    const series = await getOkxPiUsdtCandleSeries({ bar, limit });
-    if (!series) {
+  // 1) OKX spot candles first (public; works when Binance geo-blocks the VPS).
+  const okxInst = binanceUsdtSymbolToOkxInstId(symbol);
+  if (okxInst) {
+    const { bar, limit } = TF_MAP_OKX[tf];
+    const series = await fetchOkxSpotCandleSeries({
+      instId: okxInst,
+      bar,
+      limit,
+    });
+    if (series) {
       return NextResponse.json(
-        { message: "Market data unavailable." },
-        { status: 502 },
+        {
+          symbol,
+          tf,
+          points: series.points,
+          lastPrice: series.lastPrice,
+          changePct: series.changePct,
+          priceSource: "okx_spot",
+        },
+        { headers: { "Cache-Control": "no-store, max-age=0" } },
       );
     }
-    return NextResponse.json(
-      {
-        symbol: PI_TRADE_CHART,
-        tf,
-        points: series.points,
-        lastPrice: series.lastPrice,
-        changePct: series.changePct,
-        priceSource: "okx_pi_usdt",
-      },
-      { headers: { "Cache-Control": "no-store, max-age=0" } },
-    );
   }
 
+  // 2) Binance USDT-M futures klines fallback
   const { interval, limit } = TF_MAP[tf];
-
   const qs = new URLSearchParams({
     symbol,
     interval,
@@ -102,7 +104,14 @@ export async function GET(req: Request) {
     const changePct = first !== 0 ? ((last - first) / first) * 100 : 0;
 
     return NextResponse.json(
-      { symbol, tf, points, lastPrice: last, changePct, priceSource: "binance_futures" },
+      {
+        symbol,
+        tf,
+        points,
+        lastPrice: last,
+        changePct,
+        priceSource: "binance_futures",
+      },
       { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
   } catch {

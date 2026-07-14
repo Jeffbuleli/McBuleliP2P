@@ -345,13 +345,6 @@ function notifMeta(
         href: "/app/profile/kyc",
         pill: { variant: "pending", label: t("profile_kyc_pending") },
       };
-    case "kyc_identity_reverification":
-      return {
-        title: t("notif_kyc_identity_reverification_title"),
-        body: t("notif_kyc_identity_reverification_body"),
-        href: "/app/profile/kyc?start=1",
-        pill: { variant: "pending", label: t("profile_kyc_pending") },
-      };
     case "academy_session_reminder": {
       const kind = str("reminderKind");
       const title =

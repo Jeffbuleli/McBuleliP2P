@@ -276,6 +276,8 @@ export const en = {
   kyc_required: "Complete identity verification first",
   kyc_country_unsupported: "Set a supported country in profile settings",
   kyc_identity_heading: "Legal identity",
+  kyc_identity_readonly_hint:
+    "Name and document details come from your Didit ID scan. Contact support if something looks wrong.",
   kyc_identity_hint:
     "Didit may misread your ID. Correct your legal name here before resubmitting — used for P2P name matching.",
   kyc_identity_first: "Legal first name",
@@ -609,6 +611,11 @@ export const en = {
   verify_working: "Verifying…",
   verify_ok: "Email verified. Redirecting…",
   verify_missing_token: "Verification link is invalid or missing.",
+  verify_pending_title: "Confirm your email",
+  verify_pending_body:
+    "For your security, verify your email before using McBuleli. Check your inbox (and spam) for the link we sent.",
+  verify_pending_hint: "Didn’t get it? Resend below — links expire after a while.",
+  verify_pending_has_link: "I already have a verification link",
   confirm_email_title: "Confirm new email",
   confirm_email_ok: "Email updated. Redirecting…",
   profile_security_page_title: "Account security",
@@ -4574,6 +4581,8 @@ export const fr: Messages = {
   kyc_required: "Complétez d'abord la vérification d'identité",
   kyc_country_unsupported: "Définissez un pays pris en charge dans le profil",
   kyc_identity_heading: "Identité légale",
+  kyc_identity_readonly_hint:
+    "Le nom et les détails du document viennent du scan Didit. Contactez le support si quelque chose est incorrect.",
   kyc_identity_hint:
     "Didit peut mal lire votre pièce. Corrigez le nom légal ici avant de resoumettre — utilisé pour le P2P.",
   kyc_identity_first: "Prénom légal",
@@ -4911,6 +4920,11 @@ export const fr: Messages = {
   verify_working: "Vérification…",
   verify_ok: "E-mail vérifié. Redirection…",
   verify_missing_token: "Lien de vérification invalide.",
+  verify_pending_title: "Confirmez votre e-mail",
+  verify_pending_body:
+    "Pour votre sécurité, vérifiez votre e-mail avant d’utiliser McBuleli. Consultez votre boîte (et les spams) pour le lien envoyé.",
+  verify_pending_hint: "Pas reçu ? Renvoyez ci-dessous — les liens expirent après un moment.",
+  verify_pending_has_link: "J’ai déjà un lien de vérification",
   confirm_email_title: "Confirmer le nouvel e-mail",
   confirm_email_ok: "E-mail mis à jour. Redirection…",
   profile_security_page_title: "Sécurité du compte",

@@ -34,6 +34,7 @@ export async function verifyTurnstileToken(
     return { ok: false, status: 400, message: "Captcha required." };
   }
 
+  const remoteIp = clientIpFromRequest(req);
   const verifyRes = await fetch(
     "https://challenges.cloudflare.com/turnstile/v0/siteverify",
     {
@@ -42,7 +43,8 @@ export async function verifyTurnstileToken(
       body: JSON.stringify({
         secret,
         response,
-        remoteip: clientIpFromRequest(req),
+        // Omit unknown/mis-parsed IPs — they can make siteverify fail behind Cloudflare.
+        ...(remoteIp && remoteIp !== "unknown" ? { remoteip: remoteIp } : {}),
       }),
     },
   ).catch(() => null);
@@ -57,8 +59,10 @@ export async function verifyTurnstileToken(
 
   const data = (await verifyRes.json().catch(() => ({}))) as {
     success?: boolean;
+    "error-codes"?: string[];
   };
   if (!data.success) {
+    console.warn("[turnstile] siteverify failed", data["error-codes"] ?? data);
     return { ok: false, status: 403, message: "Invalid captcha." };
   }
   return { ok: true };

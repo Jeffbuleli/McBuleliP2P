@@ -62,7 +62,12 @@ export async function PUT(req: Request) {
 
   const db = getDb();
   const [user] = await db
-    .select({ id: users.id, email: users.email, role: users.role })
+    .select({
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      emailVerifiedAt: users.emailVerifiedAt,
+    })
     .from(users)
     .where(eq(users.id, result.userId))
     .limit(1);
@@ -70,9 +75,22 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  const { userNeedsEmailVerification } = await import(
+    "@/lib/auth/email-verified-gate"
+  );
+  const emailVerified = !userNeedsEmailVerification({
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+  });
+
   const token = await signSessionToken(user.id, result.sessionVersion);
   const res = NextResponse.json({
-    user: { id: user.id, email: user.email, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      emailVerified,
+    },
   });
   res.cookies.set(
     sessionCookieName(),

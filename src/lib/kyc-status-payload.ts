@@ -1,5 +1,3 @@
-import type { KycIdentityCorrection } from "@/lib/kyc-identity";
-import { isMissingKycIdentityCorrectionColumnsError } from "@/lib/kyc-identity-correction-schema";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 import {
@@ -25,13 +23,6 @@ export type KycStatusPayload = {
   rejectionNote: string | null;
   sanctionsBlocked: boolean;
   canRetryKyc: boolean;
-  /** Rejected / not started users can resubmit after correcting legal identity. */
-  canResubmitKyc: boolean;
-  /** Approved users request an OPS correction — Didit re-verification (no manual rename). */
-  canRequestIdentityCorrection: boolean;
-  /** User must complete a Didit re-verification after OPS triggered resubmission. */
-  identityReverificationPending: boolean;
-  identityCorrection: KycIdentityCorrection | null;
   canRefreshStatus: boolean;
   diditSessionId: string | null;
   diditSessionStatus: string | null;
@@ -49,9 +40,6 @@ export function buildKycStatusPayload(args: {
   diditSessionId?: string | null;
   diditSessionStatus?: string | null;
   legalIdentity?: KycLegalIdentity | null;
-  identityCorrection?: KycIdentityCorrection | null;
-  /** False when DB migration 0097 is not applied yet. */
-  identityCorrectionEnabled?: boolean;
 }): KycStatusPayload {
   const enabled = kycEnabled();
   const inCorridorCountry = kycEligibleCountry(args.countryCode);
@@ -66,22 +54,6 @@ export function buildKycStatusPayload(args: {
     !approved &&
     !sanctionsBlocked &&
     kycStatus !== "manual_review";
-  const canResubmitKyc =
-    corridor &&
-    !approved &&
-    !sanctionsBlocked &&
-    diditConfigured() &&
-    (kycStatus === "rejected" || kycStatus === "none");
-  const identityCorrection = args.identityCorrection ?? null;
-  const canRequestIdentityCorrection =
-    (args.identityCorrectionEnabled ?? true) &&
-    corridor &&
-    approved &&
-    !sanctionsBlocked &&
-    identityCorrection?.status !== "requested" &&
-    identityCorrection?.status !== "reverification";
-  const identityReverificationPending =
-    identityCorrection?.status === "reverification";
 
   const hasSessionId = Boolean(args.diditSessionId?.trim());
   const canRefreshStatus =
@@ -101,10 +73,6 @@ export function buildKycStatusPayload(args: {
     rejectionNote,
     sanctionsBlocked,
     canRetryKyc,
-    canResubmitKyc,
-    canRequestIdentityCorrection,
-    identityReverificationPending,
-    identityCorrection,
     canRefreshStatus,
     diditSessionId: args.diditSessionId ?? null,
     diditSessionStatus: args.diditSessionStatus?.trim() || null,
@@ -119,69 +87,24 @@ export async function getKycStatusPayload(
   userId: string,
 ): Promise<KycStatusPayload | null> {
   const db = getDb();
-  const baseSelect = {
-    kycStatus: users.kycStatus,
-    countryCode: users.countryCode,
-    kycUpdatedAt: users.kycUpdatedAt,
-    kycRejectionNote: users.kycRejectionNote,
-    diditSessionId: users.diditSessionId,
-    diditSessionStatus: users.diditSessionStatus,
-    legalFirstName: users.legalFirstName,
-    legalLastName: users.legalLastName,
-    birthDate: users.birthDate,
-    documentNumber: users.documentNumber,
-    documentType: users.documentType,
-    documentCountry: users.documentCountry,
-  } as const;
-
-  let row:
-    | ({
-        kycStatus: string;
-        countryCode: string | null;
-        kycUpdatedAt: Date | null;
-        kycRejectionNote: string | null;
-        diditSessionId: string | null;
-        diditSessionStatus: string | null;
-        legalFirstName: string | null;
-        legalLastName: string | null;
-        birthDate: string | null;
-        documentNumber: string | null;
-        documentType: string | null;
-        documentCountry: string | null;
-        kycIdentityCorrectionStatus?: string | null;
-        kycIdentityCorrectionRequestedAt?: Date | null;
-        kycIdentityProposedFirstName?: string | null;
-        kycIdentityProposedLastName?: string | null;
-        kycIdentityCorrectionNote?: string | null;
-        kycIdentityCorrectedAt?: Date | null;
-      })
-    | undefined;
-
-  let identityCorrectionEnabled = true;
-
-  try {
-    [row] = await db
-      .select({
-        ...baseSelect,
-        kycIdentityCorrectionStatus: users.kycIdentityCorrectionStatus,
-        kycIdentityCorrectionRequestedAt: users.kycIdentityCorrectionRequestedAt,
-        kycIdentityProposedFirstName: users.kycIdentityProposedFirstName,
-        kycIdentityProposedLastName: users.kycIdentityProposedLastName,
-        kycIdentityCorrectionNote: users.kycIdentityCorrectionNote,
-        kycIdentityCorrectedAt: users.kycIdentityCorrectedAt,
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-  } catch (e) {
-    if (!isMissingKycIdentityCorrectionColumnsError(e)) throw e;
-    identityCorrectionEnabled = false;
-    [row] = await db
-      .select(baseSelect)
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-  }
+  const [row] = await db
+    .select({
+      kycStatus: users.kycStatus,
+      countryCode: users.countryCode,
+      kycUpdatedAt: users.kycUpdatedAt,
+      kycRejectionNote: users.kycRejectionNote,
+      diditSessionId: users.diditSessionId,
+      diditSessionStatus: users.diditSessionStatus,
+      legalFirstName: users.legalFirstName,
+      legalLastName: users.legalLastName,
+      birthDate: users.birthDate,
+      documentNumber: users.documentNumber,
+      documentType: users.documentType,
+      documentCountry: users.documentCountry,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
   if (!row) return null;
 
@@ -190,21 +113,6 @@ export async function getKycStatusPayload(
     row.legalLastName ||
     row.documentNumber ||
     row.birthDate;
-
-  const correctionStatus = row.kycIdentityCorrectionStatus ?? null;
-  const identityCorrection: KycIdentityCorrection | null =
-    correctionStatus === "requested" ||
-    correctionStatus === "reverification" ||
-    correctionStatus === "corrected"
-      ? {
-          status: correctionStatus,
-          requestedAt: row.kycIdentityCorrectionRequestedAt?.toISOString() ?? null,
-          proposedFirstName: row.kycIdentityProposedFirstName ?? null,
-          proposedLastName: row.kycIdentityProposedLastName ?? null,
-          note: row.kycIdentityCorrectionNote ?? null,
-          correctedAt: row.kycIdentityCorrectedAt?.toISOString() ?? null,
-        }
-      : null;
 
   return buildKycStatusPayload({
     countryCode: row.countryCode,
@@ -223,7 +131,5 @@ export async function getKycStatusPayload(
           documentCountry: row.documentCountry ?? null,
         }
       : null,
-    identityCorrection,
-    identityCorrectionEnabled,
   });
 }

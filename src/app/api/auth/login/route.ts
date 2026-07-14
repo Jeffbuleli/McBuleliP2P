@@ -76,11 +76,19 @@ export async function POST(req: Request) {
       sessionUser.id,
       sessionUser.sessionVersion ?? 0,
     );
+    const { userNeedsEmailVerification } = await import(
+      "@/lib/auth/email-verified-gate"
+    );
+    const emailVerified = !userNeedsEmailVerification({
+      email: sessionUser.email,
+      emailVerifiedAt: sessionUser.emailVerifiedAt,
+    });
     const res = NextResponse.json({
       user: {
         id: sessionUser.id,
         email: sessionUser.email,
         role: sessionUser.role,
+        emailVerified,
       },
     });
     res.cookies.set(

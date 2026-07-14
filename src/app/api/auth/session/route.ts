@@ -33,6 +33,7 @@ export async function GET() {
       email: users.email,
       role: users.role,
       sessionVersion: users.sessionVersion,
+      emailVerifiedAt: users.emailVerifiedAt,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -42,10 +43,23 @@ export async function GET() {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
+  const { userNeedsEmailVerification } = await import(
+    "@/lib/auth/email-verified-gate"
+  );
+  const emailVerified = !userNeedsEmailVerification({
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+  });
+
   const token = await signSessionToken(user.id, user.sessionVersion);
   const res = NextResponse.json({
     ok: true,
-    user: { id: user.id, email: user.email, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      emailVerified,
+    },
   });
   res.cookies.set(
     sessionCookieName(),

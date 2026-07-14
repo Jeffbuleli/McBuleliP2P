@@ -42,6 +42,15 @@ migrate_*.log
 .env
 .env.*
 !.env.example
+McBuleliP2P.env
+
+# DB dumps / local backups (never commit — often contain PII)
+*.dump
+/backups/
+mcbuleli_backup.dump
+ops/vps/.env
+ops/vps/cron.env
+ops/vps/ai-relay.env
 
 # Python AI trading service
 services/mcbuleli-ai-trading/.venv/

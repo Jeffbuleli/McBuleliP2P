@@ -150,7 +150,7 @@ function RegisterForm() {
         return;
       }
       clearAuthReturnPath();
-      window.location.replace(nextPath);
+      window.location.replace("/verify-email/pending");
     } catch (err) {
       const aborted =
         (err instanceof DOMException || err instanceof Error) &&
