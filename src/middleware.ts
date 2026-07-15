@@ -35,8 +35,9 @@ export function middleware(request: NextRequest) {
     shouldMiddlewareThrottleApi(pathname, request.method)
   ) {
     const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      request.headers.get("x-real-ip") ??
+      request.headers.get("cf-connecting-ip")?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      request.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
       "unknown";
     const retryAfter = middlewareApiRateLimit(pathname, ip);
     if (retryAfter !== null) {

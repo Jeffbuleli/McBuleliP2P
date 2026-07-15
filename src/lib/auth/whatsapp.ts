@@ -2,7 +2,6 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { authChallenges, getDb, users, waInboundEvents } from "@/db";
 import { hashToken } from "@/lib/auth/crypto";
 import { markChallengeUsed } from "@/lib/auth/challenges";
-import { readOpenWaConfig } from "@/lib/auth/openwa-client";
 
 const CODE_RE = /McB-[A-Z2-9]{4}/i;
 
@@ -71,34 +70,10 @@ export async function processInboundWhatsAppMessage(args: {
   };
 }
 
-/** Outbound recovery OTP via OpenWA — rate-limited caller responsibility. */
-export async function sendWhatsAppOtp(args: {
+/** Outbound WhatsApp OTP — OpenWA gateway removed; always unavailable. */
+export async function sendWhatsAppOtp(_args: {
   chatId: string;
   otp: string;
 }): Promise<boolean> {
-  const cfg = readOpenWaConfig();
-  if (!cfg) {
-    console.info("[openwa] outbound skipped (not configured)", args.chatId);
-    return false;
-  }
-
-  const res = await fetch(
-    `${cfg.base}/api/sessions/${encodeURIComponent(cfg.sessionId)}/messages/send-text`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": cfg.apiKey,
-      },
-      body: JSON.stringify({
-        chatId: args.chatId,
-        text: `McBuleli — code de récupération : ${args.otp}. Valide 15 min. Ne partagez jamais ce code.`,
-      }),
-    },
-  ).catch((err) => {
-    console.warn("[openwa] send failed", err);
-    return null;
-  });
-
-  return Boolean(res?.ok);
+  return false;
 }

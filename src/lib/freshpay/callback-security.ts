@@ -9,8 +9,15 @@ export function assertFreshpayCallbackIp(req: Request): void {
   const allowed = getFreshpayCallbackIps();
   if (allowed.length === 0) return;
 
+  const cf = req.headers.get("cf-connecting-ip")?.trim();
+  const real = req.headers.get("x-real-ip")?.trim();
   const forwarded = req.headers.get("x-forwarded-for");
-  const ip = (forwarded?.split(",")[0] ?? req.headers.get("x-real-ip") ?? "").trim();
+  const xff = forwarded
+    ?.split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .pop();
+  const ip = (cf || real || xff || "").trim();
   if (!ip || !allowed.includes(ip)) {
     throw new Error("callback_ip_denied");
   }

@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import { createAuthChallenge } from "@/lib/auth/challenges";
-import { generateWaVerifyCode, pickWaMessageTemplate } from "@/lib/auth/crypto";
-import { getOpenWaMcBuleliPhone } from "@/lib/auth/openwa-client";
 import { getActiveChallengeById } from "@/lib/auth/challenges";
 
 export async function POST() {
@@ -10,27 +7,8 @@ export async function POST() {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const code = generateWaVerifyCode();
-  const { id, expiresAt } = await createAuthChallenge({
-    userId,
-    purpose: "wa_verify",
-    rawCode: code,
-  });
-
-  const templateIndex = Math.floor(Math.random() * 3);
-  const message = pickWaMessageTemplate(code, templateIndex);
-  const waNumber = await getOpenWaMcBuleliPhone();
-
-  return NextResponse.json({
-    ok: true,
-    challengeId: id,
-    code,
-    message,
-    waNumber,
-    waLink: waNumber ? `https://wa.me/${waNumber.replace(/\D/g, "")}` : null,
-    expiresAt: expiresAt.toISOString(),
-  });
+  /** OpenWA inbound gateway removed — WhatsApp verify unavailable. */
+  return NextResponse.json({ error: "whatsapp_gateway_removed" }, { status: 503 });
 }
 
 export async function GET(req: Request) {

@@ -1,9 +1,5 @@
 import { eq } from "drizzle-orm";
 import { getDb, userPasskeys, users } from "@/db";
-import {
-  getOpenWaMcBuleliPhone,
-  isOpenWaConfigured,
-} from "@/lib/auth/openwa-client";
 
 export type SecurityStatusPayload = {
   email: string;
@@ -14,6 +10,7 @@ export type SecurityStatusPayload = {
   whatsAppVerified: boolean;
   recoveryWaPhone: string | null;
   kycApproved: boolean;
+  /** Always false — OpenWA gateway removed. */
   openWaConfigured: boolean;
   openWaNumber: string | null;
   antiPhishingSet: boolean;
@@ -55,9 +52,6 @@ export async function getSecurityStatus(
     .from(userPasskeys)
     .where(eq(userPasskeys.userId, userId));
 
-  const openWaConfigured = isOpenWaConfigured();
-  const waNumber = openWaConfigured ? await getOpenWaMcBuleliPhone() : null;
-
   return {
     email: u.email,
     emailVerified: Boolean(u.emailVerifiedAt),
@@ -67,8 +61,8 @@ export async function getSecurityStatus(
     whatsAppVerified: Boolean(u.waVerifiedAt),
     recoveryWaPhone: u.recoveryWaPhone,
     kycApproved: u.kycStatus === "approved",
-    openWaConfigured,
-    openWaNumber: waNumber,
+    openWaConfigured: false,
+    openWaNumber: null,
     antiPhishingSet,
   };
 }
