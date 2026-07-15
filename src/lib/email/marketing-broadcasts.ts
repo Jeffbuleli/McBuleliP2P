@@ -15,7 +15,8 @@ export type MarketingBroadcastKind =
   | "crypto_discovery"
   | "launch_academy"
   | "academy_journey"
-  | "formation_crypto_reminder";
+  | "formation_crypto_reminder"
+  | "whitepaper";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -259,6 +260,28 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
       "/community/p/a66af481-eb44-4946-aa05-f7b942e0b9fd",
     campaign: "formation_crypto_jun27",
   },
+  whitepaper: {
+    subject: "It's official - McBuleli Whitepaper is live",
+    preheader: "Vision, technology, impact - read Constitution Lite v1.0.",
+    headline: "It's official - our Whitepaper is published",
+    paragraphs: [
+      "We're proud to share the McBuleli Whitepaper - our public Constitution Lite: vision, model, technology, and commitment to digital and financial infrastructure for Africa.",
+      "Discover how we connect, empower, and transform communities through inclusive tools built for continental realities.",
+    ],
+    bannerImageUrl: `${emailAssetBaseUrl()}/launch/whitepaper-announce.jpg`,
+    dateHighlight: "VISION · TECHNOLOGY · IMPACT",
+    bullets: [
+      "Connect communities to the digital economy",
+      "Empower people with inclusive tools",
+      "Turn opportunity into durable growth",
+      "Utility-first - no ICO, no price promises",
+    ],
+    reassurance:
+      "Constitution Lite v1.0 · mcbuleli.org/whitepaper · Utility token policy",
+    ctaLabel: "Read the Whitepaper",
+    ctaPath: "/whitepaper",
+    campaign: "whitepaper",
+  },
 };
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
@@ -475,6 +498,28 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
       "/community/p/a66af481-eb44-4946-aa05-f7b942e0b9fd",
     campaign: "formation_crypto_jun27",
   },
+  whitepaper: {
+    subject: "C'est officiel - le Whitepaper McBuleli est publié",
+    preheader: "Vision, technologie, impact - lisez la Constitution Lite v1.0.",
+    headline: "C'est officiel - notre Whitepaper est publié",
+    paragraphs: [
+      "Nous sommes fiers d'annoncer la publication officielle du Whitepaper McBuleli - notre Constitution Lite : vision, modèle, technologie et engagement pour une infrastructure numérique et financière au service de l'Afrique.",
+      "Découvrez comment McBuleli connecte, autonomise et transforme les communautés grâce à des solutions adaptées aux réalités du continent.",
+    ],
+    bannerImageUrl: `${emailAssetBaseUrl()}/launch/whitepaper-announce.jpg`,
+    dateHighlight: "VISION · TECHNOLOGIE · IMPACT",
+    bullets: [
+      "Connecter les communautés à l'économie digitale",
+      "Autonomiser grâce à des outils inclusifs",
+      "Transformer les opportunités en croissance durable",
+      "Utility first - pas d'ICO, pas de promesse de prix",
+    ],
+    reassurance:
+      "Constitution Lite v1.0 · mcbuleli.org/whitepaper · Jeton utilitaire uniquement",
+    ctaLabel: "Lire le Whitepaper",
+    ctaPath: "/whitepaper",
+    campaign: "whitepaper",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -491,6 +536,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "launch_academy",
   "academy_journey",
   "formation_crypto_reminder",
+  "whitepaper",
 ];
 
 function buildDef(

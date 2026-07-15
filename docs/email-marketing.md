@@ -35,8 +35,12 @@ Doc Resend : [Managing Broadcasts](https://resend.com/docs/dashboard/broadcasts/
 | `reengage` | Réactivation | Inactifs 30j+ | Connexion |
 | `changelog` | Mise à jour | Toute la base | App |
 | `crypto_discovery` | **Crypto simple (USDT, P2P, AVEC)** | Audience méfiante crypto / Mobile Money | [Inscription + parrain RGZDWHUH](https://mcbuleli.org/register?ref=RGZDWHUH) |
+| `whitepaper` | **Whitepaper / Constitution Lite** | Toute la base | [mcbuleli.org/whitepaper](https://mcbuleli.org/whitepaper) |
 
-**Campagne recommandée pour votre audience** : `mcbuleli-crypto_discovery-fr.html` — illustrations + 4 blocs pédagogiques, CTA parrainage inclus.
+**Campagne en attente (planifier demain)** : `mcbuleli-whitepaper-fr.html` - affiche sociale + CTA lecture.  
+**WhatsApp support (tous footers)** : [https://wa.me/message/IF6DXNT6Q2VSI1](https://wa.me/message/IF6DXNT6Q2VSI1)
+
+**Campagne recommandée pour votre audience crypto** : `mcbuleli-crypto_discovery-fr.html` — illustrations + 4 blocs pédagogiques, CTA parrainage inclus.
 
 Code source des textes : `src/lib/email/marketing-broadcasts.ts`  
 Layout HTML : `src/lib/email/marketing-layout.ts`

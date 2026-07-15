@@ -44,7 +44,7 @@ export function SupportContactPanel({ showIcon = true }: { showIcon?: boolean })
             rel="noopener noreferrer"
             className="font-semibold text-[color:var(--fd-primary)] underline-offset-4 hover:underline"
           >
-            wa.me/mcbuleli
+            WhatsApp
           </a>
           <span className="mx-1 text-[color:var(--fd-muted)]">·</span>
           <a

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T12:29:26.355Z",
+  "generatedAt": "2026-07-15T13:30:54.170Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -156,6 +156,18 @@
       "name": "McBuleli · formation_crypto_reminder (EN)",
       "subject": "Reminder — CRYPTO training · Saturday 27 June 7:30 PM",
       "html": "mcbuleli-formation_crypto_reminder-en.html"
+    },
+    {
+      "slug": "mcbuleli-whitepaper-fr",
+      "name": "McBuleli · whitepaper (FR)",
+      "subject": "C'est officiel - le Whitepaper McBuleli est publié",
+      "html": "mcbuleli-whitepaper-fr.html"
+    },
+    {
+      "slug": "mcbuleli-whitepaper-en",
+      "name": "McBuleli · whitepaper (EN)",
+      "subject": "It's official - McBuleli Whitepaper is live",
+      "html": "mcbuleli-whitepaper-en.html"
     }
   ]
 }
