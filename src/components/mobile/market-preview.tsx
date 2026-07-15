@@ -143,6 +143,7 @@ export function MarketPreview({
                   }`}
                 >
                   {ticker.symbol.replace("USDT", "")}
+                </span>
               </span>
               <span
                 className={`mt-2 text-base font-bold tabular-nums ${
