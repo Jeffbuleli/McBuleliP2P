@@ -23,6 +23,10 @@ import {
 import { buildAssistantSystemPrompt } from "@/lib/assistant/system-prompt";
 import { resolveReplyLocale } from "@/lib/assistant/locale";
 import { assertAssistantDbReady } from "@/lib/assistant/db-ready";
+import {
+  isAssistantOffScope,
+  offScopeRefusal,
+} from "@/lib/assistant/scope-guard";
 
 export type AssistantMessageDto = {
   id: string;
@@ -50,6 +54,8 @@ export type PreparedAssistantTurn = {
   hits: Awaited<ReturnType<typeof searchAssistantKnowledge>>;
   pageContext: string | null;
   convRow: typeof aiAssistantConversations.$inferSelect;
+  /** Set when message is politics / general ChatGPT — skip OpenAI. */
+  cannedReply?: string;
 };
 
 const RATE_LIMIT_PER_HOUR = 40;
@@ -240,6 +246,21 @@ export async function prepareAssistantTurn(args: {
   const simplified =
     convRow.simplifiedMode || shouldUseSimplifiedMode(chatHistory, intents);
 
+  if (isAssistantOffScope(trimmed)) {
+    return {
+      locale,
+      trimmed,
+      systemPrompt: "",
+      chatHistory,
+      mergedIntents,
+      simplified,
+      hits: [],
+      pageContext,
+      convRow,
+      cannedReply: offScopeRefusal(locale),
+    };
+  }
+
   const hits = await searchAssistantKnowledge({
     query: trimmed,
     locale,
@@ -364,11 +385,13 @@ export async function sendAssistantMessage(args: {
   recommendations: { label: string; href: string; reason: string }[];
 }> {
   const turn = await prepareAssistantTurn(args);
-  const reply = await generateAssistantReply({
-    systemPrompt: turn.systemPrompt,
-    history: turn.chatHistory,
-    userMessage: turn.trimmed,
-  });
+  const reply =
+    turn.cannedReply ??
+    (await generateAssistantReply({
+      systemPrompt: turn.systemPrompt,
+      history: turn.chatHistory,
+      userMessage: turn.trimmed,
+    }));
   return persistAssistantTurn({
     conversationId: args.conversationId,
     turn,
@@ -395,13 +418,18 @@ export async function* streamAssistantMessage(args: {
   const turn = await prepareAssistantTurn(args);
   let full = "";
 
-  for await (const token of streamAssistantReply({
-    systemPrompt: turn.systemPrompt,
-    history: turn.chatHistory,
-    userMessage: turn.trimmed,
-  })) {
-    full += token;
-    yield { type: "token", content: token };
+  if (turn.cannedReply) {
+    full = turn.cannedReply;
+    yield { type: "token", content: full };
+  } else {
+    for await (const token of streamAssistantReply({
+      systemPrompt: turn.systemPrompt,
+      history: turn.chatHistory,
+      userMessage: turn.trimmed,
+    })) {
+      full += token;
+      yield { type: "token", content: token };
+    }
   }
 
   const result = await persistAssistantTurn({

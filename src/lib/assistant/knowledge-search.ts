@@ -15,19 +15,26 @@ let embeddingBackfillStarted = false;
 export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
   if (seeded) return;
   const db = getDb();
-  const [row] = await db
-    .select({ id: aiAssistantKnowledge.id })
-    .from(aiAssistantKnowledge)
-    .limit(1);
-  if (row) {
-    seeded = true;
-    void backfillMissingEmbeddings();
-    return;
-  }
+
   for (const item of ASSISTANT_KNOWLEDGE_SEED) {
-    await db
-      .insert(aiAssistantKnowledge)
-      .values({
+    const [existing] = await db
+      .select({
+        id: aiAssistantKnowledge.id,
+        content: aiAssistantKnowledge.content,
+        title: aiAssistantKnowledge.title,
+        priority: aiAssistantKnowledge.priority,
+      })
+      .from(aiAssistantKnowledge)
+      .where(
+        and(
+          eq(aiAssistantKnowledge.slug, item.slug),
+          eq(aiAssistantKnowledge.locale, item.locale),
+        ),
+      )
+      .limit(1);
+
+    if (!existing) {
+      await db.insert(aiAssistantKnowledge).values({
         slug: item.slug,
         category: item.category,
         locale: item.locale,
@@ -36,9 +43,31 @@ export async function ensureAssistantKnowledgeSeeded(): Promise<void> {
         tags: item.tags,
         priority: item.priority,
         published: true,
+      });
+      continue;
+    }
+
+    const stale =
+      existing.content !== item.content ||
+      existing.title !== item.title ||
+      existing.priority !== item.priority;
+    if (!stale) continue;
+
+    // Clear embedding so vector search re-embeds updated product facts.
+    await db
+      .update(aiAssistantKnowledge)
+      .set({
+        category: item.category,
+        title: item.title,
+        content: item.content,
+        tags: item.tags,
+        priority: item.priority,
+        embedding: null,
+        updatedAt: new Date(),
       })
-      .onConflictDoNothing();
+      .where(eq(aiAssistantKnowledge.id, existing.id));
   }
+
   seeded = true;
   void backfillMissingEmbeddings();
 }

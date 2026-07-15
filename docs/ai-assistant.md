@@ -2,6 +2,16 @@
 
 Production-ready floating AI concierge integrated across mcbuleli.org.
 
+## Scope & safety (guest + logged-in)
+
+McBuleli AI is a **product assistant**, not a general ChatGPT.
+
+- Shared system prompt: McBuleli-only topics (wallet, P2P, trading, Academy, KYC…).
+- Hard refuse: politics / elections / conflict news / homework & unrelated creative asks (`scope-guard.ts`) — same for homepage guests and signed-in users.
+- Knowledge seed is **upserted** on boot so fees/limits stay aligned with `withdraw-fees.ts`.
+
+Academy syllabus mentor (`academy-mentor-context`) remains for enrolled learners and is even narrower.
+
 ## Architecture
 
 ```mermaid

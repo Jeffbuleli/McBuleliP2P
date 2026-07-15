@@ -141,7 +141,7 @@ function fallbackAssistantReply(
     return "To deposit USDT: go to **Wallet → Deposit**, choose your network (TRC20 is often cheapest), send to the address shown, then paste your **TXID** to confirm. Need step-by-step help? Tell me which network you prefer.";
   }
   if (/withdraw|retrait|kutoa/i.test(lower)) {
-    return "To withdraw USDT: **Wallet → Withdraw**. Enter address, network, and net amount. Platform fee is ~2 USDT. Track status in your withdrawal history. Enable 2FA for security.";
+    return "To withdraw USDT: **Wallet → Withdraw**. Enter address, network, and net amount. Platform fee is **2 USDT** (external). Minimum net **5 USDT** external / **1 USDT** internal McBuleli. Track status in withdrawal history. Enable 2FA for security.";
   }
   if (/p2p|escrow|mobile money/i.test(lower)) {
     return "McBuleli P2P uses **escrow** — the seller's crypto is locked until you confirm mobile money payment. Never pay outside the platform. Browse offers at **P2P Marketplace** in the app.";
@@ -175,10 +175,10 @@ function fallbackAssistantReply(
     return "Based on McBuleli's guides: I found relevant info in our knowledge base. Could you tell me more specifically what you need? I can explain deposits, P2P, KYC, trading, AVEC, or staking. 💚";
   }
   if (sw) {
-    return "Karibu McBuleli! 👋 Naweza kusaidia kuhusu misingi ya crypto, amana/kutoa USDT, escrow P2P, pesa ya simu, boti za AI, akiba AVEC, staking na KYC. Ungependa kujua nini? 💚";
+    return "Karibu McBuleli! 👋 Naweza kusaidia kuhusu misingi ya crypto, amana/kutoa USDT, escrow P2P, pesa ya simu, boti za AI, Academy, akiba AVEC, staking na KYC — siasa au maswali yasiyohusiana na McBuleli sivyo. Ungependa kujua nini kuhusu jukwaa? 💚";
   }
   if (fr) {
-    return "Bienvenue sur McBuleli ! 👋 Je peux vous aider avec les bases crypto, dépôts/retraits USDT, escrow P2P, mobile money, bots IA, épargne AVEC, staking et KYC. Que souhaitez-vous explorer ? 💚";
+    return "Bienvenue sur McBuleli ! 👋 Je peux vous aider avec crypto, dépôts/retraits USDT, P2P, mobile money, bots IA, Academy, AVEC, staking et KYC — pas la politique ni un ChatGPT général. Que souhaitez-vous explorer sur McBuleli ? 💚";
   }
-  return "Welcome to McBuleli! 👋 I can help with crypto basics, USDT deposits/withdrawals, P2P escrow, mobile money, AI trading bots, AVEC savings, staking, and KYC. What would you like to explore? Visit https://mcbuleli.org or ask me anything.";
+  return "Welcome to McBuleli! 👋 I help with crypto basics, USDT deposits/withdrawals, P2P, mobile money, AI bots, Academy, AVEC, staking, and KYC — not politics or general ChatGPT topics. What would you like to explore on McBuleli?";
 }

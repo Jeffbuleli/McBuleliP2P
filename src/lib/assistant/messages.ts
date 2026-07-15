@@ -39,8 +39,8 @@ export const assistantEn: AssistantMessages = {
   tagline: "Your fintech guide",
   welcome: "Welcome to McBuleli 👋",
   welcomeSub:
-    "I can help you understand crypto, USDT, trading, mobile money and all McBuleli services. What would you like help with today?",
-  placeholder: "Ask anything about McBuleli…",
+    "I help only with McBuleli — wallet, USDT, P2P, trading, Academy and security. Not a general chatbot. What do you need?",
+  placeholder: "Ask about McBuleli (wallet, P2P, Academy…)",
   send: "Send",
   thinking: "Thinking…",
   openAssistant: "Open AI assistant",
@@ -73,8 +73,8 @@ export const assistantFr: AssistantMessages = {
   tagline: "Votre guide fintech",
   welcome: "Bienvenue sur McBuleli 👋",
   welcomeSub:
-    "Je peux vous aider à comprendre la crypto, l'USDT, le trading, le mobile money et tous les services McBuleli. Comment puis-je vous aider aujourd'hui ?",
-  placeholder: "Posez une question sur McBuleli…",
+    "Je réponds uniquement sur McBuleli — wallet, USDT, P2P, trading, Academy et sécurité. Pas un ChatGPT général. De quoi avez-vous besoin ?",
+  placeholder: "Question McBuleli (wallet, P2P, Academy…)",
   send: "Envoyer",
   thinking: "Réflexion…",
   openAssistant: "Ouvrir l'assistant IA",
@@ -107,8 +107,8 @@ export const assistantSw: AssistantMessages = {
   tagline: "Mwongozo wako wa fedha",
   welcome: "Karibu McBuleli 👋",
   welcomeSub:
-    "Naweza kukusaidia kuelewa crypto, USDT, biashara, pesa ya simu na huduma zote za McBuleli. Ungependa msaada gani leo?",
-  placeholder: "Uliza chochote kuhusu McBuleli…",
+    "Ninasaidia tu McBuleli — wallet, USDT, P2P, biashara, Academy na usalama. Si ChatGPT ya kawaida. Unahitaji nini?",
+  placeholder: "Uliza kuhusu McBuleli (wallet, P2P, Academy…)",
   send: "Tuma",
   thinking: "Inafikiri…",
   openAssistant: "Fungua msaidizi wa AI",
