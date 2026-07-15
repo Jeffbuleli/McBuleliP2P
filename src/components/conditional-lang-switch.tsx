@@ -14,11 +14,20 @@ const AUTH_SHELL_PATHS = new Set([
   "/account/recovery",
 ]);
 
-/** Hide when language is provided elsewhere (app profile or auth shell). */
+const PUBLIC_SHELL_PATHS = new Set([
+  "/about",
+  "/whitepaper",
+  "/contact",
+  "/terms",
+  "/privacy",
+]);
+
+/** Hide when language is provided elsewhere (app profile, auth, or public shell). */
 export function ConditionalLangSwitch() {
   const pathname = usePathname();
   if (pathname.startsWith("/app")) return null;
   if (AUTH_SHELL_PATHS.has(pathname)) return null;
+  if (PUBLIC_SHELL_PATHS.has(pathname)) return null;
   return (
     <div className="fixed right-3 top-3 z-50 hidden sm:block">
       <LangSwitch />
