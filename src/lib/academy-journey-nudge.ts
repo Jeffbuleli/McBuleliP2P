@@ -26,13 +26,26 @@ import { ensureAcademyLaunchSeed } from "@/lib/academy-seed";
 const NUDGE_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 const STALE_ACTIVITY_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** P1b — email aux inscrits cohorte avec progression < 60 % et peu d'activité récente. */
+/**
+ * P1b — email progression cohorte.
+ * Désactivé par défaut : quota Resend free (~1k/jour) réservé au transactionnel
+ * (auth, wallet, KYC, rappels live ciblés). Marketing = Broadcasts Resend (illimité),
+ * pas l’API /emails. Opt-in rare : ACADEMY_JOURNEY_NUDGE_EMAIL=true.
+ */
 export async function runAcademyJourneyNudges(): Promise<{
   scanned: number;
   sent: number;
+  skipped?: string;
 }> {
+  if (process.env.ACADEMY_JOURNEY_NUDGE_EMAIL !== "true") {
+    return {
+      scanned: 0,
+      sent: 0,
+      skipped: "disabled — set ACADEMY_JOURNEY_NUDGE_EMAIL=true to opt in (burns Resend transactional quota)",
+    };
+  }
   if (process.env.RESEND_ALLOW_SEND !== "true") {
-    return { scanned: 0, sent: 0 };
+    return { scanned: 0, sent: 0, skipped: "RESEND_ALLOW_SEND != true" };
   }
 
   await ensureAcademyLaunchSeed();
@@ -58,6 +71,7 @@ export async function runAcademyJourneyNudges(): Promise<{
       userId: academyEnrollments.userId,
       email: users.email,
       countryCode: users.countryCode,
+      displayName: users.displayName,
     })
     .from(academyEnrollments)
     .innerJoin(users, eq(academyEnrollments.userId, users.id))
@@ -110,18 +124,22 @@ export async function runAcademyJourneyNudges(): Promise<{
       ctaHref: `${appBaseUrl().replace(/\/$/, "")}/app/academy?utm_source=email&utm_medium=journey&utm_campaign=academy_progress`,
     };
 
+    // resendAudience:false — placeholders {{{contact…}}} only work in Resend Broadcasts,
+    // not transactional /emails (literal tags otherwise).
     const ok = await sendEmail({
       to: en.email,
       subject: def.subject,
       html: renderMarketingBroadcastHtml({
         copy,
         locale,
-        resendAudience: true,
+        resendAudience: false,
+        recipientFirstName: en.displayName?.trim() || undefined,
       }),
       text: renderMarketingBroadcastText({
         copy,
         locale,
-        resendAudience: true,
+        resendAudience: false,
+        recipientFirstName: en.displayName?.trim() || undefined,
       }),
     });
     if (!ok) continue;

@@ -10,7 +10,8 @@ name: Cron scheduled (infrequent)
 on:
   schedule:
     - cron: "*/15 * * * *"
-    - cron: "0 9 * * *"
+    # journey-nudge daily disabled — burns Resend free transactional quota (~1k/day).
+    # Marketing blasts → Resend Broadcasts. Re-enable only with ACADEMY_JOURNEY_NUDGE_EMAIL=true on API.
     - cron: "0 1 * * 0"
   workflow_dispatch:
     inputs:
@@ -84,10 +85,9 @@ jobs:
           || inputs.job == matrix.id
         run: node "${{ matrix.script }}"
 
+  # Manual only (nudge). Daily 09:00 UTC removed — Resend free quota is for transactional.
   journey-nudge:
-    if: >
-      (github.event_name == 'schedule' && github.event.schedule == '0 9 * * *')
-      || (github.event_name == 'workflow_dispatch' && inputs.job == 'nudge')
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'nudge'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -105,7 +105,7 @@ jobs:
             echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
             exit 1
           fi
-      - name: Academy journey nudge
+      - name: Academy journey nudge (no-op unless ACADEMY_JOURNEY_NUDGE_EMAIL=true on API)
         run: node scripts/cron-academy-journey-nudge.mjs
 
   top-trader-payout:

@@ -115,8 +115,10 @@ function featuresHtml(rows: MarketingFeatureRow[]): string {
 export type RenderMarketingEmailArgs = {
   copy: MarketingBroadcastCopy;
   locale: "en" | "fr";
-  /** Resend audience placeholders in body/CTA */
+  /** Resend audience placeholders in body/CTA (Broadcasts only) */
   resendAudience?: boolean;
+  /** When not using Resend audience placeholders (transactional 1:1) */
+  recipientFirstName?: string;
   year?: number;
 };
 
@@ -125,7 +127,13 @@ export type RenderMarketingEmailArgs = {
  * For Resend Broadcasts (unlimited marketing sends).
  */
 export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): string {
-  const { copy, locale, resendAudience = true, year = new Date().getFullYear() } = args;
+  const {
+    copy,
+    locale,
+    resendAudience = true,
+    recipientFirstName,
+    year = new Date().getFullYear(),
+  } = args;
   const logoSrc = logoUrl();
   const rights =
     locale === "fr" ? "Tous droits réservés." : "All rights reserved.";
@@ -135,13 +143,18 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
       : "Crypto wallet & P2P";
   const waLabel = "WhatsApp";
 
+  const name = recipientFirstName?.trim();
   const greeting = resendAudience
     ? locale === "fr"
       ? `Bonjour {{{contact.first_name|ami}}},`
       : `Hi {{{contact.first_name|there}}},`
     : locale === "fr"
-      ? "Bonjour,"
-      : "Hi,";
+      ? name
+        ? `Bonjour ${escHtml(name)},`
+        : "Bonjour,"
+      : name
+        ? `Hi ${escHtml(name)},`
+        : "Hi,";
 
   const unsubscribe = resendAudience
     ? `<p style="margin:12px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${EMAIL_BRAND.muted};text-decoration:underline;">${locale === "fr" ? "Se désabonner" : "Unsubscribe"}</a></p>`
@@ -240,14 +253,19 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
 
 /** Plain-text version for Resend multipart / previews. */
 export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): string {
-  const { copy, locale, resendAudience = true } = args;
+  const { copy, locale, resendAudience = true, recipientFirstName } = args;
+  const name = recipientFirstName?.trim();
   const greeting = resendAudience
     ? locale === "fr"
       ? "Bonjour {{{contact.first_name|ami}}},"
       : "Hi {{{contact.first_name|there}}},"
     : locale === "fr"
-      ? "Bonjour,"
-      : "Hi,";
+      ? name
+        ? `Bonjour ${name},`
+        : "Bonjour,"
+      : name
+        ? `Hi ${name},`
+        : "Hi,";
 
   const featureLines =
     copy.features?.flatMap((f) => [`${f.title} — ${f.text}`, ""]) ?? [];

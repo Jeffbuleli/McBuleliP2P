@@ -91,20 +91,22 @@ services:
       - key: CRON_SECRET
         sync: false
 
-  # Academy — journey nudge emails (inactive learners, P1b)
-  - type: cron
-    name: mcbuleli-academy-journey-nudge
-    runtime: node
-    region: oregon
-    plan: starter
-    schedule: "0 9 * * *"
-    buildCommand: "true"
-    startCommand: node scripts/cron-academy-journey-nudge.mjs
-    envVars:
-      - key: MCBULELI_API_URL
-        sync: false
-      - key: CRON_SECRET
-        sync: false
+  # DISABLED on Render — journey emails burn Resend free transactional quota.
+  # Prefer Resend Broadcasts for marketing; API reserved for auth/wallet/KYC.
+  # To revive: uncomment + set ACADEMY_JOURNEY_NUDGE_EMAIL=true on the web service.
+  # - type: cron
+  #   name: mcbuleli-academy-journey-nudge
+  #   runtime: node
+  #   region: oregon
+  #   plan: starter
+  #   schedule: "0 9 * * *"
+  #   buildCommand: "true"
+  #   startCommand: node scripts/cron-academy-journey-nudge.mjs
+  #   envVars:
+  #     - key: MCBULELI_API_URL
+  #       sync: false
+  #     - key: CRON_SECRET
+  #       sync: false
 
   - type: cron
     name: mcbuleli-game-economy-tick

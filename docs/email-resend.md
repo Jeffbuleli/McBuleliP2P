@@ -15,7 +15,11 @@ Provider : [Resend](https://resend.com) · domaine `mcbuleli.org` · expéditeur
 | Limite | Valeur |
 |--------|--------|
 | Mensuel | 3 000 emails |
-| Quotidien | 100 emails |
+| Quotidien | 100–1 000 (selon compte / plan affiché Resend) |
+
+**Réserver l’API `/emails` aux flux critiques** : auth, wallet, KYC, rappels live ciblés.  
+**Ne pas** envoyer de campagnes marketing via l’API (ex. ancien cron `journey-nudge` — **désactivé** ; opt-in `ACADEMY_JOURNEY_NUDGE_EMAIL=true` seulement).  
+Marketing → [Broadcasts Resend](./email-marketing.md) (hors quota transactionnel).
 
 **Compte dans le quota** : tout envoi réel via l’API Resend **ou** le bouton **Send test** du dashboard Resend (y compris un mail intitulé « TEST »).
 
