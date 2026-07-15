@@ -1,4 +1,4 @@
-# McB token — Phase 3 deploy & claim portal
+# McB token - Phase 3 deploy & claim portal
 
 On-chain **McB** (**BEP-20** on BNB Smart Chain) + KYC-gated **BP → McB** claim queue in McBuleli.
 
@@ -24,14 +24,14 @@ Required methods (all implemented in `contracts/McBuleliToken.sol`):
 | Name | McBuleliToken |
 | Symbol | McB |
 | Standard | BEP-20 (BSC) |
-| Address | **Contract** from deploy — **not** your MetaMask wallet |
+| Address | **Contract** from deploy - **not** your MetaMask wallet |
 | BscScan | `https://bscscan.com/token/<CONTRACT_ADDRESS>` after deploy |
 
 ## App (live after deploy)
 
 | Piece | Location |
 |-------|----------|
-| User claim UI | `/app/wallet/points` — McB section |
+| User claim UI | `/app/wallet/points` - McB section |
 | User API | `GET/POST /api/rewards/claim` |
 | Admin queue | `/admin/mcb-claims` (super-admin) |
 | Admin API | `/api/admin/mcb-claims` |
@@ -49,7 +49,7 @@ MCB_TOKEN_CONTRACT=0xYourTokenContractAddress
 # Accept claims + burn BP (when treasury is ready)
 MCB_CLAIM_ENABLED=true
 
-# Optional — defaults to PancakeSwap with outputCurrency=MCB_TOKEN_CONTRACT
+# Optional - defaults to PancakeSwap with outputCurrency=MCB_TOKEN_CONTRACT
 # MCB_PANCAKESWAP_URL=https://pancakeswap.finance/swap?outputCurrency=0x...
 
 MCB_CLAIM_MIN_BP=100
@@ -82,7 +82,7 @@ If you only have your MetaMask address and no “Contract Creation” tx, **rede
 
 1. Remix → compile `McBuleliToken.sol` (Solidity **0.8.20**).
 2. Deploy with **Injected Provider** on **BNB Smart Chain** (not Ethereum mainnet, not Remix VM).
-3. Constructor `initialSupply` in **wei** (18 decimals). **Remix "VALUE" must stay `0`** — only fill the constructor box (e.g. `100000000000000000000000000` for 100M McB). If VALUE = supply, you get "sender doesn't have enough funds".
+3. Constructor `initialSupply` in **wei** (18 decimals). **Remix "VALUE" must stay `0`** - only fill the constructor box (e.g. `100000000000000000000000000` for 100M McB). If VALUE = supply, you get "sender doesn't have enough funds".
 4. Verify source on **BscScan** (improves trust for PancakeSwap / wallets).
 5. Move treasury balance to **multisig**; document owner/mint policy.
 6. Set `MCB_TOKEN_CONTRACT` on Render → redeploy web service.
@@ -105,6 +105,9 @@ See also [`contracts/README.md`](../contracts/README.md).
 
 ## Legal
 
-Utility token only — no price promises, no ICO.
+Utility token only - no price promises, no ICO.
+
+Ops pilote / multisig / checklist : [`mcb-token-ops-launch.md`](mcb-token-ops-launch.md).  
+Constitution publique : `/whitepaper`.
 
 See also: [`utility-token-roadmap.md`](utility-token-roadmap.md).

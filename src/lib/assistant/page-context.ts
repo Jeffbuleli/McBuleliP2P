@@ -18,7 +18,7 @@ export function detectPageContext(pathname: string): string | null {
   if (p.includes("/support")) return "support";
   if (p.includes("/register")) return "register";
   if (p.includes("/login")) return "login";
-  if (p === "/" || p.includes("/about")) return "landing";
+  if (p === "/" || p.includes("/about") || p.includes("/whitepaper")) return "landing";
   return null;
 }
 

@@ -367,6 +367,7 @@ Intégré au système existant (`tryGrantRewardPoints`, `users.buleli_points_bal
 
 - Tables `meta` / events réputation
 - Specs groupes, badges, signaux trading
+- **Builders Program (MBP)** — spec draft : [builders-program-spec.md](./builders-program-spec.md) (G9 badges)
 
 ---
 

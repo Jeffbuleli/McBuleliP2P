@@ -10,6 +10,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${base}${path}`,
     lastModified: now,
     changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : path === "/about" || path === "/contact" ? 0.8 : 0.6,
+    priority:
+      path === ""
+        ? 1
+        : path === "/about" || path === "/contact" || path === "/whitepaper"
+          ? 0.8
+          : 0.6,
   }));
 }

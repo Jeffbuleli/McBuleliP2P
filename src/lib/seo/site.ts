@@ -125,6 +125,7 @@ export function organizationJsonLd(locale: Locale) {
 export const PUBLIC_SITEMAP_PATHS = [
   "",
   "/about",
+  "/whitepaper",
   "/contact",
   "/terms",
   "/privacy",

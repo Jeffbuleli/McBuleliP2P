@@ -39,6 +39,7 @@ export function LandingNavbarV2() {
 
   const legal = [
     { href: "/about", label: t("landing_footer_about") },
+    { href: "/whitepaper", label: t("landing_footer_whitepaper") },
     { href: "/contact", label: t("landing_footer_contact") },
     { href: "/terms", label: t("landing_footer_terms") },
     { href: "/privacy", label: t("landing_footer_privacy") },

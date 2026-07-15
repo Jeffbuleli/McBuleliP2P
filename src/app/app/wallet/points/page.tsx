@@ -735,6 +735,12 @@ export default function WalletPointsPage() {
           <p className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/40 px-4 py-3 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
             {t("points_disclaimer")}
           </p>
+          <Link
+            href="/whitepaper"
+            className="block text-center text-[11px] font-bold text-[color:var(--fd-primary)]"
+          >
+            {t("points_whitepaper_link")} →
+          </Link>
         </div>
       ) : null}
     </div>

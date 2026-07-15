@@ -44,6 +44,9 @@ export async function PublicPageShell({
           <Link href="/about" className="hover:underline">
             {d.landing_footer_about}
           </Link>
+          <Link href="/whitepaper" className="hover:underline">
+            {d.landing_footer_whitepaper}
+          </Link>
           <Link href="/contact" className="hover:underline">
             {d.landing_footer_contact}
           </Link>

@@ -173,6 +173,14 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
                 {t("landing_footer_about")}
               </Link>
               <Link
+                href="/whitepaper"
+                className="rounded-xl px-3 py-2 text-sm text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-text)]"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                {t("landing_footer_whitepaper")}
+              </Link>
+              <Link
                 href="/contact"
                 className="rounded-xl px-3 py-2 text-sm text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-text)]"
                 role="menuitem"
