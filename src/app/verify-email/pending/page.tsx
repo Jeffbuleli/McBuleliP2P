@@ -23,15 +23,12 @@ export default function VerifyEmailPendingPage() {
     let cancelled = false;
     void fetch("/api/auth/session", { credentials: "same-origin" })
       .then(async (res) => {
-        if (!res.ok) {
-          window.location.replace("/login");
-          return;
-        }
         const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
           user?: { email?: string; emailVerified?: boolean } | null;
         };
         if (cancelled) return;
-        if (!data.user) {
+        if (!data.ok || !data.user) {
           window.location.replace("/login");
           return;
         }

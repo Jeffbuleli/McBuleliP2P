@@ -66,11 +66,6 @@ export function HomeMarketStrip({
             <span className="flex items-center gap-1.5 text-[11px] font-bold text-[color:var(--fd-text)]">
               <CoinIcon symbol={ticker.symbol} />
               {ticker.symbol.replace("USDT", "")}
-              {ticker.source === "okx" ? (
-                <span className="rounded bg-violet-100 px-1 py-0.5 text-[8px] font-bold uppercase text-violet-800">
-                  OKX
-                </span>
-              ) : null}
             </span>
             <span className="mt-1 text-xs font-semibold tabular-nums text-[color:var(--fd-text)]">
               {formatPrice(ticker.lastPrice)}

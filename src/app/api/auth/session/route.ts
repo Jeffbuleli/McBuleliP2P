@@ -8,12 +8,16 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-/** Validate session and refresh cookie (sliding expiry). */
+/**
+ * Session probe / sliding refresh.
+ * Always HTTP 200: { ok: false } when logged out (avoids noisy 401 in `next dev`).
+ * Authenticated: { ok: true, user } + refreshed cookie.
+ */
 export async function GET() {
   const jar = await cookies();
   const raw = jar.get(sessionCookieName())?.value;
   if (!raw) {
-    return NextResponse.json({ ok: false }, { status: 401 });
+    return NextResponse.json({ ok: false });
   }
 
   let userId: string;
@@ -23,7 +27,7 @@ export async function GET() {
     userId = verified.userId;
     sessionVersion = verified.sessionVersion;
   } catch {
-    return NextResponse.json({ ok: false }, { status: 401 });
+    return NextResponse.json({ ok: false });
   }
 
   const db = getDb();
@@ -40,7 +44,7 @@ export async function GET() {
     .limit(1);
 
   if (!user || user.sessionVersion !== sessionVersion) {
-    return NextResponse.json({ ok: false }, { status: 401 });
+    return NextResponse.json({ ok: false });
   }
 
   const { userNeedsEmailVerification } = await import(

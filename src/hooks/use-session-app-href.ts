@@ -14,8 +14,9 @@ export function useSessionAppHref(appPath: string): string {
     let cancelled = false;
     setHref(fallback);
     void fetch("/api/auth/session", { credentials: "same-origin" })
-      .then((res) => {
-        if (!cancelled) setHref(res.ok ? appPath : fallback);
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+        if (!cancelled) setHref(data.ok ? appPath : fallback);
       })
       .catch(() => {
         if (!cancelled) setHref(fallback);
@@ -37,8 +38,9 @@ export function useSessionEntryHref(appPath = "/app/wallet"): string {
     let cancelled = false;
     setHref(registerFallback);
     void fetch("/api/auth/session", { credentials: "same-origin" })
-      .then((res) => {
-        if (!cancelled) setHref(res.ok ? appPath : registerFallback);
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+        if (!cancelled) setHref(data.ok ? appPath : registerFallback);
       })
       .catch(() => {
         if (!cancelled) setHref(registerFallback);

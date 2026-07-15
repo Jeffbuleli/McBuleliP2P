@@ -1,7 +1,11 @@
 name: Cron scheduled (infrequent)
 
-# Jobs that tolerate GitHub Actions schedule jitter.
-# High-frequency / money / trading stay on VPS — ops/vps/crontab + docs/vps-migration.md
+# Calls McBuleli /api/internal/* with x-cron-secret.
+# Required Actions secrets (Settings → Secrets → Actions):
+#   CRON_SECRET       — same as ops/vps/.env / cron.env on the VPS
+#   MCBULELI_API_URL  — https://mcbuleli.org
+#
+# High-frequency money/bots stay on VPS (ops/vps/crontab).
 
 on:
   schedule:
@@ -62,14 +66,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Check secrets
+        run: |
+          if [ -z "${CRON_SECRET}" ] || [ "${#CRON_SECRET}" -lt 12 ]; then
+            echo "::error::Missing or short CRON_SECRET. GitHub → Settings → Secrets and variables → Actions → New repository secret: CRON_SECRET (= same value as /opt/mcbuleli/ops/vps/cron.env on the VPS)."
+            exit 1
+          fi
+          if [ -z "${MCBULELI_API_URL}" ]; then
+            echo "::error::Missing MCBULELI_API_URL. Set secret MCBULELI_API_URL=https://mcbuleli.org"
+            exit 1
+          fi
+          echo "Secrets present. API=${MCBULELI_API_URL}"
       - name: Run ${{ matrix.id }}
         if: >
           github.event_name == 'schedule'
           || inputs.job == 'all-15m'
           || inputs.job == matrix.id
-        run: |
-          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
-          node "${{ matrix.script }}"
+        run: node "${{ matrix.script }}"
 
   journey-nudge:
     if: >
@@ -82,10 +95,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Academy journey nudge
+      - name: Check secrets
         run: |
-          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
-          node scripts/cron-academy-journey-nudge.mjs
+          if [ -z "${CRON_SECRET}" ] || [ "${#CRON_SECRET}" -lt 12 ]; then
+            echo "::error::Missing CRON_SECRET (min 12 chars) in Actions secrets."
+            exit 1
+          fi
+          if [ -z "${MCBULELI_API_URL}" ]; then
+            echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
+            exit 1
+          fi
+      - name: Academy journey nudge
+        run: node scripts/cron-academy-journey-nudge.mjs
 
   top-trader-payout:
     if: >
@@ -98,7 +119,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Top trader weekly payout
+      - name: Check secrets
         run: |
-          test -n "$CRON_SECRET" && test -n "$MCBULELI_API_URL"
-          node scripts/cron-top-trader-payout.mjs
+          if [ -z "${CRON_SECRET}" ] || [ "${#CRON_SECRET}" -lt 12 ]; then
+            echo "::error::Missing CRON_SECRET (min 12 chars) in Actions secrets."
+            exit 1
+          fi
+          if [ -z "${MCBULELI_API_URL}" ]; then
+            echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
+            exit 1
+          fi
+      - name: Top trader weekly payout
+        run: node scripts/cron-top-trader-payout.mjs

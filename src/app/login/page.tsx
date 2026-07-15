@@ -87,8 +87,9 @@ function LoginForm() {
   useEffect(() => {
     let cancelled = false;
     void fetch("/api/auth/session", { credentials: "same-origin" })
-      .then((res) => {
-        if (!cancelled && res.ok) {
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+        if (!cancelled && data.ok) {
           window.location.replace(nextPath);
         }
       })
