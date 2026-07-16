@@ -160,6 +160,9 @@ export async function spendRewardPointsForPerk(args: {
   { ok: true; balance: number; perkType: string } | { ok: false; message: string }
 > {
   const opt = REWARD_SPEND[args.spendId];
+  if (args.spendId === "COMMUNITY_POST_BOOST_24H") {
+    return { ok: false, message: "points_spend_use_boost_api" };
+  }
   const db = getDb();
 
   const [user] = await db

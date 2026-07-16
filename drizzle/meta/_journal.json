@@ -645,6 +645,13 @@
       "when": 1787100000000,
       "tag": "0099_sug_horizon_a",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1787200000000,
+      "tag": "0100_community_post_boost",
+      "breakpoints": true
     }
   ]
 }

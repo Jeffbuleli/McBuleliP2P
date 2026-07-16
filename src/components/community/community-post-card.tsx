@@ -17,6 +17,8 @@ import { CommunityPostMedia } from "@/components/community/community-post-media"
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import { isFeedComposerKind } from "@/lib/community/composer-config";
+import { isPostBoosted } from "@/lib/community/boost-service";
+import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
 import { utilityTagLabel } from "@/lib/community/utility-tags";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
@@ -97,10 +99,56 @@ export function CommunityPostCard({
   }, []);
 
   const isOwner = viewerUserId === post.author.userId;
+  const boosted = isPostBoosted(post.boostedUntil);
 
   const flash = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2200);
+  };
+
+  const boostPost = async () => {
+    if (!isOwner || boosted) return;
+    const ok = window.confirm(
+      fr
+        ? `Booster ce post ${COMMUNITY_POST_BOOST.hours}h pour ${COMMUNITY_POST_BOOST.costBp} BP ?`
+        : `Boost this post ${COMMUNITY_POST_BOOST.hours}h for ${COMMUNITY_POST_BOOST.costBp} BP?`,
+    );
+    if (!ok) return;
+    setBusy(true);
+    setOwnerOpen(false);
+    try {
+      const res = await fetch(`/api/community/feed/${post.id}/boost`, {
+        method: "POST",
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        boostedUntil?: string;
+        costBp?: number;
+      };
+      if (!res.ok) {
+        const map: Record<string, string> = {
+          boost_insufficient_bp: fr ? "BP insuffisants" : "Not enough BP",
+          boost_already_active: fr ? "Déjà boosté" : "Already boosted",
+          boost_active_limit: fr
+            ? "Un boost actif max"
+            : "Max one active boost",
+          boost_daily_limit: fr
+            ? "Limite quotidienne atteinte"
+            : "Daily boost limit reached",
+          boost_not_owner: fr ? "Réservé à l'auteur" : "Author only",
+        };
+        flash(map[j.error ?? ""] ?? (fr ? "Échec boost" : "Boost failed"));
+        return;
+      }
+      onUpdate({ boostedUntil: j.boostedUntil ?? null });
+      flash(
+        fr
+          ? `Boosté (-${j.costBp ?? COMMUNITY_POST_BOOST.costBp} BP)`
+          : `Boosted (-${j.costBp ?? COMMUNITY_POST_BOOST.costBp} BP)`,
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   const toggleLike = async () => {
@@ -252,6 +300,11 @@ export function CommunityPostCard({
             {utilityTagLabel(post.utilityTag, fr)}
           </span>
         ) : null}
+        {boosted ? (
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+            {fr ? "Boosté" : "Boosted"}
+          </span>
+        ) : null}
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
           <IconGlobe size={11} />
           {post.status === "hidden"
@@ -291,6 +344,18 @@ export function CommunityPostCard({
                     {fr ? "Masquer" : "Hide"}
                   </button>
                 )}
+                {!boosted ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="block w-full px-3 py-2 text-left text-xs font-semibold text-amber-800"
+                    onClick={() => void boostPost()}
+                  >
+                    {fr
+                      ? `Booster ${COMMUNITY_POST_BOOST.hours}h (${COMMUNITY_POST_BOOST.costBp} BP)`
+                      : `Boost ${COMMUNITY_POST_BOOST.hours}h (${COMMUNITY_POST_BOOST.costBp} BP)`}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="block w-full px-3 py-2 text-left text-xs font-semibold text-red-600"

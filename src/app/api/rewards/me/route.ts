@@ -70,13 +70,15 @@ export async function GET() {
       [REWARD_GRANT.COMMUNITY_LIVE_JOIN]:
         REWARD_POINTS[REWARD_GRANT.COMMUNITY_LIVE_JOIN],
     },
-    spendOptions: Object.entries(REWARD_SPEND).map(([id, opt]) => ({
-      id,
-      perkType: opt.perkType,
-      costBp: opt.costBp,
-      discountPercent: opt.discountPercent,
-      validDays: opt.validDays,
-    })),
+    spendOptions: Object.entries(REWARD_SPEND)
+      .filter(([id]) => id !== "COMMUNITY_POST_BOOST_24H")
+      .map(([id, opt]) => ({
+        id,
+        perkType: opt.perkType,
+        costBp: opt.costBp,
+        discountPercent: opt.discountPercent,
+        validDays: opt.validDays,
+      })),
     activePerks,
     grants: summary.grants,
     ledger,

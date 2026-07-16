@@ -124,6 +124,21 @@ export const REWARD_SPEND = {
     discountPercent: 10,
     validDays: 14,
   },
+  /** Community feed boost - not a lasting perk row; spent via boost-service. */
+  COMMUNITY_POST_BOOST_24H: {
+    perkType: "community_post_boost_24h",
+    costBp: 80,
+    discountPercent: 0,
+    validDays: 1,
+  },
+} as const;
+
+/** Horizon A4 boost product rules. */
+export const COMMUNITY_POST_BOOST = {
+  costBp: REWARD_SPEND.COMMUNITY_POST_BOOST_24H.costBp,
+  hours: 24,
+  maxActivePerUser: 1,
+  maxPerDay: 3,
 } as const;
 
 export type RewardSpendId = keyof typeof REWARD_SPEND;

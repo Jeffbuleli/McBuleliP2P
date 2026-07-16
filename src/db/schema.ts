@@ -2999,6 +2999,8 @@ export const communityPosts = pgTable(
     qualitySource: varchar("quality_source", { length: 16 })
       .notNull()
       .default("rules"),
+    boostedUntil: timestamp("boosted_until", { withTimezone: true }),
+    boostBpSpent: integer("boost_bp_spent"),
     status: varchar("status", { length: 16 }).notNull().default("published"),
     mediaIds: jsonb("media_ids").$type<string[] | null>(),
     likeCount: integer("like_count").notNull().default(0),
@@ -3020,6 +3022,7 @@ export const communityPosts = pgTable(
     index("community_posts_content_kind_idx").on(t.contentKind, t.publishedAt),
     index("community_posts_utility_tag_idx").on(t.utilityTag, t.publishedAt),
     index("community_posts_quality_score_idx").on(t.qualityScore, t.publishedAt),
+    index("community_posts_boosted_until_idx").on(t.boostedUntil),
   ],
 );
 

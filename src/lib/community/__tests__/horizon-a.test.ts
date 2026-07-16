@@ -5,6 +5,8 @@ import {
   computeRulesQualityScore,
 } from "../quality-score";
 import { utilityTagFromContentKind, isUtilityTag } from "../utility-tags";
+import { COMMUNITY_POST_BOOST } from "../../reward-points-config";
+import { isPostBoosted } from "../boost-service";
 
 describe("utility tags", () => {
   it("maps content kinds", () => {
@@ -42,5 +44,26 @@ describe("quality score v0", () => {
     assert.equal(applyQualityToBpGrant(25, 100), 25);
     assert.equal(applyQualityToBpGrant(25, 0), Math.floor(25 * 0.3));
     assert.equal(applyQualityToBpGrant(25, 80), Math.floor(25 * 0.86));
+  });
+});
+
+describe("post boost A4", () => {
+  it("has product costs", () => {
+    assert.equal(COMMUNITY_POST_BOOST.costBp, 80);
+    assert.equal(COMMUNITY_POST_BOOST.hours, 24);
+    assert.equal(COMMUNITY_POST_BOOST.maxActivePerUser, 1);
+    assert.equal(COMMUNITY_POST_BOOST.maxPerDay, 3);
+  });
+
+  it("detects active boost window", () => {
+    assert.equal(isPostBoosted(null), false);
+    assert.equal(
+      isPostBoosted(new Date(Date.now() - 1000).toISOString()),
+      false,
+    );
+    assert.equal(
+      isPostBoosted(new Date(Date.now() + 60_000).toISOString()),
+      true,
+    );
   });
 });

@@ -126,6 +126,7 @@ export type FeedPostView = {
   contentKind: string;
   utilityTag?: string;
   qualityScore?: number;
+  boostedUntil?: string | null;
   formationMeta?: FormationPostMeta | null;
   botTemplateMeta?: BotTemplatePostMeta | null;
   likeCount: number;
@@ -169,6 +170,7 @@ function rowToFeedPost(
     contentKind: string | null;
     utilityTag?: string | null;
     qualityScore?: number | null;
+    boostedUntil?: Date | null;
     meta: unknown;
     status: string;
     likeCount: number;
@@ -191,6 +193,7 @@ function rowToFeedPost(
     contentKind: r.contentKind ?? "news",
     utilityTag: r.utilityTag ?? "create",
     qualityScore: r.qualityScore ?? 50,
+    boostedUntil: r.boostedUntil?.toISOString?.() ?? null,
     formationMeta: resolveFormationMeta(r),
     botTemplateMeta: resolveBotTemplateMeta(r),
     status: r.status,
@@ -440,15 +443,24 @@ export async function listFeedPosts(args: {
 
   const orderBy =
     args.sort === "trending"
-      ? [desc(trendingScoreSql()), desc(communityPosts.id)]
+      ? [
+          sql`case when ${communityPosts.boostedUntil} is not null and ${communityPosts.boostedUntil} > now() then 1 else 0 end desc`,
+          desc(trendingScoreSql()),
+          desc(communityPosts.id),
+        ]
       : args.sort === "popular"
         ? [
+            sql`case when ${communityPosts.boostedUntil} is not null and ${communityPosts.boostedUntil} > now() then 1 else 0 end desc`,
             desc(
               sql`(${communityPosts.likeCount} + ${communityPosts.commentCount})`,
             ),
             desc(communityPosts.publishedAt),
           ]
-        : [desc(communityPosts.publishedAt), desc(communityPosts.id)];
+        : [
+            sql`case when ${communityPosts.boostedUntil} is not null and ${communityPosts.boostedUntil} > now() then 1 else 0 end desc`,
+            desc(communityPosts.publishedAt),
+            desc(communityPosts.id),
+          ];
 
   const rows = await db
     .select()
