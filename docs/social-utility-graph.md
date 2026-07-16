@@ -124,10 +124,11 @@ Consommation utile récompensée (exemples) : finir un live Academy, quiz réuss
 | Feed, likes, comments | Live | `/app/community/feed`, `community_posts` |
 | Blogs, Q&A, signaux | Partiel / live | `/app/community/*` |
 | BP community | Live | `rewards-service.ts`, `reward-points-config.ts` |
-| Profils publics | Schéma prêt | `community_user_profiles` (handle, reputationScore) |
-| Composer kinds | Live | `composer-config.ts` (news, discussion, analysis, experience) |
+| Profils publics | Live + stats A5 | `/app/community/u/[handle]`, `stats.bpEarned30d` |
+| Composer kinds | Live | `composer-config.ts` + utility tags SVG |
 | Claim McB | Portal | `/app/wallet/points`, `mcb-claim-service` |
-| Builders / ads / Creator Fund | Spec only | Voir horizons A/B |
+| Builders Program | Live (McB) | `/app/community/builders`, migration `0098` |
+| Ads / Creator Fund | Spec Horizon B | [social-utility-ads-mcb.md](./social-utility-ads-mcb.md) |
 
 ---
 

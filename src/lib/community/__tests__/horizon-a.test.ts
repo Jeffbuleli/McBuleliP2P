@@ -73,4 +73,11 @@ describe("creator profile A5", () => {
     assert.equal(utilityTagLabel("p2p", true), "P2P");
     assert.equal(utilityTagLabel("learn", false), "Learn");
   });
+
+  it("keeps like-given at 1 BP (A3)", async () => {
+    const { REWARD_POINTS, REWARD_GRANT } = await import(
+      "../../reward-points-config"
+    );
+    assert.equal(REWARD_POINTS[REWARD_GRANT.COMMUNITY_LIKE], 1);
+  });
 });

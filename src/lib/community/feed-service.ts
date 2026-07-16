@@ -361,6 +361,7 @@ export async function listFeedPosts(args: {
   cursor?: string | null;
   limit?: number;
   sort?: "recent" | "popular" | "trending" | "following" | "for_you";
+  utilityTag?: string | null;
 }): Promise<{ posts: FeedPostView[]; nextCursor: string | null }> {
   if (!communityEnabled()) return { posts: [], nextCursor: null };
   await ensureFeedReady();
@@ -400,6 +401,10 @@ export async function listFeedPosts(args: {
   }
 
   const conditions = [eq(communityPosts.status, "published")];
+
+  if (args.utilityTag) {
+    conditions.push(eq(communityPosts.utilityTag, args.utilityTag));
+  }
 
   if (args.sort === "trending") {
     conditions.push(

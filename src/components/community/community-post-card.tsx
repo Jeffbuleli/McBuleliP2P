@@ -19,7 +19,8 @@ import type { CommunityContentKind } from "@/lib/community/post-types";
 import { isFeedComposerKind } from "@/lib/community/composer-config";
 import { isPostBoosted } from "@/lib/community/boost-service";
 import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
-import { utilityTagLabel } from "@/lib/community/utility-tags";
+import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
+import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
 import { postDisplayText } from "@/lib/community/link-embed";
@@ -295,14 +296,27 @@ export function CommunityPostCard({
           }
           fr={fr}
         />
-        {post.utilityTag ? (
-          <span className="rounded-full bg-[#eef6f0] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#305f33]">
-            {utilityTagLabel(post.utilityTag, fr)}
+        {post.utilityTag && isUtilityTag(post.utilityTag) ? (
+          <span
+            title={utilityTagLabel(post.utilityTag, fr)}
+            className="inline-flex items-center gap-1 rounded-full bg-[#eef6f0] px-1.5 py-0.5 text-[#305f33]"
+          >
+            <UtilityTagIcon tag={post.utilityTag} className="h-3 w-3" />
           </span>
         ) : null}
         {boosted ? (
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
-            {fr ? "Boosté" : "Boosted"}
+          <span
+            title={fr ? "Boosté" : "Boosted"}
+            className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-amber-800 ring-1 ring-amber-200"
+          >
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden
+            >
+              <path d="M13 2L4 14h7l-1 8 10-14h-7l1-6z" />
+            </svg>
           </span>
         ) : null}
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">

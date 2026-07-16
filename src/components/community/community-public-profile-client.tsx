@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityDmLink } from "@/components/community/community-dm-link";
 import { useRouter } from "next/navigation";
@@ -24,14 +25,15 @@ import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
-import { utilityTagLabel } from "@/lib/community/utility-tags";
+import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
+import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 
 function StatCard({
   label,
   value,
   accent = false,
 }: {
-  label: string;
+  label: ReactNode;
   value: number | string;
   accent?: boolean;
 }) {
@@ -44,9 +46,9 @@ function StatCard({
       }`}
     >
       <p className="text-lg font-bold tabular-nums text-[#0c0a09]">{value}</p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
+      <div className="mt-0.5 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
         {label}
-      </p>
+      </div>
     </div>
   );
 }
@@ -348,43 +350,48 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
 
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
         <StatCard
-          label={fr ? "BP 30j" : "BP 30d"}
+          label="BP"
           value={profile.stats?.bpEarned30d ?? 0}
           accent
         />
         <StatCard
-          label={fr ? "Publications" : "Posts"}
+          label={fr ? "Posts" : "Posts"}
           value={profile.stats?.posts ?? profile.postsCount}
         />
         <StatCard
-          label={fr ? "Likes reçus" : "Likes got"}
+          label={
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path d="M20.8 8.6a5 5 0 00-7.1 0L12 10.3l-1.7-1.7a5 5 0 00-7.1 7.1l1.7 1.7L12 21l7.1-7.1 1.7-1.7a5 5 0 000-7.1z" />
+            </svg>
+          }
           value={profile.stats?.likesReceived ?? 0}
         />
       </section>
 
       <section className="mt-2 grid grid-cols-2 gap-2 px-4">
-        <StatCard
-          label={fr ? "Commentaires" : "Comments"}
-          value={profile.commentCount}
-        />
-        <StatCard
-          label={fr ? "Réputation" : "Reputation"}
-          value={profile.reputationScore}
-        />
+        <StatCard label={fr ? "Com." : "Com."} value={profile.commentCount} />
+        <StatCard label="XP" value={profile.reputationScore} />
       </section>
 
       {(profile.stats?.tags?.length ?? 0) > 0 ? (
         <section className="mt-3 px-4">
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
-            {fr ? "Tags utilité" : "Utility tags"}
-          </p>
           <div className="flex flex-wrap gap-1.5">
             {profile.stats!.tags.map((t) => (
               <span
                 key={t.tag}
-                className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33]"
+                title={isUtilityTag(t.tag) ? utilityTagLabel(t.tag, fr) : t.tag}
+                className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2 py-1 text-[11px] font-semibold text-[#305f33]"
               >
-                {utilityTagLabel(t.tag, fr)}
+                {isUtilityTag(t.tag) ? (
+                  <UtilityTagIcon tag={t.tag} className="h-3 w-3" />
+                ) : null}
                 <span className="tabular-nums text-[#a8a29e]">{t.count}</span>
               </span>
             ))}

@@ -44,6 +44,7 @@ import { getEventDashboardKpis } from "@/lib/events/events-service";
 import { isKycApproved } from "@/lib/kyc-policy";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
+import { grantCommunityLiveJoin } from "@/lib/community/rewards-service";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { Locale } from "@/i18n/locale";
@@ -1516,12 +1517,23 @@ export async function checkInSession(args: {
     method: "live_button",
   });
 
-  const grant = await tryGrantRewardPoints({
+  // SUG A6: community_live_join (counts toward community BP / profile 30d)
+  const liveGrant = await grantCommunityLiveJoin({
     userId: args.userId,
-    grantType: REWARD_GRANT.TRAINING_SESSION_ATTENDED,
-    idempotencyKey: `training_session:${resolved.sessionId}`,
-    meta: { sessionSlug: resolved.slug },
+    sessionId: resolved.sessionId,
   });
+  // Keep academy catalog grant (idempotent per session) without stacking farm:
+  // only credit training_session if community live did not grant.
+  let grantedBp = liveGrant.granted ? liveGrant.points : 0;
+  if (!liveGrant.granted) {
+    const grant = await tryGrantRewardPoints({
+      userId: args.userId,
+      grantType: REWARD_GRANT.TRAINING_SESSION_ATTENDED,
+      idempotencyKey: `training_session:${resolved.sessionId}`,
+      meta: { sessionSlug: resolved.slug },
+    });
+    grantedBp = grant.granted ? grant.points : 0;
+  }
 
   const attendanceCount = await db
     .select({ n: sql<number>`count(*)::int` })
@@ -1540,7 +1552,7 @@ export async function checkInSession(args: {
     });
   }
 
-  return { ok: true, grantedBp: grant.granted ? grant.points : 0 };
+  return { ok: true, grantedBp };
 }
 
 export async function getQuizForUser(args: {

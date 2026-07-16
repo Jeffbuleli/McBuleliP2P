@@ -35,6 +35,10 @@ export async function GET(req: Request) {
     | "following"
     | "for_you"
     | null;
+  const utilityTagRaw = url.searchParams.get("utilityTag");
+  const utilityTagParsed = z
+    .enum(["learn", "trade_edu", "avec", "p2p", "local", "create", "signal"])
+    .safeParse(utilityTagRaw);
   const viewerId = await getSessionUserId();
 
   const result = await listFeedPosts({
@@ -42,6 +46,7 @@ export async function GET(req: Request) {
     cursor,
     limit,
     sort: sort ?? "recent",
+    utilityTag: utilityTagParsed.success ? utilityTagParsed.data : null,
   });
   return NextResponse.json(result);
 }

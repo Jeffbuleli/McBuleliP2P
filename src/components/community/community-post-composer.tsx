@@ -21,8 +21,10 @@ import type { CommunityContentKind } from "@/lib/community/post-types";
 import {
   UTILITY_TAG_META,
   utilityTagFromContentKind,
+  utilityTagLabel,
   type UtilityTag,
 } from "@/lib/community/utility-tags";
+import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 
 type ImageSlot = {
   id: string;
@@ -356,24 +358,24 @@ export function CommunityPostComposer({
             </button>
           </div>
 
-          <p className="mb-1.5 text-[11px] font-semibold text-[#78716c]">
-            {fr ? "Tag d'utilité" : "Utility tag"}
-          </p>
           <div className="mb-3 flex flex-wrap gap-1.5">
             {UTILITY_TAG_META.filter((t) => t.tag !== "signal").map((t) => {
               const selected = utilityTag === t.tag;
+              const label = utilityTagLabel(t.tag, fr);
               return (
                 <button
                   key={t.tag}
                   type="button"
+                  title={label}
+                  aria-label={label}
                   onClick={() => setUtilityTag(t.tag)}
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition ${
                     selected
                       ? "bg-[#305f33] text-white"
                       : "border border-[#e8f3ee] bg-white text-[#57534e]"
                   }`}
                 >
-                  {fr ? t.labelFr : t.labelEn}
+                  <UtilityTagIcon tag={t.tag} />
                 </button>
               );
             })}

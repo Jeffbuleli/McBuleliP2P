@@ -1,6 +1,6 @@
 # SUG Horizon A - Spec produit (0-3 mois)
 
-> **Statut :** A1/A2/A4/A5 en code.  
+> **Statut :** Horizon A clos (A1–A6).  
 > **Parent :** [social-utility-graph.md](./social-utility-graph.md)  
 > **Dernière révision :** juillet 2026  
 > **Objectif :** Social Utility MVP - qualité > volume, sinks BP immédiats, base créateur
@@ -9,7 +9,8 @@ Migration : `0099_sug_horizon_a.sql` + `0100_community_post_boost.sql`
 Config tags : `src/lib/community/utility-tags.ts`  
 Score : `src/lib/community/quality-score.ts`  
 Boost : `src/lib/community/boost-service.ts` (80 BP / 24h)  
-Profil : `src/lib/community/profile-service.ts` → `stats` (BP 30j community)
+Profil : `src/lib/community/profile-service.ts` → `stats` (BP 30j community)  
+Live : `grantCommunityLiveJoin` branché sur check-in Academy  
 ---
 
 ## 1. Périmètre Horizon A
@@ -136,10 +137,10 @@ Toujours soumis à `COMMUNITY_REWARD_DAILY_CAPS` et `REWARD_MONTHLY_EARN_CAP` (4
 | Action | Base actuelle | Changement Horizon A |
 |--------|---------------|----------------------|
 | Post texte / image / vidéo | 25 / 40 / 60 | × multiplicateur qualité |
-| Commentaire | 8 | × qualité commentaire simplifiée (longueur + non-spam) ou fixe 8 si coût trop élevé |
-| Like donné | 3 | **Baisser à 1** ou garder cap strict (anti-farm) |
+| Commentaire | 8 | × qualité longueur (proxy) |
+| Like donné | **1** | Baissé (anti-farm) |
 | Like reçu | 5 | Garder, plafonné |
-| Blog | 100 | × qualité (min score 50 pour grant plein) |
+| Blog | 100 | × qualité (longueur) |
 | Q&A accept | 50 | Garder (déjà "utile") |
 
 Documenter les nouvelles bases dans `reward-points-config.ts` + ce fichier le même jour.
@@ -148,7 +149,7 @@ Documenter les nouvelles bases dans `reward-points-config.ts` + ce fichier le m�
 
 | Action | BP | Note |
 |--------|-----|------|
-| Live Academy completed (attendance confirmée) | brancher `community_live_join` 35 | Lacune G1 tokenomics |
+| Live Academy completed (attendance confirmée) | `community_live_join` 35 | Branché dans `academy-service` check-in |
 | Quiz passed | déjà 60 | OK |
 
 ---
@@ -246,8 +247,10 @@ Route prévue : `/app/community/u/[handle]` (Phase 2 hub).
 - [x] Grants community appliquent la formule qualité (tests unitaires)
 - [x] Boost 24h débite 80 BP et remonte le post
 - [x] Profil public affiche stats BP community 30j
-- [ ] Caps anti-farm toujours respectés
+- [x] Caps anti-farm toujours respectés
 - [x] Aucune promesse de prix McB dans l'UI
+- [x] Like donné = 1 BP ; live Academy → community_live_join
+- [x] Filtre feed par utility tag (icônes SVG)
 
 ---
 

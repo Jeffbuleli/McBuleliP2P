@@ -196,6 +196,10 @@ export async function grantCommunityComment(args: {
     userId: args.userId,
     grantType: REWARD_GRANT.COMMUNITY_COMMENT,
     idempotencyKey: `community_comment:${args.commentId}`,
+    points: applyQualityToBpGrant(
+      REWARD_POINTS[REWARD_GRANT.COMMUNITY_COMMENT],
+      Math.min(100, 35 + Math.floor(args.bodyLength / 3)),
+    ),
     meta: { commentId: args.commentId, postId: args.postId },
   });
 }
@@ -269,11 +273,19 @@ export async function grantCommunityBlogPublished(args: {
     };
   }
 
+  const quality = Math.min(
+    100,
+    args.bodyLength >= 800 ? 85 : args.bodyLength >= 400 ? 70 : 55,
+  );
   return grantWithDailyCap({
     userId: args.userId,
     grantType: REWARD_GRANT.COMMUNITY_BLOG_PUBLISH,
     idempotencyKey: `community_blog:${args.blogId}`,
-    meta: { blogId: args.blogId },
+    points: applyQualityToBpGrant(
+      REWARD_POINTS[REWARD_GRANT.COMMUNITY_BLOG_PUBLISH],
+      quality,
+    ),
+    meta: { blogId: args.blogId, quality },
   });
 }
 
