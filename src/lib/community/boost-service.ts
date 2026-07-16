@@ -1,10 +1,13 @@
 import { and, count, eq, gt, gte, sql } from "drizzle-orm";
 import { communityPosts, getDb, rewardPointLedger, users } from "@/db";
 import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
+import { isPostBoosted } from "@/lib/community/boost-utils";
 
 export type BoostPostResult =
   | { ok: true; boostedUntil: string; balance: number; costBp: number }
   | { ok: false; code: string };
+
+export { isPostBoosted };
 
 function utcDayStart(): Date {
   const now = new Date();
@@ -145,11 +148,3 @@ export async function boostCommunityPost(args: {
   }
 }
 
-export function isPostBoosted(boostedUntil: string | Date | null | undefined): boolean {
-  if (!boostedUntil) return false;
-  const t =
-    typeof boostedUntil === "string"
-      ? new Date(boostedUntil).getTime()
-      : boostedUntil.getTime();
-  return Number.isFinite(t) && t > Date.now();
-}

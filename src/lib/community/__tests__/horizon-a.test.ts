@@ -6,7 +6,7 @@ import {
 } from "../quality-score";
 import { utilityTagFromContentKind, isUtilityTag, utilityTagLabel } from "../utility-tags";
 import { COMMUNITY_POST_BOOST } from "../../reward-points-config";
-import { isPostBoosted } from "../boost-service";
+import { isPostBoosted } from "../boost-utils";
 
 describe("utility tags", () => {
   it("maps content kinds", () => {

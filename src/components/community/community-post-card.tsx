@@ -17,7 +17,7 @@ import { CommunityPostMedia } from "@/components/community/community-post-media"
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import { isFeedComposerKind } from "@/lib/community/composer-config";
-import { isPostBoosted } from "@/lib/community/boost-service";
+import { isPostBoosted } from "@/lib/community/boost-utils";
 import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
