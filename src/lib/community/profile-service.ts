@@ -18,6 +18,10 @@ import {
 } from "@/lib/builders/builders-service";
 import type { BuildersTier } from "@/lib/builders/builders-config";
 import {
+  getActiveAmbassadorMandate,
+  getActiveAmbassadorUserIds,
+} from "@/lib/community/ambassador-service";
+import {
   countFollowing,
   countTraderFollowers,
   isFollowingTrader,
@@ -86,6 +90,7 @@ export type CommunityAuthorView = {
   reputationLevel?: string;
   memberSince?: string;
   builderTier?: BuildersTier | null;
+  isAmbassador?: boolean;
 };
 
 export async function ensureCommunityProfile(
@@ -193,10 +198,16 @@ export async function getAuthorsMap(
   const userById = new Map(userRows.map((r) => [r.id, r]));
 
   let buildersByUser = new Map<string, BuildersTier>();
+  let ambassadorIds = new Set<string>();
   try {
     buildersByUser = await getActiveBuildersTiersMap(uniq);
   } catch {
     /* table may be missing before migration 0098 */
+  }
+  try {
+    ambassadorIds = await getActiveAmbassadorUserIds(uniq);
+  } catch {
+    /* table may be missing before migration 0104 */
   }
 
   for (const id of uniq) {
@@ -214,6 +225,7 @@ export async function getAuthorsMap(
         reputationLevel: level.id,
         memberSince: p.createdAt.toISOString(),
         builderTier: buildersByUser.get(id) ?? null,
+        isAmbassador: ambassadorIds.has(id),
       });
     } else if (u) {
       map.set(id, {
@@ -226,6 +238,7 @@ export async function getAuthorsMap(
         showKycBadge: u.kycStatus === "approved",
         avatarUrl: displayAvatarUrl(u.avatarUrl),
         builderTier: buildersByUser.get(id) ?? null,
+        isAmbassador: ambassadorIds.has(id),
       });
     }
   }
@@ -300,6 +313,7 @@ export type PublicProfileView = {
   online: boolean;
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
   builderTier: BuildersTier | null;
+  isAmbassador: boolean;
   viewerFollows: boolean;
   isOwnProfile: boolean;
   signalStats: AuthorSignalStats;
@@ -452,6 +466,12 @@ export async function getPublicProfileByHandle(
   } catch {
     /* migration 0098 */
   }
+  let isAmbassador = false;
+  try {
+    isAmbassador = !!(await getActiveAmbassadorMandate(profile.userId));
+  } catch {
+    /* migration 0104 */
+  }
   const resolvedHandle = await maybeRepairLegacyHandle(
     db,
     profile,
@@ -490,6 +510,7 @@ export async function getPublicProfileByHandle(
     online,
     badges,
     builderTier: builders?.tier ?? null,
+    isAmbassador,
     viewerFollows: viewerId
       ? await isFollowingTrader(viewerId, profile.userId)
       : false,

@@ -6,6 +6,7 @@ import {
   quoteAllBuildersTiers,
   quoteBuildersTier,
 } from "@/lib/builders/builders-pricing";
+import { softPerksForTier } from "@/lib/builders/builders-soft-perks";
 
 export const BUILDERS_TIERS = [
   "bronze",
@@ -107,6 +108,7 @@ export function getBuildersPublicCatalog() {
       priceMcbLegacy: BUILDERS_TIER_PRICE_MCB_LEGACY[q.tier],
       rank: BUILDERS_TIER_RANK[q.tier],
       feePerksUnlocked: q.feePerksUnlocked,
+      softPerks: softPerksForTier(q.tier),
     })),
   };
 }

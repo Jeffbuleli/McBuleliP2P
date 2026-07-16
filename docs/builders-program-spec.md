@@ -157,11 +157,12 @@ Comble la lacune **G9** (badges / réputation Community) + sink McB (§6.4 token
 | M1 | Tables `builders_memberships` + paiement McB (tx on-chain + admin) | **Code** (migration 0098) |
 | M2 | Soft eligibility (quality score) | Pending |
 | M3 | UI `/app/community/builders` + badge profil public | **Code** |
-| M4 | Perks liés aux niveaux | Pending |
-| M5 | Charte ambassadeur + admin nomination représentants | Pending |
+| M4 | Soft perks (boost quotas + UI) — fee % still draft | **Code** (soft) |
+| M5 | Charte ambassadeur + admin approve/reject/revoke | **Code** |
 | M6 | Lien DEX sur page upgrade | **Code** (si `MCB_PANCAKESWAP_URL` / contrat) |
 
-Admin : `/admin/builders`. API user : `GET/POST /api/builders/me`.
+Admin : `/admin/builders`, `/admin/ambassadors`.  
+API user : `GET/POST /api/builders/me`, `GET/POST /api/community/ambassador/me`.
 
 **Ne pas** marketing-lancer les prix tant que trésorerie + liquidité DEX + revue juridique ne sont pas clos.
 

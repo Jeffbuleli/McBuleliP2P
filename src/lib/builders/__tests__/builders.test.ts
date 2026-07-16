@@ -13,6 +13,11 @@ import {
   membershipFeePerksEligible,
   quoteBuildersTier,
 } from "../builders-pricing";
+import {
+  buildersBoostLimits,
+  isAmbassadorCharterEligible,
+  softPerksForTier,
+} from "../builders-soft-perks";
 import { buildMcbClaimPoolStats } from "../../mcb-token-config";
 
 describe("builders config", () => {
@@ -78,6 +83,27 @@ describe("builders USD anchor pricing", () => {
     assert.equal(q.priceMcb, null);
     assert.equal(q.feePerksUnlocked, false);
     if (prev !== undefined) process.env.MCB_USD_RATE = prev;
+  });
+});
+
+describe("builders soft perks", () => {
+  it("raises boost limits for Gold+ and marks ambassador eligibility", () => {
+    assert.equal(softPerksForTier("bronze").ambassadorEligible, false);
+    assert.equal(softPerksForTier("gold").ambassadorEligible, true);
+    assert.equal(isAmbassadorCharterEligible("platinum"), true);
+    assert.equal(isAmbassadorCharterEligible("silver"), false);
+
+    const baseline = buildersBoostLimits(null);
+    assert.equal(baseline.maxPerDay, 3);
+    assert.equal(baseline.maxActivePerUser, 1);
+
+    const gold = buildersBoostLimits("gold");
+    assert.equal(gold.maxPerDay, 5);
+    assert.equal(gold.maxActivePerUser, 2);
+
+    const platinum = buildersBoostLimits("platinum");
+    assert.equal(platinum.maxPerDay, 8);
+    assert.equal(platinum.maxActivePerUser, 3);
   });
 });
 

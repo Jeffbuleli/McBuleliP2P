@@ -2094,6 +2094,50 @@ export const buildersMemberships = pgTable(
   ],
 );
 
+/** Ambassadeur charter applications (Gold+ Builders + KYC). */
+export const ambassadorApplications = pgTable(
+  "ambassador_applications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    region: varchar("region", { length: 120 }).notNull(),
+    motivation: text("motivation").notNull(),
+    experience: text("experience"),
+    languages: varchar("languages", { length: 120 }),
+    charterVersion: varchar("charter_version", { length: 16 }).notNull(),
+    charterAcceptedAt: timestamp("charter_accepted_at", {
+      withTimezone: true,
+    }).notNull(),
+    builderTierAtApply: varchar("builder_tier_at_apply", {
+      length: 16,
+    }).notNull(),
+    rejectReason: text("reject_reason"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("ambassador_applications_user_status_idx").on(
+      t.userId,
+      t.status,
+      t.createdAt,
+    ),
+    index("ambassador_applications_status_created_idx").on(
+      t.status,
+      t.createdAt,
+    ),
+  ],
+);
+
 /** In-app notifications (bell drawer). */
 export const userNotifications = pgTable(
   "user_notifications",

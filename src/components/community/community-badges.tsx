@@ -164,3 +164,24 @@ export function BuildersTierBadge({
     </BadgeShell>
   );
 }
+
+/** Company Ambassadeur mandate (charter) — not a paid Builder badge. */
+export function AmbassadorCharterBadge({ fr }: { fr: boolean }) {
+  const title = fr ? "Ambassadeur" : "Ambassador";
+  return (
+    <BadgeShell
+      title={title}
+      className="bg-emerald-50 text-emerald-950 ring-1 ring-emerald-400/50"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M12 3l8 4v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V7l8-4z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {title}
+    </BadgeShell>
+  );
+}

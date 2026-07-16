@@ -10,6 +10,7 @@ import { resolveMediaSrc } from "@/lib/media-url";
 import { useI18n } from "@/components/i18n-provider";
 import {
   AdminGoldBadge,
+  AmbassadorCharterBadge,
   BlueCheckBadge,
   BuildersTierBadge,
   CommunityBadgeIcon,
@@ -244,6 +245,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               {profile.builderTier ? (
                 <BuildersTierBadge tier={profile.builderTier} fr={fr} />
               ) : null}
+              {profile.isAmbassador ? <AmbassadorCharterBadge fr={fr} /> : null}
               <ReputationLevelBadge levelId={profile.reputationLevel} fr={fr} />
             </div>
           </div>

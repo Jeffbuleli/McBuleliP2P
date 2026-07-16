@@ -105,7 +105,7 @@ Pas de charte. Visible, compréhensible, **raison de renouveler** en McB.
 1. ~~Renommer le label score Ambassadeur → Pillier~~ **fait** (`reputation-levels.ts`).
 2. ~~Chiffrer perks Gold / Platinum~~ **brouillon** — [builders-perks-economics.md](./builders-perks-economics.md) (attente signature finance).
 3. Soft non monétaire d’abord (salon, badge, éligibilité Ambassadeur Gold+), puis remises frais avec CAP.
-4. Charte Ambassadeur + Mentor + Animateur Community (Gold+ requis).
+4. ~~Charte Ambassadeur~~ **code** (`/app/community/ambassador`, `/admin/ambassadors`) — Mentor + Animateur Community ensuite.
 5. Nomination Rep. régional / officiel après 1–2 Ambassadeurs prouvés par zone.
 6. Angel Partner : process partenariats / tokenomics — **jamais** un bouton d’achat badge.
 

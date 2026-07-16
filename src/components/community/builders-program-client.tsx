@@ -11,6 +11,19 @@ import {
 } from "@/components/community/community-inline-icons";
 import { buildersTierVisual } from "@/lib/builders/builders-visual";
 
+type SoftPerks = {
+  support: "standard_plus" | "priority" | "concierge";
+  salon: boolean;
+  boostPerDay: number;
+  boostActiveMax: number;
+  academySoft: boolean;
+  betaSug: boolean;
+  privateEvents: boolean;
+  earlyCreatorAds: boolean;
+  councilSoftVote: boolean;
+  ambassadorEligible: boolean;
+};
+
 type TierRow = {
   tier: string;
   priceUsd: number;
@@ -18,6 +31,7 @@ type TierRow = {
   priceMcbLegacy?: number;
   rank: number;
   feePerksUnlocked?: boolean;
+  softPerks?: SoftPerks;
 };
 
 type Membership = {
@@ -123,6 +137,33 @@ function IconClock({ className = "h-4 w-4" }: { className?: string }) {
       <path d="M12 7v5l3 2" />
     </svg>
   );
+}
+
+function softPerkLines(
+  t: (k: keyof import("@/i18n/messages").Messages) => string,
+  perks: SoftPerks,
+): string[] {
+  const support =
+    perks.support === "concierge"
+      ? t("builders_perk_support_concierge")
+      : perks.support === "priority"
+        ? t("builders_perk_support_priority")
+        : t("builders_perk_support_standard");
+  const lines = [
+    support,
+    interpolate(t("builders_perk_boost"), {
+      n: String(perks.boostPerDay),
+      m: String(perks.boostActiveMax),
+    }),
+  ];
+  if (perks.salon) lines.push(t("builders_perk_salon"));
+  if (perks.academySoft) lines.push(t("builders_perk_academy"));
+  if (perks.betaSug) lines.push(t("builders_perk_beta"));
+  if (perks.privateEvents) lines.push(t("builders_perk_events"));
+  if (perks.earlyCreatorAds) lines.push(t("builders_perk_ads"));
+  if (perks.councilSoftVote) lines.push(t("builders_perk_council"));
+  if (perks.ambassadorEligible) lines.push(t("builders_perk_ambassador"));
+  return lines;
 }
 
 export function BuildersProgramClient() {
@@ -289,6 +330,20 @@ export function BuildersProgramClient() {
                 })}
               </p>
             ) : null}
+            {data.catalog.tiers.find((x) => x.tier === data.active!.tier)
+              ?.softPerks?.ambassadorEligible ? (
+              <>
+                <p className="mt-1.5 text-[11px] leading-snug text-[color:var(--fd-primary)]">
+                  {t("builders_perk_ambassador")}
+                </p>
+                <Link
+                  href="/app/community/ambassador"
+                  className="mt-2 inline-block text-[12px] font-bold text-[color:var(--fd-primary)]"
+                >
+                  {t("amb_cta_apply")}
+                </Link>
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -366,6 +421,30 @@ export function BuildersProgramClient() {
             );
           })}
         </ul>
+        {selected?.softPerks ? (
+          <div className="mt-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+              {t("builders_perks_title")} · {tierLabel(t, tier)}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {softPerkLines(t, selected.softPerks).map((line) => (
+                <li
+                  key={line}
+                  className="flex items-start gap-2 text-[12px] text-[color:var(--fd-text)]"
+                >
+                  <span
+                    className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[color:var(--fd-primary)]"
+                    aria-hidden
+                  />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[10px] text-[color:var(--fd-muted)]">
+              {t("builders_soft_only_notice")}
+            </p>
+          </div>
+        ) : null}
       </section>
 
       {data.catalog.dexUrl ? (

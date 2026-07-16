@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import {
   BuildersTierBadge,
+  AmbassadorCharterBadge,
   KycVerifiedBadge,
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
@@ -52,6 +53,7 @@ export function CommunityAuthorHeader({
           {author.builderTier ? (
             <BuildersTierBadge tier={author.builderTier} fr={fr} />
           ) : null}
+          {author.isAmbassador ? <AmbassadorCharterBadge fr={fr} /> : null}
           {author.reputationLevel ? (
             <ReputationLevelBadge levelId={author.reputationLevel} fr={fr} />
           ) : null}

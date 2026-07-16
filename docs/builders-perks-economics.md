@@ -54,6 +54,9 @@ Le CAP évite qu’un power user « vide » la marge malgré un badge payé.
 
 ## 3. Soft perks (expirent avec le badge)
 
+> **Code live :** `src/lib/builders/builders-soft-perks.ts` — quotas boost Community + catalogue UI + flag `ambassadorEligible`.  
+> Remises frais **pas** branchées (toujours §2 / `builders-perks-draft.ts`).
+
 | Perk | Bronze | Silver | Gold | Diamond | Platinum |
 |------|--------|--------|------|---------|----------|
 | Badge profil + anneau | oui | oui | oui | oui | oui |
@@ -104,8 +107,8 @@ Le CAP évite qu’un power user « vide » la marge malgré un badge payé.
 ## 7. Prochaine étape produit
 
 1. Revue finance (valider ou ajuster −15 % / −25 % et CAP).  
-2. Brancher perks soft non monétaires d’abord (salon, badge, éligibilité Ambassadeur) — faible risque marge.  
-3. Puis remises frais avec CAP.  
-4. Charte Ambassadeur (Gold+ requis).
+2. ~~Soft perks + charte Ambassadeur~~ **code** — boosts, UI, candidature `/app/community/ambassador`.  
+3. Remises frais avec CAP + `fee_perks_unlocked` (après signature).  
+4. Nomination Rep. régional / officiel après Ambassadeurs prouvés.
 
 *Brouillon interne. Toute publication externe nécessite validation finance + conformité.*

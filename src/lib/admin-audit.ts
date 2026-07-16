@@ -21,6 +21,9 @@ export const PlatformAdminAuditAction = {
   MCB_CLAIM_REJECT: "mcb_claim.reject",
   BUILDERS_COMPLETE: "builders.complete",
   BUILDERS_REJECT: "builders.reject",
+  AMBASSADOR_APPROVE: "ambassador.approve",
+  AMBASSADOR_REJECT: "ambassador.reject",
+  AMBASSADOR_REVOKE: "ambassador.revoke",
   TRADE_LIVE_UPDATE: "trade.live_update",
 } as const;
 

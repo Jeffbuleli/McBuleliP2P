@@ -1,5 +1,7 @@
 import { and, count, eq, gt, gte, sql } from "drizzle-orm";
 import { communityPosts, getDb, rewardPointLedger, users } from "@/db";
+import { getActiveBuildersMembership } from "@/lib/builders/builders-service";
+import { buildersBoostLimits } from "@/lib/builders/builders-soft-perks";
 import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
 import { isPostBoosted } from "@/lib/community/boost-utils";
 
@@ -43,6 +45,9 @@ export async function boostCommunityPost(args: {
     return { ok: false, code: "boost_already_active" };
   }
 
+  const membership = await getActiveBuildersMembership(args.userId);
+  const boostLimits = buildersBoostLimits(membership?.tier);
+
   const [activeBoosts] = await db
     .select({ n: count() })
     .from(communityPosts)
@@ -53,7 +58,7 @@ export async function boostCommunityPost(args: {
         gt(communityPosts.boostedUntil, new Date()),
       ),
     );
-  if (Number(activeBoosts?.n ?? 0) >= COMMUNITY_POST_BOOST.maxActivePerUser) {
+  if (Number(activeBoosts?.n ?? 0) >= boostLimits.maxActivePerUser) {
     return { ok: false, code: "boost_active_limit" };
   }
 
@@ -68,7 +73,7 @@ export async function boostCommunityPost(args: {
         sql`${rewardPointLedger.note} like 'community_post_boost:%'`,
       ),
     );
-  if (Number(todayBoosts?.n ?? 0) >= COMMUNITY_POST_BOOST.maxPerDay) {
+  if (Number(todayBoosts?.n ?? 0) >= boostLimits.maxPerDay) {
     return { ok: false, code: "boost_daily_limit" };
   }
 

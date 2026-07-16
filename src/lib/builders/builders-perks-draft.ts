@@ -72,85 +72,11 @@ export const BUILDERS_FEE_FLOORS = {
   futuresBpsPerSide: 3,
 } as const;
 
-export type BuildersSoftPerksDraft = {
-  support: "standard_plus" | "priority" | "concierge";
-  salon: boolean;
-  boostPerDay: number;
-  boostActiveMax: number;
-  academySoft: boolean;
-  betaSug: boolean;
-  privateEvents: boolean;
-  earlyCreatorAds: boolean;
-  councilSoftVote: boolean;
-  /** Soft gate for Ambassadeur charter application. */
-  ambassadorEligible: boolean;
-};
-
-export const BUILDERS_SOFT_PERKS_DRAFT: Record<
-  BuildersTier,
-  BuildersSoftPerksDraft
-> = {
-  bronze: {
-    support: "standard_plus",
-    salon: false,
-    boostPerDay: 3,
-    boostActiveMax: 1,
-    academySoft: false,
-    betaSug: false,
-    privateEvents: false,
-    earlyCreatorAds: false,
-    councilSoftVote: false,
-    ambassadorEligible: false,
-  },
-  silver: {
-    support: "standard_plus",
-    salon: false,
-    boostPerDay: 3,
-    boostActiveMax: 1,
-    academySoft: false,
-    betaSug: false,
-    privateEvents: false,
-    earlyCreatorAds: false,
-    councilSoftVote: false,
-    ambassadorEligible: false,
-  },
-  gold: {
-    support: "priority",
-    salon: true,
-    boostPerDay: 5,
-    boostActiveMax: 2,
-    academySoft: true,
-    betaSug: false,
-    privateEvents: false,
-    earlyCreatorAds: false,
-    councilSoftVote: false,
-    ambassadorEligible: true,
-  },
-  diamond: {
-    support: "priority",
-    salon: true,
-    boostPerDay: 6,
-    boostActiveMax: 2,
-    academySoft: true,
-    betaSug: true,
-    privateEvents: true,
-    earlyCreatorAds: false,
-    councilSoftVote: false,
-    ambassadorEligible: true,
-  },
-  platinum: {
-    support: "concierge",
-    salon: true,
-    boostPerDay: 8,
-    boostActiveMax: 3,
-    academySoft: true,
-    betaSug: true,
-    privateEvents: true,
-    earlyCreatorAds: true,
-    councilSoftVote: true,
-    ambassadorEligible: true,
-  },
-};
+/** Soft perks are live — re-export for older imports. */
+export {
+  BUILDERS_SOFT_PERKS as BUILDERS_SOFT_PERKS_DRAFT,
+  type BuildersSoftPerks as BuildersSoftPerksDraft,
+} from "@/lib/builders/builders-soft-perks";
 
 /** Apply relative discount then clamp to absolute floor. */
 export function draftFeeRateAfterBuildersDiscount(
