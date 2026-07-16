@@ -1,4 +1,4 @@
-/** Polished 3D phone mockup — hero illustration (SVG), McBuleli green + brown. */
+/** Polished 3D phone mockup - hero illustration (SVG), McBuleli green + brown. */
 
 export function LandingHeroPhone({ className }: { className?: string }) {
   return (
@@ -61,13 +61,13 @@ export function LandingHeroPhone({ className }: { className?: string }) {
         <text y="8" textAnchor="middle" fill="#78350F" fontSize="24" fontWeight="900" fontFamily="serif">π</text>
       </g>
 
-      {/* BUY pill — green */}
+      {/* BUY pill - green */}
       <g filter="url(#lhp-float-shadow)" transform="translate(48, 162)">
         <rect width="54" height="28" rx="14" fill="#305F33" />
         <text x="27" y="19" textAnchor="middle" fill="white" fontSize="10" fontWeight="800" fontFamily="system-ui,sans-serif">BUY</text>
       </g>
 
-      {/* SELL pill — brown */}
+      {/* SELL pill - brown */}
       <g filter="url(#lhp-float-shadow)" transform="translate(48, 198)">
         <rect width="54" height="28" rx="14" fill="#78350F" />
         <text x="27" y="19" textAnchor="middle" fill="white" fontSize="10" fontWeight="800" fontFamily="system-ui,sans-serif">SELL</text>
@@ -98,7 +98,7 @@ export function LandingHeroPhone({ className }: { className?: string }) {
         <rect x="-68" y="-148" width="136" height="296" rx="24" fill="url(#lhp-screen)" />
         <rect x="-28" y="-156" width="56" height="22" rx="11" fill="#1C1917" />
 
-        {/* Header — logo only */}
+        {/* Header - logo only */}
         <rect x="-58" y="-118" width="116" height="32" rx="12" fill="#305F33" />
         <circle cx="-42" cy="-102" r="10" fill="white" />
         <text x="-42" y="-98" textAnchor="middle" fill="#305F33" fontSize="9" fontWeight="900" fontFamily="system-ui,sans-serif">M</text>

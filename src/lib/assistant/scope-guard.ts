@@ -1,8 +1,8 @@
 import type { AssistantLocale } from "@/lib/assistant/messages";
 
 /**
- * Hard refuse clearly off-scope messages (politics / unrelated ChatGPT-style asks)
- * before calling OpenAI — used for guests and logged-in users alike.
+ * Hard refuse clearly off-scope messages (politics / unrelated general asks)
+ * before calling OpenAI - used for guests and logged-in users alike.
  */
 
 const POLITICS_RE =
@@ -11,7 +11,7 @@ const POLITICS_RE =
 const WAR_NEWS_RE =
   /\b(guerre\s+(en|au|contre)|war\s+in\s+|ukraine|gaza|israel\s+hamas|conflit\s+armé)\b/i;
 
-/** Generic ChatGPT homework / entertainment outside fintech */
+/** Generic homework / entertainment outside fintech */
 const GENERAL_CHATBOT_RE =
   /\b(écris(-|\s)?moi\s+(un\s+)?(poème|poem|roman|story|histoire|essai|dissertation)|write\s+(me\s+)?(a\s+)?(poem|essay|novel|short\s+story)|faire\s+mes\s+devoirs|do\s+my\s+homework|solve\s+this\s+math|résous\s+ce\s+math|code\s+(me\s+)?(a\s+)?(react|python|java)\s+app|générer\s+du\s+code\s+pour)\b/i;
 
@@ -31,7 +31,7 @@ export function isAssistantOffScope(message: string): boolean {
 
 export function offScopeRefusal(locale: AssistantLocale): string {
   if (locale === "fr") {
-    return `Je suis **McBuleli AI**, l'assistant officiel de la plateforme McBuleli — pas un ChatGPT général.
+    return `Je suis **McBuleli AI**, l'assistant officiel de la plateforme McBuleli.
 
 Je peux vous aider uniquement sur :
 - **Wallet** (USDT, Pi, dépôts / retraits)
@@ -45,7 +45,7 @@ Je ne traite pas les sujets politiques, les actualités de conflits, ni les dema
 Que souhaitez-vous savoir sur McBuleli ? Par exemple : dépôt USDT, P2P, ou inscription.`;
   }
   if (locale === "sw") {
-    return `Mimi ni **McBuleli AI**, msaidizi rasmi wa jukwaa la McBuleli — si ChatGPT ya kawaida.
+    return `Mimi ni **McBuleli AI**, msaidizi rasmi wa jukwaa la McBuleli.
 
 Ninaweza kukusaidia tu kuhusu:
 - **Wallet** (USDT, Pi, amana / kutoa)
@@ -58,7 +58,7 @@ Sishughuliki siasa, habari za vita, wala maswali nje ya McBuleli.
 
 Ungependa kujua nini kuhusu McBuleli? Mfano: amana ya USDT, P2P, au usajili.`;
   }
-  return `I am **McBuleli AI**, the official assistant for the McBuleli platform — not a general ChatGPT.
+  return `I am **McBuleli AI**, the official assistant for the McBuleli platform.
 
 I can only help with:
 - **Wallet** (USDT, Pi, deposits / withdrawals)

@@ -212,8 +212,11 @@ export function LandingMarketTable({
             <h2 className="text-xl font-black text-stone-900 sm:text-2xl">{t("landing_v2_market_title")}</h2>
             <p className="mt-1 text-xs text-stone-500 sm:text-sm">{t("landing_market_sub")}</p>
           </div>
-          <SessionAppLink href="/app/market" className="text-sm font-bold text-[#305F33] hover:underline">
-            {t("landing_v2_market_see_all")} →
+          <SessionAppLink href="/app/market" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#305F33] hover:underline">
+            {t("landing_v2_market_see_all")}
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M5 12h14M14 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </SessionAppLink>
         </div>
 
@@ -275,7 +278,7 @@ export function LandingMarketTable({
                         {row.showSparkline ? (
                           <MiniSparkline up={up} flat={flat} />
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-slate-300">-</span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-slate-600">{row.payment}</td>

@@ -1,4 +1,4 @@
-/** Lightweight SVG icons — single stroke style, Lucide-like */
+/** Lightweight SVG icons - single stroke style, Lucide-like */
 
 import { SupportAgentIcon } from "@/components/icons/support-agent-icon";
 
@@ -232,6 +232,20 @@ export function IconCoins({ className }: { className?: string }) {
         strokeLinecap="round"
       />
       <path d="M3 13c0 2.76 4.03 5 9 5s9-2.24 9-5" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+export function IconBook({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 5a2 2 0 012-2h11a1 1 0 011 1v16a1 1 0 01-1 1H6a2 2 0 01-2-2V5z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M8 7h7M8 11h7M8 15h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

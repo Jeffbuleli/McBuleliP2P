@@ -93,6 +93,14 @@ function Block({ block }: { block: WhitepaperBlock }) {
     );
   }
 
+  if (block.type === "sign") {
+    return (
+      <p className="pt-4 text-right text-[15px] font-bold text-stone-900">
+        {block.text}
+      </p>
+    );
+  }
+
   return (
     <aside className="rounded-2xl border border-dashed border-amber-300/80 bg-amber-50/80 px-5 py-4">
       <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-800">

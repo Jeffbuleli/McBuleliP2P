@@ -6,21 +6,28 @@ import type { Messages } from "@/i18n/messages";
 
 type HeroDict = Pick<
   Messages,
-  "landing_v2_hero_title" | "landing_v2_hero_sub" | "landing_v2_partners_label"
+  "brand" | "landing_v2_hero_title" | "landing_v2_hero_sub" | "landing_v2_partners_label"
 >;
 
 export function LandingHeroV2({ d }: { d: HeroDict }) {
   return (
-    <section className="relative overflow-hidden bg-[#fafaf9] px-4 pb-8 pt-3 sm:px-6 sm:pb-10">
-      <div className="pointer-events-none absolute -right-24 top-0 h-64 w-64 rounded-full bg-[#305F33]/8 blur-3xl" aria-hidden />
+    <section className="relative overflow-hidden bg-[#fafaf9] px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_0%_0%,rgba(48,95,51,0.10),transparent_55%)]"
+        aria-hidden
+      />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#305F33]">PWA · Mobile first</p>
-          <h1 className="mt-2 text-balance text-2xl font-black leading-tight text-stone-900 sm:text-3xl">
+        <div className="max-w-xl text-left">
+          <p className="text-2xl font-extrabold tracking-tight text-[#305F33] sm:text-3xl">
+            {d.brand}
+          </p>
+          <h1 className="mt-2 text-balance text-2xl font-bold leading-tight text-stone-900 sm:text-3xl">
             {d.landing_v2_hero_title}
           </h1>
-          <p className="mt-1.5 text-sm text-stone-600">{d.landing_v2_hero_sub}</p>
+          <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-base">
+            {d.landing_v2_hero_sub}
+          </p>
           <LandingHeroCta />
         </div>
 
@@ -29,7 +36,7 @@ export function LandingHeroV2({ d }: { d: HeroDict }) {
         </div>
 
         <div className="mt-8 border-t border-stone-200/80 pt-5">
-          <p className="text-left text-[10px] font-extrabold uppercase tracking-[0.18em] text-stone-400">
+          <p className="text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400">
             {d.landing_v2_partners_label}
           </p>
           <div className="-mx-1 mt-3 flex justify-start gap-4 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

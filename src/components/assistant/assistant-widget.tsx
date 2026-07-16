@@ -578,7 +578,7 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                     className="rounded-2xl border border-[#305f33]/25 bg-[#305f33]/10 p-4"
                   >
                     <p className="text-base font-bold text-white">{m.welcome}</p>
-                    <p className="mt-2 text-[13px] leading-relaxed text-stone-300">
+                    <p className="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-stone-300">
                       {m.welcomeSub}
                     </p>
                     <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#6ee7a0]">

@@ -104,9 +104,9 @@ export function pageContextHint(
       sw: "Mtumiaji anaingia. Saidia kuhusu njia za kuingia, nenosiri lililosahaulika, urejeshaji WhatsApp.",
     },
     landing: {
-      en: "Guest on homepage (may be logged out). Welcome briefly, stay STRICTLY on McBuleli products (wallet, P2P, Academy, signup). Refuse politics and general ChatGPT-style questions; invite them to ask about McBuleli or create an account at /register.",
-      fr: "Visiteur page d'accueil (peut être déconnecté). Accueil court, restez STRICTEMENT sur McBuleli (wallet, P2P, Academy, inscription). Refusez politique et questions type ChatGPT ; invitez une question produit ou /register.",
-      sw: "Mgeni kwenye ukurasa wa nyumbani (anaweza kuwa hajaingia). Karibisha kwa ufupi, zingatia SANA McBuleli (wallet, P2P, Academy, usajili). Kataa siasa na maswali ya ChatGPT; waalika kuuliza kuhusu McBuleli au /register.",
+      en: "Guest on homepage (may be logged out). Welcome briefly, stay STRICTLY on McBuleli products (wallet, P2P, Academy, signup). Refuse politics and general off-topic questions; invite them to ask about McBuleli or create an account at /register.",
+      fr: "Visiteur page d'accueil (peut être déconnecté). Accueil court, restez STRICTEMENT sur McBuleli (wallet, P2P, Academy, inscription). Refusez politique et questions hors sujet ; invitez une question produit ou /register.",
+      sw: "Mgeni kwenye ukurasa wa nyumbani (anaweza kuwa hajaingia). Karibisha kwa ufupi, zingatia SANA McBuleli (wallet, P2P, Academy, usajili). Kataa siasa na maswali yasiyohusiana; waalika kuuliza kuhusu McBuleli au /register.",
     },
   };
   const row = hints[ctx];

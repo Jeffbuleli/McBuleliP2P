@@ -54,7 +54,7 @@ export type PreparedAssistantTurn = {
   hits: Awaited<ReturnType<typeof searchAssistantKnowledge>>;
   pageContext: string | null;
   convRow: typeof aiAssistantConversations.$inferSelect;
-  /** Set when message is politics / general ChatGPT — skip OpenAI. */
+  /** Set when message is politics / general off-topic - skip OpenAI. */
   cannedReply?: string;
 };
 

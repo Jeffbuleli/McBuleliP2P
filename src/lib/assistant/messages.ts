@@ -37,9 +37,9 @@ export type AssistantMessages = {
 export const assistantEn: AssistantMessages = {
   name: "McBuleli AI",
   tagline: "Your fintech guide",
-  welcome: "Welcome to McBuleli 👋",
+  welcome: "Welcome to McBuleli",
   welcomeSub:
-    "I help only with McBuleli — wallet, USDT, P2P, trading, Academy and security. Not a general chatbot. What do you need?",
+    "I only help with McBuleli:\n- Wallet, USDT, P2P\n- Trading, Academy, security\n- Staking, AVEC, KYC\n\nNot a general assistant. What do you need?",
   placeholder: "Ask about McBuleli (wallet, P2P, Academy…)",
   send: "Send",
   thinking: "Thinking…",
@@ -71,9 +71,9 @@ export const assistantEn: AssistantMessages = {
 export const assistantFr: AssistantMessages = {
   name: "McBuleli IA",
   tagline: "Votre guide fintech",
-  welcome: "Bienvenue sur McBuleli 👋",
+  welcome: "Bienvenue sur McBuleli",
   welcomeSub:
-    "Je réponds uniquement sur McBuleli — wallet, USDT, P2P, trading, Academy et sécurité. Pas un ChatGPT général. De quoi avez-vous besoin ?",
+    "Je réponds uniquement sur McBuleli :\n- Wallet, USDT, P2P\n- Trading, Academy, sécurité\n- Staking, AVEC, KYC\n\nPas un assistant général. De quoi avez-vous besoin ?",
   placeholder: "Question McBuleli (wallet, P2P, Academy…)",
   send: "Envoyer",
   thinking: "Réflexion…",
@@ -105,9 +105,9 @@ export const assistantFr: AssistantMessages = {
 export const assistantSw: AssistantMessages = {
   name: "McBuleli AI",
   tagline: "Mwongozo wako wa fedha",
-  welcome: "Karibu McBuleli 👋",
+  welcome: "Karibu McBuleli",
   welcomeSub:
-    "Ninasaidia tu McBuleli — wallet, USDT, P2P, biashara, Academy na usalama. Si ChatGPT ya kawaida. Unahitaji nini?",
+    "Ninasaidia tu McBuleli:\n- Wallet, USDT, P2P\n- Biashara, Academy, usalama\n- Staking, AVEC, KYC\n\nSi msaidizi wa kawaida. Unahitaji nini?",
   placeholder: "Uliza kuhusu McBuleli (wallet, P2P, Academy…)",
   send: "Tuma",
   thinking: "Inafikiri…",

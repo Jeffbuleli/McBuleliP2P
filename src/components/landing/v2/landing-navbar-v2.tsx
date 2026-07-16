@@ -31,22 +31,16 @@ export function LandingNavbarV2() {
   const loginHref = loginHrefFor("/app/wallet");
 
   const nav = [
+    { href: "/#services", label: t("landing_nav_services") },
     { href: "/#rates", label: t("landing_v2_flash_title") },
     { href: "/#market", label: t("landing_v2_nav_p2p") },
     { href: "/#avec", label: t("landing_v2_nav_avec") },
-    { href: "/formation", label: t("landing_v2_nav_blog") },
-  ];
-
-  const legal = [
-    { href: "/about", label: t("landing_footer_about") },
-    { href: "/whitepaper", label: t("landing_footer_whitepaper") },
-    { href: "/contact", label: t("landing_footer_contact") },
-    { href: "/terms", label: t("landing_footer_terms") },
-    { href: "/privacy", label: t("landing_footer_privacy") },
+    { href: "/app/community", label: t("landing_v2_nav_community") },
+    { href: "/app/academy", label: t("landing_v2_nav_blog") },
   ];
 
   return (
-    <header className="landing-v2-nav sticky top-0 z-50 border-b border-stone-200/80 bg-white/95 shadow-sm backdrop-blur-lg">
+    <header className="landing-v2-nav sticky top-0 z-50 border-b border-stone-200/80 bg-white/95 backdrop-blur-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between gap-2 py-2.5 sm:py-3">
           <Link href="/" className="group flex shrink-0 items-center gap-2">
@@ -79,14 +73,14 @@ export function LandingNavbarV2() {
             <Link
               href={loginHref}
               prefetch={false}
-              className="hidden rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-bold text-stone-700 transition hover:border-[#305F33]/30 hover:text-[#305F33] sm:inline-flex"
+              className="hidden rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-semibold text-stone-700 transition hover:border-[#305F33]/30 hover:text-[#305F33] sm:inline-flex"
             >
               {t("landing_cta_login")}
             </Link>
             <Link
               href={entryHref}
               prefetch={false}
-              className="hidden rounded-xl bg-[#305F33] px-4 py-2 text-sm font-extrabold text-white shadow-md shadow-emerald-900/15 transition hover:bg-[#244a27] sm:inline-flex"
+              className="hidden rounded-xl bg-[#305F33] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#244a27] sm:inline-flex"
             >
               {t("landing_v2_cta_start")}
             </Link>
@@ -101,17 +95,6 @@ export function LandingNavbarV2() {
             </button>
           </div>
         </div>
-
-        <nav
-          className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-stone-100 py-2 text-[11px] font-semibold text-[#305F33] sm:text-xs"
-          aria-label="Legal"
-        >
-          {legal.map((item) => (
-            <Link key={item.href} href={item.href} prefetch={false} className="hover:text-[#78350f] hover:underline">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </div>
 
       {open ? (
@@ -131,7 +114,7 @@ export function LandingNavbarV2() {
             <SessionAppLink
               href="/app/wallet"
               onClick={() => setOpen(false)}
-              className="mt-3 flex min-h-[48px] items-center justify-center rounded-xl bg-[#305F33] text-sm font-extrabold text-white"
+              className="mt-3 flex min-h-[48px] items-center justify-center rounded-xl bg-[#305F33] text-sm font-bold text-white"
             >
               {t("landing_nav_open_app")}
             </SessionAppLink>

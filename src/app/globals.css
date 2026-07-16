@@ -33,12 +33,14 @@
 
 @theme inline {
   --color-brand-green: var(--brand-green);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* next/font Poppins CSS var on <html> - used by font-sans utility app-wide. */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 html.dark,
 html {
   color-scheme: dark;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
@@ -50,6 +52,16 @@ body {
     linear-gradient(180deg, #0c0a09 0%, #14532d22 45%, #1c1917 100%);
   color: var(--mb-text);
   min-height: 100dvh;
+  font-family: inherit;
+}
+
+/* Form controls often reset font - force Poppins inheritance everywhere. */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* Remove tap delay + make it feel app-like on mobile */

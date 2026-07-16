@@ -8,10 +8,17 @@ export function buildContentSecurityPolicy(): string {
   const mediaOrigins = mediaPublicOrigins();
   const imgSources = ["'self'", "data:", "blob:", ...mediaOrigins];
   const mediaSources = ["'self'", "blob:", ...mediaOrigins];
+  /** React / Turbopack need eval() in development for callstack reconstruction. Never in prod. */
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
+    "https://challenges.cloudflare.com",
+  ].join(" ");
 
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+    `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${imgSources.join(" ")}`,
     `media-src ${mediaSources.join(" ")}`,

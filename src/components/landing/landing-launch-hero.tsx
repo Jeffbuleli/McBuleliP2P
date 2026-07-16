@@ -74,7 +74,9 @@ function LaunchHeroContent({ c }: { c: ReturnType<typeof launchCopy> }) {
       <span className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-[#305f33] shadow-md transition group-hover:bg-[#e8f3ee] sm:mt-3 sm:w-fit sm:justify-start sm:py-2.5">
         {c.cta}
         <span className="ml-2 opacity-70" aria-hidden>
-          →
+          <svg className="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M5 12h14M14 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </span>
       </span>
       <p className="mt-2 pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-[#e8f3ee]/75 sm:pb-0 sm:text-left sm:text-[9px]">
@@ -116,7 +118,7 @@ export async function LandingLaunchHero() {
               />
               <Image
                 src={PORTRAIT_PATH}
-                alt="Jeff Buleli — McBuleli"
+                alt="Jeff Buleli - McBuleli"
                 fill
                 priority
                 unoptimized

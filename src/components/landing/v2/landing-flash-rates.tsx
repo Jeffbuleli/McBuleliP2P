@@ -109,7 +109,7 @@ export function LandingFlashRates({
         {
           id: "btc",
           pair: "BTC / USD",
-          price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "—",
+          price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "-",
           changePct: btc?.changePct ?? 0,
           symbol: "BTC",
           featured: true,
@@ -117,7 +117,7 @@ export function LandingFlashRates({
         {
           id: "eth",
           pair: "ETH / USD",
-          price: eth ? formatLandingUsd("ETHUSDT", eth.lastPrice) : "—",
+          price: eth ? formatLandingUsd("ETHUSDT", eth.lastPrice) : "-",
           changePct: eth?.changePct ?? 0,
           symbol: "ETH",
         },
@@ -183,7 +183,7 @@ export function LandingFlashRates({
         {
           id: "w-pi",
           pair: t("landing_v2_flash_wallet_pi"),
-          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : "—",
+          price: pi ? formatLandingUsd("PIUSDT", pi.lastPrice) : "-",
           changeLabel: t("landing_v2_flash_wallet_bal"),
           symbol: "PI",
         },
@@ -232,7 +232,7 @@ export function LandingFlashRates({
       {
         id: "e-btc",
         pair: "BTC / USD",
-        price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "—",
+        price: btc ? formatLandingUsd("BTCUSDT", btc.lastPrice) : "-",
         changePct: btc?.changePct ?? 0,
         symbol: "BTC",
       },
