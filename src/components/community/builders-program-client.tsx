@@ -10,8 +10,11 @@ import { buildersTierVisual } from "@/lib/builders/builders-visual";
 
 type TierRow = {
   tier: string;
-  priceMcb: number;
+  priceUsd: number;
+  priceMcb: number | null;
+  priceMcbLegacy?: number;
   rank: number;
+  feePerksUnlocked?: boolean;
 };
 
 type Membership = {
@@ -31,6 +34,10 @@ type Catalog = {
   badgeMonths: number;
   treasuryAddress: string | null;
   dexUrl: string | null;
+  quoteMode?: string;
+  mcbUsdRate?: number | null;
+  rateSource?: string;
+  feePerksMinMcbUsd?: number;
   tiers: TierRow[];
 };
 
@@ -105,6 +112,7 @@ export function BuildersProgramClient() {
       builders_pending_exists: "builders_error_pending",
       builders_tier_not_upgrade: "builders_error_upgrade",
       builders_tx_used: "builders_error_tx_used",
+      builders_mcb_rate_unavailable: "builders_error_rate",
     };
     const k = map[code];
     return k ? t(k) : t("builders_error_generic");
@@ -138,8 +146,9 @@ export function BuildersProgramClient() {
     }
   }
 
-  const selectedPrice =
-    data?.catalog.tiers.find((x) => x.tier === tier)?.priceMcb ?? 0;
+  const selected = data?.catalog.tiers.find((x) => x.tier === tier);
+  const selectedPriceUsd = selected?.priceUsd ?? 0;
+  const selectedPriceMcb = selected?.priceMcb ?? null;
 
   if (!data && !loadErr) {
     return (
@@ -251,11 +260,18 @@ export function BuildersProgramClient() {
                       })}
                     </span>
                   </span>
-                  <span
-                    className="tabular-nums text-sm font-bold"
-                    style={visual ? { color: visual.ring } : undefined}
-                  >
-                    {row.priceMcb} McB
+                  <span className="text-right">
+                    <span
+                      className="block tabular-nums text-sm font-bold"
+                      style={visual ? { color: visual.ring } : undefined}
+                    >
+                      ${row.priceUsd}
+                    </span>
+                    <span className="block text-[10px] tabular-nums text-[color:var(--fd-muted)]">
+                      {row.priceMcb != null
+                        ? `≈ ${row.priceMcb.toLocaleString()} McB`
+                        : t("builders_mcb_quote_pending")}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -314,11 +330,26 @@ export function BuildersProgramClient() {
             </p>
           ) : null}
           <p className="text-[11px] text-[color:var(--fd-muted)]">
-            {interpolate(t("builders_pay_hint"), {
-              amount: String(selectedPrice),
-              tier: tierLabel(t, tier),
-            })}
+            {selectedPriceMcb != null
+              ? interpolate(t("builders_pay_hint_usd"), {
+                  usd: String(selectedPriceUsd),
+                  amount: selectedPriceMcb.toLocaleString(),
+                  tier: tierLabel(t, tier),
+                })
+              : t("builders_mcb_quote_pending")}
           </p>
+          {data.catalog.mcbUsdRate != null ? (
+            <p className="text-[10px] text-[color:var(--fd-muted)]">
+              {interpolate(t("builders_rate_hint"), {
+                rate: String(data.catalog.mcbUsdRate),
+              })}
+            </p>
+          ) : null}
+          {selected?.feePerksUnlocked === false ? (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+              {t("builders_fee_perks_locked")}
+            </p>
+          ) : null}
           <label className="block">
             <span className="text-[11px] font-semibold text-[color:var(--fd-muted)]">
               {t("builders_tx_label")}

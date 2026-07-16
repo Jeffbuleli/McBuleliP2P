@@ -1418,6 +1418,13 @@ export const en = {
     "Purchases open soon - browse tiers now. You will be able to submit a tx when live.",
   builders_kyc_required: "KYC is required before purchasing a Builder tier.",
   builders_pay_hint: "After sending {amount} McB for {tier}, paste the BSC tx hash below.",
+  builders_pay_hint_usd:
+    "Send ≈ {amount} McB (catalog ${usd} USD) for {tier}, then paste the BSC tx hash.",
+  builders_mcb_quote_pending:
+    "McB amount pending - set market rate (MCB_USD_RATE) before purchases open.",
+  builders_rate_hint: "Quote rate: {rate} USD / McB (admin/TWAP).",
+  builders_fee_perks_locked:
+    "At the current McB rate, fee discounts stay off. Soft badge / status only until McB has meaningful price.",
   builders_tx_label: "BSC transaction hash",
   builders_wallet_label: "Your BEP20 wallet (optional)",
   builders_submit: "Submit for verification",
@@ -1433,6 +1440,8 @@ export const en = {
   builders_error_pending: "You already have a pending purchase.",
   builders_error_upgrade: "Choose a higher tier than your current badge.",
   builders_error_tx_used: "This transaction was already used.",
+  builders_error_rate:
+    "McB/USD rate is not configured. Purchases are paused to protect the treasury.",
   builders_error_generic: "Could not submit. Try again.",
   builders_admin_title: "Builders Program",
   builders_admin_subtitle: "Confirm McB on-chain payments for Builder tiers.",
@@ -5805,6 +5814,13 @@ export const fr: Messages = {
   builders_kyc_required: "Le KYC est requis avant d’acheter un palier Builder.",
   builders_pay_hint:
     "Après envoi de {amount} McB pour {tier}, collez le hash de transaction BSC ci-dessous.",
+  builders_pay_hint_usd:
+    "Envoyez ≈ {amount} McB (catalogue ${usd} USD) pour {tier}, puis collez le hash BSC.",
+  builders_mcb_quote_pending:
+    "Montant McB en attente - configurez le cours (MCB_USD_RATE) avant d’ouvrir les achats.",
+  builders_rate_hint: "Cours de cotation : {rate} USD / McB (admin/TWAP).",
+  builders_fee_perks_locked:
+    "Au cours McB actuel, les remises de frais restent désactivées. Badge / statut soft uniquement tant que le McB n’a pas de prix significatif.",
   builders_tx_label: "Hash de transaction BSC",
   builders_wallet_label: "Votre wallet BEP20 (optionnel)",
   builders_submit: "Soumettre pour vérification",
@@ -5820,6 +5836,8 @@ export const fr: Messages = {
   builders_error_pending: "Vous avez déjà un achat en attente.",
   builders_error_upgrade: "Choisissez un palier supérieur à votre badge actuel.",
   builders_error_tx_used: "Cette transaction a déjà été utilisée.",
+  builders_error_rate:
+    "Cours McB/USD non configuré. Achats en pause pour protéger la trésorerie.",
   builders_error_generic: "Impossible de soumettre. Réessayez.",
   builders_admin_title: "Builders Program",
   builders_admin_subtitle: "Confirmer les paiements McB on-chain pour les paliers Builder.",

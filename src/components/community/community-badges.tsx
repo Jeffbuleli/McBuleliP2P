@@ -55,8 +55,10 @@ export function ReputationLevelBadge({
   levelId: ReputationLevelId | string;
   fr: boolean;
 }) {
+  const normalized =
+    levelId === "ambassador" ? "pillar" : levelId;
   const level =
-    REPUTATION_LEVELS.find((l) => l.id === levelId) ?? REPUTATION_LEVELS[0]!;
+    REPUTATION_LEVELS.find((l) => l.id === normalized) ?? REPUTATION_LEVELS[0]!;
   if (level.id === "member") return null;
   return (
     <BadgeShell

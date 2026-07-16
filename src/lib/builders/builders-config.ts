@@ -1,4 +1,11 @@
 import { getMcbDexUrl, getMcbTokenContract } from "@/lib/mcb-token-config";
+import {
+  BUILDERS_FEE_PERKS_MIN_MCB_USD,
+  BUILDERS_TIER_PRICE_MCB_LEGACY,
+  BUILDERS_TIER_PRICE_USD,
+  quoteAllBuildersTiers,
+  quoteBuildersTier,
+} from "@/lib/builders/builders-pricing";
 
 export const BUILDERS_TIERS = [
   "bronze",
@@ -25,16 +32,12 @@ export type BuildersMembershipStatus =
 export const BUILDERS_BADGE_MONTHS = 24;
 
 /**
- * Draft McB prices — utility / status only, not investment advice.
- * Override later via env if needed; keep in sync with builders-program-spec.
+ * @deprecated Fixed McB stickers — unsafe as economic price when McB is cheap.
+ * Use BUILDERS_TIER_PRICE_USD + quoteBuildersTier(). Kept for tests / legacy UI.
  */
-export const BUILDERS_TIER_PRICE_MCB: Record<BuildersTier, number> = {
-  bronze: 100,
-  silver: 300,
-  gold: 800,
-  diamond: 2000,
-  platinum: 5000,
-};
+export const BUILDERS_TIER_PRICE_MCB = BUILDERS_TIER_PRICE_MCB_LEGACY;
+
+export { BUILDERS_TIER_PRICE_USD };
 
 export const BUILDERS_TIER_RANK: Record<BuildersTier, number> = {
   bronze: 1,
@@ -73,11 +76,18 @@ export function isBuildersTier(v: string): v is BuildersTier {
   return (BUILDERS_TIERS as readonly string[]).includes(v);
 }
 
+/** @deprecated Prefer quoteBuildersTier(tier).priceMcb */
 export function buildersTierPriceMcb(tier: BuildersTier): number {
-  return BUILDERS_TIER_PRICE_MCB[tier];
+  const q = quoteBuildersTier(tier);
+  return q.priceMcb ?? BUILDERS_TIER_PRICE_MCB_LEGACY[tier];
+}
+
+export function buildersTierPriceUsd(tier: BuildersTier): number {
+  return BUILDERS_TIER_PRICE_USD[tier];
 }
 
 export function getBuildersPublicCatalog() {
+  const quotes = quoteAllBuildersTiers();
   return {
     preview: isBuildersProgramVisible(),
     enabled: isBuildersProgramEnabled(),
@@ -85,10 +95,18 @@ export function getBuildersPublicCatalog() {
     treasuryAddress: getBuildersTreasuryAddress(),
     dexUrl: getMcbDexUrl(),
     contractAddress: getMcbTokenContract(),
-    tiers: BUILDERS_TIERS.map((tier) => ({
-      tier,
-      priceMcb: BUILDERS_TIER_PRICE_MCB[tier],
-      rank: BUILDERS_TIER_RANK[tier],
+    quoteMode: "usd_anchor" as const,
+    mcbUsdRate: quotes[0]?.mcbUsdRate ?? null,
+    rateSource: quotes[0]?.rateSource ?? "unavailable",
+    feePerksMinMcbUsd: BUILDERS_FEE_PERKS_MIN_MCB_USD,
+    tiers: quotes.map((q) => ({
+      tier: q.tier,
+      priceUsd: q.priceUsd,
+      priceMcb: q.priceMcb,
+      /** Legacy sticker — not the economic price. */
+      priceMcbLegacy: BUILDERS_TIER_PRICE_MCB_LEGACY[q.tier],
+      rank: BUILDERS_TIER_RANK[q.tier],
+      feePerksUnlocked: q.feePerksUnlocked,
     })),
   };
 }

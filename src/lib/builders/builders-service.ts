@@ -5,19 +5,23 @@ import {
   BUILDERS_BADGE_MONTHS,
   BUILDERS_MEMBERSHIP_STATUS,
   BUILDERS_TIER_RANK,
-  buildersTierPriceMcb,
   getBuildersPublicCatalog,
   isBuildersProgramEnabled,
   isBuildersTier,
   type BuildersMembershipStatus,
   type BuildersTier,
 } from "@/lib/builders/builders-config";
+import { quoteBuildersTier } from "@/lib/builders/builders-pricing";
+import { ensureBuildersSchema } from "@/lib/builders/builders-schema";
 
 export type BuildersMembershipRow = {
   id: string;
   tier: BuildersTier;
   status: BuildersMembershipStatus;
   paidMcb: string;
+  paidUsdNotional: string | null;
+  mcbUsdRate: string | null;
+  feePerksUnlocked: boolean;
   paymentKind: string;
   walletAddress: string | null;
   txHash: string | null;
@@ -35,6 +39,9 @@ function mapRow(
     tier: r.tier as BuildersTier,
     status: r.status as BuildersMembershipStatus,
     paidMcb: r.paidMcb?.toString?.() ?? String(r.paidMcb),
+    paidUsdNotional: r.paidUsdNotional?.toString?.() ?? null,
+    mcbUsdRate: r.mcbUsdRate?.toString?.() ?? null,
+    feePerksUnlocked: Boolean(r.feePerksUnlocked),
     paymentKind: r.paymentKind,
     walletAddress: r.walletAddress,
     txHash: r.txHash,
@@ -140,6 +147,7 @@ export async function getPendingBuildersMembership(
 }
 
 export async function getBuildersSummary(userId: string) {
+  await ensureBuildersSchema();
   const [active, pending, catalog] = await Promise.all([
     getActiveBuildersMembership(userId),
     getPendingBuildersMembership(userId),
@@ -178,6 +186,7 @@ export async function requestBuildersPurchase(args: {
   | { ok: true; membership: BuildersMembershipRow }
   | { ok: false; code: string }
 > {
+  await ensureBuildersSchema();
   if (!isBuildersProgramEnabled()) {
     return { ok: false, code: "builders_disabled" };
   }
@@ -238,14 +247,21 @@ export async function requestBuildersPurchase(args: {
     return { ok: false, code: "builders_tx_used" };
   }
 
-  const paidMcb = buildersTierPriceMcb(tier);
+  const quote = quoteBuildersTier(tier);
+  if (quote.priceMcb == null || quote.mcbUsdRate == null) {
+    return { ok: false, code: "builders_mcb_rate_unavailable" };
+  }
+
   const [inserted] = await db
     .insert(buildersMemberships)
     .values({
       userId: args.userId,
       tier,
       status: BUILDERS_MEMBERSHIP_STATUS.PENDING,
-      paidMcb: String(paidMcb),
+      paidMcb: String(quote.priceMcb),
+      paidUsdNotional: String(quote.priceUsd),
+      mcbUsdRate: String(quote.mcbUsdRate),
+      feePerksUnlocked: quote.feePerksUnlocked,
       paymentKind: "onchain_tx",
       walletAddress: wallet,
       txHash,

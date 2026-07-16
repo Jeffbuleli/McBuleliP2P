@@ -24,7 +24,7 @@ import type { FeedPostView } from "@/lib/community/feed-service";
 import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import type { TradingSignalView } from "@/lib/community/signals-service";
-import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
+import { REPUTATION_LEVELS, normalizeReputationLevelId } from "@/lib/community/reputation-levels";
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
@@ -177,9 +177,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   }
 
   const levelLabel =
-    REPUTATION_LEVELS.find((l) => l.id === profile.reputationLevel)?.[
-      fr ? "labelFr" : "labelEn"
-    ] ?? "";
+    REPUTATION_LEVELS.find(
+      (l) => l.id === normalizeReputationLevelId(profile.reputationLevel),
+    )?.[fr ? "labelFr" : "labelEn"] ?? "";
 
   return (
     <div className="community-theme mx-auto w-full max-w-lg pb-4">

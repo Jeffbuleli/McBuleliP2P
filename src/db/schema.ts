@@ -2061,6 +2061,12 @@ export const buildersMemberships = pgTable(
     tier: varchar("tier", { length: 16 }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("pending"),
     paidMcb: numeric("paid_mcb", { precision: 36, scale: 18 }).notNull(),
+    /** USD catalog price locked at purchase (economic anchor). */
+    paidUsdNotional: numeric("paid_usd_notional", { precision: 18, scale: 6 }),
+    /** USD per McB used to compute paid_mcb at quote time. */
+    mcbUsdRate: numeric("mcb_usd_rate", { precision: 36, scale: 18 }),
+    /** Fee discounts only if true (rate above min + full USD notional). */
+    feePerksUnlocked: boolean("fee_perks_unlocked").notNull().default(false),
     paymentKind: varchar("payment_kind", { length: 24 })
       .notNull()
       .default("onchain_tx"),

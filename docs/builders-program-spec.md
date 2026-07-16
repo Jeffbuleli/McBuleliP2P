@@ -3,7 +3,7 @@
 > **Statut :** M1 partiel en code - tables + achat McB (tx) + admin + page `/app/community/builders` + badge profil. Perks / ambassadeurs pas encore.  
 > **Slogan :** Build. Grow. Belong.  
 > **Dernière révision :** juillet 2026  
-> **Liés :** [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md) · [community-hub-master-plan.md](./community-hub-master-plan.md) (G9 badges) · [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) (§6.4–6.5) · [social-utility-graph.md](./social-utility-graph.md)
+> **Liés :** [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md) · [community-hub-master-plan.md](./community-hub-master-plan.md) (G9 badges) · [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) (§6.4–6.5) · [social-utility-graph.md](./social-utility-graph.md) · [community-roles-map.md](./community-roles-map.md) · [builders-pricing-usd-anchor.md](./builders-pricing-usd-anchor.md) · [builders-perks-economics.md](./builders-perks-economics.md)
 
 Le Builders Program **complète** BP et McB ; il ne les remplace pas. Un badge élevé **ne confère pas** de rôle officiel McBuleli.
 
@@ -35,22 +35,27 @@ Esprit humain : ce qui est gratuit (like, comment, post → BP) est perçu comme
 
 ---
 
-## 3. Niveaux (badges) - payés en McB
+## 3. Niveaux (badges) - ancre **USD**, règlement en McB
 
-| Niveau | Code | Prix McB (proposition) | Activité min (soft) | Statut |
-|--------|------|------------------------|---------------------|--------|
-| Bronze | `bronze` | **100** | KYC | Live config |
-| Silver | `silver` | **300** | KYC + upgrade | Live config |
-| Gold | `gold` | **800** | KYC + upgrade | Live config |
-| Diamond | `diamond` | **2000** | KYC + upgrade | Live config |
-| Platinum | `platinum` | **5000** | KYC + upgrade | Live config |
+**Règle anti-catastrophe :** le prix économique est en **USD** (24 mois), pas un sticker McB fixe.  
+McB à envoyer = `ceil(USD / cours)`. Voir [builders-pricing-usd-anchor.md](./builders-pricing-usd-anchor.md).
 
-Prix dans `src/lib/builders/builders-config.ts` - ajustables avant marketing scale.
+| Niveau | Code | Prix **USD** (proposition) | McB | Activité min (soft) | Statut |
+|--------|------|----------------------------|-----|---------------------|--------|
+| Bronze | `bronze` | **25** | = f(cours) | KYC | Live config |
+| Silver | `silver` | **75** | = f(cours) | KYC + upgrade | Live config |
+| Gold | `gold` | **200** | = f(cours) | KYC + upgrade | Live config |
+| Diamond | `diamond` | **500** | = f(cours) | KYC + upgrade | Live config |
+| Platinum | `platinum` | **1250** | = f(cours) | KYC + upgrade | Live config |
 
-**Paiement :** burn ou lock McB depuis wallet BEP-20 / ledger custodial (décision technique M1).  
-**Source McB :** claim communautaire **ou** achat PancakeSwap - les Builders **seront poussés à acheter** quand le pool claim est rare / épuisé.
+Anciens stickers 100/300/800/2000/5000 McB = **legacy** (≈ USD à 0,25 $/McB) — **ne plus utiliser** comme prix économique.
 
-**Durée :** chaque badge est valable **24 mois**. À l’expiration : renouvellement en McB, upgrade, ou sortie. Les avantages expirent avec le badge.
+Prix USD / quote : `src/lib/builders/builders-pricing.ts`. Env cours : `MCB_USD_RATE`.
+
+**Paiement :** burn ou lock McB depuis wallet BEP-20 (décision technique M1).  
+**Remises frais :** seulement si cours ≥ seuil min **et** `fee_perks_unlocked` (sinon badge soft seulement).
+
+**Durée :** chaque badge est valable **24 mois**. À l’expiration : renouvellement au **cours du jour** (USD catalogue → McB), upgrade, ou sortie. Les avantages expirent avec le badge.
 
 **Conservé après expiration :** historique, réputation, McB déjà claimés / achetés.
 
@@ -58,19 +63,29 @@ Prix dans `src/lib/builders/builders-config.ts` - ajustables avant marketing sca
 
 ---
 
-## 4. Avantages (cadre - à chiffrer avant lancement)
+## 4. Avantages (cadre chiffré — brouillon finance)
 
-Selon le niveau, un membre **peut** bénéficier de (liste indicative) :
+Détail floors / CAP / soft : **[builders-perks-economics.md](./builders-perks-economics.md)**.  
+**Ne pas publier** les % marketing tant que finance n’a pas signé.
 
-- Réductions de frais (MM, swap, retraits) - **plafonnées** et rentables pour McBuleli
-- Support prioritaire
+| Tier | Remise frais (relatif) | CAP manque à gagner / an | Soft (expire 24 mois) |
+|------|------------------------|---------------------------|------------------------|
+| Bronze | Mild optionnel (−5 % swap) | ~8–12 USD | Badge |
+| Silver | −10 % swap ; −5 % MM | ~25–40 USD | Early soft |
+| **Gold** | **−15 %** → floors 4,25 % / 0,85 % / 2,125 % · withdraw 1,75 · futures 4 bps | **~90–120 USD** | Salon · boost↑ · Academy soft · priorité · **éligibilité Ambassadeur** |
+| Diamond | −20 % (floors ≥ Platinum floors) | ~200–280 USD | Beta SUG · events |
+| **Platinum** | **−25 %** → floors 3,75 % / 0,75 % / 1,875 % · withdraw 1,50 · futures 3 bps | **~350–450 USD** | Concierge · conseil soft · early ads |
+
+**Règle économique :** aucun avantage n’est publié tant que le modèle de coût/marge n’est pas validé (finance + produit). Après CAP annuel atteint → tarifs baseline.
+
+Selon le niveau, un membre **peut** aussi bénéficier de (soft, liste indicative) :
+
+- Support prioritaire / concierge
 - Accès anticipé / bêta
 - Academy Premium (durée limitée)
-- Événements privés
-- Badge visible profil Community (symbole de noblesse)
+- Événements privés / salon tier
+- Badge visible profil Community
 - Accès early features SUG / ads créateur
-
-**Règle économique :** aucun avantage n’est publié tant que le modèle de coût/marge n’est pas validé (finance + produit).
 
 ---
 
@@ -86,6 +101,17 @@ Ils **n’achètent pas** un badge MBP. Un gros solde BP sans McB = membre actif
 ---
 
 ## 6. Gouvernance communautaire (trois couches)
+
+Cartographie détaillée (privilèges badge vs mandats charte, rôles proposés) : [community-roles-map.md](./community-roles-map.md).
+
+**Ordre d’accès (noblesse → responsabilité terrain) :**
+
+1. Effort gratuit → échelle réputation (Membre…**Pillier**) - label seulement, **aucune** responsabilité entreprise  
+2. McB → badge **Builder** (Bronze→Platinum) - noblesse / statut payant  
+3. **Gold+** = critère d’éligibilité soft pour candidater aux mandats terrain  
+4. **Ambassadeur / Rep.** = charte ou nomination - seuls rôles qui engagent McBuleli sur le terrain  
+
+Le top score s’appelle **Pillier** (ex-« Ambassadeur » score) pour éviter toute confusion avec l’Ambassadeur charte.
 
 | Rôle | Accès | Qui décide |
 |------|-------|------------|
