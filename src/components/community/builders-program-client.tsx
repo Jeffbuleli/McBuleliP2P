@@ -5,7 +5,10 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
-import { IconExternalLink } from "@/components/community/community-inline-icons";
+import {
+  IconCheck,
+  IconExternalLink,
+} from "@/components/community/community-inline-icons";
 import { buildersTierVisual } from "@/lib/builders/builders-visual";
 
 type TierRow = {
@@ -69,6 +72,59 @@ function tierLabel(
   }
 }
 
+function IconShield({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 3l8 4v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V7l8-4z" />
+    </svg>
+  );
+}
+
+function IconBadge({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="9" r="5" />
+      <path d="M8.5 13.5L7 21l5-2 5 2-1.5-7.5" />
+    </svg>
+  );
+}
+
+function IconClock({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 export function BuildersProgramClient() {
   const { t, locale } = useI18n();
   const loc = locale === "fr" ? "fr-FR" : "en-US";
@@ -92,7 +148,10 @@ export function BuildersProgramClient() {
     setData(json);
     if (json.active) {
       const next = json.catalog.tiers.find(
-        (x) => x.rank > (json.catalog.tiers.find((y) => y.tier === json.active!.tier)?.rank ?? 0),
+        (x) =>
+          x.rank >
+          (json.catalog.tiers.find((y) => y.tier === json.active!.tier)?.rank ??
+            0),
       );
       if (next) setTier(next.tier);
     }
@@ -149,6 +208,10 @@ export function BuildersProgramClient() {
   const selected = data?.catalog.tiers.find((x) => x.tier === tier);
   const selectedPriceUsd = selected?.priceUsd ?? 0;
   const selectedPriceMcb = selected?.priceMcb ?? null;
+  const activeRank =
+    data?.active != null
+      ? (data.catalog.tiers.find((x) => x.tier === data.active!.tier)?.rank ?? 0)
+      : 0;
 
   if (!data && !loadErr) {
     return (
@@ -180,91 +243,116 @@ export function BuildersProgramClient() {
     <div className="mx-auto max-w-lg px-4 pb-24 pt-2">
       <WalletSubpageHeader title={t("builders_title")} backHref="/app/community" />
 
-      <p className="mt-2 text-xs leading-relaxed text-[color:var(--fd-muted)]">
-        {t("builders_tagline")}
-      </p>
-      <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
-        {t("builders_philosophy")}
-      </p>
+      <div className="mt-3">
+        <p className="text-base font-bold tracking-tight text-[color:var(--fd-text)]">
+          {t("builders_tagline")}
+        </p>
+        <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
+          {t("builders_philosophy")}
+        </p>
+      </div>
+
+      <ul className="mt-4 flex flex-col gap-2">
+        <li className="flex items-center gap-2.5 text-[12px] text-[color:var(--fd-muted)]">
+          <IconBadge className="h-4 w-4 shrink-0 text-[color:var(--fd-primary)]" />
+          <span>{t("builders_note_status")}</span>
+        </li>
+        <li className="flex items-center gap-2.5 text-[12px] text-[color:var(--fd-muted)]">
+          <IconShield className="h-4 w-4 shrink-0 text-[color:var(--fd-primary)]" />
+          <span>{t("builders_note_not_role")}</span>
+        </li>
+        <li className="flex items-center gap-2.5 text-[12px] text-[color:var(--fd-muted)]">
+          <IconClock className="h-4 w-4 shrink-0 text-[color:var(--fd-primary)]" />
+          <span>
+            {interpolate(t("builders_valid_months"), {
+              months: data.catalog.badgeMonths,
+            })}
+          </span>
+        </li>
+      </ul>
 
       {data.active ? (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white px-4 py-3">
-          <p className="text-sm font-bold text-amber-950">
-            {interpolate(t("builders_active"), {
-              tier: tierLabel(t, data.active.tier),
+        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+            <IconCheck className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[color:var(--fd-text)]">
+              {interpolate(t("builders_active"), {
+                tier: tierLabel(t, data.active.tier),
+              })}
+            </p>
+            {data.active.expiresAt ? (
+              <p className="mt-0.5 text-[11px] text-[color:var(--fd-muted)]">
+                {interpolate(t("builders_expires"), {
+                  date: new Date(data.active.expiresAt).toLocaleDateString(loc),
+                })}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {data.pending ? (
+        <div className="mt-4 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3">
+          <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+            {interpolate(t("builders_pending"), {
+              tier: tierLabel(t, data.pending.tier),
             })}
           </p>
-          {data.active.expiresAt ? (
-            <p className="mt-1 text-[11px] text-amber-900/80">
-              {interpolate(t("builders_expires"), {
-                date: new Date(data.active.expiresAt).toLocaleDateString(loc),
-              })}
+          {data.pending.txHash ? (
+            <p className="mt-1 truncate font-mono text-[10px] text-[color:var(--fd-muted)]">
+              {data.pending.txHash}
             </p>
           ) : null}
         </div>
       ) : null}
 
-      {data.pending ? (
-        <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
-          <p className="text-sm font-semibold text-sky-900">
-            {interpolate(t("builders_pending"), {
-              tier: tierLabel(t, data.pending.tier),
-            })}
-          </p>
-          <p className="mt-1 font-mono text-[10px] text-sky-800 break-all">
-            {data.pending.txHash}
-          </p>
-        </div>
-      ) : null}
-
-      <section className="mt-6 space-y-2">
+      <section className="mt-6">
         <h2 className="text-sm font-bold text-[color:var(--fd-text)]">
           {t("builders_tiers_title")}
         </h2>
-        <ul className="space-y-2">
+        <ul className="mt-2 space-y-2">
           {data.catalog.tiers.map((row) => {
             const isActive = data.active?.tier === row.tier;
-            const selected = tier === row.tier;
+            const isSelected = tier === row.tier;
             const visual = buildersTierVisual(row.tier);
+            const locked = !!data.pending || (data.active != null && activeRank >= row.rank);
             return (
               <li key={row.tier}>
                 <button
                   type="button"
-                  disabled={!!data.pending || (data.active != null &&
-                    (data.catalog.tiers.find((x) => x.tier === data.active!.tier)?.rank ?? 0) >=
-                      row.rank)}
+                  disabled={locked}
                   onClick={() => setTier(row.tier)}
-                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
-                    selected
-                      ? `${visual?.badgeClass ?? "border-[#991B1B] bg-[#991B1B]/5"} ring-2 ring-offset-1`
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition active:scale-[0.99] disabled:opacity-40 ${
+                    isSelected
+                      ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)]/40"
                       : "border-[color:var(--fd-border)] bg-[color:var(--fd-card)]"
-                  } disabled:opacity-40`}
-                  style={
-                    selected && visual
-                      ? { boxShadow: `0 0 0 1px ${visual.ring}, 0 0 10px ${visual.glow}` }
-                      : undefined
-                  }
+                  }`}
                 >
-                  <span>
-                    <span className="block text-sm font-bold text-[color:var(--fd-text)]">
-                      {tierLabel(t, row.tier)}
-                      {isActive ? (
-                        <span className="ml-2 text-[10px] font-semibold uppercase opacity-80">
-                          {t("builders_current")}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-[10px] text-[color:var(--fd-muted)]">
-                      {interpolate(t("builders_valid_months"), {
-                        months: data.catalog.badgeMonths,
-                      })}
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span
+                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                        isSelected ? "bg-[color:var(--fd-primary)]" : "bg-[#d6d3d1]"
+                      }`}
+                      style={
+                        visual && isSelected ? { backgroundColor: visual.ring } : undefined
+                      }
+                      aria-hidden
+                    />
+                    <span>
+                      <span className="flex items-center gap-2 text-sm font-bold text-[color:var(--fd-text)]">
+                        {tierLabel(t, row.tier)}
+                        {isActive ? (
+                          <span className="rounded bg-[color:var(--fd-mint)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                            {t("builders_current")}
+                          </span>
+                        ) : null}
+                      </span>
                     </span>
                   </span>
-                  <span className="text-right">
-                    <span
-                      className="block tabular-nums text-sm font-bold"
-                      style={visual ? { color: visual.ring } : undefined}
-                    >
+                  <span className="shrink-0 text-right">
+                    <span className="block tabular-nums text-sm font-bold text-[color:var(--fd-text)]">
                       ${row.priceUsd}
                     </span>
                     <span className="block text-[10px] tabular-nums text-[color:var(--fd-muted)]">
@@ -285,51 +373,53 @@ export function BuildersProgramClient() {
           href={data.catalog.dexUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#991B1B]/30 bg-[#991B1B] py-3 text-sm font-bold text-white"
+          className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--fd-primary)] text-sm font-bold text-white transition hover:opacity-95 active:scale-[0.99]"
         >
           {t("builders_buy_dex")}
           <IconExternalLink className="h-4 w-4" />
         </a>
       ) : (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="mt-4 text-center text-[12px] text-[color:var(--fd-muted)]">
           {t("builders_dex_soon")}
         </p>
       )}
 
       {data.catalog.treasuryAddress ? (
-        <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
-          {t("builders_send_to")}{" "}
-          <span className="font-mono text-[10px] break-all text-[color:var(--fd-text)]">
+        <div className="mt-3 rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {t("builders_send_to")}
+          </p>
+          <p className="mt-1 break-all font-mono text-[11px] text-[color:var(--fd-text)]">
             {data.catalog.treasuryAddress}
-          </span>
-        </p>
+          </p>
+        </div>
       ) : (
-        <p className="mt-3 text-[11px] text-[color:var(--fd-muted)]">
+        <p className="mt-3 text-center text-[11px] text-[color:var(--fd-muted)]">
           {t("builders_treasury_pending")}
         </p>
       )}
 
       {!data.catalog.enabled ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="mt-4 text-center text-[12px] text-[color:var(--fd-muted)]">
           {t("builders_preview_notice")}
         </p>
       ) : null}
 
       {!data.kycApproved ? (
-        <p className="mt-4 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/30 px-3 py-2 text-xs">
+        <p className="mt-4 rounded-xl border border-[color:var(--fd-border)] px-3 py-2.5 text-xs text-[color:var(--fd-text)]">
           {t("builders_kyc_required")}{" "}
           <Link href="/app/profile/kyc" className="font-bold text-[color:var(--fd-primary)]">
             KYC →
           </Link>
         </p>
       ) : data.catalog.enabled && !data.pending ? (
-        <form onSubmit={(e) => void onSubmit(e)} className="mt-4 space-y-3">
+        <form onSubmit={(e) => void onSubmit(e)} className="mt-5 space-y-3">
           {err ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
               {err}
             </p>
           ) : null}
-          <p className="text-[11px] text-[color:var(--fd-muted)]">
+          <p className="text-[12px] text-[color:var(--fd-muted)]">
             {selectedPriceMcb != null
               ? interpolate(t("builders_pay_hint_usd"), {
                   usd: String(selectedPriceUsd),
@@ -338,15 +428,8 @@ export function BuildersProgramClient() {
                 })
               : t("builders_mcb_quote_pending")}
           </p>
-          {data.catalog.mcbUsdRate != null ? (
-            <p className="text-[10px] text-[color:var(--fd-muted)]">
-              {interpolate(t("builders_rate_hint"), {
-                rate: String(data.catalog.mcbUsdRate),
-              })}
-            </p>
-          ) : null}
           {selected?.feePerksUnlocked === false ? (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+            <p className="text-[11px] text-[color:var(--fd-muted)]">
               {t("builders_fee_perks_locked")}
             </p>
           ) : null}
@@ -371,28 +454,28 @@ export function BuildersProgramClient() {
               type="text"
               value={wallet}
               onChange={(e) => setWallet(e.target.value)}
-              placeholder="0x… (optional)"
+              placeholder="0x…"
               className="mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 font-mono text-sm outline-none focus:border-[color:var(--fd-primary)]"
             />
           </label>
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl bg-[#991B1B] py-2.5 text-sm font-bold text-white disabled:opacity-40"
+            className="flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] text-sm font-bold text-white disabled:opacity-40"
           >
             {busy ? "…" : t("builders_submit")}
           </button>
         </form>
       ) : null}
 
-      <p className="mt-6 text-[10px] leading-relaxed text-[color:var(--fd-muted)]">
+      <p className="mt-8 text-center text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
         {t("builders_disclaimer")}
       </p>
       <Link
         href="/whitepaper"
-        className="mt-2 block text-center text-[11px] font-bold text-[color:var(--fd-primary)]"
+        className="mt-2 block text-center text-[11px] font-semibold text-[color:var(--fd-primary)]"
       >
-        {t("points_whitepaper_link")} →
+        {t("points_whitepaper_link")}
       </Link>
     </div>
   );
