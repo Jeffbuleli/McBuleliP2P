@@ -396,13 +396,13 @@ function notifMeta(
       };
     }
     case "community_tip": {
-      const amount = Number(payload.amount) || 0;
+      const tipAmount = Number(amount) || Number(p.amount) || 0;
       const from = str("fromHandle");
       return {
         title: t("notif_community_tip_title"),
         body: t("notif_community_tip_body", {
-          amount: String(amount),
-          handle: from ? `@${from}` : "…",
+          amount: String(tipAmount),
+          handle: from ? `@${from}` : "...",
         }),
         href: from
           ? `/app/community/u/${from}`
