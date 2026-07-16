@@ -27,8 +27,8 @@ function CloseIcon({ className }: { className?: string }) {
 export function LandingNavbarV2() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const entryHref = useSessionEntryHref("/app/wallet");
-  const loginHref = loginHrefFor("/app/wallet");
+  const entryHref = useSessionEntryHref("/app");
+  const loginHref = loginHrefFor("/app");
 
   const nav = [
     { href: "/#services", label: t("landing_nav_services") },
@@ -112,7 +112,7 @@ export function LandingNavbarV2() {
               </Link>
             ))}
             <SessionAppLink
-              href="/app/wallet"
+              href="/app"
               onClick={() => setOpen(false)}
               className="mt-3 flex min-h-[48px] items-center justify-center rounded-xl bg-[#305F33] text-sm font-bold text-white"
             >

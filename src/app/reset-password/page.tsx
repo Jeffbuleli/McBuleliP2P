@@ -40,7 +40,7 @@ function ResetPasswordForm() {
         setErr(clientErrorText(t, data.error ?? "profile_invalid_input"));
         return;
       }
-      router.replace("/app/wallet");
+      router.replace("/app");
     } finally {
       setLoading(false);
     }

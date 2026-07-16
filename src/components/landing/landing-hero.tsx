@@ -71,14 +71,14 @@ export function LandingHero({ d }: { d: HeroDict }) {
           </p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
-              href={registerHrefFor("/app/wallet")}
+              href={registerHrefFor("/app")}
               prefetch={false}
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-2xl bg-[color:var(--fd-primary)] px-5 text-sm font-extrabold text-white shadow-lg shadow-[color:var(--fd-primary)]/25 active:scale-[0.99]"
             >
               {d.landing_cta_primary}
             </Link>
             <Link
-              href={loginHrefFor("/app/wallet")}
+              href={loginHrefFor("/app")}
               prefetch={false}
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-2xl border-2 border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-5 text-sm font-bold text-[color:var(--fd-text)] active:scale-[0.99] sm:flex-none sm:px-6"
             >

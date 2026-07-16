@@ -53,7 +53,9 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
     };
   }
 
-  const tiktok = url.match(/tiktok\.com\/@[\w.]+\/video\/(\d+)/)?.[1];
+  const tiktok =
+    url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/)?.[1] ??
+    url.match(/tiktok\.com\/(?:embed\/v2\/|video\/)(\d+)/)?.[1];
   if (tiktok) {
     return {
       kind: "tiktok",

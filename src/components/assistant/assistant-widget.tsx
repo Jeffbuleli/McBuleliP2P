@@ -638,9 +638,26 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
                   <button
                     type="submit"
                     disabled={loading || !draft.trim()}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl bg-[#305f33] px-4 text-sm font-bold text-white shadow-lg shadow-[#305f33]/30 disabled:opacity-50"
+                    aria-label={m.send}
+                    className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[#305f33] px-3.5 text-sm font-bold text-white shadow-lg shadow-[#305f33]/30 disabled:opacity-50 sm:px-4"
                   >
-                    {m.send}
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden
+                      className="shrink-0"
+                    >
+                      <path
+                        d="M4 12h12M13 6l6 6-6 6"
+                        stroke="currentColor"
+                        strokeWidth="2.25"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span>{m.send}</span>
                   </button>
                 </form>
                 <Link

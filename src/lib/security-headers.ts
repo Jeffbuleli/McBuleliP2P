@@ -6,7 +6,14 @@ import { mediaPublicOrigins } from "./media-url-config";
 
 export function buildContentSecurityPolicy(): string {
   const mediaOrigins = mediaPublicOrigins();
-  const imgSources = ["'self'", "data:", "blob:", ...mediaOrigins];
+  const imgSources = [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://img.youtube.com",
+    "https://i.ytimg.com",
+    ...mediaOrigins,
+  ];
   const mediaSources = ["'self'", "blob:", ...mediaOrigins];
   /** React / Turbopack need eval() in development for callstack reconstruction. Never in prod. */
   const scriptSrc = [
@@ -14,6 +21,9 @@ export function buildContentSecurityPolicy(): string {
     "'unsafe-inline'",
     ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
     "https://challenges.cloudflare.com",
+    "https://www.youtube.com",
+    "https://www.tiktok.com",
+    "https://platform.twitter.com",
   ].join(" ");
 
   return [
@@ -33,7 +43,22 @@ export function buildContentSecurityPolicy(): string {
       "https://verify.didit.me",
       ...mediaOrigins,
     ].join(" "),
-    "frame-src 'self' https://challenges.cloudflare.com https://verification.didit.me https://verify.didit.me https://live.mcbuleli.org",
+    [
+      "frame-src 'self'",
+      "https://challenges.cloudflare.com",
+      "https://verification.didit.me",
+      "https://verify.didit.me",
+      "https://live.mcbuleli.org",
+      "https://www.youtube.com",
+      "https://youtube.com",
+      "https://www.youtube-nocookie.com",
+      "https://www.tiktok.com",
+      "https://platform.twitter.com",
+      "https://www.facebook.com",
+      "https://facebook.com",
+      "https://t.me",
+      "https://telegram.org",
+    ].join(" "),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

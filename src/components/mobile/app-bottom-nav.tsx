@@ -22,7 +22,7 @@ export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
 
   const labelFor = (key: keyof Messages) => {
     if (key === "nav_trade") return "Trade";
-    if (key === "nav_community") return t("nav_community");
+    if (key === "nav_community") return "Community";
     if (key === "nav_profile") return "Profile";
     return t(key);
   };

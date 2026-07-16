@@ -84,6 +84,39 @@ async function runEnsureCommunitySchema(): Promise<void> {
     ADD COLUMN IF NOT EXISTS meta jsonb
   `);
   await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS utility_tag varchar(16) NOT NULL DEFAULT 'create'
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS quality_score smallint NOT NULL DEFAULT 50
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS quality_source varchar(16) NOT NULL DEFAULT 'rules'
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS boosted_until timestamptz
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS boost_bp_spent integer
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_utility_tag_idx
+    ON community_posts (utility_tag, published_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_quality_score_idx
+    ON community_posts (quality_score, published_at)
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS community_posts_boosted_until_idx
+    ON community_posts (boosted_until)
+    WHERE boosted_until IS NOT NULL
+  `);
+  await db.execute(sql`
     CREATE INDEX IF NOT EXISTS community_posts_feed_idx
     ON community_posts (status, published_at)
   `);

@@ -30,7 +30,7 @@ export function useSessionAppHref(appPath: string): string {
 }
 
 /** Entry CTA: app home when signed in, register otherwise. */
-export function useSessionEntryHref(appPath = "/app/wallet"): string {
+export function useSessionEntryHref(appPath = "/app"): string {
   const registerFallback = registerHrefFor(appPath);
   const [href, setHref] = useState(registerFallback);
 

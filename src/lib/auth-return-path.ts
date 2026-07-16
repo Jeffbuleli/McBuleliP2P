@@ -43,7 +43,13 @@ export function resolveAuthReturnPath(
     storeAuthReturnPath(safe);
     return safe;
   }
-  return peekAuthReturnPath() ?? safeAppRedirectPath(fallback);
+  const peeked = peekAuthReturnPath();
+  // Legacy marketing CTAs stored /app/wallet as the default entry — prefer Home.
+  if (peeked === "/app/wallet") {
+    clearAuthReturnPath();
+    return safeAppRedirectPath(fallback);
+  }
+  return peeked ?? safeAppRedirectPath(fallback);
 }
 
 export function loginHrefFor(appPath: string): string {
