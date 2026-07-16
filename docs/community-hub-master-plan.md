@@ -367,7 +367,8 @@ Intégré au système existant (`tryGrantRewardPoints`, `users.buleli_points_bal
 
 - Tables `meta` / events réputation
 - Specs groupes, badges, signaux trading
-- **Builders Program (MBP)** — spec draft : [builders-program-spec.md](./builders-program-spec.md) (G9 badges)
+- **Builders Program (MBP)** - spec draft : [builders-program-spec.md](./builders-program-spec.md) (G9 badges)
+- **Social Utility Graph (SUG)** - vision + specs : [social-utility-graph.md](./social-utility-graph.md) · Horizon A [social-utility-horizon-a.md](./social-utility-horizon-a.md) · Ads McB [social-utility-ads-mcb.md](./social-utility-ads-mcb.md)
 
 ---
 

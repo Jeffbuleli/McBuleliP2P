@@ -1,16 +1,19 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getDb, mcbClaims, rewardPointLedger, users } from "@/db";
 import { isValidAddressForNetwork } from "@/lib/address-format";
 import {
   bpToMcbAmount,
-  formatMcbAmount,
+  buildMcbClaimPoolStats,
   getMcbClaimMinBp,
   getMcbClaimPublicConfig,
   isMcbClaimEnabled,
   MCB_CLAIM_STATUS,
   REWARD_BP_PER_MCB_CLAIM,
+  type McbClaimPoolStats,
   type McbClaimStatus,
 } from "@/lib/mcb-token-config";
+
+export type { McbClaimPoolStats };
 
 export type McbClaimRow = {
   id: string;
@@ -36,6 +39,65 @@ function mapClaimRow(r: typeof mcbClaims.$inferSelect): McbClaimRow {
     createdAt: r.createdAt.toISOString(),
     completedAt: r.completedAt?.toISOString() ?? null,
   };
+}
+
+function utcMonthStart(): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0),
+  );
+}
+
+function sumMcb(rows: { total: string | null }[]): number {
+  const raw = rows[0]?.total;
+  if (raw == null) return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export async function getMcbClaimPoolStats(): Promise<McbClaimPoolStats> {
+  const db = getDb();
+  const monthStart = utcMonthStart();
+
+  const [completedRows, pendingRows, monthlyRows] = await Promise.all([
+    db
+      .select({
+        total: sql<string>`coalesce(sum(${mcbClaims.mcbAmount}::numeric), 0)`,
+      })
+      .from(mcbClaims)
+      .where(eq(mcbClaims.status, MCB_CLAIM_STATUS.COMPLETED)),
+    db
+      .select({
+        total: sql<string>`coalesce(sum(${mcbClaims.mcbAmount}::numeric), 0)`,
+      })
+      .from(mcbClaims)
+      .where(eq(mcbClaims.status, MCB_CLAIM_STATUS.PENDING)),
+    db
+      .select({
+        total: sql<string>`coalesce(sum(${mcbClaims.mcbAmount}::numeric), 0)`,
+      })
+      .from(mcbClaims)
+      .where(
+        and(
+          inArray(mcbClaims.status, [
+            MCB_CLAIM_STATUS.PENDING,
+            MCB_CLAIM_STATUS.COMPLETED,
+          ]),
+          gte(mcbClaims.createdAt, monthStart),
+        ),
+      ),
+  ]);
+
+  return buildMcbClaimPoolStats({
+    mintedMcb: sumMcb(completedRows),
+    pendingMcb: sumMcb(pendingRows),
+    monthlyUsedMcb: sumMcb(monthlyRows),
+  });
+}
+
+function effectivePoolRemainingMcb(pool: McbClaimPoolStats): number {
+  if (pool.monthlyRemainingMcb === null) return pool.remainingMcb;
+  return Math.min(pool.remainingMcb, pool.monthlyRemainingMcb);
 }
 
 export async function listUserMcbClaims(
@@ -71,10 +133,11 @@ export async function getUserPendingMcbClaim(
 }
 
 export async function getMcbClaimSummary(userId: string) {
-  const [claims, pending, config] = await Promise.all([
+  const [claims, pending, config, pool] = await Promise.all([
     listUserMcbClaims(userId, 10),
     getUserPendingMcbClaim(userId),
     Promise.resolve(getMcbClaimPublicConfig()),
+    getMcbClaimPoolStats(),
   ]);
 
   const db = getDb();
@@ -84,13 +147,20 @@ export async function getMcbClaimSummary(userId: string) {
     .where(eq(users.id, userId))
     .limit(1);
 
-  const maxClaimBp =
+  const poolRemainingMcb = effectivePoolRemainingMcb(pool);
+  const poolMaxBp = Math.floor(poolRemainingMcb) * config.bpPerMcb;
+
+  let maxClaimBp =
     user && config.minBp > 0
       ? Math.floor(user.balance / config.minBp) * config.minBp
       : 0;
+  if (poolMaxBp < maxClaimBp) {
+    maxClaimBp = Math.floor(poolMaxBp / config.bpPerMcb) * config.bpPerMcb;
+  }
 
   return {
     config,
+    pool,
     kycApproved: user?.kycStatus === "approved",
     balance: user?.balance ?? 0,
     maxClaimBp,
@@ -124,6 +194,16 @@ export async function requestMcbClaim(args: {
     return { ok: false, code: "mcb_claim_invalid_address" };
   }
 
+  const mcbNeeded = bpToMcbAmount(bp);
+  const pool = await getMcbClaimPoolStats();
+  const poolRemaining = effectivePoolRemainingMcb(pool);
+  if (poolRemaining <= 0) {
+    return { ok: false, code: "mcb_claim_pool_exhausted" };
+  }
+  if (mcbNeeded > poolRemaining) {
+    return { ok: false, code: "mcb_claim_pool_insufficient" };
+  }
+
   const db = getDb();
   const [user] = await db
     .select({
@@ -147,10 +227,19 @@ export async function requestMcbClaim(args: {
     return { ok: false, code: "mcb_claim_pending_exists" };
   }
 
-  const mcbAmount = formatMcbAmount(bp);
-
   try {
     const claim = await db.transaction(async (tx) => {
+      // Re-check pool inside the transaction window (best-effort; admin is low volume).
+      const freshPool = await getMcbClaimPoolStats();
+      const freshRemaining = effectivePoolRemainingMcb(freshPool);
+      if (mcbNeeded > freshRemaining) {
+        throw new Error(
+          freshRemaining <= 0
+            ? "mcb_claim_pool_exhausted"
+            : "mcb_claim_pool_insufficient",
+        );
+      }
+
       const [deducted] = await tx
         .update(users)
         .set({

@@ -2,7 +2,7 @@
 
 > **Statut :** référence produit & technique - à mettre à jour à chaque phase.  
 > **Dernière révision :** juillet 2026  
-> **Documents liés :** [utility-token-roadmap.md](./utility-token-roadmap.md) · [mcb-token-phase3.md](./mcb-token-phase3.md) · [mcb-bsc-deploy-checklist.md](./mcb-bsc-deploy-checklist.md) · [game-architecture.md](./game-architecture.md) · [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md) · [builders-program-spec.md](./builders-program-spec.md)
+> **Documents liés :** [utility-token-roadmap.md](./utility-token-roadmap.md) · [mcb-token-phase3.md](./mcb-token-phase3.md) · [mcb-bsc-deploy-checklist.md](./mcb-bsc-deploy-checklist.md) · [game-architecture.md](./game-architecture.md) · [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md) · [builders-program-spec.md](./builders-program-spec.md) · [social-utility-graph.md](./social-utility-graph.md) · [social-utility-ads-mcb.md](./social-utility-ads-mcb.md)
 
 ---
 
@@ -248,13 +248,108 @@ Script bulk : `npm run db:backfill-reward-points`.
 
 | Allocation | % suggéré | Notes |
 |------------|-----------|-------|
-| Émission via claim BP | 40 % | Plafond mensuel global claim |
-| Réserve écosystème (LP, rewards) | 35 % | Trésorerie ops |
+| Émission via claim BP | 40 % | Plafond mensuel global claim + tracking stock (voir §6.1) |
+| Réserve écosystème (LP, rewards) | 35 % | Trésorerie ops, LP DEX, Creator Fund seed |
 | Équipe / ops | 15 % | Vesting 4 ans |
 | Partenariats | 10 % | - |
 | **Supply max contrat** | 100M McB | `McBuleliToken` owner-mint |
 
 Pas d’ICO - émission liée à l’utilité réelle.
+
+### 6.1 Gestion du stock claim (40 %) - "Community Claim Pool"
+
+**Problème :** sans compteur, on ne sait pas si les 40 M McB (si supply = 100 M) sont déjà promis / mintés via claim.
+
+**Modèle proposé :**
+
+| Compteur (admin + page points) | Définition |
+|--------------------------------|------------|
+| `claim_pool_cap_mcb` | 40 % supply max (ex. 40_000_000) |
+| `claim_pool_minted_mcb` | Somme des claims fulfilled on-chain |
+| `claim_pool_pending_mcb` | Claims soumis non encore fulfilled |
+| `claim_pool_remaining_mcb` | cap − minted − pending |
+| `claim_monthly_global_cap_mcb` | Plafond mint / mois (anti-dump) |
+
+Règles :
+
+1. Un claim n’est accepté que si `amount ≤ remaining` **et** dans le plafond mensuel.
+2. UI utilisateur : barre "Stock communautaire restant" + "Votre BP convertibles ce mois".
+3. Admin `/admin/mcb-claims` : mêmes compteurs + alerte à 80 % / 95 % du pool.
+4. Le ratio **100 BP = 1 McB** reste fixe tant que le pool claim est ouvert ; ce n’est **pas** un prix marché.
+
+### 6.2 Après épuisement du pool claim - que deviennent les BP ?
+
+Les BP **ne meurent pas**. Ils changent de rôle :
+
+| Phase | BP → McB claim | BP usage principal |
+|-------|----------------|-------------------|
+| Pool ouvert | Oui (dans caps) | Claim + perks |
+| Pool ≥ 95 % | Claim ralenti / file d’attente | Perks + boosts + fees discounts |
+| Pool épuisé | **Claim fermé définitivement** (sauf décision gouvernance rare : réallocation réserve écosystème) | **Uniquement sinks utilité** |
+
+Sinks BP post-claim (déjà ou à prioriser) :
+
+- Perks P2P / bots / withdraw (existants + Phase 2b)
+- Boost Community (Horizon A - 80 BP)
+- Accès signaux / formations / game boosts
+- Eventuel "échange BP → crédit ads créateur" (pas mint McB)
+
+**Message produit :** BP = points de mérite plateforme pour toujours. McB claim = **fenêtre d’émission communautaire limitée**, pas un robinet infini.
+
+Option gouvernance (rare, transparent) : prélever un % de la **réserve écosystème (35 %)** pour rouvrir un petit pool claim saisonnier - jamais silencieux, jamais "inflation libre".
+
+### 6.3 Pourquoi "McB seulement via BP" ne fixe pas une valeur on-chain
+
+| Canal | Effet sur le prix marché |
+|-------|--------------------------|
+| Claim BP → McB | **Augmente l’offre** (mint / unlock) - pression vendeuse si revente DEX |
+| Achat McB sur PancakeSwap | **Demande** - seuls les acheteurs volontaires fixent un prix |
+| Spend / burn McB in-app | **Réduit l’offre circulante** - soutient l’utilité |
+
+Donc : si tout le monde reçoit McB **gratuitement** via BP et que **personne n’a besoin d’en acheter**, le prix DEX reste faible ou illiquide. C’est attendu pour un utility token sans ICO - ce n’est **pas** un bug, c’est le signal qu’il manque des **sinks payants**.
+
+**Règle Constitution :** McBuleli ne promet jamais un prix. La "valeur" on-chain = liquidité réelle + utilité demandée, pas le ratio 100 BP = 1 McB.
+
+### 6.4 Services qui obligent (ou poussent) à acheter McB sur DEX
+
+Objectif : créer de la **demande** indépendante du claim. Priorité = services où payer en McB est un avantage clair, pas une punition.
+
+| # | Service | Qui paie | Sink / split | Horizon |
+|---|---------|----------|--------------|---------|
+| 0 | **Builders Program (Bronze→Platinum)** | Builders | Burn ou lock McB (pas BP) | MBP |
+| 1 | **Ads Community / marque** | Entreprises | 50 % Creator Fund / 25 % burn / 25 % ops | SUG B |
+| 2 | **Boost post premium (McB)** | Créateurs Verified | Burn partiel + ops | SUG B |
+| 3 | **Frais plateforme −25 % si payés en McB** | Traders / P2P / withdraw | Partial burn | Phase 4 roadmap |
+| 4 | **Badge / listing "Official Brand"** | Marques | McB one-shot + renew | SUG B |
+| 5 | **Accès signaux / packs pro** (option McB) | Power users | Burn ou ops | Phase B tokenomics |
+| 6 | **Sponsor live Academy** | Marques / formateurs | Split créateur + burn | SUG B |
+| 7 | **Staking McB / LP** (rewards utilité, pas APY promis) | Holders | Lock liquidité | Phase C |
+
+**Philosophie (esprit humain) :** BP = engagement gratuit (like, comment, post) - facile, souvent négligé. **McB = noblesse** - acheté ou claimé rare, exigé pour les services qui comptent (MBP, ads, fees premium). Objectif : plus d’achats DEX que de reventes post-claim.
+
+Voir [builders-program-spec.md](./builders-program-spec.md).
+
+**Séparation claire :**
+
+- **USDT / PI** = valeur stable (tips abo, P2P, staking yield).
+- **McB** = noblesse + carburant (MBP, ads, discounts, badges, sponsor).
+- **BP** = mérite gratuit / engagement facile ; claim limité dans le temps.
+
+Sans au moins **#0 (MBP) + #1 + #3** en prod, le DEX sert surtout de sortie pour les claimers - mauvaise boucle. Avec MBP + ads + fees McB, le DEX sert d’**entrée** pour Builders, marques et power users.
+
+### 6.5 Boucle économique cible (résumé)
+
+```
+Engagement utile → BP (earn, plafonné)
+                 → claim McB tant que pool 40 % > 0
+                 → sinon BP = perks only
+
+Builders / marques / power users → achètent McB sur DEX
+                                 → MBP (Bronze→Platinum) + ads + fees
+                                 → burn / lock + Creator Fund + ops
+
+Liquidité DEX ← réserve écosystème (seed) + volume organique
+```
 
 ---
 
@@ -271,6 +366,8 @@ Pas d’ICO - émission liée à l’utilité réelle.
 | G7 | `deposit_launch_rewards` table sans service | drizzle 0079 |
 | G8 | Doc roadmap 2000 BP vs code 4000 | `utility-token-roadmap.md` |
 | G9 | Réputation / badges Community | `community-hub-master-plan.md` - non implémenté |
+| G10 | Social Utility Graph (tags, quality, ads McB) | [social-utility-graph.md](./social-utility-graph.md) - specs A/B |
+| G11 | Compteurs claim pool (cap / minted / remaining) + UI | `mcb-claim-service.ts`, admin claims, page points - voir §6.1 |
 
 ---
 
@@ -310,10 +407,10 @@ Pas d’ICO - émission liée à l’utilité réelle.
 ## 10. Prochaines étapes suggérées (quand on reprend)
 
 1. Valider la **Phase A** (P0 : live join BP + reconcile).
-2. Prioriser **2–3 sinks court terme** (retrait, signal, formation).
-3. Décider **date pilote claim McB** + montant trésorerie initiale.
-4. Mettre à jour `utility-token-roadmap.md` (cap 4000, lien vers ce doc).
-5. Implémenter puis mesurer KPI Phase A avant Phase B.
+2. Implémenter **compteurs claim pool** (§6.1 / G11) avant scale claim.
+3. Prioriser **sinks McB payants** (§6.4) : ads + fees −25 % en McB.
+4. Décider **date pilote claim McB** + seed liquidité DEX (réserve 35 %).
+5. Implémenter puis mesurer KPI Phase A avant Phase B / SUG B.
 
 ---
 

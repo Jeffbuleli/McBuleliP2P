@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ReputationLevelId } from "@/lib/community/reputation-levels";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
+import { buildersTierVisual } from "@/lib/builders/builders-visual";
 
 function BadgeShell({
   children,
@@ -126,5 +127,35 @@ export function CommunityBadgeIcon({ slug }: { slug: string }) {
       <circle cx="12" cy="8" r="4" {...c} />
       <path d="M6 20c0-4 2.7-6 6-6s6 2 6 6" {...c} />
     </svg>
+  );
+}
+
+/** Paid Builders Program tier (McB) — nobility chip on public profiles. */
+export function BuildersTierBadge({
+  tier,
+  fr,
+}: {
+  tier: string;
+  fr: boolean;
+}) {
+  const labels: Record<string, { fr: string; en: string }> = {
+    bronze: { fr: "Builder Bronze", en: "Bronze Builder" },
+    silver: { fr: "Builder Silver", en: "Silver Builder" },
+    gold: { fr: "Builder Gold", en: "Gold Builder" },
+    diamond: { fr: "Builder Diamond", en: "Diamond Builder" },
+    platinum: { fr: "Builder Platinum", en: "Platinum Builder" },
+  };
+  const label = labels[tier] ?? { fr: "Builder", en: "Builder" };
+  const visual = buildersTierVisual(tier);
+  return (
+    <BadgeShell
+      title={fr ? label.fr : label.en}
+      className={
+        visual?.badgeClass ??
+        "bg-amber-50 text-amber-950 ring-1 ring-amber-300/60"
+      }
+    >
+      ★ {fr ? label.fr : label.en}
+    </BadgeShell>
   );
 }

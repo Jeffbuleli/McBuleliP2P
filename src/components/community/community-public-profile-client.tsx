@@ -10,11 +10,13 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   AdminGoldBadge,
   BlueCheckBadge,
+  BuildersTierBadge,
   CommunityBadgeIcon,
   KycVerifiedBadge,
   OnlineDot,
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
+import { buildersAvatarRingClass } from "@/lib/builders/builders-visual";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { CommunitySignalCard } from "@/components/community/community-signal-card";
 import type { FeedPostView } from "@/lib/community/feed-service";
@@ -198,13 +200,23 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         />
         <div className="-mt-12 px-4 pb-5">
           <div className="relative mx-auto w-fit">
-            <CommunityAvatar
-              label={profile.displayName}
-              avatarUrl={profile.avatarUrl}
-              sizeClass="h-24 w-24"
-              textClass="text-3xl"
-              className="rounded-full border-4 border-white shadow-md"
-            />
+            <div
+              className={`rounded-full p-0.5 ${
+                profile.builderTier
+                  ? buildersAvatarRingClass(profile.builderTier)
+                  : ""
+              }`}
+            >
+              <CommunityAvatar
+                label={profile.displayName}
+                avatarUrl={profile.avatarUrl}
+                sizeClass="h-24 w-24"
+                textClass="text-3xl"
+                className={`rounded-full border-4 border-white ${
+                  profile.builderTier ? "" : "shadow-md"
+                }`}
+              />
+            </div>
             <OnlineDot online={profile.online} />
           </div>
 
@@ -219,6 +231,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               {profile.isAdmin ? <AdminGoldBadge fr={fr} /> : null}
               {profile.showKycBadge ? <KycVerifiedBadge fr={fr} /> : null}
               {profile.verifiedBlue ? <BlueCheckBadge fr={fr} /> : null}
+              {profile.builderTier ? (
+                <BuildersTierBadge tier={profile.builderTier} fr={fr} />
+              ) : null}
               <ReputationLevelBadge levelId={profile.reputationLevel} fr={fr} />
             </div>
           </div>
@@ -227,6 +242,23 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
             <p className="mt-3 whitespace-pre-wrap text-center text-sm leading-relaxed text-[#57534e]">
               {profile.bio}
             </p>
+          ) : null}
+
+          {profile.isOwnProfile ? (
+            <div className="mt-3 flex justify-center">
+              <Link
+                href="/app/community/builders"
+                className="rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 text-[11px] font-bold text-amber-950"
+              >
+                {profile.builderTier
+                  ? fr
+                    ? "Gérer mon badge Builder →"
+                    : "Manage Builder badge →"
+                  : fr
+                    ? "Devenir Builder (McB) →"
+                    : "Become a Builder (McB) →"}
+              </Link>
+            </div>
           ) : null}
 
           <div className="mt-4 flex justify-center gap-8 text-center">

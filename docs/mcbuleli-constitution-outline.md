@@ -2,7 +2,7 @@
 
 > **Statut :** outline de la page publique `https://mcbuleli.org/whitepaper`  
 > **Version :** 1.0 · juillet 2026  
-> **Sources :** code live · [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) · [builders-program-spec.md](./builders-program-spec.md)
+> **Sources :** code live · [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) · [builders-program-spec.md](./builders-program-spec.md) · [social-utility-graph.md](./social-utility-graph.md)
 
 **Règle d’édition :** chaque phrase publique est soit un **fait live**, soit marquée **roadmap / draft**. Aucune promesse de prix, d’APY token, ni d’ICO.
 

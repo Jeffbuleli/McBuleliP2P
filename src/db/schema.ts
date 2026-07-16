@@ -2050,6 +2050,44 @@ export const mcbClaims = pgTable(
   ],
 );
 
+/** Builders Program — paid McB tiers (24 months). */
+export const buildersMemberships = pgTable(
+  "builders_memberships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tier: varchar("tier", { length: 16 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    paidMcb: numeric("paid_mcb", { precision: 36, scale: 18 }).notNull(),
+    paymentKind: varchar("payment_kind", { length: 24 })
+      .notNull()
+      .default("onchain_tx"),
+    walletAddress: varchar("wallet_address", { length: 64 }),
+    txHash: varchar("tx_hash", { length: 128 }),
+    rejectReason: text("reject_reason"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("builders_memberships_user_status_idx").on(
+      t.userId,
+      t.status,
+      t.createdAt,
+    ),
+    index("builders_memberships_status_created_idx").on(t.status, t.createdAt),
+    index("builders_memberships_tier_idx").on(t.tier, t.status),
+  ],
+);
+
 /** In-app notifications (bell drawer). */
 export const userNotifications = pgTable(
   "user_notifications",

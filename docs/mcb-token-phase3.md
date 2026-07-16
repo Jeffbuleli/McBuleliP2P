@@ -53,9 +53,23 @@ MCB_CLAIM_ENABLED=true
 # MCB_PANCAKESWAP_URL=https://pancakeswap.finance/swap?outputCurrency=0x...
 
 MCB_CLAIM_MIN_BP=100
+
+# Community claim pool (40% of 100M supply by default)
+# MCB_CLAIM_POOL_CAP_MCB=40000000
+# Optional monthly global mint cap via claim (0 = off)
+# MCB_CLAIM_MONTHLY_GLOBAL_CAP_MCB=0
+
+# Builders Program (paid McB tiers)
+# BUILDERS_PROGRAM_ENABLED=true
+# MCB_BUILDERS_TREASURY=0xYourTreasuryWallet
+# NEXT_PUBLIC_BUILDERS_PREVIEW=true
 ```
 
 Hide claim UI until ready: `NEXT_PUBLIC_MCB_CLAIM_PREVIEW=false`
+
+Admin `/admin/mcb-claims` shows **pool counters** (minted / pending / remaining). User claim UI shows the same stock bar.
+
+Builders: `/app/community/builders` + `/admin/builders` — see `docs/builders-program-spec.md`.
 
 ## Migration
 

@@ -55,12 +55,26 @@ type ClaimConfig = {
   enabled: boolean;
   bpPerMcb: number;
   minBp: number;
+  poolCapMcb: number;
+  monthlyGlobalCapMcb: number;
   chainLabel: string;
   chainId: number;
   tokenStandard: string;
   contractAddress: string | null;
   explorerTokenUrl: string | null;
   dexUrl: string | null;
+};
+
+type ClaimPool = {
+  capMcb: number;
+  mintedMcb: number;
+  pendingMcb: number;
+  remainingMcb: number;
+  usedPercent: number;
+  monthlyCapMcb: number | null;
+  monthlyUsedMcb: number;
+  monthlyRemainingMcb: number | null;
+  claimOpen: boolean;
 };
 
 type ClaimRow = {
@@ -76,6 +90,7 @@ type ClaimRow = {
 
 type ClaimPayload = {
   config: ClaimConfig;
+  pool?: ClaimPool;
   kycApproved: boolean;
   balance: number;
   maxClaimBp: number;
@@ -269,6 +284,8 @@ export default function WalletPointsPage() {
     if (code === "mcb_claim_invalid_address") return t("mcb_claim_error_address");
     if (code === "mcb_claim_bp_step") return t("mcb_claim_error_step");
     if (code === "mcb_claim_min_bp") return t("mcb_claim_error_min");
+    if (code === "mcb_claim_pool_exhausted") return t("mcb_claim_error_pool_exhausted");
+    if (code === "mcb_claim_pool_insufficient") return t("mcb_claim_error_pool_insufficient");
     return t("mcb_claim_error_generic");
   }
 
@@ -622,6 +639,40 @@ export default function WalletPointsPage() {
                 </p>
               ) : null}
 
+              {claimData.pool ? (
+                <div className="mt-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-[11px] font-semibold text-[color:var(--fd-muted)]">
+                      {t("mcb_claim_pool_label")}
+                    </p>
+                    <p className="text-[11px] tabular-nums text-[color:var(--fd-muted)]">
+                      {claimData.pool.usedPercent}% ·{" "}
+                      {claimData.pool.remainingMcb.toLocaleString(loc, {
+                        maximumFractionDigits: 0,
+                      })}{" "}
+                      /{" "}
+                      {claimData.pool.capMcb.toLocaleString(loc, {
+                        maximumFractionDigits: 0,
+                      })}{" "}
+                      McB
+                    </p>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[color:var(--fd-mint)]">
+                    <div
+                      className="h-full rounded-full bg-[#991B1B] transition-all"
+                      style={{
+                        width: `${Math.min(100, claimData.pool.usedPercent)}%`,
+                      }}
+                    />
+                  </div>
+                  {!claimData.pool.claimOpen ? (
+                    <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                      {t("mcb_claim_pool_closed")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               {claimData.pending ? (
                 <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/80 px-3 py-3">
                   <p className="text-sm font-semibold text-sky-900">
@@ -644,7 +695,9 @@ export default function WalletPointsPage() {
                     KYC →
                   </Link>
                 </p>
-              ) : claimData.config.enabled && !claimData.pending ? (
+              ) : claimData.config.enabled &&
+                claimData.pool?.claimOpen !== false &&
+                !claimData.pending ? (
                 <form onSubmit={(e) => void handleClaim(e)} className="mt-4 space-y-3">
                   {claimErr ? (
                     <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
@@ -729,6 +782,13 @@ export default function WalletPointsPage() {
                   {t("mcb_claim_dex_link")} ↗
                 </a>
               ) : null}
+
+              <Link
+                href="/app/community/builders"
+                className="mt-3 block text-[11px] font-bold text-[#991B1B]"
+              >
+                {t("builders_title")} →
+              </Link>
             </section>
           ) : null}
 

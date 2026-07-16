@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import {
+  BuildersTierBadge,
   KycVerifiedBadge,
   ReputationLevelBadge,
 } from "@/components/community/community-badges";
 import { COMMUNITY_AVATAR_RING, COMMUNITY_META_TEXT } from "@/lib/community/community-ui";
+import { buildersAvatarRingClass } from "@/lib/builders/builders-visual";
 import { formatRelativeTime } from "@/lib/community/relative-time";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
 
@@ -20,12 +22,16 @@ export function CommunityAuthorHeader({
   compact?: boolean;
 }) {
   const size = compact ? "h-9 w-9 text-[10px]" : "h-11 w-11 text-sm";
+  const ringClass = buildersAvatarRingClass(
+    author.builderTier,
+    COMMUNITY_AVATAR_RING,
+  );
 
   return (
     <div className="flex min-w-0 items-start gap-3">
       <Link
         href={`/app/community/u/${author.handle}`}
-        className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full ${COMMUNITY_AVATAR_RING}`}
+        className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full ${ringClass}`}
       >
         <CommunityAvatar
           label={author.displayName}
@@ -43,6 +49,9 @@ export function CommunityAuthorHeader({
             {author.displayName}
           </Link>
           {author.showKycBadge ? <KycVerifiedBadge fr={fr} /> : null}
+          {author.builderTier ? (
+            <BuildersTierBadge tier={author.builderTier} fr={fr} />
+          ) : null}
           {author.reputationLevel ? (
             <ReputationLevelBadge levelId={author.reputationLevel} fr={fr} />
           ) : null}

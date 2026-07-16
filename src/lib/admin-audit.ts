@@ -19,6 +19,8 @@ export const PlatformAdminAuditAction = {
   PLATFORM_EXPENSE_PAID: "platform_expense.paid",
   MCB_CLAIM_COMPLETE: "mcb_claim.complete",
   MCB_CLAIM_REJECT: "mcb_claim.reject",
+  BUILDERS_COMPLETE: "builders.complete",
+  BUILDERS_REJECT: "builders.reject",
   TRADE_LIVE_UPDATE: "trade.live_update",
 } as const;
 

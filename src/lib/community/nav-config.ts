@@ -13,7 +13,8 @@ export type CommunityCategoryId =
   | "blogs"
   | "questions"
   | "signals"
-  | "ranking";
+  | "ranking"
+  | "builders";
 
 export type CommunityCategoryNavItem = {
   id: CommunityCategoryId;
@@ -34,6 +35,7 @@ export const COMMUNITY_CATEGORY_NAV: CommunityCategoryNavItem[] = [
   { id: "questions", labelFr: "Questions", labelEn: "Q&A" },
   { id: "signals", labelFr: "Signaux", labelEn: "Signals" },
   { id: "ranking", labelFr: "Classement", labelEn: "Ranking", href: "/app/community/traders" },
+  { id: "builders", labelFr: "Builders", labelEn: "Builders", href: "/app/community/builders" },
 ];
 
 export type CommunityPrimaryNavItem = {

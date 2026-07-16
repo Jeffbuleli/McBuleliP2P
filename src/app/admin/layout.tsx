@@ -131,6 +131,9 @@ export default async function AdminLayout({
               <AdminNavLink href="/admin/mcb-claims" variant="money" icon="finance">
                 {d.admin_nav_mcb_claims}
               </AdminNavLink>
+              <AdminNavLink href="/admin/builders" variant="money" icon="users">
+                {d.admin_nav_builders}
+              </AdminNavLink>
               <AdminNavLink href="/admin/academy" variant="support" icon="users">
                 Academy
               </AdminNavLink>

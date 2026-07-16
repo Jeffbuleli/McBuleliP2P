@@ -12,6 +12,11 @@ import { normalizePublicMediaUrl } from "@/lib/media-url";
 import { listActiveBotSubscriptions } from "@/lib/bot-subscription-service";
 import { listUserBadges } from "@/lib/community/badges-service";
 import {
+  getActiveBuildersMembership,
+  getActiveBuildersTiersMap,
+} from "@/lib/builders/builders-service";
+import type { BuildersTier } from "@/lib/builders/builders-config";
+import {
   countFollowing,
   countTraderFollowers,
   isFollowingTrader,
@@ -79,6 +84,7 @@ export type CommunityAuthorView = {
   reputationScore?: number;
   reputationLevel?: string;
   memberSince?: string;
+  builderTier?: BuildersTier | null;
 };
 
 export async function ensureCommunityProfile(
@@ -185,6 +191,13 @@ export async function getAuthorsMap(
 
   const userById = new Map(userRows.map((r) => [r.id, r]));
 
+  let buildersByUser = new Map<string, BuildersTier>();
+  try {
+    buildersByUser = await getActiveBuildersTiersMap(uniq);
+  } catch {
+    /* table may be missing before migration 0098 */
+  }
+
   for (const id of uniq) {
     const p = profiles.find((x) => x.userId === id);
     const u = userById.get(id);
@@ -199,6 +212,7 @@ export async function getAuthorsMap(
         reputationScore: p.reputationScore,
         reputationLevel: level.id,
         memberSince: p.createdAt.toISOString(),
+        builderTier: buildersByUser.get(id) ?? null,
       });
     } else if (u) {
       map.set(id, {
@@ -210,6 +224,7 @@ export async function getAuthorsMap(
           u.displayName?.trim() || u.email.split("@")[0] || "Membre",
         showKycBadge: u.kycStatus === "approved",
         avatarUrl: displayAvatarUrl(u.avatarUrl),
+        builderTier: buildersByUser.get(id) ?? null,
       });
     }
   }
@@ -275,6 +290,7 @@ export type PublicProfileView = {
   memberSince: string;
   online: boolean;
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
+  builderTier: BuildersTier | null;
   viewerFollows: boolean;
   isOwnProfile: boolean;
   signalStats: AuthorSignalStats;
@@ -365,6 +381,12 @@ export async function getPublicProfileByHandle(
   const livePostsCount = Number(publishedPosts?.n ?? 0);
 
   const badges = await listUserBadges(profile.userId);
+  let builders: Awaited<ReturnType<typeof getActiveBuildersMembership>> = null;
+  try {
+    builders = await getActiveBuildersMembership(profile.userId);
+  } catch {
+    /* migration 0098 */
+  }
   const resolvedHandle = await maybeRepairLegacyHandle(
     db,
     profile,
@@ -400,6 +422,7 @@ export async function getPublicProfileByHandle(
     memberSince: profile.createdAt.toISOString(),
     online,
     badges,
+    builderTier: builders?.tier ?? null,
     viewerFollows: viewerId
       ? await isFollowingTrader(viewerId, profile.userId)
       : false,

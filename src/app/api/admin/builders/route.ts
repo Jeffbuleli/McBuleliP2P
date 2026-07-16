@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { listAdminBuildersMemberships } from "@/lib/builders/builders-service";
 import {
-  getMcbClaimPoolStats,
-  listAdminMcbClaims,
-} from "@/lib/mcb-claim-service";
-import { MCB_CLAIM_STATUS, type McbClaimStatus } from "@/lib/mcb-token-config";
+  BUILDERS_MEMBERSHIP_STATUS,
+  type BuildersMembershipStatus,
+} from "@/lib/builders/builders-config";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +20,15 @@ export async function GET(req: Request) {
   const statusParam = url.searchParams.get("status");
   const status =
     statusParam &&
-    (Object.values(MCB_CLAIM_STATUS) as string[]).includes(statusParam)
-      ? (statusParam as McbClaimStatus)
+    (Object.values(BUILDERS_MEMBERSHIP_STATUS) as string[]).includes(
+      statusParam,
+    )
+      ? (statusParam as BuildersMembershipStatus)
       : undefined;
 
-  const [claims, pool] = await Promise.all([
-    listAdminMcbClaims({ status, limit: 100 }),
-    getMcbClaimPoolStats(),
-  ]);
-  return NextResponse.json({ claims, pool });
+  const memberships = await listAdminBuildersMemberships({
+    status,
+    limit: 100,
+  });
+  return NextResponse.json({ memberships });
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { interpolate } from "@/i18n/messages";
 import {
   AdminBackLink,
   AdminPageHeader,
@@ -23,9 +24,26 @@ type ClaimRow = {
   createdAt: string;
 };
 
+type ClaimPool = {
+  capMcb: number;
+  mintedMcb: number;
+  pendingMcb: number;
+  remainingMcb: number;
+  usedPercent: number;
+  monthlyCapMcb: number | null;
+  monthlyUsedMcb: number;
+  monthlyRemainingMcb: number | null;
+  claimOpen: boolean;
+};
+
+function formatMcb(n: number): string {
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
 export default function AdminMcbClaimsPage() {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<ClaimRow[] | null>(null);
+  const [pool, setPool] = useState<ClaimPool | null>(null);
   const [status, setStatus] = useState("pending");
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -43,6 +61,7 @@ export default function AdminMcbClaimsPage() {
       return;
     }
     setRows(data.claims as ClaimRow[]);
+    setPool((data.pool as ClaimPool) ?? null);
   }, [status]);
 
   useEffect(() => {
@@ -170,6 +189,49 @@ export default function AdminMcbClaimsPage() {
         subtitle={t("mcb_admin_subtitle")}
         action={<AdminBackLink>{t("admin_back")}</AdminBackLink>}
       />
+
+      {pool ? (
+        <div
+          className={`mb-4 rounded-xl border px-4 py-3 ${
+            pool.claimOpen
+              ? "border-[color:var(--fd-border)] bg-[color:var(--fd-card)]"
+              : "border-amber-300 bg-amber-50"
+          }`}
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-bold text-[color:var(--fd-text)]">
+              {t("mcb_admin_pool_title")}
+            </p>
+            <p className="text-xs tabular-nums text-[color:var(--fd-muted)]">
+              {pool.usedPercent}% · {formatMcb(pool.remainingMcb)} /{" "}
+              {formatMcb(pool.capMcb)} McB {t("mcb_admin_pool_remaining")}
+            </p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[color:var(--fd-mint)]">
+            <div
+              className="h-full rounded-full bg-[color:var(--fd-primary)] transition-all"
+              style={{ width: `${Math.min(100, pool.usedPercent)}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-[color:var(--fd-muted)]">
+            {interpolate(t("mcb_admin_pool_detail"), {
+              minted: formatMcb(pool.mintedMcb),
+              pending: formatMcb(pool.pendingMcb),
+            })}
+            {pool.monthlyCapMcb != null
+              ? ` · ${interpolate(t("mcb_admin_pool_monthly"), {
+                  used: formatMcb(pool.monthlyUsedMcb),
+                  cap: formatMcb(pool.monthlyCapMcb),
+                })}`
+              : null}
+          </p>
+          {!pool.claimOpen ? (
+            <p className="mt-2 text-xs font-semibold text-amber-900">
+              {t("mcb_admin_pool_closed")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mb-4 flex flex-wrap gap-2">
         {(["pending", "completed", "rejected", "all"] as const).map((s) => (
