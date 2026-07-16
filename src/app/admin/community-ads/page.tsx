@@ -76,7 +76,7 @@ export default function AdminCommunityAdsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4">
-      <AdminBackLink />
+      <AdminBackLink>{fr ? "Retour" : "Back"}</AdminBackLink>
       <AdminPageHeader
         title={fr ? "Ads McB" : "McB Ads"}
         subtitle={
