@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { IconPlay } from "@/components/community/community-icons";
-import {
-  IconExternalLink,
-  IconPaperPlane,
-} from "@/components/community/community-inline-icons";
+import { IconExternalLink } from "@/components/community/community-inline-icons";
 import type { ParsedEmbed } from "@/lib/community/link-embed";
 
 function EmbedPreview({
@@ -32,22 +29,19 @@ function EmbedPreview({
         <img
           src={embed.thumbnailUrl}
           alt=""
-          className="h-full w-full object-cover transition group-active:scale-[1.02]"
+          className="h-full w-full object-cover"
           loading="lazy"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#292524] via-[#1c1917] to-[#0c0a09]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#292524] to-[#0c0a09]" />
       )}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/35 transition group-active:bg-black/25">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 shadow-lg ring-2 ring-white/30 backdrop-blur-sm">
+      <div className="absolute inset-0 flex items-center justify-center bg-black/35">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 ring-2 ring-white/30">
           <IconPlay size={40} />
         </span>
       </div>
       <span className="absolute left-3 top-3 rounded-md bg-black/65 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
         {embed.label}
-      </span>
-      <span className="absolute bottom-3 right-3 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold text-white/90">
-        {fr ? "Appuyer pour lire" : "Tap to play"}
       </span>
     </button>
   );
@@ -72,11 +66,17 @@ export function CommunityLinkEmbed({
         {playing ? (
           <div className="relative aspect-video w-full bg-black">
             <iframe
-              src={embed.embedUrl}
+              src={
+                embed.kind === "youtube"
+                  ? `${embed.embedUrl}${embed.embedUrl.includes("?") ? "&" : "?"}autoplay=1`
+                  : embed.embedUrl
+              }
               title={embed.label}
               className="absolute inset-0 h-full w-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         ) : (
@@ -88,9 +88,10 @@ export function CommunityLinkEmbed({
             href={embed.externalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-[#305f33]"
+            className="inline-flex items-center gap-1 font-semibold text-[#305f33]"
             onClick={(e) => e.stopPropagation()}
           >
+            <IconExternalLink className="h-3.5 w-3.5" />
             {fr ? "Ouvrir" : "Open"}
           </a>
         </div>
@@ -98,40 +99,20 @@ export function CommunityLinkEmbed({
     );
   }
 
-  const isTelegram = embed.kind === "telegram";
-
   return (
     <a
       href={embed.externalUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`mt-3 flex items-center gap-3 rounded-xl border px-4 py-3 active:scale-[0.99] ${
-        isTelegram
-          ? "border-[#229ed9]/30 bg-[#e8f6fc] text-[#0c4a6e]"
-          : "border-[#f0f4f2] bg-[#fafaf9] text-[#44403c]"
-      }`}
+      className="mt-3 flex items-center gap-3 rounded-xl border border-[#f0f4f2] bg-[#fafaf9] px-4 py-3 text-[#44403c] active:scale-[0.99]"
       onClick={(e) => e.stopPropagation()}
     >
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg ${
-          isTelegram ? "bg-[#229ed9] text-white" : "bg-[#e8f3ee] text-[#305f33]"
-        }`}
-      >
-        {isTelegram ? (
-          <IconPaperPlane className="h-5 w-5" />
-        ) : (
-          <IconExternalLink className="h-5 w-5" />
-        )}
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f3ee] text-[#305f33]">
+        <IconExternalLink className="h-5 w-5" />
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-bold">
-          {isTelegram
-            ? fr
-              ? "Canal Telegram"
-              : "Telegram channel"
-            : embed.label}
-        </p>
-        <p className="truncate text-xs opacity-80">{embed.externalUrl}</p>
+        <p className="text-sm font-bold">{embed.label}</p>
+        <p className="truncate text-xs text-[#78716c]">{embed.externalUrl}</p>
       </div>
     </a>
   );

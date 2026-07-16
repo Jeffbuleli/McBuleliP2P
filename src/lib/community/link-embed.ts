@@ -3,7 +3,10 @@ export type EmbedKind =
   | "tiktok"
   | "twitter"
   | "facebook"
+  | "instagram"
   | "telegram"
+  | "linkedin"
+  | "reddit"
   | "unknown";
 
 export type ParsedEmbed = {
@@ -30,6 +33,10 @@ export function extractHashtags(text: string): string[] {
   return [...tags];
 }
 
+function isPlayableEmbed(p: ParsedEmbed): boolean {
+  return Boolean(p.embedUrl);
+}
+
 export function parseEmbedUrl(raw: string): ParsedEmbed | null {
   let url = raw.trim();
   try {
@@ -46,7 +53,7 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
   if (yt) {
     return {
       kind: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&playsinline=1&autoplay=1`,
+      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&playsinline=1`,
       externalUrl: url,
       label: "YouTube",
       thumbnailUrl: `https://img.youtube.com/vi/${yt}/hqdefault.jpg`,
@@ -65,6 +72,15 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       thumbnailUrl: null,
     };
   }
+  if (/vm\.tiktok\.com|vt\.tiktok\.com/i.test(url)) {
+    return {
+      kind: "tiktok",
+      embedUrl: null,
+      externalUrl: url,
+      label: "TikTok",
+      thumbnailUrl: null,
+    };
+  }
 
   const tweet = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/)?.[1];
   if (tweet) {
@@ -73,6 +89,18 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       embedUrl: `https://platform.twitter.com/embed/Tweet.html?id=${tweet}&theme=light`,
       externalUrl: url,
       label: "X",
+      thumbnailUrl: null,
+    };
+  }
+
+  const ig =
+    url.match(/instagram\.com\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/)?.[1];
+  if (ig || /instagram\.com/i.test(url)) {
+    return {
+      kind: "instagram",
+      embedUrl: ig ? `https://www.instagram.com/p/${ig}/embed` : null,
+      externalUrl: url,
+      label: "Instagram",
       thumbnailUrl: null,
     };
   }
@@ -89,7 +117,6 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
       thumbnailUrl: null,
     };
   }
-
   if (/t\.me\/[\w]+/i.test(url)) {
     return {
       kind: "telegram",
@@ -102,11 +129,34 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
 
   if (/facebook\.com|fb\.watch|fb\.com/i.test(url)) {
     const encoded = encodeURIComponent(url);
+    const isVideo = /\/videos\/|fb\.watch|\/reel\//i.test(url);
     return {
       kind: "facebook",
-      embedUrl: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&width=560`,
+      embedUrl: isVideo
+        ? `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&width=560`
+        : `https://www.facebook.com/plugins/post.php?href=${encoded}&show_text=true&width=560`,
       externalUrl: url,
       label: "Facebook",
+      thumbnailUrl: null,
+    };
+  }
+
+  if (/linkedin\.com\/(posts|feed|pulse)/i.test(url)) {
+    return {
+      kind: "linkedin",
+      embedUrl: null,
+      externalUrl: url,
+      label: "LinkedIn",
+      thumbnailUrl: null,
+    };
+  }
+
+  if (/reddit\.com\/r\//i.test(url)) {
+    return {
+      kind: "reddit",
+      embedUrl: null,
+      externalUrl: url,
+      label: "Reddit",
       thumbnailUrl: null,
     };
   }
@@ -120,48 +170,38 @@ export function parseEmbedUrl(raw: string): ParsedEmbed | null {
   };
 }
 
+/** Prefer playable embeds; otherwise known network link cards. */
 export function findEmbeddableUrl(text: string): ParsedEmbed | null {
   const urls = extractUrls(text);
+  let fallback: ParsedEmbed | null = null;
   for (const u of urls) {
     const parsed = parseEmbedUrl(u);
-    if (
-      parsed &&
-      (parsed.embedUrl ||
-        parsed.kind === "telegram" ||
-        parsed.kind === "facebook")
-    ) {
-      return parsed;
+    if (!parsed) continue;
+    if (isPlayableEmbed(parsed)) return parsed;
+    if (!fallback && parsed.kind !== "unknown") {
+      fallback = parsed;
     }
   }
-  return null;
+  return fallback;
 }
 
-/** Retire les URLs qui seront affichées en lecteur intégré. */
+/** Retire les URLs affichées en lecteur / carte réseau. */
 export function stripEmbeddableUrls(text: string): string {
   let result = text;
   for (const u of extractUrls(text)) {
     const parsed = parseEmbedUrl(u);
-    if (
-      parsed &&
-      (parsed.embedUrl ||
-        parsed.kind === "telegram" ||
-        parsed.kind === "facebook" ||
-        parsed.kind === "youtube" ||
-        parsed.kind === "tiktok" ||
-        parsed.kind === "twitter")
-    ) {
+    if (parsed && parsed.kind !== "unknown") {
       result = result.split(u).join(" ");
     }
   }
   return result.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
-/** Texte affiché dans le fil : masque le lien si un embed le remplace. */
+/** Texte fil : masque les URLs remplacées par un embed / carte. */
 export function postDisplayText(
   body: string,
-  opts?: { hasMedia?: boolean },
+  _opts?: { hasMedia?: boolean },
 ): string {
-  if (opts?.hasMedia) return body;
   if (!findEmbeddableUrl(body)) return body;
   return stripEmbeddableUrls(body);
 }

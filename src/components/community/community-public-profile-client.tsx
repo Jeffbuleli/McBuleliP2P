@@ -29,6 +29,21 @@ import { REPUTATION_LEVELS, normalizeReputationLevelId } from "@/lib/community/r
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
+import {
+  CommunityProfileEditSheet,
+  ProfileSocialLinksRow,
+} from "@/components/community/community-profile-edit-sheet";
+import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
+
+const EMPTY_LINKS: CommunityProfileLinks = {
+  location: null,
+  website: null,
+  x: null,
+  facebook: null,
+  tiktok: null,
+  whatsapp: null,
+  telegram: null,
+};
 
 function StatCard({
   label,
@@ -68,6 +83,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -198,47 +214,56 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
 
       <header className="relative mt-3 overflow-hidden rounded-3xl border border-[#f0f4f2] bg-white shadow-[0_8px_30px_rgba(12,10,9,0.06)]">
         <div
-          className="h-28 w-full bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20]"
+          className="relative h-36 w-full bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20]"
           style={
             profile.coverUrl
               ? {
-                  backgroundImage: `linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.45)), url(${resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl})`,
+                  backgroundImage: `linear-gradient(rgba(0,0,0,.2), rgba(0,0,0,.4)), url(${resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }
               : undefined
           }
         />
-        <div className="-mt-12 px-4 pb-5">
-          <div className="relative mx-auto w-fit">
-            <div
-              className={`rounded-full p-0.5 ${
-                profile.builderTier
-                  ? buildersAvatarRingClass(profile.builderTier)
-                  : ""
-              }`}
-            >
-              <CommunityAvatar
-                label={profile.displayName}
-                avatarUrl={profile.avatarUrl}
-                sizeClass="h-24 w-24"
-                textClass="text-3xl"
-                className={`rounded-full border-4 border-white ${
-                  profile.builderTier ? "" : "shadow-md"
+        <div className="-mt-14 px-4 pb-5">
+          <div className="flex items-end justify-between gap-3">
+            <div className="relative">
+              <div
+                className={`rounded-full p-0.5 ${
+                  profile.builderTier
+                    ? buildersAvatarRingClass(profile.builderTier)
+                    : ""
                 }`}
-              />
+              >
+                <CommunityAvatar
+                  label={profile.displayName}
+                  avatarUrl={profile.avatarUrl}
+                  sizeClass="h-24 w-24"
+                  textClass="text-3xl"
+                  className={`rounded-full border-4 border-white ${
+                    profile.builderTier ? "" : "shadow-md"
+                  }`}
+                />
+              </div>
+              <OnlineDot online={profile.online} />
             </div>
-            <OnlineDot online={profile.online} />
+            {profile.isOwnProfile ? (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="mb-1 rounded-full border border-[#e8f3ee] bg-white px-4 py-2 text-xs font-bold text-[#0c0a09] active:scale-[0.98]"
+              >
+                {fr ? "Modifier" : "Edit"}
+              </button>
+            ) : null}
           </div>
 
-          <div className="mt-3 text-center">
+          <div className="mt-3">
             <h1 className="text-xl font-bold tracking-tight text-[#0c0a09]">
               {profile.displayName}
             </h1>
-            <p className="mt-0.5 text-sm font-medium text-[#78716c]">
-              @{profile.handle}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+            <p className="text-sm font-medium text-[#78716c]">@{profile.handle}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               {profile.isAdmin ? <AdminGoldBadge fr={fr} /> : null}
               {profile.showKycBadge ? <KycVerifiedBadge fr={fr} /> : null}
               {profile.verifiedBlue ? <BlueCheckBadge fr={fr} /> : null}
@@ -251,48 +276,60 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           </div>
 
           {profile.bio ? (
-            <p className="mt-3 whitespace-pre-wrap text-center text-sm leading-relaxed text-[#57534e]">
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#44403c]">
               {profile.bio}
             </p>
+          ) : profile.isOwnProfile ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="mt-3 text-left text-sm text-[#a8a29e]"
+            >
+              {fr ? "+ Ajouter une bio" : "+ Add a bio"}
+            </button>
           ) : null}
 
+          <ProfileSocialLinksRow links={profile.links ?? EMPTY_LINKS} />
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span>
+              <span className="font-bold text-[#0c0a09]">{profile.followerCount}</span>{" "}
+              <span className="text-[#78716c]">{fr ? "abonnés" : "followers"}</span>
+            </span>
+            <span>
+              <span className="font-bold text-[#0c0a09]">{profile.followingCount}</span>{" "}
+              <span className="text-[#78716c]">{fr ? "abonnements" : "following"}</span>
+            </span>
+            <span>
+              <span className="font-bold text-[#0c0a09]">
+                {profile.stats?.posts ?? profile.postsCount}
+              </span>{" "}
+              <span className="text-[#78716c]">posts</span>
+            </span>
+          </div>
+
           {profile.isOwnProfile ? (
-            <div className="mt-3 flex justify-center">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Link
                 href="/app/community/builders"
                 className="rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 text-[11px] font-bold text-amber-950"
               >
                 {profile.builderTier
                   ? fr
-                    ? "Gérer mon badge Builder →"
-                    : "Manage Builder badge →"
+                    ? "Builder"
+                    : "Builder"
                   : fr
-                    ? "Devenir Builder (McB) →"
-                    : "Become a Builder (McB) →"}
+                    ? "Devenir Builder"
+                    : "Become Builder"}
+              </Link>
+              <Link
+                href="/app/profile"
+                className="rounded-full border border-[#e8f3ee] px-3 py-1.5 text-[11px] font-bold text-[#305f33]"
+              >
+                {fr ? "Photo de profil" : "Profile photo"}
               </Link>
             </div>
-          ) : null}
-
-          <div className="mt-4 flex justify-center gap-8 text-center">
-            <div>
-              <p className="text-base font-bold text-[#0c0a09]">
-                {profile.followerCount}
-              </p>
-              <p className="text-[11px] text-[#a8a29e]">
-                {fr ? "Abonnés" : "Followers"}
-              </p>
-            </div>
-            <div>
-              <p className="text-base font-bold text-[#0c0a09]">
-                {profile.followingCount}
-              </p>
-              <p className="text-[11px] text-[#a8a29e]">
-                {fr ? "Abonnements" : "Following"}
-              </p>
-            </div>
-          </div>
-
-          {!profile.isOwnProfile ? (
+          ) : (
             <div className="mt-4 flex flex-col gap-2">
               <div className="flex gap-2">
                 <button
@@ -328,17 +365,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  {fr ? "Message" : "Message"}
+                  Message
                 </button>
               </div>
-              <button
-                type="button"
-                disabled
-                title={fr ? "Tips McB après lancement BSC" : "McB tips after BSC launch"}
-                className="min-h-[36px] w-full cursor-not-allowed rounded-xl border border-dashed border-[#e7e5e4] bg-[#fafaf9] text-[10px] font-semibold text-[#a8a29e]"
-              >
-                {fr ? "Tip McB · bientôt" : "Tip McB · soon"}
-              </button>
               <div className="flex justify-center">
                 <CommunityTipBpBar
                   fr={fr}
@@ -376,18 +405,29 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                 />
               </div>
             </div>
-          ) : null}
+          )}
 
-          <p className="mt-4 text-center text-[10px] text-[#a8a29e]">
+          <p className="mt-4 text-[10px] text-[#a8a29e]">
             {fr ? "Membre depuis" : "Member since"}{" "}
             {new Date(profile.memberSince).toLocaleDateString(
               fr ? "fr-FR" : "en-US",
               { month: "long", year: "numeric" },
             )}
-            {levelLabel ? ` · ${levelLabel}` : ""}
+            {levelLabel ? ` - ${levelLabel}` : ""}
           </p>
         </div>
       </header>
+
+      {editing ? (
+        <CommunityProfileEditSheet
+          profile={profile}
+          fr={fr}
+          onClose={() => setEditing(false)}
+          onSaved={(next) =>
+            setProfile((p) => (p ? { ...p, ...next, links: next.links ?? p.links } : p))
+          }
+        />
+      ) : null}
 
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
         <StatCard

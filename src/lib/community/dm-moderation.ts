@@ -21,6 +21,15 @@ const SCAM_KEYWORDS = [
   "clé privée",
   "wallet connect",
   "airdrop claim",
+  "pump and dump",
+  "to the moon 1000x",
+  "dm for signal",
+  "signaux vip payants",
+  "récupération de fonds",
+  "fund recovery",
+  "nude",
+  "onlyfans",
+  "sex tape",
 ];
 
 const SUSPICIOUS_TLDS = [".tk", ".ml", ".ga", ".cf", ".gq", ".top", ".xyz"];

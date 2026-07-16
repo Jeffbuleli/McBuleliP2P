@@ -24,6 +24,7 @@ export function buildContentSecurityPolicy(): string {
     "https://www.youtube.com",
     "https://www.tiktok.com",
     "https://platform.twitter.com",
+    "https://www.instagram.com",
   ].join(" ");
 
   return [
@@ -56,6 +57,8 @@ export function buildContentSecurityPolicy(): string {
       "https://platform.twitter.com",
       "https://www.facebook.com",
       "https://facebook.com",
+      "https://www.instagram.com",
+      "https://instagram.com",
       "https://t.me",
       "https://telegram.org",
     ].join(" "),

@@ -26,6 +26,16 @@ import {
   countTraderFollowers,
   isFollowingTrader,
 } from "@/lib/community/follows-service";
+import {
+  linksFromMeta,
+  mergeCommunityProfileMeta,
+  normalizeProfileHandle,
+  normalizeProfileWebsite,
+  normalizeWhatsapp,
+  parseCommunityProfileMeta,
+  type CommunityProfileLinks,
+} from "@/lib/community/profile-meta";
+import { assertOwnedMedia } from "@/lib/community/media-service";
 import { UserRole } from "@/lib/roles";
 import { grantCommunityProfileSetup } from "@/lib/community/rewards-service";
 import { reputationLevelFromScore } from "@/lib/community/reputation-levels";
@@ -314,6 +324,7 @@ export type PublicProfileView = {
   badges: { slug: string; labelFr: string; labelEn: string; iconKey: string }[];
   builderTier: BuildersTier | null;
   isAmbassador: boolean;
+  links: CommunityProfileLinks;
   viewerFollows: boolean;
   isOwnProfile: boolean;
   signalStats: AuthorSignalStats;
@@ -511,6 +522,7 @@ export async function getPublicProfileByHandle(
     badges,
     builderTier: builders?.tier ?? null,
     isAmbassador,
+    links: linksFromMeta(parseCommunityProfileMeta(profile.meta)),
     viewerFollows: viewerId
       ? await isFollowingTrader(viewerId, profile.userId)
       : false,
@@ -525,6 +537,9 @@ export type OwnCommunityProfile = {
   bio: string;
   showKycBadge: boolean;
   displayName: string;
+  coverUrl: string | null;
+  coverMediaId: string | null;
+  links: CommunityProfileLinks;
 };
 
 export async function getOwnCommunityProfile(
@@ -537,30 +552,58 @@ export async function getOwnCommunityProfile(
       bio: communityUserProfiles.bio,
       showKycBadge: communityUserProfiles.showKycBadge,
       displayName: communityUserProfiles.displayName,
+      coverMediaId: communityUserProfiles.coverMediaId,
+      meta: communityUserProfiles.meta,
     })
     .from(communityUserProfiles)
     .where(eq(communityUserProfiles.userId, userId))
     .limit(1);
   if (!row) return null;
+  const coverUrl = await resolveCoverUrl(row.coverMediaId);
   return {
     handle: author.handle,
     bio: row.bio?.trim() ?? "",
     showKycBadge: row.showKycBadge,
     displayName: row.displayName,
+    coverUrl,
+    coverMediaId: row.coverMediaId,
+    links: linksFromMeta(parseCommunityProfileMeta(row.meta)),
   };
 }
 
+export type CommunityProfilePatch = {
+  handle?: string;
+  bio?: string;
+  showKycBadge?: boolean;
+  coverMediaId?: string | null;
+  location?: string;
+  website?: string;
+  x?: string;
+  facebook?: string;
+  tiktok?: string;
+  whatsapp?: string;
+  telegram?: string;
+};
+
 export async function updateOwnCommunityProfile(
   userId: string,
-  patch: { handle?: string; bio?: string; showKycBadge?: boolean },
+  patch: CommunityProfilePatch,
 ): Promise<{ ok: true; profile: OwnCommunityProfile } | { ok: false; error: string }> {
   await ensureCommunityProfile(userId);
   const db = getDb();
+
+  const [existing] = await db
+    .select({ meta: communityUserProfiles.meta })
+    .from(communityUserProfiles)
+    .where(eq(communityUserProfiles.userId, userId))
+    .limit(1);
 
   const updates: {
     handle?: string;
     bio?: string | null;
     showKycBadge?: boolean;
+    coverMediaId?: string | null;
+    meta?: Record<string, unknown>;
     updatedAt: Date;
   } = { updatedAt: new Date() };
 
@@ -587,6 +630,67 @@ export async function updateOwnCommunityProfile(
 
   if (patch.showKycBadge !== undefined) {
     updates.showKycBadge = patch.showKycBadge;
+  }
+
+  if (patch.coverMediaId !== undefined) {
+    if (patch.coverMediaId === null) {
+      updates.coverMediaId = null;
+    } else {
+      const ok = await assertOwnedMedia(userId, [patch.coverMediaId]);
+      if (!ok) return { ok: false, error: "profile_invalid_input" };
+      updates.coverMediaId = patch.coverMediaId;
+    }
+  }
+
+  const linkKeys = [
+    "location",
+    "website",
+    "x",
+    "facebook",
+    "tiktok",
+    "whatsapp",
+    "telegram",
+  ] as const;
+  const hasLinkPatch = linkKeys.some((k) => patch[k] !== undefined);
+  if (hasLinkPatch) {
+    const metaPatch: Parameters<typeof mergeCommunityProfileMeta>[1] = {};
+    if (patch.location !== undefined) {
+      metaPatch.location = patch.location.trim().slice(0, 80) || "";
+    }
+    if (patch.website !== undefined) {
+      const w = patch.website.trim();
+      metaPatch.website = w ? (normalizeProfileWebsite(w) ?? "") : "";
+      if (w && !metaPatch.website) {
+        return { ok: false, error: "profile_invalid_website" };
+      }
+    }
+    if (patch.x !== undefined) {
+      const v = patch.x.trim();
+      metaPatch.x = v ? (normalizeProfileHandle(v) ?? "") : "";
+    }
+    if (patch.facebook !== undefined) {
+      const v = patch.facebook.trim();
+      metaPatch.facebook = v ? (normalizeProfileHandle(v, 120) ?? "") : "";
+    }
+    if (patch.tiktok !== undefined) {
+      const v = patch.tiktok.trim();
+      metaPatch.tiktok = v ? (normalizeProfileHandle(v) ?? "") : "";
+    }
+    if (patch.whatsapp !== undefined) {
+      const v = patch.whatsapp.trim();
+      metaPatch.whatsapp = v ? (normalizeWhatsapp(v) ?? "") : "";
+      if (v && !metaPatch.whatsapp) {
+        return { ok: false, error: "profile_invalid_whatsapp" };
+      }
+    }
+    if (patch.telegram !== undefined) {
+      const v = patch.telegram.trim();
+      metaPatch.telegram = v ? (normalizeProfileHandle(v) ?? "") : "";
+    }
+    updates.meta = mergeCommunityProfileMeta(existing?.meta, metaPatch) as Record<
+      string,
+      unknown
+    >;
   }
 
   if (Object.keys(updates).length <= 1) {

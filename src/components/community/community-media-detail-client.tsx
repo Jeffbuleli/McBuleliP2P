@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   CommunityActionBar,
-  CommunityEngagementSummary,
 } from "@/components/community/community-action-bar";
 import { CommunityMediaImage } from "@/components/community/community-media-image";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
@@ -183,14 +182,6 @@ export function CommunityMediaDetailClient({
             objectFit="contain"
           />
         </div>
-
-        <CommunityEngagementSummary
-          likeCount={data.media.likeCount}
-          commentCount={data.media.commentCount}
-          shareCount={data.media.shareCount}
-          viewCount={0}
-          fr={fr}
-        />
 
         <CommunityActionBar
           fr={fr}

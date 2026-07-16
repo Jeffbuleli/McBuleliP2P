@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityMentionInput } from "@/components/community/community-mention-input";
 import { CommunityTranslatableText } from "@/components/community/community-translatable-text";
-import { IconComment, IconLike, IconReply, IconSend } from "@/components/community/community-icons";
+import { IconLike, IconReply, IconSend } from "@/components/community/community-icons";
 import {
   COMMUNITY_AVATAR_RING,
   COMMUNITY_COMMENT_REPLY,
@@ -18,17 +18,22 @@ import type { CommentView } from "@/lib/community/feed-service";
 function commentErrorMessage(code: string | undefined, fr: boolean): string {
   switch (code) {
     case "community_comment_length":
-      return fr ? "Minimum 2 caractères." : "At least 2 characters required.";
+      return fr ? "Min. 2 caractères" : "Min. 2 characters";
+    case "community_content_blocked":
+    case "blocked":
+      return fr ? "Contenu refusé" : "Content blocked";
     case "Unauthorized":
     case "unauthorized":
-      return fr ? "Connectez-vous pour commenter." : "Sign in to comment.";
+      return fr ? "Connectez-vous" : "Sign in";
     case "parent_not_found":
-      return fr ? "Commentaire parent introuvable." : "Parent comment not found.";
-    case "blocked":
-      return fr ? "Action impossible." : "Action not allowed.";
+      return fr ? "Parent introuvable" : "Parent missing";
     default:
-      return fr ? "Envoi impossible. Réessayez." : "Could not send. Try again.";
+      return fr ? "Échec" : "Failed";
   }
+}
+
+function countTree(list: CommentView[]): number {
+  return list.reduce((n, c) => n + 1 + countTree(c.replies ?? []), 0);
 }
 
 function updateCommentTree(
@@ -276,37 +281,27 @@ export function CommunityCommentThread({
     }
   };
 
-  const totalComments = comments.reduce(
-    (n, c) => n + 1 + c.replies.length,
-    0,
-  );
+  const totalComments = countTree(comments);
 
   return (
-    <div className="border-t border-[#dce8e0] bg-gradient-to-b from-[#f8fbf9] to-[#f4f7f5] px-3 py-4">
-      <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eaf5ee] text-[#305f33]">
-          <IconComment size={15} />
-        </span>
-        <p className="text-sm font-bold text-[#0c0a09]">
-          {fr ? "Commentaires" : "Comments"}
-          {totalComments > 0 ? (
-            <span className="ml-1.5 font-semibold text-[#78716c]">
-              ({totalComments})
-            </span>
-          ) : null}
-        </p>
-      </div>
+    <div className="border-t border-[#dce8e0] bg-[#f8fbf9] px-3 py-3">
+      <p className="mb-2 px-1 text-xs font-bold text-[#0c0a09]">
+        {fr ? "Commentaires" : "Comments"}
+        {totalComments > 0 ? (
+          <span className="ml-1 font-semibold text-[#78716c]">
+            {totalComments}
+          </span>
+        ) : null}
+      </p>
 
       {loading ? (
-        <p className="py-4 text-center text-xs text-[#a8a29e]">…</p>
+        <p className="py-3 text-center text-xs text-[#a8a29e]">…</p>
       ) : comments.length === 0 ? (
-        <p className="mb-4 rounded-xl border border-dashed border-[#dce8e0] bg-white/60 py-6 text-center text-xs text-[#78716c]">
-          {fr
-            ? "Aucun commentaire - lancez la discussion."
-            : "No comments yet - start the conversation."}
+        <p className="mb-3 py-4 text-center text-xs text-[#78716c]">
+          {fr ? "Aucun commentaire" : "No comments"}
         </p>
       ) : (
-        <ul className="mb-4 max-h-96 overflow-y-auto pr-1">
+        <ul className="mb-3 max-h-96 overflow-y-auto pr-1">
           {comments.map((c) => (
             <CommentNode
               key={c.id}
@@ -332,7 +327,7 @@ export function CommunityCommentThread({
           value={text}
           onChange={setText}
           disabled={busy}
-          placeholder={fr ? "Écrire un commentaire…" : "Write a comment…"}
+          placeholder={fr ? "Commenter…" : "Comment…"}
           className="min-h-[44px] w-full border-0 bg-transparent px-1 text-sm outline-none"
           onSubmit={() => void submit(text)}
         />
@@ -341,7 +336,7 @@ export function CommunityCommentThread({
           disabled={busy || text.trim().length < 2}
           onClick={() => void submit(text)}
           aria-label={fr ? "Envoyer" : "Send"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#305f33] to-[#3d8f5a] text-white shadow-md disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#305f33] text-white disabled:opacity-40"
         >
           <IconSend size={18} />
         </button>

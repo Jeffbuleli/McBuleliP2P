@@ -133,7 +133,7 @@ export function CommunityVideoPlayer({
             }}
             className="absolute bottom-14 right-3 rounded-full bg-black/55 px-3 py-1.5 text-[10px] font-bold text-white"
           >
-            {fr ? "Activer le son" : "Tap for sound"}
+            {fr ? "Son" : "Sound"}
           </button>
         ) : null}
 

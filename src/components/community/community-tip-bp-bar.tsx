@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { COMMUNITY_TIP_BP } from "@/lib/reward-points-config";
 
-/** Compact BP tip amounts (icon-first). */
+/** Compact tip bar: BP amounts + McB (soon). */
 export function CommunityTipBpBar({
   fr,
   disabled,
@@ -26,30 +26,31 @@ export function CommunityTipBpBar({
   };
 
   return (
-    <div className="flex items-center gap-1.5">
-      <svg
-        className="h-3.5 w-3.5 shrink-0 text-[#305f33]"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden
-      >
-        <path d="M12 3v18M7 8h8a3 3 0 010 6H9a3 3 0 000 6h8" />
-      </svg>
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-wide text-[#a8a29e]">
+        Tip
+      </span>
       {COMMUNITY_TIP_BP.amounts.map((n) => (
         <button
           key={n}
           type="button"
           disabled={disabled || busy}
-          title={fr ? `Tip ${n} BP` : `Tip ${n} BP`}
-          aria-label={fr ? `Tip ${n} BP` : `Tip ${n} BP`}
+          title={`${n} BP`}
+          aria-label={`Tip ${n} BP`}
           onClick={() => void send(n)}
-          className="min-h-[32px] min-w-[40px] rounded-lg border border-[#e8f3ee] bg-white px-2 text-[11px] font-bold tabular-nums text-[#305f33] active:scale-95 disabled:opacity-40"
+          className="min-h-[32px] min-w-[44px] rounded-lg border border-[#e8f3ee] bg-white px-2 text-[11px] font-bold tabular-nums text-[#305f33] active:scale-95 disabled:opacity-40"
         >
-          {n}
+          {n} BP
         </button>
       ))}
+      <button
+        type="button"
+        disabled
+        title={fr ? "McB bientôt" : "McB soon"}
+        className="min-h-[32px] cursor-not-allowed rounded-lg border border-dashed border-[#e7e5e4] px-2 text-[11px] font-bold text-[#a8a29e]"
+      >
+        McB
+      </button>
     </div>
   );
 }

@@ -119,6 +119,21 @@ export function rewardLedgerLabel(
   if (row.note?.startsWith("mcb_claim:")) {
     return t("points_ledger_mcb_claim");
   }
+  if (row.note?.startsWith("community_tip_out:")) {
+    return t("points_ledger_community_tip_out");
+  }
+  if (row.note?.startsWith("community_tip_in:")) {
+    return t("points_ledger_community_tip_in");
+  }
+  if (row.note?.startsWith("community_post_boost:")) {
+    return t("points_ledger_community_boost");
+  }
+  if (row.note?.startsWith("spend:")) {
+    return t("points_ledger_spend_generic");
+  }
+  if (row.note?.includes(":")) {
+    return t("points_ledger_other");
+  }
   if (row.note?.trim()) return row.note.trim();
   return t("points_ledger_other");
 }
