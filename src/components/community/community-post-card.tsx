@@ -17,6 +17,7 @@ import { CommunityPostMedia } from "@/components/community/community-post-media"
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import { isFeedComposerKind } from "@/lib/community/composer-config";
+import { utilityTagLabel } from "@/lib/community/utility-tags";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
 import { postDisplayText } from "@/lib/community/link-embed";
@@ -246,6 +247,11 @@ export function CommunityPostCard({
           }
           fr={fr}
         />
+        {post.utilityTag ? (
+          <span className="rounded-full bg-[#eef6f0] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#305f33]">
+            {utilityTagLabel(post.utilityTag, fr)}
+          </span>
+        ) : null}
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[#a8a29e]">
           <IconGlobe size={11} />
           {post.status === "hidden"

@@ -302,8 +302,8 @@ export function CommunityCommentThread({
       ) : comments.length === 0 ? (
         <p className="mb-4 rounded-xl border border-dashed border-[#dce8e0] bg-white/60 py-6 text-center text-xs text-[#78716c]">
           {fr
-            ? "Aucun commentaire — lancez la discussion."
-            : "No comments yet — start the conversation."}
+            ? "Aucun commentaire - lancez la discussion."
+            : "No comments yet - start the conversation."}
         </p>
       ) : (
         <ul className="mb-4 max-h-96 overflow-y-auto pr-1">

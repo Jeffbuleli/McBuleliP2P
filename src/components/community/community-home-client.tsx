@@ -368,8 +368,8 @@ export function CommunityHomeClient() {
                 : "Follow traders from their profile or the leaderboard to see their posts here."
               : category === "for_you"
                 ? fr
-                  ? "Suivez des membres, likez et commentez — votre fil Pour vous s'adapte à vos intérêts."
-                  : "Follow members, like and comment — your For you feed adapts to your interests."
+                  ? "Suivez des membres, likez et commentez - votre fil Pour vous s'adapte à vos intérêts."
+                  : "Follow members, like and comment - your For you feed adapts to your interests."
                 : fr
                   ? "Soyez le premier à partager avec la communauté."
                   : "Be the first to share with the community."

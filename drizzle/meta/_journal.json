@@ -638,6 +638,13 @@
       "when": 1787000000000,
       "tag": "0098_builders_program",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1787100000000,
+      "tag": "0099_sug_horizon_a",
+      "breakpoints": true
     }
   ]
 }

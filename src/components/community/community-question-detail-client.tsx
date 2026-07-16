@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { IconCheck } from "@/components/community/community-inline-icons";
 import type { QuestionDetail } from "@/lib/community/qa-service";
 
 export function CommunityQuestionDetailClient({
@@ -142,7 +143,9 @@ export function CommunityQuestionDetailClient({
               <p className="text-xs text-[#78716c]">
                 @{a.author.handle}
                 {a.isAccepted ? (
-                  <span className="ml-2 font-semibold text-[#305f33]">✓</span>
+                  <span className="ml-2 inline-flex font-semibold text-[#305f33]">
+                    <IconCheck className="h-3.5 w-3.5" />
+                  </span>
                 ) : null}
               </p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-[#44403c]">

@@ -14,6 +14,9 @@ const createZ = z.object({
   contentKind: z
     .enum(["news", "discussion", "analysis", "experience"])
     .optional(),
+  utilityTag: z
+    .enum(["learn", "trade_edu", "avec", "p2p", "local", "create", "signal"])
+    .optional(),
   mediaIds: z.array(z.string().uuid()).max(4).optional(),
 });
 
@@ -71,6 +74,7 @@ export async function POST(req: Request) {
     body: parsed.data.body,
     postType: parsed.data.postType,
     contentKind: parsed.data.contentKind,
+    utilityTag: parsed.data.utilityTag,
     mediaIds,
   });
 

@@ -87,8 +87,8 @@ export function CommunityBlogsClient() {
               : "Check title (10+) and body (200+)"
             : data.error === "timeout"
               ? fr
-                ? "Délai dépassé — réessayez"
-                : "Timed out — try again"
+                ? "Délai dépassé - réessayez"
+                : "Timed out - try again"
               : (data.error ?? "failed"),
         );
         return;
@@ -106,11 +106,11 @@ export function CommunityBlogsClient() {
       setError(
         e instanceof Error && e.message === "timeout"
           ? fr
-            ? "Délai dépassé — réessayez"
-            : "Timed out — try again"
+            ? "Délai dépassé - réessayez"
+            : "Timed out - try again"
           : fr
-            ? "Erreur serveur — réessayez"
-            : "Server error — try again",
+            ? "Erreur serveur - réessayez"
+            : "Server error - try again",
       );
     } finally {
       setPublishing(false);

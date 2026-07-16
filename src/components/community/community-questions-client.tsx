@@ -10,6 +10,7 @@ import {
   EmptyQuestionIllustration,
 } from "@/components/community/community-empty-illustrations";
 import { fetchJson } from "@/lib/community/fetch-json";
+import { IconCheck } from "@/components/community/community-inline-icons";
 import type { QuestionListItem } from "@/lib/community/qa-service";
 
 type QSort = "open" | "popular" | "accepted";
@@ -78,8 +79,8 @@ export function CommunityQuestionsClient() {
               : "Title (min. 10) and details (min. 20) required"
             : data.error === "timeout"
               ? fr
-                ? "Délai dépassé — réessayez"
-                : "Timed out — try again"
+                ? "Délai dépassé - réessayez"
+                : "Timed out - try again"
               : (data.error ?? "failed"),
         );
         return;
@@ -93,7 +94,7 @@ export function CommunityQuestionsClient() {
         setTimeout(() => setBpToast(null), 3000);
       }
     } catch {
-      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
+      setError(fr ? "Erreur serveur - réessayez" : "Server error - try again");
     } finally {
       setPublishing(false);
     }
@@ -170,7 +171,11 @@ export function CommunityQuestionsClient() {
                 <p className="mt-1 text-xs text-[#78716c]">
                   @{q.author.handle} · {q.answerCount}{" "}
                   {fr ? "réponses" : "answers"}
-                  {q.hasAcceptedAnswer ? " · ✓" : ""}
+                  {q.hasAcceptedAnswer ? (
+                    <span className="ml-1 inline-flex align-middle text-[#305f33]">
+                      <IconCheck className="h-3 w-3" />
+                    </span>
+                  ) : null}
                 </p>
                 <p className="mt-2 line-clamp-2 text-sm text-[#57534e]">{q.body}</p>
               </Link>

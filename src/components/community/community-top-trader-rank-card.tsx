@@ -95,7 +95,7 @@ export function CommunityTopTraderRankCard({
             <div>
               <dt className="text-[#a8a29e]">WR</dt>
               <dd className="text-sm font-bold tabular-nums text-[#0c0a09]">
-                {entry.winRatePct != null ? `${entry.winRatePct}%` : "—"}
+                {entry.winRatePct != null ? `${entry.winRatePct}%` : "-"}
               </dd>
             </div>
           </dl>

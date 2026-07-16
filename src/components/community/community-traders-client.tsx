@@ -96,8 +96,8 @@ export function CommunityTradersClient() {
         : "DEMO · Weekly PnL · 10 USDT"
       : tab === "bots"
         ? fr
-          ? "Performance bots — copy des signaux TA+AI (vos clés)."
-          : "Bot performance — copy TA+AI signals (your keys)."
+          ? "Performance bots - copy des signaux TA+AI (vos clés)."
+          : "Bot performance - copy TA+AI signals (your keys)."
         : fr
           ? "Réputation, signaux, traders."
           : "Reputation, signals, traders.";

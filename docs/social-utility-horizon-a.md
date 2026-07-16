@@ -1,10 +1,13 @@
 # SUG Horizon A - Spec produit (0-3 mois)
 
-> **Statut :** spécification d'implémentation - pas encore codé  
+> **Statut :** A1/A2 en code (utility_tag + quality_score rules + BP multiplier). A4/A5 pending.  
 > **Parent :** [social-utility-graph.md](./social-utility-graph.md)  
 > **Dernière révision :** juillet 2026  
 > **Objectif :** Social Utility MVP - qualité > volume, sinks BP immédiats, base créateur
 
+Migration : `0099_sug_horizon_a.sql`  
+Config tags : `src/lib/community/utility-tags.ts`  
+Score : `src/lib/community/quality-score.ts`
 ---
 
 ## 1. Périmètre Horizon A

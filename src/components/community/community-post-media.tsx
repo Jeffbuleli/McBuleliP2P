@@ -29,7 +29,7 @@ export function CommunityPostMedia({
   body?: string;
   fr: boolean;
   postId?: string;
-  /** Pas de navigation — mosaic Facebook + lightbox inline. */
+  /** Pas de navigation - mosaic Facebook + lightbox inline. */
   feedInline?: boolean;
 }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);

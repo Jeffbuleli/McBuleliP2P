@@ -122,7 +122,7 @@ export default function AdminBuildersPage() {
           r.txHash ? (
             <span className="font-mono text-[10px] break-all">{r.txHash}</span>
           ) : (
-            "—"
+            "-"
           ),
       },
       {

@@ -150,7 +150,7 @@ export function CommunityBotLeaderboardList({
                   <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">
                     <dt className="text-[#a8a29e]">Win rate</dt>
                     <dd className="text-sm font-extrabold tabular-nums">
-                      {b.winRate != null ? `${b.winRate}%` : "—"}
+                      {b.winRate != null ? `${b.winRate}%` : "-"}
                     </dd>
                   </div>
                   <div className="rounded-lg bg-[#fafaf9] px-2 py-1.5">

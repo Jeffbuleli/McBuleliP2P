@@ -108,7 +108,7 @@ export function CommunityDiscussionsClient() {
       setCategoryId("");
       setShowComposer(false);
     } catch {
-      setError(fr ? "Erreur serveur — réessayez" : "Server error — try again");
+      setError(fr ? "Erreur serveur - réessayez" : "Server error - try again");
     } finally {
       setPublishing(false);
     }

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityMediaImage } from "@/components/community/community-media-image";
 import { CommunityVideoPlayer } from "@/components/community/community-video-player";
+import { IconExternalLink } from "@/components/community/community-inline-icons";
 import { COMMUNITY_STORY_VIDEO_MAX_SEC } from "@/lib/community/config";
 import type {
   CommunityStoryRing,
@@ -53,8 +54,8 @@ async function readVideoDurationSec(file: File): Promise<number> {
 function mapStoryError(code: string | undefined, fr: boolean): string {
   if (code === "stories_unavailable" || code === "story_server_error") {
     return fr
-      ? "Statuts indisponibles — migration base de données requise."
-      : "Statuses unavailable — database migration required.";
+      ? "Statuts indisponibles - migration base de données requise."
+      : "Statuses unavailable - database migration required.";
   }
   if (code === "story_limit_reached") {
     return fr ? "Limite : 8 statuts / 24 h" : "Limit: 8 statuses / 24h";
@@ -74,7 +75,7 @@ function mapStoryError(code: string | undefined, fr: boolean): string {
       : `Video too long (max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s)`;
   }
   if (code === "r2_not_configured" || code === "r2_upload_failed" || code === "upload_failed") {
-    return fr ? "Upload impossible — stockage R2" : "Upload failed — R2 storage";
+    return fr ? "Upload impossible - stockage R2" : "Upload failed - R2 storage";
   }
   if (code === "Unauthorized") {
     return fr ? "Connectez-vous pour publier" : "Sign in to publish";
@@ -198,7 +199,7 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
           onPosted={(bp) => {
             setComposerOpen(false);
             if (bp > 0) {
-              setToast(fr ? `+${bp} BP — statut publié !` : `+${bp} BP — status posted!`);
+              setToast(fr ? `+${bp} BP - statut publié !` : `+${bp} BP - status posted!`);
             }
             void load();
           }}
@@ -550,8 +551,8 @@ function StoryComposer({
             ) : null}
             <p className="mt-2 text-center text-[10px] text-[#78716c]">
               {fr
-                ? "Vérifiez avant publication — vous pouvez changer le fichier."
-                : "Review before posting — you can change the file."}
+                ? "Vérifiez avant publication - vous pouvez changer le fichier."
+                : "Review before posting - you can change the file."}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -599,8 +600,8 @@ function StoryComposer({
             </button>
             <p className="mt-2 text-center text-[10px] text-[#78716c]">
               {fr
-                ? `Vidéo max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s — aperçu avant publication`
-                : `Video max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s — preview before posting`}
+                ? `Vidéo max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s - aperçu avant publication`
+                : `Video max ${COMMUNITY_STORY_VIDEO_MAX_SEC}s - preview before posting`}
             </p>
           </>
         )}
@@ -890,7 +891,9 @@ function StoryViewer({
             onClick={() => void shareStory()}
             className="flex flex-col items-center gap-0.5 text-[10px] font-semibold text-white/90"
           >
-            <span className="text-xl">↗</span>
+            <span className="text-[#305f33]">
+              <IconExternalLink className="h-5 w-5" />
+            </span>
             {fr ? "Partager" : "Share"}
           </button>
           {!ring.isMe ? (

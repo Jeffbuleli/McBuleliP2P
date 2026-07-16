@@ -10,6 +10,10 @@ import {
   KycVerifiedBadge,
 } from "@/components/community/community-badges";
 import { IconAttach, IconSend, IconWarning } from "@/components/community/community-icons";
+import {
+  IconCheck,
+  IconDoubleCheck,
+} from "@/components/community/community-inline-icons";
 import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { DmMessageView } from "@/lib/community/dm-service";
 
@@ -248,7 +252,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
 
       {meta.isRequest ? (
         <div className="border-b border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-center text-xs text-[#92400e]">
-          {fr ? "Demande de message — " : "Message request — "}
+          {fr ? "Demande de message - " : "Message request - "}
           <button
             type="button"
             className="font-bold underline"
@@ -315,13 +319,17 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
                   fr ? "fr-FR" : "en-US",
                   { hour: "2-digit", minute: "2-digit" },
                 )}
-                {m.own
-                  ? m.read
-                    ? " · ✓✓"
-                    : m.delivered
-                      ? " · ✓"
-                      : ""
-                  : ""}
+                {m.own ? (
+                  m.read ? (
+                    <span className="ml-1 inline-flex align-middle text-[#305f33]">
+                      <IconDoubleCheck className="h-3 w-3" />
+                    </span>
+                  ) : m.delivered ? (
+                    <span className="ml-1 inline-flex align-middle text-[#78716c]">
+                      <IconCheck className="h-3 w-3" />
+                    </span>
+                  ) : null
+                ) : null}
               </p>
             </div>
           </div>

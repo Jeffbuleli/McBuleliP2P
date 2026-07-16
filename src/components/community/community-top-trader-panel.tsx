@@ -298,7 +298,7 @@ export function CommunityTopTraderPanel({ fr }: { fr: boolean }) {
                     {tradesLoading ? (
                       <p className="py-4 text-center text-xs text-[#78716c]">…</p>
                     ) : trades.length === 0 ? (
-                      <p className="py-2 text-center text-xs text-[#78716c]">—</p>
+                      <p className="py-2 text-center text-xs text-[#78716c]">-</p>
                     ) : (
                       expandedTradeGroups.map((g) => (
                         <div key={g.dayKey}>

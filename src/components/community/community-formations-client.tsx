@@ -141,8 +141,8 @@ export function CommunityFormationsClient() {
         <img src="/academy/event-live.svg" alt="" className="h-9 w-9" />
         <p className="text-xs text-[#305f33]">
           {fr
-            ? "Inscrivez-vous aux lives à venir — directement depuis cette liste."
-            : "Enroll in upcoming lives — right from this list."}
+            ? "Inscrivez-vous aux lives à venir - directement depuis cette liste."
+            : "Enroll in upcoming lives - right from this list."}
         </p>
       </div>
 

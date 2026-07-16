@@ -134,7 +134,7 @@ export function CommunityInboxClient() {
                       : ""}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-[#57534e]">
-                    {t.lastMessagePreview ?? "—"}
+                    {t.lastMessagePreview ?? "-"}
                   </p>
                 </div>
                 {t.unreadCount > 0 ? (

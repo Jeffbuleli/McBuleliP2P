@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { IconPlay } from "@/components/community/community-icons";
+import {
+  IconExternalLink,
+  IconPaperPlane,
+} from "@/components/community/community-inline-icons";
 import type { ParsedEmbed } from "@/lib/community/link-embed";
 
 function EmbedPreview({
@@ -113,7 +117,11 @@ export function CommunityLinkEmbed({
           isTelegram ? "bg-[#229ed9] text-white" : "bg-[#e8f3ee] text-[#305f33]"
         }`}
       >
-        {isTelegram ? "✈" : "↗"}
+        {isTelegram ? (
+          <IconPaperPlane className="h-5 w-5" />
+        ) : (
+          <IconExternalLink className="h-5 w-5" />
+        )}
       </span>
       <div className="min-w-0">
         <p className="text-sm font-bold">

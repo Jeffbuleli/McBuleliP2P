@@ -4,8 +4,10 @@ import { getDb, rewardPointGrants } from "@/db";
 import {
   COMMUNITY_REWARD_DAILY_CAPS,
   REWARD_GRANT,
+  REWARD_POINTS,
   type RewardGrantType,
 } from "@/lib/reward-points-config";
+import { applyQualityToBpGrant } from "@/lib/community/quality-score";
 import { tryGrantRewardPoints } from "@/lib/reward-points-service";
 
 export type CommunityPostKind = "text" | "image" | "video";
@@ -62,6 +64,7 @@ async function grantWithDailyCap(args: {
   idempotencyKey: string;
   meta?: Record<string, unknown>;
   dailyCap?: number;
+  points?: number;
 }): Promise<CommunityGrantResult> {
   const cap =
     args.dailyCap ?? COMMUNITY_REWARD_DAILY_CAPS[args.grantType];
@@ -79,6 +82,7 @@ async function grantWithDailyCap(args: {
     userId: args.userId,
     grantType: args.grantType,
     idempotencyKey: args.idempotencyKey,
+    points: args.points,
     meta: { ...args.meta, source: "community" },
   });
   return { granted: r.granted, points: r.points, balance: r.balance };
@@ -112,6 +116,7 @@ export async function grantCommunityPostPublished(args: {
   postId: string;
   kind: CommunityPostKind;
   bodyLength: number;
+  qualityScore?: number;
 }) {
   if (args.bodyLength < 20) {
     const bal = await import("@/lib/reward-points-service").then((m) =>
@@ -132,11 +137,21 @@ export async function grantCommunityPostPublished(args: {
         ? REWARD_GRANT.COMMUNITY_POST_IMAGE
         : REWARD_GRANT.COMMUNITY_POST_TEXT;
 
+  const qualityScore = args.qualityScore ?? 50;
+  const base = REWARD_POINTS[grantType];
+  const points = applyQualityToBpGrant(base, qualityScore);
+
   const main = await grantWithDailyCap({
     userId: args.userId,
     grantType,
     idempotencyKey: `community_post:${args.postId}`,
-    meta: { postId: args.postId, kind: args.kind },
+    points,
+    meta: {
+      postId: args.postId,
+      kind: args.kind,
+      qualityScore,
+      basePoints: base,
+    },
   });
 
   if (main.granted) {

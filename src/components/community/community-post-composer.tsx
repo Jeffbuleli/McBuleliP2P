@@ -18,6 +18,11 @@ import {
   uploadCommunityVideoWithProgress,
 } from "@/lib/community-media-upload";
 import type { CommunityContentKind } from "@/lib/community/post-types";
+import {
+  UTILITY_TAG_META,
+  utilityTagFromContentKind,
+  type UtilityTag,
+} from "@/lib/community/utility-tags";
 
 type ImageSlot = {
   id: string;
@@ -42,16 +47,16 @@ function mapPublishError(code: string | undefined, fr: boolean): string {
   }
   if (code === "community_content_blocked") {
     return fr
-      ? "Publication refusée — respectez la charte."
-      : "Post blocked — follow community guidelines.";
+      ? "Publication refusée - respectez la charte."
+      : "Post blocked - follow community guidelines.";
   }
   if (code === "invalid_media") {
     return fr ? "Média invalide" : "Invalid media";
   }
   if (code === "r2_upload_failed" || code === "r2_credentials_invalid") {
     return fr
-      ? "Stockage R2 indisponible — vérifiez les clés S3 sur Render."
-      : "R2 storage unavailable — check S3 API keys on Render.";
+      ? "Stockage R2 indisponible - vérifiez les clés S3 sur Render."
+      : "R2 storage unavailable - check S3 API keys on Render.";
   }
   if (code?.includes("COMMUNITY_R2_SECRET") || code?.includes("API token")) {
     return fr
@@ -75,6 +80,7 @@ export function CommunityPostComposer({
   const router = useRouter();
   const [step, setStep] = useState<"pick" | "compose">("pick");
   const [kind, setKind] = useState<FeedComposerKind | null>(null);
+  const [utilityTag, setUtilityTag] = useState<UtilityTag>("create");
   const [body, setBody] = useState("");
   const [imageSlots, setImageSlots] = useState<ImageSlot[]>([]);
   const [videoSlot, setVideoSlot] = useState<VideoSlot | null>(null);
@@ -108,6 +114,7 @@ export function CommunityPostComposer({
   const resetCompose = () => {
     setStep("pick");
     setKind(null);
+    setUtilityTag("create");
     setBody("");
     setImageSlots((slots) => {
       for (const s of slots) URL.revokeObjectURL(s.previewUrl);
@@ -125,6 +132,7 @@ export function CommunityPostComposer({
       return;
     }
     setKind(item.kind);
+    setUtilityTag(utilityTagFromContentKind(item.kind));
     setStep("compose");
     setError(null);
   };
@@ -215,8 +223,8 @@ export function CommunityPostComposer({
       setError(
         code === "timeout"
           ? fr
-            ? "Délai dépassé — réessayez"
-            : "Timed out — try again"
+            ? "Délai dépassé - réessayez"
+            : "Timed out - try again"
           : fr
             ? "Échec upload vidéo"
             : "Video upload failed",
@@ -273,6 +281,7 @@ export function CommunityPostComposer({
         body: JSON.stringify({
           body: body.trim(),
           contentKind: kind,
+          utilityTag,
           postType,
           mediaIds,
         }),
@@ -347,6 +356,29 @@ export function CommunityPostComposer({
             </button>
           </div>
 
+          <p className="mb-1.5 text-[11px] font-semibold text-[#78716c]">
+            {fr ? "Tag d'utilité" : "Utility tag"}
+          </p>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {UTILITY_TAG_META.filter((t) => t.tag !== "signal").map((t) => {
+              const selected = utilityTag === t.tag;
+              return (
+                <button
+                  key={t.tag}
+                  type="button"
+                  onClick={() => setUtilityTag(t.tag)}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                    selected
+                      ? "bg-[#305f33] text-white"
+                      : "border border-[#e8f3ee] bg-white text-[#57534e]"
+                  }`}
+                >
+                  {fr ? t.labelFr : t.labelEn}
+                </button>
+              );
+            })}
+          </div>
+
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -398,11 +430,11 @@ export function CommunityPostComposer({
                   </>
                 ) : videoSlot.status === "ready" ? (
                   <p className="text-xs font-semibold text-emerald-300">
-                    {fr ? "Vidéo prête — publiez !" : "Video ready — post now!"}
+                    {fr ? "Vidéo prête - publiez !" : "Video ready - post now!"}
                   </p>
                 ) : (
                   <p className="text-xs font-semibold text-red-300">
-                    {fr ? "Échec upload — réessayez" : "Upload failed — retry"}
+                    {fr ? "Échec upload - réessayez" : "Upload failed - retry"}
                   </p>
                 )}
               </div>

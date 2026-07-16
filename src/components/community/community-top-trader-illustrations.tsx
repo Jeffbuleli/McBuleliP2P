@@ -5,7 +5,7 @@ const mint = "#e8f3ee";
 const gold = "#b8860b";
 const muted = "#a8a29e";
 
-/** Trophy + ascending chart — Top Trader program hero. */
+/** Trophy + ascending chart - Top Trader program hero. */
 export function TopTraderHeroIllustration({ className = "h-20 w-20" }: Props) {
   return (
     <svg className={className} viewBox="0 0 80 80" fill="none" aria-hidden>

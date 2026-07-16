@@ -10,8 +10,14 @@ import {
   communityUserBlocks,
   communityUserProfiles,
   getDb,
+  users,
 } from "@/db";
 import { communityEnabled, COMMUNITY_FEED_PAGE_SIZE } from "@/lib/community/config";
+import { computeRulesQualityScore } from "@/lib/community/quality-score";
+import {
+  isUtilityTag,
+  utilityTagFromContentKind,
+} from "@/lib/community/utility-tags";
 import {
   notifyCommunityComment,
   notifyCommunityLike,
@@ -118,6 +124,8 @@ export type FeedPostView = {
   body: string;
   postType: string;
   contentKind: string;
+  utilityTag?: string;
+  qualityScore?: number;
   formationMeta?: FormationPostMeta | null;
   botTemplateMeta?: BotTemplatePostMeta | null;
   likeCount: number;
@@ -159,6 +167,8 @@ function rowToFeedPost(
     body: string;
     postType: string;
     contentKind: string | null;
+    utilityTag?: string | null;
+    qualityScore?: number | null;
     meta: unknown;
     status: string;
     likeCount: number;
@@ -179,6 +189,8 @@ function rowToFeedPost(
     body: r.body,
     postType: r.postType,
     contentKind: r.contentKind ?? "news",
+    utilityTag: r.utilityTag ?? "create",
+    qualityScore: r.qualityScore ?? 50,
     formationMeta: resolveFormationMeta(r),
     botTemplateMeta: resolveBotTemplateMeta(r),
     status: r.status,
@@ -639,6 +651,7 @@ export async function createFeedPost(args: {
   body: string;
   postType?: "text" | "image" | "video";
   contentKind?: FeedComposerKind;
+  utilityTag?: string;
   mediaIds?: string[];
 }): Promise<
   | {
@@ -656,6 +669,9 @@ export async function createFeedPost(args: {
     args.contentKind && isFeedComposerKind(args.contentKind)
       ? args.contentKind
       : "news";
+  const utilityTag = isUtilityTag(args.utilityTag ?? "")
+    ? args.utilityTag!
+    : utilityTagFromContentKind(contentKind);
   const minLen = minBodyLengthForKind(contentKind);
   if (body.length < minLen || body.length > 4000) {
     return { ok: false, error: "community_post_length" };
@@ -690,6 +706,21 @@ export async function createFeedPost(args: {
 
   await ensureCommunityProfile(args.authorId);
 
+  const [authorUser] = await db
+    .select({
+      kycStatus: users.kycStatus,
+      emailVerifiedAt: users.emailVerifiedAt,
+    })
+    .from(users)
+    .where(eq(users.id, args.authorId))
+    .limit(1);
+
+  const quality = computeRulesQualityScore({
+    body,
+    authorKycApproved: authorUser?.kycStatus === "approved",
+    authorEmailVerified: !!authorUser?.emailVerifiedAt,
+  });
+
   const now = new Date();
   const [row] = await db
     .insert(communityPosts)
@@ -698,6 +729,9 @@ export async function createFeedPost(args: {
       body,
       postType: kind,
       contentKind,
+      utilityTag,
+      qualityScore: quality.score,
+      qualitySource: quality.source,
       status: "published",
       mediaIds: args.mediaIds?.length ? args.mediaIds : null,
       publishedAt: now,
@@ -726,6 +760,7 @@ export async function createFeedPost(args: {
     postId: row.id,
     kind,
     bodyLength: body.length,
+    qualityScore: quality.score,
   });
 
   const author = await ensureCommunityProfile(args.authorId);
@@ -739,6 +774,8 @@ export async function createFeedPost(args: {
       body: row.body,
       postType: row.postType,
       contentKind: row.contentKind ?? "news",
+      utilityTag: row.utilityTag ?? utilityTag,
+      qualityScore: row.qualityScore ?? quality.score,
       status: row.status,
       likeCount: 0,
       commentCount: 0,
@@ -748,7 +785,7 @@ export async function createFeedPost(args: {
       author,
       media,
       likedByMe: false,
-      bpEarned: bp.points,
+      bpEarned: bp.granted ? bp.points : undefined,
     },
   };
 }

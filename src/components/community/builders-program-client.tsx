@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { interpolate } from "@/i18n/messages";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
+import { IconExternalLink } from "@/components/community/community-inline-icons";
 import { buildersTierVisual } from "@/lib/builders/builders-visual";
 
 type TierRow = {
@@ -268,9 +269,10 @@ export function BuildersProgramClient() {
           href={data.catalog.dexUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 flex w-full items-center justify-center rounded-2xl border border-[#991B1B]/30 bg-[#991B1B] py-3 text-sm font-bold text-white"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#991B1B]/30 bg-[#991B1B] py-3 text-sm font-bold text-white"
         >
-          {t("builders_buy_dex")} ↗
+          {t("builders_buy_dex")}
+          <IconExternalLink className="h-4 w-4" />
         </a>
       ) : (
         <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">

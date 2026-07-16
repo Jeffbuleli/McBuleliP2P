@@ -361,7 +361,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
             value={
               profile.signalStats.signalWinRate !== null
                 ? `${profile.signalStats.signalWinRate}%`
-                : "—"
+                : "-"
             }
           />
         </section>
