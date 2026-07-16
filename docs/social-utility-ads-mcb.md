@@ -1,12 +1,16 @@
 # SUG Horizon B - Ads McB, Creator Fund & burn
 
-> **Statut :** spécification - **après** Horizon A  
+> **Statut :** B6 tips BP **live** · B1 schema ads **prêt** · spend McB **gated** (`COMMUNITY_ADS_ENABLED`) jusqu'au lancement BSC  
 > **Parent :** [social-utility-graph.md](./social-utility-graph.md)  
 > **Liés :** [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) · [mcb-token-ops-launch.md](./mcb-token-ops-launch.md) · [builders-program-spec.md](./builders-program-spec.md)  
 > **Dernière révision :** juillet 2026
 
-**Prérequis :** claim McB pilote stable, liquidité minimale ou fulfillment trésorerie, Horizon A (tags + quality + boost BP) en prod.
+**Prérequis go-live ads McB :** token McB déployé BSC + claim/liquidité + `COMMUNITY_ADS_ENABLED=true`.  
+**Avant BSC :** tips BP (B6) + tables ads (B1) peuvent être migrés sans servir d'ads.
 
+Migration : `0101_community_ads_horizon_b.sql`  
+Tips : `src/lib/community/tip-service.ts` (20/50/100 BP)  
+Split ads : `src/lib/community/ads-config.ts` (50/25/25)  
 ---
 
 ## 1. Objectif
@@ -205,13 +209,13 @@ Mettre à jour en même temps que le go-live B :
 
 | ID | Titre |
 |----|-------|
-| SUG-B1 | Schema brands + ad_products + campaigns |
-| SUG-B2 | McB custodial debit + split fund/burn/ops |
-| SUG-B3 | Feed ad injection + frequency cap |
-| SUG-B4 | Admin approve / pause campaigns |
-| SUG-B5 | Creator Fund monthly cron + payouts |
-| SUG-B6 | Tips BP (puis USDT) |
-| SUG-B7 | AI ad curator + organic moderator |
+| SUG-B1 | Schema brands + ad_products + campaigns | **Schema done** (flag off) |
+| SUG-B2 | McB custodial debit + split fund/burn/ops | After BSC |
+| SUG-B3 | Feed ad injection + frequency cap | After BSC |
+| SUG-B4 | Admin approve / pause campaigns | After BSC |
+| SUG-B5 | Creator Fund monthly cron + payouts | After BSC |
+| SUG-B6 | Tips BP (puis USDT) | **BP tips live** |
+| SUG-B7 | AI ad curator + organic moderator | Later |
 
 ---
 

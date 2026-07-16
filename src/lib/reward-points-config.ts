@@ -142,6 +142,12 @@ export const COMMUNITY_POST_BOOST = {
   maxPerDay: 3,
 } as const;
 
+/** Horizon B6 - tip creator in BP (pre-McB liquidité). */
+export const COMMUNITY_TIP_BP = {
+  amounts: [20, 50, 100] as const,
+  maxPerDay: 10,
+} as const;
+
 export type RewardSpendId = keyof typeof REWARD_SPEND;
 
 export function rewardSpendOption(id: RewardSpendId) {

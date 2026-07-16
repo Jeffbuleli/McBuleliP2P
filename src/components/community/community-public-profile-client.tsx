@@ -27,6 +27,7 @@ import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
+import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
 
 function StatCard({
   label,
@@ -65,6 +66,12 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [postsLoading, setPostsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const flash = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  };
 
   useEffect(() => {
     fetch(`/api/community/profiles/${handle}`)
@@ -325,15 +332,47 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               <button
                 type="button"
                 disabled
-                title={
-                  fr
-                    ? "Tips McB - bientôt (Horizon B)"
-                    : "McB tips - coming soon (Horizon B)"
-                }
-                className="min-h-[40px] w-full cursor-not-allowed rounded-xl border border-dashed border-[#e7e5e4] bg-[#fafaf9] text-xs font-semibold text-[#a8a29e]"
+                title={fr ? "Tips McB après lancement BSC" : "McB tips after BSC launch"}
+                className="min-h-[36px] w-full cursor-not-allowed rounded-xl border border-dashed border-[#e7e5e4] bg-[#fafaf9] text-[10px] font-semibold text-[#a8a29e]"
               >
-                {fr ? "Tip McB (bientôt)" : "Tip McB (soon)"}
+                {fr ? "Tip McB · bientôt" : "Tip McB · soon"}
               </button>
+              <div className="flex justify-center">
+                <CommunityTipBpBar
+                  fr={fr}
+                  disabled={busy}
+                  onTip={async (amount) => {
+                    setBusy(true);
+                    try {
+                      const res = await fetch(
+                        `/api/community/profiles/${profile.handle}/tip`,
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ amount }),
+                        },
+                      );
+                      const j = (await res.json().catch(() => ({}))) as {
+                        error?: string;
+                      };
+                      if (!res.ok) {
+                        const map: Record<string, string> = {
+                          tip_insufficient_bp: fr ? "BP insuffisants" : "Not enough BP",
+                          tip_daily_limit: fr ? "Limite tip/jour" : "Daily tip limit",
+                          tip_self: fr ? "Impossible" : "Not allowed",
+                        };
+                        flash(
+                          map[j.error ?? ""] ?? (fr ? "Échec tip" : "Tip failed"),
+                        );
+                        return;
+                      }
+                      flash(fr ? `Tip ${amount} BP` : `Tipped ${amount} BP`);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                />
+              </div>
             </div>
           ) : null}
 
@@ -506,6 +545,12 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
             ))}
           </ul>
         </section>
+      ) : null}
+
+      {toast ? (
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#305f33] px-4 py-2 text-sm font-bold text-white shadow-lg">
+          {toast}
+        </div>
       ) : null}
     </div>
   );

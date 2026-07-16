@@ -81,3 +81,20 @@ describe("creator profile A5", () => {
     assert.equal(REWARD_POINTS[REWARD_GRANT.COMMUNITY_LIKE], 1);
   });
 });
+
+describe("horizon B tips + ads split", () => {
+  it("defines tip amounts", async () => {
+    const { COMMUNITY_TIP_BP } = await import("../../reward-points-config");
+    assert.deepEqual([...COMMUNITY_TIP_BP.amounts], [20, 50, 100]);
+    assert.equal(COMMUNITY_TIP_BP.maxPerDay, 10);
+  });
+
+  it("splits ads spend 50/25/25", async () => {
+    const { splitAdsSpendMcb } = await import("../ads-config");
+    assert.deepEqual(splitAdsSpendMcb(100), {
+      creatorFund: 50,
+      burn: 25,
+      ops: 25,
+    });
+  });
+});

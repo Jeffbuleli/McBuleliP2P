@@ -395,6 +395,21 @@ function notifMeta(
         pill: { variant: "success", label: t("notif_community_pill") },
       };
     }
+    case "community_tip": {
+      const amount = Number(payload.amount) || 0;
+      const from = str("fromHandle");
+      return {
+        title: t("notif_community_tip_title"),
+        body: t("notif_community_tip_body", {
+          amount: String(amount),
+          handle: from ? `@${from}` : "…",
+        }),
+        href: from
+          ? `/app/community/u/${from}`
+          : `/app/community/post/${str("postId")}`,
+        pill: { variant: "success", label: t("notif_community_pill") },
+      };
+    }
     case "community_trader_follow": {
       return {
         title: t("notif_community_trader_follow_title"),

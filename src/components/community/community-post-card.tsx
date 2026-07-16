@@ -21,6 +21,7 @@ import { isPostBoosted } from "@/lib/community/boost-service";
 import { COMMUNITY_POST_BOOST } from "@/lib/reward-points-config";
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
+import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
 import type { CommentView, FeedPostView } from "@/lib/community/feed-service";
 import { telegramShareUrl } from "@/lib/community/link-embed";
 import { postDisplayText } from "@/lib/community/link-embed";
@@ -458,6 +459,40 @@ export function CommunityPostCard({
         onShare={() => void sharePost()}
         onTelegramShare={shareTelegram}
       />
+
+      {viewerUserId && !isOwner ? (
+        <div className="flex justify-center px-4 pb-2">
+          <CommunityTipBpBar
+            fr={fr}
+            disabled={busy}
+            onTip={async (amount) => {
+              setBusy(true);
+              try {
+                const res = await fetch(`/api/community/feed/${post.id}/tip`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ amount }),
+                });
+                const j = (await res.json().catch(() => ({}))) as {
+                  error?: string;
+                };
+                if (!res.ok) {
+                  const map: Record<string, string> = {
+                    tip_insufficient_bp: fr ? "BP insuffisants" : "Not enough BP",
+                    tip_daily_limit: fr ? "Limite tip/jour" : "Daily tip limit",
+                    tip_self: fr ? "Impossible" : "Not allowed",
+                  };
+                  flash(map[j.error ?? ""] ?? (fr ? "Échec tip" : "Tip failed"));
+                  return;
+                }
+                flash(fr ? `Tip ${amount} BP` : `Tipped ${amount} BP`);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+        </div>
+      ) : null}
 
       {commentOpen ? (
         <CommunityCommentThread

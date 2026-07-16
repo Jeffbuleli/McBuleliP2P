@@ -43,6 +43,7 @@ export type NotificationKind =
   | "event_reminder"
   | "community_comment"
   | "community_like"
+  | "community_tip"
   | "community_trader_follow"
   | "community_bot_copy_started"
   | "top_trader_week_winner"

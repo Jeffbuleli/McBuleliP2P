@@ -3733,4 +3733,136 @@ export const communityDiscussionFollows = pgTable(
   ],
 );
 
+/** SUG Horizon B - brand advertisers (McB ads, gated by COMMUNITY_ADS_ENABLED). */
+export const communityBrands = pgTable(
+  "community_brands",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerUserId: uuid("owner_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    legalName: varchar("legal_name", { length: 160 }).notNull(),
+    displayName: varchar("display_name", { length: 80 }).notNull(),
+    kycStatus: varchar("kyc_status", { length: 24 }).notNull().default("pending"),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    billingWallet: varchar("billing_wallet", { length: 64 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("community_brands_owner_idx").on(t.ownerUserId, t.status)],
+);
+
+export const communityAdProducts = pgTable("community_ad_products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  kind: varchar("kind", { length: 24 }).notNull(),
+  priceMcb: numeric("price_mcb", { precision: 36, scale: 18 }).notNull(),
+  durationHours: integer("duration_hours"),
+  active: boolean("active").notNull().default(true),
+  meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const communityAdCampaigns = pgTable(
+  "community_ad_campaigns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    brandId: uuid("brand_id")
+      .notNull()
+      .references(() => communityBrands.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => communityAdProducts.id),
+    status: varchar("status", { length: 16 }).notNull().default("draft"),
+    creativeBody: text("creative_body"),
+    creativeMediaId: uuid("creative_media_id"),
+    landingUrl: text("landing_url"),
+    targeting: jsonb("targeting").$type<Record<string, unknown> | null>(),
+    budgetMcb: numeric("budget_mcb", { precision: 36, scale: 18 }).notNull(),
+    spentMcb: numeric("spent_mcb", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("community_ad_campaigns_status_idx").on(
+      t.status,
+      t.startsAt,
+      t.endsAt,
+    ),
+    index("community_ad_campaigns_brand_idx").on(t.brandId, t.createdAt),
+  ],
+);
+
+export const communityAdImpressions = pgTable(
+  "community_ad_impressions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => communityAdCampaigns.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    postId: uuid("post_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("community_ad_impressions_campaign_idx").on(
+      t.campaignId,
+      t.createdAt,
+    ),
+  ],
+);
+
+export const communityCreatorFundMonths = pgTable("community_creator_fund_months", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  monthKey: varchar("month_key", { length: 7 }).notNull().unique(),
+  totalMcb: numeric("total_mcb", { precision: 36, scale: 18 })
+    .notNull()
+    .default("0"),
+  status: varchar("status", { length: 16 }).notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const communityCreatorFundPayouts = pgTable(
+  "community_creator_fund_payouts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    monthKey: varchar("month_key", { length: 7 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mcbAmount: numeric("mcb_amount", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    usdtAmount: numeric("usdt_amount", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    txRef: varchar("tx_ref", { length: 128 }),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("community_creator_fund_payouts_month_idx").on(t.monthKey, t.userId),
+  ],
+);
+
 export * from "./game-schema";

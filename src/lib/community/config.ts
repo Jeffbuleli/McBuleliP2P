@@ -4,6 +4,11 @@ export function communityEnabled(): boolean {
   return process.env.COMMUNITY_ENABLED !== "false";
 }
 
+/** Ads McB (Horizon B) — keep off until BSC token launch + liquidity. */
+export function communityAdsEnabled(): boolean {
+  return process.env.COMMUNITY_ADS_ENABLED === "true";
+}
+
 export const COMMUNITY_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 export const COMMUNITY_VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 /** Max story video length (seconds). */
