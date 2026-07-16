@@ -1,4 +1,4 @@
-import { and, count, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, or, sql, sum } from "drizzle-orm";
 import {
   communityComments,
   communityMedia,
@@ -6,6 +6,7 @@ import {
   communityTradingSignals,
   communityUserProfiles,
   getDb,
+  rewardPointGrants,
   users,
 } from "@/db";
 import { normalizePublicMediaUrl } from "@/lib/media-url";
@@ -271,6 +272,14 @@ async function loadAuthorSignalStats(
   };
 }
 
+/** Horizon A5 public creator metrics (never expose wallet BP balance). */
+export type CreatorProfileStats = {
+  bpEarned30d: number;
+  posts: number;
+  likesReceived: number;
+  tags: { tag: string; count: number }[];
+};
+
 export type PublicProfileView = {
   userId: string;
   handle: string;
@@ -294,7 +303,63 @@ export type PublicProfileView = {
   viewerFollows: boolean;
   isOwnProfile: boolean;
   signalStats: AuthorSignalStats;
+  stats: CreatorProfileStats;
 };
+
+async function loadCreatorProfileStats(
+  authorId: string,
+  postsCount: number,
+): Promise<CreatorProfileStats> {
+  const db = getDb();
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [bpRow] = await db
+    .select({ total: sum(rewardPointGrants.points) })
+    .from(rewardPointGrants)
+    .where(
+      and(
+        eq(rewardPointGrants.userId, authorId),
+        gte(rewardPointGrants.createdAt, since),
+        sql`${rewardPointGrants.grantType} like 'community_%'`,
+        sql`${rewardPointGrants.points} > 0`,
+      ),
+    );
+
+  const [likesRow] = await db
+    .select({ total: sum(communityPosts.likeCount) })
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, authorId),
+        eq(communityPosts.status, "published"),
+      ),
+    );
+
+  const tagRows = await db
+    .select({
+      tag: communityPosts.utilityTag,
+      n: count(),
+    })
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, authorId),
+        eq(communityPosts.status, "published"),
+      ),
+    )
+    .groupBy(communityPosts.utilityTag)
+    .orderBy(desc(count()))
+    .limit(5);
+
+  return {
+    bpEarned30d: Number(bpRow?.total ?? 0),
+    posts: postsCount,
+    likesReceived: Number(likesRow?.total ?? 0),
+    tags: tagRows
+      .filter((r) => r.tag)
+      .map((r) => ({ tag: r.tag as string, count: Number(r.n) })),
+  };
+}
 
 export async function searchCommunityHandles(
   query: string,
@@ -401,6 +466,8 @@ export async function getPublicProfileByHandle(
   const online =
     !!profile.lastActiveAt &&
     Date.now() - profile.lastActiveAt.getTime() < ONLINE_MS;
+  const postsCount = Math.max(profile.postsCount, livePostsCount);
+  const stats = await loadCreatorProfileStats(profile.userId, postsCount);
 
   return {
     userId: profile.userId,
@@ -415,7 +482,7 @@ export async function getPublicProfileByHandle(
     coverUrl,
     reputationScore: profile.reputationScore,
     reputationLevel: level.id,
-    postsCount: Math.max(profile.postsCount, livePostsCount),
+    postsCount,
     commentCount: Number(comments?.n ?? 0),
     followerCount,
     followingCount,
@@ -428,6 +495,7 @@ export async function getPublicProfileByHandle(
       : false,
     isOwnProfile: viewerId === profile.userId,
     signalStats,
+    stats,
   };
 }
 

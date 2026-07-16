@@ -1,6 +1,6 @@
 # SUG Horizon A - Spec produit (0-3 mois)
 
-> **Statut :** A1/A2/A4 en code. A5 pending.  
+> **Statut :** A1/A2/A4/A5 en code.  
 > **Parent :** [social-utility-graph.md](./social-utility-graph.md)  
 > **Dernière révision :** juillet 2026  
 > **Objectif :** Social Utility MVP - qualité > volume, sinks BP immédiats, base créateur
@@ -8,7 +8,8 @@
 Migration : `0099_sug_horizon_a.sql` + `0100_community_post_boost.sql`  
 Config tags : `src/lib/community/utility-tags.ts`  
 Score : `src/lib/community/quality-score.ts`  
-Boost : `src/lib/community/boost-service.ts` (80 BP / 24h)
+Boost : `src/lib/community/boost-service.ts` (80 BP / 24h)  
+Profil : `src/lib/community/profile-service.ts` → `stats` (BP 30j community)
 ---
 
 ## 1. Périmètre Horizon A
@@ -241,12 +242,12 @@ Route prévue : `/app/community/u/[handle]` (Phase 2 hub).
 
 ## 8. Critères de done Horizon A
 
-- [ ] Tout nouveau post feed a un utility_tag
-- [ ] Grants community appliquent la formule qualité (tests unitaires)
-- [ ] Boost 24h débite 80 BP et remonte le post
-- [ ] Profil public affiche stats BP community 30j
+- [x] Tout nouveau post feed a un utility_tag
+- [x] Grants community appliquent la formule qualité (tests unitaires)
+- [x] Boost 24h débite 80 BP et remonte le post
+- [x] Profil public affiche stats BP community 30j
 - [ ] Caps anti-farm toujours respectés
-- [ ] Aucune promesse de prix McB dans l'UI
+- [x] Aucune promesse de prix McB dans l'UI
 
 ---
 

@@ -24,6 +24,7 @@ import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS } from "@/lib/community/reputation-levels";
+import { utilityTagLabel } from "@/lib/community/utility-tags";
 
 function StatCard({
   label,
@@ -281,41 +282,55 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           </div>
 
           {!profile.isOwnProfile ? (
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void toggleFollow()}
+                  className={`min-h-[44px] flex-1 rounded-xl text-sm font-bold active:scale-[0.98] disabled:opacity-50 ${
+                    profile.viewerFollows
+                      ? "border border-[#e8f3ee] bg-white text-[#305f33]"
+                      : "bg-[#305f33] text-white shadow-sm"
+                  }`}
+                >
+                  {profile.viewerFollows
+                    ? fr
+                      ? "Abonné"
+                      : "Following"
+                    : fr
+                      ? "Suivre"
+                      : "Follow"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void openMessage()}
+                  className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#e8f3ee] bg-[#fafaf9] text-sm font-bold text-[#305f33] active:scale-[0.98] disabled:opacity-50"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {fr ? "Message" : "Message"}
+                </button>
+              </div>
               <button
                 type="button"
-                disabled={busy}
-                onClick={() => void toggleFollow()}
-                className={`min-h-[44px] flex-1 rounded-xl text-sm font-bold active:scale-[0.98] disabled:opacity-50 ${
-                  profile.viewerFollows
-                    ? "border border-[#e8f3ee] bg-white text-[#305f33]"
-                    : "bg-[#305f33] text-white shadow-sm"
-                }`}
+                disabled
+                title={
+                  fr
+                    ? "Tips McB - bientôt (Horizon B)"
+                    : "McB tips - coming soon (Horizon B)"
+                }
+                className="min-h-[40px] w-full cursor-not-allowed rounded-xl border border-dashed border-[#e7e5e4] bg-[#fafaf9] text-xs font-semibold text-[#a8a29e]"
               >
-                {profile.viewerFollows
-                  ? fr
-                    ? "Abonné"
-                    : "Following"
-                  : fr
-                    ? "Suivre"
-                    : "Follow"}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void openMessage()}
-                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#e8f3ee] bg-[#fafaf9] text-sm font-bold text-[#305f33] active:scale-[0.98] disabled:opacity-50"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path
-                    d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {fr ? "Message" : "Message"}
+                {fr ? "Tip McB (bientôt)" : "Tip McB (soon)"}
               </button>
             </div>
           ) : null}
@@ -332,7 +347,22 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
       </header>
 
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
-        <StatCard label={fr ? "Publications" : "Posts"} value={profile.postsCount} />
+        <StatCard
+          label={fr ? "BP 30j" : "BP 30d"}
+          value={profile.stats?.bpEarned30d ?? 0}
+          accent
+        />
+        <StatCard
+          label={fr ? "Publications" : "Posts"}
+          value={profile.stats?.posts ?? profile.postsCount}
+        />
+        <StatCard
+          label={fr ? "Likes reçus" : "Likes got"}
+          value={profile.stats?.likesReceived ?? 0}
+        />
+      </section>
+
+      <section className="mt-2 grid grid-cols-2 gap-2 px-4">
         <StatCard
           label={fr ? "Commentaires" : "Comments"}
           value={profile.commentCount}
@@ -340,9 +370,27 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         <StatCard
           label={fr ? "Réputation" : "Reputation"}
           value={profile.reputationScore}
-          accent
         />
       </section>
+
+      {(profile.stats?.tags?.length ?? 0) > 0 ? (
+        <section className="mt-3 px-4">
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
+            {fr ? "Tags utilité" : "Utility tags"}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.stats!.tags.map((t) => (
+              <span
+                key={t.tag}
+                className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33]"
+              >
+                {utilityTagLabel(t.tag, fr)}
+                <span className="tabular-nums text-[#a8a29e]">{t.count}</span>
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {profile.signalStats.openSignals > 0 ||
       profile.signalStats.closedSignals > 0 ? (

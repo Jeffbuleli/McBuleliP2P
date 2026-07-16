@@ -4,7 +4,7 @@ import {
   applyQualityToBpGrant,
   computeRulesQualityScore,
 } from "../quality-score";
-import { utilityTagFromContentKind, isUtilityTag } from "../utility-tags";
+import { utilityTagFromContentKind, isUtilityTag, utilityTagLabel } from "../utility-tags";
 import { COMMUNITY_POST_BOOST } from "../../reward-points-config";
 import { isPostBoosted } from "../boost-service";
 
@@ -65,5 +65,12 @@ describe("post boost A4", () => {
       isPostBoosted(new Date(Date.now() + 60_000).toISOString()),
       true,
     );
+  });
+});
+
+describe("creator profile A5", () => {
+  it("exposes utility tag labels for stats chips", () => {
+    assert.equal(utilityTagLabel("p2p", true), "P2P");
+    assert.equal(utilityTagLabel("learn", false), "Learn");
   });
 });
