@@ -3865,4 +3865,53 @@ export const communityCreatorFundPayouts = pgTable(
   ],
 );
 
+/** Horizon B2 - off-chain McB balances (brand ads / pools) until on-chain settlement. */
+export const mcbCustodialAccounts = pgTable(
+  "mcb_custodial_accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    kind: varchar("kind", { length: 24 }).notNull(),
+    refId: uuid("ref_id"),
+    balance: numeric("balance", { precision: 36, scale: 18 })
+      .notNull()
+      .default("0"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("mcb_custodial_accounts_kind_ref_uidx")
+      .on(t.kind, t.refId)
+      .where(sql`${t.refId} IS NOT NULL`),
+    uniqueIndex("mcb_custodial_accounts_kind_pool_uidx")
+      .on(t.kind)
+      .where(sql`${t.refId} IS NULL`),
+  ],
+);
+
+export const mcbCustodialLedger = pgTable(
+  "mcb_custodial_ledger",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    batchId: uuid("batch_id").notNull(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => mcbCustodialAccounts.id, { onDelete: "cascade" }),
+    amount: numeric("amount", { precision: 36, scale: 18 }).notNull(),
+    entryType: varchar("entry_type", { length: 40 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("mcb_custodial_ledger_account_idx").on(t.accountId, t.createdAt),
+    index("mcb_custodial_ledger_batch_idx").on(t.batchId),
+    index("mcb_custodial_ledger_type_idx").on(t.entryType, t.createdAt),
+  ],
+);
+
 export * from "./game-schema";

@@ -1,16 +1,17 @@
 # SUG Horizon B - Ads McB, Creator Fund & burn
 
-> **Statut :** B6 tips BP **live** · B1 schema ads **prêt** · spend McB **gated** (`COMMUNITY_ADS_ENABLED`) jusqu'au lancement BSC  
+> **Statut :** B6 tips BP **live** · B1 schema + B2 custodial ledger + B4 admin **prêts** · spend McB **gated** (`COMMUNITY_ADS_ENABLED`) jusqu'au lancement BSC  
 > **Parent :** [social-utility-graph.md](./social-utility-graph.md)  
 > **Liés :** [mcb-tokenomics-reference.md](./mcb-tokenomics-reference.md) · [mcb-token-ops-launch.md](./mcb-token-ops-launch.md) · [builders-program-spec.md](./builders-program-spec.md)  
 > **Dernière révision :** juillet 2026
 
 **Prérequis go-live ads McB :** token McB déployé BSC + claim/liquidité + `COMMUNITY_ADS_ENABLED=true`.  
-**Avant BSC :** tips BP (B6) + tables ads (B1) peuvent être migrés sans servir d'ads.
+**Avant BSC :** tips BP (B6) + tables ads (B1) + ledger custodial (B2) + admin approve/pause (B4).
 
-Migration : `0101_community_ads_horizon_b.sql`  
+Migration : `0101_community_ads_horizon_b.sql` + `0102_mcb_custodial_ads.sql`  
 Tips : `src/lib/community/tip-service.ts` (20/50/100 BP)  
-Split ads : `src/lib/community/ads-config.ts` (50/25/25)  
+Custodial : `src/lib/community/mcb-custodial-service.ts` (`spendAdsMcb` split 50/25/25)  
+Admin : `/admin/community-ads`  
 ---
 
 ## 1. Objectif
@@ -210,9 +211,9 @@ Mettre à jour en même temps que le go-live B :
 | ID | Titre |
 |----|-------|
 | SUG-B1 | Schema brands + ad_products + campaigns | **Schema done** (flag off) |
-| SUG-B2 | McB custodial debit + split fund/burn/ops | After BSC |
+| SUG-B2 | McB custodial debit + split fund/burn/ops | **Ledger done** (spend gated) |
 | SUG-B3 | Feed ad injection + frequency cap | After BSC |
-| SUG-B4 | Admin approve / pause campaigns | After BSC |
+| SUG-B4 | Admin approve / pause campaigns | **Admin UI done** |
 | SUG-B5 | Creator Fund monthly cron + payouts | After BSC |
 | SUG-B6 | Tips BP (puis USDT) | **BP tips live** |
 | SUG-B7 | AI ad curator + organic moderator | Later |

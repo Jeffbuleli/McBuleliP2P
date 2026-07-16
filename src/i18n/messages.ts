@@ -1389,6 +1389,7 @@ export const en = {
   mcb_admin_empty: "No claims in this filter.",
   admin_nav_mcb_claims: "McB claims",
   admin_nav_builders: "Builders",
+  admin_nav_community_ads: "McB Ads",
   builders_title: "Builders Program",
   builders_tagline: "Build. Grow. Belong. - status paid in McB, not BP.",
   builders_philosophy:
@@ -5769,6 +5770,7 @@ export const fr: Messages = {
   mcb_admin_empty: "Aucun claim pour ce filtre.",
   admin_nav_mcb_claims: "Claims McB",
   admin_nav_builders: "Builders",
+  admin_nav_community_ads: "Ads McB",
   builders_title: "Builders Program",
   builders_tagline: "Build. Grow. Belong. - statut payé en McB, pas en BP.",
   builders_philosophy:

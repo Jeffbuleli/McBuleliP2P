@@ -97,4 +97,18 @@ describe("horizon B tips + ads split", () => {
       ops: 25,
     });
   });
+
+  it("rejects ads spend when flag off", async () => {
+    const prev = process.env.COMMUNITY_ADS_ENABLED;
+    process.env.COMMUNITY_ADS_ENABLED = "false";
+    const { spendAdsMcb } = await import("../mcb-custodial-service");
+    const r = await spendAdsMcb({
+      brandId: "00000000-0000-4000-8000-000000000001",
+      campaignId: "00000000-0000-4000-8000-000000000002",
+      amount: 10,
+    });
+    process.env.COMMUNITY_ADS_ENABLED = prev;
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.code, "ads_disabled");
+  });
 });
