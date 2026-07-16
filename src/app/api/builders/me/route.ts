@@ -20,8 +20,16 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const summary = await getBuildersSummary(userId);
-  return NextResponse.json(summary);
+  try {
+    const summary = await getBuildersSummary(userId);
+    return NextResponse.json(summary);
+  } catch (e) {
+    console.error("[builders/me GET]", e);
+    return NextResponse.json(
+      { message: "builders_load_failed" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {

@@ -275,6 +275,7 @@ export async function listAdminBuildersMemberships(args?: {
   status?: BuildersMembershipStatus;
   limit?: number;
 }) {
+  await ensureBuildersSchema();
   await expireStaleMemberships();
   const db = getDb();
   const limit = args?.limit ?? 50;
