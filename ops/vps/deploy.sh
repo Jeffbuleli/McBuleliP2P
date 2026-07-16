@@ -47,6 +47,10 @@ chmod +x "$REPO_DIR/ops/vps/"*.sh 2>/dev/null || true
 echo "==> Building web image"
 docker compose build web
 echo "==> Restarting web"
+# Failed recreates can leave mcbuleli-web-1 registered while compose thinks it was removed.
+docker compose stop web 2>/dev/null || true
+docker compose rm -f web 2>/dev/null || true
+docker rm -f mcbuleli-web-1 2>/dev/null || true
 docker compose up -d web
 sleep 3
 curl -fsS -o /dev/null -w "health_http=%{http_code}\n" "http://127.0.0.1:3000/login" || {
