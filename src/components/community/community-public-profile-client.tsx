@@ -497,16 +497,27 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               const label = isUtilityTag(t.tag)
                 ? utilityTagLabel(t.tag, fr)
                 : t.tag;
-              return (
-                <span
-                  key={t.tag}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33]"
-                >
+              const href = isUtilityTag(t.tag)
+                ? `/app/community/tag/${encodeURIComponent(t.tag)}`
+                : null;
+              const className =
+                "inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33] active:scale-[0.98]";
+              const inner = (
+                <>
                   {isUtilityTag(t.tag) ? (
                     <UtilityTagIcon tag={t.tag} className="h-3 w-3 shrink-0" />
                   ) : null}
                   <span>{label}</span>
                   <span className="tabular-nums text-[#a8a29e]">{t.count}</span>
+                </>
+              );
+              return href ? (
+                <Link key={t.tag} href={href} className={className}>
+                  {inner}
+                </Link>
+              ) : (
+                <span key={t.tag} className={className}>
+                  {inner}
                 </span>
               );
             })}

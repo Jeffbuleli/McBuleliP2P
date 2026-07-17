@@ -267,7 +267,9 @@ export function CommunityPostCard({
             fr={fr}
           />
           <div className="flex items-center gap-1">
-            {post.utilityTag && isUtilityTag(post.utilityTag) ? (
+            {post.utilityTag &&
+            isUtilityTag(post.utilityTag) &&
+            post.utilityTag !== "create" ? (
               <span
                 title={utilityTagLabel(post.utilityTag, fr)}
                 className="inline-flex items-center rounded-full bg-[#eef6f0] p-1 text-[#305f33]"

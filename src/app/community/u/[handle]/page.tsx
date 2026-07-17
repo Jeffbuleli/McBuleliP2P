@@ -44,7 +44,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `${profile.followerCount} abonnés · ${profile.postsCount} posts sur McBuleli Community`;
   const cover = normalizePublicMediaUrl(profile.coverUrl);
   const avatar = normalizePublicMediaUrl(profile.avatarUrl);
-  const imageUrl = cover || avatar;
+  // RS preview: prefer avatar (identity), not cover banner.
+  const imageUrl = avatar || cover;
   const images = imageUrl
     ? [{ url: imageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: `${origin}/opengraph-image`, width: 1200, height: 630 }];
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images,
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
       images: images.map((img) => img.url),
