@@ -4,14 +4,14 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb, users } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { hasFreshpayKeys } from "@/lib/env";
-import { freshpayPayIn } from "@/lib/freshpay/provider";
-import { resolveFreshpayMethod } from "@/lib/cod-mobile-providers";
+import { hasPawapayKeys } from "@/lib/env";
+import { pawapayPayIn } from "@/lib/pawapay/provider";
+import { resolvePawapayProvider, toPawapayProviderId } from "@/lib/cod-mobile-providers";
 import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import {
-  isFreshpaySupportedCurrency,
-  isFreshpaySupportedForCountry,
-} from "@/lib/freshpay/availability";
+  isPawapaySupportedCurrency,
+  isPawapaySupportedForCountry,
+} from "@/lib/pawapay/availability";
 import { checkKycGate } from "@/lib/kyc-guard";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 import { logFiatApiError } from "@/lib/fiat-api-errors";
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
-  if (!hasFreshpayKeys()) {
+  if (!hasPawapayKeys()) {
     return NextResponse.json({ error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
 
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   }
 
   const { asset, grossAmount, phoneNumber, provider, providerLabel } = parsed.data;
-  if (!isFreshpaySupportedCurrency(asset)) {
+  if (!isPawapaySupportedCurrency(asset)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     .where(eq(users.id, userId))
     .limit(1);
 
-  if (!u || !isFreshpaySupportedForCountry(u.countryCode ?? null)) {
+  if (!u || !isPawapaySupportedForCountry(u.countryCode ?? null)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
@@ -73,17 +73,21 @@ export async function POST(req: Request) {
 
   try {
     const phone = normalizeCodPhoneNumber(phoneNumber);
-    const network = resolveFreshpayMethod(phone, provider);
-    const r = await freshpayPayIn({
-      reference,
+    const network = resolvePawapayProvider(phone, provider);
+    const providerId = toPawapayProviderId(network.method);
+    const r = await pawapayPayIn({
+      depositId: reference,
       amount: grossAmount,
       currency: asset,
-      customerNumber: phone,
-      method: network.method,
+      phoneNumber: phone,
+      provider: providerId,
     });
 
     if (!r.accepted) {
-      const msg = r.response.Comment ?? r.response.resultCodeErrorDescription ?? null;
+      const msg =
+        r.response.failureReason?.failureMessage ??
+        r.response.failureReason?.failureCode ??
+        null;
       try {
         await db
           .insert(fiatFreshpayTransactions)
@@ -95,9 +99,11 @@ export async function POST(req: Request) {
             currency: asset,
             amount: grossAmount,
             phoneNumber: phone,
-            provider: network.method,
+            provider: providerId,
+            failureCode: r.response.failureReason?.failureCode ?? null,
             failureMessage: msg,
             meta: {
+              rail: "pawapay",
               providerLabel: providerLabel ?? null,
               selectedProvider: provider.trim(),
               networkDetected: network.detected,
@@ -119,12 +125,12 @@ export async function POST(req: Request) {
         kind: "deposit",
         status: "PROCESSING",
         reference,
-        providerTxId: r.response.Transaction_id ?? null,
         currency: asset,
         amount: grossAmount,
         phoneNumber: phone,
-        provider: network.method,
+        provider: providerId,
         meta: {
+          rail: "pawapay",
           providerLabel: providerLabel ?? null,
           selectedProvider: provider.trim(),
           networkDetected: network.detected,

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { hasFreshpayKeys } from "@/lib/env";
+import { hasPawapayKeys } from "@/lib/env";
 import { COD_MOBILE_FALLBACK } from "@/lib/cod-mobile-providers";
 
 export async function GET() {
-  if (!hasFreshpayKeys()) {
+  if (!hasPawapayKeys()) {
     return NextResponse.json({ ok: false, error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
 

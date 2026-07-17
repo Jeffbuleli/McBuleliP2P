@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
-import {
-  hasFreshpayCardKeys,
-  hasFreshpayMobileMoneyKeys,
-} from "@/lib/env";
+import { hasFreshpayCardKeys, hasPawapayKeys } from "@/lib/env";
 import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
 export async function GET() {
@@ -16,7 +13,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     paused,
-    mobileMoney: !paused && hasFreshpayMobileMoneyKeys(),
+    mobileMoney: !paused && hasPawapayKeys(),
     card: !paused && hasFreshpayCardKeys(),
   });
 }

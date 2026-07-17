@@ -58,23 +58,62 @@ export function hasOkxKeys(): boolean {
   );
 }
 
-// ── FreshPay / MOKO — two independent rails (do not mix credentials) ───────────
+// ── Fiat rails ────────────────────────────────────────────────────────────────
 //
-// 1) Mobile money (Airtel, Orange, M-Pesa…) — PayDRC gateway JSON API
-//    merchant_id + merchant_secrete in body; callbacks = AES + HMAC on encrypted `data`
+// 1) Mobile money (PawaPay v2) — DRC only: Airtel, Orange, M-Pesa · USD/CDF
+//    Bearer token; callbacks configured in PawaPay Dashboard (+ optional IP allowlist)
 //
-// 2) Card (Cybersource hosted checkout) — NOT wired in McBuleli yet
-//    X-API-Key + HMAC headers; callbacks = plain JSON + Callback Secret
+// 2) Card (FreshPay / Cybersource hosted checkout) — separate credentials
+//    X-API-Key + HMAC; callbacks = plain JSON + Callback Secret
+//
+// Legacy FreshPay MoMo (PayDRC) env vars may still exist but are unused for wallet MoMo.
 
-/** Mobile money pay-in / pay-out / verify (gateway JSON). */
-export function hasFreshpayMobileMoneyKeys(): boolean {
-  return Boolean(
-    process.env.FRESHPAY_MERCHANT_ID?.trim() &&
-      process.env.FRESHPAY_SECRET?.trim(),
-  );
+/** PawaPay Merchant API — production token by default (≠ sandbox token). */
+export function hasPawapayKeys(): boolean {
+  return Boolean(process.env.PAWAPAY_API_TOKEN?.trim());
 }
 
-/** Mobile money webhook decryption (separate from card Callback Secret). */
+export function getPawapayApiToken(): string {
+  const t = process.env.PAWAPAY_API_TOKEN?.trim();
+  if (!t) throw new Error("PAWAPAY_API_TOKEN must be set");
+  return t;
+}
+
+/**
+ * Sandbox and production are separate APIs + separate tokens.
+ * Default: **production** → https://api.pawapay.io
+ * Only set PAWAPAY_ENV=sandbox for local/test against https://api.sandbox.pawapay.io
+ */
+export function resolvePawapayEnvMode(): "production" | "sandbox" {
+  const env = process.env.PAWAPAY_ENV?.trim().toLowerCase();
+  if (env === "sandbox" || env === "test") return "sandbox";
+  return "production";
+}
+
+export function getPawapayApiBaseUrl(): string {
+  const override = process.env.PAWAPAY_API_BASE_URL?.trim();
+  if (override) return override.replace(/\/+$/, "");
+  return resolvePawapayEnvMode() === "sandbox"
+    ? "https://api.sandbox.pawapay.io"
+    : "https://api.pawapay.io";
+}
+
+/** Optional comma-separated PawaPay callback source IPs. */
+export function getPawapayCallbackIps(): string[] {
+  const raw = process.env.PAWAPAY_CALLBACK_IPS?.trim();
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** @deprecated FreshPay MoMo — prefer hasPawapayKeys for wallet deposit/withdraw. */
+export function hasFreshpayMobileMoneyKeys(): boolean {
+  return hasPawapayKeys();
+}
+
+/** @deprecated FreshPay MoMo callbacks — PawaPay uses dashboard callbacks + IP allowlist. */
 export function hasFreshpayMobileMoneyCallbackKeys(): boolean {
   return Boolean(
     process.env.FRESHPAY_AES_KEY?.trim() &&
@@ -82,14 +121,9 @@ export function hasFreshpayMobileMoneyCallbackKeys(): boolean {
   );
 }
 
-/** @deprecated Alias — mobile money gateway only (not card). */
+/** Wallet MoMo configured (PawaPay). */
 export function hasFreshpayKeys(): boolean {
-  return hasFreshpayMobileMoneyKeys();
-}
-
-/** @deprecated Use hasFreshpayMobileMoneyKeys */
-export function hasPawapayKeys(): boolean {
-  return hasFreshpayMobileMoneyKeys();
+  return hasPawapayKeys();
 }
 
 /** Card rail (Cybersource hosted checkout) — future use. */
@@ -101,30 +135,35 @@ export function hasFreshpayCardKeys(): boolean {
   );
 }
 
+/** @deprecated Legacy FreshPay MoMo — kept for optional legacy tooling. */
 export function getFreshpayMerchantId(): string {
   const id = process.env.FRESHPAY_MERCHANT_ID?.trim();
   if (!id) throw new Error("FRESHPAY_MERCHANT_ID must be set");
   return id;
 }
 
+/** @deprecated Legacy FreshPay MoMo */
 export function getFreshpayMerchantSecret(): string {
   const s = process.env.FRESHPAY_SECRET?.trim();
   if (!s) throw new Error("FRESHPAY_SECRET must be set");
   return s;
 }
 
+/** @deprecated Legacy FreshPay MoMo callbacks */
 export function getFreshpayAesKey(): string {
   const k = process.env.FRESHPAY_AES_KEY?.trim();
   if (!k) throw new Error("FRESHPAY_AES_KEY must be set (mobile money callbacks)");
   return k;
 }
 
+/** @deprecated Legacy FreshPay MoMo callbacks */
 export function getFreshpayHmacKey(): string {
   const k = process.env.FRESHPAY_HMAC_KEY?.trim();
   if (!k) throw new Error("FRESHPAY_HMAC_KEY must be set (mobile money callbacks)");
   return k;
 }
 
+/** @deprecated Legacy FreshPay MoMo gateway */
 export function getFreshpayGatewayUrl(): string {
   const override = process.env.FRESHPAY_API_BASE_URL?.trim();
   if (override) return override.replace(/\/+$/, "");

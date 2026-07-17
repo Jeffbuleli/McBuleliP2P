@@ -1,9 +1,14 @@
+import {
+  isPawapaySupportedCurrency,
+  isPawapaySupportedForCountry,
+} from "@/lib/pawapay/availability";
+
+/** @deprecated Prefer isPawapaySupportedForCountry — same DRC gate for fiat MoMo/card. */
 export function isFreshpaySupportedForCountry(countryCode: string | null | undefined): boolean {
-  const c = (countryCode ?? "").trim().toUpperCase();
-  return c === "CD" || c === "COD";
+  return isPawapaySupportedForCountry(countryCode);
 }
 
+/** @deprecated Prefer isPawapaySupportedCurrency */
 export function isFreshpaySupportedCurrency(currency: string | null | undefined): boolean {
-  const cur = (currency ?? "").trim().toUpperCase();
-  return cur === "USD" || cur === "CDF";
+  return isPawapaySupportedCurrency(currency);
 }

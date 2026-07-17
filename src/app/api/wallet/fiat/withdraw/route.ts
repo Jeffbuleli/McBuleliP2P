@@ -3,16 +3,16 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb, users, walletLedgerEntries } from "@/db";
-import { hasFreshpayKeys } from "@/lib/env";
+import { hasPawapayKeys } from "@/lib/env";
 import { getSessionUserId } from "@/lib/session";
 import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
-import { freshpayPayOut } from "@/lib/freshpay/provider";
-import { resolveFreshpayMethod } from "@/lib/cod-mobile-providers";
+import { pawapayPayOut } from "@/lib/pawapay/provider";
+import { resolvePawapayProvider, toPawapayProviderId } from "@/lib/cod-mobile-providers";
 import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import {
-  isFreshpaySupportedCurrency,
-  isFreshpaySupportedForCountry,
-} from "@/lib/freshpay/availability";
+  isPawapaySupportedCurrency,
+  isPawapaySupportedForCountry,
+} from "@/lib/pawapay/availability";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount } from "@/lib/wallet-types";
@@ -65,7 +65,9 @@ async function refundIfNotYet(args: {
         feeUsdEquivalent: "0",
         meta: {
           fiatPayoutRef: args.fiatPayoutRef,
+          pawapayPayoutId: args.fiatPayoutRef,
           reason: args.reason,
+          rail: "pawapay",
         },
       },
     ]);
@@ -86,7 +88,7 @@ export async function POST(req: Request) {
   if (!kyc.ok) {
     return NextResponse.json({ error: kyc.error }, { status: 403 });
   }
-  if (!hasFreshpayKeys()) {
+  if (!hasPawapayKeys()) {
     return NextResponse.json({ error: "wallet_fiat_unconfigured" }, { status: 503 });
   }
 
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "wallet_fiat_invalid_amount" }, { status: 400 });
   }
-  if (!isFreshpaySupportedCurrency(parsed.data.asset)) {
+  if (!isPawapaySupportedCurrency(parsed.data.asset)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
@@ -108,7 +110,7 @@ export async function POST(req: Request) {
     .where(eq(users.id, userId))
     .limit(1);
 
-  if (!u || !isFreshpaySupportedForCountry(u.countryCode ?? null)) {
+  if (!u || !isPawapaySupportedForCountry(u.countryCode ?? null)) {
     return NextResponse.json({ error: "wallet_fiat_unavailable" }, { status: 400 });
   }
 
@@ -126,7 +128,8 @@ export async function POST(req: Request) {
 
   try {
     const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
-    const network = resolveFreshpayMethod(phone, parsed.data.provider);
+    const network = resolvePawapayProvider(phone, parsed.data.provider);
+    const providerId = toPawapayProviderId(network.method);
 
     try {
       await db
@@ -139,9 +142,10 @@ export async function POST(req: Request) {
           currency: parsed.data.asset,
           amount: r.net,
           phoneNumber: phone,
-          provider: network.method,
+          provider: providerId,
           batchId: r.batchId,
           meta: {
+            rail: "pawapay",
             grossAmount: parsed.data.grossAmount,
             providerLabel,
             selectedProvider: parsed.data.provider.trim(),
@@ -154,16 +158,19 @@ export async function POST(req: Request) {
       // best-effort
     }
 
-    const pr = await freshpayPayOut({
-      reference,
+    const pr = await pawapayPayOut({
+      payoutId: reference,
       amount: r.net,
       currency: parsed.data.asset,
-      customerNumber: phone,
-      method: network.method,
+      phoneNumber: phone,
+      provider: providerId,
     });
 
     if (!pr.accepted) {
-      const msg = pr.response.Comment ?? pr.response.resultCodeErrorDescription ?? null;
+      const msg =
+        pr.response.failureReason?.failureMessage ??
+        pr.response.failureReason?.failureCode ??
+        null;
       await refundIfNotYet({
         userId,
         asset: parsed.data.asset,
@@ -177,6 +184,7 @@ export async function POST(req: Request) {
           .update(fiatFreshpayTransactions)
           .set({
             status: "FAILED",
+            failureCode: pr.response.failureReason?.failureCode ?? null,
             failureMessage: msg,
             updatedAt: new Date(),
           })
@@ -186,16 +194,6 @@ export async function POST(req: Request) {
       }
       logFiatApiError("momo.withdraw", msg);
       return NextResponse.json({ ok: false, error: "wallet_fiat_payout_rejected" }, { status: 400 });
-    }
-
-    if (pr.response.Transaction_id) {
-      await db
-        .update(fiatFreshpayTransactions)
-        .set({
-          providerTxId: pr.response.Transaction_id,
-          updatedAt: new Date(),
-        })
-        .where(eq(fiatFreshpayTransactions.reference, reference));
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : null;
@@ -231,7 +229,7 @@ export async function POST(req: Request) {
     resourceId: reference,
     asset: parsed.data.asset,
     amount: parsed.data.grossAmount,
-    meta: { batchId: r.batchId, provider: parsed.data.provider },
+    meta: { batchId: r.batchId, provider: parsed.data.provider, rail: "pawapay" },
   });
 
   return NextResponse.json({

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { fiatFreshpayTransactions, getDb } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { hasFreshpayCardKeys, hasFreshpayKeys } from "@/lib/env";
+import { hasFreshpayCardKeys, hasPawapayKeys } from "@/lib/env";
 import { refreshFiatTxFromProvider } from "@/lib/freshpay/reconcile-tx";
 import { sanitizeFiatTxForUser } from "@/lib/fiat-api-errors";
 
@@ -37,7 +37,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   }
 
   const isCard = tx.provider === "card" || tx.meta?.rail === "card";
-  const canRefresh = isCard ? hasFreshpayCardKeys() : hasFreshpayKeys();
+  const canRefresh = isCard ? hasFreshpayCardKeys() : hasPawapayKeys();
   const shouldRefresh =
     refresh && canRefresh && (tx.status === "PROCESSING" || tx.status === "INITIATED");
 
