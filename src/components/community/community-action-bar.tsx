@@ -22,7 +22,7 @@ export function CommunityBoostBadge({ fr }: { fr: boolean }) {
   );
 }
 
-/** Public tip totals — mini stat chips (number + BP/McB), profile-aligned. */
+/** Public tip totals — SVG + chiffre en ligne, sans superposition. */
 export function CommunityTipTotals({
   tipBpTotal = 0,
   tipMcbTotal = 0,
@@ -35,25 +35,17 @@ export function CommunityTipTotals({
   const mcb = Math.max(0, Number(tipMcbTotal) || 0);
   if (bp <= 0 && mcb <= 0) return null;
   return (
-    <div className="flex items-center gap-1.5 px-4 py-1.5">
+    <div className="flex items-center gap-3 px-4 py-1.5">
       {bp > 0 ? (
-        <span className="inline-flex min-w-[3.25rem] flex-col items-center rounded-xl border border-[#c5dfd0] bg-gradient-to-b from-[#f0faf4] to-white px-2 py-1 shadow-sm">
-          <span className="text-[12px] font-bold tabular-nums leading-none text-[#0c0a09]">
-            {formatCompactCount(bp)}
-          </span>
-          <span className="mt-0.5 inline-flex items-center gap-0.5 text-[8px] font-semibold uppercase tracking-wide text-[#78716c]">
-            <IconBp size={10} />
-          </span>
+        <span className="inline-flex items-center gap-1 text-[12px] font-bold tabular-nums text-[#305f33]">
+          <IconBp size={15} />
+          {formatCompactCount(bp)}
         </span>
       ) : null}
       {mcb > 0 ? (
-        <span className="inline-flex min-w-[3.25rem] flex-col items-center rounded-xl border border-[#e8f3ee] bg-white px-2 py-1 shadow-sm">
-          <span className="text-[12px] font-bold tabular-nums leading-none text-[#0c0a09]">
-            {formatCompactCount(Math.floor(mcb))}
-          </span>
-          <span className="mt-0.5 inline-flex items-center gap-0.5 text-[8px] font-semibold uppercase tracking-wide text-[#78716c]">
-            <IconMcB size={10} />
-          </span>
+        <span className="inline-flex items-center gap-1 text-[12px] font-bold tabular-nums text-[#991b1b]">
+          <IconMcB size={15} />
+          {formatCompactCount(Math.floor(mcb))}
         </span>
       ) : null}
     </div>

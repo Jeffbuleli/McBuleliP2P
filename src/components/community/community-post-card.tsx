@@ -91,6 +91,8 @@ export function CommunityPostCard({
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
+  const [boostConfirm, setBoostConfirm] = useState(false);
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
@@ -110,13 +112,8 @@ export function CommunityPostCard({
 
   const boostPost = async () => {
     if (!isOwner || boosted) return;
-    const ok = window.confirm(
-      fr
-        ? `Boost ${COMMUNITY_POST_BOOST.hours}h · ${COMMUNITY_POST_BOOST.costBp} BP ?`
-        : `Boost ${COMMUNITY_POST_BOOST.hours}h · ${COMMUNITY_POST_BOOST.costBp} BP?`,
-    );
-    if (!ok) return;
     setBusy(true);
+    setBoostConfirm(false);
     setOwnerOpen(false);
     try {
       const res = await fetch(`/api/community/feed/${post.id}/boost`, {
@@ -320,7 +317,10 @@ export function CommunityPostCard({
                     type="button"
                     disabled={busy}
                     className="block w-full px-3 py-2 text-left text-xs font-semibold text-amber-800"
-                    onClick={() => void boostPost()}
+                    onClick={() => {
+                      setOwnerOpen(false);
+                      setBoostConfirm(true);
+                    }}
                   >
                     Boost · {COMMUNITY_POST_BOOST.costBp} BP
                   </button>
@@ -388,7 +388,42 @@ export function CommunityPostCard({
         />
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      {boostConfirm ? (
+        <div className="mx-4 mb-2 rounded-2xl border border-amber-200 bg-amber-50/90 px-3 py-3">
+          <p className="text-sm font-bold text-amber-950">
+            {fr ? "Booster cette publication ?" : "Boost this post?"}
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-amber-900/80">
+            {fr
+              ? `${COMMUNITY_POST_BOOST.hours}h en tête du feed · ${COMMUNITY_POST_BOOST.costBp} BP. Visible avec le badge Boosté.`
+              : `${COMMUNITY_POST_BOOST.hours}h at the top of the feed · ${COMMUNITY_POST_BOOST.costBp} BP. Shows a Boosted badge.`}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setBoostConfirm(false)}
+              className="min-h-[36px] flex-1 rounded-xl border border-amber-200 bg-white text-xs font-bold text-amber-900"
+            >
+              {fr ? "Annuler" : "Cancel"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void boostPost()}
+              className="min-h-[36px] flex-1 rounded-xl bg-amber-800 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {busy
+                ? "…"
+                : fr
+                  ? `Confirmer · ${COMMUNITY_POST_BOOST.costBp} BP`
+                  : `Confirm · ${COMMUNITY_POST_BOOST.costBp} BP`}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between gap-2 border-t border-[#edf2ef]">
         <CommunityTipTotals
           tipBpTotal={post.tipBpTotal ?? 0}
           tipMcbTotal={post.tipMcbTotal ?? 0}

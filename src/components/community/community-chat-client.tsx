@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import {
   AdminGoldBadge,
   BlueCheckBadge,
@@ -16,6 +17,7 @@ import {
 } from "@/components/community/community-inline-icons";
 import { uploadCommunityImage } from "@/lib/community-media-upload";
 import type { DmMessageView } from "@/lib/community/dm-service";
+import { communityProfileAppPath } from "@/lib/community/share-url";
 
 type ThreadMeta = {
   id: string;
@@ -191,56 +193,73 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
 
   return (
     <div className="community-theme mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-lg flex-col">
-      <header className="flex items-center gap-3 border-b border-[#f0f4f2] bg-white px-4 py-3 shadow-sm">
+      <header className="flex items-center gap-2.5 border-b border-[#f0f4f2] bg-white px-3 py-2.5 shadow-sm">
         <Link
           href="/app/community/inbox"
-          className="text-sm font-semibold text-[#305f33]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-[#305f33] hover:bg-[#f0f7f3]"
+          aria-label={fr ? "Retour" : "Back"}
         >
           ←
         </Link>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-[#0c0a09]">
-            {meta.peer.displayName}
-            {meta.peer.isAdmin ? (
-              <span className="ml-1"><AdminGoldBadge fr={fr} /></span>
+        <Link
+          href={communityProfileAppPath(meta.peer.handle)}
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1 py-0.5 active:bg-[#f5f7f6]"
+        >
+          <div className="relative shrink-0">
+            <CommunityAvatar
+              label={meta.peer.displayName}
+              avatarUrl={meta.peer.avatarUrl}
+              sizeClass="h-10 w-10"
+            />
+            {meta.peer.online ? (
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#22c55e]" />
             ) : null}
-            {meta.peer.showKycBadge ? (
-              <span className="ml-1"><KycVerifiedBadge fr={fr} /></span>
-            ) : null}
-            {meta.peer.verifiedBlue ? (
-              <span className="ml-1"><BlueCheckBadge fr={fr} /></span>
-            ) : null}
-          </p>
-          <p className="text-[11px] text-[#78716c]">
-            @{meta.peer.handle}
-            {meta.peer.online
-              ? fr
-                ? " · En ligne"
-                : " · Online"
-              : ""}
-          </p>
-        </div>
-        <div className="relative">
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1 truncate text-sm font-bold text-[#0c0a09]">
+              <span className="truncate">{meta.peer.displayName}</span>
+              {meta.peer.isAdmin ? <AdminGoldBadge fr={fr} /> : null}
+              {meta.peer.showKycBadge ? <KycVerifiedBadge fr={fr} /> : null}
+              {meta.peer.verifiedBlue ? <BlueCheckBadge fr={fr} /> : null}
+            </p>
+            <p className="truncate text-[11px] text-[#78716c]">
+              @{meta.peer.handle}
+              {meta.peer.online
+                ? fr
+                  ? " · En ligne"
+                  : " · Online"
+                : ""}
+            </p>
+          </div>
+        </Link>
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[#57534e]"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#57534e] hover:bg-[#f5f7f6]"
             aria-label="Menu"
           >
             ⋮
           </button>
           {menuOpen ? (
-            <div className="absolute right-0 top-10 z-20 w-44 rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-[#f0f4f2] bg-white py-1 shadow-lg">
+              <Link
+                href={communityProfileAppPath(meta.peer.handle)}
+                className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-[#305f33] hover:bg-[#fafafa]"
+                onClick={() => setMenuOpen(false)}
+              >
+                {fr ? "Voir le profil" : "View profile"}
+              </Link>
               <button
                 type="button"
-                className="block w-full px-4 py-2 text-left text-sm text-[#57534e] hover:bg-[#fafafa]"
+                className="block w-full px-4 py-2.5 text-left text-sm text-[#57534e] hover:bg-[#fafafa]"
                 onClick={() => void reportThread()}
               >
                 {fr ? "Signaler" : "Report"}
               </button>
               <button
                 type="button"
-                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                className="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
                 onClick={() => void blockPeer()}
               >
                 {fr ? "Bloquer" : "Block"}
@@ -421,19 +440,19 @@ function PeerAvatar({
 }: {
   peer: ThreadMeta["peer"];
 }) {
-  if (peer.avatarUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={peer.avatarUrl}
-        alt=""
-        className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm"
-      />
-    );
-  }
   return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f3ee] text-xs font-bold text-[#305f33] ring-2 ring-white shadow-sm">
-      {peer.displayName.slice(0, 1).toUpperCase()}
-    </span>
+    <Link
+      href={communityProfileAppPath(peer.handle)}
+      className="shrink-0"
+      aria-label={`@${peer.handle}`}
+    >
+      <CommunityAvatar
+        label={peer.displayName}
+        avatarUrl={peer.avatarUrl}
+        sizeClass="h-8 w-8"
+        textClass="text-xs"
+        className="rounded-full shadow-sm ring-2 ring-white"
+      />
+    </Link>
   );
 }

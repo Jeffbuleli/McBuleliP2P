@@ -102,7 +102,7 @@ export function OnlineDot({ online }: { online: boolean }) {
   if (!online) return null;
   return (
     <span
-      className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#22c55e]"
+      className="absolute bottom-1 right-1 z-20 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#22c55e]"
       title="En ligne"
     />
   );

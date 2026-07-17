@@ -57,7 +57,7 @@ export function UserAvatarMark({
 
   const ringClass =
     variant === "profile"
-      ? "ring-2 ring-white"
+      ? ""
       : "ring-2 ring-white/30 dark:ring-stone-600";
 
   if (showImg) {
@@ -73,7 +73,7 @@ export function UserAvatarMark({
 
   const fallbackClass =
     variant === "profile"
-      ? `flex ${sizeClass} items-center justify-center rounded-full bg-[var(--fd-primary)] font-bold text-white shadow-md ring-2 ring-white ${textClass}`
+      ? `flex ${sizeClass} items-center justify-center rounded-full bg-[var(--fd-primary)] font-bold text-white shadow-md ${textClass}`
       : `flex ${sizeClass} items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 font-bold text-white shadow-md ring-2 ring-white/30 dark:ring-stone-700 ${textClass}`;
 
   return (

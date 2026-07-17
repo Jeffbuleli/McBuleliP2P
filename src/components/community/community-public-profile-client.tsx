@@ -205,20 +205,21 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   return (
     <div className="community-theme mx-auto w-full max-w-lg pb-4">
       <div className="px-4 pt-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">
             ← {fr ? "Communauté" : "Community"}
           </Link>
           <CommunityDmLink
             fr={fr}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f7f3] text-[#305f33] transition active:scale-95"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e8f3ee] bg-white text-[#305f33] shadow-sm transition active:scale-95"
+            iconSize={18}
           />
         </div>
       </div>
 
-      <header className="relative mt-3 overflow-hidden rounded-3xl border border-[#f0f4f2] bg-white shadow-[0_8px_30px_rgba(12,10,9,0.06)]">
+      <header className="relative mt-3 rounded-3xl border border-[#f0f4f2] bg-white shadow-[0_8px_30px_rgba(12,10,9,0.06)]">
         <div
-          className="relative h-36 w-full bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20]"
+          className="relative h-36 w-full overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20]"
           style={
             profile.coverUrl
               ? {
@@ -229,14 +230,14 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               : undefined
           }
         />
-        <div className="-mt-14 px-4 pb-5">
+        <div className="-mt-12 px-4 pb-5">
           <div className="flex items-end justify-between gap-3">
-            <div className="relative">
+            <div className="relative z-10 shrink-0">
               <div
-                className={`rounded-full p-0.5 ${
+                className={`rounded-full bg-white p-[3px] ${
                   profile.builderTier
                     ? buildersAvatarRingClass(profile.builderTier)
-                    : ""
+                    : "shadow-md"
                 }`}
               >
                 <CommunityAvatar
@@ -244,9 +245,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                   avatarUrl={profile.avatarUrl}
                   sizeClass="h-24 w-24"
                   textClass="text-3xl"
-                  className={`rounded-full border-4 border-white ${
-                    profile.builderTier ? "" : "shadow-md"
-                  }`}
+                  className="rounded-full"
                 />
               </div>
               <OnlineDot online={profile.online} />
@@ -318,12 +317,6 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
             <span>
               <span className="font-bold text-[#0c0a09]">{profile.followingCount}</span>{" "}
               <span className="text-[#78716c]">{fr ? "abonnements" : "following"}</span>
-            </span>
-            <span>
-              <span className="font-bold text-[#0c0a09]">
-                {profile.stats?.posts ?? profile.postsCount}
-              </span>{" "}
-              <span className="text-[#78716c]">posts</span>
             </span>
           </div>
 
@@ -500,18 +493,23 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
       {(profile.stats?.tags?.length ?? 0) > 0 ? (
         <section className="mt-3 px-4">
           <div className="flex flex-wrap gap-1.5">
-            {profile.stats!.tags.map((t) => (
-              <span
-                key={t.tag}
-                title={isUtilityTag(t.tag) ? utilityTagLabel(t.tag, fr) : t.tag}
-                className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2 py-1 text-[11px] font-semibold text-[#305f33]"
-              >
-                {isUtilityTag(t.tag) ? (
-                  <UtilityTagIcon tag={t.tag} className="h-3 w-3" />
-                ) : null}
-                <span className="tabular-nums text-[#a8a29e]">{t.count}</span>
-              </span>
-            ))}
+            {profile.stats!.tags.map((t) => {
+              const label = isUtilityTag(t.tag)
+                ? utilityTagLabel(t.tag, fr)
+                : t.tag;
+              return (
+                <span
+                  key={t.tag}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33]"
+                >
+                  {isUtilityTag(t.tag) ? (
+                    <UtilityTagIcon tag={t.tag} className="h-3 w-3 shrink-0" />
+                  ) : null}
+                  <span>{label}</span>
+                  <span className="tabular-nums text-[#a8a29e]">{t.count}</span>
+                </span>
+              );
+            })}
           </div>
         </section>
       ) : null}

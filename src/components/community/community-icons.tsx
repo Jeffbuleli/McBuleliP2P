@@ -51,16 +51,20 @@ export function IconInbox({ size = 18, className = "" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
       <path
-        d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
+        d="M4 6.5A3.5 3.5 0 017.5 3h6A3.5 3.5 0 0117 6.5v5a3.5 3.5 0 01-3.5 3.5H9l-4 3v-3.2A3.5 3.5 0 014 11.5v-5z"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="9" cy="10" r="0.75" fill="currentColor" />
-      <circle cx="12" cy="10" r="0.75" fill="currentColor" />
-      <circle cx="15" cy="10" r="0.75" fill="currentColor" />
+      <path
+        d="M17 8.5h.5A2.5 2.5 0 0120 11v4.5A2.5 2.5 0 0117.5 18H16l-2.5 2v-2h-.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        opacity="0.85"
+      />
     </svg>
   );
 }
