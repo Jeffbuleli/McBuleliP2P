@@ -116,7 +116,12 @@ export type PublicPostShareView = {
   body: string;
   authorHandle: string;
   authorDisplayName: string;
+  authorAvatarUrl: string | null;
   imageUrl: string | null;
+  mediaKind: "image" | "video" | null;
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
   publishedAt: string;
   /** In-app path to open after login (formation join or post detail). */
   appReturnPath: string;
@@ -1477,17 +1482,29 @@ export async function getPublicPostForShare(
   if (!author) return null;
 
   const media = await getPostMediaViews(postId, row.mediaIds, null);
+  const first = media[0] ?? null;
   const formationMeta = resolveFormationMeta(row);
   const appReturnPath =
     formationMeta?.joinPath?.startsWith("/app/")
       ? formationMeta.joinPath
       : `/app/community/post/${row.id}`;
+  const mediaKind =
+    first?.fileType === "video"
+      ? ("video" as const)
+      : first
+        ? ("image" as const)
+        : null;
   return {
     id: row.id,
     body: row.body,
     authorHandle: author.handle,
     authorDisplayName: author.displayName,
-    imageUrl: media[0]?.url ?? null,
+    authorAvatarUrl: author.avatarUrl ?? null,
+    imageUrl: first?.url ?? null,
+    mediaKind,
+    likeCount: row.likeCount ?? 0,
+    commentCount: row.commentCount ?? 0,
+    viewCount: row.viewCount ?? 0,
     publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
     appReturnPath,
   };

@@ -16,6 +16,7 @@ import {
   type MediaItemView,
 } from "@/lib/community/media-types";
 import type { CommunityAuthorView } from "@/lib/community/profile-service";
+import { communityPostSharePath } from "@/lib/community/share-url";
 
 type Payload = {
   media: MediaItemView;
@@ -89,7 +90,7 @@ export function CommunityMediaDetailClient({
 
   const shareMedia = async () => {
     if (!data) return;
-    const url = `${window.location.origin}/app/community/post/${postId}/media/${mediaId}`;
+    const url = `${window.location.origin}${communityPostSharePath(postId)}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "McBuleli", url });

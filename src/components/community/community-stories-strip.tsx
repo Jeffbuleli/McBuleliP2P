@@ -721,7 +721,7 @@ function StoryViewer({
   };
 
   const shareStory = async () => {
-    const url = `${window.location.origin}/app/community/u/${encodeURIComponent(ring.handle)}`;
+    const url = `${window.location.origin}/community/u/${encodeURIComponent(ring.handle)}`;
     const text = fr
       ? `Statut de ${ring.displayName || ring.handle} sur McBuleli`
       : `${ring.displayName || ring.handle}'s status on McBuleli`;
