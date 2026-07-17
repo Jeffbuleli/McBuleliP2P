@@ -80,11 +80,15 @@ export function CommunityFollowUserRow({
         ) : null}
       </div>
 
-      {!hideFollow && onToggleFollow ? (
+      {!hideFollow && onToggleFollow && !person.isSelf ? (
         <button
           type="button"
           disabled={busy}
-          onClick={onToggleFollow}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFollow();
+          }}
           className={`min-h-[36px] shrink-0 rounded-xl px-3.5 text-[11px] font-bold active:scale-[0.98] disabled:opacity-50 ${
             person.isFollowing
               ? "border border-[#d6d3d1] bg-white text-[#57534e]"
@@ -95,10 +99,18 @@ export function CommunityFollowUserRow({
             ? fr
               ? "Abonné"
               : "Following"
-            : fr
-              ? "Suivre"
-              : "Follow"}
+            : person.followsYou
+              ? fr
+                ? "Suivre aussi"
+                : "Follow back"
+              : fr
+                ? "Suivre"
+                : "Follow"}
         </button>
+      ) : person.isSelf ? (
+        <span className="shrink-0 rounded-lg bg-[#f0f4f2] px-2.5 py-1 text-[10px] font-bold text-[#78716c]">
+          {fr ? "Toi" : "You"}
+        </span>
       ) : null}
     </div>
   );

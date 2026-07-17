@@ -40,7 +40,6 @@ import {
 import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
 import { formatBp, formatCompactCount, formatMcB } from "@/lib/community/format-count";
 import { CommunityFollowListSheet } from "@/components/community/community-follow-list-sheet";
-import { CommunityDiscoverPeople } from "@/components/community/community-discover-people";
 
 const EMPTY_LINKS: CommunityProfileLinks = {
   location: null,
@@ -339,7 +338,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               <span className="font-bold tabular-nums text-[#0c0a09]">
                 {formatCompactCount(profile.followerCount)}
               </span>{" "}
-              <span className="text-[#78716c]">{fr ? "abonnés" : "followers"}</span>
+              <span className="text-[#78716c]">{fr ? "Abonnés" : "Followers"}</span>
             </button>
             <button
               type="button"
@@ -349,7 +348,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               <span className="font-bold tabular-nums text-[#0c0a09]">
                 {formatCompactCount(profile.followingCount)}
               </span>{" "}
-              <span className="text-[#78716c]">{fr ? "abonnements" : "following"}</span>
+              <span className="text-[#78716c]">{fr ? "Abonnements" : "Following"}</span>
             </button>
           </div>
 
@@ -375,9 +374,6 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                 >
                   {fr ? "Publier" : "Publish"}
                 </button>
-              </div>
-              <div className="mt-3">
-                <CommunityDiscoverPeople fr={fr} />
               </div>
             </>
           ) : (
@@ -500,6 +496,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           fr={fr}
           handle={profile.handle}
           mode={followListMode}
+          onModeChange={setFollowListMode}
+          followerCount={profile.followerCount}
+          followingCount={profile.followingCount}
           onCountsChange={(delta) => {
             setProfile((p) =>
               p

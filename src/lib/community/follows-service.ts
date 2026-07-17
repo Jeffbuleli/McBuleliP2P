@@ -22,20 +22,25 @@ export type FollowGraphPerson = {
   verifiedBlue: boolean;
   isFollowing: boolean;
   followsYou: boolean;
+  isSelf: boolean;
   reason: FollowDiscoverReason | null;
 };
 
 function displayAvatarUrl(url: string | null | undefined): string | null {
   if (!url) return null;
+  // List payloads must stay small - many accounts store JPEG data URLs in users.avatar_url.
+  if (url.startsWith("data:") || url.startsWith("blob:")) return null;
   return normalizePublicMediaUrl(url) ?? url;
 }
 
 async function resolveHandleUserId(handle: string): Promise<string | null> {
+  const normalized = handle.trim().replace(/^@+/, "").toLowerCase();
+  if (!normalized) return null;
   const db = getDb();
   const [row] = await db
     .select({ userId: communityUserProfiles.userId })
     .from(communityUserProfiles)
-    .where(eq(communityUserProfiles.handle, handle))
+    .where(eq(communityUserProfiles.handle, normalized))
     .limit(1);
   return row?.userId ?? null;
 }
@@ -88,6 +93,7 @@ async function enrichFollowGraphPeople(
   return rows.map((r) => {
     const isFollowing = followingSet.has(r.userId);
     const followsYou = followsYouSet.has(r.userId);
+    const isSelf = !!viewerId && r.userId === viewerId;
     let reason = reasonByUserId?.get(r.userId) ?? null;
     if (!reason && isFollowing && followsYou) reason = "mutual";
     return {
@@ -100,6 +106,7 @@ async function enrichFollowGraphPeople(
       verifiedBlue: r.verifiedBlue,
       isFollowing,
       followsYou,
+      isSelf,
       reason,
     };
   });
@@ -110,10 +117,11 @@ export async function followTrader(args: {
   traderHandle: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const db = getDb();
+  const traderHandle = args.traderHandle.trim().replace(/^@+/, "").toLowerCase();
   const [trader] = await db
     .select({ userId: communityUserProfiles.userId })
     .from(communityUserProfiles)
-    .where(eq(communityUserProfiles.handle, args.traderHandle))
+    .where(eq(communityUserProfiles.handle, traderHandle))
     .limit(1);
 
   if (!trader) return { ok: false, error: "not_found" };
@@ -152,10 +160,11 @@ export async function unfollowTrader(args: {
   traderHandle: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const db = getDb();
+  const traderHandle = args.traderHandle.trim().replace(/^@+/, "").toLowerCase();
   const [trader] = await db
     .select({ userId: communityUserProfiles.userId })
     .from(communityUserProfiles)
-    .where(eq(communityUserProfiles.handle, args.traderHandle))
+    .where(eq(communityUserProfiles.handle, traderHandle))
     .limit(1);
 
   if (!trader) return { ok: false, error: "not_found" };
@@ -318,6 +327,8 @@ export async function listFollowingOf(args: {
 export async function suggestPeopleToFollow(args: {
   viewerId: string;
   limit?: number;
+  /** Extra user IDs to skip (client dismissals, etc.). */
+  excludeUserIds?: string[];
 }): Promise<FollowGraphPerson[]> {
   const db = getDb();
   const limit = Math.min(Math.max(args.limit ?? 12, 1), 24);
@@ -334,6 +345,9 @@ export async function suggestPeopleToFollow(args: {
     .where(eq(communityTraderFollows.followerId, args.viewerId));
   const exclude = new Set(followingRows.map((r) => r.traderId));
   exclude.add(args.viewerId);
+  for (const id of args.excludeUserIds ?? []) {
+    if (id) exclude.add(id);
+  }
 
   const excludeIds = [...exclude];
   const country = viewer?.countryCode?.trim().toUpperCase() || null;
@@ -452,8 +466,19 @@ export async function suggestPeopleToFollow(args: {
     if (merged.length >= limit) break;
   }
 
+  // Prefer follow-backs, then nearby - keep rising/active as filler only.
+  const ranked = [...merged].sort((a, b) => {
+    const score = (row: (typeof merged)[number]) => {
+      if (reasonByUserId.get(row.userId) === "mutual") return 3;
+      if (reasonByUserId.get(row.userId) === "nearby") return 2;
+      if (reasonByUserId.get(row.userId) === "active") return 1;
+      return 0;
+    };
+    return score(b) - score(a);
+  });
+
   return enrichFollowGraphPeople(
-    merged.slice(0, limit),
+    ranked.slice(0, limit),
     args.viewerId,
     reasonByUserId,
   );

@@ -1,28 +1,73 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CommunityFollowUserRow } from "@/components/community/community-follow-user-row";
+import { CommunityAvatar } from "@/components/community/community-avatar";
 import type { FollowGraphPerson } from "@/lib/community/follows-service";
+import {
+  DISCOVER_VISIBLE_SLOTS,
+  dismissDiscoverPerson,
+  getDiscoverDismissedUserIds,
+  isDiscoverBlockSnoozed,
+  snoozeDiscoverBlock,
+} from "@/lib/community/discover-dismiss";
 
-export function CommunityDiscoverPeople({ fr }: { fr: boolean }) {
-  const [people, setPeople] = useState<FollowGraphPerson[]>([]);
-  const [busyHandle, setBusyHandle] = useState<string | null>(null);
+function suggestionHint(person: FollowGraphPerson, fr: boolean): string {
+  if (person.followsYou || person.reason === "mutual") {
+    return fr ? "Vous suit" : "Follows you";
+  }
+  if (person.reason === "nearby") {
+    return fr ? "Près de toi" : "Near you";
+  }
+  if (person.reason === "active") {
+    return fr ? "Actif·ve récemment" : "Recently active";
+  }
+  return fr ? "À suivre" : "Suggested";
+}
+
+function followCta(person: FollowGraphPerson, fr: boolean): string {
+  if (person.followsYou || person.reason === "mutual") {
+    return fr ? "Follow back" : "Follow back";
+  }
+  return fr ? "Follow" : "Follow";
+}
+
+export function CommunityDiscoverPeople({
+  fr,
+  compact = false,
+}: {
+  fr: boolean;
+  /** Tighter layout for profile embeds (prefer home only). */
+  compact?: boolean;
+}) {
+  const [queue, setQueue] = useState<FollowGraphPerson[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const load = useCallback(async () => {
+    if (typeof window !== "undefined" && isDiscoverBlockSnoozed()) {
+      setHidden(true);
+      setLoaded(true);
+      setQueue([]);
+      return;
+    }
     try {
-      const res = await fetch("/api/community/discover/people?limit=10", {
+      const dismissed = getDiscoverDismissedUserIds();
+      const q = new URLSearchParams({ limit: "12" });
+      if (dismissed.length) q.set("exclude", dismissed.join(","));
+      const res = await fetch(`/api/community/discover/people?${q}`, {
         cache: "no-store",
       });
       if (res.status === 401) {
-        setPeople([]);
+        setQueue([]);
         return;
       }
       const data = (await res.json()) as { people?: FollowGraphPerson[] };
-      setPeople(data.people ?? []);
+      const next = (data.people ?? []).filter((p) => !p.isFollowing && !p.isSelf);
+      setQueue(next);
     } catch {
-      setPeople([]);
+      setQueue([]);
     } finally {
       setLoaded(true);
     }
@@ -32,60 +77,121 @@ export function CommunityDiscoverPeople({ fr }: { fr: boolean }) {
     void load();
   }, [load]);
 
-  const toggleFollow = async (person: FollowGraphPerson) => {
-    setBusyHandle(person.handle);
+  const visible = useMemo(
+    () => queue.slice(0, DISCOVER_VISIBLE_SLOTS),
+    [queue],
+  );
+
+  const removeFromQueue = (userId: string) => {
+    setQueue((list) => list.filter((p) => p.userId !== userId));
+  };
+
+  const onIgnore = (person: FollowGraphPerson) => {
+    dismissDiscoverPerson(person.userId);
+    removeFromQueue(person.userId);
+  };
+
+  const onFollow = async (person: FollowGraphPerson) => {
+    setBusyId(person.userId);
     try {
-      const method = person.isFollowing ? "DELETE" : "POST";
       const res = await fetch(`/api/community/traders/${person.handle}/follow`, {
-        method,
+        method: "POST",
       });
       if (!res.ok) return;
-      if (!person.isFollowing) {
-        setPeople((list) => list.filter((p) => p.handle !== person.handle));
-      } else {
-        setPeople((list) =>
-          list.map((p) =>
-            p.handle === person.handle ? { ...p, isFollowing: false } : p,
-          ),
-        );
-      }
+      dismissDiscoverPerson(person.userId);
+      removeFromQueue(person.userId);
     } finally {
-      setBusyHandle(null);
+      setBusyId(null);
     }
   };
 
-  if (!loaded || people.length === 0) return null;
+  const onSnoozeBlock = () => {
+    snoozeDiscoverBlock();
+    setHidden(true);
+    setQueue([]);
+  };
+
+  if (!loaded || hidden || visible.length === 0) return null;
 
   return (
-    <section className="mb-3 overflow-hidden rounded-2xl border border-[#e8f3ee] bg-gradient-to-b from-[#f7fbf8] to-white">
-      <div className="flex items-center justify-between gap-2 px-3.5 pb-1 pt-3">
-        <div>
-          <h2 className="text-sm font-extrabold text-[#0c0a09]">
-            {fr ? "À découvrir" : "Discover people"}
+    <section
+      className={`mb-3 overflow-hidden rounded-2xl border border-[#e8f3ee] bg-gradient-to-b from-[#f7fbf8] to-white ${
+        compact ? "shadow-none" : "shadow-sm"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-2.5">
+        <div className="min-w-0">
+          <h2 className="text-[13px] font-extrabold text-[#0c0a09]">
+            {fr ? "Suggestions" : "Suggestions"}
           </h2>
           <p className="text-[10px] leading-snug text-[#78716c]">
             {fr
-              ? "Membres actifs, proches de toi, ou qui te suivent déjà."
-              : "Active members near you, or people who already follow you."}
+              ? "Follow back ou Follow - ignore pour voir quelqu'un d'autre."
+              : "Follow back or Follow - ignore to see someone else."}
           </p>
         </div>
-        <Link
-          href="/app/community/traders"
-          className="shrink-0 text-[10px] font-bold text-[#305f33]"
+        <button
+          type="button"
+          onClick={onSnoozeBlock}
+          className="shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold text-[#a8a29e] hover:bg-[#f0f4f2] hover:text-[#57534e]"
+          title={fr ? "Masquer 24 h" : "Hide for 24h"}
         >
-          {fr ? "Classement" : "Leaderboard"}
-        </Link>
+          {fr ? "Plus tard" : "Later"}
+        </button>
       </div>
 
-      <ul className="divide-y divide-[#f0f4f2] px-2.5 pb-2">
-        {people.slice(0, 6).map((person) => (
-          <li key={person.userId}>
-            <CommunityFollowUserRow
-              fr={fr}
-              person={person}
-              busy={busyHandle === person.handle}
-              onToggleFollow={() => void toggleFollow(person)}
-            />
+      <ul className="px-2 pb-2 pt-1">
+        {visible.map((person) => (
+          <li
+            key={person.userId}
+            className="flex items-center gap-2.5 rounded-xl px-1.5 py-2"
+          >
+            <Link
+              href={`/app/community/u/${person.handle}`}
+              className="shrink-0"
+            >
+              <CommunityAvatar
+                label={person.displayName}
+                avatarUrl={person.avatarUrl}
+                sizeClass="h-10 w-10"
+                className="ring-2 ring-white"
+              />
+            </Link>
+
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/app/community/u/${person.handle}`}
+                className="block truncate text-[13px] font-bold text-[#0c0a09] hover:underline"
+              >
+                {person.displayName}
+              </Link>
+              <p className="truncate text-[10px] text-[#78716c]">
+                @{person.handle}
+                <span className="text-[#a8a29e]"> · </span>
+                <span className="font-semibold text-[#305f33]">
+                  {suggestionHint(person, fr)}
+                </span>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={busyId === person.userId}
+              onClick={() => void onFollow(person)}
+              className="min-h-[32px] shrink-0 rounded-lg bg-[#305f33] px-2.5 text-[10px] font-bold text-white shadow-sm active:scale-[0.98] disabled:opacity-50"
+            >
+              {followCta(person, fr)}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onIgnore(person)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#a8a29e] hover:bg-[#f0f4f2] hover:text-[#57534e] active:scale-95"
+              aria-label={fr ? "Ignorer" : "Ignore"}
+              title={fr ? "Ignorer" : "Ignore"}
+            >
+              ×
+            </button>
           </li>
         ))}
       </ul>
