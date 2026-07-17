@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { CommunityCoverCropper } from "@/components/community/community-cover-cropper";
 import { useI18n } from "@/components/i18n-provider";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 
@@ -14,12 +15,14 @@ export function ProfileAvatarEditor({
   initialAvatarUrl: string | null;
   variant?: "full" | "compact";
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fr = locale === "fr";
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   useEffect(() => {
     setAvatarUrl(initialAvatarUrl);
@@ -38,11 +41,16 @@ export function ProfileAvatarEditor({
     }
   }
 
-  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || file.size < 1) return;
+    setErr(null);
+    setCropFile(file);
+  }
 
+  async function uploadCropped(file: File) {
+    setCropFile(null);
     setErr(null);
     setBusy(true);
     try {
@@ -85,13 +93,33 @@ export function ProfileAvatarEditor({
     }
   }
 
+  const cropper = cropFile ? (
+    <CommunityCoverCropper
+      file={cropFile}
+      fr={fr}
+      busy={busy}
+      aspectRatio={1}
+      outputWidth={400}
+      round
+      fileSuffix="avatar"
+      title={fr ? "Ajuster la photo" : "Adjust photo"}
+      subtitle={
+        fr
+          ? "Glisse pour cadrer ton avatar"
+          : "Drag to frame your avatar"
+      }
+      onCancel={() => setCropFile(null)}
+      onConfirm={(f) => void uploadCropped(f)}
+    />
+  ) : null;
+
   const fileInput = (
     <input
       ref={inputRef}
       type="file"
       accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
       className="hidden"
-      onChange={(ev) => void onPick(ev)}
+      onChange={onPick}
     />
   );
 
@@ -130,6 +158,7 @@ export function ProfileAvatarEditor({
           ) : null}
         </button>
         {fileInput}
+        {cropper}
         {avatarUrl ? (
           <button
             type="button"
@@ -161,6 +190,7 @@ export function ProfileAvatarEditor({
         ) : null}
       </div>
       {fileInput}
+      {cropper}
       <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
         <button
           type="button"

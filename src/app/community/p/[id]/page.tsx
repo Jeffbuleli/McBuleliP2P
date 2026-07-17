@@ -18,17 +18,27 @@ import { formatCompactCount } from "@/lib/community/format-count";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ media?: string }>;
+};
 
 function shareOrigin(): string {
   return getMetadataOrigin() || CANONICAL_PRODUCTION_ORIGIN;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
   const { id } = await params;
-  const post = await getPublicPostForShare(id);
+  const { media: mediaIdRaw } = await searchParams;
+  const mediaId = mediaIdRaw?.trim() || null;
+  const post = await getPublicPostForShare(id, mediaId);
   const origin = shareOrigin();
-  const url = `${origin}${communityPostSharePath(id)}`;
+  const url = `${origin}${communityPostSharePath(id)}${
+    mediaId ? `?media=${encodeURIComponent(mediaId)}` : ""
+  }`;
 
   if (!post) {
     return {
@@ -66,13 +76,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CommunityPostSharePage({ params }: Props) {
+export default async function CommunityPostSharePage({
+  params,
+  searchParams,
+}: Props) {
   const { id } = await params;
-  const userId = await getSessionUserId();
-  if (userId) redirect(communityPostAppPath(id));
-
-  const post = await getPublicPostForShare(id);
+  const { media: mediaIdRaw } = await searchParams;
+  const mediaId = mediaIdRaw?.trim() || null;
+  const post = await getPublicPostForShare(id, mediaId);
   const returnPath = post?.appReturnPath ?? communityPostAppPath(id);
+
+  const userId = await getSessionUserId();
+  if (userId) redirect(returnPath);
+
   const loginHref = loginHrefFor(returnPath);
   const registerHref = registerHrefFor(returnPath);
 
@@ -104,7 +120,7 @@ export default async function CommunityPostSharePage({ params }: Props) {
       registerHref={registerHref}
       atmosphereUrl={mediaUrl}
       inviteHandle={post.authorHandle}
-      secondaryCta="Voir la publication"
+      secondaryCta={mediaId ? "Voir le média" : "Voir la publication"}
     >
       {mediaUrl ? (
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0b1510]">

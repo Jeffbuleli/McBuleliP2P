@@ -7,6 +7,7 @@ import {
   communityUserProfiles,
   getDb,
   rewardPointGrants,
+  rewardPointLedger,
   users,
 } from "@/db";
 import { normalizePublicMediaUrl } from "@/lib/media-url";
@@ -362,11 +363,21 @@ async function loadCreatorProfileStats(
       ),
     );
 
-  const [tipsRow] = await db
-    .select({
-      tipBp: sum(communityPosts.tipBpTotal),
-      tipMcb: sum(communityPosts.tipMcbTotal),
-    })
+  // All tips received (posts + profile offers) from ledger — post tip_bp_total
+  // alone misses profile tips which have no postId.
+  const [tipsBpRow] = await db
+    .select({ tipBp: sum(rewardPointLedger.amount) })
+    .from(rewardPointLedger)
+    .where(
+      and(
+        eq(rewardPointLedger.userId, authorId),
+        sql`${rewardPointLedger.note} like 'community_tip_in:%'`,
+        sql`${rewardPointLedger.amount} > 0`,
+      ),
+    );
+
+  const [tipsMcbRow] = await db
+    .select({ tipMcb: sum(communityPosts.tipMcbTotal) })
     .from(communityPosts)
     .where(
       and(
@@ -395,8 +406,8 @@ async function loadCreatorProfileStats(
     bpEarned30d: Number(bpRow?.total ?? 0),
     posts: postsCount,
     likesReceived: Number(likesRow?.total ?? 0),
-    tipBpTotal: Number(tipsRow?.tipBp ?? 0),
-    tipMcbTotal: Number(tipsRow?.tipMcb ?? 0),
+    tipBpTotal: Number(tipsBpRow?.tipBp ?? 0),
+    tipMcbTotal: Number(tipsMcbRow?.tipMcb ?? 0),
     tags: tagRows
       .filter((r) => r.tag)
       .map((r) => ({ tag: r.tag as string, count: Number(r.n) })),

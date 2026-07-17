@@ -28,6 +28,17 @@ export function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+
+  // Short profile links: mcbuleli.org/@ceo → /community/u/ceo
+  const atHandle = pathname.match(/^\/@([a-z][a-z0-9_]{2,31})$/i);
+  if (atHandle) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/community/u/${atHandle[1].toLowerCase()}`;
+    const rewritten = NextResponse.rewrite(url);
+    applySecurityHeaders(rewritten.headers);
+    return rewritten;
+  }
+
   const isApi = pathname.startsWith("/api/");
 
   if (

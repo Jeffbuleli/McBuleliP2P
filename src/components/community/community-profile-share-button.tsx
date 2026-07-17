@@ -57,10 +57,7 @@ export function CommunityProfileShareButton({
     setCanNative(typeof navigator !== "undefined" && !!navigator.share);
   }, []);
 
-  const url =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/community/u/${encodeURIComponent(handle)}`
-      : communityProfileShareUrl(handle);
+  const url = communityProfileShareUrl(handle);
   const text = fr
     ? `Profil de ${displayName} (@${handle}) sur McBuleli`
     : `${displayName} (@${handle}) on McBuleli`;

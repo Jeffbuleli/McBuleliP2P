@@ -1465,6 +1465,7 @@ export async function addPostComment(args: {
 
 export async function getPublicPostForShare(
   postId: string,
+  preferredMediaId?: string | null,
 ): Promise<PublicPostShareView | null> {
   if (!communityEnabled()) return null;
   await ensureFeedReady();
@@ -1487,12 +1488,18 @@ export async function getPublicPostForShare(
   if (!author) return null;
 
   const media = await getPostMediaViews(postId, row.mediaIds, null);
-  const first = media[0] ?? null;
+  const preferred =
+    preferredMediaId
+      ? media.find((m) => m.id === preferredMediaId) ?? null
+      : null;
+  const first = preferred ?? media[0] ?? null;
   const formationMeta = resolveFormationMeta(row);
   const appReturnPath =
-    formationMeta?.joinPath?.startsWith("/app/")
-      ? formationMeta.joinPath
-      : `/app/community/post/${row.id}`;
+    preferredMediaId && preferred
+      ? `/app/community/post/${row.id}/media/${preferredMediaId}`
+      : formationMeta?.joinPath?.startsWith("/app/")
+        ? formationMeta.joinPath
+        : `/app/community/post/${row.id}`;
   const mediaKind =
     first?.fileType === "video"
       ? ("video" as const)

@@ -291,6 +291,75 @@ export async function getActiveStoryAuthor(
   }
 }
 
+export type PublicStoryShareView = {
+  id: string;
+  type: "text" | "image" | "video";
+  body: string | null;
+  mediaUrl: string | null;
+  bgColor: string | null;
+  expired: boolean;
+  authorHandle: string;
+  authorDisplayName: string;
+  authorAvatarUrl: string | null;
+  appReturnPath: string;
+};
+
+/** Lightweight story payload for public share / OG landing. */
+export async function getPublicStoryForShare(
+  storyId: string,
+): Promise<PublicStoryShareView | null> {
+  try {
+    const db = getDb();
+    const now = new Date();
+    const [row] = await db
+      .select({
+        id: communityStories.id,
+        storyType: communityStories.storyType,
+        body: communityStories.body,
+        mediaUrl: communityStories.mediaUrl,
+        bgColor: communityStories.bgColor,
+        expiresAt: communityStories.expiresAt,
+        status: communityStories.status,
+        handle: communityUserProfiles.handle,
+        displayName: communityUserProfiles.displayName,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(communityStories)
+      .innerJoin(users, eq(users.id, communityStories.authorId))
+      .leftJoin(
+        communityUserProfiles,
+        eq(communityUserProfiles.userId, communityStories.authorId),
+      )
+      .where(eq(communityStories.id, storyId))
+      .limit(1);
+
+    if (!row || row.status === "deleted") return null;
+
+    const handle = row.handle ?? "user";
+    const expired =
+      row.status !== "active" || row.expiresAt.getTime() <= now.getTime();
+    const type = row.storyType as PublicStoryShareView["type"];
+
+    return {
+      id: row.id,
+      type,
+      body: row.body,
+      mediaUrl: displayMediaUrl(row.mediaUrl),
+      bgColor: normalizeStoryTextBg(row.bgColor),
+      expired,
+      authorHandle: handle,
+      authorDisplayName: row.displayName ?? handle,
+      authorAvatarUrl: displayAvatarUrl(row.avatarUrl),
+      appReturnPath: expired
+        ? `/app/community/u/${encodeURIComponent(handle)}`
+        : `/app/community?story=${encodeURIComponent(row.id)}`,
+    };
+  } catch (e) {
+    if (isMissingTable(e)) return null;
+    throw e;
+  }
+}
+
 export async function deleteCommunityStory(args: {
   storyId: string;
   authorId: string;

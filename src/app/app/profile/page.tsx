@@ -1,5 +1,6 @@
 import { AcademyJourneyTeaser } from "@/components/profile/academy-journey-teaser";
 import { ProfileHero } from "@/components/profile/profile-hero";
+import { ProfilePublishHub } from "@/components/profile/profile-publish-hub";
 import { ProfileScreenHeader } from "@/components/profile/profile-screen-header";
 import { ProfileSecurityMeter } from "@/components/profile/profile-security-meter";
 import { ProfileSettingsList } from "@/components/profile/profile-settings-list";
@@ -40,6 +41,11 @@ export default async function ProfilePage() {
     <div className="flex flex-col gap-4 pb-4">
       <ProfileScreenHeader title={d.profile_title} />
       <ProfileHero dash={dash} locale={locale} />
+      <ProfilePublishHub
+        email={dash.email}
+        avatarUrl={dash.avatarUrl}
+        displayName={dash.displayName?.trim() || dash.email}
+      />
       <ProfileWalletStrip portfolio={dash.portfolio} locale={locale} />
       <ProfileSecurityMeter />
       <ProfileStatsRow dash={dash} locale={locale} memberSince={memberSince} />

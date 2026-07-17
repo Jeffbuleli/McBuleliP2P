@@ -4,28 +4,45 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Wide cover frame (~profile banner). */
 const COVER_ASPECT = 3;
-const OUTPUT_WIDTH = 1200;
-const OUTPUT_HEIGHT = Math.round(OUTPUT_WIDTH / COVER_ASPECT);
+const COVER_OUTPUT_WIDTH = 1200;
 
 type Props = {
   file: File;
   fr: boolean;
   busy?: boolean;
+  /** Frame aspect width/height. Cover=3, avatar=1. */
+  aspectRatio?: number;
+  outputWidth?: number;
+  /** Circular mask for avatar. */
+  round?: boolean;
+  title?: string;
+  subtitle?: string;
+  fileSuffix?: string;
   onCancel: () => void;
   onConfirm: (file: File) => void;
 };
 
 /**
- * Pan + zoom cover adjuster. Crops to a wide banner before upload
- * so tall images are not auto-cut from the middle.
+ * Pan + zoom image adjuster. Crops before upload so tall images
+ * are not auto-cut from the middle.
  */
 export function CommunityCoverCropper({
   file,
   fr,
   busy,
+  aspectRatio = COVER_ASPECT,
+  outputWidth,
+  round = false,
+  title,
+  subtitle,
+  fileSuffix = "cover",
   onCancel,
   onConfirm,
 }: Props) {
+  const outW =
+    outputWidth ??
+    (aspectRatio === 1 ? 400 : COVER_OUTPUT_WIDTH);
+  const outH = Math.round(outW / aspectRatio);
   const frameRef = useRef<HTMLDivElement>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [natural, setNatural] = useState({ w: 0, h: 0 });
@@ -140,32 +157,24 @@ export function CommunityCoverCropper({
     const sh = fh / scale;
 
     const canvas = document.createElement("canvas");
-    canvas.width = OUTPUT_WIDTH;
-    canvas.height = OUTPUT_HEIGHT;
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const img = new Image();
     img.onload = () => {
       ctx.fillStyle = "#1c1917";
-      ctx.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
-      ctx.drawImage(
-        img,
-        sx,
-        sy,
-        sw,
-        sh,
-        0,
-        0,
-        OUTPUT_WIDTH,
-        OUTPUT_HEIGHT,
-      );
+      ctx.fillRect(0, 0, outW, outH);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
       canvas.toBlob(
         (blob) => {
           if (!blob) return;
-          const name = file.name.replace(/\.\w+$/, "") || "cover";
+          const name = file.name.replace(/\.\w+$/, "") || fileSuffix;
           onConfirm(
-            new File([blob], `${name}-cover.jpg`, { type: "image/jpeg" }),
+            new File([blob], `${name}-${fileSuffix}.jpg`, {
+              type: "image/jpeg",
+            }),
           );
         },
         "image/jpeg",
@@ -176,6 +185,8 @@ export function CommunityCoverCropper({
   };
 
   const ready = natural.w > 0 && frameSize.w > 0;
+  const frameAspectClass =
+    aspectRatio === 1 ? "aspect-square max-w-[280px] mx-auto" : "aspect-[3/1]";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
@@ -188,17 +199,20 @@ export function CommunityCoverCropper({
       />
       <div className="relative z-10 w-full max-w-lg rounded-t-3xl bg-white p-4 shadow-xl sm:rounded-3xl">
         <p className="text-sm font-bold text-[#0c0a09]">
-          {fr ? "Ajuster la couverture" : "Adjust cover"}
+          {title ?? (fr ? "Ajuster la couverture" : "Adjust cover")}
         </p>
         <p className="mt-0.5 text-[11px] text-[#78716c]">
-          {fr
-            ? "Glisse pour choisir la zone visible"
-            : "Drag to choose the visible area"}
+          {subtitle ??
+            (fr
+              ? "Glisse pour choisir la zone visible"
+              : "Drag to choose the visible area")}
         </p>
 
         <div
           ref={frameRef}
-          className="relative mt-3 aspect-[3/1] w-full cursor-grab touch-none overflow-hidden rounded-xl bg-[#1c1917] active:cursor-grabbing"
+          className={`relative mt-3 w-full cursor-grab touch-none overflow-hidden bg-[#1c1917] active:cursor-grabbing ${frameAspectClass} ${
+            round ? "rounded-full" : "rounded-xl"
+          }`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -225,7 +239,11 @@ export function CommunityCoverCropper({
               }}
             />
           ) : null}
-          <div className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-white/35" />
+          <div
+            className={`pointer-events-none absolute inset-0 ring-2 ring-inset ring-white/35 ${
+              round ? "rounded-full" : ""
+            }`}
+          />
         </div>
 
         <label className="mt-3 flex items-center gap-3">
@@ -266,4 +284,3 @@ export function CommunityCoverCropper({
     </div>
   );
 }
-

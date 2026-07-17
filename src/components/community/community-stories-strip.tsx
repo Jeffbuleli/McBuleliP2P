@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { CommunityMediaImage } from "@/components/community/community-media-image";
@@ -22,6 +22,7 @@ import {
   uploadCommunityImage,
   uploadCommunityVideoWithProgress,
 } from "@/lib/community-media-upload";
+import { communityStoryShareUrl } from "@/lib/community/share-url";
 
 const TEXT_BG = COMMUNITY_STORY_TEXT_BG;
 
@@ -84,18 +85,29 @@ function mapStoryError(code: string | undefined, fr: boolean): string {
 }
 
 export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [rings, setRings] = useState<CommunityStoryRing[]>([]);
   const [loading, setLoading] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewer, setViewer] = useState<{ ringIdx: number; storyIdx: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [myLabel, setMyLabel] = useState("me");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const deepLinkHandled = useRef(false);
 
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/community/stories", { cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { rings?: CommunityStoryRing[] };
-      setRings(Array.isArray(json.rings) ? json.rings : []);
+      const next = Array.isArray(json.rings) ? json.rings : [];
+      setRings(next);
+      const me = next.find((r) => r.isMe);
+      if (me) {
+        setMyAvatarUrl(me.avatarUrl ?? null);
+        setMyLabel(me.displayName || me.handle || "me");
+      }
     } catch {
       setRings([]);
     } finally {
@@ -108,10 +120,56 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
   }, [load]);
 
   useEffect(() => {
+    if (myAvatarUrl) return;
+    void fetch("/api/profile", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { avatarUrl?: string | null; displayName?: string; email?: string }) => {
+        if (typeof j.avatarUrl === "string") setMyAvatarUrl(j.avatarUrl);
+        if (j.displayName || j.email) setMyLabel(j.displayName || j.email || "me");
+      })
+      .catch(() => {});
+  }, [myAvatarUrl]);
+
+  useEffect(() => {
     if (!toast) return;
     const t = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (loading || deepLinkHandled.current) return;
+    const storyId = searchParams.get("story")?.trim();
+    if (!storyId) return;
+    deepLinkHandled.current = true;
+
+    let ringIdx = -1;
+    let storyIdx = -1;
+    for (let i = 0; i < rings.length; i += 1) {
+      const idx = rings[i]!.stories.findIndex((s) => s.id === storyId);
+      if (idx >= 0) {
+        ringIdx = i;
+        storyIdx = idx;
+        break;
+      }
+    }
+
+    if (ringIdx >= 0 && storyIdx >= 0) {
+      setViewer({ ringIdx, storyIdx });
+    } else {
+      setToast(
+        fr
+          ? "Statut introuvable ou expiré"
+          : "Status not found or expired",
+      );
+    }
+
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("story");
+    const q = next.toString();
+    router.replace(q ? `/app/community?${q}` : "/app/community", {
+      scroll: false,
+    });
+  }, [loading, rings, searchParams, router, fr]);
 
   const openRing = (ringIdx: number) => {
     setViewer({ ringIdx, storyIdx: 0 });
@@ -160,8 +218,18 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
             onClick={() => setComposerOpen(true)}
             className="relative h-[168px] w-[108px] shrink-0 overflow-hidden rounded-xl border-2 border-dashed border-[#305f33]/35 bg-[#eaf5ee]"
           >
+            {myAvatarUrl ? (
+              <span className="pointer-events-none absolute inset-0 opacity-[0.22]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={myAvatarUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </span>
+            ) : null}
             <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#305f33]">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl font-bold shadow-sm">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-xl font-bold shadow-sm backdrop-blur-[1px]">
                 +
               </span>
               <span className="px-2 text-center text-[10px] font-bold leading-tight">
@@ -193,8 +261,10 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
       </div>
 
       {composerOpen ? (
-        <StoryComposer
+        <CommunityStoryComposer
           fr={fr}
+          avatarUrl={myAvatarUrl}
+          label={myLabel}
           onClose={() => setComposerOpen(false)}
           onPosted={(bp) => {
             setComposerOpen(false);
@@ -293,12 +363,16 @@ function StoryRingCard({
   );
 }
 
-function StoryComposer({
+export function CommunityStoryComposer({
   fr,
+  avatarUrl,
+  label = "me",
   onClose,
   onPosted,
 }: {
   fr: boolean;
+  avatarUrl?: string | null;
+  label?: string;
   onClose: () => void;
   onPosted: (bpGranted: number) => void;
 }) {
@@ -449,8 +523,21 @@ function StoryComposer({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center">
-      <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-4 shadow-xl">
+        {avatarUrl ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-6 opacity-[0.08]"
+          >
+            <CommunityAvatar
+              label={label}
+              avatarUrl={avatarUrl}
+              sizeClass="h-28 w-28"
+              textClass="text-2xl"
+            />
+          </span>
+        ) : null}
+        <div className="relative mb-3 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[#0c0a09]">
               {fr ? "Nouveau statut (24h)" : "New status (24h)"}
@@ -485,15 +572,28 @@ function StoryComposer({
         {mode === "text" ? (
           <>
             <div
-              className="flex min-h-[160px] items-center justify-center rounded-2xl p-4 shadow-inner"
+              className="relative flex min-h-[160px] items-center justify-center overflow-hidden rounded-2xl p-4 shadow-inner"
               style={{ backgroundColor: bg }}
             >
+              {avatarUrl ? (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.18]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="h-[120%] w-[120%] object-cover blur-[1px]"
+                  />
+                </span>
+              ) : null}
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value.slice(0, 280))}
                 placeholder={fr ? "Quoi de neuf ?" : "What's new?"}
                 rows={4}
-                className="w-full resize-none bg-transparent text-center text-lg font-semibold text-white placeholder:text-white/60 focus:outline-none"
+                className="relative z-[1] w-full resize-none bg-transparent text-center text-lg font-semibold text-white placeholder:text-white/60 focus:outline-none"
               />
             </div>
             <div className="mt-2 flex gap-2">
@@ -721,7 +821,7 @@ function StoryViewer({
   };
 
   const shareStory = async () => {
-    const url = `${window.location.origin}/community/u/${encodeURIComponent(ring.handle)}`;
+    const url = communityStoryShareUrl(story.id);
     const text = fr
       ? `Statut de ${ring.displayName || ring.handle} sur McBuleli`
       : `${ring.displayName || ring.handle}'s status on McBuleli`;

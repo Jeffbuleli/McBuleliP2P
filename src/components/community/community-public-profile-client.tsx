@@ -410,6 +410,19 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                         return;
                       }
                       flash(fr ? `Tip ${amount} BP` : `Tipped ${amount} BP`);
+                      setProfile((p) =>
+                        p
+                          ? {
+                              ...p,
+                              stats: p.stats
+                                ? {
+                                    ...p.stats,
+                                    tipBpTotal: (p.stats.tipBpTotal ?? 0) + amount,
+                                  }
+                                : p.stats,
+                            }
+                          : p,
+                      );
                     } finally {
                       setBusy(false);
                     }

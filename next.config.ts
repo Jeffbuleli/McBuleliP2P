@@ -28,6 +28,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/@:handle",
+        destination: "/community/u/:handle",
+      },
+    ];
+  },
   async redirects() {
     return [
       {
