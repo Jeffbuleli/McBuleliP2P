@@ -14,7 +14,7 @@ Checklist post-audit. Application-level fixes live in `src/middleware.ts`, `src/
 | `X-Frame-Options` | `DENY` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(self)` |
+| `Permissions-Policy` | `camera` / `microphone` allowed for self + Didit + live; geolocation off; payment self |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
 | ~~`Cross-Origin-Embedder-Policy`~~ | **Non utilisé** (`require-corp` casse Turnstile / Didit / Jitsi) |
 | `Cross-Origin-Resource-Policy` | `same-origin` |

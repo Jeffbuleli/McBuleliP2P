@@ -77,7 +77,8 @@ export function securityResponseHeaders(): Record<string, string> {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy":
-      "camera=(), microphone=(), geolocation=(), payment=(self)",
+      // KYC (Didit) + live need camera/mic in iframes — camera=() blocked verification.
+      'camera=(self "https://verification.didit.me" "https://verify.didit.me" "https://live.mcbuleli.org"), microphone=(self "https://verification.didit.me" "https://verify.didit.me" "https://live.mcbuleli.org"), geolocation=(), payment=(self)',
     "Cross-Origin-Opener-Policy": "same-origin",
     // No COEP require-corp — blocks Turnstile, Didit, and Jitsi iframes (no CORP from those origins).
     "Cross-Origin-Resource-Policy": "same-origin",
