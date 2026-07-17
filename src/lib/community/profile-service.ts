@@ -464,11 +464,13 @@ export async function getPublicProfileByHandle(
   viewerId?: string | null,
 ): Promise<PublicProfileView | null> {
   await ensureCommunitySchema();
+  const normalized = handle.trim().replace(/^@+/, "").toLowerCase();
+  if (!normalized) return null;
   const db = getDb();
   const [profile] = await db
     .select()
     .from(communityUserProfiles)
-    .where(eq(communityUserProfiles.handle, handle))
+    .where(eq(communityUserProfiles.handle, normalized))
     .limit(1);
   if (!profile) return null;
 

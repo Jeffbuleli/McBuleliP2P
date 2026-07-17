@@ -162,6 +162,7 @@ export function CommunityProfileEditSheet({
   onClose: () => void;
 }) {
   const coverRef = useRef<HTMLInputElement>(null);
+  const avatarRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<EditState>({
     bio: profile.bio ?? "",
     location: profile.links?.location ?? "",
@@ -176,6 +177,7 @@ export function CommunityProfileEditSheet({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropKind, setCropKind] = useState<"cover" | "avatar" | null>(null);
 
   async function uploadCover(file: File) {
     setBusy(true);
@@ -209,6 +211,37 @@ export function CommunityProfileEditSheet({
       }
       onSaved({ coverUrl: uj.url ?? null });
       setCropFile(null);
+      setCropKind(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function uploadAvatar(file: File) {
+    setBusy(true);
+    setErr(null);
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        avatarUrl?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        setErr(fr ? "Photo non enregistrée" : "Photo not saved");
+        return;
+      }
+      onSaved({
+        avatarUrl:
+          typeof data.avatarUrl === "string" ? data.avatarUrl : null,
+      });
+      setCropFile(null);
+      setCropKind(null);
     } finally {
       setBusy(false);
     }
@@ -317,15 +350,40 @@ export function CommunityProfileEditSheet({
           </button>
         </div>
 
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => coverRef.current?.click()}
-          className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#d6d3d1] bg-[#fafaf9] py-3 text-xs font-bold text-[#57534e]"
-        >
-          <IconCam />
-          {fr ? "Couverture" : "Cover photo"}
-        </button>
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => avatarRef.current?.click()}
+            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#d6d3d1] bg-[#fafaf9] py-3 text-xs font-bold text-[#57534e]"
+          >
+            <IconCam />
+            {fr ? "Photo de profil" : "Profile photo"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => coverRef.current?.click()}
+            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#d6d3d1] bg-[#fafaf9] py-3 text-xs font-bold text-[#57534e]"
+          >
+            <IconCam />
+            {fr ? "Couverture" : "Cover"}
+          </button>
+        </div>
+        <input
+          ref={avatarRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) {
+              setCropKind("avatar");
+              setCropFile(f);
+            }
+          }}
+        />
         <input
           ref={coverRef}
           type="file"
@@ -334,17 +392,45 @@ export function CommunityProfileEditSheet({
           onChange={(e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
-            if (f) setCropFile(f);
+            if (f) {
+              setCropKind("cover");
+              setCropFile(f);
+            }
           }}
         />
 
-        {cropFile ? (
+        {cropFile && cropKind === "cover" ? (
           <CommunityCoverCropper
             file={cropFile}
             fr={fr}
             busy={busy}
-            onCancel={() => setCropFile(null)}
+            onCancel={() => {
+              setCropFile(null);
+              setCropKind(null);
+            }}
             onConfirm={(cropped) => void uploadCover(cropped)}
+          />
+        ) : null}
+        {cropFile && cropKind === "avatar" ? (
+          <CommunityCoverCropper
+            file={cropFile}
+            fr={fr}
+            busy={busy}
+            aspectRatio={1}
+            outputWidth={400}
+            round
+            fileSuffix="avatar"
+            title={fr ? "Ajuster la photo" : "Adjust photo"}
+            subtitle={
+              fr
+                ? "Glisse pour cadrer ton avatar"
+                : "Drag to frame your avatar"
+            }
+            onCancel={() => {
+              setCropFile(null);
+              setCropKind(null);
+            }}
+            onConfirm={(cropped) => void uploadAvatar(cropped)}
           />
         ) : null}
 
@@ -368,18 +454,12 @@ export function CommunityProfileEditSheet({
           <p className="mt-3 text-xs font-semibold text-rose-700">{err}</p>
         ) : null}
 
-        <div className="mt-4 flex gap-2">
-          <a
-            href="/app/profile"
-            className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-[#e8f3ee] text-sm font-bold text-[#305f33]"
-          >
-            {fr ? "Photo" : "Photo"}
-          </a>
+        <div className="mt-4">
           <button
             type="button"
             disabled={busy}
             onClick={() => void save()}
-            className="flex min-h-[44px] flex-[2] items-center justify-center rounded-xl bg-[#305f33] text-sm font-bold text-white disabled:opacity-50"
+            className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[#305f33] text-sm font-bold text-white disabled:opacity-50"
           >
             {busy ? "…" : fr ? "Enregistrer" : "Save"}
           </button>

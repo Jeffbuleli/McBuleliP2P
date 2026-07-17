@@ -27,10 +27,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  const pathname = request.nextUrl.pathname;
+  const rawPathname = request.nextUrl.pathname;
+  let pathname = rawPathname;
+  try {
+    pathname = decodeURIComponent(rawPathname);
+  } catch {
+    pathname = rawPathname;
+  }
 
-  // Short profile links: mcbuleli.org/@ceo → /community/u/ceo
-  const atHandle = pathname.match(/^\/@([a-z][a-z0-9_]{2,31})$/i);
+  // Short profile links: /@ceo, /%40ceo, /u/ceo → /community/u/ceo
+  const atHandle =
+    pathname.match(/^\/@([a-z][a-z0-9_]{2,31})$/i) ||
+    rawPathname.match(/^\/%40([a-z][a-z0-9_]{2,31})$/i) ||
+    pathname.match(/^\/u\/([a-z][a-z0-9_]{2,31})$/i);
   if (atHandle) {
     const url = request.nextUrl.clone();
     url.pathname = `/community/u/${atHandle[1].toLowerCase()}`;

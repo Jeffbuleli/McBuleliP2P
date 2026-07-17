@@ -29,15 +29,23 @@ export function communityMediaShareUrl(postId: string, mediaId: string): string 
 
 /**
  * Public profile share URL — short form mcbuleli.org/@handle
- * (rewritten to /community/u/[handle] for OG + landing).
+ * (/%40handle and /u/handle also rewrite to the OG landing).
  */
 export function communityProfileSharePath(handle: string): string {
-  return `/@${encodeURIComponent(handle)}`;
+  // Keep @ branding; do not encode "@" itself (breaks some RS scrapers → 404).
+  const h = handle.trim().replace(/^@/, "").toLowerCase();
+  return `/@${h}`;
 }
 
 /** Canonical long path (OG page + rewrite destination). */
 export function communityProfileCanonicalPath(handle: string): string {
   return `/community/u/${encodeURIComponent(handle)}`;
+}
+
+/** Alternate short path without @ (safer for some messengers). */
+export function communityProfileShortPath(handle: string): string {
+  const h = handle.trim().replace(/^@/, "").toLowerCase();
+  return `/u/${h}`;
 }
 
 /** In-app profile path. */

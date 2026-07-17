@@ -5,6 +5,7 @@ import { normalizePublicMediaUrl } from "@/lib/media-url";
 import { getPublicProfileForShare } from "@/lib/community/profile-service";
 import {
   communityProfileAppPath,
+  communityProfileCanonicalPath,
   communityProfileSharePath,
 } from "@/lib/community/share-url";
 import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
@@ -48,7 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const handle = decodeURIComponent(raw);
   const profile = await getPublicProfileForShare(handle);
   const origin = shareOrigin();
-  const url = `${origin}${communityProfileSharePath(handle)}`;
+  // Stable canonical URL for crawlers (avoids @ → %40 404 on re-fetch).
+  const url = `${origin}${communityProfileCanonicalPath(handle)}`;
 
   if (!profile) {
     return {

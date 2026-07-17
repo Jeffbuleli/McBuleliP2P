@@ -34,6 +34,14 @@ const nextConfig: NextConfig = {
         source: "/@:handle",
         destination: "/community/u/:handle",
       },
+      {
+        source: "/%40:handle",
+        destination: "/community/u/:handle",
+      },
+      {
+        source: "/u/:handle",
+        destination: "/community/u/:handle",
+      },
     ];
   },
   async redirects() {

@@ -30,6 +30,8 @@ import { utilityTagHashtag, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
 import { CommunityProfileShareButton } from "@/components/community/community-profile-share-button";
+import { CommunityPostComposer } from "@/components/community/community-post-composer";
+import { CommunityStoryComposer } from "@/components/community/community-stories-strip";
 import { IconBp, IconMcB } from "@/components/community/community-icons";
 import {
   CommunityProfileEditSheet,
@@ -88,6 +90,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -334,12 +339,13 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
                     ? "Devenir Builder"
                     : "Become Builder"}
               </Link>
-              <Link
-                href="/app/profile"
-                className="rounded-full border border-[#e8f3ee] px-3 py-1.5 text-[11px] font-bold text-[#305f33]"
+              <button
+                type="button"
+                onClick={() => setPublishOpen(true)}
+                className="rounded-full border border-[#305f33]/35 bg-[#eaf5ee] px-3 py-1.5 text-[11px] font-bold text-[#305f33] active:scale-[0.98]"
               >
-                {fr ? "Photo de profil" : "Profile photo"}
-              </Link>
+                {fr ? "Publier" : "Publish"}
+              </button>
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
@@ -453,6 +459,84 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           }
         />
       ) : null}
+
+      {publishOpen ? (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close"
+            onClick={() => setPublishOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-t-3xl bg-white p-4 shadow-xl sm:rounded-3xl">
+            <p className="mb-3 text-sm font-bold text-[#0c0a09]">
+              {fr ? "Publier" : "Publish"}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPublishOpen(false);
+                  setStoryOpen(true);
+                }}
+                className="flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl bg-[#305f33] px-2 py-2 text-white active:scale-[0.98]"
+              >
+                <span className="text-xs font-bold uppercase">
+                  {fr ? "Statut" : "Status"}
+                </span>
+                <span className="text-[10px] text-white/80">24h</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPublishOpen(false);
+                  setPostOpen(true);
+                }}
+                className="flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#305f33]/40 bg-[#eaf5ee] px-2 py-2 text-[#305f33] active:scale-[0.98]"
+              >
+                <span className="text-xs font-bold uppercase">
+                  {fr ? "Publier" : "Publish"}
+                </span>
+                <span className="text-[10px] text-[#305f33]/75">
+                  {fr ? "Post / média" : "Post / media"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {storyOpen ? (
+        <CommunityStoryComposer
+          fr={fr}
+          avatarUrl={profile.avatarUrl}
+          label={profile.displayName}
+          onClose={() => setStoryOpen(false)}
+          onPosted={(bp) => {
+            setStoryOpen(false);
+            flash(
+              bp > 0
+                ? fr
+                  ? `+${bp} BP - statut publié !`
+                  : `+${bp} BP - status posted!`
+                : fr
+                  ? "Statut publié"
+                  : "Status posted",
+            );
+          }}
+        />
+      ) : null}
+
+      <CommunityPostComposer
+        fr={fr}
+        open={postOpen}
+        onClose={() => setPostOpen(false)}
+        onPublished={(post) => {
+          setPostOpen(false);
+          setPosts((prev) => [post, ...prev.filter((p) => p.id !== post.id)]);
+          flash(fr ? "Publication envoyée" : "Post published");
+        }}
+      />
 
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
         <StatCard
