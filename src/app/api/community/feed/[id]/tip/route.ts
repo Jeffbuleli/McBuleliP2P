@@ -48,5 +48,6 @@ export async function POST(
     ok: true,
     amount: result.amount,
     balance: result.tipperBalance,
+    tipBpTotal: result.tipBpTotal,
   });
 }

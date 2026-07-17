@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconBp, IconMcB } from "@/components/community/community-icons";
 import { COMMUNITY_TIP_BP } from "@/lib/reward-points-config";
 
 /** Compact tip bar: BP amounts + McB (soon). */
@@ -35,21 +36,22 @@ export function CommunityTipBpBar({
           key={n}
           type="button"
           disabled={disabled || busy}
-          title={`${n} BP`}
           aria-label={`Tip ${n} BP`}
           onClick={() => void send(n)}
-          className="min-h-[32px] min-w-[44px] rounded-lg border border-[#e8f3ee] bg-white px-2 text-[11px] font-bold tabular-nums text-[#305f33] active:scale-95 disabled:opacity-40"
+          className="inline-flex min-h-[32px] min-w-[44px] items-center justify-center gap-1 rounded-lg border border-[#e8f3ee] bg-white px-2 text-[11px] font-bold tabular-nums text-[#305f33] active:scale-95 disabled:opacity-40"
         >
-          {n} BP
+          <IconBp size={14} />
+          {n}
         </button>
       ))}
       <button
         type="button"
         disabled
-        title={fr ? "McB bientôt" : "McB soon"}
-        className="min-h-[32px] cursor-not-allowed rounded-lg border border-dashed border-[#e7e5e4] px-2 text-[11px] font-bold text-[#a8a29e]"
+        aria-label={fr ? "McB bientôt" : "McB soon"}
+        className="inline-flex min-h-[32px] cursor-not-allowed items-center gap-1 rounded-lg border border-dashed border-[#e7e5e4] px-2 text-[11px] font-bold text-[#a8a29e]"
       >
-        McB
+        <IconMcB size={14} />
+        {fr ? "Bientôt" : "Soon"}
       </button>
     </div>
   );

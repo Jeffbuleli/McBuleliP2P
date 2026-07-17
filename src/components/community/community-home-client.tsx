@@ -46,6 +46,9 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
     commentCount: item.commentCount,
     shareCount: item.shareCount,
     viewCount: item.viewCount ?? 0,
+    tipBpTotal: item.tipBpTotal ?? 0,
+    tipMcbTotal: item.tipMcbTotal ?? 0,
+    boostedUntil: item.boostedUntil ?? null,
     publishedAt: item.publishedAt,
     author: item.author,
     media: item.media,
@@ -186,6 +189,9 @@ export function CommunityHomeClient() {
       commentCount: post.commentCount,
       shareCount: post.shareCount,
       viewCount: post.viewCount ?? 0,
+      tipBpTotal: post.tipBpTotal ?? 0,
+      tipMcbTotal: post.tipMcbTotal ?? 0,
+      boostedUntil: post.boostedUntil ?? null,
       likedByMe: post.likedByMe,
       media: post.media,
       meta: { contentKind: post.contentKind },
@@ -395,6 +401,12 @@ export function CommunityHomeClient() {
                             commentCount: patch.commentCount ?? i.commentCount,
                             shareCount: patch.shareCount ?? i.shareCount,
                             viewCount: patch.viewCount ?? i.viewCount,
+                            tipBpTotal: patch.tipBpTotal ?? i.tipBpTotal,
+                            tipMcbTotal: patch.tipMcbTotal ?? i.tipMcbTotal,
+                            boostedUntil:
+                              patch.boostedUntil !== undefined
+                                ? patch.boostedUntil
+                                : i.boostedUntil,
                             likedByMe: patch.likedByMe ?? i.likedByMe,
                           }
                         : i,

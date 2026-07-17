@@ -164,6 +164,56 @@ export function IconEye({ size = 14, className = "" }: IconProps) {
   );
 }
 
+/** Compact BP coin (matches wallet green). */
+export function IconBp({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle cx="12" cy="12" r="11" fill="#D1FAE5" />
+      <circle cx="12" cy="12" r="8.5" fill="#305F33" />
+      <text
+        x="12"
+        y="15.5"
+        textAnchor="middle"
+        fill="#FFFFFF"
+        fontSize="8"
+        fontWeight="800"
+        fontFamily="system-ui,sans-serif"
+      >
+        BP
+      </text>
+    </svg>
+  );
+}
+
+/** Compact McB coin (matches wallet maroon). */
+export function IconMcB({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle cx="12" cy="12" r="11" fill="#FEE2E2" />
+      <circle cx="12" cy="12" r="8.5" fill="#991B1B" />
+      <text
+        x="12"
+        y="15.2"
+        textAnchor="middle"
+        fill="#FFFFFF"
+        fontSize="6.5"
+        fontWeight="800"
+        fontFamily="system-ui,sans-serif"
+      >
+        McB
+      </text>
+    </svg>
+  );
+}
+
+export function IconBoost({ size = 14, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M13 2L4 14h7l-1 8 10-14h-7l1-6z" />
+    </svg>
+  );
+}
+
 export function IconTrophy({ size = 18, className = "" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>

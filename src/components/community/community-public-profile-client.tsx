@@ -29,11 +29,13 @@ import { REPUTATION_LEVELS, normalizeReputationLevelId } from "@/lib/community/r
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
+import { IconBp, IconMcB } from "@/components/community/community-icons";
 import {
   CommunityProfileEditSheet,
   ProfileSocialLinksRow,
 } from "@/components/community/community-profile-edit-sheet";
 import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
+import { formatCompactCount } from "@/lib/community/format-count";
 
 const EMPTY_LINKS: CommunityProfileLinks = {
   location: null,
@@ -433,12 +435,12 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
         <StatCard
           label="BP"
-          value={profile.stats?.bpEarned30d ?? 0}
+          value={formatCompactCount(profile.stats?.bpEarned30d ?? 0)}
           accent
         />
         <StatCard
           label={fr ? "Posts" : "Posts"}
-          value={profile.stats?.posts ?? profile.postsCount}
+          value={formatCompactCount(profile.stats?.posts ?? profile.postsCount)}
         />
         <StatCard
           label={
@@ -453,14 +455,31 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               <path d="M20.8 8.6a5 5 0 00-7.1 0L12 10.3l-1.7-1.7a5 5 0 00-7.1 7.1l1.7 1.7L12 21l7.1-7.1 1.7-1.7a5 5 0 000-7.1z" />
             </svg>
           }
-          value={profile.stats?.likesReceived ?? 0}
+          value={formatCompactCount(profile.stats?.likesReceived ?? 0)}
         />
       </section>
 
-      <section className="mt-2 grid grid-cols-2 gap-2 px-4">
-        <StatCard label={fr ? "Com." : "Com."} value={profile.commentCount} />
-        <StatCard label="XP" value={profile.reputationScore} />
+      <section className="mt-2 grid grid-cols-3 gap-2 px-4">
+        <StatCard
+          label={fr ? "Com." : "Com."}
+          value={formatCompactCount(profile.commentCount)}
+        />
+        <StatCard
+          label={<IconBp size={12} />}
+          value={formatCompactCount(profile.stats?.tipBpTotal ?? 0)}
+          accent={(profile.stats?.tipBpTotal ?? 0) > 0}
+        />
+        <StatCard label="XP" value={formatCompactCount(profile.reputationScore)} />
       </section>
+
+      {(profile.stats?.tipMcbTotal ?? 0) > 0 ? (
+        <section className="mt-2 grid grid-cols-1 gap-2 px-4 sm:grid-cols-3">
+          <StatCard
+            label={<IconMcB size={12} />}
+            value={formatCompactCount(Math.floor(profile.stats!.tipMcbTotal))}
+          />
+        </section>
+      ) : null}
 
       {(profile.stats?.tags?.length ?? 0) > 0 ? (
         <section className="mt-3 px-4">

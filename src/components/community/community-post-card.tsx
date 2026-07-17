@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useI18n } from "@/components/i18n-provider";
 import {
   CommunityActionBar,
+  CommunityBoostBadge,
+  CommunityTipTotals,
   CommunityViewsCount,
 } from "@/components/community/community-action-bar";
 import { CommunityAuthorHeader } from "@/components/community/community-author-header";
@@ -276,16 +278,7 @@ export function CommunityPostCard({
                 <UtilityTagIcon tag={post.utilityTag} className="h-3 w-3" />
               </span>
             ) : null}
-            {boosted ? (
-              <span
-                title={fr ? "Boosté" : "Boosted"}
-                className="inline-flex items-center rounded-full bg-amber-50 p-1 text-amber-800 ring-1 ring-amber-200"
-              >
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M13 2L4 14h7l-1 8 10-14h-7l1-6z" />
-                </svg>
-              </span>
-            ) : null}
+            {boosted ? <CommunityBoostBadge fr={fr} /> : null}
             {post.status === "hidden" ? (
               <span className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-stone-500">
                 {fr ? "Masqué" : "Hidden"}
@@ -395,7 +388,12 @@ export function CommunityPostCard({
         />
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
+        <CommunityTipTotals
+          tipBpTotal={post.tipBpTotal ?? 0}
+          tipMcbTotal={post.tipMcbTotal ?? 0}
+          fr={fr}
+        />
         <CommunityViewsCount viewCount={post.viewCount ?? 0} />
       </div>
 
@@ -426,6 +424,7 @@ export function CommunityPostCard({
                 });
                 const j = (await res.json().catch(() => ({}))) as {
                   error?: string;
+                  tipBpTotal?: number;
                 };
                 if (!res.ok) {
                   const map: Record<string, string> = {
@@ -435,6 +434,11 @@ export function CommunityPostCard({
                   };
                   flash(map[j.error ?? ""] ?? (fr ? "Échec" : "Failed"));
                   return;
+                }
+                if (typeof j.tipBpTotal === "number") {
+                  onUpdate({ tipBpTotal: j.tipBpTotal });
+                } else {
+                  onUpdate({ tipBpTotal: (post.tipBpTotal ?? 0) + amount });
                 }
                 flash(`-${amount} BP`);
               } finally {

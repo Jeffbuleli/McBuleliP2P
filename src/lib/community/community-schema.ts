@@ -104,6 +104,45 @@ async function runEnsureCommunitySchema(): Promise<void> {
     ADD COLUMN IF NOT EXISTS boost_bp_spent integer
   `);
   await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS tip_bp_total integer NOT NULL DEFAULT 0
+  `);
+  await db.execute(sql`
+    ALTER TABLE community_posts
+    ADD COLUMN IF NOT EXISTS tip_mcb_total numeric(36, 18) NOT NULL DEFAULT 0
+  `);
+  // One-shot backfill: only if tips exist in ledger and no post has tip totals yet.
+  await db.execute(sql`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM reward_point_ledger
+        WHERE note LIKE 'community_tip_in:%' AND meta ? 'postId'
+        LIMIT 1
+      ) AND NOT EXISTS (
+        SELECT 1 FROM community_posts WHERE tip_bp_total > 0 LIMIT 1
+      ) THEN
+        UPDATE community_posts AS p
+        SET tip_bp_total = COALESCE(s.total, 0)
+        FROM (
+          SELECT post_id, SUM(amount)::integer AS total
+          FROM (
+            SELECT
+              (meta->>'postId')::uuid AS post_id,
+              (meta->>'amount')::integer AS amount
+            FROM reward_point_ledger
+            WHERE note LIKE 'community_tip_in:%'
+              AND meta ? 'postId'
+              AND (meta->>'postId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+              AND (meta->>'amount') ~ '^[0-9]+$'
+          ) parsed
+          GROUP BY post_id
+        ) AS s
+        WHERE p.id = s.post_id;
+      END IF;
+    END $$;
+  `);
+  await db.execute(sql`
     CREATE INDEX IF NOT EXISTS community_posts_utility_tag_idx
     ON community_posts (utility_tag, published_at)
   `);

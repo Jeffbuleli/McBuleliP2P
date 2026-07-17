@@ -1,13 +1,64 @@
 "use client";
 
 import {
+  IconBoost,
+  IconBp,
   IconComment,
   IconEye,
   IconLike,
+  IconMcB,
   IconShare,
 } from "@/components/community/community-icons";
 import { formatCompactCount } from "@/lib/community/format-count";
 import { COMMUNITY_ACTION_PILL } from "@/lib/community/community-ui";
+
+/** Visible boost brand mark — same language as profile badges. */
+export function CommunityBoostBadge({ fr }: { fr: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#f0f4f2] bg-white px-2 py-0.5 text-[10px] font-semibold text-amber-800 shadow-sm">
+      <IconBoost size={10} />
+      {fr ? "Boosté" : "Boosted"}
+    </span>
+  );
+}
+
+/** Public tip totals — mini stat chips (number + BP/McB), profile-aligned. */
+export function CommunityTipTotals({
+  tipBpTotal = 0,
+  tipMcbTotal = 0,
+}: {
+  tipBpTotal?: number;
+  tipMcbTotal?: number;
+  fr?: boolean;
+}) {
+  const bp = Math.max(0, Math.floor(tipBpTotal));
+  const mcb = Math.max(0, Number(tipMcbTotal) || 0);
+  if (bp <= 0 && mcb <= 0) return null;
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-1.5">
+      {bp > 0 ? (
+        <span className="inline-flex min-w-[3.25rem] flex-col items-center rounded-xl border border-[#c5dfd0] bg-gradient-to-b from-[#f0faf4] to-white px-2 py-1 shadow-sm">
+          <span className="text-[12px] font-bold tabular-nums leading-none text-[#0c0a09]">
+            {formatCompactCount(bp)}
+          </span>
+          <span className="mt-0.5 inline-flex items-center gap-0.5 text-[8px] font-semibold uppercase tracking-wide text-[#78716c]">
+            <IconBp size={10} />
+          </span>
+        </span>
+      ) : null}
+      {mcb > 0 ? (
+        <span className="inline-flex min-w-[3.25rem] flex-col items-center rounded-xl border border-[#e8f3ee] bg-white px-2 py-1 shadow-sm">
+          <span className="text-[12px] font-bold tabular-nums leading-none text-[#0c0a09]">
+            {formatCompactCount(Math.floor(mcb))}
+          </span>
+          <span className="mt-0.5 inline-flex items-center gap-0.5 text-[8px] font-semibold uppercase tracking-wide text-[#78716c]">
+            <IconMcB size={10} />
+          </span>
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 /** Views only: eye + compact number (no "reads" label). */
 export function CommunityViewsCount({

@@ -35,6 +35,9 @@ export type UnifiedFeedItem = {
   commentCount: number;
   shareCount: number;
   viewCount: number;
+  tipBpTotal?: number;
+  tipMcbTotal?: number;
+  boostedUntil?: string | null;
   likedByMe?: boolean;
   media: MediaItemView[];
   meta?: Record<string, string>;
@@ -58,6 +61,9 @@ function feedPostToUnifiedItem(p: FeedPostView): UnifiedFeedItem {
     commentCount: p.commentCount,
     shareCount: p.shareCount,
     viewCount: p.viewCount ?? 0,
+    tipBpTotal: p.tipBpTotal ?? 0,
+    tipMcbTotal: p.tipMcbTotal ?? 0,
+    boostedUntil: p.boostedUntil ?? null,
     likedByMe: p.likedByMe,
     media: p.media,
     meta: { contentKind },

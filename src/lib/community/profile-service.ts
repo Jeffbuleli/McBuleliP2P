@@ -300,6 +300,8 @@ export type CreatorProfileStats = {
   bpEarned30d: number;
   posts: number;
   likesReceived: number;
+  tipBpTotal: number;
+  tipMcbTotal: number;
   tags: { tag: string; count: number }[];
 };
 
@@ -360,6 +362,19 @@ async function loadCreatorProfileStats(
       ),
     );
 
+  const [tipsRow] = await db
+    .select({
+      tipBp: sum(communityPosts.tipBpTotal),
+      tipMcb: sum(communityPosts.tipMcbTotal),
+    })
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, authorId),
+        eq(communityPosts.status, "published"),
+      ),
+    );
+
   const tagRows = await db
     .select({
       tag: communityPosts.utilityTag,
@@ -380,6 +395,8 @@ async function loadCreatorProfileStats(
     bpEarned30d: Number(bpRow?.total ?? 0),
     posts: postsCount,
     likesReceived: Number(likesRow?.total ?? 0),
+    tipBpTotal: Number(tipsRow?.tipBp ?? 0),
+    tipMcbTotal: Number(tipsRow?.tipMcb ?? 0),
     tags: tagRows
       .filter((r) => r.tag)
       .map((r) => ({ tag: r.tag as string, count: Number(r.n) })),

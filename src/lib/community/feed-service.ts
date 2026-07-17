@@ -15,6 +15,10 @@ import {
 import { communityEnabled, COMMUNITY_FEED_PAGE_SIZE } from "@/lib/community/config";
 import { computeRulesQualityScore } from "@/lib/community/quality-score";
 import {
+  computeTrendingScore,
+  ENGAGEMENT_WEIGHTS,
+} from "@/lib/community/engagement-score";
+import {
   isUtilityTag,
   utilityTagFromContentKind,
 } from "@/lib/community/utility-tags";
@@ -38,8 +42,16 @@ async function ensureFeedReady(): Promise<void> {
 const TRENDING_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 function trendingScoreSql() {
+  const w = ENGAGEMENT_WEIGHTS;
   return sql`(
-    (${communityPosts.likeCount} * 2 + ${communityPosts.commentCount} * 3 + ${communityPosts.shareCount} * 5 + ${communityPosts.viewCount})::double precision
+    (
+      ${communityPosts.likeCount} * ${w.like}
+      + ${communityPosts.commentCount} * ${w.comment}
+      + ${communityPosts.shareCount} * ${w.share}
+      + ${communityPosts.viewCount} * ${w.view}
+      + coalesce(${communityPosts.tipBpTotal}, 0) * ${w.tipBp}
+      + coalesce(${communityPosts.tipMcbTotal}, 0)::double precision * ${w.tipMcb}
+    )::double precision
     / power(
       greatest(
         extract(epoch from (now() - coalesce(${communityPosts.publishedAt}, ${communityPosts.createdAt}))) / 3600.0,
@@ -50,24 +62,6 @@ function trendingScoreSql() {
   )`;
 }
 
-function computeTrendingScore(row: {
-  likeCount: number | null;
-  commentCount: number | null;
-  shareCount: number | null;
-  viewCount: number | null;
-  publishedAt: Date | null;
-  createdAt: Date;
-}): number {
-  const published = row.publishedAt ?? row.createdAt;
-  const hours = Math.max((Date.now() - published.getTime()) / 3_600_000, 1);
-  const engagement =
-    (row.likeCount ?? 0) * 2 +
-    (row.commentCount ?? 0) * 3 +
-    (row.shareCount ?? 0) * 5 +
-    (row.viewCount ?? 0);
-  return engagement / Math.pow(hours, 1.5);
-}
-
 const FOR_YOU_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function computeForYouScore(args: {
@@ -76,7 +70,16 @@ function computeForYouScore(args: {
   isFollowed: boolean;
   isViewed: boolean;
 }): number {
-  const trending = computeTrendingScore(args.row);
+  const trending = computeTrendingScore({
+    likeCount: args.row.likeCount,
+    commentCount: args.row.commentCount,
+    shareCount: args.row.shareCount,
+    viewCount: args.row.viewCount,
+    tipBpTotal: args.row.tipBpTotal,
+    tipMcbTotal: args.row.tipMcbTotal,
+    publishedAt: args.row.publishedAt,
+    createdAt: args.row.createdAt,
+  });
   return (
     (args.isFollowed ? 48 : 0) +
     (args.isViewed ? -32 : 0) +
@@ -133,6 +136,8 @@ export type FeedPostView = {
   commentCount: number;
   shareCount: number;
   viewCount: number;
+  tipBpTotal?: number;
+  tipMcbTotal?: number;
   publishedAt: string;
   author: CommunityAuthorView;
   media: MediaItemView[];
@@ -177,6 +182,8 @@ function rowToFeedPost(
     commentCount: number;
     shareCount: number;
     viewCount: number;
+    tipBpTotal?: number | null;
+    tipMcbTotal?: string | number | null;
     publishedAt: Date | null;
     createdAt: Date;
     authorId: string;
@@ -201,6 +208,8 @@ function rowToFeedPost(
     commentCount: r.commentCount,
     shareCount: r.shareCount,
     viewCount: r.viewCount ?? 0,
+    tipBpTotal: r.tipBpTotal ?? 0,
+    tipMcbTotal: Number(r.tipMcbTotal ?? 0),
     publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
     author,
     media,
@@ -457,7 +466,12 @@ export async function listFeedPosts(args: {
         ? [
             sql`case when ${communityPosts.boostedUntil} is not null and ${communityPosts.boostedUntil} > now() then 1 else 0 end desc`,
             desc(
-              sql`(${communityPosts.likeCount} + ${communityPosts.commentCount})`,
+              sql`(
+                ${communityPosts.likeCount}
+                + ${communityPosts.commentCount}
+                + coalesce(${communityPosts.tipBpTotal}, 0) / 25
+                + coalesce(${communityPosts.tipMcbTotal}, 0)::double precision
+              )`,
             ),
             desc(communityPosts.publishedAt),
           ]
@@ -512,7 +526,19 @@ export async function listFeedPosts(args: {
       nextCursor = Buffer.from(
         JSON.stringify(
           args.sort === "trending"
-            ? { s: computeTrendingScore(last), id: last.id }
+            ? {
+                s: computeTrendingScore({
+                  likeCount: last.likeCount,
+                  commentCount: last.commentCount,
+                  shareCount: last.shareCount,
+                  viewCount: last.viewCount,
+                  tipBpTotal: last.tipBpTotal,
+                  tipMcbTotal: Number(last.tipMcbTotal ?? 0),
+                  publishedAt: last.publishedAt,
+                  createdAt: last.createdAt,
+                }),
+                id: last.id,
+              }
             : {
                 t: (last.publishedAt ?? last.createdAt).toISOString(),
                 id: last.id,

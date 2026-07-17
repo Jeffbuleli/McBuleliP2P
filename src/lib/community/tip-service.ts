@@ -15,6 +15,7 @@ export type TipBpResult =
       amount: number;
       tipperBalance: number;
       recipientBalance: number;
+      tipBpTotal?: number;
     }
   | { ok: false; code: string };
 
@@ -129,6 +130,19 @@ export async function tipCommunityBp(args: {
         .returning({ bal: users.buleliPointsBalance });
       if (!credited) throw new Error("tip_not_found");
 
+      let tipBpTotal: number | undefined;
+      if (postId) {
+        const [tipped] = await tx
+          .update(communityPosts)
+          .set({
+            tipBpTotal: sql`coalesce(${communityPosts.tipBpTotal}, 0) + ${args.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(communityPosts.id, postId))
+          .returning({ tipBpTotal: communityPosts.tipBpTotal });
+        tipBpTotal = tipped?.tipBpTotal;
+      }
+
       await tx.insert(rewardPointLedger).values([
         {
           userId: args.tipperId,
@@ -154,7 +168,11 @@ export async function tipCommunityBp(args: {
         },
       ]);
 
-      return { tipperBalance: debited.bal, recipientBalance: credited.bal };
+      return {
+        tipperBalance: debited.bal,
+        recipientBalance: credited.bal,
+        tipBpTotal,
+      };
     });
 
     const [fromProfile] = await db
@@ -179,6 +197,7 @@ export async function tipCommunityBp(args: {
       amount: args.amount,
       tipperBalance: balances.tipperBalance,
       recipientBalance: balances.recipientBalance,
+      tipBpTotal: balances.tipBpTotal,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "tip_failed";
