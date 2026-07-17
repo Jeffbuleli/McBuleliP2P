@@ -1,6 +1,6 @@
 const STORAGE_UNTIL = "mb_pwa_install_dismiss_until";
 const SESSION_PROMPTED = "mb_pwa_prompted_session";
-/** Soft dismiss — user can see the banner again after this. */
+/** Soft dismiss - user can see the banner again after this. */
 export const PWA_DISMISS_MS = 4 * 60 * 60 * 1000;
 
 export function isStandaloneDisplay(): boolean {

@@ -4,16 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { useAcademyLiveBadge } from "@/hooks/use-academy-live-badge";
-import { isCommunityNavRoute } from "@/lib/app-chrome";
+import { APP_NAV_ITEMS, isAppNavActive } from "@/lib/app-nav-items";
 import type { Messages } from "@/i18n/messages";
-
-const paths: { href: string; key: keyof Messages; icon: typeof HomeIcon }[] = [
-  { href: "/app", key: "nav_home", icon: HomeIcon },
-  { href: "/app/wallet", key: "nav_wallet", icon: WalletIcon },
-  { href: "/app/p2p", key: "nav_p2p", icon: P2PIcon },
-  { href: "/app/community", key: "nav_community", icon: CommunityIcon },
-  { href: "/app/profile", key: "nav_profile", icon: ProfileIcon },
-];
 
 export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
   const pathname = usePathname();
@@ -29,22 +21,17 @@ export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
 
   return (
     <nav
-      className={`pointer-events-none fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 transition-transform duration-300 ease-out ${
+      className={`pointer-events-none fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 transition-transform duration-300 ease-out md:px-6 ${
         hidden ? "translate-y-[calc(100%+0.5rem)]" : "translate-y-0"
       }`}
       aria-label="Main"
       aria-hidden={hidden}
     >
-      <div className="fd-nav-glow pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full px-1 py-1 backdrop-blur-md">
-        {paths.map((p) => {
+      <div className="fd-nav-glow pointer-events-auto flex w-full max-w-md items-stretch justify-around rounded-full px-1 py-1 backdrop-blur-md md:max-w-lg">
+        {APP_NAV_ITEMS.map((p) => {
           const href = p.href;
-          const Icon = p.icon;
-          const active =
-            href === "/app"
-              ? pathname === "/app"
-              : href === "/app/community"
-                ? isCommunityNavRoute(pathname)
-                : pathname.startsWith(href);
+          const Icon = iconFor(href);
+          const active = isAppNavActive(pathname, href);
           const label = labelFor(p.key);
           const showLiveBadge = href === "/app/community" && liveBadge.live;
 
@@ -81,6 +68,14 @@ export function AppBottomNav({ hidden = false }: { hidden?: boolean }) {
       </div>
     </nav>
   );
+}
+
+function iconFor(href: string) {
+  if (href === "/app") return HomeIcon;
+  if (href === "/app/wallet") return WalletIcon;
+  if (href === "/app/p2p") return P2PIcon;
+  if (href === "/app/community") return CommunityIcon;
+  return ProfileIcon;
 }
 
 function navIconColor(active: boolean): string {

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { AppBottomNav } from "@/components/mobile/app-bottom-nav";
+import { AppSideNav } from "@/components/mobile/app-side-nav";
 import { AppTopBar } from "@/components/mobile/app-top-bar";
 import { OfflineOverlay } from "@/components/mobile/offline-overlay";
 import { UnreadCountsProvider } from "@/components/mobile/unread-counts-provider";
@@ -60,32 +61,39 @@ export function AppShell({
     onMarket;
   const shellPb =
     navAutoHide && navHidden
-      ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-      : "pb-[calc(5.25rem+env(safe-area-inset-bottom))]";
+      ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-4"
+      : "pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-6";
 
   return (
     <UnreadCountsProvider>
-    <div
-      className={`relative mx-auto flex min-h-dvh max-w-lg flex-col bg-[var(--fd-bg)] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out ${shellPb}`}
-    >
-      {showTopBar ? (
-        <div className="sticky top-0 z-40 px-3 pt-2">
-          <div className="fd-app-topbar px-2 py-1.5">
-            <AppTopBar email={email} avatarUrl={avatarUrl} isSupportStaff={isSupportStaff} />
+      <div
+        className={`relative mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-[var(--fd-bg)] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out md:max-w-3xl lg:max-w-6xl lg:flex-row lg:pt-0 ${shellPb}`}
+      >
+        <div className="hidden lg:block">
+          <AppSideNav />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          {showTopBar ? (
+            <div className="sticky top-0 z-40 px-3 pt-2 lg:px-5 lg:pt-4">
+              <div className="fd-app-topbar px-2 py-1.5">
+                <AppTopBar email={email} avatarUrl={avatarUrl} isSupportStaff={isSupportStaff} />
+              </div>
+            </div>
+          ) : null}
+          <main
+            className={`flex-1 px-4 md:px-5 lg:px-6 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
+          >
+            {children}
+          </main>
+          <div className="lg:hidden">
+            <AppBottomNav hidden={navAutoHide && navHidden} />
           </div>
         </div>
-      ) : null}
-      <main
-        className={`flex-1 px-4 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
-      >
-        {children}
-      </main>
-      <AppBottomNav hidden={navAutoHide && navHidden} />
-      <AppIconBadgeSync />
-      <KycStatusPoller />
-      <KycPostLoginSheet />
-      <OfflineOverlay />
-    </div>
+        <AppIconBadgeSync />
+        <KycStatusPoller />
+        <KycPostLoginSheet />
+        <OfflineOverlay />
+      </div>
     </UnreadCountsProvider>
   );
 }

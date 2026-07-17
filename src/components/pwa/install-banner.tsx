@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
+import { useViewport } from "@/hooks/use-viewport";
 import {
   dismissInstallPrompt,
   hasInstalledRelatedWebApp,
   installDismissed,
   isIosDevice,
-  isMobileUa,
   isStandaloneDisplay,
   markSessionPrompted,
   shouldRedirectToCanonical,
@@ -31,6 +31,7 @@ const AUTH_PATHS = new Set([
 export function PwaInstallBanner() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const { tier, isDesktop, isTablet } = useViewport();
   const [open, setOpen] = useState(false);
   const [ios, setIos] = useState(false);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
@@ -86,22 +87,17 @@ export function PwaInstallBanner() {
         }
         if (installDismissed()) return;
 
+        // Chromium install prompt available (phone, tablet, or desktop)
         if (deferred) {
           setOpen(true);
           markSessionPrompted();
           return;
         }
-        if (isIosDevice() && isMobileUa()) {
-          setFallback(true);
-          setOpen(true);
-          markSessionPrompted();
-          return;
-        }
-        if (!isIosDevice() && isMobileUa() && !bipReceived.current) {
-          setFallback(true);
-          setOpen(true);
-          markSessionPrompted();
-        }
+
+        // Manual instructions for any device without a native install sheet
+        setFallback(true);
+        setOpen(true);
+        markSessionPrompted();
       });
     }, delay);
 
@@ -115,14 +111,14 @@ export function PwaInstallBanner() {
         setInstalledRelated(installed);
         if (installed) {
           setOpen(true);
-        } else if (!installDismissed() && (deferred || (isIosDevice() && isMobileUa()))) {
+        } else if (!installDismissed() && (deferred || fallback || ios)) {
           setOpen(true);
         }
       });
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [deferred]);
+  }, [deferred, fallback, ios]);
 
   async function onInstall() {
     if (!deferred) return;
@@ -144,30 +140,61 @@ export function PwaInstallBanner() {
   if (pathname && AUTH_PATHS.has(pathname)) return null;
 
   const showOpenInApp = installedRelated && !isStandaloneDisplay();
-  const body = showOpenInApp
-    ? t("pwa_open_in_app_body")
-    : ios || (fallback && !deferred)
-      ? ios
-        ? t("pwa_install_ios_body")
-        : t("pwa_install_fallback_body")
-      : t("pwa_install_body");
+  const manual = !showOpenInApp && (ios || (fallback && !deferred));
 
-  const dockBottom =
-    pathname?.startsWith("/app") === true
-      ? "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] pb-2"
-      : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]";
+  let body: string;
+  if (showOpenInApp) {
+    body = t("pwa_open_in_app_body");
+  } else if (ios) {
+    body = isTablet || isDesktop ? t("pwa_install_ios_tablet_body") : t("pwa_install_ios_body");
+  } else if (manual && isDesktop) {
+    body = t("pwa_install_desktop_body");
+  } else if (manual && isTablet) {
+    body = t("pwa_install_tablet_body");
+  } else if (manual) {
+    body = t("pwa_install_fallback_body");
+  } else {
+    body = isDesktop
+      ? t("pwa_install_desktop_body")
+      : isTablet
+        ? t("pwa_install_tablet_body")
+        : t("pwa_install_body");
+  }
+
+  const title = showOpenInApp
+    ? t("pwa_open_in_app_title")
+    : isDesktop
+      ? t("pwa_install_desktop_title")
+      : t("pwa_install_title");
+
+  const onApp = pathname?.startsWith("/app") === true;
+  const dockBottom = onApp
+    ? "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] pb-2 lg:bottom-4 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]";
 
   return (
     <div
-      className={`fixed inset-x-0 z-[60] px-3 pt-2 ${dockBottom}`}
+      className={`fixed inset-x-0 z-[60] px-3 pt-2 md:px-5 ${dockBottom}`}
       role="dialog"
-      aria-label={showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
+      aria-label={title}
+      data-viewport={tier}
     >
-      <div className="mx-auto max-w-lg rounded-2xl border border-emerald-800/40 bg-stone-950/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-md">
-        <p className="text-sm font-bold text-stone-50">
-          {showOpenInApp ? t("pwa_open_in_app_title") : t("pwa_install_title")}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-stone-400">{body}</p>
+      <div className="mx-auto max-w-lg rounded-2xl border border-emerald-800/40 bg-stone-950/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-md md:max-w-xl lg:max-w-lg lg:ml-auto lg:mr-6">
+        <div className="flex items-start gap-3">
+          <span
+            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600/25 text-emerald-400"
+            aria-hidden
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="2" />
+              <path d="M11 18h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-stone-50">{title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-stone-400">{body}</p>
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {showOpenInApp ? (
             <button
@@ -178,7 +205,7 @@ export function PwaInstallBanner() {
               {t("pwa_open_in_app_cta")}
             </button>
           ) : null}
-          {!showOpenInApp && !ios && deferred ? (
+          {!showOpenInApp && deferred ? (
             <button
               type="button"
               onClick={() => void onInstall()}

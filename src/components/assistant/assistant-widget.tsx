@@ -461,9 +461,9 @@ export function AssistantWidget({ chromeHidden = false }: { chromeHidden?: boole
 
   return (
     <>
-      {/* Floating launcher — bottom-left to avoid bottom-nav / page CTAs on the right */}
+      {/* Floating launcher - bottom-left to avoid bottom-nav / page CTAs on the right */}
       <div
-        className={`pointer-events-none fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-3 z-[45] transition-transform duration-300 ease-out sm:bottom-6 sm:left-5 ${
+        className={`pointer-events-none fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-3 z-[45] transition-transform duration-300 ease-out sm:bottom-6 sm:left-5 lg:bottom-6 lg:left-[calc(13.5rem+1.25rem)] ${
           chromeHidden ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"
         }`}
       >

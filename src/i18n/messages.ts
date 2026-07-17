@@ -7,12 +7,19 @@ export const en = {
   lang_fr: "FR",
   brand: "McBuleli",
   pwa_install_title: "Install McBuleli",
+  pwa_install_desktop_title: "Install McBuleli on this device",
   pwa_install_body:
-    "Add this app to your home screen for quicker access and a full-screen experience.",
+    "Add McBuleli to your phone home screen for one-tap access and a full-screen app experience.",
   pwa_install_ios_body:
-    'Tap Share, then “Add to Home Screen” to install McBuleli like an app.',
+    'Tap Share, then "Add to Home Screen" to install McBuleli like an app on your phone.',
+  pwa_install_ios_tablet_body:
+    'Tap Share, then "Add to Home Screen" to install McBuleli like an app on this tablet.',
   pwa_install_fallback_body:
-    'Use your browser menu (⋮) and choose “Install app” or “Add to Home screen”.',
+    'Open your browser menu (⋮) and choose "Install app" or "Add to Home screen".',
+  pwa_install_tablet_body:
+    "Install McBuleli on this tablet for a faster, full-screen experience - no app store needed.",
+  pwa_install_desktop_body:
+    "Install McBuleli from your browser for a dedicated window and quicker access - or open mcbuleli.org on your phone and tap Install.",
   pwa_install_cta: "Install",
   pwa_install_later: "Later",
   pwa_open_in_app_title: "Open in McBuleli app",
@@ -4467,18 +4474,25 @@ export const fr: Messages = {
   lang_fr: "FR",
   brand: "McBuleli",
   pwa_install_title: "Installer McBuleli",
+  pwa_install_desktop_title: "Installer McBuleli sur cet appareil",
   pwa_install_body:
-    "Ajoutez cette application à l’écran d’accueil pour un accès plus rapide et en plein écran.",
+    "Ajoutez McBuleli à l'écran d'accueil du téléphone pour un accès en un tap et une expérience plein écran.",
   pwa_install_ios_body:
-    'Appuyez sur Partager, puis « Sur l’écran d’accueil » pour installer McBuleli comme une application.',
+    'Appuyez sur Partager, puis "Sur l\'écran d\'accueil" pour installer McBuleli comme une app sur votre téléphone.',
+  pwa_install_ios_tablet_body:
+    'Appuyez sur Partager, puis "Sur l\'écran d\'accueil" pour installer McBuleli comme une app sur cette tablette.',
   pwa_install_fallback_body:
-    'Ouvrez le menu du navigateur (⋮) et choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
+    'Ouvrez le menu du navigateur (⋮) et choisissez "Installer l\'application" ou "Ajouter à l\'écran d\'accueil".',
+  pwa_install_tablet_body:
+    "Installez McBuleli sur cette tablette pour une expérience plus rapide en plein écran - sans passer par un store.",
+  pwa_install_desktop_body:
+    "Installez McBuleli depuis le navigateur pour une fenêtre dédiée - ou ouvrez mcbuleli.org sur votre téléphone et touchez Installer.",
   pwa_install_cta: "Installer",
   pwa_install_later: "Plus tard",
-  pwa_open_in_app_title: "Ouvrir l’app McBuleli",
+  pwa_open_in_app_title: "Ouvrir l'app McBuleli",
   pwa_open_in_app_body:
-    "McBuleli est déjà installé sur cet appareil. Ouvrez l’application pour la même session et un accès plus rapide.",
-  pwa_open_in_app_cta: "Ouvrir l’app",
+    "McBuleli est déjà installé sur cet appareil. Ouvrez l'application pour la même session et un accès plus rapide.",
+  pwa_open_in_app_cta: "Ouvrir l'app",
   home_title: "Achetez et vendez des cryptos avec le mobile money en Afrique",
   home_sub:
     "Échangez entre particuliers avec protection des fonds, et un portefeuille gardé en sécurité chez nous.",
