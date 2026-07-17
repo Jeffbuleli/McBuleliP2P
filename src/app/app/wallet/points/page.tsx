@@ -13,6 +13,7 @@ import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { REWARD_GRANT } from "@/lib/reward-points-config";
 import { rewardLedgerLabel } from "@/lib/reward-points-labels";
 import { interpolate } from "@/i18n/messages";
+import { formatBp } from "@/lib/community/format-count";
 
 type Grants = Record<string, boolean>;
 
@@ -347,7 +348,7 @@ export default function WalletPointsPage() {
                   {t("points_balance")}
                 </p>
                 <p className="mt-1 text-4xl font-black tabular-nums text-[color:var(--fd-primary)]">
-                  {data.balance.toLocaleString(loc)}{" "}
+                  {formatBp(data.balance, locale === "fr" ? "fr" : "en")}{" "}
                   <span className="text-lg font-bold text-[color:var(--fd-muted)]">
                     {t("points_bp_unit")}
                   </span>

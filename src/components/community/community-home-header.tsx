@@ -1,10 +1,10 @@
-"use client";
-
 import Link from "next/link";
 import { CommunityHelpTrigger } from "@/components/community/community-help-sheet";
 import { CommunitySearchBar } from "@/components/community/community-search-bar";
 import { CommunityStoriesStrip } from "@/components/community/community-stories-strip";
+import { CommunityDiscoverPeople } from "@/components/community/community-discover-people";
 import { CommunityDmLink } from "@/components/community/community-dm-link";
+import { formatBp } from "@/lib/community/format-count";
 
 export function CommunityHomeHeader({
   fr,
@@ -32,7 +32,7 @@ export function CommunityHomeHeader({
               href="/app/wallet/points"
               className="flex h-9 items-center rounded-xl bg-[#eaf5ee] px-2.5 text-[11px] font-bold tabular-nums text-[#305f33] ring-1 ring-[#305f33]/10 transition active:scale-95"
             >
-              {bp} BP
+              {formatBp(bp, fr ? "fr" : "en")} BP
             </Link>
           ) : null}
           <CommunityHelpTrigger onClick={onHelpOpen} />
@@ -40,6 +40,8 @@ export function CommunityHomeHeader({
       </div>
 
       <CommunityStoriesStrip fr={fr} />
+
+      <CommunityDiscoverPeople fr={fr} />
 
       <CommunitySearchBar fr={fr} loading={searchLoading} onSearch={onSearch} embedded />
     </div>

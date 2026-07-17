@@ -370,8 +370,8 @@ export function CommunityHomeClient() {
           body={
             category === "following"
               ? fr
-                ? "Suivez des traders depuis leur profil ou le classement pour voir leurs publications ici."
-                : "Follow traders from their profile or the leaderboard to see their posts here."
+                ? "Suivez des membres depuis À découvrir (sous les statuts), leur profil ou le classement - leurs posts apparaîtront ici."
+                : "Follow members from Discover (under statuses), their profile, or the leaderboard - their posts will show up here."
               : category === "for_you"
                 ? fr
                   ? "Suivez des membres, likez et commentez - votre fil Pour vous s'adapte à vos intérêts."

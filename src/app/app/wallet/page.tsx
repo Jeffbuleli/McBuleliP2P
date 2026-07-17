@@ -241,6 +241,7 @@ export default async function WalletPage() {
             balance: pointsBalance,
             title: d.wallet_link_points,
             teaser: d.points_wallet_teaser,
+            locale: lang,
           }}
           stakingPromo={stakingPromo}
           poolPromo={poolPromo}

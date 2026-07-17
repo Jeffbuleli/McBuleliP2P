@@ -228,11 +228,11 @@ export function CommunityStoriesStrip({ fr }: { fr: boolean }) {
                 />
               </span>
             ) : null}
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#305f33]">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-xl font-bold shadow-sm backdrop-blur-[1px]">
+            <span className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 bg-gradient-to-t from-[#eaf5ee] via-[#eaf5ee]/90 to-transparent px-2 pb-2.5 pt-10 text-[#305f33]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg font-bold shadow-sm">
                 +
               </span>
-              <span className="px-2 text-center text-[10px] font-bold leading-tight">
+              <span className="text-center text-[10px] font-bold leading-tight">
                 {fr ? "Créer un statut" : "Create status"}
               </span>
             </span>

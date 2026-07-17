@@ -38,7 +38,9 @@ import {
   ProfileSocialLinksRow,
 } from "@/components/community/community-profile-edit-sheet";
 import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
-import { formatCompactCount } from "@/lib/community/format-count";
+import { formatBp, formatCompactCount, formatMcB } from "@/lib/community/format-count";
+import { CommunityFollowListSheet } from "@/components/community/community-follow-list-sheet";
+import { CommunityDiscoverPeople } from "@/components/community/community-discover-people";
 
 const EMPTY_LINKS: CommunityProfileLinks = {
   location: null,
@@ -93,6 +95,10 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [publishOpen, setPublishOpen] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
+  const [walletBp, setWalletBp] = useState<number | null>(null);
+  const [followListMode, setFollowListMode] = useState<
+    "followers" | "following" | null
+  >(null);
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -108,6 +114,16 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           return;
         }
         setProfile(d.profile);
+        if (d.profile.isOwnProfile) {
+          void fetch("/api/rewards/me")
+            .then((r) => r.json())
+            .then((j: { balance?: number }) => {
+              if (typeof j.balance === "number") setWalletBp(j.balance);
+            })
+            .catch(() => null);
+        } else {
+          setWalletBp(null);
+        }
         const [br, sr] = await Promise.all([
           fetch(`/api/community/blogs?authorId=${d.profile.userId}&limit=5`),
           fetch(
@@ -315,38 +331,55 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           <ProfileSocialLinksRow links={profile.links ?? EMPTY_LINKS} />
 
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span>
-              <span className="font-bold text-[#0c0a09]">{profile.followerCount}</span>{" "}
+            <button
+              type="button"
+              onClick={() => setFollowListMode("followers")}
+              className="rounded-lg px-0.5 py-0.5 text-left transition hover:bg-[#f0faf4] active:scale-[0.98]"
+            >
+              <span className="font-bold tabular-nums text-[#0c0a09]">
+                {formatCompactCount(profile.followerCount)}
+              </span>{" "}
               <span className="text-[#78716c]">{fr ? "abonnés" : "followers"}</span>
-            </span>
-            <span>
-              <span className="font-bold text-[#0c0a09]">{profile.followingCount}</span>{" "}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFollowListMode("following")}
+              className="rounded-lg px-0.5 py-0.5 text-left transition hover:bg-[#f0faf4] active:scale-[0.98]"
+            >
+              <span className="font-bold tabular-nums text-[#0c0a09]">
+                {formatCompactCount(profile.followingCount)}
+              </span>{" "}
               <span className="text-[#78716c]">{fr ? "abonnements" : "following"}</span>
-            </span>
+            </button>
           </div>
 
           {profile.isOwnProfile ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href="/app/community/builders"
-                className="rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 text-[11px] font-bold text-amber-950"
-              >
-                {profile.builderTier
-                  ? fr
-                    ? "Builder"
-                    : "Builder"
-                  : fr
-                    ? "Devenir Builder"
-                    : "Become Builder"}
-              </Link>
-              <button
-                type="button"
-                onClick={() => setPublishOpen(true)}
-                className="rounded-full border border-[#305f33]/35 bg-[#eaf5ee] px-3 py-1.5 text-[11px] font-bold text-[#305f33] active:scale-[0.98]"
-              >
-                {fr ? "Publier" : "Publish"}
-              </button>
-            </div>
+            <>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href="/app/community/builders"
+                  className="rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 text-[11px] font-bold text-amber-950"
+                >
+                  {profile.builderTier
+                    ? fr
+                      ? "Builder"
+                      : "Builder"
+                    : fr
+                      ? "Devenir Builder"
+                      : "Become Builder"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setPublishOpen(true)}
+                  className="rounded-full border border-[#305f33]/35 bg-[#eaf5ee] px-3 py-1.5 text-[11px] font-bold text-[#305f33] active:scale-[0.98]"
+                >
+                  {fr ? "Publier" : "Publish"}
+                </button>
+              </div>
+              <div className="mt-3">
+                <CommunityDiscoverPeople fr={fr} />
+              </div>
+            </>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
               <div className="flex gap-2">
@@ -460,6 +493,33 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         />
       ) : null}
 
+      {followListMode ? (
+        <CommunityFollowListSheet
+          open
+          onClose={() => setFollowListMode(null)}
+          fr={fr}
+          handle={profile.handle}
+          mode={followListMode}
+          onCountsChange={(delta) => {
+            setProfile((p) =>
+              p
+                ? {
+                    ...p,
+                    followerCount: Math.max(
+                      0,
+                      p.followerCount + (delta.followers ?? 0),
+                    ),
+                    followingCount: Math.max(
+                      0,
+                      p.followingCount + (delta.following ?? 0),
+                    ),
+                  }
+                : p,
+            );
+          }}
+        />
+      ) : null}
+
       {publishOpen ? (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
           <button
@@ -540,8 +600,18 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
 
       <section className="mt-4 grid grid-cols-3 gap-2 px-4">
         <StatCard
-          label="BP"
-          value={formatCompactCount(profile.stats?.bpEarned30d ?? 0)}
+          label={
+            profile.isOwnProfile
+              ? "BP"
+              : fr
+                ? "BP 30j"
+                : "BP 30d"
+          }
+          value={
+            profile.isOwnProfile && walletBp !== null
+              ? formatBp(walletBp, fr ? "fr" : "en")
+              : formatCompactCount(profile.stats?.bpEarned30d ?? 0)
+          }
           accent
         />
         <StatCard
@@ -571,7 +641,12 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           value={formatCompactCount(profile.commentCount)}
         />
         <StatCard
-          label={<IconBp size={12} />}
+          label={
+            <span className="inline-flex items-center gap-0.5">
+              <IconBp size={12} />
+              <span>{fr ? "Tips" : "Tips"}</span>
+            </span>
+          }
           value={formatCompactCount(profile.stats?.tipBpTotal ?? 0)}
           accent={(profile.stats?.tipBpTotal ?? 0) > 0}
         />
@@ -582,7 +657,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
         <section className="mt-2 grid grid-cols-1 gap-2 px-4 sm:grid-cols-3">
           <StatCard
             label={<IconMcB size={12} />}
-            value={formatCompactCount(Math.floor(profile.stats!.tipMcbTotal))}
+            value={formatMcB(profile.stats!.tipMcbTotal, fr ? "fr" : "en")}
           />
         </section>
       ) : null}

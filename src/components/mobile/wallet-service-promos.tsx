@@ -4,6 +4,7 @@ import { AvecCompactIllustration } from "@/components/wallet/avec-illustrations"
 import { BuleliPointsCompactIllustration } from "@/components/wallet/points-illustrations";
 import { StakingHeroIllustration } from "@/components/wallet/staking-illustrations";
 import { WalletIconPool } from "@/components/wallet/wallet-service-icons";
+import { formatBp } from "@/lib/community/format-count";
 
 function Chevron() {
   return (
@@ -122,10 +123,12 @@ function PointsPromoCard({
   balance,
   teaser,
   title,
+  locale = "en",
 }: {
   balance: number;
   teaser: string;
   title: string;
+  locale?: "en" | "fr";
 }) {
   return (
     <Link
@@ -138,7 +141,7 @@ function PointsPromoCard({
           <p className="text-sm font-bold text-[color:var(--fd-text)]">{title}</p>
           {balance > 0 ? (
             <span className="rounded-full bg-[color:var(--fd-primary)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
-              {balance}
+              {formatBp(balance, locale)} BP
             </span>
           ) : null}
         </div>
@@ -159,7 +162,7 @@ export function WalletServicePromos({
   stakingPromo: StakingPromoDTO | null;
   poolPromo: ServicePromoDTO | null;
   avecPromo: (ServicePromoDTO & { rightPrimary: string; rightSecondary?: string }) | null;
-  pointsPromo?: { balance: number; title: string; teaser: string } | null;
+  pointsPromo?: { balance: number; title: string; teaser: string; locale?: "en" | "fr" } | null;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -168,6 +171,7 @@ export function WalletServicePromos({
           balance={pointsPromo.balance}
           title={pointsPromo.title}
           teaser={pointsPromo.teaser}
+          locale={pointsPromo.locale ?? "en"}
         />
       ) : null}
       {stakingPromo ? <StakingPromoCard promo={stakingPromo} /> : null}

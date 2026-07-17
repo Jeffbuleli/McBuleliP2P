@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { formatBp } from "@/lib/community/format-count";
 import {
   CommunityHelpSheet,
   CommunityHelpTrigger,
@@ -96,7 +97,7 @@ export function CommunityHub() {
               href="/app/wallet/points"
               className="rounded-full bg-[#e8f3ee] px-2.5 py-1 text-[10px] font-bold text-[#305f33]"
             >
-              {bpBalance} BP
+              {formatBp(bpBalance, fr ? "fr" : "en")} BP
             </Link>
           ) : null}
           <CommunityHelpTrigger onClick={() => setHelpOpen(true)} />
