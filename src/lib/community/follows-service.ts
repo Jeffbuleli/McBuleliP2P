@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, lt, ne, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, lt } from "drizzle-orm";
 import {
   communityTraderFollows,
   communityUserProfiles,
@@ -10,7 +10,14 @@ import { addCommunityReputation } from "@/lib/community/reputation-service";
 import { grantCommunityTraderFollow } from "@/lib/community/rewards-service";
 import { normalizePublicMediaUrl } from "@/lib/media-url";
 
-export type FollowDiscoverReason = "mutual" | "nearby" | "active" | "rising";
+export type FollowDiscoverReason =
+  | "mutual"
+  | "engaged"
+  | "taste"
+  | "circle"
+  | "nearby"
+  | "active"
+  | "rising";
 
 export type FollowGraphPerson = {
   userId: string;
@@ -51,7 +58,7 @@ async function resolveHandleUserId(handle: string): Promise<string | null> {
   return row?.userId ?? null;
 }
 
-async function enrichFollowGraphPeople(
+export async function enrichFollowGraphPeopleForDiscover(
   rows: Array<{
     userId: string;
     handle: string;
@@ -267,7 +274,7 @@ export async function listFollowersOf(args: {
     .limit(limit + 1);
 
   const slice = rows.slice(0, limit);
-  const people = await enrichFollowGraphPeople(slice, args.viewerId);
+  const people = await enrichFollowGraphPeopleForDiscover(slice, args.viewerId);
   const nextCursor =
     rows.length > limit
       ? slice[slice.length - 1]?.followedAt?.toISOString() ?? null
@@ -318,7 +325,7 @@ export async function listFollowingOf(args: {
     .limit(limit + 1);
 
   const slice = rows.slice(0, limit);
-  const people = await enrichFollowGraphPeople(slice, args.viewerId);
+  const people = await enrichFollowGraphPeopleForDiscover(slice, args.viewerId);
   const nextCursor =
     rows.length > limit
       ? slice[slice.length - 1]?.followedAt?.toISOString() ?? null
@@ -326,166 +333,3 @@ export async function listFollowingOf(args: {
   return { people, nextCursor };
 }
 
-/**
- * Discovery: people to connect with - nearby country, mutuals, active voices.
- * Inspired by social graphs, tuned for McBuleli (KYC, reputation, Africa community).
- */
-export async function suggestPeopleToFollow(args: {
-  viewerId: string;
-  limit?: number;
-  /** Extra user IDs to skip (client dismissals, etc.). */
-  excludeUserIds?: string[];
-}): Promise<FollowGraphPerson[]> {
-  const db = getDb();
-  const limit = Math.min(Math.max(args.limit ?? 12, 1), 24);
-
-  const [viewer] = await db
-    .select({ countryCode: users.countryCode })
-    .from(users)
-    .where(eq(users.id, args.viewerId))
-    .limit(1);
-
-  const followingRows = await db
-    .select({ traderId: communityTraderFollows.traderId })
-    .from(communityTraderFollows)
-    .where(eq(communityTraderFollows.followerId, args.viewerId));
-  const exclude = new Set(followingRows.map((r) => r.traderId));
-  exclude.add(args.viewerId);
-  for (const id of args.excludeUserIds ?? []) {
-    if (id) exclude.add(id);
-  }
-
-  const excludeIds = [...exclude];
-  const country = viewer?.countryCode?.trim().toUpperCase() || null;
-  const ONLINE_MS = 15 * 60 * 1000;
-  const activeSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-  const candidates = await db
-    .select({
-      userId: communityUserProfiles.userId,
-      handle: communityUserProfiles.handle,
-      displayName: communityUserProfiles.displayName,
-      reputationScore: communityUserProfiles.reputationScore,
-      showKycBadge: communityUserProfiles.showKycBadge,
-      verifiedBlue: communityUserProfiles.verifiedBlue,
-      lastActiveAt: communityUserProfiles.lastActiveAt,
-      avatarUrl: users.avatarUrl,
-      kycStatus: users.kycStatus,
-      countryCode: users.countryCode,
-    })
-    .from(communityUserProfiles)
-    .innerJoin(users, eq(users.id, communityUserProfiles.userId))
-    .where(
-      and(
-        ne(communityUserProfiles.userId, args.viewerId),
-        excludeIds.length > 0
-          ? notInArray(communityUserProfiles.userId, excludeIds)
-          : undefined,
-      ),
-    )
-    .orderBy(
-      desc(communityUserProfiles.reputationScore),
-      desc(communityUserProfiles.lastActiveAt),
-    )
-    .limit(Math.max(limit * 4, 40));
-
-  candidates.sort((a, b) => {
-    const aNear =
-      !!country && (a.countryCode?.trim().toUpperCase() ?? "") === country
-        ? 1
-        : 0;
-    const bNear =
-      !!country && (b.countryCode?.trim().toUpperCase() ?? "") === country
-        ? 1
-        : 0;
-    if (bNear !== aNear) return bNear - aNear;
-    if (b.reputationScore !== a.reputationScore) {
-      return b.reputationScore - a.reputationScore;
-    }
-    const aTs = a.lastActiveAt?.getTime() ?? 0;
-    const bTs = b.lastActiveAt?.getTime() ?? 0;
-    return bTs - aTs;
-  });
-
-
-  // Mutuals: people who follow the viewer but viewer does not follow back
-  const mutualCandidates = await db
-    .select({
-      userId: communityUserProfiles.userId,
-      handle: communityUserProfiles.handle,
-      displayName: communityUserProfiles.displayName,
-      reputationScore: communityUserProfiles.reputationScore,
-      showKycBadge: communityUserProfiles.showKycBadge,
-      verifiedBlue: communityUserProfiles.verifiedBlue,
-      lastActiveAt: communityUserProfiles.lastActiveAt,
-      avatarUrl: users.avatarUrl,
-      kycStatus: users.kycStatus,
-      countryCode: users.countryCode,
-    })
-    .from(communityTraderFollows)
-    .innerJoin(
-      communityUserProfiles,
-      eq(communityUserProfiles.userId, communityTraderFollows.followerId),
-    )
-    .innerJoin(users, eq(users.id, communityTraderFollows.followerId))
-    .where(
-      and(
-        eq(communityTraderFollows.traderId, args.viewerId),
-        excludeIds.length > 0
-          ? notInArray(communityTraderFollows.followerId, excludeIds)
-          : undefined,
-      ),
-    )
-    .orderBy(desc(communityTraderFollows.createdAt))
-    .limit(Math.min(8, limit));
-
-  const reasonByUserId = new Map<string, FollowDiscoverReason>();
-  const merged: typeof candidates = [];
-  const seen = new Set<string>();
-
-  for (const row of mutualCandidates) {
-    if (seen.has(row.userId)) continue;
-    seen.add(row.userId);
-    reasonByUserId.set(row.userId, "mutual");
-    merged.push(row);
-  }
-  for (const row of candidates) {
-    if (seen.has(row.userId)) continue;
-    seen.add(row.userId);
-    const sameCountry =
-      !!country &&
-      (row.countryCode?.trim().toUpperCase() ?? "") === country;
-    const recentlyActive =
-      !!row.lastActiveAt && row.lastActiveAt.getTime() >= activeSince.getTime();
-    const onlineNow =
-      !!row.lastActiveAt &&
-      Date.now() - row.lastActiveAt.getTime() < ONLINE_MS;
-    reasonByUserId.set(
-      row.userId,
-      sameCountry
-        ? "nearby"
-        : onlineNow || recentlyActive
-          ? "active"
-          : "rising",
-    );
-    merged.push(row);
-    if (merged.length >= limit) break;
-  }
-
-  // Prefer follow-backs, then nearby - keep rising/active as filler only.
-  const ranked = [...merged].sort((a, b) => {
-    const score = (row: (typeof merged)[number]) => {
-      if (reasonByUserId.get(row.userId) === "mutual") return 3;
-      if (reasonByUserId.get(row.userId) === "nearby") return 2;
-      if (reasonByUserId.get(row.userId) === "active") return 1;
-      return 0;
-    };
-    return score(b) - score(a);
-  });
-
-  return enrichFollowGraphPeople(
-    ranked.slice(0, limit),
-    args.viewerId,
-    reasonByUserId,
-  );
-}

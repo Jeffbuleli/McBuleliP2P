@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { communityEnabled } from "@/lib/community/config";
-import { suggestPeopleToFollow } from "@/lib/community/follows-service";
+import { suggestPeopleToFollow } from "@/lib/community/discover-suggest-service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";

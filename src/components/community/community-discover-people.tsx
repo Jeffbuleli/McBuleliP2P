@@ -7,8 +7,9 @@ import type { FollowGraphPerson } from "@/lib/community/follows-service";
 import {
   DISCOVER_VISIBLE_SLOTS,
   dismissDiscoverPerson,
-  getDiscoverDismissedUserIds,
+  getDiscoverExcludeUserIds,
   isDiscoverBlockSnoozed,
+  noteDiscoverShown,
   snoozeDiscoverBlock,
 } from "@/lib/community/discover-dismiss";
 
@@ -16,20 +17,29 @@ function suggestionHint(person: FollowGraphPerson, fr: boolean): string {
   if (person.followsYou || person.reason === "mutual") {
     return fr ? "Vous suit" : "Follows you";
   }
+  if (person.reason === "engaged") {
+    return fr ? "Tu interagis avec ses posts" : "You engage with their posts";
+  }
+  if (person.reason === "taste") {
+    return fr ? "Contenus proches de toi" : "Content close to your taste";
+  }
+  if (person.reason === "circle") {
+    return fr ? "Suivi par tes abonnements" : "Followed by people you follow";
+  }
   if (person.reason === "nearby") {
     return fr ? "Près de toi" : "Near you";
   }
   if (person.reason === "active") {
     return fr ? "Actif·ve récemment" : "Recently active";
   }
-  return fr ? "À suivre" : "Suggested";
+  return fr ? "À découvrir" : "Suggested";
 }
 
 function followCta(person: FollowGraphPerson, fr: boolean): string {
   if (person.followsYou || person.reason === "mutual") {
-    return fr ? "Follow back" : "Follow back";
+    return "Follow back";
   }
-  return fr ? "Follow" : "Follow";
+  return "Follow";
 }
 
 export function CommunityDiscoverPeople({
@@ -37,13 +47,13 @@ export function CommunityDiscoverPeople({
   compact = false,
 }: {
   fr: boolean;
-  /** Tighter layout for profile embeds (prefer home only). */
   compact?: boolean;
 }) {
   const [queue, setQueue] = useState<FollowGraphPerson[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [snoozeHint, setSnoozeHint] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (typeof window !== "undefined" && isDiscoverBlockSnoozed()) {
@@ -53,9 +63,9 @@ export function CommunityDiscoverPeople({
       return;
     }
     try {
-      const dismissed = getDiscoverDismissedUserIds();
-      const q = new URLSearchParams({ limit: "12" });
-      if (dismissed.length) q.set("exclude", dismissed.join(","));
+      const excluded = getDiscoverExcludeUserIds();
+      const q = new URLSearchParams({ limit: "14" });
+      if (excluded.length) q.set("exclude", excluded.join(","));
       const res = await fetch(`/api/community/discover/people?${q}`, {
         cache: "no-store",
       });
@@ -66,6 +76,7 @@ export function CommunityDiscoverPeople({
       const data = (await res.json()) as { people?: FollowGraphPerson[] };
       const next = (data.people ?? []).filter((p) => !p.isFollowing && !p.isSelf);
       setQueue(next);
+      if (next.length > 0) noteDiscoverShown();
     } catch {
       setQueue([]);
     } finally {
@@ -105,11 +116,25 @@ export function CommunityDiscoverPeople({
     }
   };
 
-  const onSnoozeBlock = () => {
-    snoozeDiscoverBlock();
+  const onLater = () => {
+    const { hours } = snoozeDiscoverBlock(visible.map((p) => p.userId));
+    setSnoozeHint(
+      fr
+        ? `On te proposera d'autres profils dans ~${hours} h`
+        : `We'll suggest other people in ~${hours}h`,
+    );
     setHidden(true);
     setQueue([]);
+    window.setTimeout(() => setSnoozeHint(null), 4500);
   };
+
+  if (snoozeHint && hidden) {
+    return (
+      <div className="mb-3 rounded-2xl border border-dashed border-[#dce8e0] bg-[#f7fbf8] px-3 py-2.5 text-center text-[11px] text-[#78716c]">
+        {snoozeHint}
+      </div>
+    );
+  }
 
   if (!loaded || hidden || visible.length === 0) return null;
 
@@ -126,15 +151,19 @@ export function CommunityDiscoverPeople({
           </h2>
           <p className="text-[10px] leading-snug text-[#78716c]">
             {fr
-              ? "Follow back ou Follow - ignore pour voir quelqu'un d'autre."
-              : "Follow back or Follow - ignore to see someone else."}
+              ? "Selon tes interactions et goûts - Later = plus tard, pas exclus."
+              : "Based on your interactions & taste - Later pauses, doesn't exclude."}
           </p>
         </div>
         <button
           type="button"
-          onClick={onSnoozeBlock}
+          onClick={onLater}
           className="shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold text-[#a8a29e] hover:bg-[#f0f4f2] hover:text-[#57534e]"
-          title={fr ? "Masquer 24 h" : "Hide for 24h"}
+          title={
+            fr
+              ? "Masquer un moment, d'autres profils reviendront"
+              : "Hide for a while - other profiles will return"
+          }
         >
           {fr ? "Plus tard" : "Later"}
         </button>
@@ -188,7 +217,7 @@ export function CommunityDiscoverPeople({
               onClick={() => onIgnore(person)}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#a8a29e] hover:bg-[#f0f4f2] hover:text-[#57534e] active:scale-95"
               aria-label={fr ? "Ignorer" : "Ignore"}
-              title={fr ? "Ignorer" : "Ignore"}
+              title={fr ? "Ignorer 7 jours" : "Ignore for 7 days"}
             >
               ×
             </button>
