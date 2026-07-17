@@ -9,6 +9,7 @@ export type CommunityProfileMeta = {
   x?: string;
   facebook?: string;
   tiktok?: string;
+  youtube?: string;
   whatsapp?: string;
   telegram?: string;
 };
@@ -19,6 +20,7 @@ export type CommunityProfileLinks = {
   x: string | null;
   facebook: string | null;
   tiktok: string | null;
+  youtube: string | null;
   whatsapp: string | null;
   telegram: string | null;
 };
@@ -46,6 +48,7 @@ export function parseCommunityProfileMeta(raw: unknown): CommunityProfileMeta {
     x: asTrimmed(m.x, 120),
     facebook: asTrimmed(m.facebook, 200),
     tiktok: asTrimmed(m.tiktok, 120),
+    youtube: asTrimmed(m.youtube, 120),
     whatsapp: asTrimmed(m.whatsapp, 32),
     telegram: asTrimmed(m.telegram, 64),
   };
@@ -63,6 +66,7 @@ export function mergeCommunityProfileMeta(
     "x",
     "facebook",
     "tiktok",
+    "youtube",
     "whatsapp",
     "telegram",
   ] as const) {
@@ -80,6 +84,7 @@ export function linksFromMeta(meta: CommunityProfileMeta): CommunityProfileLinks
     x: meta.x ?? null,
     facebook: meta.facebook ?? null,
     tiktok: meta.tiktok ?? null,
+    youtube: meta.youtube ?? null,
     whatsapp: meta.whatsapp ?? null,
     telegram: meta.telegram ?? null,
   };
@@ -134,6 +139,13 @@ export function profileLinkHref(
       return `https://facebook.com/${value}`;
     case "tiktok":
       return `https://www.tiktok.com/@${value.replace(/^@/, "")}`;
+    case "youtube": {
+      const h = value.replace(/^@/, "");
+      if (/^UC[\w-]{20,}$/i.test(h)) {
+        return `https://www.youtube.com/channel/${h}`;
+      }
+      return `https://www.youtube.com/@${h}`;
+    }
     case "whatsapp":
       return `https://wa.me/${value.replace(/\D/g, "")}`;
     case "telegram":

@@ -25,6 +25,7 @@ const patchZ = z.object({
   x: z.string().max(120).optional(),
   facebook: z.string().max(200).optional(),
   tiktok: z.string().max(120).optional(),
+  youtube: z.string().max(120).optional(),
   whatsapp: z.string().max(32).optional(),
   telegram: z.string().max(64).optional(),
 });
@@ -57,6 +58,7 @@ export async function PATCH(req: Request) {
     x: parsed.data.x,
     facebook: parsed.data.facebook,
     tiktok: parsed.data.tiktok,
+    youtube: parsed.data.youtube,
     whatsapp: parsed.data.whatsapp,
     telegram: parsed.data.telegram,
   });

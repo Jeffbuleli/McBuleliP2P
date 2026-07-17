@@ -41,6 +41,7 @@ const EMPTY_LINKS: CommunityProfileLinks = {
   x: null,
   facebook: null,
   tiktok: null,
+  youtube: null,
   whatsapp: null,
   telegram: null,
 };

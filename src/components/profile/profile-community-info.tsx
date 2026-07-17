@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CommunityCoverCropper } from "@/components/community/community-cover-cropper";
 import { ProfileIconCommunity } from "@/components/icons/profile-icons";
 import { profileChipClass } from "@/components/profile/profile-vibrant-styles";
 import { useI18n } from "@/components/i18n-provider";
@@ -21,7 +22,7 @@ const inputCls =
   "w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-sm text-[#1c1917]";
 
 export function ProfileCommunityInfo() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const coverRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [handle, setHandle] = useState("");
@@ -32,12 +33,14 @@ export function ProfileCommunityInfo() {
   const [x, setX] = useState("");
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [telegram, setTelegram] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   const applyProfile = useCallback((p: CommunityProfile) => {
     setProfile(p);
@@ -49,6 +52,7 @@ export function ProfileCommunityInfo() {
     setX(p.links?.x ?? "");
     setFacebook(p.links?.facebook ?? "");
     setTiktok(p.links?.tiktok ?? "");
+    setYoutube(p.links?.youtube ?? "");
     setWhatsapp(p.links?.whatsapp ?? "");
     setTelegram(p.links?.telegram ?? "");
   }, []);
@@ -102,6 +106,7 @@ export function ProfileCommunityInfo() {
         return;
       }
       applyProfile(data.profile as CommunityProfile);
+      setCropFile(null);
       setOk(true);
     } finally {
       setSaving(false);
@@ -125,6 +130,7 @@ export function ProfileCommunityInfo() {
         x,
         facebook,
         tiktok,
+        youtube,
         whatsapp,
         telegram,
       }),
@@ -180,9 +186,19 @@ export function ProfileCommunityInfo() {
         onChange={(e) => {
           const f = e.target.files?.[0];
           e.target.value = "";
-          if (f) void uploadCover(f);
+          if (f) setCropFile(f);
         }}
       />
+
+      {cropFile ? (
+        <CommunityCoverCropper
+          file={cropFile}
+          fr={locale === "fr"}
+          busy={saving}
+          onCancel={() => setCropFile(null)}
+          onConfirm={(cropped) => void uploadCover(cropped)}
+        />
+      ) : null}
 
       {err ? (
         <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{err}</p>
@@ -227,6 +243,7 @@ export function ProfileCommunityInfo() {
             ["x", x, setX, t("profile_community_x")],
             ["facebook", facebook, setFacebook, t("profile_community_facebook")],
             ["tiktok", tiktok, setTiktok, t("profile_community_tiktok")],
+            ["youtube", youtube, setYoutube, t("profile_community_youtube")],
             ["whatsapp", whatsapp, setWhatsapp, t("profile_community_whatsapp")],
             ["telegram", telegram, setTelegram, t("profile_community_telegram")],
           ] as const

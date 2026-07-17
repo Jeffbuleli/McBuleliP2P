@@ -581,6 +581,7 @@ export type CommunityProfilePatch = {
   x?: string;
   facebook?: string;
   tiktok?: string;
+  youtube?: string;
   whatsapp?: string;
   telegram?: string;
 };
@@ -648,6 +649,7 @@ export async function updateOwnCommunityProfile(
     "x",
     "facebook",
     "tiktok",
+    "youtube",
     "whatsapp",
     "telegram",
   ] as const;
@@ -675,6 +677,10 @@ export async function updateOwnCommunityProfile(
     if (patch.tiktok !== undefined) {
       const v = patch.tiktok.trim();
       metaPatch.tiktok = v ? (normalizeProfileHandle(v) ?? "") : "";
+    }
+    if (patch.youtube !== undefined) {
+      const v = patch.youtube.trim();
+      metaPatch.youtube = v ? (normalizeProfileHandle(v, 120) ?? "") : "";
     }
     if (patch.whatsapp !== undefined) {
       const v = patch.whatsapp.trim();

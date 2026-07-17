@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CommunityCoverCropper } from "@/components/community/community-cover-cropper";
 import { profileLinkHref } from "@/lib/community/profile-meta";
 import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
 import type { PublicProfileView } from "@/lib/community/profile-service";
@@ -22,7 +23,7 @@ function IconCam({ className = "h-4 w-4" }: { className?: string }) {
 function SocialIcon({
   kind,
 }: {
-  kind: "website" | "x" | "facebook" | "tiktok" | "whatsapp" | "telegram" | "location";
+  kind: "website" | "x" | "facebook" | "tiktok" | "youtube" | "whatsapp" | "telegram" | "location";
 }) {
   const c = "h-4 w-4";
   if (kind === "location") {
@@ -66,6 +67,13 @@ function SocialIcon({
       </svg>
     );
   }
+  if (kind === "youtube") {
+    return (
+      <svg className={c} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M23 12.2s0-3.1-.4-4.5c-.2-.9-.9-1.6-1.8-1.8C19.4 5.5 12 5.5 12 5.5s-7.4 0-8.8.4c-.9.2-1.6.9-1.8 1.8C1 9.1 1 12.2 1 12.2s0 3.1.4 4.5c.2.9.9 1.6 1.8 1.8 1.4.4 8.8.4 8.8.4s7.4 0 8.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.4.4-4.5.4-4.5zM9.8 15.5v-6.6l6.3 3.3-6.3 3.3z" />
+      </svg>
+    );
+  }
   if (kind === "whatsapp") {
     return (
       <svg className={c} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -73,11 +81,14 @@ function SocialIcon({
       </svg>
     );
   }
-  return (
-    <svg className={c} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 3c-4 0-7 2.6-7 6.5 0 4.4 4.5 8.2 6.4 9.5.4.3.9.3 1.2 0C14.5 17.7 19 13.9 19 9.5 19 5.6 16 3 12 3zm0 9a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-    </svg>
-  );
+  if (kind === "telegram") {
+    return (
+      <svg className={c} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M21.5 3.5L2.8 11.1c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.7.4.9 1 .9.6 0 .9-.3 1.2-.6l2.8-2.7 5.8 4.3c1.1.6 1.8.3 2.1-1l3.5-16.5c.4-1.5-.5-2.2-1.9-1.6zM9.7 14.6l-.3 3.7-1.3-4.4L18.5 7.2 9.7 14.6z" />
+      </svg>
+    );
+  }
+  return null;
 }
 
 export function ProfileSocialLinksRow({
@@ -86,13 +97,14 @@ export function ProfileSocialLinksRow({
   links: CommunityProfileLinks;
 }) {
   const items: {
-    kind: "website" | "x" | "facebook" | "tiktok" | "whatsapp" | "telegram";
+    kind: "website" | "x" | "facebook" | "tiktok" | "youtube" | "whatsapp" | "telegram";
     value: string;
   }[] = [];
   if (links.website) items.push({ kind: "website", value: links.website });
   if (links.x) items.push({ kind: "x", value: links.x });
   if (links.facebook) items.push({ kind: "facebook", value: links.facebook });
   if (links.tiktok) items.push({ kind: "tiktok", value: links.tiktok });
+  if (links.youtube) items.push({ kind: "youtube", value: links.youtube });
   if (links.whatsapp) items.push({ kind: "whatsapp", value: links.whatsapp });
   if (links.telegram) items.push({ kind: "telegram", value: links.telegram });
 
@@ -133,6 +145,7 @@ type EditState = {
   x: string;
   facebook: string;
   tiktok: string;
+  youtube: string;
   whatsapp: string;
   telegram: string;
 };
@@ -156,11 +169,13 @@ export function CommunityProfileEditSheet({
     x: profile.links?.x ?? "",
     facebook: profile.links?.facebook ?? "",
     tiktok: profile.links?.tiktok ?? "",
+    youtube: profile.links?.youtube ?? "",
     whatsapp: profile.links?.whatsapp ?? "",
     telegram: profile.links?.telegram ?? "",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   async function uploadCover(file: File) {
     setBusy(true);
@@ -193,6 +208,7 @@ export function CommunityProfileEditSheet({
         return;
       }
       onSaved({ coverUrl: uj.url ?? null });
+      setCropFile(null);
     } finally {
       setBusy(false);
     }
@@ -212,6 +228,7 @@ export function CommunityProfileEditSheet({
           x: form.x,
           facebook: form.facebook,
           tiktok: form.tiktok,
+          youtube: form.youtube,
           whatsapp: form.whatsapp,
           telegram: form.telegram,
         }),
@@ -317,9 +334,19 @@ export function CommunityProfileEditSheet({
           onChange={(e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
-            if (f) void uploadCover(f);
+            if (f) setCropFile(f);
           }}
         />
+
+        {cropFile ? (
+          <CommunityCoverCropper
+            file={cropFile}
+            fr={fr}
+            busy={busy}
+            onCancel={() => setCropFile(null)}
+            onConfirm={(cropped) => void uploadCover(cropped)}
+          />
+        ) : null}
 
         <div className="space-y-3">
           {field("Bio", "bio", fr ? "Qui es-tu ?" : "Who are you?")}
@@ -332,7 +359,8 @@ export function CommunityProfileEditSheet({
           {field("X", "x", "@handle")}
           {field("Facebook", "facebook", "username")}
           {field("TikTok", "tiktok", "@handle")}
-          {field("WhatsApp", "whatsapp", "+243…")}
+          {field("YouTube", "youtube", "@channel")}
+          {field("WhatsApp", "whatsapp", "+indicatif…")}
           {field("Telegram", "telegram", "@handle")}
         </div>
 
