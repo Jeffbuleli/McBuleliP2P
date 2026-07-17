@@ -2,6 +2,8 @@ const STORAGE_UNTIL = "mb_pwa_install_dismiss_until";
 const SESSION_PROMPTED = "mb_pwa_prompted_session";
 /** Soft dismiss - user can see the banner again after this. */
 export const PWA_DISMISS_MS = 4 * 60 * 60 * 1000;
+/** iOS users often need a few tries (Share sheet) - re-prompt sooner. */
+export const PWA_IOS_DISMISS_MS = 45 * 60 * 1000;
 
 export function isStandaloneDisplay(): boolean {
   if (typeof window === "undefined") return false;
@@ -20,6 +22,31 @@ export function isIosDevice(): boolean {
     /iPad|iPhone|iPod/.test(ua) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
   );
+}
+
+/** WhatsApp / Instagram / Facebook / etc. - Add to Home Screen usually unavailable. */
+export function isIosInAppBrowser(): boolean {
+  if (!isIosDevice()) return false;
+  const ua = window.navigator.userAgent;
+  if (
+    /FBAN|FBAV|Instagram|Line\/|Twitter|WhatsApp|MicroMessenger|Snapchat|TikTok|Bytedance|musical_ly|Pinterest|LinkedInApp|Messenger|GSA\//i.test(
+      ua,
+    )
+  ) {
+    return true;
+  }
+  // WKWebView without Safari token
+  if (/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(ua)) return true;
+  return false;
+}
+
+/** True Safari on iOS (not Chrome/Firefox/Edge/in-app). Required for reliable A2HS. */
+export function isIosSafari(): boolean {
+  if (!isIosDevice()) return false;
+  if (isIosInAppBrowser()) return false;
+  const ua = window.navigator.userAgent;
+  if (/CriOS|FxiOS|EdgiOS|OPiOS|OPT\//i.test(ua)) return false;
+  return /Safari/i.test(ua);
 }
 
 export function isMobileUa(): boolean {
@@ -41,7 +68,8 @@ export function installDismissed(): boolean {
 
 export function dismissInstallPrompt(): void {
   try {
-    localStorage.setItem(STORAGE_UNTIL, String(Date.now() + PWA_DISMISS_MS));
+    const ms = isIosDevice() ? PWA_IOS_DISMISS_MS : PWA_DISMISS_MS;
+    localStorage.setItem(STORAGE_UNTIL, String(Date.now() + ms));
   } catch {
     // ignore
   }
@@ -66,6 +94,8 @@ export function wasPromptedThisSession(): boolean {
 /** Chromium: PWA from this origin already installed (browser tab may still be open). */
 export async function hasInstalledRelatedWebApp(): Promise<boolean> {
   if (typeof window === "undefined") return false;
+  // iOS has no getInstalledRelatedApps - never treat as "already installed"
+  if (isIosDevice()) return false;
   const fn = (
     navigator as Navigator & {
       getInstalledRelatedApps?: () => Promise<{ platform?: string; url?: string }[]>;

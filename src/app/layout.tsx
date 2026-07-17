@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "McBuleli - USDT Wallet, P2P & Mobile Money in Africa",
+    title: "McBuleli",
     statusBarStyle: "black-translucent",
   },
 };

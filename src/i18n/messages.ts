@@ -22,6 +22,17 @@ export const en = {
     "Install McBuleli from your browser for a dedicated window and quicker access - or open mcbuleli.org on your phone and tap Install.",
   pwa_install_cta: "Install",
   pwa_install_later: "Later",
+  pwa_install_got_it: "Got it",
+  pwa_install_copy_link: "Copy link",
+  pwa_install_link_copied: "Link copied",
+  pwa_install_open_safari_title: "Open in Safari to install",
+  pwa_install_open_safari_body:
+    "Installation does not work inside WhatsApp, Instagram or other in-app browsers. Copy the link, open Safari, paste it, then use Share - Add to Home Screen.",
+  pwa_install_ios_use_safari_body:
+    "On iPhone, install McBuleli from Safari (not Chrome). Copy this link, open Safari, paste it, then tap Share - Add to Home Screen.",
+  pwa_install_ios_step1: "Tap Share at the bottom of Safari",
+  pwa_install_ios_step2: 'Scroll and tap "Add to Home Screen"',
+  pwa_install_ios_step3: 'Tap "Add" - McBuleli appears on your home screen',
   pwa_open_in_app_title: "Open in McBuleli app",
   pwa_open_in_app_body:
     "You already installed McBuleli on this device. Open the app for the same session and faster access.",
@@ -4489,6 +4500,17 @@ export const fr: Messages = {
     "Installez McBuleli depuis le navigateur pour une fenêtre dédiée - ou ouvrez mcbuleli.org sur votre téléphone et touchez Installer.",
   pwa_install_cta: "Installer",
   pwa_install_later: "Plus tard",
+  pwa_install_got_it: "Compris",
+  pwa_install_copy_link: "Copier le lien",
+  pwa_install_link_copiéd: "Lien copié",
+  pwa_install_open_safari_title: "Ouvrir dans Safari pour installer",
+  pwa_install_open_safari_body:
+    "L'installation ne marche pas dans WhatsApp, Instagram ou les autres navigateurs intégrés. Copiez le lien, ouvrez Safari, collez-le, puis Partager - Sur l'écran d'accueil.",
+  pwa_install_ios_use_safari_body:
+    "Sur iPhone, installez McBuleli depuis Safari (pas Chrome). Copiez ce lien, ouvrez Safari, collez-le, puis touchez Partager - Sur l'écran d'accueil.",
+  pwa_install_ios_step1: "Touchez Partager en bas de Safari",
+  pwa_install_ios_step2: 'Faites défiler et touchez "Sur l\'écran d\'accueil"',
+  pwa_install_ios_step3: 'Touchez "Ajouter" - McBuleli apparaît sur l\'écran d\'accueil',
   pwa_open_in_app_title: "Ouvrir l'app McBuleli",
   pwa_open_in_app_body:
     "McBuleli est déjà installé sur cet appareil. Ouvrez l'application pour la même session et un accès plus rapide.",
