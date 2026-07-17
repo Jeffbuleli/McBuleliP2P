@@ -4502,7 +4502,7 @@ export const fr: Messages = {
   pwa_install_later: "Plus tard",
   pwa_install_got_it: "Compris",
   pwa_install_copy_link: "Copier le lien",
-  pwa_install_link_copiéd: "Lien copié",
+  pwa_install_link_copied: "Lien copié",
   pwa_install_open_safari_title: "Ouvrir dans Safari pour installer",
   pwa_install_open_safari_body:
     "L'installation ne marche pas dans WhatsApp, Instagram ou les autres navigateurs intégrés. Copiez le lien, ouvrez Safari, collez-le, puis Partager - Sur l'écran d'accueil.",
