@@ -6,7 +6,6 @@ import { getPublicProfileForShare } from "@/lib/community/profile-service";
 import {
   communityProfileAppPath,
   communityProfileCanonicalPath,
-  communityProfileSharePath,
 } from "@/lib/community/share-url";
 import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 import {
