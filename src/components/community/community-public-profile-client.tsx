@@ -29,6 +29,7 @@ import { REPUTATION_LEVELS, normalizeReputationLevelId } from "@/lib/community/r
 import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
+import { CommunityProfileShareButton } from "@/components/community/community-profile-share-button";
 import { IconBp, IconMcB } from "@/components/community/community-icons";
 import {
   CommunityProfileEditSheet,
@@ -251,14 +252,29 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
               <OnlineDot online={profile.online} />
             </div>
             {profile.isOwnProfile ? (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="mb-1 rounded-full border border-[#e8f3ee] bg-white px-4 py-2 text-xs font-bold text-[#0c0a09] active:scale-[0.98]"
-              >
-                {fr ? "Modifier" : "Edit"}
-              </button>
-            ) : null}
+              <div className="mb-1 flex flex-wrap items-center justify-end gap-2">
+                <CommunityProfileShareButton
+                  handle={profile.handle}
+                  displayName={profile.displayName}
+                  fr={fr}
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="rounded-full border border-[#e8f3ee] bg-white px-4 py-2 text-xs font-bold text-[#0c0a09] active:scale-[0.98]"
+                >
+                  {fr ? "Modifier" : "Edit"}
+                </button>
+              </div>
+            ) : (
+              <div className="mb-1">
+                <CommunityProfileShareButton
+                  handle={profile.handle}
+                  displayName={profile.displayName}
+                  fr={fr}
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-3">

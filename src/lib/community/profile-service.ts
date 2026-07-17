@@ -549,6 +549,35 @@ export async function getPublicProfileByHandle(
   };
 }
 
+/** Lightweight public card for OG / share landing (no viewer-specific fields). */
+export type PublicProfileShareView = {
+  handle: string;
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  postsCount: number;
+  followerCount: number;
+  appReturnPath: string;
+};
+
+export async function getPublicProfileForShare(
+  handle: string,
+): Promise<PublicProfileShareView | null> {
+  const profile = await getPublicProfileByHandle(handle, null);
+  if (!profile) return null;
+  return {
+    handle: profile.handle,
+    displayName: profile.displayName,
+    bio: profile.bio,
+    avatarUrl: profile.avatarUrl,
+    coverUrl: profile.coverUrl,
+    postsCount: profile.stats?.posts ?? profile.postsCount,
+    followerCount: profile.followerCount,
+    appReturnPath: `/app/community/u/${encodeURIComponent(profile.handle)}`,
+  };
+}
+
 export type OwnCommunityProfile = {
   handle: string;
   bio: string;
