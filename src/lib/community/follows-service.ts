@@ -26,9 +26,15 @@ export type FollowGraphPerson = {
   reason: FollowDiscoverReason | null;
 };
 
-function displayAvatarUrl(url: string | null | undefined): string | null {
+function listAvatarUrl(
+  userId: string,
+  url: string | null | undefined,
+): string | null {
   if (!url) return null;
-  // List payloads must stay small - many accounts store JPEG data URLs in users.avatar_url.
+  // Keep JSON small: proxy data URLs instead of embedding megabyte base64 blobs.
+  if (url.startsWith("data:image/")) {
+    return `/api/community/avatars/${userId}`;
+  }
   if (url.startsWith("data:") || url.startsWith("blob:")) return null;
   return normalizePublicMediaUrl(url) ?? url;
 }
@@ -100,7 +106,7 @@ async function enrichFollowGraphPeople(
       userId: r.userId,
       handle: r.handle,
       displayName: r.displayName,
-      avatarUrl: displayAvatarUrl(r.avatarUrl),
+      avatarUrl: listAvatarUrl(r.userId, r.avatarUrl),
       reputationScore: r.reputationScore,
       showKycBadge: r.showKycBadge && r.kycStatus === "approved",
       verifiedBlue: r.verifiedBlue,
