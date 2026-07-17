@@ -57,3 +57,9 @@ export function utilityTagLabel(tag: string, fr: boolean): string {
   if (!meta) return tag;
   return fr ? meta.labelFr : meta.labelEn;
 }
+
+/** Localized hashtag display, e.g. #Création / #Create — slug stays `create`. */
+export function utilityTagHashtag(tag: string, fr: boolean): string {
+  const label = utilityTagLabel(tag, fr).replace(/\s+/g, "");
+  return `#${label}`;
+}

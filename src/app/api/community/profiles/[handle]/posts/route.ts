@@ -23,6 +23,14 @@ export async function GET(
 
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? undefined;
+  const utilityTagRaw = url.searchParams.get("utilityTag");
+  const utilityTag =
+    utilityTagRaw &&
+    ["learn", "trade_edu", "avec", "p2p", "local", "create", "signal"].includes(
+      utilityTagRaw,
+    )
+      ? utilityTagRaw
+      : undefined;
   const cursor = url.searchParams.get("cursor");
   const limit = Number(url.searchParams.get("limit") ?? "15");
 
@@ -30,6 +38,7 @@ export async function GET(
     authorId: profile.userId,
     viewerId,
     q,
+    utilityTag,
     cursor,
     limit,
     includeHidden: profile.isOwnProfile,

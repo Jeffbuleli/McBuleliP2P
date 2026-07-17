@@ -24,6 +24,25 @@ function shareOrigin(): string {
   return getMetadataOrigin() || CANONICAL_PRODUCTION_ORIGIN;
 }
 
+/** Absolute https URL for OG crawlers (rejects data: and relative-without-origin). */
+function absoluteOgImage(
+  url: string | null | undefined,
+  origin: string,
+): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+    return null;
+  }
+  if (trimmed.startsWith("https://") || trimmed.startsWith("http://")) {
+    return normalizePublicMediaUrl(trimmed) ?? trimmed;
+  }
+  if (trimmed.startsWith("/")) {
+    return `${origin}${trimmed}`;
+  }
+  return null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle: raw } = await params;
   const handle = decodeURIComponent(raw);
@@ -44,11 +63,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `${profile.followerCount} abonnés · ${profile.postsCount} posts sur McBuleli Community`;
   const cover = normalizePublicMediaUrl(profile.coverUrl);
   const avatar = normalizePublicMediaUrl(profile.avatarUrl);
-  // RS preview: prefer avatar (identity), not cover banner.
-  const imageUrl = avatar || cover;
-  const images = imageUrl
-    ? [{ url: imageUrl, width: 1200, height: 630, alt: title }]
-    : [{ url: `${origin}/opengraph-image`, width: 1200, height: 630 }];
+  // RS preview: avatar from profile photo (users.avatar), never cover banner.
+  // Must be absolute https - crawlers ignore relative/data URLs and often keep cover cache.
+  const imageUrl =
+    absoluteOgImage(avatar, origin) ||
+    absoluteOgImage(cover, origin) ||
+    `${origin}/opengraph-image`;
+  const images = [{ url: imageUrl, width: 1200, height: 630, alt: title }];
 
   return {
     title,
@@ -65,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary",
       title,
       description,
-      images: images.map((img) => img.url),
+      images: [imageUrl],
     },
   };
 }

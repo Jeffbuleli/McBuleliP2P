@@ -907,6 +907,7 @@ export async function listAuthorFeedPosts(args: {
   authorId: string;
   viewerId: string | null;
   q?: string;
+  utilityTag?: string | null;
   cursor?: string | null;
   limit?: number;
   includeHidden?: boolean;
@@ -940,6 +941,10 @@ export async function listAuthorFeedPosts(args: {
     eq(communityPosts.authorId, args.authorId),
     inArray(communityPosts.status, [...statuses]),
   ];
+
+  if (args.utilityTag && isUtilityTag(args.utilityTag)) {
+    conditions.push(eq(communityPosts.utilityTag, args.utilityTag));
+  }
 
   if (args.q?.trim()) {
     conditions.push(ilike(communityPosts.body, `%${args.q.trim()}%`));

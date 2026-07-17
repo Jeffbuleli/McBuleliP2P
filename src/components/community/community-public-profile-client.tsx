@@ -26,7 +26,7 @@ import type { PublicProfileView } from "@/lib/community/profile-service";
 import type { BlogPostListItem } from "@/lib/community/blog-service";
 import type { TradingSignalView } from "@/lib/community/signals-service";
 import { REPUTATION_LEVELS, normalizeReputationLevelId } from "@/lib/community/reputation-levels";
-import { utilityTagLabel, isUtilityTag } from "@/lib/community/utility-tags";
+import { utilityTagHashtag, isUtilityTag } from "@/lib/community/utility-tags";
 import { UtilityTagIcon } from "@/components/community/utility-tag-icons";
 import { CommunityTipBpBar } from "@/components/community/community-tip-bp-bar";
 import { CommunityProfileShareButton } from "@/components/community/community-profile-share-button";
@@ -495,10 +495,10 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           <div className="flex flex-wrap gap-1.5">
             {profile.stats!.tags.map((t) => {
               const label = isUtilityTag(t.tag)
-                ? utilityTagLabel(t.tag, fr)
-                : t.tag;
+                ? utilityTagHashtag(t.tag, fr)
+                : `#${t.tag}`;
               const href = isUtilityTag(t.tag)
-                ? `/app/community/tag/${encodeURIComponent(t.tag)}`
+                ? `/app/community/tag/${encodeURIComponent(t.tag)}?author=${encodeURIComponent(profile.handle)}`
                 : null;
               const className =
                 "inline-flex items-center gap-1 rounded-full border border-[#e8f3ee] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#305f33] active:scale-[0.98]";
