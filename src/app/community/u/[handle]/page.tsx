@@ -87,8 +87,8 @@ export default async function CommunityProfileSharePage({ params }: Props) {
         <Link href="/" className="mt-4 text-sm font-semibold text-[#9dcc9f]">
           mcbuleli.org
         </Link>
-        <div className="mt-10 [&_a]:text-[#9dcc9f] [&_span]:text-white/50">
-          <CommunityPoweredByStrip />
+        <div className="mt-10">
+          <CommunityPoweredByStrip onDark />
         </div>
       </main>
     );
@@ -186,20 +186,20 @@ export default async function CommunityProfileSharePage({ params }: Props) {
                   </div>
                 )}
               </div>
-              <div className="mb-1 flex gap-3 pb-1 text-center">
-                <div>
-                  <p className="text-base font-extrabold tabular-nums text-[#0c0a09]">
+              <div className="mb-1 flex gap-2 pb-1">
+                <div className="min-w-[4.25rem] rounded-xl bg-[#f4f7f5] px-2.5 py-2 text-center ring-1 ring-[#e8f3ee]">
+                  <p className="text-lg font-extrabold tabular-nums leading-none text-[#0c0a09]">
                     {profile.followerCount}
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#57534e]">
                     Abonnés
                   </p>
                 </div>
-                <div>
-                  <p className="text-base font-extrabold tabular-nums text-[#0c0a09]">
+                <div className="min-w-[4.25rem] rounded-xl bg-[#f4f7f5] px-2.5 py-2 text-center ring-1 ring-[#e8f3ee]">
+                  <p className="text-lg font-extrabold tabular-nums leading-none text-[#0c0a09]">
                     {profile.postsCount}
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#78716c]">
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#57534e]">
                     Posts
                   </p>
                 </div>
@@ -212,7 +212,7 @@ export default async function CommunityProfileSharePage({ params }: Props) {
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0c0a09]">
               {profile.displayName}
             </h1>
-            <p className="text-sm font-semibold text-[#78716c]">
+            <p className="text-sm font-semibold text-[#57534e]">
               @{profile.handle}
             </p>
 
@@ -222,10 +222,11 @@ export default async function CommunityProfileSharePage({ params }: Props) {
               </p>
             ) : null}
 
-            <div className="mt-5 rounded-2xl bg-gradient-to-br from-[#f0faf4] to-[#e8f3ee] px-4 py-3">
-              <p className="text-[13px] font-semibold leading-snug text-[#244a27]">
-                Rejoins la communauté P2P, trading et builders — comme{" "}
-                <span className="font-extrabold">@{profile.handle}</span>.
+            <div className="mt-5 rounded-2xl bg-[#eaf5ee] px-4 py-3.5 ring-1 ring-[#305f33]/15">
+              <p className="text-[13px] font-semibold leading-snug text-[#1a3d1c]">
+                Rejoignez une communauté P2P, Trading Crypto et Builders
+                Innovants - comme{" "}
+                <span className="font-extrabold">@{profile.handle}</span>
               </p>
             </div>
 
@@ -246,8 +247,8 @@ export default async function CommunityProfileSharePage({ params }: Props) {
           </div>
         </article>
 
-        <div className="mt-auto pt-8 [&_span]:text-white/55 [&_a]:text-[#b7d9b9]">
-          <CommunityPoweredByStrip />
+        <div className="mt-auto pt-8">
+          <CommunityPoweredByStrip onDark />
         </div>
       </div>
     </main>
