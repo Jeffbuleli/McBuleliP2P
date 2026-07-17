@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: "Callback received successfully" });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "callback_error";
-    if (msg === "callback_ip_denied") {
+    if (msg === "callback_ip_denied" || msg === "callback_secret_denied") {
       return NextResponse.json({ error: msg }, { status: 401 });
     }
     if (msg === "missing_payment_id") {

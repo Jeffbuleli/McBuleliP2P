@@ -108,6 +108,19 @@ export function getPawapayCallbackIps(): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Optional shared secret for inbound callbacks (McBuleli defense-in-depth).
+ *
+ * Official PawaPay v2 auth for deposit/payout is `PAWAPAY_API_TOKEN` (Bearer).
+ * Official signed callbacks use RFC-9421 + PawaPay public keys — not this secret.
+ * If set, `/api/webhooks/pawapay` also requires a matching header
+ * (`Authorization: Bearer …` or `X-Callback-Secret` / `X-Pawapay-Callback-Secret`).
+ */
+export function getPawapayCallbackSecret(): string | null {
+  const s = process.env.PAWAPAY_CALLBACK_SECRET?.trim();
+  return s ? s : null;
+}
+
 /** @deprecated FreshPay MoMo — prefer hasPawapayKeys for wallet deposit/withdraw. */
 export function hasFreshpayMobileMoneyKeys(): boolean {
   return hasPawapayKeys();

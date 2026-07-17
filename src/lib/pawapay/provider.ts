@@ -10,7 +10,10 @@ import type {
   PawapayNormalizedCallback,
   PawapayStatusResponse,
 } from "@/lib/pawapay/types";
-import { assertPawapayCallbackIp } from "@/lib/pawapay/callback-security";
+import {
+  assertPawapayCallbackIp,
+  assertPawapayCallbackSecret,
+} from "@/lib/pawapay/callback-security";
 
 /**
  * PawaPay amount rules: no trailing zeros after decimal; leading zero only for < 1.
@@ -201,6 +204,7 @@ export function parsePawapayCallback(
   body: Record<string, unknown>,
 ): PawapayNormalizedCallback {
   assertPawapayCallbackIp(req);
+  assertPawapayCallbackSecret(req);
 
   const depositId = body.depositId != null ? String(body.depositId).trim() : "";
   const payoutId = body.payoutId != null ? String(body.payoutId).trim() : "";
