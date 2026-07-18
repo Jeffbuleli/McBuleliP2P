@@ -17,7 +17,15 @@ import {
   walletPrimaryBtnClass,
 } from "@/components/wallet/wallet-form";
 import { FiatProviderPicker } from "@/components/wallet/fiat-provider-picker";
-import { COD_MOBILE_FALLBACK, detectCodMobileMethodFromPhone, filterCodMobileProviders } from "@/lib/cod-mobile-providers";
+import {
+  COD_MOBILE_FALLBACK,
+  detectCodMobileMethodFromPhone,
+  filterCodMobileProviders,
+} from "@/lib/cod-mobile-providers";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 
 type ProviderOption = { provider: string; label: string };
 
@@ -95,6 +103,11 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
     }
   }, [phoneNumber, providers]);
 
+  function commitPhone() {
+    const next = normalizeCodPhoneNumber(phoneNumber);
+    if (next && next !== phoneNumber) setPhoneNumber(next);
+  }
+
   async function submit() {
     if (fiatPaused || !summary) return;
     setErr(null);
@@ -106,7 +119,7 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
         body: JSON.stringify({
           asset,
           grossAmount: gross,
-          phoneNumber,
+          phoneNumber: normalizeCodPhoneNumber(phoneNumber),
           provider,
           providerLabel: providers.find((p) => p.provider === provider)?.label ?? provider,
         }),
@@ -186,11 +199,15 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
             <input
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              onBlur={commitPhone}
               inputMode="tel"
-              placeholder="09xxxxxxxx"
+              placeholder="0812345678"
               disabled={locked}
               className={`${walletInputClass} disabled:opacity-60`}
             />
+            <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
+              {t("wallet_fiat_phone_hint_243")}
+            </p>
           </WalletFieldLabel>
           <WalletFieldLabel label={t("wallet_mobile_money_provider")}>
             <FiatProviderPicker
@@ -207,8 +224,11 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
             <button
               type="button"
               className={walletPrimaryBtnClass}
-              disabled={locked || !phoneNumber.trim() || !provider}
-              onClick={() => setStep(2)}
+              disabled={locked || !isValidCodMsisdn(phoneNumber) || !provider}
+              onClick={() => {
+                commitPhone();
+                setStep(2);
+              }}
             >
               →
             </button>
@@ -223,6 +243,7 @@ export default function WalletFiatDepositClient({ fiatPaused = false }: { fiatPa
               {summary.g.toLocaleString(loc)} {asset}
             </p>
             <p className="text-[11px] opacity-90">{providers.find((p) => p.provider === provider)?.label}</p>
+            <p className="text-[11px] opacity-90">{normalizeCodPhoneNumber(phoneNumber)}</p>
           </WalletStatusBanner>
           <p className="text-xs text-[color:var(--fd-muted)]">{t("wallet_fiat_status_pending_body")}</p>
           {err ? <WalletErrorBanner>{clientErrorText(t, err)}</WalletErrorBanner> : null}

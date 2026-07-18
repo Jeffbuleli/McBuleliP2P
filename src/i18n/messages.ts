@@ -1759,7 +1759,8 @@ export const en = {
   lp_pool_no_rewards: "✕ No rewards",
   lp_pool_withdraw_failed: "✕ Withdraw failed",
   wallet_fiat_invalid_amount: "Invalid amount.",
-  wallet_fiat_invalid_phone: "Enter a valid DRC mobile number (09… or +243…).",
+  wallet_fiat_invalid_phone: "Enter a valid DRC mobile number (081…, 099… or +243…). We convert it to 243… automatically.",
+  wallet_fiat_phone_hint_243: "Any format works (081…, +243…). We send 243… to Mobile Money.",
   wallet_fiat_withdraw_failed: "Withdrawal could not be completed.",
   wallet_fiat_unconfigured: "Mobile money is temporarily unavailable.",
   wallet_fiat_paused:
@@ -1775,6 +1776,8 @@ export const en = {
   wallet_fiat_deposit_rejected: "Deposit was rejected. Check details and try again.",
   wallet_fiat_payout_failed: "Withdrawal could not be sent. Try again later.",
   wallet_fiat_payout_rejected: "Withdrawal was rejected. Check details and try again.",
+  wallet_fiat_payouts_not_allowed:
+    "Payouts are not enabled yet on the Mobile Money account for this network. Contact support.",
   wallet_fiat_status_pending_title: "Pending confirmation",
   wallet_fiat_status_pending_body:
     "If you already confirmed on your phone, this page will update automatically.",
@@ -6260,7 +6263,9 @@ export const fr: Messages = {
   lp_pool_no_rewards: "✕ Aucun reward",
   lp_pool_withdraw_failed: "✕ Retrait échoué",
   wallet_fiat_invalid_amount: "Montant invalide.",
-  wallet_fiat_invalid_phone: "Saisissez un numéro mobile RDC valide (09… ou +243…).",
+  wallet_fiat_invalid_phone:
+    "Saisissez un numéro mobile RDC valide (081…, 099… ou +243…). Conversion auto en 243….",
+  wallet_fiat_phone_hint_243: "Tous formats acceptés (081…, +243…). Envoi en 243… vers Mobile Money.",
   wallet_fiat_withdraw_failed: "Retrait impossible.",
   wallet_fiat_unconfigured: "Le mobile money est temporairement indisponible.",
   wallet_fiat_paused:
@@ -6276,6 +6281,8 @@ export const fr: Messages = {
   wallet_fiat_deposit_rejected: "Le dépôt a été rejeté. Vérifiez et réessayez.",
   wallet_fiat_payout_failed: "Le retrait n’a pas pu être envoyé. Réessayez plus tard.",
   wallet_fiat_payout_rejected: "Le retrait a été rejeté. Vérifiez et réessayez.",
+  wallet_fiat_payouts_not_allowed:
+    "Les retraits Mobile Money ne sont pas encore activés pour ce réseau sur le compte marchand. Contactez le support.",
   wallet_fiat_status_pending_title: "En attente de confirmation",
   wallet_fiat_status_pending_body:
     "Si tu as déjà confirmé sur ton téléphone, cette page se mettra à jour automatiquement.",

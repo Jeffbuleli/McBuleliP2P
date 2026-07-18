@@ -7,7 +7,10 @@ import { getSessionUserId } from "@/lib/session";
 import { hasPawapayKeys } from "@/lib/env";
 import { pawapayPayIn } from "@/lib/pawapay/provider";
 import { resolvePawapayProvider, toPawapayProviderId } from "@/lib/cod-mobile-providers";
-import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 import {
   isPawapaySupportedCurrency,
   isPawapaySupportedForCountry,
@@ -73,6 +76,9 @@ export async function POST(req: Request) {
 
   try {
     const phone = normalizeCodPhoneNumber(phoneNumber);
+    if (!isValidCodMsisdn(phone)) {
+      return NextResponse.json({ error: "wallet_fiat_invalid_phone" }, { status: 400 });
+    }
     const network = resolvePawapayProvider(phone, provider);
     const providerId = toPawapayProviderId(network.method);
     const r = await pawapayPayIn({

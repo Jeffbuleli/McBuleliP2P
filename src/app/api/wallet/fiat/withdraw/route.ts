@@ -8,7 +8,10 @@ import { getSessionUserId } from "@/lib/session";
 import { executeFiatWithdraw } from "@/lib/wallet-fiat-withdraw";
 import { pawapayPayOut } from "@/lib/pawapay/provider";
 import { resolvePawapayProvider, toPawapayProviderId } from "@/lib/cod-mobile-providers";
-import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 import {
   isPawapaySupportedCurrency,
   isPawapaySupportedForCountry,
@@ -115,6 +118,11 @@ export async function POST(req: Request) {
   }
 
   const providerLabel = parsed.data.providerLabel?.trim() || null;
+  const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
+  if (!isValidCodMsisdn(phone)) {
+    return NextResponse.json({ error: "wallet_fiat_invalid_phone" }, { status: 400 });
+  }
+
   const r = await executeFiatWithdraw({
     userId,
     asset: parsed.data.asset,
@@ -127,7 +135,6 @@ export async function POST(req: Request) {
   const reference = randomUUID();
 
   try {
-    const phone = normalizeCodPhoneNumber(parsed.data.phoneNumber);
     const network = resolvePawapayProvider(phone, parsed.data.provider);
     const providerId = toPawapayProviderId(network.method);
 
@@ -193,7 +200,18 @@ export async function POST(req: Request) {
         // best-effort
       }
       logFiatApiError("momo.withdraw", msg);
-      return NextResponse.json({ ok: false, error: "wallet_fiat_payout_rejected" }, { status: 400 });
+      const code = pr.response.failureReason?.failureCode ?? null;
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            code === "PAYOUTS_NOT_ALLOWED"
+              ? "wallet_fiat_payouts_not_allowed"
+              : "wallet_fiat_payout_rejected",
+          failureCode: code,
+        },
+        { status: 400 },
+      );
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : null;
