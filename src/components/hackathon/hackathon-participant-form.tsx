@@ -218,9 +218,19 @@ export function HackathonParticipantForm({
           {isFr ? "Catégorie" : "Category"}
         </label>
         <select id="hk-cat" name="projectCategory" className={field} defaultValue="ai" disabled={!registrationOpen}>
-          {["ai", "fintech", "education", "health", "agriculture", "other"].map((c) => (
-            <option key={c} value={c}>
-              {c}
+          {[
+            ["ai", isFr ? "Intelligence artificielle" : "Artificial intelligence"],
+            ["fintech", "FinTech"],
+            ["govtech", "GovTech"],
+            ["health", isFr ? "Santé" : "Health"],
+            ["agriculture", isFr ? "Agriculture" : "Agriculture"],
+            ["education", isFr ? "Éducation" : "Education"],
+            ["media", isFr ? "Médias" : "Media"],
+            ["cyber", isFr ? "Cybersécurité" : "Cybersecurity"],
+            ["other", isFr ? "Autre" : "Other"],
+          ].map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
             </option>
           ))}
         </select>
