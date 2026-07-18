@@ -30,12 +30,14 @@ export const HACKATHON_PAYMENT_METHODS = [
   "orange",
   "mpesa",
   "airtel",
-  "card",
   "usdt",
 ] as const;
 
 export type HackathonPaymentMethod =
   (typeof HACKATHON_PAYMENT_METHODS)[number];
+
+/** Seat hold duration for free pré-inscription before payment */
+export const HACKATHON_HOLD_HOURS = 72;
 
 export function defaultProgram(): HackathonProgramDay[] {
   return [

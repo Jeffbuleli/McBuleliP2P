@@ -1,16 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { getDb, hackathonPayments, hackathonRegistrations } from "@/db";
-import { getAppAbsoluteUrl } from "@/lib/app-url";
 import {
   resolvePawapayProvider,
   toPawapayProviderId,
 } from "@/lib/cod-mobile-providers";
-import { hasFreshpayCardKeys, hasPawapayKeys } from "@/lib/env";
-import {
-  freshpayCreateCardOrder,
-  formatCardOrderAmount,
-} from "@/lib/freshpay/card-provider";
+import { hasPawapayKeys } from "@/lib/env";
 import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
@@ -105,78 +100,4 @@ export async function initiateHackathonMomoPayment(args: {
     .where(eq(hackathonPayments.reference, reference));
 
   return { ok: true, reference };
-}
-
-export async function initiateHackathonCardPayment(args: {
-  registrationId: string;
-  amountUsd: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-}): Promise<
-  | { ok: true; reference: string; checkoutUrl: string }
-  | { ok: false; error: string; message?: string }
-> {
-  if (!hasFreshpayCardKeys()) {
-    return { ok: false, error: "payment_unconfigured" };
-  }
-
-  const amountNum = formatCardOrderAmount(Number(args.amountUsd), "USD");
-  if (!Number.isFinite(amountNum) || amountNum <= 0) {
-    return { ok: false, error: "invalid_amount" };
-  }
-
-  const reference = randomUUID();
-  const db = getDb();
-
-  await db.insert(hackathonPayments).values({
-    registrationId: args.registrationId,
-    reference,
-    rail: "card",
-    provider: "freshpay_card",
-    phoneNumber: args.phone ?? null,
-    currency: "USD",
-    amount: String(amountNum),
-    status: "INITIATED",
-    meta: { paymentMethod: "card" },
-  });
-
-  const order = await freshpayCreateCardOrder({
-    reference,
-    amount: amountNum,
-    currency: "USD",
-    firstname: args.firstName,
-    lastname: args.lastName,
-    email: args.email,
-    phone: args.phone,
-    returnUrl: getAppAbsoluteUrl(
-      `/hackathon/payment/${encodeURIComponent(reference)}`,
-    ),
-  });
-
-  if (!order.ok) {
-    await db
-      .update(hackathonPayments)
-      .set({
-        status: "FAILED",
-        failureMessage: order.message,
-        updatedAt: new Date(),
-        completedAt: new Date(),
-      })
-      .where(eq(hackathonPayments.reference, reference));
-    return { ok: false, error: "payment_rejected", message: order.message };
-  }
-
-  await db
-    .update(hackathonPayments)
-    .set({
-      status: "PROCESSING",
-      checkoutUrl: order.checkoutUrl,
-      providerTxId: order.transactionUuid,
-      updatedAt: new Date(),
-    })
-    .where(eq(hackathonPayments.reference, reference));
-
-  return { ok: true, reference, checkoutUrl: order.checkoutUrl };
 }

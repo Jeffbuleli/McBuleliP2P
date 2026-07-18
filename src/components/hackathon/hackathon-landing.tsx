@@ -18,7 +18,6 @@ import {
 import { PORTRAIT_PATH } from "@/lib/launch-campaign";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import { BUILDERS_TIER_VISUAL } from "@/lib/builders/builders-visual";
-import { HackathonHeroIllustration } from "@/components/hackathon/hackathon-hero-illustration";
 import { HackathonParticipantForm } from "@/components/hackathon/hackathon-participant-form";
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
@@ -105,22 +104,46 @@ function Section({
   );
 }
 
-function CtaPrimary({ href, children }: { href: string; children: React.ReactNode }) {
+function CtaPrimary({
+  href,
+  children,
+  onDark,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onDark?: boolean;
+}) {
   return (
     <a
       href={href}
-      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+      className={
+        onDark
+          ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          : "inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+      }
     >
       {children}
     </a>
   );
 }
 
-function CtaSecondary({ href, children }: { href: string; children: React.ReactNode }) {
+function CtaSecondary({
+  href,
+  children,
+  onDark,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onDark?: boolean;
+}) {
   return (
     <a
       href={href}
-      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+      className={
+        onDark
+          ? "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+      }
     >
       {children}
     </a>
@@ -257,7 +280,7 @@ function MidCta({ isFr }: { isFr: boolean }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <CtaPrimary href="#register">{isFr ? "S'inscrire" : "Register"}</CtaPrimary>
+          <CtaPrimary href="#register">{isFr ? "Pré-inscrire" : "Pre-register"}</CtaPrimary>
           <CtaSecondary href="#partner">
             {isFr ? "Devenir partenaire" : "Become a partner"}
           </CtaSecondary>
@@ -289,57 +312,72 @@ export function HackathonLanding({
 
   return (
     <div className="bg-[color:var(--fd-bg)] pb-24 text-[color:var(--fd-text)] sm:pb-10">
-      {/* Hero */}
-      <header className="relative overflow-hidden border-b border-[color:var(--fd-border)] bg-white">
+      {/* Hero — Kinshasa skyline (Congo River / downtown aerial) */}
+      <header className="relative min-h-[min(92vh,780px)] overflow-hidden border-b border-[color:var(--fd-border)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hackathon/kinshasa-skyline.jpg"
+          alt={
+            isFr
+              ? "Vue aérienne de Kinshasa et du fleuve Congo"
+              : "Aerial view of Kinshasa and the Congo River"
+          }
+          className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
+        />
         <div
-          className="pointer-events-none absolute inset-0 opacity-70"
+          className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 60% at 10% -10%, #e8f3ee 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 20%, #f4f6f5 0%, transparent 50%)",
+              "linear-gradient(105deg, rgba(12, 28, 18, 0.88) 0%, rgba(18, 42, 28, 0.72) 42%, rgba(12, 28, 18, 0.45) 70%, rgba(8, 20, 14, 0.55) 100%)",
           }}
         />
-        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:pb-20 lg:pt-12">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-primary)]">
-              McBuleli · {isFr ? "Hackathon IA - RDC" : "AI Hackathon - DRC"}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
+          style={{
+            background: "linear-gradient(to top, var(--fd-bg), transparent)",
+          }}
+        />
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-24 lg:min-h-[min(92vh,780px)] lg:justify-center lg:pb-24 lg:pt-20">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-mint)]">
+              McBuleli · {isFr ? "Hackathon IA - Kinshasa" : "AI Hackathon - Kinshasa"}
             </p>
-            <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight text-[color:var(--fd-text)] sm:text-5xl lg:text-[3.25rem]">
+            <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.25rem]">
               Build the Future with AI
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-[color:var(--fd-muted)] sm:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
               {isFr
-                ? "Le hackathon IA de référence en République Démocratique du Congo - organisé par McBuleli. Apprenez le Vibe Coding, construisez un produit, pitchtez devant un jury, et rejoignez un écosystème qui relie builders, entreprises et investisseurs."
-                : "The AI hackathon of reference in the Democratic Republic of the Congo - organized by McBuleli. Learn Vibe Coding, ship a product, pitch before a jury, and join an ecosystem connecting builders, companies and investors."}
+                ? "Le hackathon IA de référence en République Démocratique du Congo - organisé par McBuleli depuis Kinshasa. Apprenez le Vibe Coding, construisez un produit, pitchtez devant un jury, et rejoignez un écosystème qui relie builders, entreprises et investisseurs."
+                : "The AI hackathon of reference in the Democratic Republic of the Congo - organized by McBuleli from Kinshasa. Learn Vibe Coding, ship a product, pitch before a jury, and join an ecosystem connecting builders, companies and investors."}
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-[color:var(--fd-muted)]">
+            <ul className="mt-5 space-y-2 text-sm text-white/75">
               <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
                 {isFr
                   ? "Organisé par McBuleli - plateforme fintech & communauté builders"
                   : "Organized by McBuleli - fintech platform & builders community"}
               </li>
               <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
                 {isFr
                   ? "Unique : bootcamp + hackathon + incubation sur une même plateforme"
                   : "Unique: bootcamp + hackathon + incubation on one platform"}
               </li>
               <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
                 {isFr
                   ? `${name} · ${statusLabel(e.status, isFr)} · ${seatsLeft} places restantes`
                   : `${name} · ${statusLabel(e.status, isFr)} · ${seatsLeft} seats left`}
               </li>
             </ul>
             <div className="mt-8 flex flex-wrap gap-3">
-              <CtaPrimary href="#register">{isFr ? "S'inscrire" : "Register"}</CtaPrimary>
-              <CtaSecondary href="#partner">
+              <CtaPrimary href="#register" onDark>
+                {isFr ? "Pré-inscrire" : "Pre-register"}
+              </CtaPrimary>
+              <CtaSecondary href="#partner" onDark>
                 {isFr ? "Devenir partenaire" : "Become a partner"}
               </CtaSecondary>
             </div>
-          </div>
-          <div className="justify-self-center lg:justify-self-end">
-            <HackathonHeroIllustration className="h-auto w-full max-w-md drop-shadow-sm" />
           </div>
         </div>
       </header>
@@ -612,8 +650,8 @@ export function HackathonLanding({
         title={isFr ? "Rejoindre l’édition" : "Join this edition"}
         subtitle={
           isFr
-            ? "Après paiement, vous recevez un ticket QR McBuleli par e-mail."
-            : "After payment you receive a McBuleli QR ticket by email."
+            ? "Pré-inscription gratuite (place retenue 72 h), puis paiement quand vous êtes prêt. Ticket QR après confirmation."
+            : "Free pre-registration (seat held 72 h), then pay when ready. QR ticket after confirmation."
         }
       >
         <div className="mx-auto max-w-2xl rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-sm sm:p-8">
@@ -861,7 +899,7 @@ export function HackathonLanding({
               href="#register"
               className="inline-flex min-h-11 items-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)]"
             >
-              {isFr ? "S'inscrire maintenant" : "Register now"}
+              {isFr ? "Pré-inscrire maintenant" : "Pre-register now"}
             </a>
             <a
               href="#sponsor"
@@ -961,7 +999,7 @@ export function HackathonLanding({
             href="#register"
             className="flex flex-1 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] py-3 text-sm font-semibold text-white"
           >
-            {isFr ? "S'inscrire" : "Register"}
+            {isFr ? "Pré-inscrire" : "Pre-register"}
           </a>
           <a
             href="#partner"

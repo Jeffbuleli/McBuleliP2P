@@ -4176,12 +4176,16 @@ export const hackathonRegistrations = pgTable(
     /** day1 | full */
     ticketPack: varchar("ticket_pack", { length: 16 }).notNull().default("full"),
     priceUsd: numeric("price_usd", { precision: 12, scale: 2 }).notNull(),
-    /** pending | paid | failed | refunded | free */
+    /** pending | reserved | paid | failed | refunded | expired */
     paymentStatus: varchar("payment_status", { length: 16 })
       .notNull()
       .default("pending"),
-    /** orange | mpesa | airtel | card | usdt */
+    /** orange | mpesa | airtel | usdt */
     paymentMethod: varchar("payment_method", { length: 24 }),
+    /** Magic link token for pay-later checkout */
+    paymentToken: varchar("payment_token", { length: 64 }).unique(),
+    /** Seat hold deadline for reserved (pre-inscription) */
+    holdExpiresAt: timestamp("hold_expires_at", { withTimezone: true }),
     ticketCode: varchar("ticket_code", { length: 32 }).unique(),
     locale: varchar("locale", { length: 8 }).notNull().default("fr"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
@@ -4199,6 +4203,7 @@ export const hackathonRegistrations = pgTable(
       t.editionId,
       t.paymentStatus,
     ),
+    index("hackathon_registrations_hold_idx").on(t.holdExpiresAt),
     uniqueIndex("hackathon_registrations_edition_email_uidx").on(
       t.editionId,
       t.email,

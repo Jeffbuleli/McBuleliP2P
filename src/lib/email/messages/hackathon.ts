@@ -2,7 +2,82 @@ import { eq } from "drizzle-orm";
 import { getDb, hackathonEditions, hackathonRegistrations } from "@/db";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
 import { sendEmail } from "@/lib/email/send";
-import { ticketPublicUrl } from "@/lib/hackathon/service";
+import { HACKATHON_HOLD_HOURS } from "@/lib/hackathon/constants";
+import { payLaterPublicUrl, ticketPublicUrl } from "@/lib/hackathon/service";
+
+export async function sendHackathonReserveEmail(args: {
+  registrationId: string;
+}): Promise<boolean> {
+  const db = getDb();
+  const [reg] = await db
+    .select()
+    .from(hackathonRegistrations)
+    .where(eq(hackathonRegistrations.id, args.registrationId))
+    .limit(1);
+  if (!reg?.paymentToken || reg.paymentStatus !== "reserved") return false;
+
+  const [edition] = await db
+    .select()
+    .from(hackathonEditions)
+    .where(eq(hackathonEditions.id, reg.editionId))
+    .limit(1);
+
+  const isFr = reg.locale !== "en";
+  const payUrl = payLaterPublicUrl(reg.paymentToken);
+  const editionName = isFr
+    ? (edition?.nameFr ?? "McBuleli Hackathon")
+    : (edition?.nameEn ?? "McBuleli Hackathon");
+  const holdHours = HACKATHON_HOLD_HOURS;
+  const expiresLabel = reg.holdExpiresAt
+    ? reg.holdExpiresAt.toLocaleString(isFr ? "fr-FR" : "en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : null;
+
+  const subject = isFr
+    ? `Place réservée — ${editionName}`
+    : `Seat reserved — ${editionName}`;
+
+  const { html, text } = renderMcBuleliEmail({
+    locale: isFr ? "fr" : "en",
+    illustration: "verify",
+    actionUrl: payUrl,
+    copy: {
+      subject,
+      preheader: isFr
+        ? `Votre place est pré-réservée ${holdHours} h. Payez quand vous êtes prêt.`
+        : `Your seat is held for ${holdHours} h. Pay when you are ready.`,
+      title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
+      body: isFr
+        ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée ${holdHours} heures${expiresLabel ? ` (jusqu'au ${expiresLabel})` : ""}. Cliquez pour payer et recevoir votre ticket QR.`
+        : `Your pre-registration for ${editionName} is saved. Your seat is held for ${holdHours} hours${expiresLabel ? ` (until ${expiresLabel})` : ""}. Tap below to pay and receive your QR ticket.`,
+      cta: isFr ? "Payer mon inscription" : "Pay my registration",
+      footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
+      footerContact: isFr ? "Contactez-nous" : "Contact us",
+    },
+    detailRows: [
+      { label: isFr ? "Édition" : "Edition", value: editionName },
+      {
+        label: isFr ? "Pack" : "Pack",
+        value:
+          reg.ticketPack === "day1"
+            ? isFr
+              ? "1 jour"
+              : "1 day"
+            : isFr
+              ? "2 jours + Hackathon"
+              : "2 days + Hackathon",
+      },
+      {
+        label: isFr ? "Montant" : "Amount",
+        value: `${reg.priceUsd} USD`,
+      },
+    ],
+  });
+
+  return sendEmail({ to: reg.email, subject, html, text });
+}
 
 export async function sendHackathonTicketEmail(args: {
   registrationId: string;

@@ -197,7 +197,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Comment se passe le paiement ?",
-        a: "Orange Money, M-Pesa, Airtel Money ou carte bancaire. Après validation, vous recevez un ticket QR par e-mail.",
+        a: "Pré-inscription gratuite (place retenue 72 h), puis paiement par Orange Money, M-Pesa ou Airtel Money via le lien reçu par e-mail. Vous pouvez aussi payer immédiatement. Après validation, ticket QR par e-mail.",
       },
       {
         q: "Où et quand a lieu l’événement ?",
@@ -232,7 +232,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "How does payment work?",
-      a: "Orange Money, M-Pesa, Airtel Money or card. After confirmation you receive a QR ticket by email.",
+      a: "Free pre-registration (seat held 72 h), then pay via Orange Money, M-Pesa or Airtel Money using the email link. You can also pay immediately. After confirmation you receive a QR ticket by email.",
     },
     {
       q: "Where and when is it?",

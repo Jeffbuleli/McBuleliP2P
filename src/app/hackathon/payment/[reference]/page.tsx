@@ -77,14 +77,6 @@ export default function HackathonPaymentStatusPage() {
               Validez le prompt sur votre téléphone (Orange / M-Pesa / Airtel). Cette page se
               met à jour automatiquement.
             </p>
-            {data?.checkoutUrl ? (
-              <a
-                href={data.checkoutUrl}
-                className="mt-4 inline-flex text-sm font-bold text-[color:var(--fd-primary)] underline"
-              >
-                Rouvrir le paiement carte
-              </a>
-            ) : null}
             <p className="mt-4 font-mono text-xs text-[color:var(--fd-muted)]">
               {data?.status ?? "…"}
             </p>

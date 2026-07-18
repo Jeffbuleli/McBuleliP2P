@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   hkCheckChip,
   hkField,
@@ -27,15 +27,19 @@ export function HackathonParticipantForm({
 }: Props) {
   const isFr = locale === "fr";
   const [busy, setBusy] = useState(false);
+  const intentRef = useRef<"reserve" | "pay_now">("reserve");
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [payUrl, setPayUrl] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!registrationOpen) return;
+    const intent = intentRef.current;
     setBusy(true);
     setMsg(null);
     setErr(null);
+    setPayUrl(null);
     const fd = new FormData(e.currentTarget);
     const body = {
       editionId,
@@ -53,7 +57,11 @@ export function HackathonParticipantForm({
       projectCategory: String(fd.get("projectCategory") ?? "") || undefined,
       workMode: String(fd.get("workMode") ?? "solo"),
       ticketPack: String(fd.get("ticketPack") ?? "full"),
-      paymentMethod: String(fd.get("paymentMethod") ?? "orange"),
+      intent,
+      paymentMethod:
+        intent === "pay_now"
+          ? String(fd.get("paymentMethod") ?? "orange")
+          : undefined,
       locale,
     };
 
@@ -69,6 +77,9 @@ export function HackathonParticipantForm({
         checkoutUrl?: string;
         reference?: string;
         ticketCode?: string;
+        mode?: string;
+        payUrl?: string;
+        holdHours?: number;
       };
       if (!res.ok) {
         if (json.error === "already_registered") {
@@ -80,8 +91,14 @@ export function HackathonParticipantForm({
         } else if (json.error === "usdt_coming_soon") {
           setErr(
             isFr
-              ? "Paiement USDT bientôt disponible - choisissez MoMo ou carte."
-              : "USDT payment coming soon - choose MoMo or card.",
+              ? "Paiement USDT bientôt disponible - choisissez Orange, M-Pesa ou Airtel."
+              : "USDT payment coming soon - choose Orange, M-Pesa or Airtel.",
+          );
+        } else if (json.error === "sold_out") {
+          setErr(
+            isFr
+              ? "Plus de places disponibles pour cette édition."
+              : "No seats left for this edition.",
           );
         } else {
           setErr(
@@ -91,6 +108,15 @@ export function HackathonParticipantForm({
                 : "Registration failed. Check your details and try again."),
           );
         }
+        return;
+      }
+      if (json.mode === "reserved" && json.payUrl) {
+        setPayUrl(json.payUrl);
+        setMsg(
+          isFr
+            ? `Place pré-réservée ${json.holdHours ?? 72} h. Un e-mail avec le lien de paiement vous a été envoyé.`
+            : `Seat held for ${json.holdHours ?? 72} h. We emailed you a payment link.`,
+        );
         return;
       }
       if (json.checkoutUrl) {
@@ -147,7 +173,7 @@ export function HackathonParticipantForm({
         </div>
         <div>
           <label className={hkLabel} htmlFor="hk-phone">
-            {isFr ? "Téléphone (paiement MoMo)" : "Phone (MoMo payment)"}
+            {isFr ? "Téléphone" : "Phone"}
           </label>
           <input id="hk-phone" name="phone" required className={hkField} placeholder="243…" disabled={!registrationOpen} />
         </div>
@@ -282,9 +308,15 @@ export function HackathonParticipantForm({
         </label>
       </fieldset>
 
+      <p className="rounded-xl bg-[color:var(--fd-mint)]/50 px-4 py-3 text-sm text-[color:var(--fd-muted)]">
+        {isFr
+          ? "Pré-inscription gratuite : place retenue 72 h, paiement plus tard par e-mail. Ou payez tout de suite ci-dessous."
+          : "Free pre-registration: seat held 72 h, pay later by email. Or pay now below."}
+      </p>
+
       <div>
         <label className={hkLabel} htmlFor="hk-pay">
-          {isFr ? "Paiement" : "Payment"}
+          {isFr ? "Moyen de paiement (si vous payez maintenant)" : "Payment method (if paying now)"}
         </label>
         <select
           id="hk-pay"
@@ -294,30 +326,52 @@ export function HackathonParticipantForm({
           defaultValue="orange"
           disabled={!registrationOpen}
         >
-          <option value="orange">Orange Money</option>
-          <option value="mpesa">M-Pesa</option>
-          <option value="airtel">Airtel Money</option>
-          <option value="card">{isFr ? "Carte bancaire" : "Bank card"}</option>
-          <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
+            <option value="orange">Orange Money</option>
+            <option value="mpesa">M-Pesa</option>
+            <option value="airtel">Airtel Money</option>
+            <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
         </select>
       </div>
 
       {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
       {msg ? <p className="text-sm font-semibold text-[color:var(--fd-primary)]">{msg}</p> : null}
+      {payUrl ? (
+        <a
+          href={payUrl}
+          className="inline-flex text-sm font-bold text-[color:var(--fd-primary)] underline"
+        >
+          {isFr ? "Payer maintenant" : "Pay now"}
+        </a>
+      ) : null}
 
-      <button
-        type="submit"
-        disabled={busy || !registrationOpen}
-        className="w-full rounded-2xl bg-[color:var(--fd-primary)] px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60"
-      >
-        {busy
-          ? isFr
-            ? "Envoi…"
-            : "Sending…"
-          : isFr
-            ? "S'inscrire et payer"
-            : "Register & pay"}
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="submit"
+          disabled={busy || !registrationOpen}
+          onClick={() => {
+            intentRef.current = "reserve";
+          }}
+          className="w-full rounded-2xl bg-[color:var(--fd-primary)] px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60"
+        >
+          {busy
+            ? isFr
+              ? "Envoi…"
+              : "Sending…"
+            : isFr
+              ? "Pré-inscrire (gratuit)"
+              : "Pre-register (free)"}
+        </button>
+        <button
+          type="submit"
+          disabled={busy || !registrationOpen}
+          onClick={() => {
+            intentRef.current = "pay_now";
+          }}
+          className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-sm font-extrabold text-[color:var(--fd-text)] disabled:opacity-60"
+        >
+          {isFr ? "S'inscrire et payer" : "Register & pay"}
+        </button>
+      </div>
     </form>
   );
 }

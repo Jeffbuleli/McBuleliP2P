@@ -25,8 +25,16 @@ export function generateTicketCode(): string {
   return `MBH-${randomBytes(5).toString("hex").toUpperCase()}`;
 }
 
+export function generatePaymentToken(): string {
+  return randomBytes(24).toString("base64url");
+}
+
 export function ticketPublicUrl(code: string): string {
   return getAppAbsoluteUrl(`/hackathon/ticket/${encodeURIComponent(code)}`);
+}
+
+export function payLaterPublicUrl(token: string): string {
+  return getAppAbsoluteUrl(`/hackathon/pay/${encodeURIComponent(token)}`);
 }
 
 export type FeaturedHackathonPayload = {
@@ -105,7 +113,16 @@ export async function getFeaturedHackathon(): Promise<FeaturedHackathonPayload |
     .where(
       and(
         eq(hackathonRegistrations.editionId, row.id),
-        eq(hackathonRegistrations.paymentStatus, "paid"),
+        sql`(
+          ${hackathonRegistrations.paymentStatus} = 'paid'
+          OR (
+            ${hackathonRegistrations.paymentStatus} = 'reserved'
+            AND (
+              ${hackathonRegistrations.holdExpiresAt} IS NULL
+              OR ${hackathonRegistrations.holdExpiresAt} > now()
+            )
+          )
+        )`,
       ),
     );
 
@@ -294,9 +311,32 @@ export async function completeHackathonPaymentByReference(args: {
     .set({
       paymentStatus: "paid",
       ticketCode,
+      paymentToken: null,
+      holdExpiresAt: null,
       updatedAt: new Date(),
     })
     .where(eq(hackathonRegistrations.id, reg.id));
 
   return { handled: true, ticketCode, registrationId: reg.id };
+}
+
+export async function getRegistrationByPaymentToken(token: string) {
+  const db = getDb();
+  const normalized = token.trim();
+  if (!normalized) return null;
+
+  const [reg] = await db
+    .select()
+    .from(hackathonRegistrations)
+    .where(eq(hackathonRegistrations.paymentToken, normalized))
+    .limit(1);
+  if (!reg) return null;
+
+  const [edition] = await db
+    .select()
+    .from(hackathonEditions)
+    .where(eq(hackathonEditions.id, reg.editionId))
+    .limit(1);
+
+  return { registration: reg, edition: edition ?? null };
 }
