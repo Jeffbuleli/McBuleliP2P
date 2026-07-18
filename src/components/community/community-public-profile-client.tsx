@@ -40,6 +40,8 @@ import {
 import type { CommunityProfileLinks } from "@/lib/community/profile-meta";
 import { formatBp, formatCompactCount, formatMcB } from "@/lib/community/format-count";
 import { CommunityFollowListSheet } from "@/components/community/community-follow-list-sheet";
+import { CommunityProfileMediaLightbox } from "@/components/community/community-profile-media-lightbox";
+import { resolveAvatarSrc } from "@/lib/avatar-url";
 
 const EMPTY_LINKS: CommunityProfileLinks = {
   location: null,
@@ -98,6 +100,9 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
   const [followListMode, setFollowListMode] = useState<
     "followers" | "following" | null
   >(null);
+  const [mediaLightbox, setMediaLightbox] = useState<"avatar" | "cover" | null>(
+    null,
+  );
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -238,36 +243,46 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
       </div>
 
       <header className="relative mt-3 rounded-3xl border border-[#f0f4f2] bg-white shadow-[0_8px_30px_rgba(12,10,9,0.06)]">
-        <div
-          className="relative h-36 w-full overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20]"
+        <button
+          type="button"
+          disabled={!profile.coverUrl}
+          onClick={() => profile.coverUrl && setMediaLightbox("cover")}
+          className="relative h-40 w-full overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#305f33] via-[#3d7340] to-[#1e3d20] disabled:cursor-default"
           style={
             profile.coverUrl
               ? {
-                  backgroundImage: `linear-gradient(rgba(0,0,0,.2), rgba(0,0,0,.4)), url(${resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl})`,
+                  backgroundImage: `linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.35)), url(${resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }
               : undefined
           }
+          aria-label={fr ? "Voir la couverture" : "View cover"}
         />
-        <div className="-mt-12 px-4 pb-5">
+        <div className="-mt-14 px-4 pb-5">
           <div className="flex items-end justify-between gap-3">
             <div className="relative z-10 shrink-0">
-              <div
-                className={`rounded-full bg-white p-[3px] ${
+              <button
+                type="button"
+                disabled={!profile.avatarUrl}
+                onClick={() => {
+                  if (profile.avatarUrl) setMediaLightbox("avatar");
+                }}
+                className={`rounded-full bg-white p-[3px] transition active:scale-[0.98] disabled:cursor-default ${
                   profile.builderTier
                     ? buildersAvatarRingClass(profile.builderTier)
                     : "shadow-md"
                 }`}
+                aria-label={fr ? "Voir la photo" : "View photo"}
               >
                 <CommunityAvatar
                   label={profile.displayName}
                   avatarUrl={profile.avatarUrl}
-                  sizeClass="h-24 w-24"
-                  textClass="text-3xl"
+                  sizeClass="h-28 w-28"
+                  textClass="text-4xl"
                   className="rounded-full"
                 />
-              </div>
+              </button>
               <OnlineDot online={profile.online} />
             </div>
             {profile.isOwnProfile ? (
@@ -518,6 +533,32 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
           }}
         />
       ) : null}
+
+      <CommunityProfileMediaLightbox
+        open={mediaLightbox === "cover"}
+        src={
+          profile.coverUrl
+            ? resolveMediaSrc(profile.coverUrl) ?? profile.coverUrl
+            : null
+        }
+        label={fr ? "Couverture" : "Cover"}
+        fr={fr}
+        onClose={() => setMediaLightbox(null)}
+      />
+      <CommunityProfileMediaLightbox
+        open={mediaLightbox === "avatar"}
+        src={
+          profile.avatarUrl?.startsWith("data:")
+            ? `/api/community/avatars/${profile.userId}`
+            : resolveAvatarSrc(profile.avatarUrl) ??
+              (profile.avatarUrl
+                ? resolveMediaSrc(profile.avatarUrl) ?? profile.avatarUrl
+                : null)
+        }
+        label={profile.displayName}
+        fr={fr}
+        onClose={() => setMediaLightbox(null)}
+      />
 
       {publishOpen ? (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 sm:items-center sm:p-4">

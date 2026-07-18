@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   communityReputationEvents,
   communityUserProfiles,
@@ -43,4 +43,44 @@ export async function addCommunityReputation(args: {
   const score = row?.score ?? 0;
   await maybeAwardBadges(args.userId);
   return score;
+}
+
+/**
+ * Once-only reputation for a (reason, ref) pair - blocks follow/unfollow farming.
+ * Returns whether a new event was written.
+ */
+export async function addCommunityReputationOnce(args: {
+  userId: string;
+  delta: number;
+  reason: ReputationReason;
+  refType: string;
+  refId: string;
+}): Promise<{ applied: boolean; score: number }> {
+  if (!args.delta) return { applied: false, score: 0 };
+
+  const db = getDb();
+  const [existing] = await db
+    .select({ id: communityReputationEvents.id })
+    .from(communityReputationEvents)
+    .where(
+      and(
+        eq(communityReputationEvents.userId, args.userId),
+        eq(communityReputationEvents.reason, args.reason),
+        eq(communityReputationEvents.refType, args.refType),
+        eq(communityReputationEvents.refId, args.refId),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    const [prof] = await db
+      .select({ score: communityUserProfiles.reputationScore })
+      .from(communityUserProfiles)
+      .where(eq(communityUserProfiles.userId, args.userId))
+      .limit(1);
+    return { applied: false, score: prof?.score ?? 0 };
+  }
+
+  const score = await addCommunityReputation(args);
+  return { applied: true, score };
 }

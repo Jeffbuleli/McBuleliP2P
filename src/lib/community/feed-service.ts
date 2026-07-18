@@ -106,6 +106,7 @@ import {
   grantCommunityComment,
   grantCommunityLike,
   grantCommunityPostPublished,
+  grantCommunityRepost,
   grantCommunityShare,
 } from "@/lib/community/rewards-service";
 
@@ -149,6 +150,12 @@ export type FeedPostView = {
   status?: string;
   likedByMe: boolean;
   bpEarned?: number;
+  /** Original post id when this card is an internal repost. */
+  repostOfId?: string | null;
+  /** Embedded original (X-style repost / LinkedIn reshare). */
+  repostOf?: FeedPostView | null;
+  /** Viewer already republished this post. */
+  repostedByMe?: boolean;
 };
 
 function resolveBotTemplateMeta(row: {
@@ -170,6 +177,16 @@ function resolveFormationMeta(row: {
     return parseFormationPostMeta(row.meta, row.body);
   }
   return null;
+}
+
+export function parseRepostOfId(meta: unknown): string | null {
+  if (!meta || typeof meta !== "object") return null;
+  const v = (meta as Record<string, unknown>).repostOf;
+  if (typeof v !== "string") return null;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)) {
+    return null;
+  }
+  return v;
 }
 
 function rowToFeedPost(
@@ -219,7 +236,75 @@ function rowToFeedPost(
     author,
     media,
     likedByMe,
+    repostOfId: parseRepostOfId(r.meta),
+    repostOf: null,
+    repostedByMe: false,
   };
+}
+
+async function hydrateReposts(
+  posts: FeedPostView[],
+  viewerId: string | null,
+): Promise<FeedPostView[]> {
+  if (posts.length === 0) return posts;
+  const db = getDb();
+  const originalIds = [
+    ...new Set(
+      posts
+        .map((p) => p.repostOfId)
+        .filter((id): id is string => typeof id === "string"),
+    ),
+  ];
+
+  const originals = new Map<string, FeedPostView>();
+  if (originalIds.length > 0) {
+    const rows = await db
+      .select()
+      .from(communityPosts)
+      .where(
+        and(
+          inArray(communityPosts.id, originalIds),
+          eq(communityPosts.status, "published"),
+        ),
+      );
+    const authors = await getAuthorsMap(rows.map((r) => r.authorId));
+    for (const r of rows) {
+      const author = authors.get(r.authorId);
+      if (!author) continue;
+      const media = await getPostMediaViews(r.id, r.mediaIds, viewerId);
+      // Nested reposts resolve one level only.
+      const view = rowToFeedPost(r, author, media, false);
+      view.repostOfId = null;
+      originals.set(r.id, view);
+    }
+  }
+
+  let myRepostTargets = new Set<string>();
+  if (viewerId) {
+    const targetIds = posts.map((p) => p.repostOfId ?? p.id);
+    const mine = await db
+      .select({ meta: communityPosts.meta })
+      .from(communityPosts)
+      .where(
+        and(
+          eq(communityPosts.authorId, viewerId),
+          eq(communityPosts.status, "published"),
+          sql`${communityPosts.meta}->>'repostOf' is not null`,
+        ),
+      )
+      .limit(200);
+    myRepostTargets = new Set(
+      mine
+        .map((r) => parseRepostOfId(r.meta))
+        .filter((id): id is string => !!id),
+    );
+  }
+
+  return posts.map((p) => ({
+    ...p,
+    repostOf: p.repostOfId ? originals.get(p.repostOfId) ?? null : null,
+    repostedByMe: myRepostTargets.has(p.repostOfId ?? p.id),
+  }));
 }
 
 async function blockedUserIds(viewerId: string): Promise<Set<string>> {
@@ -356,6 +441,8 @@ async function listForYouFeedPosts(args: {
     posts.push(rowToFeedPost(row, author, media, likedSet.has(row.id)));
   }
 
+  const hydrated = await hydrateReposts(posts, viewerId);
+
   let nextCursor: string | null = null;
   if (filtered.length > limit) {
     const last = page[page.length - 1];
@@ -367,7 +454,7 @@ async function listForYouFeedPosts(args: {
     }
   }
 
-  return { posts, nextCursor };
+  return { posts: hydrated, nextCursor };
 }
 
 export async function listFeedPosts(args: {
@@ -554,7 +641,10 @@ export async function listFeedPosts(args: {
     }
   }
 
-  return { posts, nextCursor };
+  return {
+    posts: await hydrateReposts(posts, args.viewerId),
+    nextCursor,
+  };
 }
 
 /** Formation / Academy announcements only. */
@@ -1557,6 +1647,195 @@ export async function recordPostShare(args: {
     bpGranted: bp.points,
     shareCount: u?.shareCount ?? post.shareCount + 1,
   };
+}
+
+/**
+ * Internal reshare (X repost / LinkedIn share to feed).
+ * BP once per user×original forever - unrepost does not refund; re-repost does not re-grant.
+ */
+export async function createPostRepost(args: {
+  userId: string;
+  postId: string;
+  quote?: string | null;
+}): Promise<
+  | {
+      ok: true;
+      post: FeedPostView;
+      bpGranted: number;
+      shareCount: number;
+      already: boolean;
+    }
+  | { ok: false; error: string }
+> {
+  if (!communityEnabled()) return { ok: false, error: "community_disabled" };
+  await ensureFeedReady();
+  const db = getDb();
+
+  const [source] = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.id, args.postId),
+        eq(communityPosts.status, "published"),
+      ),
+    )
+    .limit(1);
+  if (!source) return { ok: false, error: "not_found" };
+
+  const rootId = parseRepostOfId(source.meta) ?? source.id;
+  const [root] =
+    rootId === source.id
+      ? [source]
+      : await db
+          .select()
+          .from(communityPosts)
+          .where(
+            and(
+              eq(communityPosts.id, rootId),
+              eq(communityPosts.status, "published"),
+            ),
+          )
+          .limit(1);
+  if (!root) return { ok: false, error: "not_found" };
+
+  const [existing] = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, args.userId),
+        eq(communityPosts.status, "published"),
+        sql`${communityPosts.meta}->>'repostOf' = ${root.id}`,
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    const authors = await getAuthorsMap([existing.authorId]);
+    const author = authors.get(existing.authorId);
+    if (!author) return { ok: false, error: "not_found" };
+    const media = await getPostMediaViews(
+      existing.id,
+      existing.mediaIds,
+      args.userId,
+    );
+    const [hydrated] = await hydrateReposts(
+      [rowToFeedPost(existing, author, media, false)],
+      args.userId,
+    );
+    return {
+      ok: true,
+      post: hydrated!,
+      bpGranted: 0,
+      shareCount: root.shareCount,
+      already: true,
+    };
+  }
+
+  const quote = (args.quote ?? "").trim().slice(0, 280);
+  if (quote.length > 0) {
+    const moderation = await moderateCommunityText(quote);
+    if (!moderation.allowed) {
+      return { ok: false, error: "community_content_blocked" };
+    }
+  }
+
+  await ensureCommunityProfile(args.userId);
+  const now = new Date();
+  const [row] = await db
+    .insert(communityPosts)
+    .values({
+      authorId: args.userId,
+      body: quote.length > 0 ? quote : " ",
+      postType: "text",
+      contentKind: "news",
+      utilityTag: root.utilityTag ?? "create",
+      status: "published",
+      mediaIds: null,
+      meta: { repostOf: root.id, isRepost: true },
+      publishedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  if (!row) return { ok: false, error: "create_failed" };
+
+  await db
+    .update(communityPosts)
+    .set({ shareCount: sql`${communityPosts.shareCount} + 1` })
+    .where(eq(communityPosts.id, root.id));
+
+  const bp = await grantCommunityRepost({
+    userId: args.userId,
+    postId: root.id,
+  });
+
+  const [shareRow] = await db
+    .select({ shareCount: communityPosts.shareCount })
+    .from(communityPosts)
+    .where(eq(communityPosts.id, root.id))
+    .limit(1);
+
+  const authors = await getAuthorsMap([row.authorId]);
+  const author = authors.get(row.authorId);
+  if (!author) return { ok: false, error: "create_failed" };
+  const [hydrated] = await hydrateReposts(
+    [rowToFeedPost(row, author, [], false)],
+    args.userId,
+  );
+
+  return {
+    ok: true,
+    post: hydrated!,
+    bpGranted: bp.points,
+    shareCount: shareRow?.shareCount ?? root.shareCount + 1,
+    already: false,
+  };
+}
+
+export async function removePostRepost(args: {
+  userId: string;
+  postId: string;
+}): Promise<{ ok: true; shareCount: number } | { ok: false; error: string }> {
+  await ensureFeedReady();
+  const db = getDb();
+  const rootId = args.postId;
+
+  const [existing] = await db
+    .select()
+    .from(communityPosts)
+    .where(
+      and(
+        eq(communityPosts.authorId, args.userId),
+        eq(communityPosts.status, "published"),
+        sql`${communityPosts.meta}->>'repostOf' = ${rootId}`,
+      ),
+    )
+    .limit(1);
+
+  if (!existing) return { ok: false, error: "not_found" };
+
+  await db
+    .update(communityPosts)
+    .set({ status: "deleted", updatedAt: new Date() })
+    .where(eq(communityPosts.id, existing.id));
+
+  await db
+    .update(communityPosts)
+    .set({
+      shareCount: sql`GREATEST(${communityPosts.shareCount} - 1, 0)`,
+    })
+    .where(eq(communityPosts.id, rootId));
+
+  const [u] = await db
+    .select({ shareCount: communityPosts.shareCount })
+    .from(communityPosts)
+    .where(eq(communityPosts.id, rootId))
+    .limit(1);
+
+  return { ok: true, shareCount: u?.shareCount ?? 0 };
 }
 
 export async function reportCommunityContent(args: {

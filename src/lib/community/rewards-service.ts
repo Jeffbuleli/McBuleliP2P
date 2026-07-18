@@ -241,7 +241,7 @@ export async function grantCommunityLike(args: {
   return liker;
 }
 
-/** Partage d'un post (1× par post et par jour). */
+/** Partage externe / native (1× par post et par jour). */
 export async function grantCommunityShare(args: {
   userId: string;
   postId: string;
@@ -251,7 +251,22 @@ export async function grantCommunityShare(args: {
     userId: args.userId,
     grantType: REWARD_GRANT.COMMUNITY_SHARE,
     idempotencyKey: `community_share:${args.postId}:${day}`,
-    meta: { postId: args.postId },
+    meta: { postId: args.postId, channel: "external" },
+  });
+}
+
+/**
+ * Internal repost (once per user×post forever) - unfollow-style farming impossible.
+ */
+export async function grantCommunityRepost(args: {
+  userId: string;
+  postId: string;
+}) {
+  return grantWithDailyCap({
+    userId: args.userId,
+    grantType: REWARD_GRANT.COMMUNITY_SHARE,
+    idempotencyKey: `community_repost:${args.userId}:${args.postId}`,
+    meta: { postId: args.postId, channel: "repost" },
   });
 }
 

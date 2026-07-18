@@ -6,7 +6,9 @@ import {
   users,
 } from "@/db";
 import { notifyCommunityTraderFollow } from "@/lib/community/community-notifications";
-import { addCommunityReputation } from "@/lib/community/reputation-service";
+import {
+  addCommunityReputationOnce,
+} from "@/lib/community/reputation-service";
 import { grantCommunityTraderFollow } from "@/lib/community/rewards-service";
 import { normalizePublicMediaUrl } from "@/lib/media-url";
 
@@ -146,24 +148,29 @@ export async function followTrader(args: {
       traderId: trader.userId,
     });
   } catch {
+    // Already following - never re-grant BP / reputation / notify.
     return { ok: true };
   }
 
+  // BP: once per (follower, trader) forever via idempotency key - unfollow cannot re-farm.
   await grantCommunityTraderFollow({
     followerId: args.followerId,
     traderId: trader.userId,
   });
-  await addCommunityReputation({
+  // Reputation: once per follower pair - no clawback on unfollow (same anti-farm rule).
+  const rep = await addCommunityReputationOnce({
     userId: trader.userId,
     delta: 3,
     reason: "trader_followed",
     refType: "follow",
     refId: args.followerId,
   });
-  await notifyCommunityTraderFollow({
-    traderId: trader.userId,
-    followerId: args.followerId,
-  });
+  if (rep.applied) {
+    await notifyCommunityTraderFollow({
+      traderId: trader.userId,
+      followerId: args.followerId,
+    });
+  }
 
   return { ok: true };
 }

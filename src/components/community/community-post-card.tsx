@@ -14,9 +14,10 @@ import { CommunityCommentThread } from "@/components/community/community-comment
 import { CommunityFormationCard } from "@/components/community/community-formation-card";
 import { CommunityBotTemplateCard } from "@/components/community/community-bot-template-card";
 import { CommunityExpandableText } from "@/components/community/community-expandable-text";
-import { IconMore } from "@/components/community/community-icons";
+import { IconMore, IconRepost } from "@/components/community/community-icons";
 import { CommunityPostMedia } from "@/components/community/community-post-media";
 import { CommunityPostTypeChip } from "@/components/community/community-post-type-chip";
+import { CommunityShareSheet } from "@/components/community/community-share-sheet";
 import type { CommunityContentKind } from "@/lib/community/post-types";
 import { isFeedComposerKind } from "@/lib/community/composer-config";
 import { isPostBoosted } from "@/lib/community/boost-utils";
@@ -92,6 +93,7 @@ export function CommunityPostCard({
   const [reportOpen, setReportOpen] = useState(false);
 
   const [boostConfirm, setBoostConfirm] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -171,31 +173,86 @@ export function CommunityPostCard({
   };
 
   const shareUrl = () =>
-    `${window.location.origin}${communityPostSharePath(post.id)}`;
+    `${window.location.origin}${communityPostSharePath(post.repostOfId ?? post.id)}`;
 
-  const sharePost = async () => {
+  const targetPostId = post.repostOfId ?? post.id;
+
+  const recordExternalShare = async () => {
+    const res = await fetch(`/api/community/feed/${targetPostId}/share`, {
+      method: "POST",
+    });
+    const j = await res.json();
+    if (res.ok) {
+      onUpdate({ shareCount: j.shareCount });
+      if (j.bpGranted > 0) flash(`+${j.bpGranted} BP`);
+    }
+  };
+
+  const copyLink = async () => {
+    setShareOpen(false);
+    try {
+      await navigator.clipboard.writeText(shareUrl());
+      flash(fr ? "Lien copié" : "Link copied");
+      await recordExternalShare();
+    } catch {
+      flash(fr ? "Échec" : "Failed");
+    }
+  };
+
+  const externalShare = async () => {
+    setShareOpen(false);
     const url = shareUrl();
     try {
       if (navigator.share) {
         await navigator.share({
           title: "McBuleli",
-          text: post.body.slice(0, 100),
+          text: (post.repostOf?.body ?? post.body).slice(0, 100),
           url,
         });
       } else {
         await navigator.clipboard.writeText(url);
         flash(fr ? "Lien copié" : "Link copied");
       }
-      const res = await fetch(`/api/community/feed/${post.id}/share`, {
-        method: "POST",
-      });
-      const j = await res.json();
-      if (res.ok) {
-        onUpdate({ shareCount: j.shareCount });
-        if (j.bpGranted > 0) flash(`+${j.bpGranted} BP`);
-      }
+      await recordExternalShare();
     } catch {
       /* cancelled */
+    }
+  };
+
+  const toggleRepost = async () => {
+    setBusy(true);
+    try {
+      if (post.repostedByMe) {
+        const res = await fetch(`/api/community/feed/${targetPostId}/repost`, {
+          method: "DELETE",
+        });
+        const j = await res.json();
+        if (res.ok) {
+          onUpdate({
+            repostedByMe: false,
+            shareCount: j.shareCount ?? Math.max(0, post.shareCount - 1),
+          });
+          flash(fr ? "Republication annulée" : "Repost removed");
+        }
+      } else {
+        const res = await fetch(`/api/community/feed/${targetPostId}/repost`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const j = await res.json();
+        if (res.ok) {
+          onUpdate({
+            repostedByMe: true,
+            shareCount: j.shareCount ?? post.shareCount + 1,
+          });
+          if (j.bpGranted > 0) flash(`+${j.bpGranted} BP`);
+          else flash(fr ? "Republié" : "Reposted");
+        }
+      }
+      setShareOpen(false);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -361,7 +418,9 @@ export function CommunityPostCard({
   ) : null;
 
   const textBlock =
-    !post.formationMeta && !post.botTemplateMeta && displayBody.length > 0 ? (
+    !post.formationMeta &&
+    !post.botTemplateMeta &&
+    displayBody.trim().length > 0 ? (
       <div className="block">
         <CommunityExpandableText
           text={displayBody}
@@ -372,22 +431,64 @@ export function CommunityPostCard({
       </div>
     ) : null;
 
+  const original = post.repostOf;
+  const isRepostCard = !!post.repostOfId;
+
   return (
     <article ref={impressionRef} className={COMMUNITY_CARD}>
       <span className={COMMUNITY_CARD_ACCENT} aria-hidden />
       <div className="px-4 pt-4">
+        {isRepostCard ? (
+          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-[#78716c]">
+            <IconRepost size={14} />
+            {fr ? "a republié" : "reposted"}
+          </p>
+        ) : null}
         {header}
         {formationBlock}
         {botTemplateBlock}
         {textBlock}
-        <CommunityPostMedia
-          media={post.media}
-          postType={post.postType}
-          body={post.body}
-          fr={fr}
-          postId={post.id}
-          feedInline
-        />
+        {original ? (
+          <div className="mb-3 overflow-hidden rounded-2xl border border-[#e8f3ee] bg-[#fafcfb]">
+            <div className="border-b border-[#eef3f0] px-3 py-2">
+              <CommunityAuthorHeader
+                author={original.author}
+                publishedAt={original.publishedAt}
+                fr={fr}
+              />
+            </div>
+            <div className="px-3 py-2">
+              {original.body.trim() ? (
+                <CommunityExpandableText
+                  text={postDisplayText(original.body, {
+                    hasMedia: original.media.length > 0,
+                  })}
+                  fr={fr}
+                  withMentions
+                  className="text-[13px] leading-snug text-[#44403c]"
+                />
+              ) : null}
+              <CommunityPostMedia
+                media={original.media}
+                postType={original.postType}
+                body={original.body}
+                fr={fr}
+                postId={original.id}
+                feedInline
+              />
+            </div>
+          </div>
+        ) : null}
+        {!original ? (
+          <CommunityPostMedia
+            media={post.media}
+            postType={post.postType}
+            body={post.body}
+            fr={fr}
+            postId={post.id}
+            feedInline
+          />
+        ) : null}
       </div>
 
       {boostConfirm ? (
@@ -443,7 +544,18 @@ export function CommunityPostCard({
         busy={busy}
         onLike={() => void toggleLike()}
         onComment={() => void openComments()}
-        onShare={() => void sharePost()}
+        onShare={() => setShareOpen(true)}
+      />
+
+      <CommunityShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        fr={fr}
+        repostedByMe={!!post.repostedByMe}
+        busy={busy}
+        onRepost={() => void toggleRepost()}
+        onCopyLink={() => void copyLink()}
+        onExternalShare={() => void externalShare()}
       />
 
       {viewerUserId && !isOwner ? (
