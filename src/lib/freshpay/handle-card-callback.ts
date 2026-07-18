@@ -89,6 +89,15 @@ export async function handleFreshpayCardCallback(
           completedAt: txStatus === "FAILED" ? new Date() : null,
         })
         .where(eq(fiatFreshpayTransactions.reference, reference));
+    } else {
+      const { completeHackathonPaymentByReference } = await import(
+        "@/lib/hackathon/service"
+      );
+      await completeHackathonPaymentByReference({
+        reference,
+        status: txStatus === "FAILED" ? "FAILED" : "PROCESSING",
+        providerTxId: providerTxId || null,
+      });
     }
     await db
       .insert(freshpayWebhookEvents)
@@ -108,6 +117,41 @@ export async function handleFreshpayCardCallback(
   }
 
   if (!tx || !UUID_RE.test(tx.userId) || tx.kind !== "deposit") {
+    if (!tx) {
+      const { completeHackathonPaymentByReference } = await import(
+        "@/lib/hackathon/service"
+      );
+      const hackathon = await completeHackathonPaymentByReference({
+        reference,
+        status: "COMPLETED",
+        providerTxId: providerTxId || null,
+      });
+      if (hackathon.handled) {
+        if (hackathon.registrationId) {
+          const { sendHackathonTicketEmail } = await import(
+            "@/lib/email/messages/hackathon"
+          );
+          void sendHackathonTicketEmail({
+            registrationId: hackathon.registrationId,
+          }).catch(() => null);
+        }
+        await db
+          .insert(freshpayWebhookEvents)
+          .values({
+            dedupKey,
+            kind: "card_deposit",
+            providerReference: reference,
+            status: txStatus,
+            currency,
+            amount,
+            userId: null,
+            effect: "hackathon_paid",
+            rawBody,
+          })
+          .onConflictDoNothing();
+        return { ok: true };
+      }
+    }
     await db
       .insert(freshpayWebhookEvents)
       .values({

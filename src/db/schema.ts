@@ -3970,4 +3970,275 @@ export const mcbCustodialLedger = pgTable(
   ],
 );
 
+/* ─── Hackathon / Bootcamp platform (multi-edition) ─── */
+
+export type HackathonProgramDay = {
+  day: number;
+  titleFr: string;
+  titleEn: string;
+  itemsFr: string[];
+  itemsEn: string[];
+};
+
+export type HackathonPrizeCategory = {
+  id: string;
+  labelFr: string;
+  labelEn: string;
+};
+
+export type HackathonGalleryItem = {
+  kind: "image" | "video";
+  url: string;
+  captionFr?: string;
+  captionEn?: string;
+};
+
+export type HackathonDisplayStats = {
+  participants: number;
+  teams: number;
+  hackathons: number;
+  projects: number;
+  partners: number;
+  sponsors: number;
+};
+
+export const hackathonEditions = pgTable(
+  "hackathon_editions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 128 }).notNull().unique(),
+    nameFr: varchar("name_fr", { length: 200 }).notNull(),
+    nameEn: varchar("name_en", { length: 200 }).notNull(),
+    taglineFr: text("tagline_fr"),
+    taglineEn: text("tagline_en"),
+    startDate: timestamp("start_date", { withTimezone: true }),
+    endDate: timestamp("end_date", { withTimezone: true }),
+    venue: varchar("venue", { length: 200 }),
+    city: varchar("city", { length: 120 }).notNull().default("Kinshasa"),
+    country: varchar("country", { length: 80 }).notNull().default("CD"),
+    maxSeats: integer("max_seats").notNull().default(100),
+    priceDay1Usd: numeric("price_day1_usd", { precision: 12, scale: 2 })
+      .notNull()
+      .default("50"),
+    priceFullUsd: numeric("price_full_usd", { precision: 12, scale: 2 })
+      .notNull()
+      .default("80"),
+    /** open | closed | soon */
+    status: varchar("status", { length: 16 }).notNull().default("soon"),
+    featured: boolean("featured").notNull().default(false),
+    program: jsonb("program")
+      .$type<HackathonProgramDay[]>()
+      .notNull()
+      .default([]),
+    prizes: jsonb("prizes")
+      .$type<HackathonPrizeCategory[]>()
+      .notNull()
+      .default([]),
+    gallery: jsonb("gallery")
+      .$type<HackathonGalleryItem[]>()
+      .notNull()
+      .default([]),
+    displayStats: jsonb("display_stats")
+      .$type<HackathonDisplayStats>()
+      .notNull()
+      .default({
+        participants: 0,
+        teams: 0,
+        hackathons: 1,
+        projects: 0,
+        partners: 0,
+        sponsors: 0,
+      }),
+    coverImage: text("cover_image"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_editions_status_idx").on(t.status, t.startDate),
+    index("hackathon_editions_featured_idx").on(t.featured),
+  ],
+);
+
+export const hackathonPeople = pgTable(
+  "hackathon_people",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    /** jury | mentor */
+    role: varchar("role", { length: 16 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    company: varchar("company", { length: 160 }),
+    title: varchar("title", { length: 160 }),
+    expertise: varchar("expertise", { length: 200 }),
+    photoUrl: text("photo_url"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    published: boolean("published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_people_edition_role_idx").on(
+      t.editionId,
+      t.role,
+      t.sortOrder,
+    ),
+  ],
+);
+
+export const hackathonPartners = pgTable(
+  "hackathon_partners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    orgName: varchar("org_name", { length: 200 }).notNull(),
+    contactName: varchar("contact_name", { length: 160 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 40 }),
+    website: varchar("website", { length: 255 }),
+    sector: varchar("sector", { length: 120 }),
+    partnershipTypes: jsonb("partnership_types")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    contribution: text("contribution"),
+    logoUrl: text("logo_url"),
+    /** lead | confirmed | rejected */
+    status: varchar("status", { length: 16 }).notNull().default("lead"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_partners_edition_status_idx").on(t.editionId, t.status),
+  ],
+);
+
+export const hackathonSponsors = pgTable(
+  "hackathon_sponsors",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    companyName: varchar("company_name", { length: 200 }).notNull(),
+    contactName: varchar("contact_name", { length: 160 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 40 }),
+    website: varchar("website", { length: 255 }),
+    /** bronze | silver | gold | platinum | custom */
+    pack: varchar("pack", { length: 24 }).notNull().default("bronze"),
+    budgetNote: text("budget_note"),
+    comment: text("comment"),
+    logoUrl: text("logo_url"),
+    /** lead | confirmed | rejected */
+    status: varchar("status", { length: 16 }).notNull().default("lead"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_sponsors_edition_status_idx").on(t.editionId, t.status),
+  ],
+);
+
+export const hackathonRegistrations = pgTable(
+  "hackathon_registrations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    firstName: varchar("first_name", { length: 80 }).notNull(),
+    lastName: varchar("last_name", { length: 80 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 40 }).notNull(),
+    whatsapp: varchar("whatsapp", { length: 40 }),
+    city: varchar("city", { length: 120 }),
+    profession: varchar("profession", { length: 120 }),
+    company: varchar("company", { length: 160 }),
+    /** beginner | intermediate | advanced */
+    level: varchar("level", { length: 24 }).notNull().default("beginner"),
+    projectName: varchar("project_name", { length: 200 }),
+    projectDescription: text("project_description"),
+    projectCategory: varchar("project_category", { length: 64 }),
+    /** solo | team */
+    workMode: varchar("work_mode", { length: 16 }).notNull().default("solo"),
+    /** day1 | full */
+    ticketPack: varchar("ticket_pack", { length: 16 }).notNull().default("full"),
+    priceUsd: numeric("price_usd", { precision: 12, scale: 2 }).notNull(),
+    /** pending | paid | failed | refunded | free */
+    paymentStatus: varchar("payment_status", { length: 16 })
+      .notNull()
+      .default("pending"),
+    /** orange | mpesa | airtel | card | usdt */
+    paymentMethod: varchar("payment_method", { length: 24 }),
+    ticketCode: varchar("ticket_code", { length: 32 }).unique(),
+    locale: varchar("locale", { length: 8 }).notNull().default("fr"),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_registrations_edition_idx").on(t.editionId, t.createdAt),
+    index("hackathon_registrations_email_idx").on(t.email),
+    index("hackathon_registrations_payment_idx").on(
+      t.editionId,
+      t.paymentStatus,
+    ),
+    uniqueIndex("hackathon_registrations_edition_email_uidx").on(
+      t.editionId,
+      t.email,
+    ),
+  ],
+);
+
+export const hackathonPayments = pgTable(
+  "hackathon_payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    registrationId: uuid("registration_id")
+      .notNull()
+      .references(() => hackathonRegistrations.id, { onDelete: "cascade" }),
+    /** Unique deposit / merchant reference sent to PawaPay or FreshPay */
+    reference: varchar("reference", { length: 64 }).notNull().unique(),
+    /** momo | card */
+    rail: varchar("rail", { length: 16 }).notNull(),
+    provider: varchar("provider", { length: 64 }),
+    phoneNumber: varchar("phone_number", { length: 32 }),
+    currency: varchar("currency", { length: 8 }).notNull().default("USD"),
+    amount: varchar("amount", { length: 64 }).notNull(),
+    /** INITIATED | PROCESSING | COMPLETED | FAILED */
+    status: varchar("status", { length: 24 }).notNull().default("INITIATED"),
+    providerTxId: varchar("provider_tx_id", { length: 128 }),
+    checkoutUrl: text("checkout_url"),
+    failureMessage: text("failure_message"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("hackathon_payments_registration_idx").on(t.registrationId),
+    index("hackathon_payments_status_idx").on(t.status),
+  ],
+);
+
 export * from "./game-schema";

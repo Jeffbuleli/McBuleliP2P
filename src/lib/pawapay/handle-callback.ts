@@ -111,6 +111,31 @@ async function handleDepositCallback(
   }
 
   if (args.status !== "COMPLETED") {
+    if (!tx) {
+      const { completeHackathonPaymentByReference } = await import(
+        "@/lib/hackathon/service"
+      );
+      const hackathon = await completeHackathonPaymentByReference({
+        reference: args.reference,
+        status: args.status === "FAILED" ? "FAILED" : "PROCESSING",
+        providerTxId: args.providerTxId || null,
+        failureMessage: args.failureMessage ?? null,
+      });
+      if (hackathon.handled) {
+        await insertWebhookEvent({
+          dedupKey,
+          kind: "deposit",
+          providerReference: args.reference,
+          status: args.status,
+          currency: args.currency,
+          amount: args.amount,
+          userId: null,
+          effect: args.status === "FAILED" ? "hackathon_failed" : "hackathon_non_final",
+          rawBody: args.rawBody,
+        });
+        return { ok: true };
+      }
+    }
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
@@ -126,6 +151,39 @@ async function handleDepositCallback(
   }
 
   if (!tx || tx.kind !== "deposit" || !UUID_RE.test(tx.userId)) {
+    // Guest / non-wallet deposits (e.g. hackathon registration MoMo)
+    if (!tx) {
+      const { completeHackathonPaymentByReference } = await import(
+        "@/lib/hackathon/service"
+      );
+      const hackathon = await completeHackathonPaymentByReference({
+        reference: args.reference,
+        status: "COMPLETED",
+        providerTxId: args.providerTxId || null,
+      });
+      if (hackathon.handled) {
+        if (hackathon.registrationId) {
+          const { sendHackathonTicketEmail } = await import(
+            "@/lib/email/messages/hackathon"
+          );
+          void sendHackathonTicketEmail({
+            registrationId: hackathon.registrationId,
+          }).catch(() => null);
+        }
+        await insertWebhookEvent({
+          dedupKey,
+          kind: "deposit",
+          providerReference: args.reference,
+          status: args.status,
+          currency: args.currency,
+          amount: args.amount,
+          userId: null,
+          effect: "hackathon_paid",
+          rawBody: args.rawBody,
+        });
+        return { ok: true };
+      }
+    }
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",

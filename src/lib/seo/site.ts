@@ -156,4 +156,5 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/login",
   "/register",
   "/community",
+  "/hackathon",
 ] as const;

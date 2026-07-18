@@ -59,6 +59,8 @@ export async function freshpayCreateCardOrder(args: {
   lastname: string;
   email: string;
   phone?: string;
+  /** Override default wallet fiat status return URL (e.g. hackathon payment status). */
+  returnUrl?: string;
 }): Promise<{ ok: true; checkoutUrl: string; transactionUuid: string } | { ok: false; message: string }> {
   const base = getFreshpayCardApiBaseUrl();
   const timestamp = new Date().toISOString();
@@ -79,7 +81,9 @@ export async function freshpayCreateCardOrder(args: {
     bill_to_address_postal_code: "00000",
     bill_to_address_country: "CD",
     callback_url: getAppAbsoluteUrl("/api/webhooks/freshpay/card"),
-    return_url: getAppAbsoluteUrl(`/app/wallet/fiat/status/${encodeURIComponent(args.reference)}?card=1`),
+    return_url:
+      args.returnUrl ??
+      getAppAbsoluteUrl(`/app/wallet/fiat/status/${encodeURIComponent(args.reference)}?card=1`),
   };
 
   const body = JSON.stringify(payload);
