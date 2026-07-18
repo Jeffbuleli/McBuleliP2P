@@ -51,8 +51,8 @@ export async function sendHackathonReserveEmail(args: {
     : null;
 
   const subject = isFr
-    ? `Place réservée — ${editionName}`
-    : `Seat reserved — ${editionName}`;
+    ? `Place réservée - ${editionName}`
+    : `Seat reserved - ${editionName}`;
 
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
@@ -126,8 +126,8 @@ export async function sendHackathonHoldReminderEmail(args: {
     : null;
 
   const subject = isFr
-    ? `Rappel — finalisez votre inscription (${editionName})`
-    : `Reminder — complete your registration (${editionName})`;
+    ? `Rappel - finalisez votre inscription (${editionName})`
+    : `Reminder - complete your registration (${editionName})`;
 
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
@@ -183,8 +183,8 @@ export async function sendHackathonTicketEmail(args: {
     : (edition?.nameEn ?? "McBuleli Hackathon");
 
   const subject = isFr
-    ? `Votre ticket — ${editionName}`
-    : `Your ticket — ${editionName}`;
+    ? `Votre ticket - ${editionName}`
+    : `Your ticket - ${editionName}`;
 
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
@@ -233,8 +233,8 @@ export async function sendHackathonPartnerAckEmail(args: {
 }): Promise<boolean> {
   const isFr = args.locale !== "en";
   const subject = isFr
-    ? "Partenariat McBuleli Hackathon — demande reçue"
-    : "McBuleli Hackathon partnership — request received";
+    ? "Partenariat McBuleli Hackathon - demande reçue"
+    : "McBuleli Hackathon partnership - request received";
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
     illustration: "verify",
@@ -268,8 +268,8 @@ export async function sendHackathonSponsorAckEmail(args: {
 }): Promise<boolean> {
   const isFr = args.locale !== "en";
   const subject = isFr
-    ? "Sponsorship McBuleli Hackathon — demande reçue"
-    : "McBuleli Hackathon sponsorship — request received";
+    ? "Sponsorship McBuleli Hackathon - demande reçue"
+    : "McBuleli Hackathon sponsorship - request received";
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
     illustration: "verify",

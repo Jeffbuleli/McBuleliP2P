@@ -160,7 +160,7 @@ function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[
         expertise: "Cursor · Claude · Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
-        href: "/@ceo",
+        href: "https://mcbuleli.org/@ceo",
       };
     }
     return p;
@@ -198,7 +198,7 @@ function PersonGrid({
           <>
             <div
               className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-lg font-semibold text-[color:var(--fd-primary)] ${
-                p.photoFit === "contain" ? "p-2" : ""
+                p.photoFit === "contain" ? "p-2.5 ring-1 ring-[color:var(--fd-primary)]/15" : ""
               }`}
             >
               {p.photoUrl ? (
@@ -206,7 +206,11 @@ function PersonGrid({
                 <img
                   src={p.photoUrl}
                   alt=""
-                  className={`h-full w-full ${p.photoFit === "contain" ? "object-contain" : "object-cover"}`}
+                  className={`h-full w-full ${
+                    p.photoFit === "contain"
+                      ? "object-contain scale-[1.05]"
+                      : "object-cover object-top"
+                  }`}
                 />
               ) : (
                 p.name.slice(0, 1)
@@ -228,12 +232,23 @@ function PersonGrid({
         return (
           <li key={p.id}>
             {p.href ? (
-              <Link
-                href={p.href}
-                className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
-              >
-                {inner}
-              </Link>
+              p.href.startsWith("http") ? (
+                <a
+                  href={p.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
+                >
+                  {inner}
+                </a>
+              ) : (
+                <Link
+                  href={p.href}
+                  className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
+                >
+                  {inner}
+                </Link>
+              )
             ) : (
               <div className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)]">
                 {inner}
@@ -254,6 +269,116 @@ function PersonGrid({
         </li>
       ))}
     </ul>
+  );
+}
+
+function IconWrap({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+      {children}
+    </span>
+  );
+}
+
+function IconCalendar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconPin() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <circle cx="12" cy="10" r="2.25" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+function IconSeats() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 18v-1.5A3.5 3.5 0 0 1 7.5 13h9A3.5 3.5 0 0 1 20 16.5V18"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M4 18h16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconStatus() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M8.5 12.2 11 14.7 15.5 9.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconMail() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.75" />
+      <path d="m4 7 8 6 8-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconPhone() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M8.5 3.5h3l1 4.5-2 1.5a12 12 0 0 0 5 5l1.5-2 4.5 1v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3.5 5.7 2 2 0 0 1 5.5 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconWhatsApp() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L4 20.5l4.3-.7A8.5 8.5 0 1 0 12 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.2 9.3c.3-.5.6-.5.9-.5h.7c.2 0 .4.1.5.4l.7 1.7c.1.2 0 .5-.2.6l-.5.5c-.2.2-.2.4 0 .7.5.8 1.3 1.5 2.2 2 .3.2.5.1.7-.1l.6-.7c.2-.2.4-.2.7-.1l1.6.7c.3.1.4.3.4.6v.6c0 .3-.1.6-.5.8-.7.4-1.7.6-2.6.3-2.1-.7-3.9-2.4-4.8-4.5-.4-1-.4-2.1.1-3.1Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function IconGlobe() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M3.8 12h16.4M12 3.8c2.4 2.6 2.4 13.8 0 16.4M12 3.8c-2.4 2.6-2.4 13.8 0 16.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconX() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+    </svg>
   );
 }
 
@@ -306,7 +431,7 @@ export function HackathonLanding({
 
   return (
     <div className="bg-[color:var(--fd-bg)] pb-24 text-[color:var(--fd-text)] sm:pb-10">
-      {/* Hero — Kinshasa skyline (Congo River / downtown aerial) */}
+      {/* Hero - Kinshasa skyline (Congo River / downtown aerial) */}
       <header className="relative min-h-[min(92vh,780px)] overflow-hidden border-b border-[color:var(--fd-border)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -440,22 +565,30 @@ export function HackathonLanding({
                   (e.endDate && e.startDate
                     ? ` → ${practicalDate(e.endDate, isFr)}`
                     : ""),
+                <IconCalendar key="cal" />,
               ],
-              [isFr ? "Lieu" : "Venue", practicalVenue(e.venue, e.city, isFr)],
+              [
+                isFr ? "Lieu" : "Venue",
+                practicalVenue(e.venue, e.city, isFr),
+                <IconPin key="pin" />,
+              ],
               [
                 isFr ? "Places" : "Seats",
                 `${e.seatsTaken} / ${e.maxSeats} ${isFr ? "réservées" : "held"} · ${seatsLeft} ${isFr ? "libres" : "left"}`,
+                <IconSeats key="seats" />,
               ],
               [
                 isFr ? "Statut" : "Status",
                 statusLabel(e.status, isFr),
+                <IconStatus key="status" />,
               ],
             ] as const
-          ).map(([label, value]) => (
+          ).map(([label, value, icon]) => (
             <div
               key={label}
               className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5"
             >
+              <IconWrap>{icon}</IconWrap>
               <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
                 {label}
               </p>
@@ -831,14 +964,27 @@ export function HackathonLanding({
         eyebrow="FAQ"
         title={isFr ? "Questions fréquentes" : "Frequently asked questions"}
       >
-        <ul className="divide-y divide-[color:var(--fd-border)] overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
+        <div className="overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
           {faq.map((item) => (
-            <li key={item.q} className="bg-[color:var(--fd-bg)] px-5 py-4 sm:px-6">
-              <h3 className="font-semibold text-[color:var(--fd-text)]">{item.q}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">{item.a}</p>
-            </li>
+            <details
+              key={item.q}
+              className="group border-b border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] last:border-b-0 open:bg-white"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-[color:var(--fd-text)] sm:px-6 [&::-webkit-details-marker]:hidden">
+                <span>{item.q}</span>
+                <span
+                  className="shrink-0 text-[color:var(--fd-primary)] transition group-open:rotate-45"
+                  aria-hidden
+                >
+                  +
+                </span>
+              </summary>
+              <p className="border-t border-[color:var(--fd-border)]/60 px-5 pb-4 pt-3 text-sm leading-relaxed text-[color:var(--fd-muted)] sm:px-6">
+                {item.a}
+              </p>
+            </details>
           ))}
-        </ul>
+        </div>
       </Section>
 
       {/* Contact */}
@@ -852,6 +998,9 @@ export function HackathonLanding({
             href={`mailto:${SUPPORT_EMAIL}`}
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
+            <IconWrap>
+              <IconMail />
+            </IconWrap>
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">Email</p>
             <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_EMAIL}</p>
           </a>
@@ -859,6 +1008,9 @@ export function HackathonLanding({
             href={`tel:${SUPPORT_PHONE_DISPLAY.replace(/\s/g, "")}`}
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
+            <IconWrap>
+              <IconPhone />
+            </IconWrap>
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
               {isFr ? "Téléphone" : "Phone"}
             </p>
@@ -870,6 +1022,9 @@ export function HackathonLanding({
             rel="noopener noreferrer"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
+            <IconWrap>
+              <IconWhatsApp />
+            </IconWrap>
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">WhatsApp</p>
             <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">
               {isFr ? "Ouvrir le chat" : "Open chat"}
@@ -879,6 +1034,9 @@ export function HackathonLanding({
             href="https://mcbuleli.org"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
+            <IconWrap>
+              <IconGlobe />
+            </IconWrap>
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
               {isFr ? "Site web" : "Website"}
             </p>
@@ -890,6 +1048,9 @@ export function HackathonLanding({
             rel="noopener noreferrer"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
+            <IconWrap>
+              <IconX />
+            </IconWrap>
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
               {isFr ? "Réseaux" : "Social"}
             </p>
@@ -929,14 +1090,14 @@ export function HackathonLanding({
       </div>
 
       {/* Legal footer */}
-      <footer className="border-t border-[color:var(--fd-border)] bg-white">
+      <footer className="border-t border-white/10 bg-[#0c1c12] text-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-3">
           <div>
-            <p className="text-sm font-semibold text-[color:var(--fd-text)]">{HACKATHON_LEGAL.legalName}</p>
-            <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+            <p className="text-sm font-semibold text-white">{HACKATHON_LEGAL.legalName}</p>
+            <p className="mt-2 text-sm leading-relaxed text-white/65">
               {HACKATHON_LEGAL.address}
             </p>
-            <p className="mt-3 text-xs text-[color:var(--fd-muted)]">
+            <p className="mt-3 text-xs text-white/50">
               RCCM : {HACKATHON_LEGAL.rccm}
               <br />
               ID Nat : {HACKATHON_LEGAL.idNat}
@@ -945,57 +1106,57 @@ export function HackathonLanding({
             </p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+            <p className="text-sm font-semibold text-white">
               {isFr ? "Contact" : "Contact"}
             </p>
-            <ul className="mt-2 space-y-1 text-sm text-[color:var(--fd-muted)]">
+            <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
-                <a className="hover:text-[color:var(--fd-primary)]" href={`mailto:${SUPPORT_EMAIL}`}>
+                <a className="hover:text-[color:var(--fd-mint)]" href={`mailto:${SUPPORT_EMAIL}`}>
                   {SUPPORT_EMAIL}
                 </a>
               </li>
               <li>{SUPPORT_PHONE_DISPLAY}</li>
               <li>
-                <a className="hover:text-[color:var(--fd-primary)]" href={SUPPORT_WA_PATH} target="_blank" rel="noopener noreferrer">
+                <a className="hover:text-[color:var(--fd-mint)]" href={SUPPORT_WA_PATH} target="_blank" rel="noopener noreferrer">
                   WhatsApp
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold text-[color:var(--fd-text)]">
+            <p className="text-sm font-semibold text-white">
               {isFr ? "Mentions légales" : "Legal"}
             </p>
-            <ul className="mt-2 space-y-1 text-sm text-[color:var(--fd-muted)]">
+            <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
-                <Link className="hover:text-[color:var(--fd-primary)]" href="/privacy">
+                <Link className="hover:text-[color:var(--fd-mint)]" href="/privacy">
                   {isFr ? "Politique de confidentialité" : "Privacy policy"}
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-[color:var(--fd-primary)]" href="/terms">
+                <Link className="hover:text-[color:var(--fd-mint)]" href="/terms">
                   {isFr ? "Conditions d’utilisation" : "Terms of use"}
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-[color:var(--fd-primary)]" href="/about">
+                <Link className="hover:text-[color:var(--fd-mint)]" href="/about">
                   {isFr ? "À propos / Mentions légales" : "About / Legal notice"}
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-[color:var(--fd-border)] px-4 py-6 sm:px-6">
-          <p className="text-center text-xs text-[color:var(--fd-muted)]">
+        <div className="border-t border-white/10 px-4 py-6 sm:px-6">
+          <p className="text-center text-xs text-white/50">
             © {year} {HACKATHON_LEGAL.legalName}. {isFr ? "Tous droits réservés." : "All rights reserved."}
           </p>
           <a
             href={SUPPORT_X}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[color:var(--fd-text)] transition hover:text-[color:var(--fd-primary)]"
+            className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-white transition hover:text-[color:var(--fd-mint)]"
           >
-            <span className="text-xs font-medium text-[color:var(--fd-muted)]">Powered by</span>
+            <span className="text-xs font-medium text-white/55">Powered by</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/brand/logo-256.png"
