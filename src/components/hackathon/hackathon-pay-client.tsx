@@ -247,13 +247,16 @@ export function HackathonPayClient({
         >
           <span className="text-xs font-medium text-[color:var(--fd-muted)]">Powered by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={BRAND_LOGO_256}
-            alt=""
-            width={24}
-            height={24}
-            className="h-6 w-6 rounded-none"
-          />
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BRAND_LOGO_256}
+              alt=""
+              width={28}
+              height={28}
+              className="h-full w-full scale-125 object-cover"
+            />
+          </span>
           <span>McBuleli</span>
         </a>
       </div>

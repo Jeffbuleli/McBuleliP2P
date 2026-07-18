@@ -16,7 +16,8 @@ export type MarketingBroadcastKind =
   | "launch_academy"
   | "academy_journey"
   | "formation_crypto_reminder"
-  | "whitepaper";
+  | "whitepaper"
+  | "hackathon";
 
 export type MarketingBroadcastDef = {
   kind: MarketingBroadcastKind;
@@ -282,6 +283,26 @@ const EN: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/whitepaper",
     campaign: "whitepaper",
   },
+  hackathon: {
+    subject: "McBuleli Hackathon Kinshasa - build with AI",
+    preheader: "Vibe Coding bootcamp + hackathon at Silikin Village. Pre-register free.",
+    headline: "Build the Future with AI",
+    paragraphs: [
+      "McBuleli Hackathon is open for Kinshasa builders: learn Cursor, Claude and Codex, ship a real product, and pitch before a jury.",
+      "Venue: Silikin Village. Dates: coming soon. Pre-register free - your seat is held 72 hours.",
+    ],
+    dateHighlight: "Kinshasa · Silikin Village · Coming soon",
+    bannerImageUrl: `${emailAssetBaseUrl()}/hackathon/kinshasa-skyline.jpg`,
+    bullets: [
+      "Day 1: Vibe Coding bootcamp",
+      "Day 2: Hackathon, pitch & awards",
+      "QR ticket after MoMo payment",
+    ],
+    reassurance: "Organized by McBuleli · Pre-registration free · Limited seats",
+    ctaLabel: "Discover the Hackathon",
+    ctaPath: "/hackathon",
+    campaign: "hackathon_kinshasa",
+  },
 };
 
 const FR: Record<MarketingBroadcastKind, CampaignSource> = {
@@ -520,6 +541,26 @@ const FR: Record<MarketingBroadcastKind, CampaignSource> = {
     ctaPath: "/whitepaper",
     campaign: "whitepaper",
   },
+  hackathon: {
+    subject: "McBuleli Hackathon Kinshasa - construisez avec l'IA",
+    preheader: "Bootcamp Vibe Coding + hackathon à Silikin Village. Pré-inscription gratuite.",
+    headline: "Build the Future with AI",
+    paragraphs: [
+      "Le McBuleli Hackathon ouvre ses portes aux builders de Kinshasa : apprenez Cursor, Claude et Codex, livrez un produit réel, et pitchtez devant un jury.",
+      "Lieu : Silikin Village. Dates : bientôt. Pré-inscrivez-vous gratuitement - place retenue 72 h.",
+    ],
+    dateHighlight: "Kinshasa · Silikin Village · Bientôt",
+    bannerImageUrl: `${emailAssetBaseUrl()}/hackathon/kinshasa-skyline.jpg`,
+    bullets: [
+      "Jour 1 : bootcamp Vibe Coding",
+      "Jour 2 : hackathon, pitch et prix",
+      "Ticket QR après paiement MoMo",
+    ],
+    reassurance: "Organisé par McBuleli · Pré-inscription gratuite · Places limitées",
+    ctaLabel: "Découvrir le Hackathon",
+    ctaPath: "/hackathon",
+    campaign: "hackathon_kinshasa",
+  },
 };
 
 const KINDS: MarketingBroadcastKind[] = [
@@ -537,6 +578,7 @@ const KINDS: MarketingBroadcastKind[] = [
   "academy_journey",
   "formation_crypto_reminder",
   "whitepaper",
+  "hackathon",
 ];
 
 function buildDef(

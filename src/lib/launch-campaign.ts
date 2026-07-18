@@ -7,7 +7,7 @@ export const TRAINING_SLOT = "18:30–20:00";
 export const TRAINING_WEEKDAYS = "saturday" as const;
 
 export const FORMATION_PATH = "/formation";
-export const PORTRAIT_PATH = "/launch/jeff-portrait.png";
+export const PORTRAIT_PATH = "/launch/jeff-portrait-v2.png";
 
 export function formationUrl(params?: Record<string, string>): string {
   const base = FORMATION_PATH;

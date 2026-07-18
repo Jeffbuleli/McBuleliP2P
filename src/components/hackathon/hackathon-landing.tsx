@@ -198,7 +198,7 @@ function PersonGrid({
           <>
             <div
               className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-lg font-semibold text-[color:var(--fd-primary)] ${
-                p.photoFit === "contain" ? "p-2.5 ring-1 ring-[color:var(--fd-primary)]/15" : ""
+                p.photoFit === "contain" ? "ring-1 ring-[color:var(--fd-primary)]/15" : ""
               }`}
             >
               {p.photoUrl ? (
@@ -206,10 +206,8 @@ function PersonGrid({
                 <img
                   src={p.photoUrl}
                   alt=""
-                  className={`h-full w-full ${
-                    p.photoFit === "contain"
-                      ? "object-contain scale-[1.05]"
-                      : "object-cover object-top"
+                  className={`h-full w-full object-cover ${
+                    p.photoFit === "contain" ? "scale-125" : "object-top"
                   }`}
                 />
               ) : (
@@ -663,11 +661,13 @@ export function HackathonLanding({
               key={s.step}
               className="relative rounded-2xl border border-[color:var(--fd-border)] bg-white p-5"
             >
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
-                {s.step}
-              </span>
-              <h3 className="mt-3 font-semibold text-[color:var(--fd-text)]">{s.title}</h3>
-              <p className="mt-1.5 text-sm text-[color:var(--fd-muted)]">{s.body}</p>
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
+                  {s.step}
+                </span>
+                <h3 className="font-semibold leading-snug text-[color:var(--fd-text)]">{s.title}</h3>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--fd-muted)]">{s.body}</p>
               {idx < journey.length - 1 ? (
                 <span className="absolute -bottom-2 left-1/2 hidden h-4 w-px bg-[color:var(--fd-border)] sm:left-auto sm:right-[-0.4rem] sm:top-1/2 sm:h-px sm:w-3 lg:block" />
               ) : null}
@@ -1172,13 +1172,16 @@ export function HackathonLanding({
           >
             <span className="text-xs font-medium text-white/55">Powered by</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/logo-256.png"
-              alt=""
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-none"
-            />
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/logo-256.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-full w-full scale-125 object-cover"
+              />
+            </span>
             <span>McBuleli</span>
           </a>
         </div>

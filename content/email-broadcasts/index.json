@@ -168,6 +168,18 @@
       "name": "McBuleli · whitepaper (EN)",
       "subject": "It's official - McBuleli Whitepaper is live",
       "html": "mcbuleli-whitepaper-en.html"
+    },
+    {
+      "slug": "mcbuleli-hackathon-fr",
+      "name": "McBuleli · hackathon (FR)",
+      "subject": "McBuleli Hackathon Kinshasa - construisez avec l'IA",
+      "html": "mcbuleli-hackathon-fr.html"
+    },
+    {
+      "slug": "mcbuleli-hackathon-en",
+      "name": "McBuleli · hackathon (EN)",
+      "subject": "McBuleli Hackathon Kinshasa - build with AI",
+      "html": "mcbuleli-hackathon-en.html"
     }
   ]
 }
