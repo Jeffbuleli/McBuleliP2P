@@ -118,8 +118,8 @@ export function HackathonParticipantForm({
         } else if (json.error === "invalid_phone") {
           setErr(
             isFr
-              ? "Le téléphone doit commencer par 243 (comme sur Wallet)."
-              : "Phone must start with 243 (same as Wallet).",
+              ? "Le téléphone doit commencer par 243 (ex. 2438XXXXXXXX)."
+              : "Phone must start with 243 (e.g. 2438XXXXXXXX).",
           );
         } else {
           setErr(
@@ -220,8 +220,8 @@ export function HackathonParticipantForm({
           />
           <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
             {isFr
-              ? "Format PawaPay / Wallet : le numéro doit commencer par 243."
-              : "PawaPay / Wallet format: number must start with 243."}
+              ? "Le numéro doit commencer par 243."
+              : "The number must start with 243."}
           </p>
         </div>
       </div>

@@ -51,8 +51,8 @@ export function HackathonPayClient({
     if (!isValidCodMsisdn(normalized)) {
       setErr(
         isFr
-          ? "Le numéro doit être au format 243… (ex. 2438XXXXXXXX)."
-          : "Phone must start with 243… (e.g. 2438XXXXXXXX).",
+          ? "Le numéro doit commencer par 243 (ex. 2438XXXXXXXX)."
+          : "The number must start with 243 (e.g. 2438XXXXXXXX).",
       );
       setBusy(false);
       return;
@@ -88,8 +88,8 @@ export function HackathonPayClient({
         } else if (json.error === "invalid_phone") {
           setErr(
             isFr
-              ? "Le numéro doit être au format 243… (comme sur Wallet)."
-              : "Phone must be 243… format (same as Wallet).",
+              ? "Le numéro doit commencer par 243."
+              : "The number must start with 243.",
           );
         } else if (json.error === "usdt_coming_soon") {
           setErr(
@@ -196,8 +196,8 @@ export function HackathonPayClient({
             />
             <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
               {isFr
-                ? "Même format que le dépôt Wallet : commence par 243."
-                : "Same format as Wallet deposit: must start with 243."}
+                ? "Le numéro doit commencer par 243."
+                : "The number must start with 243."}
             </p>
           </div>
           <div>
@@ -252,7 +252,7 @@ export function HackathonPayClient({
             alt=""
             width={24}
             height={24}
-            className="h-6 w-6 rounded-md"
+            className="h-6 w-6 rounded-none"
           />
           <span>McBuleli</span>
         </a>

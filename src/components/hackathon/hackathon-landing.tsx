@@ -151,12 +151,12 @@ type PersonCard = FeaturedHackathonPayload["jury"][number] & {
 
 function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[] {
   return people.map((p) => {
-    if (/vibe\s*coding/i.test(p.name) || /mentor vibe/i.test(p.name)) {
+    if (/vibe\s*coding/i.test(p.name) || /mentor vibe/i.test(p.name) || /jeff/i.test(p.name)) {
       return {
         ...p,
-        name: "Jeff Buleli",
-        title: "CEO",
-        company: "McBuleli",
+        name: "Mentor Vibe Coding",
+        title: "Jeff Buleli - CEO",
+        company: null,
         expertise: "Cursor · Claude · Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
@@ -219,7 +219,9 @@ function PersonGrid({
             <div>
               <h3 className="font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
               <p className="mt-0.5 text-sm text-[color:var(--fd-primary)]">
-                {[p.title, p.company].filter(Boolean).join(" · ")}
+                {p.title && p.company
+                  ? `${p.title} · ${p.company}`
+                  : p.title || p.company || null}
               </p>
               {p.expertise ? (
                 <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
@@ -274,7 +276,7 @@ function PersonGrid({
 
 function IconWrap({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
       {children}
     </span>
   );
@@ -588,11 +590,13 @@ export function HackathonLanding({
               key={label}
               className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5"
             >
-              <IconWrap>{icon}</IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-                {label}
-              </p>
-              <p className="mt-2 text-sm font-semibold leading-snug text-[color:var(--fd-text)]">
+              <div className="flex items-center gap-3">
+                <IconWrap>{icon}</IconWrap>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                  {label}
+                </p>
+              </div>
+              <p className="mt-3 text-sm font-semibold leading-snug text-[color:var(--fd-text)]">
                 {value}
               </p>
             </div>
@@ -998,23 +1002,27 @@ export function HackathonLanding({
             href={`mailto:${SUPPORT_EMAIL}`}
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
-            <IconWrap>
-              <IconMail />
-            </IconWrap>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">Email</p>
-            <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_EMAIL}</p>
+            <div className="flex items-center gap-3">
+              <IconWrap>
+                <IconMail />
+              </IconWrap>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">Email</p>
+            </div>
+            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_EMAIL}</p>
           </a>
           <a
             href={`tel:${SUPPORT_PHONE_DISPLAY.replace(/\s/g, "")}`}
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
-            <IconWrap>
-              <IconPhone />
-            </IconWrap>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "Téléphone" : "Phone"}
-            </p>
-            <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_PHONE_DISPLAY}</p>
+            <div className="flex items-center gap-3">
+              <IconWrap>
+                <IconPhone />
+              </IconWrap>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                {isFr ? "Téléphone" : "Phone"}
+              </p>
+            </div>
+            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_PHONE_DISPLAY}</p>
           </a>
           <a
             href={SUPPORT_WA_PATH}
@@ -1022,11 +1030,13 @@ export function HackathonLanding({
             rel="noopener noreferrer"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
-            <IconWrap>
-              <IconWhatsApp />
-            </IconWrap>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">WhatsApp</p>
-            <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">
+            <div className="flex items-center gap-3">
+              <IconWrap>
+                <IconWhatsApp />
+              </IconWrap>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">WhatsApp</p>
+            </div>
+            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">
               {isFr ? "Ouvrir le chat" : "Open chat"}
             </p>
           </a>
@@ -1034,13 +1044,15 @@ export function HackathonLanding({
             href="https://mcbuleli.org"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
-            <IconWrap>
-              <IconGlobe />
-            </IconWrap>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "Site web" : "Website"}
-            </p>
-            <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">mcbuleli.org</p>
+            <div className="flex items-center gap-3">
+              <IconWrap>
+                <IconGlobe />
+              </IconWrap>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                {isFr ? "Site web" : "Website"}
+              </p>
+            </div>
+            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">mcbuleli.org</p>
           </a>
           <a
             href={SUPPORT_X}
@@ -1048,13 +1060,15 @@ export function HackathonLanding({
             rel="noopener noreferrer"
             className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
           >
-            <IconWrap>
-              <IconX />
-            </IconWrap>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "Réseaux" : "Social"}
-            </p>
-            <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">@McBuleli</p>
+            <div className="flex items-center gap-3">
+              <IconWrap>
+                <IconX />
+              </IconWrap>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                {isFr ? "Réseaux" : "Social"}
+              </p>
+            </div>
+            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">@McBuleli</p>
           </a>
         </div>
       </Section>
@@ -1163,7 +1177,7 @@ export function HackathonLanding({
               alt=""
               width={28}
               height={28}
-              className="h-7 w-7 rounded-lg"
+              className="h-7 w-7 rounded-none"
             />
             <span>McBuleli</span>
           </a>

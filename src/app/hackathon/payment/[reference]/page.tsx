@@ -74,8 +74,8 @@ export default function HackathonPaymentStatusPage() {
               En attente de paiement
             </h1>
             <p className="mt-2 text-sm text-[color:var(--fd-muted)]">
-              Validez le prompt sur votre téléphone (Orange / M-Pesa / Airtel). Cette page se
-              met à jour automatiquement.
+              Validez le prompt sur votre téléphone (Orange / M-Pesa / Airtel). Le numéro doit
+              commencer par 243. Cette page se met à jour automatiquement.
             </p>
             <p className="mt-4 font-mono text-xs text-[color:var(--fd-muted)]">
               {data?.status ?? "…"}
