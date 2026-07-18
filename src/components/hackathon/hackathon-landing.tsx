@@ -15,6 +15,9 @@ import {
   SUPPORT_WA_PATH,
   SUPPORT_X,
 } from "@/lib/support-contact";
+import { PORTRAIT_PATH } from "@/lib/launch-campaign";
+import { BRAND_LOGO_256 } from "@/lib/brand-logo";
+import { BUILDERS_TIER_VISUAL } from "@/lib/builders/builders-visual";
 import { HackathonHeroIllustration } from "@/components/hackathon/hackathon-hero-illustration";
 import { HackathonParticipantForm } from "@/components/hackathon/hackathon-participant-form";
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
@@ -124,44 +127,104 @@ function CtaSecondary({ href, children }: { href: string; children: React.ReactN
   );
 }
 
+type PersonCard = FeaturedHackathonPayload["jury"][number] & {
+  href?: string;
+  photoFit?: "cover" | "contain";
+};
+
+function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[] {
+  return people.map((p) => {
+    if (/vibe\s*coding/i.test(p.name) || /mentor vibe/i.test(p.name)) {
+      return {
+        ...p,
+        name: "Jeff Buleli",
+        title: "CEO",
+        company: "McBuleli",
+        expertise: "Cursor · ChatGPT · Ship",
+        photoUrl: PORTRAIT_PATH,
+        photoFit: "cover",
+        href: "/@ceo",
+      };
+    }
+    return p;
+  });
+}
+
+function enrichJury(people: FeaturedHackathonPayload["jury"]): PersonCard[] {
+  return people.map((p) => {
+    if (/jury\s*mcbuleli/i.test(p.name) || /^mcbuleli$/i.test(p.name)) {
+      return {
+        ...p,
+        name: "Jury McBuleli",
+        photoUrl: BRAND_LOGO_256,
+        photoFit: "contain",
+      };
+    }
+    return p;
+  });
+}
+
 function PersonGrid({
   people,
   empty,
   slots = 6,
 }: {
-  people: FeaturedHackathonPayload["jury"];
+  people: PersonCard[];
   empty: string;
   slots?: number;
 }) {
   const placeholders = Math.max(0, slots - people.length);
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {people.map((p) => (
-        <li
-          key={p.id}
-          className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)]"
-        >
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-lg font-semibold text-[color:var(--fd-primary)]">
-            {p.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.photoUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              p.name.slice(0, 1)
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
-            <p className="mt-0.5 text-sm text-[color:var(--fd-primary)]">
-              {[p.title, p.company].filter(Boolean).join(" · ")}
-            </p>
-            {p.expertise ? (
-              <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
-                {p.expertise}
+      {people.map((p) => {
+        const inner = (
+          <>
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-lg font-semibold text-[color:var(--fd-primary)] ${
+                p.photoFit === "contain" ? "p-2" : ""
+              }`}
+            >
+              {p.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={p.photoUrl}
+                  alt=""
+                  className={`h-full w-full ${p.photoFit === "contain" ? "object-contain" : "object-cover"}`}
+                />
+              ) : (
+                p.name.slice(0, 1)
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
+              <p className="mt-0.5 text-sm text-[color:var(--fd-primary)]">
+                {[p.title, p.company].filter(Boolean).join(" · ")}
               </p>
-            ) : null}
-          </div>
-        </li>
-      ))}
+              {p.expertise ? (
+                <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+                  {p.expertise}
+                </p>
+              ) : null}
+            </div>
+          </>
+        );
+        return (
+          <li key={p.id}>
+            {p.href ? (
+              <Link
+                href={p.href}
+                className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)]">
+                {inner}
+              </div>
+            )}
+          </li>
+        );
+      })}
       {Array.from({ length: placeholders }).map((_, i) => (
         <li
           key={`ph-${i}`}
@@ -189,8 +252,8 @@ function MidCta({ isFr }: { isFr: boolean }) {
           </p>
           <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
             {isFr
-              ? "Réservez votre place — places limitées pour cette édition."
-              : "Secure your seat — limited capacity for this edition."}
+              ? "Réservez votre place - places limitées pour cette édition."
+              : "Secure your seat - limited capacity for this edition."}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -238,22 +301,22 @@ export function HackathonLanding({
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:pb-20 lg:pt-12">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-primary)]">
-              McBuleli · {isFr ? "Hackathon IA — RDC" : "AI Hackathon — DRC"}
+              McBuleli · {isFr ? "Hackathon IA - RDC" : "AI Hackathon - DRC"}
             </p>
             <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight text-[color:var(--fd-text)] sm:text-5xl lg:text-[3.25rem]">
               Build the Future with AI
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-[color:var(--fd-muted)] sm:text-lg">
               {isFr
-                ? "Le hackathon IA de référence en République Démocratique du Congo — organisé par McBuleli. Apprenez le Vibe Coding, construisez un produit, pitchtez devant un jury, et rejoignez un écosystème qui relie builders, entreprises et investisseurs."
-                : "The AI hackathon of reference in the Democratic Republic of the Congo — organized by McBuleli. Learn Vibe Coding, ship a product, pitch before a jury, and join an ecosystem connecting builders, companies and investors."}
+                ? "Le hackathon IA de référence en République Démocratique du Congo - organisé par McBuleli. Apprenez le Vibe Coding, construisez un produit, pitchtez devant un jury, et rejoignez un écosystème qui relie builders, entreprises et investisseurs."
+                : "The AI hackathon of reference in the Democratic Republic of the Congo - organized by McBuleli. Learn Vibe Coding, ship a product, pitch before a jury, and join an ecosystem connecting builders, companies and investors."}
             </p>
             <ul className="mt-5 space-y-2 text-sm text-[color:var(--fd-muted)]">
               <li className="flex gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
                 {isFr
-                  ? "Organisé par McBuleli — plateforme fintech & communauté builders"
-                  : "Organized by McBuleli — fintech platform & builders community"}
+                  ? "Organisé par McBuleli - plateforme fintech & communauté builders"
+                  : "Organized by McBuleli - fintech platform & builders community"}
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
@@ -301,8 +364,8 @@ export function HackathonLanding({
         eyebrow={isFr ? "Pourquoi participer" : "Why join"}
         title={
           isFr
-            ? "Plus qu’une compétition — un tremplin"
-            : "More than a competition — a launchpad"
+            ? "Plus qu’une compétition - un tremplin"
+            : "More than a competition - a launchpad"
         }
         subtitle={
           isFr
@@ -332,8 +395,8 @@ export function HackathonLanding({
         title={name}
         subtitle={
           isFr
-            ? "Lieu et dates exacts communiqués après réservation du site — pas de date fictive."
-            : "Exact venue and dates shared after venue booking — no placeholder dates."
+            ? "Lieu et dates exacts communiqués après réservation du site - pas de date fictive."
+            : "Exact venue and dates shared after venue booking - no placeholder dates."
         }
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -373,7 +436,7 @@ export function HackathonLanding({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5">
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "1 jour — Bootcamp" : "1 day — Bootcamp"}
+              {isFr ? "1 jour - Bootcamp" : "1 day - Bootcamp"}
             </p>
             <p className="mt-2 text-2xl font-semibold text-[color:var(--fd-primary)]">
               {e.priceDay1Usd} USD
@@ -402,8 +465,8 @@ export function HackathonLanding({
         }
         subtitle={
           isFr
-            ? "Choisissez un défi — ou proposez une solution transversale."
-            : "Pick a challenge — or propose a cross-cutting solution."
+            ? "Choisissez un défi - ou proposez une solution transversale."
+            : "Pick a challenge - or propose a cross-cutting solution."
         }
       >
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -576,12 +639,12 @@ export function HackathonLanding({
         }
         subtitle={
           isFr
-            ? "Grille prête — annonces au fil des confirmations."
-            : "Grid ready — announcements as mentors confirm."
+            ? "Grille prête - annonces au fil des confirmations."
+            : "Grid ready - announcements as mentors confirm."
         }
       >
         <PersonGrid
-          people={data.mentors}
+          people={enrichMentors(data.mentors)}
           empty={isFr ? "Mentor à annoncer" : "Mentor TBA"}
         />
       </Section>
@@ -597,7 +660,7 @@ export function HackathonLanding({
         }
       >
         <PersonGrid
-          people={data.jury}
+          people={enrichJury(data.jury)}
           empty={isFr ? "Membre du jury à annoncer" : "Jury member TBA"}
         />
       </Section>
@@ -636,14 +699,24 @@ export function HackathonLanding({
           </ul>
         ) : (
           <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {["Bronze", "Silver", "Gold", "Platinum"].map((tier) => (
-              <div
-                key={tier}
-                className="flex h-16 items-center justify-center rounded-xl border border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] text-xs font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]"
-              >
-                {tier}
-              </div>
-            ))}
+            {(
+              [
+                ["Bronze", "bronze"],
+                ["Silver", "silver"],
+                ["Gold", "gold"],
+                ["Platinum", "platinum"],
+              ] as const
+            ).map(([label, tier]) => {
+              const v = BUILDERS_TIER_VISUAL[tier];
+              return (
+                <div
+                  key={tier}
+                  className={`flex h-16 items-center justify-center rounded-xl text-xs font-semibold uppercase tracking-wide ${v.badgeClass}`}
+                >
+                  {label}
+                </div>
+              );
+            })}
           </div>
         )}
         <div className="mb-8">
@@ -780,8 +853,8 @@ export function HackathonLanding({
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
             {isFr
-              ? "Hackathons IA en RDC — powered by McBuleli. Inscrivez-vous ou devenez partenaire aujourd’hui."
-              : "AI hackathons in DRC — powered by McBuleli. Register or partner today."}
+              ? "Hackathons IA en RDC - powered by McBuleli. Inscrivez-vous ou devenez partenaire aujourd’hui."
+              : "AI hackathons in DRC - powered by McBuleli. Register or partner today."}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a

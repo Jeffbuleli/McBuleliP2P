@@ -9,7 +9,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from "@/lib/support-contact";
 export const dynamic = "force-dynamic";
 
 const TITLE =
-  "McBuleli Hackathon — Hackathon IA de référence en RDC | Kinshasa";
+  "McBuleli Hackathon - Hackathon IA de référence en RDC | Kinshasa";
 const DESCRIPTION =
   "Hackathon et bootcamp IA organisés par McBuleli à Kinshasa. Vibe Coding, défis FinTech, Santé, Agriculture, pitch jury, incubation. Inscrivez-vous ou devenez partenaire.";
 

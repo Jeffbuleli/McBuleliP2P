@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { HACKATHON_PARTNERSHIP_TYPES } from "@/lib/hackathon/constants";
+import {
+  hkCheckChip,
+  hkCheckbox,
+  hkField,
+  hkLabel,
+} from "@/components/hackathon/hackathon-form-styles";
 
 const TYPE_LABELS: Record<"fr" | "en", Record<string, string>> = {
   fr: {
@@ -77,16 +83,12 @@ export function HackathonPartnerForm({
     }
   }
 
-  const field =
-    "mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--fd-primary)]";
-  const label = "block text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]";
-
   if (ok) {
     return (
       <p className="rounded-xl bg-[color:var(--fd-mint)] px-4 py-3 text-sm font-semibold text-[color:var(--fd-primary)]">
         {isFr
-          ? "Merci — nous avons bien reçu votre demande de partenariat."
-          : "Thanks — we received your partnership request."}
+          ? "Merci - nous avons bien reçu votre demande de partenariat."
+          : "Thanks - we received your partnership request."}
       </p>
     );
   }
@@ -94,49 +96,49 @@ export function HackathonPartnerForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className={label}>{isFr ? "Organisation" : "Organization"}</label>
-        <input name="orgName" required className={field} />
+        <label className={hkLabel}>{isFr ? "Organisation" : "Organization"}</label>
+        <input name="orgName" required className={hkField} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>{isFr ? "Responsable" : "Contact"}</label>
-          <input name="contactName" required className={field} />
+          <label className={hkLabel}>{isFr ? "Responsable" : "Contact"}</label>
+          <input name="contactName" required className={hkField} />
         </div>
         <div>
-          <label className={label}>Email</label>
-          <input name="email" type="email" required className={field} />
+          <label className={hkLabel}>Email</label>
+          <input name="email" type="email" required className={hkField} />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>{isFr ? "Téléphone" : "Phone"}</label>
-          <input name="phone" className={field} />
+          <label className={hkLabel}>{isFr ? "Téléphone" : "Phone"}</label>
+          <input name="phone" className={hkField} />
         </div>
         <div>
-          <label className={label}>{isFr ? "Site web" : "Website"}</label>
-          <input name="website" className={field} />
+          <label className={hkLabel}>{isFr ? "Site web" : "Website"}</label>
+          <input name="website" className={hkField} />
         </div>
       </div>
       <div>
-        <label className={label}>{isFr ? "Secteur" : "Sector"}</label>
-        <input name="sector" className={field} />
+        <label className={hkLabel}>{isFr ? "Secteur" : "Sector"}</label>
+        <input name="sector" className={hkField} />
       </div>
       <fieldset>
-        <legend className={label}>{isFr ? "Type de partenariat" : "Partnership type"}</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <legend className={hkLabel}>{isFr ? "Type de partenariat" : "Partnership type"}</legend>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {HACKATHON_PARTNERSHIP_TYPES.map((t) => (
-            <label key={t} className="flex items-center gap-2 text-sm font-medium text-[color:var(--fd-text)]">
-              <input type="checkbox" name={`type_${t}`} />
+            <label key={t} className={hkCheckChip}>
+              <input type="checkbox" name={`type_${t}`} className={hkCheckbox} />
               {TYPE_LABELS[locale][t]}
             </label>
           ))}
         </div>
       </fieldset>
       <div>
-        <label className={label}>
+        <label className={hkLabel}>
           {isFr ? "Comment souhaitez-vous contribuer ?" : "How would you like to contribute?"}
         </label>
-        <textarea name="contribution" rows={3} className={field} />
+        <textarea name="contribution" rows={3} className={hkField} />
       </div>
       {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
       <button

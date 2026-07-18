@@ -14,7 +14,7 @@ export function whyParticipate(isFr: boolean): BenefitItem[] {
     return [
       {
         title: "Apprendre",
-        body: "Maîtrisez le Vibe Coding avec ChatGPT, Cursor et les outils IA modernes — du prototype au déploiement.",
+        body: "Maîtrisez le Vibe Coding avec ChatGPT, Cursor et les outils IA modernes - du prototype au déploiement.",
       },
       {
         title: "Créer",
@@ -49,7 +49,7 @@ export function whyParticipate(isFr: boolean): BenefitItem[] {
   return [
     {
       title: "Learn",
-      body: "Master Vibe Coding with ChatGPT, Cursor and modern AI tools — from prototype to deploy.",
+      body: "Master Vibe Coding with ChatGPT, Cursor and modern AI tools - from prototype to deploy.",
     },
     {
       title: "Build",
@@ -111,7 +111,7 @@ export function journeySteps(isFr: boolean): JourneyStep[] {
   if (isFr) {
     return [
       { step: 1, title: "Inscription", body: "Créez votre dossier et choisissez votre pack." },
-      { step: 2, title: "Validation", body: "Paiement confirmé — ticket QR envoyé par e-mail." },
+      { step: 2, title: "Validation", body: "Paiement confirmé - ticket QR envoyé par e-mail." },
       { step: 3, title: "Formation", body: "Bootcamp Vibe Coding (outils IA & ship)." },
       { step: 4, title: "Hackathon", body: "Build intensif en équipe sur votre défi." },
       { step: 5, title: "Présentation", body: "Pitch devant le jury et les partenaires." },
@@ -122,7 +122,7 @@ export function journeySteps(isFr: boolean): JourneyStep[] {
   }
   return [
     { step: 1, title: "Registration", body: "Submit your application and choose a pack." },
-    { step: 2, title: "Validation", body: "Payment confirmed — QR ticket by email." },
+    { step: 2, title: "Validation", body: "Payment confirmed - QR ticket by email." },
     { step: 3, title: "Training", body: "Vibe Coding bootcamp (AI tools & ship)." },
     { step: 4, title: "Hackathon", body: "Intensive team build on your challenge." },
     { step: 5, title: "Demo day", body: "Pitch before the jury and partners." },
@@ -189,7 +189,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Quels sont les critères d’évaluation ?",
-        a: "Innovation, impact, qualité technique, business model et présentation — voir la grille détaillée ci-dessus.",
+        a: "Innovation, impact, qualité technique, business model et présentation - voir la grille détaillée ci-dessus.",
       },
       {
         q: "À qui appartient la propriété intellectuelle ?",
@@ -201,7 +201,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Où et quand a lieu l’événement ?",
-        a: "À Kinshasa. Lieu et dates exacts sont confirmés après réservation du site — communiqués aux inscrits payés.",
+        a: "À Kinshasa. Lieu et dates exacts sont confirmés après réservation du site - communiqués aux inscrits payés.",
       },
       {
         q: "Puis-je venir en tant qu’entreprise ou université ?",
@@ -212,7 +212,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
   return [
     {
       q: "Who can participate?",
-      a: "Students, developers, designers, founders and multidisciplinary profiles. Beginners are welcome — the bootcamp covers the basics.",
+      a: "Students, developers, designers, founders and multidisciplinary profiles. Beginners are welcome - the bootcamp covers the basics.",
     },
     {
       q: "Do I need a team already?",
@@ -224,7 +224,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "What are the judging criteria?",
-      a: "Innovation, impact, technical quality, business model and presentation — see the rubric above.",
+      a: "Innovation, impact, technical quality, business model and presentation - see the rubric above.",
     },
     {
       q: "Who owns the intellectual property?",
@@ -236,7 +236,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Where and when is it?",
-      a: "In Kinshasa. Exact venue and dates are confirmed after venue booking — shared with paid attendees.",
+      a: "In Kinshasa. Exact venue and dates are confirmed after venue booking - shared with paid attendees.",
     },
     {
       q: "Can companies or universities join?",
@@ -245,7 +245,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
   ];
 }
 
-/** Corporate registry — McBuleli (RDC). */
+/** Corporate registry - McBuleli (RDC). */
 export const HACKATHON_LEGAL = {
   legalName: "McBuleli",
   rccm: "CD/KNG/RCCM/26-A-00382",

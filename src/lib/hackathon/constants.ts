@@ -41,8 +41,8 @@ export function defaultProgram(): HackathonProgramDay[] {
   return [
     {
       day: 1,
-      titleFr: "Jour 1 — Bootcamp Vibe Coding",
-      titleEn: "Day 1 — Vibe Coding Bootcamp",
+      titleFr: "Jour 1 - Bootcamp Vibe Coding",
+      titleEn: "Day 1 - Vibe Coding Bootcamp",
       itemsFr: [
         "Introduction au Vibe Coding",
         "ChatGPT",
@@ -64,8 +64,8 @@ export function defaultProgram(): HackathonProgramDay[] {
     },
     {
       day: 2,
-      titleFr: "Jour 2 — Hackathon",
-      titleEn: "Day 2 — Hackathon",
+      titleFr: "Jour 2 - Hackathon",
+      titleEn: "Day 2 - Hackathon",
       itemsFr: [
         "Les équipes développent leur projet",
         "Présentation devant le jury",

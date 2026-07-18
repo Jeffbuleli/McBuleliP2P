@@ -9,7 +9,7 @@ import { getTicketByCode, ticketPublicUrl } from "@/lib/hackathon/service";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ticket Hackathon — McBuleli",
+  title: "Ticket Hackathon - McBuleli",
   robots: { index: false, follow: false },
 };
 

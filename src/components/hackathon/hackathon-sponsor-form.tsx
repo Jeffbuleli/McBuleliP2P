@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import {
+  hkField,
+  hkLabel,
+  hkSelect,
+  hkSelectChevronStyle,
+} from "@/components/hackathon/hackathon-form-styles";
 
 export function HackathonSponsorForm({
   editionId,
@@ -50,16 +56,12 @@ export function HackathonSponsorForm({
     }
   }
 
-  const field =
-    "mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--fd-primary)]";
-  const label = "block text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]";
-
   if (ok) {
     return (
       <p className="rounded-xl bg-[color:var(--fd-mint)] px-4 py-3 text-sm font-semibold text-[color:var(--fd-primary)]">
         {isFr
-          ? "Merci — demande de sponsorship reçue."
-          : "Thanks — sponsorship request received."}
+          ? "Merci - demande de sponsorship reçue."
+          : "Thanks - sponsorship request received."}
       </p>
     );
   }
@@ -67,32 +69,37 @@ export function HackathonSponsorForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className={label}>{isFr ? "Entreprise" : "Company"}</label>
-        <input name="companyName" required className={field} />
+        <label className={hkLabel}>{isFr ? "Entreprise" : "Company"}</label>
+        <input name="companyName" required className={hkField} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>{isFr ? "Contact" : "Contact"}</label>
-          <input name="contactName" required className={field} />
+          <label className={hkLabel}>{isFr ? "Contact" : "Contact"}</label>
+          <input name="contactName" required className={hkField} />
         </div>
         <div>
-          <label className={label}>Email</label>
-          <input name="email" type="email" required className={field} />
+          <label className={hkLabel}>Email</label>
+          <input name="email" type="email" required className={hkField} />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>{isFr ? "Téléphone" : "Phone"}</label>
-          <input name="phone" className={field} />
+          <label className={hkLabel}>{isFr ? "Téléphone" : "Phone"}</label>
+          <input name="phone" className={hkField} />
         </div>
         <div>
-          <label className={label}>{isFr ? "Site web" : "Website"}</label>
-          <input name="website" className={field} />
+          <label className={hkLabel}>{isFr ? "Site web" : "Website"}</label>
+          <input name="website" className={hkField} />
         </div>
       </div>
       <div>
-        <label className={label}>{isFr ? "Pack" : "Pack"}</label>
-        <select name="pack" className={field} defaultValue="gold">
+        <label className={hkLabel}>{isFr ? "Pack" : "Pack"}</label>
+        <select
+          name="pack"
+          className={hkSelect}
+          style={hkSelectChevronStyle}
+          defaultValue="gold"
+        >
           <option value="bronze">Bronze</option>
           <option value="silver">Silver</option>
           <option value="gold">Gold</option>
@@ -101,12 +108,12 @@ export function HackathonSponsorForm({
         </select>
       </div>
       <div>
-        <label className={label}>{isFr ? "Budget / notes" : "Budget / notes"}</label>
-        <input name="budgetNote" className={field} />
+        <label className={hkLabel}>{isFr ? "Budget / notes" : "Budget / notes"}</label>
+        <input name="budgetNote" className={hkField} />
       </div>
       <div>
-        <label className={label}>{isFr ? "Commentaire" : "Comment"}</label>
-        <textarea name="comment" rows={3} className={field} />
+        <label className={hkLabel}>{isFr ? "Commentaire" : "Comment"}</label>
+        <textarea name="comment" rows={3} className={hkField} />
       </div>
       {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
       <button

@@ -254,7 +254,7 @@ export async function completeHackathonPaymentByReference(args: {
     return { handled: true, registrationId: pay.registrationId };
   }
 
-  // COMPLETED — idempotent
+  // COMPLETED - idempotent
   const [reg] = await db
     .select()
     .from(hackathonRegistrations)

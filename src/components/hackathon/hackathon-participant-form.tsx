@@ -1,6 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import {
+  hkCheckChip,
+  hkField,
+  hkLabel,
+  hkRadio,
+  hkSelect,
+  hkSelectChevronStyle,
+} from "@/components/hackathon/hackathon-form-styles";
 
 type Props = {
   editionId: string;
@@ -66,14 +74,14 @@ export function HackathonParticipantForm({
         if (json.error === "already_registered") {
           setErr(
             isFr
-              ? `Déjà inscrit${json.ticketCode ? ` — ticket ${json.ticketCode}` : ""}.`
-              : `Already registered${json.ticketCode ? ` — ticket ${json.ticketCode}` : ""}.`,
+              ? `Déjà inscrit${json.ticketCode ? ` - ticket ${json.ticketCode}` : ""}.`
+              : `Already registered${json.ticketCode ? ` - ticket ${json.ticketCode}` : ""}.`,
           );
         } else if (json.error === "usdt_coming_soon") {
           setErr(
             isFr
-              ? "Paiement USDT bientôt disponible — choisissez MoMo ou carte."
-              : "USDT payment coming soon — choose MoMo or card.",
+              ? "Paiement USDT bientôt disponible - choisissez MoMo ou carte."
+              : "USDT payment coming soon - choose MoMo or card.",
           );
         } else {
           setErr(
@@ -105,10 +113,6 @@ export function HackathonParticipantForm({
     }
   }
 
-  const field =
-    "mt-1 w-full rounded-xl border border-[color:var(--fd-border)] bg-white px-3 py-2.5 text-sm text-[color:var(--fd-text)] outline-none focus:border-[color:var(--fd-primary)]";
-  const label = "block text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]";
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {!registrationOpen ? (
@@ -121,80 +125,94 @@ export function HackathonParticipantForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label} htmlFor="hk-first">
+          <label className={hkLabel} htmlFor="hk-first">
             {isFr ? "Prénom" : "First name"}
           </label>
-          <input id="hk-first" name="firstName" required className={field} disabled={!registrationOpen} />
+          <input id="hk-first" name="firstName" required className={hkField} disabled={!registrationOpen} />
         </div>
         <div>
-          <label className={label} htmlFor="hk-last">
+          <label className={hkLabel} htmlFor="hk-last">
             {isFr ? "Nom" : "Last name"}
           </label>
-          <input id="hk-last" name="lastName" required className={field} disabled={!registrationOpen} />
+          <input id="hk-last" name="lastName" required className={hkField} disabled={!registrationOpen} />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label} htmlFor="hk-email">
+          <label className={hkLabel} htmlFor="hk-email">
             Email
           </label>
-          <input id="hk-email" name="email" type="email" required className={field} disabled={!registrationOpen} />
+          <input id="hk-email" name="email" type="email" required className={hkField} disabled={!registrationOpen} />
         </div>
         <div>
-          <label className={label} htmlFor="hk-phone">
+          <label className={hkLabel} htmlFor="hk-phone">
             {isFr ? "Téléphone (paiement MoMo)" : "Phone (MoMo payment)"}
           </label>
-          <input id="hk-phone" name="phone" required className={field} placeholder="243…" disabled={!registrationOpen} />
+          <input id="hk-phone" name="phone" required className={hkField} placeholder="243…" disabled={!registrationOpen} />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label} htmlFor="hk-wa">
+          <label className={hkLabel} htmlFor="hk-wa">
             WhatsApp
           </label>
-          <input id="hk-wa" name="whatsapp" className={field} disabled={!registrationOpen} />
+          <input id="hk-wa" name="whatsapp" className={hkField} disabled={!registrationOpen} />
         </div>
         <div>
-          <label className={label} htmlFor="hk-city">
+          <label className={hkLabel} htmlFor="hk-city">
             {isFr ? "Ville" : "City"}
           </label>
-          <input id="hk-city" name="city" className={field} disabled={!registrationOpen} />
+          <input id="hk-city" name="city" className={hkField} disabled={!registrationOpen} />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label} htmlFor="hk-job">
+          <label className={hkLabel} htmlFor="hk-job">
             {isFr ? "Profession" : "Profession"}
           </label>
-          <input id="hk-job" name="profession" className={field} disabled={!registrationOpen} />
+          <input id="hk-job" name="profession" className={hkField} disabled={!registrationOpen} />
         </div>
         <div>
-          <label className={label} htmlFor="hk-co">
+          <label className={hkLabel} htmlFor="hk-co">
             {isFr ? "Entreprise (optionnel)" : "Company (optional)"}
           </label>
-          <input id="hk-co" name="company" className={field} disabled={!registrationOpen} />
+          <input id="hk-co" name="company" className={hkField} disabled={!registrationOpen} />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label} htmlFor="hk-level">
+          <label className={hkLabel} htmlFor="hk-level">
             {isFr ? "Niveau" : "Level"}
           </label>
-          <select id="hk-level" name="level" className={field} defaultValue="beginner" disabled={!registrationOpen}>
+          <select
+            id="hk-level"
+            name="level"
+            className={hkSelect}
+            style={hkSelectChevronStyle}
+            defaultValue="beginner"
+            disabled={!registrationOpen}
+          >
             <option value="beginner">{isFr ? "Débutant" : "Beginner"}</option>
             <option value="intermediate">{isFr ? "Intermédiaire" : "Intermediate"}</option>
             <option value="advanced">{isFr ? "Avancé" : "Advanced"}</option>
           </select>
         </div>
         <div>
-          <label className={label} htmlFor="hk-mode">
+          <label className={hkLabel} htmlFor="hk-mode">
             {isFr ? "Travail" : "Work mode"}
           </label>
-          <select id="hk-mode" name="workMode" className={field} defaultValue="solo" disabled={!registrationOpen}>
+          <select
+            id="hk-mode"
+            name="workMode"
+            className={hkSelect}
+            style={hkSelectChevronStyle}
+            defaultValue="solo"
+            disabled={!registrationOpen}
+          >
             <option value="solo">{isFr ? "Individuel" : "Solo"}</option>
             <option value="team">{isFr ? "Équipe" : "Team"}</option>
           </select>
@@ -202,22 +220,29 @@ export function HackathonParticipantForm({
       </div>
 
       <div>
-        <label className={label} htmlFor="hk-proj">
+        <label className={hkLabel} htmlFor="hk-proj">
           {isFr ? "Nom du projet" : "Project name"}
         </label>
-        <input id="hk-proj" name="projectName" className={field} disabled={!registrationOpen} />
+        <input id="hk-proj" name="projectName" className={hkField} disabled={!registrationOpen} />
       </div>
       <div>
-        <label className={label} htmlFor="hk-desc">
+        <label className={hkLabel} htmlFor="hk-desc">
           {isFr ? "Description" : "Description"}
         </label>
-        <textarea id="hk-desc" name="projectDescription" rows={3} className={field} disabled={!registrationOpen} />
+        <textarea id="hk-desc" name="projectDescription" rows={3} className={hkField} disabled={!registrationOpen} />
       </div>
       <div>
-        <label className={label} htmlFor="hk-cat">
+        <label className={hkLabel} htmlFor="hk-cat">
           {isFr ? "Catégorie" : "Category"}
         </label>
-        <select id="hk-cat" name="projectCategory" className={field} defaultValue="ai" disabled={!registrationOpen}>
+        <select
+          id="hk-cat"
+          name="projectCategory"
+          className={hkSelect}
+          style={hkSelectChevronStyle}
+          defaultValue="ai"
+          disabled={!registrationOpen}
+        >
           {[
             ["ai", isFr ? "Intelligence artificielle" : "Artificial intelligence"],
             ["fintech", "FinTech"],
@@ -228,33 +253,47 @@ export function HackathonParticipantForm({
             ["media", isFr ? "Médias" : "Media"],
             ["cyber", isFr ? "Cybersécurité" : "Cybersecurity"],
             ["other", isFr ? "Autre" : "Other"],
-          ].map(([value, label]) => (
+          ].map(([value, optLabel]) => (
             <option key={value} value={value}>
-              {label}
+              {optLabel}
             </option>
           ))}
         </select>
       </div>
 
       <fieldset className="space-y-2">
-        <legend className={label}>{isFr ? "Pack" : "Pack"}</legend>
-        <label className="flex items-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]">
-          <input type="radio" name="ticketPack" value="day1" disabled={!registrationOpen} />
-          {isFr ? `1 jour — ${priceDay1} USD` : `1 day — ${priceDay1} USD`}
+        <legend className={hkLabel}>{isFr ? "Pack" : "Pack"}</legend>
+        <label className={`${hkCheckChip} ${!registrationOpen ? "opacity-60" : ""}`}>
+          <input type="radio" name="ticketPack" value="day1" className={hkRadio} disabled={!registrationOpen} />
+          {isFr ? `1 jour - ${priceDay1} USD` : `1 day - ${priceDay1} USD`}
         </label>
-        <label className="flex items-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]">
-          <input type="radio" name="ticketPack" value="full" defaultChecked disabled={!registrationOpen} />
+        <label className={`${hkCheckChip} ${!registrationOpen ? "opacity-60" : ""}`}>
+          <input
+            type="radio"
+            name="ticketPack"
+            value="full"
+            defaultChecked
+            className={hkRadio}
+            disabled={!registrationOpen}
+          />
           {isFr
-            ? `2 jours + Hackathon — ${priceFull} USD`
-            : `2 days + Hackathon — ${priceFull} USD`}
+            ? `2 jours + Hackathon - ${priceFull} USD`
+            : `2 days + Hackathon - ${priceFull} USD`}
         </label>
       </fieldset>
 
       <div>
-        <label className={label} htmlFor="hk-pay">
+        <label className={hkLabel} htmlFor="hk-pay">
           {isFr ? "Paiement" : "Payment"}
         </label>
-        <select id="hk-pay" name="paymentMethod" className={field} defaultValue="orange" disabled={!registrationOpen}>
+        <select
+          id="hk-pay"
+          name="paymentMethod"
+          className={hkSelect}
+          style={hkSelectChevronStyle}
+          defaultValue="orange"
+          disabled={!registrationOpen}
+        >
           <option value="orange">Orange Money</option>
           <option value="mpesa">M-Pesa</option>
           <option value="airtel">Airtel Money</option>
