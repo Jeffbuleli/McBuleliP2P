@@ -88,6 +88,19 @@ export type FeaturedHackathonPayload = {
 
 export async function getFeaturedHackathon(): Promise<FeaturedHackathonPayload | null> {
   const db = getDb();
+
+  // Free seats when holds expire (even before hourly cron)
+  await db
+    .update(hackathonRegistrations)
+    .set({ paymentStatus: "expired", updatedAt: new Date() })
+    .where(
+      and(
+        eq(hackathonRegistrations.paymentStatus, "reserved"),
+        sql`${hackathonRegistrations.holdExpiresAt} IS NOT NULL`,
+        sql`${hackathonRegistrations.holdExpiresAt} <= now()`,
+      ),
+    );
+
   const [edition] = await db
     .select()
     .from(hackathonEditions)

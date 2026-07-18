@@ -4186,6 +4186,8 @@ export const hackathonRegistrations = pgTable(
     paymentToken: varchar("payment_token", { length: 64 }).unique(),
     /** Seat hold deadline for reserved (pre-inscription) */
     holdExpiresAt: timestamp("hold_expires_at", { withTimezone: true }),
+    /** When the ~24h expiry reminder email was sent */
+    holdReminderSentAt: timestamp("hold_reminder_sent_at", { withTimezone: true }),
     ticketCode: varchar("ticket_code", { length: 32 }).unique(),
     locale: varchar("locale", { length: 8 }).notNull().default("fr"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),

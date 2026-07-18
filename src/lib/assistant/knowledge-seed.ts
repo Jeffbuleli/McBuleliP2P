@@ -142,4 +142,24 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     tags: ["support", "escalation", "human", "dispute"],
     priority: 95,
   },
+  {
+    slug: "hackathon-overview",
+    category: "hackathon",
+    locale: "all",
+    title: "McBuleli Hackathon Kinshasa",
+    content:
+      "McBuleli Hackathon is the AI hackathon organized by McBuleli in Kinshasa at Silikin Village, 63 Ave Colonel Mondjiba. Dates: coming soon (Bientôt). Day 1 is a Vibe Coding bootcamp with Cursor, Claude, and Codex; Day 2 is the hackathon with jury pitch. Public page: https://mcbuleli.org/hackathon. Pre-register free (seat held 72 hours), then pay with Orange Money, M-Pesa or Airtel Money (phone must start with 243). After payment you get a QR ticket by email. Packs: 1-day bootcamp or 2 days + Hackathon. Partners and sponsors use forms on the same page. A McBuleli account is created with the registration email.",
+    tags: ["hackathon", "kinshasa", "silikin", "vibe coding", "cursor", "claude", "codex"],
+    priority: 92,
+  },
+  {
+    slug: "hackathon-payment",
+    category: "hackathon",
+    locale: "all",
+    title: "Hackathon registration and payment",
+    content:
+      "On /hackathon: choose Pré-inscrire (free) or Register & pay. Pre-registration emails a magic pay link valid 72 hours. Payment is MoMo only via PawaPay — number format 243XXXXXXXXX like Wallet deposit. No card checkout for hackathon. If the hold expires, pre-register again. Paid participants receive a QR ticket. Seats update as reservations are made or expire.",
+    tags: ["hackathon", "payment", "momo", "243", "ticket", "qr"],
+    priority: 88,
+  },
 ];

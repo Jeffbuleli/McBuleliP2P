@@ -16,10 +16,15 @@ import {
 import {
   initiateHackathonMomoPayment,
 } from "@/lib/hackathon/payments";
+import { ensureHackathonUser } from "@/lib/hackathon/ensure-user";
 import {
   generatePaymentToken,
   payLaterPublicUrl,
 } from "@/lib/hackathon/service";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 import { sendHackathonPartnerAckEmail } from "@/lib/email/messages/hackathon";
 import { sendHackathonReserveEmail } from "@/lib/email/messages/hackathon";
 import { sendHackathonSponsorAckEmail } from "@/lib/email/messages/hackathon";
@@ -186,6 +191,11 @@ export async function registerParticipant(raw: unknown) {
   const data = parsed.data;
   const intent = data.intent;
 
+  const phone = normalizeCodPhoneNumber(data.phone);
+  if (!isValidCodMsisdn(phone)) {
+    return { ok: false as const, error: "invalid_phone", status: 400 };
+  }
+
   if (intent === "pay_now" && data.paymentMethod === "usdt") {
     return { ok: false as const, error: "usdt_coming_soon", status: 400 };
   }
@@ -213,8 +223,14 @@ export async function registerParticipant(raw: unknown) {
       ? String(fullEdition.priceDay1Usd)
       : String(fullEdition.priceFullUsd);
 
-  const userId = await getSessionUserId();
   const email = data.email.toLowerCase();
+  const userId =
+    (await getSessionUserId()) ??
+    (await ensureHackathonUser({
+      email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    }));
 
   const existing = await db
     .select()
@@ -251,8 +267,8 @@ export async function registerParticipant(raw: unknown) {
   const profile = {
     firstName: data.firstName,
     lastName: data.lastName,
-    phone: data.phone,
-    whatsapp: data.whatsapp || data.phone,
+    phone,
+    whatsapp: data.whatsapp ? normalizeCodPhoneNumber(data.whatsapp) || phone : phone,
     city: data.city || null,
     profession: data.profession || null,
     company: data.company || null,
@@ -264,7 +280,7 @@ export async function registerParticipant(raw: unknown) {
     ticketPack: data.ticketPack,
     priceUsd,
     locale: data.locale,
-    userId: userId ?? null,
+    userId,
   };
 
   if (intent === "reserve") {
@@ -355,7 +371,7 @@ export async function registerParticipant(raw: unknown) {
   return startCheckout({
     registrationId: registrationId!,
     priceUsd,
-    phone: data.phone,
+    phone,
     paymentMethod: paymentMethod as "orange" | "mpesa" | "airtel",
   });
 }
@@ -370,6 +386,9 @@ export async function payReservedRegistration(token: string, raw: unknown) {
   if (data.paymentMethod === "usdt") {
     return { ok: false as const, error: "usdt_coming_soon", status: 400 };
   }
+
+  const phone = normalizeCodPhoneNumber(data.phone || "");
+  // phone optional in body — fall back to registration phone below after load
 
   const db = getDb();
   const [reg] = await db
@@ -404,11 +423,17 @@ export async function payReservedRegistration(token: string, raw: unknown) {
     return { ok: false as const, error: "invalid_status", status: 409 };
   }
 
-  const phone = data.phone || reg.phone;
+  const payPhone = phone && isValidCodMsisdn(phone)
+    ? phone
+    : normalizeCodPhoneNumber(reg.phone);
+  if (!isValidCodMsisdn(payPhone)) {
+    return { ok: false as const, error: "invalid_phone", status: 400 };
+  }
+
   await db
     .update(hackathonRegistrations)
     .set({
-      phone,
+      phone: payPhone,
       paymentMethod: data.paymentMethod,
       paymentStatus: "pending",
       updatedAt: new Date(),
@@ -418,7 +443,7 @@ export async function payReservedRegistration(token: string, raw: unknown) {
   return startCheckout({
     registrationId: reg.id,
     priceUsd: String(reg.priceUsd),
-    phone,
+    phone: payPhone,
     paymentMethod: data.paymentMethod as "orange" | "mpesa" | "airtel",
   });
 }

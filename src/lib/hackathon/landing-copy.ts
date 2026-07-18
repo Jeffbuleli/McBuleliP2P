@@ -14,7 +14,7 @@ export function whyParticipate(isFr: boolean): BenefitItem[] {
     return [
       {
         title: "Apprendre",
-        body: "Maîtrisez le Vibe Coding avec ChatGPT, Cursor et les outils IA modernes - du prototype au déploiement.",
+        body: "Maîtrisez le Vibe Coding avec Cursor, Claude, Codex et les outils IA modernes - du prototype au déploiement.",
       },
       {
         title: "Créer",
@@ -49,7 +49,7 @@ export function whyParticipate(isFr: boolean): BenefitItem[] {
   return [
     {
       title: "Learn",
-      body: "Master Vibe Coding with ChatGPT, Cursor and modern AI tools - from prototype to deploy.",
+      body: "Master Vibe Coding with Cursor, Claude, Codex and modern AI tools - from prototype to deploy.",
     },
     {
       title: "Build",
@@ -201,7 +201,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Où et quand a lieu l’événement ?",
-        a: "À Kinshasa. Lieu et dates exacts sont confirmés après réservation du site - communiqués aux inscrits payés.",
+        a: "À Kinshasa - Silikin Village, 63, Ave Colonel Mondjiba. Dates : bientôt annoncées (communiquées aux inscrits).",
       },
       {
         q: "Puis-je venir en tant qu’entreprise ou université ?",
@@ -236,7 +236,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Where and when is it?",
-      a: "In Kinshasa. Exact venue and dates are confirmed after venue booking - shared with paid attendees.",
+      a: "In Kinshasa - Silikin Village, 63 Ave Colonel Mondjiba. Dates: coming soon (shared with registered participants).",
     },
     {
       q: "Can companies or universities join?",

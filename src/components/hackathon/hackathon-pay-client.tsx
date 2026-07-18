@@ -8,6 +8,12 @@ import {
   hkSelect,
   hkSelectChevronStyle,
 } from "@/components/hackathon/hackathon-form-styles";
+import { BRAND_LOGO_256 } from "@/lib/brand-logo";
+import { SUPPORT_X } from "@/lib/support-contact";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 
 type Props = {
   token: string;
@@ -33,15 +39,29 @@ export function HackathonPayClient({
   const isFr = locale === "fr";
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [phoneValue, setPhoneValue] = useState(
+    normalizeCodPhoneNumber(phone) || phone,
+  );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
     setErr(null);
+    const normalized = normalizeCodPhoneNumber(phoneValue);
+    if (!isValidCodMsisdn(normalized)) {
+      setErr(
+        isFr
+          ? "Le numéro doit être au format 243… (ex. 2438XXXXXXXX)."
+          : "Phone must start with 243… (e.g. 2438XXXXXXXX).",
+      );
+      setBusy(false);
+      return;
+    }
+    setPhoneValue(normalized);
     const fd = new FormData(e.currentTarget);
     const body = {
       paymentMethod: String(fd.get("paymentMethod") ?? "orange"),
-      phone: String(fd.get("phone") ?? phone),
+      phone: normalized,
     };
     try {
       const res = await fetch(`/api/hackathon/pay/${encodeURIComponent(token)}`, {
@@ -65,6 +85,12 @@ export function HackathonPayClient({
           );
         } else if (json.error === "already_registered") {
           setErr(isFr ? "Déjà payé." : "Already paid.");
+        } else if (json.error === "invalid_phone") {
+          setErr(
+            isFr
+              ? "Le numéro doit être au format 243… (comme sur Wallet)."
+              : "Phone must be 243… format (same as Wallet).",
+          );
         } else if (json.error === "usdt_coming_soon") {
           setErr(
             isFr
@@ -77,10 +103,6 @@ export function HackathonPayClient({
               (isFr ? "Paiement impossible." : "Payment failed."),
           );
         }
-        return;
-      }
-      if (json.checkoutUrl) {
-        window.location.href = json.checkoutUrl;
         return;
       }
       if (json.reference) {
@@ -113,11 +135,21 @@ export function HackathonPayClient({
 
   return (
     <div className="home-theme fd-public-light flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-white p-6">
-        <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
-          McBuleli Hackathon
-        </p>
-        <h1 className="mt-3 text-center text-xl font-black text-[color:var(--fd-text)]">
+      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-white p-6 shadow-sm">
+        <div className="flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={BRAND_LOGO_256}
+            alt="McBuleli"
+            width={56}
+            height={56}
+            className="h-14 w-14 rounded-xl"
+          />
+          <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
+            McBuleli Hackathon
+          </p>
+        </div>
+        <h1 className="mt-4 text-center text-xl font-black text-[color:var(--fd-text)]">
           {isFr ? `Finaliser, ${firstName}` : `Complete payment, ${firstName}`}
         </h1>
         <p className="mt-2 text-center text-sm text-[color:var(--fd-muted)]">
@@ -145,15 +177,28 @@ export function HackathonPayClient({
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
             <label className={hkLabel} htmlFor="pay-phone">
-              {isFr ? "Téléphone (MoMo)" : "Phone (MoMo)"}
+              {isFr ? "Téléphone MoMo (243…)" : "MoMo phone (243…)"}
             </label>
             <input
               id="pay-phone"
               name="phone"
               required
-              defaultValue={phone}
+              inputMode="tel"
+              autoComplete="tel"
+              value={phoneValue}
+              onChange={(e) => setPhoneValue(e.target.value)}
+              onBlur={() => {
+                const n = normalizeCodPhoneNumber(phoneValue);
+                if (n) setPhoneValue(n);
+              }}
               className={hkField}
+              placeholder="2438XXXXXXXX"
             />
+            <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+              {isFr
+                ? "Même format que le dépôt Wallet : commence par 243."
+                : "Same format as Wallet deposit: must start with 243."}
+            </p>
           </div>
           <div>
             <label className={hkLabel} htmlFor="pay-method">
@@ -193,6 +238,24 @@ export function HackathonPayClient({
             ← Hackathon
           </Link>
         </p>
+
+        <a
+          href={SUPPORT_X}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 flex items-center justify-center gap-2 border-t border-[color:var(--fd-border)] pt-5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:text-[color:var(--fd-primary)]"
+        >
+          <span className="text-xs font-medium text-[color:var(--fd-muted)]">Powered by</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={BRAND_LOGO_256}
+            alt=""
+            width={24}
+            height={24}
+            className="h-6 w-6 rounded-md"
+          />
+          <span>McBuleli</span>
+        </a>
       </div>
     </div>
   );

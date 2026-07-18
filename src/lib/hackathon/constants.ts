@@ -39,6 +39,10 @@ export type HackathonPaymentMethod =
 /** Seat hold duration for free pré-inscription before payment */
 export const HACKATHON_HOLD_HOURS = 72;
 
+/** Confirmed venue for Kinshasa editions */
+export const HACKATHON_VENUE_SILIKIN =
+  "Silikin Village, 63, Ave Colonel Mondjiba";
+
 export function defaultProgram(): HackathonProgramDay[] {
   return [
     {
@@ -47,19 +51,17 @@ export function defaultProgram(): HackathonProgramDay[] {
       titleEn: "Day 1 - Vibe Coding Bootcamp",
       itemsFr: [
         "Introduction au Vibe Coding",
-        "ChatGPT",
         "Cursor",
-        "Lovable",
-        "Bolt",
+        "Claude",
+        "Codex",
         "Création d'une application",
         "Déploiement",
       ],
       itemsEn: [
         "Introduction to Vibe Coding",
-        "ChatGPT",
         "Cursor",
-        "Lovable",
-        "Bolt",
+        "Claude",
+        "Codex",
         "Build an application",
         "Deployment",
       ],

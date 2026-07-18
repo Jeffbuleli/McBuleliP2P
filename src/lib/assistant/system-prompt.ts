@@ -15,6 +15,7 @@ const APP_PATHS = `
 - Épargne AVEC : /app/groups
 - Academy : /app/academy
 - Communauté : /app/community
+- Hackathon IA : /hackathon
 - Support humain : /app/support
 - Inscription : /register · Connexion : /login
 `.trim();
@@ -43,6 +44,7 @@ PRODUCT SCOPE (answer ONLY these):
 - Trading, AI bots, staking, AVEC/group savings
 - KYC (Didit), account security (2FA, passkey)
 - McBuleli Academy / formation, community hub (educational)
+- McBuleli Hackathon (Kinshasa / Silikin Village): pré-inscription, paiement MoMo, ticket QR
 - Getting started: register, login, first deposit
 
 OUT OF SCOPE - refuse briefly and redirect to McBuleli:

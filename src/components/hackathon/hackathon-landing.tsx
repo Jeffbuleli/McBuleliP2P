@@ -41,9 +41,7 @@ function isPlaceholderVenue(venue: string | null | undefined) {
 
 function practicalDate(iso: string | null, isFr: boolean) {
   if (!iso) {
-    return isFr
-      ? "À confirmer après réservation"
-      : "To be confirmed after venue booking";
+    return isFr ? "Bientôt" : "Coming soon";
   }
   try {
     return new Date(iso).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
@@ -52,17 +50,13 @@ function practicalDate(iso: string | null, isFr: boolean) {
       year: "numeric",
     });
   } catch {
-    return isFr
-      ? "À confirmer après réservation"
-      : "To be confirmed after venue booking";
+    return isFr ? "Bientôt" : "Coming soon";
   }
 }
 
-function practicalVenue(venue: string | null, city: string, isFr: boolean) {
+function practicalVenue(venue: string | null, city: string, _isFr: boolean) {
   if (isPlaceholderVenue(venue)) {
-    return isFr
-      ? `À confirmer après réservation · ${city}`
-      : `To be confirmed after venue booking · ${city}`;
+    return `Silikin Village, 63, Ave Colonel Mondjiba · ${city || "Kinshasa"}`;
   }
   return [venue, city].filter(Boolean).join(" · ");
 }
@@ -163,7 +157,7 @@ function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[
         name: "Jeff Buleli",
         title: "CEO",
         company: "McBuleli",
-        expertise: "Cursor · ChatGPT · Ship",
+        expertise: "Cursor · Claude · Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
         href: "/@ceo",
@@ -433,8 +427,8 @@ export function HackathonLanding({
         title={name}
         subtitle={
           isFr
-            ? "Lieu et dates exacts communiqués après réservation du site - pas de date fictive."
-            : "Exact venue and dates shared after venue booking - no placeholder dates."
+            ? "Lieu confirmé à Kinshasa - dates bientôt annoncées."
+            : "Venue confirmed in Kinshasa - dates announced soon."
         }
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -450,7 +444,7 @@ export function HackathonLanding({
               [isFr ? "Lieu" : "Venue", practicalVenue(e.venue, e.city, isFr)],
               [
                 isFr ? "Places" : "Seats",
-                `${seatsLeft} / ${e.maxSeats} ${isFr ? "disponibles" : "available"}`,
+                `${e.seatsTaken} / ${e.maxSeats} ${isFr ? "réservées" : "held"} · ${seatsLeft} ${isFr ? "libres" : "left"}`,
               ],
               [
                 isFr ? "Statut" : "Status",
@@ -721,37 +715,60 @@ export function HackathonLanding({
       >
         {data.sponsorLogos.length ? (
           <ul className="mb-8 flex flex-wrap gap-3">
-            {data.sponsorLogos.map((s) => (
-              <li
-                key={s.id}
-                className="flex h-16 min-w-[8rem] flex-col items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-5"
-              >
-                {s.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.logoUrl} alt={s.name} className="max-h-8 max-w-[120px]" />
-                ) : (
-                  <span className="text-sm font-semibold text-[color:var(--fd-muted)]">{s.name}</span>
-                )}
-              </li>
-            ))}
+            {data.sponsorLogos.map((s) => {
+              const v = BUILDERS_TIER_VISUAL[s.pack] ?? BUILDERS_TIER_VISUAL.bronze;
+              return (
+                <li
+                  key={s.id}
+                  className={`flex h-20 min-w-[9rem] flex-col items-center justify-center rounded-xl px-5 ${v.badgeClass}`}
+                >
+                  {s.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.logoUrl} alt={s.name} className="max-h-8 max-w-[120px]" />
+                  ) : (
+                    <span className="text-sm font-semibold">{s.name}</span>
+                  )}
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-wide opacity-80">
+                    {s.pack}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : (
-          <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(
               [
-                ["Bronze", "bronze"],
-                ["Silver", "silver"],
-                ["Gold", "gold"],
-                ["Platinum", "platinum"],
+                [
+                  "Bronze",
+                  "bronze",
+                  isFr ? "Logo + mention réseaux" : "Logo + social mention",
+                ],
+                [
+                  "Silver",
+                  "silver",
+                  isFr ? "Stand + kit presse" : "Booth + press kit",
+                ],
+                [
+                  "Gold",
+                  "gold",
+                  isFr ? "Pitch stage + atelier" : "Stage pitch + workshop",
+                ],
+                [
+                  "Platinum",
+                  "platinum",
+                  isFr ? "Naming + jury + recrutement" : "Naming + jury + hiring",
+                ],
               ] as const
-            ).map(([label, tier]) => {
+            ).map(([label, tier, perk]) => {
               const v = BUILDERS_TIER_VISUAL[tier];
               return (
                 <div
                   key={tier}
-                  className={`flex h-16 items-center justify-center rounded-xl text-xs font-semibold uppercase tracking-wide ${v.badgeClass}`}
+                  className={`rounded-2xl p-4 ring-1 ${v.badgeClass}`}
                 >
-                  {label}
+                  <p className="text-xs font-bold uppercase tracking-wide">{label}</p>
+                  <p className="mt-2 text-sm leading-snug opacity-90">{perk}</p>
                 </div>
               );
             })}

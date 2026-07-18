@@ -558,6 +558,21 @@ html {
   transition: background-color 99999s ease-out 0s;
 }
 
+/* Hackathon forms — same autofill fix (email/phone browser fill) */
+.fd-public-light input.hk-field:-webkit-autofill,
+.fd-public-light input.hk-field:-webkit-autofill:hover,
+.fd-public-light input.hk-field:-webkit-autofill:focus,
+.fd-public-light input.hk-field:-webkit-autofill:active,
+.fd-public-light textarea.hk-field:-webkit-autofill,
+.fd-public-light select.hk-field:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--fd-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--fd-card) inset !important;
+  -webkit-text-fill-color: var(--fd-text) !important;
+  caret-color: var(--fd-text);
+  border-color: rgba(48, 95, 51, 0.22) !important;
+  transition: background-color 99999s ease-out 0s;
+}
+
 .fd-public-light .fd-card,
 .fd-public-light.home-theme .fd-card {
   border-radius: 1rem;

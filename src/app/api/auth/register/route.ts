@@ -110,6 +110,12 @@ export async function POST(req: Request) {
         .then(() => autoEnrollLaunchCohort(created.id))
         .catch((err) => console.warn("[auth/register] academy", err)),
     );
+    void import("@/lib/hackathon/ensure-user").then(({ linkHackathonRegistrationToUser }) =>
+      linkHackathonRegistrationToUser({
+        userId: created.id,
+        email: created.email,
+      }).catch((err) => console.warn("[auth/register] hackathon", err)),
+    );
 
     const token = await signSessionToken(created.id, 0);
     const res = NextResponse.json({

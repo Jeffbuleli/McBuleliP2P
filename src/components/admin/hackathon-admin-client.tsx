@@ -80,6 +80,7 @@ export function HackathonAdminClient() {
           venue: String(fd.get("venue") || "") || undefined,
           status: String(fd.get("status") || "soon"),
           featured: fd.get("featured") === "on",
+          maxSeats: Number(fd.get("maxSeats") || 100) || 100,
         }),
       });
       if (!res.ok) throw new Error("create_failed");
@@ -93,22 +94,30 @@ export function HackathonAdminClient() {
     }
   }
 
+  async function patchEdition(id: string, patch: Record<string, unknown>) {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/hackathon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      if (!res.ok) throw new Error("patch_failed");
+      await loadEditions();
+    } catch {
+      setErr("Mise à jour impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function setStatus(id: string, status: string) {
-    await fetch("/api/admin/hackathon", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    await loadEditions();
+    await patchEdition(id, { status });
   }
 
   async function setFeatured(id: string) {
-    await fetch("/api/admin/hackathon", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, featured: true }),
-    });
-    await loadEditions();
+    await patchEdition(id, { featured: true });
   }
 
   async function patchLead(
@@ -133,6 +142,8 @@ export function HackathonAdminClient() {
       "phone",
       "ticketPack",
       "paymentStatus",
+      "holdExpiresAt",
+      "userId",
       "ticketCode",
       "city",
       "createdAt",
@@ -217,7 +228,8 @@ export function HackathonAdminClient() {
               <input name="city" placeholder="Ville" defaultValue="Kinshasa" className={adminCls.input} />
               <input name="nameFr" required placeholder="Nom FR" className={adminCls.input} />
               <input name="nameEn" required placeholder="Name EN" className={adminCls.input} />
-              <input name="venue" placeholder="Lieu" className={adminCls.input} />
+              <input name="venue" placeholder="Lieu" defaultValue="Silikin Village, 63, Ave Colonel Mondjiba" className={adminCls.input} />
+              <input name="maxSeats" type="number" placeholder="Places (100)" defaultValue="100" className={adminCls.input} />
               <select name="status" className={adminCls.select} defaultValue="soon">
                 <option value="soon">Bientôt</option>
                 <option value="open">Ouvert</option>
@@ -244,7 +256,11 @@ export function HackathonAdminClient() {
                       ) : null}
                     </p>
                     <p className="text-xs text-[color:var(--fd-muted)]">
-                      {ed.slug} · {ed.city} · {ed.status} · {ed.priceDay1Usd}/{ed.priceFullUsd} USD
+                      {ed.slug} · {ed.city} · {ed.status} · {ed.priceDay1Usd}/{ed.priceFullUsd} USD ·{" "}
+                      {ed.maxSeats} places
+                    </p>
+                    <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+                      {ed.venue ?? "—"}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -264,6 +280,29 @@ export function HackathonAdminClient() {
                     </select>
                   </div>
                 </div>
+                <form
+                  className="mt-4 grid gap-2 border-t border-[color:var(--fd-border)] pt-4 sm:grid-cols-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    void patchEdition(ed.id, {
+                      venue: String(fd.get("venue") || "") || null,
+                      maxSeats: Number(fd.get("maxSeats") || ed.maxSeats),
+                      priceDay1Usd: String(fd.get("priceDay1Usd") || ed.priceDay1Usd),
+                      priceFullUsd: String(fd.get("priceFullUsd") || ed.priceFullUsd),
+                      city: String(fd.get("city") || ed.city),
+                    });
+                  }}
+                >
+                  <input name="venue" defaultValue={ed.venue ?? ""} placeholder="Lieu" className={adminCls.input} />
+                  <input name="city" defaultValue={ed.city} placeholder="Ville" className={adminCls.input} />
+                  <input name="maxSeats" type="number" defaultValue={ed.maxSeats} className={adminCls.input} />
+                  <input name="priceDay1Usd" defaultValue={ed.priceDay1Usd} placeholder="Prix 1j" className={adminCls.input} />
+                  <input name="priceFullUsd" defaultValue={ed.priceFullUsd} placeholder="Prix full" className={adminCls.input} />
+                  <button type="submit" disabled={busy} className={adminCls.btnPrimary}>
+                    Enregistrer
+                  </button>
+                </form>
               </li>
             ))}
           </ul>
@@ -281,8 +320,11 @@ export function HackathonAdminClient() {
                 <tr>
                   <th className="px-3 py-2">Nom</th>
                   <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2">Tél</th>
                   <th className="px-3 py-2">Pack</th>
                   <th className="px-3 py-2">Paiement</th>
+                  <th className="px-3 py-2">Hold</th>
+                  <th className="px-3 py-2">User</th>
                   <th className="px-3 py-2">Ticket</th>
                 </tr>
               </thead>
@@ -293,8 +335,17 @@ export function HackathonAdminClient() {
                       {String(r.firstName)} {String(r.lastName)}
                     </td>
                     <td className="px-3 py-2">{String(r.email)}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{String(r.phone ?? "—")}</td>
                     <td className="px-3 py-2">{String(r.ticketPack)}</td>
                     <td className="px-3 py-2">{String(r.paymentStatus)}</td>
+                    <td className="px-3 py-2 text-xs text-[color:var(--fd-muted)]">
+                      {r.holdExpiresAt
+                        ? new Date(String(r.holdExpiresAt)).toLocaleString("fr-FR")
+                        : "—"}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-[10px]">
+                      {r.userId ? String(r.userId).slice(0, 8) : "—"}
+                    </td>
                     <td className="px-3 py-2 font-mono text-xs">{String(r.ticketCode ?? "—")}</td>
                   </tr>
                 ))}

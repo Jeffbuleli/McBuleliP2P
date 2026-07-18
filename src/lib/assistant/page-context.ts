@@ -15,6 +15,7 @@ export function detectPageContext(pathname: string): string | null {
   if (p.includes("/profile/security")) return "security";
   if (p.includes("/community")) return "community";
   if (p.includes("/academy")) return "academy";
+  if (p.includes("/hackathon")) return "hackathon";
   if (p.includes("/support")) return "support";
   if (p.includes("/register")) return "register";
   if (p.includes("/login")) return "login";
@@ -102,6 +103,11 @@ export function pageContextHint(
       en: "User is logging in. Help with login methods, password reset, WhatsApp recovery.",
       fr: "L'utilisateur se connecte. Aidez avec connexion, mot de passe oublié, récupération WhatsApp.",
       sw: "Mtumiaji anaingia. Saidia kuhusu njia za kuingia, nenosiri lililosahaulika, urejeshaji WhatsApp.",
+    },
+    hackathon: {
+      en: "User is on /hackathon. Explain Silikin Village venue, Coming soon dates, free 72h pre-registration, MoMo payment (243…), Cursor/Claude/Codex bootcamp, and QR tickets. Point to #register, #partner, #sponsor.",
+      fr: "L'utilisateur est sur /hackathon. Expliquez Silikin Village, dates Bientôt, pré-inscription 72 h, paiement MoMo (243…), bootcamp Cursor/Claude/Codex, et tickets QR. Orientez vers #register, #partner, #sponsor.",
+      sw: "Mtumiaji yuko kwenye /hackathon. Eleza Silikin Village, tarehe Coming soon, usajili wa awali 72h, malipo ya MoMo (243…), bootcamp Cursor/Claude/Codex, na tiketi za QR.",
     },
     landing: {
       en: "Guest on homepage (may be logged out). Welcome briefly, stay STRICTLY on McBuleli products (wallet, P2P, Academy, signup). Refuse politics and general off-topic questions; invite them to ask about McBuleli or create an account at /register.",

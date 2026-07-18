@@ -9,6 +9,10 @@ import {
   hkSelect,
   hkSelectChevronStyle,
 } from "@/components/hackathon/hackathon-form-styles";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 
 type Props = {
   editionId: string;
@@ -41,12 +45,23 @@ export function HackathonParticipantForm({
     setErr(null);
     setPayUrl(null);
     const fd = new FormData(e.currentTarget);
+    const rawPhone = String(fd.get("phone") ?? "");
+    const phone = normalizeCodPhoneNumber(rawPhone);
+    if (!isValidCodMsisdn(phone)) {
+      setErr(
+        isFr
+          ? "Le téléphone doit commencer par 243 (ex. 2438XXXXXXXX)."
+          : "Phone must start with 243 (e.g. 2438XXXXXXXX).",
+      );
+      setBusy(false);
+      return;
+    }
     const body = {
       editionId,
       firstName: String(fd.get("firstName") ?? ""),
       lastName: String(fd.get("lastName") ?? ""),
       email: String(fd.get("email") ?? ""),
-      phone: String(fd.get("phone") ?? ""),
+      phone,
       whatsapp: String(fd.get("whatsapp") ?? "") || undefined,
       city: String(fd.get("city") ?? "") || undefined,
       profession: String(fd.get("profession") ?? "") || undefined,
@@ -99,6 +114,12 @@ export function HackathonParticipantForm({
             isFr
               ? "Plus de places disponibles pour cette édition."
               : "No seats left for this edition.",
+          );
+        } else if (json.error === "invalid_phone") {
+          setErr(
+            isFr
+              ? "Le téléphone doit commencer par 243 (comme sur Wallet)."
+              : "Phone must start with 243 (same as Wallet).",
           );
         } else {
           setErr(
@@ -169,13 +190,39 @@ export function HackathonParticipantForm({
           <label className={hkLabel} htmlFor="hk-email">
             Email
           </label>
-          <input id="hk-email" name="email" type="email" required className={hkField} disabled={!registrationOpen} />
+          <input
+            id="hk-email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            className={hkField}
+            disabled={!registrationOpen}
+          />
         </div>
         <div>
           <label className={hkLabel} htmlFor="hk-phone">
-            {isFr ? "Téléphone" : "Phone"}
+            {isFr ? "Téléphone (243…)" : "Phone (243…)"}
           </label>
-          <input id="hk-phone" name="phone" required className={hkField} placeholder="243…" disabled={!registrationOpen} />
+          <input
+            id="hk-phone"
+            name="phone"
+            required
+            inputMode="tel"
+            autoComplete="tel"
+            className={hkField}
+            placeholder="2438XXXXXXXX"
+            disabled={!registrationOpen}
+            onBlur={(e) => {
+              const n = normalizeCodPhoneNumber(e.target.value);
+              if (n) e.target.value = n;
+            }}
+          />
+          <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+            {isFr
+              ? "Format PawaPay / Wallet : le numéro doit commencer par 243."
+              : "PawaPay / Wallet format: number must start with 243."}
+          </p>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 /** Shared form control classes aligned with McBuleli FD light UI. */
 
 export const hkField =
-  "mt-1 w-full appearance-none rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm text-[color:var(--fd-text)] outline-none transition focus:border-[color:var(--fd-primary)] focus:ring-2 focus:ring-[color:var(--fd-primary)]/15";
+  "hk-field mt-1 w-full appearance-none rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2.5 text-sm text-[color:var(--fd-text)] outline-none transition focus:border-[color:var(--fd-primary)] focus:ring-2 focus:ring-[color:var(--fd-primary)]/15";
 
 export const hkSelect = `${hkField} bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat pr-10`;
 

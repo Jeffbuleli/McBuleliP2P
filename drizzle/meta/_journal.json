@@ -687,6 +687,13 @@
       "when": 1787700000000,
       "tag": "0107_hackathon_pay_later",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1787800000000,
+      "tag": "0108_hackathon_polish",
+      "breakpoints": true
     }
   ]
 }

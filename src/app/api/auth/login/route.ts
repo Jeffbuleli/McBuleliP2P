@@ -141,4 +141,9 @@ async function reconcileAcademyAfterLogin(userId: string, email: string) {
     .catch((err) => {
       console.warn("[auth/login] academy reconcile", err);
     });
+  void import("@/lib/hackathon/ensure-user").then(({ linkHackathonRegistrationToUser }) =>
+    linkHackathonRegistrationToUser({ userId, email }).catch((err) => {
+      console.warn("[auth/login] hackathon reconcile", err);
+    }),
+  );
 }
