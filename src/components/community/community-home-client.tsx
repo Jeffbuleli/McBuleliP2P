@@ -53,6 +53,9 @@ function toFeedPost(item: UnifiedFeedItem): FeedPostView {
     author: item.author,
     media: item.media,
     likedByMe: item.likedByMe ?? false,
+    repostOfId: item.repostOfId ?? null,
+    repostOf: item.repostOf ?? null,
+    repostedByMe: item.repostedByMe ?? false,
   };
 }
 
@@ -408,6 +411,10 @@ export function CommunityHomeClient() {
                                 ? patch.boostedUntil
                                 : i.boostedUntil,
                             likedByMe: patch.likedByMe ?? i.likedByMe,
+                            repostedByMe:
+                              patch.repostedByMe !== undefined
+                                ? patch.repostedByMe
+                                : i.repostedByMe,
                           }
                         : i,
                     ),

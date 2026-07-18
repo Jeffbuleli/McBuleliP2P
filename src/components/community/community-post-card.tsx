@@ -441,45 +441,63 @@ export function CommunityPostCard({
         {isRepostCard ? (
           <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-[#78716c]">
             <IconRepost size={14} />
-            {fr ? "a republié" : "reposted"}
+            <span className="truncate">
+              {post.author.displayName}{" "}
+              {fr ? "a republié" : "reposted"}
+            </span>
           </p>
         ) : null}
         {header}
         {formationBlock}
         {botTemplateBlock}
         {textBlock}
-        {original ? (
-          <div className="mb-3 overflow-hidden rounded-2xl border border-[#e8f3ee] bg-[#fafcfb]">
-            <div className="border-b border-[#eef3f0] px-3 py-2">
-              <CommunityAuthorHeader
-                author={original.author}
-                publishedAt={original.publishedAt}
-                fr={fr}
-              />
-            </div>
-            <div className="px-3 py-2">
-              {original.body.trim() ? (
-                <CommunityExpandableText
-                  text={postDisplayText(original.body, {
-                    hasMedia: original.media.length > 0,
-                  })}
+        {isRepostCard ? (
+          original ? (
+            <div className="mb-3 overflow-hidden rounded-2xl border border-[#dce8e0] bg-[#fafcfb]">
+              <div className="border-b border-[#eef3f0] px-3 py-2.5">
+                <Link
+                  href={`/app/community/u/${original.author.handle}`}
+                  className="block"
+                >
+                  <CommunityAuthorHeader
+                    author={original.author}
+                    publishedAt={original.publishedAt}
+                    fr={fr}
+                  />
+                </Link>
+              </div>
+              <Link
+                href={`/app/community/post/${original.id}`}
+                className="block px-3 py-2.5"
+              >
+                {original.body.trim() ? (
+                  <CommunityExpandableText
+                    text={postDisplayText(original.body, {
+                      hasMedia: original.media.length > 0,
+                    })}
+                    fr={fr}
+                    withMentions
+                    className="text-[13px] leading-snug text-[#44403c]"
+                  />
+                ) : null}
+                <CommunityPostMedia
+                  media={original.media}
+                  postType={original.postType}
+                  body={original.body}
                   fr={fr}
-                  withMentions
-                  className="text-[13px] leading-snug text-[#44403c]"
+                  postId={original.id}
+                  feedInline
                 />
-              ) : null}
-              <CommunityPostMedia
-                media={original.media}
-                postType={original.postType}
-                body={original.body}
-                fr={fr}
-                postId={original.id}
-                feedInline
-              />
+              </Link>
             </div>
-          </div>
-        ) : null}
-        {!original ? (
+          ) : (
+            <div className="mb-3 rounded-2xl border border-dashed border-[#d6d3d1] bg-[#fafaf9] px-3 py-4 text-center text-[12px] text-[#78716c]">
+              {fr
+                ? "Publication d'origine indisponible"
+                : "Original post unavailable"}
+            </div>
+          )
+        ) : (
           <CommunityPostMedia
             media={post.media}
             postType={post.postType}
@@ -488,7 +506,7 @@ export function CommunityPostCard({
             postId={post.id}
             feedInline
           />
-        ) : null}
+        )}
       </div>
 
       {boostConfirm ? (

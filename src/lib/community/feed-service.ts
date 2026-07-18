@@ -261,27 +261,25 @@ async function hydrateReposts(
     const rows = await db
       .select()
       .from(communityPosts)
-      .where(
-        and(
-          inArray(communityPosts.id, originalIds),
-          eq(communityPosts.status, "published"),
-        ),
-      );
-    const authors = await getAuthorsMap(rows.map((r) => r.authorId));
+      .where(inArray(communityPosts.id, originalIds));
+    const authors = await getAuthorsMap(
+      rows.map((r) => r.authorId).filter(Boolean),
+    );
     for (const r of rows) {
+      if (r.status === "deleted") continue;
       const author = authors.get(r.authorId);
       if (!author) continue;
       const media = await getPostMediaViews(r.id, r.mediaIds, viewerId);
-      // Nested reposts resolve one level only.
       const view = rowToFeedPost(r, author, media, false);
+      // One-level embed only (no nested repost chain in the card).
       view.repostOfId = null;
+      view.repostOf = null;
       originals.set(r.id, view);
     }
   }
 
   let myRepostTargets = new Set<string>();
   if (viewerId) {
-    const targetIds = posts.map((p) => p.repostOfId ?? p.id);
     const mine = await db
       .select({ meta: communityPosts.meta })
       .from(communityPosts)
@@ -1100,7 +1098,10 @@ export async function listAuthorFeedPosts(args: {
     }
   }
 
-  return { posts, nextCursor };
+  return {
+    posts: await hydrateReposts(posts, args.viewerId),
+    nextCursor,
+  };
 }
 
 export async function togglePostLike(args: {
@@ -1300,7 +1301,11 @@ export async function getFeedPostById(args: {
   }
 
   const media = await getPostMediaViews(row.id, row.mediaIds, args.viewerId);
-  return rowToFeedPost(row, author, media, likedByMe);
+  const [hydrated] = await hydrateReposts(
+    [rowToFeedPost(row, author, media, likedByMe)],
+    args.viewerId,
+  );
+  return hydrated ?? null;
 }
 
 export async function listPostComments(

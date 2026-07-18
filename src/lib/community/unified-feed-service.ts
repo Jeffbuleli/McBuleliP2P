@@ -43,6 +43,10 @@ export type UnifiedFeedItem = {
   meta?: Record<string, string>;
   formationMeta?: FormationPostMeta | null;
   botTemplateMeta?: BotTemplatePostMeta | null;
+  /** Internal reshare (X/LinkedIn style). */
+  repostOfId?: string | null;
+  repostOf?: FeedPostView | null;
+  repostedByMe?: boolean;
 };
 
 function feedPostToUnifiedItem(p: FeedPostView): UnifiedFeedItem {
@@ -69,6 +73,9 @@ function feedPostToUnifiedItem(p: FeedPostView): UnifiedFeedItem {
     meta: { contentKind },
     formationMeta: p.formationMeta,
     botTemplateMeta: p.botTemplateMeta,
+    repostOfId: p.repostOfId ?? null,
+    repostOf: p.repostOf ?? null,
+    repostedByMe: p.repostedByMe ?? false,
   };
 }
 
