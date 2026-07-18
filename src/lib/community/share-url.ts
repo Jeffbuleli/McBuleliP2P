@@ -70,3 +70,28 @@ export function communityStoryAppPath(storyId: string): string {
 export function communityStoryShareUrl(storyId: string): string {
   return getAppAbsoluteUrl(communityStorySharePath(storyId));
 }
+
+/** Public hashtag landing — crawlable at /community/tag/[tag]. */
+export function communityTagSharePath(tag: string): string {
+  const t = tag.trim().replace(/^#/, "").toLowerCase();
+  return `/community/tag/${encodeURIComponent(t)}`;
+}
+
+/** In-app hashtag feed. */
+export function communityTagAppPath(tag: string): string {
+  const t = tag.trim().replace(/^#/, "").toLowerCase();
+  return `/app/community/tag/${encodeURIComponent(t)}`;
+}
+
+export function communityTagShareUrl(tag: string): string {
+  return getAppAbsoluteUrl(communityTagSharePath(tag));
+}
+
+/** Public community hub. */
+export function communityHubSharePath(): string {
+  return "/community";
+}
+
+export function communityHubAppPath(): string {
+  return "/app/community";
+}

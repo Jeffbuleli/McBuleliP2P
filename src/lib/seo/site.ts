@@ -18,6 +18,30 @@ export const SEO_KEYWORDS = [
   "M-Pesa",
   "Airtel Money",
   "fintech Africa",
+  "crypto RDC",
+  "crypto Kinshasa",
+  "USDT mobile money RDC",
+  "P2P Congo",
+  "communauté crypto RDC",
+  "trading crypto Afrique",
+] as const;
+
+/** Seed hashtags for public Community SEO / sitemap. */
+export const COMMUNITY_SEO_TAGS = [
+  "p2p",
+  "usdt",
+  "crypto",
+  "rdc",
+  "kinshasa",
+  "pi",
+  "orangemoney",
+  "mpesa",
+  "airtel",
+  "avec",
+  "trading",
+  "signal",
+  "learn",
+  "local",
 ] as const;
 
 type HomeSeoCopy = {
@@ -131,4 +155,5 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/privacy",
   "/login",
   "/register",
+  "/community",
 ] as const;

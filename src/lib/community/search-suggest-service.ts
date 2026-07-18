@@ -18,6 +18,7 @@ import {
   UTILITY_TAG_META,
   isUtilityTag,
 } from "@/lib/community/utility-tags";
+import { communityTagSharePath } from "@/lib/community/share-url";
 
 export type SearchSuggestKind =
   | "person"
@@ -327,7 +328,7 @@ export async function suggestCommunitySearch(args: {
         id: `tag:${tag}`,
         label: `#${tag}`,
         subtitle: fr ? "Hashtag" : "Hashtag",
-        href: `/app/community/tag/${encodeURIComponent(tag)}`,
+        href: communityTagSharePath(tag),
         query: `#${tag}`,
         score: 80 + Math.min(20, score),
       });

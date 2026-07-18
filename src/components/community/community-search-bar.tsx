@@ -190,7 +190,7 @@ export function CommunitySearchBar({
       router.push(item.href);
       return;
     }
-    if (item.href?.startsWith("/app/community/tag/")) {
+    if (item.href?.startsWith("/app/community/tag/") || item.href?.startsWith("/community/tag/")) {
       pushRecent(item.query ?? item.label);
       setRecent(readRecent());
       setOpen(false);

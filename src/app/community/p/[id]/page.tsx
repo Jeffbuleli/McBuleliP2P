@@ -6,6 +6,7 @@ import { getPublicPostForShare } from "@/lib/community/feed-service";
 import {
   communityPostAppPath,
   communityPostSharePath,
+  communityTagSharePath,
 } from "@/lib/community/share-url";
 import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/lib/app-url";
 import { getSessionUserId } from "@/lib/session";
 import { CommunityPublicShareShell } from "@/components/community/community-public-share-shell";
+import { CommunityMentionText } from "@/components/community/community-mention-text";
 import { formatCompactCount } from "@/lib/community/format-count";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +45,7 @@ export async function generateMetadata({
   if (!post) {
     return {
       title: "Publication introuvable",
+      alternates: { canonical: url },
       openGraph: { url, siteName: "McBuleli" },
     };
   }
@@ -58,6 +61,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: url },
     openGraph: {
       type: "article",
       url,
@@ -109,10 +113,14 @@ export default async function CommunityPostSharePage({
   const avatarUrl = normalizePublicMediaUrl(post.authorAvatarUrl);
   const initial = post.authorDisplayName.slice(0, 1).toUpperCase();
   const body =
-    post.body.trim().length > 320
-      ? `${post.body.trim().slice(0, 317)}…`
+    post.body.trim().length > 1200
+      ? `${post.body.trim().slice(0, 1197)}…`
       : post.body.trim();
   const isVideo = post.mediaKind === "video";
+  const hashtags = Array.from(
+    body.matchAll(/#([\p{L}\p{N}_]{2,40})/gu),
+    (m) => m[1].toLowerCase(),
+  ).filter((t, i, arr) => arr.indexOf(t) === i);
 
   return (
     <CommunityPublicShareShell
@@ -192,8 +200,22 @@ export default async function CommunityPostSharePage({
 
         {body ? (
           <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-[#44403c]">
-            {body}
+            <CommunityMentionText text={body} publicLinks />
           </p>
+        ) : null}
+
+        {hashtags.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {hashtags.slice(0, 8).map((t) => (
+              <Link
+                key={t}
+                href={communityTagSharePath(t)}
+                className="rounded-full bg-[#eef6fb] px-2.5 py-1 text-[11px] font-bold text-[#229ed9]"
+              >
+                #{t}
+              </Link>
+            ))}
+          </div>
         ) : null}
 
         <div className="mt-4 flex gap-2">
