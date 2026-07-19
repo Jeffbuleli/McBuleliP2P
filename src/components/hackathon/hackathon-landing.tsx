@@ -206,9 +206,11 @@ function PersonGrid({
                 <img
                   src={p.photoUrl}
                   alt=""
-                  className={`h-full w-full object-cover ${
-                    p.photoFit === "contain" ? "scale-125" : "object-top"
-                  }`}
+                  className={
+                    p.photoFit === "contain"
+                      ? "h-full w-full object-contain p-1"
+                      : "h-full w-full object-cover object-top"
+                  }
                 />
               ) : (
                 p.name.slice(0, 1)
@@ -573,8 +575,8 @@ export function HackathonLanding({
                 <IconPin key="pin" />,
               ],
               [
-                isFr ? "Places" : "Seats",
-                `${e.seatsTaken} / ${e.maxSeats} ${isFr ? "réservées" : "held"} · ${seatsLeft} ${isFr ? "libres" : "left"}`,
+                isFr ? "Places libres" : "Seats left",
+                `${seatsLeft}`,
                 <IconSeats key="seats" />,
               ],
               [
@@ -1179,7 +1181,7 @@ export function HackathonLanding({
                 alt=""
                 width={32}
                 height={32}
-                className="h-full w-full scale-125 object-cover"
+                className="h-full w-full object-contain p-0.5"
               />
             </span>
             <span>McBuleli</span>

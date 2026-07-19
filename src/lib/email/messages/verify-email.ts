@@ -7,11 +7,14 @@ export async function sendEmailVerification(args: {
   userId: string;
   email: string;
   locale?: EmailLocale;
+  /** Stored on the auth challenge (e.g. hackathonRegistrationId). */
+  meta?: Record<string, unknown>;
 }) {
   const locale = args.locale ?? "fr";
   const { rawCode } = await createAuthChallenge({
     userId: args.userId,
     purpose: "email_verify",
+    meta: args.meta,
   });
   await sendMcBuleliTransactionalEmail({
     to: args.email,

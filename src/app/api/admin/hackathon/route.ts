@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
   getDb,
@@ -8,6 +8,7 @@ import {
   hackathonPartners,
   hackathonRegistrations,
   hackathonSponsors,
+  users,
 } from "@/db";
 import { StaffAuthError, requireStaff } from "@/lib/session-user";
 import {
@@ -53,7 +54,61 @@ export async function GET(req: Request) {
       .where(eq(hackathonRegistrations.editionId, editionId))
       .orderBy(desc(hackathonRegistrations.createdAt))
       .limit(500);
-    return NextResponse.json({ registrations: rows });
+
+    const userIds = [
+      ...new Set(rows.map((r) => r.userId).filter((id): id is string => Boolean(id))),
+    ];
+    const userMap = new Map<
+      string,
+      {
+        displayName: string | null;
+        email: string;
+        emailVerifiedAt: Date | null;
+      }
+    >();
+    if (userIds.length) {
+      const userRows = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          email: users.email,
+          emailVerifiedAt: users.emailVerifiedAt,
+        })
+        .from(users)
+        .where(inArray(users.id, userIds));
+      for (const u of userRows) {
+        userMap.set(u.id, {
+          displayName: u.displayName,
+          email: u.email,
+          emailVerifiedAt: u.emailVerifiedAt,
+        });
+      }
+    }
+
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      if (!r.userId) continue;
+      counts.set(r.userId, (counts.get(r.userId) ?? 0) + 1);
+    }
+
+    const registrations = rows.map((r) => {
+      const u = r.userId ? userMap.get(r.userId) : undefined;
+      const emailMismatch =
+        Boolean(u && r.email) &&
+        u!.email.toLowerCase() !== r.email.toLowerCase();
+      return {
+        ...r,
+        userDisplayName: u?.displayName ?? null,
+        userEmail: u?.email ?? null,
+        userEmailVerified: Boolean(u?.emailVerifiedAt),
+        userDuplicateInEdition: r.userId
+          ? (counts.get(r.userId) ?? 0) > 1
+          : false,
+        userEmailMismatch: emailMismatch,
+      };
+    });
+
+    return NextResponse.json({ registrations });
   }
   if (tab === "partners") {
     const rows = await db
@@ -118,6 +173,12 @@ const patchLeadZ = z.object({
   published: z.boolean().optional(),
 });
 
+const patchRegistrationZ = z.object({
+  kind: z.literal("registration"),
+  id: z.string().uuid(),
+  action: z.enum(["relink_user", "resend_verify"]),
+});
+
 export async function POST(req: Request) {
   try {
     await requireStaff();
@@ -169,6 +230,53 @@ export async function PATCH(req: Request) {
   const json = await req.json().catch(() => null);
 
   if (json && typeof json === "object" && "kind" in json) {
+    if ((json as { kind?: string }).kind === "registration") {
+      const regPatch = patchRegistrationZ.safeParse(json);
+      if (!regPatch.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const db = getDb();
+      const [reg] = await db
+        .select()
+        .from(hackathonRegistrations)
+        .where(eq(hackathonRegistrations.id, regPatch.data.id))
+        .limit(1);
+      if (!reg) {
+        return NextResponse.json({ error: "not_found" }, { status: 404 });
+      }
+
+      if (regPatch.data.action === "relink_user") {
+        const { ensureHackathonUser } = await import("@/lib/hackathon/ensure-user");
+        const account = await ensureHackathonUser({
+          email: reg.email,
+          firstName: reg.firstName,
+          lastName: reg.lastName,
+        });
+        await db
+          .update(hackathonRegistrations)
+          .set({ userId: account.id, updatedAt: new Date() })
+          .where(eq(hackathonRegistrations.id, reg.id));
+        return NextResponse.json({
+          ok: true,
+          userId: account.id,
+          emailVerified: Boolean(account.emailVerifiedAt),
+        });
+      }
+
+      if (regPatch.data.action === "resend_verify") {
+        if (reg.paymentStatus !== "pending_verify" || !reg.userId) {
+          return NextResponse.json({ error: "invalid_status" }, { status: 409 });
+        }
+        const { sendEmailVerification } = await import(
+          "@/lib/auth/email-verification"
+        );
+        await sendEmailVerification(reg.userId, reg.email, (reg.locale as "fr" | "en") || "fr", {
+          hackathonRegistrationId: reg.id,
+        });
+        return NextResponse.json({ ok: true });
+      }
+    }
+
     const lead = patchLeadZ.safeParse(json);
     if (!lead.success) {
       return NextResponse.json({ error: "invalid_body" }, { status: 400 });

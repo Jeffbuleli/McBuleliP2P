@@ -39,8 +39,30 @@ export async function POST(req: Request) {
     console.warn("[auth/verify-email] reward points grant skipped", err);
   });
 
+  const hackathonRegistrationId =
+    typeof consumed.meta?.hackathonRegistrationId === "string"
+      ? consumed.meta.hackathonRegistrationId
+      : undefined;
+
+  const { activateHackathonAfterEmailVerify } = await import(
+    "@/lib/hackathon/ensure-user"
+  );
+  const hackathon = await activateHackathonAfterEmailVerify({
+    userId: consumed.userId,
+    registrationId: hackathonRegistrationId,
+  }).catch((err) => {
+    console.warn("[auth/verify-email] hackathon activate failed", err);
+    return { activated: false as const };
+  });
+
   const jwt = await signSessionToken(consumed.userId, u?.sessionVersion ?? 0);
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.json({
+    ok: true,
+    next: hackathon.activated
+      ? hackathon.payUrl ?? "/hackathon#register"
+      : "/app",
+    hackathonActivated: hackathon.activated,
+  });
   res.cookies.set(
     sessionCookieName(),
     jwt,

@@ -95,6 +95,7 @@ export function HackathonParticipantForm({
         mode?: string;
         payUrl?: string;
         holdHours?: number;
+        existingAccount?: boolean;
       };
       if (!res.ok) {
         if (json.error === "already_registered") {
@@ -131,12 +132,24 @@ export function HackathonParticipantForm({
         }
         return;
       }
+      if (json.mode === "pending_verify") {
+        setMsg(
+          isFr
+            ? "Confirmez votre e-mail : un message de vérification vient de vous être envoyé. Dès confirmation, vous recevrez le lien de réservation / paiement. Compte McBuleli déjà lié à cet e-mail ? Utilisez « Mot de passe oublié » sur /login pour y accéder."
+            : "Confirm your email: we just sent a verification message. Once confirmed, you will get the reservation / payment link. Already have a McBuleli account on this email? Use “Forgot password” on /login to access it.",
+        );
+        return;
+      }
       if (json.mode === "reserved" && json.payUrl) {
         setPayUrl(json.payUrl);
         setMsg(
           isFr
-            ? `Place pré-réservée ${json.holdHours ?? 72} h. Un e-mail avec le lien de paiement vous a été envoyé.`
-            : `Seat held for ${json.holdHours ?? 72} h. We emailed you a payment link.`,
+            ? json.existingAccount
+              ? `Place pré-réservée ${json.holdHours ?? 72} h. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail — Mot de passe oublié sur /login si besoin).`
+              : `Place pré-réservée ${json.holdHours ?? 72} h. Un e-mail avec le lien de paiement vous a été envoyé.`
+            : json.existingAccount
+              ? `Seat held for ${json.holdHours ?? 72} h. Payment link emailed (McBuleli account already linked — use Forgot password on /login if needed).`
+              : `Seat held for ${json.holdHours ?? 72} h. We emailed you a payment link.`,
         );
         return;
       }

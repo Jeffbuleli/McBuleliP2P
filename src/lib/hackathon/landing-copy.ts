@@ -110,7 +110,7 @@ export function challengeCategories(isFr: boolean): ChallengeItem[] {
 export function journeySteps(isFr: boolean): JourneyStep[] {
   if (isFr) {
     return [
-      { step: 1, title: "Inscription", body: "Créez votre dossier et choisissez votre pack." },
+      { step: 1, title: "Inscription", body: "Confirmez votre e-mail, puis réservez votre place (72 h)." },
       { step: 2, title: "Validation", body: "Paiement confirmé - ticket QR envoyé par e-mail." },
       { step: 3, title: "Formation", body: "Bootcamp Vibe Coding (outils IA & ship)." },
       { step: 4, title: "Hackathon", body: "Build intensif en équipe sur votre défi." },
@@ -121,7 +121,7 @@ export function journeySteps(isFr: boolean): JourneyStep[] {
     ];
   }
   return [
-    { step: 1, title: "Registration", body: "Submit your application and choose a pack." },
+    { step: 1, title: "Registration", body: "Confirm your email, then hold your seat (72 h)." },
     { step: 2, title: "Validation", body: "Payment confirmed - QR ticket by email." },
     { step: 3, title: "Training", body: "Vibe Coding bootcamp (AI tools & ship)." },
     { step: 4, title: "Hackathon", body: "Intensive team build on your challenge." },
@@ -197,7 +197,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Comment se passe le paiement ?",
-        a: "Pré-inscription gratuite (place retenue 72 h), puis paiement par Orange Money, M-Pesa ou Airtel Money via le lien reçu par e-mail. Vous pouvez aussi payer immédiatement. Après validation, ticket QR par e-mail.",
+        a: "Pré-inscription : confirmez d'abord votre e-mail (lien de vérification). Ensuite place retenue 72 h et lien de paiement Orange Money, M-Pesa ou Airtel Money. Vous pouvez aussi payer immédiatement après confirmation. Ticket QR par e-mail après paiement.",
       },
       {
         q: "Où et quand a lieu l’événement ?",
@@ -232,7 +232,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "How does payment work?",
-      a: "Free pre-registration (seat held 72 h), then pay via Orange Money, M-Pesa or Airtel Money using the email link. You can also pay immediately. After confirmation you receive a QR ticket by email.",
+      a: "Pre-registration: confirm your email first (verification link). Then your seat is held 72 h with a pay link for Orange Money, M-Pesa or Airtel Money. You can also pay immediately after confirmation. QR ticket by email after payment.",
     },
     {
       q: "Where and when is it?",

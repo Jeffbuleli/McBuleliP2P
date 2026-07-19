@@ -155,21 +155,23 @@ export function HackathonPayClient({
         <p className="mt-2 text-center text-sm text-[color:var(--fd-muted)]">
           {editionName}
         </p>
-        <dl className="mt-5 space-y-2 rounded-xl bg-[color:var(--fd-mint)]/40 px-4 py-3 text-sm">
-          <div className="flex justify-between gap-3">
+        <dl className="mt-5 divide-y divide-[color:var(--fd-primary)]/10 overflow-hidden rounded-xl border border-[color:var(--fd-primary)]/15 bg-[color:var(--fd-mint)]/35 text-sm">
+          <div className="grid grid-cols-[7.5rem_1fr] items-baseline gap-3 px-4 py-3">
             <dt className="text-[color:var(--fd-muted)]">{isFr ? "Pack" : "Pack"}</dt>
-            <dd className="font-semibold text-[color:var(--fd-text)]">{packLabel}</dd>
+            <dd className="text-right font-semibold text-[color:var(--fd-text)]">{packLabel}</dd>
           </div>
-          <div className="flex justify-between gap-3">
+          <div className="grid grid-cols-[7.5rem_1fr] items-baseline gap-3 px-4 py-3">
             <dt className="text-[color:var(--fd-muted)]">{isFr ? "Montant" : "Amount"}</dt>
-            <dd className="font-semibold text-[color:var(--fd-text)]">{priceUsd} USD</dd>
+            <dd className="text-right font-semibold text-[color:var(--fd-text)]">{priceUsd} USD</dd>
           </div>
           {expiresLabel ? (
-            <div className="flex justify-between gap-3">
+            <div className="grid grid-cols-[7.5rem_1fr] items-baseline gap-3 px-4 py-3">
               <dt className="text-[color:var(--fd-muted)]">
-                {isFr ? "Place retenue jusqu'au" : "Seat held until"}
+                {isFr ? "Retenue jusqu'au" : "Held until"}
               </dt>
-              <dd className="font-semibold text-[color:var(--fd-text)]">{expiresLabel}</dd>
+              <dd className="text-right font-semibold leading-snug text-[color:var(--fd-text)]">
+                {expiresLabel}
+              </dd>
             </div>
           ) : null}
         </dl>
@@ -254,7 +256,7 @@ export function HackathonPayClient({
               alt=""
               width={28}
               height={28}
-              className="h-full w-full scale-125 object-cover"
+              className="h-full w-full object-contain p-0.5"
             />
           </span>
           <span>McBuleli</span>

@@ -4176,7 +4176,7 @@ export const hackathonRegistrations = pgTable(
     /** day1 | full */
     ticketPack: varchar("ticket_pack", { length: 16 }).notNull().default("full"),
     priceUsd: numeric("price_usd", { precision: 12, scale: 2 }).notNull(),
-    /** pending | reserved | paid | failed | refunded | expired */
+    /** pending | pending_verify | reserved | paid | failed | refunded | expired */
     paymentStatus: varchar("payment_status", { length: 16 })
       .notNull()
       .default("pending"),

@@ -65,8 +65,8 @@ export async function sendHackathonReserveEmail(args: {
         : `Your seat is held for ${holdHours} h. Pay when you are ready.`,
       title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
       body: isFr
-        ? `Votre pré-inscription à ${editionName} est enregistrée. Un compte McBuleli a été créé avec cet e-mail (utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin). Votre place est réservée ${holdHours} heures${expiresLabel ? ` (jusqu'au ${expiresLabel})` : ""}. Cliquez pour payer et recevoir votre ticket QR.`
-        : `Your pre-registration for ${editionName} is saved. A McBuleli account was created with this email (use “Forgot password” on mcbuleli.org/login if needed). Your seat is held for ${holdHours} hours${expiresLabel ? ` (until ${expiresLabel})` : ""}. Tap below to pay and receive your QR ticket.`,
+        ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée ${holdHours} heures${expiresLabel ? ` (jusqu'au ${expiresLabel})` : ""}. Cliquez pour payer et recevoir votre ticket QR. Compte McBuleli : utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin.`
+        : `Your pre-registration for ${editionName} is saved. Your seat is held for ${holdHours} hours${expiresLabel ? ` (until ${expiresLabel})` : ""}. Tap below to pay and receive your QR ticket. McBuleli account: use “Forgot password” on mcbuleli.org/login if needed.`,
       cta: isFr ? "Payer mon inscription" : "Pay my registration",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",

@@ -37,7 +37,11 @@ function VerifyEmailInner() {
           return;
         }
         setStatus("ok");
-        setTimeout(() => router.replace("/app"), 1200);
+        const next =
+          typeof data.next === "string" && data.next.startsWith("/")
+            ? data.next
+            : "/app";
+        setTimeout(() => router.replace(next), 1200);
       })
       .catch(() => {
         setStatus("err");

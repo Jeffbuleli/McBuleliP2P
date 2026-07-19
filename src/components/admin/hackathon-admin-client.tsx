@@ -133,6 +133,27 @@ export function HackathonAdminClient() {
     await loadTab();
   }
 
+  async function patchRegistration(
+    id: string,
+    action: "relink_user" | "resend_verify",
+  ) {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/hackathon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "registration", id, action }),
+      });
+      if (!res.ok) throw new Error("patch_failed");
+      await loadTab();
+    } catch {
+      setErr("Action participant impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function exportCsv() {
     if (tab !== "registrations" || !rows.length) return;
     const headers = [
@@ -144,6 +165,11 @@ export function HackathonAdminClient() {
       "paymentStatus",
       "holdExpiresAt",
       "userId",
+      "userDisplayName",
+      "userEmail",
+      "userEmailVerified",
+      "userDuplicateInEdition",
+      "userEmailMismatch",
       "ticketCode",
       "city",
       "createdAt",
@@ -311,9 +337,16 @@ export function HackathonAdminClient() {
 
       {tab === "registrations" ? (
         <div className="space-y-3">
-          <button type="button" className={adminCls.btnSecondary} onClick={exportCsv}>
-            Export CSV
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className={adminCls.btnSecondary} onClick={exportCsv}>
+              Export CSV
+            </button>
+            <p className="text-xs text-[color:var(--fd-muted)]">
+              Compte = user McBuleli lié par e-mail. « Doublon user » = même UUID sur
+              plusieurs lignes (anomalie). « E-mail ≠ compte » = userId rattaché au
+              mauvais e-mail.
+            </p>
+          </div>
           <div className="overflow-x-auto rounded-2xl border border-[color:var(--fd-border)]">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[color:var(--fd-mint)] text-xs font-bold uppercase text-[color:var(--fd-muted)]">
@@ -324,31 +357,107 @@ export function HackathonAdminClient() {
                   <th className="px-3 py-2">Pack</th>
                   <th className="px-3 py-2">Paiement</th>
                   <th className="px-3 py-2">Hold</th>
-                  <th className="px-3 py-2">User</th>
+                  <th className="px-3 py-2">Compte McBuleli</th>
                   <th className="px-3 py-2">Ticket</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={String(r.id)} className="border-t border-[color:var(--fd-border)]">
-                    <td className="px-3 py-2 font-semibold">
-                      {String(r.firstName)} {String(r.lastName)}
-                    </td>
-                    <td className="px-3 py-2">{String(r.email)}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{String(r.phone ?? "—")}</td>
-                    <td className="px-3 py-2">{String(r.ticketPack)}</td>
-                    <td className="px-3 py-2">{String(r.paymentStatus)}</td>
-                    <td className="px-3 py-2 text-xs text-[color:var(--fd-muted)]">
-                      {r.holdExpiresAt
-                        ? new Date(String(r.holdExpiresAt)).toLocaleString("fr-FR")
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-[10px]">
-                      {r.userId ? String(r.userId).slice(0, 8) : "—"}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-xs">{String(r.ticketCode ?? "—")}</td>
-                  </tr>
-                ))}
+                {rows.map((r) => {
+                  const userId = r.userId ? String(r.userId) : "";
+                  const duplicate = Boolean(r.userDuplicateInEdition);
+                  const mismatch = Boolean(r.userEmailMismatch);
+                  const verified = Boolean(r.userEmailVerified);
+                  const status = String(r.paymentStatus);
+                  return (
+                    <tr
+                      key={String(r.id)}
+                      className={`border-t border-[color:var(--fd-border)] ${
+                        duplicate || mismatch ? "bg-amber-50/80" : ""
+                      }`}
+                    >
+                      <td className="px-3 py-2 font-semibold">
+                        {String(r.firstName)} {String(r.lastName)}
+                      </td>
+                      <td className="px-3 py-2">{String(r.email)}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{String(r.phone ?? "—")}</td>
+                      <td className="px-3 py-2">{String(r.ticketPack)}</td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={
+                            status === "pending_verify"
+                              ? "font-semibold text-amber-800"
+                              : status === "reserved"
+                                ? "font-semibold text-[color:var(--fd-primary)]"
+                                : status === "paid"
+                                  ? "font-semibold text-emerald-700"
+                                  : ""
+                          }
+                        >
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-[color:var(--fd-muted)]">
+                        {r.holdExpiresAt
+                          ? new Date(String(r.holdExpiresAt)).toLocaleString("fr-FR")
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-xs">
+                        {userId ? (
+                          <div className="space-y-0.5">
+                            <a
+                              href={`/admin/users/${userId}`}
+                              className="font-mono text-[11px] font-semibold text-[color:var(--fd-primary)] underline-offset-2 hover:underline"
+                              title={userId}
+                            >
+                              {userId.slice(0, 8)}
+                            </a>
+                            <p className="text-[color:var(--fd-muted)]">
+                              {String(r.userDisplayName ?? "—")}
+                              {verified ? " · vérifié" : " · non vérifié"}
+                            </p>
+                            {duplicate ? (
+                              <p className="font-semibold text-amber-800">Doublon user</p>
+                            ) : null}
+                            {mismatch ? (
+                              <p className="font-semibold text-red-700">
+                                E-mail ≠ compte ({String(r.userEmail)})
+                              </p>
+                            ) : null}
+                            {mismatch || !userId || status === "pending_verify" ? (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {mismatch || !userId ? (
+                                  <button
+                                    type="button"
+                                    className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-border)]"
+                                    onClick={() =>
+                                      void patchRegistration(String(r.id), "relink_user")
+                                    }
+                                  >
+                                    Relier e-mail
+                                  </button>
+                                ) : null}
+                                {status === "pending_verify" ? (
+                                  <button
+                                    type="button"
+                                    className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-amber-900 ring-1 ring-amber-200"
+                                    onClick={() =>
+                                      void patchRegistration(String(r.id), "resend_verify")
+                                    }
+                                  >
+                                    Renvoyer vérif.
+                                  </button>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-xs">{String(r.ticketCode ?? "—")}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

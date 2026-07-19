@@ -7,7 +7,7 @@ import {
   hackathonRegistrations,
   hackathonSponsors,
 } from "@/db";
-import { getSessionUserId } from "@/lib/session";
+import { sendEmailVerification } from "@/lib/auth/email-verification";
 import {
   HACKATHON_HOLD_HOURS,
   HACKATHON_PARTNERSHIP_TYPES,
@@ -28,6 +28,7 @@ import {
 import { sendHackathonPartnerAckEmail } from "@/lib/email/messages/hackathon";
 import { sendHackathonReserveEmail } from "@/lib/email/messages/hackathon";
 import { sendHackathonSponsorAckEmail } from "@/lib/email/messages/hackathon";
+import type { EmailLocale } from "@/lib/email/locale";
 
 const paymentMethodZ = z.enum(["orange", "mpesa", "airtel", "usdt"]);
 
@@ -224,13 +225,15 @@ export async function registerParticipant(raw: unknown) {
       : String(fullEdition.priceFullUsd);
 
   const email = data.email.toLowerCase();
-  const userId =
-    (await getSessionUserId()) ??
-    (await ensureHackathonUser({
-      email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-    }));
+  // Always resolve the McBuleli user by registration email (never borrow a
+  // logged-in session user for a different email — that duplicated userIds in OPS).
+  const account = await ensureHackathonUser({
+    email,
+    firstName: data.firstName,
+    lastName: data.lastName,
+  });
+  const userId = account.id;
+  const emailVerified = Boolean(account.emailVerifiedAt);
 
   const existing = await db
     .select()
@@ -284,14 +287,72 @@ export async function registerParticipant(raw: unknown) {
   };
 
   if (intent === "reserve") {
-    const token =
-      existingActiveHold && existing[0]?.paymentToken
-        ? existing[0].paymentToken
-        : generatePaymentToken();
-    const holdExpiresAt =
-      existingActiveHold && existing[0]?.holdExpiresAt
-        ? existing[0].holdExpiresAt
-        : new Date(Date.now() + HACKATHON_HOLD_HOURS * 60 * 60 * 1000);
+    // Active hold: return existing pay link (idempotent re-submit).
+    if (existingActiveHold && existing[0]?.paymentToken) {
+      return {
+        ok: true as const,
+        mode: "reserved" as const,
+        registrationId: existing[0].id,
+        paymentToken: existing[0].paymentToken,
+        payUrl: payLaterPublicUrl(existing[0].paymentToken),
+        holdExpiresAt: existing[0].holdExpiresAt!.toISOString(),
+        holdHours: HACKATHON_HOLD_HOURS,
+        amountUsd: priceUsd,
+        existingAccount: !account.created,
+      };
+    }
+
+    // Email not verified yet → ask confirmation first; seat hold starts after verify.
+    if (!emailVerified) {
+      let registrationId = existing[0]?.id;
+      if (registrationId) {
+        await db
+          .update(hackathonRegistrations)
+          .set({
+            ...profile,
+            paymentMethod: data.paymentMethod ?? existing[0]?.paymentMethod ?? null,
+            paymentStatus: "pending_verify",
+            paymentToken: null,
+            holdExpiresAt: null,
+            holdReminderSentAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(hackathonRegistrations.id, registrationId));
+      } else {
+        const [created] = await db
+          .insert(hackathonRegistrations)
+          .values({
+            editionId: fullEdition.id,
+            email,
+            ...profile,
+            paymentMethod: data.paymentMethod ?? null,
+            paymentStatus: "pending_verify",
+          })
+          .returning({ id: hackathonRegistrations.id });
+        registrationId = created.id;
+      }
+
+      void sendEmailVerification(
+        userId,
+        email,
+        data.locale as EmailLocale,
+        { hackathonRegistrationId: registrationId },
+      ).catch(() => null);
+
+      return {
+        ok: true as const,
+        mode: "pending_verify" as const,
+        registrationId,
+        existingAccount: !account.created,
+        amountUsd: priceUsd,
+      };
+    }
+
+    // Verified account (new or returning after expiry) → hold seat + reservation email.
+    const token = generatePaymentToken();
+    const holdExpiresAt = new Date(
+      Date.now() + HACKATHON_HOLD_HOURS * 60 * 60 * 1000,
+    );
 
     let registrationId = existing[0]?.id;
     if (registrationId) {
@@ -303,6 +364,7 @@ export async function registerParticipant(raw: unknown) {
           paymentStatus: "reserved",
           paymentToken: token,
           holdExpiresAt,
+          holdReminderSentAt: null,
           updatedAt: new Date(),
         })
         .where(eq(hackathonRegistrations.id, registrationId));
@@ -336,10 +398,56 @@ export async function registerParticipant(raw: unknown) {
       holdExpiresAt: holdExpiresAt.toISOString(),
       holdHours: HACKATHON_HOLD_HOURS,
       amountUsd: priceUsd,
+      existingAccount: !account.created,
     };
   }
 
-  // pay_now
+  // pay_now — require verified email first (same gate as reserve).
+  if (!emailVerified) {
+    let registrationId = existing[0]?.id;
+    if (registrationId) {
+      await db
+        .update(hackathonRegistrations)
+        .set({
+          ...profile,
+          paymentMethod: data.paymentMethod ?? existing[0]?.paymentMethod ?? null,
+          paymentStatus: "pending_verify",
+          paymentToken: null,
+          holdExpiresAt: null,
+          holdReminderSentAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(hackathonRegistrations.id, registrationId));
+    } else {
+      const [created] = await db
+        .insert(hackathonRegistrations)
+        .values({
+          editionId: fullEdition.id,
+          email,
+          ...profile,
+          paymentMethod: data.paymentMethod ?? null,
+          paymentStatus: "pending_verify",
+        })
+        .returning({ id: hackathonRegistrations.id });
+      registrationId = created.id;
+    }
+
+    void sendEmailVerification(
+      userId,
+      email,
+      data.locale as EmailLocale,
+      { hackathonRegistrationId: registrationId },
+    ).catch(() => null);
+
+    return {
+      ok: true as const,
+      mode: "pending_verify" as const,
+      registrationId,
+      existingAccount: !account.created,
+      amountUsd: priceUsd,
+    };
+  }
+
   const paymentMethod = data.paymentMethod!;
   let registrationId = existing[0]?.id;
   if (registrationId) {

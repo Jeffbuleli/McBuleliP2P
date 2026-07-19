@@ -5,6 +5,7 @@ export async function sendEmailVerification(
   userId: string,
   email: string,
   locale?: EmailLocale,
+  meta?: Record<string, unknown>,
 ) {
-  await sendVerify({ userId, email, locale });
+  await sendVerify({ userId, email, locale, meta });
 }

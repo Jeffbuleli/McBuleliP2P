@@ -113,7 +113,7 @@ export default async function HackathonTicketPage({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center overflow-hidden rounded-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={BRAND_LOGO_256} alt="" width={22} height={22} className="h-full w-full scale-125 object-cover" />
+            <img src={BRAND_LOGO_256} alt="" width={22} height={22} className="h-full w-full object-contain p-0.5" />
           </span>
           <span>McBuleli</span>
         </a>
