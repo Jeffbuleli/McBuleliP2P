@@ -2,13 +2,13 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import type { Locale } from "@/i18n/locale";
 import { LOCALE_COOKIE } from "@/i18n/locale";
 import {
@@ -32,18 +32,20 @@ export function I18nProvider({
   initialLocale: Locale;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const [locale, setLocaleState] = useState(initialLocale);
 
   useEffect(() => {
     setLocaleState(initialLocale);
   }, [initialLocale]);
 
-  function setLocale(l: Locale) {
-    document.cookie = `${LOCALE_COOKIE}=${l};path=/;max-age=31536000;SameSite=Lax`;
-    setLocaleState(l);
-    router.refresh();
-  }
+  const setLocale = useCallback((l: Locale) => {
+    setLocaleState((prev) => {
+      if (prev === l) return prev;
+      document.cookie = `${LOCALE_COOKIE}=${l};path=/;max-age=31536000;SameSite=Lax`;
+      document.documentElement.lang = l;
+      return l;
+    });
+  }, []);
 
   const value = useMemo((): Ctx => {
     const d = getDictionary(locale);
@@ -55,7 +57,7 @@ export function I18nProvider({
         return vars ? interpolate(raw, vars) : raw;
       },
     };
-  }, [locale]);
+  }, [locale, setLocale]);
 
   return (
     <I18nContext.Provider value={value}>{children}</I18nContext.Provider>

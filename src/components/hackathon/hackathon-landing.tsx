@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { FeaturedHackathonPayload } from "@/lib/hackathon/service";
 import {
@@ -21,6 +23,7 @@ import { BUILDERS_TIER_VISUAL } from "@/lib/builders/builders-visual";
 import { HackathonParticipantForm } from "@/components/hackathon/hackathon-participant-form";
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
+import { useI18n } from "@/components/i18n-provider";
 
 function statusLabel(status: string, isFr: boolean) {
   if (status === "open") return isFr ? "Inscriptions ouvertes" : "Registration open";
@@ -413,11 +416,10 @@ function MidCta({ isFr }: { isFr: boolean }) {
 
 export function HackathonLanding({
   data,
-  locale,
 }: {
   data: FeaturedHackathonPayload;
-  locale: "fr" | "en";
 }) {
+  const { locale } = useI18n();
   const isFr = locale === "fr";
   const e = data.edition;
   const name = isFr ? e.nameFr : e.nameEn;

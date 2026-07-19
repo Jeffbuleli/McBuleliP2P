@@ -137,7 +137,7 @@ export default async function HackathonPage() {
               __html: JSON.stringify(eventJsonLd(data)),
             }}
           />
-          <HackathonLanding data={data} locale={isFr ? "fr" : "en"} />
+          <HackathonLanding data={data} />
         </>
       ) : (
         <div className="mx-auto max-w-lg px-4 py-16 text-center">
