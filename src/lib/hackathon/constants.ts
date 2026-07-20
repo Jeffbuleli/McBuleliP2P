@@ -36,8 +36,17 @@ export const HACKATHON_PAYMENT_METHODS = [
 export type HackathonPaymentMethod =
   (typeof HACKATHON_PAYMENT_METHODS)[number];
 
-/** Seat hold duration for free pré-inscription before payment */
-export const HACKATHON_HOLD_HOURS = 72;
+/** Open-ended seat hold (no auto-expiry). Reminders every N hours via cron. */
+export const HACKATHON_HOLD_EXPIRES = false;
+/** Hours between payment reminder emails for reserved seats (cron). */
+export const HACKATHON_REMINDER_HOURS = 24;
+/** @deprecated kept for older callers - holds no longer expire */
+export const HACKATHON_HOLD_HOURS = HACKATHON_REMINDER_HOURS;
+
+/** Unique ticket price (USD) for the full 3-day program */
+export const HACKATHON_PRICE_USD = "100";
+/** Default pack - single full program (no day-1-only option) */
+export const HACKATHON_DEFAULT_PACK = "full" as const;
 
 /** Confirmed venue for Kinshasa editions */
 export const HACKATHON_VENUE_SILIKIN =

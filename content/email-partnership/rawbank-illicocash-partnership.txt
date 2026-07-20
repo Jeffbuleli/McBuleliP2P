@@ -1,0 +1,42 @@
+Bonjour Rawbank / illicocash,
+
+Nous sommes McBuleli (mcbuleli.org). Nous organisons le McBuleli Hackathon au Silikin Village (Kinshasa) : bootcamp IA pratique (Cursor, Claude, Codex), compétition, mentorat et incubation.
+Programme : https://mcbuleli.org/hackathon
+
+Aujourd'hui, le paiement des tickets passe uniquement par mobile money opérateurs (Orange Money, M-Pesa, Airtel Money). Nous souhaitons proposer illicocash comme mode de paiement partenaire, en complément, pour élargir l'accès aux builders bancarisés et renforcer l'inclusion financière digitale.
+Référence produit : https://rawbank.com/banque-a-distance/illicocash/
+
+APPROCHE GAGNANT-GAGNANT
+
+1) Pour les participants
+- Payer le pack (bootcamp 1 jour ou 2 jours + hackathon) depuis le portefeuille illicocash (CDF/USD), sans dépendre uniquement d'un opérateur telco
+- Parcours simple (app / USSD), confiance marque Rawbank
+- Option : promo ponctuelle (ex. frais réduits ou cashback illicocash sur le ticket)
+
+2) Pour McBuleli Hackathon
+- Meilleure conversion des pré-inscriptions en paiements confirmés
+- Crédibilité d'un rail bancaire aux côtés du MoMo
+- Moins d'abandons liés aux limites / indisponibilités d'un seul canal
+
+3) Pour Rawbank / illicocash
+- Visibilité sponsoring paiement sur la page /hackathon, e-mails ticket et Silikin Village
+- Activations / usage portefeuille auprès d'un public builders & entrepreneurs
+- Alignement avec l'innovation digitale et le volet Digital / We Act
+- Option défi FinTech « inclusion & paiements » co-brandé jury / atelier
+- Données d'acquisition événementielle (participants qui choisissent illicocash)
+
+MODALITES PROPOSEES (à discuter)
+A. Merchant / API / QR marchand pour encaisser les tickets USD/CDF
+B. Pack sponsor paiement (Silver/Gold/Platinum) : logo « Payé avec illicocash », stand, atelier
+C. Campagne conjointe : « Réservez votre place - payez en MoMo ou illicocash »
+D. Sur mesure : réduction de frais sur le volume tickets hackathon
+
+Nous serions ravis d'un court appel de 20-30 minutes avec vos équipes Marketing / illicocash / partenariats pour caler le rail technique et le niveau de visibilité.
+
+Cordialement,
+McBuleli Team
+Mme Patty B.
+hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1
+https://mcbuleli.org/hackathon

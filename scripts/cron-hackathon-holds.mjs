@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Cron — POST /api/internal/hackathon/holds
- * Expire overdue seat holds + send ~24h payment reminders.
+ * Cron - POST /api/internal/hackathon/holds
+ * Hourly: payment reminders every 24h for reserved seats (no auto-expiry).
  */
 const base = (
   process.env.MCBULELI_API_URL ??

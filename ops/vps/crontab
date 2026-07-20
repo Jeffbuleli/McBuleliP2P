@@ -26,7 +26,7 @@ LOG_DIR=/var/log/mcbuleli
 */10 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-kyc-sync-pending.mjs >>$LOG_DIR/kyc-sync.log 2>&1
 */10 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-governance-tick.mjs >>$LOG_DIR/governance.log 2>&1
 
-# Hackathon seat holds (expire + payment reminders)
+# Hackathon reserved seats - payment reminders every 24h (no auto-expiry)
 0 * * * * set -a; . $CRON_ENV; set +a; cd $MCBULELI_REPO && /usr/bin/node scripts/cron-hackathon-holds.mjs >>$LOG_DIR/hackathon-holds.log 2>&1
 
 # Daily DB backup (local retention handled by backup-db.sh)

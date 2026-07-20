@@ -86,20 +86,61 @@ export type FeaturedHackathonPayload = {
   }>;
 };
 
+/**
+ * Static payload for local preview when DATABASE_URL / editions are unavailable.
+ * Registration/partner forms still need a real edition id to submit.
+ */
+export function demoFeaturedHackathon(): FeaturedHackathonPayload {
+  return {
+    edition: {
+      id: "00000000-0000-4000-8000-000000000001",
+      slug: "kinshasa-vibe-coding-2026",
+      nameFr: "McBuleli AI Hackathon - Kinshasa",
+      nameEn: "McBuleli AI Hackathon - Kinshasa",
+      taglineFr: "Bootcamp Vibe Coding + Hackathon : apprenez, construisez, pitchtez.",
+      taglineEn: "Vibe Coding Bootcamp + Hackathon: learn, build, pitch.",
+      startDate: null,
+      endDate: null,
+      venue: "Silikin Village, 63, Ave Colonel Mondjiba",
+      city: "Kinshasa",
+      maxSeats: 100,
+      seatsTaken: 0,
+      priceDay1Usd: "100",
+      priceFullUsd: "100",
+      status: "open",
+      program: defaultProgram(),
+      prizes: defaultPrizes(),
+      gallery: [],
+      displayStats: emptyStats(),
+      coverImage: null,
+    },
+    jury: [
+      {
+        id: "demo-jury-1",
+        name: "Jury McBuleli",
+        company: "McBuleli",
+        title: "Jury",
+        expertise: null,
+        photoUrl: null,
+      },
+    ],
+    mentors: [
+      {
+        id: "demo-mentor-1",
+        name: "Mentor Vibe Coding",
+        company: "McBuleli",
+        title: "Jeff Buleli - CEO",
+        expertise: "Cursor - Claude - Codex",
+        photoUrl: null,
+      },
+    ],
+    partnerLogos: [],
+    sponsorLogos: [],
+  };
+}
+
 export async function getFeaturedHackathon(): Promise<FeaturedHackathonPayload | null> {
   const db = getDb();
-
-  // Free seats when holds expire (even before hourly cron)
-  await db
-    .update(hackathonRegistrations)
-    .set({ paymentStatus: "expired", updatedAt: new Date() })
-    .where(
-      and(
-        eq(hackathonRegistrations.paymentStatus, "reserved"),
-        sql`${hackathonRegistrations.holdExpiresAt} IS NOT NULL`,
-        sql`${hackathonRegistrations.holdExpiresAt} <= now()`,
-      ),
-    );
 
   const [edition] = await db
     .select()
@@ -128,13 +169,7 @@ export async function getFeaturedHackathon(): Promise<FeaturedHackathonPayload |
         eq(hackathonRegistrations.editionId, row.id),
         sql`(
           ${hackathonRegistrations.paymentStatus} = 'paid'
-          OR (
-            ${hackathonRegistrations.paymentStatus} = 'reserved'
-            AND (
-              ${hackathonRegistrations.holdExpiresAt} IS NULL
-              OR ${hackathonRegistrations.holdExpiresAt} > now()
-            )
-          )
+          OR ${hackathonRegistrations.paymentStatus} = 'reserved'
         )`,
       ),
     );

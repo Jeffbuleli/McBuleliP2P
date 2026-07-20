@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { HackathonLanding } from "@/components/hackathon/hackathon-landing";
 import { getLocale } from "@/lib/get-locale";
-import { getFeaturedHackathon } from "@/lib/hackathon/service";
+import {
+  demoFeaturedHackathon,
+  getFeaturedHackathon,
+} from "@/lib/hackathon/service";
 import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
 import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from "@/lib/support-contact";
 
@@ -92,18 +95,7 @@ function eventJsonLd(data: NonNullable<Awaited<ReturnType<typeof getFeaturedHack
     offers: [
       {
         "@type": "Offer",
-        name: "Bootcamp 1 jour",
-        price: e.priceDay1Usd,
-        priceCurrency: "USD",
-        availability:
-          e.status === "open"
-            ? "https://schema.org/InStock"
-            : "https://schema.org/PreOrder",
-        url: `${CANONICAL_PRODUCTION_ORIGIN}/hackathon#register`,
-      },
-      {
-        "@type": "Offer",
-        name: "2 jours + Hackathon",
+        name: "McBuleli Hackathon - 3 jours",
         price: e.priceFullUsd,
         priceCurrency: "USD",
         availability:
@@ -120,10 +112,17 @@ export default async function HackathonPage() {
   const locale = await getLocale();
   const isFr = locale === "fr";
   let data = null;
+  let usedDemo = false;
   try {
     data = await getFeaturedHackathon();
-  } catch {
+  } catch (err) {
+    console.error("[hackathon] getFeaturedHackathon failed", err);
     data = null;
+  }
+
+  if (!data && process.env.NODE_ENV !== "production") {
+    data = demoFeaturedHackathon();
+    usedDemo = true;
   }
 
   return (
@@ -131,6 +130,13 @@ export default async function HackathonPage() {
       <LandingTopBar authReturnPath="/hackathon" />
       {data ? (
         <>
+          {usedDemo ? (
+            <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-900">
+              {isFr
+                ? "Aperçu local (DB indisponible) - les formulaires ne s'enregistreront pas tant que DATABASE_URL / seed ne sont pas OK."
+                : "Local preview (DB unavailable) - forms will not save until DATABASE_URL / seed are OK."}
+            </div>
+          ) : null}
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{

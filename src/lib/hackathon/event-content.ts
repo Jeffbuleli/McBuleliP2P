@@ -1,0 +1,347 @@
+/**
+ * Configurable marketing content for McBuleli events (hackathons, bootcamps, etc.).
+ * Edit this file to reuse the landing template for other editions.
+ */
+import type { BenefitIconId, PrizeIconId } from "@/components/hackathon/event-icons";
+
+export type EventNavItem = { id: string; labelFr: string; labelEn: string };
+
+export type ProgramSlot = {
+  time: string;
+  activityFr: string;
+  activityEn: string;
+  icon: ProgramIconId;
+};
+
+export type ProgramDay = {
+  day: number;
+  labelFr: string;
+  labelEn: string;
+  subtitleFr: string;
+  subtitleEn: string;
+  slots: ProgramSlot[];
+};
+
+export type ProgramIconId =
+  | "welcome"
+  | "mic"
+  | "partners"
+  | "target"
+  | "coffee"
+  | "brain"
+  | "code"
+  | "help"
+  | "team"
+  | "build"
+  | "clock"
+  | "presentation"
+  | "jury"
+  | "award"
+  | "network"
+  | "media";
+
+export type PrizeCard = {
+  id: PrizeIconId;
+  icon: PrizeIconId;
+  titleFr: string;
+  titleEn: string;
+  bodyFr: string;
+  bodyEn: string;
+};
+
+export type PartnerBenefit = {
+  id: string;
+  icon: BenefitIconId;
+  titleFr: string;
+  titleEn: string;
+  bodyFr: string;
+  bodyEn: string;
+};
+
+export type SponsorTier = {
+  id: "platinum" | "gold" | "silver" | "bronze";
+  labelFr: string;
+  labelEn: string;
+  perksFr: string[];
+  perksEn: string[];
+};
+
+export type EventHeroStats = {
+  participantsExpected: number;
+  mentorsLabelFr: string;
+  mentorsLabelEn: string;
+  partnersLabelFr: string;
+  partnersLabelEn: string;
+  prizesCountFr: string;
+  prizesCountEn: string;
+};
+
+/** Edition year shown on the landing when dates are TBA. */
+export const HACKATHON_EVENT_YEAR = 2026;
+
+export const HACKATHON_EVENT_DAYS = 3;
+
+export const HACKATHON_NAV: EventNavItem[] = [
+  { id: "about", labelFr: "À propos", labelEn: "About" },
+  { id: "programme", labelFr: "Programme", labelEn: "Program" },
+  { id: "defis", labelFr: "Défis", labelEn: "Challenges" },
+  { id: "prix", labelFr: "Prix", labelEn: "Prizes" },
+  { id: "partenaires", labelFr: "Partenaires", labelEn: "Partners" },
+  { id: "sponsors", labelFr: "Sponsors", labelEn: "Sponsors" },
+  { id: "faq", labelFr: "FAQ", labelEn: "FAQ" },
+  { id: "contact", labelFr: "Contact", labelEn: "Contact" },
+];
+
+export function defaultHeroStats(
+  _mentorsCount: number,
+  partnersCount: number,
+): EventHeroStats {
+  return {
+    participantsExpected: 100,
+    mentorsLabelFr: "3+",
+    mentorsLabelEn: "3+",
+    partnersLabelFr: partnersCount > 0 ? `${partnersCount}+` : "5+",
+    partnersLabelEn: partnersCount > 0 ? `${partnersCount}+` : "5+",
+    prizesCountFr: "5",
+    prizesCountEn: "5",
+  };
+}
+
+export function hackathonProgramDays(): ProgramDay[] {
+  return [
+    {
+      day: 1,
+      labelFr: "Jour 1 - Bootcamp & Lancement",
+      labelEn: "Day 1 - Bootcamp & Launch",
+      subtitleFr: "08h00 - 13h30",
+      subtitleEn: "8:00 AM - 1:30 PM",
+      slots: [
+        { time: "08h00 - 08h45", activityFr: "Accueil, badges et networking (café)", activityEn: "Welcome, badges & networking (coffee)", icon: "welcome" },
+        { time: "08h45 - 09h00", activityFr: "Mot de bienvenue McBuleli et objectifs", activityEn: "McBuleli welcome & goals", icon: "mic" },
+        { time: "09h00 - 09h20", activityFr: "Discours partenaire principal", activityEn: "Lead partner keynote", icon: "partners" },
+        { time: "09h20 - 09h35", activityFr: "Présentation partenaires et sponsors", activityEn: "Partners & sponsors intro", icon: "partners" },
+        { time: "09h35 - 10h10", activityFr: "Présentation des défis et règles", activityEn: "Challenges & rules briefing", icon: "target" },
+        { time: "10h10 - 10h25", activityFr: "Pause café & networking", activityEn: "Coffee break & networking", icon: "coffee" },
+        { time: "10h25 - 11h10", activityFr: "Bootcamp 1 : Design Thinking & validation", activityEn: "Bootcamp 1: Design Thinking & validation", icon: "brain" },
+        { time: "11h10 - 11h45", activityFr: "Bootcamp 2 : IA, APIs et outils", activityEn: "Bootcamp 2: AI, APIs & tools", icon: "code" },
+        { time: "11h45 - 12h05", activityFr: "Q&R avec les mentors", activityEn: "Q&A with mentors", icon: "help" },
+        { time: "12h05 - 12h25", activityFr: "Formation des équipes et choix des défis", activityEn: "Team formation & challenge pick", icon: "team" },
+        { time: "12h25 - 13h20", activityFr: "Travail en équipe (mentorat)", activityEn: "Team work (mentoring)", icon: "build" },
+        { time: "13h20 - 13h30", activityFr: "Briefing Jour 2 et clôture", activityEn: "Day 2 briefing & wrap-up", icon: "clock" },
+      ],
+    },
+    {
+      day: 2,
+      labelFr: "Jour 2 - Build Day & Mentorat",
+      labelEn: "Day 2 - Build Day & Mentoring",
+      subtitleFr: "08h00 - 13h30",
+      subtitleEn: "8:00 AM - 1:30 PM",
+      slots: [
+        { time: "08h00 - 08h15", activityFr: "Accueil et rappel des objectifs", activityEn: "Welcome & goals recap", icon: "welcome" },
+        { time: "08h15 - 10h00", activityFr: "Développement intensif des prototypes", activityEn: "Intensive prototype development", icon: "build" },
+        { time: "10h00 - 10h15", activityFr: "Pause café", activityEn: "Coffee break", icon: "coffee" },
+        { time: "10h15 - 10h45", activityFr: "Session partenaire (entrepreneuriat / innovation)", activityEn: "Partner session (entrepreneurship / innovation)", icon: "mic" },
+        { time: "10h45 - 12h15", activityFr: "Développement avec mentorat tech & business", activityEn: "Build with tech & business mentoring", icon: "code" },
+        { time: "12h15 - 12h40", activityFr: "Revue d'avancement (3 min / équipe)", activityEn: "Progress check-in (3 min / team)", icon: "presentation" },
+        { time: "12h40 - 13h10", activityFr: "Préparation pitch & démo", activityEn: "Pitch & demo prep", icon: "presentation" },
+        { time: "13h10 - 13h30", activityFr: "Critères d'évaluation et clôture", activityEn: "Judging criteria & wrap-up", icon: "jury" },
+      ],
+    },
+    {
+      day: 3,
+      labelFr: "Jour 3 - Demo Day & Cérémonie",
+      labelEn: "Day 3 - Demo Day & Ceremony",
+      subtitleFr: "08h00 - 13h30",
+      subtitleEn: "8:00 AM - 1:30 PM",
+      slots: [
+        { time: "08h00 - 08h20", activityFr: "Installation et tests techniques", activityEn: "Setup & tech checks", icon: "build" },
+        { time: "08h20 - 08h35", activityFr: "Mot d'ouverture Demo Day", activityEn: "Demo Day opening", icon: "mic" },
+        { time: "08h35 - 10h35", activityFr: "Pitch + demo + questions jury", activityEn: "Pitch + demo + jury Q&A", icon: "jury" },
+        { time: "10h35 - 10h50", activityFr: "Pause cafe & networking", activityEn: "Coffee break & networking", icon: "coffee" },
+        { time: "10h50 - 11h20", activityFr: "Intervention entrepreneur / partenaire", activityEn: "Guest entrepreneur / partner talk", icon: "mic" },
+        { time: "11h20 - 11h50", activityFr: "Délibération jury & programmes partenaires", activityEn: "Jury deliberation & partner programs", icon: "partners" },
+        { time: "11h50 - 12h20", activityFr: "Annonce des gagnants et remise des prix", activityEn: "Winners announcement & awards", icon: "award" },
+        { time: "12h20 - 12h40", activityFr: "Certificats, partenariats symboliques, photos", activityEn: "Certificates, partnerships, photos", icon: "award" },
+        { time: "12h40 - 13h00", activityFr: "Cocktail de clôture", activityEn: "Closing cocktail", icon: "network" },
+        { time: "13h00 - 13h30", activityFr: "Interviews presse et cloture officielle", activityEn: "Press interviews & official close", icon: "media" },
+      ],
+    },
+  ];
+}
+
+export function crossCuttingActivities(isFr: boolean): string[] {
+  if (isFr) {
+    return [
+      "Couverture médiatique (photos, vidéos, réseaux sociaux)",
+      "Espace partenaires (produits, services, opportunités)",
+      "Interviews équipes et mentors",
+      "Publications live McBuleli & partenaires",
+      "Capsules sponsors aux transitions",
+      "Rencontres B2B partenaires - mentors - porteurs de projets",
+    ];
+  }
+  return [
+    "Media coverage (photos, video, social)",
+    "Partner booth (products, services, opportunities)",
+    "Team & mentor interviews",
+    "Live posts from McBuleli & partners",
+    "Sponsor spots during transitions",
+    "B2B meetings: partners - mentors - founders",
+  ];
+}
+
+const PRIZES: PrizeCard[] = [
+  { id: "first", icon: "first", titleFr: "Grand Prix", titleEn: "Grand Prize", bodyFr: "Meilleure équipe globale - dotation à annoncer.", bodyEn: "Top overall team - prize TBA." },
+  { id: "second", icon: "second", titleFr: "Deuxième Prix", titleEn: "Second Prize", bodyFr: "Excellence technique et exécution.", bodyEn: "Technical excellence & execution." },
+  { id: "third", icon: "third", titleFr: "Troisième Prix", titleEn: "Third Prize", bodyFr: "Projet prometteur avec fort potentiel.", bodyEn: "Promising project with strong potential." },
+  { id: "innovation", icon: "innovation", titleFr: "Prix Innovation", titleEn: "Innovation Award", bodyFr: "Solution la plus originale et créative.", bodyEn: "Most original & creative solution." },
+  { id: "impact", icon: "impact", titleFr: "Prix Impact Social", titleEn: "Social Impact Award", bodyFr: "Impact mesurable pour la communauté en RDC.", bodyEn: "Measurable impact for communities in DRC." },
+];
+
+export function podiumPrizes(_isFr: boolean): PrizeCard[] {
+  return PRIZES;
+}
+
+const BENEFITS: PartnerBenefit[] = [
+  { id: "visibility", icon: "visibility", titleFr: "Visibilité", titleEn: "Visibility", bodyFr: "Logo, mentions et présence sur site & réseaux.", bodyEn: "Logo, mentions & presence on site & social." },
+  { id: "talents", icon: "talents", titleFr: "Accès aux talents", titleEn: "Talent access", bodyFr: "Rencontrez builders, étudiants et entrepreneurs.", bodyEn: "Meet builders, students and founders." },
+  { id: "innovation", icon: "innovation", titleFr: "Innovation", titleEn: "Innovation", bodyFr: "Co-créez autour de l'IA et des défis locaux.", bodyEn: "Co-create around AI and local challenges." },
+  { id: "impact", icon: "impact", titleFr: "Impact social", titleEn: "Social impact", bodyFr: "Soutenez la jeunesse tech congolaise.", bodyEn: "Support Congolese tech youth." },
+  { id: "network", icon: "network", titleFr: "Networking", titleEn: "Networking", bodyFr: "Rencontres B2B avec mentors et porteurs de projets.", bodyEn: "B2B with mentors and project leads." },
+  { id: "hiring", icon: "hiring", titleFr: "Recrutement", titleEn: "Hiring", bodyFr: "Identifiez des profils prometteurs sur place.", bodyEn: "Spot promising profiles on site." },
+  { id: "comms", icon: "comms", titleFr: "Communication", titleEn: "Communications", bodyFr: "Contenu réutilisable (talks, interviews, capsules).", bodyEn: "Reusable content (talks, interviews, spots)." },
+  { id: "report", icon: "report", titleFr: "Rapport d'impact", titleEn: "Impact report", bodyFr: "Synthèse post-événement (portée, équipes, médias).", bodyEn: "Post-event summary (reach, teams, media)." },
+];
+
+export function partnerBenefits(_isFr: boolean): PartnerBenefit[] {
+  return BENEFITS;
+}
+
+export function sponsorTiers(): SponsorTier[] {
+  return [
+    {
+      id: "platinum",
+      labelFr: "Platine",
+      labelEn: "Platinum",
+      perksFr: ["Logo XXL", "Stand premium", "Intervention officielle", "Siège jury", "Communication maximale"],
+      perksEn: ["XXL logo", "Premium booth", "Official talk", "Jury seat", "Maximum comms"],
+    },
+    {
+      id: "gold",
+      labelFr: "Or",
+      labelEn: "Gold",
+      perksFr: ["Logo large", "Stand événement", "Atelier ou talk", "Mention presse", "Visibilité réseaux"],
+      perksEn: ["Large logo", "Event booth", "Workshop or talk", "Press mention", "Social visibility"],
+    },
+    {
+      id: "silver",
+      labelFr: "Argent",
+      labelEn: "Silver",
+      perksFr: ["Logo page hackathon", "Stand partagé", "Kit presse", "Mention réseaux"],
+      perksEn: ["Hackathon page logo", "Shared booth", "Press kit", "Social mention"],
+    },
+    {
+      id: "bronze",
+      labelFr: "Bronze",
+      labelEn: "Bronze",
+      perksFr: ["Logo partenaire", "Mention événement", "Présence espace partenaires"],
+      perksEn: ["Partner logo", "Event mention", "Partner area presence"],
+    },
+  ];
+}
+
+export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
+  if (isFr) {
+    return [
+      {
+        q: "Qui peut participer ?",
+        a: "Étudiants, développeurs, designers, entrepreneurs et profils pluridisciplinaires. Les débutants sont les bienvenus grâce au bootcamp Jour 1.",
+      },
+      {
+        q: "Faut-il une équipe ?",
+        a: "Non. Inscrivez-vous seul ou en équipe - la formation des équipes a lieu le Jour 1.",
+      },
+      {
+        q: "Le hackathon est-il gratuit ?",
+        a: "Non. Tarif unique : 100 USD pour le programme complet (3 demi-journées). Des bourses partenaires peuvent être annoncées.",
+      },
+      {
+        q: "Quels sont les critères ?",
+        a: "Innovation (25 %), impact (25 %), qualité technique (20 %), business model (15 %) et présentation (15 %).",
+      },
+      {
+        q: "Qui garde la propriété intellectuelle ?",
+        a: "Les participants conservent la PI de leurs projets, sauf accord écrit avec un partenaire. McBuleli peut communiquer sur les projets présentés.",
+      },
+      {
+        q: "Comment devenir partenaire ?",
+        a: "Remplissez le formulaire Partenaire ou contactez-nous. Chaque collaboration est définie sur mesure après échange.",
+      },
+      {
+        q: "Comment devenir sponsor ?",
+        a: "Choisissez un niveau (Bronze à Platine) via le formulaire Sponsor. Les montants seront confirmés lors de la discussion.",
+      },
+    ];
+  }
+  return [
+    {
+      q: "Who can participate?",
+      a: "Students, developers, designers, founders and multidisciplinary profiles. Beginners welcome thanks to Day 1 bootcamp.",
+    },
+    {
+      q: "Do I need a team?",
+      a: "No. Register solo or as a team - team formation happens on Day 1.",
+    },
+    {
+      q: "Is the hackathon free?",
+      a: "No. Single price: 100 USD for the full 3 half-day program. Partner scholarships may be announced.",
+    },
+    {
+      q: "What are the criteria?",
+      a: "Innovation (25%), impact (25%), technical quality (20%), business model (15%) and presentation (15%).",
+    },
+    {
+      q: "Who owns the intellectual property?",
+      a: "Participants keep IP unless otherwise agreed with a partner. McBuleli may communicate about presented projects.",
+    },
+    {
+      q: "How to become a partner?",
+      a: "Fill the Partner form or contact us. Each collaboration is tailored after discussion.",
+    },
+    {
+      q: "How to become a sponsor?",
+      a: "Pick a tier (Bronze to Platinum) via the Sponsor form. Amounts confirmed during discussion.",
+    },
+  ];
+}
+
+export function aboutBlurb(isFr: boolean): { title: string; body: string } {
+  if (isFr) {
+    return {
+      title: "3 demi-journées pour apprendre, builder et pitcher",
+      body: "Bootcamp Vibe Coding, hackathon intensif et Demo Day au Silikin Village (2026). Un format professionnel pensé pour la RDC - avec visibilité partenaires et expérience fluide pour les participants.",
+    };
+  }
+  return {
+    title: "3 half-days to learn, build and pitch",
+    body: "Vibe Coding bootcamp, intensive hackathon and Demo Day at Silikin Village (2026). A professional format built for DRC - partner visibility and a smooth participant experience.",
+  };
+}
+
+export function eventDateLabel(
+  startDate: string | null,
+  isFr: boolean,
+): string {
+  if (!startDate) {
+    return isFr ? `Bientôt - ${HACKATHON_EVENT_YEAR}` : `Coming soon - ${HACKATHON_EVENT_YEAR}`;
+  }
+  try {
+    return new Date(startDate).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return isFr ? `Bientôt - ${HACKATHON_EVENT_YEAR}` : `Coming soon - ${HACKATHON_EVENT_YEAR}`;
+  }
+}

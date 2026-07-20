@@ -6,7 +6,6 @@ import {
   canonicalEmailForDedup,
   normalizeAuthEmail,
 } from "@/lib/auth/email-normalize";
-import { HACKATHON_HOLD_HOURS } from "@/lib/hackathon/constants";
 import {
   generatePaymentToken,
   payLaterPublicUrl,
@@ -168,16 +167,14 @@ export async function activateHackathonAfterEmailVerify(args: {
   }
 
   const token = generatePaymentToken();
-  const holdExpiresAt = new Date(
-    Date.now() + HACKATHON_HOLD_HOURS * 60 * 60 * 1000,
-  );
 
   await db
     .update(hackathonRegistrations)
     .set({
       paymentStatus: "reserved",
       paymentToken: token,
-      holdExpiresAt,
+      holdExpiresAt: null,
+      holdReminderSentAt: null,
       updatedAt: new Date(),
     })
     .where(eq(hackathonRegistrations.id, reg.id));

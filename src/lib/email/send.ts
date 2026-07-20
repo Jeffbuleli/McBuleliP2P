@@ -74,14 +74,20 @@ export async function sendEmail(args: {
   /** Override default noreply@ (e.g. partnership outreach from hi@). */
   from?: string;
   replyTo?: string;
+  /** Blind copy (e.g. partnership archive to hi@). */
+  bcc?: string | string[];
 }): Promise<boolean> {
   const from = args.from ?? emailFromAddress();
   const replyTo = args.replyTo ?? emailReplyTo();
+  const bcc = (Array.isArray(args.bcc) ? args.bcc : args.bcc ? [args.bcc] : [])
+    .map((e) => e.trim())
+    .filter(Boolean);
 
   if (!canSendViaResendApi()) {
     return devPreview({
       mode: "html",
       to: args.to,
+      bcc: bcc.length ? bcc : undefined,
       from,
       replyTo,
       subject: args.subject,
@@ -102,6 +108,7 @@ export async function sendEmail(args: {
       from,
       reply_to: replyTo,
       to: [args.to],
+      ...(bcc.length ? { bcc } : {}),
       subject: args.subject,
       html: args.html,
       text: args.text,

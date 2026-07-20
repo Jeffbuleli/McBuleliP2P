@@ -18,6 +18,7 @@ import {
 } from "../src/lib/email/partnership/avadapay-templates";
 import {
   PARTNERSHIP_EMAIL_LAYOUT,
+  partnershipArchiveBcc,
   partnershipEmailBaseUrl,
 } from "../src/lib/email/partnership/partnership-email-config";
 import { renderPartnershipEmail } from "../src/lib/email/partnership/render-partnership-email";
@@ -119,7 +120,10 @@ async function main() {
     console.error("Échec Resend — voir les logs [email] resend html error ci-dessus.");
     process.exit(1);
   }
-  console.log(`✓ Envoyé via Resend : "${subject}" → ${to}`);
+  const archiveBcc = partnershipArchiveBcc(to);
+  console.log(
+    `✓ Envoyé via Resend : "${subject}" → ${to}${archiveBcc ? ` (BCC ${archiveBcc})` : ""}`,
+  );
 }
 
 main().catch((e) => {

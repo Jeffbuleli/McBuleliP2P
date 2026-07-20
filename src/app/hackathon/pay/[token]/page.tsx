@@ -35,11 +35,7 @@ export default async function HackathonPayPage({
 
   const { registration: reg, edition } = row;
   const isFr = reg.locale !== "en";
-  const expired =
-    reg.paymentStatus === "expired" ||
-    (reg.paymentStatus === "reserved" &&
-      reg.holdExpiresAt != null &&
-      reg.holdExpiresAt.getTime() <= Date.now());
+  const expired = reg.paymentStatus === "expired";
 
   if (reg.paymentStatus === "paid" && reg.ticketCode) {
     return (
@@ -74,8 +70,8 @@ export default async function HackathonPayPage({
           </h1>
           <p className="mt-2 text-sm text-[color:var(--fd-muted)]">
             {isFr
-              ? "Le délai de 72 h est passé. Pré-inscrivez-vous à nouveau pour reprendre une place."
-              : "The 72 h window has passed. Pre-register again to claim a seat."}
+              ? "Cette réservation n'est plus active. Pré-inscrivez-vous à nouveau pour reprendre une place."
+              : "This reservation is no longer active. Pre-register again to claim a seat."}
           </p>
           <a
             href="/hackathon#register"

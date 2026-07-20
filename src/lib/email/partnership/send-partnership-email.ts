@@ -5,6 +5,7 @@ import {
 } from "@/lib/email/partnership/avadapay-templates";
 import {
   PARTNERSHIP_EMAIL_LAYOUT,
+  partnershipArchiveBcc,
   partnershipEmailFrom,
   partnershipEmailReplyTo,
   partnershipEmailBaseUrl,
@@ -29,6 +30,7 @@ export async function sendPartnershipEmail(args: {
     text,
     from: partnershipEmailFrom(),
     replyTo: partnershipEmailReplyTo(),
+    bcc: partnershipArchiveBcc(args.to),
   });
 }
 

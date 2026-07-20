@@ -250,7 +250,7 @@ export function HackathonAdminClient() {
           <form onSubmit={createEdition} className={`${adminCls.card} space-y-3`}>
             <h3 className={adminCls.h2}>Nouvelle édition</h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              <input name="slug" required placeholder="slug (ex: lubumbashi-2027)" className={adminCls.input} />
+              <input name="slug" required placeholder="slug (ex: lubumbashi-2026)" className={adminCls.input} />
               <input name="city" placeholder="Ville" defaultValue="Kinshasa" className={adminCls.input} />
               <input name="nameFr" required placeholder="Nom FR" className={adminCls.input} />
               <input name="nameEn" required placeholder="Name EN" className={adminCls.input} />

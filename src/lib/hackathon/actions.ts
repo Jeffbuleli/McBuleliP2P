@@ -9,7 +9,6 @@ import {
 } from "@/db";
 import { sendEmailVerification } from "@/lib/auth/email-verification";
 import {
-  HACKATHON_HOLD_HOURS,
   HACKATHON_PARTNERSHIP_TYPES,
   HACKATHON_SPONSOR_PACKS,
 } from "@/lib/hackathon/constants";
@@ -142,13 +141,7 @@ async function countHeldSeats(editionId: string) {
         eq(hackathonRegistrations.editionId, editionId),
         sql`(
           ${hackathonRegistrations.paymentStatus} = 'paid'
-          OR (
-            ${hackathonRegistrations.paymentStatus} = 'reserved'
-            AND (
-              ${hackathonRegistrations.holdExpiresAt} IS NULL
-              OR ${hackathonRegistrations.holdExpiresAt} > now()
-            )
-          )
+          OR ${hackathonRegistrations.paymentStatus} = 'reserved'
         )`,
       ),
     );
@@ -219,10 +212,9 @@ export async function registerParticipant(raw: unknown) {
     return { ok: false as const, error: "no_edition", status: 404 };
   }
 
-  const priceUsd =
-    data.ticketPack === "day1"
-      ? String(fullEdition.priceDay1Usd)
-      : String(fullEdition.priceFullUsd);
+  const priceUsd = String(fullEdition.priceFullUsd);
+  // Single 3-day program - ignore day1 pack from clients
+  const ticketPack = "full" as const;
 
   const email = data.email.toLowerCase();
   // Always resolve the McBuleli user by registration email (never borrow a
@@ -255,10 +247,7 @@ export async function registerParticipant(raw: unknown) {
     };
   }
 
-  const existingActiveHold =
-    existing[0]?.paymentStatus === "reserved" &&
-    existing[0].holdExpiresAt &&
-    existing[0].holdExpiresAt.getTime() > Date.now();
+  const existingActiveHold = existing[0]?.paymentStatus === "reserved";
 
   if (!existingActiveHold) {
     const held = await countHeldSeats(fullEdition.id);
@@ -280,7 +269,7 @@ export async function registerParticipant(raw: unknown) {
     projectDescription: data.projectDescription || null,
     projectCategory: data.projectCategory || null,
     workMode: data.workMode,
-    ticketPack: data.ticketPack,
+    ticketPack,
     priceUsd,
     locale: data.locale,
     userId,
@@ -295,8 +284,8 @@ export async function registerParticipant(raw: unknown) {
         registrationId: existing[0].id,
         paymentToken: existing[0].paymentToken,
         payUrl: payLaterPublicUrl(existing[0].paymentToken),
-        holdExpiresAt: existing[0].holdExpiresAt!.toISOString(),
-        holdHours: HACKATHON_HOLD_HOURS,
+        holdExpiresAt: null,
+        holdHours: null,
         amountUsd: priceUsd,
         existingAccount: !account.created,
       };
@@ -348,11 +337,8 @@ export async function registerParticipant(raw: unknown) {
       };
     }
 
-    // Verified account (new or returning after expiry) → hold seat + reservation email.
+    // Verified account (new or returning) → open-ended seat hold + reservation email.
     const token = generatePaymentToken();
-    const holdExpiresAt = new Date(
-      Date.now() + HACKATHON_HOLD_HOURS * 60 * 60 * 1000,
-    );
 
     let registrationId = existing[0]?.id;
     if (registrationId) {
@@ -363,7 +349,7 @@ export async function registerParticipant(raw: unknown) {
           paymentMethod: data.paymentMethod ?? existing[0]?.paymentMethod ?? null,
           paymentStatus: "reserved",
           paymentToken: token,
-          holdExpiresAt,
+          holdExpiresAt: null,
           holdReminderSentAt: null,
           updatedAt: new Date(),
         })
@@ -378,7 +364,7 @@ export async function registerParticipant(raw: unknown) {
           paymentMethod: data.paymentMethod ?? null,
           paymentStatus: "reserved",
           paymentToken: token,
-          holdExpiresAt,
+          holdExpiresAt: null,
         })
         .returning({ id: hackathonRegistrations.id });
       registrationId = created.id;
@@ -395,8 +381,8 @@ export async function registerParticipant(raw: unknown) {
       registrationId,
       paymentToken: token,
       payUrl,
-      holdExpiresAt: holdExpiresAt.toISOString(),
-      holdHours: HACKATHON_HOLD_HOURS,
+      holdExpiresAt: null,
+      holdHours: null,
       amountUsd: priceUsd,
       existingAccount: !account.created,
     };
@@ -521,11 +507,11 @@ export async function payReservedRegistration(token: string, raw: unknown) {
     reg.holdExpiresAt &&
     reg.holdExpiresAt.getTime() <= Date.now()
   ) {
+    // Legacy rows that still have an expiry: clear it instead of blocking payment.
     await db
       .update(hackathonRegistrations)
-      .set({ paymentStatus: "expired", updatedAt: new Date() })
+      .set({ holdExpiresAt: null, updatedAt: new Date() })
       .where(eq(hackathonRegistrations.id, reg.id));
-    return { ok: false as const, error: "hold_expired", status: 410 };
   }
   if (reg.paymentStatus !== "reserved" && reg.paymentStatus !== "pending" && reg.paymentStatus !== "failed") {
     return { ok: false as const, error: "invalid_status", status: 409 };

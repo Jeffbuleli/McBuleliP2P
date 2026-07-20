@@ -2,10 +2,8 @@
 
 import { useRef, useState } from "react";
 import {
-  hkCheckChip,
   hkField,
   hkLabel,
-  hkRadio,
   hkSelect,
   hkSelectChevronStyle,
 } from "@/components/hackathon/hackathon-form-styles";
@@ -17,16 +15,15 @@ import {
 type Props = {
   editionId: string;
   locale: "fr" | "en";
-  priceDay1: string;
-  priceFull: string;
+  /** Unique 3-day program price (USD) */
+  priceUsd: string;
   registrationOpen: boolean;
 };
 
 export function HackathonParticipantForm({
   editionId,
   locale,
-  priceDay1,
-  priceFull,
+  priceUsd,
   registrationOpen,
 }: Props) {
   const isFr = locale === "fr";
@@ -71,7 +68,7 @@ export function HackathonParticipantForm({
       projectDescription: String(fd.get("projectDescription") ?? "") || undefined,
       projectCategory: String(fd.get("projectCategory") ?? "") || undefined,
       workMode: String(fd.get("workMode") ?? "solo"),
-      ticketPack: String(fd.get("ticketPack") ?? "full"),
+      ticketPack: "full",
       intent,
       paymentMethod:
         intent === "pay_now"
@@ -145,11 +142,11 @@ export function HackathonParticipantForm({
         setMsg(
           isFr
             ? json.existingAccount
-              ? `Place pré-réservée ${json.holdHours ?? 72} h. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail — Mot de passe oublié sur /login si besoin).`
-              : `Place pré-réservée ${json.holdHours ?? 72} h. Un e-mail avec le lien de paiement vous a été envoyé.`
+              ? "Place pré-réservée. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail - Mot de passe oublié sur /login si besoin)."
+              : "Place pré-réservée. Un e-mail avec le lien de paiement vous a été envoyé. Nous vous rappelons toutes les 24 h pour confirmer."
             : json.existingAccount
-              ? `Seat held for ${json.holdHours ?? 72} h. Payment link emailed (McBuleli account already linked — use Forgot password on /login if needed).`
-              : `Seat held for ${json.holdHours ?? 72} h. We emailed you a payment link.`,
+              ? "Seat reserved. Payment link emailed (McBuleli account already linked - use Forgot password on /login if needed)."
+              : "Seat reserved. We emailed you a payment link. We remind you every 24 h to confirm.",
         );
         return;
       }
@@ -347,31 +344,22 @@ export function HackathonParticipantForm({
         </select>
       </div>
 
-      <fieldset className="space-y-2">
-        <legend className={hkLabel}>{isFr ? "Pack" : "Pack"}</legend>
-        <label className={`${hkCheckChip} ${!registrationOpen ? "opacity-60" : ""}`}>
-          <input type="radio" name="ticketPack" value="day1" className={hkRadio} disabled={!registrationOpen} />
-          {isFr ? `1 jour - ${priceDay1} USD` : `1 day - ${priceDay1} USD`}
-        </label>
-        <label className={`${hkCheckChip} ${!registrationOpen ? "opacity-60" : ""}`}>
-          <input
-            type="radio"
-            name="ticketPack"
-            value="full"
-            defaultChecked
-            className={hkRadio}
-            disabled={!registrationOpen}
-          />
+      <div className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-4 py-3">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+          {isFr ? "Tarif" : "Price"}
+        </p>
+        <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
           {isFr
-            ? `2 jours + Hackathon - ${priceFull} USD`
-            : `2 days + Hackathon - ${priceFull} USD`}
-        </label>
-      </fieldset>
+            ? `Programme 3 jours - ${priceUsd} USD`
+            : `3-day program - ${priceUsd} USD`}
+        </p>
+        <input type="hidden" name="ticketPack" value="full" />
+      </div>
 
       <p className="rounded-xl bg-[color:var(--fd-mint)]/50 px-4 py-3 text-sm text-[color:var(--fd-muted)]">
         {isFr
-          ? "Pré-inscription gratuite : place retenue 72 h, paiement plus tard par e-mail. Ou payez tout de suite ci-dessous."
-          : "Free pre-registration: seat held 72 h, pay later by email. Or pay now below."}
+          ? "Pré-inscription gratuite : place réservée sans expiration, rappels toutes les 24 h pour confirmer. Ou payez tout de suite ci-dessous."
+          : "Free pre-registration: seat held with no expiry, reminders every 24 h to confirm. Or pay now below."}
       </p>
 
       <div>

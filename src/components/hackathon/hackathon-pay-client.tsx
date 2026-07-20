@@ -117,14 +117,7 @@ export function HackathonPayClient({
     }
   }
 
-  const packLabel =
-    ticketPack === "day1"
-      ? isFr
-        ? "1 jour"
-        : "1 day"
-      : isFr
-        ? "2 jours + Hackathon"
-        : "2 days + Hackathon";
+  const packLabel = isFr ? "Programme 3 jours" : "3-day program";
 
   const expiresLabel = holdExpiresAt
     ? new Date(holdExpiresAt).toLocaleString(isFr ? "fr-FR" : "en-US", {

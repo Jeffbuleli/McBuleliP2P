@@ -1,9 +1,11 @@
-import { and, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, eq, isNull, lte, or, sql } from "drizzle-orm";
 import { getDb, hackathonRegistrations } from "@/db";
 import { sendHackathonHoldReminderEmail } from "@/lib/email/messages/hackathon";
+import { HACKATHON_REMINDER_HOURS } from "@/lib/hackathon/constants";
 
 /**
- * Expire overdue seat holds and send ~24h payment reminders.
+ * Hackathon seat holds do not auto-expire.
+ * Cron (hourly on VPS) sends payment reminders every HACKATHON_REMINDER_HOURS.
  */
 export async function runHackathonHoldMaintenance(): Promise<{
   expired: number;
@@ -11,30 +13,28 @@ export async function runHackathonHoldMaintenance(): Promise<{
 }> {
   const db = getDb();
   const now = new Date();
+  const reminderCutoff = new Date(
+    now.getTime() - HACKATHON_REMINDER_HOURS * 60 * 60 * 1000,
+  );
 
-  const expiredRows = await db
-    .update(hackathonRegistrations)
-    .set({ paymentStatus: "expired", updatedAt: now })
-    .where(
-      and(
-        eq(hackathonRegistrations.paymentStatus, "reserved"),
-        lte(hackathonRegistrations.holdExpiresAt, now),
-      ),
-    )
-    .returning({ id: hackathonRegistrations.id });
-
-  const reminderWindowEnd = new Date(now.getTime() + 28 * 60 * 60 * 1000);
-  const reminderWindowStart = new Date(now.getTime() + 20 * 60 * 60 * 1000);
-
+  // Due: reserved, never reminded and created >= 24h ago,
+  // OR last reminder was >= 24h ago.
   const due = await db
     .select({ id: hackathonRegistrations.id })
     .from(hackathonRegistrations)
     .where(
       and(
         eq(hackathonRegistrations.paymentStatus, "reserved"),
-        isNull(hackathonRegistrations.holdReminderSentAt),
-        gte(hackathonRegistrations.holdExpiresAt, reminderWindowStart),
-        lte(hackathonRegistrations.holdExpiresAt, reminderWindowEnd),
+        or(
+          and(
+            isNull(hackathonRegistrations.holdReminderSentAt),
+            lte(hackathonRegistrations.createdAt, reminderCutoff),
+          ),
+          and(
+            sql`${hackathonRegistrations.holdReminderSentAt} IS NOT NULL`,
+            lte(hackathonRegistrations.holdReminderSentAt, reminderCutoff),
+          ),
+        ),
       ),
     )
     .limit(100);
@@ -53,5 +53,5 @@ export async function runHackathonHoldMaintenance(): Promise<{
     }
   }
 
-  return { expired: expiredRows.length, reminded };
+  return { expired: 0, reminded };
 }

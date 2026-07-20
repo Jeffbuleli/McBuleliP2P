@@ -88,13 +88,7 @@ export default async function HackathonTicketPage({
             <p className="text-xs text-[color:var(--fd-muted)]">{reg.phone}</p>
           ) : null}
           <p className="mt-3 text-sm font-semibold text-[color:var(--fd-text)]">
-            {reg.ticketPack === "day1"
-              ? isFr
-                ? "Pack 1 jour"
-                : "1-day pack"
-              : isFr
-                ? "Pack 2 jours + Hackathon"
-                : "2-day + Hackathon pack"}
+            {isFr ? "Programme 3 jours" : "3-day program"}
           </p>
           <p className="mt-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
             {venue}

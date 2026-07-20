@@ -147,8 +147,8 @@ const createEditionZ = z.object({
   status: z.enum(["open", "closed", "soon"]).default("soon"),
   featured: z.boolean().optional(),
   maxSeats: z.number().int().min(1).max(10000).default(100),
-  priceDay1Usd: z.string().default("50"),
-  priceFullUsd: z.string().default("80"),
+  priceDay1Usd: z.string().default("100"),
+  priceFullUsd: z.string().default("100"),
 });
 
 const patchEditionZ = z.object({

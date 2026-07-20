@@ -2,15 +2,21 @@
 
 import Link from "next/link";
 import type { FeaturedHackathonPayload } from "@/lib/hackathon/service";
+import { challengeCategories, HACKATHON_LEGAL } from "@/lib/hackathon/landing-copy";
 import {
-  challengeCategories,
-  evaluationCriteria,
-  expandedFaq,
-  HACKATHON_LEGAL,
-  journeySteps,
-  rewardHighlights,
-  whyParticipate,
-} from "@/lib/hackathon/landing-copy";
+  aboutBlurb,
+  crossCuttingActivities,
+  defaultHeroStats,
+  eventDateLabel,
+  HACKATHON_EVENT_DAYS,
+  HACKATHON_EVENT_YEAR,
+  HACKATHON_NAV,
+  hackathonFaqNav,
+  hackathonProgramDays,
+  partnerBenefits,
+  podiumPrizes,
+  sponsorTiers,
+} from "@/lib/hackathon/event-content";
 import {
   SUPPORT_EMAIL,
   SUPPORT_PHONE_DISPLAY,
@@ -23,45 +29,30 @@ import { BUILDERS_TIER_VISUAL } from "@/lib/builders/builders-visual";
 import { HackathonParticipantForm } from "@/components/hackathon/hackathon-participant-form";
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
+import { HackathonStickyNav } from "@/components/hackathon/hackathon-sticky-nav";
+import {
+  BenefitIcon,
+  BulletIcon,
+  CheckIcon,
+  PrizeIcon,
+} from "@/components/hackathon/event-icons";
+import { ProgramIcon } from "@/components/hackathon/program-icon";
 import { useI18n } from "@/components/i18n-provider";
-
-function statusLabel(status: string, isFr: boolean) {
-  if (status === "open") return isFr ? "Inscriptions ouvertes" : "Registration open";
-  if (status === "closed") return isFr ? "Inscriptions fermées" : "Registration closed";
-  return isFr ? "Bientôt ouvert" : "Opening soon";
-}
+import { Accordion, AccordionItem } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 
 function isPlaceholderVenue(venue: string | null | undefined) {
   if (!venue?.trim()) return true;
   const v = venue.trim().toLowerCase();
-  return (
-    v.includes("confirmer") ||
-    v.includes("tbd") ||
-    v.includes("tba") ||
-    v.includes("à définir")
-  );
+  return v.includes("confirmer") || v.includes("tbd") || v.includes("tba") || v.includes("à définir");
 }
 
-function practicalDate(iso: string | null, isFr: boolean) {
-  if (!iso) {
-    return isFr ? "Bientôt" : "Coming soon";
-  }
-  try {
-    return new Date(iso).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  } catch {
-    return isFr ? "Bientôt" : "Coming soon";
-  }
-}
-
-function practicalVenue(venue: string | null, city: string, _isFr: boolean) {
+function practicalVenue(venue: string | null, city: string) {
   if (isPlaceholderVenue(venue)) {
-    return `Silikin Village, 63, Ave Colonel Mondjiba · ${city || "Kinshasa"}`;
+    return `Silikin Village - ${city || "Kinshasa"}`;
   }
-  return [venue, city].filter(Boolean).join(" · ");
+  return [venue, city].filter(Boolean).join(" - ");
 }
 
 function Section({
@@ -80,7 +71,7 @@ function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={`scroll-mt-24 py-14 sm:py-20 ${className}`}>
+    <section id={id} className={`scroll-mt-28 py-12 sm:py-16 ${className}`}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {eyebrow ? (
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
@@ -95,7 +86,7 @@ function Section({
             {subtitle}
           </p>
         ) : null}
-        <div className="mt-10">{children}</div>
+        <div className="mt-8">{children}</div>
       </div>
     </section>
   );
@@ -115,8 +106,8 @@ function CtaPrimary({
       href={href}
       className={
         onDark
-          ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          : "inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+          ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)]"
+          : "inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)]"
       }
     >
       {children}
@@ -138,8 +129,8 @@ function CtaSecondary({
       href={href}
       className={
         onDark
-          ? "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fd-primary)]"
+          ? "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
       }
     >
       {children}
@@ -160,7 +151,7 @@ function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[
         name: "Mentor Vibe Coding",
         title: "Jeff Buleli - CEO",
         company: null,
-        expertise: "Cursor · Claude · Codex",
+        expertise: "Cursor - Claude - Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
         href: "https://mcbuleli.org/@ceo",
@@ -187,7 +178,7 @@ function enrichJury(people: FeaturedHackathonPayload["jury"]): PersonCard[] {
 function PersonGrid({
   people,
   empty,
-  slots = 6,
+  slots = 3,
 }: {
   people: PersonCard[];
   empty: string;
@@ -195,12 +186,12 @@ function PersonGrid({
 }) {
   const placeholders = Math.max(0, slots - people.length);
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {people.map((p) => {
         const inner = (
           <>
             <div
-              className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-lg font-semibold text-[color:var(--fd-primary)] ${
+              className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ${
                 p.photoFit === "contain" ? "ring-1 ring-[color:var(--fd-primary)]/15" : ""
               }`}
             >
@@ -219,45 +210,30 @@ function PersonGrid({
                 p.name.slice(0, 1)
               )}
             </div>
-            <div>
-              <h3 className="font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
-              <p className="mt-0.5 text-sm text-[color:var(--fd-primary)]">
-                {p.title && p.company
-                  ? `${p.title} · ${p.company}`
-                  : p.title || p.company || null}
-              </p>
-              {p.expertise ? (
-                <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">
-                  {p.expertise}
+            <div className="min-w-0">
+              <h3 className="truncate font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
+              {(p.title || p.company) && (
+                <p className="mt-0.5 truncate text-xs text-[color:var(--fd-primary)]">
+                  {[p.title, p.company].filter(Boolean).join(" - ")}
                 </p>
-              ) : null}
+              )}
             </div>
           </>
         );
+        const cls =
+          "flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white p-3";
         return (
           <li key={p.id}>
-            {p.href ? (
-              p.href.startsWith("http") ? (
-                <a
-                  href={p.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
-                >
-                  {inner}
-                </a>
-              ) : (
-                <Link
-                  href={p.href}
-                  className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)] transition hover:border-[color:var(--fd-primary)]/35 hover:bg-[color:var(--fd-mint)]/40"
-                >
-                  {inner}
-                </Link>
-              )
-            ) : (
-              <div className="flex gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)]">
+            {p.href?.startsWith("http") ? (
+              <a href={p.href} target="_blank" rel="noopener noreferrer" className={cls}>
                 {inner}
-              </div>
+              </a>
+            ) : p.href ? (
+              <Link href={p.href} className={cls}>
+                {inner}
+              </Link>
+            ) : (
+              <div className={cls}>{inner}</div>
             )}
           </li>
         );
@@ -265,239 +241,100 @@ function PersonGrid({
       {Array.from({ length: placeholders }).map((_, i) => (
         <li
           key={`ph-${i}`}
-          className="flex flex-col justify-center rounded-2xl border border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60 p-5"
+          className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--fd-border)] p-3 text-sm text-[color:var(--fd-muted)]"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[color:var(--fd-muted)]">
-            +
-          </div>
-          <p className="mt-3 text-sm font-medium text-[color:var(--fd-muted)]">{empty}</p>
+          + {empty}
         </li>
       ))}
     </ul>
   );
 }
 
-function IconWrap({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-      {children}
-    </span>
-  );
-}
-
-function IconCalendar() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconPin() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-      />
-      <circle cx="12" cy="10" r="2.25" stroke="currentColor" strokeWidth="1.75" />
-    </svg>
-  );
-}
-
-function IconSeats() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M4 18v-1.5A3.5 3.5 0 0 1 7.5 13h9A3.5 3.5 0 0 1 20 16.5V18"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <circle cx="12" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M4 18h16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconStatus() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M8.5 12.2 11 14.7 15.5 9.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconMail() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.75" />
-      <path d="m4 7 8 6 8-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconPhone() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M8.5 3.5h3l1 4.5-2 1.5a12 12 0 0 0 5 5l1.5-2 4.5 1v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3.5 5.7 2 2 0 0 1 5.5 3.5Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconWhatsApp() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L4 20.5l4.3-.7A8.5 8.5 0 1 0 12 3.5Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.2 9.3c.3-.5.6-.5.9-.5h.7c.2 0 .4.1.5.4l.7 1.7c.1.2 0 .5-.2.6l-.5.5c-.2.2-.2.4 0 .7.5.8 1.3 1.5 2.2 2 .3.2.5.1.7-.1l.6-.7c.2-.2.4-.2.7-.1l1.6.7c.3.1.4.3.4.6v.6c0 .3-.1.6-.5.8-.7.4-1.7.6-2.6.3-2.1-.7-3.9-2.4-4.8-4.5-.4-1-.4-2.1.1-3.1Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function IconGlobe() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M3.8 12h16.4M12 3.8c2.4 2.6 2.4 13.8 0 16.4M12 3.8c-2.4 2.6-2.4 13.8 0 16.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconX() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
-    </svg>
-  );
-}
-
-function MidCta({ isFr }: { isFr: boolean }) {
-  return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)]/60 px-6 py-6 sm:flex-row sm:items-center sm:px-8">
-        <div>
-          <p className="text-lg font-semibold text-[color:var(--fd-text)]">
-            {isFr
-              ? "Prêt à construire avec l’IA ?"
-              : "Ready to build with AI?"}
-          </p>
-          <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
-            {isFr
-              ? "Réservez votre place - places limitées pour cette édition."
-              : "Secure your seat - limited capacity for this edition."}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <CtaPrimary href="#register">{isFr ? "Pré-inscrire" : "Pre-register"}</CtaPrimary>
-          <CtaSecondary href="#partner">
-            {isFr ? "Devenir partenaire" : "Become a partner"}
-          </CtaSecondary>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function HackathonLanding({
-  data,
-}: {
-  data: FeaturedHackathonPayload;
-}) {
+export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
   const { locale } = useI18n();
   const isFr = locale === "fr";
   const e = data.edition;
-  const name = isFr ? e.nameFr : e.nameEn;
   const open = e.status === "open";
-  const seatsLeft = Math.max(0, e.maxSeats - e.seatsTaken);
-  const benefits = whyParticipate(isFr);
+  const year = HACKATHON_EVENT_YEAR;
+
   const challenges = challengeCategories(isFr);
-  const journey = journeySteps(isFr);
-  const criteria = evaluationCriteria(isFr);
-  const rewards = rewardHighlights(isFr);
-  const faq = expandedFaq(isFr);
-  const year = new Date().getFullYear();
+  const programDays = hackathonProgramDays();
+  const prizes = podiumPrizes(isFr);
+  const benefits = partnerBenefits(isFr);
+  const faq = hackathonFaqNav(isFr);
+  const about = aboutBlurb(isFr);
+  const crossCut = crossCuttingActivities(isFr);
+  const tiers = sponsorTiers();
+  const stats = defaultHeroStats(data.mentors.length, data.partnerLogos.length);
+
+  const confirmedPacks = new Set(
+    data.sponsorLogos.map((s) => s.pack.toLowerCase()).filter((p) => p !== "custom"),
+  );
+
+  const statItems = [
+    {
+      label: isFr ? "Participants attendus" : "Expected participants",
+      value: String(stats.participantsExpected),
+    },
+    {
+      label: isFr ? "Mentors" : "Mentors",
+      value: isFr ? stats.mentorsLabelFr : stats.mentorsLabelEn,
+    },
+    {
+      label: isFr ? "Partenaires" : "Partners",
+      value: isFr ? stats.partnersLabelFr : stats.partnersLabelEn,
+    },
+    {
+      label: isFr ? "Prix à gagner" : "Prizes to win",
+      value: isFr ? stats.prizesCountFr : stats.prizesCountEn,
+    },
+  ];
 
   return (
     <div className="bg-[color:var(--fd-bg)] pb-24 text-[color:var(--fd-text)] sm:pb-10">
-      {/* Hero - Kinshasa skyline (Congo River / downtown aerial) */}
-      <header className="relative min-h-[min(92vh,780px)] overflow-hidden border-b border-[color:var(--fd-border)]">
+      {/* Hero */}
+      <header className="relative min-h-[min(72vh,640px)] overflow-hidden border-b border-[color:var(--fd-border)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/hackathon/kinshasa-skyline.jpg"
-          alt={
-            isFr
-              ? "Vue aérienne de Kinshasa et du fleuve Congo"
-              : "Aerial view of Kinshasa and the Congo River"
-          }
+          alt={isFr ? "Kinshasa" : "Kinshasa"}
           className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(105deg, rgba(12, 28, 18, 0.88) 0%, rgba(18, 42, 28, 0.72) 42%, rgba(12, 28, 18, 0.45) 70%, rgba(8, 20, 14, 0.55) 100%)",
+              "linear-gradient(105deg, rgba(12, 28, 18, 0.9) 0%, rgba(18, 42, 28, 0.75) 50%, rgba(12, 28, 18, 0.55) 100%)",
           }}
         />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
-          style={{
-            background: "linear-gradient(to top, var(--fd-bg), transparent)",
-          }}
-        />
-        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-24 lg:min-h-[min(92vh,780px)] lg:justify-center lg:pb-24 lg:pt-20">
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:min-h-[min(72vh,640px)] lg:justify-center">
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-mint)]">
-              McBuleli · {isFr ? "Hackathon IA - Kinshasa" : "AI Hackathon - Kinshasa"}
+              McBuleli Hackathon - {HACKATHON_EVENT_DAYS} {isFr ? "jours" : "days"} - {HACKATHON_EVENT_YEAR}
             </p>
-            <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.25rem]">
+            <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
               Build the Future with AI
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+            <p className="mt-4 text-base leading-relaxed text-white/85 sm:text-lg">
               {isFr
-                ? "Le hackathon IA de référence en République Démocratique du Congo - organisé par McBuleli depuis Kinshasa. Apprenez le Vibe Coding, construisez un produit, pitchtez devant un jury, et rejoignez un écosystème qui relie builders, entreprises et investisseurs."
-                : "The AI hackathon of reference in the Democratic Republic of the Congo - organized by McBuleli from Kinshasa. Learn Vibe Coding, ship a product, pitch before a jury, and join an ecosystem connecting builders, companies and investors."}
+                ? "Bootcamp Vibe Coding, hackathon et Demo Day au Silikin Village - Kinshasa."
+                : "Vibe Coding bootcamp, hackathon and Demo Day at Silikin Village - Kinshasa."}
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-white/75">
-              <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
-                {isFr
-                  ? "Organisé par McBuleli - plateforme fintech & communauté builders"
-                  : "Organized by McBuleli - fintech platform & builders community"}
-              </li>
-              <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
-                {isFr
-                  ? "Unique : bootcamp + hackathon + incubation sur une même plateforme"
-                  : "Unique: bootcamp + hackathon + incubation on one platform"}
-              </li>
-              <li className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--fd-mint)]" />
-                {isFr
-                  ? `${name} · ${statusLabel(e.status, isFr)} · ${seatsLeft} places restantes`
-                  : `${name} · ${statusLabel(e.status, isFr)} · ${seatsLeft} seats left`}
-              </li>
-            </ul>
+            <dl className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
+              <div>
+                <dt className="sr-only">{isFr ? "Date" : "Date"}</dt>
+                <dd>{eventDateLabel(e.startDate, isFr)}</dd>
+              </div>
+              <div>
+                <dt className="sr-only">{isFr ? "Ville" : "City"}</dt>
+                <dd>{practicalVenue(e.venue, e.city)}</dd>
+              </div>
+            </dl>
             <div className="mt-8 flex flex-wrap gap-3">
               <CtaPrimary href="#register" onDark>
-                {isFr ? "Pré-inscrire" : "Pre-register"}
+                {isFr ? "Participer" : "Join"}
               </CtaPrimary>
-              <CtaSecondary href="#partner" onDark>
+              <CtaSecondary href="#partenaires" onDark>
                 {isFr ? "Devenir partenaire" : "Become a partner"}
               </CtaSecondary>
             </div>
@@ -505,356 +342,282 @@ export function HackathonLanding({
         </div>
       </header>
 
-      {/* Trust strip */}
+      {/* Stats strip */}
       <div className="border-b border-[color:var(--fd-border)] bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 text-sm text-[color:var(--fd-muted)] sm:px-6">
-          <p>
-            <span className="font-semibold text-[color:var(--fd-text)]">McBuleli</span>
-            {" · "}
-            {isFr ? "Wallet · P2P · Academy · Communauté" : "Wallet · P2P · Academy · Community"}
-          </p>
-          <p className="font-medium text-[color:var(--fd-primary)]">
-            {isFr ? "Kinshasa · Afrique" : "Kinshasa · Africa"}
-          </p>
-        </div>
-      </div>
-
-      {/* Why */}
-      <Section
-        id="pourquoi"
-        eyebrow={isFr ? "Pourquoi participer" : "Why join"}
-        title={
-          isFr
-            ? "Plus qu’une compétition - un tremplin"
-            : "More than a competition - a launchpad"
-        }
-        subtitle={
-          isFr
-            ? "Conçu pour les talents qui veulent apprendre, livrer et se connecter à l’écosystème McBuleli."
-            : "Built for talent who want to learn, ship and connect to the McBuleli ecosystem."
-        }
-      >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((b) => (
-            <li
-              key={b.title}
-              className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-[0_1px_0_rgba(12,10,9,0.04)]"
-            >
-              <h3 className="text-base font-semibold text-[color:var(--fd-text)]">{b.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">{b.body}</p>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <MidCta isFr={isFr} />
-
-      {/* Practical info */}
-      <Section
-        id="infos"
-        eyebrow={isFr ? "Informations pratiques" : "Practical info"}
-        title={name}
-        subtitle={
-          isFr
-            ? "Lieu confirmé à Kinshasa - dates bientôt annoncées."
-            : "Venue confirmed in Kinshasa - dates announced soon."
-        }
-      >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {(
-            [
-              [
-                isFr ? "Date" : "Date",
-                practicalDate(e.startDate, isFr) +
-                  (e.endDate && e.startDate
-                    ? ` → ${practicalDate(e.endDate, isFr)}`
-                    : ""),
-                <IconCalendar key="cal" />,
-              ],
-              [
-                isFr ? "Lieu" : "Venue",
-                practicalVenue(e.venue, e.city, isFr),
-                <IconPin key="pin" />,
-              ],
-              [
-                isFr ? "Places libres" : "Seats left",
-                `${seatsLeft}`,
-                <IconSeats key="seats" />,
-              ],
-              [
-                isFr ? "Statut" : "Status",
-                statusLabel(e.status, isFr),
-                <IconStatus key="status" />,
-              ],
-            ] as const
-          ).map(([label, value, icon]) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5"
-            >
-              <div className="flex items-center gap-3">
-                <IconWrap>{icon}</IconWrap>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-                  {label}
-                </p>
-              </div>
-              <p className="mt-3 text-sm font-semibold leading-snug text-[color:var(--fd-text)]">
-                {value}
-              </p>
+        <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-[color:var(--fd-border)] sm:grid-cols-4">
+          {statItems.map((s) => (
+            <div key={s.label} className="bg-white px-4 py-5 text-center sm:px-6">
+              <dt className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                {s.label}
+              </dt>
+              <dd className="mt-1 text-2xl font-semibold tabular-nums text-[color:var(--fd-primary)]">
+                {s.value}
+              </dd>
             </div>
           ))}
+        </dl>
+      </div>
+
+      <HackathonStickyNav items={HACKATHON_NAV} isFr={isFr} />
+
+      {/* About */}
+      <Section
+        id="about"
+        eyebrow={isFr ? "À propos" : "About"}
+        title={about.title}
+        subtitle={about.body}
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <h3 className="text-sm font-semibold text-[color:var(--fd-text)]">
+              {isFr ? "Mentors" : "Mentors"}
+            </h3>
+            <div className="mt-3">
+              <PersonGrid
+                people={enrichMentors(data.mentors)}
+                empty={isFr ? "Mentor à annoncer" : "Mentor TBA"}
+                slots={3}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-[color:var(--fd-text)]">
+              {isFr ? "Jury" : "Jury"}
+            </h3>
+            <div className="mt-3">
+              <PersonGrid
+                people={enrichJury(data.jury)}
+                empty={isFr ? "Jury à annoncer" : "Jury TBA"}
+              />
+            </div>
+          </div>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "1 jour - Bootcamp" : "1 day - Bootcamp"}
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-[color:var(--fd-primary)]">
-              {e.priceDay1Usd} USD
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-              {isFr ? "2 jours + Hackathon" : "2 days + Hackathon"}
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-[color:var(--fd-primary)]">
-              {e.priceFullUsd} USD
-            </p>
-          </div>
+      </Section>
+
+      {/* Program */}
+      <Section
+        id="programme"
+        className="bg-white"
+        eyebrow={isFr ? "Programme" : "Program"}
+        title={isFr ? "3 demi-journées - 08h00 - 13h30" : "3 half-days - 8:00 AM - 1:30 PM"}
+        subtitle={
+          isFr
+            ? "Format professionnel avec temps dédié aux partenaires."
+            : "Professional format with dedicated partner slots."
+        }
+      >
+        <Accordion defaultOpen="day-1">
+          {programDays.map((day) => (
+            <AccordionItem
+              key={day.day}
+              id={`day-${day.day}`}
+              title={isFr ? day.labelFr : day.labelEn}
+              subtitle={isFr ? day.subtitleFr : day.subtitleEn}
+              icon={<span className="text-sm font-bold">{day.day}</span>}
+            >
+              <ul className="space-y-2">
+                {day.slots.map((slot) => (
+                  <li
+                    key={`${day.day}-${slot.time}-${slot.icon}`}
+                    className="flex gap-3 rounded-xl bg-[color:var(--fd-bg)] px-3 py-2.5"
+                  >
+                    <span className="mt-0.5 text-[color:var(--fd-primary)]">
+                      <ProgramIcon id={slot.icon} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold tabular-nums text-[color:var(--fd-primary)]">
+                        {slot.time}
+                      </p>
+                      <p className="mt-0.5 text-sm text-[color:var(--fd-text)]">
+                        {isFr ? slot.activityFr : slot.activityEn}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </AccordionItem>
+          ))}
+        </Accordion>
+        <div className="mt-6">
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {isFr ? "Activités transversales" : "Cross-cutting activities"}
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {crossCut.map((item) => (
+              <li
+                key={item}
+                className="flex items-center gap-2 text-sm text-[color:var(--fd-muted)]"
+              >
+                <BulletIcon className="h-3 w-3 shrink-0 text-[color:var(--fd-primary)]" />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
       </Section>
 
       {/* Challenges */}
       <Section
         id="defis"
-        className="bg-white"
         eyebrow={isFr ? "Défis" : "Challenges"}
-        title={
-          isFr
-            ? "Catégories pour un impact réel"
-            : "Categories for real-world impact"
-        }
-        subtitle={
-          isFr
-            ? "Choisissez un défi - ou proposez une solution transversale."
-            : "Pick a challenge - or propose a cross-cutting solution."
-        }
+        title={isFr ? "Choisissez votre impact" : "Pick your impact"}
       >
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {challenges.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 hover:bg-white"
-            >
-              <h3 className="font-semibold text-[color:var(--fd-text)]">{c.label}</h3>
-              <p className="mt-2 text-sm text-[color:var(--fd-muted)]">{c.blurb}</p>
+            <li key={c.id}>
+              <Card className="h-full transition hover:border-[color:var(--fd-primary)]/30">
+                <CardTitle>{c.label}</CardTitle>
+                <CardDescription>{c.blurb}</CardDescription>
+              </Card>
             </li>
           ))}
         </ul>
       </Section>
 
-      {/* Journey */}
+      {/* Prizes */}
       <Section
-        id="deroulement"
-        eyebrow={isFr ? "Déroulement" : "Journey"}
-        title={isFr ? "Du dossier à l’incubation" : "From application to incubation"}
-      >
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {journey.map((s, idx) => (
-            <li
-              key={s.step}
-              className="relative rounded-2xl border border-[color:var(--fd-border)] bg-white p-5"
-            >
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-bold text-[color:var(--fd-primary)]">
-                  {s.step}
-                </span>
-                <h3 className="font-semibold leading-snug text-[color:var(--fd-text)]">{s.title}</h3>
-              </div>
-              <p className="mt-2 text-sm text-[color:var(--fd-muted)]">{s.body}</p>
-              {idx < journey.length - 1 ? (
-                <span className="absolute -bottom-2 left-1/2 hidden h-4 w-px bg-[color:var(--fd-border)] sm:left-auto sm:right-[-0.4rem] sm:top-1/2 sm:h-px sm:w-3 lg:block" />
-              ) : null}
-            </li>
-          ))}
-        </ol>
-      </Section>
-
-      {/* Program detail */}
-      <Section
-        id="programme"
+        id="prix"
         className="bg-white"
-        eyebrow={isFr ? "Programme" : "Program"}
-        title={isFr ? "Bootcamp puis compétition" : "Bootcamp then competition"}
+        eyebrow={isFr ? "Prix" : "Prizes"}
+        title={isFr ? "Récompenses & reconnaissance" : "Awards & recognition"}
         subtitle={
           isFr
-            ? "Jour 1 : Vibe Coding. Jour 2 : hackathon, pitch et remise des prix."
-            : "Day 1: Vibe Coding. Day 2: hackathon, pitch and awards."
+            ? "Montants officiels annoncés avant l'événement."
+            : "Official amounts announced before the event."
         }
       >
-        <div className="grid gap-6 lg:grid-cols-2">
-          {e.program.map((day) => (
-            <article
-              key={day.day}
-              className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-6 sm:p-8"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
-                {isFr ? `Jour ${day.day}` : `Day ${day.day}`}
-              </p>
-              <h3 className="mt-2 text-xl font-semibold text-[color:var(--fd-text)]">
-                {isFr ? day.titleFr : day.titleEn}
-              </h3>
-              <ul className="mt-4 space-y-2.5">
-                {(isFr ? day.itemsFr : day.itemsEn).map((item) => (
-                  <li key={item} className="flex gap-2 text-sm text-[color:var(--fd-muted)]">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[color:var(--fd-primary)]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      {/* Criteria */}
-      <Section
-        id="criteres"
-        eyebrow={isFr ? "Évaluation" : "Judging"}
-        title={isFr ? "Critères d’évaluation" : "Evaluation criteria"}
-        subtitle={
-          isFr
-            ? "Une grille claire pour un jury crédible et transparent."
-            : "A clear rubric for credible, transparent judging."
-        }
-      >
-        <ul className="divide-y divide-[color:var(--fd-border)] overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-white">
-          {criteria.map((c) => (
-            <li key={c.label} className="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-              <div>
-                <h3 className="font-semibold text-[color:var(--fd-text)]">{c.label}</h3>
-                <p className="mt-1 text-sm text-[color:var(--fd-muted)]">{c.body}</p>
-              </div>
-              {c.weight ? (
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-[color:var(--fd-primary)]">
-                  {c.weight}
-                </span>
-              ) : null}
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {prizes.map((p) => (
+            <li key={p.id}>
+              <Card>
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+                    <PrizeIcon id={p.icon} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="mt-0">
+                      {isFr ? p.titleFr : p.titleEn}
+                    </CardTitle>
+                    <CardDescription>{isFr ? p.bodyFr : p.bodyEn}</CardDescription>
+                  </div>
+                </div>
+              </Card>
             </li>
           ))}
         </ul>
       </Section>
-
-      {/* Rewards */}
-      <Section
-        id="recompenses"
-        className="bg-white"
-        eyebrow={isFr ? "Récompenses" : "Rewards"}
-        title={
-          isFr
-            ? "Au-delà du podium"
-            : "Beyond the podium"
-        }
-        subtitle={
-          isFr
-            ? "Les montants seront annoncés officiellement. Voici ce que vous gagnez dès aujourd’hui en participant."
-            : "Prize amounts will be announced officially. Here’s what you gain by joining."
-        }
-      >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rewards.map((r) => (
-            <li
-              key={r.title}
-              className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5"
-            >
-              <h3 className="font-semibold text-[color:var(--fd-text)]">{r.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[color:var(--fd-muted)]">{r.body}</p>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <div className="py-6">
-        <MidCta isFr={isFr} />
-      </div>
 
       {/* Register */}
       <Section
         id="register"
         eyebrow={isFr ? "Inscription" : "Registration"}
-        title={isFr ? "Rejoindre l’édition" : "Join this edition"}
+        title={isFr ? "Rejoindre l'édition" : "Join this edition"}
         subtitle={
           isFr
-            ? "Pré-inscription gratuite (place retenue 72 h), puis paiement quand vous êtes prêt. Ticket QR après confirmation."
-            : "Free pre-registration (seat held 72 h), then pay when ready. QR ticket after confirmation."
+            ? "Pré-inscription gratuite, place réservée sans expiration - rappels 24 h pour confirmer."
+            : "Free pre-registration, seat held with no expiry - 24 h reminders to confirm."
         }
       >
-        <div className="mx-auto max-w-2xl rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 shadow-sm sm:p-8">
-          <HackathonParticipantForm
-            editionId={e.id}
-            locale={locale}
-            priceDay1={e.priceDay1Usd}
-            priceFull={e.priceFullUsd}
-            registrationOpen={open}
-          />
+        <div className="mx-auto max-w-2xl">
+          <Card className="p-5 sm:p-8">
+            <HackathonParticipantForm
+              editionId={e.id}
+              locale={locale}
+              priceUsd={e.priceFullUsd}
+              registrationOpen={open}
+            />
+          </Card>
         </div>
       </Section>
 
-      {/* Mentors + Jury */}
+      {/* Partners */}
       <Section
-        id="mentors"
+        id="partenaires"
         className="bg-white"
-        eyebrow="Mentors"
-        title={
-          isFr
-            ? "Accompagnement d’experts"
-            : "Expert guidance"
-        }
+        eyebrow={isFr ? "Partenaires" : "Partners"}
+        title={isFr ? "Pourquoi devenir partenaire ?" : "Why become a partner?"}
         subtitle={
           isFr
-            ? "Grille prête - annonces au fil des confirmations."
-            : "Grid ready - announcements as mentors confirm."
+            ? "Chaque collaboration est définie sur mesure après discussion."
+            : "Each collaboration is tailored after discussion."
         }
       >
-        <PersonGrid
-          people={enrichMentors(data.mentors)}
-          empty={isFr ? "Mentor à annoncer" : "Mentor TBA"}
-        />
-      </Section>
-
-      <Section
-        id="jury"
-        eyebrow="Jury"
-        title={isFr ? "Un jury exigeant" : "A rigorous jury"}
-        subtitle={
-          isFr
-            ? "Évaluation selon la grille officielle."
-            : "Scoring against the official rubric."
-        }
-      >
-        <PersonGrid
-          people={enrichJury(data.jury)}
-          empty={isFr ? "Membre du jury à annoncer" : "Jury member TBA"}
-        />
+        {(() => {
+          const logoSlots = Math.max(6, data.partnerLogos.length);
+          const logos = [
+            ...data.partnerLogos,
+            ...Array.from({ length: logoSlots - data.partnerLogos.length }, (_, i) => ({
+              id: `partner-slot-${i}`,
+              name: isFr ? "Logo partenaire" : "Partner logo",
+              logoUrl: null as string | null,
+              website: null as string | null,
+              placeholder: true,
+            })),
+          ];
+          return (
+            <ul className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {logos.map((p) => (
+                <li
+                  key={p.id}
+                  className={`flex h-16 items-center justify-center rounded-xl border px-3 ${
+                    "placeholder" in p && p.placeholder
+                      ? "border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60"
+                      : "border-[color:var(--fd-border)] bg-white"
+                  }`}
+                >
+                  {p.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.logoUrl} alt={p.name} className="max-h-8 max-w-[120px] object-contain" />
+                  ) : (
+                    <span className="text-center text-[11px] font-medium text-[color:var(--fd-muted)]">
+                      {p.name}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          );
+        })()}
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {benefits.map((b) => (
+            <li key={b.id}>
+              <Card className="h-full">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
+                    <BenefitIcon id={b.icon} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="mt-0">{isFr ? b.titleFr : b.titleEn}</CardTitle>
+                    <CardDescription>{isFr ? b.bodyFr : b.bodyEn}</CardDescription>
+                  </div>
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <CtaPrimary href="#partenaires-form">
+            {isFr ? "Devenir partenaire" : "Become a partner"}
+          </CtaPrimary>
+        </div>
+        <div id="partenaires-form" className="mt-8 scroll-mt-28">
+          <Card className="p-5 sm:p-8">
+            <HackathonPartnerForm editionId={e.id} locale={locale} />
+          </Card>
+        </div>
       </Section>
 
       {/* Sponsors */}
       <Section
         id="sponsors"
-        className="bg-white"
         eyebrow="Sponsors"
         title={
           isFr
             ? "Soutenez la prochaine génération de builders"
             : "Support the next generation of builders"
         }
-        subtitle={
-          isFr
-            ? "Packs Bronze, Silver, Gold, Platinum ou budget personnalisé."
-            : "Bronze, Silver, Gold, Platinum or custom budget."
-        }
       >
-        {data.sponsorLogos.length ? (
+        {data.sponsorLogos.length > 0 ? (
           <ul className="mb-8 flex flex-wrap gap-3">
             {data.sponsorLogos.map((s) => {
               const v = BUILDERS_TIER_VISUAL[s.pack] ?? BUILDERS_TIER_VISUAL.bronze;
@@ -869,99 +632,53 @@ export function HackathonLanding({
                   ) : (
                     <span className="text-sm font-semibold">{s.name}</span>
                   )}
-                  <span className="mt-1 text-[10px] font-bold uppercase tracking-wide opacity-80">
-                    {s.pack}
-                  </span>
                 </li>
               );
             })}
           </ul>
-        ) : (
-          <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(
-              [
-                [
-                  "Bronze",
-                  "bronze",
-                  isFr ? "Logo + mention réseaux" : "Logo + social mention",
-                ],
-                [
-                  "Silver",
-                  "silver",
-                  isFr ? "Stand + kit presse" : "Booth + press kit",
-                ],
-                [
-                  "Gold",
-                  "gold",
-                  isFr ? "Pitch stage + atelier" : "Stage pitch + workshop",
-                ],
-                [
-                  "Platinum",
-                  "platinum",
-                  isFr ? "Naming + jury + recrutement" : "Naming + jury + hiring",
-                ],
-              ] as const
-            ).map(([label, tier, perk]) => {
-              const v = BUILDERS_TIER_VISUAL[tier];
-              return (
-                <div
-                  key={tier}
-                  className={`rounded-2xl p-4 ring-1 ${v.badgeClass}`}
-                >
-                  <p className="text-xs font-bold uppercase tracking-wide">{label}</p>
-                  <p className="mt-2 text-sm leading-snug opacity-90">{perk}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <div className="mb-8">
-          <CtaPrimary href="#sponsor">{isFr ? "Devenir sponsor" : "Become a sponsor"}</CtaPrimary>
-        </div>
-        <div id="sponsor" className="scroll-mt-24 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 sm:p-8">
-          <h3 className="text-lg font-semibold text-[color:var(--fd-text)]">
-            {isFr ? "Formulaire sponsor" : "Sponsor form"}
-          </h3>
-          <div className="mt-4">
-            <HackathonSponsorForm editionId={e.id} locale={locale} />
-          </div>
-        </div>
-      </Section>
-
-      {/* Partners */}
-      <Section
-        id="partner"
-        eyebrow={isFr ? "Partenaires" : "Partners"}
-        title={
-          isFr
-            ? "Universités, entreprises, médias"
-            : "Universities, companies, media"
-        }
-        subtitle={
-          isFr
-            ? "Lieu, internet, communication, jury, mentorat, incubation, formation, recrutement…"
-            : "Venue, internet, communication, jury, mentoring, incubation, training, hiring…"
-        }
-      >
-        {data.partnerLogos.length ? (
-          <ul className="mb-8 flex flex-wrap gap-3">
-            {data.partnerLogos.map((p) => (
-              <li
-                key={p.id}
-                className="flex h-14 min-w-[7rem] items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-4 text-sm font-semibold text-[color:var(--fd-muted)]"
-              >
-                {p.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.logoUrl} alt={p.name} className="max-h-8 max-w-[120px]" />
-                ) : (
-                  p.name
-                )}
-              </li>
-            ))}
-          </ul>
         ) : null}
-        <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 sm:p-8">
-          <HackathonPartnerForm editionId={e.id} locale={locale} />
+        <ul className="grid gap-4 lg:grid-cols-2">
+          {tiers.map((tier) => {
+            const v = BUILDERS_TIER_VISUAL[tier.id];
+            const confirmed = confirmedPacks.has(tier.id);
+            const perks = isFr ? tier.perksFr : tier.perksEn;
+            return (
+              <li key={tier.id}>
+                <Card className={`h-full ${v?.badgeClass ?? ""}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <CardTitle>{isFr ? tier.labelFr : tier.labelEn}</CardTitle>
+                    <Badge variant={confirmed ? "success" : "muted"}>
+                      {confirmed
+                        ? isFr
+                          ? "Confirmé"
+                          : "Confirmed"
+                        : isFr
+                          ? "Disponible"
+                          : "Available"}
+                    </Badge>
+                  </div>
+                  <ul className="mt-4 space-y-1.5">
+                    {perks.map((perk) => (
+                      <li key={perk} className="flex items-center gap-2 text-sm opacity-90">
+                        <CheckIcon className="h-4 w-4 shrink-0 text-[color:var(--fd-primary)]" />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+        <div id="sponsor-form" className="mt-8 scroll-mt-28">
+          <Card className="p-5 sm:p-8">
+            <h3 className="text-lg font-semibold">
+              {isFr ? "Formulaire sponsor" : "Sponsor form"}
+            </h3>
+            <div className="mt-4">
+              <HackathonSponsorForm editionId={e.id} locale={locale} />
+            </div>
+          </Card>
         </div>
       </Section>
 
@@ -970,135 +687,72 @@ export function HackathonLanding({
         id="faq"
         className="bg-white"
         eyebrow="FAQ"
-        title={isFr ? "Questions fréquentes" : "Frequently asked questions"}
+        title={isFr ? "Questions fréquentes" : "FAQ"}
       >
-        <div className="overflow-hidden rounded-2xl border border-[color:var(--fd-border)]">
-          {faq.map((item) => (
-            <details
-              key={item.q}
-              className="group border-b border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] last:border-b-0 open:bg-white"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-[color:var(--fd-text)] sm:px-6 [&::-webkit-details-marker]:hidden">
-                <span>{item.q}</span>
-                <span
-                  className="shrink-0 text-[color:var(--fd-primary)] transition group-open:rotate-45"
-                  aria-hidden
-                >
-                  +
-                </span>
-              </summary>
-              <p className="border-t border-[color:var(--fd-border)]/60 px-5 pb-4 pt-3 text-sm leading-relaxed text-[color:var(--fd-muted)] sm:px-6">
-                {item.a}
-              </p>
-            </details>
+        <Accordion>
+          {faq.map((item, i) => (
+            <AccordionItem key={item.q} id={`faq-${i}`} title={item.q}>
+              <p className="text-sm leading-relaxed text-[color:var(--fd-muted)]">{item.a}</p>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </Section>
 
       {/* Contact */}
       <Section
         id="contact"
         eyebrow={isFr ? "Contact" : "Contact"}
-        title={isFr ? "Parler à l’équipe McBuleli" : "Talk to the McBuleli team"}
+        title={isFr ? "Parler à l'équipe McBuleli" : "Talk to McBuleli"}
       >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <a
-            href={`mailto:${SUPPORT_EMAIL}`}
-            className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <IconWrap>
-                <IconMail />
-              </IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">Email</p>
-            </div>
-            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_EMAIL}</p>
-          </a>
-          <a
-            href={`tel:${SUPPORT_PHONE_DISPLAY.replace(/\s/g, "")}`}
-            className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <IconWrap>
-                <IconPhone />
-              </IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-                {isFr ? "Téléphone" : "Phone"}
-              </p>
-            </div>
-            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">{SUPPORT_PHONE_DISPLAY}</p>
-          </a>
-          <a
-            href={SUPPORT_WA_PATH}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <IconWrap>
-                <IconWhatsApp />
-              </IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">WhatsApp</p>
-            </div>
-            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">
-              {isFr ? "Ouvrir le chat" : "Open chat"}
-            </p>
-          </a>
-          <a
-            href="https://mcbuleli.org"
-            className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <IconWrap>
-                <IconGlobe />
-              </IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-                {isFr ? "Site web" : "Website"}
-              </p>
-            </div>
-            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">mcbuleli.org</p>
-          </a>
-          <a
-            href={SUPPORT_X}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-5 transition hover:border-[color:var(--fd-primary)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <IconWrap>
-                <IconX />
-              </IconWrap>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-                {isFr ? "Réseaux" : "Social"}
-              </p>
-            </div>
-            <p className="mt-3 font-semibold text-[color:var(--fd-primary)]">@McBuleli</p>
-          </a>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { label: "Email", href: `mailto:${SUPPORT_EMAIL}`, value: SUPPORT_EMAIL },
+            {
+              label: isFr ? "Téléphone" : "Phone",
+              href: `tel:${SUPPORT_PHONE_DISPLAY.replace(/\s/g, "")}`,
+              value: SUPPORT_PHONE_DISPLAY,
+            },
+            {
+              label: "WhatsApp",
+              href: SUPPORT_WA_PATH,
+              value: isFr ? "Ouvrir le chat" : "Open chat",
+            },
+            { label: isFr ? "Site" : "Website", href: "https://mcbuleli.org", value: "mcbuleli.org" },
+            { label: isFr ? "Réseaux" : "Social", href: SUPPORT_X, value: "@McBuleli" },
+          ].map((c) => (
+            <a
+              key={c.label}
+              href={c.href}
+              target={c.href.startsWith("http") ? "_blank" : undefined}
+              rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="block"
+            >
+              <Card className="transition hover:border-[color:var(--fd-primary)]/30">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                  {c.label}
+                </p>
+                <p className="mt-2 font-semibold text-[color:var(--fd-primary)]">{c.value}</p>
+              </Card>
+            </a>
+          ))}
         </div>
       </Section>
 
       {/* Final CTA */}
       <div className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
-        <div className="rounded-3xl bg-[color:var(--fd-primary)] px-6 py-12 text-center text-white sm:px-12">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {isFr
-              ? "Construisez votre futur avec l’IA."
-              : "Build your future with AI."}
+        <div className="rounded-3xl bg-[color:var(--fd-primary)] px-6 py-10 text-center text-white sm:px-12">
+          <h2 className="text-2xl font-semibold sm:text-3xl">
+            {isFr ? "Construisez votre futur avec l'IA." : "Build your future with AI."}
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
-            {isFr
-              ? "Hackathons IA en RDC - powered by McBuleli. Inscrivez-vous ou devenez partenaire aujourd’hui."
-              : "AI hackathons in DRC - powered by McBuleli. Register or partner today."}
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a
               href="#register"
               className="inline-flex min-h-11 items-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)]"
             >
-              {isFr ? "Pré-inscrire maintenant" : "Pre-register now"}
+              {isFr ? "Participer" : "Join"}
             </a>
             <a
-              href="#sponsor"
+              href="#sponsors"
               className="inline-flex min-h-11 items-center rounded-xl border border-white/40 px-6 py-2.5 text-sm font-semibold text-white"
             >
               {isFr ? "Devenir sponsor" : "Become a sponsor"}
@@ -1107,26 +761,20 @@ export function HackathonLanding({
         </div>
       </div>
 
-      {/* Legal footer */}
+      {/* Footer */}
       <footer className="border-t border-white/10 bg-[#0c1c12] text-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-3">
           <div>
-            <p className="text-sm font-semibold text-white">{HACKATHON_LEGAL.legalName}</p>
-            <p className="mt-2 text-sm leading-relaxed text-white/65">
-              {HACKATHON_LEGAL.address}
-            </p>
+            <p className="text-sm font-semibold">{HACKATHON_LEGAL.legalName}</p>
+            <p className="mt-2 text-sm text-white/65">{HACKATHON_LEGAL.address}</p>
             <p className="mt-3 text-xs text-white/50">
               RCCM : {HACKATHON_LEGAL.rccm}
               <br />
               ID Nat : {HACKATHON_LEGAL.idNat}
-              <br />
-              NIF : {HACKATHON_LEGAL.taxId}
             </p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">
-              {isFr ? "Contact" : "Contact"}
-            </p>
+            <p className="text-sm font-semibold">{isFr ? "Contact" : "Contact"}</p>
             <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
                 <a className="hover:text-[color:var(--fd-mint)]" href={`mailto:${SUPPORT_EMAIL}`}>
@@ -1134,60 +782,39 @@ export function HackathonLanding({
                 </a>
               </li>
               <li>{SUPPORT_PHONE_DISPLAY}</li>
-              <li>
-                <a className="hover:text-[color:var(--fd-mint)]" href={SUPPORT_WA_PATH} target="_blank" rel="noopener noreferrer">
-                  WhatsApp
-                </a>
-              </li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">
-              {isFr ? "Mentions légales" : "Legal"}
-            </p>
+            <p className="text-sm font-semibold">{isFr ? "Mentions légales" : "Legal"}</p>
             <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
                 <Link className="hover:text-[color:var(--fd-mint)]" href="/privacy">
-                  {isFr ? "Politique de confidentialité" : "Privacy policy"}
+                  {isFr ? "Confidentialité" : "Privacy"}
                 </Link>
               </li>
               <li>
                 <Link className="hover:text-[color:var(--fd-mint)]" href="/terms">
-                  {isFr ? "Conditions d’utilisation" : "Terms of use"}
+                  {isFr ? "Conditions" : "Terms"}
                 </Link>
               </li>
               <li>
                 <Link className="hover:text-[color:var(--fd-mint)]" href="/about">
-                  {isFr ? "À propos / Mentions légales" : "About / Legal notice"}
+                  {isFr ? "À propos" : "About"}
                 </Link>
               </li>
             </ul>
+            <div className="mt-4 flex gap-3">
+              <a href={SUPPORT_X} target="_blank" rel="noopener noreferrer" className="text-white/65 hover:text-[color:var(--fd-mint)]">
+                X / Twitter
+              </a>
+              <a href={SUPPORT_WA_PATH} target="_blank" rel="noopener noreferrer" className="text-white/65 hover:text-[color:var(--fd-mint)]">
+                WhatsApp
+              </a>
+            </div>
           </div>
         </div>
-        <div className="border-t border-white/10 px-4 py-6 sm:px-6">
-          <p className="text-center text-xs text-white/50">
-            © {year} {HACKATHON_LEGAL.legalName}. {isFr ? "Tous droits réservés." : "All rights reserved."}
-          </p>
-          <a
-            href={SUPPORT_X}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-white transition hover:text-[color:var(--fd-mint)]"
-          >
-            <span className="text-xs font-medium text-white/55">Powered by</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/logo-256.png"
-                alt=""
-                width={32}
-                height={32}
-                className="h-full w-full object-contain p-0.5"
-              />
-            </span>
-            <span>McBuleli</span>
-          </a>
+        <div className="border-t border-white/10 px-4 py-6 text-center text-xs text-white/50 sm:px-6">
+          © {year} {HACKATHON_LEGAL.legalName}. {isFr ? "Tous droits réservés." : "All rights reserved."}
         </div>
       </footer>
 
@@ -1198,11 +825,11 @@ export function HackathonLanding({
             href="#register"
             className="flex flex-1 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] py-3 text-sm font-semibold text-white"
           >
-            {isFr ? "Pré-inscrire" : "Pre-register"}
+            {isFr ? "Participer" : "Join"}
           </a>
           <a
-            href="#partner"
-            className="flex flex-1 items-center justify-center rounded-xl border border-[color:var(--fd-border)] py-3 text-sm font-semibold text-[color:var(--fd-text)]"
+            href="#partenaires"
+            className="flex flex-1 items-center justify-center rounded-xl border border-[color:var(--fd-border)] py-3 text-sm font-semibold"
           >
             {isFr ? "Partenaire" : "Partner"}
           </a>

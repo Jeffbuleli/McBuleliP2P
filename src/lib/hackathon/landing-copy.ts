@@ -110,7 +110,7 @@ export function challengeCategories(isFr: boolean): ChallengeItem[] {
 export function journeySteps(isFr: boolean): JourneyStep[] {
   if (isFr) {
     return [
-      { step: 1, title: "Inscription", body: "Confirmez votre e-mail, puis réservez votre place (72 h)." },
+      { step: 1, title: "Inscription", body: "Confirmez votre e-mail, puis réservez votre place (rappels 24 h)." },
       { step: 2, title: "Validation", body: "Paiement confirmé - ticket QR envoyé par e-mail." },
       { step: 3, title: "Formation", body: "Bootcamp Vibe Coding (outils IA & ship)." },
       { step: 4, title: "Hackathon", body: "Build intensif en équipe sur votre défi." },
@@ -121,7 +121,7 @@ export function journeySteps(isFr: boolean): JourneyStep[] {
     ];
   }
   return [
-    { step: 1, title: "Registration", body: "Confirm your email, then hold your seat (72 h)." },
+    { step: 1, title: "Registration", body: "Confirm your email, then hold your seat (24 h reminders)." },
     { step: 2, title: "Validation", body: "Payment confirmed - QR ticket by email." },
     { step: 3, title: "Training", body: "Vibe Coding bootcamp (AI tools & ship)." },
     { step: 4, title: "Hackathon", body: "Intensive team build on your challenge." },
@@ -185,7 +185,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Est-ce gratuit ?",
-        a: "Non. Deux packs : 1 jour (bootcamp) et 2 jours + Hackathon. Les tarifs sont affichés sur la page d’inscription. Des places partenaires / bourses peuvent être annoncées séparément.",
+        a: "Non. Tarif unique : 100 USD pour le programme complet (3 jours). Des places partenaires / bourses peuvent être annoncées séparément.",
       },
       {
         q: "Quels sont les critères d’évaluation ?",
@@ -197,7 +197,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Comment se passe le paiement ?",
-        a: "Pré-inscription : confirmez d'abord votre e-mail (lien de vérification). Ensuite place retenue 72 h et lien de paiement Orange Money, M-Pesa ou Airtel Money. Vous pouvez aussi payer immédiatement après confirmation. Ticket QR par e-mail après paiement.",
+        a: "Pré-inscription : confirmez d'abord votre e-mail (lien de vérification). Ensuite place réservée sans expiration automatique, avec rappels toutes les 24 h et lien de paiement Orange Money, M-Pesa ou Airtel Money. Vous pouvez aussi payer immédiatement après confirmation. Ticket QR par e-mail après paiement.",
       },
       {
         q: "Où et quand a lieu l’événement ?",
@@ -220,7 +220,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Is it free?",
-      a: "No. Two packs: 1-day bootcamp and 2 days + Hackathon. Prices are on the registration form. Partner seats / scholarships may be announced separately.",
+      a: "No. Single price: 100 USD for the full 3-day program. Partner seats / scholarships may be announced separately.",
     },
     {
       q: "What are the judging criteria?",
@@ -232,7 +232,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "How does payment work?",
-      a: "Pre-registration: confirm your email first (verification link). Then your seat is held 72 h with a pay link for Orange Money, M-Pesa or Airtel Money. You can also pay immediately after confirmation. QR ticket by email after payment.",
+      a: "Pre-registration: confirm your email first (verification link). Then your seat is held with no automatic expiry, with reminders every 24 h and a pay link for Orange Money, M-Pesa or Airtel Money. You can also pay immediately after confirmation. QR ticket by email after payment.",
     },
     {
       q: "Where and when is it?",

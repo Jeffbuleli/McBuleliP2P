@@ -1,0 +1,45 @@
+Bonjour l'équipe MontanaPay,
+
+Merci pour votre message et pour la question précise sur le rôle attendu. Nous avons clarifié notre proposition autour de ce que MontanaPay fait le mieux : wallet sécurisé, escrow anti-arnaque, e-commerce et retrait Mobile Money (Orange, Airtel, M-Pesa...).
+
+Programme : https://mcbuleli.org/hackathon
+Votre produit : https://www.montana-pay.com/
+
+RÔLE PRINCIPAL QUE NOUS VOUS PROPOSONS
+Partenaire technique FinTech / Escrow du McBuleli Hackathon (Silikin Village).
+
+Concrètement :
+1) Session courte (30-45 min) pendant le bootcamp : « Escrow & confiance dans le e-commerce en RDC » - cas MontanaPay.
+2) Mentorat ciblé des équipes qui construisent marketplace, livraison, P2P ou wallet (1-2 créneaux).
+3) Si possible : sandbox / crédits de test / maquette d'intégration pour que les prototypes appellent un flux escrow réaliste (même simplifié).
+
+OPTION LÉGÈRE (si vous le souhaitez)
+- 1 siège jury sur les projets FinTech / e-commerce (demi-journée pitch).
+- Logo partenaire sur la page hackathon et les supports événement.
+
+Ce n'est pas d'abord une demande de sponsoring cash. Nous voulons d'abord un partenariat produit utile aux participants et visible pour MontanaPay.
+
+CE QUE MONTANAPAY Y GAGNE
+- Des builders qui découvrent et intègrent la logique escrow MontanaPay dans de vrais prototypes
+- Positionnement : référence paiement sécurisé / anti-arnaque auprès de l'écosystème Silikin
+- Pipeline de talents et de projets marketplace alignés avec votre roadmap
+- Contenu (talk + démo) réutilisable sur vos réseaux
+
+CE QUE GAGNENT LES PARTICIPANTS
+- Un cas d'usage local concret (pas seulement de la théorie IA)
+- Des prototypes plus crédibles (escrow, retrait MoMo, parcours acheteur/vendeur)
+- Un feedback métier FinTech pendant le hackathon
+
+CE QUE GAGNE McBULELI
+- Un partenaire FinTech crédible sur le défi e-commerce / inclusion
+- Une meilleure qualité des projets marketplace
+
+Prochaine étape : un appel de 20 minutes pour valider ce rôle (talk + mentorat ± sandbox) et un créneau Silikin.
+
+Cordialement,
+McBuleli Team
+Mme Patty B.
+hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1
+https://mcbuleli.org/hackathon

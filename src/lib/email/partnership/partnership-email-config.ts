@@ -27,3 +27,12 @@ export function partnershipEmailReplyTo(): string {
   if (override) return override;
   return PARTNERSHIP_PLACEHOLDERS.contactEmail;
 }
+
+/**
+ * Always archive partnership outreach to hi@ (BCC),
+ * unless that address is already the primary To.
+ */
+export function partnershipArchiveBcc(to: string): string | undefined {
+  if (to.trim().toLowerCase() === SUPPORT_EMAIL.toLowerCase()) return undefined;
+  return SUPPORT_EMAIL;
+}
