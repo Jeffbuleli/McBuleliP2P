@@ -81,6 +81,24 @@ export const HACKATHON_EVENT_YEAR = 2026;
 
 export const HACKATHON_EVENT_DAYS = 3;
 
+/** Official proposed dates (Silikin Village reservation). */
+export const HACKATHON_DATES_LABEL_FR = "12, 13 et 14 août 2026";
+export const HACKATHON_DATES_LABEL_EN = "August 12, 13 & 14, 2026";
+
+/** Confirmed payment rail partner for builders (sandbox APIs). */
+export const PAWAPAY_PARTNER = {
+  name: "pawaPay",
+  roleFr: "Partenaire Paiement Mobile",
+  roleEn: "Mobile Payment Partner",
+  website: "https://www.pawapay.io/",
+  docs: "https://docs.pawapay.io/",
+  logoUrl: "/partners/pawapay-logo.png",
+  blurbFr:
+    "Rail Mobile Money (Orange, Airtel, M-Pesa). Les participants utilisent le sandbox pawaPay et les APIs pour leurs prototypes.",
+  blurbEn:
+    "Mobile Money rail (Orange, Airtel, M-Pesa). Participants use the pawaPay sandbox and APIs in their prototypes.",
+} as const;
+
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
@@ -97,7 +115,7 @@ export function defaultHeroStats(
   partnersCount: number,
 ): EventHeroStats {
   return {
-    participantsExpected: 100,
+    participantsExpected: 30,
     mentorsLabelFr: "3+",
     mentorsLabelEn: "3+",
     partnersLabelFr: partnersCount > 0 ? `${partnersCount}+` : "5+",
@@ -123,7 +141,7 @@ export function hackathonProgramDays(): ProgramDay[] {
         { time: "09h35 - 10h10", activityFr: "Présentation des défis et règles", activityEn: "Challenges & rules briefing", icon: "target" },
         { time: "10h10 - 10h25", activityFr: "Pause café & networking", activityEn: "Coffee break & networking", icon: "coffee" },
         { time: "10h25 - 11h10", activityFr: "Bootcamp 1 : Design Thinking & validation", activityEn: "Bootcamp 1: Design Thinking & validation", icon: "brain" },
-        { time: "11h10 - 11h45", activityFr: "Bootcamp 2 : IA, APIs et outils", activityEn: "Bootcamp 2: AI, APIs & tools", icon: "code" },
+        { time: "11h10 - 11h45", activityFr: "Bootcamp 2 : Cursor, Claude, Codex & APIs", activityEn: "Bootcamp 2: Cursor, Claude, Codex & APIs", icon: "code" },
         { time: "11h45 - 12h05", activityFr: "Q&R avec les mentors", activityEn: "Q&A with mentors", icon: "help" },
         { time: "12h05 - 12h25", activityFr: "Formation des équipes et choix des défis", activityEn: "Team formation & challenge pick", icon: "team" },
         { time: "12h25 - 13h20", activityFr: "Travail en équipe (mentorat)", activityEn: "Team work (mentoring)", icon: "build" },
@@ -319,12 +337,12 @@ export function aboutBlurb(isFr: boolean): { title: string; body: string } {
   if (isFr) {
     return {
       title: "3 demi-journées pour apprendre, builder et pitcher",
-      body: "Bootcamp Vibe Coding, hackathon intensif et Demo Day au Silikin Village (2026). Un format professionnel pensé pour la RDC - avec visibilité partenaires et expérience fluide pour les participants.",
+      body: "Bootcamp Vibe Coding avec Cursor, Claude et Codex, hackathon intensif et Demo Day au Silikin Village (12-14 août 2026). Format professionnel pour ~30 builders en RDC - visibilité partenaires et expérience fluide.",
     };
   }
   return {
     title: "3 half-days to learn, build and pitch",
-    body: "Vibe Coding bootcamp, intensive hackathon and Demo Day at Silikin Village (2026). A professional format built for DRC - partner visibility and a smooth participant experience.",
+    body: "Vibe Coding bootcamp with Cursor, Claude and Codex, intensive hackathon and Demo Day at Silikin Village (Aug 12-14, 2026). A professional format for ~30 builders in DRC - partner visibility and a smooth experience.",
   };
 }
 
@@ -333,7 +351,7 @@ export function eventDateLabel(
   isFr: boolean,
 ): string {
   if (!startDate) {
-    return isFr ? `Bientôt - ${HACKATHON_EVENT_YEAR}` : `Coming soon - ${HACKATHON_EVENT_YEAR}`;
+    return isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN;
   }
   try {
     return new Date(startDate).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
@@ -342,6 +360,6 @@ export function eventDateLabel(
       year: "numeric",
     });
   } catch {
-    return isFr ? `Bientôt - ${HACKATHON_EVENT_YEAR}` : `Coming soon - ${HACKATHON_EVENT_YEAR}`;
+    return isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN;
   }
 }

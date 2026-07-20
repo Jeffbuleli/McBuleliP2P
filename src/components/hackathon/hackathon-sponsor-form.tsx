@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { preparePartnerLogoDataUrl } from "@/lib/hackathon/prepare-logo";
 import {
   hkField,
   hkLabel,
@@ -19,6 +20,26 @@ export function HackathonSponsorForm({
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  async function onLogoPick(file: File | null) {
+    setErr(null);
+    if (!file) {
+      setLogoPreview(null);
+      setLogoUrl(null);
+      return;
+    }
+    try {
+      const dataUrl = await preparePartnerLogoDataUrl(file);
+      setLogoUrl(dataUrl);
+      setLogoPreview(dataUrl);
+    } catch {
+      setErr(isFr ? "Logo invalide ou trop lourd." : "Invalid or oversized logo.");
+      setLogoPreview(null);
+      setLogoUrl(null);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,6 +56,7 @@ export function HackathonSponsorForm({
       pack: String(fd.get("pack") ?? "bronze"),
       budgetNote: String(fd.get("budgetNote") ?? "") || undefined,
       comment: String(fd.get("comment") ?? "") || undefined,
+      logoUrl: logoUrl || undefined,
       locale,
     };
     try {
@@ -49,6 +71,8 @@ export function HackathonSponsorForm({
       }
       setOk(true);
       e.currentTarget.reset();
+      setLogoPreview(null);
+      setLogoUrl(null);
     } catch {
       setErr(isFr ? "Erreur réseau." : "Network error.");
     } finally {
@@ -91,6 +115,23 @@ export function HackathonSponsorForm({
           <label className={hkLabel}>{isFr ? "Site web" : "Website"}</label>
           <input name="website" className={hkField} />
         </div>
+      </div>
+      <div>
+        <label className={hkLabel}>
+          {isFr ? "Logo (PNG, JPG ou WebP)" : "Logo (PNG, JPG or WebP)"}
+        </label>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className={`${hkField} cursor-pointer file:mr-3 file:rounded-lg file:border-0 file:bg-[color:var(--fd-mint)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[color:var(--fd-primary)]`}
+          onChange={(ev) => void onLogoPick(ev.target.files?.[0] ?? null)}
+        />
+        {logoPreview ? (
+          <span className="mt-2 inline-flex h-14 items-center rounded-xl bg-white px-4 ring-1 ring-[color:var(--fd-border)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoPreview} alt="" className="max-h-9 max-w-[140px] object-contain" />
+          </span>
+        ) : null}
       </div>
       <div>
         <label className={hkLabel}>{isFr ? "Pack" : "Pack"}</label>

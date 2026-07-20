@@ -82,6 +82,13 @@ export const partnerBodyZ = z.object({
     .min(1)
     .max(12),
   contribution: z.string().trim().max(4000).optional(),
+  logoUrl: z
+    .string()
+    .max(350_000)
+    .refine((s) => s.startsWith("data:image/") || /^https?:\/\//i.test(s), {
+      message: "invalid_logo",
+    })
+    .optional(),
   locale: z.enum(["fr", "en"]).default("fr"),
 });
 
@@ -95,6 +102,13 @@ export const sponsorBodyZ = z.object({
   pack: z.enum(HACKATHON_SPONSOR_PACKS),
   budgetNote: z.string().trim().max(2000).optional(),
   comment: z.string().trim().max(4000).optional(),
+  logoUrl: z
+    .string()
+    .max(350_000)
+    .refine((s) => s.startsWith("data:image/") || /^https?:\/\//i.test(s), {
+      message: "invalid_logo",
+    })
+    .optional(),
   locale: z.enum(["fr", "en"]).default("fr"),
 });
 
@@ -567,6 +581,7 @@ export async function submitPartner(raw: unknown) {
       sector: data.sector || null,
       partnershipTypes: data.partnershipTypes,
       contribution: data.contribution || null,
+      logoUrl: data.logoUrl || null,
       status: "lead",
     })
     .returning({ id: hackathonPartners.id });
@@ -605,6 +620,7 @@ export async function submitSponsor(raw: unknown) {
       pack: data.pack,
       budgetNote: data.budgetNote || null,
       comment: data.comment || null,
+      logoUrl: data.logoUrl || null,
       status: "lead",
     })
     .returning({ id: hackathonSponsors.id });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HACKATHON_PARTNERSHIP_TYPES } from "@/lib/hackathon/constants";
+import { preparePartnerLogoDataUrl } from "@/lib/hackathon/prepare-logo";
 import {
   hkCheckChip,
   hkCheckbox,
@@ -45,6 +46,26 @@ export function HackathonPartnerForm({
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  async function onLogoPick(file: File | null) {
+    setErr(null);
+    if (!file) {
+      setLogoPreview(null);
+      setLogoUrl(null);
+      return;
+    }
+    try {
+      const dataUrl = await preparePartnerLogoDataUrl(file);
+      setLogoUrl(dataUrl);
+      setLogoPreview(dataUrl);
+    } catch {
+      setErr(isFr ? "Logo invalide ou trop lourd." : "Invalid or oversized logo.");
+      setLogoPreview(null);
+      setLogoUrl(null);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,6 +83,7 @@ export function HackathonPartnerForm({
       sector: String(fd.get("sector") ?? "") || undefined,
       partnershipTypes: types.length ? types : (["autre"] as const),
       contribution: String(fd.get("contribution") ?? "") || undefined,
+      logoUrl: logoUrl || undefined,
       locale,
     };
     try {
@@ -76,6 +98,8 @@ export function HackathonPartnerForm({
       }
       setOk(true);
       e.currentTarget.reset();
+      setLogoPreview(null);
+      setLogoUrl(null);
     } catch {
       setErr(isFr ? "Erreur réseau." : "Network error.");
     } finally {
@@ -122,6 +146,23 @@ export function HackathonPartnerForm({
       <div>
         <label className={hkLabel}>{isFr ? "Secteur" : "Sector"}</label>
         <input name="sector" className={hkField} />
+      </div>
+      <div>
+        <label className={hkLabel}>
+          {isFr ? "Logo (PNG, JPG ou WebP)" : "Logo (PNG, JPG or WebP)"}
+        </label>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className={`${hkField} cursor-pointer file:mr-3 file:rounded-lg file:border-0 file:bg-[color:var(--fd-mint)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[color:var(--fd-primary)]`}
+          onChange={(ev) => void onLogoPick(ev.target.files?.[0] ?? null)}
+        />
+        {logoPreview ? (
+          <span className="mt-2 inline-flex h-14 items-center rounded-xl bg-white px-4 ring-1 ring-[color:var(--fd-border)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoPreview} alt="" className="max-h-9 max-w-[140px] object-contain" />
+          </span>
+        ) : null}
       </div>
       <fieldset>
         <legend className={hkLabel}>{isFr ? "Type de partenariat" : "Partnership type"}</legend>

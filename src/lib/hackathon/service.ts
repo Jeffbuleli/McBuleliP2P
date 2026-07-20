@@ -103,7 +103,7 @@ export function demoFeaturedHackathon(): FeaturedHackathonPayload {
       endDate: null,
       venue: "Silikin Village, 63, Ave Colonel Mondjiba",
       city: "Kinshasa",
-      maxSeats: 100,
+      maxSeats: 30,
       seatsTaken: 0,
       priceDay1Usd: "100",
       priceFullUsd: "100",
@@ -127,10 +127,10 @@ export function demoFeaturedHackathon(): FeaturedHackathonPayload {
     mentors: [
       {
         id: "demo-mentor-1",
-        name: "Mentor Vibe Coding",
+        name: "Jeff Buleli - CEO",
         company: "McBuleli",
-        title: "Jeff Buleli - CEO",
-        expertise: "Cursor - Claude - Codex",
+        title: "Full Stack Dev. & Entrepreneur",
+        expertise: "Cursor · Claude · Codex",
         photoUrl: null,
       },
     ],

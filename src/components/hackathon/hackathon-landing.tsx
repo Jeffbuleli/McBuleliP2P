@@ -15,6 +15,7 @@ import {
   hackathonFaqNav,
   hackathonProgramDays,
   partnerBenefits,
+  PAWAPAY_PARTNER,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
@@ -149,10 +150,10 @@ function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[
     if (/vibe\s*coding/i.test(p.name) || /mentor vibe/i.test(p.name) || /jeff/i.test(p.name)) {
       return {
         ...p,
-        name: "Mentor Vibe Coding",
-        title: "Jeff Buleli - CEO",
+        name: "Jeff Buleli - CEO",
+        title: "Full Stack Dev. & Entrepreneur",
         company: null,
-        expertise: "Cursor - Claude - Codex",
+        expertise: "Cursor · Claude · Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
         href: "https://mcbuleli.org/@ceo",
@@ -218,6 +219,11 @@ function PersonGrid({
                   {[p.title, p.company].filter(Boolean).join(" - ")}
                 </p>
               )}
+              {p.expertise ? (
+                <p className="mt-0.5 truncate text-[11px] text-[color:var(--fd-muted)]">
+                  {p.expertise}
+                </p>
+              ) : null}
             </div>
           </>
         );
@@ -318,8 +324,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             </h1>
             <p className="mt-4 text-base leading-relaxed text-white/85 sm:text-lg">
               {isFr
-                ? "Bootcamp Vibe Coding, hackathon et Demo Day au Silikin Village - Kinshasa."
-                : "Vibe Coding bootcamp, hackathon and Demo Day at Silikin Village - Kinshasa."}
+                ? "Bootcamp Vibe Coding avec Cursor, Claude et Codex - hackathon et Demo Day au Silikin Village, Kinshasa."
+                : "Vibe Coding bootcamp with Cursor, Claude and Codex - hackathon and Demo Day at Silikin Village, Kinshasa."}
             </p>
             <dl className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
               <div>
@@ -543,39 +549,101 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             : "Each collaboration is tailored after discussion."
         }
       >
+        {/* Featured payment partner */}
+        <a
+          href={PAWAPAY_PARTNER.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <span className="inline-flex h-16 min-w-[11rem] items-center justify-center rounded-xl bg-white px-5 ring-1 ring-[color:var(--fd-border)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={PAWAPAY_PARTNER.logoUrl}
+                alt={PAWAPAY_PARTNER.name}
+                className="h-8 w-auto max-w-[168px] object-contain object-left"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                {isFr ? PAWAPAY_PARTNER.roleFr : PAWAPAY_PARTNER.roleEn}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+                {PAWAPAY_PARTNER.name}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+                {isFr ? PAWAPAY_PARTNER.blurbFr : PAWAPAY_PARTNER.blurbEn}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+                pawapay.io · docs.pawapay.io
+              </p>
+            </div>
+          </div>
+        </a>
+
         {(() => {
-          const logoSlots = Math.max(6, data.partnerLogos.length);
+          const existing = data.partnerLogos.filter(
+            (p) => !/pawapay/i.test(p.name),
+          );
+          const logoSlots = Math.max(6, existing.length + 1);
           const logos = [
-            ...data.partnerLogos,
-            ...Array.from({ length: logoSlots - data.partnerLogos.length }, (_, i) => ({
-              id: `partner-slot-${i}`,
-              name: isFr ? "Logo partenaire" : "Partner logo",
-              logoUrl: null as string | null,
-              website: null as string | null,
-              placeholder: true,
-            })),
+            {
+              id: "pawapay-featured",
+              name: PAWAPAY_PARTNER.name,
+              logoUrl: PAWAPAY_PARTNER.logoUrl,
+              website: PAWAPAY_PARTNER.website,
+              placeholder: false,
+            },
+            ...existing,
+            ...Array.from(
+              { length: Math.max(0, logoSlots - existing.length - 1) },
+              (_, i) => ({
+                id: `partner-slot-${i}`,
+                name: isFr ? "Logo partenaire" : "Partner logo",
+                logoUrl: null as string | null,
+                website: null as string | null,
+                placeholder: true,
+              }),
+            ),
           ];
           return (
             <ul className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {logos.map((p) => (
-                <li
-                  key={p.id}
-                  className={`flex h-16 items-center justify-center rounded-xl border px-3 ${
-                    "placeholder" in p && p.placeholder
-                      ? "border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60"
-                      : "border-[color:var(--fd-border)] bg-white"
-                  }`}
-                >
-                  {p.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.logoUrl} alt={p.name} className="max-h-8 max-w-[120px] object-contain" />
-                  ) : (
-                    <span className="text-center text-[11px] font-medium text-[color:var(--fd-muted)]">
-                      {p.name}
-                    </span>
-                  )}
-                </li>
-              ))}
+              {logos.map((p) => {
+                const inner = p.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.logoUrl}
+                    alt={p.name}
+                    className="max-h-9 max-w-[140px] object-contain"
+                  />
+                ) : (
+                  <span className="text-center text-[11px] font-medium text-[color:var(--fd-muted)]">
+                    {p.name}
+                  </span>
+                );
+                const cls = `flex h-16 items-center justify-center rounded-xl border px-3 ${
+                  "placeholder" in p && p.placeholder
+                    ? "border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60"
+                    : "border-[color:var(--fd-border)] bg-white"
+                }`;
+                return (
+                  <li key={p.id}>
+                    {p.website ? (
+                      <a
+                        href={p.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cls}
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <div className={cls}>{inner}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           );
         })()}
