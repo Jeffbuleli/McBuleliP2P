@@ -10,6 +10,7 @@ import {
 import { sendEmailVerification } from "@/lib/auth/email-verification";
 import {
   HACKATHON_PARTNERSHIP_TYPES,
+  HACKATHON_PRICE_USD,
   HACKATHON_SPONSOR_PACKS,
 } from "@/lib/hackathon/constants";
 import {
@@ -212,7 +213,7 @@ export async function registerParticipant(raw: unknown) {
     return { ok: false as const, error: "no_edition", status: 404 };
   }
 
-  const priceUsd = String(fullEdition.priceFullUsd);
+  const priceUsd = HACKATHON_PRICE_USD;
   // Single 3-day program - ignore day1 pack from clients
   const ticketPack = "full" as const;
 

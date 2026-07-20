@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { FeaturedHackathonPayload } from "@/lib/hackathon/service";
 import { challengeCategories, HACKATHON_LEGAL } from "@/lib/hackathon/landing-copy";
+import { HACKATHON_PRICE_USD } from "@/lib/hackathon/constants";
 import {
   aboutBlurb,
   crossCuttingActivities,
@@ -523,7 +524,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <HackathonParticipantForm
               editionId={e.id}
               locale={locale}
-              priceUsd={e.priceFullUsd}
+              priceUsd={HACKATHON_PRICE_USD}
               registrationOpen={open}
             />
           </Card>

@@ -7,6 +7,7 @@ import {
   getFeaturedHackathon,
 } from "@/lib/hackathon/service";
 import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
+import { HACKATHON_PRICE_USD } from "@/lib/hackathon/constants";
 import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from "@/lib/support-contact";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +97,7 @@ function eventJsonLd(data: NonNullable<Awaited<ReturnType<typeof getFeaturedHack
       {
         "@type": "Offer",
         name: "McBuleli Hackathon - 3 jours",
-        price: e.priceFullUsd,
+        price: HACKATHON_PRICE_USD,
         priceCurrency: "USD",
         availability:
           e.status === "open"
