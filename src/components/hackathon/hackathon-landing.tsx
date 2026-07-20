@@ -280,8 +280,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
 
   const statItems = [
     {
-      label: isFr ? "Participants attendus" : "Expected participants",
-      value: String(stats.participantsExpected),
+      label: isFr ? "Équipes attendues" : "Expected teams",
+      value: String(stats.teamsExpected),
     },
     {
       label: isFr ? "Mentors" : "Mentors",

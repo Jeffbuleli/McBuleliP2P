@@ -2,7 +2,7 @@
  * Silikin Village - demande de reservation de salle pour McBuleli Hackathon.
  * Contact reception : reception_skv@texaf-rdc.com
  * Booking : OfficeRnD Auditorium calendar
- * Dates proposees : 12, 13 et 14 aout 2026
+ * Periode : aout 2026 (dates exactes a confirmer)
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
 import {
@@ -38,10 +38,9 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
   const logo = logoUrl();
   const year = new Date().getFullYear();
 
-  const subject =
-    "Reservation salle - McBuleli Hackathon - 12, 13 et 14 aout 2026";
+  const subject = "Reservation salle - McBuleli Hackathon - Aout 2026";
   const preheader =
-    "Demande de reservation Silikin Village (Auditorium) : 3 demi-journees (08h00-13h30), ~30 personnes.";
+    "Demande de reservation Silikin Village (Auditorium) : 3 demi-journees en aout 2026 (08h00-13h30), ~30 personnes - dates a confirmer.";
 
   const text = [
     "Bonjour l'equipe Silikin Village / Reception,",
@@ -52,10 +51,8 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
     `Calendrier Auditorium : ${SILIKIN_BOOKING_URL}`,
     `Votre site : ${SILIKIN_SITE_URL}`,
     "",
-    "DATES PROPOSEES",
-    "- Mercredi 12 aout 2026",
-    "- Jeudi 13 aout 2026",
-    "- Vendredi 14 aout 2026",
+    "PERIODE SOUHAITEE",
+    "Aout 2026 - 3 demi-journees consecutives (dates exactes a confirmer avec vous).",
     "",
     "HORAIRES",
     "Chaque jour : 08h00 - 13h30 (demi-journee).",
@@ -71,7 +68,7 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
     "Jour 2 - Build Day & mentorat",
     "Jour 3 - Demo Day & ceremonie",
     "",
-    "Merci de nous confirmer la disponibilite, le devis et la procedure de reservation via votre calendrier OfficeRnD.",
+    "Merci de nous proposer les creneaux disponibles en aout 2026, le devis et la procedure de reservation via votre calendrier OfficeRnD.",
     "",
     "Contacts McBuleli pour le suivi :",
     `Email : ${SUPPORT_EMAIL}`,
@@ -122,14 +119,10 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
               </p>
 
               <p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};font-weight:700;">
-                Dates proposees
+                Periode souhaitee
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>12 aout 2026</strong> - Jour 1 Bootcamp &amp; lancement (08h00-13h30)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 aout 2026</strong> - Jour 2 Build Day &amp; mentorat (08h00-13h30)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 aout 2026</strong> - Jour 3 Demo Day &amp; ceremonie (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Aout 2026</strong> - 3 demi-journees consecutives (08h00-13h30), dates exactes a confirmer avec vous</td></tr>
               </table>
 
               <p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};font-weight:700;">
@@ -140,7 +133,7 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
               </p>
 
               <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">
-                Merci de confirmer la <strong style="color:${EMAIL_BRAND.text};">disponibilite</strong>,
+                Merci de nous proposer les <strong style="color:${EMAIL_BRAND.text};">creneaux disponibles</strong>,
                 le <strong style="color:${EMAIL_BRAND.text};">devis</strong>
                 et la procedure via votre calendrier OfficeRnD.
               </p>

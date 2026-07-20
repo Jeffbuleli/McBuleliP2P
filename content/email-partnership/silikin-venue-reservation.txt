@@ -6,10 +6,8 @@ Programme public : https://mcbuleli.org/hackathon
 Calendrier Auditorium : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41&start=2026-07-20T17:00:00.000Z&end=2026-07-20T18:00:00.000Z
 Votre site : https://www.silikinvillage.com/
 
-DATES PROPOSEES
-- Mercredi 12 aout 2026
-- Jeudi 13 aout 2026
-- Vendredi 14 aout 2026
+PERIODE SOUHAITEE
+Aout 2026 - 3 demi-journees consecutives (dates exactes a confirmer avec vous).
 
 HORAIRES
 Chaque jour : 08h00 - 13h30 (demi-journee).
@@ -25,7 +23,7 @@ Jour 1 - Bootcamp & lancement
 Jour 2 - Build Day & mentorat
 Jour 3 - Demo Day & ceremonie
 
-Merci de nous confirmer la disponibilite, le devis et la procedure de reservation via votre calendrier OfficeRnD.
+Merci de nous proposer les creneaux disponibles en aout 2026, le devis et la procedure de reservation via votre calendrier OfficeRnD.
 
 Contacts McBuleli pour le suivi :
 Email : hi@mcbuleli.org

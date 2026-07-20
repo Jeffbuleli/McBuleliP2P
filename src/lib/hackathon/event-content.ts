@@ -67,7 +67,7 @@ export type SponsorTier = {
 };
 
 export type EventHeroStats = {
-  participantsExpected: number;
+  teamsExpected: number;
   mentorsLabelFr: string;
   mentorsLabelEn: string;
   partnersLabelFr: string;
@@ -81,9 +81,9 @@ export const HACKATHON_EVENT_YEAR = 2026;
 
 export const HACKATHON_EVENT_DAYS = 3;
 
-/** Official proposed dates (Silikin Village reservation). */
-export const HACKATHON_DATES_LABEL_FR = "12, 13 et 14 août 2026";
-export const HACKATHON_DATES_LABEL_EN = "August 12, 13 & 14, 2026";
+/** Public date label while venue dates are pending confirmation. */
+export const HACKATHON_DATES_LABEL_FR = "Août 2026";
+export const HACKATHON_DATES_LABEL_EN = "August 2026";
 
 /** Confirmed payment rail partner for builders (sandbox APIs). */
 export const PAWAPAY_PARTNER = {
@@ -115,7 +115,7 @@ export function defaultHeroStats(
   partnersCount: number,
 ): EventHeroStats {
   return {
-    participantsExpected: 30,
+    teamsExpected: 12,
     mentorsLabelFr: "3+",
     mentorsLabelEn: "3+",
     partnersLabelFr: partnersCount > 0 ? `${partnersCount}+` : "5+",
@@ -337,12 +337,12 @@ export function aboutBlurb(isFr: boolean): { title: string; body: string } {
   if (isFr) {
     return {
       title: "3 demi-journées pour apprendre, builder et pitcher",
-      body: "Bootcamp Vibe Coding avec Cursor, Claude et Codex, hackathon intensif et Demo Day au Silikin Village (12-14 août 2026). Format professionnel pour ~30 builders en RDC - visibilité partenaires et expérience fluide.",
+      body: "Bootcamp Vibe Coding avec Cursor, Claude et Codex, hackathon intensif et Demo Day au Silikin Village (août 2026). Format professionnel pensé pour la RDC - visibilité partenaires et expérience fluide pour les équipes.",
     };
   }
   return {
     title: "3 half-days to learn, build and pitch",
-    body: "Vibe Coding bootcamp with Cursor, Claude and Codex, intensive hackathon and Demo Day at Silikin Village (Aug 12-14, 2026). A professional format for ~30 builders in DRC - partner visibility and a smooth experience.",
+    body: "Vibe Coding bootcamp with Cursor, Claude and Codex, intensive hackathon and Demo Day at Silikin Village (August 2026). A professional format built for DRC - partner visibility and a smooth experience for teams.",
   };
 }
 

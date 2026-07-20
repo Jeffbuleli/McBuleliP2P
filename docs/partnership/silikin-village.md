@@ -6,11 +6,9 @@
 - **Adresse** : 63, Ave Colonel Mondjiba, Kinshasa
 - **Calendrier Auditorium** : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41&start=2026-07-20T17:00:00.000Z&end=2026-07-20T18:00:00.000Z
 
-## Dates proposees
+## Periode souhaitee
 
-- 12 aout 2026 - Jour 1 Bootcamp (08h00-13h30)
-- 13 aout 2026 - Jour 2 Build Day (08h00-13h30)
-- 14 aout 2026 - Jour 3 Demo Day (08h00-13h30)
+**Aout 2026** - 3 demi-journees consecutives (08h00-13h30), dates exactes a confirmer avec Silikin.
 
 ~30 personnes · Auditorium / salle de reunion.
 
