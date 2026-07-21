@@ -1,0 +1,130 @@
+Objet : McBuleli Hackathon - dossier partenariat e-COM SAS
+
+Bonjour,
+
+Nous vous remercions pour votre retour et pour l'intérêt porté au McBuleli Hackathon.
+
+Nous avons pris connaissance du positionnement d'e-COM SAS en tant qu'ESN spécialisée dans la transformation numérique et les transactions électroniques sécurisées (e-Com EasyPay, e-Com Billing, e-COM P&S, monétique), ainsi que de vos références en e-commerce, e-gouvernement et inclusion financière en RDC. Votre expertise en paiement multi-canal, conformité PCI-DSS et intégration bancaire via le switch interbancaire correspond directement à nos défis FinTech et GovTech.
+
+Vous trouverez ci-dessous les éléments demandés par votre Direction.
+
+
+1) PRÉSENTATION DE NOTRE STRUCTURE
+
+McBuleli est une organisation tech basée à Kinshasa (RDC), orientée formation, innovation produit et accompagnement de builders.
+
+- Site : https://mcbuleli.org
+- Programme hackathon : https://mcbuleli.org/hackathon
+- RCCM : CD/KNG/RCCM/26-A-00382
+- ID. Nat. : 01-G4701-N91309X
+- N° impôt : G2660507E
+- Siège : Kinshasa, République Démocratique du Congo
+
+Nous organisons des programmes éducatifs et événements qui connectent étudiants, développeurs, designers et entrepreneurs aux outils modernes (IA, APIs, produit) et à l'écosystème local (partenaires FinTech, institutions, mentors).
+
+
+2) DOSSIER DE PRÉSENTATION DU PROGRAMME
+
+Événement : McBuleli Hackathon - Kinshasa
+Format : 3 demi-journées (bootcamp Vibe Coding + build intensif + Demo Day)
+Lieu prévu : Silikin Village, Kinshasa
+Dates prévues : 12, 13 et 14 août 2026 (sous réserve d'approbation finale du lieu)
+Équipes attendues : ~12
+Tarif participant : 100 USD (programme complet)
+
+Le hackathon couvre 8 domaines de défis :
+- Intelligence artificielle
+- FinTech (paiements, inclusion, mobile money, crypto)
+- GovTech (services publics numériques, transparence)
+- Santé · Agriculture · Éducation · Médias · Cybersécurité
+
+Partenaires techniques déjà confirmés pour les builders :
+- pawaPay (sandbox Mobile Money : Orange, Airtel, M-Pesa)
+- Binance (endpoints demo Spot et Futures via demo.binance.com)
+
+Programme détaillé :
+- Jour 1 (12 août, 08h00-13h30) : Bootcamp Vibe Coding (Cursor, Claude, Codex, APIs), formation des équipes, choix des défis
+- Jour 2 (13 août, 08h00-13h30) : Build Day intensif, mentorat tech & business, session partenaire
+- Jour 3 (14 août, 08h00-13h30) : Demo Day, pitch + démo devant jury, remise des prix, networking B2B
+
+Grille d'évaluation : Innovation 25 % · Impact 25 % · Qualité technique 20 % · Business model 15 % · Présentation 15 %
+
+
+3) ATTENTES PRÉCISES VIS-À-VIS D'e-COM SAS
+
+Rôle proposé : Partenaire Infrastructure FinTech & e-Paiement
+
+Nous envisageons avec e-COM SAS un partenariat sur mesure, adapté à votre cœur de métier :
+
+a) Atelier technique (45 min, Jour 1 ou Jour 2)
+   Intégration d'un parcours de paiement sécurisé multi-canal (web / mobile) dans un prototype FinTech ou GovTech : accepteur, porteur, réconciliation, bonnes pratiques de sécurité.
+
+b) Mentorat ciblé
+   Accompagnement des équipes sur e-paiement, e-facturation, UX transactionnelle, conformité et fiabilité des flux (contexte RDC).
+
+c) Participation au jury (option)
+   Évaluation des prototypes sur la robustesse transactionnelle, la sécurité et la pertinence des parcours paiement / facturation.
+
+d) Visibilité & présence
+   Logo partenaire sur la page hackathon, mention lors de l'événement, espace partenaires (démo e-Com EasyPay / e-Com Billing si vous le souhaitez).
+
+e) Co-cadrage d'un défi (option)
+   Formulation d'un cas d'usage concret (e-commerce, télépaiement de services publics, facturation dématérialisée) aligné sur vos solutions.
+
+Les modalités exactes (intervention, mentorat, jury, sponsor) seront finalisées avec votre Direction après examen de ce dossier.
+
+
+4) CALENDRIER ET AVANTAGES PARTENAIRES
+
+Calendrier des activités (prévisionnel)
+
+12 août 2026 - Jour 1
+- 08h00-08h45 Accueil et networking
+- 08h45-09h35 Ouverture, partenaires, présentation des défis
+- 10h25-11h45 Bootcamp IA & APIs (Cursor, Claude, Codex)
+- 12h05-12h25 Formation des équipes et choix des défis
+
+13 août 2026 - Jour 2
+- 08h15-10h00 Développement intensif des prototypes
+- 10h15-10h45 Session partenaire (créneau possible pour e-COM SAS)
+- 10h45-12h15 Build avec mentorat
+- 12h40-13h10 Préparation pitch & démo
+
+14 août 2026 - Jour 3
+- 08h35-10h35 Pitch + demo + questions jury
+- 11h20-11h50 Délibération jury & programmes partenaires
+- 11h50-12h20 Annonce des gagnants et remise des prix
+- 12h40-13h30 Networking, interviews presse
+
+Avantages prévus pour les partenaires
+
+- Visibilité : logo et mentions sur mcbuleli.org/hackathon, communications événement et réseaux sociaux
+- Accès aux talents : ~12 équipes, profils dev, produit, design et business
+- Innovation : co-création autour de défis FinTech / GovTech concrets en RDC
+- Networking B2B : rencontres avec mentors, porteurs de projets et autres partenaires
+- Recrutement : identification de profils prometteurs sur place
+- Communication : contenu réutilisable (talk, interviews, capsules)
+- Rapport d'impact post-événement : synthèse portée, équipes, médias
+
+Niveaux sponsor optionnels (Bronze à Platine) : stand, intervention officielle, visibilité renforcée - à discuter selon vos objectifs.
+
+
+PROCHAINE ÉTAPE
+
+Nous restons à votre disposition pour un échange avec votre Direction.
+
+Merci de nous confirmer, si possible :
+1. Contact référent (nom, fonction, email, téléphone)
+2. Logo officiel (PNG ou SVG)
+3. Options retenues (atelier, mentorat, jury, démo produit, sponsor)
+4. Disponibilités préférées (Jour 1, Jour 2 ou flexible)
+
+Programme en ligne : https://mcbuleli.org/hackathon
+
+Cordialement,
+
+Mme Patty B.
+McBuleli Team
+hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1

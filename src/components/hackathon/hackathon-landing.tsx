@@ -33,6 +33,7 @@ import { HackathonParticipantForm } from "@/components/hackathon/hackathon-parti
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
 import { HackathonStickyNav } from "@/components/hackathon/hackathon-sticky-nav";
+import { HackathonLogo } from "@/components/hackathon/hackathon-logo";
 import {
   BenefitIcon,
   BulletIcon,
@@ -317,6 +318,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         />
         <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:min-h-[min(72vh,640px)] lg:justify-center">
           <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-3 rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 backdrop-blur-sm">
+              <HackathonLogo className="h-14 w-12 sm:h-16 sm:w-14" />
+              <span className="pr-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/90">
+                McBuleli Hackathon
+              </span>
+            </div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-mint)]">
               McBuleli Hackathon - {HACKATHON_EVENT_DAYS} {isFr ? "jours" : "days"} - {HACKATHON_EVENT_YEAR}
             </p>

@@ -8,26 +8,37 @@ import { ProfileIconFlagEn, ProfileIconFlagFr } from "@/components/icons/profile
 export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }) {
   const { locale, setLocale, t } = useI18n();
   const dark = variant === "dark";
+  const enActive = locale === "en";
 
   function btn(target: Locale, flag: ReactNode, code: string) {
     const active = locale === target;
     return (
       <button
         type="button"
-        onClick={() => setLocale(target)}
+        onClick={() => {
+          if (locale === target) return;
+          setLocale(target);
+        }}
         title={code}
-        className={`flex items-center justify-center rounded-lg px-2.5 py-1.5 transition ${
+        className={`relative z-10 flex items-center justify-center rounded-full px-2.5 py-1.5 transition-all duration-200 ease-out ${
           active
             ? dark
-              ? "bg-emerald-500 text-stone-950 ring-2 ring-emerald-400/60"
-              : "bg-[color:var(--fd-primary)] text-white ring-2 ring-[color:var(--fd-primary)]/30"
+              ? "text-stone-950"
+              : "text-white"
             : dark
-              ? "bg-stone-800/90 text-stone-200 hover:bg-stone-700"
-              : "border border-[color:var(--fd-border)] bg-[color:var(--fd-mint)] text-[color:var(--fd-text)] hover:bg-[color:var(--fd-mint-deep)]"
+              ? "text-stone-300 hover:text-white"
+              : "text-[color:var(--fd-text)] hover:bg-[color:var(--fd-mint)]/80"
         }`}
         aria-pressed={active}
       >
-        <span aria-hidden>{flag}</span>
+        <span
+          className={`inline-flex transition-transform duration-200 ease-out ${
+            active ? "scale-110" : "scale-100 opacity-80"
+          }`}
+          aria-hidden
+        >
+          {flag}
+        </span>
         <span className="sr-only">{code}</span>
       </button>
     );
@@ -35,7 +46,7 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
 
   return (
     <div
-      className={`flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
+      className={`relative flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
         dark
           ? "border border-stone-600/80 bg-stone-900/90"
           : "border border-[color:var(--fd-border)] bg-white/95"
@@ -43,6 +54,12 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
       role="group"
       aria-label={locale === "fr" ? "Langue" : "Language"}
     >
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full shadow-sm transition-all duration-300 ease-out ${
+          dark ? "bg-emerald-500" : "bg-[color:var(--fd-primary)]"
+        } ${enActive ? "left-0.5" : "left-[calc(50%+1px)]"}`}
+      />
       {btn("en", <ProfileIconFlagEn />, t("lang_en"))}
       {btn("fr", <ProfileIconFlagFr />, t("lang_fr"))}
     </div>

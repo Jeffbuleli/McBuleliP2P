@@ -42,6 +42,7 @@
     "email:hope-services": "tsx scripts/send-hope-services-email.ts",
     "email:offre-emploi-rdc": "tsx scripts/send-offre-emploi-rdc-email.ts",
     "email:vision-partner": "tsx scripts/send-vision-partner-email.ts",
+    "email:e-com-sas": "tsx scripts/send-e-com-sas-email.ts",
     "email:afri-carrieres": "tsx scripts/send-afri-carrieres-email.ts",
     "email:silikin-venue": "tsx scripts/send-silikin-venue-email.ts",
     "launch:generate-social": "node scripts/generate-launch-social-pngs.mjs",

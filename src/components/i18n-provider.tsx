@@ -43,6 +43,11 @@ export function I18nProvider({
       if (prev === l) return prev;
       document.cookie = `${LOCALE_COOKIE}=${l};path=/;max-age=31536000;SameSite=Lax`;
       document.documentElement.lang = l;
+      // Smooth language switch without full navigation / router.refresh
+      document.documentElement.classList.add("locale-switching");
+      window.setTimeout(() => {
+        document.documentElement.classList.remove("locale-switching");
+      }, 220);
       return l;
     });
   }, []);

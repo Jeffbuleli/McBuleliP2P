@@ -76,10 +76,14 @@ export async function sendEmail(args: {
   replyTo?: string;
   /** Blind copy (e.g. partnership archive to hi@). */
   bcc?: string | string[];
+  cc?: string | string[];
 }): Promise<boolean> {
   const from = args.from ?? emailFromAddress();
   const replyTo = args.replyTo ?? emailReplyTo();
   const bcc = (Array.isArray(args.bcc) ? args.bcc : args.bcc ? [args.bcc] : [])
+    .map((e) => e.trim())
+    .filter(Boolean);
+  const cc = (Array.isArray(args.cc) ? args.cc : args.cc ? [args.cc] : [])
     .map((e) => e.trim())
     .filter(Boolean);
 
@@ -108,6 +112,7 @@ export async function sendEmail(args: {
       from,
       reply_to: replyTo,
       to: [args.to],
+      ...(cc.length ? { cc } : {}),
       ...(bcc.length ? { bcc } : {}),
       subject: args.subject,
       html: args.html,

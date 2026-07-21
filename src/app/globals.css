@@ -31,6 +31,12 @@
   --fd-brown: #78350f;
 }
 
+/* Instant FR/EN switch: soft fade on text surfaces while locale flips */
+html.locale-switching body {
+  transition: opacity 180ms ease;
+  opacity: 0.92;
+}
+
 @theme inline {
   --color-brand-green: var(--brand-green);
   /* next/font Poppins CSS var on <html> - used by font-sans utility app-wide. */
