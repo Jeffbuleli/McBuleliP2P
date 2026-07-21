@@ -37,6 +37,18 @@ export type PawapayStatusResponse = {
   created?: string;
 };
 
+export type PawapayStatusLookupResponse = {
+  status?: "FOUND" | "NOT_FOUND" | string;
+  data?: PawapayStatusResponse | null;
+  depositId?: string;
+  payoutId?: string;
+  amount?: string;
+  currency?: string;
+  country?: string;
+  providerTransactionId?: string;
+  failureReason?: PawapayFailureReason;
+};
+
 /** Normalized callback / reconcile payload used by ledger handlers. */
 export type PawapayNormalizedCallback = {
   kind: "deposit" | "payout";

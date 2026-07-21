@@ -99,6 +99,21 @@ export const PAWAPAY_PARTNER = {
     "Mobile Money rail (Orange, Airtel, M-Pesa). Participants use the pawaPay sandbox and APIs in their prototypes.",
 } as const;
 
+/** Confirmed crypto partner for builders (demo APIs). */
+export const BINANCE_PARTNER = {
+  name: "Binance",
+  roleFr: "Partenaire Crypto",
+  roleEn: "Crypto Partner",
+  website: "https://www.binance.com/",
+  demo: "https://demo.binance.com/",
+  docs: "https://developers.binance.com/",
+  logoUrl: "/partners/binance-logo.png",
+  blurbFr:
+    "Exchange crypto. Les participants intègrent dans leurs prototypes les endpoints demo Spot et Futures via les APIs demo.binance.com (demo-api.binance.com · demo-fapi.binance.com).",
+  blurbEn:
+    "Crypto exchange. Participants integrate demo Spot and Futures endpoints via demo.binance.com APIs in their prototypes (demo-api.binance.com · demo-fapi.binance.com).",
+} as const;
+
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
@@ -299,6 +314,10 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
         q: "Comment devenir sponsor ?",
         a: "Choisissez un niveau (Bronze à Platine) via le formulaire Sponsor. Les montants seront confirmés lors de la discussion.",
       },
+      {
+        q: "Comment utiliser les APIs Binance (demo) ?",
+        a: "Intégrez les endpoints demo Spot (demo-api.binance.com) et Futures (demo-fapi.binance.com) via les APIs demo.binance.com dans votre prototype. Documentation : developers.binance.com.",
+      },
     ];
   }
   return [
@@ -329,6 +348,10 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
     {
       q: "How to become a sponsor?",
       a: "Pick a tier (Bronze to Platinum) via the Sponsor form. Amounts confirmed during discussion.",
+    },
+    {
+      q: "How to use Binance demo APIs?",
+      a: "Create an account on demo.binance.com, then API Management to generate keys. Spot: demo-api.binance.com · Futures: demo-fapi.binance.com. Docs: developers.binance.com.",
     },
   ];
 }

@@ -16,6 +16,7 @@ import {
   hackathonProgramDays,
   partnerBenefits,
   PAWAPAY_PARTNER,
+  BINANCE_PARTNER,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
@@ -557,12 +558,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 min-w-[11rem] items-center justify-center rounded-xl bg-white px-5 ring-1 ring-[color:var(--fd-border)]">
+            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F7F7F7] ring-1 ring-[color:var(--fd-border)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={PAWAPAY_PARTNER.logoUrl}
                 alt={PAWAPAY_PARTNER.name}
-                className="h-8 w-auto max-w-[168px] object-contain object-left"
+                className="max-h-full max-w-full object-contain object-center"
               />
             </span>
             <div className="min-w-0 flex-1">
@@ -582,11 +583,44 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </div>
         </a>
 
+        {/* Featured crypto partner */}
+        <a
+          href={BINANCE_PARTNER.demo}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#12161D] ring-1 ring-[color:var(--fd-border)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={BINANCE_PARTNER.logoUrl}
+                alt={BINANCE_PARTNER.name}
+                className="max-h-full max-w-full object-contain object-center"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                {isFr ? BINANCE_PARTNER.roleFr : BINANCE_PARTNER.roleEn}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+                {BINANCE_PARTNER.name}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+                {isFr ? BINANCE_PARTNER.blurbFr : BINANCE_PARTNER.blurbEn}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+                demo.binance.com · developers.binance.com
+              </p>
+            </div>
+          </div>
+        </a>
+
         {(() => {
           const existing = data.partnerLogos.filter(
-            (p) => !/pawapay/i.test(p.name),
+            (p) => !/pawapay|binance/i.test(p.name),
           );
-          const logoSlots = Math.max(6, existing.length + 1);
+          const logoSlots = Math.max(6, existing.length + 2);
           const logos = [
             {
               id: "pawapay-featured",
@@ -595,9 +629,16 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               website: PAWAPAY_PARTNER.website,
               placeholder: false,
             },
+            {
+              id: "binance-featured",
+              name: BINANCE_PARTNER.name,
+              logoUrl: BINANCE_PARTNER.logoUrl,
+              website: BINANCE_PARTNER.website,
+              placeholder: false,
+            },
             ...existing,
             ...Array.from(
-              { length: Math.max(0, logoSlots - existing.length - 1) },
+              { length: Math.max(0, logoSlots - existing.length - 2) },
               (_, i) => ({
                 id: `partner-slot-${i}`,
                 name: isFr ? "Logo partenaire" : "Partner logo",
@@ -610,22 +651,35 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           return (
             <ul className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
+                const isBinance = /binance/i.test(p.name);
+                const isPawapay = /pawapay/i.test(p.name);
+                const brandBg = isBinance || isPawapay;
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.logoUrl}
                     alt={p.name}
-                    className="max-h-9 max-w-[140px] object-contain"
+                    className={
+                      brandBg
+                        ? "max-h-full max-w-full object-contain object-center"
+                        : "max-h-10 max-w-full object-contain object-center"
+                    }
                   />
                 ) : (
                   <span className="text-center text-[11px] font-medium text-[color:var(--fd-muted)]">
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center rounded-xl border px-3 ${
+                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border ${
+                  brandBg ? "p-0" : "px-3"
+                } ${
                   "placeholder" in p && p.placeholder
                     ? "border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60"
-                    : "border-[color:var(--fd-border)] bg-white"
+                    : isBinance
+                      ? "border-[color:var(--fd-border)] bg-[#12161D]"
+                      : isPawapay
+                        ? "border-[color:var(--fd-border)] bg-[#F7F7F7]"
+                        : "border-[color:var(--fd-border)] bg-white"
                 }`;
                 return (
                   <li key={p.id}>

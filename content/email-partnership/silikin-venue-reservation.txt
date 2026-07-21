@@ -1,35 +1,22 @@
-Bonjour l'equipe Silikin Village / Reception,
+Bonjour l'equipe Silikin Village,
 
-Nous sommes McBuleli. Nous organisons le McBuleli Hackathon (bootcamp Vibe Coding, competition, Demo Day) et souhaitons reserver une salle chez vous.
+Nous organisons le McBuleli Hackathon (bootcamp Vibe Coding, competition, Demo Day) et souhaitons reserver une salle pour environ 30 personnes (Auditorium / salle de reunion).
 
-Programme public : https://mcbuleli.org/hackathon
-Calendrier Auditorium : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41&start=2026-07-20T17:00:00.000Z&end=2026-07-20T18:00:00.000Z
-Votre site : https://www.silikinvillage.com/
+Dates proposees
+12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)
+13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)
+14 août 2026 - Jour 3 Demo Day & ceremonie (08h00-13h30)
 
-PERIODE SOUHAITEE
-Aout 2026 - 3 demi-journees consecutives (dates exactes a confirmer avec vous).
+Besoin
+~30 personnes · internet stable · projection/son si disponible · pauses cafe selon vos offres.
 
-HORAIRES
-Chaque jour : 08h00 - 13h30 (demi-journee).
+Merci de confirmer la disponibilite, le devis et la procedure via votre calendrier OfficeRnD.
 
-BESOIN
-- Salle pour environ 30 personnes (Auditorium / salle de reunion)
-- Connexion internet stable (hackathon builders)
-- Projection / son si disponible
-- Acces cafe / pauses selon vos offres
-
-FORMAT
-Jour 1 - Bootcamp & lancement
-Jour 2 - Build Day & mentorat
-Jour 3 - Demo Day & ceremonie
-
-Merci de nous proposer les creneaux disponibles en aout 2026, le devis et la procedure de reservation via votre calendrier OfficeRnD.
-
-Contacts McBuleli pour le suivi :
-Email : hi@mcbuleli.org
-Tel : +243 997 366 736 · +243 860 218 521
-WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1
+Programme : https://mcbuleli.org/hackathon
 
 Cordialement,
 McBuleli Team
 Mme Patty B.
+hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1

@@ -6,11 +6,15 @@
 - **Adresse** : 63, Ave Colonel Mondjiba, Kinshasa
 - **Calendrier Auditorium** : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41&start=2026-07-20T17:00:00.000Z&end=2026-07-20T18:00:00.000Z
 
-## Periode souhaitee
+## Dates proposees
 
-**Aout 2026** - 3 demi-journees consecutives (08h00-13h30), dates exactes a confirmer avec Silikin.
+- 12 août 2026 - Jour 1 Bootcamp (08h00-13h30)
+- 13 août 2026 - Jour 2 Build Day (08h00-13h30)
+- 14 août 2026 - Jour 3 Demo Day (08h00-13h30)
 
 ~30 personnes · Auditorium / salle de reunion.
+
+CTA email : **Voir le programme du McBuleli Hackathon** → https://mcbuleli.org/hackathon
 
 ## Envoi
 
