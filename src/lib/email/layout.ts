@@ -30,6 +30,8 @@ export type McBuleliEmailLayoutArgs = {
   detailRows?: EmailDetailRow[];
   /** Embed PNGs via Resend CID attachments (works in spam folders). */
   useInlineImages?: boolean;
+  /** Trusted HTML block (e.g. QR preview) inserted after details. */
+  extraHtml?: string;
 };
 
 function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): string {
@@ -77,6 +79,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     resendVariables,
     detailRows,
     useInlineImages = false,
+    extraHtml,
   } = args;
   const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
   const bodyHtml = resendVariables
@@ -104,6 +107,11 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
               </div>
             </td>
           </tr>`
+      : "";
+
+  const extraBlock =
+    extraHtml && extraHtml.trim()
+      ? `<tr><td style="padding:0 28px 16px;">${extraHtml}</td></tr>`
       : "";
 
   const html = `<!DOCTYPE html>
@@ -149,6 +157,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
             </td>
           </tr>
           ${detailsHtml}
+          ${extraBlock}
           <tr>
             <td style="padding:8px 32px 24px;text-align:center;">
               <a href="${href}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${escHtml(copy.cta)}</a>

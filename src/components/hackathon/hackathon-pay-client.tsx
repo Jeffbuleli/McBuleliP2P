@@ -8,8 +8,8 @@ import {
   hkSelect,
   hkSelectChevronStyle,
 } from "@/components/hackathon/hackathon-form-styles";
+import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
-import { SUPPORT_X } from "@/lib/support-contact";
 import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
@@ -234,26 +234,7 @@ export function HackathonPayClient({
           </Link>
         </p>
 
-        <a
-          href={SUPPORT_X}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 flex items-center justify-center gap-2 border-t border-[color:var(--fd-border)] pt-5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:text-[color:var(--fd-primary)]"
-        >
-          <span className="text-xs font-medium text-[color:var(--fd-muted)]">Powered by</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={BRAND_LOGO_256}
-              alt=""
-              width={28}
-              height={28}
-              className="h-full w-full object-contain p-0.5"
-            />
-          </span>
-          <span>McBuleli</span>
-        </a>
+        <HackathonPoweredBy />
       </div>
     </div>
   );

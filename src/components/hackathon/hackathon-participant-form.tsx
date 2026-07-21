@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import {
   hkField,
   hkLabel,
@@ -20,6 +21,25 @@ type Props = {
   registrationOpen: boolean;
 };
 
+type SessionCtx = {
+  session: {
+    email: string;
+    emailVerified: boolean;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  } | null;
+  registration: {
+    id: string;
+    paymentStatus: string;
+    ticketCode: string | null;
+    payUrl: string | null;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  } | null;
+};
+
 export function HackathonParticipantForm({
   editionId,
   locale,
@@ -32,6 +52,51 @@ export function HackathonParticipantForm({
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [payUrl, setPayUrl] = useState<string | null>(null);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [sessionVerified, setSessionVerified] = useState(false);
+  const [prefill, setPrefill] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
+  const [existingReg, setExistingReg] = useState<SessionCtx["registration"]>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/hackathon/session-context?editionId=${encodeURIComponent(editionId)}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) return;
+        const json = (await res.json()) as SessionCtx;
+        if (cancelled) return;
+        if (json.session) {
+          setSessionEmail(json.session.email);
+          setSessionVerified(json.session.emailVerified);
+          setPrefill({
+            firstName: json.session.firstName,
+            lastName: json.session.lastName,
+            email: json.session.email,
+            phone: json.session.phone
+              ? normalizeCodPhoneNumber(json.session.phone) || json.session.phone
+              : "",
+          });
+        }
+        if (json.registration) {
+          setExistingReg(json.registration);
+          if (json.registration.payUrl) setPayUrl(json.registration.payUrl);
+        }
+      } catch {
+        /* guest */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editionId]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -180,18 +245,115 @@ export function HackathonParticipantForm({
         </p>
       ) : null}
 
+      {sessionEmail ? (
+        <div className="rounded-xl border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)]/60 px-4 py-3 text-sm text-[color:var(--fd-text)]">
+          <p className="font-semibold text-[color:var(--fd-primary)]">
+            {isFr ? "Connecté à McBuleli" : "Signed in to McBuleli"}
+          </p>
+          <p className="mt-1 text-[color:var(--fd-muted)]">
+            {sessionVerified
+              ? isFr
+                ? `Compte vérifié · ${sessionEmail}. Vos infos sont préremplies - finalisez et payez en quelques clics.`
+                : `Verified account · ${sessionEmail}. Details are prefilled - finish and pay in a few taps.`
+              : isFr
+                ? `Session active · ${sessionEmail}. Confirmez votre e-mail McBuleli pour accélérer le paiement.`
+                : `Active session · ${sessionEmail}. Verify your McBuleli email to speed up payment.`}
+          </p>
+        </div>
+      ) : (
+        <p className="rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
+          {isFr ? (
+            <>
+              Déjà un compte McBuleli ?{" "}
+              <Link
+                href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                className="font-semibold text-[color:var(--fd-primary)]"
+              >
+                Connectez-vous
+              </Link>{" "}
+              pour préremplir le formulaire.
+            </>
+          ) : (
+            <>
+              Already have a McBuleli account?{" "}
+              <Link
+                href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                className="font-semibold text-[color:var(--fd-primary)]"
+              >
+                Sign in
+              </Link>{" "}
+              to prefill this form.
+            </>
+          )}
+        </p>
+      )}
+
+      {existingReg?.paymentStatus === "paid" && existingReg.ticketCode ? (
+        <div className="rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)] px-4 py-4 text-center">
+          <p className="text-sm font-bold text-[color:var(--fd-primary)]">
+            {isFr ? "Vous êtes déjà inscrit" : "You are already registered"}
+          </p>
+          <p className="mt-1 font-mono text-xs font-semibold text-[color:var(--fd-text)]">
+            {existingReg.ticketCode}
+          </p>
+          <Link
+            href={`/hackathon/ticket/${encodeURIComponent(existingReg.ticketCode)}`}
+            className="mt-3 inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
+          >
+            {isFr ? "Voir mon ticket QR" : "View my QR ticket"}
+          </Link>
+        </div>
+      ) : null}
+
+      {existingReg?.paymentStatus === "reserved" && existingReg.payUrl ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-center">
+          <p className="text-sm font-bold text-amber-900">
+            {isFr ? "Place déjà réservée" : "Seat already reserved"}
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            {isFr
+              ? "Finalisez le paiement pour recevoir votre ticket QR."
+              : "Complete payment to receive your QR ticket."}
+          </p>
+          <a
+            href={existingReg.payUrl}
+            className="mt-3 inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
+          >
+            {isFr ? "Payer maintenant" : "Pay now"}
+          </a>
+        </div>
+      ) : null}
+
+      {existingReg?.paymentStatus === "paid" && existingReg.ticketCode ? null : (
+      <>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={hkLabel} htmlFor="hk-first">
             {isFr ? "Prénom" : "First name"}
           </label>
-          <input id="hk-first" name="firstName" required className={hkField} disabled={!registrationOpen} />
+          <input
+            id="hk-first"
+            name="firstName"
+            required
+            defaultValue={prefill.firstName}
+            key={`fn-${prefill.firstName}`}
+            className={hkField}
+            disabled={!registrationOpen}
+          />
         </div>
         <div>
           <label className={hkLabel} htmlFor="hk-last">
             {isFr ? "Nom" : "Last name"}
           </label>
-          <input id="hk-last" name="lastName" required className={hkField} disabled={!registrationOpen} />
+          <input
+            id="hk-last"
+            name="lastName"
+            required
+            defaultValue={prefill.lastName}
+            key={`ln-${prefill.lastName}`}
+            className={hkField}
+            disabled={!registrationOpen}
+          />
         </div>
       </div>
 
@@ -206,9 +368,19 @@ export function HackathonParticipantForm({
             type="email"
             required
             autoComplete="email"
-            className={hkField}
+            defaultValue={prefill.email}
+            key={`em-${prefill.email}`}
+            readOnly={Boolean(sessionEmail)}
+            className={`${hkField} ${sessionEmail ? "bg-[color:var(--fd-mint)]/40" : ""}`}
             disabled={!registrationOpen}
           />
+          {sessionEmail ? (
+            <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
+              {isFr
+                ? "E-mail du compte connecté (non modifiable)."
+                : "Signed-in account email (locked)."}
+            </p>
+          ) : null}
         </div>
         <div>
           <label className={hkLabel} htmlFor="hk-phone">
@@ -220,6 +392,8 @@ export function HackathonParticipantForm({
             required
             inputMode="tel"
             autoComplete="tel"
+            defaultValue={prefill.phone}
+            key={`ph-${prefill.phone}`}
             className={hkField}
             placeholder="2438XXXXXXXX"
             disabled={!registrationOpen}
@@ -420,6 +594,8 @@ export function HackathonParticipantForm({
           {isFr ? "S'inscrire et payer" : "Register & pay"}
         </button>
       </div>
+      </>
+      )}
     </form>
   );
 }

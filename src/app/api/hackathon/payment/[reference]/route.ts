@@ -24,6 +24,7 @@ export async function GET(
         paymentStatus: hackathonRegistrations.paymentStatus,
         ticketCode: hackathonRegistrations.ticketCode,
         firstName: hackathonRegistrations.firstName,
+        locale: hackathonRegistrations.locale,
       })
       .from(hackathonRegistrations)
       .where(eq(hackathonRegistrations.id, pay.registrationId))
@@ -35,6 +36,7 @@ export async function GET(
       paymentStatus: reg?.paymentStatus ?? "pending",
       ticketCode: reg?.ticketCode ?? null,
       firstName: reg?.firstName ?? null,
+      locale: reg?.locale ?? null,
       checkoutUrl: pay.checkoutUrl,
     });
   } catch (e) {

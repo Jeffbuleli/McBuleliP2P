@@ -3,11 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "react-qr-code";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
+import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import { getLocale } from "@/lib/get-locale";
+import {
+  HACKATHON_DATES_LABEL_EN,
+  HACKATHON_DATES_LABEL_FR,
+} from "@/lib/hackathon/event-content";
 import { HACKATHON_VENUE_SILIKIN } from "@/lib/hackathon/constants";
 import { getTicketByCode, ticketPublicUrl } from "@/lib/hackathon/service";
-import { SUPPORT_X } from "@/lib/support-contact";
 
 export const dynamic = "force-dynamic";
 
@@ -93,24 +97,11 @@ export default async function HackathonTicketPage({
           <p className="mt-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
             {venue}
             <br />
-            Kinshasa · {isFr ? "Date : Bientôt" : "Date: Coming soon"}
+            Kinshasa · {isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN}
           </p>
-        </div>
 
-        <a
-          href={SUPPORT_X}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-[color:var(--fd-text)]"
-        >
-          <span className="text-xs font-medium text-[color:var(--fd-muted)]">Powered by</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center overflow-hidden rounded-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={BRAND_LOGO_256} alt="" width={22} height={22} className="h-full w-full object-contain p-0.5" />
-          </span>
-          <span>McBuleli</span>
-        </a>
+          <HackathonPoweredBy className="mt-6" />
+        </div>
 
         <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">
           <Link href="/hackathon" className="font-semibold text-[color:var(--fd-primary)]">

@@ -17,7 +17,7 @@ function venueLabel(edition: { venue: string | null; city: string } | null | und
 }
 
 function dateLabel(isFr: boolean) {
-  return isFr ? "Bientôt" : "Coming soon";
+  return isFr ? "Août 2026" : "August 2026";
 }
 
 export async function sendHackathonReserveEmail(args: {
@@ -54,17 +54,20 @@ export async function sendHackathonReserveEmail(args: {
     copy: {
       subject,
       preheader: isFr
-        ? "Votre place est pré-réservée. Payez quand vous êtes prêt."
-        : "Your seat is reserved. Pay when you are ready.",
+        ? "Votre place est pré-réservée. Payez pour recevoir votre ticket QR officiel."
+        : "Your seat is reserved. Pay to receive your official QR ticket.",
       title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
       body: isFr
-        ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée sans expiration automatique. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h pour confirmer. Cliquez pour payer et recevoir votre ticket QR. Compte McBuleli : utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin.`
-        : `Your pre-registration for ${editionName} is saved. Your seat is held with no automatic expiry. We remind you every ${HACKATHON_REMINDER_HOURS} h to confirm. Tap below to pay and receive your QR ticket. McBuleli account: use “Forgot password” on mcbuleli.org/login if needed.`,
+        ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée sans expiration automatique. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h pour confirmer. Cliquez pour payer (${reg.priceUsd} USD) et recevoir votre ticket QR. Compte McBuleli : utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin.`
+        : `Your pre-registration for ${editionName} is saved. Your seat is held with no automatic expiry. We remind you every ${HACKATHON_REMINDER_HOURS} h to confirm. Tap below to pay (${reg.priceUsd} USD) and receive your QR ticket. McBuleli account: use “Forgot password” on mcbuleli.org/login if needed.`,
       cta: isFr ? "Payer mon inscription" : "Pay my registration",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",
     },
     detailRows: [
+      { label: isFr ? "Participant" : "Participant", value: `${reg.firstName} ${reg.lastName}` },
+      { label: "Email", value: reg.email },
+      { label: isFr ? "Téléphone" : "Phone", value: reg.phone },
       { label: isFr ? "Édition" : "Edition", value: editionName },
       { label: isFr ? "Lieu" : "Venue", value: venueLabel(edition) },
       { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
@@ -120,13 +123,15 @@ export async function sendHackathonHoldReminderEmail(args: {
         : "Confirm your reservation by paying your registration.",
       title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
       body: isFr
-        ? `Rappel pour ${editionName} : votre place est toujours réservée. Payez pour confirmer et recevoir votre ticket QR. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h tant que le paiement n'est pas fait.`
-        : `Reminder for ${editionName}: your seat is still reserved. Pay to confirm and receive your QR ticket. We remind you every ${HACKATHON_REMINDER_HOURS} h until payment is complete.`,
+        ? `Rappel pour ${editionName} : votre place est toujours réservée (${reg.firstName} ${reg.lastName}). Payez pour confirmer et recevoir votre ticket QR. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h tant que le paiement n'est pas fait.`
+        : `Reminder for ${editionName}: your seat is still reserved (${reg.firstName} ${reg.lastName}). Pay to confirm and receive your QR ticket. We remind you every ${HACKATHON_REMINDER_HOURS} h until payment is complete.`,
       cta: isFr ? "Payer maintenant" : "Pay now",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",
     },
     detailRows: [
+      { label: isFr ? "Participant" : "Participant", value: `${reg.firstName} ${reg.lastName}` },
+      { label: "Email", value: reg.email },
       { label: isFr ? "Lieu" : "Venue", value: venueLabel(edition) },
       { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
       {
@@ -163,35 +168,48 @@ export async function sendHackathonTicketEmail(args: {
     : (edition?.nameEn ?? "McBuleli Hackathon");
 
   const subject = isFr
-    ? `Votre ticket - ${editionName}`
-    : `Your ticket - ${editionName}`;
+    ? `Votre ticket officiel - ${editionName}`
+    : `Your official ticket - ${editionName}`;
+
+  const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(ticketUrl)}`;
+  const extraHtml = `<div style="text-align:center;background:${"#e8f3ee"};border-radius:14px;padding:18px 16px;">
+      <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#305f33;">${isFr ? "Ticket QR" : "QR ticket"}</p>
+      <img src="${qrImg}" width="180" height="180" alt="QR ${reg.ticketCode}" style="display:block;margin:0 auto;border:0;border-radius:12px;background:#ffffff;padding:8px;" />
+      <p style="margin:12px 0 0;font-family:ui-monospace,Menlo,monospace;font-size:16px;font-weight:800;letter-spacing:0.06em;color:#305f33;">${reg.ticketCode}</p>
+      <p style="margin:8px 0 0;font-size:12px;line-height:1.45;color:#57534e;">${isFr ? "Présentez ce QR (ou le code) à l'entrée." : "Show this QR (or the code) at the entrance."}</p>
+    </div>`;
 
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
     illustration: "verify",
     actionUrl: ticketUrl,
+    extraHtml,
     copy: {
       subject,
       preheader: isFr
-        ? "Paiement confirmé. Présentez votre QR à l'entrée."
-        : "Payment confirmed. Show your QR at the entrance.",
-      title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
+        ? `Paiement confirmé · Ticket ${reg.ticketCode}. Présentez le QR à l'entrée.`
+        : `Payment confirmed · Ticket ${reg.ticketCode}. Show the QR at the entrance.`,
+      title: isFr ? `Bienvenue ${reg.firstName}` : `Welcome ${reg.firstName}`,
       body: isFr
-        ? `Votre inscription à ${editionName} est confirmée. Conservez ce ticket (code ${reg.ticketCode}) - il vous sera demandé à l'entrée.`
-        : `Your registration for ${editionName} is confirmed. Keep this ticket (code ${reg.ticketCode}) - you will need it at the entrance.`,
-      cta: isFr ? "Voir mon ticket" : "View my ticket",
+        ? `Votre inscription à ${editionName} est confirmée. Conservez ce message et votre ticket QR (code ${reg.ticketCode}) - ils vous seront demandés à l'entrée du Silikin Village.`
+        : `Your registration for ${editionName} is confirmed. Keep this email and your QR ticket (code ${reg.ticketCode}) - you will need them at the Silikin Village entrance.`,
+      cta: isFr ? "Ouvrir mon ticket" : "Open my ticket",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",
     },
     detailRows: [
+      { label: isFr ? "Participant" : "Participant", value: `${reg.firstName} ${reg.lastName}` },
+      { label: "Email", value: reg.email },
+      { label: isFr ? "Téléphone" : "Phone", value: reg.phone },
       { label: isFr ? "Édition" : "Edition", value: editionName },
       { label: isFr ? "Lieu" : "Venue", value: venueLabel(edition) },
       { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
       {
         label: isFr ? "Pack" : "Pack",
-        value: isFr ? "Programme 3 jours" : "3-day program",
+        value: isFr ? "Programme 3 jours · 100 USD" : "3-day program · 100 USD",
       },
       { label: isFr ? "Code ticket" : "Ticket code", value: reg.ticketCode },
+      { label: isFr ? "Réf. inscription" : "Registration ID", value: reg.id.slice(0, 8).toUpperCase() },
     ],
   });
 
