@@ -30,10 +30,8 @@ function pad(n: number): string {
 
 export function PartnerMeetCountdown({
   scheduledAt,
-  timezone,
 }: {
   scheduledAt: string | Date;
-  timezone?: string | null;
 }) {
   const target = new Date(scheduledAt).getTime();
   const [parts, setParts] = useState<Parts>(() =>
@@ -51,19 +49,28 @@ export function PartnerMeetCountdown({
 
   if (!Number.isFinite(target)) return null;
 
-  const liveWindowMs = 2 * 60 * 60 * 1000; // 2h after start
+  const liveWindowMs = 2 * 60 * 60 * 1000;
   const started = parts.totalMs <= 0;
   const stillLive = started && Date.now() - target < liveWindowMs;
   const ended = started && !stillLive;
 
-  const tz = timezone?.trim() || "Africa/Kinshasa";
-
   return (
-    <aside className={styles.countdown} aria-live="polite">
-      <p className={styles.label}>
-        {ended ? "RDV passé" : stillLive ? "En cours" : "Débute dans"}
-      </p>
-      {!ended && !stillLive && ready ? (
+    <aside
+      className={styles.countdown}
+      aria-live="polite"
+      aria-label={
+        ended
+          ? "RDV passé"
+          : stillLive
+            ? "RDV en cours"
+            : `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes ${pad(parts.seconds)} secondes`
+      }
+    >
+      {ended ? (
+        <p className={styles.status}>Passé</p>
+      ) : stillLive ? (
+        <p className={styles.status}>En cours</p>
+      ) : ready ? (
         <div className={styles.digits} role="timer">
           {parts.days > 0 ? (
             <>
@@ -96,8 +103,6 @@ export function PartnerMeetCountdown({
           </span>
         </div>
       ) : null}
-      {stillLive ? <p className={styles.livePulse}>Rejoignez la salle</p> : null}
-      <p className={styles.tz}>{tz.replace(/_/g, " ")}</p>
     </aside>
   );
 }

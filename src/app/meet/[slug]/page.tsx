@@ -22,7 +22,7 @@ export async function generateMetadata({
   const meet = await ensurePartnerMeet(slug);
   if (!meet) return { title: "McBuleli Meet" };
   return {
-    title: `RDV partenariat · ${meet.partnerName} · McBuleli Meet`,
+    title: `${meet.title} · McBuleli Meet`,
     description: `RDV partenariat ${meet.partnerName} sur McBuleli Meet.`,
   };
 }
