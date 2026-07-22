@@ -97,8 +97,8 @@ export function demoFeaturedHackathon(): FeaturedHackathonPayload {
     edition: {
       id: "00000000-0000-4000-8000-000000000001",
       slug: "kinshasa-vibe-coding-2026",
-      nameFr: "McBuleli AI Hackathon - Kinshasa",
-      nameEn: "McBuleli AI Hackathon - Kinshasa",
+      nameFr: "McBuleli AI Hackathon",
+      nameEn: "McBuleli AI Hackathon",
       taglineFr: "Bootcamp Vibe Coding + Hackathon : apprenez, construisez, pitchtez.",
       taglineEn: "Vibe Coding Bootcamp + Hackathon: learn, build, pitch.",
       startDate: null,

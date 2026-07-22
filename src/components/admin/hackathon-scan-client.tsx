@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { adminCls } from "@/components/admin/admin-ui";
 import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
 
@@ -34,6 +34,24 @@ type ScanResult = {
   };
 };
 
+type BarcodeDetectorLike = {
+  detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>>;
+};
+
+function getNativeQrDetector(): BarcodeDetectorLike | null {
+  const BD = (
+    globalThis as unknown as {
+      BarcodeDetector?: new (opts: { formats: string[] }) => BarcodeDetectorLike;
+    }
+  ).BarcodeDetector;
+  if (!BD) return null;
+  try {
+    return new BD({ formats: ["qr_code"] });
+  } catch {
+    return null;
+  }
+}
+
 export function HackathonScanClient() {
   const [editions, setEditions] = useState<Edition[]>([]);
   const [editionId, setEditionId] = useState("");
@@ -56,11 +74,13 @@ export function HackathonScanClient() {
   }>({ absent: [], inside: [], outside: [] });
   const [camOn, setCamOn] = useState(false);
   const [camErr, setCamErr] = useState<string | null>(null);
+  const [aiLens, setAiLens] = useState(false);
 
   const uid = useId().replace(/:/g, "");
   const regionId = `hackathon-door-reader-${uid}`;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scanningLock = useRef(false);
+  const lastDecoded = useRef("");
   const scanCtx = useRef({
     editionId: "",
     mode: "in" as "in" | "out",
@@ -105,8 +125,10 @@ export function HackathonScanClient() {
   const submitScan = useCallback(
     async (code: string) => {
       const ctx = scanCtx.current;
-      if (!ctx.editionId || !code.trim() || scanningLock.current) return;
+      const trimmed = code.trim();
+      if (!ctx.editionId || !trimmed || scanningLock.current) return;
       scanningLock.current = true;
+      lastDecoded.current = trimmed;
       setBusy(true);
       setErr(null);
       try {
@@ -114,7 +136,7 @@ export function HackathonScanClient() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            code: code.trim(),
+            code: trimmed,
             mode: ctx.mode,
             dayIndex: ctx.dayIndex,
             editionId: ctx.editionId,
@@ -138,7 +160,7 @@ export function HackathonScanClient() {
         setBusy(false);
         window.setTimeout(() => {
           scanningLock.current = false;
-        }, 1400);
+        }, 900);
       }
     },
     [loadRoster],
@@ -150,23 +172,28 @@ export function HackathonScanClient() {
     };
   }, [submitScan]);
 
-  /** Camera mounts once while camOn - never restarts on scan/mode changes. */
+  /** Dual path: html5-qrcode + native BarcodeDetector AI lens. */
   useEffect(() => {
     if (!camOn) return;
     let cancelled = false;
+    let aiTimer: number | null = null;
     setCamErr(null);
+    setAiLens(false);
 
     const start = async () => {
       const el = document.getElementById(regionId);
       if (!el) return;
       el.innerHTML = "";
-      const scanner = new Html5Qrcode(regionId, { verbose: false });
+      const scanner = new Html5Qrcode(regionId, {
+        verbose: false,
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        useBarCodeDetectorIfSupported: true,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+      });
       scannerRef.current = scanner;
       try {
         const cameras = await Html5Qrcode.getCameras();
-        if (!cameras.length) {
-          throw new Error("no_camera");
-        }
+        if (!cameras.length) throw new Error("no_camera");
         const back =
           cameras.find((c) => /back|rear|environment|arrière/i.test(c.label)) ??
           cameras[cameras.length - 1];
@@ -174,16 +201,21 @@ export function HackathonScanClient() {
         await scanner.start(
           back.id,
           {
-            fps: 10,
+            fps: 30,
             qrbox: (viewW, viewH) => {
               const side = Math.max(
-                160,
-                Math.floor(Math.min(viewW, viewH) * 0.68),
+                200,
+                Math.floor(Math.min(viewW, viewH) * 0.82),
               );
               return { width: side, height: side };
             },
             aspectRatio: 1,
             disableFlip: false,
+            videoConstraints: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
           },
           (text) => {
             if (cancelled) return;
@@ -191,6 +223,30 @@ export function HackathonScanClient() {
           },
           () => {},
         );
+
+        const detector = getNativeQrDetector();
+        if (detector) {
+          setAiLens(true);
+          const tick = async () => {
+            if (cancelled) return;
+            try {
+              const video = el.querySelector("video");
+              if (video && video.readyState >= 2) {
+                const hits = await detector.detect(video);
+                const value = hits[0]?.rawValue?.trim();
+                if (value) onDecodeRef.current(value);
+              }
+            } catch {
+              /* frame miss - keep looping */
+            }
+            if (!cancelled) {
+              aiTimer = window.setTimeout(() => {
+                void tick();
+              }, 90);
+            }
+          };
+          void tick();
+        }
       } catch (e) {
         if (!cancelled) {
           console.warn("[hackathon-scan] camera", e);
@@ -198,6 +254,7 @@ export function HackathonScanClient() {
             "Caméra inaccessible. Autorisez l'accès navigateur ou saisissez le code.",
           );
           setCamOn(false);
+          setAiLens(false);
         }
       }
     };
@@ -206,6 +263,8 @@ export function HackathonScanClient() {
 
     return () => {
       cancelled = true;
+      if (aiTimer != null) window.clearTimeout(aiTimer);
+      setAiLens(false);
       const s = scannerRef.current;
       scannerRef.current = null;
       if (s) {
@@ -262,7 +321,7 @@ export function HackathonScanClient() {
         <div className="min-w-0">
           <h2 className={adminCls.h1}>Scanner porte</h2>
           <p className={adminCls.muted}>
-            Entrée / sortie - badges - 3 jours
+            Entrée / sortie - badges - lentille IA QR
           </p>
         </div>
         <Link href="/admin/hackathon" className={adminCls.btnSecondary}>
@@ -323,7 +382,16 @@ export function HackathonScanClient() {
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className="min-w-0 rounded-2xl border border-[color:var(--fd-border)] bg-white p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-bold">Caméra</p>
+            <div>
+              <p className="text-sm font-bold">Lentille QR</p>
+              <p className="text-[11px] text-[color:var(--fd-muted)]">
+                {aiLens
+                  ? "IA BarcodeDetector active - détection accélérée"
+                  : camOn
+                    ? "Scan haute fréquence (30 fps)"
+                    : "Caméra arrêtée"}
+              </p>
+            </div>
             <button
               type="button"
               className={camOn ? adminCls.btnSecondary : adminCls.btnPrimary}
@@ -333,16 +401,33 @@ export function HackathonScanClient() {
             </button>
           </div>
 
-          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,320px)] overflow-hidden rounded-xl bg-stone-950">
+          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,340px)] overflow-hidden rounded-2xl bg-stone-950 ring-1 ring-black/10">
             <div
               id={regionId}
               className="absolute inset-0 h-full w-full overflow-hidden [&_video]:!absolute [&_video]:!inset-0 [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover [&_canvas]:!absolute [&_canvas]:!inset-0 [&_canvas]:!h-full [&_canvas]:!w-full [&_img]:!absolute [&_img]:!inset-0 [&_img]:!h-full [&_img]:!w-full [&_img]:!object-cover [&>div]:!h-full [&>div]:!w-full [&>div]:!overflow-hidden"
             />
-            {!camOn ? (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4 text-center text-xs text-stone-400">
-                Appuyez sur « Démarrer caméra » puis présentez le QR du badge.
+
+            {camOn ? (
+              <div className="pointer-events-none absolute inset-0 z-10">
+                <div className="absolute inset-[12%] rounded-2xl border-2 border-[color:var(--fd-primary)]/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                <div className="absolute left-[12%] top-[12%] h-7 w-7 rounded-tl-xl border-l-[3px] border-t-[3px] border-emerald-300" />
+                <div className="absolute right-[12%] top-[12%] h-7 w-7 rounded-tr-xl border-r-[3px] border-t-[3px] border-emerald-300" />
+                <div className="absolute bottom-[12%] left-[12%] h-7 w-7 rounded-bl-xl border-b-[3px] border-l-[3px] border-emerald-300" />
+                <div className="absolute bottom-[12%] right-[12%] h-7 w-7 rounded-br-xl border-b-[3px] border-r-[3px] border-emerald-300" />
+                <div className="absolute inset-x-[14%] top-1/2 h-px -translate-y-1/2 overflow-hidden">
+                  <div className="h-full w-full animate-pulse bg-gradient-to-r from-transparent via-emerald-300/90 to-transparent" />
+                </div>
+                {aiLens ? (
+                  <span className="absolute left-3 top-3 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                    AI lens
+                  </span>
+                ) : null}
               </div>
-            ) : null}
+            ) : (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4 text-center text-xs text-stone-400">
+                Démarrez la caméra puis alignez le QR dans la lentille.
+              </div>
+            )}
           </div>
 
           {camErr ? (
@@ -393,7 +478,7 @@ export function HackathonScanClient() {
                 {last.pass.ticketCode}
               </p>
               <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-                {last.previousStatus} → {last.presenceStatus}
+                {last.previousStatus} - {last.presenceStatus}
               </p>
             </div>
           ) : null}
