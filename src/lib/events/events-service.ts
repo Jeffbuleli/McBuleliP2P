@@ -8,7 +8,20 @@ import {
   users,
 } from "@/db";
 import { getAppAbsoluteUrl } from "@/lib/app-url";
-import { liveRoomNameFromSessionSlug } from "@/lib/academy-jitsi-token";
+import {
+  appendJitsiJwtToUrl,
+  appendJitsiUserToUrl,
+  appendMcbLiveReturnUrl,
+  isAcademyJitsiJwtEnabled,
+  jitsiModeratorForMode,
+  liveRoomNameFromSessionSlug,
+  signAcademyJitsiToken,
+} from "@/lib/academy-jitsi-token";
+import {
+  buildJitsiLowBandwidthHash,
+  isJitsiMeetRoomUrl,
+  selfHostedJitsiBase,
+} from "@/lib/academy-live";
 import {
   removeEventCommunityPost,
   resolveEventJoinPath,
@@ -22,6 +35,7 @@ import {
 } from "@/lib/events/permissions";
 import {
   EventAudienceMode,
+  EventRole,
   EventStatus,
   EventType,
   ParticipantStatus,
@@ -32,7 +46,7 @@ import {
 } from "@/lib/events/types";
 import { insertWalletLedgerLines as insertLedger } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
-import type { UserRoleType } from "@/lib/roles";
+import { UserRole, type UserRoleType } from "@/lib/roles";
 
 function slugify(title: string): string {
   const base = title
@@ -677,22 +691,80 @@ export function getEventLiveJoinPath(slug: string): string {
 export async function getEventLiveUrlForUser(args: {
   idOrSlug: string;
   userId: string;
+  displayName?: string;
+  appRole?: UserRoleType | null;
+  mode?: "learner" | "host" | "audio";
 }): Promise<{ ok: true; url: string; platform: "McBuleli Live" } | { ok: false; code: string }> {
   const row = await getEventByIdOrSlug(args.idOrSlug);
   if (!row || !row.liveRoomUrl) return { ok: false, code: "event_live_unavailable" };
 
-  const [part] = await getDb()
-    .select()
-    .from(academyTrainingEventParticipants)
-    .where(
-      and(
-        eq(academyTrainingEventParticipants.eventId, row.id),
-        eq(academyTrainingEventParticipants.userId, args.userId),
-        eq(academyTrainingEventParticipants.participantStatus, ParticipantStatus.ENROLLED),
-      ),
-    )
-    .limit(1);
-  if (!part) return { ok: false, code: "event_not_enrolled" };
+  const role = resolveEventRole({
+    userId: args.userId,
+    appRole: args.appRole ?? UserRole.USER,
+    event: row,
+  });
+  const isStaffOrTrainer =
+    role === EventRole.SYSTEM_ADMIN ||
+    role === EventRole.TRAINER ||
+    row.trainerId === args.userId ||
+    row.createdBy === args.userId;
 
-  return { ok: true, url: row.liveRoomUrl, platform: "McBuleli Live" };
+  if (!isStaffOrTrainer) {
+    const [part] = await getDb()
+      .select()
+      .from(academyTrainingEventParticipants)
+      .where(
+        and(
+          eq(academyTrainingEventParticipants.eventId, row.id),
+          eq(academyTrainingEventParticipants.userId, args.userId),
+          eq(
+            academyTrainingEventParticipants.participantStatus,
+            ParticipantStatus.ENROLLED,
+          ),
+        ),
+      )
+      .limit(1);
+    if (!part) return { ok: false, code: "event_not_enrolled" };
+  }
+
+  const mode =
+    args.mode === "host" && isStaffOrTrainer
+      ? "host"
+      : args.mode === "audio"
+        ? "audio"
+        : "learner";
+
+  const roomId = row.liveRoomId || `event-${row.slug}`;
+  const room = liveRoomNameFromSessionSlug(roomId);
+  let url = row.liveRoomUrl.trim();
+
+  if (isJitsiMeetRoomUrl(url)) {
+    const selfBase = selfHostedJitsiBase(url);
+    const hash = buildJitsiLowBandwidthHash(mode, {
+      sessionTitle: row.title,
+      sessionSlug: room,
+    });
+    if (selfBase) {
+      url = `${selfBase.replace(/\/$/, "")}/${room}${hash}`;
+    } else if (!url.includes("#")) {
+      url = `${url.split("?")[0]}${hash}`;
+    }
+
+    if (isAcademyJitsiJwtEnabled() && selfBase) {
+      const jwt = await signAcademyJitsiToken({
+        userId: args.userId,
+        displayName: args.displayName?.trim() || "McBuleli",
+        room,
+        moderator: jitsiModeratorForMode(mode),
+      });
+      url = appendJitsiJwtToUrl(url, jwt);
+    }
+    url = appendJitsiUserToUrl(url, args.displayName?.trim() || "McBuleli");
+    url = appendMcbLiveReturnUrl(
+      url,
+      getAppAbsoluteUrl(`/app/events/${row.slug}`),
+    );
+  }
+
+  return { ok: true, url, platform: "McBuleli Live" };
 }

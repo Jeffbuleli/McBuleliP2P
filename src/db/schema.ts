@@ -4248,4 +4248,41 @@ export const hackathonPayments = pgTable(
   ],
 );
 
+/** Partnership RDV on McBuleli Meet (live.mcbuleli.org) - no Academy enrollment. */
+export const partnerMeets = pgTable(
+  "partner_meets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 128 }).notNull().unique(),
+    title: varchar("title", { length: 200 }).notNull(),
+    partnerName: varchar("partner_name", { length: 160 }).notNull(),
+    partnerEmail: varchar("partner_email", { length: 255 }).notNull(),
+    hostEmail: varchar("host_email", { length: 255 }).notNull(),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    durationMinutes: integer("duration_minutes").notNull().default(30),
+    roomSlug: varchar("room_slug", { length: 128 }).notNull().unique(),
+    /** proposed | confirmed | done | cancelled */
+    status: varchar("status", { length: 16 }).notNull().default("proposed"),
+    agenda: jsonb("agenda").$type<string[]>().notNull().default([]),
+    allowlistEmails: jsonb("allowlist_emails")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    timezone: varchar("timezone", { length: 64 })
+      .notNull()
+      .default("Africa/Kinshasa"),
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("partner_meets_status_idx").on(t.status)],
+);
+
 export * from "./game-schema";

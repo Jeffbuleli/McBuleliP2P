@@ -1,0 +1,265 @@
+.meetRoot {
+  --meet-ink: #0f1f14;
+  --meet-forest: #1e4d2b;
+  --meet-leaf: #2f6b3c;
+  --meet-sand: #f3f7f1;
+  --meet-muted: #5c6b60;
+  min-height: 100dvh;
+  font-family: var(--font-meet-sans), "Source Sans 3", system-ui, sans-serif;
+  color: var(--meet-ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #c8e0d0 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #e8f0e4 0%, transparent 50%),
+    linear-gradient(165deg, #eef5ef 0%, var(--meet-sand) 45%, #e4ece6 100%);
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  animation: meetIn 0.7s ease both;
+}
+
+.brandImg {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(30, 77, 43, 0.18);
+}
+
+.brandName {
+  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  color: var(--meet-forest);
+  line-height: 1.1;
+}
+
+.brandSub {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--meet-muted);
+  margin-top: 0.15rem;
+}
+
+.hero {
+  margin-top: 2.75rem;
+  animation: meetIn 0.85s 0.08s ease both;
+}
+
+.kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--meet-leaf);
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
+  font-size: clamp(1.85rem, 4.5vw, 2.55rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--meet-ink);
+  max-width: 18ch;
+  margin: 0;
+}
+
+.lede {
+  margin: 1rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--meet-muted);
+  max-width: 38ch;
+}
+
+.status {
+  margin-top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(47, 107, 60, 0.1);
+  color: var(--meet-forest);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--meet-leaf);
+  box-shadow: 0 0 0 4px rgba(47, 107, 60, 0.15);
+}
+
+.meta {
+  margin-top: 1.75rem;
+  display: grid;
+  gap: 0.65rem;
+  animation: meetIn 0.9s 0.14s ease both;
+}
+
+.metaRow {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--meet-ink);
+}
+
+.metaRow strong {
+  font-weight: 700;
+  color: var(--meet-forest);
+}
+
+.agenda {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(30, 77, 43, 0.12);
+  animation: meetIn 0.95s 0.18s ease both;
+}
+
+.agenda h2 {
+  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.85rem;
+}
+
+.agenda ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.agenda li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--meet-muted);
+}
+
+.agenda li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--meet-leaf);
+}
+
+.ctaWrap {
+  margin-top: 2.25rem;
+  animation: meetIn 1s 0.22s ease both;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.9rem 1.6rem;
+  border-radius: 14px;
+  background: var(--meet-forest);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(30, 77, 43, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(30, 77, 43, 0.34);
+  color: #fff;
+}
+
+.ctaNote {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: var(--meet-muted);
+  max-width: 36ch;
+  line-height: 1.45;
+}
+
+.host {
+  margin-top: 2.75rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(30, 77, 43, 0.1);
+  backdrop-filter: blur(8px);
+  animation: meetIn 1.05s 0.26s ease both;
+}
+
+.hostLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--meet-muted);
+}
+
+.hostName {
+  margin-top: 0.35rem;
+  font-weight: 700;
+  color: var(--meet-ink);
+}
+
+.hostMail {
+  font-size: 0.9rem;
+  color: var(--meet-leaf);
+  text-decoration: none;
+}
+
+.hostLink {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--meet-forest);
+  text-decoration: none;
+}
+
+.foot {
+  margin-top: 2.5rem;
+  font-size: 0.75rem;
+  color: var(--meet-muted);
+}
+
+@keyframes meetIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .shell {
+    padding-top: 1.75rem;
+  }
+  .cta {
+    width: 100%;
+  }
+}
