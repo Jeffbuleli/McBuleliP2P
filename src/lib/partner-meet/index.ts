@@ -146,12 +146,38 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     notes:
       "RDV confirmé vendredi 24 juillet 2026 11h00 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
   },
+  "rdpi-thinktank-partenariat": {
+    slug: "rdpi-thinktank-partenariat",
+    title: "McBuleli × RDPI Think Tank - RDV partenariat",
+    partnerName: "RDPI Think Tank",
+    partnerEmail: "maristote@rdpithinktank.org",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 30,
+    status: "confirmed",
+    scheduledAt: new Date("2026-07-24T10:30:00+01:00"),
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "maristote@rdpithinktank.org",
+      "info@rdpithinktank.org",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Partenariat Policy & Impact : atelier, mentorat, jury, diffusion",
+      "Calendrier hackathon & statut lieu Silikin Village",
+      "Modalités pratiques (référent, logo, communication)",
+      "Prochaines étapes opérationnelles",
+    ],
+    notes:
+      "RDV confirmé vendredi 24 juillet 2026 10h30 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
+  },
 };
 
 const CATALOG_IDS: Record<string, string> = {
   "kilelo-partenariat": "a1b2c3d4-e5f6-4a70-8b9c-0d1e2f3a4b5c",
   "cesar-group-partenariat": "b2c3d4e5-f6a7-4b81-9c0d-1e2f3a4b5c6d",
   "e-com-sas-partenariat": "c3d4e5f6-a7b8-4c92-9d0e-1f2a3b4c5d6e",
+  "rdpi-thinktank-partenariat": "d4e5f6a7-b8c9-4d03-0e1f-2a3b4c5d6e7f",
 };
 
 export function partnerMeetFromCatalog(
