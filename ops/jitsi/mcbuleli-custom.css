@@ -1,5 +1,6 @@
 /**
- * McBuleli Meet — watermark PNG (logo source, cercle transparent).
+ * McBuleli Meet — watermark coin vidéo (div.backgroundImage Jitsi).
+ * Ne jamais mettre background:none sur .leftwatermark : ça masque le logo.
  */
 .poweredby,
 .jitsi-logo,
@@ -8,27 +9,34 @@ a[href*="8x8.vc"] {
   display: none !important;
 }
 
-/* Coin vidéo — disque McBuleli (forme source, pas de carré) */
-.leftwatermark {
+/* Coin vidéo — Jitsi pose le logo via background-image sur ce div */
+.leftwatermark,
+.watermark.leftwatermark {
   display: block !important;
-  opacity: 0.88 !important;
-  width: 64px !important;
-  max-width: 64px !important;
-  height: 64px !important;
-  max-height: 64px !important;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
-  background: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 72px !important;
+  max-width: 72px !important;
+  height: 72px !important;
+  max-height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
+  z-index: 500 !important;
+  pointer-events: none !important;
 }
 
-.leftwatermark a,
-.leftwatermark img,
-.leftwatermark svg {
-  width: 64px !important;
-  max-width: 64px !important;
-  height: 64px !important;
-  max-height: 64px !important;
-  object-fit: contain;
-  background: none !important;
+.leftwatermark a {
+  display: block !important;
+  width: 72px !important;
+  height: 72px !important;
+  background: inherit !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
 }
 
 .premeeting-screen .preview-video-container::before,
@@ -36,10 +44,6 @@ a[href*="8x8.vc"] {
 .prejoin-preview::before,
 .preview-container::before {
   content: none !important;
-  display: none !important;
-}
-
-#mcbuleli-wm-overlay {
   display: none !important;
 }
 
