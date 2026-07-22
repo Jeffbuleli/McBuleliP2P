@@ -8,7 +8,11 @@ import {
   BINANCE_PARTNER,
   PAWAPAY_PARTNER,
 } from "@/lib/hackathon/event-content";
-import { SUPPORT_X } from "@/lib/support-contact";
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_WA_PATH,
+  SUPPORT_X,
+} from "@/lib/support-contact";
 
 export type HackathonBadgeKind =
   | "participant"
@@ -139,11 +143,11 @@ function IconMapPin({ className }: { className?: string }) {
     </svg>
   );
 }
-function IconGlobe({ className }: { className?: string }) {
+function IconMail({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   );
 }
@@ -260,8 +264,16 @@ export function HackathonPassBadge({
   const venueShort = /silikin/i.test(venue) ? "Silikin Village" : venue;
 
   const logos = [
-    { name: PAWAPAY_PARTNER.name, src: PAWAPAY_PARTNER.logoUrl },
-    { name: BINANCE_PARTNER.name, src: BINANCE_PARTNER.logoUrl },
+    {
+      name: PAWAPAY_PARTNER.name,
+      src: PAWAPAY_PARTNER.logoUrl,
+      box: "border-[#E5E5E0] bg-[#F7F7F7]",
+    },
+    {
+      name: BINANCE_PARTNER.name,
+      src: BINANCE_PARTNER.logoUrl,
+      box: "border-[#E5E5E0] bg-[#12161D]",
+    },
   ];
 
   return (
@@ -412,13 +424,13 @@ export function HackathonPassBadge({
             {logos.map((logo) => (
               <div
                 key={logo.name}
-                className="flex h-11 w-[6.75rem] items-center justify-center rounded-2xl border border-[#E5E5E0] bg-white px-3 shadow-sm"
+                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border p-0 ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logo.src}
                   alt={logo.name}
-                  className="max-h-6 max-w-full object-contain"
+                  className="max-h-full max-w-full object-contain object-center"
                 />
               </div>
             ))}
@@ -426,26 +438,39 @@ export function HackathonPassBadge({
         </div>
       </div>
 
-      <div className="relative mt-7 overflow-hidden bg-[#1F6B43] px-5 py-3.5 text-white sm:px-6">
+      <div className="relative mt-7 overflow-hidden bg-[#1F6B43] px-5 py-4 text-white sm:px-6">
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full opacity-25"
-          viewBox="0 0 400 72"
+          viewBox="0 0 400 88"
           preserveAspectRatio="none"
           aria-hidden
         >
           <path
-            d="M0 36c40-16 80 16 120 0s80-16 120 0 80 16 120 0 40-10 40-10v46H0z"
+            d="M0 40c40-16 80 16 120 0s80-16 120 0 80 16 120 0 40-10 40-10v58H0z"
             fill="#14532D"
           />
         </svg>
-        <div className="relative flex flex-wrap items-center justify-between gap-2">
-          <a
-            href="https://mcbuleli.org/hackathon"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/90 hover:text-white"
-          >
-            <IconGlobe className="h-3.5 w-3.5" />
-            mcbuleli.org/hackathon
-          </a>
+        <div className="relative flex flex-col items-center gap-2.5 text-center">
+          <p className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/90">
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="inline-flex items-center gap-1.5 hover:text-white"
+            >
+              <IconMail className="h-3.5 w-3.5 shrink-0" />
+              {SUPPORT_EMAIL}
+            </a>
+            <span className="opacity-50" aria-hidden>
+              |
+            </span>
+            <a
+              href={SUPPORT_WA_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white"
+            >
+              WhatsApp
+            </a>
+          </p>
           <a
             href={SUPPORT_X}
             target="_blank"
