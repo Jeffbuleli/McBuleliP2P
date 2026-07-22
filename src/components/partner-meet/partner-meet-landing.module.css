@@ -1,253 +1,303 @@
 .meetRoot {
-  --meet-ink: #0f1f14;
-  --meet-forest: #1e4d2b;
-  --meet-leaf: #2f6b3c;
-  --meet-sand: #f3f7f1;
-  --meet-muted: #5c6b60;
+  --meet-ink: #102418;
+  --meet-forest: #1a3f28;
+  --meet-leaf: #2a5c38;
+  --meet-copper: #b56a3a;
+  --meet-mist: #dce8df;
+  --meet-paper: #f7faf6;
+  --meet-muted: #4f6356;
+  position: relative;
+  isolation: isolate;
   min-height: 100dvh;
-  font-family: var(--font-meet-sans), "Source Sans 3", system-ui, sans-serif;
+  overflow: clip;
   color: var(--meet-ink);
+  background: var(--meet-paper);
+  font-family: var(--font-meet-sans), "Figtree", system-ui, sans-serif;
+}
+
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background:
-    radial-gradient(1200px 600px at 10% -10%, #c8e0d0 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #e8f0e4 0%, transparent 50%),
-    linear-gradient(165deg, #eef5ef 0%, var(--meet-sand) 45%, #e4ece6 100%);
+    linear-gradient(
+      118deg,
+      #e8f1ea 0%,
+      var(--meet-paper) 42%,
+      #e4efe6 72%,
+      #d5e6d9 100%
+    );
 }
 
-.shell {
-  max-width: 720px;
+.mesh {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(26, 63, 40, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 63, 40, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 70% 40%, #000 20%, transparent 75%);
+}
+
+.beam {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: min(70vw, 640px);
+  height: min(70vw, 640px);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(181, 106, 58, 0.14) 0%,
+      rgba(42, 92, 56, 0.12) 38%,
+      transparent 70%
+    );
+  animation: meetGlow 9s ease-in-out infinite alternate;
+}
+
+.watermark {
+  position: absolute;
+  right: max(-8%, -4rem);
+  top: 8%;
+  width: min(58vw, 520px);
+  height: auto;
+  opacity: 0.14;
+  mix-blend-mode: multiply;
+  filter: contrast(1.05);
+  animation: meetDrift 14s ease-in-out infinite alternate;
+  transform-origin: 60% 40%;
+}
+
+.stage {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  animation: meetIn 0.7s ease both;
-}
-
-.brandImg {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  object-fit: cover;
-  box-shadow: 0 8px 24px rgba(30, 77, 43, 0.18);
-}
-
-.brandName {
-  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-  color: var(--meet-forest);
-  line-height: 1.1;
-}
-
-.brandSub {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--meet-muted);
-  margin-top: 0.15rem;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2.5rem)
+    clamp(2.5rem, 6vw, 4rem);
+  display: grid;
+  gap: clamp(2.5rem, 6vw, 4.5rem);
 }
 
 .hero {
-  margin-top: 2.75rem;
-  animation: meetIn 0.85s 0.08s ease both;
+  max-width: 34rem;
+  padding-top: clamp(1rem, 4vh, 2.5rem);
+  animation: meetRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.kicker {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--meet-leaf);
-  margin-bottom: 0.75rem;
+.brandBlock {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: clamp(1.75rem, 4vw, 2.5rem);
 }
 
-.title {
-  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
-  font-size: clamp(1.85rem, 4.5vw, 2.55rem);
+.brandMark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.brandName {
+  margin: 0;
+  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-size: clamp(2.35rem, 6.5vw, 3.6rem);
   font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: var(--meet-forest);
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-size: clamp(1.55rem, 3.8vw, 2.15rem);
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--meet-ink);
-  max-width: 18ch;
-  margin: 0;
+}
+
+.headline em {
+  font-style: italic;
+  font-weight: 700;
+  color: var(--meet-copper);
 }
 
 .lede {
   margin: 1rem 0 0;
+  max-width: 32ch;
   font-size: 1.05rem;
   line-height: 1.55;
   color: var(--meet-muted);
-  max-width: 38ch;
 }
 
-.status {
-  margin-top: 1.5rem;
-  display: inline-flex;
+.facts {
+  margin: 1.5rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(47, 107, 60, 0.1);
-  color: var(--meet-forest);
-  font-size: 0.85rem;
-  font-weight: 700;
+  gap: 0.55rem 0.75rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--meet-leaf);
 }
 
-.statusDot {
-  width: 8px;
-  height: 8px;
+.dot {
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--meet-leaf);
-  box-shadow: 0 0 0 4px rgba(47, 107, 60, 0.15);
+  background: var(--meet-copper);
+  opacity: 0.8;
 }
 
-.meta {
-  margin-top: 1.75rem;
-  display: grid;
-  gap: 0.65rem;
-  animation: meetIn 0.9s 0.14s ease both;
-}
-
-.metaRow {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--meet-ink);
-}
-
-.metaRow strong {
-  font-weight: 700;
-  color: var(--meet-forest);
-}
-
-.agenda {
+.ctaGroup {
   margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(30, 77, 43, 0.12);
-  animation: meetIn 0.95s 0.18s ease both;
-}
-
-.agenda h2 {
-  font-family: var(--font-meet-display), Fraunces, Georgia, serif;
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 0 0 0.85rem;
-}
-
-.agenda ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.agenda li {
-  position: relative;
-  padding-left: 1.15rem;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  color: var(--meet-muted);
-}
-
-.agenda li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.45rem;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--meet-leaf);
-}
-
-.ctaWrap {
-  margin-top: 2.25rem;
-  animation: meetIn 1s 0.22s ease both;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.1rem;
+  animation: meetRise 1.05s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .cta {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 0.9rem 1.6rem;
-  border-radius: 14px;
+  min-height: 3.35rem;
+  padding: 0.9rem 1.55rem;
+  border-radius: 4px;
   background: var(--meet-forest);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   text-decoration: none;
-  box-shadow: 0 12px 28px rgba(30, 77, 43, 0.28);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  animation: meetSheen 4.5s 1.2s ease-in-out infinite;
 }
 
 .cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 32px rgba(30, 77, 43, 0.34);
+  background: #143322;
+  transform: translateY(-1px);
   color: #fff;
 }
 
-.ctaNote {
-  margin: 0.85rem 0 0;
-  font-size: 0.82rem;
-  color: var(--meet-muted);
-  max-width: 36ch;
-  line-height: 1.45;
-}
-
-.host {
-  margin-top: 2.75rem;
-  padding: 1.15rem 1.25rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(30, 77, 43, 0.1);
-  backdrop-filter: blur(8px);
-  animation: meetIn 1.05s 0.26s ease both;
-}
-
-.hostLabel {
-  font-size: 0.7rem;
+.ctaGhost {
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  color: var(--meet-forest);
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(26, 63, 40, 0.28);
+  padding-bottom: 0.1rem;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.ctaGhost:hover {
+  color: var(--meet-copper);
+  border-color: var(--meet-copper);
+}
+
+.agenda {
+  max-width: 36rem;
+  animation: meetRise 1.1s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.agenda h2 {
+  margin: 0 0 1.15rem;
+  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--meet-muted);
 }
 
-.hostName {
-  margin-top: 0.35rem;
-  font-weight: 700;
+.agenda ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.agenda li {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  font-size: 1rem;
+  line-height: 1.45;
   color: var(--meet-ink);
 }
 
-.hostMail {
-  font-size: 0.9rem;
-  color: var(--meet-leaf);
-  text-decoration: none;
-}
-
-.hostLink {
-  display: inline-block;
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
+.agendaIndex {
+  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--meet-forest);
-  text-decoration: none;
+  letter-spacing: -0.02em;
+  color: var(--meet-copper);
+  padding-top: 0.1rem;
 }
 
 .foot {
-  margin-top: 2.5rem;
-  font-size: 0.75rem;
+  border-top: 1px solid rgba(26, 63, 40, 0.12);
+  padding-top: 1.35rem;
+  display: grid;
+  gap: 0.35rem;
+  animation: meetRise 1.15s 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.foot p {
+  margin: 0;
+  font-size: 0.92rem;
   color: var(--meet-muted);
 }
 
-@keyframes meetIn {
+.foot a {
+  color: var(--meet-forest);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.foot a:hover {
+  color: var(--meet-copper);
+}
+
+.footNote {
+  font-size: 0.82rem !important;
+}
+
+.legal {
+  margin-top: 0.55rem !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.02em;
+}
+
+@keyframes meetRise {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -255,11 +305,64 @@
   }
 }
 
-@media (max-width: 480px) {
-  .shell {
-    padding-top: 1.75rem;
+@keyframes meetDrift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-2deg);
   }
+  to {
+    transform: translate3d(-2%, 3%, 0) rotate(2deg);
+  }
+}
+
+@keyframes meetGlow {
+  from {
+    opacity: 0.75;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-4%, 3%, 0) scale(1.06);
+  }
+}
+
+@keyframes meetSheen {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  75%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (max-width: 720px) {
+  .watermark {
+    top: auto;
+    bottom: -8%;
+    right: -18%;
+    width: min(88vw, 380px);
+    opacity: 0.1;
+  }
+
+  .brandMark {
+    width: 58px;
+    height: 58px;
+  }
+
   .cta {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .ctaGroup,
+  .agenda,
+  .foot,
+  .watermark,
+  .beam,
+  .cta::after {
+    animation: none !important;
   }
 }

@@ -3,9 +3,9 @@ import type { PartnerMeetRow } from "@/lib/partner-meet";
 import styles from "./partner-meet-landing.module.css";
 
 const STATUS_LABEL: Record<string, string> = {
-  proposed: "Créneaux proposés - en attente de confirmation",
-  confirmed: "RDV confirmé",
-  done: "RDV terminé",
+  proposed: "Créneau à confirmer",
+  confirmed: "Confirmé",
+  done: "Terminé",
   cancelled: "Annulé",
 };
 
@@ -14,10 +14,9 @@ function formatWhen(meet: PartnerMeetRow): string | null {
   try {
     return new Intl.DateTimeFormat("fr-CD", {
       timeZone: meet.timezone || "Africa/Kinshasa",
-      weekday: "long",
+      weekday: "short",
       day: "numeric",
-      month: "long",
-      year: "numeric",
+      month: "short",
       hour: "2-digit",
       minute: "2-digit",
     }).format(new Date(meet.scheduledAt));
@@ -39,94 +38,95 @@ export function PartnerMeetLanding({
 }) {
   const when = formatWhen(meet);
   const agenda = meet.agenda?.length ? meet.agenda : [];
+  const status = STATUS_LABEL[meet.status] ?? meet.status;
 
   return (
     <div className={styles.meetRoot}>
-      <div className={styles.shell}>
-        <div className={styles.brand}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={styles.brandImg}
-            src="/brand/mcbuleli-meet-logo.png"
-            width={52}
-            height={52}
-            alt="McBuleli Meet"
-          />
-          <div>
-            <div className={styles.brandName}>McBuleli Meet</div>
-            <div className={styles.brandSub}>Visio sécurisée · live.mcbuleli.org</div>
-          </div>
-        </div>
+      <div className={styles.atmosphere} aria-hidden>
+        <div className={styles.mesh} />
+        <div className={styles.beam} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.watermark}
+          src="/brand/mcbuleli-meet-watermark.png"
+          alt=""
+          width={720}
+          height={720}
+        />
+      </div>
 
+      <div className={styles.stage}>
         <header className={styles.hero}>
-          <span className={styles.kicker}>RDV partenariat</span>
-          <h1 className={styles.title}>{meet.title}</h1>
+          <div className={styles.brandBlock}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={styles.brandMark}
+              src="/brand/mcbuleli-meet-logo.png"
+              width={72}
+              height={72}
+              alt=""
+            />
+            <p className={styles.brandName}>McBuleli Meet</p>
+          </div>
+
+          <h1 className={styles.headline}>
+            Avec <em>{meet.partnerName}</em>
+          </h1>
           <p className={styles.lede}>
-            Échange de {meet.durationMinutes} minutes avec {meet.partnerName} et
-            l&apos;équipe McBuleli, sur notre salle McBuleli Meet.
+            {meet.durationMinutes} minutes pour aligner le partenariat hackathon
+            - salle sécurisée McBuleli.
           </p>
-          <div className={styles.status}>
-            <span className={styles.statusDot} aria-hidden />
-            {STATUS_LABEL[meet.status] ?? meet.status}
+
+          <p className={styles.facts}>
+            <span>{status}</span>
+            <span className={styles.dot} aria-hidden />
+            <span>
+              {when
+                ? when
+                : `${meet.durationMinutes} min · Kinshasa`}
+            </span>
+          </p>
+
+          <div className={styles.ctaGroup}>
+            <Link href={joinHref} className={styles.cta}>
+              Rejoindre la salle
+            </Link>
+            {showHostLink ? (
+              <Link href={hostHref} className={styles.ctaGhost}>
+                Entrée hôte
+              </Link>
+            ) : null}
           </div>
         </header>
 
-        <div className={styles.meta}>
-          <p className={styles.metaRow}>
-            <strong>Partenaire</strong> - {meet.partnerName}
-          </p>
-          {when ? (
-            <p className={styles.metaRow}>
-              <strong>Quand</strong> - {when} ({meet.timezone})
-            </p>
-          ) : (
-            <p className={styles.metaRow}>
-              <strong>Quand</strong> - créneau à confirmer (voir email)
-            </p>
-          )}
-          <p className={styles.metaRow}>
-            <strong>Durée</strong> - {meet.durationMinutes} minutes
-          </p>
-        </div>
-
         {agenda.length > 0 ? (
-          <section className={styles.agenda}>
-            <h2>Au programme</h2>
-            <ul>
-              {agenda.map((item) => (
-                <li key={item}>{item}</li>
+          <section className={styles.agenda} aria-labelledby="meet-agenda">
+            <h2 id="meet-agenda">Au programme</h2>
+            <ol>
+              {agenda.map((item, i) => (
+                <li key={item}>
+                  <span className={styles.agendaIndex}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span>{item}</span>
+                </li>
               ))}
-            </ul>
+            </ol>
           </section>
         ) : null}
 
-        <div className={styles.ctaWrap}>
-          <Link href={joinHref} className={styles.cta}>
-            Rejoindre la salle
-          </Link>
-          <p className={styles.ctaNote}>
-            Un compte McBuleli gratuit est requis. Connectez-vous (ou créez un
-            compte), puis vous êtes redirigé vers McBuleli Meet avec un accès
-            sécurisé - ne partagez pas d&apos;URL live.mcbuleli.org nue.
+        <footer className={styles.foot}>
+          <p>
+            Hôte ·{" "}
+            <a href={`mailto:${meet.hostEmail}`}>{meet.hostEmail}</a>
           </p>
-        </div>
-
-        <aside className={styles.host}>
-          <div className={styles.hostLabel}>Hôte McBuleli</div>
-          <div className={styles.hostName}>CEO · McBuleli</div>
-          <a className={styles.hostMail} href={`mailto:${meet.hostEmail}`}>
-            {meet.hostEmail}
-          </a>
-          {showHostLink ? (
-            <Link href={hostHref} className={styles.hostLink}>
-              Ouvrir en tant qu&apos;hôte →
-            </Link>
-          ) : null}
-        </aside>
-
-        <p className={styles.foot}>
-          McBuleli · RCCM CD/KNG/RCCM/26-A-00382 · mcbuleli.org
-        </p>
+          <p className={styles.footNote}>
+            Compte McBuleli requis · ne partagez pas d&apos;URL live nue
+          </p>
+          <p className={styles.legal}>
+            McBuleli · RCCM CD/KNG/RCCM/26-A-00382
+          </p>
+        </footer>
       </div>
     </div>
   );

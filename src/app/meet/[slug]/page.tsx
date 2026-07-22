@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 import { PartnerMeetLanding } from "@/components/partner-meet/partner-meet-landing";
 import {
@@ -12,13 +12,13 @@ import { getSessionUser } from "@/lib/session-user";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
 
-const display = Fraunces({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-meet-display",
   weight: ["600", "700"],
 });
 
-const sans = Source_Sans_3({
+const sans = Figtree({
   subsets: ["latin"],
   variable: "--font-meet-sans",
   weight: ["400", "600", "700"],
