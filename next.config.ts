@@ -47,6 +47,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/hackathon/ticket/:code",
+        destination: "/hackathon/pass/:code",
+        permanent: true,
+      },
+      {
         source: "/app/deposit/:id",
         destination: "/app/wallet/deposit/:id",
         permanent: true,
