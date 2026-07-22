@@ -118,11 +118,40 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     notes:
       "RDV confirmé jeudi 23 juillet 2026 14h00 Kinshasa - plusieurs comptes McBuleli peuvent rejoindre la même salle.",
   },
+  "e-com-sas-partenariat": {
+    slug: "e-com-sas-partenariat",
+    title: "McBuleli × e-COM SAS - RDV partenariat",
+    partnerName: "e-COM SAS",
+    partnerEmail: "jean.andre@e-comsas.com",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 45,
+    status: "confirmed",
+    scheduledAt: new Date("2026-07-24T11:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "jean.andre@e-comsas.com",
+      "contact@e-comsas.com",
+      "accel.muziami@e-comsas.com",
+      "merlin.diongo@e-comsas.com",
+      "jessy.djonga@e-comsas.com",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Rôle e-COM SAS : infrastructure FinTech & e-paiement au hackathon",
+      "Atelier technique : intégration paiement sécurisé multi-canal",
+      "Mentorat équipes & option jury (robustesse transactionnelle)",
+      "Prochaines étapes (logo, référent, démo EasyPay / Billing)",
+    ],
+    notes:
+      "RDV confirmé vendredi 24 juillet 2026 11h00 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
+  },
 };
 
 const CATALOG_IDS: Record<string, string> = {
   "kilelo-partenariat": "a1b2c3d4-e5f6-4a70-8b9c-0d1e2f3a4b5c",
   "cesar-group-partenariat": "b2c3d4e5-f6a7-4b81-9c0d-1e2f3a4b5c6d",
+  "e-com-sas-partenariat": "c3d4e5f6-a7b8-4c92-9d0e-1f2a3b4c5d6e",
 };
 
 export function partnerMeetFromCatalog(

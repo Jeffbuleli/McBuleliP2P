@@ -32,3 +32,11 @@
 
 - `content/email-partnership/e-com-sas-dossier-partenariat.html`
 - `content/email-partnership/e-com-sas-dossier-partenariat.txt`
+
+## RDV
+
+**Confirmé** : vendredi **24 juillet 2026 à 11h00** (Kinshasa) - visio McBuleli Meet (préféré au présentiel proposé par e-COM SAS)
+- Lien Meet : https://mcbuleli.org/meet/e-com-sas-partenariat
+- Email Meet : `content/email-partnership/e-com-sas-meet.{html,txt}`
+- Script : `npm run email:e-com-sas-meet`
+- Prod : to `jean.andre@e-comsas.com` · CC `contact@e-comsas.com`, `accel.muziami@e-comsas.com`, `merlin.diongo@e-comsas.com`, `jessy.djonga@e-comsas.com` (+ ceo)
