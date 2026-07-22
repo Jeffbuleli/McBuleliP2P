@@ -17,13 +17,13 @@ import {
 import { HACKATHON_VENUE_SILIKIN } from "../src/lib/hackathon/constants";
 import { SUPPORT_EMAIL } from "../src/lib/support-contact";
 
-const SAMPLE_TICKET_CODE = "MCB-PREVIEW-24A7";
+const SAMPLE_TICKET_CODE = "MBH-PREVIEW24A7";
 const SAMPLE_FIRST = "Patty";
 const SAMPLE_LAST = "B.";
 const SAMPLE_PHONE = "+243 997 366 736";
 const SAMPLE_REG_ID = "a1b2c3d4-preview";
 /** Force prod origin so the QR / CTA look like production. */
-const PROD_TICKET_URL = `https://mcbuleli.org/hackathon/ticket/${encodeURIComponent(SAMPLE_TICKET_CODE)}`;
+const PROD_TICKET_URL = `https://mcbuleli.org/hackathon/pass/${encodeURIComponent(SAMPLE_TICKET_CODE)}`;
 
 function loadLocalEnv(): void {
   const envPath = path.resolve(process.cwd(), ".env");

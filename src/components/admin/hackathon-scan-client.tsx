@@ -56,10 +56,21 @@ export function HackathonScanClient() {
   }>({ absent: [], inside: [], outside: [] });
   const [camOn, setCamOn] = useState(false);
   const [camErr, setCamErr] = useState<string | null>(null);
+
   const uid = useId().replace(/:/g, "");
   const regionId = `hackathon-door-reader-${uid}`;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scanningLock = useRef(false);
+  const scanCtx = useRef({
+    editionId: "",
+    mode: "in" as "in" | "out",
+    dayIndex: 1 as 1 | 2 | 3,
+  });
+  const onDecodeRef = useRef<(text: string) => void>(() => {});
+
+  useEffect(() => {
+    scanCtx.current = { editionId, mode, dayIndex };
+  }, [editionId, mode, dayIndex]);
 
   const loadRoster = useCallback(async () => {
     if (!editionId) return;
@@ -68,8 +79,6 @@ export function HackathonScanClient() {
     );
     if (!res.ok) throw new Error("roster_failed");
     const json = (await res.json()) as {
-      dayIndex: 1 | 2 | 3;
-      suggestedDayIndex: 1 | 2 | 3;
       counts: typeof counts;
       roster: typeof roster;
     };
@@ -95,7 +104,9 @@ export function HackathonScanClient() {
 
   const submitScan = useCallback(
     async (code: string) => {
-      if (!editionId || !code.trim() || busy) return;
+      const ctx = scanCtx.current;
+      if (!ctx.editionId || !code.trim() || scanningLock.current) return;
+      scanningLock.current = true;
       setBusy(true);
       setErr(null);
       try {
@@ -104,9 +115,9 @@ export function HackathonScanClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             code: code.trim(),
-            mode,
-            dayIndex,
-            editionId,
+            mode: ctx.mode,
+            dayIndex: ctx.dayIndex,
+            editionId: ctx.editionId,
           }),
         });
         const json = (await res.json()) as ScanResult & {
@@ -120,49 +131,91 @@ export function HackathonScanClient() {
         }
         setLast(json);
         setManualCode("");
-        await loadRoster();
+        await loadRoster().catch(() => {});
       } catch {
         setErr("Erreur réseau lors du scan.");
       } finally {
         setBusy(false);
-        scanningLock.current = false;
+        window.setTimeout(() => {
+          scanningLock.current = false;
+        }, 1400);
       }
     },
-    [editionId, mode, dayIndex, busy, loadRoster],
+    [loadRoster],
   );
 
   useEffect(() => {
+    onDecodeRef.current = (text: string) => {
+      void submitScan(text);
+    };
+  }, [submitScan]);
+
+  /** Camera mounts once while camOn - never restarts on scan/mode changes. */
+  useEffect(() => {
     if (!camOn) return;
-    let stopped = false;
+    let cancelled = false;
     setCamErr(null);
-    const scanner = new Html5Qrcode(regionId);
-    scannerRef.current = scanner;
 
-    scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 8, qrbox: { width: 240, height: 240 }, aspectRatio: 1 },
-        (text) => {
-          if (stopped || scanningLock.current) return;
-          scanningLock.current = true;
-          void submitScan(text);
-        },
-        () => {},
-      )
-      .catch(() => {
-        setCamErr("Caméra inaccessible. Autorisez l'accès ou saisissez le code.");
-        setCamOn(false);
-      });
+    const start = async () => {
+      const el = document.getElementById(regionId);
+      if (!el) return;
+      el.innerHTML = "";
+      const scanner = new Html5Qrcode(regionId, { verbose: false });
+      scannerRef.current = scanner;
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras.length) {
+          throw new Error("no_camera");
+        }
+        const back =
+          cameras.find((c) => /back|rear|environment|arrière/i.test(c.label)) ??
+          cameras[cameras.length - 1];
 
-    return () => {
-      stopped = true;
-      const s = scannerRef.current;
-      scannerRef.current = null;
-      if (s?.isScanning) {
-        void s.stop().catch(() => {});
+        await scanner.start(
+          back.id,
+          {
+            fps: 10,
+            qrbox: (viewW, viewH) => {
+              const side = Math.max(
+                160,
+                Math.floor(Math.min(viewW, viewH) * 0.68),
+              );
+              return { width: side, height: side };
+            },
+            aspectRatio: 1,
+            disableFlip: false,
+          },
+          (text) => {
+            if (cancelled) return;
+            onDecodeRef.current(text);
+          },
+          () => {},
+        );
+      } catch (e) {
+        if (!cancelled) {
+          console.warn("[hackathon-scan] camera", e);
+          setCamErr(
+            "Caméra inaccessible. Autorisez l'accès navigateur ou saisissez le code.",
+          );
+          setCamOn(false);
+        }
       }
     };
-  }, [camOn, regionId, submitScan]);
+
+    void start();
+
+    return () => {
+      cancelled = true;
+      const s = scannerRef.current;
+      scannerRef.current = null;
+      if (s) {
+        void s
+          .stop()
+          .then(() => s.clear())
+          .catch(() => {});
+      }
+    };
+  }, [camOn, regionId]);
 
   function PersonList({
     title,
@@ -174,23 +227,26 @@ export function HackathonScanClient() {
     tone: string;
   }) {
     return (
-      <div className="rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
+      <div className="min-w-0 rounded-xl border border-[color:var(--fd-border)] bg-white p-3">
         <p className={`text-xs font-extrabold uppercase tracking-wider ${tone}`}>
-          {title} · {people.length}
+          {title} - {people.length}
         </p>
-        <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-sm">
+        <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm">
           {people.length === 0 ? (
-            <li className="text-[color:var(--fd-muted)]">—</li>
+            <li className="text-[color:var(--fd-muted)]">-</li>
           ) : (
             people.map((p) => (
-              <li key={`${p.subjectType}-${p.subjectId}`} className="truncate">
+              <li
+                key={`${p.subjectType}-${p.subjectId}`}
+                className="truncate"
+                title={`${p.displayName} - ${p.orgOrEmail}`}
+              >
                 <span className="font-semibold text-[color:var(--fd-text)]">
                   {p.displayName}
                 </span>
                 <span className="text-[color:var(--fd-muted)]">
                   {" "}
-                  · {p.subjectType === "partner" ? "Partenaire" : "Participant"} ·{" "}
-                  {p.orgOrEmail}
+                  - {p.subjectType === "partner" ? "P" : "B"} - {p.orgOrEmail}
                 </span>
               </li>
             ))
@@ -201,26 +257,26 @@ export function HackathonScanClient() {
   }
 
   return (
-    <div className={adminCls.page}>
+    <div className={`${adminCls.page} max-w-full overflow-x-hidden`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className={adminCls.h1}>Scanner porte</h2>
           <p className={adminCls.muted}>
-            Entrée / sortie (besoin primaire) · badges participants & partenaires · 3 jours
+            Entrée / sortie - badges - 3 jours
           </p>
         </div>
         <Link href="/admin/hackathon" className={adminCls.btnSecondary}>
-          ← Admin Hackathon
+          ← Admin
         </Link>
       </div>
 
-      {err ? <p className={adminCls.error}>{err}</p> : null}
+      {err ? <p className={`${adminCls.error} break-words`}>{err}</p> : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           <span className="mb-1 block font-semibold">Édition</span>
           <select
-            className={adminCls.input}
+            className={`${adminCls.input} w-full max-w-full`}
             value={editionId}
             onChange={(e) => setEditionId(e.target.value)}
           >
@@ -231,23 +287,21 @@ export function HackathonScanClient() {
             ))}
           </select>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           <span className="mb-1 block font-semibold">Jour</span>
           <select
-            className={adminCls.input}
+            className={`${adminCls.input} w-full max-w-full`}
             value={dayIndex}
-            onChange={(e) =>
-              setDayIndex(Number(e.target.value) as 1 | 2 | 3)
-            }
+            onChange={(e) => setDayIndex(Number(e.target.value) as 1 | 2 | 3)}
           >
             <option value={1}>Jour 1</option>
             <option value={2}>Jour 2</option>
             <option value={3}>Jour 3</option>
           </select>
         </label>
-        <div className="text-sm sm:col-span-2">
+        <div className="min-w-0 text-sm sm:col-span-2">
           <span className="mb-1 block font-semibold">Mode scan</span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               className={mode === "in" ? adminCls.btnPrimary : adminCls.btnSecondary}
@@ -266,9 +320,9 @@ export function HackathonScanClient() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-[color:var(--fd-border)] bg-white p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <div className="min-w-0 rounded-2xl border border-[color:var(--fd-border)] bg-white p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-bold">Caméra</p>
             <button
               type="button"
@@ -278,33 +332,45 @@ export function HackathonScanClient() {
               {camOn ? "Arrêter" : "Démarrer caméra"}
             </button>
           </div>
-          <div className="relative min-h-[240px] overflow-hidden rounded-xl bg-stone-950">
-            <div id={regionId} className="w-full [&_video]:rounded-xl" />
+
+          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,320px)] overflow-hidden rounded-xl bg-stone-950">
+            <div
+              id={regionId}
+              className="absolute inset-0 h-full w-full overflow-hidden [&_video]:!absolute [&_video]:!inset-0 [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover [&_canvas]:!absolute [&_canvas]:!inset-0 [&_canvas]:!h-full [&_canvas]:!w-full [&_img]:!absolute [&_img]:!inset-0 [&_img]:!h-full [&_img]:!w-full [&_img]:!object-cover [&>div]:!h-full [&>div]:!w-full [&>div]:!overflow-hidden"
+            />
+            {!camOn ? (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4 text-center text-xs text-stone-400">
+                Appuyez sur « Démarrer caméra » puis présentez le QR du badge.
+              </div>
+            ) : null}
           </div>
+
           {camErr ? (
-            <p className="mt-2 text-sm text-rose-700">{camErr}</p>
+            <p className="mt-2 break-words text-sm text-rose-700">{camErr}</p>
           ) : (
             <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
-              Mode actuel : <strong>{mode === "in" ? "Entrée" : "Sortie"}</strong> · Jour {dayIndex}
+              Mode : <strong>{mode === "in" ? "Entrée" : "Sortie"}</strong> - Jour{" "}
+              {dayIndex}
+              {busy ? " - scan..." : ""}
             </p>
           )}
 
           <form
-            className="mt-4 flex gap-2"
+            className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row"
             onSubmit={(e) => {
               e.preventDefault();
               void submitScan(manualCode);
             }}
           >
             <input
-              className={adminCls.input}
-              placeholder="Code ou URL QR (MBH-… / MBP-…)"
+              className={`${adminCls.input} min-w-0 flex-1`}
+              placeholder="Code ou URL (MBH-... / MBP-...)"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
             />
             <button
               type="submit"
-              className={adminCls.btnPrimary}
+              className={`${adminCls.btnPrimary} shrink-0`}
               disabled={busy || !manualCode.trim()}
             >
               Valider
@@ -312,7 +378,7 @@ export function HackathonScanClient() {
           </form>
 
           {last ? (
-            <div className="mt-4 rounded-xl border border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] p-3">
+            <div className="mt-4 break-words rounded-xl border border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] p-3">
               <p className="text-xs font-extrabold uppercase tracking-wider text-[color:var(--fd-primary)]">
                 {last.mode === "in" ? "Entrée OK" : "Sortie OK"}
               </p>
@@ -320,7 +386,7 @@ export function HackathonScanClient() {
                 {last.pass.displayName}
               </p>
               <p className="text-sm text-[color:var(--fd-muted)]">
-                {last.pass.subjectType === "partner" ? "Partenaire" : "Participant"} ·{" "}
+                {last.pass.subjectType === "partner" ? "Partenaire" : "Participant"} -{" "}
                 {last.pass.orgOrEmail}
               </p>
               <p className="mt-1 font-mono text-sm font-bold text-[color:var(--fd-primary)]">
@@ -333,7 +399,7 @@ export function HackathonScanClient() {
           ) : null}
         </div>
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
             <div className="rounded-xl bg-stone-100 p-3">
               <p className="text-2xl font-black">{counts.absent}</p>
@@ -346,7 +412,7 @@ export function HackathonScanClient() {
                 {counts.inside}
               </p>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--fd-primary)]">
-                Dans la salle
+                Salle
               </p>
             </div>
             <div className="rounded-xl bg-amber-50 p-3">
@@ -356,11 +422,7 @@ export function HackathonScanClient() {
               </p>
             </div>
           </div>
-          <PersonList
-            title="Absents"
-            people={roster.absent}
-            tone="text-stone-500"
-          />
+          <PersonList title="Absents" people={roster.absent} tone="text-stone-500" />
           <PersonList
             title="Dans la salle"
             people={roster.inside}
