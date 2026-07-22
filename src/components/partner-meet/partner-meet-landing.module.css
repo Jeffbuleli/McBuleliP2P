@@ -12,7 +12,7 @@
   overflow: clip;
   color: var(--meet-ink);
   background: var(--meet-paper);
-  font-family: var(--font-meet-sans), "Figtree", system-ui, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 .atmosphere {
@@ -105,7 +105,7 @@
 
 .brandName {
   margin: 0;
-  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(2.35rem, 6.5vw, 3.6rem);
   font-weight: 700;
   letter-spacing: -0.045em;
@@ -115,7 +115,7 @@
 
 .headline {
   margin: 0;
-  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(1.55rem, 3.8vw, 2.15rem);
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -225,7 +225,7 @@
 
 .agenda h2 {
   margin: 0 0 1.15rem;
-  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -252,7 +252,7 @@
 }
 
 .agendaIndex {
-  font-family: var(--font-meet-display), "Bricolage Grotesque", Georgia, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: -0.02em;

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 import { PartnerMeetLanding } from "@/components/partner-meet/partner-meet-landing";
 import {
@@ -11,18 +10,6 @@ import {
 import { getSessionUser } from "@/lib/session-user";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/db";
-
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-meet-display",
-  weight: ["600", "700"],
-});
-
-const sans = Figtree({
-  subsets: ["latin"],
-  variable: "--font-meet-sans",
-  weight: ["400", "600", "700"],
-});
 
 export const dynamic = "force-dynamic";
 
@@ -65,13 +52,11 @@ export default async function PartnerMeetPage({
   }
 
   return (
-    <div className={`${display.variable} ${sans.variable}`}>
-      <PartnerMeetLanding
-        meet={meet}
-        joinHref={partnerMeetJoinPath(meet.slug)}
-        hostHref={partnerMeetHostPath(meet.slug)}
-        showHostLink={showHostLink}
-      />
-    </div>
+    <PartnerMeetLanding
+      meet={meet}
+      joinHref={partnerMeetJoinPath(meet.slug)}
+      hostHref={partnerMeetHostPath(meet.slug)}
+      showHostLink={showHostLink}
+    />
   );
 }
