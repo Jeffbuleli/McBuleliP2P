@@ -93,10 +93,36 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     ],
     notes: "Réponse à Jeancy Kabangu - visio 20-30 min sur McBuleli Meet.",
   },
+  "cesar-group-partenariat": {
+    slug: "cesar-group-partenariat",
+    title: "McBuleli × César Group - RDV partenariat",
+    partnerName: "César Group",
+    partnerEmail: "cesargrouprdc@gmail.com",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 30,
+    status: "confirmed",
+    scheduledAt: new Date("2026-07-23T14:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "cesargrouprdc@gmail.com",
+      "contact@cesargroup-rdc.com",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Rôle César Group : formation & employabilité au hackathon",
+      "Atelier pitch / outils Office / posture jury",
+      "Option mobilité & logistique événement",
+      "Prochaines étapes (logo, référent, dates Silikin)",
+    ],
+    notes:
+      "RDV confirmé jeudi 23 juillet 2026 14h00 Kinshasa - plusieurs comptes McBuleli peuvent rejoindre la même salle.",
+  },
 };
 
 const CATALOG_IDS: Record<string, string> = {
   "kilelo-partenariat": "a1b2c3d4-e5f6-4a70-8b9c-0d1e2f3a4b5c",
+  "cesar-group-partenariat": "b2c3d4e5-f6a7-4b81-9c0d-1e2f3a4b5c6d",
 };
 
 export function partnerMeetFromCatalog(
@@ -249,11 +275,13 @@ export function canAccessPartnerMeet(args: {
 }): boolean {
   if (isStaffRole(args.appRole)) return true;
   const email = normEmail(args.userEmail);
+  if (!email) return false;
   if (email === normEmail(args.meet.hostEmail)) return true;
   if (email === normEmail(args.meet.partnerEmail)) return true;
   const allow = args.meet.allowlistEmails ?? [];
   if (allow.some((e) => normEmail(e) === email)) return true;
-  return false;
+  // Same invite link: several colleagues can join once each has a McBuleli account.
+  return true;
 }
 
 export function canHostPartnerMeet(args: {

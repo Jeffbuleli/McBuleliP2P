@@ -41,6 +41,7 @@
     "email:kilelo-fiche": "tsx scripts/send-kilelo-fiche-email.ts",
     "email:kilelo-meet-reply": "tsx scripts/send-kilelo-meet-reply-email.ts",
     "seed:kilelo-meet": "tsx scripts/seed-kilelo-partner-meet.ts",
+    "email:cesar-group-meet": "tsx scripts/send-cesar-group-meet-email.ts",
     "email:hope-services": "tsx scripts/send-hope-services-email.ts",
     "email:offre-emploi-rdc": "tsx scripts/send-offre-emploi-rdc-email.ts",
     "email:vision-partner": "tsx scripts/send-vision-partner-email.ts",
