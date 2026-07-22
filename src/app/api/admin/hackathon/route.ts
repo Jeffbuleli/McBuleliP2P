@@ -287,6 +287,40 @@ export async function PATCH(req: Request) {
         .update(hackathonPartners)
         .set({ status: lead.data.status })
         .where(eq(hackathonPartners.id, lead.data.id));
+
+      if (lead.data.status === "confirmed") {
+        const { ensurePartnerTicketCode } = await import(
+          "@/lib/hackathon/access"
+        );
+        const ticketCode = await ensurePartnerTicketCode(lead.data.id);
+        const [partner] = await db
+          .select()
+          .from(hackathonPartners)
+          .where(eq(hackathonPartners.id, lead.data.id))
+          .limit(1);
+        if (partner && ticketCode) {
+          const { sendHackathonPartnerConfirmEmail } = await import(
+            "@/lib/email/messages/hackathon"
+          );
+          void sendHackathonPartnerConfirmEmail({
+            to: partner.email,
+            orgName: partner.orgName,
+            contactName: partner.contactName,
+            referentEmail: partner.email,
+            roleLabel: "Partenaire McBuleli Hackathon",
+            contributions: partner.partnershipTypes?.length
+              ? partner.partnershipTypes
+              : partner.contribution
+                ? [partner.contribution]
+                : ["Participation confirmée au McBuleli Hackathon"],
+            ticketCode,
+            locale: "fr",
+          }).catch((e) =>
+            console.warn("[hackathon] partner confirm email failed", e),
+          );
+        }
+        return NextResponse.json({ ok: true, ticketCode });
+      }
     } else if (lead.data.kind === "sponsor" && lead.data.status) {
       await db
         .update(hackathonSponsors)

@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
-import { getTicketByCode, ticketPublicUrl } from "@/lib/hackathon/service";
+import { getPassByCode, passPublicUrl } from "@/lib/hackathon/access";
 
 export const dynamic = "force-dynamic";
 
-/** Legacy ticket API — prefer /api/hackathon/pass/[code]. */
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ code: string }> },
 ) {
   const { code } = await ctx.params;
   try {
-    const data = await getTicketByCode(code);
-    if (!data || data.registration.paymentStatus !== "paid") {
+    const data = await getPassByCode(code);
+    if (!data?.pass?.valid) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
-    const { registration: reg, edition } = data;
+    const { pass, edition } = data;
     return NextResponse.json({
-      ticketCode: reg.ticketCode,
-      ticketUrl: ticketPublicUrl(reg.ticketCode!),
-      firstName: reg.firstName,
-      lastName: reg.lastName,
-      email: reg.email,
-      ticketPack: reg.ticketPack,
-      projectName: reg.projectName,
+      subjectType: pass.subjectType,
+      ticketCode: pass.ticketCode,
+      passUrl: passPublicUrl(pass.ticketCode),
+      displayName: pass.displayName,
+      orgOrEmail: pass.orgOrEmail,
+      presenceStatus: pass.presenceStatus,
       edition: edition
         ? {
             nameFr: edition.nameFr,
@@ -35,7 +33,7 @@ export async function GET(
         : null,
     });
   } catch (e) {
-    console.error("[hackathon/ticket]", e);
+    console.error("[hackathon/pass]", e);
     return NextResponse.json({ error: "unavailable" }, { status: 503 });
   }
 }

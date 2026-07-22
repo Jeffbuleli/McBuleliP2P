@@ -20,6 +20,7 @@ import {
   defaultProgram,
   emptyStats,
 } from "@/lib/hackathon/constants";
+import { passPublicUrl } from "@/lib/hackathon/access";
 
 export function generateTicketCode(): string {
   return `MBH-${randomBytes(5).toString("hex").toUpperCase()}`;
@@ -29,8 +30,9 @@ export function generatePaymentToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
+/** @deprecated Prefer passPublicUrl — kept for older callers; now points to /pass/. */
 export function ticketPublicUrl(code: string): string {
-  return getAppAbsoluteUrl(`/hackathon/ticket/${encodeURIComponent(code)}`);
+  return passPublicUrl(code);
 }
 
 export function payLaterPublicUrl(token: string): string {

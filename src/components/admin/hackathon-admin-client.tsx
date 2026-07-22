@@ -208,6 +208,13 @@ export function HackathonAdminClient() {
           <a href="/hackathon" className="font-semibold text-[color:var(--fd-primary)]">
             /hackathon
           </a>
+          {" · "}
+          <a
+            href="/admin/hackathon/scan"
+            className="font-semibold text-[color:var(--fd-primary)]"
+          >
+            Scanner porte
+          </a>
         </p>
       </div>
 

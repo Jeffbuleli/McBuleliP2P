@@ -11,6 +11,7 @@ import {
 } from "@/lib/email/email-inline-images";
 import type { EmailCopyBlock } from "@/lib/email/copy";
 import type { EmailDetailRow } from "@/lib/email/wallet-email-details";
+import { SUPPORT_X } from "@/lib/support-contact";
 
 function escHtml(value: string): string {
   return value
@@ -37,14 +38,18 @@ export type McBuleliEmailLayoutArgs = {
 function renderDetailsTable(rows: EmailDetailRow[], escapeValues: boolean): string {
   const val = (v: string) => (escapeValues ? escHtml(v) : v);
   const cells = rows
-    .map(
-      (row) => `<tr>
-      <td style="padding:8px 0;font-size:13px;color:${EMAIL_BRAND.muted};vertical-align:top;width:38%;">${escHtml(row.label)}</td>
-      <td style="padding:8px 0;font-size:13px;color:${EMAIL_BRAND.text};font-weight:600;word-break:break-all;">${val(row.value)}</td>
-    </tr>`,
-    )
+    .map((row, i) => {
+      const border =
+        i < rows.length - 1
+          ? `border-bottom:1px solid ${EMAIL_BRAND.border};`
+          : "";
+      return `<tr>
+      <td style="padding:11px 0;${border}font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:${EMAIL_BRAND.muted};vertical-align:top;width:36%;">${escHtml(row.label)}</td>
+      <td style="padding:11px 0;${border}font-size:14px;color:${EMAIL_BRAND.text};font-weight:700;line-height:1.35;word-break:break-word;">${val(row.value)}</td>
+    </tr>`;
+    })
     .join("");
-  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:360px;">${cells}</table>`;
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:380px;">${cells}</table>`;
 }
 
 function renderHeaderLogo(useInlineImages: boolean): string {
@@ -101,17 +106,26 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
   const detailsHtml =
     detailRows && detailRows.length > 0
       ? `<tr>
-            <td style="padding:4px 28px 20px;">
-              <div style="background:${EMAIL_BRAND.mint};border-radius:14px;padding:16px 18px;">
-                ${renderDetailsTable(detailRows, !resendVariables)}
-              </div>
+            <td style="padding:8px 24px 12px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${EMAIL_BRAND.white};border:1px solid ${EMAIL_BRAND.border};border-radius:16px;overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 18px 6px;background:${EMAIL_BRAND.mint};border-bottom:1px solid ${EMAIL_BRAND.border};">
+                    <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${EMAIL_BRAND.primary};">${locale === "fr" ? "Détails" : "Details"}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 18px 8px;background:${EMAIL_BRAND.white};">
+                    ${renderDetailsTable(detailRows, !resendVariables)}
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>`
       : "";
 
   const extraBlock =
     extraHtml && extraHtml.trim()
-      ? `<tr><td style="padding:0 28px 16px;">${extraHtml}</td></tr>`
+      ? `<tr><td style="padding:4px 24px 16px;">${extraHtml}</td></tr>`
       : "";
 
   const html = `<!DOCTYPE html>
@@ -170,6 +184,17 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
           }
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 14px;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:8px;font-size:12px;color:${EMAIL_BRAND.muted};">Powered by</td>
+                  <td style="vertical-align:middle;padding-right:6px;">
+                    <img src="${useInlineImages ? `cid:${EMAIL_LOGO_CID}` : logoUrl()}" width="22" height="22" alt="" style="display:block;border:0;border-radius:50%;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <a href="${SUPPORT_X}" style="font-size:13px;font-weight:800;color:${EMAIL_BRAND.primary};text-decoration:none;">McBuleli</a>
+                  </td>
+                </tr>
+              </table>
               ${renderFooterLogo(useInlineImages)}
               <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${EMAIL_BRAND.text};">McBuleli</p>
               <p style="margin:0 0 10px;font-size:12px;color:${EMAIL_BRAND.muted};">${escHtml(copy.footerHelp)} <a href="mailto:${EMAIL_FOOTER.supportEmail}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">${escHtml(copy.footerContact)}</a></p>

@@ -4113,6 +4113,13 @@ export const hackathonPartners = pgTable(
     logoUrl: text("logo_url"),
     /** lead | confirmed | rejected */
     status: varchar("status", { length: 16 }).notNull().default("lead"),
+    /** Door badge QR (MBP-…) when confirmed */
+    ticketCode: varchar("ticket_code", { length: 32 }).unique(),
+    /** absent | inside | outside */
+    presenceStatus: varchar("presence_status", { length: 16 })
+      .notNull()
+      .default("absent"),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4190,6 +4197,10 @@ export const hackathonRegistrations = pgTable(
     holdReminderSentAt: timestamp("hold_reminder_sent_at", { withTimezone: true }),
     ticketCode: varchar("ticket_code", { length: 32 }).unique(),
     locale: varchar("locale", { length: 8 }).notNull().default("fr"),
+    /** absent | inside | outside */
+    presenceStatus: varchar("presence_status", { length: 16 })
+      .notNull()
+      .default("absent"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -4245,6 +4256,45 @@ export const hackathonPayments = pgTable(
   (t) => [
     index("hackathon_payments_registration_idx").on(t.registrationId),
     index("hackathon_payments_status_idx").on(t.status),
+  ],
+);
+
+/** Door scan log (entry / temporary exit) across hackathon days. */
+export const hackathonAccessEvents = pgTable(
+  "hackathon_access_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    /** participant | partner */
+    subjectType: varchar("subject_type", { length: 16 }).notNull(),
+    subjectId: uuid("subject_id").notNull(),
+    ticketCode: varchar("ticket_code", { length: 32 }).notNull(),
+    /** 1 | 2 | 3 */
+    dayIndex: integer("day_index").notNull(),
+    /** in | out */
+    eventType: varchar("event_type", { length: 8 }).notNull(),
+    scannedBy: uuid("scanned_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    scannedAt: timestamp("scanned_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    note: text("note"),
+  },
+  (t) => [
+    index("hackathon_access_events_edition_day_idx").on(
+      t.editionId,
+      t.dayIndex,
+      t.scannedAt,
+    ),
+    index("hackathon_access_events_ticket_idx").on(t.ticketCode, t.scannedAt),
+    index("hackathon_access_events_subject_idx").on(
+      t.subjectType,
+      t.subjectId,
+      t.dayIndex,
+    ),
   ],
 );
 
