@@ -67,22 +67,27 @@ export function PartnerMeetLanding({
       ) : null}
 
       <div className={styles.stage}>
-        <header className={styles.hero}>
+        <header
+          className={
+            showCountdown ? `${styles.hero} ${styles.heroWithCountdown}` : styles.hero
+          }
+        >
           <div className={styles.brandBlock}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className={styles.brandMark}
               src="/brand/mcbuleli-meet-logo.png"
-              width={72}
-              height={72}
+              width={44}
+              height={44}
               alt=""
             />
             <p className={styles.brandName}>McBuleli Meet</p>
           </div>
 
-          <h1 className={styles.headline}>
-            Avec <em>{meet.partnerName}</em>
-          </h1>
+          <h1 className={styles.headline}>RDV partenariat</h1>
+          <p className={styles.partnerLine}>
+            avec <em>{meet.partnerName}</em>
+          </p>
           <p className={styles.lede}>
             {meet.durationMinutes} minutes pour aligner le partenariat hackathon
             - salle sécurisée McBuleli.
