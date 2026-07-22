@@ -55,26 +55,45 @@ cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 python3 "$SCRIPT_DIR/make-round-logo.py" "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$JITSI_IMAGES/mcbuleli-favicon.png" 64 2>/dev/null || \
   cp "$JITSI_IMAGES/mcbuleli-round.png" "$JITSI_IMAGES/mcbuleli-favicon.png"
 
-echo "==> Watermark coin vidéo (depuis mcbuleli-meet-watermark-source.png — forme logo inchangée)"
+echo "==> Watermark coin vidéo (PNG transparent 96px — jamais la source JPEG brute)"
+WM_REPO="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark.png"
 WM_RAW="$SCRIPT_DIR/../../public/brand/mcbuleli-meet-watermark-source.png"
 WM_BUILD="$JITSI_IMAGES/.mcbuleli-watermark-build.png"
-if [[ ! -f "$WM_RAW" ]]; then
-  curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark-source.png" -o "$WM_RAW" || true
-fi
 WM_OK=0
-if [[ -f "$WM_RAW" ]] && command -v python3 >/dev/null; then
-  PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
-  if python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96 2>/dev/null \
-    || python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96; then
-    WM_OK=1
+# 1) Prefère le PNG déjà généré dans le repo (évite le fond noir 1024×682 en live)
+if [[ -f "$WM_REPO" ]]; then
+  cp -a "$WM_REPO" "$WM_BUILD"
+  WM_OK=1
+  echo "    source: public/brand/mcbuleli-meet-watermark.png"
+fi
+# 2) Sinon régénère depuis la source (Pillow)
+if [[ "$WM_OK" -eq 0 ]]; then
+  if [[ ! -f "$WM_RAW" ]]; then
+    curl -fsSL "https://mcbuleli.org/brand/mcbuleli-meet-watermark-source.png" -o "$WM_RAW" || true
+  fi
+  if [[ -f "$WM_RAW" ]] && command -v python3 >/dev/null; then
+    PYTHONPATH="${SCRIPT_DIR}/../../.tmp/pillow-lib:${PYTHONPATH:-}"
+    if python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96 2>/dev/null \
+      || python3 "$SCRIPT_DIR/make-meet-watermark.py" "$WM_RAW" "$WM_BUILD" 96; then
+      WM_OK=1
+      echo "    source: regenerated via make-meet-watermark.py"
+    fi
   fi
 fi
-if [[ "$WM_OK" -eq 0 && -f "$WM_RAW" ]]; then
-  cp -a "$WM_RAW" "$WM_BUILD"
-  echo "    (pillow absent — source brute; apt install -y python3-pil.imaging)"
+# 3) Dernier recours: logo Meet circulaire (pas la JPEG source)
+if [[ "$WM_OK" -eq 0 ]]; then
+  if [[ -f "$JITSI_IMAGES/mcbuleli-meet-logo.png" ]]; then
+    cp -a "$JITSI_IMAGES/mcbuleli-meet-logo.png" "$WM_BUILD"
+    echo "    fallback: mcbuleli-meet-logo.png (installez python3-pil pour le watermark transparent)"
+  else
+    echo "ERREUR: aucun watermark McBuleli disponible" >&2
+    exit 1
+  fi
 fi
 cp -a "$WM_BUILD" "$JITSI_IMAGES/watermark.png"
 cp -a "$WM_BUILD" "$JITSI_IMAGES/mcbuleli-meet-watermark.png"
+# Ne jamais laisser la JPEG source se faire servir comme watermark
+rm -f "$JITSI_IMAGES/mcbuleli-meet-watermark-source.png" 2>/dev/null || true
 cp -a "$SCRIPT_DIR/mcbuleli-custom.css" "$JITSI_CSS/mcbuleli-custom.css"
 
 echo "==> Favicon navigateur (onglet)"
@@ -289,4 +308,4 @@ echo "==> Redémarrage"
 systemctl restart prosody jicofo jitsi-videobridge2
 systemctl reload nginx
 
-echo "OK — Watermark: $WATERMARK_URL (source: mcbuleli-meet-watermark-source.png)"
+echo "OK — Watermark: $WATERMARK_URL (PNG transparent, pas la JPEG source)"
