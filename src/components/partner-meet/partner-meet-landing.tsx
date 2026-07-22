@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { PartnerMeetRow } from "@/lib/partner-meet";
+import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
+import { PartnerMeetCountdown } from "@/components/partner-meet/partner-meet-countdown";
 import styles from "./partner-meet-landing.module.css";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -39,6 +41,8 @@ export function PartnerMeetLanding({
   const when = formatWhen(meet);
   const agenda = meet.agenda?.length ? meet.agenda : [];
   const status = STATUS_LABEL[meet.status] ?? meet.status;
+  const showCountdown =
+    meet.status === "confirmed" && Boolean(meet.scheduledAt);
 
   return (
     <div className={styles.meetRoot}>
@@ -54,6 +58,13 @@ export function PartnerMeetLanding({
           height={720}
         />
       </div>
+
+      {showCountdown && meet.scheduledAt ? (
+        <PartnerMeetCountdown
+          scheduledAt={meet.scheduledAt}
+          timezone={meet.timezone}
+        />
+      ) : null}
 
       <div className={styles.stage}>
         <header className={styles.hero}>
@@ -127,6 +138,10 @@ export function PartnerMeetLanding({
             McBuleli · RCCM CD/KNG/RCCM/26-A-00382
           </p>
         </footer>
+
+        <div className={styles.powered}>
+          <McBuleliPoweredFooter />
+        </div>
       </div>
     </div>
   );

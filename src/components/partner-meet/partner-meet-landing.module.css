@@ -294,6 +294,19 @@
   letter-spacing: 0.02em;
 }
 
+.powered {
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+}
+
+.powered :global(footer) {
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
 @keyframes meetRise {
   from {
     opacity: 0;
