@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PARTNER_MEET_GUEST_JOIN_WINDOW_MS } from "@/lib/partner-meet/timing";
 import styles from "./partner-meet-countdown.module.css";
 
 type Parts = {
@@ -49,9 +50,9 @@ export function PartnerMeetCountdown({
 
   if (!Number.isFinite(target)) return null;
 
-  const liveWindowMs = 2 * 60 * 60 * 1000;
   const started = parts.totalMs <= 0;
-  const stillLive = started && Date.now() - target < liveWindowMs;
+  const stillLive =
+    started && Date.now() - target < PARTNER_MEET_GUEST_JOIN_WINDOW_MS;
   const ended = started && !stillLive;
 
   return (
@@ -60,14 +61,14 @@ export function PartnerMeetCountdown({
       aria-live="polite"
       aria-label={
         ended
-          ? "RDV passé"
+          ? "RDV terminé"
           : stillLive
             ? "RDV en cours"
             : `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes ${pad(parts.seconds)} secondes`
       }
     >
       {ended ? (
-        <p className={styles.status}>Passé</p>
+        <p className={styles.status}>Terminé</p>
       ) : stillLive ? (
         <p className={styles.status}>En cours</p>
       ) : ready ? (

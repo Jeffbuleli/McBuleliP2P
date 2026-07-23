@@ -56,7 +56,7 @@ export default async function PartnerMeetJoinPage({
     out.code === "partner_meet_forbidden"
       ? "Cet espace est réservé aux participants invités. Connectez-vous avec l'email partenaire ou contactez l'hôte."
       : out.code === "partner_meet_closed"
-        ? "Ce RDV est clos."
+        ? "Ce RDV est terminé (plus d'1 h après l'heure prévue). Seul l'hôte ou un admin peut relancer la salle."
         : "Impossible d'ouvrir la salle pour le moment.";
 
   return (

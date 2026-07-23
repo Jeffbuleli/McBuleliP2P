@@ -13,6 +13,15 @@ import {
 import { buildJitsiLowBandwidthHash, type LiveJoinMode } from "@/lib/academy-live";
 import { recordJitsiAccess } from "@/lib/jitsi-access-audit";
 import { UserRole, type UserRoleType } from "@/lib/roles";
+import { isPartnerMeetGuestJoinExpired } from "@/lib/partner-meet/timing";
+
+export {
+  PARTNER_MEET_GUEST_JOIN_WINDOW_MS,
+  isPartnerMeetGuestJoinExpired,
+  isPartnerMeetInProgress,
+  normalizeMeetDisplayText,
+  partnerMeetScheduledMs,
+} from "@/lib/partner-meet/timing";
 
 export type PartnerMeetStatus =
   | "proposed"
@@ -384,6 +393,15 @@ export async function resolvePartnerMeetJoinUrl(args: {
     }
   } else if (!canAccessPartnerMeet(args)) {
     return { ok: false, code: "partner_meet_forbidden" };
+  }
+
+  // After 1h past scheduled start: guests blocked; host / staff may relaunch.
+  if (
+    !wantsHost &&
+    isPartnerMeetGuestJoinExpired(args.meet) &&
+    !canHostPartnerMeet(args)
+  ) {
+    return { ok: false, code: "partner_meet_closed" };
   }
 
   const effectiveMode: LiveJoinMode = wantsHost

@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { PartnerMeetRow } from "@/lib/partner-meet";
+import {
+  isPartnerMeetGuestJoinExpired,
+  normalizeMeetDisplayText,
+} from "@/lib/partner-meet/timing";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import { PartnerMeetCountdown } from "@/components/partner-meet/partner-meet-countdown";
 import styles from "./partner-meet-landing.module.css";
@@ -14,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
 function formatWhen(meet: PartnerMeetRow): string | null {
   if (!meet.scheduledAt) return null;
   try {
-    return new Intl.DateTimeFormat("fr-CD", {
+    const raw = new Intl.DateTimeFormat("fr-CD", {
       timeZone: meet.timezone || "Africa/Kinshasa",
       weekday: "short",
       day: "numeric",
@@ -22,8 +26,11 @@ function formatWhen(meet: PartnerMeetRow): string | null {
       hour: "2-digit",
       minute: "2-digit",
     }).format(new Date(meet.scheduledAt));
+    return normalizeMeetDisplayText(raw);
   } catch {
-    return new Date(meet.scheduledAt).toLocaleString("fr-FR");
+    return normalizeMeetDisplayText(
+      new Date(meet.scheduledAt).toLocaleString("fr-FR"),
+    );
   }
 }
 
@@ -40,9 +47,15 @@ export function PartnerMeetLanding({
 }) {
   const when = formatWhen(meet);
   const agenda = meet.agenda?.length ? meet.agenda : [];
-  const status = STATUS_LABEL[meet.status] ?? meet.status;
+  const guestJoinExpired = isPartnerMeetGuestJoinExpired(meet);
+  const status =
+    guestJoinExpired && meet.status === "confirmed"
+      ? "Terminé"
+      : (STATUS_LABEL[meet.status] ?? meet.status);
   const showCountdown =
-    meet.status === "confirmed" && Boolean(meet.scheduledAt);
+    (meet.status === "confirmed" || meet.status === "done") &&
+    Boolean(meet.scheduledAt);
+  const canGuestJoin = !guestJoinExpired && meet.status === "confirmed";
 
   return (
     <div className={styles.meetRoot}>
@@ -78,7 +91,7 @@ export function PartnerMeetLanding({
           </div>
 
           <h1 className={styles.headline}>
-            Avec <em>{meet.partnerName}</em>
+            Avec <em>{normalizeMeetDisplayText(meet.partnerName)}</em>
           </h1>
           <p className={styles.lede}>
             {meet.durationMinutes} minutes pour aligner le partenariat hackathon
@@ -91,20 +104,32 @@ export function PartnerMeetLanding({
             <span>
               {when
                 ? when
-                : `${meet.durationMinutes} min · Kinshasa`}
+                : `${meet.durationMinutes} min - Kinshasa`}
             </span>
           </p>
 
           <div className={styles.ctaGroup}>
-            <Link href={joinHref} className={styles.cta}>
-              Rejoindre la salle
-            </Link>
+            {canGuestJoin ? (
+              <Link href={joinHref} className={styles.cta}>
+                Rejoindre la salle
+              </Link>
+            ) : (
+              <span className={styles.ctaDisabled} aria-disabled="true">
+                {guestJoinExpired ? "Salle fermée" : status}
+              </span>
+            )}
             {showHostLink ? (
               <Link href={hostHref} className={styles.ctaGhost}>
-                Entrée hôte
+                {guestJoinExpired ? "Relancer (hôte)" : "Entrée hôte"}
               </Link>
             ) : null}
           </div>
+          {guestJoinExpired && !showHostLink ? (
+            <p className={styles.closedHint}>
+              RDV terminé (plus d&apos;1 h). Seul l&apos;hôte ou un admin peut
+              relancer la salle.
+            </p>
+          ) : null}
         </header>
 
         {agenda.length > 0 ? (
@@ -116,7 +141,7 @@ export function PartnerMeetLanding({
                   <span className={styles.agendaIndex}>
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span>{item}</span>
+                  <span>{normalizeMeetDisplayText(item)}</span>
                 </li>
               ))}
             </ol>
@@ -125,14 +150,14 @@ export function PartnerMeetLanding({
 
         <footer className={styles.foot}>
           <p>
-            Hôte ·{" "}
+            Hôte -{" "}
             <a href={`mailto:${meet.hostEmail}`}>{meet.hostEmail}</a>
           </p>
           <p className={styles.footNote}>
-            Compte McBuleli requis · ne partagez pas d&apos;URL live nue
+            Compte McBuleli requis - ne partagez pas d&apos;URL live nue
           </p>
           <p className={styles.legal}>
-            McBuleli · RCCM CD/KNG/RCCM/26-A-00382
+            McBuleli - RCCM CD/KNG/RCCM/26-A-00382
           </p>
         </footer>
 
