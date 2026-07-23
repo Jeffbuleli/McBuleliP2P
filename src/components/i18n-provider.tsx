@@ -35,7 +35,18 @@ export function I18nProvider({
   const [locale, setLocaleState] = useState(initialLocale);
 
   useEffect(() => {
+    // Prefer cookie after client flag switch so RSC remounts don't snap back.
+    const match = document.cookie.match(
+      new RegExp(`(?:^|;\\s*)${LOCALE_COOKIE}=([^;]*)`),
+    );
+    const fromCookie = match?.[1];
+    if (fromCookie === "fr" || fromCookie === "en") {
+      setLocaleState(fromCookie);
+      document.documentElement.lang = fromCookie;
+      return;
+    }
     setLocaleState(initialLocale);
+    document.documentElement.lang = initialLocale;
   }, [initialLocale]);
 
   const setLocale = useCallback((l: Locale) => {
@@ -43,7 +54,6 @@ export function I18nProvider({
       if (prev === l) return prev;
       document.cookie = `${LOCALE_COOKIE}=${l};path=/;max-age=31536000;SameSite=Lax`;
       document.documentElement.lang = l;
-      // Smooth language switch without full navigation / router.refresh
       document.documentElement.classList.add("locale-switching");
       window.setTimeout(() => {
         document.documentElement.classList.remove("locale-switching");

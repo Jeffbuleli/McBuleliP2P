@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/components/i18n-provider";
 import {
   AMBASSADOR_CASHBACK_USD,
   AMBASSADOR_DISCOUNT_PERCENT,
 } from "@/lib/hackathon/promo-types";
 import { HACKATHON_PRICE_USD } from "@/lib/hackathon/constants";
-import {
-  ambassadorFormCopy,
-  type HackathonUiLocale,
-} from "@/lib/hackathon/ambassador-ui-copy";
+import { ambassadorFormCopy } from "@/lib/hackathon/ambassador-ui-copy";
 
 type ExistingPromo = {
   code: string;
@@ -23,16 +21,15 @@ type ExistingPromo = {
 };
 
 export function AmbassadorPromoClient({
-  locale,
   initialEmail,
   initialDisplayName,
 }: {
-  locale: HackathonUiLocale;
   initialEmail: string;
   initialDisplayName: string;
 }) {
+  const { locale } = useI18n();
+  const t = ambassadorFormCopy(locale === "fr" ? "fr" : "en");
   const router = useRouter();
-  const t = ambassadorFormCopy(locale);
   const [code, setCode] = useState("");
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [busy, setBusy] = useState(false);
@@ -44,6 +41,10 @@ export function AmbassadorPromoClient({
   const discounted = Math.round(
     (Number(HACKATHON_PRICE_USD) * (100 - AMBASSADOR_DISCOUNT_PERCENT)) / 100,
   );
+
+  useEffect(() => {
+    setErr(null);
+  }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
