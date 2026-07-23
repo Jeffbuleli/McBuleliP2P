@@ -30,6 +30,7 @@
 - Lien : https://mcbuleli.org/meet/cesar-group-partenariat
 - Email Meet : `content/email-partnership/cesar-group-meet.{html,txt}`
 - Script : `npm run email:cesar-group-meet`
+- Rappel début RDV : `npm run email:cesar-group-meet-reminder`
 - Prod : to `cesargrouprdc@gmail.com` · CC `contact@cesargroup-rdc.com` (+ ceo)
 
 ## Email partenariat (proposition initiale)

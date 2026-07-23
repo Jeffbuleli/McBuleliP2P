@@ -28,8 +28,8 @@
     img.height = 72;
     img.style.cssText =
       "position:fixed;top:16px;left:16px;width:72px;height:72px;z-index:600;" +
-      "pointer-events:none;object-fit:contain;" +
-      "filter:drop-shadow(0 2px 6px rgba(0,0,0,.55));";
+      "pointer-events:none;object-fit:contain;opacity:0.22;" +
+      "filter:drop-shadow(0 1px 3px rgba(0,0,0,.25));";
     document.body.appendChild(img);
   }
 
