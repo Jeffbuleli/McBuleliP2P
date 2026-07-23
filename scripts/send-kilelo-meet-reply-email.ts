@@ -1,5 +1,5 @@
 /**
- * Kilelo - reply RDV McBuleli Meet (CEO + invite link).
+ * Kilelo - confirmation RDV McBuleli Meet (lundi 27 juillet 15h00).
  *
  *   npx tsx scripts/send-kilelo-meet-reply-email.ts --preview
  *   npx tsx scripts/send-kilelo-meet-reply-email.ts --to hi@mcbuleli.org --send
@@ -21,7 +21,7 @@ export const KILELO_MEET_CC = "ceo@mcbuleli.org";
 export const KILELO_MEET_REPLY_TO = "ceo@mcbuleli.org";
 
 const SUBJECT =
-  "McBuleli × Kilelo - RDV sur McBuleli Meet + créneaux proposés";
+  "McBuleli × Kilelo - RDV confirmé lundi 27 juillet 15h00 (McBuleli Meet)";
 
 function loadLocalEnv(): void {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -61,7 +61,10 @@ async function main() {
 
   console.log(`Subject: ${SUBJECT}`);
   console.log(`HTML: content/email-partnership/kilelo-meet-reply.html`);
-  console.log(`Prod to: ${KILELO_MEET_TO} · CC ${KILELO_MEET_CC} · Reply-To ${KILELO_MEET_REPLY_TO}`);
+  console.log(
+    `Prod to: ${KILELO_MEET_TO} - CC ${KILELO_MEET_CC} - Reply-To ${KILELO_MEET_REPLY_TO}`,
+  );
+  console.log(`Meet: https://mcbuleli.org/meet/kilelo-partenariat`);
 
   if (!args.send) {
     console.log(
@@ -106,9 +109,9 @@ async function main() {
     console.error("Échec Resend");
     process.exit(1);
   }
-  const ccNote = cc?.length ? ` · CC ${cc.join(", ")}` : "";
+  const ccNote = cc?.length ? ` - CC ${cc.join(", ")}` : "";
   console.log(
-    `✓ Envoyé via Resend → ${to}${ccNote}${archiveBcc ? ` (BCC ${archiveBcc})` : ""}`,
+    `Envoye via Resend -> ${to}${ccNote}${archiveBcc ? ` (BCC ${archiveBcc})` : ""}`,
   );
 }
 

@@ -79,7 +79,9 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     partnerEmail: "support@kileloapp.com",
     hostEmail: "ceo@mcbuleli.org",
     durationMinutes: 30,
-    status: "proposed",
+    status: "confirmed",
+    scheduledAt: new Date("2026-07-27T15:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
     allowlistEmails: [
       "support@kileloapp.com",
       "ceo@mcbuleli.org",
@@ -91,7 +93,8 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
       "Déroulement des 3 jours et logistique Demo Day",
       "Prochaines étapes (logo, créneau talk, contact référent)",
     ],
-    notes: "Réponse à Jeancy Kabangu - visio 20-30 min sur McBuleli Meet.",
+    notes:
+      "RDV confirmé lundi 27 juillet 2026 15h00 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
   },
   "cesar-group-partenariat": {
     slug: "cesar-group-partenariat",

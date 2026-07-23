@@ -1,5 +1,5 @@
 /**
- * Upsert Partner Meet for Kilelo RDV.
+ * Upsert Partner Meet for Kilelo RDV (confirmé lundi 27 juillet 15h00).
  *
  *   npx tsx scripts/seed-kilelo-partner-meet.ts
  */
@@ -31,7 +31,9 @@ async function main() {
     partnerEmail: "support@kileloapp.com",
     hostEmail: "ceo@mcbuleli.org",
     durationMinutes: 30,
-    status: "proposed",
+    status: "confirmed",
+    scheduledAt: new Date("2026-07-27T15:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
     allowlistEmails: [
       "support@kileloapp.com",
       "ceo@mcbuleli.org",
@@ -44,11 +46,13 @@ async function main() {
       "Prochaines étapes (logo, créneau talk, contact référent)",
     ],
     notes:
-      "Réponse à Jeancy Kabangu - visio 20-30 min sur McBuleli Meet. Créneaux proposés dans l'email.",
+      "RDV confirmé lundi 27 juillet 2026 15h00 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
   });
 
-  console.log("✓ Partner meet ready");
+  console.log("Partner meet ready");
   console.log(`  slug: ${meet.slug}`);
+  console.log(`  status: ${meet.status}`);
+  console.log(`  scheduledAt: ${meet.scheduledAt?.toISOString() ?? "null"}`);
   console.log(`  room: ${meet.roomSlug}`);
   console.log(`  landing: ${partnerMeetPublicUrl(meet.slug)}`);
   console.log(`  join:    https://mcbuleli.org/meet/${meet.slug}/join`);

@@ -24,6 +24,7 @@ import {
   upsertPartnerPromo,
 } from "../src/lib/hackathon/promo";
 import { SUPPORT_EMAIL } from "../src/lib/support-contact";
+import { partnershipArchiveBcc } from "../src/lib/email/partnership/partnership-email-config";
 
 function loadLocalEnv(): void {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -47,6 +48,8 @@ function parseArgs(argv: string[]) {
     else if (a === "--code" && argv[i + 1]) out.code = argv[++i];
     else if (a.startsWith("--to=")) out.to = a.slice("--to=".length);
     else if (a === "--to" && argv[i + 1]) out.to = argv[++i];
+    else if (a.startsWith("--cc=")) out.cc = a.slice("--cc=".length);
+    else if (a === "--cc" && argv[i + 1]) out.cc = argv[++i];
     else if (a.startsWith("--org=")) out.org = a.slice("--org=".length);
     else if (a === "--org" && argv[i + 1]) out.org = argv[++i];
     else if (a.startsWith("--name=")) out.name = a.slice("--name=".length);
@@ -132,11 +135,16 @@ async function main() {
 
   const ok = await sendEmail({
     to,
+    cc:
+      typeof args.cc === "string" && args.cc.trim()
+        ? args.cc.split(",").map((s) => s.trim()).filter(Boolean)
+        : undefined,
     subject: email.subject,
     html: email.html,
     text: email.text,
     from: `McBuleli <${SUPPORT_EMAIL}>`,
     replyTo: SUPPORT_EMAIL,
+    bcc: partnershipArchiveBcc(to),
   });
 
   if (!ok) {
