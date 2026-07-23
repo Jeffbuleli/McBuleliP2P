@@ -138,7 +138,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 </h1>
                 {edition ? (
                   <p className="mt-1 truncate text-sm text-[#8A8A8A]">
-                    {edition.nameFr}
+                    {edition.nameFr.replace(/\s*[—–]\s*/g, " - ")}
                   </p>
                 ) : null}
               </div>
