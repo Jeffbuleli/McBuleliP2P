@@ -317,7 +317,7 @@ const PRIZES: PrizeCard[] = [
     titleFr: "Prix ILOKWE",
     titleEn: "ILOKWE Prize",
     bodyFr:
-      "Premier prix - meilleure équipe globale. Nommé en partenariat avec ILOKWE GROUP (valorisation agricole & chaîne de production).",
+      "Premier prix - meilleure équipe globale. Nommée en partenariat avec ILOKWE GROUP (valorisation agricole & chaîne de production).",
     bodyEn:
       "First prize - top overall team. Named in partnership with ILOKWE GROUP (agri value & production chain).",
   },
