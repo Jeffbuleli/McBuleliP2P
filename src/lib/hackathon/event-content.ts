@@ -201,6 +201,47 @@ export function hackathonFeaturedSponsors(): HackathonFeaturedSponsor[] {
   ];
 }
 
+export type HackathonFeaturedJury = {
+  id: string;
+  name: string;
+  company: string | null;
+  titleFr: string;
+  titleEn: string;
+  expertiseFr: string;
+  expertiseEn: string;
+  /** Portrait URL — set when provided; null shows initial. */
+  photoUrl: string | null;
+  href: string | null;
+};
+
+/** Featured jury members on the landing (merge with DB / demo rows). */
+export function hackathonFeaturedJury(): HackathonFeaturedJury[] {
+  return [
+    {
+      id: "jury-expert-innovation",
+      name: "Expert Innovation",
+      company: null,
+      titleFr: "Jury - À annoncer",
+      titleEn: "Jury - TBA",
+      expertiseFr: "Startups · Impact",
+      expertiseEn: "Startups · Impact",
+      photoUrl: null,
+      href: null,
+    },
+    {
+      id: "jury-ilokwe-christian",
+      name: ILOKWE_PARTNER.contactName,
+      company: ILOKWE_PARTNER.name,
+      titleFr: "Jury · Agriculture & AgriBusiness",
+      titleEn: "Jury · Agriculture & AgriBusiness",
+      expertiseFr: "AgroTech · Prix ILOKWE",
+      expertiseEn: "AgroTech · ILOKWE Prize",
+      photoUrl: null,
+      href: ILOKWE_PARTNER.facebook,
+    },
+  ];
+}
+
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },

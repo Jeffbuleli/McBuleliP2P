@@ -20,6 +20,7 @@ import {
   ILOKWE_PARTNER,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
+  hackathonFeaturedJury,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
@@ -168,18 +169,58 @@ function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[
   });
 }
 
-function enrichJury(people: FeaturedHackathonPayload["jury"]): PersonCard[] {
-  return people.map((p) => {
+function enrichJury(
+  people: FeaturedHackathonPayload["jury"],
+  isFr: boolean,
+): PersonCard[] {
+  const mapped = people.map((p) => {
     if (/jury\s*mcbuleli/i.test(p.name) || /^mcbuleli$/i.test(p.name)) {
       return {
         ...p,
         name: "Jury McBuleli",
         photoUrl: BRAND_LOGO_256,
-        photoFit: "contain",
+        photoFit: "contain" as const,
+      };
+    }
+    if (/expert\s*innovation/i.test(p.name)) {
+      return {
+        ...p,
+        name: "Expert Innovation",
+        company: null,
+        title: isFr ? "Jury - À annoncer" : "Jury - TBA",
+        expertise: "Startups · Impact",
+        photoUrl: null,
+        photoFit: "cover" as const,
       };
     }
     return p;
   });
+
+  for (const j of hackathonFeaturedJury()) {
+    const already = mapped.some((p) => {
+      if (p.id === j.id) return true;
+      if (/ilokwe|ikwele/i.test(j.name) || /ilokwe/i.test(j.company ?? "")) {
+        return /ilokwe|ikwele/i.test(p.name) || /ilokwe/i.test(p.company ?? "");
+      }
+      if (/expert\s*innovation/i.test(j.name)) {
+        return /expert\s*innovation/i.test(p.name);
+      }
+      return false;
+    });
+    if (already) continue;
+    mapped.push({
+      id: j.id,
+      name: j.name,
+      company: j.company,
+      title: isFr ? j.titleFr : j.titleEn,
+      expertise: isFr ? j.expertiseFr : j.expertiseEn,
+      photoUrl: j.photoUrl,
+      photoFit: "cover",
+      href: j.href ?? undefined,
+    });
+  }
+
+  return mapped;
 }
 
 function PersonGrid({
@@ -193,12 +234,12 @@ function PersonGrid({
 }) {
   const placeholders = Math.max(0, slots - people.length);
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {people.map((p) => {
         const inner = (
           <>
             <div
-              className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ${
+              className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ${
                 p.photoFit === "contain" ? "ring-1 ring-[color:var(--fd-primary)]/15" : ""
               }`}
             >
@@ -214,18 +255,25 @@ function PersonGrid({
                   }
                 />
               ) : (
-                p.name.slice(0, 1)
+                p.name.replace(/^Mr\.?\s+/i, "").slice(0, 1).toUpperCase()
               )}
             </div>
-            <div className="min-w-0">
-              <h3 className="truncate font-semibold text-[color:var(--fd-text)]">{p.name}</h3>
-              {(p.title || p.company) && (
-                <p className="mt-0.5 truncate text-xs text-[color:var(--fd-primary)]">
-                  {[p.title, p.company].filter(Boolean).join(" - ")}
+            <div className="min-w-0 flex-1">
+              <h3 className="break-words text-sm font-semibold leading-snug text-[color:var(--fd-text)] sm:text-base">
+                {p.name}
+              </h3>
+              {p.title ? (
+                <p className="mt-0.5 break-words text-xs leading-snug text-[color:var(--fd-primary)]">
+                  {p.title}
                 </p>
-              )}
+              ) : null}
+              {p.company ? (
+                <p className="mt-0.5 break-words text-xs leading-snug font-medium text-[color:var(--fd-text)]">
+                  {p.company}
+                </p>
+              ) : null}
               {p.expertise ? (
-                <p className="mt-0.5 truncate text-[11px] text-[color:var(--fd-muted)]">
+                <p className="mt-0.5 break-words text-[11px] leading-snug text-[color:var(--fd-muted)]">
                   {p.expertise}
                 </p>
               ) : null}
@@ -233,9 +281,9 @@ function PersonGrid({
           </>
         );
         const cls =
-          "flex items-center gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white p-3";
+          "flex items-start gap-3 rounded-xl border border-[color:var(--fd-border)] bg-white p-3 sm:p-3.5";
         return (
-          <li key={p.id}>
+          <li key={p.id} className="min-w-0">
             {p.href?.startsWith("http") ? (
               <a href={p.href} target="_blank" rel="noopener noreferrer" className={cls}>
                 {inner}
@@ -253,7 +301,7 @@ function PersonGrid({
       {Array.from({ length: placeholders }).map((_, i) => (
         <li
           key={`ph-${i}`}
-          className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--fd-border)] p-3 text-sm text-[color:var(--fd-muted)]"
+          className="flex min-w-0 items-center gap-3 rounded-xl border border-dashed border-[color:var(--fd-border)] p-3 text-sm text-[color:var(--fd-muted)]"
         >
           + {empty}
         </li>
@@ -373,8 +421,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       <div className="border-b border-[color:var(--fd-border)] bg-white">
         <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-[color:var(--fd-border)] sm:grid-cols-4">
           {statItems.map((s) => (
-            <div key={s.label} className="bg-white px-4 py-5 text-center sm:px-6">
-              <dt className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            <div key={s.label} className="bg-white px-3 py-5 text-center sm:px-6">
+              <dt className="break-words text-[11px] font-bold uppercase leading-snug tracking-wide text-[color:var(--fd-muted)]">
                 {s.label}
               </dt>
               <dd className="mt-1 text-2xl font-semibold tabular-nums text-[color:var(--fd-primary)]">
@@ -394,7 +442,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         title={about.title}
         subtitle={about.body}
       >
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-8">
           <div>
             <h3 className="text-sm font-semibold text-[color:var(--fd-text)]">
               {isFr ? "Mentors" : "Mentors"}
@@ -413,8 +461,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             </h3>
             <div className="mt-3">
               <PersonGrid
-                people={enrichJury(data.jury)}
+                people={enrichJury(data.jury, isFr)}
                 empty={isFr ? "Jury à annoncer" : "Jury TBA"}
+                slots={3}
               />
             </div>
           </div>
@@ -489,12 +538,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         eyebrow={isFr ? "Défis" : "Challenges"}
         title={isFr ? "Choisissez votre impact" : "Pick your impact"}
       >
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {challenges.map((c) => (
-            <li key={c.id}>
+            <li key={c.id} className="min-w-0">
               <Card className="h-full transition hover:border-[color:var(--fd-primary)]/30">
-                <CardTitle>{c.label}</CardTitle>
-                <CardDescription>{c.blurb}</CardDescription>
+                <CardTitle className="break-words">{c.label}</CardTitle>
+                <CardDescription className="break-words">{c.blurb}</CardDescription>
               </Card>
             </li>
           ))}
@@ -517,7 +566,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           {prizes.map((p) => {
             const isFirst = p.id === "first";
             return (
-              <li key={p.id}>
+              <li key={p.id} className="min-w-0">
                 <Card className={isFirst ? "ring-1 ring-[#d4a017]/40" : undefined}>
                   <div className="flex items-start gap-3">
                     <span
@@ -530,10 +579,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                       <PrizeIcon id={p.icon} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="mt-0">
+                      <CardTitle className="mt-0 break-words">
                         {isFr ? p.titleFr : p.titleEn}
                       </CardTitle>
-                      <CardDescription>{isFr ? p.bodyFr : p.bodyEn}</CardDescription>
+                      <CardDescription className="break-words">
+                        {isFr ? p.bodyFr : p.bodyEn}
+                      </CardDescription>
                     </div>
                   </div>
                 </Card>
@@ -586,7 +637,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#F7F7F7] p-2">
+            <span className="inline-flex h-16 w-full max-w-[11rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#F7F7F7] p-2 sm:w-44">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={PAWAPAY_PARTNER.logoUrl}
@@ -598,13 +649,13 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
                 {isFr ? PAWAPAY_PARTNER.roleFr : PAWAPAY_PARTNER.roleEn}
               </p>
-              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+              <p className="mt-1 break-words text-lg font-semibold text-[color:var(--fd-text)]">
                 {PAWAPAY_PARTNER.name}
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+              <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--fd-muted)]">
                 {isFr ? PAWAPAY_PARTNER.blurbFr : PAWAPAY_PARTNER.blurbEn}
               </p>
-              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+              <p className="mt-2 break-words text-xs font-semibold text-[color:var(--fd-primary)]">
                 pawapay.io · docs.pawapay.io
               </p>
             </div>
@@ -619,7 +670,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#12161D] p-2">
+            <span className="inline-flex h-16 w-full max-w-[11rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#12161D] p-2 sm:w-44">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={BINANCE_PARTNER.logoUrl}
@@ -631,13 +682,13 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
                 {isFr ? BINANCE_PARTNER.roleFr : BINANCE_PARTNER.roleEn}
               </p>
-              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+              <p className="mt-1 break-words text-lg font-semibold text-[color:var(--fd-text)]">
                 {BINANCE_PARTNER.name}
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+              <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--fd-muted)]">
                 {isFr ? BINANCE_PARTNER.blurbFr : BINANCE_PARTNER.blurbEn}
               </p>
-              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+              <p className="mt-2 break-words text-xs font-semibold text-[color:var(--fd-primary)]">
                 demo.binance.com · developers.binance.com
               </p>
             </div>
@@ -652,7 +703,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 w-44 shrink-0 overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#0B3D2E]">
+            <span className="inline-flex h-16 w-full max-w-[11rem] shrink-0 overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#0B3D2E] sm:w-44">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={ILOKWE_PARTNER.logoUrl}
@@ -661,19 +712,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+              <p className="break-words text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
                 {isFr ? ILOKWE_PARTNER.roleFr : ILOKWE_PARTNER.roleEn}
               </p>
-              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+              <p className="mt-1 break-words text-lg font-semibold text-[color:var(--fd-text)]">
                 {ILOKWE_PARTNER.name}
               </p>
-              <p className="mt-0.5 text-xs font-medium italic text-[color:var(--fd-muted)]">
+              <p className="mt-0.5 break-words text-xs font-medium italic text-[color:var(--fd-muted)]">
                 {isFr ? ILOKWE_PARTNER.sloganFr : ILOKWE_PARTNER.sloganEn}
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+              <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--fd-muted)]">
                 {isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn}
               </p>
-              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+              <p className="mt-2 break-words text-xs font-semibold text-[color:var(--fd-primary)]">
                 Facebook · Prix ILOKWE · Sponsor Or · Jury
               </p>
             </div>
@@ -683,7 +734,10 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         {(() => {
           const featuredIds = new Set(featuredPartners.map((p) => p.name.toLowerCase()));
           const existing = data.partnerLogos.filter(
-            (p) => !featuredIds.has(p.name.toLowerCase()) && !/pawapay|binance|ilokwe/i.test(p.name),
+            (p) =>
+              !featuredIds.has(p.name.toLowerCase()) &&
+              !/pawapay|binance|ilokwe|rdpi/i.test(p.name) &&
+              !/^mcbuleli$/i.test(p.name.trim()),
           );
           const logoSlots = Math.max(6, featuredPartners.length + existing.length);
           const logos = [
@@ -765,15 +819,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         })()}
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map((b) => (
-            <li key={b.id}>
+            <li key={b.id} className="min-w-0">
               <Card className="h-full">
                 <div className="flex items-start gap-3">
                   <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
                     <BenefitIcon id={b.icon} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="mt-0">{isFr ? b.titleFr : b.titleEn}</CardTitle>
-                    <CardDescription>{isFr ? b.bodyFr : b.bodyEn}</CardDescription>
+                    <CardTitle className="mt-0 break-words">
+                      {isFr ? b.titleFr : b.titleEn}
+                    </CardTitle>
+                    <CardDescription className="break-words">
+                      {isFr ? b.bodyFr : b.bodyEn}
+                    </CardDescription>
                   </div>
                 </div>
               </Card>
@@ -815,7 +873,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex h-20 min-w-[11rem] flex-col items-center justify-center gap-1 rounded-xl px-5 ${v.badgeClass}`}
+                    className={`flex min-h-20 min-w-[11rem] max-w-full flex-col items-center justify-center gap-1 rounded-xl px-4 py-2 sm:px-5 ${v.badgeClass}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -823,7 +881,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                       alt={s.name}
                       className="h-9 w-auto max-w-[140px] rounded-md object-cover"
                     />
-                    <span className="text-[10px] font-bold uppercase tracking-wide">
+                    <span className="max-w-[11rem] break-words text-center text-[10px] font-bold uppercase leading-snug tracking-wide">
                       {isFr ? s.roleFr : s.roleEn}
                     </span>
                   </a>

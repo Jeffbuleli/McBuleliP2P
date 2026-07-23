@@ -33,9 +33,12 @@ Atelier court sur **rentabilité agricole**, exécution terrain et chaîne de va
 
 Les équipes doivent proposer une solution capable de **moderniser la chaîne de production agricole** en RDC, en s'inspirant du modèle ILOKWE.
 
-## Réunion
+## Jury
 
-Réunion des partenaires à caler (brief atelier, jury, créneaux, visibilité).
+- **Mr Christian Ikwele** · ILOKWE GROUP
+- Titre : Jury · Agriculture & AgriBusiness
+- Photo : à recevoir (placeholder initial en attendant)
+- Config : `hackathonFeaturedJury()` dans `src/lib/hackathon/event-content.ts`
 
 ## Emails / scripts
 
