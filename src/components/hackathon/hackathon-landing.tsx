@@ -732,6 +732,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <CtaPrimary href="#partenaires-form">
             {isFr ? "Devenir partenaire" : "Become a partner"}
           </CtaPrimary>
+          <CtaSecondary href="/hackathon/ambassadeur">
+            {isFr ? "Devenir ambassadeur" : "Become an ambassador"}
+          </CtaSecondary>
         </div>
         <div id="partenaires-form" className="mt-8 scroll-mt-28">
           <Card className="p-5 sm:p-8">

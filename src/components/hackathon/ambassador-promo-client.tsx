@@ -32,6 +32,7 @@ export function AmbassadorPromoClient({
   const [err, setErr] = useState<string | null>(null);
   const [existing, setExisting] = useState<ExistingPromo | null>(null);
   const [loadingExisting, setLoadingExisting] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const discounted = Math.round(
     (Number(HACKATHON_PRICE_USD) * (100 - AMBASSADOR_DISCOUNT_PERCENT)) / 100,
@@ -93,31 +94,67 @@ export function AmbassadorPromoClient({
     }
   }
 
+  async function copyShare() {
+    if (!existing?.shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(existing.shareUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (loadingExisting) {
     return (
-      <p className="text-sm text-[#5c6b60]">Chargement…</p>
+      <div className="rounded-2xl bg-white px-5 py-10 text-center shadow-sm ring-1 ring-black/[0.04]">
+        <p className="text-sm text-[#5c6b60]">Chargement…</p>
+      </div>
     );
   }
 
   if (existing) {
     return (
       <div className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04]">
-        <p className="text-sm text-[#5c6b60]">
-          Tu as déjà un code ambassadeur actif.
-        </p>
-        <p className="text-2xl font-black tracking-tight text-[#1A1A1A]">
-          {existing.code}
-        </p>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+            Code actif
+          </p>
+          <p className="mt-2 font-mono text-3xl font-black tracking-[0.08em] text-[#1A1A1A]">
+            {existing.code}
+          </p>
+          <p className="mt-2 text-sm text-[#5c6b60]">
+            Tu as déjà un code ambassadeur. Partage ton lien et suis les
+            confirmations.
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-[#EAF6EE] px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#1F6B43]">
+            Lien à partager
+          </p>
+          <p className="mt-1 break-all text-sm font-semibold text-[#1F6B43]">
+            {existing.shareUrl}
+          </p>
+          <button
+            type="button"
+            onClick={() => void copyShare()}
+            className="mt-3 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
+          >
+            {copied ? "Copié" : "Copier le lien"}
+          </button>
+        </div>
+
         <div className="flex flex-wrap gap-3">
           <a
             href={`/hackathon/promo/dashboard/${encodeURIComponent(existing.dashboardToken)}`}
-            className="inline-flex rounded-xl bg-[#1F6B43] px-4 py-3 text-sm font-bold text-white"
+            className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#1F6B43] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#185535]"
           >
             Ouvrir mon dashboard
           </a>
           <a
             href={existing.shareUrl}
-            className="inline-flex rounded-xl bg-[#F3F4F1] px-4 py-3 text-sm font-bold text-[#1A1A1A]"
+            className="inline-flex items-center justify-center rounded-xl bg-[#F3F4F1] px-4 py-3 text-sm font-bold text-[#1A1A1A] transition hover:bg-[#E8E9E4]"
           >
             Voir mon lien
           </a>
@@ -140,8 +177,8 @@ export function AmbassadorPromoClient({
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={80}
           required
-          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 text-sm font-medium text-[#1A1A1A] outline-none focus:border-[#1F6B43]"
-          placeholder="Ex. Jean Kabila"
+          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 text-sm font-medium text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
+          placeholder="Ex. Jeff Buleli"
         />
       </div>
       <div>
@@ -156,8 +193,8 @@ export function AmbassadorPromoClient({
           minLength={4}
           maxLength={16}
           required
-          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 font-mono text-sm font-bold tracking-wider text-[#1A1A1A] outline-none focus:border-[#1F6B43]"
-          placeholder="Ex. JEAN10"
+          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 font-mono text-sm font-bold tracking-wider text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
+          placeholder="Ex. JEFF243"
           autoCapitalize="characters"
         />
         <p className="mt-1.5 text-xs text-[#6B6B6B]">
@@ -165,16 +202,14 @@ export function AmbassadorPromoClient({
         </p>
       </div>
 
-      <div className="rounded-xl bg-[#EAF6EE] px-4 py-3 text-sm text-[#1F6B43]">
+      <div className="rounded-xl bg-[#EAF6EE] px-4 py-3.5 text-sm text-[#1F6B43]">
         <p className="font-bold">
           -{AMBASSADOR_DISCOUNT_PERCENT}% pour tes inscrits ({discounted} USD)
         </p>
         <p className="mt-1">
           +{AMBASSADOR_CASHBACK_USD} USD cashback par paiement confirmé
         </p>
-        <p className="mt-1 text-[#5c6b60]">
-          Compte : {initialEmail}
-        </p>
+        <p className="mt-2 text-xs text-[#5c6b60]">Compte : {initialEmail}</p>
       </div>
 
       {err ? (
@@ -186,7 +221,7 @@ export function AmbassadorPromoClient({
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-[#1F6B43] px-4 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+        className="w-full rounded-xl bg-[#1F6B43] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#185535] disabled:opacity-60"
       >
         {busy ? "Création…" : "Créer mon code"}
       </button>

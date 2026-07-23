@@ -479,7 +479,10 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 Pour voir les inscrits et retirer le cashback, validez l&apos;accès
                 avec le code envoyé à{" "}
                 <span className="font-bold text-[#1A1A1A]">
-                  {auth.partnerEmailMasked ?? "votre email partenaire"}
+                  {auth.partnerEmailMasked ??
+                    (isAmbassador
+                      ? "votre email"
+                      : "votre email partenaire")}
                 </span>
                 .
               </p>
@@ -854,7 +857,9 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       colSpan={5}
                       className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
                     >
-                      Aucun inscrit pour le moment. Partagez votre lien.
+                      {isAmbassador
+                        ? "Aucun inscrit pour le moment. Partage ton lien ambassadeur."
+                        : "Aucun inscrit pour le moment. Partagez votre lien."}
                     </td>
                   </tr>
                 ) : (

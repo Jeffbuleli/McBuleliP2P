@@ -4,6 +4,9 @@ import {
   createAmbassadorPromo,
   getAmbassadorPromoForUser,
 } from "@/lib/hackathon/ambassador";
+import { buildAmbassadorPromoConfirmEmail } from "@/lib/email/partnership/ambassador-promo-confirm-email";
+import { sendEmail } from "@/lib/email/send";
+import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { getSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +60,37 @@ export async function POST(req: Request) {
     if (!out.ok) {
       return NextResponse.json({ error: out.error }, { status: out.status });
     }
-    return NextResponse.json({ ok: true, promo: out.promo });
+
+    if (out.created) {
+      try {
+        const mail = buildAmbassadorPromoConfirmEmail({
+          displayName: out.promo.partnerName || out.promo.orgName,
+          email: out.promo.partnerEmail,
+          code: out.promo.code,
+          discountPercent: out.promo.discountPercent,
+          cashbackUsd: out.promo.cashbackUsd,
+          priceUsd: out.promo.priceUsd,
+          shareUrl: out.promo.shareUrl,
+          dashboardUrl: out.promo.dashboardUrl,
+        });
+        void sendEmail({
+          to: out.promo.partnerEmail,
+          subject: mail.subject,
+          html: mail.html,
+          text: mail.text,
+          from: `McBuleli <${SUPPORT_EMAIL}>`,
+          replyTo: SUPPORT_EMAIL,
+        });
+      } catch (e) {
+        console.warn("[hackathon/ambassador] confirm email failed", e);
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      created: out.created,
+      promo: out.promo,
+    });
   } catch (e) {
     console.error("[hackathon/ambassador POST]", e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });

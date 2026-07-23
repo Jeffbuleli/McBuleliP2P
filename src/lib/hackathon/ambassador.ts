@@ -82,6 +82,7 @@ export async function createAmbassadorPromo(args: {
 }): Promise<
   | {
       ok: true;
+      created: boolean;
       promo: ResolvedPromo & {
         kind: "ambassador";
         shareUrl: string;
@@ -115,7 +116,7 @@ export async function createAmbassadorPromo(args: {
     editionId,
   });
   if (existing) {
-    return { ok: true, promo: existing };
+    return { ok: true, created: false, promo: existing };
   }
 
   const db = getDb();
@@ -153,6 +154,7 @@ export async function createAmbassadorPromo(args: {
 
     return {
       ok: true,
+      created: true,
       promo: {
         id: created.id,
         editionId: created.editionId,
@@ -176,7 +178,7 @@ export async function createAmbassadorPromo(args: {
         userId: args.userId,
         editionId,
       });
-      if (again) return { ok: true, promo: again };
+      if (again) return { ok: true, created: false, promo: again };
     }
     if (msg.includes("hackathon_promo_codes_edition_code_uidx")) {
       return { ok: false, error: "code_taken", status: 409 };

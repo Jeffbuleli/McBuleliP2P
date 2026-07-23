@@ -111,6 +111,9 @@ export async function requestPromoDashOtp(dashboardToken: string): Promise<
     return { ok: false, error: "not_found", status: 404 };
   }
 
+  const isAmbassador = (promo.kind ?? "partner") === "ambassador";
+  const label = isAmbassador ? "ambassadeur" : "partenaire";
+
   const code = String(randomInt(100000, 999999));
   const db = getDb();
   await db
@@ -125,7 +128,7 @@ export async function requestPromoDashOtp(dashboardToken: string): Promise<
   const html = `<!DOCTYPE html><html lang="fr"><body style="font-family:Arial,sans-serif;background:#f3f4f1;padding:24px;">
   <table style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;border:1px solid #d6d3d1;padding:24px;">
     <tr><td style="text-align:center;"><img src="${logoUrl()}" width="48" height="48" alt="McBuleli" style="border-radius:12px;" /></td></tr>
-    <tr><td style="padding-top:16px;font-size:15px;color:#0c0a09;">Code de vérification dashboard partenaire <strong>${promo.code}</strong></td></tr>
+    <tr><td style="padding-top:16px;font-size:15px;color:#0c0a09;">Code de vérification dashboard ${label} <strong>${promo.code}</strong></td></tr>
     <tr><td style="padding:18px 0;text-align:center;font-size:28px;font-weight:800;letter-spacing:0.2em;color:${EMAIL_BRAND.primary};">${code}</td></tr>
     <tr><td style="font-size:13px;color:#57534e;">Valable 15 minutes. Seul ${promo.partnerEmail} peut réclamer le cashback.</td></tr>
     <tr><td style="padding-top:16px;font-size:12px;color:#57534e;">${SUPPORT_EMAIL}</td></tr>
@@ -135,7 +138,7 @@ export async function requestPromoDashOtp(dashboardToken: string): Promise<
     to: promo.partnerEmail,
     subject: `Code dashboard ${promo.code} - McBuleli Hackathon`,
     html,
-    text: `Code ${code} pour le dashboard partenaire ${promo.code}. Valable 15 minutes.`,
+    text: `Code ${code} pour le dashboard ${label} ${promo.code}. Valable 15 minutes.`,
     from: `McBuleli <${SUPPORT_EMAIL}>`,
     replyTo: SUPPORT_EMAIL,
   });
