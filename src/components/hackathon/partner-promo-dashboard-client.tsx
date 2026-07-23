@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
@@ -9,10 +9,23 @@ import {
   SUPPORT_X,
 } from "@/lib/support-contact";
 import type { PartnerDashboardStats } from "@/lib/hackathon/promo-types";
+import { FiatStepper } from "@/components/wallet/fiat-stepper";
+import { FiatProviderPicker } from "@/components/wallet/fiat-provider-picker";
+import {
+  COD_MOBILE_FALLBACK,
+  detectCodMobileMethodFromPhone,
+  filterCodMobileProviders,
+} from "@/lib/cod-mobile-providers";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
 
 type Props = {
   token: string;
 };
+
+type ProviderOption = { provider: string; label: string };
 
 function statusLabel(status: string, confirmed: boolean): string {
   if (confirmed) return "Confirmé";
@@ -28,10 +41,11 @@ function statusLabel(status: string, confirmed: boolean): string {
 }
 
 function claimStatusLabel(status: string): string {
-  if (status === "requested") return "Demandé";
+  if (status === "requested") return "En cours (Mobile Money)";
   if (status === "approved") return "Approuvé";
   if (status === "paid") return "Payé";
   if (status === "rejected") return "Rejeté";
+  if (status === "failed") return "Échoué";
   return status;
 }
 
@@ -61,6 +75,12 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   const [authMsg, setAuthMsg] = useState<string | null>(null);
   const [claimBusy, setClaimBusy] = useState(false);
   const [claimMsg, setClaimMsg] = useState<string | null>(null);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawStep, setWithdrawStep] = useState(0);
+  const [amountUsd, setAmountUsd] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [provider, setProvider] = useState("");
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -94,6 +114,53 @@ export function PartnerPromoDashboardClient({ token }: Props) {
     }, 12_000);
     return () => window.clearInterval(id);
   }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadProviders() {
+      try {
+        const res = await fetch("/api/config/mobile-money/providers");
+        const json = (await res.json().catch(() => ({}))) as {
+          providers?: ProviderOption[];
+        };
+        const raw = (json.providers ?? []).map((p) => ({
+          provider: p.provider,
+          label: p.label,
+        }));
+        const use =
+          filterCodMobileProviders(raw).length > 0
+            ? filterCodMobileProviders(raw)
+            : COD_MOBILE_FALLBACK.map((p) => ({
+                provider: p.provider,
+                label: p.label,
+              }));
+        if (!cancelled) {
+          setProviders(use);
+          if (use[0]) setProvider((prev) => prev || use[0].provider);
+        }
+      } catch {
+        if (!cancelled) {
+          const fallback = COD_MOBILE_FALLBACK.map((p) => ({
+            provider: p.provider,
+            label: p.label,
+          }));
+          setProviders(fallback);
+          if (fallback[0]) setProvider((prev) => prev || fallback[0].provider);
+        }
+      }
+    }
+    void loadProviders();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const detected = detectCodMobileMethodFromPhone(phoneNumber);
+    if (detected && providers.some((p) => p.provider === detected)) {
+      setProvider(detected);
+    }
+  }, [phoneNumber, providers]);
 
   async function requestOtp() {
     setAuthBusy(true);
@@ -166,13 +233,38 @@ export function PartnerPromoDashboardClient({ token }: Props) {
     }
   }
 
-  async function requestClaim() {
+  function openWithdraw() {
+    const max = data?.cashback.claimableUsd ?? 0;
+    setAmountUsd(max > 0 ? String(max) : "");
+    setWithdrawStep(0);
+    setClaimMsg(null);
+    setWithdrawOpen(true);
+  }
+
+  function closeWithdraw() {
+    setWithdrawOpen(false);
+    setWithdrawStep(0);
+    setClaimMsg(null);
+  }
+
+  async function submitWithdraw() {
     setClaimBusy(true);
     setClaimMsg(null);
     try {
+      const phone = normalizeCodPhoneNumber(phoneNumber);
       const res = await fetch(
         `/api/hackathon/promo/dashboard/${encodeURIComponent(token)}/claim`,
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amountUsd: Number(amountUsd),
+            phoneNumber: phone,
+            provider,
+            providerLabel:
+              providers.find((p) => p.provider === provider)?.label ?? provider,
+          }),
+        },
       );
       const json = (await res.json().catch(() => null)) as {
         amountUsd?: number;
@@ -184,15 +276,24 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           nothing_to_claim: "Rien à réclamer pour le moment.",
           claim_pending: "Une demande est déjà en cours.",
           email_mismatch: "Email non autorisé pour ce code.",
+          invalid_phone: "Numéro Mobile Money invalide (243...).",
+          invalid_amount: "Montant invalide (minimum 1 USD).",
+          amount_exceeds_claimable: "Montant supérieur au cashback disponible.",
+          momo_unavailable: "Mobile Money temporairement indisponible.",
+          payout_rejected: "Paiement Mobile Money refusé. Réessayez.",
+          payout_failed: "Échec d'envoi Mobile Money. Réessayez.",
+          invalid_body: "Vérifiez le montant, le numéro et le réseau.",
         };
-        setClaimMsg(map[json?.error ?? ""] ?? "Demande impossible.");
+        setClaimMsg(map[json?.error ?? ""] ?? "Retrait impossible.");
         return;
       }
       setClaimMsg(
         json?.amountUsd != null
-          ? `Demande envoyée : ${json.amountUsd} USD. Paiement hors plateforme après validation McBuleli.`
-          : "Demande envoyée.",
+          ? `Retrait de ${json.amountUsd} USD lancé vers votre Mobile Money. Vous recevrez bientôt la notification.`
+          : "Retrait Mobile Money lancé.",
       );
+      setWithdrawOpen(false);
+      setWithdrawStep(0);
       await load();
     } catch {
       setClaimMsg("Erreur réseau.");
@@ -200,6 +301,15 @@ export function PartnerPromoDashboardClient({ token }: Props) {
       setClaimBusy(false);
     }
   }
+
+  const withdrawSteps = useMemo(
+    () => [
+      { id: "amount", label: "Montant" },
+      { id: "network", label: "Réseau" },
+      { id: "confirm", label: "Confirmer" },
+    ],
+    [],
+  );
 
   if (loading && !data) {
     return (
@@ -229,6 +339,18 @@ export function PartnerPromoDashboardClient({ token }: Props) {
     Math.round((totals.confirmed / rewards.freeSeatsThreshold) * 100),
   );
   const pendingClaim = cashback.claims.some((c) => c.status === "requested");
+  const claimable = cashback.claimableUsd;
+  const amountNum = Number(amountUsd);
+  const amountOk =
+    Number.isFinite(amountNum) && amountNum >= 1 && amountNum <= claimable + 0.001;
+  const phoneOk = isValidCodMsisdn(normalizeCodPhoneNumber(phoneNumber));
+  const providerLabel =
+    providers.find((p) => p.provider === provider)?.label ?? provider;
+
+  const amountPresets = [0.25, 0.5, 0.75, 1].map((ratio) => ({
+    label: ratio === 1 ? "Max" : `${Math.round(ratio * 100)}%`,
+    value: Math.round(claimable * ratio * 100) / 100,
+  }));
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
@@ -409,22 +531,170 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 Cashback à réclamer
               </p>
               <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
-                {cashback.claimableUsd} USD
+                {claimable} USD
               </p>
               <p className="mt-2 text-xs text-[#57534e]">
-                Cumulé confirmé : {totals.cashbackUsd} USD. Paiement Mobile Money /
-                bank hors plateforme après validation McBuleli.
+                Cumulé confirmé : {totals.cashbackUsd} USD. Retrait via Mobile Money
+                (Airtel / Orange / M-Pesa).
               </p>
-              <button
-                type="button"
-                disabled={
-                  claimBusy || cashback.claimableUsd <= 0 || pendingClaim
-                }
-                onClick={() => void requestClaim()}
-                className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
-              >
-                Demander le cashback
-              </button>
+
+              {!withdrawOpen ? (
+                <button
+                  type="button"
+                  disabled={claimBusy || claimable <= 0 || pendingClaim}
+                  onClick={openWithdraw}
+                  className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                >
+                  Demander le cashback
+                </button>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-[#E5E5E0] bg-white px-4 py-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-extrabold text-[#222222]">
+                      Retrait Mobile Money
+                    </p>
+                    <button
+                      type="button"
+                      onClick={closeWithdraw}
+                      className="text-xs font-bold text-[#8A8A8A] underline"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+
+                  <div className="mt-3">
+                    <FiatStepper steps={withdrawSteps} current={withdrawStep} />
+                  </div>
+
+                  {withdrawStep === 0 ? (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-[#57534e]">
+                        Montant (USD)
+                        <input
+                          inputMode="decimal"
+                          value={amountUsd}
+                          onChange={(e) =>
+                            setAmountUsd(
+                              e.target.value.replace(/[^\d.]/g, ""),
+                            )
+                          }
+                          className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2.5 text-lg font-black tabular-nums text-[#222222]"
+                          placeholder="0.00"
+                        />
+                      </label>
+                      <p className="text-[11px] text-[#8A8A8A]">
+                        Disponible : {claimable} USD (min. 1 USD)
+                      </p>
+                      {claimable > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {amountPresets.map((p) => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              disabled={p.value < 1}
+                              onClick={() => setAmountUsd(String(p.value))}
+                              className="rounded-full border border-[#E5E5E0] bg-[#F3F4F1] px-2.5 py-1 text-[11px] font-bold text-[#222222] disabled:opacity-40"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={!amountOk}
+                        onClick={() => setWithdrawStep(1)}
+                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                      >
+                        Continuer
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {withdrawStep === 1 ? (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-[#57534e]">
+                        Numéro Mobile Money
+                        <input
+                          inputMode="tel"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          onBlur={() => {
+                            const n = normalizeCodPhoneNumber(phoneNumber);
+                            if (n) setPhoneNumber(n);
+                          }}
+                          className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2.5 font-mono text-sm text-[#222222]"
+                          placeholder="2438XXXXXXXX"
+                        />
+                      </label>
+                      <div>
+                        <p className="mb-2 text-xs font-bold text-[#57534e]">
+                          Réseau
+                        </p>
+                        <FiatProviderPicker
+                          providers={providers}
+                          value={provider}
+                          onChange={setProvider}
+                          disabled={claimBusy}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setWithdrawStep(0)}
+                          className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-extrabold text-[#57534e]"
+                        >
+                          Retour
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!phoneOk || !provider}
+                          onClick={() => setWithdrawStep(2)}
+                          className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                        >
+                          Continuer
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {withdrawStep === 2 ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl bg-[#F3F4F1] px-3 py-3 text-sm">
+                        <p className="font-bold text-[#222222]">
+                          {amountNum} USD → {providerLabel}
+                        </p>
+                        <p className="mt-1 font-mono text-xs text-[#57534e]">
+                          {normalizeCodPhoneNumber(phoneNumber)}
+                        </p>
+                        <p className="mt-2 text-xs text-[#8A8A8A]">
+                          Le montant sera envoyé directement sur ce numéro via
+                          Mobile Money.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setWithdrawStep(1)}
+                          disabled={claimBusy}
+                          className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-extrabold text-[#57534e] disabled:opacity-50"
+                        >
+                          Retour
+                        </button>
+                        <button
+                          type="button"
+                          disabled={claimBusy || !amountOk || !phoneOk}
+                          onClick={() => void submitWithdraw()}
+                          className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                        >
+                          {claimBusy ? "Envoi..." : "Confirmer le retrait"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
               {claimMsg ? (
                 <p className="mt-2 text-xs font-semibold text-[#57534e]">
                   {claimMsg}
@@ -439,6 +709,8 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                     >
                       <span className="font-bold text-[#222222]">
                         {c.amountUsd} USD - {claimStatusLabel(c.status)}
+                        {c.providerLabel ? ` · ${c.providerLabel}` : ""}
+                        {c.phoneNumber ? ` · ${c.phoneNumber}` : ""}
                       </span>
                       <span className="text-[#8A8A8A]">
                         {new Date(c.requestedAt).toLocaleDateString("fr-CD")}

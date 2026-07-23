@@ -23,6 +23,9 @@ type PromoClaim = {
   id: string;
   amountUsd: number;
   status: string;
+  phoneNumber?: string | null;
+  providerLabel?: string | null;
+  payoutStatus?: string | null;
   requestedAt: string;
   resolvedAt: string | null;
   note: string | null;
@@ -754,7 +757,10 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
                       >
                         <span>
                           <span className="font-semibold">{c.amountUsd} USD</span>{" "}
-                          · {c.status} ·{" "}
+                          · {c.status}
+                          {c.payoutStatus ? ` / ${c.payoutStatus}` : ""}
+                          {c.phoneNumber ? ` · ${c.phoneNumber}` : ""}
+                          {c.providerLabel ? ` · ${c.providerLabel}` : ""} ·{" "}
                           {new Date(c.requestedAt).toLocaleString("fr-FR")}
                           {c.note ? ` · ${c.note}` : ""}
                         </span>

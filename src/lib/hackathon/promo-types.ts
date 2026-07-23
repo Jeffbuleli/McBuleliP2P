@@ -51,6 +51,9 @@ export type PartnerDashboardStats = {
       id: string;
       amountUsd: number;
       status: string;
+      phoneNumber: string | null;
+      providerLabel: string | null;
+      payoutStatus: string | null;
       requestedAt: string;
       resolvedAt: string | null;
       note: string | null;

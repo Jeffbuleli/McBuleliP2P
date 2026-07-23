@@ -4273,8 +4273,15 @@ export const hackathonPromoCashbackClaims = pgTable(
       .notNull()
       .references(() => hackathonPromoCodes.id, { onDelete: "cascade" }),
     amountUsd: numeric("amount_usd", { precision: 12, scale: 2 }).notNull(),
-    /** requested | approved | paid | rejected */
+    /** requested | approved | paid | rejected | failed */
     status: varchar("status", { length: 16 }).notNull().default("requested"),
+    phoneNumber: varchar("phone_number", { length: 32 }),
+    provider: varchar("provider", { length: 64 }),
+    providerLabel: varchar("provider_label", { length: 120 }),
+    /** PawaPay payoutId */
+    payoutReference: varchar("payout_reference", { length: 64 }),
+    /** PROCESSING | COMPLETED | FAILED */
+    payoutStatus: varchar("payout_status", { length: 24 }),
     requestedAt: timestamp("requested_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

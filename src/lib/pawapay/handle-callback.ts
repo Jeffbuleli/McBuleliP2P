@@ -351,6 +351,24 @@ async function handlePayoutCallback(
     // best-effort
   }
 
+  try {
+    const { applyPromoCashbackPayoutCallback } = await import(
+      "@/lib/hackathon/promo-claims"
+    );
+    await applyPromoCashbackPayoutCallback({
+      payoutReference: args.reference,
+      status:
+        args.status === "COMPLETED"
+          ? "COMPLETED"
+          : args.status === "FAILED"
+            ? "FAILED"
+            : "PROCESSING",
+      failureMessage: args.failureMessage,
+    });
+  } catch {
+    // best-effort — claim may not exist for this payout id
+  }
+
   if (args.status === "FAILED" && tx?.batchId && userId && UUID_RE.test(userId)) {
     const pocket = args.currency === "USD" ? "USD" : "CDF";
     const batchId = tx.batchId;
