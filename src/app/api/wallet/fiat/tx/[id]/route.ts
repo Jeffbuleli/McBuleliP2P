@@ -7,20 +7,32 @@ import { hasFreshpayCardKeys, hasPawapayKeys } from "@/lib/env";
 import { refreshFiatTxFromProvider } from "@/lib/freshpay/reconcile-tx";
 import { sanitizeFiatTxForUser } from "@/lib/fiat-api-errors";
 
+export const dynamic = "force-dynamic";
+
 const paramsZ = z.object({
   id: z.string().uuid(),
 });
 
+const noStoreHeaders = {
+  "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+};
+
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: noStoreHeaders },
+    );
   }
 
   const params = await ctx.params;
   const parsed = paramsZ.safeParse(params);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid id" },
+      { status: 400, headers: noStoreHeaders },
+    );
   }
 
   const url = new URL(req.url);
@@ -33,7 +45,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     .where(eq(fiatFreshpayTransactions.reference, parsed.data.id));
 
   if (!tx || tx.userId !== userId) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Not found" },
+      { status: 404, headers: noStoreHeaders },
+    );
   }
 
   const isCard = tx.provider === "card" || tx.meta?.rail === "card";
@@ -49,8 +64,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     }
   }
 
-  return NextResponse.json({
-    ok: true,
-    tx: sanitizeFiatTxForUser(tx),
-  });
+  return NextResponse.json(
+    {
+      ok: true,
+      tx: sanitizeFiatTxForUser(tx),
+    },
+    { headers: noStoreHeaders },
+  );
 }

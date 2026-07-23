@@ -8,6 +8,7 @@ import type {
   PawapayFinalStatus,
   PawapayInitResponse,
   PawapayNormalizedCallback,
+  PawapayStatusLookupResponse,
   PawapayStatusResponse,
 } from "@/lib/pawapay/types";
 import {
@@ -46,6 +47,44 @@ export function mapPawapayStatus(status: string | undefined): "COMPLETED" | "FAI
   if (s === "COMPLETED") return "COMPLETED";
   if (s === "FAILED" || s === "REJECTED") return "FAILED";
   return "PROCESSING";
+}
+
+/**
+ * v2 GET /deposits|payouts/:id returns `{ status: "FOUND", data: { status: "COMPLETED", ... } }`.
+ * Callbacks and some responses are flat payment objects. Always normalize to the payment body.
+ */
+export function unwrapPawapayStatusLookup(
+  remote: PawapayStatusLookupResponse | PawapayStatusResponse | null | undefined,
+): PawapayStatusResponse | null {
+  if (!remote || typeof remote !== "object") return null;
+  const top = remote as PawapayStatusLookupResponse;
+  const topStatus = String(top.status ?? "").toUpperCase();
+
+  if (topStatus === "NOT_FOUND") return null;
+
+  if (topStatus === "FOUND") {
+    if (top.data && typeof top.data === "object") return top.data;
+    return null;
+  }
+
+  // Flat payment / callback shape (status is COMPLETED|FAILED|…).
+  if (
+    topStatus === "COMPLETED" ||
+    topStatus === "FAILED" ||
+    topStatus === "REJECTED" ||
+    topStatus === "ACCEPTED" ||
+    topStatus === "SUBMITTED" ||
+    topStatus === "ENQUEUED" ||
+    topStatus === "PROCESSING" ||
+    topStatus === "DUPLICATE_IGNORED" ||
+    Boolean(top.depositId) ||
+    Boolean(top.payoutId)
+  ) {
+    return remote as PawapayStatusResponse;
+  }
+
+  if (top.data && typeof top.data === "object") return top.data;
+  return remote as PawapayStatusResponse;
 }
 
 async function pawapayFetch<T>(
@@ -143,17 +182,27 @@ export async function pawapayPayOut(args: PawapayPayOutArgs): Promise<{
   return { accepted: isPawapayInitAccepted(response.status), response };
 }
 
-export async function pawapayCheckDeposit(depositId: string): Promise<PawapayStatusResponse | null> {
+export async function pawapayCheckDeposit(
+  depositId: string,
+): Promise<PawapayStatusLookupResponse | PawapayStatusResponse | null> {
   try {
-    return await pawapayFetch<PawapayStatusResponse>("GET", `/v2/deposits/${depositId}`);
+    return await pawapayFetch<PawapayStatusLookupResponse | PawapayStatusResponse>(
+      "GET",
+      `/v2/deposits/${depositId}`,
+    );
   } catch {
     return null;
   }
 }
 
-export async function pawapayCheckPayout(payoutId: string): Promise<PawapayStatusResponse | null> {
+export async function pawapayCheckPayout(
+  payoutId: string,
+): Promise<PawapayStatusLookupResponse | PawapayStatusResponse | null> {
   try {
-    return await pawapayFetch<PawapayStatusResponse>("GET", `/v2/payouts/${payoutId}`);
+    return await pawapayFetch<PawapayStatusLookupResponse | PawapayStatusResponse>(
+      "GET",
+      `/v2/payouts/${payoutId}`,
+    );
   } catch {
     return null;
   }
@@ -176,19 +225,35 @@ function failureFromUnknown(raw: Record<string, unknown>): {
 
 export function normalizePawapayStatusPayload(
   kind: "deposit" | "payout",
-  remote: PawapayStatusResponse,
+  remote: PawapayStatusLookupResponse | PawapayStatusResponse,
   fallback: { reference: string; currency: string; amount: string },
 ): PawapayNormalizedCallback {
+  const payment = unwrapPawapayStatusLookup(remote);
+  if (!payment) {
+    return {
+      kind,
+      reference: fallback.reference,
+      status: "PROCESSING",
+      currency: fallback.currency.toUpperCase(),
+      amount: fallback.amount,
+      providerTxId: null,
+      failureCode: null,
+      failureMessage: null,
+      rawBody: JSON.stringify(remote),
+    };
+  }
+
   const reference =
-    (kind === "deposit" ? remote.depositId : remote.payoutId)?.trim() || fallback.reference;
-  const fail = failureFromUnknown(remote as unknown as Record<string, unknown>);
+    (kind === "deposit" ? payment.depositId : payment.payoutId)?.trim() ||
+    fallback.reference;
+  const fail = failureFromUnknown(payment as unknown as Record<string, unknown>);
   return {
     kind,
     reference,
-    status: mapPawapayStatus(remote.status as PawapayFinalStatus),
-    currency: String(remote.currency ?? fallback.currency).toUpperCase(),
-    amount: String(remote.amount ?? fallback.amount),
-    providerTxId: remote.providerTransactionId?.trim() || null,
+    status: mapPawapayStatus(payment.status as PawapayFinalStatus),
+    currency: String(payment.currency ?? fallback.currency).toUpperCase(),
+    amount: String(payment.amount ?? fallback.amount),
+    providerTxId: payment.providerTransactionId?.trim() || null,
     failureCode: fail.failureCode,
     failureMessage: fail.failureMessage,
     rawBody: JSON.stringify(remote),

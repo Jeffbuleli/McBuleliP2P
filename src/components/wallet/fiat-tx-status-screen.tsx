@@ -72,14 +72,17 @@ export function FiatTxStatusScreen({
   }, [tx, rail, locale]);
 
   const fetchOnce = useCallback(
-    async (refresh: boolean) => {
+    async (refresh: boolean): Promise<FiatTxStatus["status"] | null> => {
       const url = `/api/wallet/fiat/tx/${encodeURIComponent(txId)}${refresh ? "?refresh=1" : ""}`;
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
         setErr(typeof data?.error === "string" ? data.error : "wallet_fiat_withdraw_failed");
         setPolling(false);
-        return;
+        return null;
       }
       const next = data.tx as FiatTxStatus;
       setTx(next);
@@ -87,6 +90,7 @@ export function FiatTxStatusScreen({
       if (next.status === "COMPLETED" || next.status === "FAILED") {
         setPolling(false);
       }
+      return next.status;
     },
     [txId],
   );
@@ -98,11 +102,11 @@ export function FiatTxStatusScreen({
 
     async function loop() {
       if (cancelled) return;
-      await fetchOnce(true);
+      const status = await fetchOnce(true);
       if (cancelled) return;
+      if (!status || status === "COMPLETED" || status === "FAILED") return;
       ticks += 1;
-      const fast = cardReturn || tx?.provider === "card" || tx?.meta?.rail === "card";
-      const delay = fast && ticks < 30 ? 1000 : 3000;
+      const delay = cardReturn && ticks < 30 ? 1000 : 3000;
       timer = setTimeout(loop, delay);
     }
 
@@ -111,7 +115,7 @@ export function FiatTxStatusScreen({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [fetchOnce, cardReturn, tx?.provider, tx?.meta?.rail]);
+  }, [fetchOnce, cardReturn]);
 
   const pill =
     tx?.status === "COMPLETED"
