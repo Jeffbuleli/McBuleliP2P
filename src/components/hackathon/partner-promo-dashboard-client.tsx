@@ -8,6 +8,8 @@ import {
   SUPPORT_WA_PATH,
   SUPPORT_X,
 } from "@/lib/support-contact";
+import { useI18n } from "@/components/i18n-provider";
+import { promoDashCopy } from "@/lib/hackathon/ambassador-ui-copy";
 import type { PartnerDashboardStats } from "@/lib/hackathon/promo-types";
 import { PROMO_CASHBACK_CLAIM_MIN_USD } from "@/lib/hackathon/promo-types";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
@@ -80,6 +82,8 @@ function IconCopy({ className }: { className?: string }) {
 }
 
 export function PartnerPromoDashboardClient({ token }: Props) {
+  const { locale } = useI18n();
+  const ui = promoDashCopy(locale === "fr" ? "fr" : "en");
   const [data, setData] = useState<PartnerDashboardStats | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -408,7 +412,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
-              {isAmbassador ? "Ambassadeur Hackathon" : "Partenaire Hackathon"}
+              {isAmbassador ? ui.ambEyebrow : ui.partnerEyebrow}
             </p>
             <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
               {promo.orgName}
@@ -424,7 +428,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
               </span>
               <span className="text-xs font-semibold text-[#6B6B6B]">
                 -{promo.discountPercent}% · cashback {promo.cashbackPerPaidUsd}{" "}
-                USD / payé
+                {ui.perPaid}
               </span>
             </div>
           </div>
@@ -443,7 +447,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
-                Lien à partager
+                {ui.shareStrip}
               </p>
               <p className="mt-0.5 truncate text-sm font-semibold text-[#1F6B43]">
                 {promo.shareUrl}
@@ -452,14 +456,17 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             <button
               type="button"
               onClick={() => void copyShare()}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
             >
               <IconCopy className="h-3.5 w-3.5" />
-              {copied ? "Copié" : "Copier"}
+              {copied ? ui.copied : ui.copy}
             </button>
           </div>
           <p className="mt-2 text-[10px] text-[#8A8A8A]">
-            Mise à jour {new Date(data.updatedAt).toLocaleTimeString("fr-CD")}
+            {ui.updated}{" "}
+            {new Date(data.updatedAt).toLocaleTimeString(
+              locale === "fr" ? "fr-CD" : "en-GB",
+            )}
           </p>
         </section>
 
@@ -473,16 +480,13 @@ export function PartnerPromoDashboardClient({ token }: Props) {
               className="overflow-hidden rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-[#1F6B43]/15"
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-                Vérification email
+                {ui.authTitle}
               </p>
               <p className="mt-2 text-sm font-medium leading-relaxed text-[#3D3D3D]">
-                Pour voir les inscrits et retirer le cashback, validez l&apos;accès
-                avec le code envoyé à{" "}
+                {ui.authBody}{" "}
                 <span className="font-bold text-[#1A1A1A]">
                   {auth.partnerEmailMasked ??
-                    (isAmbassador
-                      ? "votre email"
-                      : "votre email partenaire")}
+                    (isAmbassador ? ui.yourEmail : ui.partnerEmail)}
                 </span>
                 .
               </p>
@@ -493,7 +497,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   onClick={() => void requestOtp()}
                   className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
                 >
-                  {otpSent ? "Renvoyer le code" : "Recevoir le code"}
+                  {otpSent ? ui.resendCode : ui.sendCode}
                 </button>
               </div>
               {otpSent ? (
@@ -502,7 +506,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   className="mt-4 flex flex-wrap items-end gap-2"
                 >
                   <label className="block text-xs font-bold text-[#6B6B6B]">
-                    Code à 6 chiffres
+                    {ui.otpLabel}
                     <input
                       inputMode="numeric"
                       pattern="\d{6}"
@@ -521,7 +525,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                     disabled={authBusy || otpCode.length !== 6}
                     className="rounded-xl border-2 border-[#1F6B43] px-4 py-2.5 text-sm font-bold text-[#1F6B43] disabled:opacity-60"
                   >
-                    Valider
+                    {ui.validate}
                   </button>
                 </form>
               ) : null}
@@ -536,10 +540,10 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
         {/* KPIs */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Kpi label="Inscrits" value={String(totals.signups)} />
-          <Kpi label="Confirmés" value={String(totals.confirmed)} accent />
-          <Kpi label="En attente" value={String(totals.pending)} />
-          <Kpi label="Cashback" value={`${totals.cashbackUsd} $`} accent />
+          <Kpi label={ui.kpiSignups} value={String(totals.signups)} />
+          <Kpi label={ui.kpiConfirmed} value={String(totals.confirmed)} accent />
+          <Kpi label={ui.kpiPending} value={String(totals.pending)} />
+          <Kpi label={ui.kpiCashback} value={`${totals.cashbackUsd} $`} accent />
         </section>
 
         {/* Free seats - partners only */}
@@ -548,11 +552,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-                Places partenaires
+                {ui.seatsTitle}
               </p>
               <p className="mt-1 text-lg font-black tracking-tight text-[#1A1A1A]">
-                {seatsEarned} / {rewards.seatsMax ?? 2} débloquée
-                {seatsEarned > 1 ? "s" : ""}
+                {seatsEarned} / {rewards.seatsMax ?? 2}{" "}
+                {ui.unlocked(seatsEarned)}
               </p>
             </div>
             <span
@@ -619,14 +623,14 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         {verified ? (
           <section className="rounded-2xl bg-gradient-to-br from-[#EAF6EE] to-[#F7FBF8] px-5 py-5 ring-1 ring-[#1F6B43]/12">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-              Cashback à retirer
+              {ui.cashbackTitle}
             </p>
             <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-black tabular-nums tracking-tight text-[#1F6B43]">
               {claimable}{" "}
               <span className="text-xl font-bold text-[#1F6B43]/80">USD</span>
             </p>
             <p className="mt-2 text-xs text-[#57534e]">
-              Cumulé confirmé : {totals.cashbackUsd} USD · retrait Mobile Money
+              {ui.cashbackHint} : {totals.cashbackUsd} USD · {ui.withdrawMm}
             </p>
 
             {!withdrawOpen ? (
@@ -640,20 +644,20 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 onClick={openWithdraw}
                 className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#185535] disabled:opacity-45"
               >
-                Demander le cashback
+                {ui.askCashback}
               </button>
             ) : (
               <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-black/[0.04]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-bold text-[#1A1A1A]">
-                    Retrait Mobile Money
+                    {ui.withdrawTitle}
                   </p>
                   <button
                     type="button"
                     onClick={closeWithdraw}
                     className="text-xs font-bold text-[#8A8A8A] underline"
                   >
-                    Fermer
+                    {ui.close}
                   </button>
                 </div>
                 <div className="mt-3">
@@ -663,7 +667,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 {withdrawStep === 0 ? (
                   <div className="space-y-3">
                     <label className="block text-xs font-bold text-[#6B6B6B]">
-                      Montant (USD)
+                      {ui.amount}
                       <input
                         inputMode="decimal"
                         value={amountUsd}
@@ -675,8 +679,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       />
                     </label>
                     <p className="text-[11px] text-[#8A8A8A]">
-                      Disponible : {claimable} USD (min.{" "}
-                      {PROMO_CASHBACK_CLAIM_MIN_USD})
+                      {ui.available(claimable, PROMO_CASHBACK_CLAIM_MIN_USD)}
                     </p>
                     {claimable > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
@@ -699,7 +702,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       onClick={() => setWithdrawStep(1)}
                       className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                     >
-                      Continuer
+                      {ui.continue}
                     </button>
                   </div>
                 ) : null}
@@ -812,13 +815,13 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         ) : (
           <section className="rounded-2xl bg-[#EAF6EE] px-5 py-6 text-center ring-1 ring-[#1F6B43]/12">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-              Cashback cumulé
+              {ui.cashbackLocked}
             </p>
             <p className="mt-1 text-3xl font-black tabular-nums text-[#1F6B43]">
               {totals.cashbackUsd} USD
             </p>
             <p className="mt-2 text-xs text-[#57534e]">
-              Vérifiez votre email pour demander le retrait.
+              {ui.verifyToClaim}
             </p>
           </section>
         )}
@@ -827,18 +830,18 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
           <div className="border-b border-[#EFEFEA] px-5 py-3.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
-              Inscrits via votre code
+              {ui.signupsTitle}
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[#FAFAF8] text-[10px] font-bold uppercase tracking-[0.12em] text-[#8A8A8A]">
                 <tr>
-                  <th className="px-4 py-3">Nom</th>
-                  <th className="px-4 py-3">Statut</th>
-                  <th className="px-4 py-3">Ticket</th>
-                  <th className="px-4 py-3">WhatsApp</th>
-                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">{ui.colName}</th>
+                  <th className="px-4 py-3">{ui.colStatus}</th>
+                  <th className="px-4 py-3">{ui.colTicket}</th>
+                  <th className="px-4 py-3">{ui.colWa}</th>
+                  <th className="px-4 py-3">{ui.colEmail}</th>
                 </tr>
               </thead>
               <tbody>
@@ -848,7 +851,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       colSpan={5}
                       className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
                     >
-                      Liste disponible après vérification email.
+                      {ui.listAfterAuth}
                     </td>
                   </tr>
                 ) : signups.length === 0 ? (
@@ -857,9 +860,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       colSpan={5}
                       className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
                     >
-                      {isAmbassador
-                        ? "Aucun inscrit pour le moment. Partage ton lien ambassadeur."
-                        : "Aucun inscrit pour le moment. Partagez votre lien."}
+                      {isAmbassador ? ui.emptyAmb : ui.emptyPartner}
                     </td>
                   </tr>
                 ) : (
@@ -904,7 +905,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                           href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(`McBuleli Hackathon - ${promo.code}`)}`}
                           className="font-semibold text-[#1F6B43] underline-offset-2 hover:underline"
                         >
-                          Écrire
+                          {ui.write}
                         </a>
                       </td>
                     </tr>
@@ -952,6 +953,9 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             />
             <span className="font-extrabold">McBuleli</span>
           </a>
+          <p className="mt-3 text-[10px] text-white/55">
+            McBuleli - RCCM CD/KNG/RCCM/26-A-00382
+          </p>
         </footer>
       </motion.div>
     </div>

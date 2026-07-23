@@ -1,0 +1,26 @@
+McBuleli
+Hackathon - Ambassadors & Partners
+
+Hi {{{contact.first_name|friend}}},
+
+Help fill the McBuleli Hackathon in Kinshasa - and get rewarded.
+
+1) Ambassador (McBuleli account)
+- Create your promo code in 1 minute
+- Your invites pay -10%
+- You earn $10 cashback per confirmed payment
+- Dashboard + Mobile Money withdraw (min. $10)
+
+Link: https://mcbuleli.org/hackathon/ambassadeur?utm_source=email&utm_medium=broadcast&utm_campaign=hackathon_ambassadeurs_partenaires
+
+2) Partner (org / campus / brand)
+- Dedicated code, free seats by volume
+- Visibility and McBuleli support
+
+Link: https://mcbuleli.org/hackathon#partenaires?utm_source=email&utm_medium=broadcast&utm_campaign=hackathon_ambassadeurs_partenaires
+
+Hackathon: https://mcbuleli.org/hackathon?utm_source=email&utm_medium=broadcast&utm_campaign=hackathon_ambassadeurs_partenaires
+
+hi@mcbuleli.org · WhatsApp
+
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

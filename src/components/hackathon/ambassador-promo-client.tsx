@@ -7,6 +7,10 @@ import {
   AMBASSADOR_DISCOUNT_PERCENT,
 } from "@/lib/hackathon/promo-types";
 import { HACKATHON_PRICE_USD } from "@/lib/hackathon/constants";
+import {
+  ambassadorFormCopy,
+  type HackathonUiLocale,
+} from "@/lib/hackathon/ambassador-ui-copy";
 
 type ExistingPromo = {
   code: string;
@@ -19,13 +23,16 @@ type ExistingPromo = {
 };
 
 export function AmbassadorPromoClient({
+  locale,
   initialEmail,
   initialDisplayName,
 }: {
+  locale: HackathonUiLocale;
   initialEmail: string;
   initialDisplayName: string;
 }) {
   const router = useRouter();
+  const t = ambassadorFormCopy(locale);
   const [code, setCode] = useState("");
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [busy, setBusy] = useState(false);
@@ -74,21 +81,17 @@ export function AmbassadorPromoClient({
         promo?: { dashboardToken: string; dashboardUrl: string };
       };
       if (!res.ok || !json.promo) {
-        const map: Record<string, string> = {
-          invalid_code: "Code invalide (4-16 lettres/chiffres).",
-          invalid_display_name: "Nom public trop court.",
-          code_taken: "Ce code est déjà pris. Choisis-en un autre.",
-          no_edition: "Aucune édition hackathon active.",
-          auth_required: "Connecte-toi pour continuer.",
-        };
-        setErr(map[json.error ?? ""] ?? "Impossible de créer le code.");
+        const key = json.error as keyof typeof t.err | undefined;
+        setErr(
+          (key && key in t.err ? t.err[key] : null) ?? t.err.fallback,
+        );
         return;
       }
       router.push(
         `/hackathon/promo/dashboard/${encodeURIComponent(json.promo.dashboardToken)}`,
       );
     } catch {
-      setErr("Erreur réseau.");
+      setErr(t.err.network);
     } finally {
       setBusy(false);
     }
@@ -108,7 +111,7 @@ export function AmbassadorPromoClient({
   if (loadingExisting) {
     return (
       <div className="rounded-2xl bg-white px-5 py-10 text-center shadow-sm ring-1 ring-black/[0.04]">
-        <p className="text-sm text-[#5c6b60]">Chargement…</p>
+        <p className="text-sm text-[#5c6b60]">{t.loading}</p>
       </div>
     );
   }
@@ -118,20 +121,17 @@ export function AmbassadorPromoClient({
       <div className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04]">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-            Code actif
+            {t.activeCode}
           </p>
           <p className="mt-2 font-mono text-3xl font-black tracking-[0.08em] text-[#1A1A1A]">
             {existing.code}
           </p>
-          <p className="mt-2 text-sm text-[#5c6b60]">
-            Tu as déjà un code ambassadeur. Partage ton lien et suis les
-            confirmations.
-          </p>
+          <p className="mt-2 text-sm text-[#5c6b60]">{t.alreadyActive}</p>
         </div>
 
         <div className="rounded-xl bg-[#EAF6EE] px-4 py-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#1F6B43]">
-            Lien à partager
+            {t.shareLink}
           </p>
           <p className="mt-1 break-all text-sm font-semibold text-[#1F6B43]">
             {existing.shareUrl}
@@ -141,22 +141,22 @@ export function AmbassadorPromoClient({
             onClick={() => void copyShare()}
             className="mt-3 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
           >
-            {copied ? "Copié" : "Copier le lien"}
+            {copied ? t.copied : t.copyLink}
           </button>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <a
             href={`/hackathon/promo/dashboard/${encodeURIComponent(existing.dashboardToken)}`}
-            className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#1F6B43] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#185535]"
+            className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl bg-[#1F6B43] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#185535]"
           >
-            Ouvrir mon dashboard
+            {t.openDash}
           </a>
           <a
             href={existing.shareUrl}
             className="inline-flex items-center justify-center rounded-xl bg-[#F3F4F1] px-4 py-3 text-sm font-bold text-[#1A1A1A] transition hover:bg-[#E8E9E4]"
           >
-            Voir mon lien
+            {t.viewLink}
           </a>
         </div>
       </div>
@@ -170,7 +170,7 @@ export function AmbassadorPromoClient({
     >
       <div>
         <label className="text-[11px] font-bold uppercase tracking-wide text-[#6B6B6B]">
-          Nom public
+          {t.displayName}
         </label>
         <input
           value={displayName}
@@ -178,12 +178,12 @@ export function AmbassadorPromoClient({
           maxLength={80}
           required
           className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 text-sm font-medium text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
-          placeholder="Ex. Jeff Buleli"
+          placeholder={t.displayPh}
         />
       </div>
       <div>
         <label className="text-[11px] font-bold uppercase tracking-wide text-[#6B6B6B]">
-          Ton code promo
+          {t.codeLabel}
         </label>
         <input
           value={code}
@@ -194,22 +194,20 @@ export function AmbassadorPromoClient({
           maxLength={16}
           required
           className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 font-mono text-sm font-bold tracking-wider text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
-          placeholder="Ex. JEFF243"
+          placeholder={t.codePh}
           autoCapitalize="characters"
         />
-        <p className="mt-1.5 text-xs text-[#6B6B6B]">
-          4 à 16 caractères - lettres et chiffres seulement.
-        </p>
+        <p className="mt-1.5 text-xs text-[#6B6B6B]">{t.codeHint}</p>
       </div>
 
       <div className="rounded-xl bg-[#EAF6EE] px-4 py-3.5 text-sm text-[#1F6B43]">
         <p className="font-bold">
-          -{AMBASSADOR_DISCOUNT_PERCENT}% pour tes inscrits ({discounted} USD)
+          {t.discountLine(AMBASSADOR_DISCOUNT_PERCENT, discounted)}
         </p>
-        <p className="mt-1">
-          +{AMBASSADOR_CASHBACK_USD} USD cashback par paiement confirmé
+        <p className="mt-1">{t.cashbackLine(AMBASSADOR_CASHBACK_USD)}</p>
+        <p className="mt-2 break-all text-xs text-[#5c6b60]">
+          {t.account} : {initialEmail}
         </p>
-        <p className="mt-2 text-xs text-[#5c6b60]">Compte : {initialEmail}</p>
       </div>
 
       {err ? (
@@ -223,7 +221,7 @@ export function AmbassadorPromoClient({
         disabled={busy}
         className="w-full rounded-xl bg-[#1F6B43] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#185535] disabled:opacity-60"
       >
-        {busy ? "Création…" : "Créer mon code"}
+        {busy ? t.creating : t.submit}
       </button>
     </form>
   );

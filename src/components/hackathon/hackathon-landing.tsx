@@ -345,15 +345,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 <dd>{practicalVenue(e.venue, e.city)}</dd>
               </div>
             </dl>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
               <CtaPrimary href="#register" onDark>
                 {isFr ? "Participer" : "Join"}
               </CtaPrimary>
               <CtaSecondary href="#partenaires" onDark>
-                {isFr ? "Devenir partenaire" : "Become a partner"}
+                {isFr ? "Partenaire" : "Partner"}
               </CtaSecondary>
               <CtaSecondary href="/hackathon/ambassadeur" onDark>
-                {isFr ? "Devenir ambassadeur" : "Become an ambassador"}
+                {isFr ? "Ambassadeur" : "Ambassador"}
               </CtaSecondary>
             </div>
           </div>
@@ -728,12 +728,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             </li>
           ))}
         </ul>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
           <CtaPrimary href="#partenaires-form">
             {isFr ? "Devenir partenaire" : "Become a partner"}
           </CtaPrimary>
           <CtaSecondary href="/hackathon/ambassadeur">
-            {isFr ? "Devenir ambassadeur" : "Become an ambassador"}
+            {isFr ? "Ambassadeur" : "Ambassador"}
           </CtaSecondary>
         </div>
         <div id="partenaires-form" className="mt-8 scroll-mt-28">

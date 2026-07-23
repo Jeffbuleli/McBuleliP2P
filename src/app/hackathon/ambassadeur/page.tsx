@@ -5,22 +5,27 @@ import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-footer";
 import { AmbassadorPromoClient } from "@/components/hackathon/ambassador-promo-client";
 import { getSessionUser } from "@/lib/session-user";
+import { getLocale } from "@/lib/get-locale";
 import {
   AMBASSADOR_CASHBACK_USD,
   AMBASSADOR_DISCOUNT_PERCENT,
   PROMO_CASHBACK_CLAIM_MIN_USD,
 } from "@/lib/hackathon/promo-types";
+import { ambassadorPageCopy } from "@/lib/hackathon/ambassador-ui-copy";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Devenir ambassadeur - McBuleli Hackathon",
-  description:
-    "Crée ton code promo McBuleli Hackathon, partage ton lien et gagne du cashback.",
-  robots: { index: true, follow: true },
-};
-
 const PATH = "/hackathon/ambassadeur";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const c = ambassadorPageCopy(locale);
+  return {
+    title: c.metaTitle,
+    description: c.metaDesc,
+    robots: { index: true, follow: true },
+  };
+}
 
 export default async function HackathonAmbassadorPage() {
   const user = await getSessionUser();
@@ -28,6 +33,8 @@ export default async function HackathonAmbassadorPage() {
     redirect(`/login?next=${encodeURIComponent(PATH)}`);
   }
 
+  const locale = await getLocale();
+  const c = ambassadorPageCopy(locale);
   const displayName =
     user.email.split("@")[0]?.replace(/[._]/g, " ") || "Ambassadeur";
 
@@ -40,55 +47,54 @@ export default async function HackathonAmbassadorPage() {
       <LandingTopBar authReturnPath={PATH} />
       <main className="relative mx-auto max-w-lg px-4 py-10 sm:py-14">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
-          McBuleli Hackathon
+          {c.eyebrow}
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
-          Devenir ambassadeur
+          {c.title}
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-[#5c6b60]">
-          Crée ton code, partage ton lien d&apos;inscription, suis les
-          confirmations et retire ton cashback Mobile Money.
-        </p>
+        <p className="mt-3 text-sm leading-relaxed text-[#5c6b60]">{c.lede}</p>
 
         <ul className="mt-6 space-y-2.5 rounded-2xl bg-white/80 px-4 py-4 text-sm text-[#3D3D3D] shadow-sm ring-1 ring-black/[0.04] backdrop-blur-sm">
           <li className="flex gap-2">
-            <span className="font-bold text-[#1F6B43]">
+            <span className="shrink-0 font-bold text-[#1F6B43]">
               -{AMBASSADOR_DISCOUNT_PERCENT}%
             </span>
-            <span>pour chaque personne qui s&apos;inscrit avec ton code</span>
+            <span>{c.ruleDiscount(AMBASSADOR_DISCOUNT_PERCENT)}</span>
           </li>
           <li className="flex gap-2">
-            <span className="font-bold text-[#1F6B43]">
+            <span className="shrink-0 font-bold text-[#1F6B43]">
               +{AMBASSADOR_CASHBACK_USD} USD
             </span>
-            <span>pour toi à chaque paiement confirmé</span>
+            <span>{c.ruleCashback}</span>
           </li>
           <li className="flex gap-2">
-            <span className="font-bold text-[#1F6B43]">
+            <span className="shrink-0 font-bold text-[#1F6B43]">
               {PROMO_CASHBACK_CLAIM_MIN_USD}+ USD
             </span>
-            <span>pour retirer via Mobile Money</span>
+            <span>{c.ruleMin}</span>
           </li>
-          <li className="text-[#6B6B6B]">
-            Pas de cashback sur ton propre paiement - anti-collusion actif
-          </li>
+          <li className="text-[#6B6B6B]">{c.ruleAnti}</li>
         </ul>
 
         <div className="mt-8">
           <AmbassadorPromoClient
+            locale={locale}
             initialEmail={user.email}
             initialDisplayName={displayName}
           />
         </div>
 
         <p className="mt-8 text-center text-xs text-[#6B6B6B]">
-          <Link href="/hackathon" className="font-semibold text-[#1F6B43] hover:underline">
-            Retour au hackathon
+          <Link
+            href="/hackathon"
+            className="font-semibold text-[#1F6B43] hover:underline"
+          >
+            {c.back}
           </Link>
         </p>
 
         <p className="mt-6 text-center text-[10px] leading-relaxed text-[#8A8A8A]">
-          McBuleli - RCCM CD/KNG/RCCM/26-A-00382
+          {c.legal}
         </p>
         <McBuleliPoweredFooter />
       </main>
