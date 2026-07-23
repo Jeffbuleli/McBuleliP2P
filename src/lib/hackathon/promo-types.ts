@@ -1,0 +1,40 @@
+/** Shared types for partner promo dashboard (safe for client + server). */
+
+export type PartnerDashboardSignup = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  whatsappUrl: string | null;
+  paymentStatus: string;
+  confirmed: boolean;
+  ticketCode: string | null;
+  cashbackUsd: number | null;
+  createdAt: string;
+};
+
+export type PartnerDashboardStats = {
+  promo: {
+    code: string;
+    orgName: string;
+    partnerName: string | null;
+    discountPercent: number;
+    cashbackPerPaidUsd: number;
+    shareUrl: string;
+    active: boolean;
+  };
+  edition: {
+    id: string;
+    nameFr: string;
+    nameEn: string;
+  } | null;
+  totals: {
+    signups: number;
+    confirmed: number;
+    pending: number;
+    cashbackUsd: number;
+  };
+  signups: PartnerDashboardSignup[];
+  updatedAt: string;
+};

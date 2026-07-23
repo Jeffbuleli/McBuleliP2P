@@ -367,6 +367,9 @@ export async function completeHackathonPaymentByReference(args: {
     })
     .where(eq(hackathonRegistrations.id, reg.id));
 
+  const { awardPromoCashbackIfNeeded } = await import("@/lib/hackathon/promo");
+  await awardPromoCashbackIfNeeded(reg.id);
+
   return { handled: true, ticketCode, registrationId: reg.id };
 }
 

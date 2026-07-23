@@ -4202,6 +4202,10 @@ export const hackathonRegistrations = pgTable(
       .notNull()
       .default("absent"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    promoCodeId: uuid("promo_code_id"),
+    promoCode: varchar("promo_code", { length: 32 }),
+    cashbackUsd: numeric("cashback_usd", { precision: 12, scale: 2 }),
+    cashbackAwardedAt: timestamp("cashback_awarded_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4217,10 +4221,43 @@ export const hackathonRegistrations = pgTable(
       t.paymentStatus,
     ),
     index("hackathon_registrations_hold_idx").on(t.holdExpiresAt),
+    index("hackathon_registrations_promo_idx").on(t.promoCodeId),
     uniqueIndex("hackathon_registrations_edition_email_uidx").on(
       t.editionId,
       t.email,
     ),
+  ],
+);
+
+export const hackathonPromoCodes = pgTable(
+  "hackathon_promo_codes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    code: varchar("code", { length: 32 }).notNull(),
+    orgName: varchar("org_name", { length: 200 }).notNull(),
+    partnerEmail: varchar("partner_email", { length: 255 }).notNull(),
+    partnerName: varchar("partner_name", { length: 160 }),
+    discountPercent: numeric("discount_percent", { precision: 5, scale: 2 })
+      .notNull()
+      .default("10"),
+    cashbackUsd: numeric("cashback_usd", { precision: 12, scale: 2 })
+      .notNull()
+      .default("10"),
+    active: boolean("active").notNull().default(true),
+    dashboardToken: varchar("dashboard_token", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_promo_codes_edition_idx").on(t.editionId),
+    index("hackathon_promo_codes_email_idx").on(t.partnerEmail),
   ],
 );
 

@@ -21,6 +21,7 @@ import {
   generatePaymentToken,
   payLaterPublicUrl,
 } from "@/lib/hackathon/service";
+import { resolveActivePromo } from "@/lib/hackathon/promo";
 import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
@@ -52,6 +53,8 @@ export const registerBodyZ = z
     /** Free seat hold (default) or immediate checkout */
     intent: z.enum(["reserve", "pay_now"]).default("reserve"),
     paymentMethod: paymentMethodZ.optional(),
+    /** Partner share link promo (locked client-side; re-validated server-side). */
+    promoCode: z.string().trim().max(32).optional(),
     locale: z.enum(["fr", "en"]).default("fr"),
   })
   .superRefine((data, ctx) => {
@@ -227,9 +230,20 @@ export async function registerParticipant(raw: unknown) {
     return { ok: false as const, error: "no_edition", status: 404 };
   }
 
-  const priceUsd = HACKATHON_PRICE_USD;
   // Single 3-day program - ignore day1 pack from clients
   const ticketPack = "full" as const;
+
+  const promo = data.promoCode
+    ? await resolveActivePromo({
+        code: data.promoCode,
+        editionId: fullEdition.id,
+      })
+    : null;
+  if (data.promoCode?.trim() && !promo) {
+    return { ok: false as const, error: "invalid_promo", status: 400 };
+  }
+
+  const priceUsd = promo?.priceUsd ?? HACKATHON_PRICE_USD;
 
   const email = data.email.toLowerCase();
   // Always resolve the McBuleli user by registration email (never borrow a
@@ -288,6 +302,9 @@ export async function registerParticipant(raw: unknown) {
     priceUsd,
     locale: data.locale,
     userId,
+    promoCodeId: promo?.id ?? null,
+    promoCode: promo?.code ?? null,
+    cashbackUsd: promo ? String(promo.cashbackUsd) : null,
   };
 
   if (intent === "reserve") {

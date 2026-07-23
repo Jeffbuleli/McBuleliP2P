@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
   hkField,
   hkLabel,
@@ -19,6 +20,13 @@ type Props = {
   /** Unique 3-day program price (USD) */
   priceUsd: string;
   registrationOpen: boolean;
+};
+
+type LockedPromo = {
+  code: string;
+  orgName: string;
+  discountPercent: number;
+  priceUsd: string;
 };
 
 type SessionCtx = {
@@ -40,13 +48,23 @@ type SessionCtx = {
   } | null;
 };
 
-export function HackathonParticipantForm({
+export function HackathonParticipantForm(props: Props) {
+  return (
+    <Suspense fallback={null}>
+      <HackathonParticipantFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function HackathonParticipantFormInner({
   editionId,
   locale,
   priceUsd,
   registrationOpen,
 }: Props) {
   const isFr = locale === "fr";
+  const searchParams = useSearchParams();
+  const promoParam = searchParams.get("promo")?.trim() ?? "";
   const [busy, setBusy] = useState(false);
   const intentRef = useRef<"reserve" | "pay_now">("reserve");
   const [msg, setMsg] = useState<string | null>(null);
@@ -54,6 +72,7 @@ export function HackathonParticipantForm({
   const [payUrl, setPayUrl] = useState<string | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionVerified, setSessionVerified] = useState(false);
+  const [lockedPromo, setLockedPromo] = useState<LockedPromo | null>(null);
   const [prefill, setPrefill] = useState({
     firstName: "",
     lastName: "",
@@ -61,6 +80,8 @@ export function HackathonParticipantForm({
     phone: "",
   });
   const [existingReg, setExistingReg] = useState<SessionCtx["registration"]>(null);
+
+  const effectivePriceUsd = lockedPromo?.priceUsd ?? priceUsd;
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +118,39 @@ export function HackathonParticipantForm({
       cancelled = true;
     };
   }, [editionId]);
+
+  useEffect(() => {
+    if (!promoParam) {
+      setLockedPromo(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/hackathon/promo?code=${encodeURIComponent(promoParam)}&editionId=${encodeURIComponent(editionId)}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) {
+          if (!cancelled) setLockedPromo(null);
+          return;
+        }
+        const json = (await res.json()) as LockedPromo;
+        if (cancelled) return;
+        setLockedPromo({
+          code: json.code,
+          orgName: json.orgName,
+          discountPercent: json.discountPercent,
+          priceUsd: json.priceUsd,
+        });
+      } catch {
+        if (!cancelled) setLockedPromo(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [promoParam, editionId]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -139,6 +193,7 @@ export function HackathonParticipantForm({
         intent === "pay_now"
           ? String(fd.get("paymentMethod") ?? "orange")
           : undefined,
+      ...(lockedPromo?.code ? { promoCode: lockedPromo.code } : {}),
       locale,
     };
 
@@ -183,6 +238,12 @@ export function HackathonParticipantForm({
             isFr
               ? "Le téléphone doit commencer par 243 (ex. 2438XXXXXXXX)."
               : "Phone must start with 243 (e.g. 2438XXXXXXXX).",
+          );
+        } else if (json.error === "invalid_promo") {
+          setErr(
+            isFr
+              ? "Code promo invalide ou inactif."
+              : "Invalid or inactive promo code.",
           );
         } else {
           setErr(
@@ -243,6 +304,31 @@ export function HackathonParticipantForm({
             ? "Inscriptions fermées pour cette édition."
             : "Registration is closed for this edition."}
         </p>
+      ) : null}
+
+      {lockedPromo ? (
+        <div className="rounded-xl border border-[color:var(--fd-primary)]/25 bg-[color:var(--fd-mint)]/70 px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+            {isFr ? "Code partenaire" : "Partner code"}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={lockedPromo.code}
+              className={`${hkField} max-w-[12rem] bg-white font-mono font-bold tracking-wide`}
+              aria-label={isFr ? "Code promo (non modifiable)" : "Promo code (locked)"}
+            />
+            <span className="text-sm font-semibold text-[color:var(--fd-text)]">
+              -{lockedPromo.discountPercent}% - {lockedPromo.priceUsd} USD
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
+            {isFr
+              ? `Appliqué via le lien ${lockedPromo.orgName} (non modifiable).`
+              : `Applied via ${lockedPromo.orgName} link (locked).`}
+          </p>
+        </div>
       ) : null}
 
       {sessionEmail ? (
@@ -524,8 +610,13 @@ export function HackathonParticipantForm({
         </p>
         <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
           {isFr
-            ? `Programme 3 jours - ${priceUsd} USD`
-            : `3-day program - ${priceUsd} USD`}
+            ? `Programme 3 jours - ${effectivePriceUsd} USD`
+            : `3-day program - ${effectivePriceUsd} USD`}
+          {lockedPromo && lockedPromo.priceUsd !== priceUsd ? (
+            <span className="ml-2 text-sm font-medium text-[color:var(--fd-muted)] line-through">
+              {priceUsd} USD
+            </span>
+          ) : null}
         </p>
         <input type="hidden" name="ticketPack" value="full" />
       </div>
