@@ -38,6 +38,11 @@ export default async function AdminLayout({
     u.role === UserRole.SUPER_ADMIN || canAccessPlatformExpensesModule(u);
   const showLandingAds =
     u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "landing_ads");
+  const showHackathonScan =
+    u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "hackathon_scan");
+  const showHackathonStats =
+    u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "hackathon_stats");
+  const showHackathonAdmin = u.role === UserRole.SUPER_ADMIN;
   const noOps =
     u.role === UserRole.AGENT && !agentHasAnyStaffScope(u);
 
@@ -143,9 +148,21 @@ export default async function AdminLayout({
               <AdminNavLink href="/admin/academy" variant="support" icon="users">
                 Academy
               </AdminNavLink>
-              <AdminNavLink href="/admin/hackathon" variant="support" icon="users">
-                Hackathon
-              </AdminNavLink>
+              {showHackathonAdmin ? (
+                <AdminNavLink href="/admin/hackathon" variant="support" icon="users">
+                  {d.admin_nav_hackathon}
+                </AdminNavLink>
+              ) : null}
+              {showHackathonStats && !showHackathonAdmin ? (
+                <AdminNavLink href="/admin/hackathon" variant="support" icon="users">
+                  {d.admin_nav_hackathon_stats}
+                </AdminNavLink>
+              ) : null}
+              {showHackathonScan ? (
+                <AdminNavLink href="/admin/hackathon/scan" variant="support" icon="users">
+                  {d.admin_nav_hackathon_scan}
+                </AdminNavLink>
+              ) : null}
               <AdminNavLink href="/admin/bots" variant="bots" icon="bots">
                 {d.admin_nav_bots}
               </AdminNavLink>

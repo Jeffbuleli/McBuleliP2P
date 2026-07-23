@@ -17,6 +17,8 @@ import {
   PARTNER_FREE_SEATS,
   PARTNER_FREE_SEATS_THRESHOLD,
 } from "@/lib/hackathon/promo-types";
+import { claimableCashbackUsd, listClaimsForPromo } from "@/lib/hackathon/promo-claims";
+import { readPromoDashSession } from "@/lib/hackathon/promo-dashboard-auth";
 
 export type { PartnerDashboardSignup, PartnerDashboardStats } from "@/lib/hackathon/promo-types";
 export {
@@ -189,6 +191,20 @@ export async function getPartnerDashboardStats(
   const freeSeatsUnlocked = confirmed >= PARTNER_FREE_SEATS_THRESHOLD;
   const freeSeatsRemaining = Math.max(0, PARTNER_FREE_SEATS_THRESHOLD - confirmed);
 
+  const claimableUsd = await claimableCashbackUsd(promo.id);
+  const claims = await listClaimsForPromo(promo.id);
+  const session = await readPromoDashSession();
+  const verified =
+    Boolean(session) &&
+    session!.promoId === promo.id &&
+    session!.email === promo.partnerEmail.toLowerCase();
+  const email = promo.partnerEmail;
+  const [userPart, domain] = email.split("@");
+  const masked =
+    userPart && domain
+      ? `${userPart.slice(0, 1)}***@${domain}`
+      : null;
+
   return {
     promo: {
       code: promo.code,
@@ -212,7 +228,25 @@ export async function getPartnerDashboardStats(
       freeSeatsUnlocked,
       freeSeatsRemaining,
     },
-    signups,
+    cashback: {
+      claimableUsd: verified ? claimableUsd : 0,
+      claims: verified
+        ? claims.map((c) => ({
+            id: c.id,
+            amountUsd: Number(c.amountUsd),
+            status: c.status,
+            requestedAt: c.requestedAt.toISOString(),
+            resolvedAt: c.resolvedAt?.toISOString() ?? null,
+            note: c.note,
+          }))
+        : [],
+    },
+    auth: {
+      required: true,
+      verified,
+      partnerEmailMasked: masked,
+    },
+    signups: verified ? signups : [],
     updatedAt: new Date().toISOString(),
   };
 }
@@ -300,6 +334,19 @@ export async function upsertPartnerPromo(args: {
     priceUsd: discountedPriceUsd(Number(created.discountPercent)),
     dashboardToken: created.dashboardToken,
   };
+}
+
+export async function setPromoActive(
+  promoId: string,
+  active: boolean,
+): Promise<boolean> {
+  const db = getDb();
+  const [row] = await db
+    .update(hackathonPromoCodes)
+    .set({ active, updatedAt: new Date() })
+    .where(eq(hackathonPromoCodes.id, promoId))
+    .returning({ id: hackathonPromoCodes.id });
+  return Boolean(row);
 }
 
 /** Award cashback once when a promo registration becomes paid. */

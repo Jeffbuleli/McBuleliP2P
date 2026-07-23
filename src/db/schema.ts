@@ -4248,6 +4248,10 @@ export const hackathonPromoCodes = pgTable(
       .default("10"),
     active: boolean("active").notNull().default(true),
     dashboardToken: varchar("dashboard_token", { length: 64 }).notNull().unique(),
+    dashboardOtpHash: varchar("dashboard_otp_hash", { length: 128 }),
+    dashboardOtpExpiresAt: timestamp("dashboard_otp_expires_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4258,6 +4262,40 @@ export const hackathonPromoCodes = pgTable(
   (t) => [
     index("hackathon_promo_codes_edition_idx").on(t.editionId),
     index("hackathon_promo_codes_email_idx").on(t.partnerEmail),
+  ],
+);
+
+export const hackathonPromoCashbackClaims = pgTable(
+  "hackathon_promo_cashback_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    promoCodeId: uuid("promo_code_id")
+      .notNull()
+      .references(() => hackathonPromoCodes.id, { onDelete: "cascade" }),
+    amountUsd: numeric("amount_usd", { precision: 12, scale: 2 }).notNull(),
+    /** requested | approved | paid | rejected */
+    status: varchar("status", { length: 16 }).notNull().default("requested"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: uuid("resolved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_promo_cashback_claims_promo_idx").on(
+      t.promoCodeId,
+      t.createdAt,
+    ),
+    index("hackathon_promo_cashback_claims_status_idx").on(t.status),
   ],
 );
 

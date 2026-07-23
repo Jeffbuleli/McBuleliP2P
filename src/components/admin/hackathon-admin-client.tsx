@@ -19,13 +19,56 @@ type Edition = {
   endDate: string | null;
 };
 
-type Tab = "editions" | "registrations" | "partners" | "sponsors" | "people";
+type PromoClaim = {
+  id: string;
+  amountUsd: number;
+  status: string;
+  requestedAt: string;
+  resolvedAt: string | null;
+  note: string | null;
+};
 
-export function HackathonAdminClient() {
-  const [tab, setTab] = useState<Tab>("editions");
+type PromoRow = {
+  id: string;
+  editionId: string;
+  code: string;
+  orgName: string;
+  partnerEmail: string;
+  partnerName: string | null;
+  discountPercent: number;
+  cashbackUsd: number;
+  active: boolean;
+  dashboardToken: string;
+  totals: {
+    signups: number;
+    confirmed: number;
+    pending: number;
+    cashbackUsd: number;
+  };
+  claimableUsd: number;
+  claims: PromoClaim[];
+};
+
+type Tab =
+  | "editions"
+  | "registrations"
+  | "partners"
+  | "sponsors"
+  | "people"
+  | "promo";
+
+type Props = {
+  /** admin = full ops; stats = read-only lists for agents */
+  mode?: "admin" | "stats";
+};
+
+export function HackathonAdminClient({ mode = "admin" }: Props) {
+  const isAdmin = mode === "admin";
+  const [tab, setTab] = useState<Tab>(isAdmin ? "editions" : "registrations");
   const [editions, setEditions] = useState<Edition[]>([]);
   const [editionId, setEditionId] = useState<string>("");
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [promos, setPromos] = useState<PromoRow[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -43,6 +86,15 @@ export function HackathonAdminClient() {
       return;
     }
     if (!editionId) return;
+    if (tab === "promo") {
+      const res = await fetch(
+        `/api/admin/hackathon?tab=promo&editionId=${encodeURIComponent(editionId)}`,
+      );
+      if (!res.ok) throw new Error("load_failed");
+      const json = (await res.json()) as { promos: PromoRow[] };
+      setPromos(json.promos ?? []);
+      return;
+    }
     const res = await fetch(
       `/api/admin/hackathon?tab=${tab}&editionId=${encodeURIComponent(editionId)}`,
     );
@@ -60,11 +112,16 @@ export function HackathonAdminClient() {
   }, [tab, editionId, loadEditions]);
 
   useEffect(() => {
+    void loadEditions().catch(() => setErr("Impossible de charger."));
+  }, [loadEditions]);
+
+  useEffect(() => {
     void loadTab().catch(() => setErr("Impossible de charger."));
   }, [loadTab]);
 
   async function createEdition(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!isAdmin) return;
     setBusy(true);
     setErr(null);
     const fd = new FormData(e.currentTarget);
@@ -94,7 +151,39 @@ export function HackathonAdminClient() {
     }
   }
 
+  async function createPromo(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!isAdmin || !editionId) return;
+    setBusy(true);
+    setErr(null);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/admin/hackathon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "promo",
+          editionId,
+          code: String(fd.get("code")),
+          orgName: String(fd.get("orgName")),
+          partnerEmail: String(fd.get("partnerEmail")),
+          partnerName: String(fd.get("partnerName") || "") || null,
+          discountPercent: Number(fd.get("discountPercent") || 10),
+          cashbackUsd: Number(fd.get("cashbackUsd") || 10),
+        }),
+      });
+      if (!res.ok) throw new Error("create_failed");
+      e.currentTarget.reset();
+      await loadTab();
+    } catch {
+      setErr("Création / mise à jour du code promo impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function patchEdition(id: string, patch: Record<string, unknown>) {
+    if (!isAdmin) return;
     setBusy(true);
     setErr(null);
     try {
@@ -125,6 +214,7 @@ export function HackathonAdminClient() {
     id: string,
     status: string,
   ) {
+    if (!isAdmin) return;
     await fetch("/api/admin/hackathon", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -137,6 +227,7 @@ export function HackathonAdminClient() {
     id: string,
     action: "relink_user" | "resend_verify",
   ) {
+    if (!isAdmin) return;
     setBusy(true);
     setErr(null);
     try {
@@ -149,6 +240,47 @@ export function HackathonAdminClient() {
       await loadTab();
     } catch {
       setErr("Action participant impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function togglePromo(id: string, active: boolean) {
+    if (!isAdmin) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/hackathon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "promo", id, active }),
+      });
+      if (!res.ok) throw new Error("patch_failed");
+      await loadTab();
+    } catch {
+      setErr("Activation code impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resolveClaim(
+    id: string,
+    status: "approved" | "paid" | "rejected",
+  ) {
+    if (!isAdmin) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/hackathon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "promo_claim", id, status }),
+      });
+      if (!res.ok) throw new Error("patch_failed");
+      await loadTab();
+    } catch {
+      setErr("Traitement cashback impossible.");
     } finally {
       setBusy(false);
     }
@@ -191,20 +323,31 @@ export function HackathonAdminClient() {
     URL.revokeObjectURL(url);
   }
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "editions", label: "Éditions" },
-    { id: "registrations", label: "Participants" },
-    { id: "partners", label: "Partenaires" },
-    { id: "sponsors", label: "Sponsors" },
-    { id: "people", label: "Jury / Mentors" },
-  ];
+  const tabs: { id: Tab; label: string }[] = isAdmin
+    ? [
+        { id: "editions", label: "Éditions" },
+        { id: "registrations", label: "Participants" },
+        { id: "partners", label: "Partenaires" },
+        { id: "sponsors", label: "Sponsors" },
+        { id: "people", label: "Jury / Mentors" },
+        { id: "promo", label: "Promo / Cashback" },
+      ]
+    : [
+        { id: "registrations", label: "Participants" },
+        { id: "partners", label: "Partenaires" },
+        { id: "sponsors", label: "Sponsors" },
+        { id: "people", label: "Jury / Mentors" },
+        { id: "promo", label: "Promo (lecture)" },
+      ];
 
   return (
     <div className={adminCls.page}>
       <div>
-        <h2 className={adminCls.h1}>Hackathon</h2>
+        <h2 className={adminCls.h1}>
+          Hackathon{isAdmin ? "" : " - stats"}
+        </h2>
         <p className={adminCls.muted}>
-          Multi-éditions — landing publique{" "}
+          Multi-éditions - landing publique{" "}
           <a href="/hackathon" className="font-semibold text-[color:var(--fd-primary)]">
             /hackathon
           </a>
@@ -215,6 +358,7 @@ export function HackathonAdminClient() {
           >
             Scanner porte
           </a>
+          {!isAdmin ? " · lecture seule" : null}
         </p>
       </div>
 
@@ -252,7 +396,7 @@ export function HackathonAdminClient() {
         </label>
       ) : null}
 
-      {tab === "editions" ? (
+      {tab === "editions" && isAdmin ? (
         <>
           <form onSubmit={createEdition} className={`${adminCls.card} space-y-3`}>
             <h3 className={adminCls.h2}>Nouvelle édition</h3>
@@ -293,7 +437,7 @@ export function HackathonAdminClient() {
                       {ed.maxSeats} places
                     </p>
                     <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-                      {ed.venue ?? "—"}
+                      {ed.venue ?? "-"}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -386,7 +530,7 @@ export function HackathonAdminClient() {
                         {String(r.firstName)} {String(r.lastName)}
                       </td>
                       <td className="px-3 py-2">{String(r.email)}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{String(r.phone ?? "—")}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{String(r.phone ?? "-")}</td>
                       <td className="px-3 py-2">{String(r.ticketPack)}</td>
                       <td className="px-3 py-2">
                         <span
@@ -406,7 +550,7 @@ export function HackathonAdminClient() {
                       <td className="px-3 py-2 text-xs text-[color:var(--fd-muted)]">
                         {r.holdExpiresAt
                           ? new Date(String(r.holdExpiresAt)).toLocaleString("fr-FR")
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="px-3 py-2 text-xs">
                         {userId ? (
@@ -419,7 +563,7 @@ export function HackathonAdminClient() {
                               {userId.slice(0, 8)}
                             </a>
                             <p className="text-[color:var(--fd-muted)]">
-                              {String(r.userDisplayName ?? "—")}
+                              {String(r.userDisplayName ?? "-")}
                               {verified ? " · vérifié" : " · non vérifié"}
                             </p>
                             {duplicate ? (
@@ -430,7 +574,8 @@ export function HackathonAdminClient() {
                                 E-mail ≠ compte ({String(r.userEmail)})
                               </p>
                             ) : null}
-                            {mismatch || !userId || status === "pending_verify" ? (
+                            {isAdmin &&
+                            (mismatch || !userId || status === "pending_verify") ? (
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {mismatch || !userId ? (
                                   <button
@@ -458,10 +603,10 @@ export function HackathonAdminClient() {
                             ) : null}
                           </div>
                         ) : (
-                          "—"
+                          "-"
                         )}
                       </td>
-                      <td className="px-3 py-2 font-mono text-xs">{String(r.ticketCode ?? "—")}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{String(r.ticketCode ?? "-")}</td>
                     </tr>
                   );
                 })}
@@ -477,33 +622,35 @@ export function HackathonAdminClient() {
             <li key={String(r.id)} className={`${adminCls.card} flex flex-wrap items-center justify-between gap-2`}>
               <div>
                 <p className="font-bold">
-                  {String(r.orgName ?? r.companyName)} — {String(r.contactName)}
+                  {String(r.orgName ?? r.companyName)} - {String(r.contactName)}
                 </p>
                 <p className="text-xs text-[color:var(--fd-muted)]">
                   {String(r.email)} · {String(r.status)}
                   {r.pack ? ` · ${String(r.pack)}` : ""}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className={adminCls.btnSecondary}
-                  onClick={() =>
-                    void patchLead(tab === "partners" ? "partner" : "sponsor", String(r.id), "confirmed")
-                  }
-                >
-                  Confirmer
-                </button>
-                <button
-                  type="button"
-                  className={adminCls.btnSecondary}
-                  onClick={() =>
-                    void patchLead(tab === "partners" ? "partner" : "sponsor", String(r.id), "rejected")
-                  }
-                >
-                  Rejeter
-                </button>
-              </div>
+              {isAdmin ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className={adminCls.btnSecondary}
+                    onClick={() =>
+                      void patchLead(tab === "partners" ? "partner" : "sponsor", String(r.id), "confirmed")
+                    }
+                  >
+                    Confirmer
+                  </button>
+                  <button
+                    type="button"
+                    className={adminCls.btnSecondary}
+                    onClick={() =>
+                      void patchLead(tab === "partners" ? "partner" : "sponsor", String(r.id), "rejected")
+                    }
+                  >
+                    Rejeter
+                  </button>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -522,9 +669,145 @@ export function HackathonAdminClient() {
             </li>
           ))}
           {!rows.length ? (
-            <p className={adminCls.empty}>Aucun jury/mentor — seed ou ajoutez en DB.</p>
+            <p className={adminCls.empty}>Aucun jury/mentor - seed ou ajoutez en DB.</p>
           ) : null}
         </ul>
+      ) : null}
+
+      {tab === "promo" ? (
+        <div className="space-y-4">
+          {isAdmin ? (
+            <form onSubmit={createPromo} className={`${adminCls.card} space-y-3`}>
+              <h3 className={adminCls.h2}>Créer / upsert code promo</h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input name="code" required placeholder="CODE" className={adminCls.input} />
+                <input name="orgName" required placeholder="Organisation" className={adminCls.input} />
+                <input name="partnerEmail" required type="email" placeholder="Email partenaire" className={adminCls.input} />
+                <input name="partnerName" placeholder="Nom contact" className={adminCls.input} />
+                <input name="discountPercent" type="number" defaultValue={10} placeholder="% remise" className={adminCls.input} />
+                <input name="cashbackUsd" type="number" defaultValue={10} placeholder="Cashback USD" className={adminCls.input} />
+              </div>
+              <button type="submit" disabled={busy || !editionId} className={adminCls.btnPrimary}>
+                Enregistrer
+              </button>
+            </form>
+          ) : null}
+
+          <ul className="space-y-3">
+            {promos.map((p) => (
+              <li key={p.id} className={adminCls.card}>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-bold text-[color:var(--fd-text)]">
+                      {p.code}{" "}
+                      <span
+                        className={
+                          p.active
+                            ? "text-emerald-700"
+                            : "text-[color:var(--fd-muted)]"
+                        }
+                      >
+                        {p.active ? "actif" : "inactif"}
+                      </span>
+                    </p>
+                    <p className="text-xs text-[color:var(--fd-muted)]">
+                      {p.orgName} · {p.partnerEmail}
+                      {p.partnerName ? ` · ${p.partnerName}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+                      -{p.discountPercent}% · cashback {p.cashbackUsd} USD · inscrits{" "}
+                      {p.totals.signups} · confirmés {p.totals.confirmed} · dû{" "}
+                      {p.totals.cashbackUsd} USD · réclamable {p.claimableUsd} USD
+                    </p>
+                    {isAdmin ? (
+                      <p className="mt-1 break-all text-[11px] text-[color:var(--fd-muted)]">
+                        Dashboard :{" "}
+                        <a
+                          href={`/hackathon/promo/dashboard/${p.dashboardToken}`}
+                          className="font-semibold text-[color:var(--fd-primary)] underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          /hackathon/promo/dashboard/...
+                        </a>
+                      </p>
+                    ) : null}
+                  </div>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className={adminCls.btnSecondary}
+                      disabled={busy}
+                      onClick={() => void togglePromo(p.id, !p.active)}
+                    >
+                      {p.active ? "Désactiver" : "Activer"}
+                    </button>
+                  ) : null}
+                </div>
+
+                {p.claims.length ? (
+                  <ul className="mt-3 space-y-2 border-t border-[color:var(--fd-border)] pt-3">
+                    {p.claims.map((c) => (
+                      <li
+                        key={c.id}
+                        className="flex flex-wrap items-center justify-between gap-2 text-sm"
+                      >
+                        <span>
+                          <span className="font-semibold">{c.amountUsd} USD</span>{" "}
+                          · {c.status} ·{" "}
+                          {new Date(c.requestedAt).toLocaleString("fr-FR")}
+                          {c.note ? ` · ${c.note}` : ""}
+                        </span>
+                        {isAdmin &&
+                        (c.status === "requested" || c.status === "approved") ? (
+                          <div className="flex flex-wrap gap-1">
+                            {c.status === "requested" ? (
+                              <>
+                                <button
+                                  type="button"
+                                  className={adminCls.btnSecondary}
+                                  disabled={busy}
+                                  onClick={() => void resolveClaim(c.id, "approved")}
+                                >
+                                  Approuver
+                                </button>
+                                <button
+                                  type="button"
+                                  className={adminCls.btnSecondary}
+                                  disabled={busy}
+                                  onClick={() => void resolveClaim(c.id, "rejected")}
+                                >
+                                  Rejeter
+                                </button>
+                              </>
+                            ) : null}
+                            {c.status === "approved" || c.status === "requested" ? (
+                              <button
+                                type="button"
+                                className={adminCls.btnPrimary}
+                                disabled={busy}
+                                onClick={() => void resolveClaim(c.id, "paid")}
+                              >
+                                Marquer payé
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-xs text-[color:var(--fd-muted)]">
+                    Aucune demande cashback.
+                  </p>
+                )}
+              </li>
+            ))}
+            {!promos.length ? (
+              <p className={adminCls.empty}>Aucun code promo pour cette édition.</p>
+            ) : null}
+          </ul>
+        </div>
       ) : null}
     </div>
   );

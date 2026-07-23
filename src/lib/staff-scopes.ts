@@ -12,6 +12,10 @@ export const STAFF_SCOPES = [
   "platform_expenses_approve",
   /** Home page landing promo banners (images, links, copy). */
   "landing_ads",
+  /** Hackathon door QR scan (entry / exit). */
+  "hackathon_scan",
+  /** Hackathon read-only stats / registration lists. */
+  "hackathon_stats",
 ] as const;
 export type StaffScope = (typeof STAFF_SCOPES)[number];
 

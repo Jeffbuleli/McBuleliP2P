@@ -722,6 +722,13 @@
       "when": 1788200000000,
       "tag": "0112_hackathon_promo",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1788300000000,
+      "tag": "0113_hackathon_promo_claims",
+      "breakpoints": true
     }
   ]
 }

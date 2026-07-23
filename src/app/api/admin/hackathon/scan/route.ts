@@ -8,7 +8,7 @@ import {
   recordAccessScan,
   rosterBuckets,
 } from "@/lib/hackathon/access";
-import { StaffAuthError, requireStaff } from "@/lib/session-user";
+import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ function authError(e: unknown) {
 
 export async function GET(req: Request) {
   try {
-    await requireStaff();
+    await requireStaffScope("hackathon_scan");
   } catch (e) {
     return authError(e);
   }
@@ -83,7 +83,7 @@ const scanZ = z.object({
 export async function POST(req: Request) {
   let staff;
   try {
-    staff = await requireStaff();
+    staff = await requireStaffScope("hackathon_scan");
   } catch (e) {
     return authError(e);
   }

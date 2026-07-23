@@ -27,6 +27,14 @@ function statusLabel(status: string, confirmed: boolean): string {
   return status;
 }
 
+function claimStatusLabel(status: string): string {
+  if (status === "requested") return "Demandé";
+  if (status === "approved") return "Approuvé";
+  if (status === "paid") return "Payé";
+  if (status === "rejected") return "Rejeté";
+  return status;
+}
+
 function IconMail({ className }: { className?: string }) {
   return (
     <svg
@@ -47,6 +55,12 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   const [data, setData] = useState<PartnerDashboardStats | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authMsg, setAuthMsg] = useState<string | null>(null);
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimMsg, setClaimMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -81,6 +95,112 @@ export function PartnerPromoDashboardClient({ token }: Props) {
     return () => window.clearInterval(id);
   }, [load]);
 
+  async function requestOtp() {
+    setAuthBusy(true);
+    setAuthMsg(null);
+    try {
+      const res = await fetch(
+        `/api/hackathon/promo/dashboard/${encodeURIComponent(token)}/auth`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "request" }),
+        },
+      );
+      const json = (await res.json().catch(() => null)) as {
+        maskedEmail?: string;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        setAuthMsg(
+          json?.error === "email_failed"
+            ? "Envoi du code impossible. Réessayez."
+            : "Impossible d'envoyer le code.",
+        );
+        return;
+      }
+      setOtpSent(true);
+      setAuthMsg(
+        json?.maskedEmail
+          ? `Code envoyé à ${json.maskedEmail}.`
+          : "Code envoyé.",
+      );
+    } catch {
+      setAuthMsg("Erreur réseau.");
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function verifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthBusy(true);
+    setAuthMsg(null);
+    try {
+      const res = await fetch(
+        `/api/hackathon/promo/dashboard/${encodeURIComponent(token)}/auth`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "verify", code: otpCode.trim() }),
+        },
+      );
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setAuthMsg(
+          json?.error === "otp_expired"
+            ? "Code expiré. Demandez-en un nouveau."
+            : "Code invalide.",
+        );
+        return;
+      }
+      setOtpCode("");
+      setAuthMsg(null);
+      await load();
+    } catch {
+      setAuthMsg("Erreur réseau.");
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function requestClaim() {
+    setClaimBusy(true);
+    setClaimMsg(null);
+    try {
+      const res = await fetch(
+        `/api/hackathon/promo/dashboard/${encodeURIComponent(token)}/claim`,
+        { method: "POST" },
+      );
+      const json = (await res.json().catch(() => null)) as {
+        amountUsd?: number;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        const map: Record<string, string> = {
+          auth_required: "Vérifiez votre email d'abord.",
+          nothing_to_claim: "Rien à réclamer pour le moment.",
+          claim_pending: "Une demande est déjà en cours.",
+          email_mismatch: "Email non autorisé pour ce code.",
+        };
+        setClaimMsg(map[json?.error ?? ""] ?? "Demande impossible.");
+        return;
+      }
+      setClaimMsg(
+        json?.amountUsd != null
+          ? `Demande envoyée : ${json.amountUsd} USD. Paiement hors plateforme après validation McBuleli.`
+          : "Demande envoyée.",
+      );
+      await load();
+    } catch {
+      setClaimMsg("Erreur réseau.");
+    } finally {
+      setClaimBusy(false);
+    }
+  }
+
   if (loading && !data) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#8A8A8A]">
@@ -102,11 +222,13 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
   if (!data) return null;
 
-  const { promo, totals, signups, edition, rewards } = data;
+  const { promo, totals, signups, edition, rewards, auth, cashback } = data;
+  const verified = auth.verified;
   const progress = Math.min(
     100,
     Math.round((totals.confirmed / rewards.freeSeatsThreshold) * 100),
   );
+  const pendingClaim = cashback.claims.some((c) => c.status === "requested");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
@@ -179,6 +301,58 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         </div>
 
         <div className="space-y-5 px-5 py-5 sm:px-6">
+          {!verified ? (
+            <div className="rounded-2xl border border-[#1F6B43]/25 bg-white px-4 py-5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
+                Vérification email
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[#222222]">
+                Pour voir les inscrits et demander le cashback, validez l&apos;accès
+                avec le code envoyé à{" "}
+                {auth.partnerEmailMasked ?? "l'email partenaire"}.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={authBusy}
+                  onClick={() => void requestOtp()}
+                  className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-60"
+                >
+                  {otpSent ? "Renvoyer le code" : "Recevoir le code"}
+                </button>
+              </div>
+              {otpSent ? (
+                <form onSubmit={verifyOtp} className="mt-4 flex flex-wrap items-end gap-2">
+                  <label className="block text-xs font-bold text-[#57534e]">
+                    Code à 6 chiffres
+                    <input
+                      inputMode="numeric"
+                      pattern="\d{6}"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) =>
+                        setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      className="mt-1 block w-40 rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2 font-mono text-lg tracking-[0.2em] text-[#222222]"
+                      placeholder="000000"
+                      required
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={authBusy || otpCode.length !== 6}
+                    className="rounded-xl border border-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-[#1F6B43] disabled:opacity-60"
+                  >
+                    Valider
+                  </button>
+                </form>
+              ) : null}
+              {authMsg ? (
+                <p className="mt-3 text-xs font-semibold text-[#57534e]">{authMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-2.5">
             <Stat label="Inscrits" value={String(totals.signups)} />
             <Stat label="Confirmés" value={String(totals.confirmed)} accent />
@@ -229,6 +403,65 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             </p>
           </div>
 
+          {verified ? (
+            <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
+                Cashback à réclamer
+              </p>
+              <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
+                {cashback.claimableUsd} USD
+              </p>
+              <p className="mt-2 text-xs text-[#57534e]">
+                Cumulé confirmé : {totals.cashbackUsd} USD. Paiement Mobile Money /
+                bank hors plateforme après validation McBuleli.
+              </p>
+              <button
+                type="button"
+                disabled={
+                  claimBusy || cashback.claimableUsd <= 0 || pendingClaim
+                }
+                onClick={() => void requestClaim()}
+                className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+              >
+                Demander le cashback
+              </button>
+              {claimMsg ? (
+                <p className="mt-2 text-xs font-semibold text-[#57534e]">
+                  {claimMsg}
+                </p>
+              ) : null}
+              {cashback.claims.length > 0 ? (
+                <ul className="mt-4 space-y-2 border-t border-[#1F6B43]/15 pt-3">
+                  {cashback.claims.map((c) => (
+                    <li
+                      key={c.id}
+                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="font-bold text-[#222222]">
+                        {c.amountUsd} USD - {claimStatusLabel(c.status)}
+                      </span>
+                      <span className="text-[#8A8A8A]">
+                        {new Date(c.requestedAt).toLocaleDateString("fr-CD")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5 text-center">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
+                Cashback cumulé (temps réel)
+              </p>
+              <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
+                {totals.cashbackUsd} USD
+              </p>
+              <p className="mt-2 text-xs text-[#57534e]">
+                Vérifiez votre email pour demander le paiement.
+              </p>
+            </div>
+          )}
+
           <div className="overflow-x-auto rounded-2xl border border-[#E5E5E0] bg-white">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-[#E5E5E0] bg-[#F3F4F1]/90 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
@@ -241,7 +474,16 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {signups.length === 0 ? (
+                {!verified ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-10 text-center text-sm text-[#8A8A8A]"
+                    >
+                      Liste des inscrits disponible après vérification email.
+                    </td>
+                  </tr>
+                ) : signups.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -301,19 +543,6 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 )}
               </tbody>
             </table>
-          </div>
-
-          <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5 text-center">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
-              Cashback cumulé (temps réel)
-            </p>
-            <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
-              {totals.cashbackUsd} USD
-            </p>
-            <p className="mt-2 text-xs text-[#57534e]">
-              {promo.cashbackPerPaidUsd} USD par inscription confirmée (payée) via
-              votre code.
-            </p>
           </div>
         </div>
 

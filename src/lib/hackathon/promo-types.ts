@@ -45,6 +45,22 @@ export type PartnerDashboardStats = {
     freeSeatsUnlocked: boolean;
     freeSeatsRemaining: number;
   };
+  cashback: {
+    claimableUsd: number;
+    claims: Array<{
+      id: string;
+      amountUsd: number;
+      status: string;
+      requestedAt: string;
+      resolvedAt: string | null;
+      note: string | null;
+    }>;
+  };
+  auth: {
+    required: boolean;
+    verified: boolean;
+    partnerEmailMasked: string | null;
+  };
   signups: PartnerDashboardSignup[];
   updatedAt: string;
 };

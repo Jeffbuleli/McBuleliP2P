@@ -271,6 +271,8 @@ export default function AdminUsersPage() {
                   t("admin_agent_scope_platform_expenses_approve"),
                 ] as const,
                 ["landing_ads", t("admin_agent_scope_landing_ads")] as const,
+                ["hackathon_scan", t("admin_agent_scope_hackathon_scan")] as const,
+                ["hackathon_stats", t("admin_agent_scope_hackathon_stats")] as const,
               ] as const
             ).map(([scope, label]) => (
               <label key={scope} className="flex cursor-pointer items-center gap-2">

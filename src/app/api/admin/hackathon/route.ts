@@ -6,11 +6,12 @@ import {
   hackathonEditions,
   hackathonPeople,
   hackathonPartners,
+  hackathonPromoCodes,
   hackathonRegistrations,
   hackathonSponsors,
   users,
 } from "@/db";
-import { StaffAuthError, requireStaff } from "@/lib/session-user";
+import { StaffAuthError, requireStaffScope, requireSuperAdmin } from "@/lib/session-user";
 import {
   defaultPrizes,
   defaultProgram,
@@ -24,14 +25,37 @@ function authError(e: unknown) {
   return NextResponse.json({ error: msg }, { status: 403 });
 }
 
-export async function GET(req: Request) {
+/** Read: stats agents, scan agents (editions list only), or super_admin. */
+async function requireHackathonRead(tab: string): Promise<{
+  isSuperAdmin: boolean;
+}> {
   try {
-    await requireStaff();
+    await requireSuperAdmin();
+    return { isSuperAdmin: true };
+  } catch {
+    if (tab === "editions") {
+      try {
+        await requireStaffScope("hackathon_stats");
+        return { isSuperAdmin: false };
+      } catch {
+        await requireStaffScope("hackathon_scan");
+        return { isSuperAdmin: false };
+      }
+    }
+    await requireStaffScope("hackathon_stats");
+    return { isSuperAdmin: false };
+  }
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const tab = url.searchParams.get("tab") ?? "editions";
+  let readAuth: { isSuperAdmin: boolean };
+  try {
+    readAuth = await requireHackathonRead(tab);
   } catch (e) {
     return authError(e);
   }
-  const url = new URL(req.url);
-  const tab = url.searchParams.get("tab") ?? "editions";
   const editionId = url.searchParams.get("editionId");
   const db = getDb();
 
@@ -135,6 +159,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ people: rows });
   }
 
+  if (tab === "promo") {
+    const { listAdminPromoOverview } = await import(
+      "@/lib/hackathon/promo-claims"
+    );
+    const promos = await listAdminPromoOverview(editionId);
+    return NextResponse.json({
+      promos: readAuth.isSuperAdmin
+        ? promos
+        : promos.map(({ dashboardToken: _t, ...rest }) => rest),
+    });
+  }
+
   return NextResponse.json({ error: "bad_tab" }, { status: 400 });
 }
 
@@ -149,6 +185,35 @@ const createEditionZ = z.object({
   maxSeats: z.number().int().min(1).max(10000).default(100),
   priceDay1Usd: z.string().default("100"),
   priceFullUsd: z.string().default("100"),
+});
+
+const createPromoZ = z.object({
+  kind: z.literal("promo"),
+  editionId: z.string().uuid(),
+  code: z.string().trim().min(3).max(32),
+  orgName: z.string().trim().min(2).max(200),
+  partnerEmail: z.string().trim().email().max(255),
+  partnerName: z.string().trim().max(160).optional().nullable(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  cashbackUsd: z.number().min(0).max(10_000).optional(),
+});
+
+const patchPromoZ = z.object({
+  kind: z.literal("promo"),
+  id: z.string().uuid(),
+  active: z.boolean().optional(),
+  orgName: z.string().trim().min(2).max(200).optional(),
+  partnerEmail: z.string().trim().email().max(255).optional(),
+  partnerName: z.string().trim().max(160).nullable().optional(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  cashbackUsd: z.number().min(0).max(10_000).optional(),
+});
+
+const patchClaimZ = z.object({
+  kind: z.literal("promo_claim"),
+  id: z.string().uuid(),
+  status: z.enum(["approved", "paid", "rejected"]),
+  note: z.string().trim().max(2000).optional().nullable(),
 });
 
 const patchEditionZ = z.object({
@@ -181,11 +246,22 @@ const patchRegistrationZ = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireStaff();
+    await requireSuperAdmin();
   } catch (e) {
     return authError(e);
   }
   const json = await req.json().catch(() => null);
+
+  if (json && typeof json === "object" && (json as { kind?: string }).kind === "promo") {
+    const parsed = createPromoZ.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+    }
+    const { upsertPartnerPromo } = await import("@/lib/hackathon/promo");
+    const promo = await upsertPartnerPromo(parsed.data);
+    return NextResponse.json({ promo });
+  }
+
   const parsed = createEditionZ.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
@@ -222,14 +298,84 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  let admin;
   try {
-    await requireStaff();
+    admin = await requireSuperAdmin();
   } catch (e) {
     return authError(e);
   }
   const json = await req.json().catch(() => null);
 
   if (json && typeof json === "object" && "kind" in json) {
+    if ((json as { kind?: string }).kind === "promo_claim") {
+      const claimPatch = patchClaimZ.safeParse(json);
+      if (!claimPatch.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const { resolveCashbackClaim } = await import(
+        "@/lib/hackathon/promo-claims"
+      );
+      const result = await resolveCashbackClaim({
+        claimId: claimPatch.data.id,
+        status: claimPatch.data.status,
+        adminUserId: admin.id,
+        note: claimPatch.data.note,
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: result.status },
+        );
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    if ((json as { kind?: string }).kind === "promo") {
+      const promoPatch = patchPromoZ.safeParse(json);
+      if (!promoPatch.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const db = getDb();
+      const data = promoPatch.data;
+      const [existing] = await db
+        .select()
+        .from(hackathonPromoCodes)
+        .where(eq(hackathonPromoCodes.id, data.id))
+        .limit(1);
+      if (!existing) {
+        return NextResponse.json({ error: "not_found" }, { status: 404 });
+      }
+
+      if (
+        data.orgName !== undefined ||
+        data.partnerEmail !== undefined ||
+        data.partnerName !== undefined ||
+        data.discountPercent !== undefined ||
+        data.cashbackUsd !== undefined
+      ) {
+        const { upsertPartnerPromo } = await import("@/lib/hackathon/promo");
+        await upsertPartnerPromo({
+          editionId: existing.editionId,
+          code: existing.code,
+          orgName: data.orgName ?? existing.orgName,
+          partnerEmail: data.partnerEmail ?? existing.partnerEmail,
+          partnerName:
+            data.partnerName !== undefined
+              ? data.partnerName
+              : existing.partnerName,
+          discountPercent:
+            data.discountPercent ?? Number(existing.discountPercent),
+          cashbackUsd: data.cashbackUsd ?? Number(existing.cashbackUsd),
+        });
+      }
+
+      if (data.active !== undefined) {
+        const { setPromoActive } = await import("@/lib/hackathon/promo");
+        await setPromoActive(data.id, data.active);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     if ((json as { kind?: string }).kind === "registration") {
       const regPatch = patchRegistrationZ.safeParse(json);
       if (!regPatch.success) {
