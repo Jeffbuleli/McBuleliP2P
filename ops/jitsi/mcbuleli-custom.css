@@ -10,12 +10,14 @@ a[href*="8x8.vc"] {
 }
 
 /* Coin vidéo — Jitsi pose le logo via background-image sur ce div.
- * Transparence ~75–80 % (opacity 0.20–0.25) pour ne pas couvrir les visages. */
+ * Transparence 80 % (opacity 0.20) pour ne pas couvrir les visages. */
 .leftwatermark,
-.watermark.leftwatermark {
+.watermark.leftwatermark,
+div.leftwatermark,
+div.watermark.leftwatermark {
   display: block !important;
   visibility: visible !important;
-  opacity: 0.22 !important;
+  opacity: 0.2 !important;
   width: 72px !important;
   max-width: 72px !important;
   height: 72px !important;
@@ -25,7 +27,7 @@ a[href*="8x8.vc"] {
   background-repeat: no-repeat !important;
   background-position: center !important;
   background-size: contain !important;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
   z-index: 500 !important;
   pointer-events: none !important;
 }

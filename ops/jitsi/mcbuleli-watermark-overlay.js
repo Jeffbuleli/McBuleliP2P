@@ -1,10 +1,18 @@
 /**
  * Filet de secours : injecte le logo McBuleli si .leftwatermark est absent / vide.
- * Le logo natif Jitsi utilise background-image sur .leftwatermark (ne pas le casser en CSS).
+ * Force aussi opacity ~80% transparente sur le watermark natif (contourne CSS en cache).
  */
 (function () {
   var LOGO = "/images/mcbuleli-meet-logo.png";
   var ID = "mcbuleli-wm-overlay";
+  var OPACITY = "0.2";
+
+  function softenNativeWatermark() {
+    var nodes = document.querySelectorAll(".leftwatermark, .watermark.leftwatermark");
+    for (var i = 0; i < nodes.length; i += 1) {
+      nodes[i].style.setProperty("opacity", OPACITY, "important");
+    }
+  }
 
   function hasNativeWatermark() {
     var el = document.querySelector(".leftwatermark");
@@ -14,6 +22,7 @@
   }
 
   function ensureOverlay() {
+    softenNativeWatermark();
     if (hasNativeWatermark()) {
       var existing = document.getElementById(ID);
       if (existing) existing.remove();
@@ -28,8 +37,10 @@
     img.height = 72;
     img.style.cssText =
       "position:fixed;top:16px;left:16px;width:72px;height:72px;z-index:600;" +
-      "pointer-events:none;object-fit:contain;opacity:0.22;" +
-      "filter:drop-shadow(0 1px 3px rgba(0,0,0,.25));";
+      "pointer-events:none;object-fit:contain;opacity:" +
+      OPACITY +
+      ";" +
+      "filter:drop-shadow(0 1px 3px rgba(0,0,0,.2));";
     document.body.appendChild(img);
   }
 

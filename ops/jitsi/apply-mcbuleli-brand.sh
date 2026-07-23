@@ -238,13 +238,27 @@ config.interfaceConfig.SHOW_POWERED_BY = false;
 config.interfaceConfig.SHOW_PROMOTIONAL_CLOSE_PAGE = false;
 config.interfaceConfig.MOBILE_APP_PROMO = false;
 config.interfaceConfig.JITSI_WATERMARK_LINK = '';
-config.customParticipantLabelCssUrl = '/css/mcbuleli-custom.css';
+config.customParticipantLabelCssUrl = '/css/mcbuleli-custom.css?v=wm80-20260723';
 EOF
 fi
 
-# Charger CSS sur toutes les pages
-if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-custom.css' "$JITSI_ROOT/index.html"; then
-  sed -i 's|</head>|<link rel="stylesheet" href="/css/mcbuleli-custom.css" />\n</head>|' "$JITSI_ROOT/index.html"
+# Cache-bust CSS/JS watermark (évite CSS opaque en cache navigateur)
+WM_ASSET_V="wm80-20260723"
+if [[ -f "$JITSI_ROOT/index.html" ]]; then
+  if grep -q 'mcbuleli-custom\.css' "$JITSI_ROOT/index.html"; then
+    sed -i -E "s|/css/mcbuleli-custom\\.css(\\?v=[^\"]*)?|/css/mcbuleli-custom.css?v=${WM_ASSET_V}|g" \
+      "$JITSI_ROOT/index.html"
+  else
+    sed -i "s|</head>|<link rel=\"stylesheet\" href=\"/css/mcbuleli-custom.css?v=${WM_ASSET_V}\" />\n</head>|" \
+      "$JITSI_ROOT/index.html"
+  fi
+  if grep -q 'mcbuleli-watermark-overlay\.js' "$JITSI_ROOT/index.html"; then
+    sed -i -E "s|/mcbuleli-watermark-overlay\\.js(\\?v=[^\"]*)?|/mcbuleli-watermark-overlay.js?v=${WM_ASSET_V}|g" \
+      "$JITSI_ROOT/index.html"
+  else
+    sed -i "s|</body>|<script src=\"/mcbuleli-watermark-overlay.js?v=${WM_ASSET_V}\"></script>\n</body>|" \
+      "$JITSI_ROOT/index.html"
+  fi
 fi
 
 echo "==> Notifications McBuleli (plus de « via Jitsi »)"
@@ -263,10 +277,16 @@ fi
 
 # Overlay de secours (si .leftwatermark absent) + scripts branding
 cp "$SCRIPT_DIR/mcbuleli-watermark-overlay.js" "$JITSI_ROOT/mcbuleli-watermark-overlay.js"
-if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q 'mcbuleli-watermark-overlay\.js' "$JITSI_ROOT/index.html"; then
-  sed -i 's|</body>|<script src="/mcbuleli-watermark-overlay.js"></script>\n</body>|' "$JITSI_ROOT/index.html"
-fi
+# index.html script tag handled above with cache-bust
 
+# Keep customParticipantLabelCssUrl cache-busted when block already existed
+sed -i -E "s|config\\.customParticipantLabelCssUrl = '/css/mcbuleli-custom\\.css(\\?v=[^']*)?'|config.customParticipantLabelCssUrl = '/css/mcbuleli-custom.css?v=${WM_ASSET_V}'|g" \
+  "$CONFIG" 2>/dev/null || true
+sed -i -E "s|config\\.customParticipantLabelCssUrl = \"/css/mcbuleli-custom\\.css(\\?v=[^\"]*)?\"|config.customParticipantLabelCssUrl = \"/css/mcbuleli-custom.css?v=${WM_ASSET_V}\"|g" \
+  "$CONFIG" 2>/dev/null || true
+
+echo "==> Vérification watermark cache-bust (?v=${WM_ASSET_V})"
+grep -E 'mcbuleli-custom\\.css|mcbuleli-watermark-overlay' "$JITSI_ROOT/index.html" 2>/dev/null | head -5 || true
 for js in mcbuleli-hangup-return.js mcbuleli-rebrand-notifications.js mcbuleli-live-title.js mcbuleli-prejoin-brand.js; do
   cp "$SCRIPT_DIR/$js" "$JITSI_ROOT/$js"
   if [[ -f "$JITSI_ROOT/index.html" ]] && ! grep -q "$js" "$JITSI_ROOT/index.html"; then
