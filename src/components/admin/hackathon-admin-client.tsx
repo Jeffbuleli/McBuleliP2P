@@ -38,6 +38,8 @@ type PromoRow = {
   orgName: string;
   partnerEmail: string;
   partnerName: string | null;
+  kind?: string;
+  ownerUserId?: string | null;
   discountPercent: number;
   cashbackUsd: number;
   active: boolean;
@@ -703,6 +705,9 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
                   <div>
                     <p className="font-bold text-[color:var(--fd-text)]">
                       {p.code}{" "}
+                      <span className="text-[color:var(--fd-muted)]">
+                        · {p.kind === "ambassador" ? "ambassadeur" : "partenaire"}
+                      </span>{" "}
                       <span
                         className={
                           p.active

@@ -9,6 +9,7 @@ import {
   SUPPORT_X,
 } from "@/lib/support-contact";
 import type { PartnerDashboardStats } from "@/lib/hackathon/promo-types";
+import { PROMO_CASHBACK_CLAIM_MIN_USD } from "@/lib/hackathon/promo-types";
 import { FiatStepper } from "@/components/wallet/fiat-stepper";
 import { FiatProviderPicker } from "@/components/wallet/fiat-provider-picker";
 import {
@@ -291,7 +292,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           claim_pending: "Une demande est déjà en cours.",
           email_mismatch: "Email non autorisé pour ce code.",
           invalid_phone: "Numéro Mobile Money invalide (243...).",
-          invalid_amount: "Montant invalide (minimum 1 USD).",
+          invalid_amount: `Montant invalide (minimum ${PROMO_CASHBACK_CLAIM_MIN_USD} USD).`,
           amount_exceeds_claimable: "Montant supérieur au cashback disponible.",
           momo_unavailable: "Mobile Money temporairement indisponible.",
           payout_rejected: "Paiement Mobile Money refusé. Réessayez.",
@@ -361,12 +362,15 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   if (!data) return null;
 
   const { promo, totals, signups, edition, rewards, auth, cashback } = data;
+  const isAmbassador = promo.kind === "ambassador";
   const verified = auth.verified;
   const pendingClaim = cashback.claims.some((c) => c.status === "requested");
   const claimable = cashback.claimableUsd;
   const amountNum = Number(amountUsd);
   const amountOk =
-    Number.isFinite(amountNum) && amountNum >= 1 && amountNum <= claimable + 0.001;
+    Number.isFinite(amountNum) &&
+    amountNum >= PROMO_CASHBACK_CLAIM_MIN_USD &&
+    amountNum <= claimable + 0.001;
   const phoneOk = isValidCodMsisdn(normalizeCodPhoneNumber(phoneNumber));
   const providerLabel =
     providers.find((p) => p.provider === provider)?.label ?? provider;
@@ -404,7 +408,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
-              Partenaire Hackathon
+              {isAmbassador ? "Ambassadeur Hackathon" : "Partenaire Hackathon"}
             </p>
             <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
               {promo.orgName}
@@ -535,7 +539,8 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           <Kpi label="Cashback" value={`${totals.cashbackUsd} $`} accent />
         </section>
 
-        {/* Free seats — tiered */}
+        {/* Free seats - partners only */}
+        {!isAmbassador ? (
         <section className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -566,7 +571,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
           <div className="mt-5 space-y-3">
             <SeatTier
-              title="1re place — pour vous"
+              title="1re place - pour vous"
               detail={`${seat1At} inscrits payés`}
               done={seat1Done}
               progress={Math.min(
@@ -605,6 +610,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             </div>
           ) : null}
         </section>
+        ) : null}
 
         {/* Cashback */}
         {verified ? (
@@ -623,7 +629,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             {!withdrawOpen ? (
               <button
                 type="button"
-                disabled={claimBusy || claimable <= 0 || pendingClaim}
+                disabled={
+                  claimBusy ||
+                  claimable < PROMO_CASHBACK_CLAIM_MIN_USD ||
+                  pendingClaim
+                }
                 onClick={openWithdraw}
                 className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#185535] disabled:opacity-45"
               >
@@ -662,7 +672,8 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       />
                     </label>
                     <p className="text-[11px] text-[#8A8A8A]">
-                      Disponible : {claimable} USD (min. 1)
+                      Disponible : {claimable} USD (min.{" "}
+                      {PROMO_CASHBACK_CLAIM_MIN_USD})
                     </p>
                     {claimable > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
@@ -670,7 +681,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                           <button
                             key={p.label}
                             type="button"
-                            disabled={p.value < 1}
+                            disabled={p.value < PROMO_CASHBACK_CLAIM_MIN_USD}
                             onClick={() => setAmountUsd(String(p.value))}
                             className="rounded-full border border-[#E5E5E0] bg-[#F3F4F1] px-2.5 py-1 text-[11px] font-bold text-[#1A1A1A] disabled:opacity-40"
                           >

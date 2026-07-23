@@ -8,8 +8,16 @@ export const PARTNER_SEAT_2_AT = 10;
 
 /** @deprecated use PARTNER_FREE_SEATS_MAX */
 export const PARTNER_FREE_SEATS = PARTNER_FREE_SEATS_MAX;
-/** @deprecated use PARTNER_SEAT_2_AT — kept for older copy that meant “full unlock”. */
+/** @deprecated use PARTNER_SEAT_2_AT - kept for older copy that meant "full unlock". */
 export const PARTNER_FREE_SEATS_THRESHOLD = PARTNER_SEAT_2_AT;
+
+/** Ambassador self-serve economics (same discount/cashback as partner, no free seats). */
+export const AMBASSADOR_DISCOUNT_PERCENT = 10;
+export const AMBASSADOR_CASHBACK_USD = 10;
+/** Minimum Mobile Money withdrawal for promo cashback. */
+export const PROMO_CASHBACK_CLAIM_MIN_USD = 10;
+
+export type PromoKind = "partner" | "ambassador";
 
 export function partnerFreeSeatsEarned(confirmedPaid: number): number {
   if (confirmedPaid >= PARTNER_SEAT_2_AT) return 2;
@@ -36,6 +44,7 @@ export type PartnerDashboardStats = {
     code: string;
     orgName: string;
     partnerName: string | null;
+    kind: PromoKind;
     discountPercent: number;
     cashbackPerPaidUsd: number;
     shareUrl: string;

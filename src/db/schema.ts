@@ -4240,6 +4240,12 @@ export const hackathonPromoCodes = pgTable(
     orgName: varchar("org_name", { length: 200 }).notNull(),
     partnerEmail: varchar("partner_email", { length: 255 }).notNull(),
     partnerName: varchar("partner_name", { length: 160 }),
+    /** partner | ambassador */
+    kind: varchar("kind", { length: 16 }).notNull().default("partner"),
+    /** McBuleli user who owns an ambassador code. */
+    ownerUserId: uuid("owner_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     discountPercent: numeric("discount_percent", { precision: 5, scale: 2 })
       .notNull()
       .default("10"),
@@ -4262,6 +4268,12 @@ export const hackathonPromoCodes = pgTable(
   (t) => [
     index("hackathon_promo_codes_edition_idx").on(t.editionId),
     index("hackathon_promo_codes_email_idx").on(t.partnerEmail),
+    index("hackathon_promo_codes_owner_idx").on(t.ownerUserId),
+    uniqueIndex("hackathon_promo_codes_ambassador_owner_uidx")
+      .on(t.editionId, t.ownerUserId)
+      .where(
+        sql`${t.kind} = 'ambassador' and ${t.active} = true and ${t.ownerUserId} is not null`,
+      ),
   ],
 );
 

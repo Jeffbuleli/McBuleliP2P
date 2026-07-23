@@ -352,6 +352,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <CtaSecondary href="#partenaires" onDark>
                 {isFr ? "Devenir partenaire" : "Become a partner"}
               </CtaSecondary>
+              <CtaSecondary href="/hackathon/ambassadeur" onDark>
+                {isFr ? "Devenir ambassadeur" : "Become an ambassador"}
+              </CtaSecondary>
             </div>
           </div>
         </div>

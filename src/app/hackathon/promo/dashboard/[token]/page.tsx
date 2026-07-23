@@ -5,7 +5,7 @@ import { PartnerPromoDashboardClient } from "@/components/hackathon/partner-prom
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Dashboard partenaire - McBuleli Hackathon",
+  title: "Dashboard promo - McBuleli Hackathon",
   robots: { index: false, follow: false },
 };
 

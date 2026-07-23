@@ -736,6 +736,13 @@
       "when": 1788400000000,
       "tag": "0114_hackathon_promo_claim_payout",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1788500000000,
+      "tag": "0115_hackathon_promo_ambassador",
+      "breakpoints": true
     }
   ]
 }

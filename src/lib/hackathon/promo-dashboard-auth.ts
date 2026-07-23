@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email/send";
 import { EMAIL_BRAND, logoUrl } from "@/lib/email/config";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { getPromoByDashboardToken } from "@/lib/hackathon/promo";
+import { getSessionUserId } from "@/lib/session";
 
 const COOKIE = "mcbuleli_promo_dash";
 const OTP_TTL_MS = 15 * 60 * 1000;
@@ -72,12 +73,24 @@ export async function readPromoDashSession(): Promise<{
   return verifyPromoDashSession(raw);
 }
 
+async function isOwnerSession(
+  promo: NonNullable<Awaited<ReturnType<typeof getPromoByDashboardToken>>>,
+): Promise<boolean> {
+  if (!promo.ownerUserId) return false;
+  const userId = await getSessionUserId();
+  return Boolean(userId && userId === promo.ownerUserId);
+}
+
 export async function requirePromoDashAuth(dashboardToken: string): Promise<
   | { ok: true; promo: NonNullable<Awaited<ReturnType<typeof getPromoByDashboardToken>>>; email: string }
   | { ok: false; error: string; status: number }
 > {
   const promo = await getPromoByDashboardToken(dashboardToken);
   if (!promo) return { ok: false, error: "not_found", status: 404 };
+
+  if (await isOwnerSession(promo)) {
+    return { ok: true, promo, email: promo.partnerEmail.toLowerCase() };
+  }
 
   const session = await readPromoDashSession();
   if (!session || session.promoId !== promo.id) {

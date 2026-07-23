@@ -1,10 +1,12 @@
 import { randomBytes } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   getDb,
   hackathonEditions,
   hackathonPromoCodes,
+  hackathonPromoCashbackClaims,
   hackathonRegistrations,
+  users,
 } from "@/db";
 import { HACKATHON_PRICE_USD } from "@/lib/hackathon/constants";
 import { partnershipPublicBaseUrl } from "@/lib/email/config";
@@ -21,6 +23,9 @@ import {
 } from "@/lib/hackathon/promo-types";
 import { claimableCashbackUsd, listClaimsForPromo } from "@/lib/hackathon/promo-claims";
 import { readPromoDashSession } from "@/lib/hackathon/promo-dashboard-auth";
+import { canonicalEmailForDedup } from "@/lib/auth/email-normalize";
+import { getSessionUserId } from "@/lib/session";
+import type { PromoKind } from "@/lib/hackathon/promo-types";
 
 export type { PartnerDashboardSignup, PartnerDashboardStats } from "@/lib/hackathon/promo-types";
 export {
@@ -30,7 +35,11 @@ export {
   PARTNER_SEAT_1_AT,
   PARTNER_SEAT_2_AT,
   partnerFreeSeatsEarned,
+  AMBASSADOR_CASHBACK_USD,
+  AMBASSADOR_DISCOUNT_PERCENT,
+  PROMO_CASHBACK_CLAIM_MIN_USD,
 } from "@/lib/hackathon/promo-types";
+export type { PromoKind } from "@/lib/hackathon/promo-types";
 export type ResolvedPromo = {
   id: string;
   editionId: string;
@@ -191,12 +200,14 @@ export async function getPartnerDashboardStats(
   const confirmed = signups.filter((s) => s.confirmed).length;
   const cashbackUsd = signups.reduce((sum, s) => {
     if (!s.confirmed) return sum;
-    return sum + (s.cashbackUsd ?? Number(promo.cashbackUsd));
+    return sum + (s.cashbackUsd ?? 0);
   }, 0);
 
-  const seatsEarned = partnerFreeSeatsEarned(confirmed);
-  const nextSeatAt =
-    seatsEarned < 1
+  const isAmbassador = (promo.kind ?? "partner") === "ambassador";
+  const seatsEarned = isAmbassador ? 0 : partnerFreeSeatsEarned(confirmed);
+  const nextSeatAt = isAmbassador
+    ? null
+    : seatsEarned < 1
       ? PARTNER_SEAT_1_AT
       : seatsEarned < PARTNER_FREE_SEATS_MAX
         ? PARTNER_SEAT_2_AT
@@ -207,10 +218,16 @@ export async function getPartnerDashboardStats(
   const claimableUsd = await claimableCashbackUsd(promo.id);
   const claims = await listClaimsForPromo(promo.id);
   const session = await readPromoDashSession();
+  const sessionUserId = await getSessionUserId();
+  const ownerMatch =
+    Boolean(promo.ownerUserId) &&
+    sessionUserId === promo.ownerUserId &&
+    Boolean(sessionUserId);
   const verified =
-    Boolean(session) &&
-    session!.promoId === promo.id &&
-    session!.email === promo.partnerEmail.toLowerCase();
+    ownerMatch ||
+    (Boolean(session) &&
+      session!.promoId === promo.id &&
+      session!.email === promo.partnerEmail.toLowerCase());
   const email = promo.partnerEmail;
   const [userPart, domain] = email.split("@");
   const masked =
@@ -223,6 +240,7 @@ export async function getPartnerDashboardStats(
       code: promo.code,
       orgName: promo.orgName,
       partnerName: promo.partnerName,
+      kind: (isAmbassador ? "ambassador" : "partner") as PromoKind,
       discountPercent: Number(promo.discountPercent),
       cashbackPerPaidUsd: Number(promo.cashbackUsd),
       shareUrl: partnerShareUrl(promo.code),
@@ -236,15 +254,15 @@ export async function getPartnerDashboardStats(
       cashbackUsd,
     },
     rewards: {
-      seatsMax: PARTNER_FREE_SEATS_MAX,
+      seatsMax: isAmbassador ? 0 : PARTNER_FREE_SEATS_MAX,
       seatsEarned,
       seat1At: PARTNER_SEAT_1_AT,
       seat2At: PARTNER_SEAT_2_AT,
       nextSeatAt,
       nextSeatRemaining,
-      freeSeats: PARTNER_FREE_SEATS_MAX,
+      freeSeats: isAmbassador ? 0 : PARTNER_FREE_SEATS_MAX,
       freeSeatsThreshold: PARTNER_SEAT_2_AT,
-      freeSeatsUnlocked: seatsEarned >= PARTNER_FREE_SEATS_MAX,
+      freeSeatsUnlocked: !isAmbassador && seatsEarned >= PARTNER_FREE_SEATS_MAX,
       freeSeatsRemaining: nextSeatRemaining,
     },
     cashback: {
@@ -264,7 +282,7 @@ export async function getPartnerDashboardStats(
         : [],
     },
     auth: {
-      required: true,
+      required: !ownerMatch,
       verified,
       partnerEmailMasked: masked,
     },
@@ -337,6 +355,7 @@ export async function upsertPartnerPromo(args: {
       orgName: args.orgName.trim(),
       partnerEmail: email,
       partnerName: args.partnerName?.trim() || null,
+      kind: "partner",
       discountPercent: String(discountPercent),
       cashbackUsd: String(cashbackUsd),
       active: true,
@@ -371,16 +390,21 @@ export async function setPromoActive(
   return Boolean(row);
 }
 
-/** Award cashback once when a promo registration becomes paid. */
+/** Award cashback once when a promo registration becomes paid (anti-collusion → $0). */
 export async function awardPromoCashbackIfNeeded(registrationId: string): Promise<void> {
   const db = getDb();
   const [reg] = await db
     .select({
       id: hackathonRegistrations.id,
+      editionId: hackathonRegistrations.editionId,
+      userId: hackathonRegistrations.userId,
+      email: hackathonRegistrations.email,
+      phone: hackathonRegistrations.phone,
       promoCodeId: hackathonRegistrations.promoCodeId,
       cashbackAwardedAt: hackathonRegistrations.cashbackAwardedAt,
       cashbackUsd: hackathonRegistrations.cashbackUsd,
       paymentStatus: hackathonRegistrations.paymentStatus,
+      createdAt: hackathonRegistrations.createdAt,
     })
     .from(hackathonRegistrations)
     .where(eq(hackathonRegistrations.id, registrationId))
@@ -390,14 +414,25 @@ export async function awardPromoCashbackIfNeeded(registrationId: string): Promis
     return;
   }
 
-  let amount = reg.cashbackUsd != null ? Number(reg.cashbackUsd) : null;
-  if (amount == null || !Number.isFinite(amount)) {
-    const [promo] = await db
-      .select({ cashbackUsd: hackathonPromoCodes.cashbackUsd })
-      .from(hackathonPromoCodes)
-      .where(eq(hackathonPromoCodes.id, reg.promoCodeId))
-      .limit(1);
-    amount = promo ? Number(promo.cashbackUsd) : 0;
+  const [promo] = await db
+    .select()
+    .from(hackathonPromoCodes)
+    .where(eq(hackathonPromoCodes.id, reg.promoCodeId))
+    .limit(1);
+
+  let amount =
+    reg.cashbackUsd != null && Number.isFinite(Number(reg.cashbackUsd))
+      ? Number(reg.cashbackUsd)
+      : promo
+        ? Number(promo.cashbackUsd)
+        : 0;
+
+  if (promo && amount > 0) {
+    const blocked = await isPromoCashbackBlocked({
+      reg,
+      promo,
+    });
+    if (blocked) amount = 0;
   }
 
   await db
@@ -413,4 +448,117 @@ export async function awardPromoCashbackIfNeeded(registrationId: string): Promis
         sql`${hackathonRegistrations.cashbackAwardedAt} is null`,
       ),
     );
+}
+
+async function isPromoCashbackBlocked(args: {
+  reg: {
+    id: string;
+    editionId: string;
+    userId: string | null;
+    email: string;
+    phone: string;
+    createdAt: Date;
+  };
+  promo: typeof hackathonPromoCodes.$inferSelect;
+}): Promise<boolean> {
+  const { reg, promo } = args;
+  const db = getDb();
+  const regEmailCanon = canonicalEmailForDedup(reg.email);
+  const partnerEmailCanon = canonicalEmailForDedup(promo.partnerEmail);
+  if (regEmailCanon && partnerEmailCanon && regEmailCanon === partnerEmailCanon) {
+    return true;
+  }
+  if (reg.email.trim().toLowerCase() === promo.partnerEmail.trim().toLowerCase()) {
+    return true;
+  }
+  if (promo.ownerUserId && reg.userId && reg.userId === promo.ownerUserId) {
+    return true;
+  }
+
+  // Soft self-referral: registration predates the promo code.
+  if (reg.createdAt.getTime() < promo.createdAt.getTime()) {
+    return true;
+  }
+
+  const regPhone = normalizeCodPhoneNumber(reg.phone);
+  if (promo.ownerUserId) {
+    const [owner] = await db
+      .select({
+        email: users.email,
+        emailCanonical: users.emailCanonical,
+        recoveryWaPhone: users.recoveryWaPhone,
+      })
+      .from(users)
+      .where(eq(users.id, promo.ownerUserId))
+      .limit(1);
+    if (owner) {
+      const ownerCanon =
+        owner.emailCanonical || canonicalEmailForDedup(owner.email);
+      if (ownerCanon && regEmailCanon && ownerCanon === regEmailCanon) {
+        return true;
+      }
+      if (owner.recoveryWaPhone) {
+        const ownerPhone = normalizeCodPhoneNumber(owner.recoveryWaPhone);
+        if (ownerPhone && regPhone && ownerPhone === regPhone) {
+          return true;
+        }
+      }
+    }
+  }
+
+  if (regPhone) {
+    const [priorClaimPhone] = await db
+      .select({ id: hackathonPromoCashbackClaims.id })
+      .from(hackathonPromoCashbackClaims)
+      .where(
+        and(
+          eq(hackathonPromoCashbackClaims.promoCodeId, promo.id),
+          eq(hackathonPromoCashbackClaims.phoneNumber, regPhone),
+          inArray(hackathonPromoCashbackClaims.status, [
+            "requested",
+            "approved",
+            "paid",
+          ]),
+        ),
+      )
+      .limit(1);
+    if (priorClaimPhone) return true;
+  }
+
+  // One referred cashback > 0 per payer (email) per edition across all promos.
+  const [priorAward] = await db
+    .select({ id: hackathonRegistrations.id })
+    .from(hackathonRegistrations)
+    .where(
+      and(
+        eq(hackathonRegistrations.editionId, reg.editionId),
+        eq(hackathonRegistrations.paymentStatus, "paid"),
+        sql`${hackathonRegistrations.cashbackAwardedAt} is not null`,
+        sql`coalesce(${hackathonRegistrations.cashbackUsd}, 0) > 0`,
+        sql`${hackathonRegistrations.id} <> ${reg.id}`,
+        sql`lower(${hackathonRegistrations.email}) = ${reg.email.trim().toLowerCase()}`,
+      ),
+    )
+    .limit(1);
+  if (priorAward) return true;
+
+  if (regPhone) {
+    const [priorPhoneAward] = await db
+      .select({ id: hackathonRegistrations.id })
+      .from(hackathonRegistrations)
+      .where(
+        and(
+          eq(hackathonRegistrations.editionId, reg.editionId),
+          eq(hackathonRegistrations.paymentStatus, "paid"),
+          sql`${hackathonRegistrations.cashbackAwardedAt} is not null`,
+          sql`coalesce(${hackathonRegistrations.cashbackUsd}, 0) > 0`,
+          sql`${hackathonRegistrations.id} <> ${reg.id}`,
+          sql`${hackathonRegistrations.phone} = ${reg.phone}`,
+        ),
+      )
+      .limit(1);
+    if (priorPhoneAward) return true;
+  }
+
+  return false;
 }

@@ -15,6 +15,7 @@ import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
 } from "@/lib/freshpay/normalize-phone";
+import { PROMO_CASHBACK_CLAIM_MIN_USD } from "@/lib/hackathon/promo-types";
 import { pawapayPayOut } from "@/lib/pawapay/provider";
 
 async function getPromoByToken(token: string) {
@@ -40,6 +41,7 @@ export async function claimableCashbackUsd(promoId: string): Promise<number> {
       and(
         eq(hackathonRegistrations.promoCodeId, promoId),
         eq(hackathonRegistrations.paymentStatus, "paid"),
+        sql`${hackathonRegistrations.cashbackAwardedAt} is not null`,
       ),
     );
 
@@ -117,7 +119,7 @@ export async function requestCashbackClaim(args: {
   }
 
   const amount = roundUsd(Number(args.amountUsd));
-  if (!Number.isFinite(amount) || amount < 1) {
+  if (!Number.isFinite(amount) || amount < PROMO_CASHBACK_CLAIM_MIN_USD) {
     return { ok: false, error: "invalid_amount", status: 400 };
   }
   if (amount > claimable + 0.001) {
@@ -332,6 +334,8 @@ export async function listAdminPromoOverview(editionId?: string | null) {
       orgName: p.orgName,
       partnerEmail: p.partnerEmail,
       partnerName: p.partnerName,
+      kind: p.kind ?? "partner",
+      ownerUserId: p.ownerUserId ?? null,
       discountPercent: Number(p.discountPercent),
       cashbackUsd: Number(p.cashbackUsd),
       active: p.active,
