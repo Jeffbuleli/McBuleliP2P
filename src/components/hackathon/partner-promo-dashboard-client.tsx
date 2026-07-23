@@ -109,7 +109,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   );
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8 sm:py-10">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
       <motion.article
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -229,55 +229,78 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-[#E5E5E0] bg-white">
-            <div className="border-b border-[#E5E5E0] bg-[#F3F4F1]/80 px-3.5 py-2.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
-              Inscrits via votre code
-            </div>
-            {signups.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-[#8A8A8A]">
-                Aucun inscrit pour le moment. Partagez votre lien.
-              </p>
-            ) : (
-              <ul className="divide-y divide-[#E5E5E0]/80">
-                {signups.map((s) => (
-                  <li key={s.id} className="px-3.5 py-3.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#222222]">
-                          {s.firstName} {s.lastName}
-                        </p>
-                        <p
-                          className={`mt-0.5 text-xs font-semibold ${
-                            s.confirmed ? "text-[#1F6B43]" : "text-amber-800"
-                          }`}
+          <div className="overflow-x-auto rounded-2xl border border-[#E5E5E0] bg-white">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-[#E5E5E0] bg-[#F3F4F1]/90 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
+                <tr>
+                  <th className="px-3 py-3 sm:px-4">Nom</th>
+                  <th className="px-3 py-3 sm:px-4">Statut</th>
+                  <th className="px-3 py-3 sm:px-4">N° ticket</th>
+                  <th className="px-3 py-3 sm:px-4">WhatsApp</th>
+                  <th className="px-3 py-3 sm:px-4">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {signups.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-10 text-center text-sm text-[#8A8A8A]"
+                    >
+                      Aucun inscrit via votre code pour le moment. Partagez votre
+                      lien.
+                    </td>
+                  </tr>
+                ) : (
+                  signups.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="border-b border-[#E5E5E0]/70 last:border-0"
+                    >
+                      <td className="px-3 py-3 font-semibold text-[#222222] sm:px-4">
+                        {s.firstName} {s.lastName}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
+                        <span
+                          className={
+                            s.confirmed
+                              ? "font-bold text-[#1F6B43]"
+                              : "font-semibold text-amber-800"
+                          }
                         >
                           {statusLabel(s.paymentStatus, s.confirmed)}
-                          {s.ticketCode ? ` - ${s.ticketCode}` : ""}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 gap-2">
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 font-mono text-xs sm:px-4">
+                        {s.ticketCode ?? "-"}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
                         {s.whatsappUrl ? (
                           <a
                             href={s.whatsappUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-2.5 py-1 text-[11px] font-bold text-[#1F6B43]"
+                            className="font-semibold text-[#1F6B43] underline"
                           >
-                            WhatsApp
+                            Contacter
                           </a>
-                        ) : null}
+                        ) : (
+                          <span className="text-[#8A8A8A]">-</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
                         <a
                           href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(`McBuleli Hackathon - confirmation (${promo.code})`)}`}
-                          className="rounded-full border border-[#E5E5E0] bg-white px-2.5 py-1 text-[11px] font-bold text-[#1F6B43]"
+                          className="font-semibold text-[#1F6B43] underline"
                         >
-                          Email
+                          Écrire
                         </a>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5 text-center">
