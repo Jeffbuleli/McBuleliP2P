@@ -17,7 +17,7 @@ export default async function PartnerPromoDashboardPage({
   const { token } = await params;
 
   return (
-    <div className="home-theme fd-public-light min-h-dvh bg-[color:var(--fd-bg)]">
+    <div className="min-h-dvh bg-[#F3F4F1]">
       <LandingTopBar authReturnPath="/hackathon" />
       <PartnerPromoDashboardClient token={token} />
     </div>

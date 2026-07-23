@@ -13,8 +13,16 @@ import type {
   PartnerDashboardSignup,
   PartnerDashboardStats,
 } from "@/lib/hackathon/promo-types";
+import {
+  PARTNER_FREE_SEATS,
+  PARTNER_FREE_SEATS_THRESHOLD,
+} from "@/lib/hackathon/promo-types";
 
 export type { PartnerDashboardSignup, PartnerDashboardStats } from "@/lib/hackathon/promo-types";
+export {
+  PARTNER_FREE_SEATS,
+  PARTNER_FREE_SEATS_THRESHOLD,
+} from "@/lib/hackathon/promo-types";
 export type ResolvedPromo = {
   id: string;
   editionId: string;
@@ -178,6 +186,9 @@ export async function getPartnerDashboardStats(
     return sum + (s.cashbackUsd ?? Number(promo.cashbackUsd));
   }, 0);
 
+  const freeSeatsUnlocked = confirmed >= PARTNER_FREE_SEATS_THRESHOLD;
+  const freeSeatsRemaining = Math.max(0, PARTNER_FREE_SEATS_THRESHOLD - confirmed);
+
   return {
     promo: {
       code: promo.code,
@@ -194,6 +205,12 @@ export async function getPartnerDashboardStats(
       confirmed,
       pending: signups.length - confirmed,
       cashbackUsd,
+    },
+    rewards: {
+      freeSeats: PARTNER_FREE_SEATS,
+      freeSeatsThreshold: PARTNER_FREE_SEATS_THRESHOLD,
+      freeSeatsUnlocked,
+      freeSeatsRemaining,
     },
     signups,
     updatedAt: new Date().toISOString(),

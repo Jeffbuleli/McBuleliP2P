@@ -1,5 +1,9 @@
 /** Shared types for partner promo dashboard (safe for client + server). */
 
+export const PARTNER_FREE_SEATS = 2;
+/** Paid confirmations via promo required to unlock free partner seats. */
+export const PARTNER_FREE_SEATS_THRESHOLD = 10;
+
 export type PartnerDashboardSignup = {
   id: string;
   firstName: string;
@@ -34,6 +38,12 @@ export type PartnerDashboardStats = {
     confirmed: number;
     pending: number;
     cashbackUsd: number;
+  };
+  rewards: {
+    freeSeats: number;
+    freeSeatsThreshold: number;
+    freeSeatsUnlocked: boolean;
+    freeSeatsRemaining: number;
   };
   signups: PartnerDashboardSignup[];
   updatedAt: string;
