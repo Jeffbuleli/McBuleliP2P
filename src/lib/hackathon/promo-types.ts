@@ -1,8 +1,21 @@
 /** Shared types for partner promo dashboard (safe for client + server). */
 
-export const PARTNER_FREE_SEATS = 2;
-/** Paid confirmations via promo required to unlock free partner seats. */
-export const PARTNER_FREE_SEATS_THRESHOLD = 10;
+export const PARTNER_FREE_SEATS_MAX = 2;
+/** Paid confirmations via promo to unlock the partner's own free seat. */
+export const PARTNER_SEAT_1_AT = 3;
+/** Paid confirmations via promo to unlock the second free seat. */
+export const PARTNER_SEAT_2_AT = 10;
+
+/** @deprecated use PARTNER_FREE_SEATS_MAX */
+export const PARTNER_FREE_SEATS = PARTNER_FREE_SEATS_MAX;
+/** @deprecated use PARTNER_SEAT_2_AT — kept for older copy that meant “full unlock”. */
+export const PARTNER_FREE_SEATS_THRESHOLD = PARTNER_SEAT_2_AT;
+
+export function partnerFreeSeatsEarned(confirmedPaid: number): number {
+  if (confirmedPaid >= PARTNER_SEAT_2_AT) return 2;
+  if (confirmedPaid >= PARTNER_SEAT_1_AT) return 1;
+  return 0;
+}
 
 export type PartnerDashboardSignup = {
   id: string;
@@ -40,9 +53,19 @@ export type PartnerDashboardStats = {
     cashbackUsd: number;
   };
   rewards: {
+    seatsMax: number;
+    seatsEarned: number;
+    seat1At: number;
+    seat2At: number;
+    nextSeatAt: number | null;
+    nextSeatRemaining: number;
+    /** @deprecated use seatsEarned >= 1 */
     freeSeats: number;
+    /** @deprecated use seat2At */
     freeSeatsThreshold: number;
+    /** @deprecated use seatsEarned >= seatsMax */
     freeSeatsUnlocked: boolean;
+    /** @deprecated use nextSeatRemaining */
     freeSeatsRemaining: number;
   };
   cashback: {

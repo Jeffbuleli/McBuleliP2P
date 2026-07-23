@@ -10,8 +10,8 @@ import {
   SUPPORT_WA_PATH,
 } from "@/lib/support-contact";
 import {
-  PARTNER_FREE_SEATS,
-  PARTNER_FREE_SEATS_THRESHOLD,
+  PARTNER_SEAT_1_AT,
+  PARTNER_SEAT_2_AT,
 } from "@/lib/hackathon/promo-types";
 
 const FONT = "'Poppins',Arial,Helvetica,sans-serif";
@@ -60,7 +60,7 @@ export function buildPartnerPromoConfirmEmail(args: PartnerPromoConfirmArgs): {
     "",
     `Tarif via votre code : ${args.priceUsd} USD (-${args.discountPercent}%).`,
     `Cashback : ${args.cashbackUsd} USD par inscription payee via votre code.`,
-    `2 places offertes si votre code amene ${PARTNER_FREE_SEATS_THRESHOLD}+ participants confirmes (payes). Sinon, cashback uniquement.`,
+    `Places offertes : 1 place pour vous a ${PARTNER_SEAT_1_AT} inscrits payes, 2e place a ${PARTNER_SEAT_2_AT}+. Cashback toujours actif.`,
     "",
     `Dashboard temps reel :`,
     args.dashboardUrl,
@@ -119,9 +119,12 @@ export function buildPartnerPromoConfirmEmail(args: PartnerPromoConfirmArgs): {
           <tr>
             <td style="padding:14px 28px 4px;">
               <p style="margin:0;font-size:14px;line-height:1.55;color:${EMAIL_BRAND.muted};">
-                <strong style="color:${EMAIL_BRAND.text};">${PARTNER_FREE_SEATS} places offertes</strong> si votre code amène
-                <strong style="color:${EMAIL_BRAND.text};">${PARTNER_FREE_SEATS_THRESHOLD}+ participants confirmés</strong> (payés).
-                Sinon, vous conservez uniquement le cashback.
+                <strong style="color:${EMAIL_BRAND.text};">Places offertes :</strong>
+                1 place pour vous dès
+                <strong style="color:${EMAIL_BRAND.text};">${PARTNER_SEAT_1_AT} inscrits payés</strong>,
+                puis une 2<sup>e</sup> place à
+                <strong style="color:${EMAIL_BRAND.text};">${PARTNER_SEAT_2_AT}+</strong>.
+                Le cashback reste acquis sur chaque inscription payée.
               </p>
             </td>
           </tr>
@@ -141,7 +144,7 @@ export function buildPartnerPromoConfirmEmail(args: PartnerPromoConfirmArgs): {
                 Ouvrir mon dashboard
               </a>
               <p style="margin:12px 0 0;font-size:13px;line-height:1.55;color:${EMAIL_BRAND.muted};">
-                Stats en temps réel : inscrits, confirmation, N° ticket, WhatsApp, cashback, progression vers les ${PARTNER_FREE_SEATS} places.
+                Stats en temps réel : inscrits, confirmation, N° ticket, WhatsApp, cashback, progression des places (3 → 1 place, 10 → 2 places).
               </p>
             </td>
           </tr>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
   SUPPORT_EMAIL,
@@ -21,10 +21,7 @@ import {
   normalizeCodPhoneNumber,
 } from "@/lib/freshpay/normalize-phone";
 
-type Props = {
-  token: string;
-};
-
+type Props = { token: string };
 type ProviderOption = { provider: string; label: string };
 
 function statusLabel(status: string, confirmed: boolean): string {
@@ -34,14 +31,14 @@ function statusLabel(status: string, confirmed: boolean): string {
     status === "pending" ||
     status === "pending_verify"
   ) {
-    return "Non confirmé";
+    return "En attente";
   }
   if (status === "failed") return "Échoué";
   return status;
 }
 
 function claimStatusLabel(status: string): string {
-  if (status === "requested") return "En cours (Mobile Money)";
+  if (status === "requested") return "Mobile Money en cours";
   if (status === "approved") return "Approuvé";
   if (status === "paid") return "Payé";
   if (status === "rejected") return "Rejeté";
@@ -65,6 +62,22 @@ function IconMail({ className }: { className?: string }) {
   );
 }
 
+function IconCopy({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" />
+      <path d="M4 16V6a2 2 0 0 1 2-2h10" />
+    </svg>
+  );
+}
+
 export function PartnerPromoDashboardClient({ token }: Props) {
   const [data, setData] = useState<PartnerDashboardStats | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -81,6 +94,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [provider, setProvider] = useState("");
   const [providers, setProviders] = useState<ProviderOption[]>([]);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -289,7 +303,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
       }
       setClaimMsg(
         json?.amountUsd != null
-          ? `Retrait de ${json.amountUsd} USD lancé vers votre Mobile Money. Vous recevrez bientôt la notification.`
+          ? `Retrait de ${json.amountUsd} USD lancé vers votre Mobile Money.`
           : "Retrait Mobile Money lancé.",
       );
       setWithdrawOpen(false);
@@ -299,6 +313,17 @@ export function PartnerPromoDashboardClient({ token }: Props) {
       setClaimMsg("Erreur réseau.");
     } finally {
       setClaimBusy(false);
+    }
+  }
+
+  async function copyShare() {
+    if (!data?.promo.shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(data.promo.shareUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* ignore */
     }
   }
 
@@ -313,16 +338,19 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
   if (loading && !data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#8A8A8A]">
-        Chargement du dashboard partenaire...
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <div className="mx-auto h-10 w-10 animate-pulse rounded-2xl bg-[#1F6B43]/15" />
+        <p className="mt-4 text-sm font-semibold text-[#8A8A8A]">
+          Chargement du dashboard...
+        </p>
       </div>
     );
   }
 
   if (err && !data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="text-xl font-black tracking-tight text-[#222222]">
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-black tracking-tight text-[#1A1A1A]">
           Dashboard partenaire
         </h1>
         <p className="mt-3 text-sm font-semibold text-red-700">{err}</p>
@@ -334,10 +362,6 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
   const { promo, totals, signups, edition, rewards, auth, cashback } = data;
   const verified = auth.verified;
-  const progress = Math.min(
-    100,
-    Math.round((totals.confirmed / rewards.freeSeatsThreshold) * 100),
-  );
   const pendingClaim = cashback.claims.some((c) => c.status === "requested");
   const claimable = cashback.claimableUsd;
   const amountNum = Number(amountUsd);
@@ -346,6 +370,17 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   const phoneOk = isValidCodMsisdn(normalizeCodPhoneNumber(phoneNumber));
   const providerLabel =
     providers.find((p) => p.provider === provider)?.label ?? provider;
+  const seatsEarned = rewards.seatsEarned ?? (rewards.freeSeatsUnlocked ? 2 : 0);
+  const seat1At = rewards.seat1At ?? 3;
+  const seat2At = rewards.seat2At ?? 10;
+  const seat1Done = totals.confirmed >= seat1At;
+  const seat2Done = totals.confirmed >= seat2At;
+  const progressToNext = rewards.nextSeatAt
+    ? Math.min(
+        100,
+        Math.round((totals.confirmed / rewards.nextSeatAt) * 100),
+      )
+    : 100;
 
   const amountPresets = [0.25, 0.5, 0.75, 1].map((ratio) => ({
     label: ratio === 1 ? "Max" : `${Math.round(ratio * 100)}%`,
@@ -353,99 +388,113 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
-      <motion.article
-        initial={{ opacity: 0, y: 10 }}
+    <div className="relative mx-auto max-w-4xl px-4 py-8 sm:py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(ellipse_at_top,_rgba(31,107,67,0.14),_transparent_60%)]"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="overflow-hidden rounded-[28px] border border-white/80 bg-[#FBFBFA] shadow-[0_22px_60px_-28px_rgba(31,107,67,0.45)] ring-1 ring-black/[0.04]"
+        className="space-y-6"
       >
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#EAF6EE] via-[#FBFBFA] to-[#F3F4F1] px-5 pb-5 pt-6 sm:px-6">
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full opacity-40"
-            viewBox="0 0 400 220"
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            <circle cx="340" cy="20" r="90" fill="#1F6B43" fillOpacity="0.06" />
-            <circle cx="40" cy="180" r="70" fill="#1F6B43" fillOpacity="0.05" />
-          </svg>
-
-          <div className="relative">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#1F6B43]">
-                  Partenaire Hackathon
-                </p>
-                <h1 className="mt-1.5 text-2xl font-black tracking-tight text-[#222222]">
-                  {promo.orgName}
-                </h1>
-                {edition ? (
-                  <p className="mt-1 truncate text-sm text-[#8A8A8A]">
-                    {edition.nameFr.replace(/\s*[—–]\s*/g, " - ")}
-                  </p>
-                ) : null}
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={BRAND_LOGO_256}
-                alt=""
-                width={44}
-                height={44}
-                className="h-11 w-11 shrink-0 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-[#E5E5E0]"
-              />
+        {/* Header */}
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
+              Partenaire Hackathon
+            </p>
+            <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
+              {promo.orgName}
+            </h1>
+            {edition ? (
+              <p className="mt-1.5 text-sm text-[#6B6B6B]">
+                {edition.nameFr.replace(/\s*[—–]\s*/g, " - ")}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[#1F6B43] px-3.5 py-1.5 font-mono text-sm font-bold tracking-[0.14em] text-white">
+                {promo.code}
+              </span>
+              <span className="text-xs font-semibold text-[#6B6B6B]">
+                -{promo.discountPercent}% · cashback {promo.cashbackPerPaidUsd}{" "}
+                USD / payé
+              </span>
             </div>
-
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#E5E5E0] bg-white/90 px-3.5 py-1.5 font-mono text-sm font-extrabold tracking-[0.12em] text-[#1F6B43] shadow-sm">
-              {promo.code}
-            </div>
-            <p className="mt-2 text-xs font-semibold text-[#57534e]">
-              -{promo.discountPercent}% - cashback {promo.cashbackPerPaidUsd}{" "}
-              USD / payé
-            </p>
-
-            <p className="mt-3 break-all text-[11px] leading-relaxed text-[#8A8A8A]">
-              Lien à partager :{" "}
-              <a
-                href={promo.shareUrl}
-                className="font-semibold text-[#1F6B43] underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {promo.shareUrl}
-              </a>
-            </p>
-            <p className="mt-1 text-[10px] text-[#8A8A8A]">
-              Mise à jour en temps réel -{" "}
-              {new Date(data.updatedAt).toLocaleTimeString("fr-CD")}
-            </p>
           </div>
-        </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={BRAND_LOGO_256}
+            alt=""
+            width={52}
+            height={52}
+            className="h-13 w-13 shrink-0 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/5"
+          />
+        </header>
 
-        <div className="space-y-5 px-5 py-5 sm:px-6">
+        {/* Share strip */}
+        <section className="rounded-2xl bg-white/80 px-4 py-3.5 shadow-sm ring-1 ring-black/[0.04] backdrop-blur-sm sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
+                Lien à partager
+              </p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-[#1F6B43]">
+                {promo.shareUrl}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void copyShare()}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
+            >
+              <IconCopy className="h-3.5 w-3.5" />
+              {copied ? "Copié" : "Copier"}
+            </button>
+          </div>
+          <p className="mt-2 text-[10px] text-[#8A8A8A]">
+            Mise à jour {new Date(data.updatedAt).toLocaleTimeString("fr-CD")}
+          </p>
+        </section>
+
+        {/* Auth gate */}
+        <AnimatePresence>
           {!verified ? (
-            <div className="rounded-2xl border border-[#1F6B43]/25 bg-white px-4 py-5">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
+            <motion.section
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-[#1F6B43]/15"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
                 Vérification email
               </p>
-              <p className="mt-2 text-sm font-semibold text-[#222222]">
-                Pour voir les inscrits et demander le cashback, validez l&apos;accès
+              <p className="mt-2 text-sm font-medium leading-relaxed text-[#3D3D3D]">
+                Pour voir les inscrits et retirer le cashback, validez l&apos;accès
                 avec le code envoyé à{" "}
-                {auth.partnerEmailMasked ?? "l'email partenaire"}.
+                <span className="font-bold text-[#1A1A1A]">
+                  {auth.partnerEmailMasked ?? "votre email partenaire"}
+                </span>
+                .
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
                   disabled={authBusy}
                   onClick={() => void requestOtp()}
-                  className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-60"
+                  className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
                 >
                   {otpSent ? "Renvoyer le code" : "Recevoir le code"}
                 </button>
               </div>
               {otpSent ? (
-                <form onSubmit={verifyOtp} className="mt-4 flex flex-wrap items-end gap-2">
-                  <label className="block text-xs font-bold text-[#57534e]">
+                <form
+                  onSubmit={verifyOtp}
+                  className="mt-4 flex flex-wrap items-end gap-2"
+                >
+                  <label className="block text-xs font-bold text-[#6B6B6B]">
                     Code à 6 chiffres
                     <input
                       inputMode="numeric"
@@ -455,7 +504,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       onChange={(e) =>
                         setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
-                      className="mt-1 block w-40 rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2 font-mono text-lg tracking-[0.2em] text-[#222222]"
+                      className="mt-1 block w-40 rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2 font-mono text-lg tracking-[0.2em] text-[#1A1A1A]"
                       placeholder="000000"
                       required
                     />
@@ -463,286 +512,319 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   <button
                     type="submit"
                     disabled={authBusy || otpCode.length !== 6}
-                    className="rounded-xl border border-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-[#1F6B43] disabled:opacity-60"
+                    className="rounded-xl border-2 border-[#1F6B43] px-4 py-2.5 text-sm font-bold text-[#1F6B43] disabled:opacity-60"
                   >
                     Valider
                   </button>
                 </form>
               ) : null}
               {authMsg ? (
-                <p className="mt-3 text-xs font-semibold text-[#57534e]">{authMsg}</p>
+                <p className="mt-3 text-xs font-semibold text-[#6B6B6B]">
+                  {authMsg}
+                </p>
               ) : null}
-            </div>
+            </motion.section>
           ) : null}
+        </AnimatePresence>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            <Stat label="Inscrits" value={String(totals.signups)} />
-            <Stat label="Confirmés" value={String(totals.confirmed)} accent />
-            <Stat label="En attente" value={String(totals.pending)} />
-            <Stat label="Cashback" value={`${totals.cashbackUsd} USD`} accent />
+        {/* KPIs */}
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Kpi label="Inscrits" value={String(totals.signups)} />
+          <Kpi label="Confirmés" value={String(totals.confirmed)} accent />
+          <Kpi label="En attente" value={String(totals.pending)} />
+          <Kpi label="Cashback" value={`${totals.cashbackUsd} $`} accent />
+        </section>
+
+        {/* Free seats — tiered */}
+        <section className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+                Places partenaires
+              </p>
+              <p className="mt-1 text-lg font-black tracking-tight text-[#1A1A1A]">
+                {seatsEarned} / {rewards.seatsMax ?? 2} débloquée
+                {seatsEarned > 1 ? "s" : ""}
+              </p>
+            </div>
+            <span
+              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                seatsEarned >= 2
+                  ? "bg-[#1F6B43] text-white"
+                  : seatsEarned === 1
+                    ? "bg-[#EAF6EE] text-[#1F6B43]"
+                    : "bg-[#F3F4F1] text-[#6B6B6B]"
+              }`}
+            >
+              {seatsEarned >= 2
+                ? "Complet"
+                : seatsEarned === 1
+                  ? "1 place"
+                  : "En cours"}
+            </span>
           </div>
 
-          <div
-            className={`rounded-2xl border px-4 py-4 ${
-              rewards.freeSeatsUnlocked
-                ? "border-[#1F6B43]/30 bg-[#EAF6EE]"
-                : "border-[#E5E5E0] bg-white"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
-                  2 places offertes
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#222222]">
-                  {rewards.freeSeatsUnlocked
-                    ? "Objectif atteint - places débloquées"
-                    : `${totals.confirmed} / ${rewards.freeSeatsThreshold} confirmés`}
-                </p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${
-                  rewards.freeSeatsUnlocked
-                    ? "bg-[#1F6B43] text-white"
-                    : "bg-[#F3F4F1] text-[#57534e]"
-                }`}
-              >
-                {rewards.freeSeatsUnlocked ? "Débloqué" : "En cours"}
-              </span>
-            </div>
-            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#E5E5E0]">
+          <div className="mt-5 space-y-3">
+            <SeatTier
+              title="1re place — pour vous"
+              detail={`${seat1At} inscrits payés`}
+              done={seat1Done}
+              progress={Math.min(
+                100,
+                Math.round((totals.confirmed / seat1At) * 100),
+              )}
+              current={`${Math.min(totals.confirmed, seat1At)} / ${seat1At}`}
+            />
+            <SeatTier
+              title="2e place"
+              detail={`${seat2At}+ inscrits payés`}
+              done={seat2Done}
+              progress={Math.min(
+                100,
+                Math.round((totals.confirmed / seat2At) * 100),
+              )}
+              current={`${Math.min(totals.confirmed, seat2At)} / ${seat2At}`}
+            />
+          </div>
+
+          <p className="mt-4 text-xs leading-relaxed text-[#6B6B6B]">
+            {seatsEarned >= 2
+              ? "Les 2 places sont débloquées. Le cashback continue sur chaque inscription payée."
+              : seatsEarned === 1
+                ? `Votre place est débloquée. Encore ${rewards.nextSeatRemaining} confirmé${rewards.nextSeatRemaining > 1 ? "s" : ""} pour la 2e place.`
+                : `À ${seat1At} payés : 1 place pour vous. À ${seat2At}+ : 2e place. Cashback dès le 1er payé.`}
+          </p>
+          {rewards.nextSeatAt ? (
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EFEFEA]">
               <motion.div
                 className="h-full rounded-full bg-[#1F6B43]"
                 initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
+                animate={{ width: `${progressToNext}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
               />
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[#8A8A8A]">
-              {rewards.freeSeatsUnlocked
-                ? `Vous avez ${rewards.freeSeats} places partenaires + le cashback sur chaque inscription payée.`
-                : `Il faut ${rewards.freeSeatsThreshold}+ participants confirmés (payés) via votre code pour les ${rewards.freeSeats} places. Sinon, vous conservez uniquement le cashback (${promo.cashbackPerPaidUsd} USD / payé). Encore ${rewards.freeSeatsRemaining}.`}
+          ) : null}
+        </section>
+
+        {/* Cashback */}
+        {verified ? (
+          <section className="rounded-2xl bg-gradient-to-br from-[#EAF6EE] to-[#F7FBF8] px-5 py-5 ring-1 ring-[#1F6B43]/12">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+              Cashback à retirer
             </p>
-          </div>
+            <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-black tabular-nums tracking-tight text-[#1F6B43]">
+              {claimable}{" "}
+              <span className="text-xl font-bold text-[#1F6B43]/80">USD</span>
+            </p>
+            <p className="mt-2 text-xs text-[#57534e]">
+              Cumulé confirmé : {totals.cashbackUsd} USD · retrait Mobile Money
+            </p>
 
-          {verified ? (
-            <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
-                Cashback à réclamer
-              </p>
-              <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
-                {claimable} USD
-              </p>
-              <p className="mt-2 text-xs text-[#57534e]">
-                Cumulé confirmé : {totals.cashbackUsd} USD. Retrait via Mobile Money
-                (Airtel / Orange / M-Pesa).
-              </p>
+            {!withdrawOpen ? (
+              <button
+                type="button"
+                disabled={claimBusy || claimable <= 0 || pendingClaim}
+                onClick={openWithdraw}
+                className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#185535] disabled:opacity-45"
+              >
+                Demander le cashback
+              </button>
+            ) : (
+              <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-black/[0.04]">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-[#1A1A1A]">
+                    Retrait Mobile Money
+                  </p>
+                  <button
+                    type="button"
+                    onClick={closeWithdraw}
+                    className="text-xs font-bold text-[#8A8A8A] underline"
+                  >
+                    Fermer
+                  </button>
+                </div>
+                <div className="mt-3">
+                  <FiatStepper steps={withdrawSteps} current={withdrawStep} />
+                </div>
 
-              {!withdrawOpen ? (
-                <button
-                  type="button"
-                  disabled={claimBusy || claimable <= 0 || pendingClaim}
-                  onClick={openWithdraw}
-                  className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
-                >
-                  Demander le cashback
-                </button>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-[#E5E5E0] bg-white px-4 py-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-extrabold text-[#222222]">
-                      Retrait Mobile Money
+                {withdrawStep === 0 ? (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-[#6B6B6B]">
+                      Montant (USD)
+                      <input
+                        inputMode="decimal"
+                        value={amountUsd}
+                        onChange={(e) =>
+                          setAmountUsd(e.target.value.replace(/[^\d.]/g, ""))
+                        }
+                        className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 text-lg font-black tabular-nums text-[#1A1A1A]"
+                        placeholder="0.00"
+                      />
+                    </label>
+                    <p className="text-[11px] text-[#8A8A8A]">
+                      Disponible : {claimable} USD (min. 1)
                     </p>
+                    {claimable > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {amountPresets.map((p) => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            disabled={p.value < 1}
+                            onClick={() => setAmountUsd(String(p.value))}
+                            className="rounded-full border border-[#E5E5E0] bg-[#F3F4F1] px-2.5 py-1 text-[11px] font-bold text-[#1A1A1A] disabled:opacity-40"
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <button
                       type="button"
-                      onClick={closeWithdraw}
-                      className="text-xs font-bold text-[#8A8A8A] underline"
+                      disabled={!amountOk}
+                      onClick={() => setWithdrawStep(1)}
+                      className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                     >
-                      Fermer
+                      Continuer
                     </button>
                   </div>
+                ) : null}
 
-                  <div className="mt-3">
-                    <FiatStepper steps={withdrawSteps} current={withdrawStep} />
-                  </div>
-
-                  {withdrawStep === 0 ? (
-                    <div className="space-y-3">
-                      <label className="block text-xs font-bold text-[#57534e]">
-                        Montant (USD)
-                        <input
-                          inputMode="decimal"
-                          value={amountUsd}
-                          onChange={(e) =>
-                            setAmountUsd(
-                              e.target.value.replace(/[^\d.]/g, ""),
-                            )
-                          }
-                          className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2.5 text-lg font-black tabular-nums text-[#222222]"
-                          placeholder="0.00"
-                        />
-                      </label>
-                      <p className="text-[11px] text-[#8A8A8A]">
-                        Disponible : {claimable} USD (min. 1 USD)
+                {withdrawStep === 1 ? (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-[#6B6B6B]">
+                      Numéro Mobile Money
+                      <input
+                        inputMode="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onBlur={() => {
+                          const n = normalizeCodPhoneNumber(phoneNumber);
+                          if (n) setPhoneNumber(n);
+                        }}
+                        className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 font-mono text-sm text-[#1A1A1A]"
+                        placeholder="2438XXXXXXXX"
+                      />
+                    </label>
+                    <div>
+                      <p className="mb-2 text-xs font-bold text-[#6B6B6B]">
+                        Réseau
                       </p>
-                      {claimable > 0 ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {amountPresets.map((p) => (
-                            <button
-                              key={p.label}
-                              type="button"
-                              disabled={p.value < 1}
-                              onClick={() => setAmountUsd(String(p.value))}
-                              className="rounded-full border border-[#E5E5E0] bg-[#F3F4F1] px-2.5 py-1 text-[11px] font-bold text-[#222222] disabled:opacity-40"
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
+                      <FiatProviderPicker
+                        providers={providers}
+                        value={provider}
+                        onChange={setProvider}
+                        disabled={claimBusy}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        disabled={!amountOk}
-                        onClick={() => setWithdrawStep(1)}
-                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                        onClick={() => setWithdrawStep(0)}
+                        className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-bold text-[#6B6B6B]"
+                      >
+                        Retour
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!phoneOk || !provider}
+                        onClick={() => setWithdrawStep(2)}
+                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                       >
                         Continuer
                       </button>
                     </div>
-                  ) : null}
+                  </div>
+                ) : null}
 
-                  {withdrawStep === 1 ? (
-                    <div className="space-y-3">
-                      <label className="block text-xs font-bold text-[#57534e]">
-                        Numéro Mobile Money
-                        <input
-                          inputMode="tel"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          onBlur={() => {
-                            const n = normalizeCodPhoneNumber(phoneNumber);
-                            if (n) setPhoneNumber(n);
-                          }}
-                          className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FBFBFA] px-3 py-2.5 font-mono text-sm text-[#222222]"
-                          placeholder="2438XXXXXXXX"
-                        />
-                      </label>
-                      <div>
-                        <p className="mb-2 text-xs font-bold text-[#57534e]">
-                          Réseau
-                        </p>
-                        <FiatProviderPicker
-                          providers={providers}
-                          value={provider}
-                          onChange={setProvider}
-                          disabled={claimBusy}
-                        />
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setWithdrawStep(0)}
-                          className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-extrabold text-[#57534e]"
-                        >
-                          Retour
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!phoneOk || !provider}
-                          onClick={() => setWithdrawStep(2)}
-                          className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
-                        >
-                          Continuer
-                        </button>
-                      </div>
+                {withdrawStep === 2 ? (
+                  <div className="space-y-3">
+                    <div className="rounded-xl bg-[#F3F4F1] px-3 py-3 text-sm">
+                      <p className="font-bold text-[#1A1A1A]">
+                        {amountNum} USD → {providerLabel}
+                      </p>
+                      <p className="mt-1 font-mono text-xs text-[#6B6B6B]">
+                        {normalizeCodPhoneNumber(phoneNumber)}
+                      </p>
                     </div>
-                  ) : null}
-
-                  {withdrawStep === 2 ? (
-                    <div className="space-y-3">
-                      <div className="rounded-xl bg-[#F3F4F1] px-3 py-3 text-sm">
-                        <p className="font-bold text-[#222222]">
-                          {amountNum} USD → {providerLabel}
-                        </p>
-                        <p className="mt-1 font-mono text-xs text-[#57534e]">
-                          {normalizeCodPhoneNumber(phoneNumber)}
-                        </p>
-                        <p className="mt-2 text-xs text-[#8A8A8A]">
-                          Le montant sera envoyé directement sur ce numéro via
-                          Mobile Money.
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setWithdrawStep(1)}
-                          disabled={claimBusy}
-                          className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-extrabold text-[#57534e] disabled:opacity-50"
-                        >
-                          Retour
-                        </button>
-                        <button
-                          type="button"
-                          disabled={claimBusy || !amountOk || !phoneOk}
-                          onClick={() => void submitWithdraw()}
-                          className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
-                        >
-                          {claimBusy ? "Envoi..." : "Confirmer le retrait"}
-                        </button>
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWithdrawStep(1)}
+                        disabled={claimBusy}
+                        className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-bold text-[#6B6B6B] disabled:opacity-50"
+                      >
+                        Retour
+                      </button>
+                      <button
+                        type="button"
+                        disabled={claimBusy || !amountOk || !phoneOk}
+                        onClick={() => void submitWithdraw()}
+                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                      >
+                        {claimBusy ? "Envoi..." : "Confirmer le retrait"}
+                      </button>
                     </div>
-                  ) : null}
-                </div>
-              )}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
-              {claimMsg ? (
-                <p className="mt-2 text-xs font-semibold text-[#57534e]">
-                  {claimMsg}
-                </p>
-              ) : null}
-              {cashback.claims.length > 0 ? (
-                <ul className="mt-4 space-y-2 border-t border-[#1F6B43]/15 pt-3">
-                  {cashback.claims.map((c) => (
-                    <li
-                      key={c.id}
-                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
-                    >
-                      <span className="font-bold text-[#222222]">
-                        {c.amountUsd} USD - {claimStatusLabel(c.status)}
-                        {c.providerLabel ? ` · ${c.providerLabel}` : ""}
-                        {c.phoneNumber ? ` · ${c.phoneNumber}` : ""}
-                      </span>
-                      <span className="text-[#8A8A8A]">
-                        {new Date(c.requestedAt).toLocaleDateString("fr-CD")}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-4 py-5 text-center">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
-                Cashback cumulé (temps réel)
+            {claimMsg ? (
+              <p className="mt-3 text-xs font-semibold text-[#57534e]">
+                {claimMsg}
               </p>
-              <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-[#1F6B43]">
-                {totals.cashbackUsd} USD
-              </p>
-              <p className="mt-2 text-xs text-[#57534e]">
-                Vérifiez votre email pour demander le paiement.
-              </p>
-            </div>
-          )}
+            ) : null}
 
-          <div className="overflow-x-auto rounded-2xl border border-[#E5E5E0] bg-white">
+            {cashback.claims.length > 0 ? (
+              <ul className="mt-4 space-y-2 border-t border-[#1F6B43]/12 pt-3">
+                {cashback.claims.map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="font-semibold text-[#1A1A1A]">
+                      {c.amountUsd} USD · {claimStatusLabel(c.status)}
+                      {c.providerLabel ? ` · ${c.providerLabel}` : ""}
+                    </span>
+                    <span className="text-[#8A8A8A]">
+                      {new Date(c.requestedAt).toLocaleDateString("fr-CD")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        ) : (
+          <section className="rounded-2xl bg-[#EAF6EE] px-5 py-6 text-center ring-1 ring-[#1F6B43]/12">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+              Cashback cumulé
+            </p>
+            <p className="mt-1 text-3xl font-black tabular-nums text-[#1F6B43]">
+              {totals.cashbackUsd} USD
+            </p>
+            <p className="mt-2 text-xs text-[#57534e]">
+              Vérifiez votre email pour demander le retrait.
+            </p>
+          </section>
+        )}
+
+        {/* Signups table */}
+        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
+          <div className="border-b border-[#EFEFEA] px-5 py-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
+              Inscrits via votre code
+            </p>
+          </div>
+          <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-[#E5E5E0] bg-[#F3F4F1]/90 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
+              <thead className="bg-[#FAFAF8] text-[10px] font-bold uppercase tracking-[0.12em] text-[#8A8A8A]">
                 <tr>
-                  <th className="px-3 py-3 sm:px-4">Nom</th>
-                  <th className="px-3 py-3 sm:px-4">Statut</th>
-                  <th className="px-3 py-3 sm:px-4">N° ticket</th>
-                  <th className="px-3 py-3 sm:px-4">WhatsApp</th>
-                  <th className="px-3 py-3 sm:px-4">Email</th>
+                  <th className="px-4 py-3">Nom</th>
+                  <th className="px-4 py-3">Statut</th>
+                  <th className="px-4 py-3">Ticket</th>
+                  <th className="px-4 py-3">WhatsApp</th>
+                  <th className="px-4 py-3">Email</th>
                 </tr>
               </thead>
               <tbody>
@@ -750,31 +832,30 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-10 text-center text-sm text-[#8A8A8A]"
+                      className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
                     >
-                      Liste des inscrits disponible après vérification email.
+                      Liste disponible après vérification email.
                     </td>
                   </tr>
                 ) : signups.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-10 text-center text-sm text-[#8A8A8A]"
+                      className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
                     >
-                      Aucun inscrit via votre code pour le moment. Partagez votre
-                      lien.
+                      Aucun inscrit pour le moment. Partagez votre lien.
                     </td>
                   </tr>
                 ) : (
                   signups.map((s) => (
                     <tr
                       key={s.id}
-                      className="border-b border-[#E5E5E0]/70 last:border-0"
+                      className="border-t border-[#F0F0EC] transition hover:bg-[#FAFAF8]"
                     >
-                      <td className="px-3 py-3 font-semibold text-[#222222] sm:px-4">
+                      <td className="px-4 py-3 font-semibold text-[#1A1A1A]">
                         {s.firstName} {s.lastName}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
+                      <td className="px-4 py-3">
                         <span
                           className={
                             s.confirmed
@@ -785,16 +866,16 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                           {statusLabel(s.paymentStatus, s.confirmed)}
                         </span>
                       </td>
-                      <td className="px-3 py-3 font-mono text-xs sm:px-4">
+                      <td className="px-4 py-3 font-mono text-xs text-[#6B6B6B]">
                         {s.ticketCode ?? "-"}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
+                      <td className="px-4 py-3">
                         {s.whatsappUrl ? (
                           <a
                             href={s.whatsappUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-[#1F6B43] underline"
+                            className="font-semibold text-[#1F6B43] underline-offset-2 hover:underline"
                           >
                             Contacter
                           </a>
@@ -802,10 +883,10 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                           <span className="text-[#8A8A8A]">-</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
+                      <td className="px-4 py-3">
                         <a
-                          href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(`McBuleli Hackathon - confirmation (${promo.code})`)}`}
-                          className="font-semibold text-[#1F6B43] underline"
+                          href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(`McBuleli Hackathon - ${promo.code}`)}`}
+                          className="font-semibold text-[#1F6B43] underline-offset-2 hover:underline"
                         >
                           Écrire
                         </a>
@@ -816,66 +897,52 @@ export function PartnerPromoDashboardClient({ token }: Props) {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <div className="relative overflow-hidden bg-[#1F6B43] px-5 py-4 text-white sm:px-6">
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full opacity-25"
-            viewBox="0 0 400 88"
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            <path
-              d="M0 40c40-16 80 16 120 0s80-16 120 0 80 16 120 0 40-10 40-10v58H0z"
-              fill="#14532D"
-            />
-          </svg>
-          <div className="relative flex flex-col items-center gap-2.5 text-center">
-            <p className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/90">
-              <a
-                href={`mailto:${SUPPORT_EMAIL}`}
-                className="inline-flex items-center gap-1.5 hover:text-white"
-              >
-                <IconMail className="h-3.5 w-3.5 shrink-0" />
-                {SUPPORT_EMAIL}
-              </a>
-              <span className="opacity-50" aria-hidden>
-                |
-              </span>
-              <a
-                href={SUPPORT_WA_PATH}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white"
-              >
-                WhatsApp
-              </a>
-            </p>
+        {/* Footer */}
+        <footer className="rounded-2xl bg-[#1F6B43] px-5 py-5 text-center text-white">
+          <p className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/90">
             <a
-              href={SUPPORT_X}
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="inline-flex items-center gap-1.5 hover:text-white"
+            >
+              <IconMail className="h-3.5 w-3.5" />
+              {SUPPORT_EMAIL}
+            </a>
+            <span className="opacity-40">|</span>
+            <a
+              href={SUPPORT_WA_PATH}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[11px] font-semibold text-white/90 hover:text-white"
+              className="hover:text-white"
             >
-              <span className="opacity-80">Powered by</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={BRAND_LOGO_256}
-                alt=""
-                width={22}
-                height={22}
-                className="h-[22px] w-[22px] rounded-full bg-white/10 p-0.5 ring-1 ring-white/25"
-              />
-              <span className="font-extrabold">McBuleli</span>
+              WhatsApp
             </a>
-          </div>
-        </div>
-      </motion.article>
+          </p>
+          <a
+            href={SUPPORT_X}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-white/90 hover:text-white"
+          >
+            <span className="opacity-80">Powered by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BRAND_LOGO_256}
+              alt=""
+              width={22}
+              height={22}
+              className="h-[22px] w-[22px] rounded-full bg-white/10 p-0.5 ring-1 ring-white/25"
+            />
+            <span className="font-extrabold">McBuleli</span>
+          </a>
+        </footer>
+      </motion.div>
     </div>
   );
 }
 
-function Stat({
+function Kpi({
   label,
   value,
   accent,
@@ -886,22 +953,66 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl border px-3 py-3 ${
+      className={`rounded-2xl px-3.5 py-3.5 shadow-sm ring-1 ${
         accent
-          ? "border-[#1F6B43]/25 bg-[#EAF6EE]"
-          : "border-[#E5E5E0] bg-white"
+          ? "bg-[#EAF6EE] ring-[#1F6B43]/15"
+          : "bg-white ring-black/[0.04]"
       }`}
     >
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8A8A8A]">
         {label}
       </p>
       <p
-        className={`mt-1 text-xl font-black tabular-nums tracking-tight ${
-          accent ? "text-[#1F6B43]" : "text-[#222222]"
+        className={`mt-1 text-2xl font-black tabular-nums tracking-tight ${
+          accent ? "text-[#1F6B43]" : "text-[#1A1A1A]"
         }`}
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+function SeatTier({
+  title,
+  detail,
+  done,
+  progress,
+  current,
+}: {
+  title: string;
+  detail: string;
+  done: boolean;
+  progress: number;
+  current: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl px-3.5 py-3 ${
+        done ? "bg-[#EAF6EE]" : "bg-[#FAFAF8]"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-bold text-[#1A1A1A]">{title}</p>
+          <p className="text-[11px] text-[#6B6B6B]">{detail}</p>
+        </div>
+        <span
+          className={`text-[11px] font-bold ${
+            done ? "text-[#1F6B43]" : "text-[#8A8A8A]"
+          }`}
+        >
+          {done ? "OK" : current}
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/80">
+        <motion.div
+          className={`h-full rounded-full ${done ? "bg-[#1F6B43]" : "bg-[#1F6B43]/55"}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
+        />
+      </div>
     </div>
   );
 }

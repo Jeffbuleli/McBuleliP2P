@@ -14,8 +14,10 @@ import type {
   PartnerDashboardStats,
 } from "@/lib/hackathon/promo-types";
 import {
-  PARTNER_FREE_SEATS,
-  PARTNER_FREE_SEATS_THRESHOLD,
+  PARTNER_FREE_SEATS_MAX,
+  PARTNER_SEAT_1_AT,
+  PARTNER_SEAT_2_AT,
+  partnerFreeSeatsEarned,
 } from "@/lib/hackathon/promo-types";
 import { claimableCashbackUsd, listClaimsForPromo } from "@/lib/hackathon/promo-claims";
 import { readPromoDashSession } from "@/lib/hackathon/promo-dashboard-auth";
@@ -23,7 +25,11 @@ import { readPromoDashSession } from "@/lib/hackathon/promo-dashboard-auth";
 export type { PartnerDashboardSignup, PartnerDashboardStats } from "@/lib/hackathon/promo-types";
 export {
   PARTNER_FREE_SEATS,
+  PARTNER_FREE_SEATS_MAX,
   PARTNER_FREE_SEATS_THRESHOLD,
+  PARTNER_SEAT_1_AT,
+  PARTNER_SEAT_2_AT,
+  partnerFreeSeatsEarned,
 } from "@/lib/hackathon/promo-types";
 export type ResolvedPromo = {
   id: string;
@@ -188,8 +194,15 @@ export async function getPartnerDashboardStats(
     return sum + (s.cashbackUsd ?? Number(promo.cashbackUsd));
   }, 0);
 
-  const freeSeatsUnlocked = confirmed >= PARTNER_FREE_SEATS_THRESHOLD;
-  const freeSeatsRemaining = Math.max(0, PARTNER_FREE_SEATS_THRESHOLD - confirmed);
+  const seatsEarned = partnerFreeSeatsEarned(confirmed);
+  const nextSeatAt =
+    seatsEarned < 1
+      ? PARTNER_SEAT_1_AT
+      : seatsEarned < PARTNER_FREE_SEATS_MAX
+        ? PARTNER_SEAT_2_AT
+        : null;
+  const nextSeatRemaining =
+    nextSeatAt == null ? 0 : Math.max(0, nextSeatAt - confirmed);
 
   const claimableUsd = await claimableCashbackUsd(promo.id);
   const claims = await listClaimsForPromo(promo.id);
@@ -223,10 +236,16 @@ export async function getPartnerDashboardStats(
       cashbackUsd,
     },
     rewards: {
-      freeSeats: PARTNER_FREE_SEATS,
-      freeSeatsThreshold: PARTNER_FREE_SEATS_THRESHOLD,
-      freeSeatsUnlocked,
-      freeSeatsRemaining,
+      seatsMax: PARTNER_FREE_SEATS_MAX,
+      seatsEarned,
+      seat1At: PARTNER_SEAT_1_AT,
+      seat2At: PARTNER_SEAT_2_AT,
+      nextSeatAt,
+      nextSeatRemaining,
+      freeSeats: PARTNER_FREE_SEATS_MAX,
+      freeSeatsThreshold: PARTNER_SEAT_2_AT,
+      freeSeatsUnlocked: seatsEarned >= PARTNER_FREE_SEATS_MAX,
+      freeSeatsRemaining: nextSeatRemaining,
     },
     cashback: {
       claimableUsd: verified ? claimableUsd : 0,
