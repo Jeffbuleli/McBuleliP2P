@@ -173,7 +173,7 @@ function enrichJury(
   people: FeaturedHackathonPayload["jury"],
   isFr: boolean,
 ): PersonCard[] {
-  const mapped = people.map((p) => {
+  const mapped: PersonCard[] = people.map((p) => {
     if (/jury\s*mcbuleli/i.test(p.name) || /^mcbuleli$/i.test(p.name)) {
       return {
         ...p,
@@ -193,7 +193,7 @@ function enrichJury(
         photoFit: "cover" as const,
       };
     }
-    return p;
+    return { ...p };
   });
 
   for (const j of hackathonFeaturedJury()) {
