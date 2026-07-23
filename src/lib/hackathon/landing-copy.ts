@@ -89,7 +89,12 @@ export function challengeCategories(isFr: boolean): ChallengeItem[] {
       { id: "fintech", label: "FinTech", blurb: "Paiements, inclusion financière, crypto & mobile money." },
       { id: "govtech", label: "GovTech", blurb: "Services publics numériques et transparence." },
       { id: "health", label: "Santé", blurb: "Accès aux soins, diagnostic, santé communautaire." },
-      { id: "agriculture", label: "Agriculture", blurb: "Productivité, marchés et chaînes de valeur." },
+      {
+        id: "agriculture",
+        label: "AgroTech",
+        blurb:
+          "Moderniser la chaîne de production agricole en RDC, avec ILOKWE GROUP comme référence terrain (production, rentabilité, valorisation du terroir).",
+      },
       { id: "education", label: "Éducation", blurb: "Apprentissage, compétences et accessibilité." },
       { id: "media", label: "Médias", blurb: "Information, création de contenu et confiance." },
       { id: "cyber", label: "Cybersécurité", blurb: "Protection des données, identité et résilience." },
@@ -100,7 +105,12 @@ export function challengeCategories(isFr: boolean): ChallengeItem[] {
     { id: "fintech", label: "FinTech", blurb: "Payments, inclusion, crypto & mobile money." },
     { id: "govtech", label: "GovTech", blurb: "Digital public services and transparency." },
     { id: "health", label: "Health", blurb: "Access to care, diagnostics, community health." },
-    { id: "agriculture", label: "Agriculture", blurb: "Productivity, markets and value chains." },
+    {
+      id: "agriculture",
+      label: "AgroTech",
+      blurb:
+        "Modernize the agricultural production chain in DRC, using ILOKWE GROUP as a field reference (production, profitability, terroir value).",
+    },
     { id: "education", label: "Education", blurb: "Learning, skills and accessibility." },
     { id: "media", label: "Media", blurb: "Information, content and trust." },
     { id: "cyber", label: "Cybersecurity", blurb: "Data protection, identity and resilience." },

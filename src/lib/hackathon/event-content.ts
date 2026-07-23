@@ -114,6 +114,93 @@ export const BINANCE_PARTNER = {
     "Crypto exchange. Participants integrate demo Spot and Futures endpoints via demo.binance.com APIs in their prototypes (demo-api.binance.com · demo-fapi.binance.com).",
 } as const;
 
+/** Confirmed agriculture / AgriBusiness partner (AgroTech challenge + Prix ILOKWE). */
+export const ILOKWE_PARTNER = {
+  name: "ILOKWE GROUP",
+  roleFr: "Partenaire Agriculture & AgriBusiness · Sponsor Or",
+  roleEn: "Agriculture & AgriBusiness Partner · Gold Sponsor",
+  website: "https://www.facebook.com/profile.php?id=100065743382631",
+  facebook: "https://www.facebook.com/profile.php?id=100065743382631",
+  logoUrl: "/partners/ilokwe-group-logo.png",
+  sloganFr: "La valeur ajoutée du terroir",
+  sloganEn: "The added value of the terroir",
+  contactName: "Mr Christian Ikwele",
+  phone: "+243 990 044 150",
+  email: "ilokwegroup@gmail.com",
+  promoCode: "ILOKWE",
+  sponsorTier: "gold" as const,
+  blurbFr:
+    "Production agricole et accompagnement d'investissements agricoles à Kinshasa (Mont Ngafula). Référence terrain du défi AgroTech : moderniser la chaîne de production en RDC. Premier prix nommé Prix ILOKWE · Sponsor Or · Jury.",
+  blurbEn:
+    "Agricultural production and investment support in Kinshasa (Mont Ngafula). Field reference for the AgroTech challenge: modernize the production chain in DRC. First prize named Prix ILOKWE · Gold Sponsor · Jury.",
+} as const;
+
+/** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
+export type HackathonFeaturedLogo = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  href: string;
+  /** Tile background (brand fill, like Binance / pawaPay). */
+  tileBgClass: string;
+  /** contain = letterbox in tile (pawaPay/Binance); cover = full-bleed photo logos (ILOKWE). */
+  fit: "contain" | "cover";
+};
+
+export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
+  return [
+    {
+      id: "pawapay",
+      name: PAWAPAY_PARTNER.name,
+      logoUrl: PAWAPAY_PARTNER.logoUrl,
+      href: PAWAPAY_PARTNER.website,
+      tileBgClass: "bg-[#F7F7F7]",
+      fit: "contain",
+    },
+    {
+      id: "binance",
+      name: BINANCE_PARTNER.name,
+      logoUrl: BINANCE_PARTNER.logoUrl,
+      href: BINANCE_PARTNER.demo,
+      tileBgClass: "bg-[#12161D]",
+      fit: "contain",
+    },
+    {
+      id: "ilokwe",
+      name: ILOKWE_PARTNER.name,
+      logoUrl: ILOKWE_PARTNER.logoUrl,
+      href: ILOKWE_PARTNER.facebook,
+      tileBgClass: "bg-[#0B3D2E]",
+      fit: "cover",
+    },
+  ];
+}
+
+export type HackathonFeaturedSponsor = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  website: string;
+  pack: "platinum" | "gold" | "silver" | "bronze";
+  roleFr: string;
+  roleEn: string;
+};
+
+/** Confirmed sponsors shown on the landing (independent of DB leads). */
+export function hackathonFeaturedSponsors(): HackathonFeaturedSponsor[] {
+  return [
+    {
+      id: "ilokwe-gold",
+      name: ILOKWE_PARTNER.name,
+      logoUrl: ILOKWE_PARTNER.logoUrl,
+      website: ILOKWE_PARTNER.facebook,
+      pack: "gold",
+      roleFr: "Sponsor Or · Prix ILOKWE · Jury",
+      roleEn: "Gold Sponsor · ILOKWE Prize · Jury",
+    },
+  ];
+}
+
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
@@ -224,7 +311,16 @@ export function crossCuttingActivities(isFr: boolean): string[] {
 }
 
 const PRIZES: PrizeCard[] = [
-  { id: "first", icon: "first", titleFr: "Grand Prix", titleEn: "Grand Prize", bodyFr: "Meilleure équipe globale - dotation à annoncer.", bodyEn: "Top overall team - prize TBA." },
+  {
+    id: "first",
+    icon: "first",
+    titleFr: "Prix ILOKWE",
+    titleEn: "ILOKWE Prize",
+    bodyFr:
+      "Premier prix - meilleure équipe globale. Nommé en partenariat avec ILOKWE GROUP (valorisation agricole & chaîne de production).",
+    bodyEn:
+      "First prize - top overall team. Named in partnership with ILOKWE GROUP (agri value & production chain).",
+  },
   { id: "second", icon: "second", titleFr: "Deuxième Prix", titleEn: "Second Prize", bodyFr: "Excellence technique et exécution.", bodyEn: "Technical excellence & execution." },
   { id: "third", icon: "third", titleFr: "Troisième Prix", titleEn: "Third Prize", bodyFr: "Projet prometteur avec fort potentiel.", bodyEn: "Promising project with strong potential." },
   { id: "innovation", icon: "innovation", titleFr: "Prix Innovation", titleEn: "Innovation Award", bodyFr: "Solution la plus originale et créative.", bodyEn: "Most original & creative solution." },

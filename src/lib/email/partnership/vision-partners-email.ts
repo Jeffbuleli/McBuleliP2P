@@ -51,14 +51,16 @@ export const VISION_PARTNER_PROFILES: VisionPartnerProfile[] = [
     domainLabel: "Agriculture",
     roleTitle: "Partenaire Agriculture & AgriBusiness",
     expectedFromPartner: [
-      "Atelier court sur rentabilité agricole, exécution terrain et chaîne de valeur",
-      "Mentorat des équipes sur les défis agriculture (production, marché, distribution)",
-      "Option jury sur les prototypes AgriTech",
+      "Atelier court sur rentabilité agricole, exécution terrain et chaîne de valeur (option retenue)",
+      "Mentorat des équipes AgroTech (production, marché, distribution)",
+      "Référence terrain du défi AgroTech : moderniser la chaîne de production",
+      "Option jury sur les prototypes AgriTech · premier prix nommé Prix ILOKWE",
     ],
     partnerGains: [
       "Visibilité auprès des jeunes builders et porteurs de projets",
       "Accès à des prototypes utiles pour l'agri-business local",
       "Pipeline de talents pour projets agricoles digitaux",
+      "Naming du premier prix : Prix ILOKWE",
     ],
   },
   {

@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import QRCode from "react-qr-code";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
-  BINANCE_PARTNER,
-  PAWAPAY_PARTNER,
+  hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
 import {
   SUPPORT_EMAIL,
@@ -263,18 +262,12 @@ export function HackathonPassBadge({
 
   const venueShort = /silikin/i.test(venue) ? "Silikin Village" : venue;
 
-  const logos = [
-    {
-      name: PAWAPAY_PARTNER.name,
-      src: PAWAPAY_PARTNER.logoUrl,
-      box: "border-[#E5E5E0] bg-[#F7F7F7]",
-    },
-    {
-      name: BINANCE_PARTNER.name,
-      src: BINANCE_PARTNER.logoUrl,
-      box: "border-[#E5E5E0] bg-[#12161D]",
-    },
-  ];
+  const logos = hackathonFeaturedPartners().map((p) => ({
+    name: p.name,
+    src: p.logoUrl,
+    box: `border-[#E5E5E0] ${p.tileBgClass}`,
+    fit: p.fit,
+  }));
 
   return (
     <motion.article
@@ -424,13 +417,19 @@ export function HackathonPassBadge({
             {logos.map((logo) => (
               <div
                 key={logo.name}
-                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border p-0 ${logo.box}`}
+                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border ${
+                  logo.fit === "cover" ? "p-0" : "px-2"
+                } ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logo.src}
                   alt={logo.name}
-                  className="max-h-full max-w-full object-contain object-center"
+                  className={
+                    logo.fit === "cover"
+                      ? "h-full w-full object-cover object-center"
+                      : "max-h-full max-w-full object-contain object-center"
+                  }
                 />
               </div>
             ))}

@@ -591,7 +591,7 @@ function HackathonParticipantFormInner({
             ["fintech", "FinTech"],
             ["govtech", "GovTech"],
             ["health", isFr ? "Santé" : "Health"],
-            ["agriculture", isFr ? "Agriculture" : "Agriculture"],
+            ["agriculture", isFr ? "AgroTech" : "AgroTech"],
             ["education", isFr ? "Éducation" : "Education"],
             ["media", isFr ? "Médias" : "Media"],
             ["cyber", isFr ? "Cybersécurité" : "Cybersecurity"],

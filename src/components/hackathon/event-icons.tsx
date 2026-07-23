@@ -32,13 +32,7 @@ export type BenefitIconId =
 export function PrizeIcon({ id, className }: { id: PrizeIconId; className?: string }) {
   switch (id) {
     case "first":
-      return (
-        <IconBase className={className}>
-          <circle cx="12" cy="10" r="5.5" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M8.5 14 7 20l5-2.5L17 20l-1.5-6" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-          <path d="M12 6.5V4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </IconBase>
-      );
+      return <GoldTrophyIcon className={className} />;
     case "second":
       return (
         <IconBase className={className}>
@@ -66,6 +60,83 @@ export function PrizeIcon({ id, className }: { id: PrizeIconId; className?: stri
         </IconBase>
       );
   }
+}
+
+/** Gold trophy for Prix ILOKWE (first prize) — metallic cup with shine sweep. */
+export function GoldTrophyIcon({ className = "" }: { className?: string }) {
+  const gid = "ilokwe-gold-trophy";
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      className={className}
+    >
+      <defs>
+        <linearGradient id={`${gid}-metal`} x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFF6C8" />
+          <stop offset="35%" stopColor="#F5D76E" />
+          <stop offset="55%" stopColor="#D4A017" />
+          <stop offset="78%" stopColor="#B8860B" />
+          <stop offset="100%" stopColor="#F0E68C" />
+        </linearGradient>
+        <linearGradient id={`${gid}-shine`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="45%" stopColor="#ffffff" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+        <clipPath id={`${gid}-clip`}>
+          <path d="M7.2 3.2h9.6v7.2c0 2.7-2.15 4.9-4.8 4.9S7.2 13.1 7.2 10.4V3.2Z" />
+        </clipPath>
+      </defs>
+      {/* Handles */}
+      <path
+        d="M7.2 4.6H5.4a2.2 2.2 0 0 0 0 4.4h1.2"
+        stroke={`url(#${gid}-metal)`}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16.8 4.6h1.8a2.2 2.2 0 0 1 0 4.4h-1.2"
+        stroke={`url(#${gid}-metal)`}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      {/* Cup */}
+      <path
+        d="M7.2 3.2h9.6v7.2c0 2.7-2.15 4.9-4.8 4.9S7.2 13.1 7.2 10.4V3.2Z"
+        fill={`url(#${gid}-metal)`}
+      />
+      {/* Shine sweep */}
+      <g clipPath={`url(#${gid}-clip)`}>
+        <rect x="-8" y="2" width="6" height="14" fill={`url(#${gid}-shine)`} opacity="0.9">
+          <animateTransform
+            attributeName="transform"
+            type="translate"
+            values="-2 0; 26 0; -2 0"
+            dur="2.8s"
+            repeatCount="indefinite"
+          />
+        </rect>
+      </g>
+      {/* Stem + base */}
+      <path d="M12 15.3v2.2" stroke={`url(#${gid}-metal)`} strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M8.4 20.6h7.2c.55 0 1-.35 1-.8 0-.55-.45-.9-1-.9H8.4c-.55 0-1 .35-1 .9 0 .45.45.8 1 .8Z"
+        fill={`url(#${gid}-metal)`}
+      />
+      <ellipse cx="12" cy="17.8" rx="2.2" ry="0.7" fill={`url(#${gid}-metal)`} opacity="0.9" />
+      {/* Sparkles */}
+      <circle cx="18.6" cy="4.2" r="0.7" fill="#FFF6C8">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.6s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="5.4" cy="6.4" r="0.55" fill="#FFF6C8">
+        <animate attributeName="opacity" values="1;0.25;1" dur="1.9s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
 }
 
 export function BenefitIcon({ id, className }: { id: BenefitIconId; className?: string }) {

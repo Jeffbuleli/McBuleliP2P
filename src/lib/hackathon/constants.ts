@@ -103,7 +103,7 @@ export function defaultPrizes(): HackathonPrizeCategory[] {
     { id: "govtech", labelFr: "GovTech", labelEn: "GovTech" },
     { id: "education", labelFr: "Éducation", labelEn: "Education" },
     { id: "health", labelFr: "Santé", labelEn: "Health" },
-    { id: "agriculture", labelFr: "Agriculture", labelEn: "Agriculture" },
+    { id: "agriculture", labelFr: "AgroTech", labelEn: "AgroTech" },
     { id: "media", labelFr: "Médias", labelEn: "Media" },
     { id: "cyber", labelFr: "Cybersécurité", labelEn: "Cybersecurity" },
   ];

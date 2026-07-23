@@ -17,6 +17,9 @@ import {
   partnerBenefits,
   PAWAPAY_PARTNER,
   BINANCE_PARTNER,
+  ILOKWE_PARTNER,
+  hackathonFeaturedPartners,
+  hackathonFeaturedSponsors,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
@@ -274,11 +277,17 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
   const about = aboutBlurb(isFr);
   const crossCut = crossCuttingActivities(isFr);
   const tiers = sponsorTiers();
-  const stats = defaultHeroStats(data.mentors.length, data.partnerLogos.length);
-
-  const confirmedPacks = new Set(
-    data.sponsorLogos.map((s) => s.pack.toLowerCase()).filter((p) => p !== "custom"),
+  const featuredPartners = hackathonFeaturedPartners();
+  const featuredSponsors = hackathonFeaturedSponsors();
+  const stats = defaultHeroStats(
+    data.mentors.length,
+    data.partnerLogos.length + featuredPartners.length,
   );
+
+  const confirmedPacks = new Set([
+    ...data.sponsorLogos.map((s) => s.pack.toLowerCase()).filter((p) => p !== "custom"),
+    ...featuredSponsors.map((s) => s.pack),
+  ]);
 
   const statItems = [
     {
@@ -505,23 +514,32 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         }
       >
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {prizes.map((p) => (
-            <li key={p.id}>
-              <Card>
-                <div className="flex items-start gap-3">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]">
-                    <PrizeIcon id={p.icon} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="mt-0">
-                      {isFr ? p.titleFr : p.titleEn}
-                    </CardTitle>
-                    <CardDescription>{isFr ? p.bodyFr : p.bodyEn}</CardDescription>
+          {prizes.map((p) => {
+            const isFirst = p.id === "first";
+            return (
+              <li key={p.id}>
+                <Card className={isFirst ? "ring-1 ring-[#d4a017]/40" : undefined}>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isFirst
+                          ? "bg-[#fbf3d8] shadow-[0_0_16px_rgba(212,160,23,0.35)]"
+                          : "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                      }`}
+                    >
+                      <PrizeIcon id={p.icon} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="mt-0">
+                        {isFr ? p.titleFr : p.titleEn}
+                      </CardTitle>
+                      <CardDescription>{isFr ? p.bodyFr : p.bodyEn}</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </li>
-          ))}
+                </Card>
+              </li>
+            );
+          })}
         </ul>
       </Section>
 
@@ -568,7 +586,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F7F7F7] ring-1 ring-[color:var(--fd-border)]">
+            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#F7F7F7] p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={PAWAPAY_PARTNER.logoUrl}
@@ -601,7 +619,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#12161D] ring-1 ring-[color:var(--fd-border)]">
+            <span className="inline-flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#12161D] p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={BINANCE_PARTNER.logoUrl}
@@ -626,34 +644,76 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </div>
         </a>
 
+        {/* Featured agriculture partner + Gold sponsor */}
+        <a
+          href={ILOKWE_PARTNER.facebook}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <span className="inline-flex h-16 w-44 shrink-0 overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#0B3D2E]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={ILOKWE_PARTNER.logoUrl}
+                alt={ILOKWE_PARTNER.name}
+                className="h-full w-full object-cover object-center"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                {isFr ? ILOKWE_PARTNER.roleFr : ILOKWE_PARTNER.roleEn}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
+                {ILOKWE_PARTNER.name}
+              </p>
+              <p className="mt-0.5 text-xs font-medium italic text-[color:var(--fd-muted)]">
+                {isFr ? ILOKWE_PARTNER.sloganFr : ILOKWE_PARTNER.sloganEn}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-[color:var(--fd-muted)]">
+                {isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-[color:var(--fd-primary)]">
+                Facebook · Prix ILOKWE · Sponsor Or · Jury
+              </p>
+            </div>
+          </div>
+        </a>
+
         {(() => {
+          const featuredIds = new Set(featuredPartners.map((p) => p.name.toLowerCase()));
           const existing = data.partnerLogos.filter(
-            (p) => !/pawapay|binance/i.test(p.name),
+            (p) => !featuredIds.has(p.name.toLowerCase()) && !/pawapay|binance|ilokwe/i.test(p.name),
           );
-          const logoSlots = Math.max(6, existing.length + 2);
+          const logoSlots = Math.max(6, featuredPartners.length + existing.length);
           const logos = [
-            {
-              id: "pawapay-featured",
-              name: PAWAPAY_PARTNER.name,
-              logoUrl: PAWAPAY_PARTNER.logoUrl,
-              website: PAWAPAY_PARTNER.website,
-              placeholder: false,
-            },
-            {
-              id: "binance-featured",
-              name: BINANCE_PARTNER.name,
-              logoUrl: BINANCE_PARTNER.logoUrl,
-              website: BINANCE_PARTNER.website,
-              placeholder: false,
-            },
-            ...existing,
+            ...featuredPartners.map((p) => ({
+              id: p.id,
+              name: p.name,
+              logoUrl: p.logoUrl as string | null,
+              website: p.href as string | null,
+              tileBgClass: p.tileBgClass,
+              fit: p.fit,
+              placeholder: false as boolean,
+            })),
+            ...existing.map((p) => ({
+              id: p.id,
+              name: p.name,
+              logoUrl: p.logoUrl,
+              website: p.website,
+              tileBgClass: "bg-white",
+              fit: "contain" as const,
+              placeholder: false as boolean,
+            })),
             ...Array.from(
-              { length: Math.max(0, logoSlots - existing.length - 2) },
+              { length: Math.max(0, logoSlots - featuredPartners.length - existing.length) },
               (_, i) => ({
                 id: `partner-slot-${i}`,
                 name: isFr ? "Logo partenaire" : "Partner logo",
                 logoUrl: null as string | null,
                 website: null as string | null,
+                tileBgClass: "bg-[color:var(--fd-bg)]/60",
+                fit: "contain" as const,
                 placeholder: true,
               }),
             ),
@@ -661,17 +721,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           return (
             <ul className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
-                const isBinance = /binance/i.test(p.name);
-                const isPawapay = /pawapay/i.test(p.name);
-                const brandBg = isBinance || isPawapay;
+                const cover = p.fit === "cover";
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.logoUrl}
                     alt={p.name}
                     className={
-                      brandBg
-                        ? "max-h-full max-w-full object-contain object-center"
+                      cover
+                        ? "h-full w-full object-cover object-center"
                         : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
@@ -680,16 +738,10 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border ${
-                  brandBg ? "p-0" : "px-3"
-                } ${
-                  "placeholder" in p && p.placeholder
-                    ? "border-dashed border-[color:var(--fd-border)] bg-[color:var(--fd-bg)]/60"
-                    : isBinance
-                      ? "border-[color:var(--fd-border)] bg-[#12161D]"
-                      : isPawapay
-                        ? "border-[color:var(--fd-border)] bg-[#F7F7F7]"
-                        : "border-[color:var(--fd-border)] bg-white"
+                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] ${
+                  cover || p.placeholder ? "p-0" : "px-3"
+                } ${p.tileBgClass} ${
+                  p.placeholder ? "border-dashed" : ""
                 }`;
                 return (
                   <li key={p.id}>
@@ -753,9 +805,34 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             : "Support the next generation of builders"
         }
       >
-        {data.sponsorLogos.length > 0 ? (
+        {featuredSponsors.length > 0 || data.sponsorLogos.length > 0 ? (
           <ul className="mb-8 flex flex-wrap gap-3">
-            {data.sponsorLogos.map((s) => {
+            {featuredSponsors.map((s) => {
+              const v = BUILDERS_TIER_VISUAL[s.pack] ?? BUILDERS_TIER_VISUAL.bronze;
+              return (
+                <li key={s.id}>
+                  <a
+                    href={s.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex h-20 min-w-[11rem] flex-col items-center justify-center gap-1 rounded-xl px-5 ${v.badgeClass}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={s.logoUrl}
+                      alt={s.name}
+                      className="h-9 w-auto max-w-[140px] rounded-md object-cover"
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-wide">
+                      {isFr ? s.roleFr : s.roleEn}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+            {data.sponsorLogos
+              .filter((s) => !/ilokwe/i.test(s.name))
+              .map((s) => {
               const v = BUILDERS_TIER_VISUAL[s.pack] ?? BUILDERS_TIER_VISUAL.bronze;
               return (
                 <li
