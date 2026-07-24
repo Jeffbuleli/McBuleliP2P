@@ -54,7 +54,7 @@ export function buildIlokweGroupFicheEmail(
   const subject =
     "Partenariat confirmé - ILOKWE GROUP × McBuleli Hackathon (Sponsor Or · Prix ILOKWE)";
   const preheader =
-    "Merci Mr Christian Ikwele — atelier, jury, Prix ILOKWE, Sponsor Or, code promo ILOKWE et 2 places partenaires.";
+    "Merci Mr Christian Ikwele - atelier, jury, Prix ILOKWE, Sponsor Or, code promo ILOKWE et 2 places partenaires.";
 
   const text = [
     `Bonjour Mr ${ILOKWE_PARTNER.contactName.replace(/^Mr\s+/i, "")},`,
@@ -72,9 +72,8 @@ export function buildIlokweGroupFicheEmail(
     "McBuleli Hackathon - bootcamp Vibe Coding + compétition + Demo Day",
     "Lieu : Silikin Village, Kinshasa",
     "Dates prévues :",
-    "- 12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)",
-    "- 13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)",
-    "- 14 août 2026 - Jour 3 Demo Day & cérémonie (08h00-13h30)",
+    "- 13 Août 2026 - Jeudi Bootcamp & Build (08h00-17h00)",
+    "- 14 Août 2026 - Vendredi Build & Demo Day (08h00-17h00)",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     `Page : ${hackathonUrl}`,
     "",

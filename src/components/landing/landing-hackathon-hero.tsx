@@ -18,7 +18,7 @@ function hackathonHomeCopy(isFr: boolean) {
       topics: ["IA", "FinTech", "GovTech", "Éducation"],
       partners: "pawaPay · Binance · partenaires",
       cta: "Rejoindre le hackathon",
-      badge: "100 USD · 3 demi-journées",
+      badge: "100 USD · 2 Journées",
       teams: "12 équipes attendues",
     };
   }
@@ -30,7 +30,7 @@ function hackathonHomeCopy(isFr: boolean) {
     topics: ["AI", "FinTech", "GovTech", "Education"],
     partners: "pawaPay · Binance · partners",
     cta: "Join the hackathon",
-    badge: "100 USD · 3 half-days",
+    badge: "100 USD · 2 days",
     teams: "12 teams expected",
   };
 }

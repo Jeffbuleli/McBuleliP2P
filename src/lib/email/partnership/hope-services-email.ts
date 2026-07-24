@@ -43,7 +43,7 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
   const subject =
     "Partenariat Hope Services × McBuleli Hackathon - formalisation PME & docs légaux";
   const preheader =
-    "Dates prévues 12-14 août 2026 (sous réserve Silikin) - rôle partenaire formalisation pour les projets du hackathon.";
+    "Dates confirmées 13–14 Août 2026 · Silikin Village (08h00–17h00) - rôle partenaire formalisation pour les projets du hackathon.";
 
   const text = [
     "Bonjour l'équipe Hope Services,",
@@ -54,9 +54,8 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
     `Votre site : ${hopeUrl}`,
     "",
     "DATES PRÉVUES",
-    "- 12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)",
-    "- 13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)",
-    "- 14 août 2026 - Jour 3 Demo Day & cérémonie (08h00-13h30)",
+    "- 13 Août 2026 - Jeudi Bootcamp & Build (08h00-17h00)",
+    "- 14 Août 2026 - Vendredi Build & Demo Day (08h00-17h00)",
     "Lieu : Silikin Village, Kinshasa",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     "",
@@ -137,11 +136,9 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
                 Dates prévues
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>12 août 2026</strong> - Jour 1 Bootcamp &amp; lancement (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 Août 2026</strong> - Jeudi Bootcamp &amp; Build (08h00–17h00)</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 août 2026</strong> - Jour 2 Build Day &amp; mentorat (08h00-13h30)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 août 2026</strong> - Jour 3 Demo Day &amp; cérémonie (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 Août 2026</strong> - Vendredi Build &amp; Demo Day (08h00–17h00)</td></tr>
               </table>
               <p style="margin:0 0 18px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.muted};">
                 Lieu : Silikin Village, Kinshasa ·

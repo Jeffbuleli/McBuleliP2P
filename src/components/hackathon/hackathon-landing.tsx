@@ -11,13 +11,18 @@ import {
   eventDateLabel,
   HACKATHON_EVENT_DAYS,
   HACKATHON_EVENT_YEAR,
+  HACKATHON_HOURS_LABEL_EN,
+  HACKATHON_HOURS_LABEL_FR,
   HACKATHON_NAV,
+  HACKATHON_SCHEDULE_SUMMARY,
+  HACKATHON_VENUE_SHORT,
   hackathonFaqNav,
   hackathonProgramDays,
   partnerBenefits,
   PAWAPAY_PARTNER,
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
+  SILIKIN_PARTNER,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
   hackathonFeaturedJury,
@@ -382,7 +387,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               </span>
             </div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-mint)]">
-              McBuleli Hackathon - {HACKATHON_EVENT_DAYS} {isFr ? "jours" : "days"} - {HACKATHON_EVENT_YEAR}
+              McBuleli Hackathon - {HACKATHON_EVENT_DAYS} {isFr ? "Jours" : "Days"} - {HACKATHON_EVENT_YEAR}
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
               Build the Future with AI
@@ -395,11 +400,14 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <dl className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
               <div>
                 <dt className="sr-only">{isFr ? "Date" : "Date"}</dt>
-                <dd>{eventDateLabel(e.startDate, isFr)}</dd>
+                <dd>
+                  {eventDateLabel(e.startDate, isFr)} ·{" "}
+                  {isFr ? HACKATHON_HOURS_LABEL_FR : HACKATHON_HOURS_LABEL_EN}
+                </dd>
               </div>
               <div>
                 <dt className="sr-only">{isFr ? "Ville" : "City"}</dt>
-                <dd>{practicalVenue(e.venue, e.city)}</dd>
+                <dd>{practicalVenue(e.venue, e.city) || HACKATHON_VENUE_SHORT}</dd>
               </div>
             </dl>
             <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
@@ -475,13 +483,41 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         id="programme"
         className="bg-white"
         eyebrow={isFr ? "Programme" : "Program"}
-        title={isFr ? "3 demi-journées - 08h00 - 13h30" : "3 half-days - 8:00 AM - 1:30 PM"}
+        title={
+          isFr
+            ? `2 Journées · ${HACKATHON_HOURS_LABEL_FR}`
+            : `2 days · ${HACKATHON_HOURS_LABEL_EN}`
+        }
         subtitle={
           isFr
-            ? "Format professionnel avec temps dédié aux partenaires."
-            : "Professional format with dedicated partner slots."
+            ? `Dates confirmées · ${HACKATHON_VENUE_SHORT}`
+            : `Confirmed dates · ${HACKATHON_VENUE_SHORT}`
         }
       >
+        <ul className="mb-8 grid gap-3 sm:grid-cols-2">
+          {HACKATHON_SCHEDULE_SUMMARY.map((day, i) => (
+            <li
+              key={day.dateFr}
+              className="relative overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-5 py-5"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--fd-primary)]">
+                {isFr ? `Jour ${i + 1}` : `Day ${i + 1}`}
+              </p>
+              <p className="mt-2 text-xl font-semibold tracking-tight text-[color:var(--fd-text)]">
+                {isFr ? day.weekdayFr : day.weekdayEn}
+              </p>
+              <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
+                {isFr ? day.dateFr : day.dateEn}
+              </p>
+              <p className="mt-3 text-sm font-semibold tabular-nums text-[color:var(--fd-text)]">
+                {isFr ? day.hoursFr : day.hoursEn}
+              </p>
+              <p className="mt-1 text-sm text-[color:var(--fd-muted)]">
+                {isFr ? day.focusFr : day.focusEn}
+              </p>
+            </li>
+          ))}
+        </ul>
         <Accordion defaultOpen="day-1">
           {programDays.map((day) => (
             <AccordionItem
@@ -731,12 +767,45 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </div>
         </a>
 
+        {/* Featured venue partner */}
+        <a
+          href={SILIKIN_PARTNER.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-8 block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] p-5 transition hover:border-[color:var(--fd-primary)]/30 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <span className="inline-flex h-16 w-full max-w-[11rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] bg-[#000000] p-0 sm:w-44">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={SILIKIN_PARTNER.logoUrl}
+                alt={SILIKIN_PARTNER.name}
+                className="h-[92%] w-[96%] object-contain object-center"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]">
+                {isFr ? SILIKIN_PARTNER.roleFr : SILIKIN_PARTNER.roleEn}
+              </p>
+              <p className="mt-1 break-words text-lg font-semibold text-[color:var(--fd-text)]">
+                {SILIKIN_PARTNER.name}
+              </p>
+              <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--fd-muted)]">
+                {isFr ? SILIKIN_PARTNER.blurbFr : SILIKIN_PARTNER.blurbEn}
+              </p>
+              <p className="mt-2 break-words text-xs font-semibold text-[color:var(--fd-primary)]">
+                silikinvillage.com · by TEXAF Digital
+              </p>
+            </div>
+          </div>
+        </a>
+
         {(() => {
           const featuredIds = new Set(featuredPartners.map((p) => p.name.toLowerCase()));
           const existing = data.partnerLogos.filter(
             (p) =>
               !featuredIds.has(p.name.toLowerCase()) &&
-              !/pawapay|binance|ilokwe|rdpi/i.test(p.name) &&
+              !/pawapay|binance|ilokwe|silikin|rdpi/i.test(p.name) &&
               !/^mcbuleli$/i.test(p.name.trim()),
           );
           const logoSlots = Math.max(6, featuredPartners.length + existing.length);
@@ -776,6 +845,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <ul className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
                 const cover = p.fit === "cover";
+                const silikin = p.id === "silikin";
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -784,7 +854,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     className={
                       cover
                         ? "h-full w-full object-cover object-center"
-                        : "max-h-10 max-w-full object-contain object-center"
+                        : silikin
+                          ? "h-[90%] w-[94%] object-contain object-center"
+                          : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
                 ) : (
@@ -793,7 +865,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   </span>
                 );
                 const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--fd-border)] ${
-                  cover || p.placeholder ? "p-0" : "px-3"
+                  cover || silikin || p.placeholder ? "p-0" : "px-3"
                 } ${p.tileBgClass} ${
                   p.placeholder ? "border-dashed" : ""
                 }`;

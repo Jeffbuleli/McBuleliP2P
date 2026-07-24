@@ -96,7 +96,7 @@ function eventJsonLd(data: NonNullable<Awaited<ReturnType<typeof getFeaturedHack
     offers: [
       {
         "@type": "Offer",
-        name: "McBuleli Hackathon - 3 jours",
+        name: "McBuleli Hackathon - 2 Jours",
         price: HACKATHON_PRICE_USD,
         priceCurrency: "USD",
         availability:

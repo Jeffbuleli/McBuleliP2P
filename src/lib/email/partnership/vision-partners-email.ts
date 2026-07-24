@@ -332,17 +332,16 @@ export function buildVisionPartnerEmail(profile: VisionPartnerProfile): VisionPa
 
   const subject = `Partenariat sur mesure - ${profile.orgName} × McBuleli Hackathon`;
   const preheader =
-    "Programme 3 jours (12-14 août 2026, sous réserve Silikin) - rôle partenaire sur mesure, valeur claire pour votre organisation.";
+    "Programme 2 Jours (13–14 Août 2026, Silikin Village) - rôle partenaire sur mesure, valeur claire pour votre organisation.";
 
   const text = [
     `Bonjour l'équipe ${profile.orgName},`,
     "",
-    "Nous organisons le McBuleli Hackathon à Kinshasa : 3 jours de bootcamp Vibe Coding, build produit et Demo Day.",
+    "Nous organisons le McBuleli Hackathon à Kinshasa : 2 Jours (13–14 Août 2026, 08h00–17h00) de bootcamp Vibe Coding, build produit et Demo Day au Silikin Village.",
     "",
-    "PROGRAMME (3 JOURS)",
-    "- 12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)",
-    "- 13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)",
-    "- 14 août 2026 - Jour 3 Demo Day & cérémonie (08h00-13h30)",
+    "PROGRAMME (2 JOURS)",
+    "- 13 Août 2026 - Jeudi Bootcamp & Build (08h00-17h00)",
+    "- 14 Août 2026 - Vendredi Build & Demo Day (08h00-17h00)",
     "Lieu : Silikin Village, Kinshasa",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     "",
@@ -423,18 +422,16 @@ export function buildVisionPartnerEmail(profile: VisionPartnerProfile): VisionPa
               <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">Bonjour l'équipe ${esc(profile.orgName)},</p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">
                 Nous organisons le <strong style="color:${EMAIL_BRAND.text};">McBuleli Hackathon</strong> à Kinshasa :
-                3 jours de bootcamp Vibe Coding, build produit et Demo Day devant jury/partenaires.
+                2 Jours (13–14 Août 2026, 08h00–17h00) de bootcamp Vibe Coding, build produit et Demo Day devant jury/partenaires au Silikin Village.
               </p>
 
               <p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};font-weight:700;">
-                Programme (3 jours)
+                Programme (2 Jours)
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>12 août 2026</strong> - Jour 1 Bootcamp &amp; lancement (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 Août 2026</strong> - Jeudi Bootcamp &amp; Build (08h00–17h00)</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 août 2026</strong> - Jour 2 Build Day &amp; mentorat (08h00-13h30)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 août 2026</strong> - Jour 3 Demo Day &amp; cérémonie (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 Août 2026</strong> - Vendredi Build &amp; Demo Day (08h00–17h00)</td></tr>
               </table>
               <p style="margin:0 0 16px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.muted};">
                 Lieu : Silikin Village, Kinshasa · <strong style="color:${EMAIL_BRAND.text};">Statut :</strong> en attente d'approbation finale de Silikin Village.

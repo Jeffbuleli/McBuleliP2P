@@ -99,7 +99,7 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     agenda: [
       "Attentes de part et d'autre pour le McBuleli Hackathon",
       "Rôle Kilelo : talk / mentorat marketplace & confiance",
-      "Déroulement des 3 jours et logistique Demo Day",
+      "Déroulement des 2 jours et logistique Demo Day",
       "Prochaines étapes (logo, créneau talk, contact référent)",
     ],
     notes:

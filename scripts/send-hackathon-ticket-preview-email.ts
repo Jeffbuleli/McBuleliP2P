@@ -84,7 +84,7 @@ async function main() {
       { label: "Édition", value: editionName },
       { label: "Lieu", value: `${HACKATHON_VENUE_SILIKIN}, Kinshasa` },
       { label: "Date", value: "Août 2026" },
-      { label: "Pack", value: "Programme 3 jours · 100 USD" },
+      { label: "Pack", value: "Programme 2 Jours · 100 USD" },
       { label: "Code ticket", value: SAMPLE_TICKET_CODE },
       {
         label: "Réf. inscription",

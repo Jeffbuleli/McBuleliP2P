@@ -17,7 +17,7 @@ import {
 type Props = {
   editionId: string;
   locale: "fr" | "en";
-  /** Unique 3-day program price (USD) */
+  /** Unique 2-day program price (USD) */
   priceUsd: string;
   registrationOpen: boolean;
 };
@@ -610,8 +610,8 @@ function HackathonParticipantFormInner({
         </p>
         <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
           {isFr
-            ? `Programme 3 jours - ${effectivePriceUsd} USD`
-            : `3-day program - ${effectivePriceUsd} USD`}
+            ? `Programme 2 Jours - ${effectivePriceUsd} USD`
+            : `2-day program - ${effectivePriceUsd} USD`}
           {lockedPromo && lockedPromo.priceUsd !== priceUsd ? (
             <span className="ml-2 text-sm font-medium text-[color:var(--fd-muted)] line-through">
               {priceUsd} USD

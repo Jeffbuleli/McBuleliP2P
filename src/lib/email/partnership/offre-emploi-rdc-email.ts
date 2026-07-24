@@ -41,7 +41,7 @@ export function buildOffreEmploiRdcPartnershipEmail(): OffreEmploiRdcEmailCopy {
   const subject =
     "Suite réunion - Partenariat Offre d'emploi RDC × McBuleli Hackathon";
   const preheader =
-    "Programme 12-14 août 2026 (sous réserve Silikin) - ce que McBuleli attend, ce que Offre d'emploi RDC gagne.";
+    "Programme 13–14 Août 2026 · Silikin Village (08h00–17h00) - ce que McBuleli attend, ce que Offre d'emploi RDC gagne.";
 
   const text = [
     "Bonjour Monsieur Henry,",
@@ -55,9 +55,8 @@ export function buildOffreEmploiRdcPartnershipEmail(): OffreEmploiRdcEmailCopy {
     "McBuleli Hackathon - bootcamp Vibe Coding (Cursor, Claude, Codex) + compétition + Demo Day.",
     "Lieu : Silikin Village, Kinshasa",
     "Dates prévues :",
-    "- 12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)",
-    "- 13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)",
-    "- 14 août 2026 - Jour 3 Demo Day & cérémonie (08h00-13h30)",
+    "- 13 Août 2026 - Jeudi Bootcamp & Build (08h00-17h00)",
+    "- 14 Août 2026 - Vendredi Build & Demo Day (08h00-17h00)",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     "",
     "Public : builders, étudiants, jeunes talents tech & IA en RDC (~12 équipes attendues).",
@@ -143,11 +142,9 @@ export function buildOffreEmploiRdcPartnershipEmail(): OffreEmploiRdcEmailCopy {
                 ~12 équipes attendues · Silikin Village, Kinshasa.
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>12 août 2026</strong> - Jour 1 Bootcamp &amp; lancement (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 Août 2026</strong> - Jeudi Bootcamp &amp; Build (08h00–17h00)</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 août 2026</strong> - Jour 2 Build Day &amp; mentorat (08h00-13h30)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 août 2026</strong> - Jour 3 Demo Day &amp; cérémonie (08h00-13h30)</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 Août 2026</strong> - Vendredi Build &amp; Demo Day (08h00–17h00)</td></tr>
               </table>
               <p style="margin:0 0 18px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.muted};">
                 <strong style="color:${EMAIL_BRAND.text};">Statut lieu :</strong>

@@ -19,7 +19,7 @@ function venueLabel(edition: { venue: string | null; city: string } | null | und
 }
 
 function dateLabel(isFr: boolean) {
-  return isFr ? "Août 2026" : "August 2026";
+  return isFr ? "13–14 Août 2026" : "August 13–14, 2026";
 }
 
 /** QR ticket/badge card with McBuleli logo centered (baked into QR + email-safe card). */
@@ -37,8 +37,8 @@ export function renderHackathonTicketQrCardHtml(args: {
   const hint =
     args.hint ??
     (isFr
-      ? "Présentez ce QR (ou le code) à l'entrée. Valable les 3 jours."
-      : "Show this QR (or the code) at the entrance. Valid for all 3 days.");
+      ? "Présentez ce QR (ou le code) à l'entrée. Valable les 2 Jours."
+      : "Show this QR (or the code) at the entrance. Valid for both days.");
   const logo = logoUrl();
   // Bake logo into QR (ecLevel H) so it survives every mail client, including Outlook.
   const qrImg =
@@ -130,7 +130,7 @@ export async function sendHackathonReserveEmail(args: {
       { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
       {
         label: isFr ? "Pack" : "Pack",
-        value: isFr ? "Programme 3 jours" : "3-day program",
+        value: isFr ? "Programme 2 Jours" : "2-day program",
       },
       {
         label: isFr ? "Montant" : "Amount",
@@ -261,7 +261,7 @@ export async function sendHackathonTicketEmail(args: {
       { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
       {
         label: isFr ? "Pack" : "Pack",
-        value: isFr ? "Programme 3 jours · 100 USD" : "3-day program · 100 USD",
+        value: isFr ? "Programme 2 Jours · 100 USD" : "2-day program · 100 USD",
       },
       { label: isFr ? "Code ticket" : "Ticket code", value: reg.ticketCode },
       { label: isFr ? "Réf. inscription" : "Registration ID", value: reg.id.slice(0, 8).toUpperCase() },
@@ -355,8 +355,8 @@ export function buildHackathonPartnerConfirmEmail(
         isFr,
         heading: isFr ? "Badge QR partenaire" : "Partner QR badge",
         hint: isFr
-          ? "Présentez ce QR à l'entrée. Valable les 3 jours du hackathon."
-          : "Show this QR at the entrance. Valid for all 3 hackathon days.",
+          ? "Présentez ce QR à l'entrée. Valable les 2 Jours du hackathon."
+          : "Show this QR at the entrance. Valid for both hackathon days.",
       })}`
     : "";
 
@@ -376,8 +376,8 @@ export function buildHackathonPartnerConfirmEmail(
         ? `Bienvenue ${args.contactName}`
         : `Welcome ${args.contactName}`,
       body: isFr
-        ? `Nous confirmons officiellement le partenariat de ${args.orgName} pour le ${editionName}. Conservez votre badge QR pour l'accès à la porte (valable les 3 jours).`
-        : `We officially confirm ${args.orgName}'s partnership for the ${editionName}. Keep your QR badge for door access (valid all 3 days).`,
+        ? `Nous confirmons officiellement le partenariat de ${args.orgName} pour le ${editionName}. Conservez votre badge QR pour l'accès à la porte (valable les 2 Jours).`
+        : `We officially confirm ${args.orgName}'s partnership for the ${editionName}. Keep your QR badge for door access (valid both days).`,
       cta: args.ticketCode
         ? isFr
           ? "Ouvrir mon badge"

@@ -43,7 +43,7 @@ export const HACKATHON_REMINDER_HOURS = 24;
 /** @deprecated kept for older callers - holds no longer expire */
 export const HACKATHON_HOLD_HOURS = HACKATHON_REMINDER_HOURS;
 
-/** Unique ticket price (USD) for the full 3-day program */
+/** Unique ticket price (USD) for the full 2-day program */
 export const HACKATHON_PRICE_USD = "100";
 /** Default pack - single full program (no day-1-only option) */
 export const HACKATHON_DEFAULT_PACK = "full" as const;

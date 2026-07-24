@@ -55,7 +55,7 @@ function getNativeQrDetector(): BarcodeDetectorLike | null {
 export function HackathonScanClient() {
   const [editions, setEditions] = useState<Edition[]>([]);
   const [editionId, setEditionId] = useState("");
-  const [dayIndex, setDayIndex] = useState<1 | 2 | 3>(1);
+  const [dayIndex, setDayIndex] = useState<1 | 2>(1);
   const [mode, setMode] = useState<"in" | "out">("in");
   const [manualCode, setManualCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,7 +84,7 @@ export function HackathonScanClient() {
   const scanCtx = useRef({
     editionId: "",
     mode: "in" as "in" | "out",
-    dayIndex: 1 as 1 | 2 | 3,
+    dayIndex: 1 as 1 | 2,
   });
   const onDecodeRef = useRef<(text: string) => void>(() => {});
 
@@ -351,11 +351,10 @@ export function HackathonScanClient() {
           <select
             className={`${adminCls.input} w-full max-w-full`}
             value={dayIndex}
-            onChange={(e) => setDayIndex(Number(e.target.value) as 1 | 2 | 3)}
+            onChange={(e) => setDayIndex(Number(e.target.value) as 1 | 2)}
           >
-            <option value={1}>Jour 1</option>
-            <option value={2}>Jour 2</option>
-            <option value={3}>Jour 3</option>
+            <option value={1}>Jour 1 · 13 Août</option>
+            <option value={2}>Jour 2 · 14 Août</option>
           </select>
         </label>
         <div className="min-w-0 text-sm sm:col-span-2">

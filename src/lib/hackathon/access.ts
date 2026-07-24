@@ -59,11 +59,11 @@ export function extractPassCode(raw: string): string | null {
   return null;
 }
 
-/** Day 1..3 from edition startDate (Africa/Kinshasa calendar). */
+/** Day 1..2 from edition startDate (Africa/Kinshasa calendar). */
 export function eventDayIndex(
   edition: { startDate: Date | null } | null | undefined,
   now = new Date(),
-): 1 | 2 | 3 {
+): 1 | 2 {
   if (!edition?.startDate) return 1;
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Africa/Kinshasa",
@@ -78,8 +78,7 @@ export function eventDayIndex(
   if (!Number.isFinite(t0) || !Number.isFinite(t1)) return 1;
   const diffDays = Math.floor((t1 - t0) / 86_400_000);
   if (diffDays <= 0) return 1;
-  if (diffDays === 1) return 2;
-  return 3;
+  return 2;
 }
 
 export async function resolvePassByCode(

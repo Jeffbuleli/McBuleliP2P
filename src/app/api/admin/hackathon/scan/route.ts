@@ -41,9 +41,9 @@ export async function GET(req: Request) {
   }
 
   const dayParam = Number(url.searchParams.get("dayIndex") || "0");
-  const dayIndex = ([1, 2, 3].includes(dayParam)
+  const dayIndex = ([1, 2].includes(dayParam)
     ? dayParam
-    : eventDayIndex(edition)) as 1 | 2 | 3;
+    : eventDayIndex(edition)) as 1 | 2;
 
   const roster = await getAccessRoster({ editionId, dayIndex });
   const all = [...roster.participants, ...roster.partners];
