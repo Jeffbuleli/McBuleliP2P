@@ -47,6 +47,7 @@
     "email:offre-emploi-rdc": "tsx scripts/send-offre-emploi-rdc-email.ts",
     "email:vision-partner": "tsx scripts/send-vision-partner-email.ts",
     "email:ilokwe-group-fiche": "tsx scripts/send-ilokwe-group-fiche-email.ts",
+    "email:partners-program-update": "tsx scripts/send-partners-program-update-email.ts",
     "email:e-com-sas": "tsx scripts/send-e-com-sas-email.ts",
     "email:e-com-sas-meet": "tsx scripts/send-e-com-sas-meet-email.ts",
     "email:rdpi-thinktank-meet": "tsx scripts/send-rdpi-thinktank-meet-email.ts",
