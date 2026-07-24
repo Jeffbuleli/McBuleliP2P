@@ -211,7 +211,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Où et quand a lieu l’événement ?",
-        a: "À Kinshasa - Silikin Village, 63, Ave Colonel Mondjiba. Dates : bientôt annoncées (communiquées aux inscrits).",
+        a: "À Kinshasa - Silikin Village, 63, Ave Colonel Mondjiba. Dates confirmées : vendredi 28 et samedi 29 août 2026, 08h00 – 17h00.",
       },
       {
         q: "Puis-je venir en tant qu’entreprise ou université ?",
@@ -246,7 +246,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Where and when is it?",
-      a: "In Kinshasa - Silikin Village, 63 Ave Colonel Mondjiba. Dates: coming soon (shared with registered participants).",
+      a: "In Kinshasa - Silikin Village, 63 Ave Colonel Mondjiba. Confirmed dates: Friday 28 and Saturday 29 August 2026, 08:00 – 17:00.",
     },
     {
       q: "Can companies or universities join?",

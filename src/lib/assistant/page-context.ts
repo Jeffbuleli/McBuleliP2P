@@ -105,9 +105,9 @@ export function pageContextHint(
       sw: "Mtumiaji anaingia. Saidia kuhusu njia za kuingia, nenosiri lililosahaulika, urejeshaji WhatsApp.",
     },
     hackathon: {
-      en: "User is on /hackathon. Explain Silikin Village venue, Coming soon dates, free 72h pre-registration, MoMo payment (243…), Cursor/Claude/Codex bootcamp, and QR tickets. Point to #register, #partner, #sponsor.",
-      fr: "L'utilisateur est sur /hackathon. Expliquez Silikin Village, dates Bientôt, pré-inscription 72 h, paiement MoMo (243…), bootcamp Cursor/Claude/Codex, et tickets QR. Orientez vers #register, #partner, #sponsor.",
-      sw: "Mtumiaji yuko kwenye /hackathon. Eleza Silikin Village, tarehe Coming soon, usajili wa awali 72h, malipo ya MoMo (243…), bootcamp Cursor/Claude/Codex, na tiketi za QR.",
+      en: "User is on a Hackathon page. Facts: Silikin Village (63 Ave Colonel Mondjiba, Kinshasa); confirmed 28–29 August 2026, 08:00–17:00; single 100 USD 2-day pack; email confirm then seat hold with NO auto-expiry + 24h pay reminders; MoMo Orange/M-Pesa/Airtel (243…); QR ticket at /hackathon/pass/[code]; ambassador promo at /hackathon/ambassadeur; partners/sponsors forms on /hackathon. Do NOT say dates are TBA or that holds expire in 72h.",
+      fr: "L'utilisateur est sur une page Hackathon. Faits : Silikin Village (63 Ave Colonel Mondjiba, Kinshasa) ; dates confirmées 28–29 août 2026, 08h00–17h00 ; pack unique 100 USD sur 2 jours ; confirmation e-mail puis place sans expiration auto + rappels paiement 24 h ; MoMo Orange/M-Pesa/Airtel (243…) ; ticket QR sur /hackathon/pass/[code] ; ambassadeur sur /hackathon/ambassadeur ; formulaires partenaire/sponsor sur /hackathon. Ne dites PAS que les dates sont « bientôt » ni qu'une place expire en 72 h.",
+      sw: "Mtumiaji yuko kwenye ukurasa wa Hackathon. Ukweli: Silikin Village (Kinshasa); tarehe 28–29 Agosti 2026, 08:00–17:00; bei 100 USD siku 2; nafasi haina kuisha kiotomatiki + vikumbusho vya malipo kila saa 24; MoMo (243…); tiketi QR /hackathon/pass/[code]; balozi /hackathon/ambassadeur. Usiseme tarehe hazijajulikana au nafasi inaisha baada ya saa 72.",
     },
     landing: {
       en: "Guest on homepage (may be logged out). Welcome briefly, stay STRICTLY on McBuleli products (wallet, P2P, Academy, signup). Refuse politics and general off-topic questions; invite them to ask about McBuleli or create an account at /register.",

@@ -246,6 +246,52 @@ const ROUTES: RouteDef[] = [
     },
   },
   {
+    href: "/hackathon",
+    keywords: [
+      "hackathon",
+      "silikin",
+      "vibe coding",
+      "kinshasa hackathon",
+      "ambassadeur",
+      "ambassador",
+      "ticket qr",
+      "badge hackathon",
+      "28 août",
+      "29 août",
+      "august 28",
+      "august 29",
+    ],
+    labels: {
+      en: "Hackathon Kinshasa",
+      fr: "Hackathon Kinshasa",
+      sw: "Hackathon Kinshasa",
+    },
+    reasons: {
+      en: "Open the hackathon page (dates, register, partners)",
+      fr: "Ouvrir la page hackathon (dates, inscription, partenaires)",
+      sw: "Fungua ukurasa wa hackathon (tarehe, usajili, washirika)",
+    },
+  },
+  {
+    href: "/hackathon/ambassadeur",
+    keywords: [
+      "code promo hackathon",
+      "cashback hackathon",
+      "devenir ambassadeur",
+      "become ambassador",
+    ],
+    labels: {
+      en: "Become ambassador",
+      fr: "Devenir ambassadeur",
+      sw: "Kuwa balozi",
+    },
+    reasons: {
+      en: "Create your hackathon promo code",
+      fr: "Créer votre code promo hackathon",
+      sw: "Unda code yako ya promo ya hackathon",
+    },
+  },
+  {
     href: "/register",
     keywords: ["register", "inscription", "sign up", "créer un compte", "s'inscrire"],
     labels: {

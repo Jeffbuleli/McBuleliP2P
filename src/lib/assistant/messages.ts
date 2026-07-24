@@ -32,6 +32,7 @@ export type AssistantMessages = {
   qa_avec: string;
   qa_staking: string;
   qa_kyc: string;
+  qa_hackathon: string;
 };
 
 export const assistantEn: AssistantMessages = {
@@ -39,8 +40,8 @@ export const assistantEn: AssistantMessages = {
   tagline: "Your fintech guide",
   welcome: "Welcome to McBuleli",
   welcomeSub:
-    "I only help with McBuleli:\n- Wallet, USDT, P2P\n- Trading, Academy, security\n- Staking, AVEC, KYC\n\nNot a general assistant. What do you need?",
-  placeholder: "Ask about McBuleli (wallet, P2P, Academy…)",
+    "I only help with McBuleli:\n- Wallet, USDT, P2P\n- Trading, Academy, security\n- Staking, AVEC, KYC\n- Hackathon Kinshasa (28–29 Aug 2026)\n\nNot a general assistant. What do you need?",
+  placeholder: "Ask about McBuleli (wallet, P2P, Hackathon…)",
   send: "Send",
   thinking: "Thinking…",
   openAssistant: "Open AI assistant",
@@ -66,6 +67,7 @@ export const assistantEn: AssistantMessages = {
   qa_avec: "AVEC Savings",
   qa_staking: "Staking",
   qa_kyc: "KYC Guide",
+  qa_hackathon: "Hackathon Kin.",
 };
 
 export const assistantFr: AssistantMessages = {
@@ -73,8 +75,8 @@ export const assistantFr: AssistantMessages = {
   tagline: "Votre guide fintech",
   welcome: "Bienvenue sur McBuleli",
   welcomeSub:
-    "Je réponds uniquement sur McBuleli :\n- Wallet, USDT, P2P\n- Trading, Academy, sécurité\n- Staking, AVEC, KYC\n\nPas un assistant général. De quoi avez-vous besoin ?",
-  placeholder: "Question McBuleli (wallet, P2P, Academy…)",
+    "Je réponds uniquement sur McBuleli :\n- Wallet, USDT, P2P\n- Trading, Academy, sécurité\n- Staking, AVEC, KYC\n- Hackathon Kinshasa (28–29 août 2026)\n\nPas un assistant général. De quoi avez-vous besoin ?",
+  placeholder: "Question McBuleli (wallet, P2P, Hackathon…)",
   send: "Envoyer",
   thinking: "Réflexion…",
   openAssistant: "Ouvrir l'assistant IA",
@@ -100,6 +102,7 @@ export const assistantFr: AssistantMessages = {
   qa_avec: "Épargne AVEC",
   qa_staking: "Staking",
   qa_kyc: "Guide KYC",
+  qa_hackathon: "Hackathon Kin.",
 };
 
 export const assistantSw: AssistantMessages = {
@@ -107,8 +110,8 @@ export const assistantSw: AssistantMessages = {
   tagline: "Mwongozo wako wa fedha",
   welcome: "Karibu McBuleli",
   welcomeSub:
-    "Ninasaidia tu McBuleli:\n- Wallet, USDT, P2P\n- Biashara, Academy, usalama\n- Staking, AVEC, KYC\n\nSi msaidizi wa kawaida. Unahitaji nini?",
-  placeholder: "Uliza kuhusu McBuleli (wallet, P2P, Academy…)",
+    "Ninasaidia tu McBuleli:\n- Wallet, USDT, P2P\n- Biashara, Academy, usalama\n- Staking, AVEC, KYC\n- Hackathon Kinshasa (28–29 Agosti 2026)\n\nSi msaidizi wa kawaida. Unahitaji nini?",
+  placeholder: "Uliza kuhusu McBuleli (wallet, P2P, Hackathon…)",
   send: "Tuma",
   thinking: "Inafikiri…",
   openAssistant: "Fungua msaidizi wa AI",
@@ -134,6 +137,7 @@ export const assistantSw: AssistantMessages = {
   qa_avec: "Akiba AVEC",
   qa_staking: "Staking",
   qa_kyc: "Mwongozo wa KYC",
+  qa_hackathon: "Hackathon Kin.",
 };
 
 export function getAssistantMessages(locale: AssistantLocale): AssistantMessages {
@@ -161,9 +165,11 @@ export type QuickActionKey =
   | "security"
   | "avec"
   | "staking"
-  | "kyc";
+  | "kyc"
+  | "hackathon";
 
 export const QUICK_ACTION_KEYS: QuickActionKey[] = [
+  "hackathon",
   "crypto",
   "usdt",
   "trading",
@@ -192,6 +198,7 @@ export function quickActionLabel(
     avec: m.qa_avec,
     staking: m.qa_staking,
     kyc: m.qa_kyc,
+    hackathon: m.qa_hackathon,
   };
   return map[key];
 }
@@ -212,6 +219,8 @@ export function quickActionPrompt(
       avec: "What is AVEC group savings on McBuleli?",
       staking: "How does staking work on McBuleli?",
       kyc: "Why is KYC important and how do I complete it?",
+      hackathon:
+        "Tell me about the McBuleli Hackathon in Kinshasa: dates, venue, price, how to register and pay, and the ambassador program.",
     },
     fr: {
       crypto: "Expliquez les bases de la crypto pour un débutant en Afrique.",
@@ -224,6 +233,8 @@ export function quickActionPrompt(
       avec: "Qu'est-ce que l'épargne collective AVEC sur McBuleli ?",
       staking: "Comment fonctionne le staking sur McBuleli ?",
       kyc: "Pourquoi le KYC est important et comment le compléter ?",
+      hackathon:
+        "Parle-moi du McBuleli Hackathon à Kinshasa : dates, lieu, prix, inscription/paiement et programme ambassadeur.",
     },
     sw: {
       crypto: "Eleza misingi ya crypto kwa mwanzo kabisa barani Afrika.",
@@ -236,6 +247,8 @@ export function quickActionPrompt(
       avec: "Akiba ya kikundi AVEC ni nini kwenye McBuleli?",
       staking: "Staking inavyofanya kazi kwenye McBuleli vipi?",
       kyc: "Kwa nini KYC ni muhimu na ninakamilisha vipi?",
+      hackathon:
+        "Niambie kuhusu McBuleli Hackathon Kinshasa: tarehe, mahali, bei, usajili/malipo na programu ya balozi.",
     },
   };
   return prompts[locale][key];
