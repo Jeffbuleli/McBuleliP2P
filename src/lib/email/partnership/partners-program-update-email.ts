@@ -3,6 +3,7 @@
  * + logos / noms des partenaires déjà visibles sur /hackathon.
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
+import { CAMPUS_VISIBILITY_PROFILES } from "@/lib/email/partnership/campus-visibility-email";
 import {
   BINANCE_PARTNER,
   HACKATHON_DATES_LABEL_FR,
@@ -11,7 +12,6 @@ import {
   HACKATHON_VENUE_SHORT,
   ILOKWE_PARTNER,
   PAWAPAY_PARTNER,
-  SILIKIN_PARTNER,
   hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
 import {
@@ -62,11 +62,6 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       href: ILOKWE_PARTNER.facebook,
       contentType: "image/png",
     },
-    silikin: {
-      roleFr: SILIKIN_PARTNER.roleFr,
-      href: SILIKIN_PARTNER.website,
-      contentType: "image/jpeg",
-    },
   };
 
   return featured.map((p) => {
@@ -83,7 +78,7 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       publicPath: p.logoUrl.replace(/^\//, ""),
       cid: `partner-${p.id}-logo`,
       tileBg:
-        p.id === "binance" || p.id === "silikin"
+        p.id === "binance"
           ? "#000000"
           : p.id === "ilokwe"
             ? "#0B3D2E"
@@ -100,7 +95,6 @@ export const PARTNER_PROGRAM_UPDATE_RECIPIENTS: {
   cc?: string[];
 }[] = [
   { org: "ILOKWE GROUP", email: ILOKWE_PARTNER.email },
-  { org: "Silikin Village", email: "reception_skv@texaf-rdc.com", cc: ["j.mika@texaf-rdc.com"] },
   { org: "Kilelo", email: "support@kileloapp.com" },
   {
     org: "IA Académie RDC / CHK",
@@ -121,6 +115,59 @@ export const PARTNER_PROGRAM_UPDATE_RECIPIENTS: {
   },
 ];
 
+/**
+ * Active hackathon ambassadors (promo kind=ambassador on VPS).
+ * Excludes internal @mcbuleli.org addresses from the public blast.
+ */
+export const AMBASSADOR_PROGRAM_UPDATE_RECIPIENTS: {
+  org: string;
+  email: string;
+  code: string;
+}[] = [
+  {
+    org: "Ambassadeur COORDHEC",
+    email: "gdllks66@gmail.com",
+    code: "COORDHEC",
+  },
+];
+
+export function partnerProgramUpdateEmailSet(): Set<string> {
+  const emails = new Set<string>();
+  for (const r of PARTNER_PROGRAM_UPDATE_RECIPIENTS) {
+    emails.add(r.email.trim().toLowerCase());
+    for (const cc of r.cc ?? []) emails.add(cc.trim().toLowerCase());
+  }
+  return emails;
+}
+
+/** Ambassadors minus the 7 partner emails already blasted. */
+export function ambassadorProgramUpdateRecipients(): {
+  org: string;
+  email: string;
+  code: string;
+}[] {
+  const skip = partnerProgramUpdateEmailSet();
+  return AMBASSADOR_PROGRAM_UPDATE_RECIPIENTS.filter(
+    (r) => !skip.has(r.email.trim().toLowerCase()),
+  );
+}
+
+/** Campus / student-visibility contacts, excluding the 7 partner emails. */
+export function campusProgramUpdateRecipients(): {
+  id: string;
+  org: string;
+  email: string;
+}[] {
+  const skip = partnerProgramUpdateEmailSet();
+  return CAMPUS_VISIBILITY_PROFILES.filter(
+    (p) => !skip.has(p.contactEmail.trim().toLowerCase()),
+  ).map((p) => ({
+    id: p.id,
+    org: p.orgName,
+    email: p.contactEmail,
+  }));
+}
+
 function esc(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -131,8 +178,11 @@ function esc(value: string): string {
 
 export function buildPartnersProgramUpdateEmail(args?: {
   useInlineLogos?: boolean;
+  /** partners (default) | ambassadors | campus */
+  audience?: "partners" | "ambassadors" | "campus";
 }): PartnersProgramUpdateEmailCopy {
   const useInline = args?.useInlineLogos !== false;
+  const audience = args?.audience ?? "partners";
   const hackathonUrl = `${partnershipPublicBaseUrl()}/hackathon`;
   const brandLogo = logoUrl();
   const year = new Date().getFullYear();
@@ -140,6 +190,23 @@ export function buildPartnersProgramUpdateEmail(args?: {
 
   const subject = `Programme confirmé - McBuleli Hackathon · ${HACKATHON_DATES_LABEL_FR} · ${HACKATHON_VENUE_SHORT}`;
   const preheader = `2 Journées confirmées (${HACKATHON_HOURS_LABEL_FR}) au ${HACKATHON_VENUE_SHORT}. Voir le programme et nos partenaires.`;
+
+  const greeting =
+    audience === "ambassadors"
+      ? "Bonjour chers Ambassadeurs,"
+      : audience === "campus"
+        ? "Bonjour chers Relais campus,"
+        : "Bonjour chers Partenaires,";
+  const thanks =
+    audience === "ambassadors"
+      ? "Merci pour votre engagement. Continuez à partager votre lien ambassadeur pour remplir les équipes - nous reviendrons bientôt pour la réunion (créneaux, ateliers, visibilité)."
+      : audience === "campus"
+        ? "Merci pour votre relais campus. Continuez à diffuser l'inscription auprès de vos étudiants - page programme ci-dessous."
+        : "Merci pour votre engagement. Nous reviendrons très bientôt pour la réunion partenaires (créneaux, ateliers, visibilité).";
+  const ambassadorCta =
+    audience === "ambassadors" || audience === "campus"
+      ? `\nEspace ambassadeur / relais : ${hackathonUrl.replace(/\/hackathon$/, "/hackathon/ambassadeur")}`
+      : "";
 
   const scheduleText = HACKATHON_SCHEDULE_SUMMARY.map(
     (d) =>
@@ -151,7 +218,7 @@ export function buildPartnersProgramUpdateEmail(args?: {
     .join("\n");
 
   const text = [
-    "Bonjour chers Partenaires,",
+    greeting,
     "",
     "Nous vous confirmons officiellement le programme du McBuleli Hackathon.",
     "",
@@ -166,8 +233,9 @@ export function buildPartnersProgramUpdateEmail(args?: {
     partnersText,
     "",
     `Page programme : ${hackathonUrl}`,
+    ambassadorCta.trim(),
     "",
-    "Merci pour votre engagement. Nous reviendrons très bientôt pour la réunion partenaires (créneaux, ateliers, visibilité).",
+    thanks,
     "",
     "Cordialement,",
     "McBuleli Team",
@@ -175,7 +243,9 @@ export function buildPartnersProgramUpdateEmail(args?: {
     SUPPORT_EMAIL,
     SUPPORT_PHONES_DISPLAY,
     `WhatsApp : ${SUPPORT_WA_PATH}`,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const scheduleRows = HACKATHON_SCHEDULE_SUMMARY.map(
     (d) => `
@@ -247,7 +317,7 @@ export function buildPartnersProgramUpdateEmail(args?: {
           </tr>
           <tr>
             <td style="padding:24px 28px 8px;">
-              <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">Bonjour chers Partenaires,</p>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">${esc(greeting.replace(/,$/, ""))},</p>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">
                 Nous vous confirmons officiellement le <strong style="color:${EMAIL_BRAND.text};">programme</strong>
                 du McBuleli Hackathon : <strong style="color:${EMAIL_BRAND.text};">2 Journées</strong>
@@ -277,9 +347,7 @@ export function buildPartnersProgramUpdateEmail(args?: {
               </table>
 
               <p style="margin:0 0 22px;font-size:14px;line-height:1.55;color:${EMAIL_BRAND.muted};">
-                Merci pour votre engagement. Nous reviendrons très bientôt pour la
-                <strong style="color:${EMAIL_BRAND.text};">réunion partenaires</strong>
-                (créneaux, ateliers, visibilité).
+                ${esc(thanks)}
               </p>
 
               <p style="margin:0 0 22px;text-align:center;">

@@ -389,13 +389,11 @@ export function HackathonPassBadge({
             {isFr ? "Nos partenaires" : "Our partners"}
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
-            {logos.map((logo) => {
-              const silikin = logo.id === "silikin";
-              return (
+            {logos.map((logo) => (
               <div
                 key={logo.name}
                 className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${
-                  logo.fit === "cover" || silikin ? "p-0" : "px-2"
+                  logo.fit === "cover" ? "p-0" : "px-2"
                 } ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -405,14 +403,11 @@ export function HackathonPassBadge({
                   className={
                     logo.fit === "cover"
                       ? "h-full w-full object-cover object-center"
-                      : silikin
-                        ? "h-[92%] w-[96%] object-contain object-center"
-                        : "max-h-full max-w-full object-contain object-center"
+                      : "max-h-full max-w-full object-contain object-center"
                   }
                 />
               </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </div>

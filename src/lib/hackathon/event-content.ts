@@ -223,14 +223,6 @@ export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
       tileBgClass: "bg-[#0B3D2E]",
       fit: "cover",
     },
-    {
-      id: "silikin",
-      name: SILIKIN_PARTNER.name,
-      logoUrl: SILIKIN_PARTNER.logoUrl,
-      href: SILIKIN_PARTNER.website,
-      tileBgClass: "bg-[#000000]",
-      fit: "contain",
-    },
   ];
 }
 
