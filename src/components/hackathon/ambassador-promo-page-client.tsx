@@ -23,34 +23,34 @@ export function AmbassadorPromoPageClient({
 
   return (
     <main className="relative mx-auto max-w-lg px-4 py-10 sm:py-14">
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[color:var(--hk-accent,var(--fd-primary))]">
         {c.eyebrow}
       </p>
-      <h1 className="mt-2 text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
+      <h1 className="mt-2 text-3xl font-black tracking-tight text-[color:var(--hk-text,var(--fd-text))] sm:text-4xl">
         {c.title}
       </h1>
-      <p className="mt-3 text-sm leading-relaxed text-[#5c6b60]">{c.lede}</p>
+      <p className="mt-3 text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">{c.lede}</p>
 
-      <ul className="mt-6 space-y-2.5 rounded-2xl bg-white/80 px-4 py-4 text-sm text-[#3D3D3D] shadow-sm ring-1 ring-black/[0.04] backdrop-blur-sm">
+      <ul className="mt-6 space-y-2.5 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 px-4 py-4 text-sm text-[color:var(--hk-text,var(--fd-text))] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] backdrop-blur-sm">
         <li className="flex gap-2">
-          <span className="shrink-0 font-bold text-[#1F6B43]">
+          <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
             -{AMBASSADOR_DISCOUNT_PERCENT}%
           </span>
           <span>{c.ruleDiscount(AMBASSADOR_DISCOUNT_PERCENT)}</span>
         </li>
         <li className="flex gap-2">
-          <span className="shrink-0 font-bold text-[#1F6B43]">
+          <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
             +{AMBASSADOR_CASHBACK_USD} USD
           </span>
           <span>{c.ruleCashback}</span>
         </li>
         <li className="flex gap-2">
-          <span className="shrink-0 font-bold text-[#1F6B43]">
+          <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
             {PROMO_CASHBACK_CLAIM_MIN_USD}+ USD
           </span>
           <span>{c.ruleMin}</span>
         </li>
-        <li className="text-[#6B6B6B]">{c.ruleAnti}</li>
+        <li className="text-[color:var(--hk-muted,var(--fd-muted))]">{c.ruleAnti}</li>
       </ul>
 
       <div className="mt-8">
@@ -60,16 +60,16 @@ export function AmbassadorPromoPageClient({
         />
       </div>
 
-      <p className="mt-8 text-center text-xs text-[#6B6B6B]">
+      <p className="mt-8 text-center text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
         <Link
           href="/hackathon"
-          className="font-semibold text-[#1F6B43] hover:underline"
+          className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] hover:underline"
         >
           {c.back}
         </Link>
       </p>
 
-      <p className="mt-6 text-center text-[10px] leading-relaxed text-[#8A8A8A]">
+      <p className="mt-6 text-center text-[10px] leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
         {c.legal}
       </p>
       <McBuleliPoweredFooter />

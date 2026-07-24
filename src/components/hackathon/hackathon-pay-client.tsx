@@ -130,8 +130,8 @@ export function HackathonPayClient({
     : null;
 
   return (
-    <div className="home-theme fd-public-light flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-white p-6 shadow-sm">
+    <div className="flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--hk-surface,var(--fd-card))] p-6 shadow-sm">
         <div className="flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -139,7 +139,7 @@ export function HackathonPayClient({
             alt="McBuleli"
             width={56}
             height={56}
-            className="h-14 w-14 rounded-xl"
+            className="h-14 w-14 rounded-xl bg-white"
           />
           <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
             McBuleli Hackathon
@@ -215,7 +215,7 @@ export function HackathonPayClient({
               <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
             </select>
           </div>
-          {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
+          {err ? <p className="text-sm font-semibold text-[color:var(--hk-err,#b91c1c)]">{err}</p> : null}
           <button
             type="submit"
             disabled={busy}

@@ -740,6 +740,137 @@ html {
   backdrop-filter: blur(10px);
 }
 
+/* Hackathon landing — local light/dark surface (preview toggle) */
+.hackathon-theme {
+  --hk-page: #fafaf8;
+  --hk-surface: #ffffff;
+  --hk-border: #e5e5e0;
+  --hk-text: #222222;
+  --hk-muted: #8a8a8a;
+  --hk-accent: #1f6b43;
+  --hk-soft: #eaf6ee;
+  --hk-shadow: rgba(34, 34, 34, 0.28);
+  --hk-glow: rgba(31, 107, 67, 0.55);
+  --hk-dot: rgba(31, 107, 67, 0.07);
+  --hk-wash: rgba(234, 246, 238, 0.18);
+  --hk-warn-text: #92400e;
+  --hk-warn-muted: #b45309;
+  --hk-ok-bg: #ecfdf5;
+  --hk-ok-text: #065f46;
+  --hk-ok-ring: #a7f3d0;
+  --hk-err: #b91c1c;
+  --fd-bg: var(--hk-page);
+  --fd-card: var(--hk-surface);
+  --fd-text: var(--hk-text);
+  --fd-muted: var(--hk-muted);
+  --fd-border: color-mix(in srgb, var(--hk-border) 85%, transparent);
+  --fd-mint: var(--hk-soft);
+  --fd-mint-deep: color-mix(in srgb, var(--hk-soft) 80%, var(--hk-accent));
+  color: var(--hk-text);
+  background: var(--hk-page);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+.hackathon-theme[data-hk-theme="dark"],
+html[data-hk-theme="dark"] .hackathon-theme {
+  --hk-page: #0c1210;
+  --hk-surface: #151c18;
+  --hk-border: #2a342f;
+  --hk-text: #eef2ef;
+  --hk-muted: #9aa59e;
+  --hk-accent: #3d9b68;
+  --hk-soft: #1a2e24;
+  --hk-shadow: rgba(0, 0, 0, 0.55);
+  --hk-glow: rgba(61, 155, 104, 0.45);
+  --hk-dot: rgba(94, 201, 138, 0.12);
+  --hk-wash: rgba(26, 46, 36, 0.55);
+  --hk-warn-text: #fbbf24;
+  --hk-warn-muted: #fcd34d;
+  --hk-ok-bg: rgba(16, 185, 129, 0.15);
+  --hk-ok-text: #6ee7b7;
+  --hk-ok-ring: rgba(16, 185, 129, 0.35);
+  --hk-err: #f87171;
+  --fd-primary: #3d9b68;
+  --fd-primary-dark: #2f7a52;
+  --fd-mint: #1a2e24;
+  --fd-mint-deep: #243830;
+  color-scheme: dark;
+}
+.hackathon-theme[data-hk-theme="dark"] .fd-app-topbar,
+html[data-hk-theme="dark"] .hackathon-theme .fd-app-topbar {
+  border-color: rgba(94, 201, 138, 0.18);
+  background: rgba(21, 28, 24, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.hackathon-theme[data-hk-theme="dark"] [role="menu"],
+html[data-hk-theme="dark"] .hackathon-theme [role="menu"] {
+  border-color: var(--hk-border);
+  background: var(--hk-surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* Native selects: readable chevron + option menu in both themes */
+.hackathon-theme select.hk-field,
+.hackathon-theme select.hk-select,
+.hackathon-theme select {
+  color-scheme: inherit;
+  background-color: var(--fd-card);
+  color: var(--fd-text);
+}
+.hackathon-theme select.hk-field option,
+.hackathon-theme select.hk-select option,
+.hackathon-theme select option {
+  background-color: var(--fd-card);
+  color: var(--fd-text);
+}
+.hackathon-theme input.hk-check[type="checkbox"],
+.hackathon-theme input.hk-check[type="radio"] {
+  accent-color: var(--fd-primary);
+  color-scheme: inherit;
+  background-color: var(--fd-card);
+  border-color: var(--fd-border);
+}
+.hackathon-theme[data-hk-theme="dark"] select,
+html[data-hk-theme="dark"] .hackathon-theme select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239aa59e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-size: 1rem;
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+}
+.hackathon-theme[data-hk-theme="light"] select,
+html:not([data-hk-theme="dark"]) .hackathon-theme select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2357534e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-size: 1rem;
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+}
+
+/* Soften pastel sponsor/tier chips on dark so they don't glare */
+.hackathon-theme[data-hk-theme="dark"] .hk-tier-chip,
+html[data-hk-theme="dark"] .hackathon-theme .hk-tier-chip {
+  filter: saturate(0.85) brightness(0.92);
+}
+
+/* Footer links stay bright on always-dark legal footer */
+.hackathon-theme .hk-footer-link:hover {
+  color: #86efac !important;
+}
+
+/* Autofill stays readable in dark surface */
+html[data-hk-theme="dark"] .hackathon-theme input.hk-field:-webkit-autofill,
+html[data-hk-theme="dark"] .hackathon-theme input.hk-field:-webkit-autofill:hover,
+html[data-hk-theme="dark"] .hackathon-theme input.hk-field:-webkit-autofill:focus,
+html[data-hk-theme="dark"] .hackathon-theme textarea.hk-field:-webkit-autofill,
+html[data-hk-theme="dark"] .hackathon-theme select.hk-field:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--hk-surface) inset !important;
+  box-shadow: 0 0 0 1000px var(--hk-surface) inset !important;
+  -webkit-text-fill-color: var(--hk-text) !important;
+  caret-color: var(--hk-text);
+}
+
 /* Hackathon Kin. top-bar CTA — soft shine / pulse */
 .fd-hackathon-kin-shine {
   position: relative;

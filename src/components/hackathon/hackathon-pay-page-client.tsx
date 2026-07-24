@@ -31,7 +31,7 @@ export function HackathonPayPageClient({ data }: { data: HackathonPayPageData })
 
   if (data.kind === "invalid") {
     return (
-      <div className="min-h-dvh bg-[#F7F8F5]">
+      <div className="min-h-dvh">
         <LandingTopBar authReturnPath="/hackathon" />
         <HackathonProcessCard
           tone="danger"
@@ -50,7 +50,7 @@ export function HackathonPayPageClient({ data }: { data: HackathonPayPageData })
 
   if (data.kind === "paid") {
     return (
-      <div className="min-h-dvh bg-[#F7F8F5]">
+      <div className="min-h-dvh">
         <LandingTopBar authReturnPath="/hackathon" />
         <HackathonProcessCard
           tone="success"
@@ -76,7 +76,7 @@ export function HackathonPayPageClient({ data }: { data: HackathonPayPageData })
 
   if (data.kind === "expired") {
     return (
-      <div className="min-h-dvh bg-[#F7F8F5]">
+      <div className="min-h-dvh">
         <LandingTopBar authReturnPath="/hackathon" />
         <HackathonProcessCard
           tone="warning"
@@ -94,7 +94,7 @@ export function HackathonPayPageClient({ data }: { data: HackathonPayPageData })
   }
 
   return (
-    <div className="min-h-dvh bg-[#F7F8F5]">
+    <div className="min-h-dvh">
       <LandingTopBar authReturnPath="/hackathon" />
       <HackathonPayClient
         token={data.token}

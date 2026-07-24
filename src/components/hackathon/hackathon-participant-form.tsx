@@ -301,7 +301,7 @@ function HackathonParticipantFormInner({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {!registrationOpen ? (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+        <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm font-semibold text-[color:var(--hk-warn-text,#92400e)]">
           {isFr
             ? "Inscriptions fermées pour cette édition."
             : "Registration is closed for this edition."}
@@ -318,7 +318,7 @@ function HackathonParticipantFormInner({
               type="text"
               readOnly
               value={lockedPromo.code}
-              className={`${hkField} max-w-[12rem] bg-white font-mono font-bold tracking-wide`}
+              className={`${hkField} max-w-[12rem] bg-[color:var(--fd-card)] font-mono font-bold tracking-wide`}
               aria-label={isFr ? "Code promo (non modifiable)" : "Promo code (locked)"}
             />
             <span className="text-sm font-semibold text-[color:var(--fd-text)]">
@@ -349,7 +349,7 @@ function HackathonParticipantFormInner({
           </p>
         </div>
       ) : (
-        <p className="rounded-xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
+        <p className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
           {isFr ? (
             <>
               Déjà un compte McBuleli ?{" "}
@@ -394,11 +394,11 @@ function HackathonParticipantFormInner({
       ) : null}
 
       {existingReg?.paymentStatus === "reserved" && existingReg.payUrl ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-center">
-          <p className="text-sm font-bold text-amber-900">
+        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 text-center">
+          <p className="text-sm font-bold text-[color:var(--hk-warn-text,#92400e)]">
             {isFr ? "Place déjà réservée" : "Seat already reserved"}
           </p>
-          <p className="mt-1 text-xs text-amber-800">
+          <p className="mt-1 text-xs text-[color:var(--hk-warn-muted,#b45309)]">
             {isFr
               ? "Finalisez le paiement pour recevoir votre ticket QR."
               : "Complete payment to receive your QR ticket."}
@@ -648,7 +648,7 @@ function HackathonParticipantFormInner({
         </select>
       </div>
 
-      {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
+      {err ? <p className="text-sm font-semibold text-[color:var(--hk-err,#b91c1c)]">{err}</p> : null}
       {msg ? <p className="text-sm font-semibold text-[color:var(--fd-primary)]">{msg}</p> : null}
       {payUrl ? (
         <a
@@ -666,7 +666,7 @@ function HackathonParticipantFormInner({
           onClick={() => {
             intentRef.current = "reserve";
           }}
-          className="w-full rounded-2xl bg-[color:var(--fd-primary)] px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60"
+          className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3 text-sm font-extrabold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)] disabled:opacity-60"
         >
           {busy
             ? isFr
@@ -682,7 +682,7 @@ function HackathonParticipantFormInner({
           onClick={() => {
             intentRef.current = "pay_now";
           }}
-          className="w-full rounded-2xl border border-[color:var(--fd-border)] bg-white px-4 py-3 text-sm font-extrabold text-[color:var(--fd-text)] disabled:opacity-60"
+          className="w-full rounded-2xl bg-[color:var(--fd-primary)] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)] disabled:opacity-60"
         >
           {isFr ? "S'inscrire et payer" : "Register & pay"}
         </button>

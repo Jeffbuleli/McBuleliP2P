@@ -50,10 +50,10 @@ export function HackathonPassView({
         editionTitle={isFr ? editionNameFr : editionNameEn}
       />
 
-      <p className="mt-6 text-center text-xs text-[#8A8A8A]">
+      <p className="mt-6 text-center text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
         <Link
           href="/hackathon"
-          className="font-semibold text-[#1F6B43] hover:underline"
+          className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] hover:underline"
         >
           ← {isFr ? "Retour au Hackathon" : "Back to Hackathon"}
         </Link>

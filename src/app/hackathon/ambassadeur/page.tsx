@@ -30,10 +30,10 @@ export default async function HackathonAmbassadorPage() {
     user.email.split("@")[0]?.replace(/[._]/g, " ") || "Ambassadeur";
 
   return (
-    <div className="relative min-h-dvh bg-[#F7F8F5]">
+    <div className="relative min-h-dvh">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,_rgba(31,107,67,0.14),_transparent_60%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,_color-mix(in_srgb,var(--hk-accent,#1F6B43)_18%,transparent),_transparent_60%)]"
       />
       <LandingTopBar authReturnPath={PATH} />
       <AmbassadorPromoPageClient

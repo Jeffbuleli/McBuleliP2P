@@ -8,7 +8,7 @@ export function McBuleliPoweredFooter() {
     <footer className="mt-8 flex flex-col items-center gap-1.5 pb-4 pt-2">
       <div className="flex items-center gap-2 text-[10px] text-[color:var(--fd-muted)]">
         <span>Powered by</span>
-        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-[color:var(--fd-primary)]/20 bg-[color:var(--fd-mint)]">
+        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-[color:var(--fd-primary)]/20 bg-white">
           <Image
             src="/brand/logo.png"
             alt=""

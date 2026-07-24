@@ -161,7 +161,7 @@ export function HackathonPartnerForm({
           onChange={(ev) => void onLogoPick(ev.target.files?.[0] ?? null)}
         />
         {logoPreview ? (
-          <span className="mt-2 inline-flex h-14 items-center rounded-xl bg-white px-4 ring-1 ring-[color:var(--fd-border)]">
+          <span className="mt-2 inline-flex h-14 items-center rounded-xl bg-[color:var(--fd-card)] px-4 ring-1 ring-[color:var(--fd-border)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={logoPreview} alt="" className="max-h-9 max-w-[140px] object-contain" />
           </span>
@@ -184,7 +184,7 @@ export function HackathonPartnerForm({
         </label>
         <textarea name="contribution" rows={3} className={hkField} />
       </div>
-      {err ? <p className="text-sm font-semibold text-red-700">{err}</p> : null}
+      {err ? <p className="text-sm font-semibold text-[color:var(--hk-err,#b91c1c)]">{err}</p> : null}
       <button
         type="submit"
         disabled={busy}

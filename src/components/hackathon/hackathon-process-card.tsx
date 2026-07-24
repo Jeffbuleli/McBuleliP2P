@@ -16,7 +16,7 @@ export function HackathonPoweredBy({ className = "" }: { className?: string }) {
       <span className="text-xs font-medium text-[color:var(--fd-muted)]">
         Powered by
       </span>
-      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] ring-1 ring-[color:var(--fd-primary)]/15">
+      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[color:var(--fd-primary)]/15">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={BRAND_LOGO_256}
@@ -36,8 +36,8 @@ type Tone = "neutral" | "success" | "warning" | "danger" | "info";
 const toneTitle: Record<Tone, string> = {
   neutral: "text-[color:var(--fd-text)]",
   success: "text-[color:var(--fd-primary)]",
-  warning: "text-amber-800",
-  danger: "text-red-700",
+  warning: "text-[color:var(--hk-warn-text,#92400e)]",
+  danger: "text-red-600",
   info: "text-[color:var(--fd-text)]",
 };
 
@@ -61,8 +61,8 @@ export function HackathonProcessCard({
   showLogo?: boolean;
 }) {
   return (
-    <div className="home-theme fd-public-light flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-white p-6 text-center shadow-sm">
+    <div className="flex min-h-[70dvh] items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--hk-surface,var(--fd-card))] p-6 text-center shadow-sm">
         {showLogo ? (
           <div className="flex flex-col items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -71,7 +71,7 @@ export function HackathonProcessCard({
               alt="McBuleli"
               width={48}
               height={48}
-              className="h-12 w-12 rounded-xl"
+              className="h-12 w-12 rounded-xl bg-white"
             />
             <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
               McBuleli Hackathon

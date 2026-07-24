@@ -193,7 +193,7 @@ export type HackathonFeaturedLogo = {
   href: string;
   /** Tile background (brand fill, like Binance / pawaPay). */
   tileBgClass: string;
-  /** contain = letterbox in tile (pawaPay/Binance); cover = full-bleed photo logos (ILOKWE). */
+  /** contain = letterbox in tile (pawaPay/Binance/ILOKWE); cover = full-bleed photo logos. */
   fit: "contain" | "cover";
 };
 
@@ -221,7 +221,7 @@ export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
       logoUrl: ILOKWE_PARTNER.logoUrl,
       href: ILOKWE_PARTNER.facebook,
       tileBgClass: "bg-[#0B3D2E]",
-      fit: "cover",
+      fit: "contain",
     },
   ];
 }

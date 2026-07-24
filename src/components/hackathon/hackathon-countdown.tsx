@@ -59,9 +59,9 @@ export function HackathonCountdown({
   if (!Number.isFinite(target)) return null;
 
   const started = parts.totalMs <= 0;
-  const ink = onDark ? "text-white" : "text-[#1F6B43]";
-  const muted = onDark ? "text-white/65" : "text-[#8A8A8A]";
-  const sep = onDark ? "text-white/40" : "text-[#C5C5C0]";
+  const ink = onDark ? "text-white" : "text-[color:var(--hk-accent,var(--fd-primary))]";
+  const muted = onDark ? "text-white/65" : "text-[color:var(--hk-muted,var(--fd-muted))]";
+  const sep = onDark ? "text-white/40" : "text-[color:var(--hk-border,#C5C5C0)]";
 
   const aria = started
     ? isFr
@@ -95,7 +95,7 @@ export function HackathonCountdown({
       <Unit value={parts.seconds} label="s" muted={muted} />
     </div>
   ) : (
-    <span className={`inline-block h-4 w-24 animate-pulse rounded ${onDark ? "bg-white/15" : "bg-black/10"}`} />
+    <span className={`inline-block h-4 w-24 animate-pulse rounded ${onDark ? "bg-white/15" : "bg-[color:var(--hk-border)]/50"}`} />
   );
 
   if (bare) {
@@ -111,7 +111,7 @@ export function HackathonCountdown({
       className={`rounded-2xl border px-3 py-2 ${
         onDark
           ? "border-white/25 bg-white/10 text-white shadow-sm backdrop-blur-md"
-          : "border-[#E5E5E0] bg-white/90 text-[#222222] shadow-[0_10px_28px_-16px_rgba(34,34,34,0.35)] backdrop-blur-md"
+          : "border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))]/90 text-[color:var(--hk-text,var(--fd-text))] shadow-[0_10px_28px_-16px_var(--hk-shadow,rgba(34,34,34,0.35))] backdrop-blur-md"
       } ${className}`}
       aria-live="polite"
       aria-label={aria}

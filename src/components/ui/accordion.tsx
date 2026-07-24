@@ -67,28 +67,32 @@ export function AccordionItem({
   const triggerId = useId();
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-[#E5E5E0] bg-white shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)]">
+    <div className="overflow-hidden rounded-[22px] border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] shadow-[0_14px_44px_-28px_var(--hk-shadow,rgba(34,34,34,0.28))]">
       <button
         type="button"
         id={triggerId}
         aria-expanded={isOpen}
         aria-controls={panelId}
         onClick={() => toggle(itemId)}
-        className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[#EAF6EE]/60 sm:px-5"
+        className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color:var(--hk-soft,var(--fd-mint))]/60 sm:px-5"
       >
         {icon ? (
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF6EE] text-[#1F6B43]">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] text-[color:var(--hk-accent,var(--fd-primary))]">
             {icon}
           </span>
         ) : null}
         <span className="min-w-0 flex-1">
-          <span className="block font-extrabold tracking-tight text-[#222222]">{title}</span>
+          <span className="block font-extrabold tracking-tight text-[color:var(--hk-text,var(--fd-text))]">
+            {title}
+          </span>
           {subtitle ? (
-            <span className="mt-0.5 block text-sm text-[#8A8A8A]">{subtitle}</span>
+            <span className="mt-0.5 block text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+              {subtitle}
+            </span>
           ) : null}
         </span>
         <span
-          className={`shrink-0 text-lg font-light text-[#1F6B43] transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`}
+          className={`shrink-0 text-lg font-light text-[color:var(--hk-accent,var(--fd-primary))] transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`}
           aria-hidden
         >
           +
@@ -99,7 +103,7 @@ export function AccordionItem({
           id={panelId}
           role="region"
           aria-labelledby={triggerId}
-          className="border-t border-[#E5E5E0] px-4 py-4 sm:px-5"
+          className="border-t border-[color:var(--hk-border,var(--fd-border))] px-4 py-4 sm:px-5"
         >
           {children}
         </div>

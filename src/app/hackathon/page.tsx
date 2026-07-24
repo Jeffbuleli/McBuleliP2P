@@ -125,12 +125,12 @@ export default async function HackathonPage() {
   }
 
   return (
-    <div className="home-theme fd-public-light min-h-dvh">
+    <>
       <LandingTopBar authReturnPath="/hackathon" />
       {data ? (
         <>
           {usedDemo ? (
-            <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-900">
+            <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs text-[color:var(--hk-warn-text,#92400e)]">
               <HackathonLocaleText
                 fr="Aperçu local (DB indisponible) - les formulaires ne s'enregistreront pas tant que DATABASE_URL / seed ne sont pas OK."
                 en="Local preview (DB unavailable) - forms will not save until DATABASE_URL / seed are OK."
@@ -158,6 +158,6 @@ export default async function HackathonPage() {
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 }

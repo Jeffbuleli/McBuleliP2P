@@ -5,9 +5,10 @@ type BadgeVariant = "default" | "success" | "muted" | "outline";
 const VARIANT: Record<BadgeVariant, string> = {
   default:
     "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ring-1 ring-[color:var(--fd-primary)]/15",
-  success: "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200",
+  success:
+    "bg-[color:var(--hk-ok-bg,#ecfdf5)] text-[color:var(--hk-ok-text,#065f46)] ring-1 ring-[color:var(--hk-ok-ring,#a7f3d0)]",
   muted: "bg-[color:var(--fd-bg)] text-[color:var(--fd-muted)] ring-1 ring-[color:var(--fd-border)]",
-  outline: "bg-white text-[color:var(--fd-text)] ring-1 ring-[color:var(--fd-border)]",
+  outline: "bg-[color:var(--fd-card)] text-[color:var(--fd-text)] ring-1 ring-[color:var(--fd-border)]",
 };
 
 export function Badge({

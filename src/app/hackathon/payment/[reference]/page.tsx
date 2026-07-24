@@ -32,7 +32,7 @@ function StatusIcon({ kind }: { kind: "wait" | "ok" | "fail" | "miss" }) {
   }
   if (kind === "fail") {
     return (
-      <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600">
+      <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-red-500">
         <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
           <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
         </svg>
@@ -41,7 +41,7 @@ function StatusIcon({ kind }: { kind: "wait" | "ok" | "fail" | "miss" }) {
   }
   if (kind === "miss") {
     return (
-      <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 text-stone-500">
+      <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--hk-page,var(--fd-bg))] text-[color:var(--fd-muted)]">
         <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <circle cx="12" cy="12" r="9" />
           <path d="M12 8v5M12 16h.01" strokeLinecap="round" />
@@ -112,7 +112,7 @@ export default function HackathonPaymentStatusPage() {
 
   function shell(card: ReactNode) {
     return (
-      <div className="min-h-dvh bg-[#F7F8F5]">
+      <div className="min-h-dvh">
         <LandingTopBar authReturnPath="/hackathon" />
         {card}
       </div>

@@ -35,7 +35,7 @@ export default async function HackathonPassPage({
     pass.subjectType === "partner" ? "partner" : "ticket";
 
   return (
-    <div className="min-h-dvh bg-[#F3F4F1]">
+    <div className="min-h-dvh">
       <LandingTopBar authReturnPath="/hackathon" />
       <div className="mx-auto max-w-lg px-4 py-8 sm:py-10">
         <HackathonPassView

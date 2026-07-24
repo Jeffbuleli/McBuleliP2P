@@ -28,8 +28,8 @@ export function HackathonAtmosphere({
         aria-hidden
         style={{
           backgroundImage: [
-            "radial-gradient(circle, rgba(31,107,67,0.07) 1.35px, transparent 1.6px)",
-            "linear-gradient(135deg, rgba(234,246,238,0.18) 0%, transparent 40%, rgba(238,242,255,0.06) 100%)",
+            "radial-gradient(circle, var(--hk-dot, rgba(31,107,67,0.07)) 1.35px, transparent 1.6px)",
+            "linear-gradient(135deg, var(--hk-wash, rgba(234,246,238,0.18)) 0%, transparent 40%, rgba(238,242,255,0.06) 100%)",
           ].join(", "),
           backgroundSize: "18px 18px, 100% 100%",
           backgroundRepeat: "repeat, no-repeat",

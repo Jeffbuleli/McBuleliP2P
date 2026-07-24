@@ -93,20 +93,20 @@ function Section({
         <div
           className={
             solidBand
-              ? "max-w-3xl"
-              : "max-w-3xl rounded-2xl bg-[#FAFAF8] px-3 py-2 sm:px-3.5 sm:py-2.5"
+              ? "max-w-3xl rounded-2xl bg-[color:var(--hk-surface)] px-3 py-2 sm:px-3.5 sm:py-2.5"
+              : "max-w-3xl rounded-2xl bg-[color:var(--hk-page)] px-3 py-2 sm:px-3.5 sm:py-2.5"
           }
         >
           {eyebrow ? (
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#1F6B43]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
               {eyebrow}
             </p>
           ) : null}
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#222222] sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-3xl">
             {title}
           </h2>
           {subtitle ? (
-            <p className="mt-3 text-base leading-relaxed text-[#8A8A8A]">
+            <p className="mt-3 text-base leading-relaxed text-[color:var(--hk-muted)]">
               {subtitle}
             </p>
           ) : null}
@@ -131,7 +131,7 @@ function CtaPrimary({
       href={href}
       className={
         onDark
-          ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-mint)]"
+          ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[#1F6B43] shadow-sm transition hover:bg-[#EAF6EE]"
           : "inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--fd-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)]"
       }
     >
@@ -155,7 +155,7 @@ function CtaSecondary({
       className={
         onDark
           ? "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
+          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
       }
     >
       {children}
@@ -256,8 +256,10 @@ function PersonGrid({
         const inner = (
           <>
             <div
-              className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] ${
-                p.photoFit === "contain" ? "ring-1 ring-[color:var(--fd-primary)]/15" : ""
+              className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-[color:var(--fd-primary)] ${
+                p.photoFit === "contain"
+                  ? "bg-white ring-1 ring-[color:var(--fd-primary)]/15"
+                  : "bg-[color:var(--fd-mint)]"
               }`}
             >
               {p.photoUrl ? (
@@ -298,7 +300,7 @@ function PersonGrid({
           </>
         );
         const cls =
-          "flex items-start gap-3 rounded-2xl border border-[#E5E5E0] bg-white p-3 shadow-[0_10px_28px_-16px_rgba(34,34,34,0.22)] sm:p-3.5";
+          "flex items-start gap-3 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-3 shadow-[0_10px_28px_-16px_var(--hk-shadow)] sm:p-3.5";
         return (
           <li key={p.id} className="min-w-0">
             {p.href?.startsWith("http") ? (
@@ -388,7 +390,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
   ];
 
   return (
-    <div className="relative overflow-hidden bg-[#FAFAF8] pb-24 text-[#222222] sm:pb-10">
+    <div className="relative overflow-hidden bg-[color:var(--hk-page)] pb-24 text-[color:var(--hk-text)] sm:pb-10">
       <HackathonAtmosphere variant="page" />
       {/* Hero */}
       <header className="relative z-10 min-h-[min(72vh,640px)] overflow-hidden border-b border-[color:var(--fd-border)]">
@@ -416,7 +418,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 McBuleli Hackathon
               </span>
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--fd-mint)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#c8ebd0]">
               McBuleli Hackathon - {HACKATHON_EVENT_DAYS} {isFr ? "Jours" : "Days"} - {HACKATHON_EVENT_YEAR}
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
@@ -456,14 +458,14 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </header>
 
       {/* Stats strip */}
-      <div className="relative z-10 border-b border-[#E5E5E0] bg-white">
-        <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-[#E5E5E0] sm:grid-cols-4">
+      <div className="relative z-10 border-b border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]">
+        <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-[color:var(--hk-border)] sm:grid-cols-4">
           {statItems.map((s) => (
-            <div key={s.label} className="bg-white px-3 py-5 text-center sm:px-6">
-              <dt className="break-words text-[10px] font-extrabold uppercase leading-snug tracking-[0.14em] text-[#8A8A8A]">
+            <div key={s.label} className="bg-[color:var(--hk-surface)] px-3 py-5 text-center sm:px-6">
+              <dt className="break-words text-[10px] font-extrabold uppercase leading-snug tracking-[0.14em] text-[color:var(--hk-muted)]">
                 {s.label}
               </dt>
-              <dd className="mt-1 text-2xl font-black tabular-nums tracking-tight text-[#1F6B43]">
+              <dd className="mt-1 text-2xl font-black tabular-nums tracking-tight text-[color:var(--hk-accent)]">
                 {s.value}
               </dd>
             </div>
@@ -482,7 +484,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {challenges.map((c) => (
             <li key={c.id} className="min-w-0">
-              <Card className="h-full rounded-[22px] border-[#E5E5E0] shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)] transition hover:border-[#1F6B43]/35">
+              <Card className="h-full rounded-[22px] border-[color:var(--hk-border)] shadow-[0_14px_44px_-28px_var(--hk-shadow)] transition hover:border-[color:var(--hk-accent)]/35">
                 <CardTitle className="break-words">{c.label}</CardTitle>
                 <CardDescription className="break-words">{c.blurb}</CardDescription>
               </Card>
@@ -494,7 +496,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       {/* Prix */}
       <Section
         id="prix"
-        className="bg-white"
+        className="bg-[color:var(--hk-surface)]"
         eyebrow={isFr ? "Prix" : "Prizes"}
         title={isFr ? "Récompenses & reconnaissance" : "Rewards & recognition"}
       >
@@ -504,12 +506,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             return (
               <li key={p.id}>
                 <Card
-                  className={`rounded-[22px] border-[#E5E5E0] shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)] ${
+                  className={`rounded-[22px] border-[color:var(--hk-border)] shadow-[0_14px_44px_-28px_var(--hk-shadow)] ${
                     isFirst ? "ring-1 ring-[#d4a017]/40" : ""
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EAF6EE] text-[#1F6B43]">
+                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color:var(--hk-soft)] text-[color:var(--hk-accent)]">
                       <PrizeIcon id={p.icon} />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -547,21 +549,21 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           {HACKATHON_SCHEDULE_SUMMARY.map((day, i) => (
             <li
               key={day.dateFr}
-              className="relative overflow-hidden rounded-[22px] border border-[#E5E5E0] bg-white px-5 py-5 shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)]"
+              className="relative overflow-hidden rounded-[22px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] px-5 py-5 shadow-[0_14px_44px_-28px_var(--hk-shadow)]"
             >
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1F6B43]">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
                 {isFr ? `Jour ${i + 1}` : `Day ${i + 1}`}
               </p>
-              <p className="mt-2 text-xl font-black tracking-tight text-[#222222]">
+              <p className="mt-2 text-xl font-black tracking-tight text-[color:var(--hk-text)]">
                 {isFr ? day.weekdayFr : day.weekdayEn}
               </p>
-              <p className="mt-1 text-sm text-[#8A8A8A]">
+              <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
                 {isFr ? day.dateFr : day.dateEn}
               </p>
-              <p className="mt-3 text-sm font-extrabold tabular-nums text-[#222222]">
+              <p className="mt-3 text-sm font-extrabold tabular-nums text-[color:var(--hk-text)]">
                 {isFr ? day.hoursFr : day.hoursEn}
               </p>
-              <p className="mt-1 text-sm text-[#8A8A8A]">
+              <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
                 {isFr ? day.focusFr : day.focusEn}
               </p>
             </li>
@@ -580,16 +582,16 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 {day.slots.map((slot) => (
                   <li
                     key={`${day.day}-${slot.time}-${slot.icon}`}
-                    className="flex gap-3 rounded-xl bg-[#FAFAF8] px-3 py-2.5"
+                    className="flex gap-3 rounded-xl bg-[color:var(--hk-soft)]/55 px-3 py-2.5 ring-1 ring-[color:var(--hk-border)]/60"
                   >
-                    <span className="mt-0.5 text-[#1F6B43]">
+                    <span className="mt-0.5 text-[color:var(--hk-accent)]">
                       <ProgramIcon id={slot.icon} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-extrabold tabular-nums text-[#1F6B43]">
+                      <p className="text-xs font-extrabold tabular-nums text-[color:var(--hk-accent)]">
                         {slot.time}
                       </p>
-                      <p className="mt-0.5 text-sm text-[#222222]">
+                      <p className="mt-0.5 text-sm text-[color:var(--hk-text)]">
                         {isFr ? slot.activityFr : slot.activityEn}
                       </p>
                     </div>
@@ -600,13 +602,13 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           ))}
         </Accordion>
         <div className="mt-6">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#8A8A8A]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
             {isFr ? "Activités transversales" : "Cross-cutting activities"}
           </p>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {crossCut.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-[#8A8A8A]">
-                <BulletIcon className="h-3 w-3 shrink-0 text-[#1F6B43]" />
+              <li key={item} className="flex items-center gap-2 text-sm text-[color:var(--hk-muted)]">
+                <BulletIcon className="h-3 w-3 shrink-0 text-[color:var(--hk-accent)]" />
                 {item}
               </li>
             ))}
@@ -617,7 +619,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       {/* À propos — mentors/jury pliés */}
       <Section
         id="about"
-        className="bg-white"
+        className="bg-[color:var(--hk-surface)]"
         eyebrow={isFr ? "À propos" : "About"}
         title={about.title}
         subtitle={about.body}
@@ -713,7 +715,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 : "Promo code, -10% and cashback for your signups"
             }
           >
-            <p className="text-sm leading-relaxed text-[#8A8A8A]">
+            <p className="text-sm leading-relaxed text-[color:var(--hk-muted)]">
               {isFr
                 ? "Crée ton code ambassadeur, partage ton lien et suis les inscriptions confirmées."
                 : "Create your ambassador code, share your link and track confirmed signups."}
@@ -730,7 +732,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       {/* Écosystème — logos visibles, détails pliés */}
       <Section
         id="partenaires"
-        className="bg-white"
+        className="bg-[color:var(--hk-surface)]"
         eyebrow={isFr ? "Écosystème" : "Ecosystem"}
         title={isFr ? "Ils accompagnent les builders" : "They back the builders"}
         subtitle={
@@ -774,7 +776,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 name: isFr ? "Logo partenaire" : "Partner logo",
                 logoUrl: null as string | null,
                 website: null as string | null,
-                tileBgClass: "bg-[#FAFAF8]",
+                tileBgClass: "bg-white/80",
                 fit: "contain" as const,
                 placeholder: true,
               }),
@@ -796,11 +798,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     }
                   />
                 ) : (
-                  <span className="text-center text-[11px] font-medium text-[#8A8A8A]">
+                  <span className="text-center text-[11px] font-medium text-[color:var(--hk-muted)]">
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${
+                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
                   cover || p.placeholder ? "p-0" : "px-3"
                 } ${p.tileBgClass} ${p.placeholder ? "border-dashed" : ""}`;
                 return (
@@ -823,21 +825,26 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <ul className="mb-6 flex flex-wrap gap-3">
             {featuredSponsors.map((s) => {
               const v = BUILDERS_TIER_VISUAL[s.pack] ?? BUILDERS_TIER_VISUAL.bronze;
+              const isIlokwe = /ilokwe/i.test(s.name);
               return (
                 <li key={s.id}>
                   <a
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 rounded-xl border border-[#E5E5E0] px-4 py-2 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
+                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 rounded-xl border border-[color:var(--hk-border)] px-4 py-2 shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
+                      isIlokwe ? "bg-[#0B3D2E]" : "bg-white"
+                    }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={s.logoUrl}
                       alt={s.name}
-                      className="h-8 w-auto max-w-[120px] rounded-md object-cover"
+                      className="h-9 w-auto max-w-[130px] rounded-md object-contain"
                     />
-                    <span className="max-w-[10rem] break-words text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide">
+                    <span
+                      className={`max-w-[10rem] break-words rounded-full px-2 py-0.5 text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide hk-tier-chip ${v.badgeClass}`}
+                    >
                       {isFr ? s.roleFr : s.roleEn}
                     </span>
                   </a>
@@ -851,14 +858,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 return (
                   <li
                     key={s.id}
-                    className={`flex h-16 min-w-[8rem] flex-col items-center justify-center rounded-xl border border-[#E5E5E0] px-4 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
+                    className="flex h-16 min-w-[8rem] flex-col items-center justify-center gap-1 rounded-xl border border-[color:var(--hk-border)] bg-white px-4 shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
                   >
                     {s.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={s.logoUrl} alt={s.name} className="max-h-7 max-w-[100px]" />
                     ) : (
-                      <span className="text-sm font-semibold">{s.name}</span>
+                      <span className="text-sm font-semibold text-[#222222]">{s.name}</span>
                     )}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide hk-tier-chip ${v.badgeClass}`}
+                    >
+                      {s.pack}
+                    </span>
                   </li>
                 );
               })}
@@ -904,7 +916,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   name: ILOKWE_PARTNER.name,
                   body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
                   meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
-                  cover: true,
+                  cover: false,
                 },
               ].map((p) => (
                 <a
@@ -912,11 +924,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   href={p.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block rounded-[22px] border border-[#E5E5E0] bg-white p-4 shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)] transition hover:border-[#1F6B43]/35 sm:p-5"
+                  className="block rounded-[22px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 shadow-[0_14px_44px_-28px_var(--hk-shadow)] transition hover:border-[color:var(--hk-accent)]/35 sm:p-5"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_8px_22px_-12px_rgba(34,34,34,0.35)] ${p.tile} ${p.cover ? "p-0" : "p-2"} sm:w-40`}
+                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.tile} ${p.cover ? "p-0" : "p-2"} sm:w-40`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -930,16 +942,16 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                       />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#1F6B43]">
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--hk-accent)]">
                         {p.role}
                       </p>
-                      <p className="mt-1 break-words text-base font-extrabold text-[#222222]">
+                      <p className="mt-1 break-words text-base font-extrabold text-[color:var(--hk-text)]">
                         {p.name}
                       </p>
-                      <p className="mt-1 break-words text-sm leading-relaxed text-[#8A8A8A]">
+                      <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--hk-muted)]">
                         {p.body}
                       </p>
-                      <p className="mt-2 break-words text-xs font-extrabold text-[#1F6B43]">
+                      <p className="mt-2 break-words text-xs font-extrabold text-[color:var(--hk-accent)]">
                         {p.meta}
                       </p>
                     </div>
@@ -956,15 +968,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <ul className="grid gap-3 sm:grid-cols-2">
               {benefits.map((b) => (
                 <li key={b.id} className="min-w-0">
-                  <div className="flex items-start gap-3 rounded-[18px] border border-[#E5E5E0] bg-white p-3">
-                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF6EE] text-[#1F6B43]">
+                  <div className="flex items-start gap-3 rounded-[18px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-3">
+                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--hk-soft)] text-[color:var(--hk-accent)]">
                       <BenefitIcon id={b.icon} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-extrabold text-[#222222]">
+                      <p className="font-extrabold text-[color:var(--hk-text)]">
                         {isFr ? b.titleFr : b.titleEn}
                       </p>
-                      <p className="mt-1 text-sm text-[#8A8A8A]">
+                      <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
                         {isFr ? b.bodyFr : b.bodyEn}
                       </p>
                     </div>
@@ -976,7 +988,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <a
                 href="#register"
                 onClick={() => setFormsOpen("partner-form")}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#1F6B43] px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-95"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--hk-accent)] px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-95"
               >
                 {isFr ? "Ouvrir le formulaire partenaire" : "Open partner form"}
               </a>
@@ -994,9 +1006,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 const perks = isFr ? tier.perksFr : tier.perksEn;
                 return (
                   <li key={tier.id}>
-                    <Card
-                      className={`h-full rounded-[22px] border-[#E5E5E0] shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)] ${v?.badgeClass ?? ""}`}
-                    >
+                    <Card className="h-full rounded-[22px] border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] shadow-[0_14px_44px_-28px_var(--hk-shadow)]">
                       <div className="flex items-start justify-between gap-3">
                         <CardTitle>{isFr ? tier.labelFr : tier.labelEn}</CardTitle>
                         <Badge variant={confirmed ? "success" : "muted"}>
@@ -1009,10 +1019,20 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                               : "Available"}
                         </Badge>
                       </div>
+                      {v ? (
+                        <span
+                          className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide hk-tier-chip ${v.badgeClass}`}
+                        >
+                          {tier.id}
+                        </span>
+                      ) : null}
                       <ul className="mt-3 space-y-1.5">
                         {perks.map((perk) => (
-                          <li key={perk} className="flex items-center gap-2 text-sm opacity-90">
-                            <CheckIcon className="h-4 w-4 shrink-0 text-[#1F6B43]" />
+                          <li
+                            key={perk}
+                            className="flex items-center gap-2 text-sm text-[color:var(--hk-text)] opacity-90"
+                          >
+                            <CheckIcon className="h-4 w-4 shrink-0 text-[color:var(--hk-accent)]" />
                             {perk}
                           </li>
                         ))}
@@ -1026,7 +1046,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <a
                 href="#register"
                 onClick={() => setFormsOpen("sponsor-form")}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#1F6B43] px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-95"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--hk-accent)] px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-95"
               >
                 {isFr ? "Ouvrir le formulaire sponsor" : "Open sponsor form"}
               </a>
@@ -1040,7 +1060,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         <Accordion>
           {faq.map((item, i) => (
             <AccordionItem key={item.q} id={`faq-${i}`} title={item.q}>
-              <p className="text-sm leading-relaxed text-[#8A8A8A]">{item.a}</p>
+              <p className="text-sm leading-relaxed text-[color:var(--hk-muted)]">{item.a}</p>
             </AccordionItem>
           ))}
         </Accordion>
@@ -1049,7 +1069,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       {/* Contact */}
       <Section
         id="contact"
-        className="bg-white"
+        className="bg-[color:var(--hk-surface)]"
         eyebrow={isFr ? "Contact" : "Contact"}
         title={isFr ? "Parler à l'équipe McBuleli" : "Talk to McBuleli"}
       >
@@ -1076,11 +1096,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
               className="block"
             >
-              <Card className="rounded-[22px] border-[#E5E5E0] shadow-[0_14px_44px_-28px_rgba(34,34,34,0.28)] transition hover:border-[#1F6B43]/35">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8A8A8A]">
+              <Card className="rounded-[22px] border-[color:var(--hk-border)] shadow-[0_14px_44px_-28px_var(--hk-shadow)] transition hover:border-[color:var(--hk-accent)]/35">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--hk-muted)]">
                   {c.label}
                 </p>
-                <p className="mt-2 font-extrabold text-[#1F6B43]">{c.value}</p>
+                <p className="mt-2 font-extrabold text-[color:var(--hk-accent)]">{c.value}</p>
               </Card>
             </a>
           ))}
@@ -1089,21 +1109,21 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
 
       {/* Final CTA */}
       <div className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
-        <div className="rounded-[28px] bg-[#1F6B43] px-6 py-10 text-center text-white shadow-[0_24px_64px_-30px_rgba(31,107,67,0.55)] sm:px-12">
-          <h2 className="text-2xl font-semibold sm:text-3xl">
+        <div className="rounded-[28px] bg-[#1F6B43] px-6 py-10 text-center text-white shadow-[0_24px_64px_-30px_var(--hk-glow)] sm:px-12">
+          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             {isFr ? "Construisez votre futur avec l'IA." : "Build your future with AI."}
           </h2>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a
               href="#register"
-              className="inline-flex min-h-11 items-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-primary)]"
+              className="inline-flex min-h-11 items-center rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-[#1F6B43] shadow-sm transition hover:bg-[#EAF6EE]"
             >
               {isFr ? "Participer" : "Join"}
             </a>
             <a
               href="#register"
               onClick={() => setFormsOpen("sponsor-form")}
-              className="inline-flex min-h-11 items-center rounded-xl border border-white/40 px-6 py-2.5 text-sm font-extrabold text-white"
+              className="inline-flex min-h-11 items-center rounded-xl border border-white/45 bg-white/10 px-6 py-2.5 text-sm font-extrabold text-white backdrop-blur-sm transition hover:bg-white/20"
             >
               {isFr ? "Devenir sponsor" : "Become a sponsor"}
             </a>
@@ -1127,7 +1147,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <p className="text-sm font-semibold">{isFr ? "Contact" : "Contact"}</p>
             <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
-                <a className="hover:text-[color:var(--fd-mint)]" href={`mailto:${SUPPORT_EMAIL}`}>
+                <a className="hk-footer-link hover:text-[#86efac]" href={`mailto:${SUPPORT_EMAIL}`}>
                   {SUPPORT_EMAIL}
                 </a>
               </li>
@@ -1138,26 +1158,36 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <p className="text-sm font-semibold">{isFr ? "Mentions légales" : "Legal"}</p>
             <ul className="mt-2 space-y-1 text-sm text-white/65">
               <li>
-                <Link className="hover:text-[color:var(--fd-mint)]" href="/privacy">
+                <Link className="hk-footer-link hover:text-[#86efac]" href="/privacy">
                   {isFr ? "Confidentialité" : "Privacy"}
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-[color:var(--fd-mint)]" href="/terms">
+                <Link className="hk-footer-link hover:text-[#86efac]" href="/terms">
                   {isFr ? "Conditions" : "Terms"}
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-[color:var(--fd-mint)]" href="/about">
+                <Link className="hk-footer-link hover:text-[#86efac]" href="/about">
                   {isFr ? "À propos" : "About"}
                 </Link>
               </li>
             </ul>
             <div className="mt-4 flex gap-3">
-              <a href={SUPPORT_X} target="_blank" rel="noopener noreferrer" className="text-white/65 hover:text-[color:var(--fd-mint)]">
+              <a
+                href={SUPPORT_X}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hk-footer-link text-white/65 hover:text-[#86efac]"
+              >
                 X / Twitter
               </a>
-              <a href={SUPPORT_WA_PATH} target="_blank" rel="noopener noreferrer" className="text-white/65 hover:text-[color:var(--fd-mint)]">
+              <a
+                href={SUPPORT_WA_PATH}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hk-footer-link text-white/65 hover:text-[#86efac]"
+              >
                 WhatsApp
               </a>
             </div>
@@ -1169,7 +1199,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </footer>
 
       {/* Mobile sticky CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--fd-border)] bg-white/95 p-3 backdrop-blur sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--fd-border)] bg-[color:var(--hk-surface)]/95 p-3 backdrop-blur sm:hidden">
         <div className="flex gap-2">
           <a
             href="#register"
@@ -1179,7 +1209,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </a>
           <a
             href="#partenaires"
-            className="flex flex-1 items-center justify-center rounded-xl border border-[color:var(--fd-border)] py-3 text-sm font-semibold"
+            className="flex flex-1 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] py-3 text-sm font-semibold text-[color:var(--fd-text)]"
           >
             {isFr ? "Partenaire" : "Partner"}
           </a>

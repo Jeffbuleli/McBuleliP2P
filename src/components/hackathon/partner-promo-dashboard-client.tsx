@@ -344,8 +344,8 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   if (loading && !data) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <div className="mx-auto h-10 w-10 animate-pulse rounded-2xl bg-[#1F6B43]/15" />
-        <p className="mt-4 text-sm font-semibold text-[#8A8A8A]">
+        <div className="mx-auto h-10 w-10 animate-pulse rounded-2xl bg-[color:var(--hk-accent,var(--fd-primary))]/15" />
+        <p className="mt-4 text-sm font-semibold text-[color:var(--hk-muted,var(--fd-muted))]">
           Chargement du dashboard...
         </p>
       </div>
@@ -355,7 +355,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
   if (err && !data) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-black tracking-tight text-[#1A1A1A]">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-black tracking-tight text-[color:var(--hk-text,var(--fd-text))]">
           Dashboard partenaire
         </h1>
         <p className="mt-3 text-sm font-semibold text-red-700">{err}</p>
@@ -411,22 +411,22 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         {/* Header */}
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[color:var(--hk-accent,var(--fd-primary))]">
               {isAmbassador ? ui.ambEyebrow : ui.partnerEyebrow}
             </p>
-            <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-black tracking-tight text-[#1A1A1A] sm:text-4xl">
+            <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-black tracking-tight text-[color:var(--hk-text,var(--fd-text))] sm:text-4xl">
               {promo.orgName}
             </h1>
             {edition ? (
-              <p className="mt-1.5 text-sm text-[#6B6B6B]">
+              <p className="mt-1.5 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
                 {edition.nameFr.replace(/\s*[—–]\s*/g, " - ")}
               </p>
             ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#1F6B43] px-3.5 py-1.5 font-mono text-sm font-bold tracking-[0.14em] text-white">
+              <span className="rounded-full bg-[color:var(--hk-accent,var(--fd-primary))] px-3.5 py-1.5 font-mono text-sm font-bold tracking-[0.14em] text-white">
                 {promo.code}
               </span>
-              <span className="text-xs font-semibold text-[#6B6B6B]">
+              <span className="text-xs font-semibold text-[color:var(--hk-muted,var(--fd-muted))]">
                 -{promo.discountPercent}% · cashback {promo.cashbackPerPaidUsd}{" "}
                 {ui.perPaid}
               </span>
@@ -438,31 +438,31 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             alt=""
             width={52}
             height={52}
-            className="h-13 w-13 shrink-0 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/5"
+            className="h-13 w-13 shrink-0 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
           />
         </header>
 
         {/* Share strip */}
-        <section className="rounded-2xl bg-white/80 px-4 py-3.5 shadow-sm ring-1 ring-black/[0.04] backdrop-blur-sm sm:px-5">
+        <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 px-4 py-3.5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] backdrop-blur-sm sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
                 {ui.shareStrip}
               </p>
-              <p className="mt-0.5 truncate text-sm font-semibold text-[#1F6B43]">
+              <p className="mt-0.5 truncate text-sm font-semibold text-[color:var(--hk-accent,var(--fd-primary))]">
                 {promo.shareUrl}
               </p>
             </div>
             <button
               type="button"
               onClick={() => void copyShare()}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[color:var(--fd-primary-dark)]"
             >
               <IconCopy className="h-3.5 w-3.5" />
               {copied ? ui.copied : ui.copy}
             </button>
           </div>
-          <p className="mt-2 text-[10px] text-[#8A8A8A]">
+          <p className="mt-2 text-[10px] text-[color:var(--hk-muted,var(--fd-muted))]">
             {ui.updated}{" "}
             {new Date(data.updatedAt).toLocaleTimeString(
               locale === "fr" ? "fr-CD" : "en-GB",
@@ -477,14 +477,14 @@ export function PartnerPromoDashboardClient({ token }: Props) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-[#1F6B43]/15"
+              className="overflow-hidden rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-5 shadow-sm ring-1 ring-[#1F6B43]/15"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
                 {ui.authTitle}
               </p>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-[#3D3D3D]">
+              <p className="mt-2 text-sm font-medium leading-relaxed text-[color:var(--hk-text,var(--fd-text))]">
                 {ui.authBody}{" "}
-                <span className="font-bold text-[#1A1A1A]">
+                <span className="font-bold text-[color:var(--hk-text,var(--fd-text))]">
                   {auth.partnerEmailMasked ??
                     (isAmbassador ? ui.yourEmail : ui.partnerEmail)}
                 </span>
@@ -495,7 +495,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   type="button"
                   disabled={authBusy}
                   onClick={() => void requestOtp()}
-                  className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+                  className="rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
                 >
                   {otpSent ? ui.resendCode : ui.sendCode}
                 </button>
@@ -505,7 +505,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   onSubmit={verifyOtp}
                   className="mt-4 flex flex-wrap items-end gap-2"
                 >
-                  <label className="block text-xs font-bold text-[#6B6B6B]">
+                  <label className="block text-xs font-bold text-[color:var(--hk-muted,var(--fd-muted))]">
                     {ui.otpLabel}
                     <input
                       inputMode="numeric"
@@ -515,7 +515,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       onChange={(e) =>
                         setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
-                      className="mt-1 block w-40 rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2 font-mono text-lg tracking-[0.2em] text-[#1A1A1A]"
+                      className="mt-1 block w-40 rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 font-mono text-lg tracking-[0.2em] text-[color:var(--hk-text,var(--fd-text))]"
                       placeholder="000000"
                       required
                     />
@@ -523,14 +523,14 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   <button
                     type="submit"
                     disabled={authBusy || otpCode.length !== 6}
-                    className="rounded-xl border-2 border-[#1F6B43] px-4 py-2.5 text-sm font-bold text-[#1F6B43] disabled:opacity-60"
+                    className="rounded-xl border-2 border-[#1F6B43] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-accent,var(--fd-primary))] disabled:opacity-60"
                   >
                     {ui.validate}
                   </button>
                 </form>
               ) : null}
               {authMsg ? (
-                <p className="mt-3 text-xs font-semibold text-[#6B6B6B]">
+                <p className="mt-3 text-xs font-semibold text-[color:var(--hk-muted,var(--fd-muted))]">
                   {authMsg}
                 </p>
               ) : null}
@@ -548,13 +548,13 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
         {/* Free seats - partners only */}
         {!isAmbassador ? (
-        <section className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
+        <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
                 {ui.seatsTitle}
               </p>
-              <p className="mt-1 text-lg font-black tracking-tight text-[#1A1A1A]">
+              <p className="mt-1 text-lg font-black tracking-tight text-[color:var(--hk-text,var(--fd-text))]">
                 {seatsEarned} / {rewards.seatsMax ?? 2}{" "}
                 {ui.unlocked(seatsEarned)}
               </p>
@@ -562,10 +562,10 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             <span
               className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
                 seatsEarned >= 2
-                  ? "bg-[#1F6B43] text-white"
+                  ? "bg-[color:var(--hk-accent,var(--fd-primary))] text-white"
                   : seatsEarned === 1
-                    ? "bg-[#EAF6EE] text-[#1F6B43]"
-                    : "bg-[#F3F4F1] text-[#6B6B6B]"
+                    ? "bg-[color:var(--hk-soft,var(--fd-mint))] text-[color:var(--hk-accent,var(--fd-primary))]"
+                    : "bg-[color:var(--hk-page,var(--fd-bg))] text-[color:var(--hk-muted,var(--fd-muted))]"
               }`}
             >
               {seatsEarned >= 2
@@ -599,7 +599,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             />
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-[#6B6B6B]">
+          <p className="mt-4 text-xs leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
             {seatsEarned >= 2
               ? "Les 2 places sont débloquées. Le cashback continue sur chaque inscription payée."
               : seatsEarned === 1
@@ -607,9 +607,9 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                 : `À ${seat1At} payés : 1 place pour vous. À ${seat2At}+ : 2e place. Cashback dès le 1er payé.`}
           </p>
           {rewards.nextSeatAt ? (
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EFEFEA]">
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[color:var(--hk-page,var(--fd-bg))]">
               <motion.div
-                className="h-full rounded-full bg-[#1F6B43]"
+                className="h-full rounded-full bg-[color:var(--hk-accent,var(--fd-primary))]"
                 initial={{ width: 0 }}
                 animate={{ width: `${progressToNext}%` }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -622,14 +622,14 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         {/* Cashback */}
         {verified ? (
           <section className="rounded-2xl bg-gradient-to-br from-[#EAF6EE] to-[#F7FBF8] px-5 py-5 ring-1 ring-[#1F6B43]/12">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
               {ui.cashbackTitle}
             </p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-black tabular-nums tracking-tight text-[#1F6B43]">
+            <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-black tabular-nums tracking-tight text-[color:var(--hk-accent,var(--fd-primary))]">
               {claimable}{" "}
-              <span className="text-xl font-bold text-[#1F6B43]/80">USD</span>
+              <span className="text-xl font-bold text-[color:var(--hk-accent,var(--fd-primary))]/80">USD</span>
             </p>
-            <p className="mt-2 text-xs text-[#57534e]">
+            <p className="mt-2 text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
               {ui.cashbackHint} : {totals.cashbackUsd} USD · {ui.withdrawMm}
             </p>
 
@@ -642,20 +642,20 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   pendingClaim
                 }
                 onClick={openWithdraw}
-                className="mt-4 rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#185535] disabled:opacity-45"
+                className="mt-4 rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)] disabled:opacity-45"
               >
                 {ui.askCashback}
               </button>
             ) : (
-              <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-black/[0.04]">
+              <div className="mt-4 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-4 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-[#1A1A1A]">
+                  <p className="text-sm font-bold text-[color:var(--hk-text,var(--fd-text))]">
                     {ui.withdrawTitle}
                   </p>
                   <button
                     type="button"
                     onClick={closeWithdraw}
-                    className="text-xs font-bold text-[#8A8A8A] underline"
+                    className="text-xs font-bold text-[color:var(--hk-muted,var(--fd-muted))] underline"
                   >
                     {ui.close}
                   </button>
@@ -666,7 +666,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
                 {withdrawStep === 0 ? (
                   <div className="space-y-3">
-                    <label className="block text-xs font-bold text-[#6B6B6B]">
+                    <label className="block text-xs font-bold text-[color:var(--hk-muted,var(--fd-muted))]">
                       {ui.amount}
                       <input
                         inputMode="decimal"
@@ -674,11 +674,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                         onChange={(e) =>
                           setAmountUsd(e.target.value.replace(/[^\d.]/g, ""))
                         }
-                        className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 text-lg font-black tabular-nums text-[#1A1A1A]"
+                        className="mt-1 block w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2.5 text-lg font-black tabular-nums text-[color:var(--hk-text,var(--fd-text))]"
                         placeholder="0.00"
                       />
                     </label>
-                    <p className="text-[11px] text-[#8A8A8A]">
+                    <p className="text-[11px] text-[color:var(--hk-muted,var(--fd-muted))]">
                       {ui.available(claimable, PROMO_CASHBACK_CLAIM_MIN_USD)}
                     </p>
                     {claimable > 0 ? (
@@ -689,7 +689,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                             type="button"
                             disabled={p.value < PROMO_CASHBACK_CLAIM_MIN_USD}
                             onClick={() => setAmountUsd(String(p.value))}
-                            className="rounded-full border border-[#E5E5E0] bg-[#F3F4F1] px-2.5 py-1 text-[11px] font-bold text-[#1A1A1A] disabled:opacity-40"
+                            className="rounded-full border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-2.5 py-1 text-[11px] font-bold text-[color:var(--hk-text,var(--fd-text))] disabled:opacity-40"
                           >
                             {p.label}
                           </button>
@@ -700,7 +700,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       type="button"
                       disabled={!amountOk}
                       onClick={() => setWithdrawStep(1)}
-                      className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                      className="rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                     >
                       {ui.continue}
                     </button>
@@ -709,7 +709,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
                 {withdrawStep === 1 ? (
                   <div className="space-y-3">
-                    <label className="block text-xs font-bold text-[#6B6B6B]">
+                    <label className="block text-xs font-bold text-[color:var(--hk-muted,var(--fd-muted))]">
                       Numéro Mobile Money
                       <input
                         inputMode="tel"
@@ -719,12 +719,12 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                           const n = normalizeCodPhoneNumber(phoneNumber);
                           if (n) setPhoneNumber(n);
                         }}
-                        className="mt-1 block w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 font-mono text-sm text-[#1A1A1A]"
+                        className="mt-1 block w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2.5 font-mono text-sm text-[color:var(--hk-text,var(--fd-text))]"
                         placeholder="2438XXXXXXXX"
                       />
                     </label>
                     <div>
-                      <p className="mb-2 text-xs font-bold text-[#6B6B6B]">
+                      <p className="mb-2 text-xs font-bold text-[color:var(--hk-muted,var(--fd-muted))]">
                         Réseau
                       </p>
                       <FiatProviderPicker
@@ -738,7 +738,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       <button
                         type="button"
                         onClick={() => setWithdrawStep(0)}
-                        className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-bold text-[#6B6B6B]"
+                        className="rounded-xl border border-[color:var(--hk-border,var(--fd-border))] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-muted,var(--fd-muted))]"
                       >
                         Retour
                       </button>
@@ -746,7 +746,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                         type="button"
                         disabled={!phoneOk || !provider}
                         onClick={() => setWithdrawStep(2)}
-                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                        className="rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                       >
                         Continuer
                       </button>
@@ -756,11 +756,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
                 {withdrawStep === 2 ? (
                   <div className="space-y-3">
-                    <div className="rounded-xl bg-[#F3F4F1] px-3 py-3 text-sm">
-                      <p className="font-bold text-[#1A1A1A]">
+                    <div className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-3 text-sm">
+                      <p className="font-bold text-[color:var(--hk-text,var(--fd-text))]">
                         {amountNum} USD → {providerLabel}
                       </p>
-                      <p className="mt-1 font-mono text-xs text-[#6B6B6B]">
+                      <p className="mt-1 font-mono text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
                         {normalizeCodPhoneNumber(phoneNumber)}
                       </p>
                     </div>
@@ -769,7 +769,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                         type="button"
                         onClick={() => setWithdrawStep(1)}
                         disabled={claimBusy}
-                        className="rounded-xl border border-[#E5E5E0] px-4 py-2.5 text-sm font-bold text-[#6B6B6B] disabled:opacity-50"
+                        className="rounded-xl border border-[color:var(--hk-border,var(--fd-border))] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-muted,var(--fd-muted))] disabled:opacity-50"
                       >
                         Retour
                       </button>
@@ -777,7 +777,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                         type="button"
                         disabled={claimBusy || !amountOk || !phoneOk}
                         onClick={() => void submitWithdraw()}
-                        className="rounded-xl bg-[#1F6B43] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                        className="rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                       >
                         {claimBusy ? "Envoi..." : "Confirmer le retrait"}
                       </button>
@@ -788,7 +788,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             )}
 
             {claimMsg ? (
-              <p className="mt-3 text-xs font-semibold text-[#57534e]">
+              <p className="mt-3 text-xs font-semibold text-[color:var(--hk-muted,var(--fd-muted))]">
                 {claimMsg}
               </p>
             ) : null}
@@ -800,11 +800,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                     key={c.id}
                     className="flex flex-wrap items-center justify-between gap-2 text-xs"
                   >
-                    <span className="font-semibold text-[#1A1A1A]">
+                    <span className="font-semibold text-[color:var(--hk-text,var(--fd-text))]">
                       {c.amountUsd} USD · {claimStatusLabel(c.status)}
                       {c.providerLabel ? ` · ${c.providerLabel}` : ""}
                     </span>
-                    <span className="text-[#8A8A8A]">
+                    <span className="text-[color:var(--hk-muted,var(--fd-muted))]">
                       {new Date(c.requestedAt).toLocaleDateString("fr-CD")}
                     </span>
                   </li>
@@ -813,29 +813,29 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             ) : null}
           </section>
         ) : (
-          <section className="rounded-2xl bg-[#EAF6EE] px-5 py-6 text-center ring-1 ring-[#1F6B43]/12">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+          <section className="rounded-2xl bg-[color:var(--hk-soft,var(--fd-mint))] px-5 py-6 text-center ring-1 ring-[#1F6B43]/12">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
               {ui.cashbackLocked}
             </p>
-            <p className="mt-1 text-3xl font-black tabular-nums text-[#1F6B43]">
+            <p className="mt-1 text-3xl font-black tabular-nums text-[color:var(--hk-accent,var(--fd-primary))]">
               {totals.cashbackUsd} USD
             </p>
-            <p className="mt-2 text-xs text-[#57534e]">
+            <p className="mt-2 text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
               {ui.verifyToClaim}
             </p>
           </section>
         )}
 
         {/* Signups table */}
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-          <div className="border-b border-[#EFEFEA] px-5 py-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8A8A]">
+        <section className="overflow-hidden rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
+          <div className="border-b border-[color:var(--hk-border,var(--fd-border))] px-5 py-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
               {ui.signupsTitle}
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-[#FAFAF8] text-[10px] font-bold uppercase tracking-[0.12em] text-[#8A8A8A]">
+              <thead className="bg-[color:var(--hk-page,var(--fd-bg))] text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-muted,var(--fd-muted))]">
                 <tr>
                   <th className="px-4 py-3">{ui.colName}</th>
                   <th className="px-4 py-3">{ui.colStatus}</th>
@@ -849,7 +849,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
+                      className="px-4 py-12 text-center text-sm text-[color:var(--hk-muted,var(--fd-muted))]"
                     >
                       {ui.listAfterAuth}
                     </td>
@@ -858,7 +858,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-12 text-center text-sm text-[#8A8A8A]"
+                      className="px-4 py-12 text-center text-sm text-[color:var(--hk-muted,var(--fd-muted))]"
                     >
                       {isAmbassador ? ui.emptyAmb : ui.emptyPartner}
                     </td>
@@ -867,23 +867,23 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                   signups.map((s) => (
                     <tr
                       key={s.id}
-                      className="border-t border-[#F0F0EC] transition hover:bg-[#FAFAF8]"
+                      className="border-t border-[color:var(--hk-border,var(--fd-border))] transition hover:bg-[color:var(--hk-page,var(--fd-bg))]"
                     >
-                      <td className="px-4 py-3 font-semibold text-[#1A1A1A]">
+                      <td className="px-4 py-3 font-semibold text-[color:var(--hk-text,var(--fd-text))]">
                         {s.firstName} {s.lastName}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={
                             s.confirmed
-                              ? "font-bold text-[#1F6B43]"
+                              ? "font-bold text-[color:var(--hk-accent,var(--fd-primary))]"
                               : "font-semibold text-amber-800"
                           }
                         >
                           {statusLabel(s.paymentStatus, s.confirmed)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#6B6B6B]">
+                      <td className="px-4 py-3 font-mono text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
                         {s.ticketCode ?? "-"}
                       </td>
                       <td className="px-4 py-3">
@@ -892,18 +892,18 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                             href={s.whatsappUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-[#1F6B43] underline-offset-2 hover:underline"
+                            className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] underline-offset-2 hover:underline"
                           >
                             Contacter
                           </a>
                         ) : (
-                          <span className="text-[#8A8A8A]">-</span>
+                          <span className="text-[color:var(--hk-muted,var(--fd-muted))]">-</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <a
                           href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(`McBuleli Hackathon - ${promo.code}`)}`}
-                          className="font-semibold text-[#1F6B43] underline-offset-2 hover:underline"
+                          className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] underline-offset-2 hover:underline"
                         >
                           {ui.write}
                         </a>
@@ -917,7 +917,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         </section>
 
         {/* Footer */}
-        <footer className="rounded-2xl bg-[#1F6B43] px-5 py-5 text-center text-white">
+        <footer className="rounded-2xl bg-[color:var(--hk-accent,var(--fd-primary))] px-5 py-5 text-center text-white">
           <p className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/90">
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
@@ -975,16 +975,16 @@ function Kpi({
     <div
       className={`rounded-2xl px-3.5 py-3.5 shadow-sm ring-1 ${
         accent
-          ? "bg-[#EAF6EE] ring-[#1F6B43]/15"
-          : "bg-white ring-black/[0.04]"
+          ? "bg-[color:var(--hk-soft,var(--fd-mint))] ring-[#1F6B43]/15"
+          : "bg-[color:var(--hk-surface,var(--fd-card))] ring-[color:var(--hk-border,var(--fd-border))]"
       }`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8A8A8A]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-muted,var(--fd-muted))]">
         {label}
       </p>
       <p
         className={`mt-1 text-2xl font-black tabular-nums tracking-tight ${
-          accent ? "text-[#1F6B43]" : "text-[#1A1A1A]"
+          accent ? "text-[color:var(--hk-accent,var(--fd-primary))]" : "text-[color:var(--hk-text,var(--fd-text))]"
         }`}
       >
         {value}
@@ -1009,25 +1009,25 @@ function SeatTier({
   return (
     <div
       className={`rounded-xl px-3.5 py-3 ${
-        done ? "bg-[#EAF6EE]" : "bg-[#FAFAF8]"
+        done ? "bg-[color:var(--hk-soft,var(--fd-mint))]" : "bg-[color:var(--hk-page,var(--fd-bg))]"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-bold text-[#1A1A1A]">{title}</p>
-          <p className="text-[11px] text-[#6B6B6B]">{detail}</p>
+          <p className="text-sm font-bold text-[color:var(--hk-text,var(--fd-text))]">{title}</p>
+          <p className="text-[11px] text-[color:var(--hk-muted,var(--fd-muted))]">{detail}</p>
         </div>
         <span
           className={`text-[11px] font-bold ${
-            done ? "text-[#1F6B43]" : "text-[#8A8A8A]"
+            done ? "text-[color:var(--hk-accent,var(--fd-primary))]" : "text-[color:var(--hk-muted,var(--fd-muted))]"
           }`}
         >
           {done ? "OK" : current}
         </span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/80">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color:var(--hk-surface,var(--fd-card))]/90">
         <motion.div
-          className={`h-full rounded-full ${done ? "bg-[#1F6B43]" : "bg-[#1F6B43]/55"}`}
+          className={`h-full rounded-full ${done ? "bg-[color:var(--hk-accent,var(--fd-primary))]" : "bg-[color:var(--hk-accent,var(--fd-primary))]/55"}`}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.55, ease: "easeOut" }}

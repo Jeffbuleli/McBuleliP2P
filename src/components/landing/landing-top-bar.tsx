@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LangSwitch } from "@/components/lang-switch";
 import { useI18n } from "@/components/i18n-provider";
+import { useOptionalHackathonTheme } from "@/components/hackathon/hackathon-theme-shell";
 import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
 
 function XIcon({ className }: { className?: string }) {
@@ -16,6 +17,41 @@ function XIcon({ className }: { className?: string }) {
       fill="currentColor"
     >
       <path d="M18.9 2H21l-6.6 7.6L22.2 22h-6.2l-4.9-6.4L5.5 22H3.4l7.1-8.2L2 2h6.3l4.4 5.8L18.9 2Zm-2.2 18h1.1L7.7 3.9H6.5L16.7 20Z" />
+    </svg>
+  );
+}
+
+function SunIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56" />
+    </svg>
+  );
+}
+
+function MoonIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5Z" />
     </svg>
   );
 }
@@ -42,6 +78,7 @@ function MenuIcon({ className }: { className?: string }) {
 export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPath?: string }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const hkTheme = useOptionalHackathonTheme();
   const loginHref = loginHrefFor(authReturnPath);
   const registerHref = registerHrefFor(authReturnPath);
 
@@ -59,7 +96,7 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
       <div className="relative mx-auto max-w-lg sm:max-w-6xl">
         <div className="fd-app-topbar flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4">
           <Link href="/" className="flex min-w-0 items-center gap-2.5 pr-1">
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-[color:var(--fd-primary)]/25">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white ring-2 ring-[color:var(--fd-primary)]/25">
               <Image
                 src="/brand/logo-256.png"
                 alt=""
@@ -90,20 +127,44 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             <div className="sm:hidden">
-              <LangSwitch />
+              <LangSwitch variant={hkTheme?.surface === "dark" ? "dark" : "light"} />
             </div>
-            <a
-              href="https://x.com/McBuleli"
-              target="_blank"
-              rel="noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)]"
-              aria-label="X"
-              title="X"
-            >
-              <XIcon className="h-5 w-5" />
-            </a>
+            {hkTheme ? (
+              <button
+                type="button"
+                onClick={hkTheme.toggle}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)]"
+                aria-label={
+                  hkTheme.surface === "dark"
+                    ? t("profile_theme_light")
+                    : t("profile_theme_dark")
+                }
+                title={
+                  hkTheme.surface === "dark"
+                    ? t("profile_theme_light")
+                    : t("profile_theme_dark")
+                }
+              >
+                {hkTheme.surface === "dark" ? (
+                  <SunIcon className="h-5 w-5" />
+                ) : (
+                  <MoonIcon className="h-5 w-5" />
+                )}
+              </button>
+            ) : (
+              <a
+                href="https://x.com/McBuleli"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)]"
+                aria-label="X"
+                title="X"
+              >
+                <XIcon className="h-5 w-5" />
+              </a>
+            )}
             <div className="hidden sm:block">
-              <LangSwitch />
+              <LangSwitch variant={hkTheme?.surface === "dark" ? "dark" : "light"} />
             </div>
             <Link
               href={loginHref}
@@ -135,7 +196,7 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
 
         {open ? (
           <div
-            className="absolute right-0 mt-2 w-[min(92vw,18rem)] overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-white shadow-xl"
+            className="absolute right-0 mt-2 w-[min(92vw,18rem)] overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] shadow-xl"
             role="menu"
           >
             <div className="flex flex-col p-2">

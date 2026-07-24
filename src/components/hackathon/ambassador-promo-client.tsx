@@ -111,36 +111,36 @@ export function AmbassadorPromoClient({
 
   if (loadingExisting) {
     return (
-      <div className="rounded-2xl bg-white px-5 py-10 text-center shadow-sm ring-1 ring-black/[0.04]">
-        <p className="text-sm text-[#5c6b60]">{t.loading}</p>
+      <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-10 text-center shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
+        <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">{t.loading}</p>
       </div>
     );
   }
 
   if (existing) {
     return (
-      <div className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04]">
+      <div className="space-y-5 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-6 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
             {t.activeCode}
           </p>
-          <p className="mt-2 font-mono text-3xl font-black tracking-[0.08em] text-[#1A1A1A]">
+          <p className="mt-2 font-mono text-3xl font-black tracking-[0.08em] text-[color:var(--hk-text,var(--fd-text))]">
             {existing.code}
           </p>
-          <p className="mt-2 text-sm text-[#5c6b60]">{t.alreadyActive}</p>
+          <p className="mt-2 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">{t.alreadyActive}</p>
         </div>
 
-        <div className="rounded-xl bg-[#EAF6EE] px-4 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#1F6B43]">
+        <div className="rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-accent,var(--fd-primary))]">
             {t.shareLink}
           </p>
-          <p className="mt-1 break-all text-sm font-semibold text-[#1F6B43]">
+          <p className="mt-1 break-all text-sm font-semibold text-[color:var(--hk-accent,var(--fd-primary))]">
             {existing.shareUrl}
           </p>
           <button
             type="button"
             onClick={() => void copyShare()}
-            className="mt-3 rounded-xl bg-[#1F6B43] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#185535]"
+            className="mt-3 rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[color:var(--fd-primary-dark)]"
           >
             {copied ? t.copied : t.copyLink}
           </button>
@@ -149,13 +149,13 @@ export function AmbassadorPromoClient({
         <div className="flex flex-wrap gap-3">
           <a
             href={`/hackathon/promo/dashboard/${encodeURIComponent(existing.dashboardToken)}`}
-            className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl bg-[#1F6B43] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#185535]"
+            className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-3 text-sm font-bold text-white transition hover:bg-[color:var(--fd-primary-dark)]"
           >
             {t.openDash}
           </a>
           <a
             href={existing.shareUrl}
-            className="inline-flex items-center justify-center rounded-xl bg-[#F3F4F1] px-4 py-3 text-sm font-bold text-[#1A1A1A] transition hover:bg-[#E8E9E4]"
+            className="inline-flex items-center justify-center rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-4 py-3 text-sm font-bold text-[color:var(--hk-text,var(--fd-text))] transition hover:bg-[color:var(--hk-soft,var(--fd-mint))]"
           >
             {t.viewLink}
           </a>
@@ -167,10 +167,10 @@ export function AmbassadorPromoClient({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04]"
+      className="space-y-5 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-6 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
     >
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-wide text-[#6B6B6B]">
+        <label className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">
           {t.displayName}
         </label>
         <input
@@ -178,12 +178,12 @@ export function AmbassadorPromoClient({
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={80}
           required
-          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 text-sm font-medium text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
+          className="mt-1.5 w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3.5 py-3 text-sm font-medium text-[color:var(--hk-text,var(--fd-text))] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
           placeholder={t.displayPh}
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-wide text-[#6B6B6B]">
+        <label className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">
           {t.codeLabel}
         </label>
         <input
@@ -194,19 +194,19 @@ export function AmbassadorPromoClient({
           minLength={4}
           maxLength={16}
           required
-          className="mt-1.5 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] px-3.5 py-3 font-mono text-sm font-bold tracking-wider text-[#1A1A1A] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
+          className="mt-1.5 w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3.5 py-3 font-mono text-sm font-bold tracking-wider text-[color:var(--hk-text,var(--fd-text))] outline-none transition focus:border-[#1F6B43] focus:ring-2 focus:ring-[#1F6B43]/15"
           placeholder={t.codePh}
           autoCapitalize="characters"
         />
-        <p className="mt-1.5 text-xs text-[#6B6B6B]">{t.codeHint}</p>
+        <p className="mt-1.5 text-xs text-[color:var(--hk-muted,var(--fd-muted))]">{t.codeHint}</p>
       </div>
 
-      <div className="rounded-xl bg-[#EAF6EE] px-4 py-3.5 text-sm text-[#1F6B43]">
+      <div className="rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] px-4 py-3.5 text-sm text-[color:var(--hk-accent,var(--fd-primary))]">
         <p className="font-bold">
           {t.discountLine(AMBASSADOR_DISCOUNT_PERCENT, discounted)}
         </p>
         <p className="mt-1">{t.cashbackLine(AMBASSADOR_CASHBACK_USD)}</p>
-        <p className="mt-2 break-all text-xs text-[#5c6b60]">
+        <p className="mt-2 break-all text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
           {t.account} : {initialEmail}
         </p>
       </div>
@@ -220,7 +220,7 @@ export function AmbassadorPromoClient({
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-[#1F6B43] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#185535] disabled:opacity-60"
+        className="w-full rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[color:var(--fd-primary-dark)] disabled:opacity-60"
       >
         {busy ? t.creating : t.submit}
       </button>
