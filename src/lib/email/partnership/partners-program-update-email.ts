@@ -12,6 +12,7 @@ import {
   HACKATHON_VENUE_SHORT,
   ILOKWE_PARTNER,
   PAWAPAY_PARTNER,
+  SILIKIN_PARTNER,
   hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
 import {
@@ -62,6 +63,11 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       href: ILOKWE_PARTNER.facebook,
       contentType: "image/png",
     },
+    silikin: {
+      roleFr: SILIKIN_PARTNER.roleFr,
+      href: SILIKIN_PARTNER.website,
+      contentType: "image/jpeg",
+    },
   };
 
   return featured.map((p) => {
@@ -78,7 +84,7 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       publicPath: p.logoUrl.replace(/^\//, ""),
       cid: `partner-${p.id}-logo`,
       tileBg:
-        p.id === "binance"
+        p.id === "binance" || p.id === "silikin"
           ? "#000000"
           : p.id === "ilokwe"
             ? "#0B3D2E"

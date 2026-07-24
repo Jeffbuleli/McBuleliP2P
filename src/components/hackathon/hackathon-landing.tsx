@@ -23,6 +23,7 @@ import {
   PAWAPAY_PARTNER,
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
+  SILIKIN_PARTNER,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
   hackathonFeaturedJury,
@@ -744,7 +745,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           const existing = data.partnerLogos.filter(
             (p) =>
               !featuredIds.has(p.name.toLowerCase()) &&
-              !/pawapay|binance|ilokwe|rdpi/i.test(p.name) &&
+              !/pawapay|binance|ilokwe|silikin|rdpi/i.test(p.name) &&
               !/^mcbuleli$/i.test(p.name.trim()),
           );
           const logoSlots = Math.max(6, featuredPartners.length + existing.length);
@@ -784,6 +785,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
                 const cover = p.fit === "cover";
+                const silikin = p.id === "silikin";
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -792,7 +794,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     className={
                       cover
                         ? "h-full w-full object-cover object-center"
-                        : "max-h-10 max-w-full object-contain object-center"
+                        : silikin
+                          ? "h-[90%] w-[94%] object-contain object-center"
+                          : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
                 ) : (
@@ -801,7 +805,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   </span>
                 );
                 const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${
-                  cover || p.placeholder ? "p-0" : "px-3"
+                  cover || silikin || p.placeholder ? "p-0" : "px-3"
                 } ${p.tileBgClass} ${p.placeholder ? "border-dashed" : ""}`;
                 return (
                   <li key={p.id}>
@@ -869,7 +873,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="pawaPay · Binance · ILOKWE"
+            subtitle="pawaPay · Binance · ILOKWE · Silikin"
           >
             <div className="space-y-4">
               {[
@@ -883,6 +887,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   body: isFr ? PAWAPAY_PARTNER.blurbFr : PAWAPAY_PARTNER.blurbEn,
                   meta: "pawapay.io · docs.pawapay.io",
                   cover: false,
+                  silikin: false,
                 },
                 {
                   href: BINANCE_PARTNER.demo,
@@ -894,6 +899,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   body: isFr ? BINANCE_PARTNER.blurbFr : BINANCE_PARTNER.blurbEn,
                   meta: "demo.binance.com · developers.binance.com",
                   cover: false,
+                  silikin: false,
                 },
                 {
                   href: ILOKWE_PARTNER.facebook,
@@ -905,6 +911,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
                   meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
                   cover: true,
+                  silikin: false,
+                },
+                {
+                  href: SILIKIN_PARTNER.website,
+                  logo: SILIKIN_PARTNER.logoUrl,
+                  alt: SILIKIN_PARTNER.name,
+                  tile: "bg-[#000000]",
+                  role: isFr ? SILIKIN_PARTNER.roleFr : SILIKIN_PARTNER.roleEn,
+                  name: SILIKIN_PARTNER.name,
+                  body: isFr ? SILIKIN_PARTNER.blurbFr : SILIKIN_PARTNER.blurbEn,
+                  meta: "silikinvillage.com · by TEXAF Digital",
+                  cover: false,
+                  silikin: true,
                 },
               ].map((p) => (
                 <a
@@ -916,7 +935,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_8px_22px_-12px_rgba(34,34,34,0.35)] ${p.tile} ${p.cover ? "p-0" : "p-2"} sm:w-40`}
+                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_8px_22px_-12px_rgba(34,34,34,0.35)] ${p.tile} ${p.cover || p.silikin ? "p-0" : "p-2"} sm:w-40`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -925,7 +944,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                         className={
                           p.cover
                             ? "h-full w-full object-cover object-center"
-                            : "max-h-full max-w-full object-contain object-center"
+                            : p.silikin
+                              ? "h-[92%] w-[96%] object-contain object-center"
+                              : "max-h-full max-w-full object-contain object-center"
                         }
                       />
                     </span>
