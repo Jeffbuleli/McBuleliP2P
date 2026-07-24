@@ -183,6 +183,30 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     notes:
       "RDV confirmé vendredi 24 juillet 2026 10h30 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
   },
+  "kimia-partenariat": {
+    slug: "kimia-partenariat",
+    title: "McBuleli × KIMIA Service - RDV partenariat",
+    partnerName: "KIMIA Service",
+    partnerEmail: "kimiaservice896@gmail.com",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 30,
+    status: "proposed",
+    scheduledAt: null,
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "kimiaservice896@gmail.com",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Rôle KIMIA Service : Partenaire Services & Talents",
+      "Mentorat, relais talents / offres, diffusion réseau entreprises",
+      "Visibilité, logos partenaires & logistique Demo Day",
+      "Prochaines étapes (référent, logo, créneau confirmé)",
+    ],
+    notes:
+      "Créneau à fixer : mardi (idéalement 28 juillet 2026) entre 10h00 et 15h00 Kinshasa - visio McBuleli Meet.",
+  },
 };
 
 const CATALOG_IDS: Record<string, string> = {
@@ -190,6 +214,7 @@ const CATALOG_IDS: Record<string, string> = {
   "cesar-group-partenariat": "b2c3d4e5-f6a7-4b81-9c0d-1e2f3a4b5c6d",
   "e-com-sas-partenariat": "c3d4e5f6-a7b8-4c92-9d0e-1f2a3b4c5d6e",
   "rdpi-thinktank-partenariat": "d4e5f6a7-b8c9-4d03-0e1f-2a3b4c5d6e7f",
+  "kimia-partenariat": "e5f6a7b8-c9d0-4e14-1f2a-3b4c5d6e7f80",
 };
 
 export function partnerMeetFromCatalog(
