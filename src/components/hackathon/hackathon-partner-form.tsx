@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import { HACKATHON_PARTNERSHIP_TYPES } from "@/lib/hackathon/constants";
 import { preparePartnerLogoDataUrl } from "@/lib/hackathon/prepare-logo";
 import {
@@ -37,11 +38,13 @@ const TYPE_LABELS: Record<"fr" | "en", Record<string, string>> = {
 
 export function HackathonPartnerForm({
   editionId,
-  locale,
+  locale: _localeProp,
 }: {
   editionId: string;
-  locale: "fr" | "en";
+  /** @deprecated Prefer live useI18n(); kept for call-site compatibility. */
+  locale?: "fr" | "en";
 }) {
+  const { locale } = useI18n();
   const isFr = locale === "fr";
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);

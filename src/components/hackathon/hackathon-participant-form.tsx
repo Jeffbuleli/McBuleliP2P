@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import {
   hkField,
   hkLabel,
@@ -16,7 +17,8 @@ import {
 
 type Props = {
   editionId: string;
-  locale: "fr" | "en";
+  /** @deprecated Prefer live useI18n(); kept for call-site compatibility. */
+  locale?: "fr" | "en";
   /** Unique 2-day program price (USD) */
   priceUsd: string;
   registrationOpen: boolean;
@@ -58,10 +60,10 @@ export function HackathonParticipantForm(props: Props) {
 
 function HackathonParticipantFormInner({
   editionId,
-  locale,
   priceUsd,
   registrationOpen,
 }: Props) {
+  const { locale } = useI18n();
   const isFr = locale === "fr";
   const searchParams = useSearchParams();
   const promoParam = searchParams.get("promo")?.trim() ?? "";

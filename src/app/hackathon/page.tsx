@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { HackathonLanding } from "@/components/hackathon/hackathon-landing";
-import { getLocale } from "@/lib/get-locale";
+import { HackathonLocaleText } from "@/components/hackathon/hackathon-locale-text";
 import {
   demoFeaturedHackathon,
   getFeaturedHackathon,
@@ -110,8 +110,6 @@ function eventJsonLd(data: NonNullable<Awaited<ReturnType<typeof getFeaturedHack
 }
 
 export default async function HackathonPage() {
-  const locale = await getLocale();
-  const isFr = locale === "fr";
   let data = null;
   let usedDemo = false;
   try {
@@ -133,9 +131,10 @@ export default async function HackathonPage() {
         <>
           {usedDemo ? (
             <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-900">
-              {isFr
-                ? "Aperçu local (DB indisponible) - les formulaires ne s'enregistreront pas tant que DATABASE_URL / seed ne sont pas OK."
-                : "Local preview (DB unavailable) - forms will not save until DATABASE_URL / seed are OK."}
+              <HackathonLocaleText
+                fr="Aperçu local (DB indisponible) - les formulaires ne s'enregistreront pas tant que DATABASE_URL / seed ne sont pas OK."
+                en="Local preview (DB unavailable) - forms will not save until DATABASE_URL / seed are OK."
+              />
             </div>
           ) : null}
           <script
@@ -152,9 +151,10 @@ export default async function HackathonPage() {
             McBuleli Hackathon
           </h1>
           <p className="mt-3 text-sm text-[color:var(--fd-muted)]">
-            {isFr
-              ? "La prochaine édition arrive bientôt. Revenez dans quelques instants."
-              : "The next edition is coming soon. Check back shortly."}
+            <HackathonLocaleText
+              fr="La prochaine édition arrive bientôt. Revenez dans quelques instants."
+              en="The next edition is coming soon. Check back shortly."
+            />
           </p>
         </div>
       )}

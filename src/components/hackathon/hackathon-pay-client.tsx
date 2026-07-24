@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import {
   hkField,
   hkLabel,
@@ -17,9 +18,9 @@ import {
 
 type Props = {
   token: string;
-  locale: "fr" | "en";
   firstName: string;
-  editionName: string;
+  editionNameFr: string;
+  editionNameEn: string;
   ticketPack: string;
   priceUsd: string;
   phone: string;
@@ -28,15 +29,17 @@ type Props = {
 
 export function HackathonPayClient({
   token,
-  locale,
   firstName,
-  editionName,
-  ticketPack,
+  editionNameFr,
+  editionNameEn,
+  ticketPack: _ticketPack,
   priceUsd,
   phone,
   holdExpiresAt,
 }: Props) {
+  const { locale } = useI18n();
   const isFr = locale === "fr";
+  const editionName = isFr ? editionNameFr : editionNameEn;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [phoneValue, setPhoneValue] = useState(
@@ -127,7 +130,7 @@ export function HackathonPayClient({
     : null;
 
   return (
-    <div className="home-theme fd-public-light flex min-h-dvh items-center justify-center px-4 py-10">
+    <div className="home-theme fd-public-light flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-white p-6 shadow-sm">
         <div className="flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}

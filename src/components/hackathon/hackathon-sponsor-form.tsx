@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import { preparePartnerLogoDataUrl } from "@/lib/hackathon/prepare-logo";
 import {
   hkField,
@@ -11,11 +12,13 @@ import {
 
 export function HackathonSponsorForm({
   editionId,
-  locale,
+  locale: _localeProp,
 }: {
   editionId: string;
-  locale: "fr" | "en";
+  /** @deprecated Prefer live useI18n(); kept for call-site compatibility. */
+  locale?: "fr" | "en";
 }) {
+  const { locale } = useI18n();
   const isFr = locale === "fr";
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);

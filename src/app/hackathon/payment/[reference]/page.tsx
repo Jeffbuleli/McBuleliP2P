@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { LandingTopBar } from "@/components/landing/landing-top-bar";
 import { useI18n } from "@/components/i18n-provider";
 import {
   HackathonProcessCard,
@@ -108,8 +110,17 @@ export default function HackathonPaymentStatusPage() {
     return () => window.clearTimeout(timer);
   }, [paid, data?.ticketCode]);
 
-  if (err) {
+  function shell(card: ReactNode) {
     return (
+      <div className="min-h-dvh bg-[#F7F8F5]">
+        <LandingTopBar authReturnPath="/hackathon" />
+        {card}
+      </div>
+    );
+  }
+
+  if (err) {
+    return shell(
       <HackathonProcessCard
         tone="danger"
         icon={<StatusIcon kind="miss" />}
@@ -125,12 +136,12 @@ export default function HackathonPaymentStatusPage() {
         <p className="font-mono text-[11px] text-[color:var(--fd-muted)]">
           {reference}
         </p>
-      </HackathonProcessCard>
+      </HackathonProcessCard>,
     );
   }
 
   if (paid && data?.ticketCode) {
-    return (
+    return shell(
       <HackathonProcessCard
         tone="success"
         icon={<StatusIcon kind="ok" />}
@@ -152,12 +163,12 @@ export default function HackathonPaymentStatusPage() {
         <p className="mt-3 font-mono text-xs font-bold tracking-wide text-[color:var(--fd-primary)]">
           {data.ticketCode}
         </p>
-      </HackathonProcessCard>
+      </HackathonProcessCard>,
     );
   }
 
   if (failed) {
-    return (
+    return shell(
       <HackathonProcessCard
         tone="danger"
         icon={<StatusIcon kind="fail" />}
@@ -179,13 +190,13 @@ export default function HackathonPaymentStatusPage() {
         >
           {isFr ? "Reprendre" : "Try again"}
         </Link>
-      </HackathonProcessCard>
+      </HackathonProcessCard>,
     );
   }
 
   const statusLabel = (data?.status ?? "…").toUpperCase();
 
-  return (
+  return shell(
     <HackathonProcessCard
       tone="info"
       icon={<StatusIcon kind="wait" />}
@@ -212,6 +223,6 @@ export default function HackathonPaymentStatusPage() {
           ? "Ne fermez pas cette page tant que le paiement n'est pas confirmé."
           : "Keep this page open until payment is confirmed."}
       </p>
-    </HackathonProcessCard>
+    </HackathonProcessCard>,
   );
 }
