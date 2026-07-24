@@ -20,7 +20,7 @@ En résumé :
 2) PARTENAIRES DÉJÀ CONFIRMÉS (extrait public)
 - Silikin Village - Partenaire Lieu / hub d'innovation
 - pawaPay - Partenaire Paiement Mobile (sandbox APIs)
-- Binance - Partenaire Crypto (APIs demo)
+- Binance - Demo crypto (équipes testent l'intégration via APIs demo)
 - ILOKWE GROUP - Sponsor Or · Prix ILOKWE · Jury (AgriBusiness)
 - RDPI Think Tank - Partenaire Policy & Impact (atelier, mentorat, jury)
 

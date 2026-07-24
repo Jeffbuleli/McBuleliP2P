@@ -136,19 +136,19 @@ export const PAWAPAY_PARTNER = {
     "Mobile Money rail (Orange, Airtel, M-Pesa). Participants use the pawaPay sandbox and APIs in their prototypes.",
 } as const;
 
-/** Confirmed crypto partner for builders (demo APIs). */
+/** Crypto stack for builders via Binance demo APIs (not a signed partnership). */
 export const BINANCE_PARTNER = {
   name: "Binance",
-  roleFr: "Partenaire Crypto",
-  roleEn: "Crypto Partner",
+  roleFr: "Demo Crypto",
+  roleEn: "Crypto Demo",
   website: "https://www.binance.com/",
   demo: "https://demo.binance.com/",
   docs: "https://developers.binance.com/",
   logoUrl: "/partners/binance-logo.png",
   blurbFr:
-    "Exchange crypto. Les participants intègrent dans leurs prototypes les endpoints demo Spot et Futures via les APIs demo.binance.com (demo-api.binance.com · demo-fapi.binance.com).",
+    "Pas un partenariat signé. Les équipes utilisent demo Binance pour tester l'intégration crypto (Spot & Futures via demo.binance.com : demo-api.binance.com · demo-fapi.binance.com).",
   blurbEn:
-    "Crypto exchange. Participants integrate demo Spot and Futures endpoints via demo.binance.com APIs in their prototypes (demo-api.binance.com · demo-fapi.binance.com).",
+    "Not a signed partnership. Teams use Binance demo to test crypto integration (Spot & Futures via demo.binance.com: demo-api.binance.com · demo-fapi.binance.com).",
 } as const;
 
 /** Confirmed agriculture / AgriBusiness partner (AgroTech challenge + Prix ILOKWE). */

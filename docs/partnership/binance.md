@@ -1,11 +1,11 @@
 # Binance × McBuleli Hackathon
 
-- **Role** : Partenaire Crypto
+- **Role** : Demo Crypto (pas un partenariat signé)
 - **Demo** : https://demo.binance.com/
 - **Docs** : https://developers.binance.com/
 - **Logo** : `/partners/binance-logo.png`
 
-Pendant le hackathon, les builders intègrent les **endpoints demo Binance** dans leurs prototypes :
+Les équipes utilisent **demo Binance** pour tester l'intégration crypto dans leurs prototypes (Binance n'est pas accueilli dans l'espace européen ; on reste sur le sandbox demo).
 
 - **Spot** : `https://demo-api.binance.com`
 - **Futures (USDⓈ-M)** : `https://demo-fapi.binance.com`
