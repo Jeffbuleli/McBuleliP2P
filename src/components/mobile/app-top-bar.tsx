@@ -87,28 +87,39 @@ export function AppTopBar({
           scrolled ? "shadow-sm shadow-[color:var(--fd-primary)]/10" : ""
         }`}
       >
-        <Link
-          href="/app"
-          className="flex min-h-[44px] min-w-0 flex-shrink-0 items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
-          aria-label={t("brand")}
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
-            <Image
-              src="/brand/logo-256.png"
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
-              priority
-              unoptimized
-            />
-          </span>
-          <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
-            {t("brand")}
-          </span>
-        </Link>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/app"
+            className="flex min-h-[44px] min-w-0 shrink items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
+            aria-label={t("brand")}
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
+              <Image
+                src="/brand/logo-256.png"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+                priority
+                unoptimized
+              />
+            </span>
+            <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
+              {t("brand")}
+            </span>
+          </Link>
 
-        <div className="flex items-center gap-1">
+          <Link
+            href="/hackathon"
+            className="inline-flex min-h-[32px] shrink-0 items-center rounded-full border border-[color:var(--fd-primary)]/35 bg-[color:var(--fd-mint)] px-2.5 text-[11px] font-bold leading-none tracking-tight text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-primary)] hover:text-white active:scale-95 sm:min-h-[34px] sm:px-3 sm:text-xs"
+            aria-label={t("nav_hackathon_kin")}
+            title={t("nav_hackathon_kin")}
+          >
+            {t("nav_hackathon_kin")}
+          </Link>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
           <TopBarActionButton
             href={supportHref}
             badge={unreadSupport}

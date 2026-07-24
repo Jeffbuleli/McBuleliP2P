@@ -807,6 +807,7 @@ export const en = {
   nav_market: "Market",
   nav_community: "Community",
   nav_profile: "Profile",
+  nav_hackathon_kin: "Hackathon Kin.",
   community_help_open: "What is Community?",
   community_help_title: "McBuleli Community",
   community_help_intro:
@@ -5306,6 +5307,7 @@ export const fr: Messages = {
   nav_market: "Marché",
   nav_community: "Communauté",
   nav_profile: "Profil",
+  nav_hackathon_kin: "Hackathon Kin.",
   community_help_open: "Qu'est-ce que la Communauté ?",
   community_help_title: "Communauté McBuleli",
   community_help_intro:
