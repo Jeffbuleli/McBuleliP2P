@@ -406,8 +406,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               "linear-gradient(105deg, rgba(12, 28, 18, 0.9) 0%, rgba(18, 42, 28, 0.75) 50%, rgba(12, 28, 18, 0.55) 100%)",
           }}
         />
-        <div className="absolute right-3 top-3 z-20 sm:right-6 sm:top-5">
-          <HackathonCountdown isFr={isFr} onDark />
+        <div className="absolute right-3 top-1.5 z-20 sm:right-6 sm:top-2">
+          <HackathonCountdown isFr={isFr} onDark bare />
         </div>
         <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:min-h-[min(72vh,640px)] lg:justify-center">
           <div className="max-w-2xl">
@@ -804,7 +804,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-3xl border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${
+                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${
                   cover || silikin || p.placeholder ? "p-0" : "px-3"
                 } ${p.tileBgClass} ${p.placeholder ? "border-dashed" : ""}`;
                 return (
@@ -833,7 +833,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 rounded-3xl border border-[#E5E5E0] px-4 py-2 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
+                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 rounded-xl border border-[#E5E5E0] px-4 py-2 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -855,7 +855,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 return (
                   <li
                     key={s.id}
-                    className={`flex h-16 min-w-[8rem] flex-col items-center justify-center rounded-3xl border border-[#E5E5E0] px-4 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
+                    className={`flex h-16 min-w-[8rem] flex-col items-center justify-center rounded-xl border border-[#E5E5E0] px-4 shadow-[0_10px_28px_-14px_rgba(34,34,34,0.28)] ${v.badgeClass}`}
                   >
                     {s.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -935,7 +935,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[#E5E5E0] shadow-[0_8px_22px_-12px_rgba(34,34,34,0.35)] ${p.tile} ${p.cover || p.silikin ? "p-0" : "p-2"} sm:w-40`}
+                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E0] shadow-[0_8px_22px_-12px_rgba(34,34,34,0.35)] ${p.tile} ${p.cover || p.silikin ? "p-0" : "p-2"} sm:w-40`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import QRCode from "react-qr-code";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
+import { HackathonCountdown } from "@/components/hackathon/hackathon-countdown";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
   HACKATHON_HOURS_COMPACT_EN,
@@ -226,8 +227,6 @@ export function HackathonPassBadge({
 
   const venueShort = /silikin/i.test(venue) ? "Silikin Village" : venue;
   const hoursLabel = isFr ? HACKATHON_HOURS_COMPACT_FR : HACKATHON_HOURS_COMPACT_EN;
-  /** Hours sit under kind label for ticket ("Ticket officiel") and partner ("Partenaire"). */
-  const showHoursUnderKind = kind === "ticket" || kind === "partner";
 
   const logos = hackathonFeaturedPartners().map((p) => ({
     id: p.id,
@@ -269,21 +268,14 @@ export function HackathonPassBadge({
               ) : null}
             </div>
           </div>
-          <div className="shrink-0 text-right">
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
             <span
               className="inline-block rounded-full px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em]"
               style={{ background: meta.soft, color: meta.ink }}
             >
               {isFr ? meta.labelFr : meta.labelEn}
             </span>
-            {showHoursUnderKind ? (
-              <p
-                className="mt-1 text-[10px] font-extrabold tabular-nums tracking-wide"
-                style={{ color: meta.ink }}
-              >
-                {hoursLabel}
-              </p>
-            ) : null}
+            <HackathonCountdown isFr={isFr} bare className="text-right" />
           </div>
         </div>
 
@@ -301,24 +293,22 @@ export function HackathonPassBadge({
             </span>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-start gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <MetaChip
               icon={<IconMapPin className="h-3.5 w-3.5" />}
               label={venueShort}
               iconClass="text-[#7C3AED]"
             />
-            <div className="inline-flex flex-col items-start gap-1">
-              <MetaChip
-                icon={<IconCalendar className="h-3.5 w-3.5" />}
-                label={datesLabel}
-                iconClass="text-[#EA580C]"
-              />
-              <MetaChip
-                icon={<IconClock className="h-3.5 w-3.5" />}
-                label={hoursLabel}
-                iconClass="text-[#1F6B43]"
-              />
-            </div>
+            <MetaChip
+              icon={<IconCalendar className="h-3.5 w-3.5" />}
+              label={datesLabel}
+              iconClass="text-[#EA580C]"
+            />
+            <MetaChip
+              icon={<IconClock className="h-3.5 w-3.5" />}
+              label={hoursLabel}
+              iconClass="text-[#1F6B43]"
+            />
             <MetaChip
               icon={<IconShield className="h-3.5 w-3.5" />}
               label={statusLabel}
@@ -404,7 +394,7 @@ export function HackathonPassBadge({
               return (
               <div
                 key={logo.name}
-                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-3xl border shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${
+                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${
                   logo.fit === "cover" || silikin ? "p-0" : "px-2"
                 } ${logo.box}`}
               >

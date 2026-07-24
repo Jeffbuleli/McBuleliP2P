@@ -33,11 +33,14 @@ export function HackathonCountdown({
   targetAt = HACKATHON_START_AT,
   onDark = false,
   className = "",
+  /** Digits only (jj h mm ss) — no card, no “Compte à rebours” label. */
+  bare = true,
 }: {
   isFr: boolean;
   targetAt?: string;
   onDark?: boolean;
   className?: string;
+  bare?: boolean;
 }) {
   const target = new Date(targetAt).getTime();
   const [parts, setParts] = useState<Parts>(() =>
@@ -56,57 +59,64 @@ export function HackathonCountdown({
   if (!Number.isFinite(target)) return null;
 
   const started = parts.totalMs <= 0;
-  const shell = onDark
-    ? "border-white/25 bg-white/10 text-white shadow-sm backdrop-blur-md"
-    : "border-[#E5E5E0] bg-white/90 text-[#222222] shadow-[0_10px_28px_-16px_rgba(34,34,34,0.35)] backdrop-blur-md";
+  const ink = onDark ? "text-white" : "text-[#1F6B43]";
+  const muted = onDark ? "text-white/65" : "text-[#8A8A8A]";
+  const sep = onDark ? "text-white/40" : "text-[#C5C5C0]";
+
+  const aria = started
+    ? isFr
+      ? "Hackathon en cours"
+      : "Hackathon in progress"
+    : isFr
+      ? `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes`
+      : `Countdown ${pad(parts.days)} days ${pad(parts.hours)} hours ${pad(parts.minutes)} minutes`;
+
+  const digits = started ? (
+    <span className={`text-sm font-extrabold tabular-nums ${ink}`}>
+      {isFr ? "En cours" : "Live"}
+    </span>
+  ) : ready ? (
+    <div
+      className={`flex items-baseline gap-0.5 font-extrabold tabular-nums ${ink}`}
+      role="timer"
+    >
+      <Unit value={parts.days} label={isFr ? "j" : "d"} muted={muted} />
+      <span className={`px-0.5 text-xs ${sep}`} aria-hidden>
+        :
+      </span>
+      <Unit value={parts.hours} label="h" muted={muted} />
+      <span className={`px-0.5 text-xs ${sep}`} aria-hidden>
+        :
+      </span>
+      <Unit value={parts.minutes} label="m" muted={muted} />
+      <span className={`px-0.5 text-xs ${sep}`} aria-hidden>
+        :
+      </span>
+      <Unit value={parts.seconds} label="s" muted={muted} />
+    </div>
+  ) : (
+    <span className={`inline-block h-4 w-24 animate-pulse rounded ${onDark ? "bg-white/15" : "bg-black/10"}`} />
+  );
+
+  if (bare) {
+    return (
+      <aside className={className} aria-live="polite" aria-label={aria}>
+        {digits}
+      </aside>
+    );
+  }
 
   return (
     <aside
-      className={`rounded-2xl border px-3 py-2 ${shell} ${className}`}
+      className={`rounded-2xl border px-3 py-2 ${
+        onDark
+          ? "border-white/25 bg-white/10 text-white shadow-sm backdrop-blur-md"
+          : "border-[#E5E5E0] bg-white/90 text-[#222222] shadow-[0_10px_28px_-16px_rgba(34,34,34,0.35)] backdrop-blur-md"
+      } ${className}`}
       aria-live="polite"
-      aria-label={
-        started
-          ? isFr
-            ? "Hackathon en cours"
-            : "Hackathon in progress"
-          : isFr
-            ? `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes`
-            : `Countdown ${pad(parts.days)} days ${pad(parts.hours)} hours ${pad(parts.minutes)} minutes`
-      }
+      aria-label={aria}
     >
-      <p
-        className={`text-[9px] font-extrabold uppercase tracking-[0.16em] ${
-          onDark ? "text-white/75" : "text-[#8A8A8A]"
-        }`}
-      >
-        {started
-          ? isFr
-            ? "C’est parti"
-            : "It’s on"
-          : isFr
-            ? "Compte à rebours"
-            : "Countdown"}
-      </p>
-      {started ? (
-        <p className="mt-0.5 text-sm font-extrabold tabular-nums">
-          {isFr ? "En cours" : "Live"}
-        </p>
-      ) : ready ? (
-        <div
-          className="mt-1 flex items-baseline gap-1 font-extrabold tabular-nums"
-          role="timer"
-        >
-          <Unit value={parts.days} label={isFr ? "j" : "d"} onDark={onDark} />
-          <Sep onDark={onDark} />
-          <Unit value={parts.hours} label="h" onDark={onDark} />
-          <Sep onDark={onDark} />
-          <Unit value={parts.minutes} label="m" onDark={onDark} />
-          <Sep onDark={onDark} />
-          <Unit value={parts.seconds} label="s" onDark={onDark} />
-        </div>
-      ) : (
-        <p className="mt-0.5 h-5 w-28 animate-pulse rounded bg-current/10" />
-      )}
+      {digits}
     </aside>
   );
 }
@@ -114,33 +124,16 @@ export function HackathonCountdown({
 function Unit({
   value,
   label,
-  onDark,
+  muted,
 }: {
   value: number;
   label: string;
-  onDark: boolean;
+  muted: string;
 }) {
   return (
     <span className="inline-flex items-baseline gap-0.5">
-      <strong className="text-sm sm:text-base">{pad(value)}</strong>
-      <em
-        className={`text-[9px] font-bold not-italic ${
-          onDark ? "text-white/65" : "text-[#8A8A8A]"
-        }`}
-      >
-        {label}
-      </em>
-    </span>
-  );
-}
-
-function Sep({ onDark }: { onDark: boolean }) {
-  return (
-    <span
-      className={`text-xs ${onDark ? "text-white/40" : "text-[#C5C5C0]"}`}
-      aria-hidden
-    >
-      :
+      <strong className="text-sm sm:text-[15px]">{pad(value)}</strong>
+      <em className={`text-[9px] font-bold not-italic ${muted}`}>{label}</em>
     </span>
   );
 }
