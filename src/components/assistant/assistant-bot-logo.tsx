@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-/** Minimalist McBuleli AI bot mark — speech ring, visor face, M badge. */
+/** Minimalist McBuleli AI bot mark — face only (no speech-bubble plate). */
 
 type Props = { className?: string; size?: number; gradientId?: string };
 
@@ -19,11 +19,6 @@ export function AssistantBotLogo({ className, size, gradientId }: Props) {
       height={size}
       aria-hidden
     >
-      <path
-        d="M32 4c15.5 0 28 12.5 28 28s-12.5 28-28 28c-3.2 0-6.2-.5-9-1.5L8 62l3.8-14.2C6.8 42.2 4 37.3 4 32 4 16.5 16.5 4 32 4z"
-        fill={`url(#${gid})`}
-        opacity="0.95"
-      />
       <circle cx="32" cy="30" r="17" fill="#F8FAF8" />
       <circle cx="32" cy="30" r="17" stroke="#305f33" strokeWidth="1.25" opacity="0.35" />
       <circle cx="17" cy="30" r="5.5" fill="#F8FAF8" stroke="#305f33" strokeWidth="1" opacity="0.5" />
@@ -52,6 +47,7 @@ export function AssistantBotLogo({ className, size, gradientId }: Props) {
       <circle cx="48" cy="46" r="1.1" fill="#6ee7a0" />
       <circle cx="51" cy="46" r="1.1" fill="#6ee7a0" />
       <defs>
+        {/* Keep id stable for callers that pass gradientId; unused plate removed. */}
         <linearGradient id={gid} x1="8" y1="8" x2="56" y2="56">
           <stop stopColor="#305f33" />
           <stop offset="1" stopColor="#6ee7a0" />

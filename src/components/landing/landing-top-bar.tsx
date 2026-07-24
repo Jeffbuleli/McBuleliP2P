@@ -7,6 +7,7 @@ import { LangSwitch } from "@/components/lang-switch";
 import { useI18n } from "@/components/i18n-provider";
 import { useOptionalHackathonTheme } from "@/components/hackathon/hackathon-theme-shell";
 import { loginHrefFor, registerHrefFor } from "@/lib/auth-return-path";
+import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -95,19 +96,24 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
     <header className="sticky top-0 z-40 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
       <div className="relative mx-auto max-w-lg sm:max-w-6xl">
         <div className="fd-app-topbar flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4">
-          <Link href="/" className="flex min-w-0 items-center gap-2.5 pr-1">
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white ring-2 ring-[color:var(--fd-primary)]/25">
+          <Link
+            href="/"
+            className="group flex min-w-0 items-center gap-2.5 pr-1"
+            aria-label={t("brand")}
+          >
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center">
               <Image
-                src="/brand/logo-256.png"
+                src={BRAND_LOGO_MARK_256}
                 alt=""
                 aria-hidden
                 width={40}
                 height={40}
-                className="object-cover"
+                className="h-10 w-10 object-contain drop-shadow-[0_2px_6px_rgba(48,95,51,0.22)] transition duration-200 group-hover:scale-[1.04]"
                 priority
+                unoptimized
               />
-            </div>
-            <span className="truncate text-base font-bold tracking-tight text-[color:var(--fd-text)]">
+            </span>
+            <span className="truncate text-base font-extrabold tracking-tight text-[color:var(--fd-text)]">
               {t("brand")}
             </span>
           </Link>

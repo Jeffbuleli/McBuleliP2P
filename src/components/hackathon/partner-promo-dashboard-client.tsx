@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BRAND_LOGO_256 } from "@/lib/brand-logo";
+import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import {
   SUPPORT_EMAIL,
   SUPPORT_WA_PATH,
@@ -434,11 +434,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={BRAND_LOGO_256}
+            src={BRAND_LOGO_MARK_256}
             alt=""
             width={52}
             height={52}
-            className="h-13 w-13 shrink-0 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+            className="h-13 w-13 shrink-0 rounded-full object-contain drop-shadow-[0_2px_8px_rgba(48,95,51,0.2)]"
           />
         </header>
 
@@ -945,11 +945,11 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             <span className="opacity-80">Powered by</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={BRAND_LOGO_256}
+              src={BRAND_LOGO_MARK_256}
               alt=""
               width={22}
               height={22}
-              className="h-[22px] w-[22px] rounded-full bg-white p-0.5 ring-1 ring-white/30"
+              className="h-[22px] w-[22px] rounded-full object-contain"
             />
             <span className="font-extrabold">McBuleli</span>
           </a>
