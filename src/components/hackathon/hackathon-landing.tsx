@@ -786,15 +786,17 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
                 const cover = p.fit === "cover";
-                const brandBleed = /binance|ilokwe/i.test(p.name);
+                const isBinance = /binance/i.test(p.name);
+                const isIlokwe = /ilokwe/i.test(p.name);
+                const brandBleed = isBinance || isIlokwe;
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.logoUrl}
                     alt={p.name}
                     className={
-                      cover || brandBleed
-                        ? "h-full w-full scale-[1.02] object-cover object-center"
+                      brandBleed || cover
+                        ? "h-full w-full object-cover object-center"
                         : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
@@ -803,12 +805,14 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
-                  cover || p.placeholder || brandBleed ? "p-0" : "px-3"
+                const cls = `flex items-center justify-center overflow-hidden rounded-xl ${
+                  isIlokwe ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]" : "h-16"
+                } ${
+                  brandBleed || cover || p.placeholder ? "p-0" : "px-3"
                 } ${
                   brandBleed
-                    ? "border border-transparent"
-                    : "border border-[color:var(--hk-border)]"
+                    ? "border-0 shadow-none ring-0"
+                    : "border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
                 } ${p.tileBgClass} ${p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""}`;
                 return (
                   <li key={p.id}>
@@ -837,22 +841,29 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl px-3 py-2 shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
+                    className={`flex min-h-[5.5rem] min-w-[11rem] max-w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl px-2 py-2 ${
                       isIlokwe
-                        ? "border border-transparent bg-[#0B3D2E]"
-                        : "border border-[color:var(--hk-border)] bg-white"
+                        ? "border-0 bg-transparent shadow-none ring-0"
+                        : "border border-[color:var(--hk-border)] bg-white shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={s.logoUrl}
-                      alt={s.name}
-                      className={
-                        isIlokwe
-                          ? "h-11 w-auto max-w-[140px] scale-110 object-cover object-center"
-                          : "h-9 w-auto max-w-[130px] rounded-md object-contain"
-                      }
-                    />
+                    {isIlokwe ? (
+                      <span className="aspect-square w-[5.75rem] overflow-hidden rounded-xl border-0 bg-[#2e5506] shadow-none ring-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={s.logoUrl}
+                          alt={s.name}
+                          className="h-full w-full object-cover object-center"
+                        />
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.logoUrl}
+                        alt={s.name}
+                        className="h-9 w-auto max-w-[130px] rounded-md object-contain"
+                      />
+                    )}
                     <span
                       className={`max-w-[10rem] break-words rounded-full px-2 py-0.5 text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide hk-tier-chip ${v.badgeClass}`}
                     >
@@ -924,12 +935,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   href: ILOKWE_PARTNER.facebook,
                   logo: ILOKWE_PARTNER.logoUrl,
                   alt: ILOKWE_PARTNER.name,
-                  tile: "bg-[#0B3D2E]",
+                  tile: "bg-[#2e5506]",
                   role: isFr ? ILOKWE_PARTNER.roleFr : ILOKWE_PARTNER.roleEn,
                   name: ILOKWE_PARTNER.name,
                   body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
                   meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
-                  cover: true,
+                  cover: false,
                   borderless: true,
                 },
               ].map((p) => (
@@ -942,20 +953,24 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`inline-flex h-16 w-full max-w-[11rem] shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.tile} ${
+                      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${p.tile} ${
+                        /ilokwe/i.test(p.name)
+                          ? "aspect-square h-auto w-[6.5rem] sm:w-28"
+                          : "h-16 w-full max-w-[11rem] sm:w-44"
+                      } ${
                         p.borderless
-                          ? "border border-transparent p-0"
-                          : `border border-[color:var(--hk-border)] ${p.cover ? "p-0" : "p-2"}`
-                      } sm:w-44`}
+                          ? "border-0 p-0 shadow-none ring-0"
+                          : `border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.cover ? "p-0" : "p-2"}`
+                      }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={p.logo}
                         alt={p.alt}
                         className={
-                          p.cover
-                            ? "h-full w-full scale-[1.04] object-cover object-center"
-                            : "max-h-full max-w-full object-contain object-center"
+                          p.cover || /ilokwe/i.test(p.name)
+                            ? "h-full w-full object-cover object-center"
+                            : "h-full w-full object-contain object-center"
                         }
                       />
                     </span>

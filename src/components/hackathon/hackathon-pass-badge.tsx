@@ -234,9 +234,10 @@ export function HackathonPassBadge({
     src: p.logoUrl,
     box:
       /binance|ilokwe/i.test(p.name)
-        ? `border-transparent ${p.tileBgClass}`
-        : `border-[#E5E5E0] ${p.tileBgClass}`,
+        ? `border-0 shadow-none ring-0 ${p.tileBgClass}`
+        : `border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${p.tileBgClass}`,
     fit: p.fit,
+    square: /ilokwe/i.test(p.name),
   }));
 
   return (
@@ -395,8 +396,8 @@ export function HackathonPassBadge({
             {logos.map((logo) => (
               <div
                 key={logo.name}
-                className={`flex h-14 w-[7.5rem] items-center justify-center overflow-hidden rounded-xl border shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${
-                  logo.fit === "cover" ? "p-0" : "px-2"
+                className={`flex items-center justify-center overflow-hidden rounded-xl p-0 ${
+                  logo.square ? "aspect-square h-auto w-16" : "h-14 w-[7.5rem]"
                 } ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -404,9 +405,9 @@ export function HackathonPassBadge({
                   src={logo.src}
                   alt={logo.name}
                   className={
-                    logo.fit === "cover"
+                    logo.fit === "cover" || logo.square
                       ? "h-full w-full object-cover object-center"
-                      : "max-h-full max-w-full object-contain object-center"
+                      : "h-full w-full object-contain object-center"
                   }
                 />
               </div>

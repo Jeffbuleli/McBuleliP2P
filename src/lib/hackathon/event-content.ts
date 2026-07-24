@@ -158,7 +158,7 @@ export const ILOKWE_PARTNER = {
   roleEn: "Agriculture & AgriBusiness Partner · Gold Sponsor",
   website: "https://www.facebook.com/profile.php?id=100065743382631",
   facebook: "https://www.facebook.com/profile.php?id=100065743382631",
-  logoUrl: "/partners/ilokwe-group-logo.png?v=20260724",
+  logoUrl: "/partners/ilokwe-group-logo.png?v=20260724c",
   sloganFr: "La valeur ajoutée du terroir",
   sloganEn: "The added value of the terroir",
   contactName: "Mr Christian Ikwele",
@@ -220,7 +220,9 @@ export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
       name: ILOKWE_PARTNER.name,
       logoUrl: ILOKWE_PARTNER.logoUrl,
       href: ILOKWE_PARTNER.facebook,
-      tileBgClass: "bg-[#0B3D2E]",
+      // Mid-green near PNG edges (logo is not flat #0B3D2E).
+      tileBgClass: "bg-[#2e5506]",
+      // Square asset: cover in a square tile = edge-to-edge, no letterbox “frame”.
       fit: "cover",
     },
   ];
