@@ -64,7 +64,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1064.0",
     "@didit-protocol/sdk-web": "^0.2.1",
     "@simplewebauthn/browser": "^13.3.0",
-    "@simplewebauthn/server": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.2",
     "bcryptjs": "^3.0.3",
     "ccxt": "^4.5.54",
     "drizzle-orm": "^0.45.2",
