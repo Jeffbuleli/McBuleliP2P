@@ -90,7 +90,7 @@ export function AppTopBar({
         <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
           <Link
             href="/app"
-            className="flex min-h-[44px] min-w-0 shrink items-center gap-2 rounded-xl px-1 active:scale-[0.98]"
+            className="flex min-h-[44px] shrink-0 items-center rounded-xl px-1 active:scale-[0.98]"
             aria-label={t("brand")}
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--fd-primary)]/30 bg-[color:var(--fd-mint)] shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
@@ -104,14 +104,11 @@ export function AppTopBar({
                 unoptimized
               />
             </span>
-            <span className="truncate font-bold tracking-tight text-[color:var(--fd-text)]">
-              {t("brand")}
-            </span>
           </Link>
 
           <Link
             href="/hackathon"
-            className="inline-flex min-h-[32px] shrink-0 items-center rounded-full border border-[color:var(--fd-primary)]/35 bg-[color:var(--fd-mint)] px-2.5 text-[11px] font-bold leading-none tracking-tight text-[color:var(--fd-primary)] shadow-sm transition hover:bg-[color:var(--fd-primary)] hover:text-white active:scale-95 sm:min-h-[34px] sm:px-3 sm:text-xs"
+            className="fd-hackathon-kin-shine inline-flex min-h-[34px] shrink-0 items-center rounded-full px-3 text-xs font-extrabold leading-none tracking-tight text-white sm:min-h-[36px] sm:px-3.5 sm:text-[13px]"
             aria-label={t("nav_hackathon_kin")}
             title={t("nav_hackathon_kin")}
           >

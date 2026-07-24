@@ -740,6 +740,64 @@ html {
   backdrop-filter: blur(10px);
 }
 
+/* Hackathon Kin. top-bar CTA — soft shine / pulse */
+.fd-hackathon-kin-shine {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(48, 95, 51, 0.45);
+  background: linear-gradient(135deg, #1f6b43 0%, #305f33 55%, #3f8f5a 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 4px 14px rgba(31, 107, 67, 0.35),
+    0 0 18px rgba(63, 143, 90, 0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  animation: fd-hackathon-kin-glow 2.4s ease-in-out infinite;
+}
+.fd-hackathon-kin-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.38) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: fd-hackathon-kin-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.fd-hackathon-kin-shine:active {
+  transform: scale(0.96);
+}
+@keyframes fd-hackathon-kin-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 4px 14px rgba(31, 107, 67, 0.35),
+      0 0 14px rgba(63, 143, 90, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+      0 6px 18px rgba(31, 107, 67, 0.45),
+      0 0 26px rgba(90, 180, 120, 0.55);
+  }
+}
+@keyframes fd-hackathon-kin-shimmer {
+  0%,
+  35% {
+    transform: translateX(-120%);
+  }
+  65%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
 /* Wallet section — reuses profile tokens */
 .wallet-theme {
   color: var(--fd-text);
