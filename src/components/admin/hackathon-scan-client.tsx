@@ -353,8 +353,8 @@ export function HackathonScanClient() {
             value={dayIndex}
             onChange={(e) => setDayIndex(Number(e.target.value) as 1 | 2)}
           >
-            <option value={1}>Jour 1 · 13 Août</option>
-            <option value={2}>Jour 2 · 14 Août</option>
+            <option value={1}>Jour 1 · 28 Août</option>
+            <option value={2}>Jour 2 · 29 Août</option>
           </select>
         </label>
         <div className="min-w-0 text-sm sm:col-span-2">

@@ -1,15 +1,11 @@
-Bonjour chers Partenaires,
-
+Bonjour chers Ambassadeurs,
 Nous vous confirmons officiellement le programme du McBuleli Hackathon.
-
 PROGRAMME CONFIRMÉ
 Lieu : Silikin Village, Kinshasa
 Horaires : 08h00 – 17h00
 - 28 Août 2026 - Vendredi Bootcamp & Build (08h00–17h00)
 - 29 Août 2026 - Samedi Build & Demo Day (08h00–17h00)
-
 Format : Bootcamp Vibe Coding (Cursor, Claude, Codex) · Build intensif · Demo Day devant jury et partenaires.
-
 PARTENAIRES DÉJÀ SUR LA PAGE HACKATHON
 - pawaPay · Partenaire Paiement Mobile
   https://www.pawapay.io/
@@ -19,11 +15,9 @@ PARTENAIRES DÉJÀ SUR LA PAGE HACKATHON
   https://www.facebook.com/profile.php?id=100065743382631
 - Silikin Village · Partenaire Lieu · Hub d'innovation
   https://www.silikinvillage.com/
-
 Page programme : https://mcbuleli.org/hackathon
-
-Merci pour votre engagement. Nous reviendrons très bientôt pour la réunion partenaires (créneaux, ateliers, visibilité).
-
+Espace ambassadeur : https://mcbuleli.org/hackathon/ambassadeur
+Merci pour votre engagement. Continuez à partager votre lien ambassadeur pour remplir les équipes - nous reviendrons bientôt pour la réunion (créneaux, ateliers, visibilité).
 Cordialement,
 McBuleli Team
 Mme Patty B.

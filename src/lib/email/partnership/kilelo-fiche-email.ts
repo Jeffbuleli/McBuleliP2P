@@ -34,7 +34,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
   const subject =
     "Fiche partenaire - Kilelo × McBuleli Hackathon";
   const preheader =
-    "Dates confirmées 13–14 Août 2026 · Silikin Village (08h00–17h00) - merci de nous renvoyer logo, contact référent et confirmation talk / mentorat.";
+    "Dates confirmées 28–29 Août 2026 · Silikin Village (08h00–17h00) - merci de nous renvoyer logo, contact référent et confirmation talk / mentorat.";
 
   const text = [
     "Bonjour Monsieur Kabangu,",
@@ -47,8 +47,8 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
     "McBuleli Hackathon - bootcamp Vibe Coding + compétition + Demo Day",
     "Lieu : Silikin Village, Kinshasa",
     "Dates prévues :",
-    "- 13 Août 2026 - Jeudi Bootcamp & Build (08h00-17h00)",
-    "- 14 Août 2026 - Vendredi Build & Demo Day (08h00-17h00)",
+    "- 28 Août 2026 - Vendredi Bootcamp & Build (08h00-17h00)",
+    "- 29 Août 2026 - Samedi Build & Demo Day (08h00-17h00)",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     `Page : ${hackathonUrl}`,
     "",
@@ -150,9 +150,9 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
                       Dates prévues
                     </p>
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>13 Août 2026</strong> · Jeudi Bootcamp &amp; Build · 08h00–17h00</td></tr>
+                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>28 Août 2026</strong> · Vendredi Bootcamp &amp; Build · 08h00–17h00</td></tr>
                       <tr><td style="height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>14 Août 2026</strong> · Vendredi Build &amp; Demo Day · 08h00–17h00</td></tr>
+                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>29 Août 2026</strong> · Samedi Build &amp; Demo Day · 08h00–17h00</td></tr>
                     </table>
                     <p style="margin:0 0 14px;font-size:12px;line-height:1.45;color:${EMAIL_BRAND.muted};">
                       <strong style="color:${EMAIL_BRAND.text};">Statut lieu :</strong>

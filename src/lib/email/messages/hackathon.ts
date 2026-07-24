@@ -19,7 +19,7 @@ function venueLabel(edition: { venue: string | null; city: string } | null | und
 }
 
 function dateLabel(isFr: boolean) {
-  return isFr ? "13–14 Août 2026" : "August 13–14, 2026";
+  return isFr ? "28–29 Août 2026" : "August 28–29, 2026";
 }
 
 /** QR ticket/badge card with McBuleli logo centered (baked into QR + email-safe card). */

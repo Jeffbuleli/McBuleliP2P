@@ -84,8 +84,8 @@ export const HACKATHON_EVENT_DAYS = 2;
 /** Confirmed schedule at Silikin Village. */
 export const HACKATHON_DATES_CONFIRMED = true;
 
-export const HACKATHON_DATES_LABEL_FR = "13–14 Août 2026";
-export const HACKATHON_DATES_LABEL_EN = "August 13–14, 2026";
+export const HACKATHON_DATES_LABEL_FR = "28–29 Août 2026";
+export const HACKATHON_DATES_LABEL_EN = "August 28–29, 2026";
 
 export const HACKATHON_HOURS_LABEL_FR = "08h00 – 17h00";
 export const HACKATHON_HOURS_LABEL_EN = "8:00 AM – 5:00 PM";
@@ -95,26 +95,26 @@ export const HACKATHON_HOURS_COMPACT_FR = "8h00 - 17h00";
 export const HACKATHON_HOURS_COMPACT_EN = "8:00 AM - 5:00 PM";
 
 /** Day 1 door open — Africa/Kinshasa (UTC+1). */
-export const HACKATHON_START_AT = "2026-08-13T08:00:00+01:00";
+export const HACKATHON_START_AT = "2026-08-28T08:00:00+01:00";
 
 export const HACKATHON_VENUE_SHORT = "Silikin Village";
 
 export const HACKATHON_SCHEDULE_SUMMARY = [
   {
-    weekdayFr: "Jeudi",
-    weekdayEn: "Thursday",
-    dateFr: "13 Août 2026",
-    dateEn: "August 13, 2026",
+    weekdayFr: "Vendredi",
+    weekdayEn: "Friday",
+    dateFr: "28 Août 2026",
+    dateEn: "August 28, 2026",
     hoursFr: "08h00 – 17h00",
     hoursEn: "8:00 AM – 5:00 PM",
     focusFr: "Bootcamp & Build",
     focusEn: "Bootcamp & Build",
   },
   {
-    weekdayFr: "Vendredi",
-    weekdayEn: "Friday",
-    dateFr: "14 Août 2026",
-    dateEn: "August 14, 2026",
+    weekdayFr: "Samedi",
+    weekdayEn: "Saturday",
+    dateFr: "29 Août 2026",
+    dateEn: "August 29, 2026",
     hoursFr: "08h00 – 17h00",
     hoursEn: "8:00 AM – 5:00 PM",
     focusFr: "Build & Demo Day",
@@ -322,8 +322,8 @@ export function hackathonProgramDays(): ProgramDay[] {
   return [
     {
       day: 1,
-      labelFr: "Jeudi 13 Août - Bootcamp & Build",
-      labelEn: "Thursday, August 13 - Bootcamp & Build",
+      labelFr: "Vendredi 28 Août - Bootcamp & Build",
+      labelEn: "Friday, August 28 - Bootcamp & Build",
       subtitleFr: "08h00 – 17h00 · Silikin Village",
       subtitleEn: "8:00 AM – 5:00 PM · Silikin Village",
       slots: [
@@ -346,8 +346,8 @@ export function hackathonProgramDays(): ProgramDay[] {
     },
     {
       day: 2,
-      labelFr: "Vendredi 14 Août - Build & Demo Day",
-      labelEn: "Friday, August 14 - Build & Demo Day",
+      labelFr: "Samedi 29 Août - Build & Demo Day",
+      labelEn: "Saturday, August 29 - Build & Demo Day",
       subtitleFr: "08h00 – 17h00 · Silikin Village",
       subtitleEn: "8:00 AM – 5:00 PM · Silikin Village",
       slots: [

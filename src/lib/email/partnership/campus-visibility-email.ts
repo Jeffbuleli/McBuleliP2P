@@ -336,7 +336,7 @@ export function buildCampusVisibilityEmail(
     "2 places offertes pour votre structure",
     "Code promo : -10% (90 USD au lieu de 100)",
     "Cashback : 10 USD par inscription payée via votre code",
-    "Format : ~12 équipes - 2 Jours (13–14 Août 2026, 08h00–17h00) à Silikin Village",
+    "Format : ~12 équipes - 2 Jours (28–29 Août 2026, 08h00–17h00) à Silikin Village",
   ];
 
   const text = [
