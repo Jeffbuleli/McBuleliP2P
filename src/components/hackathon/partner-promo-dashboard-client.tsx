@@ -621,7 +621,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
 
         {/* Cashback */}
         {verified ? (
-          <section className="rounded-2xl bg-gradient-to-br from-[#EAF6EE] to-[#F7FBF8] px-5 py-5 ring-1 ring-[#1F6B43]/12">
+          <section className="rounded-2xl bg-[color:var(--hk-soft,var(--fd-mint))] px-5 py-5 ring-1 ring-[color:var(--hk-accent,var(--fd-primary))]/20">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
               {ui.cashbackTitle}
             </p>
@@ -949,7 +949,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
               alt=""
               width={22}
               height={22}
-              className="h-[22px] w-[22px] rounded-full bg-white/10 p-0.5 ring-1 ring-white/25"
+              className="h-[22px] w-[22px] rounded-full bg-white p-0.5 ring-1 ring-white/30"
             />
             <span className="font-extrabold">McBuleli</span>
           </a>

@@ -786,14 +786,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
                 const cover = p.fit === "cover";
+                const brandBleed = /binance|ilokwe/i.test(p.name);
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.logoUrl}
                     alt={p.name}
                     className={
-                      cover
-                        ? "h-full w-full object-cover object-center"
+                      cover || brandBleed
+                        ? "h-full w-full scale-[1.02] object-cover object-center"
                         : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
@@ -802,9 +803,13 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     {p.name}
                   </span>
                 );
-                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
-                  cover || p.placeholder ? "p-0" : "px-3"
-                } ${p.tileBgClass} ${p.placeholder ? "border-dashed" : ""}`;
+                const cls = `flex h-16 items-center justify-center overflow-hidden rounded-xl shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
+                  cover || p.placeholder || brandBleed ? "p-0" : "px-3"
+                } ${
+                  brandBleed
+                    ? "border border-transparent"
+                    : "border border-[color:var(--hk-border)]"
+                } ${p.tileBgClass} ${p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""}`;
                 return (
                   <li key={p.id}>
                     {p.website ? (
@@ -832,15 +837,21 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 rounded-xl border border-[color:var(--hk-border)] px-4 py-2 shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
-                      isIlokwe ? "bg-[#0B3D2E]" : "bg-white"
+                    className={`flex min-h-16 min-w-[10rem] max-w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl px-3 py-2 shadow-[0_10px_28px_-14px_var(--hk-shadow)] ${
+                      isIlokwe
+                        ? "border border-transparent bg-[#0B3D2E]"
+                        : "border border-[color:var(--hk-border)] bg-white"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={s.logoUrl}
                       alt={s.name}
-                      className="h-9 w-auto max-w-[130px] rounded-md object-contain"
+                      className={
+                        isIlokwe
+                          ? "h-11 w-auto max-w-[140px] scale-110 object-cover object-center"
+                          : "h-9 w-auto max-w-[130px] rounded-md object-contain"
+                      }
                     />
                     <span
                       className={`max-w-[10rem] break-words rounded-full px-2 py-0.5 text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide hk-tier-chip ${v.badgeClass}`}
@@ -895,17 +906,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   body: isFr ? PAWAPAY_PARTNER.blurbFr : PAWAPAY_PARTNER.blurbEn,
                   meta: "pawapay.io · docs.pawapay.io",
                   cover: false,
+                  borderless: false,
                 },
                 {
                   href: BINANCE_PARTNER.demo,
                   logo: BINANCE_PARTNER.logoUrl,
                   alt: BINANCE_PARTNER.name,
-                  tile: "bg-[#12161D]",
+                  tile: "bg-[#0B0E11]",
                   role: isFr ? BINANCE_PARTNER.roleFr : BINANCE_PARTNER.roleEn,
                   name: BINANCE_PARTNER.name,
                   body: isFr ? BINANCE_PARTNER.blurbFr : BINANCE_PARTNER.blurbEn,
                   meta: "demo.binance.com · developers.binance.com",
-                  cover: false,
+                  cover: true,
+                  borderless: true,
                 },
                 {
                   href: ILOKWE_PARTNER.facebook,
@@ -916,7 +929,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   name: ILOKWE_PARTNER.name,
                   body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
                   meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
-                  cover: false,
+                  cover: true,
+                  borderless: true,
                 },
               ].map((p) => (
                 <a
@@ -928,7 +942,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`inline-flex h-14 w-full max-w-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.tile} ${p.cover ? "p-0" : "p-2"} sm:w-40`}
+                      className={`inline-flex h-16 w-full max-w-[11rem] shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.tile} ${
+                        p.borderless
+                          ? "border border-transparent p-0"
+                          : `border border-[color:var(--hk-border)] ${p.cover ? "p-0" : "p-2"}`
+                      } sm:w-44`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -936,7 +954,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                         alt={p.alt}
                         className={
                           p.cover
-                            ? "h-full w-full object-cover object-center"
+                            ? "h-full w-full scale-[1.04] object-cover object-center"
                             : "max-h-full max-w-full object-contain object-center"
                         }
                       />

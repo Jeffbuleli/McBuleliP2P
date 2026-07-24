@@ -232,7 +232,10 @@ export function HackathonPassBadge({
     id: p.id,
     name: p.name,
     src: p.logoUrl,
-    box: `border-[#E5E5E0] ${p.tileBgClass}`,
+    box:
+      /binance|ilokwe/i.test(p.name)
+        ? `border-transparent ${p.tileBgClass}`
+        : `border-[#E5E5E0] ${p.tileBgClass}`,
     fit: p.fit,
   }));
 
@@ -458,7 +461,7 @@ export function HackathonPassBadge({
               alt=""
               width={22}
               height={22}
-              className="h-[22px] w-[22px] rounded-full bg-white/10 p-0.5 ring-1 ring-white/25"
+              className="h-[22px] w-[22px] rounded-full bg-white p-0.5 ring-1 ring-white/30"
             />
             <span className="font-extrabold">McBuleli</span>
           </a>
