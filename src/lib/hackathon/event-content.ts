@@ -90,6 +90,13 @@ export const HACKATHON_DATES_LABEL_EN = "August 13–14, 2026";
 export const HACKATHON_HOURS_LABEL_FR = "08h00 – 17h00";
 export const HACKATHON_HOURS_LABEL_EN = "8:00 AM – 5:00 PM";
 
+/** Compact hours for badges / tickets (matches spoken form). */
+export const HACKATHON_HOURS_COMPACT_FR = "8h00 - 17h00";
+export const HACKATHON_HOURS_COMPACT_EN = "8:00 AM - 5:00 PM";
+
+/** Day 1 door open — Africa/Kinshasa (UTC+1). */
+export const HACKATHON_START_AT = "2026-08-13T08:00:00+01:00";
+
 export const HACKATHON_VENUE_SHORT = "Silikin Village";
 
 export const HACKATHON_SCHEDULE_SUMMARY = [
@@ -294,12 +301,12 @@ export function hackathonFeaturedJury(): HackathonFeaturedJury[] {
 }
 
 export const HACKATHON_NAV: EventNavItem[] = [
-  { id: "about", labelFr: "À propos", labelEn: "About" },
-  { id: "programme", labelFr: "Programme", labelEn: "Program" },
+  { id: "register", labelFr: "Participer", labelEn: "Join" },
   { id: "defis", labelFr: "Défis", labelEn: "Challenges" },
   { id: "prix", labelFr: "Prix", labelEn: "Prizes" },
-  { id: "partenaires", labelFr: "Partenaires", labelEn: "Partners" },
-  { id: "sponsors", labelFr: "Sponsors", labelEn: "Sponsors" },
+  { id: "programme", labelFr: "Programme", labelEn: "Program" },
+  { id: "about", labelFr: "À propos", labelEn: "About" },
+  { id: "partenaires", labelFr: "Écosystème", labelEn: "Ecosystem" },
   { id: "faq", labelFr: "FAQ", labelEn: "FAQ" },
   { id: "contact", labelFr: "Contact", labelEn: "Contact" },
 ];

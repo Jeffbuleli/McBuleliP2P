@@ -39,7 +39,7 @@ export function HackathonStickyNav({
   return (
     <nav
       aria-label={isFr ? "Navigation hackathon" : "Hackathon navigation"}
-      className="sticky top-0 z-30 border-b border-[color:var(--fd-border)] bg-white/90 backdrop-blur-md"
+      className="sticky top-0 z-30 border-b border-[#E5E5E0] bg-[#FAFAF8]"
     >
       <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 py-2 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
