@@ -13,6 +13,7 @@
  * Prod (destinataires réels) :
  *   npx tsx scripts/send-partner-role-announcement-email.ts --all --send
  *   npx tsx scripts/send-partner-role-announcement-email.ts --partner=ilokwe --all --send
+ *   npx tsx scripts/send-partner-role-announcement-email.ts --all --send --exclude=silikin
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -57,6 +58,9 @@ function parseArgs(argv: string[]) {
     else if (a.startsWith("--partner="))
       out.partner = a.slice("--partner=".length);
     else if (a === "--partner" && argv[i + 1]) out.partner = argv[++i];
+    else if (a.startsWith("--exclude="))
+      out.exclude = a.slice("--exclude=".length);
+    else if (a === "--exclude" && argv[i + 1]) out.exclude = argv[++i];
   }
   return out;
 }
@@ -75,6 +79,20 @@ function selectedPartners(args: Record<string, string | boolean>) {
   }
   if (args.confirmed) {
     list = list.filter((p) => p.status === "confirmed");
+  }
+  if (typeof args.exclude === "string" && args.exclude.trim()) {
+    const excluded = new Set(
+      args.exclude
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+    );
+    list = list.filter(
+      (p) =>
+        !excluded.has(p.id.toLowerCase()) &&
+        !excluded.has(p.shortName.toLowerCase()) &&
+        !excluded.has((p.orgSlug ?? "").toLowerCase()),
+    );
   }
   return list;
 }
