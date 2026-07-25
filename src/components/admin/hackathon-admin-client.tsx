@@ -60,7 +60,8 @@ type Tab =
   | "partners"
   | "sponsors"
   | "people"
-  | "promo";
+  | "promo"
+  | "chat_orgs";
 
 type Props = {
   /** admin = full ops; stats = read-only lists for agents */
@@ -98,6 +99,15 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       if (!res.ok) throw new Error("load_failed");
       const json = (await res.json()) as { promos: PromoRow[] };
       setPromos(json.promos ?? []);
+      return;
+    }
+    if (tab === "chat_orgs") {
+      const res = await fetch(
+        `/api/admin/hackathon?tab=chat_orgs&editionId=${encodeURIComponent(editionId)}`,
+      );
+      if (!res.ok) throw new Error("load_failed");
+      const json = (await res.json()) as { chatOrgs: Record<string, unknown>[] };
+      setRows(json.chatOrgs ?? []);
       return;
     }
     const res = await fetch(
@@ -228,6 +238,19 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
     await loadTab();
   }
 
+  async function patchChatOrg(
+    id: string,
+    status: "confirmed" | "in_progress" | "undetermined" | "rejected",
+  ) {
+    if (!isAdmin) return;
+    await fetch("/api/admin/hackathon", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "chat_org", id, status }),
+    });
+    await loadTab();
+  }
+
   async function patchRegistration(
     id: string,
     action: "relink_user" | "resend_verify",
@@ -333,6 +356,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
         { id: "editions", label: "Éditions" },
         { id: "registrations", label: "Participants" },
         { id: "partners", label: "Partenaires" },
+        { id: "chat_orgs", label: "Échange / Chat" },
         { id: "sponsors", label: "Sponsors" },
         { id: "people", label: "Jury / Mentors" },
         { id: "promo", label: "Promo / Cashback" },
@@ -340,6 +364,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
     : [
         { id: "registrations", label: "Participants" },
         { id: "partners", label: "Partenaires" },
+        { id: "chat_orgs", label: "Échange / Chat" },
         { id: "sponsors", label: "Sponsors" },
         { id: "people", label: "Jury / Mentors" },
         { id: "promo", label: "Promo (lecture)" },
@@ -355,6 +380,13 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
           Multi-éditions - landing publique{" "}
           <a href="/hackathon" className="font-semibold text-[color:var(--fd-primary)]">
             /hackathon
+          </a>
+          {" · "}
+          <a
+            href="/hackathon/chat"
+            className="font-semibold text-[color:var(--fd-primary)]"
+          >
+            Échange partenaires
           </a>
           {" · "}
           <a
@@ -658,6 +690,78 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
               ) : null}
             </li>
           ))}
+        </ul>
+      ) : null}
+
+      {tab === "chat_orgs" ? (
+        <ul className="space-y-2">
+          <p className={adminCls.muted}>
+            Roster du portail{" "}
+            <a href="/hackathon/chat" className="font-semibold text-[color:var(--fd-primary)]">
+              /hackathon/chat
+            </a>{" "}
+            - statuts Confirmé / En cours / Indéterminé.
+          </p>
+          {rows.map((r) => (
+            <li
+              key={String(r.id)}
+              className={`${adminCls.card} flex flex-wrap items-center justify-between gap-2`}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {r.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={String(r.logoUrl)}
+                    alt=""
+                    className="h-10 w-10 rounded-lg object-cover"
+                  />
+                ) : (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--fd-mint)] text-[10px] font-extrabold uppercase">
+                    {String(r.shortName ?? "?").slice(0, 2)}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="font-bold">
+                    {String(r.orgName)}{" "}
+                    <span className="text-xs font-normal text-[color:var(--fd-muted)]">
+                      / {String(r.shortName)}
+                    </span>
+                  </p>
+                  <p className="truncate text-xs text-[color:var(--fd-muted)]">
+                    {r.contactEmail ? String(r.contactEmail) : "-"} ·{" "}
+                    <span className="font-semibold">{String(r.status)}</span>
+                  </p>
+                </div>
+              </div>
+              {isAdmin ? (
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["confirmed", "Confirmé"],
+                      ["in_progress", "En cours"],
+                      ["undetermined", "Indéterminé"],
+                      ["rejected", "Masquer"],
+                    ] as const
+                  ).map(([st, label]) => (
+                    <button
+                      key={st}
+                      type="button"
+                      className={adminCls.btnSecondary}
+                      disabled={String(r.status) === st}
+                      onClick={() => void patchChatOrg(String(r.id), st)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </li>
+          ))}
+          {!rows.length ? (
+            <p className={adminCls.empty}>
+              Aucune org - le seed se crée à l&apos;ouverture de /hackathon/chat.
+            </p>
+          ) : null}
         </ul>
       ) : null}
 

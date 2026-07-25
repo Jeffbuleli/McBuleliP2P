@@ -13,7 +13,7 @@ export function HackathonStickyNav({
   const [active, setActive] = useState(items[0]?.id ?? "");
 
   useEffect(() => {
-    const ids = items.map((i) => i.id);
+    const ids = items.filter((i) => !i.href).map((i) => i.id);
     const sections = ids
       .map((id) => document.getElementById(id))
       .filter(Boolean) as HTMLElement[];
@@ -44,11 +44,11 @@ export function HackathonStickyNav({
       <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 py-2 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
           const label = isFr ? item.labelFr : item.labelEn;
-          const isActive = active === item.id;
+          const isActive = !item.href && active === item.id;
           return (
             <a
               key={item.id}
-              href={`#${item.id}`}
+              href={item.href ?? `#${item.id}`}
               className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition sm:text-sm ${
                 isActive
                   ? "bg-[color:var(--fd-primary)] text-white"

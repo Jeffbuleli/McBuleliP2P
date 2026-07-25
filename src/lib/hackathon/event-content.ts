@@ -4,7 +4,13 @@
  */
 import type { BenefitIconId, PrizeIconId } from "@/components/hackathon/event-icons";
 
-export type EventNavItem = { id: string; labelFr: string; labelEn: string };
+export type EventNavItem = {
+  id: string;
+  labelFr: string;
+  labelEn: string;
+  /** Absolute path for off-page links (e.g. /hackathon/chat). Default: #id */
+  href?: string;
+};
 
 export type ProgramSlot = {
   time: string;
@@ -301,6 +307,7 @@ export const HACKATHON_NAV: EventNavItem[] = [
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "partenaires", labelFr: "Écosystème", labelEn: "Ecosystem" },
+  { id: "chat", labelFr: "Échange", labelEn: "Exchange", href: "/hackathon/chat" },
   { id: "faq", labelFr: "FAQ", labelEn: "FAQ" },
   { id: "contact", labelFr: "Contact", labelEn: "Contact" },
 ];

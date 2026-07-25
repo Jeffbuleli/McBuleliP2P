@@ -452,6 +452,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <CtaSecondary href="/hackathon/ambassadeur" onDark>
                 {isFr ? "Ambassadeur" : "Ambassador"}
               </CtaSecondary>
+              <CtaSecondary href="/hackathon/chat" onDark>
+                {isFr ? "Chat" : "Chat"}
+              </CtaSecondary>
             </div>
           </div>
         </div>
@@ -616,7 +619,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         </div>
       </Section>
 
-      {/* À propos — mentors/jury pliés */}
+      {/* À propos - mentors/jury pliés */}
       <Section
         id="about"
         className="bg-[color:var(--hk-surface)]"
@@ -650,7 +653,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         </Accordion>
       </Section>
 
-      {/* Inscription — formulaires pliés */}
+      {/* Inscription - formulaires pliés */}
       <Section
         id="register"
         eyebrow={isFr ? "Rejoindre" : "Join"}
@@ -729,7 +732,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         </Accordion>
       </Section>
 
-      {/* Écosystème — logos visibles, détails pliés */}
+      {/* Écosystème - logos visibles, détails pliés */}
       <Section
         id="partenaires"
         className="bg-[color:var(--hk-surface)]"
@@ -741,6 +744,19 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             : "Credibility for candidates · details one click away."
         }
       >
+        <div className="mb-5">
+          <a
+            href="/hackathon/chat"
+            className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-fg)] shadow-[0_10px_28px_-18px_var(--hk-shadow)] transition hover:border-[color:var(--fd-primary)] hover:text-[color:var(--fd-primary)]"
+          >
+            {isFr ? "Échange partenaires →" : "Partner exchange →"}
+          </a>
+          <p className="mt-2 text-xs text-[color:var(--hk-muted)]">
+            {isFr
+              ? "Vue, roster et dialogue - connexion compte McBuleli (admin ou partenaire)."
+              : "Overview, roster and dialogue - McBuleli account (admin or partner)."}
+          </p>
+        </div>
         {(() => {
           const featuredIds = new Set(featuredPartners.map((p) => p.name.toLowerCase()));
           const existing = data.partnerLogos.filter(

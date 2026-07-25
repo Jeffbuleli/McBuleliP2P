@@ -1,0 +1,355 @@
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import {
+  getDb,
+  hackathonEditions,
+  hackathonPartnerChatMessages,
+  hackathonPartnerOrgs,
+} from "@/db";
+import {
+  BINANCE_PARTNER,
+  ILOKWE_PARTNER,
+  PAWAPAY_PARTNER,
+  SILIKIN_PARTNER,
+} from "@/lib/hackathon/event-content";
+import { SUPPORT_EMAIL } from "@/lib/support-contact";
+
+export type PartnerOrgStatus =
+  | "confirmed"
+  | "in_progress"
+  | "undetermined"
+  | "rejected";
+
+export const PARTNER_ORG_STATUSES: PartnerOrgStatus[] = [
+  "confirmed",
+  "in_progress",
+  "undetermined",
+  "rejected",
+];
+
+export type PartnerOrgPublic = {
+  id: string;
+  slug: string;
+  orgName: string;
+  shortName: string;
+  logoUrl: string | null;
+  website: string | null;
+  status: PartnerOrgStatus;
+  sortOrder: number;
+};
+
+export type PartnerOrgRosterRow = PartnerOrgPublic & {
+  contactEmail: string | null;
+};
+
+type SeedOrg = {
+  slug: string;
+  orgName: string;
+  shortName: string;
+  logoUrl: string | null;
+  contactEmail: string;
+  website: string | null;
+  status: PartnerOrgStatus;
+  sortOrder: number;
+};
+
+const SEED_ORGS: SeedOrg[] = [
+  {
+    slug: "ilokwe",
+    orgName: ILOKWE_PARTNER.name,
+    shortName: "ILOKWE",
+    logoUrl: ILOKWE_PARTNER.logoUrl,
+    contactEmail: ILOKWE_PARTNER.email,
+    website: ILOKWE_PARTNER.facebook,
+    status: "confirmed",
+    sortOrder: 10,
+  },
+  {
+    slug: "silikin",
+    orgName: SILIKIN_PARTNER.name,
+    shortName: "Silikin",
+    logoUrl: SILIKIN_PARTNER.logoUrl,
+    contactEmail: "reception_skv@texaf-rdc.com",
+    website: SILIKIN_PARTNER.website,
+    status: "in_progress",
+    sortOrder: 20,
+  },
+  {
+    slug: "pawapay",
+    orgName: PAWAPAY_PARTNER.name,
+    shortName: "pawaPay",
+    logoUrl: PAWAPAY_PARTNER.logoUrl,
+    contactEmail: SUPPORT_EMAIL,
+    website: PAWAPAY_PARTNER.website,
+    status: "confirmed",
+    sortOrder: 30,
+  },
+  {
+    slug: "kimia",
+    orgName: "KIMIA Service",
+    shortName: "KIMIA",
+    logoUrl: null,
+    contactEmail: "kimiaservice896@gmail.com",
+    website: "https://www.facebook.com/profile.php?id=61560600003901",
+    status: "in_progress",
+    sortOrder: 40,
+  },
+  {
+    slug: "rdpi",
+    orgName: "RDPI Think Tank",
+    shortName: "RDPI",
+    logoUrl: null,
+    contactEmail: "info@rdpithinktank.org",
+    website: "https://rdpithinktank.org",
+    status: "in_progress",
+    sortOrder: 50,
+  },
+  {
+    slug: "e-com-sas",
+    orgName: "e-COM SAS",
+    shortName: "E-Com",
+    logoUrl: null,
+    contactEmail: "contact@e-comsas.com",
+    website: "https://e-comsas.com",
+    status: "in_progress",
+    sortOrder: 60,
+  },
+  {
+    slug: "binance",
+    orgName: BINANCE_PARTNER.name,
+    shortName: "Binance",
+    logoUrl: BINANCE_PARTNER.logoUrl,
+    contactEmail: SUPPORT_EMAIL,
+    website: BINANCE_PARTNER.demo,
+    status: "undetermined",
+    sortOrder: 70,
+  },
+  {
+    slug: "kilelo",
+    orgName: "Kilelo",
+    shortName: "Kilelo",
+    logoUrl: null,
+    contactEmail: "support@kileloapp.com",
+    website: null,
+    status: "in_progress",
+    sortOrder: 80,
+  },
+];
+
+export async function getFeaturedEditionId(): Promise<string | null> {
+  const db = getDb();
+  const [featured] = await db
+    .select({ id: hackathonEditions.id })
+    .from(hackathonEditions)
+    .where(eq(hackathonEditions.featured, true))
+    .limit(1);
+  if (featured) return featured.id;
+  const [any] = await db
+    .select({ id: hackathonEditions.id })
+    .from(hackathonEditions)
+    .orderBy(desc(hackathonEditions.createdAt))
+    .limit(1);
+  return any?.id ?? null;
+}
+
+/** Idempotent seed of known partner orgs for the featured edition. */
+export async function ensurePartnerOrgsSeeded(
+  editionId?: string,
+): Promise<string | null> {
+  const db = getDb();
+  const eid = editionId ?? (await getFeaturedEditionId());
+  if (!eid) return null;
+
+  for (const org of SEED_ORGS) {
+    const [existing] = await db
+      .select({ id: hackathonPartnerOrgs.id })
+      .from(hackathonPartnerOrgs)
+      .where(
+        and(
+          eq(hackathonPartnerOrgs.editionId, eid),
+          eq(hackathonPartnerOrgs.slug, org.slug),
+        ),
+      )
+      .limit(1);
+    if (existing) continue;
+    await db.insert(hackathonPartnerOrgs).values({
+      editionId: eid,
+      slug: org.slug,
+      orgName: org.orgName,
+      shortName: org.shortName,
+      logoUrl: org.logoUrl,
+      contactEmail: org.contactEmail.toLowerCase(),
+      website: org.website,
+      status: org.status,
+      sortOrder: org.sortOrder,
+    });
+  }
+  return eid;
+}
+
+function asStatus(raw: string): PartnerOrgStatus {
+  if (
+    raw === "confirmed" ||
+    raw === "in_progress" ||
+    raw === "undetermined" ||
+    raw === "rejected"
+  ) {
+    return raw;
+  }
+  return "undetermined";
+}
+
+export async function listPartnerOrgsPublic(
+  editionId: string,
+): Promise<PartnerOrgPublic[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: hackathonPartnerOrgs.id,
+      slug: hackathonPartnerOrgs.slug,
+      orgName: hackathonPartnerOrgs.orgName,
+      shortName: hackathonPartnerOrgs.shortName,
+      logoUrl: hackathonPartnerOrgs.logoUrl,
+      website: hackathonPartnerOrgs.website,
+      status: hackathonPartnerOrgs.status,
+      sortOrder: hackathonPartnerOrgs.sortOrder,
+    })
+    .from(hackathonPartnerOrgs)
+    .where(
+      and(
+        eq(hackathonPartnerOrgs.editionId, editionId),
+        ne(hackathonPartnerOrgs.status, "rejected"),
+      ),
+    )
+    .orderBy(asc(hackathonPartnerOrgs.sortOrder), asc(hackathonPartnerOrgs.orgName));
+
+  return rows.map((r) => ({
+    ...r,
+    status: asStatus(r.status),
+  }));
+}
+
+export async function listPartnerOrgsRoster(
+  editionId: string,
+  includeEmail: boolean,
+): Promise<PartnerOrgRosterRow[]> {
+  const publicRows = await listPartnerOrgsPublic(editionId);
+  if (!includeEmail) {
+    return publicRows.map((r) => ({ ...r, contactEmail: null }));
+  }
+  const db = getDb();
+  const emails = await db
+    .select({
+      id: hackathonPartnerOrgs.id,
+      contactEmail: hackathonPartnerOrgs.contactEmail,
+    })
+    .from(hackathonPartnerOrgs)
+    .where(eq(hackathonPartnerOrgs.editionId, editionId));
+  const map = new Map(emails.map((e) => [e.id, e.contactEmail]));
+  return publicRows.map((r) => ({
+    ...r,
+    contactEmail: map.get(r.id) ?? null,
+  }));
+}
+
+export function partnerOrgStats(orgs: PartnerOrgPublic[]) {
+  const total = orgs.length;
+  const confirmed = orgs.filter((o) => o.status === "confirmed").length;
+  const inProgress = orgs.filter((o) => o.status === "in_progress").length;
+  const undetermined = orgs.filter((o) => o.status === "undetermined").length;
+  return { total, confirmed, inProgress, undetermined };
+}
+
+export async function getPartnerOrgById(orgId: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(hackathonPartnerOrgs)
+    .where(eq(hackathonPartnerOrgs.id, orgId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function listChatMessages(editionId: string, limit = 80) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: hackathonPartnerChatMessages.id,
+      orgId: hackathonPartnerChatMessages.orgId,
+      senderLabel: hackathonPartnerChatMessages.senderLabel,
+      body: hackathonPartnerChatMessages.body,
+      messageType: hackathonPartnerChatMessages.messageType,
+      createdAt: hackathonPartnerChatMessages.createdAt,
+      orgShortName: hackathonPartnerOrgs.shortName,
+      orgStatus: hackathonPartnerOrgs.status,
+      orgLogoUrl: hackathonPartnerOrgs.logoUrl,
+    })
+    .from(hackathonPartnerChatMessages)
+    .leftJoin(
+      hackathonPartnerOrgs,
+      eq(hackathonPartnerChatMessages.orgId, hackathonPartnerOrgs.id),
+    )
+    .where(eq(hackathonPartnerChatMessages.editionId, editionId))
+    .orderBy(desc(hackathonPartnerChatMessages.createdAt))
+    .limit(limit);
+
+  return rows
+    .map((r) => ({
+      id: r.id,
+      orgId: r.orgId,
+      senderLabel: r.senderLabel,
+      displayName: r.orgShortName
+        ? `${r.senderLabel}/${r.orgShortName}`
+        : r.senderLabel,
+      orgStatus: r.orgStatus ? asStatus(r.orgStatus) : null,
+      orgLogoUrl: r.orgLogoUrl,
+      body: r.body,
+      messageType: r.messageType,
+      createdAt: r.createdAt.toISOString(),
+    }))
+    .reverse();
+}
+
+export async function postChatMessage(args: {
+  editionId: string;
+  orgId: string | null;
+  senderLabel: string;
+  body: string;
+}) {
+  const body = args.body.trim().slice(0, 4000);
+  if (!body) throw new Error("empty_body");
+  const label = args.senderLabel.trim().slice(0, 80) || "Membre";
+  const db = getDb();
+  const [row] = await db
+    .insert(hackathonPartnerChatMessages)
+    .values({
+      editionId: args.editionId,
+      orgId: args.orgId,
+      senderLabel: label,
+      body,
+      messageType: "chat",
+    })
+    .returning({ id: hackathonPartnerChatMessages.id });
+  return row;
+}
+
+export async function updatePartnerOrgStatus(
+  orgId: string,
+  status: PartnerOrgStatus,
+) {
+  const db = getDb();
+  const [row] = await db
+    .update(hackathonPartnerOrgs)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(hackathonPartnerOrgs.id, orgId))
+    .returning();
+  return row ?? null;
+}
+
+export async function countPartnerOrgMessages(editionId: string) {
+  const db = getDb();
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(hackathonPartnerChatMessages)
+    .where(eq(hackathonPartnerChatMessages.editionId, editionId));
+  return row?.n ?? 0;
+}

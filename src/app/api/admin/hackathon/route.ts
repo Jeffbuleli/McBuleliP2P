@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { desc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
   getDb,
   hackathonEditions,
   hackathonPeople,
   hackathonPartners,
+  hackathonPartnerOrgs,
   hackathonPromoCodes,
   hackathonRegistrations,
   hackathonSponsors,
@@ -17,6 +18,8 @@ import {
   defaultProgram,
   emptyStats,
 } from "@/lib/hackathon/constants";
+import { ensurePartnerOrgsSeeded } from "@/lib/hackathon/partner-chat";
+import type { PartnerOrgStatus } from "@/lib/hackathon/partner-chat";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +174,20 @@ export async function GET(req: Request) {
     });
   }
 
+  if (tab === "chat_orgs") {
+    await ensurePartnerOrgsSeeded(editionId);
+    const rows = await db
+      .select()
+      .from(hackathonPartnerOrgs)
+      .where(eq(hackathonPartnerOrgs.editionId, editionId))
+      .orderBy(asc(hackathonPartnerOrgs.sortOrder), asc(hackathonPartnerOrgs.orgName));
+    return NextResponse.json({
+      chatOrgs: readAuth.isSuperAdmin
+        ? rows
+        : rows.map(({ contactEmail: _e, otpHash: _h, otpExpiresAt: _x, ...rest }) => rest),
+    });
+  }
+
   return NextResponse.json({ error: "bad_tab" }, { status: 400 });
 }
 
@@ -236,6 +253,12 @@ const patchLeadZ = z.object({
   id: z.string().uuid(),
   status: z.enum(["lead", "confirmed", "rejected"]).optional(),
   published: z.boolean().optional(),
+});
+
+const patchChatOrgZ = z.object({
+  kind: z.literal("chat_org"),
+  id: z.string().uuid(),
+  status: z.enum(["confirmed", "in_progress", "undetermined", "rejected"]),
 });
 
 const patchRegistrationZ = z.object({
@@ -307,6 +330,24 @@ export async function PATCH(req: Request) {
   const json = await req.json().catch(() => null);
 
   if (json && typeof json === "object" && "kind" in json) {
+    if ((json as { kind?: string }).kind === "chat_org") {
+      const parsed = patchChatOrgZ.safeParse(json);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const { updatePartnerOrgStatus } = await import(
+        "@/lib/hackathon/partner-chat"
+      );
+      const row = await updatePartnerOrgStatus(
+        parsed.data.id,
+        parsed.data.status as PartnerOrgStatus,
+      );
+      if (!row) {
+        return NextResponse.json({ error: "not_found" }, { status: 404 });
+      }
+      return NextResponse.json({ org: row });
+    }
+
     if ((json as { kind?: string }).kind === "promo_claim") {
       const claimPatch = patchClaimZ.safeParse(json);
       if (!claimPatch.success) {

@@ -4157,6 +4157,73 @@ export const hackathonSponsors = pgTable(
   ],
 );
 
+/** Partner exchange portal roster (OTP chat) — separate from form leads. */
+export const hackathonPartnerOrgs = pgTable(
+  "hackathon_partner_orgs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    orgName: varchar("org_name", { length: 200 }).notNull(),
+    /** Short label for chat display: Aristote/RDPI */
+    shortName: varchar("short_name", { length: 48 }).notNull(),
+    logoUrl: text("logo_url"),
+    contactEmail: varchar("contact_email", { length: 255 }).notNull(),
+    website: varchar("website", { length: 255 }),
+    /** undetermined | in_progress | confirmed | rejected */
+    status: varchar("status", { length: 16 }).notNull().default("undetermined"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    otpHash: text("otp_hash"),
+    otpExpiresAt: timestamp("otp_expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_partner_orgs_edition_slug_uidx").on(
+      t.editionId,
+      t.slug,
+    ),
+    index("hackathon_partner_orgs_edition_status_idx").on(
+      t.editionId,
+      t.status,
+    ),
+  ],
+);
+
+/** Shared partner exchange chat room (one room per edition). */
+export const hackathonPartnerChatMessages = pgTable(
+  "hackathon_partner_chat_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    /** Null when sender is McBuleli staff. */
+    orgId: uuid("org_id").references(() => hackathonPartnerOrgs.id, {
+      onDelete: "set null",
+    }),
+    senderLabel: varchar("sender_label", { length: 80 }).notNull(),
+    body: text("body").notNull(),
+    /** chat | system */
+    messageType: varchar("message_type", { length: 16 }).notNull().default("chat"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_partner_chat_messages_edition_created_idx").on(
+      t.editionId,
+      t.createdAt,
+    ),
+  ],
+);
+
 export const hackathonRegistrations = pgTable(
   "hackathon_registrations",
   {
