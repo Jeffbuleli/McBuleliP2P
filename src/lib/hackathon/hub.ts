@@ -13,10 +13,12 @@ import { hackathonProgramDays } from "@/lib/hackathon/event-content";
 import type { HubPayloadOk } from "@/lib/hackathon/hub-types";
 import { payLaterPublicUrl } from "@/lib/hackathon/service";
 import {
+  getFormationMeta,
   getMemberForRegistration,
   getRegistrationForUser,
   getTeamBundle,
 } from "@/lib/hackathon/teams";
+import { TEAM_MAX_MEMBERS } from "@/lib/hackathon/team-formation";
 
 export type { HubPayloadOk };
 
@@ -82,6 +84,8 @@ export async function buildHubPayload(userId: string): Promise<
         null
       : null;
 
+  const formationMeta = await getFormationMeta(edition.id);
+
   return {
     edition: {
       id: edition.id,
@@ -109,6 +113,13 @@ export async function buildHubPayload(userId: string): Promise<
       : null,
     isPaid,
     memberRole,
+    formation: {
+      softMaxTeams: formationMeta.softMaxTeams,
+      targetTeamSize: formationMeta.targetTeamSize,
+      teamCount: formationMeta.teamCount,
+      maxMembers: TEAM_MAX_MEMBERS,
+      openTeams: formationMeta.openTeams,
+    },
     team: teamBundle
       ? {
           id: teamBundle.team.id,
@@ -125,12 +136,25 @@ export async function buildHubPayload(userId: string): Promise<
                 labelEn: teamBundle.challenge.labelEn,
               }
             : null,
+          commsUrl: teamBundle.team.commsUrl ?? null,
+          governanceNotes: teamBundle.team.governanceNotes ?? null,
           members: teamBundle.members.map((m) => ({
             ...m,
             joinedAt:
               m.joinedAt instanceof Date
                 ? m.joinedAt.toISOString()
                 : String(m.joinedAt),
+          })),
+          messages: teamBundle.messages.map((m) => ({
+            id: m.id,
+            body: m.body,
+            createdAt:
+              m.createdAt instanceof Date
+                ? m.createdAt.toISOString()
+                : String(m.createdAt),
+            authorRegistrationId: m.authorRegistrationId,
+            firstName: m.firstName,
+            lastName: m.lastName,
           })),
           rulesAcceptedAt:
             teamBundle.team.rulesAcceptedAt?.toISOString() ?? null,

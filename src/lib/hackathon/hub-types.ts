@@ -1,5 +1,14 @@
 /** Shared hub payload types (no DB imports - safe for client components). */
 
+export type HubOpenTeam = {
+  id: string;
+  name: string;
+  inviteCode: string;
+  memberCount: number;
+  vacantRoles: string[];
+  challenge: { id: string; labelFr: string; labelEn: string } | null;
+};
+
 export type HubPayloadOk = {
   edition: {
     id: string;
@@ -23,6 +32,13 @@ export type HubPayloadOk = {
   } | null;
   isPaid: boolean;
   memberRole: string | null;
+  formation: {
+    softMaxTeams: number;
+    targetTeamSize: number;
+    teamCount: number;
+    maxMembers: number;
+    openTeams: HubOpenTeam[];
+  };
   team: {
     id: string;
     name: string;
@@ -32,6 +48,8 @@ export type HubPayloadOk = {
     isSolo: boolean;
     challengeId: string | null;
     challenge: { id: string; labelFr: string; labelEn: string } | null;
+    commsUrl: string | null;
+    governanceNotes: string | null;
     members: Array<{
       id: string;
       role: string;
@@ -42,6 +60,14 @@ export type HubPayloadOk = {
       email: string;
       paymentStatus: string;
       presenceStatus: string;
+    }>;
+    messages: Array<{
+      id: string;
+      body: string;
+      createdAt: string;
+      authorRegistrationId: string;
+      firstName: string;
+      lastName: string;
     }>;
     rulesAcceptedAt: string | null;
     presentedAt: string | null;

@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 const TITLE =
   "McBuleli Hackathon - Hackathon IA de référence en RDC | Kinshasa";
 const DESCRIPTION =
-  "Hackathon et bootcamp IA organisés par McBuleli à Kinshasa. Vibe Coding, défis FinTech, Santé, Agriculture, pitch jury, incubation. Inscrivez-vous ou devenez partenaire.";
+  "Hackathon et bootcamp IA organisés par McBuleli à Kinshasa. Vibe Coding, 3 défis (FinTech, AgroTech, IA & société), pitch jury, incubation. Inscrivez-vous ou devenez partenaire.";
 
 export const metadata: Metadata = {
   title: TITLE,

@@ -4056,6 +4056,10 @@ export const hackathonEditions = pgTable(
     submissionDeadlineAt: timestamp("submission_deadline_at", {
       withTimezone: true,
     }),
+    /** Soft ceiling on team count; expands (+4) when full. */
+    softMaxTeams: integer("soft_max_teams").notNull().default(12),
+    /** Soft target size for balancing (3 → 4 → 5 as capacity expands). */
+    targetTeamSize: integer("target_team_size").notNull().default(3),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4151,6 +4155,9 @@ export const hackathonTeams = pgTable(
     /** forming | ready | building | submitted | presented | judged */
     status: varchar("status", { length: 24 }).notNull().default("forming"),
     isSolo: boolean("is_solo").notNull().default(false),
+    /** WhatsApp / Discord / Meet link for internal team comms. */
+    commsUrl: text("comms_url"),
+    governanceNotes: text("governance_notes"),
     rulesAcceptedAt: timestamp("rules_accepted_at", { withTimezone: true }),
     rulesAcceptedByRegistrationId: uuid("rules_accepted_by_registration_id"),
     createdByRegistrationId: uuid("created_by_registration_id").notNull(),
@@ -4525,8 +4532,8 @@ export const hackathonTeamMembers = pgTable(
     registrationId: uuid("registration_id")
       .notNull()
       .references(() => hackathonRegistrations.id, { onDelete: "cascade" }),
-    /** lead | dev | design | business | other */
-    role: varchar("role", { length: 24 }).notNull().default("other"),
+    /** lead | principal_dev | design | specialist | presenter */
+    role: varchar("role", { length: 24 }).notNull().default("lead"),
     joinedAt: timestamp("joined_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4540,8 +4547,29 @@ export const hackathonTeamMembers = pgTable(
     uniqueIndex("hackathon_team_members_registration_uidx").on(
       t.registrationId,
     ),
+    /** One person per role inside a team. */
+    uniqueIndex("hackathon_team_members_team_role_uidx").on(t.teamId, t.role),
     index("hackathon_team_members_team_idx").on(t.teamId),
   ],
+);
+
+/** Lightweight internal team board (not a full chat product). */
+export const hackathonTeamMessages = pgTable(
+  "hackathon_team_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => hackathonTeams.id, { onDelete: "cascade" }),
+    authorRegistrationId: uuid("author_registration_id")
+      .notNull()
+      .references(() => hackathonRegistrations.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("hackathon_team_messages_team_idx").on(t.teamId, t.createdAt)],
 );
 
 export const hackathonPromoCodes = pgTable(

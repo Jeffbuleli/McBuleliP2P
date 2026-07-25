@@ -57,3 +57,10 @@ export function computeWeightedScore(
 
 export const MAX_TEAM_MEMBERS = 5;
 export const MIN_TEAM_MEMBERS_NON_SOLO = 1;
+
+// Re-export formation constants for callers that imported from team-status.
+export {
+  TEAM_MAX_MEMBERS,
+  TEAM_SOFT_MAX_DEFAULT,
+  TEAM_TARGET_SIZE_DEFAULT,
+} from "@/lib/hackathon/team-formation";

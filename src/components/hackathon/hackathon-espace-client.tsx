@@ -21,6 +21,17 @@ import {
 } from "@/components/hackathon/hk-ui";
 import type { HubPayloadOk } from "@/lib/hackathon/hub-types";
 import { phaseUnlocks } from "@/lib/hackathon/phases";
+import {
+  TEAM_MAX_MEMBERS,
+  TEAM_ROLE_META,
+  type TeamRoleId,
+} from "@/lib/hackathon/team-formation";
+
+function roleLabel(role: string, isFr: boolean): string {
+  const meta = TEAM_ROLE_META[role as TeamRoleId];
+  if (!meta) return role;
+  return isFr ? meta.shortFr : meta.shortEn;
+}
 
 export function HackathonEspaceClient({
   initial,
@@ -34,6 +45,15 @@ export function HackathonEspaceClient({
   const [teamName, setTeamName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isSolo, setIsSolo] = useState(false);
+  const [createChallengeId, setCreateChallengeId] = useState(
+    initial.challenges[0]?.id ?? "",
+  );
+  const [joinTeamId, setJoinTeamId] = useState(
+    initial.formation?.openTeams[0]?.id ?? "",
+  );
+  const [joinRole, setJoinRole] = useState<string>("");
+  const [commsUrl, setCommsUrl] = useState(initial.team?.commsUrl ?? "");
+  const [teamMsg, setTeamMsg] = useState("");
   const [mentorTopic, setMentorTopic] = useState("");
   const [now, setNow] = useState<number | null>(null);
   const [subForm, setSubForm] = useState({
@@ -68,6 +88,23 @@ export function HackathonEspaceClient({
     const timer = window.setInterval(updateNow, 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    setCommsUrl(data.team?.commsUrl ?? "");
+  }, [data.team?.commsUrl]);
+
+  useEffect(() => {
+    const open = data.formation?.openTeams ?? [];
+    if (!joinTeamId && open[0]) setJoinTeamId(open[0].id);
+    const selected = open.find((t) => t.id === joinTeamId) ?? open[0];
+    if (selected && !selected.vacantRoles.includes(joinRole)) {
+      setJoinRole(selected.vacantRoles[0] ?? "");
+    }
+  }, [data.formation?.openTeams, joinTeamId, joinRole]);
+
+  const selectedOpenTeam = useMemo(() => {
+    return (data.formation?.openTeams ?? []).find((t) => t.id === joinTeamId);
+  }, [data.formation?.openTeams, joinTeamId]);
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/hackathon/hub");
@@ -312,61 +349,172 @@ export function HackathonEspaceClient({
             }
           >
             {!data.team ? (
-              <div className="grid gap-6 sm:grid-cols-2">
-                {unlocks.canFormTeam ? (
-                  <div className="space-y-3">
-                    <HkLabel>{isFr ? "Créer une équipe" : "Create a team"}</HkLabel>
-                    <HkInput
-                      value={teamName}
-                      onChange={(event) => setTeamName(event.target.value)}
-                      placeholder={isFr ? "Nom de l'équipe" : "Team name"}
-                    />
-                    <label className="flex items-center gap-2 text-sm text-[color:var(--hk-text,var(--fd-text))]">
-                      <input
-                        type="checkbox"
-                        checked={isSolo}
-                        onChange={(event) => setIsSolo(event.target.checked)}
-                        className="rounded border-[color:var(--hk-border,var(--fd-border))]"
+              <div className="space-y-6">
+                <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                  {isFr
+                    ? `${data.formation.teamCount}/${data.formation.softMaxTeams} équipes · cible ~${data.formation.targetTeamSize} membres · max ${TEAM_MAX_MEMBERS}. 3 défis · ~4 équipes par défi.`
+                    : `${data.formation.teamCount}/${data.formation.softMaxTeams} teams · target ~${data.formation.targetTeamSize} members · max ${TEAM_MAX_MEMBERS}. 3 challenges · ~4 teams each.`}
+                </p>
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {unlocks.canFormTeam ? (
+                    <div className="space-y-3">
+                      <HkLabel>
+                        {isFr ? "Créer un groupe (vous êtes Team Lead)" : "Create a group (you are Team Lead)"}
+                      </HkLabel>
+                      <HkInput
+                        value={teamName}
+                        onChange={(event) => setTeamName(event.target.value)}
+                        placeholder={isFr ? "Nom de l'équipe" : "Team name"}
                       />
-                      {isFr ? "Je participe en solo" : "I'm going solo"}
-                    </label>
-                    <HkBtn
-                      disabled={busy || teamName.trim().length < 2}
-                      onClick={() =>
-                        postAction({ action: "create", name: teamName, isSolo })
-                      }
-                    >
-                      {isFr ? "Créer l'équipe" : "Create team"}
-                    </HkBtn>
+                      <HkLabel>{isFr ? "Défi" : "Challenge"}</HkLabel>
+                      <select
+                        className="w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
+                        value={createChallengeId}
+                        onChange={(e) => setCreateChallengeId(e.target.value)}
+                      >
+                        {data.challenges.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {isFr ? c.labelFr : c.labelEn}
+                          </option>
+                        ))}
+                      </select>
+                      <label className="flex items-center gap-2 text-sm text-[color:var(--hk-text,var(--fd-text))]">
+                        <input
+                          type="checkbox"
+                          checked={isSolo}
+                          onChange={(event) => setIsSolo(event.target.checked)}
+                          className="rounded border-[color:var(--hk-border,var(--fd-border))]"
+                        />
+                        {isFr ? "Rester en solo (pas de rejoindre)" : "Stay solo (not joinable)"}
+                      </label>
+                      <HkBtn
+                        disabled={busy || teamName.trim().length < 2}
+                        onClick={() =>
+                          postAction({
+                            action: "create",
+                            name: teamName,
+                            isSolo,
+                            challengeId: createChallengeId || undefined,
+                          })
+                        }
+                      >
+                        {isFr ? "Créer le groupe" : "Create group"}
+                      </HkBtn>
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-3">
+                    <HkLabel>
+                      {isFr ? "Rejoindre un groupe existant" : "Join an existing group"}
+                    </HkLabel>
+                    {(data.formation.openTeams ?? []).length === 0 ? (
+                      <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                        {isFr
+                          ? "Aucun groupe ouvert (complets ou absents). Créez le vôtre."
+                          : "No open groups. Create yours."}
+                      </p>
+                    ) : (
+                      <>
+                        <select
+                          className="w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
+                          value={joinTeamId}
+                          onChange={(e) => setJoinTeamId(e.target.value)}
+                          disabled={!data.isPaid}
+                        >
+                          {data.formation.openTeams.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name} ({t.memberCount}/{TEAM_MAX_MEMBERS})
+                              {t.challenge
+                                ? ` · ${isFr ? t.challenge.labelFr : t.challenge.labelEn}`
+                                : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <HkLabel>{isFr ? "Rôle vacant" : "Vacant role"}</HkLabel>
+                        <select
+                          className="w-full rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
+                          value={joinRole}
+                          onChange={(e) => setJoinRole(e.target.value)}
+                          disabled={!data.isPaid}
+                        >
+                          {(selectedOpenTeam?.vacantRoles ?? []).map((r) => (
+                            <option key={r} value={r}>
+                              {roleLabel(r, isFr)}
+                            </option>
+                          ))}
+                        </select>
+                        <HkBtn
+                          variant="secondary"
+                          disabled={
+                            !data.isPaid ||
+                            busy ||
+                            !joinTeamId ||
+                            !joinRole
+                          }
+                          onClick={() =>
+                            postAction({
+                              action: "join",
+                              teamId: joinTeamId,
+                              role: joinRole,
+                            })
+                          }
+                        >
+                          {isFr ? "Rejoindre" : "Join"}
+                        </HkBtn>
+                      </>
+                    )}
+                    <div className="border-t border-[color:var(--hk-border,var(--fd-border))] pt-3">
+                      <HkLabel>
+                        {isFr ? "Ou code invitation" : "Or invite code"}
+                      </HkLabel>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <HkInput
+                          value={inviteCode}
+                          onChange={(event) => setInviteCode(event.target.value)}
+                          placeholder="MBT-..."
+                          className="uppercase"
+                          disabled={!data.isPaid}
+                        />
+                        <select
+                          className="rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
+                          value={joinRole}
+                          onChange={(e) => setJoinRole(e.target.value)}
+                          disabled={!data.isPaid}
+                        >
+                          {(
+                            [
+                              "principal_dev",
+                              "design",
+                              "specialist",
+                              "presenter",
+                            ] as const
+                          ).map((r) => (
+                            <option key={r} value={r}>
+                              {roleLabel(r, isFr)}
+                            </option>
+                          ))}
+                        </select>
+                        <HkBtn
+                          variant="secondary"
+                          disabled={
+                            !data.isPaid ||
+                            busy ||
+                            inviteCode.trim().length < 4 ||
+                            !joinRole
+                          }
+                          onClick={() =>
+                            postAction({
+                              action: "join",
+                              inviteCode: inviteCode.trim(),
+                              role: joinRole,
+                            })
+                          }
+                        >
+                          {isFr ? "Via code" : "Via code"}
+                        </HkBtn>
+                      </div>
+                    </div>
                   </div>
-                ) : null}
-                <div
-                  className={
-                    unlocks.canFormTeam
-                      ? "space-y-3 border-t border-[color:var(--hk-border,var(--fd-border))] pt-6 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0"
-                      : "space-y-3 sm:col-span-2"
-                  }
-                >
-                  <HkLabel>{isFr ? "Rejoindre une équipe" : "Join a team"}</HkLabel>
-                  <HkInput
-                    value={inviteCode}
-                    onChange={(event) => setInviteCode(event.target.value)}
-                    placeholder="MBT-..."
-                    className="uppercase"
-                    disabled={!data.isPaid}
-                  />
-                  <HkBtn
-                    variant="secondary"
-                    disabled={!data.isPaid || busy || inviteCode.trim().length < 4}
-                    onClick={() =>
-                      postAction({
-                        action: "join",
-                        inviteCode: inviteCode.trim(),
-                      })
-                    }
-                  >
-                    {isFr ? "Rejoindre" : "Join"}
-                  </HkBtn>
                 </div>
               </div>
             ) : (
@@ -374,27 +522,160 @@ export function HackathonEspaceClient({
                 <div>
                   <p className="text-lg font-black text-[color:var(--hk-text,var(--fd-text))]">
                     {data.team.name}
+                    {data.team.isSolo ? (
+                      <span className="ml-2 text-sm font-medium text-[color:var(--hk-muted,var(--fd-muted))]">
+                        (solo)
+                      </span>
+                    ) : null}
                   </p>
                   <p className="mt-1 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
                     {isFr ? "Code invitation" : "Invite code"}:{" "}
                     <code className="rounded-lg bg-[color:var(--hk-soft,var(--fd-mint))] px-2 py-0.5 font-mono font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
                       {data.team.inviteCode}
                     </code>
+                    {" · "}
+                    {data.team.members.length}/{TEAM_MAX_MEMBERS}
                   </p>
                 </div>
                 <ul className="space-y-1.5">
                   {data.team.members.map((member) => (
                     <li
                       key={member.id}
-                      className="flex items-center justify-between rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-sm"
                     >
                       <span className="font-medium text-[color:var(--hk-text,var(--fd-text))]">
                         {member.firstName} {member.lastName}
                       </span>
-                      <HkStatusPill>{member.role}</HkStatusPill>
+                      {isLead ? (
+                        <select
+                          className="rounded-lg border border-[color:var(--hk-border,var(--fd-border))] bg-transparent px-2 py-1 text-xs"
+                          value={member.role}
+                          disabled={busy}
+                          onChange={(e) =>
+                            postAction({
+                              action: "assign_role",
+                              targetRegistrationId: member.registrationId,
+                              role: e.target.value,
+                            })
+                          }
+                        >
+                          {(
+                            [
+                              "lead",
+                              "principal_dev",
+                              "design",
+                              "specialist",
+                              "presenter",
+                            ] as const
+                          ).map((r) => (
+                            <option key={r} value={r}>
+                              {roleLabel(r, isFr)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <HkStatusPill>{roleLabel(member.role, isFr)}</HkStatusPill>
+                      )}
                     </li>
                   ))}
                 </ul>
+
+                <div className="space-y-2 rounded-xl border border-[color:var(--hk-border,var(--fd-border))] p-3">
+                  <HkLabel>
+                    {isFr ? "Comms équipe (WhatsApp / Meet…)" : "Team comms (WhatsApp / Meet…)"}
+                  </HkLabel>
+                  {isLead ? (
+                    <div className="flex flex-wrap gap-2">
+                      <HkInput
+                        value={commsUrl}
+                        onChange={(e) => setCommsUrl(e.target.value)}
+                        placeholder="https://…"
+                      />
+                      <HkBtn
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() =>
+                          postAction({
+                            action: "governance",
+                            commsUrl: commsUrl.trim() || null,
+                          })
+                        }
+                      >
+                        {isFr ? "Enregistrer" : "Save"}
+                      </HkBtn>
+                    </div>
+                  ) : data.team.commsUrl ? (
+                    <a
+                      href={data.team.commsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-medium text-[color:var(--hk-accent,var(--fd-primary))] underline"
+                    >
+                      {data.team.commsUrl}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                      {isFr ? "Pas encore de lien." : "No link yet."}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <HkLabel>
+                    {isFr ? "Fil d'équipe" : "Team board"}
+                  </HkLabel>
+                  <ul className="max-h-40 space-y-1 overflow-y-auto text-sm">
+                    {(data.team.messages ?? []).map((m) => (
+                      <li
+                        key={m.id}
+                        className="rounded-lg bg-[color:var(--hk-page,var(--fd-bg))] px-2 py-1.5"
+                      >
+                        <span className="font-semibold">
+                          {m.firstName}:
+                        </span>{" "}
+                        {m.body}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-2">
+                    <HkInput
+                      value={teamMsg}
+                      onChange={(e) => setTeamMsg(e.target.value)}
+                      placeholder={isFr ? "Message court…" : "Short note…"}
+                    />
+                    <HkBtn
+                      variant="secondary"
+                      disabled={busy || teamMsg.trim().length < 1}
+                      onClick={async () => {
+                        const msg = teamMsg;
+                        setBusy(true);
+                        setError(null);
+                        try {
+                          const res = await fetch("/api/hackathon/hub", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              action: "team_message",
+                              body: msg,
+                            }),
+                          });
+                          const json = await res.json().catch(() => ({}));
+                          if (!res.ok) {
+                            setError(json.error ?? "error");
+                            return;
+                          }
+                          setTeamMsg("");
+                          await refresh();
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      {isFr ? "Publier" : "Post"}
+                    </HkBtn>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-2">
                   {isLead && !data.team.rulesAcceptedAt ? (
                     <HkBtn

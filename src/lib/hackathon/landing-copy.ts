@@ -4,6 +4,7 @@
  */
 
 import { HACKATHON_PHASES, actorLabel } from "@/lib/hackathon/phases";
+import { CANONICAL_CHALLENGES } from "@/lib/hackathon/team-formation";
 
 export type BenefitItem = { title: string; body: string };
 export type ChallengeItem = { id: string; label: string; blurb: string };
@@ -90,38 +91,11 @@ export function whyParticipate(isFr: boolean): BenefitItem[] {
 }
 
 export function challengeCategories(isFr: boolean): ChallengeItem[] {
-  if (isFr) {
-    return [
-      { id: "ai", label: "Intelligence artificielle", blurb: "Agents, LLM, automation et produits IA utiles." },
-      { id: "fintech", label: "FinTech", blurb: "Paiements, inclusion financière, crypto & mobile money." },
-      { id: "govtech", label: "GovTech", blurb: "Services publics numériques et transparence." },
-      { id: "health", label: "Santé", blurb: "Accès aux soins, diagnostic, santé communautaire." },
-      {
-        id: "agriculture",
-        label: "AgroTech",
-        blurb:
-          "Moderniser la chaîne de production agricole en RDC, avec ILOKWE GROUP comme référence terrain (production, rentabilité, valorisation du terroir).",
-      },
-      { id: "education", label: "Éducation", blurb: "Apprentissage, compétences et accessibilité." },
-      { id: "media", label: "Médias", blurb: "Information, création de contenu et confiance." },
-      { id: "cyber", label: "Cybersécurité", blurb: "Protection des données, identité et résilience." },
-    ];
-  }
-  return [
-    { id: "ai", label: "Artificial intelligence", blurb: "Agents, LLMs, automation and useful AI products." },
-    { id: "fintech", label: "FinTech", blurb: "Payments, inclusion, crypto & mobile money." },
-    { id: "govtech", label: "GovTech", blurb: "Digital public services and transparency." },
-    { id: "health", label: "Health", blurb: "Access to care, diagnostics, community health." },
-    {
-      id: "agriculture",
-      label: "AgroTech",
-      blurb:
-        "Modernize the agricultural production chain in DRC, using ILOKWE GROUP as a field reference (production, profitability, terroir value).",
-    },
-    { id: "education", label: "Education", blurb: "Learning, skills and accessibility." },
-    { id: "media", label: "Media", blurb: "Information, content and trust." },
-    { id: "cyber", label: "Cybersecurity", blurb: "Data protection, identity and resilience." },
-  ];
+  return CANONICAL_CHALLENGES.map((c) => ({
+    id: c.slug,
+    label: isFr ? c.labelFr : c.labelEn,
+    blurb: isFr ? c.blurbFr : c.blurbEn,
+  }));
 }
 
 export function journeySteps(isFr: boolean): JourneyStep[] {
