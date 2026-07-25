@@ -56,6 +56,7 @@
     "email:afri-carrieres": "tsx scripts/send-afri-carrieres-email.ts",
     "email:silikin-venue": "tsx scripts/send-silikin-venue-email.ts",
     "email:partner-promo": "tsx scripts/send-partner-promo-confirm-email.ts",
+    "email:partner-chat-invite": "tsx scripts/send-partner-chat-invite-email.ts",
     "email:kimia-service-reply": "tsx scripts/send-kimia-service-reply-email.ts",
     "email:institutional-coop": "tsx scripts/send-institutional-coop-email.ts",
     "seed:kimia-meet": "tsx scripts/seed-kimia-partner-meet.ts",

@@ -547,6 +547,7 @@ export function PartnerChatClient() {
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollBoxRef = useRef<HTMLDivElement>(null);
   const stickBottomRef = useRef(true);
+  const composerFocusedRef = useRef(false);
 
   const loadDash = useCallback(async () => {
     setLoadErr(null);
@@ -584,7 +585,21 @@ export function PartnerChatClient() {
     }
     if (!res.ok) return;
     const data = (await res.json()) as { messages: Msg[] };
-    setMessages(data.messages ?? []);
+    const next = data.messages ?? [];
+    setMessages((prev) => {
+      if (
+        prev.length === next.length &&
+        prev.every(
+          (m, i) =>
+            m.id === next[i]?.id &&
+            m.body === next[i]?.body &&
+            m.imageUrl === next[i]?.imageUrl,
+        )
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, [loadDash]);
 
   useEffect(() => {
@@ -598,11 +613,22 @@ export function PartnerChatClient() {
     return () => clearInterval(t);
   }, [dash?.auth.verified, loadMessages]);
 
+  const scrollMessagesToBottom = useCallback((smooth = true) => {
+    const el = scrollBoxRef.current;
+    if (!el) return;
+    if (smooth) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    } else {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, []);
+
   useEffect(() => {
     if (tab !== "dialogue") return;
     if (!stickBottomRef.current) return;
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, tab]);
+    if (composerFocusedRef.current) return;
+    scrollMessagesToBottom(true);
+  }, [messages, tab, scrollMessagesToBottom]);
 
   async function selectOrg(orgId: string) {
     setSwitchBusy(true);
@@ -692,6 +718,8 @@ export function PartnerChatClient() {
       setMessages(data.messages ?? []);
       setDraft("");
       setPendingImage(null);
+      stickBottomRef.current = true;
+      requestAnimationFrame(() => scrollMessagesToBottom(false));
     } catch {
       setMsgErr(isFr ? "Erreur réseau." : "Network error.");
     } finally {
@@ -1229,6 +1257,12 @@ export function PartnerChatClient() {
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={onComposerKeyDown}
+                    onFocus={() => {
+                      composerFocusedRef.current = true;
+                    }}
+                    onBlur={() => {
+                      composerFocusedRef.current = false;
+                    }}
                     rows={1}
                     placeholder={
                       isFr ? "Écrire un message…" : "Write a message…"
