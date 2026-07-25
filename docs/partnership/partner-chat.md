@@ -5,8 +5,15 @@ Espace commun pour les organisations du McBuleli Hackathon.
 ## Accès
 
 1. Ouvrir https://mcbuleli.org/hackathon/chat
-2. Connexion compte McBuleli (staff agent/super_admin → McBuleli ; partenaire si email = contact org)
-3. Pas d'OTP
+2. Créer / connecter un compte McBuleli avec l'**email principal** du partenaire
+3. Staff McBuleli (agent / super_admin) → entrée automatique en tant que McBuleli
+4. Pas d'OTP
+
+## Étapes membres affiliés (dans l'UI)
+
+1. Vue + Membres - état des partenariats
+2. Dialogue - se présenter (texte / image R2)
+3. Participants - liste paginée (10 / 20 / 30)
 
 ## Onglets
 
@@ -17,8 +24,8 @@ Espace commun pour les organisations du McBuleli Hackathon.
 
 ## Statuts seed (sync à chaque chargement)
 
-Confirmés : ILOKWE, Silikin, pawaPay, Binance, KIMIA, RDPI, Kilelo, TYTS, IA Académie  
-En cours : e-COM SAS, César Group
+Confirmés : ILOKWE, pawaPay, Binance, KIMIA, RDPI, Kilelo, TYTS, IA Académie  
+En cours : Silikin, e-COM SAS, César Group
 
 ## Admin
 

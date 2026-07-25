@@ -73,7 +73,7 @@ const SEED_ORGS: SeedOrg[] = [
     logoUrl: SILIKIN_PARTNER.logoUrl,
     contactEmail: "reception_skv@texaf-rdc.com",
     website: SILIKIN_PARTNER.website,
-    status: "confirmed",
+    status: "in_progress",
     sortOrder: 20,
   },
   {
@@ -162,7 +162,7 @@ const SEED_ORGS: SeedOrg[] = [
     shortName: "IA Académie",
     logoUrl: null,
     contactEmail: "contact@ia-academie.cd",
-    website: null,
+    website: "https://ia-academie.cd",
     status: "confirmed",
     sortOrder: 70,
   },

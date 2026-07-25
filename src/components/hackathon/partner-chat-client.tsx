@@ -188,11 +188,6 @@ function StackedBreakdown({
       <p className="text-sm font-bold text-[color:var(--hk-text)]">
         {isFr ? "Répartition du roster" : "Roster breakdown"}
       </p>
-      <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
-        {isFr
-          ? `${total} organisations actives (hors rejetés)`
-          : `${total} active organisations (excluding rejected)`}
-      </p>
       <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-[color:var(--hk-border)]">
         {c > 0 ? (
           <div
@@ -223,7 +218,7 @@ function StackedBreakdown({
             {isFr ? "Confirmés" : "Confirmed"}
           </span>
           <span className="tabular-nums font-semibold text-[color:var(--hk-text)]">
-            {confirmed} · {c}%
+            {c}%
           </span>
         </li>
         <li className="flex justify-between gap-3">
@@ -232,7 +227,7 @@ function StackedBreakdown({
             {isFr ? "En cours" : "In progress"}
           </span>
           <span className="tabular-nums font-semibold text-[color:var(--hk-text)]">
-            {inProgress} · {p}%
+            {p}%
           </span>
         </li>
         <li className="flex justify-between gap-3">
@@ -241,7 +236,7 @@ function StackedBreakdown({
             {isFr ? "Pas encore déterminés" : "Undetermined"}
           </span>
           <span className="tabular-nums font-semibold text-[color:var(--hk-text)]">
-            {undetermined} · {u}%
+            {u}%
           </span>
         </li>
       </ul>
@@ -283,15 +278,254 @@ function paymentStatusLabel(
   confirmed: boolean,
   isFr: boolean,
 ): string {
-  if (confirmed) return isFr ? "Confirmé" : "Confirmed";
-  const s = status.toLowerCase();
+  const s = (status || "").toLowerCase();
+  if (confirmed || s === "paid" || s === "succeeded" || s === "success") {
+    return isFr ? "Confirmé" : "Confirmed";
+  }
+  if (s === "reserved") {
+    return isFr ? "Place réservée" : "Seat reserved";
+  }
+  if (s === "pending_verify") {
+    return isFr ? "Vérif. email" : "Email verify";
+  }
   if (s === "pending" || s === "processing" || s === "hold") {
     return isFr ? "En attente" : "Pending";
   }
-  if (s === "failed" || s === "cancelled" || s === "canceled") {
+  if (s === "failed") {
     return isFr ? "Échoué" : "Failed";
   }
-  return status || (isFr ? "En attente" : "Pending");
+  if (s === "cancelled" || s === "canceled") {
+    return isFr ? "Annulé" : "Cancelled";
+  }
+  if (s === "free") {
+    return isFr ? "Inscrit" : "Registered";
+  }
+  return isFr ? "En attente" : "Pending";
+}
+
+type PageSize = 10 | 20 | 30;
+
+function AffiliateSteps({
+  isFr,
+  mode,
+}: {
+  isFr: boolean;
+  mode: "login" | "forbidden" | "inside";
+}) {
+  const steps =
+    mode === "login"
+      ? isFr
+        ? [
+            "Créez un compte McBuleli avec l'email principal de votre organisation.",
+            "Connectez-vous (pas de code OTP).",
+            "Accédez à Vue, Membres, Dialogue et Participants.",
+          ]
+        : [
+            "Create a McBuleli account with your organisation's primary email.",
+            "Sign in (no OTP).",
+            "Open Overview, Members, Dialogue and Participants.",
+          ]
+      : mode === "forbidden"
+        ? isFr
+          ? [
+              "Utilisez l'email contact déjà déclaré pour le partenaire (roster).",
+              "Si besoin, demandez à McBuleli d'ajouter votre email au roster.",
+              `Écrivez à ${SUPPORT_EMAIL} pour finaliser l'affiliation.`,
+            ]
+          : [
+              "Use the partner contact email already on the roster.",
+              "If needed, ask McBuleli to add your email to the roster.",
+              `Email ${SUPPORT_EMAIL} to finish affiliation.`,
+            ]
+        : isFr
+          ? [
+              "Consultez Vue et Membres pour l'état des partenariats.",
+              "Présentez votre organisation dans Dialogue (texte ou image).",
+              "Suivez les Participants inscrits et contactez-les si utile.",
+            ]
+          : [
+              "Check Overview and Members for partnership status.",
+              "Introduce your organisation in Dialogue (text or image).",
+              "Follow registered Participants and reach out when useful.",
+            ];
+
+  return (
+    <ol className="mt-4 space-y-2 text-left text-sm text-[color:var(--hk-muted)]">
+      {steps.map((step, i) => (
+        <li key={step} className="flex gap-3">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color:var(--hk-soft)] text-[11px] font-extrabold text-[color:var(--hk-accent)]">
+            {i + 1}
+          </span>
+          <span className="leading-snug pt-0.5">{step}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function ParticipantsTable({
+  participants,
+  isFr,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  participants: Participant[];
+  isFr: boolean;
+  page: number;
+  pageSize: PageSize;
+  onPageChange: (p: number) => void;
+  onPageSizeChange: (n: PageSize) => void;
+}) {
+  const total = participants.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, pageCount - 1);
+  const start = safePage * pageSize;
+  const slice = participants.slice(start, start + pageSize);
+  const from = total === 0 ? 0 : start + 1;
+  const to = Math.min(start + pageSize, total);
+
+  return (
+    <section className="overflow-hidden rounded-2xl bg-[color:var(--hk-surface)] shadow-sm ring-1 ring-[color:var(--hk-border)]">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[color:var(--hk-border)] px-5 py-3.5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
+            {isFr ? "Inscrits hackathon" : "Hackathon registrations"}
+          </p>
+          <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
+            {total === 0
+              ? isFr
+                ? "Aucun inscrit"
+                : "No registrations"
+              : isFr
+                ? `${from}-${to} sur ${total}`
+                : `${from}-${to} of ${total}`}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-semibold text-[color:var(--hk-muted)]">
+            {isFr ? "Par page" : "Per page"}
+          </span>
+          {([10, 20, 30] as PageSize[]).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onPageSizeChange(n)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                pageSize === n
+                  ? "bg-[color:var(--hk-accent)] text-white"
+                  : "border border-[color:var(--hk-border)] text-[color:var(--hk-muted)] hover:text-[color:var(--hk-text)]"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <div className="ml-1 flex items-center gap-1">
+            <button
+              type="button"
+              disabled={safePage <= 0}
+              onClick={() => onPageChange(safePage - 1)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[color:var(--hk-border)] text-[color:var(--hk-text)] disabled:opacity-40"
+              aria-label={isFr ? "Page précédente" : "Previous page"}
+            >
+              ←
+            </button>
+            <span className="min-w-[3.5rem] text-center text-xs font-semibold tabular-nums text-[color:var(--hk-muted)]">
+              {safePage + 1}/{pageCount}
+            </span>
+            <button
+              type="button"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => onPageChange(safePage + 1)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[color:var(--hk-border)] text-[color:var(--hk-text)] disabled:opacity-40"
+              aria-label={isFr ? "Page suivante" : "Next page"}
+            >
+              →
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-[color:var(--hk-page)] text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-muted)]">
+            <tr>
+              <th className="px-4 py-3">{isFr ? "Nom" : "Name"}</th>
+              <th className="px-4 py-3">{isFr ? "Statut" : "Status"}</th>
+              <th className="px-4 py-3">Ticket</th>
+              <th className="px-4 py-3">WhatsApp</th>
+              <th className="px-4 py-3">Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {slice.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-12 text-center text-sm text-[color:var(--hk-muted)]"
+                >
+                  {isFr
+                    ? "Aucun inscrit pour le moment."
+                    : "No registrations yet."}
+                </td>
+              </tr>
+            ) : (
+              slice.map((s) => (
+                <tr
+                  key={s.id}
+                  className="border-t border-[color:var(--hk-border)] transition hover:bg-[color:var(--hk-page)]"
+                >
+                  <td className="px-4 py-3 font-semibold text-[color:var(--hk-text)]">
+                    {s.firstName} {s.lastName}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={
+                        s.confirmed
+                          ? "font-bold text-[color:var(--hk-accent)]"
+                          : "font-semibold text-[color:var(--hk-warn-muted)]"
+                      }
+                    >
+                      {paymentStatusLabel(
+                        s.paymentStatus,
+                        s.confirmed,
+                        isFr,
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-[color:var(--hk-muted)]">
+                    {s.ticketCode ?? "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {s.whatsappUrl ? (
+                      <a
+                        href={s.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
+                      >
+                        {isFr ? "Contacter" : "Contact"}
+                      </a>
+                    ) : (
+                      <span className="text-[color:var(--hk-muted)]">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent("McBuleli Hackathon")}`}
+                      className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
+                    >
+                      {isFr ? "Écrire" : "Message"}
+                    </a>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
 }
 
 export function PartnerChatClient() {
@@ -307,6 +541,8 @@ export function PartnerChatClient() {
   const [msgBusy, setMsgBusy] = useState(false);
   const [msgErr, setMsgErr] = useState<string | null>(null);
   const [switchBusy, setSwitchBusy] = useState(false);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [page, setPage] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollBoxRef = useRef<HTMLDivElement>(null);
@@ -493,8 +729,6 @@ export function PartnerChatClient() {
 
   const dates = isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN;
   const hours = isFr ? HACKATHON_HOURS_COMPACT_FR : HACKATHON_HOURS_COMPACT_EN;
-  const total = dash?.stats.total ?? 0;
-  const pctOf = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-10 pt-6 sm:px-6">
@@ -575,7 +809,7 @@ export function PartnerChatClient() {
 
       {!loading && !loadErr && dash?.auth.needLogin ? (
         <section className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-6 shadow-[0_16px_40px_-24px_var(--hk-shadow)] sm:p-8">
-          <div className="mx-auto max-w-md text-center">
+          <div className="mx-auto max-w-lg">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--hk-soft)]">
               <Image
                 src={BRAND_LOGO_MARK_256}
@@ -586,29 +820,32 @@ export function PartnerChatClient() {
                 unoptimized
               />
             </div>
-            <h2 className="mt-4 text-lg font-bold text-[color:var(--hk-text)]">
-              {isFr ? "Connexion requise" : "Sign in required"}
+            <h2 className="mt-4 text-center text-lg font-bold text-[color:var(--hk-text)]">
+              {isFr ? "Connexion partenaire" : "Partner sign-in"}
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+            <p className="mt-2 text-center text-sm leading-relaxed text-[color:var(--hk-muted)]">
               {isFr
-                ? "Les administrateurs McBuleli et les comptes partenaires accèdent ici sans code OTP - connectez-vous avec votre compte McBuleli."
-                : "McBuleli admins and partner accounts enter here without an OTP - sign in with your McBuleli account."}
+                ? "Espace réservé aux membres affiliés et à l'équipe McBuleli - accès avec votre compte, sans OTP."
+                : "Reserved for affiliated members and the McBuleli team - access with your account, no OTP."}
             </p>
-            <a
-              href={dash.auth.loginHref}
-              className="mt-6 inline-flex rounded-xl bg-[color:var(--hk-accent)] px-5 py-3 text-sm font-bold text-white"
-            >
-              {isFr ? "Se connecter" : "Sign in"}
-            </a>
-            <p className="mt-4 text-xs text-[color:var(--hk-muted)]">
-              {isFr ? "Pas encore de compte ?" : "No account yet?"}{" "}
+            <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-muted)]">
+              {isFr ? "Étapes d'intégration" : "Integration steps"}
+            </p>
+            <AffiliateSteps isFr={isFr} mode="login" />
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href={dash.auth.loginHref}
+                className="inline-flex rounded-xl bg-[color:var(--hk-accent)] px-5 py-3 text-sm font-bold text-white"
+              >
+                {isFr ? "Se connecter" : "Sign in"}
+              </a>
               <a
                 href={`/register?next=${encodeURIComponent("/hackathon/chat")}`}
-                className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
+                className="inline-flex rounded-xl border border-[color:var(--hk-border)] px-5 py-3 text-sm font-bold text-[color:var(--hk-text)]"
               >
                 {isFr ? "Créer un compte" : "Create an account"}
               </a>
-            </p>
+            </div>
           </div>
         </section>
       ) : null}
@@ -616,16 +853,20 @@ export function PartnerChatClient() {
       {!loading && !loadErr && dash?.auth.forbidden ? (
         <section className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-6 sm:p-8">
           <h2 className="text-lg font-bold text-[color:var(--hk-text)]">
-            {isFr ? "Accès non autorisé" : "Access not granted"}
+            {isFr ? "Affiliation requise" : "Affiliation required"}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
             {isFr
-              ? "Votre compte McBuleli est connecté, mais il n'est pas rattaché à une organisation partenaire de cet espace. Utilisez l'email principal du partenaire, ou contactez l'équipe McBuleli."
-              : "You're signed in, but this McBuleli account isn't linked to a partner organisation for this space. Use the partner's primary email, or contact the McBuleli team."}
+              ? "Votre compte est connecté, mais il n'est pas encore rattaché à une organisation du roster partenaires."
+              : "You're signed in, but this account is not yet linked to a partner organisation on the roster."}
           </p>
-          <p className="mt-4 text-sm">
+          <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-muted)]">
+            {isFr ? "Étapes pour s'affilier" : "Steps to affiliate"}
+          </p>
+          <AffiliateSteps isFr={isFr} mode="forbidden" />
+          <p className="mt-5 text-sm">
             <a
-              href={`mailto:${SUPPORT_EMAIL}`}
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Affiliation chat partenaires Hackathon")}`}
               className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
             >
               {SUPPORT_EMAIL}
@@ -683,9 +924,18 @@ export function PartnerChatClient() {
             </div>
           ) : null}
 
+          {!dash.auth.staff ? (
+            <div className="mb-5 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-muted)]">
+                {isFr ? "Étapes pour les membres affiliés" : "Steps for affiliated members"}
+              </p>
+              <AffiliateSteps isFr={isFr} mode="inside" />
+            </div>
+          ) : null}
+
           {tab === "vue" ? (
             <section className="space-y-5">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 <Kpi
                   label={isFr ? "Organisations" : "Organisations"}
                   value={dash.stats.total}
@@ -693,20 +943,21 @@ export function PartnerChatClient() {
                 <Kpi
                   label={isFr ? "Confirmés" : "Confirmed"}
                   value={dash.stats.confirmed}
-                  pct={pctOf(dash.stats.confirmed)}
                   tone="ok"
                 />
                 <Kpi
                   label={isFr ? "En cours" : "In progress"}
                   value={dash.stats.inProgress}
-                  pct={pctOf(dash.stats.inProgress)}
                   tone="warn"
                 />
                 <Kpi
                   label={isFr ? "Indéterminés" : "Undetermined"}
                   value={dash.stats.undetermined}
-                  pct={pctOf(dash.stats.undetermined)}
                   tone="muted"
+                />
+                <Kpi
+                  label={isFr ? "Participants" : "Participants"}
+                  value={(dash.participants ?? []).length}
                 />
               </div>
               <StackedBreakdown
@@ -998,103 +1249,17 @@ export function PartnerChatClient() {
           ) : null}
 
           {tab === "participants" ? (
-            <section className="overflow-hidden rounded-2xl bg-[color:var(--hk-surface)] shadow-sm ring-1 ring-[color:var(--hk-border)]">
-              <div className="border-b border-[color:var(--hk-border)] px-5 py-3.5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
-                  {isFr
-                    ? "Inscrits hackathon"
-                    : "Hackathon registrations"}
-                </p>
-                <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
-                  {(dash.participants ?? []).length}{" "}
-                  {isFr ? "participant(s)" : "participant(s)"}
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[color:var(--hk-page)] text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-muted)]">
-                    <tr>
-                      <th className="px-4 py-3">
-                        {isFr ? "Nom" : "Name"}
-                      </th>
-                      <th className="px-4 py-3">
-                        {isFr ? "Statut" : "Status"}
-                      </th>
-                      <th className="px-4 py-3">Ticket</th>
-                      <th className="px-4 py-3">WhatsApp</th>
-                      <th className="px-4 py-3">Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(dash.participants ?? []).length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-4 py-12 text-center text-sm text-[color:var(--hk-muted)]"
-                        >
-                          {isFr
-                            ? "Aucun inscrit pour le moment."
-                            : "No registrations yet."}
-                        </td>
-                      </tr>
-                    ) : (
-                      (dash.participants ?? []).map((s) => (
-                        <tr
-                          key={s.id}
-                          className="border-t border-[color:var(--hk-border)] transition hover:bg-[color:var(--hk-page)]"
-                        >
-                          <td className="px-4 py-3 font-semibold text-[color:var(--hk-text)]">
-                            {s.firstName} {s.lastName}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={
-                                s.confirmed
-                                  ? "font-bold text-[color:var(--hk-accent)]"
-                                  : "font-semibold text-[color:var(--hk-warn-muted)]"
-                              }
-                            >
-                              {paymentStatusLabel(
-                                s.paymentStatus,
-                                s.confirmed,
-                                isFr,
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-xs text-[color:var(--hk-muted)]">
-                            {s.ticketCode ?? "-"}
-                          </td>
-                          <td className="px-4 py-3">
-                            {s.whatsappUrl ? (
-                              <a
-                                href={s.whatsappUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
-                              >
-                                {isFr ? "Contacter" : "Contact"}
-                              </a>
-                            ) : (
-                              <span className="text-[color:var(--hk-muted)]">
-                                -
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <a
-                              href={`mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent("McBuleli Hackathon")}`}
-                              className="font-semibold text-[color:var(--hk-accent)] underline-offset-2 hover:underline"
-                            >
-                              {isFr ? "Écrire" : "Message"}
-                            </a>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            <ParticipantsTable
+              participants={dash.participants ?? []}
+              isFr={isFr}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(n) => {
+                setPageSize(n);
+                setPage(0);
+              }}
+            />
           ) : null}
         </>
       ) : null}
