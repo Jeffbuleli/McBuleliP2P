@@ -147,15 +147,15 @@ async function recomputeTeamStatus(teamId: string): Promise<TeamStatus> {
 export async function markTeamBuilding(teamId: string) {
   const db = getDb();
   const [team] = await db
-    .select({ status: hackathonTeams.status })
+    .select()
     .from(hackathonTeams)
     .where(eq(hackathonTeams.id, teamId))
     .limit(1);
   if (!team) return;
-  if (
-    team.status === "forming" ||
-    team.status === "ready"
-  ) {
+  if (!team.challengeId || !team.rulesAcceptedAt) {
+    throw new TeamError("team_not_ready", 403);
+  }
+  if (team.status === "forming" || team.status === "ready") {
     await db
       .update(hackathonTeams)
       .set({ status: "building", updatedAt: new Date() })
@@ -165,6 +165,18 @@ export async function markTeamBuilding(teamId: string) {
 
 export async function markTeamSubmitted(teamId: string) {
   const db = getDb();
+  const [team] = await db
+    .select()
+    .from(hackathonTeams)
+    .where(eq(hackathonTeams.id, teamId))
+    .limit(1);
+  if (!team) throw new TeamError("not_found", 404);
+  if (!team.challengeId || !team.rulesAcceptedAt) {
+    throw new TeamError("team_not_ready", 403);
+  }
+  if (team.status === "forming" || team.status === "ready") {
+    throw new TeamError("start_build_first", 403);
+  }
   await db
     .update(hackathonTeams)
     .set({ status: "submitted", updatedAt: new Date() })

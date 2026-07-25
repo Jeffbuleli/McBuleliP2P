@@ -3,9 +3,16 @@
  * Separated from DB seed so messaging can evolve without migrations.
  */
 
+import { HACKATHON_PHASES, actorLabel } from "@/lib/hackathon/phases";
+
 export type BenefitItem = { title: string; body: string };
 export type ChallengeItem = { id: string; label: string; blurb: string };
-export type JourneyStep = { step: number; title: string; body: string };
+export type JourneyStep = {
+  step: number;
+  title: string;
+  body: string;
+  actors?: string[];
+};
 export type CriteriaItem = { label: string; weight?: string; body: string };
 export type RewardItem = { title: string; body: string };
 
@@ -118,28 +125,12 @@ export function challengeCategories(isFr: boolean): ChallengeItem[] {
 }
 
 export function journeySteps(isFr: boolean): JourneyStep[] {
-  if (isFr) {
-    return [
-      { step: 1, title: "Inscription", body: "Confirmez votre e-mail, puis réservez votre place (rappels 24 h)." },
-      { step: 2, title: "Validation", body: "Paiement confirmé - ticket QR envoyé par e-mail." },
-      { step: 3, title: "Formation", body: "Bootcamp Vibe Coding (outils IA & ship)." },
-      { step: 4, title: "Hackathon", body: "Build intensif en équipe sur votre défi." },
-      { step: 5, title: "Présentation", body: "Pitch devant le jury et les partenaires." },
-      { step: 6, title: "Délibération", body: "Évaluation selon la grille officielle." },
-      { step: 7, title: "Remise des prix", body: "Récompenses, visibilité et certificats." },
-      { step: 8, title: "Incubation", body: "Accompagnement des projets sélectionnés." },
-    ];
-  }
-  return [
-    { step: 1, title: "Registration", body: "Confirm your email, then hold your seat (24 h reminders)." },
-    { step: 2, title: "Validation", body: "Payment confirmed - QR ticket by email." },
-    { step: 3, title: "Training", body: "Vibe Coding bootcamp (AI tools & ship)." },
-    { step: 4, title: "Hackathon", body: "Intensive team build on your challenge." },
-    { step: 5, title: "Demo day", body: "Pitch before the jury and partners." },
-    { step: 6, title: "Deliberation", body: "Scoring against the official rubric." },
-    { step: 7, title: "Awards", body: "Prizes, visibility and certificates." },
-    { step: 8, title: "Incubation", body: "Support for selected projects." },
-  ];
+  return HACKATHON_PHASES.map((p) => ({
+    step: p.order,
+    title: isFr ? p.titleFr : p.titleEn,
+    body: isFr ? p.bodyFr : p.bodyEn,
+    actors: p.actors.map((id) => actorLabel(id, isFr)),
+  }));
 }
 
 export function evaluationCriteria(isFr: boolean): CriteriaItem[] {

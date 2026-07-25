@@ -46,6 +46,7 @@ import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-f
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
 import { HackathonStickyNav } from "@/components/hackathon/hackathon-sticky-nav";
 import { HackathonLogo } from "@/components/hackathon/hackathon-logo";
+import { HackathonLandingJourney } from "@/components/hackathon/hackathon-phase-stepper";
 import {
   BenefitIcon,
   BulletIcon,
@@ -618,6 +619,24 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             ))}
           </ul>
         </div>
+      </Section>
+
+      {/* Parcours étape par étape + acteurs */}
+      <Section
+        id="parcours"
+        eyebrow={isFr ? "Parcours" : "Journey"}
+        title={
+          isFr
+            ? "Bootcamp → Équipes → Build → Mentorat → Pitch → Jury → Prix"
+            : "Bootcamp → Teams → Build → Mentoring → Pitch → Jury → Awards"
+        }
+        subtitle={
+          isFr
+            ? "Chaque étape a ses acteurs. L'ordre est le fil conducteur de l'événement."
+            : "Each step has its actors. This order is the spine of the event."
+        }
+      >
+        <HackathonLandingJourney isFr={isFr} />
       </Section>
 
       {/* À propos - mentors/jury pliés */}

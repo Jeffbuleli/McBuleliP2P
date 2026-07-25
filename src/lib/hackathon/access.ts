@@ -247,7 +247,14 @@ export async function recordAccessScan(args: {
           "@/lib/hackathon/teams"
         );
         const membership = await getMemberForRegistration(pass.subjectId);
-        if (membership) await markTeamBuilding(membership.team.id);
+        if (
+          membership?.team.challengeId &&
+          membership.team.rulesAcceptedAt &&
+          (membership.team.status === "forming" ||
+            membership.team.status === "ready")
+        ) {
+          await markTeamBuilding(membership.team.id);
+        }
       } catch (e) {
         console.warn("[hackathon] markTeamBuilding on check-in skipped", e);
       }

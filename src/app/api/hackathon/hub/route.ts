@@ -157,6 +157,19 @@ export async function POST(req: Request) {
       if (reg.paymentStatus !== "paid") {
         return NextResponse.json({ error: "payment_required" }, { status: 403 });
       }
+      if (
+        !membership.team.challengeId ||
+        !membership.team.rulesAcceptedAt
+      ) {
+        return NextResponse.json({ error: "team_not_ready" }, { status: 403 });
+      }
+      // Mentoring comes after team is ready / during development.
+      if (membership.team.status === "forming") {
+        return NextResponse.json({ error: "start_build_first" }, { status: 403 });
+      }
+      if (membership.team.status === "ready") {
+        await markTeamBuilding(membership.team.id);
+      }
       const db = getDb();
       const [row] = await db
         .insert(hackathonMentorRequests)

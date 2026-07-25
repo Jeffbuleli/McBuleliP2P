@@ -11,20 +11,20 @@ export const TEAM_STATUSES = [
 export type TeamStatus = (typeof TEAM_STATUSES)[number];
 
 export const TEAM_STATUS_LABELS_FR: Record<TeamStatus, string> = {
-  forming: "Inscrite",
-  ready: "Check-in prêt / défi choisi",
-  building: "Développement en cours",
-  submitted: "Livrables déposés",
-  presented: "Présentation effectuée",
-  judged: "Évaluation terminée",
+  forming: "Formation d'équipe",
+  ready: "Équipe prête (défi + règlement)",
+  building: "Développement",
+  submitted: "Livrables / prêt pitch",
+  presented: "Pitch effectué",
+  judged: "Jury terminé",
 };
 
 export const TEAM_STATUS_LABELS_EN: Record<TeamStatus, string> = {
-  forming: "Registered",
-  ready: "Ready (challenge + rules)",
-  building: "Building",
-  submitted: "Deliverables submitted",
-  presented: "Presented",
+  forming: "Team forming",
+  ready: "Team ready (challenge + rules)",
+  building: "Development",
+  submitted: "Deliverables / pitch ready",
+  presented: "Pitched",
   judged: "Judged",
 };
 
