@@ -2,19 +2,23 @@
 
 Espace commun pour les organisations du McBuleli Hackathon.
 
-## Accès (sans OTP)
+## Accès
 
 1. Ouvrir https://mcbuleli.org/hackathon/chat
-2. **Se connecter** avec un compte McBuleli
-3. **Admin / agent** → entrée directe comme `McBuleli`
-4. **Compte partenaire** → email du compte = email principal de l'org (ou email promo partenaire actif) → entrée `Prénom/Org`
-5. Sinon → message « accès non autorisé »
+2. Connexion compte McBuleli (staff agent/super_admin → McBuleli ; partenaire si email = contact org)
+3. Pas d'OTP
 
 ## Onglets
 
-- **Vue** - KPIs confirmés / en cours / indéterminés
+- **Vue** - KPIs + barres % cohérentes (confirmés / en cours / indéterminés)
 - **Membres** - tableau roster + légende badges SVG
-- **Dialogue** - salle commune (poll 4s)
+- **Dialogue** - salle commune (poll ~5s), texte + image R2
+- **Participants** - inscrits édition (style dashboard ambassadeur)
+
+## Statuts seed (sync à chaque chargement)
+
+Confirmés : ILOKWE, Silikin, pawaPay, Binance, KIMIA, RDPI, Kilelo, TYTS, IA Académie  
+En cours : e-COM SAS, César Group
 
 ## Admin
 
@@ -23,6 +27,6 @@ Espace commun pour les organisations du McBuleli Hackathon.
 ## Tables
 
 - `hackathon_partner_orgs`
-- `hackathon_partner_chat_messages`
+- `hackathon_partner_chat_messages` (+ `image_url`)
 
-Migration : `drizzle/0116_hackathon_partner_chat.sql`
+Migrations : `0116_hackathon_partner_chat.sql`, `0117_hackathon_partner_chat_image.sql`

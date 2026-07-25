@@ -4209,7 +4209,9 @@ export const hackathonPartnerChatMessages = pgTable(
       onDelete: "set null",
     }),
     senderLabel: varchar("sender_label", { length: 80 }).notNull(),
-    body: text("body").notNull(),
+    body: text("body").notNull().default(""),
+    /** Public R2 URL for optional image attachment. */
+    imageUrl: text("image_url"),
     /** chat | system */
     messageType: varchar("message_type", { length: 16 }).notNull().default("chat"),
     createdAt: timestamp("created_at", { withTimezone: true })

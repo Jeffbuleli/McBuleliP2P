@@ -419,7 +419,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             </h1>
             {edition ? (
               <p className="mt-1.5 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
-                {edition.nameFr.replace(/\s*[—–]\s*/g, " - ")}
+                {edition.nameFr.replace(/\s*[\u2014\u2013]\s*/g, " - ")}
               </p>
             ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-2">

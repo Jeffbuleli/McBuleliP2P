@@ -446,14 +446,14 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <CtaPrimary href="#register" onDark>
                 {isFr ? `Participer · ${HACKATHON_PRICE_USD} USD` : `Join · ${HACKATHON_PRICE_USD} USD`}
               </CtaPrimary>
+              <CtaSecondary href="/hackathon/chat" onDark>
+                Chat
+              </CtaSecondary>
               <CtaSecondary href="#programme" onDark>
                 {isFr ? "Voir le programme" : "See the program"}
               </CtaSecondary>
               <CtaSecondary href="/hackathon/ambassadeur" onDark>
                 {isFr ? "Ambassadeur" : "Ambassador"}
-              </CtaSecondary>
-              <CtaSecondary href="/hackathon/chat" onDark>
-                {isFr ? "Chat" : "Chat"}
               </CtaSecondary>
             </div>
           </div>

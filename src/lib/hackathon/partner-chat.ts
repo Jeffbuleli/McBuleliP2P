@@ -4,6 +4,7 @@ import {
   hackathonEditions,
   hackathonPartnerChatMessages,
   hackathonPartnerOrgs,
+  hackathonRegistrations,
 } from "@/db";
 import {
   BINANCE_PARTNER,
@@ -11,6 +12,7 @@ import {
   PAWAPAY_PARTNER,
   SILIKIN_PARTNER,
 } from "@/lib/hackathon/event-content";
+import { whatsappMeUrl } from "@/lib/hackathon/promo";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 
 export type PartnerOrgStatus =
@@ -52,6 +54,7 @@ type SeedOrg = {
   sortOrder: number;
 };
 
+/** Canonical roster + statuses (synced on each ensurePartnerOrgsSeeded). */
 const SEED_ORGS: SeedOrg[] = [
   {
     slug: "ilokwe",
@@ -70,7 +73,7 @@ const SEED_ORGS: SeedOrg[] = [
     logoUrl: SILIKIN_PARTNER.logoUrl,
     contactEmail: "reception_skv@texaf-rdc.com",
     website: SILIKIN_PARTNER.website,
-    status: "in_progress",
+    status: "confirmed",
     sortOrder: 20,
   },
   {
@@ -84,13 +87,23 @@ const SEED_ORGS: SeedOrg[] = [
     sortOrder: 30,
   },
   {
+    slug: "binance",
+    orgName: BINANCE_PARTNER.name,
+    shortName: "Binance",
+    logoUrl: BINANCE_PARTNER.logoUrl,
+    contactEmail: SUPPORT_EMAIL,
+    website: BINANCE_PARTNER.demo,
+    status: "confirmed",
+    sortOrder: 35,
+  },
+  {
     slug: "kimia",
     orgName: "KIMIA Service",
     shortName: "KIMIA",
     logoUrl: null,
     contactEmail: "kimiaservice896@gmail.com",
     website: "https://www.facebook.com/profile.php?id=61560600003901",
-    status: "in_progress",
+    status: "confirmed",
     sortOrder: 40,
   },
   {
@@ -100,8 +113,28 @@ const SEED_ORGS: SeedOrg[] = [
     logoUrl: null,
     contactEmail: "info@rdpithinktank.org",
     website: "https://rdpithinktank.org",
-    status: "in_progress",
+    status: "confirmed",
     sortOrder: 50,
+  },
+  {
+    slug: "kilelo",
+    orgName: "Kilelo",
+    shortName: "Kilelo",
+    logoUrl: null,
+    contactEmail: "support@kileloapp.com",
+    website: "https://kileloapp.com",
+    status: "confirmed",
+    sortOrder: 55,
+  },
+  {
+    slug: "tyts",
+    orgName: "THE YOUNG TECHNOLOGY SERVICE",
+    shortName: "TYTS",
+    logoUrl: null,
+    contactEmail: "nsomoneaaron2@gmail.com",
+    website: null,
+    status: "confirmed",
+    sortOrder: 58,
   },
   {
     slug: "e-com-sas",
@@ -114,24 +147,24 @@ const SEED_ORGS: SeedOrg[] = [
     sortOrder: 60,
   },
   {
-    slug: "binance",
-    orgName: BINANCE_PARTNER.name,
-    shortName: "Binance",
-    logoUrl: BINANCE_PARTNER.logoUrl,
-    contactEmail: SUPPORT_EMAIL,
-    website: BINANCE_PARTNER.demo,
-    status: "undetermined",
-    sortOrder: 70,
+    slug: "cesar-group",
+    orgName: "César Group",
+    shortName: "César",
+    logoUrl: null,
+    contactEmail: "cesargrouprdc@gmail.com",
+    website: "https://cesargroup-rdc.com",
+    status: "in_progress",
+    sortOrder: 65,
   },
   {
-    slug: "kilelo",
-    orgName: "Kilelo",
-    shortName: "Kilelo",
+    slug: "ia-academie-chk",
+    orgName: "IA Académie / CHK",
+    shortName: "IA Académie",
     logoUrl: null,
-    contactEmail: "support@kileloapp.com",
+    contactEmail: "contact@ia-academie.cd",
     website: null,
-    status: "in_progress",
-    sortOrder: 80,
+    status: "confirmed",
+    sortOrder: 70,
   },
 ];
 
@@ -151,7 +184,7 @@ export async function getFeaturedEditionId(): Promise<string | null> {
   return any?.id ?? null;
 }
 
-/** Idempotent seed of known partner orgs for the featured edition. */
+/** Idempotent seed + status sync for known partner orgs. */
 export async function ensurePartnerOrgsSeeded(
   editionId?: string,
 ): Promise<string | null> {
@@ -170,7 +203,22 @@ export async function ensurePartnerOrgsSeeded(
         ),
       )
       .limit(1);
-    if (existing) continue;
+    if (existing) {
+      await db
+        .update(hackathonPartnerOrgs)
+        .set({
+          orgName: org.orgName,
+          shortName: org.shortName,
+          logoUrl: org.logoUrl,
+          contactEmail: org.contactEmail.toLowerCase(),
+          website: org.website,
+          status: org.status,
+          sortOrder: org.sortOrder,
+          updatedAt: new Date(),
+        })
+        .where(eq(hackathonPartnerOrgs.id, existing.id));
+      continue;
+    }
     await db.insert(hackathonPartnerOrgs).values({
       editionId: eid,
       slug: org.slug,
@@ -252,10 +300,10 @@ export async function listPartnerOrgsRoster(
 }
 
 export function partnerOrgStats(orgs: PartnerOrgPublic[]) {
-  const total = orgs.length;
   const confirmed = orgs.filter((o) => o.status === "confirmed").length;
   const inProgress = orgs.filter((o) => o.status === "in_progress").length;
   const undetermined = orgs.filter((o) => o.status === "undetermined").length;
+  const total = confirmed + inProgress + undetermined;
   return { total, confirmed, inProgress, undetermined };
 }
 
@@ -277,6 +325,7 @@ export async function listChatMessages(editionId: string, limit = 80) {
       orgId: hackathonPartnerChatMessages.orgId,
       senderLabel: hackathonPartnerChatMessages.senderLabel,
       body: hackathonPartnerChatMessages.body,
+      imageUrl: hackathonPartnerChatMessages.imageUrl,
       messageType: hackathonPartnerChatMessages.messageType,
       createdAt: hackathonPartnerChatMessages.createdAt,
       orgShortName: hackathonPartnerOrgs.shortName,
@@ -303,6 +352,7 @@ export async function listChatMessages(editionId: string, limit = 80) {
       orgStatus: r.orgStatus ? asStatus(r.orgStatus) : null,
       orgLogoUrl: r.orgLogoUrl,
       body: r.body,
+      imageUrl: r.imageUrl,
       messageType: r.messageType,
       createdAt: r.createdAt.toISOString(),
     }))
@@ -314,9 +364,11 @@ export async function postChatMessage(args: {
   orgId: string | null;
   senderLabel: string;
   body: string;
+  imageUrl?: string | null;
 }) {
   const body = args.body.trim().slice(0, 4000);
-  if (!body) throw new Error("empty_body");
+  const imageUrl = args.imageUrl?.trim() || null;
+  if (!body && !imageUrl) throw new Error("empty_body");
   const label = args.senderLabel.trim().slice(0, 80) || "Membre";
   const db = getDb();
   const [row] = await db
@@ -325,7 +377,8 @@ export async function postChatMessage(args: {
       editionId: args.editionId,
       orgId: args.orgId,
       senderLabel: label,
-      body,
+      body: body || (imageUrl ? " " : ""),
+      imageUrl,
       messageType: "chat",
     })
     .returning({ id: hackathonPartnerChatMessages.id });
@@ -352,4 +405,55 @@ export async function countPartnerOrgMessages(editionId: string) {
     .from(hackathonPartnerChatMessages)
     .where(eq(hackathonPartnerChatMessages.editionId, editionId));
   return row?.n ?? 0;
+}
+
+export type PartnerChatParticipant = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  whatsapp: string | null;
+  whatsappUrl: string | null;
+  paymentStatus: string;
+  ticketCode: string | null;
+  confirmed: boolean;
+  createdAt: string;
+};
+
+export async function listEditionParticipants(
+  editionId: string,
+): Promise<PartnerChatParticipant[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: hackathonRegistrations.id,
+      firstName: hackathonRegistrations.firstName,
+      lastName: hackathonRegistrations.lastName,
+      email: hackathonRegistrations.email,
+      phone: hackathonRegistrations.phone,
+      whatsapp: hackathonRegistrations.whatsapp,
+      paymentStatus: hackathonRegistrations.paymentStatus,
+      ticketCode: hackathonRegistrations.ticketCode,
+      createdAt: hackathonRegistrations.createdAt,
+    })
+    .from(hackathonRegistrations)
+    .where(eq(hackathonRegistrations.editionId, editionId))
+    .orderBy(desc(hackathonRegistrations.createdAt))
+    .limit(500);
+
+  return rows.map((r) => {
+    const status = (r.paymentStatus || "").toLowerCase();
+    const confirmed =
+      status === "paid" ||
+      status === "confirmed" ||
+      status === "succeeded" ||
+      status === "success";
+    return {
+      ...r,
+      whatsappUrl: whatsappMeUrl(r.whatsapp || r.phone),
+      confirmed,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
 }

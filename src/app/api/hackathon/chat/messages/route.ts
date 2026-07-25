@@ -6,12 +6,26 @@ import {
   postChatMessage,
 } from "@/lib/hackathon/partner-chat";
 import { requirePartnerChatAuth } from "@/lib/hackathon/partner-chat-auth";
+import { getCommunityR2Config } from "@/lib/community/media-r2";
 
 export const dynamic = "force-dynamic";
 
 const postZ = z.object({
-  body: z.string().trim().min(1).max(4000),
+  body: z.string().trim().max(4000).optional().default(""),
+  imageUrl: z.string().url().max(2000).optional().nullable(),
 });
+
+function isAllowedChatImageUrl(url: string): boolean {
+  const cfg = getCommunityR2Config();
+  if (!cfg?.publicBaseUrl) return false;
+  try {
+    const u = new URL(url);
+    const base = new URL(cfg.publicBaseUrl);
+    return u.origin === base.origin && u.pathname.includes("hackathon-chat/");
+  } catch {
+    return false;
+  }
+}
 
 const lastPostBySession = new Map<string, number>();
 
@@ -63,12 +77,22 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid_body" }, { status: 400 });
     }
+    const body = parsed.data.body?.trim() ?? "";
+    const imageUrlRaw = parsed.data.imageUrl?.trim() || null;
+    if (imageUrlRaw && !isAllowedChatImageUrl(imageUrlRaw)) {
+      return NextResponse.json({ error: "invalid_image" }, { status: 400 });
+    }
+    const imageUrl = imageUrlRaw;
+    if (!body && !imageUrl) {
+      return NextResponse.json({ error: "empty_body" }, { status: 400 });
+    }
 
     await postChatMessage({
       editionId,
       orgId: auth.session.orgId,
       senderLabel: auth.session.displayName,
-      body: parsed.data.body,
+      body,
+      imageUrl,
     });
     const messages = await listChatMessages(editionId);
     return NextResponse.json({ ok: true, messages });

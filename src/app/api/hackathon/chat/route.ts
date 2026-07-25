@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   countPartnerOrgMessages,
   ensurePartnerOrgsSeeded,
+  listEditionParticipants,
   listPartnerOrgsRoster,
   partnerOrgStats,
 } from "@/lib/hackathon/partner-chat";
@@ -10,7 +11,7 @@ import { loginHrefFor } from "@/lib/auth-return-path";
 
 export const dynamic = "force-dynamic";
 
-/** Vue stats + roster. Auth via McBuleli session (admin / partner account). */
+/** Vue stats + roster + participants. Auth via McBuleli session. */
 export async function GET() {
   try {
     const editionId = await ensurePartnerOrgsSeeded();
@@ -20,6 +21,7 @@ export async function GET() {
         stats: { total: 0, confirmed: 0, inProgress: 0, undetermined: 0 },
         messageCount: 0,
         orgs: [],
+        participants: [],
         auth: {
           verified: false,
           needLogin: true,
@@ -44,12 +46,16 @@ export async function GET() {
     const orgs = await listPartnerOrgsRoster(editionId, verified);
     const stats = partnerOrgStats(orgs);
     const messageCount = await countPartnerOrgMessages(editionId);
+    const participants = verified
+      ? await listEditionParticipants(editionId)
+      : [];
 
     return NextResponse.json({
       editionId,
       stats,
       messageCount,
       orgs,
+      participants,
       auth: {
         verified,
         needLogin: !access.ok && access.error === "login_required",

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Échange partenaires - McBuleli Hackathon",
   description:
-    "Espace d'échange entre partenaires du McBuleli Hackathon : vue, roster et dialogue.",
+    "Espace d'échange entre partenaires du McBuleli Hackathon : vue, roster, dialogue et participants.",
   robots: { index: false, follow: false },
 };
 
