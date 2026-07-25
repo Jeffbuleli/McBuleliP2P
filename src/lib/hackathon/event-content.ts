@@ -191,6 +191,21 @@ export const SILIKIN_PARTNER = {
     "Innovation and entrepreneurship hub in Kinshasa (Gombe). Hosts the McBuleli Hackathon: bootcamp, build and Demo Day.",
 } as const;
 
+/** Confirmed digital / SaaS partner (Kisangani → Kinshasa ecosystem). */
+export const SANJA_PARTNER = {
+  name: "SanJa",
+  roleFr: "Partenaire Transformation Numérique & SaaS",
+  roleEn: "Digital Transformation & SaaS Partner",
+  website: "https://www.sanjaservice.com/",
+  logoUrl: "/partners/sanja-service-logo.png?v=20260725c",
+  contactName: "Ir Joseph TOKOMBE",
+  email: "josephtokombe@icloud.com",
+  blurbFr:
+    "Basée à Kisangani, SanJa (Sanja Service) accompagne la transformation numérique en RDC : SaaS (Commerce, GPME), cloud, web & apps, réseaux et formation. Partenaire confirmé pour mentorat produit / tech et relais auprès des PME.",
+  blurbEn:
+    "Based in Kisangani, SanJa (Sanja Service) drives digital transformation in DRC: SaaS (Commerce, GPME), cloud, web & apps, networks and training. Confirmed partner for product/tech mentoring and SME outreach.",
+} as const;
+
 /** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
 export type HackathonFeaturedLogo = {
   id: string;
@@ -230,6 +245,14 @@ export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
       tileBgClass: "bg-[#2e5506]",
       // Square asset: cover in a square tile = edge-to-edge, no letterbox “frame”.
       fit: "cover",
+    },
+    {
+      id: "sanja",
+      name: SANJA_PARTNER.name,
+      logoUrl: SANJA_PARTNER.logoUrl,
+      href: SANJA_PARTNER.website,
+      tileBgClass: "bg-[#F5F2EB]",
+      fit: "contain",
     },
   ];
 }

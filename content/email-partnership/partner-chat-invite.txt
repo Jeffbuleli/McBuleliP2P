@@ -7,8 +7,10 @@ https://mcbuleli.org/hackathon/chat
 
 COMMENT REJOINDRE
 1. Créez (ou utilisez) un compte McBuleli avec l'email principal de votre organisation.
-2. Connectez-vous - pas de code OTP.
+2. Connectez-vous.
 3. Accédez à Vue, Membres, Dialogue et Participants.
+
+NB : Une autre personne de votre organisation peut aussi rejoindre : un code OTP lui sera envoyé sur l'email principal de l'organisation.
 
 À QUOI ÇA SERT
 - Voir le roster et le statut de chaque partenaire

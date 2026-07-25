@@ -10,6 +10,7 @@ import {
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
   PAWAPAY_PARTNER,
+  SANJA_PARTNER,
   SILIKIN_PARTNER,
 } from "@/lib/hackathon/event-content";
 import { whatsappMeUrl } from "@/lib/hackathon/promo";
@@ -105,6 +106,16 @@ const SEED_ORGS: SeedOrg[] = [
     website: "https://www.facebook.com/profile.php?id=61560600003901",
     status: "confirmed",
     sortOrder: 40,
+  },
+  {
+    slug: "sanja-service",
+    orgName: SANJA_PARTNER.name,
+    shortName: "SanJa",
+    logoUrl: SANJA_PARTNER.logoUrl,
+    contactEmail: SANJA_PARTNER.email,
+    website: SANJA_PARTNER.website,
+    status: "confirmed",
+    sortOrder: 42,
   },
   {
     slug: "rdpi",

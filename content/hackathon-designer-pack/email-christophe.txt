@@ -1,0 +1,32 @@
+Bonjour Ir Christophe CHIBEMBE,
+
+Voici le pack pour réaliser le poste publicitaire vidéo du McBuleli Hackathon sur les réseaux sociaux.
+
+COMPRENDRE L'ÉVÉNEMENT
+McBuleli Hackathon - 28-29 août 2026 - Silikin Village, Kinshasa (08h00-17h00).
+Format : Bootcamp Vibe Coding (code avec IA : Cursor, Claude, Codex) → constitution d'équipes → défis terrain → Demo Day devant un jury rigoureux → remise des prix.
+
+INTÉRÊT DE PARTICIPER
+- Se former concrètement au code assisté par l'IA
+- Se constituer en équipe et livrer sous contrainte
+- Présenter devant un jury exigeant
+- Tenter de gagner les prix (dont Prix ILOKWE)
+
+CHARTE (rappel)
+Accent vert #1f6b43 · fond clair #fafaf8 · texte #222222 · dark #0c1210 / accent #3d9b68
+Logos McBuleli joints (dossier brand/).
+
+ASSETS JOINTS
+- brand/ : logos McBuleli
+- photos-ccb/ : photos ambiance (CCB)
+- qr-jeff243-mcbuleli.png : QR avec logo McBuleli
+  Lien : https://mcbuleli.org/hackathon?promo=JEFF243#register
+  Code promo : JEFF243
+- BRIEF.md : brief complet
+
+Page : https://mcbuleli.org/hackathon
+
+Cordialement,
+McBuleli Team
+Mme Patty B.
+hi@mcbuleli.org

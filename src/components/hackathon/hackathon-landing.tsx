@@ -23,6 +23,7 @@ import {
   PAWAPAY_PARTNER,
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
+  SANJA_PARTNER,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
   hackathonFeaturedJury,
@@ -804,6 +805,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 const cover = p.fit === "cover";
                 const isBinance = /binance/i.test(p.name);
                 const isIlokwe = /ilokwe/i.test(p.name);
+                const isSanja = /sanja/i.test(p.name);
                 const brandBleed = isBinance || isIlokwe;
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -813,7 +815,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     className={
                       brandBleed || cover
                         ? "h-full w-full object-cover object-center"
-                        : "max-h-10 max-w-full object-contain object-center"
+                        : isSanja
+                          ? "max-h-[3.75rem] w-full max-w-[9rem] scale-125 object-contain object-center"
+                          : "max-h-10 max-w-full object-contain object-center"
                     }
                   />
                 ) : (
@@ -824,7 +828,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 const cls = `flex items-center justify-center overflow-hidden rounded-xl ${
                   isIlokwe ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]" : "h-16"
                 } ${
-                  brandBleed || cover || p.placeholder ? "p-0" : "px-3"
+                  brandBleed || cover || p.placeholder
+                    ? "p-0"
+                    : isSanja
+                      ? "px-1"
+                      : "px-3"
                 } ${
                   brandBleed
                     ? "border-0 shadow-none ring-0"
@@ -919,7 +927,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="pawaPay · Binance · ILOKWE"
+            subtitle="pawaPay · Binance · ILOKWE · SanJa"
           >
             <div className="space-y-4">
               {[
@@ -959,6 +967,18 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   cover: false,
                   borderless: true,
                 },
+                {
+                  href: SANJA_PARTNER.website,
+                  logo: SANJA_PARTNER.logoUrl,
+                  alt: SANJA_PARTNER.name,
+                  tile: "bg-[#F5F2EB]",
+                  role: isFr ? SANJA_PARTNER.roleFr : SANJA_PARTNER.roleEn,
+                  name: SANJA_PARTNER.name,
+                  body: isFr ? SANJA_PARTNER.blurbFr : SANJA_PARTNER.blurbEn,
+                  meta: "sanjaservice.com · Kisangani · SaaS & digital",
+                  cover: false,
+                  borderless: false,
+                },
               ].map((p) => (
                 <a
                   key={p.name}
@@ -972,11 +992,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${p.tile} ${
                         /ilokwe/i.test(p.name)
                           ? "aspect-square h-auto w-[6.5rem] sm:w-28"
-                          : "h-16 w-full max-w-[11rem] sm:w-44"
+                          : /sanja/i.test(p.name)
+                            ? "h-14 w-full max-w-[15rem] px-3 py-2 sm:h-16 sm:w-56"
+                            : "h-16 w-full max-w-[11rem] sm:w-44"
                       } ${
                         p.borderless
                           ? "border-0 p-0 shadow-none ring-0"
-                          : `border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${p.cover ? "p-0" : "p-2"}`
+                          : `border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${
+                              p.cover ? "p-0" : /sanja/i.test(p.name) ? "" : "p-2"
+                            }`
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}

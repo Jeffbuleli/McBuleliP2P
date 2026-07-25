@@ -71,6 +71,12 @@ export async function sendEmail(args: {
   html: string;
   text?: string;
   inlineAttachments?: ResendInlineAttachment[];
+  /** Regular downloadable attachments (no CID). */
+  fileAttachments?: {
+    filename: string;
+    content: string;
+    content_type?: string;
+  }[];
   /** Override default noreply@ (e.g. partnership outreach from hi@). */
   from?: string;
   replyTo?: string;
@@ -96,15 +102,23 @@ export async function sendEmail(args: {
       replyTo,
       subject: args.subject,
       preview: args.text ?? args.html.slice(0, 240),
+      files: args.fileAttachments?.map((f) => f.filename),
     });
   }
 
-  const attachments = args.inlineAttachments?.map((a) => ({
-    filename: a.filename,
-    content: a.content,
-    content_id: a.content_id,
-    content_type: a.content_type,
-  }));
+  const attachments = [
+    ...(args.inlineAttachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      content_id: a.content_id,
+      content_type: a.content_type,
+    })) ?? []),
+    ...(args.fileAttachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      content_type: a.content_type,
+    })) ?? []),
+  ];
 
   const res = await resendFetch("/emails", {
     method: "POST",
@@ -120,7 +134,7 @@ export async function sendEmail(args: {
       headers: {
         "X-Entity-Ref-ID": crypto.randomUUID(),
       },
-      ...(attachments?.length ? { attachments } : {}),
+      ...(attachments.length ? { attachments } : {}),
     }),
   });
 

@@ -24,7 +24,7 @@ Espace commun pour les organisations du McBuleli Hackathon.
 
 ## Statuts seed (sync à chaque chargement)
 
-Confirmés : ILOKWE, pawaPay, Binance, KIMIA, RDPI, Kilelo, TYTS, IA Académie  
+Confirmés : ILOKWE, pawaPay, Binance, KIMIA, SanJa, RDPI, Kilelo, TYTS, IA Académie  
 En cours : Silikin, e-COM SAS, César Group
 
 ## Admin

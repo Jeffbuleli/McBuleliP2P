@@ -12,6 +12,7 @@ import {
   HACKATHON_VENUE_SHORT,
   ILOKWE_PARTNER,
   PAWAPAY_PARTNER,
+  SANJA_PARTNER,
   hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
 import {
@@ -60,6 +61,11 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
     ilokwe: {
       roleFr: ILOKWE_PARTNER.roleFr,
       href: ILOKWE_PARTNER.facebook,
+      contentType: "image/png",
+    },
+    sanja: {
+      roleFr: SANJA_PARTNER.roleFr,
+      href: SANJA_PARTNER.website,
       contentType: "image/png",
     },
   };

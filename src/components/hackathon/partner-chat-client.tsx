@@ -317,12 +317,12 @@ function AffiliateSteps({
       ? isFr
         ? [
             "Créez un compte McBuleli avec l'email principal de votre organisation.",
-            "Connectez-vous (pas de code OTP).",
+            "Connectez-vous.",
             "Accédez à Vue, Membres, Dialogue et Participants.",
           ]
         : [
             "Create a McBuleli account with your organisation's primary email.",
-            "Sign in (no OTP).",
+            "Sign in.",
             "Open Overview, Members, Dialogue and Participants.",
           ]
       : mode === "forbidden"
@@ -853,13 +853,19 @@ export function PartnerChatClient() {
             </h2>
             <p className="mt-2 text-center text-sm leading-relaxed text-[color:var(--hk-muted)]">
               {isFr
-                ? "Espace réservé aux membres affiliés et à l'équipe McBuleli - accès avec votre compte, sans OTP."
-                : "Reserved for affiliated members and the McBuleli team - access with your account, no OTP."}
+                ? "Espace réservé aux membres affiliés et à l'équipe McBuleli - accès avec votre compte."
+                : "Reserved for affiliated members and the McBuleli team - access with your account."}
             </p>
             <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--hk-muted)]">
               {isFr ? "Étapes d'intégration" : "Integration steps"}
             </p>
             <AffiliateSteps isFr={isFr} mode="login" />
+            <p className="mt-4 rounded-xl bg-[color:var(--hk-soft)] px-3 py-2.5 text-left text-xs leading-relaxed text-[color:var(--hk-muted)]">
+              <strong className="text-[color:var(--hk-text)]">NB :</strong>{" "}
+              {isFr
+                ? "Une autre personne de l'organisation peut aussi rejoindre : un code OTP sera envoyé sur l'email principal de l'organisation."
+                : "Another person from the organisation can also join: an OTP will be sent to the organisation's primary email."}
+            </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <a
                 href={dash.auth.loginHref}

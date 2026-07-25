@@ -50,6 +50,7 @@ export const PARTNER_CHAT_INVITE_RECIPIENTS: {
     to: "cesargrouprdc@gmail.com",
     cc: ["contact@cesargroup-rdc.com"],
   },
+  { label: "SanJa", to: "josephtokombe@icloud.com" },
   { label: "IA Academie / CHK", to: "contact@ia-academie.cd" },
 ];
 
