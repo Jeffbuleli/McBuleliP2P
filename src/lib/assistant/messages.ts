@@ -1,4 +1,4 @@
-/** AI Assistant UI strings — EN / FR / SW (Swahili). */
+/** AI Assistant UI strings - EN / FR / SW (Swahili). */
 export type AssistantLocale = "en" | "fr" | "sw";
 
 export type AssistantMessages = {

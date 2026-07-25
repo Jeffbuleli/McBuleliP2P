@@ -100,7 +100,7 @@ export const HACKATHON_HOURS_LABEL_EN = "8:00 AM – 5:00 PM";
 export const HACKATHON_HOURS_COMPACT_FR = "8h00 - 17h00";
 export const HACKATHON_HOURS_COMPACT_EN = "8:00 AM - 5:00 PM";
 
-/** Day 1 door open — Africa/Kinshasa (UTC+1). */
+/** Day 1 door open - Africa/Kinshasa (UTC+1). */
 export const HACKATHON_START_AT = "2026-08-28T08:00:00+01:00";
 
 export const HACKATHON_VENUE_SHORT = "Silikin Village";
@@ -313,12 +313,23 @@ export function hackathonFeaturedJury(): HackathonFeaturedJury[] {
       id: "jury-ilokwe-christian",
       name: ILOKWE_PARTNER.contactName,
       company: ILOKWE_PARTNER.name,
-      titleFr: "Jury · Agriculture & AgriBusiness",
-      titleEn: "Jury · Agriculture & AgriBusiness",
-      expertiseFr: "AgroTech · Prix ILOKWE",
-      expertiseEn: "AgroTech · ILOKWE Prize",
+      titleFr: "Jury - Agriculture & AgriBusiness",
+      titleEn: "Jury - Agriculture & AgriBusiness",
+      expertiseFr: "AgroTech - Prix ILOKWE",
+      expertiseEn: "AgroTech - ILOKWE Prize",
       photoUrl: null,
       href: ILOKWE_PARTNER.facebook,
+    },
+    {
+      id: "jury-rdpi-aristote",
+      name: "Aristote MUGISHO",
+      company: "RDPI Think Tank",
+      titleFr: "Jury - Policy & Impact",
+      titleEn: "Jury - Policy & Impact",
+      expertiseFr: "Politiques publiques - Impact socio-économique",
+      expertiseEn: "Public policy - Socio-economic impact",
+      photoUrl: null,
+      href: "https://rdpithinktank.org/",
     },
   ];
 }

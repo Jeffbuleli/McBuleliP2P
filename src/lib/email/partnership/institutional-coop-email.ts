@@ -67,9 +67,9 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     roleTitle: "Sponsor & Partenaire principal",
     askPrincipalSponsor: true,
     whyThem:
-      "La Délégation de l'UE à Kinshasa joue un rôle central pour accompagner la transformation numérique, l'emploi des jeunes et un développement durable ancré dans les compétences. Le McBuleli Hackathon 2026 est un moment concret pour démontrer — à Silikin Village — ce que l'IA pratique peut changer pour la jeunesse congolaise.",
+      "La Délégation de l'UE à Kinshasa joue un rôle central pour accompagner la transformation numérique, l'emploi des jeunes et un développement durable ancré dans les compétences. Le McBuleli Hackathon 2026 est un moment concret pour démontrer - à Silikin Village - ce que l'IA pratique peut changer pour la jeunesse congolaise.",
     withYouImpact:
-      "Avec l'UE comme Sponsor et Partenaire principal, l'événement gagne une portée institutionnelle majeure : plus de bourses participants, un Demo Day d'envergure, une visibilité régionale, et un signal fort — la maîtrise de l'IA comme levier de croissance rapide pour notre communauté.",
+      "Avec l'UE comme Sponsor et Partenaire principal, l'événement gagne une portée institutionnelle majeure : plus de bourses participants, un Demo Day d'envergure, une visibilité régionale, et un signal fort - la maîtrise de l'IA comme levier de croissance rapide pour notre communauté.",
     expectedFromPartner: [
       "Sponsoring principal (visibilité naming / Platinum selon modalités)",
       "Appui à l'impact : bourses participants, mentorat, ou contribution logistique",
@@ -92,7 +92,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     domainLabel: "Coopération belge · compétences & emploi",
     roleTitle: "Partenaire Compétences numériques & emploi jeunes",
     whyThem:
-      "Enabel accompagne en RDC des programmes de compétences, d'emploi et de développement durable. Le McBuleli Hackathon forme des builders à l'IA pratique — exactement le type de compétences qui accélèrent l'employabilité et l'entrepreneuriat numérique.",
+      "Enabel accompagne en RDC des programmes de compétences, d'emploi et de développement durable. Le McBuleli Hackathon forme des builders à l'IA pratique - exactement le type de compétences qui accélèrent l'employabilité et l'entrepreneuriat numérique.",
     withYouImpact:
       "Votre appui (technique, mentorat, diffusion, et/ou contribution) permettrait d'élargir l'accès des jeunes aux outils IA et de relier les prototypes à des trajectoires d'emploi et d'accompagnement déjà portées par Enabel.",
     expectedFromPartner: [
@@ -120,7 +120,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     whyThem:
       "La Coopération suisse en RDC soutient un développement durable et des opportunités concrètes pour les populations. Former une génération capable d'utiliser l'IA pour résoudre des problèmes locaux accélère précisément ce type d'impact.",
     withYouImpact:
-      "En rejoignant le hackathon, vous renforceriez un espace pratique où les jeunes construisent des solutions (santé, agriculture, éducation, gouvernance) — et où la maîtrise de l'IA devient un accélérateur de croissance communautaire, pas seulement un sujet technologique.",
+      "En rejoignant le hackathon, vous renforceriez un espace pratique où les jeunes construisent des solutions (santé, agriculture, éducation, gouvernance) - et où la maîtrise de l'IA devient un accélérateur de croissance communautaire, pas seulement un sujet technologique.",
     expectedFromPartner: [
       "Appui institutionnel / partenaires (mentorat, jury impact, ou contribution)",
       "Option relais auprès de vos réseaux et programmes en RDC",
@@ -142,7 +142,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     domainLabel: "Formation digitale · Orange",
     roleTitle: "Partenaire Formation digitale & talents IA",
     whyThem:
-      "L'Orange Digital Center forme et accompagne les talents numériques en RDC. Le McBuleli Hackathon prolonge cette mission sur 2 jours intensifs : Vibe Coding, build produit et Demo Day — pour que l'IA soit maîtrisée, pas seulement découverte.",
+      "L'Orange Digital Center forme et accompagne les talents numériques en RDC. Le McBuleli Hackathon prolonge cette mission sur 2 jours intensifs : Vibe Coding, build produit et Demo Day - pour que l'IA soit maîtrisée, pas seulement découverte.",
     withYouImpact:
       "Ensemble, ODC et McBuleli peuvent montrer qu'une communauté qui sait utiliser l'IA construit plus vite, forme plus de builders opérationnels, et accélère l'innovation locale autour des défis concrets de la RDC.",
     expectedFromPartner: [
@@ -169,7 +169,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     whyThem:
       "Génération sans limites (GenU) / UNICEF mise sur les compétences, l'emploi et l'engagement des jeunes. L'IA pratique est aujourd'hui un levier décisif : la maîtriser, c'est donner aux jeunes les moyens d'apprendre, créer et entreprendre plus vite.",
     withYouImpact:
-      "Votre appui permettrait d'élargir l'accès des jeunes au hackathon, de renforcer le mentorat, et de relier les prototypes à une trajectoire d'impact jeunesse — pour que l'IA accélère réellement la croissance de notre communauté.",
+      "Votre appui permettrait d'élargir l'accès des jeunes au hackathon, de renforcer le mentorat, et de relier les prototypes à une trajectoire d'impact jeunesse - pour que l'IA accélère réellement la croissance de notre communauté.",
     expectedFromPartner: [
       "Relais auprès des jeunes / réseaux GenU et partenaires jeunesse",
       "Option atelier : compétences numériques, IA responsable, employabilité",
@@ -191,9 +191,9 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     domainLabel: "Tech locale · innovation",
     roleTitle: "Partenaire Tech locale & innovation",
     whyThem:
-      "Congo Tech s'inscrit dans l'écosystème technologique local. Le McBuleli Hackathon rassemble builders, mentors et partenaires pour produire des prototypes IA utiles — une opportunité de croiser votre expertise terrain avec une génération qui apprend à construire plus vite grâce à l'IA.",
+      "Congo Tech s'inscrit dans l'écosystème technologique local. Le McBuleli Hackathon rassemble builders, mentors et partenaires pour produire des prototypes IA utiles - une opportunité de croiser votre expertise terrain avec une génération qui apprend à construire plus vite grâce à l'IA.",
     withYouImpact:
-      "En étant partenaire, vous aidez à ancrer l'événement dans le tissu tech congolais : mentorat métier, diffusion, et mise en relation — pour que la maîtrise de l'IA serve la croissance rapide de solutions locales.",
+      "En étant partenaire, vous aidez à ancrer l'événement dans le tissu tech congolais : mentorat métier, diffusion, et mise en relation - pour que la maîtrise de l'IA serve la croissance rapide de solutions locales.",
     expectedFromPartner: [
       "Mentorat court ou regard expert sur les prototypes",
       "Option relais auprès de votre réseau tech / clients",
@@ -217,7 +217,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     whyThem:
       "Le service de communication du PNUD en RDC valorise les initiatives qui transforment concrètement les communautés. Le McBuleli Hackathon montre l'impact de l'IA maîtrisée : jeunes qui construisent des solutions locales en 48 heures, avec mentorat et Demo Day.",
     withYouImpact:
-      "Avec le PNUD en appui communication / partenariat, l'histoire de ces builders — et le message « maîtriser l'IA pour accélérer la croissance » — peut toucher bien plus large : institutions, médias, jeunesse et partenaires de développement.",
+      "Avec le PNUD en appui communication / partenariat, l'histoire de ces builders - et le message « maîtriser l'IA pour accélérer la croissance » - peut toucher bien plus large : institutions, médias, jeunesse et partenaires de développement.",
     expectedFromPartner: [
       "Conseil / appui communication autour de l'événement et de l'impact IA",
       "Option relais sur vos canaux PNUD (selon validation interne)",
@@ -239,9 +239,9 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     domainLabel: "Coopération allemande · transformation",
     roleTitle: "Partenaire Transformation digitale & compétences",
     whyThem:
-      "La GIZ accompagne en RDC des dynamiques de transformation et de compétences. Le McBuleli Hackathon forme des builders à l'utilisation concrète de l'IA — un accélérateur pour l'innovation locale, l'employabilité et des services numériques utiles.",
+      "La GIZ accompagne en RDC des dynamiques de transformation et de compétences. Le McBuleli Hackathon forme des builders à l'utilisation concrète de l'IA - un accélérateur pour l'innovation locale, l'employabilité et des services numériques utiles.",
     withYouImpact:
-      "Votre partenariat renforcerait la portée et la qualité du programme (mentorat, bourses, expertise) — et montrerait qu'une communauté qui maîtrise l'IA peut croître plus vite, avec des prototypes ancrés dans les défis congolais.",
+      "Votre partenariat renforcerait la portée et la qualité du programme (mentorat, bourses, expertise) - et montrerait qu'une communauté qui maîtrise l'IA peut croître plus vite, avec des prototypes ancrés dans les défis congolais.",
     expectedFromPartner: [
       "Appui technique / mentorat (digital, innovation, compétences)",
       "Option contribution (bourses, atelier, ou soutien selon modalités GIZ)",
@@ -290,16 +290,16 @@ export function buildInstitutionalCoopEmail(
   const year = new Date().getFullYear();
 
   const subject = profile.askPrincipalSponsor
-    ? `McBuleli Hackathon × ${profile.orgName} — invitation Sponsor & Partenaire principal`
-    : `McBuleli Hackathon × ${profile.orgName} — partenariat & impact IA`;
+    ? `McBuleli Hackathon × ${profile.orgName} - invitation Sponsor & Partenaire principal`
+    : `McBuleli Hackathon × ${profile.orgName} - partenariat & impact IA`;
 
   const preheader = profile.askPrincipalSponsor
-    ? "Portée, impact IA, partenaires déjà confirmés — et ce que l'événement devient avec l'UE comme partenaire principal."
+    ? "Portée, impact IA, partenaires déjà confirmés - et ce que l'événement devient avec l'UE comme partenaire principal."
     : "Où nous en sommes, impact de l'IA pour la jeunesse en RDC, et rôle sur mesure pour votre organisation.";
 
   const sponsorshipNote = profile.askPrincipalSponsor
-    ? "Nous vous sollicitons explicitement comme Sponsor et Partenaire principal — pour amplifier la portée et l'impact de l'événement."
-    : "L'appui peut être technique, mentorat, communication, bourses, et/ou contribution selon vos modalités — l'essentiel est d'avancer ensemble sur l'impact.";
+    ? "Nous vous sollicitons explicitement comme Sponsor et Partenaire principal - pour amplifier la portée et l'impact de l'événement."
+    : "L'appui peut être technique, mentorat, communication, bourses, et/ou contribution selon vos modalités - l'essentiel est d'avancer ensemble sur l'impact.";
 
   const text = [
     `Bonjour ${profile.greeting}`,
@@ -321,7 +321,7 @@ export function buildInstitutionalCoopEmail(
     "",
     "D'autres acteurs (campus, médias, services, FinTech) sont en discussion. Nous déployons aussi un réseau d'ambassadeurs universitaires.",
     "",
-    `RÔLE PROPOSÉ — ${profile.roleTitle}`,
+    `RÔLE PROPOSÉ - ${profile.roleTitle}`,
     `(${profile.domainLabel})`,
     "",
     profile.withYouImpact,
@@ -336,7 +336,7 @@ export function buildInstitutionalCoopEmail(
     "",
     "PROCHAINE ÉTAPE",
     "Merci de nous renvoyer :",
-    "1) Intérêt — oui / à discuter / pas maintenant",
+    "1) Intérêt - oui / à discuter / pas maintenant",
     "2) Contact référent (nom, fonction, email, téléphone / WhatsApp)",
     "3) Modalités envisagées (sponsor, mentorat, communication, bourses, autre)",
     "4) Logo officiel PNG/SVG (si intérêt confirmé)",
@@ -401,13 +401,13 @@ export function buildInstitutionalCoopEmail(
                 Où nous en sommes
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Dates</strong> — ven. 28 &amp; sam. 29 août 2026, 08h00–17h00</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Dates</strong> - ven. 28 &amp; sam. 29 août 2026, 08h00–17h00</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Lieu</strong> — Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Lieu</strong> - Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Format</strong> — Formation IA (Vibe Coding) + compétition + mentorat + Demo Day</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Format</strong> - Formation IA (Vibe Coding) + compétition + mentorat + Demo Day</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Défis</strong> — IA, FinTech, GovTech, Santé, Agriculture, Éducation, Médias, Cybersécurité</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Défis</strong> - IA, FinTech, GovTech, Santé, Agriculture, Éducation, Médias, Cybersécurité</td></tr>
               </table>
               <p style="margin:0 0 10px;font-size:14px;line-height:1.5;color:${EMAIL_BRAND.muted};">
                 Partenaires déjà confirmés :
@@ -451,7 +451,7 @@ export function buildInstitutionalCoopEmail(
                 Prochaine étape
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>1.</strong> Intérêt — oui / à discuter / pas maintenant</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>1.</strong> Intérêt - oui / à discuter / pas maintenant</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
                 <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>2.</strong> Contact référent (nom, fonction, email, téléphone / WhatsApp)</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>

@@ -1,20 +1,28 @@
 /**
- * Annonce programme confirmé à tous les partenaires (logos page Hackathon).
+ * Annonce programme confirmé (logos page Hackathon).
  *
  * Preview:
  *   npx tsx scripts/send-partners-program-update-email.ts --preview
  *
- * Test (avant envoi partenaires):
+ * Test:
  *   npx tsx scripts/send-partners-program-update-email.ts --to hi@mcbuleli.org --send
  *
- * Envoi à tous les contacts partenaires:
+ * Partenaires (7, sans Silikin):
  *   npx tsx scripts/send-partners-program-update-email.ts --all --send
+ *
+ * Ambassadeurs (hors liste des 7 partenaires):
+ *   npx tsx scripts/send-partners-program-update-email.ts --ambassadors --send
+ *
+ * Relais campus (hors 7 partenaires):
+ *   npx tsx scripts/send-partners-program-update-email.ts --campus --send
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { loadEnvFile } from "node:process";
 import {
+  ambassadorProgramUpdateRecipients,
   buildPartnersProgramUpdateEmail,
+  campusProgramUpdateRecipients,
   featuredPartnersForEmail,
   PARTNER_PROGRAM_UPDATE_RECIPIENTS,
 } from "../src/lib/email/partnership/partners-program-update-email";
@@ -45,6 +53,8 @@ function parseArgs(argv: string[]) {
     if (a === "--preview") out.preview = true;
     else if (a === "--send") out.send = true;
     else if (a === "--all") out.all = true;
+    else if (a === "--ambassadors") out.ambassadors = true;
+    else if (a === "--campus") out.campus = true;
     else if (a === "--list") out.list = true;
     else if (a.startsWith("--to=")) out.to = a.slice("--to=".length);
     else if (a === "--to" && argv[i + 1]) out.to = argv[++i];
@@ -71,8 +81,12 @@ async function sendOne(args: {
   to: string;
   cc?: string[];
   label: string;
+  audience: "partners" | "ambassadors" | "campus";
 }): Promise<boolean> {
-  const email = buildPartnersProgramUpdateEmail({ useInlineLogos: true });
+  const email = buildPartnersProgramUpdateEmail({
+    useInlineLogos: true,
+    audience: args.audience,
+  });
   const from =
     process.env.PARTNERSHIP_EMAIL_FROM?.trim() ||
     `McBuleli Team <${SUPPORT_EMAIL}>`;
@@ -103,42 +117,59 @@ async function sendOne(args: {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const ambassadors = ambassadorProgramUpdateRecipients();
+  const campus = campusProgramUpdateRecipients();
+  const audience: "partners" | "ambassadors" | "campus" = args.campus
+    ? "campus"
+    : args.ambassadors
+      ? "ambassadors"
+      : "partners";
   const emailPreview = buildPartnersProgramUpdateEmail({
     useInlineLogos: false,
+    audience,
   });
 
-  const outDir = path.join(
-    process.cwd(),
-    "content/email-partnership",
-  );
+  const outDir = path.join(process.cwd(), "content/email-partnership");
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(
-    path.join(outDir, "partners-program-update.html"),
-    emailPreview.html,
-    "utf8",
-  );
-  writeFileSync(
-    path.join(outDir, "partners-program-update.txt"),
-    emailPreview.text,
-    "utf8",
-  );
+  const previewBase =
+    audience === "campus"
+      ? "campus-program-update"
+      : audience === "ambassadors"
+        ? "ambassadors-program-update"
+        : "partners-program-update";
+  writeFileSync(path.join(outDir, `${previewBase}.html`), emailPreview.html, "utf8");
+  writeFileSync(path.join(outDir, `${previewBase}.txt`), emailPreview.text, "utf8");
 
   console.log(`Subject: ${emailPreview.subject}`);
-  console.log(
-    "✓ Preview → content/email-partnership/partners-program-update.html",
-  );
+  console.log(`Audience: ${audience}`);
+  console.log(`✓ Preview → content/email-partnership/${previewBase}.html`);
   console.log(
     `Logos page: ${featuredPartnersForEmail().map((p) => p.name).join(" · ")}`,
   );
   console.log(
-    `Recipients (${PARTNER_PROGRAM_UPDATE_RECIPIENTS.length}): ${PARTNER_PROGRAM_UPDATE_RECIPIENTS.map((r) => r.org).join(", ")}`,
+    `Partenaires (${PARTNER_PROGRAM_UPDATE_RECIPIENTS.length}): ${PARTNER_PROGRAM_UPDATE_RECIPIENTS.map((r) => r.org).join(", ")}`,
+  );
+  console.log(
+    `Ambassadeurs hors 7 (${ambassadors.length}): ${ambassadors.map((r) => r.email).join(", ") || "(aucun)"}`,
+  );
+  console.log(
+    `Campus hors 7 (${campus.length}): ${campus.map((r) => r.id).join(", ")}`,
   );
 
   if (args.list) {
+    console.log("\nPartenaires:");
     for (const r of PARTNER_PROGRAM_UPDATE_RECIPIENTS) {
       console.log(
         `- ${r.org}: ${r.email}${r.cc?.length ? ` · CC ${r.cc.join(", ")}` : ""}`,
       );
+    }
+    console.log("\nAmbassadeurs (hors 7):");
+    for (const r of ambassadors) {
+      console.log(`- ${r.org} (${r.code}): ${r.email}`);
+    }
+    console.log("\nCampus (hors 7):");
+    for (const r of campus) {
+      console.log(`- ${r.id} · ${r.org}: ${r.email}`);
     }
     return;
   }
@@ -148,7 +179,13 @@ async function main() {
       `\nTest: npx tsx scripts/send-partners-program-update-email.ts --to ${SUPPORT_EMAIL} --send`,
     );
     console.log(
-      `Prod:  npx tsx scripts/send-partners-program-update-email.ts --all --send`,
+      `Partenaires: npx tsx scripts/send-partners-program-update-email.ts --all --send`,
+    );
+    console.log(
+      `Ambassadeurs: npx tsx scripts/send-partners-program-update-email.ts --ambassadors --send`,
+    );
+    console.log(
+      `Campus: npx tsx scripts/send-partners-program-update-email.ts --campus --send`,
     );
     return;
   }
@@ -159,6 +196,44 @@ async function main() {
     process.exit(1);
   }
 
+  if (args.campus) {
+    if (!campus.length) {
+      console.error("Aucun contact campus à envoyer.");
+      process.exit(1);
+    }
+    let okCount = 0;
+    for (const r of campus) {
+      const ok = await sendOne({
+        to: r.email,
+        label: `${r.org} (${r.id})`,
+        audience: "campus",
+      });
+      if (ok) okCount += 1;
+    }
+    console.log(`\nDone campus: ${okCount}/${campus.length}`);
+    if (okCount < campus.length) process.exit(1);
+    return;
+  }
+
+  if (args.ambassadors) {
+    if (!ambassadors.length) {
+      console.error("Aucun ambassadeur à envoyer (liste vide après exclusion des 7).");
+      process.exit(1);
+    }
+    let okCount = 0;
+    for (const r of ambassadors) {
+      const ok = await sendOne({
+        to: r.email,
+        label: `${r.org} · ${r.code}`,
+        audience: "ambassadors",
+      });
+      if (ok) okCount += 1;
+    }
+    console.log(`\nDone ambassadeurs: ${okCount}/${ambassadors.length}`);
+    if (okCount < ambassadors.length) process.exit(1);
+    return;
+  }
+
   if (args.all) {
     let okCount = 0;
     for (const r of PARTNER_PROGRAM_UPDATE_RECIPIENTS) {
@@ -166,22 +241,26 @@ async function main() {
         to: r.email,
         cc: r.cc,
         label: r.org,
+        audience: "partners",
       });
       if (ok) okCount += 1;
     }
-    console.log(`\nDone: ${okCount}/${PARTNER_PROGRAM_UPDATE_RECIPIENTS.length}`);
+    console.log(`\nDone partenaires: ${okCount}/${PARTNER_PROGRAM_UPDATE_RECIPIENTS.length}`);
     if (okCount < PARTNER_PROGRAM_UPDATE_RECIPIENTS.length) process.exit(1);
     return;
   }
 
   const to = typeof args.to === "string" ? args.to.trim() : "";
   if (!to) {
-    console.error("Missing --to (or use --all)");
+    console.error("Missing --to (or use --all / --ambassadors / --campus)");
     process.exit(1);
   }
 
-  // Test override: never CC real partner addresses.
-  const ok = await sendOne({ to, label: "Test" });
+  const ok = await sendOne({
+    to,
+    label: "Test",
+    audience,
+  });
   if (!ok) process.exit(1);
 }
 

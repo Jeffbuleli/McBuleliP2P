@@ -10,7 +10,7 @@ export type KnowledgeSeed = {
   priority: number;
 };
 
-/** Built-in knowledge — synced to DB on first assistant boot. */
+/** Built-in knowledge - synced to DB on first assistant boot. */
 export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
   {
     slug: "what-is-mcbuleli",
@@ -28,7 +28,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Crypto basics for beginners",
     content:
-      "Cryptocurrency is digital money on a blockchain. A wallet stores your crypto — think of it like a digital bank account. USDT is a stablecoin pegged to ~1 USD, useful for saving value and transfers. Never share your password, seed phrase, or 2FA codes. Start small and learn before investing large amounts.",
+      "Cryptocurrency is digital money on a blockchain. A wallet stores your crypto - think of it like a digital bank account. USDT is a stablecoin pegged to ~1 USD, useful for saving value and transfers. Never share your password, seed phrase, or 2FA codes. Start small and learn before investing large amounts.",
     tags: ["crypto", "beginner", "wallet", "blockchain"],
     priority: 90,
   },
@@ -38,7 +38,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "How to deposit USDT",
     content:
-      "Go to Wallet → Deposit → choose USDT and network (TRC20, BEP20, or ERC20). McBuleli shows a deposit address and unique amount. Send USDT on-chain, then paste your TXID (transaction ID) to confirm. TRC20 is often cheapest for fees. Never send the wrong network — funds can be lost.",
+      "Go to Wallet → Deposit → choose USDT and network (TRC20, BEP20, or ERC20). McBuleli shows a deposit address and unique amount. Send USDT on-chain, then paste your TXID (transaction ID) to confirm. TRC20 is often cheapest for fees. Never send the wrong network - funds can be lost.",
     tags: ["usdt", "deposit", "txid", "trc20"],
     priority: 85,
   },
@@ -58,7 +58,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "P2P escrow protection",
     content:
-      "McBuleli P2P locks the seller's crypto in escrow until the buyer confirms mobile money payment. Never release crypto before receiving payment. If there's a dispute, use the in-app dispute flow — do not trade outside the platform. Escrow protects both parties.",
+      "McBuleli P2P locks the seller's crypto in escrow until the buyer confirms mobile money payment. Never release crypto before receiving payment. If there's a dispute, use the in-app dispute flow - do not trade outside the platform. Escrow protects both parties.",
     tags: ["p2p", "escrow", "mobile money", "dispute"],
     priority: 80,
   },
@@ -78,7 +78,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "AI Trading Bot",
     content:
-      "McBuleli offers automated trading bots that connect to exchange APIs. Bots use technical indicators and optional AI signals. Trading involves risk — you can lose money. Start with demo/small amounts. Configure bots in Trade → Bots. Never share API keys with anyone except through McBuleli's secure setup.",
+      "McBuleli offers automated trading bots that connect to exchange APIs. Bots use technical indicators and optional AI signals. Trading involves risk - you can lose money. Start with demo/small amounts. Configure bots in Trade → Bots. Never share API keys with anyone except through McBuleli's secure setup.",
     tags: ["bot", "trading", "ai", "automation"],
     priority: 70,
   },
@@ -108,7 +108,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "AVEC group savings",
     content:
-      "AVEC (Association Villageoise d'Épargne et de Crédit) on McBuleli lets groups save together — like digital tontines. Members contribute on a schedule, can request internal loans, and track cycles. Great for community finance in Africa. Find it under Groups in the app.",
+      "AVEC (Association Villageoise d'Épargne et de Crédit) on McBuleli lets groups save together - like digital tontines. Members contribute on a schedule, can request internal loans, and track cycles. Great for community finance in Africa. Find it under Groups in the app.",
     tags: ["avec", "tontine", "group", "savings", "community"],
     priority: 65,
   },
@@ -118,7 +118,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Staking on McBuleli",
     content:
-      "Staking lets you earn rewards by locking crypto for a period. McBuleli offers staking programs — check Staking in the app for current APY, minimums, and lock duration. Understand that staked funds may not be instantly withdrawable. Returns are not guaranteed.",
+      "Staking lets you earn rewards by locking crypto for a period. McBuleli offers staking programs - check Staking in the app for current APY, minimums, and lock duration. Understand that staked funds may not be instantly withdrawable. Returns are not guaranteed.",
     tags: ["staking", "yield", "rewards", "invest"],
     priority: 65,
   },
@@ -148,7 +148,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "McBuleli Hackathon Kinshasa",
     content:
-      "McBuleli Hackathon is McBuleli's AI / Vibe Coding hackathon in Kinshasa. Confirmed dates: Friday 28 – Saturday 29 August 2026, 08:00–17:00 (Kinshasa time). Venue: Silikin Village, 63 Ave Colonel Mondjiba. Format: one full 2-day program (not separate day packs) — Day 1 Bootcamp & Build (Cursor, Claude, Codex), Day 2 Build & Demo Day with jury. Price: 100 USD. Public page: https://mcbuleli.org/hackathon. Challenges include FinTech, Health, AgroTech (ILOKWE GROUP field reference), Education and more. Featured ecosystem partners include pawaPay (Mobile Money), Binance (demo APIs), ILOKWE GROUP (Prix ILOKWE / Gold), and Silikin Village (venue). Register on the page; partners/sponsors use the Partner and Sponsor forms. Ambassadors create a promo code at https://mcbuleli.org/hackathon/ambassadeur.",
+      "McBuleli Hackathon is McBuleli's AI / Vibe Coding hackathon in Kinshasa. Confirmed dates: Friday 28 – Saturday 29 August 2026, 08:00–17:00 (Kinshasa time). Venue: Silikin Village, 63 Ave Colonel Mondjiba. Format: one full 2-day program (not separate day packs) - Day 1 Bootcamp & Build (Cursor, Claude, Codex), Day 2 Build & Demo Day with jury. Price: 100 USD. Public page: https://mcbuleli.org/hackathon. Challenges include FinTech, Health, AgroTech (ILOKWE GROUP field reference), Education and more. Featured ecosystem partners include pawaPay (Mobile Money), Binance (demo APIs), ILOKWE GROUP (Prix ILOKWE / Gold), and Silikin Village (venue). Register on the page; partners/sponsors use the Partner and Sponsor forms. Ambassadors create a promo code at https://mcbuleli.org/hackathon/ambassadeur.",
     tags: [
       "hackathon",
       "kinshasa",
@@ -170,7 +170,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Hackathon registration, payment and ticket",
     content:
-      "On https://mcbuleli.org/hackathon: confirm your email first, then either reserve a seat (Pré-inscrire) or Register & pay. Seat holds do NOT auto-expire; McBuleli sends payment reminders every 24 hours with a magic pay link. Payment: Orange Money, M-Pesa or Airtel Money via pawaPay — phone must start with 243 (same format as Wallet MoMo). USDT for hackathon is coming soon. Single pack price: 100 USD for the full 2-day program. After payment you receive a QR ticket/badge by email; open it at /hackathon/pass/[code] (legacy /hackathon/ticket/[code] redirects there). You can switch FR/EN on ticket and badge pages with the language flags. A McBuleli account is created with the registration email.",
+      "On https://mcbuleli.org/hackathon: confirm your email first, then either reserve a seat (Pré-inscrire) or Register & pay. Seat holds do NOT auto-expire; McBuleli sends payment reminders every 24 hours with a magic pay link. Payment: Orange Money, M-Pesa or Airtel Money via pawaPay - phone must start with 243 (same format as Wallet MoMo). USDT for hackathon is coming soon. Single pack price: 100 USD for the full 2-day program. After payment you receive a QR ticket/badge by email; open it at /hackathon/pass/[code] (legacy /hackathon/ticket/[code] redirects there). You can switch FR/EN on ticket and badge pages with the language flags. A McBuleli account is created with the registration email.",
     tags: [
       "hackathon",
       "payment",
@@ -190,7 +190,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Hackathon ambassador and partner promo",
     content:
-      "Ambassadors: create a personal promo code at https://mcbuleli.org/hackathon/ambassadeur (requires McBuleli login). Invites get about -10% on the hackathon fee; ambassador earns 10 USD cashback per confirmed paid signup, withdrawable via Mobile Money once the minimum claim threshold is reached (dashboard shows balance). Partners/organizations can get dedicated promo codes, complimentary seats by volume, and visibility — use Become a partner on /hackathon or contact hi@mcbuleli.org. Promo dashboards live at /hackathon/promo/dashboard/[token].",
+      "Ambassadors: create a personal promo code at https://mcbuleli.org/hackathon/ambassadeur (requires McBuleli login). Invites get about -10% on the hackathon fee; ambassador earns 10 USD cashback per confirmed paid signup, withdrawable via Mobile Money once the minimum claim threshold is reached (dashboard shows balance). Partners/organizations can get dedicated promo codes, complimentary seats by volume, and visibility - use Become a partner on /hackathon or contact hi@mcbuleli.org. Promo dashboards live at /hackathon/promo/dashboard/[token].",
     tags: [
       "hackathon",
       "ambassador",

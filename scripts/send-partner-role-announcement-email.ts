@@ -91,6 +91,51 @@ function writePreview(partner: PartnerRoleAnnouncement) {
   return email;
 }
 
+async function enrichPartnerBadge(
+  partner: PartnerRoleAnnouncement,
+): Promise<PartnerRoleAnnouncement> {
+  if (partner.hasBadges === false) return partner;
+  const { and, eq } = await import("drizzle-orm");
+  const { getDb, hackathonPartnerOrgs } = await import("../src/db");
+  const { ensurePartnerOrgsSeeded } = await import(
+    "../src/lib/hackathon/partner-chat"
+  );
+  const { ensureOrgPartnerPasses, passToPublic } = await import(
+    "../src/lib/hackathon/partner-passes"
+  );
+  const editionId = await ensurePartnerOrgsSeeded();
+  const slug = partner.orgSlug ?? partner.id;
+  if (!editionId) {
+    throw new Error("featured edition missing - cannot mint partner badges");
+  }
+  const db = getDb();
+  const [org] = await db
+    .select()
+    .from(hackathonPartnerOrgs)
+    .where(
+      and(
+        eq(hackathonPartnerOrgs.editionId, editionId),
+        eq(hackathonPartnerOrgs.slug, slug),
+      ),
+    )
+    .limit(1);
+  if (!org) {
+    throw new Error(`partner org not found for slug=${slug}`);
+  }
+  const passes = await ensureOrgPartnerPasses(org.id);
+  const seat1 = passes.find((p) => p.seatIndex === 1 && p.ticketCode);
+  if (!seat1?.ticketCode) {
+    throw new Error(`seat-1 badge missing for ${partner.shortName}`);
+  }
+  const pub = passToPublic(seat1);
+  return {
+    ...partner,
+    badgePassUrl: pub.passUrl,
+    badgeCode: pub.ticketCode,
+    hasBadges: true,
+  };
+}
+
 async function sendOne(opts: {
   partner: PartnerRoleAnnouncement;
   to: string;
@@ -99,47 +144,18 @@ async function sendOne(opts: {
 }) {
   let partner = opts.partner;
   try {
-    const { and, eq } = await import("drizzle-orm");
-    const { getDb, hackathonPartnerOrgs } = await import("../src/db");
-    const { ensurePartnerOrgsSeeded } = await import(
-      "../src/lib/hackathon/partner-chat"
-    );
-    const { ensureOrgPartnerPasses, passToPublic } = await import(
-      "../src/lib/hackathon/partner-passes"
-    );
-    const editionId = await ensurePartnerOrgsSeeded();
-    const slug = partner.orgSlug ?? partner.id;
-    if (editionId && partner.hasBadges !== false) {
-      const db = getDb();
-      const [org] = await db
-        .select()
-        .from(hackathonPartnerOrgs)
-        .where(
-          and(
-            eq(hackathonPartnerOrgs.editionId, editionId),
-            eq(hackathonPartnerOrgs.slug, slug),
-          ),
-        )
-        .limit(1);
-      if (org) {
-        const passes = await ensureOrgPartnerPasses(org.id);
-        const seat1 = passes.find((p) => p.seatIndex === 1 && p.ticketCode);
-        if (seat1) {
-          const pub = passToPublic(seat1);
-          partner = {
-            ...partner,
-            badgePassUrl: pub.passUrl,
-            badgeCode: pub.ticketCode,
-            hasBadges: true,
-          };
-        }
-      }
-    }
+    partner = await enrichPartnerBadge(partner);
   } catch (e) {
     console.warn(
-      `badge enrich skipped for ${opts.partner.shortName}:`,
+      `badge enrich failed for ${opts.partner.shortName}:`,
       e instanceof Error ? e.message : e,
     );
+    if (opts.partner.hasBadges !== false) {
+      console.error(
+        `Abort send for ${opts.partner.shortName}: badge URL required (no /chat fallback).`,
+      );
+      return false;
+    }
   }
 
   const email = buildPartnerRoleAnnouncementEmail(partner);
@@ -163,6 +179,7 @@ async function sendOne(opts: {
     replyTo,
     bcc: archiveBcc,
   });
+  writePreview(partner);
   console.log(
     ok
       ? `OK ${opts.partner.shortName} → ${opts.to}${opts.cc?.length ? ` (cc ${opts.cc.join(", ")})` : ""}${partner.badgeCode ? ` [badge ${partner.badgeCode}]` : ""}${archiveBcc ? ` (BCC ${archiveBcc})` : ""}`
@@ -184,12 +201,29 @@ async function main() {
     console.log(`    CTA: ${p.links[0]?.url}`);
   }
 
+  const enrichedPreviews: PartnerRoleAnnouncement[] = [];
   for (const p of partners) {
+    try {
+      enrichedPreviews.push(await enrichPartnerBadge(p));
+    } catch (e) {
+      console.warn(
+        `preview badge enrich skipped for ${p.shortName}:`,
+        e instanceof Error ? e.message : e,
+      );
+      enrichedPreviews.push(p);
+    }
+  }
+  for (const p of enrichedPreviews) {
     writePreview(p);
   }
   console.log(
     `\nPreview files: content/email-partnership/partner-role-announcement/{id}.{html,txt}`,
   );
+  for (const p of enrichedPreviews) {
+    if (p.hasBadges !== false && p.badgePassUrl) {
+      console.log(`  badge ${p.shortName}: ${p.badgePassUrl}`);
+    }
+  }
 
   if (args.list || args.preview || !args.send) {
     console.log(

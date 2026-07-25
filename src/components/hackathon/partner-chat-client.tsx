@@ -787,7 +787,7 @@ export function PartnerChatClient() {
                 {isFr ? "Date" : "Date"}
               </dt>
               <dd className="mt-0.5 font-semibold">
-                {dates.replace(/[–—]/g, "-")} · {hours}
+                {dates.replace(/[–-]/g, "-")} · {hours}
               </dd>
             </div>
             <div>

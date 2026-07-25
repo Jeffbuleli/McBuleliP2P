@@ -8,7 +8,7 @@ import { TRAINING_END, TRAINING_SLOT, TRAINING_START } from "@/lib/launch-campai
 import { getSessionUserId } from "@/lib/session";
 
 export const metadata = {
-  title: "Formation McBuleli — inscription gratuite",
+  title: "Formation McBuleli - inscription gratuite",
   description:
     "Formation gratuite Crypto, Trading, IA et P2P. Lancement 8 juin 2026. Sessions 15–30 juin.",
 };
@@ -25,7 +25,7 @@ export default async function FormationPage() {
         <LandingLaunchHero />
         <div className="fd-card mt-6 rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-5 sm:p-7">
           <h1 className="text-xl font-black text-[color:var(--fd-text)]">
-            {isFr ? "Inscription — formation gratuite" : "Register — free training"}
+            {isFr ? "Inscription - formation gratuite" : "Register - free training"}
           </h1>
           <p className="mt-2 text-sm text-[color:var(--fd-muted)]">
             {isFr
@@ -34,12 +34,12 @@ export default async function FormationPage() {
           </p>
           <p className="mt-1 text-xs font-semibold text-[color:var(--fd-primary)]">
             {isFr
-              ? "Powered by McBuleli — vos coordonnées servent uniquement aux rappels formation."
-              : "Powered by McBuleli — your contact details are used only for training reminders."}
+              ? "Powered by McBuleli - vos coordonnées servent uniquement aux rappels formation."
+              : "Powered by McBuleli - your contact details are used only for training reminders."}
           </p>
           {userId ? (
             <p className="mt-4 rounded-xl bg-[#e8f3ee] px-4 py-3 text-sm font-semibold text-[#305f33]">
-              {isFr ? "Compte connecté — " : "Signed in — "}
+              {isFr ? "Compte connecté - " : "Signed in - "}
               <Link href="/app/academy" className="underline font-extrabold">
                 {isFr ? "ouvrir McBuleli Academy" : "open McBuleli Academy"}
               </Link>

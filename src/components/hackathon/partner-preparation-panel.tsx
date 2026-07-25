@@ -128,7 +128,7 @@ export function PartnerPreparationPanel({
                       : ""}
                   </p>
                   <p className="text-[color:var(--hk-muted)]">
-                    {p.holderName || "—"} · {p.holderEmail || "—"}
+                    {p.holderName || "-"} · {p.holderEmail || "-"}
                   </p>
                   <p className="mt-0.5 text-xs font-semibold text-[color:var(--hk-accent)]">
                     {p.roleLabel}
@@ -136,7 +136,11 @@ export function PartnerPreparationPanel({
                 </div>
                 {p.passUrl && p.status === "active" ? (
                   <Link
-                    href={p.passUrl}
+                    href={
+                      p.ticketCode
+                        ? `/hackathon/pass/${encodeURIComponent(p.ticketCode)}`
+                        : p.passUrl
+                    }
                     className="rounded-lg bg-[color:var(--hk-accent)] px-3 py-1.5 text-xs font-bold text-white"
                   >
                     {isFr ? "Ouvrir mon badge" : "Open my badge"}

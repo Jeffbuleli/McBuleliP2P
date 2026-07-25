@@ -1,5 +1,5 @@
 McBuleli
-Passkeys & 2FA — protégez votre solde en deux gestes.
+Passkeys & 2FA - protégez votre solde en deux gestes.
 Bonjour {{{contact.first_name|ami}}},
 Sécurisez votre compte
 Ajoutez une passkey ou une app d'authentification. Retraits et changements sensibles = validation rapide.

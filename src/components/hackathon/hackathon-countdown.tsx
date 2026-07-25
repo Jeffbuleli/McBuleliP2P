@@ -33,7 +33,7 @@ export function HackathonCountdown({
   targetAt = HACKATHON_START_AT,
   onDark = false,
   className = "",
-  /** Digits only (jj h mm ss) — no card, no “Compte à rebours” label. */
+  /** Digits only (jj h mm ss) - no card, no “Compte à rebours” label. */
   bare = true,
 }: {
   isFr: boolean;

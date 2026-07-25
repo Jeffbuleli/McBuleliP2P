@@ -1,4 +1,4 @@
-# McBuleli Hackathon — brief designer (RS / vidéo)
+# McBuleli Hackathon - brief designer (RS / vidéo)
 
 **Destinataire :** Ir Christophe CHIBEMBE · chibembechristophe@gmail.com  
 **Objet :** Charte + compréhension + assets pour poste publicitaire vidéo
@@ -7,10 +7,10 @@
 
 Le **McBuleli Hackathon** est un format intensif de 2 jours à **Silikin Village, Kinshasa** (28–29 août 2026, 08h00–17h00) :
 
-1. **Bootcamp Vibe Coding** — formation pratique au code assisté par l'IA (Cursor, Claude, Codex)
-2. **Build en équipe** — constituer une équipe, relever un défi terrain RDC
-3. **Demo Day** — présenter devant un **jury rigoureux** (partenaires & experts)
-4. **Prix** — tenter de gagner les récompenses (dont Prix ILOKWE · Sponsor Or)
+1. **Bootcamp Vibe Coding** - formation pratique au code assisté par l'IA (Cursor, Claude, Codex)
+2. **Build en équipe** - constituer une équipe, relever un défi terrain RDC
+3. **Demo Day** - présenter devant un **jury rigoureux** (partenaires & experts)
+4. **Prix** - tenter de gagner les récompenses (dont Prix ILOKWE · Sponsor Or)
 
 Page : https://mcbuleli.org/hackathon  
 Tarif programme : **100 USD** (2 jours complets)
@@ -34,18 +34,18 @@ Tarif programme : **100 USD** (2 jours complets)
 | Soft / mint | `#eaf6ee` | `#1a2e24` |
 | Bordure | `#e5e5e0` | `#2a342f` |
 
-**Marque :** McBuleli — vert forêt, typo bold, photo réelle (pas d'illustration générique IA).  
+**Marque :** McBuleli - vert forêt, typo bold, photo réelle (pas d'illustration générique IA).  
 **Logos fournis :** `brand/logo-*.png` et `brand/logo-mark-*.png`
 
 ## Assets joints
 
-- `brand/` — logos McBuleli
-- `photos-ccb/` — photos événement / ambiance (dossier CCB compressé)
-- `qr-jeff243-mcbuleli.png` — QR avec logo McBuleli au centre
+- `brand/` - logos McBuleli
+- `photos-ccb/` - photos événement / ambiance (dossier CCB compressé)
+- `qr-jeff243-mcbuleli.png` - QR avec logo McBuleli au centre
   - Lien promo : https://mcbuleli.org/hackathon?promo=JEFF243#register
   - Code promo : **JEFF243**
 
 ## CTA suggéré pour la vidéo
 
-« Bootcamp IA · Build · Demo Day — inscris-toi avec JEFF243 »
+« Bootcamp IA · Build · Demo Day - inscris-toi avec JEFF243 »
 Scan QR ou lien mcbuleli.org/hackathon

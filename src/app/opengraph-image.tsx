@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
 /** Node runtime: read logo from `public/` so OG works without env URL at generation time. */
 export const runtime = "nodejs";
 
-export const alt = "McBuleli — crypto P2P & mobile money";
+export const alt = "McBuleli - crypto P2P & mobile money";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -84,7 +84,7 @@ export default async function OpenGraphImage() {
                 lineHeight: 1.35,
               }}
             >
-              Buy & sell crypto with mobile money — P2P escrow, wallet, Africa.
+              Buy & sell crypto with mobile money - P2P escrow, wallet, Africa.
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 Bonjour l'équipe Congo Tech,
-Congo Tech s'inscrit dans l'écosystème technologique local. Le McBuleli Hackathon rassemble builders, mentors et partenaires pour produire des prototypes IA utiles — une opportunité de croiser votre expertise terrain avec une génération qui apprend à construire plus vite grâce à l'IA.
+Congo Tech s'inscrit dans l'écosystème technologique local. Le McBuleli Hackathon rassemble builders, mentors et partenaires pour produire des prototypes IA utiles - une opportunité de croiser votre expertise terrain avec une génération qui apprend à construire plus vite grâce à l'IA.
 POURQUOI L'IA MAINTENANT
 - L'IA n'est plus un sujet théorique : elle accélère la productivité, l'apprentissage et la création de services utiles.
 - Quand une génération de builders en RDC maîtrise ces outils, elle peut construire plus vite des solutions locales (santé, finance, agriculture, éducation, gouvernance).
@@ -17,9 +17,9 @@ Partenaires déjà confirmés (extrait) :
 - ILOKWE GROUP - Sponsor Or · Prix ILOKWE · Jury
 - RDPI Think Tank - Partenaire Policy & Impact
 D'autres acteurs (campus, médias, services, FinTech) sont en discussion. Nous déployons aussi un réseau d'ambassadeurs universitaires.
-RÔLE PROPOSÉ — Partenaire Tech locale & innovation
+RÔLE PROPOSÉ - Partenaire Tech locale & innovation
 (Tech locale · innovation)
-En étant partenaire, vous aidez à ancrer l'événement dans le tissu tech congolais : mentorat métier, diffusion, et mise en relation — pour que la maîtrise de l'IA serve la croissance rapide de solutions locales.
+En étant partenaire, vous aidez à ancrer l'événement dans le tissu tech congolais : mentorat métier, diffusion, et mise en relation - pour que la maîtrise de l'IA serve la croissance rapide de solutions locales.
 CE QUE NOUS ATTENDONS DE VOUS
 - Mentorat court ou regard expert sur les prototypes
 - Option relais auprès de votre réseau tech / clients
@@ -29,10 +29,10 @@ CE QUE VOUS Y GAGNEZ
 - Visibilité auprès de builders et partenaires à Silikin Village
 - Pipeline de talents et projets digitaux
 - Positionnement acteur tech engagé dans l'IA pratique en RDC
-L'appui peut être technique, mentorat, communication, bourses, et/ou contribution selon vos modalités — l'essentiel est d'avancer ensemble sur l'impact.
+L'appui peut être technique, mentorat, communication, bourses, et/ou contribution selon vos modalités - l'essentiel est d'avancer ensemble sur l'impact.
 PROCHAINE ÉTAPE
 Merci de nous renvoyer :
-1) Intérêt — oui / à discuter / pas maintenant
+1) Intérêt - oui / à discuter / pas maintenant
 2) Contact référent (nom, fonction, email, téléphone / WhatsApp)
 3) Modalités envisagées (sponsor, mentorat, communication, bourses, autre)
 4) Logo officiel PNG/SVG (si intérêt confirmé)

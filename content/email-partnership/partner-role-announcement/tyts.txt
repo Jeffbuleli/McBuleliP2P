@@ -5,6 +5,11 @@ Nous confirmons officiellement votre rôle dans le McBuleli Hackathon.
 VOTRE RÔLE
 Partenaire Tech / Cybersécurité & réseaux
 
+VOTRE BADGE PARTENAIRE
+Partenaire Tech / Cybersécurité & réseaux
+Accès exclusif titulaire (compte = email du badge).
+2 places : vous + 1 collègue (onglet Préparation).
+Badge : disponible dans l'onglet Préparation (https://mcbuleli.org/hackathon/chat) après connexion
 CE QUI VOUS REVIENT
 - Mentorat cyber / réseaux (selon créneaux retenus)
 - Option regard jury technique
@@ -21,7 +26,7 @@ COMMENT Y ACCÉDER
 2. Connectez-vous
 3. Ouvrez Espace partenaires: https://mcbuleli.org/hackathon/chat
 
-NB: Une autre personne de votre organisation peut rejoindre l'espace d'échange (OTP sur l'email principal). Les droits restent liés à l'accréditation TYTS.
+Sécurité : badge/ticket visibles uniquement par le titulaire. 2e place + to-do = onglet Préparation.
 
 28-29 août 2026 · Silikin Village, Kinshasa · 08h00-17h00
 https://mcbuleli.org/hackathon

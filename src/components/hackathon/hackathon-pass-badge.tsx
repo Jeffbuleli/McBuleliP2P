@@ -108,7 +108,7 @@ const KIND_META: Record<
 /** Drop city suffix so titles never truncate as "… - Kinsh". */
 export function cleanHackathonEditionTitle(raw: string): string {
   return raw
-    .replace(/\s*[—–-]\s*Kinshasa\b/gi, "")
+    .replace(/\s*[-–-]\s*Kinshasa\b/gi, "")
     .replace(/\bKinshasa\b/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();

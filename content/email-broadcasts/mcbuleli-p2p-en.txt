@@ -1,5 +1,5 @@
 McBuleli
-Buy & sell crypto with escrow — mobile money friendly.
+Buy & sell crypto with escrow - mobile money friendly.
 Hi {{{contact.first_name|there}}},
 P2P that protects both sides
 Trade with real people, not guesswork. Funds stay in escrow until the deal is done.

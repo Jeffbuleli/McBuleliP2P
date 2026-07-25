@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Confirmé (intérêt)** — Rodrigue KASHARA DAVID (DG), réponse positive en tant que **partenaire académique**.
+**Confirmé (intérêt)** - Rodrigue KASHARA DAVID (DG), réponse positive en tant que **partenaire académique**.
 
 Sites : [ch-kin.com](https://ch-kin.com/) · [i-academie.com](https://i-academie.com/)  
 Contacts : contact@ch-kin.com · contact@ia-academie.cd · (+243) 90 18 15 632

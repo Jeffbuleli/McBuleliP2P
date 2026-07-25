@@ -32,7 +32,7 @@ type OrgBadgeProfile = {
 export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   ilokwe: {
     seats: 2,
-    roleLabel: "Sponsor Or · Jury · Mentorat · Atelier",
+    roleLabel: "Sponsor Or - Jury - Mentorat - Atelier",
     badgeKind: "sponsor",
     defaultTasks: [
       { title: "Confirmer le créneau atelier rentabilité agricole", kind: "atelier" },
@@ -44,7 +44,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   rdpi: {
     seats: 2,
-    roleLabel: "Policy & Impact · Atelier · Mentorat · Jury",
+    roleLabel: "Jury - Policy & Impact",
     badgeKind: "jury",
     defaultTasks: [
       { title: "Finaliser titre & durée de l'atelier policy/impact", kind: "atelier" },
@@ -55,7 +55,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   kimia: {
     seats: 2,
-    roleLabel: "Services & Talents · Mentorat",
+    roleLabel: "Services & Talents - Mentorat",
     badgeKind: "mentor",
     defaultTasks: [
       { title: "Envoyer logo officiel PNG/SVG", kind: "logo" },
@@ -73,7 +73,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   kilelo: {
     seats: 2,
-    roleLabel: "Marketplace · Talk · Mentorat",
+    roleLabel: "Marketplace - Talk - Mentorat",
     badgeKind: "speaker",
     defaultTasks: [
       { title: "Préparer talk matching / confiance / avis", kind: "atelier" },
@@ -83,7 +83,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   tyts: {
     seats: 2,
-    roleLabel: "Tech · Cyber / réseaux",
+    roleLabel: "Tech - Cyber / réseaux",
     badgeKind: "mentor",
     defaultTasks: [
       { title: "Confirmer modalités mentorat cyber/réseaux", kind: "mentorat" },
@@ -92,7 +92,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   "ia-academie-chk": {
     seats: 2,
-    roleLabel: "Partenaire académique · Vivier · Atelier",
+    roleLabel: "Partenaire académique - Vivier - Atelier",
     badgeKind: "speaker",
     defaultTasks: [
       { title: "Confirmer vivier apprenants / alumni", kind: "other" },

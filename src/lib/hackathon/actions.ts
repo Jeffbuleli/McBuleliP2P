@@ -247,7 +247,7 @@ export async function registerParticipant(raw: unknown) {
 
   const email = data.email.toLowerCase();
   // Always resolve the McBuleli user by registration email (never borrow a
-  // logged-in session user for a different email — that duplicated userIds in OPS).
+  // logged-in session user for a different email - that duplicated userIds in OPS).
   const account = await ensureHackathonUser({
     email,
     firstName: data.firstName,
@@ -420,7 +420,7 @@ export async function registerParticipant(raw: unknown) {
     };
   }
 
-  // pay_now — require verified email first (same gate as reserve).
+  // pay_now - require verified email first (same gate as reserve).
   if (!emailVerified) {
     let registrationId = existing[0]?.id;
     if (registrationId) {
@@ -514,7 +514,7 @@ export async function payReservedRegistration(token: string, raw: unknown) {
   }
 
   const phone = normalizeCodPhoneNumber(data.phone || "");
-  // phone optional in body — fall back to registration phone below after load
+  // phone optional in body - fall back to registration phone below after load
 
   const db = getDb();
   const [reg] = await db

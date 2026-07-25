@@ -22,6 +22,7 @@
 - Lien Meet : https://mcbuleli.org/meet/rdpi-thinktank-partenariat
 - Email Meet : `content/email-partnership/rdpi-thinktank-meet.{html,txt}`
 - Script : `npm run email:rdpi-thinktank-meet`
+- Rappel début RDV : `npm run email:rdpi-thinktank-meet-reminder`
 - Prod : to `maristote@rdpithinktank.org` · CC `info@rdpithinktank.org` (+ ceo)
 
 ## Email proposition initiale

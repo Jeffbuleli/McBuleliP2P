@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-/** Soft mint wash + dots + hex — same language as badges / tickets. */
+/** Soft mint wash + dots + hex - same language as badges / tickets. */
 export function HackathonAtmosphere({
   className = "",
   decorated = false,

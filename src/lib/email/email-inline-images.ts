@@ -40,7 +40,7 @@ function readPngAttachment(relativePath: string, contentId: string): ResendInlin
   };
 }
 
-/** Resend CID inline images — works in Gmail, Outlook, mobile (unlike data: URIs). */
+/** Resend CID inline images - works in Gmail, Outlook, mobile (unlike data: URIs). */
 export function buildMcBuleliInlineAttachments(
   illustration: EmailIllustration,
 ): ResendInlineAttachment[] {

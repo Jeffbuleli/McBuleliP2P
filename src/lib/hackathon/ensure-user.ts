@@ -21,7 +21,7 @@ export type HackathonUserRef = {
 
 /**
  * Ensure a McBuleli `users` row exists for a hackathon registrant
- * (same DB — no parallel guest identity store).
+ * (same DB - no parallel guest identity store).
  * Always keyed by the registration email (never attach another person's email to a session user).
  */
 export async function ensureHackathonUser(args: {

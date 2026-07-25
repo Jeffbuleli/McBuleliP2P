@@ -8,7 +8,7 @@ import {
   HACKATHON_VENUE_SILIKIN,
 } from "@/lib/hackathon/constants";
 import { passPublicUrl } from "@/lib/hackathon/access";
-import { payLaterPublicUrl, ticketPublicUrl } from "@/lib/hackathon/service";
+import { payLaterPublicUrl } from "@/lib/hackathon/service";
 
 function venueLabel(edition: { venue: string | null; city: string } | null | undefined) {
   const venue = edition?.venue?.trim();
@@ -219,7 +219,7 @@ export async function sendHackathonTicketEmail(args: {
     .limit(1);
 
   const isFr = reg.locale !== "en";
-  const ticketUrl = ticketPublicUrl(reg.ticketCode);
+  const ticketUrl = passPublicUrl(reg.ticketCode);
   const editionName = isFr
     ? (edition?.nameFr ?? "McBuleli Hackathon")
     : (edition?.nameEn ?? "McBuleli Hackathon");
@@ -234,6 +234,9 @@ export async function sendHackathonTicketEmail(args: {
     isFr,
   });
 
+  const securityFr = `Sécurité : ce ticket est réservé au titulaire. Seul un compte McBuleli connecté avec l'email ${reg.email} peut l'ouvrir. Un lien partagé ne suffit pas.`;
+  const securityEn = `Security: this ticket is owner-only. Only a McBuleli account signed in as ${reg.email} can open it. A shared link is not enough.`;
+
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
     illustration: "verify",
@@ -242,12 +245,12 @@ export async function sendHackathonTicketEmail(args: {
     copy: {
       subject,
       preheader: isFr
-        ? `Paiement confirmé · Ticket ${reg.ticketCode}. Présentez le QR à l'entrée.`
-        : `Payment confirmed · Ticket ${reg.ticketCode}. Show the QR at the entrance.`,
+        ? `Paiement confirmé · Ticket ${reg.ticketCode}. Accès exclusif à votre email McBuleli.`
+        : `Payment confirmed · Ticket ${reg.ticketCode}. Exclusive access via your McBuleli email.`,
       title: isFr ? `Bienvenue ${reg.firstName}` : `Welcome ${reg.firstName}`,
       body: isFr
-        ? `Votre inscription à ${editionName} est confirmée. Conservez ce message et votre ticket QR (code ${reg.ticketCode}) - ils vous seront demandés à l'entrée du Silikin Village.`
-        : `Your registration for ${editionName} is confirmed. Keep this email and your QR ticket (code ${reg.ticketCode}) - you will need them at the Silikin Village entrance.`,
+        ? `Votre inscription à ${editionName} est confirmée. Conservez ce message et votre ticket QR (code ${reg.ticketCode}) - ils vous seront demandés à l'entrée du Silikin Village. ${securityFr}`
+        : `Your registration for ${editionName} is confirmed. Keep this email and your QR ticket (code ${reg.ticketCode}) - you will need them at the Silikin Village entrance. ${securityEn}`,
       cta: isFr ? "Ouvrir mon ticket" : "Open my ticket",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",
@@ -264,6 +267,12 @@ export async function sendHackathonTicketEmail(args: {
         value: isFr ? "Programme 2 Jours · 100 USD" : "2-day program · 100 USD",
       },
       { label: isFr ? "Code ticket" : "Ticket code", value: reg.ticketCode },
+      {
+        label: isFr ? "Accès ticket" : "Ticket access",
+        value: isFr
+          ? `Exclusif · compte McBuleli = ${reg.email}`
+          : `Exclusive · McBuleli account = ${reg.email}`,
+      },
       { label: isFr ? "Réf. inscription" : "Registration ID", value: reg.id.slice(0, 8).toUpperCase() },
     ],
   });
@@ -376,8 +385,8 @@ export function buildHackathonPartnerConfirmEmail(
         ? `Bienvenue ${args.contactName}`
         : `Welcome ${args.contactName}`,
       body: isFr
-        ? `Nous confirmons officiellement le partenariat de ${args.orgName} pour le ${editionName}. Conservez votre badge QR pour l'accès à la porte (valable les 2 Jours).`
-        : `We officially confirm ${args.orgName}'s partnership for the ${editionName}. Keep your QR badge for door access (valid both days).`,
+        ? `Nous confirmons officiellement le partenariat de ${args.orgName} pour le ${editionName}. Conservez votre badge QR pour l'accès à la porte (valable les 2 Jours). Sécurité : seul le compte McBuleli lié à l'email du titulaire du badge peut l'ouvrir.`
+        : `We officially confirm ${args.orgName}'s partnership for the ${editionName}. Keep your QR badge for door access (valid both days). Security: only the McBuleli account matching the badge holder email can open it.`,
       cta: args.ticketCode
         ? isFr
           ? "Ouvrir mon badge"
@@ -400,6 +409,12 @@ export function buildHackathonPartnerConfirmEmail(
             {
               label: isFr ? "Code badge" : "Badge code",
               value: args.ticketCode,
+            },
+            {
+              label: isFr ? "Accès badge" : "Badge access",
+              value: isFr
+                ? `Exclusif · compte McBuleli = email du titulaire`
+                : `Exclusive · McBuleli account = holder email`,
             },
           ]
         : []),

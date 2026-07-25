@@ -23,7 +23,7 @@ type Props = {
   editionNameEn: string;
 };
 
-/** Pass / ticket view — follows LangSwitch via useI18n (not SSR-frozen locale). */
+/** Pass / ticket view - follows LangSwitch via useI18n (not SSR-frozen locale). */
 export function HackathonPassView({
   kind,
   passUrl,

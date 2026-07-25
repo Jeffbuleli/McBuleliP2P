@@ -1,4 +1,4 @@
-# AvadaPay — modèles d’e-mail partenariat (Resend)
+# AvadaPay - modèles d’e-mail partenariat (Resend)
 
 Demande d’accès **API payouts** mobile money RDC pour McBuleli, avec branding transactionnel minimaliste (vert McBuleli).
 
@@ -18,12 +18,12 @@ Positionnement RDC : **fintech + mobile money**, pas promotion crypto. Les retra
 
 | ID | Usage |
 |----|--------|
-| `avadapay_initial_fr` | **Premier e-mail** après appel — FR (recommandé) |
-| `avadapay_initial_en` | Même contenu — EN |
+| `avadapay_initial_fr` | **Premier e-mail** après appel - FR (recommandé) |
+| `avadapay_initial_en` | Même contenu - EN |
 | `avadapay_followup_fr` | Relance courte |
 | `avadapay_followup_en` | Follow-up EN |
 
-## Avant envoi — personnaliser
+## Avant envoi - personnaliser
 
 Éditer les placeholders dans `src/lib/email/partnership/avadapay-templates.ts` :
 
@@ -43,7 +43,7 @@ open .tmp/avadapay-avadapay_initial_fr.html
 
 ## Envoyer via Resend
 
-Expéditeur **`Jeff Buleli — McBuleli <hi@mcbuleli.org>`** · réponses vers **`ceo@mcbuleli.org`**.
+Expéditeur **`Jeff Buleli - McBuleli <hi@mcbuleli.org>`** · réponses vers **`ceo@mcbuleli.org`**.
 
 Layout **conversation** par défaut (texte type email pro, sans bouton promo ni image) pour viser la boîte **Principale** Gmail plutôt que Promotions.
 
@@ -64,11 +64,11 @@ Si vous voyez `Envoi bloqué` ou pas de mail dans Gmail : vérifiez Resend → *
 
 Le bouton CTA pointe toujours vers **https://mcbuleli.org** en local (pas `localhost`), même si `NEXT_PUBLIC_APP_URL` est en dev.
 
-**Recommandation :** envoyer depuis **hi@mcbuleli.org** en mettant `Reply-To` identique (déjà configuré dans l’app). Objet professionnel, pas de pièce jointe lourde en premier mail — joindre RCCM / pitch PDF seulement si AvadaPay le demande.
+**Recommandation :** envoyer depuis **hi@mcbuleli.org** en mettant `Reply-To` identique (déjà configuré dans l’app). Objet professionnel, pas de pièce jointe lourde en premier mail - joindre RCCM / pitch PDF seulement si AvadaPay le demande.
 
 ## Copier-coller texte brut (FR)
 
-**Objet :** Demande d’intégration API AvadaPay — retraits mobile money (McBuleli, RDC)
+**Objet :** Demande d’intégration API AvadaPay - retraits mobile money (McBuleli, RDC)
 
 **Corps (version courte si formulaire web) :**
 
@@ -78,7 +78,7 @@ Le bouton CTA pointe toujours vers **https://mcbuleli.org** en local (pas `local
 > Besoins : sandbox, API payouts (+ deposits si disponible), webhooks, réconciliation USD/CDF.  
 > Merci d’indiquer la procédure d’onboarding et un contact technique.  
 > Cordialement,  
-> [Nom] — [Société] — hi@mcbuleli.org
+> [Nom] - [Société] - hi@mcbuleli.org
 
 ## Après réponse AvadaPay
 

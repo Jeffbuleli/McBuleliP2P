@@ -31,7 +31,7 @@ export function HackathonHeroIllustration({ className }: { className?: string })
       <circle cx="430" cy="70" r="56" fill="#305f33" fillOpacity="0.06" />
       <circle cx="90" cy="320" r="40" fill="#c47a1a" fillOpacity="0.07" />
 
-      {/* ——— IDE / Build panel ——— */}
+      {/* --- IDE / Build panel --- */}
       <g filter="url(#hkSoft)">
         <rect x="36" y="44" width="248" height="210" rx="18" fill="url(#hkHeroCard)" stroke="#305f33" strokeOpacity="0.14" strokeWidth="1.5" />
         {/* Window chrome */}
@@ -63,7 +63,7 @@ export function HackathonHeroIllustration({ className }: { className?: string })
         <rect x="142" y="226" width="78" height="18" rx="7" fill="#e8f3ee" stroke="#305f33" strokeOpacity="0.25" />
       </g>
 
-      {/* ——— Neural / AI node ——— */}
+      {/* --- Neural / AI node --- */}
       <g filter="url(#hkSoft)">
         <circle cx="400" cy="108" r="58" fill="#e8f3ee" />
         <circle cx="400" cy="108" r="42" fill="white" stroke="#305f33" strokeOpacity="0.16" strokeWidth="1.5" />
@@ -87,7 +87,7 @@ export function HackathonHeroIllustration({ className }: { className?: string })
         />
       </g>
 
-      {/* ——— Pitch / Demo card ——— */}
+      {/* --- Pitch / Demo card --- */}
       <g filter="url(#hkSoft)">
         <rect x="308" y="198" width="176" height="132" rx="16" fill="url(#hkHeroCard)" stroke="#305f33" strokeOpacity="0.14" strokeWidth="1.5" />
         {/* Screen */}
@@ -113,7 +113,7 @@ export function HackathonHeroIllustration({ className }: { className?: string })
         </text>
       </g>
 
-      {/* ——— Journey chips ——— */}
+      {/* --- Journey chips --- */}
       <g>
         {[
           { x: 48, label: "AI" },

@@ -26,7 +26,7 @@ export type PartnerRoleAnnouncement = {
   greeting?: string;
   /** org slug for badge seed (matches hackathon_partner_orgs.slug) */
   orgSlug?: string;
-  /** Seat 1 badge URL (owner-gated) — filled at send time when possible */
+  /** Seat 1 badge URL (owner-gated) - filled at send time when possible */
   badgePassUrl?: string | null;
   badgeCode?: string | null;
   /** false for orgs without door badges (e.g. SanJa) */
@@ -50,7 +50,7 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     to: "ilokwegroup@gmail.com",
     status: "confirmed",
     roleTitle:
-      "Partenaire Agriculture & AgriBusiness · Sponsor Or · Jury · Mentorat · Atelier",
+      "Partenaire Agriculture & AgriBusiness - Sponsor Or - Jury - Mentorat - Atelier",
     entitlements: [
       "Siège Jury sur les prototypes AgroTech (Demo Day)",
       "Mentorat des équipes sur le défi AgroTech & économie réelle",
@@ -85,7 +85,7 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     cc: ["maristote@rdpithinktank.org"],
     status: "confirmed",
     greeting: "Bonjour Aristote,",
-    roleTitle: "Partenaire Policy & Impact · Atelier · Mentorat · Jury",
+    roleTitle: "Partenaire Policy & Impact - Atelier - Mentorat - Jury",
     entitlements: [
       "Atelier : innovation, politiques publiques & impact socio-économique en RDC",
       "Mentorat : impact, adoption des innovations & enjeux réglementaires",
@@ -116,13 +116,13 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     shortName: "KIMIA",
     to: "kimiaservice896@gmail.com",
     status: "confirmed",
-    roleTitle: "Partenaire Services & Talents · Mentorat",
+    roleTitle: "Partenaire Services & Talents - Mentorat",
     entitlements: [
       "Mentorat : professionnalisation, employabilité, développement des services",
       "Mise en relation talents ↔ opportunités / entreprises partenaires",
       "Diffusion auprès de votre réseau professionnel",
       "Logo + présence espace partenaires (dès réception du fichier officiel)",
-      "2 badges porte (vous + 1 collègue) — accès exclusif propriétaire",
+      "2 badges porte (vous + 1 collègue) - accès exclusif propriétaire",
       "Espace Préparation : to-do atelier/mentorat",
     ],
     links: [
@@ -145,7 +145,7 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     status: "confirmed",
     greeting: "Bonjour Jeancy,",
     roleTitle:
-      "Partenaire Marketplace Services Locaux · Talk · Mentorat",
+      "Partenaire Marketplace Services Locaux - Talk - Mentorat",
     entitlements: [
       "Talk / intervention sur matching, confiance et avis marketplace",
       "Mentorat ciblé des équipes concernées",
@@ -171,7 +171,7 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     to: "contact@ia-academie.cd",
     cc: ["contact@ch-kin.com"],
     status: "confirmed",
-    roleTitle: "Partenaire académique · Vivier · Atelier / Mentorat",
+    roleTitle: "Partenaire académique - Vivier - Atelier / Mentorat",
     entitlements: [
       "Mobilisation apprenants / alumni",
       "Atelier ou session(s) de mentorat (thème à finaliser)",
@@ -322,7 +322,7 @@ export function buildPartnerRoleAnnouncementEmail(
   const statusLine =
     partner.status === "confirmed"
       ? "Nous confirmons officiellement votre rôle dans le McBuleli Hackathon."
-      : "Voici le rôle en discussion pour votre organisation dans le McBuleli Hackathon — à finaliser via l'espace partenaires.";
+      : "Voici le rôle en discussion pour votre organisation dans le McBuleli Hackathon - à finaliser via l'espace partenaires.";
 
   const primary = partner.links[0];
   const subject =
@@ -340,7 +340,7 @@ export function buildPartnerRoleAnnouncementEmail(
         ? `<br /><span style="font-size:12px;color:#57534e;">${esc(l.note)}</span>`
         : "";
       return rowHtml(
-        `<strong>${esc(l.label)}</strong> — <a href="${esc(l.url)}" style="color:#305f33;font-weight:700;">${esc(l.url.replace("https://", ""))}</a>${note}`,
+        `<strong>${esc(l.label)}</strong> - <a href="${esc(l.url)}" style="color:#305f33;font-weight:700;">${esc(l.url.replace("https://", ""))}</a>${note}`,
         "#f5f5f4",
       );
     })
@@ -353,13 +353,18 @@ export function buildPartnerRoleAnnouncementEmail(
     ),
     rowHtml("<strong>2.</strong> Connectez-vous", "#f5f5f4"),
     rowHtml(
-      `<strong>3.</strong> Ouvrez <a href="${esc(primary.url)}" style="color:#305f33;font-weight:700;">${esc(primary.label)}</a> — vous y trouverez ce qui vous revient selon votre accréditation`,
+      `<strong>3.</strong> Ouvrez <a href="${esc(primary.url)}" style="color:#305f33;font-weight:700;">${esc(primary.label)}</a> - vous y trouverez ce qui vous revient selon votre accréditation`,
       "#f5f5f4",
     ),
   ].join("");
 
   const hasBadges = partner.hasBadges !== false;
-  const badgeUrl = partner.badgePassUrl?.trim() || CHAT;
+  const badgeUrl = partner.badgePassUrl?.trim() || "";
+  const hasBadgeLink = Boolean(badgeUrl);
+  const badgeCtaHref = hasBadgeLink ? badgeUrl : primary.url;
+  const badgeCtaLabel = hasBadgeLink
+    ? "Ouvrir mon badge"
+    : `Ouvrir ${primary.label}`;
   const badgeBlockHtml = hasBadges
     ? `
               <p style="margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#0c0a09;">Votre badge partenaire</p>
@@ -368,7 +373,7 @@ export function buildPartnerRoleAnnouncementEmail(
                   <td style="padding:14px 16px;background:#f5f5f4;border-radius:12px;">
                     <p style="margin:0 0 8px;font-size:14px;line-height:1.5;font-weight:700;color:#0c0a09;">${esc(partner.roleTitle)}</p>
                     <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#57534e;">
-                      Badge officiel (accès porte) — <strong style="color:#0c0a09;">exclusif au titulaire</strong> :
+                      Badge officiel (accès porte) - <strong style="color:#0c0a09;">exclusif au titulaire</strong> :
                       seul le compte McBuleli lié à l'email du badge peut l'ouvrir. Un lien partagé ne suffit plus.
                     </p>
                     <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#57534e;">
@@ -379,7 +384,11 @@ export function buildPartnerRoleAnnouncementEmail(
                         ? `<p style="margin:0 0 10px;font-size:12px;color:#57534e;">Code : <strong style="color:#0c0a09;">${esc(partner.badgeCode)}</strong></p>`
                         : ""
                     }
-                    <a href="${esc(badgeUrl)}" style="display:inline-block;padding:10px 18px;border-radius:10px;background:#305f33;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;">Ouvrir mon badge</a>
+                    ${
+                      hasBadgeLink
+                        ? `<a href="${esc(badgeUrl)}" style="display:inline-block;padding:10px 18px;border-radius:10px;background:#305f33;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;">Ouvrir mon badge</a>`
+                        : `<p style="margin:0;font-size:13px;line-height:1.5;color:#57534e;">Votre lien badge personnel sera disponible dans l'onglet <strong style="color:#0c0a09;">Préparation</strong> de l'espace partenaires après connexion.</p>`
+                    }
                   </td>
                 </tr>
               </table>`
@@ -394,7 +403,7 @@ export function buildPartnerRoleAnnouncementEmail(
   <title>${esc(subject)}</title>
 </head>
 <body style="margin:0;padding:0;background:#e8f3ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(partner.roleTitle)} — badge sécurisé & espace préparation.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(partner.roleTitle)} - badge sécurisé & espace préparation.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e8f3ee;padding:28px 16px;">
     <tr>
       <td align="center">
@@ -453,7 +462,7 @@ export function buildPartnerRoleAnnouncementEmail(
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
                 <tr>
                   <td style="border-radius:12px;background:#305f33;">
-                    <a href="${esc(hasBadges ? badgeUrl : primary.url)}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">${hasBadges ? "Ouvrir mon badge" : `Ouvrir ${esc(primary.label)}`}</a>
+                    <a href="${esc(hasBadges ? badgeCtaHref : primary.url)}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">${hasBadges ? esc(badgeCtaLabel) : `Ouvrir ${esc(primary.label)}`}</a>
                   </td>
                 </tr>
               </table>
@@ -495,9 +504,9 @@ export function buildPartnerRoleAnnouncementEmail(
           partner.roleTitle,
           `Accès exclusif titulaire (compte = email du badge).`,
           `2 places : vous + 1 collègue (onglet Préparation).`,
-          partner.badgePassUrl
-            ? `Badge : ${partner.badgePassUrl}`
-            : `Badge : ${CHAT} (onglet Préparation)`,
+          hasBadgeLink
+            ? `Badge : ${badgeUrl}`
+            : `Badge : disponible dans l'onglet Préparation (${CHAT}) après connexion`,
           partner.badgeCode ? `Code : ${partner.badgeCode}` : "",
           "",
         ].filter(Boolean)

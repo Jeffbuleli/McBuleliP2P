@@ -1,19 +1,19 @@
 # Institutional coop × McBuleli Hackathon
 
-Lot de 8 organisations (coopération / développement / tech) — emails sur mesure, esprit KIMIA (où on en est + partenaires confirmés) + focus impact IA.
+Lot de 8 organisations (coopération / développement / tech) - emails sur mesure, esprit KIMIA (où on en est + partenaires confirmés) + focus impact IA.
 
 ## Destinataires
 
 | ID | Org | Rôle proposé | To | CC |
 |----|-----|--------------|----|-----|
-| `eeas-delegation` | Délégation UE en RDC | **Sponsor & Partenaire principal** | delegation-dem-rep-of-congo@eeas.europa.eu | — |
-| `enabel` | Enabel | Compétences numériques & emploi jeunes | drcongo@enabel.be | — |
+| `eeas-delegation` | Délégation UE en RDC | **Sponsor & Partenaire principal** | delegation-dem-rep-of-congo@eeas.europa.eu | - |
+| `enabel` | Enabel | Compétences numériques & emploi jeunes | drcongo@enabel.be | - |
 | `swiss-coop` | Coopération suisse | Développement & Innovation jeunesse | kinshasa.cc@eda.admin.ch | kinshasa@eda.admin.ch |
-| `odc-orange` | Orange Digital Center (ODC) RDC | Formation digitale & talents IA | marc.tshibasu@orange.com | — |
+| `odc-orange` | Orange Digital Center (ODC) RDC | Formation digitale & talents IA | marc.tshibasu@orange.com | - |
 | `unicef-genu` | UNICEF · GenU | Jeunesse & compétences pour l'avenir | nssona@unicef.org | jsimon@unicef.org, cfofana@unicef.org |
-| `congo-tech` | Congo Tech | Tech locale & innovation | info@congo-tech.com | — |
-| `undp-com` | PNUD RDC (Communication) | Communication & Impact développement | clarisse.museme@undp.org | — |
-| `giz-rdc` | GIZ RDC | Transformation digitale & compétences | giz-kongo-rdc@giz.de | — |
+| `congo-tech` | Congo Tech | Tech locale & innovation | info@congo-tech.com | - |
+| `undp-com` | PNUD RDC (Communication) | Communication & Impact développement | clarisse.museme@undp.org | - |
+| `giz-rdc` | GIZ RDC | Transformation digitale & compétences | giz-kongo-rdc@giz.de | - |
 
 ## Message commun
 

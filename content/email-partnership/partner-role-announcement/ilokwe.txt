@@ -3,8 +3,13 @@ Bonjour ILOKWE,
 Nous confirmons officiellement votre rôle dans le McBuleli Hackathon.
 
 VOTRE RÔLE
-Partenaire Agriculture & AgriBusiness · Sponsor Or · Jury · Mentorat · Atelier
+Partenaire Agriculture & AgriBusiness - Sponsor Or - Jury - Mentorat - Atelier
 
+VOTRE BADGE PARTENAIRE
+Partenaire Agriculture & AgriBusiness - Sponsor Or - Jury - Mentorat - Atelier
+Accès exclusif titulaire (compte = email du badge).
+2 places : vous + 1 collègue (onglet Préparation).
+Badge : disponible dans l'onglet Préparation (https://mcbuleli.org/hackathon/chat) après connexion
 CE QUI VOUS REVIENT
 - Siège Jury sur les prototypes AgroTech (Demo Day)
 - Mentorat des équipes sur le défi AgroTech & économie réelle
@@ -15,7 +20,7 @@ CE QUI VOUS REVIENT
 - Accès à l'espace d'échange partenaires (coordination opérationnelle)
 
 VOTRE ESPACE D'ACCÈS
-- Espace partenaires: https://mcbuleli.org/hackathon/chat (Coordonner atelier, mentorat, jury et logistique avec McBuleli)
+- Espace partenaires: https://mcbuleli.org/hackathon/chat (Onglet Préparation : badges, 2e place collègue, to-do atelier/mentorat/jury)
 - Espace Jury: https://mcbuleli.org/hackathon/jury (Connectez-vous avec l'email de votre organisation (compte à lier par McBuleli si besoin))
 - Live événement: https://mcbuleli.org/hackathon/live
 - Page Hackathon: https://mcbuleli.org/hackathon
@@ -25,7 +30,7 @@ COMMENT Y ACCÉDER
 2. Connectez-vous
 3. Ouvrez Espace partenaires: https://mcbuleli.org/hackathon/chat
 
-NB: Une autre personne de votre organisation peut rejoindre l'espace d'échange (OTP sur l'email principal). Les droits restent liés à l'accréditation ILOKWE.
+Sécurité : badge/ticket visibles uniquement par le titulaire. 2e place + to-do = onglet Préparation.
 
 28-29 août 2026 · Silikin Village, Kinshasa · 08h00-17h00
 https://mcbuleli.org/hackathon

@@ -1,4 +1,4 @@
-/** McBuleli Hackathon mark — lightbulb × brain (circuit + binary), inspired by SIH motif. */
+/** McBuleli Hackathon mark - lightbulb × brain (circuit + binary), inspired by SIH motif. */
 
 export function HackathonLogo({
   className,
@@ -45,7 +45,7 @@ export function HackathonLogo({
         strokeWidth="2.2"
       />
 
-      {/* Left hemisphere — circuit */}
+      {/* Left hemisphere - circuit */}
       <clipPath id={`${uid}-left`}>
         <path d="M60 16c-20 0-36 15-36 36 0 13 6 24 16 31V83H60V16Z" />
       </clipPath>
@@ -66,7 +66,7 @@ export function HackathonLogo({
         <circle cx="58" cy="72" r="2.2" fill="#fff7ed" />
       </g>
 
-      {/* Right hemisphere — binary */}
+      {/* Right hemisphere - binary */}
       <clipPath id={`${uid}-right`}>
         <path d="M60 16c20 0 36 15 36 36 0 13-6 24-16 31V83H60V16Z" />
       </clipPath>

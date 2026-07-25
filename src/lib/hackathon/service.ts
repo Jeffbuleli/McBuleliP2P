@@ -30,7 +30,7 @@ export function generatePaymentToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
-/** @deprecated Prefer passPublicUrl — kept for older callers; now points to /pass/. */
+/** @deprecated Prefer passPublicUrl - kept for older callers; now points to /pass/. */
 export function ticketPublicUrl(code: string): string {
   return passPublicUrl(code);
 }

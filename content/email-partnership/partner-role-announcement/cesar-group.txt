@@ -1,10 +1,15 @@
 Bonjour César Group,
 
-Voici le rôle en discussion pour votre organisation dans le McBuleli Hackathon — à finaliser via l'espace partenaires.
+Voici le rôle en discussion pour votre organisation dans le McBuleli Hackathon - à finaliser via l'espace partenaires.
 
 VOTRE RÔLE
 Partenaire Formation & Employabilité (discussion en cours)
 
+VOTRE BADGE PARTENAIRE
+Partenaire Formation & Employabilité (discussion en cours)
+Accès exclusif titulaire (compte = email du badge).
+2 places : vous + 1 collègue (onglet Préparation).
+Badge : disponible dans l'onglet Préparation (https://mcbuleli.org/hackathon/chat) après connexion
 CE QUI VOUS REVIENT
 - Proposition : atelier / mentorat pitch, Office, posture jury
 - Option mobilité / logistique événement
@@ -20,7 +25,7 @@ COMMENT Y ACCÉDER
 2. Connectez-vous
 3. Ouvrez Espace partenaires: https://mcbuleli.org/hackathon/chat
 
-NB: Une autre personne de votre organisation peut rejoindre l'espace d'échange (OTP sur l'email principal). Les droits restent liés à l'accréditation César Group.
+Sécurité : badge/ticket visibles uniquement par le titulaire. 2e place + to-do = onglet Préparation.
 
 28-29 août 2026 · Silikin Village, Kinshasa · 08h00-17h00
 https://mcbuleli.org/hackathon

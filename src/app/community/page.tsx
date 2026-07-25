@@ -24,7 +24,7 @@ function origin(): string {
 }
 
 const TITLE =
-  "McBuleli Community — Crypto, USDT & P2P en RDC et Afrique";
+  "McBuleli Community - Crypto, USDT & P2P en RDC et Afrique";
 const DESCRIPTION =
   "Communauté crypto en RDC : USDT, P2P, mobile money (Orange, M-Pesa, Airtel), trading et builders à Kinshasa et en Afrique. Découvrez les publications et hashtags McBuleli.";
 

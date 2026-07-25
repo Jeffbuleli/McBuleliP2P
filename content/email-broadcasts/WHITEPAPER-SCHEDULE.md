@@ -16,7 +16,7 @@ Bandeau : `https://mcbuleli.org/launch/whitepaper-announce.jpg` (déployer le VP
 1. Déployer le VPS si pas encore fait (`bash /opt/mcbuleli/ops/vps/deploy.sh`) pour que l'image bandeau soit en ligne.
 2. [Resend → Broadcasts → Create](https://resend.com/broadcasts)
 3. Audience : liste marketing opt-in
-4. From : `Jeff Buleli — McBuleli <hi@mcbuleli.org>` (ou `news@` si configuré)
+4. From : `Jeff Buleli - McBuleli <hi@mcbuleli.org>` (ou `news@` si configuré)
 5. Subject : coller depuis le `.json` FR (puis dupliquer EN si segment EN)
 6. Body : coller tout le HTML `mcbuleli-whitepaper-fr.html`
 7. Preview (sans Send test API si le quota transactionnel est serré)

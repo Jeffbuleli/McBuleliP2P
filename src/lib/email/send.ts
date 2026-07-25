@@ -55,11 +55,11 @@ export function resendSendBlockedReason(): string | null {
 
 function devPreview(args: Record<string, unknown>): boolean {
   if (process.env.NODE_ENV === "production") {
-    console.warn("[email] RESEND_API_KEY missing — email not sent", args);
+    console.warn("[email] RESEND_API_KEY missing - email not sent", args);
     return false;
   }
   console.warn(
-    "[email] not sent — set RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env",
+    "[email] not sent - set RESEND_API_KEY and RESEND_ALLOW_SEND=true in .env",
     args,
   );
   return false;
@@ -185,7 +185,7 @@ export async function sendResendTemplate(args: {
   return true;
 }
 
-/** @deprecated use sendEmail — kept for auth imports */
+/** @deprecated use sendEmail - kept for auth imports */
 export const sendAuthEmail = sendEmail;
 
 export function emailVerifyLink(token: string): string {
@@ -216,7 +216,7 @@ export async function upsertResendTemplate(args: {
   const variableDefs = args.variables.map((key) => ({
     key,
     type: "string" as const,
-    fallback_value: key === "ACTION_URL" ? appBaseUrl() : "—",
+    fallback_value: key === "ACTION_URL" ? appBaseUrl() : "-",
   }));
 
   const patch = await resendFetch(`/templates/${encodeURIComponent(args.alias)}`, {

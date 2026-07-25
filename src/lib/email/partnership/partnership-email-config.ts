@@ -13,12 +13,12 @@ export type PartnershipEmailLayout = "conversation" | "marketing";
 export const PARTNERSHIP_EMAIL_LAYOUT: PartnershipEmailLayout =
   "conversation";
 
-/** Visible sender — hi@ (not noreply). */
+/** Visible sender - hi@ (not noreply). */
 export function partnershipEmailFrom(): string {
   const override = process.env.PARTNERSHIP_EMAIL_FROM?.trim();
   if (override) return override;
   const { contactName } = PARTNERSHIP_PLACEHOLDERS;
-  return `${contactName} — McBuleli <${SUPPORT_EMAIL}>`;
+  return `${contactName} - McBuleli <${SUPPORT_EMAIL}>`;
 }
 
 /** Replies to CEO; ceo@ appears in signature. */

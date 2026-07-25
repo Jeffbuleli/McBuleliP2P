@@ -6,6 +6,8 @@
 - **Logo** : `/partners/sanja-service-logo.png`
 - **Statut** : **Confirmé**
 - **Rôle** : Partenaire Transformation Numérique & SaaS
+- **Email confirmation** : `content/email-partnership/sanja-service-confirm.{html,txt}`
+- **Script** : `npm run email:sanja-service`
 
 ## Apport
 

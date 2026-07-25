@@ -1,8 +1,8 @@
 McBuleli
-You're enrolled — one tap to pick up where you left off.
+You're enrolled - one tap to pick up where you left off.
 Hi {{{contact.first_name|there}}},
 Your progress is waiting
-You joined the McBuleli Academy cohort. Complete a short module or join the next live — it only takes a few minutes.
+You joined the McBuleli Academy cohort. Complete a short module or join the next live - it only takes a few minutes.
 Learn → practice on Wallet & P2P → grow with the community.
 • Micro-lessons
 • Live sessions

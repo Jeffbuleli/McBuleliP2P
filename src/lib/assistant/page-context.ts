@@ -51,8 +51,8 @@ export function pageContextHint(
     },
     ai_bot: {
       en: "User is exploring AI Trading Bot. Explain setup, risks, and that crypto trading involves loss risk.",
-      fr: "L'utilisateur explore le bot IA. Expliquez la configuration, les risques — le trading comporte des pertes possibles.",
-      sw: "Mtumiaji anachunguza Boti ya AI. Eleza usanidi, hatari — biashara ya crypto ina hatari ya hasara.",
+      fr: "L'utilisateur explore le bot IA. Expliquez la configuration, les risques - le trading comporte des pertes possibles.",
+      sw: "Mtumiaji anachunguza Boti ya AI. Eleza usanidi, hatari - biashara ya crypto ina hatari ya hasara.",
     },
     trading: {
       en: "User is in the trading section. Explain tools available and risk disclaimers.",
@@ -80,13 +80,13 @@ export function pageContextHint(
       sw: "Mtumiaji yuko kwenye mipangilio ya usalama. Eleza 2FA, passkeys, na urejeshaji wa WhatsApp.",
     },
     community: {
-      en: "User is in McBuleli Community Hub. Explain feed, blogs, Q&A, trading signals (educational only), trader leaderboard, Buleli Points rewards — not financial advice.",
-      fr: "L'utilisateur est dans le Hub Communauté McBuleli. Expliquez fil, blogs, Q&R, signaux (éducatifs), classement traders, Buleli Points — pas de conseil financier.",
+      en: "User is in McBuleli Community Hub. Explain feed, blogs, Q&A, trading signals (educational only), trader leaderboard, Buleli Points rewards - not financial advice.",
+      fr: "L'utilisateur est dans le Hub Communauté McBuleli. Expliquez fil, blogs, Q&R, signaux (éducatifs), classement traders, Buleli Points - pas de conseil financier.",
       sw: "Mtumiaji yuko kwenye Jumuiya ya McBuleli. Eleza mipasho, blogu, maswali, ishara za biashara (elimu tu), na Buleli Points.",
     },
     academy: {
-      en: "User is in McBuleli Academy (training cohort). Help with syllabus, live sessions, quiz, Buleli Points — not personalized investment advice.",
-      fr: "L'utilisateur est dans McBuleli Academy (cohorte). Aidez sur le syllabus, les lives, le quiz, les Buleli Points — pas de conseil d'investissement personnalisé.",
+      en: "User is in McBuleli Academy (training cohort). Help with syllabus, live sessions, quiz, Buleli Points - not personalized investment advice.",
+      fr: "L'utilisateur est dans McBuleli Academy (cohorte). Aidez sur le syllabus, les lives, le quiz, les Buleli Points - pas de conseil d'investissement personnalisé.",
       sw: "Mtumiaji yuko katika McBuleli Academy. Saidia kuhusu mada, vikao live, jaribio la maswali, Buleli Points.",
     },
     support: {

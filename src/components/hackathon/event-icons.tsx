@@ -62,7 +62,7 @@ export function PrizeIcon({ id, className }: { id: PrizeIconId; className?: stri
   }
 }
 
-/** Gold trophy for Prix ILOKWE (first prize) — metallic cup with shine sweep. */
+/** Gold trophy for Prix ILOKWE (first prize) - metallic cup with shine sweep. */
 export function GoldTrophyIcon({ className = "" }: { className?: string }) {
   const gid = "ilokwe-gold-trophy";
   return (
