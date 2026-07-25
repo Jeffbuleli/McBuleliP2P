@@ -4420,6 +4420,94 @@ export const hackathonPartnerOrgs = pgTable(
   ],
 );
 
+/**
+ * Door badges for partner orgs (max 2 seats).
+ * View gated by holder email / owner user — scan stays staff-side by code.
+ */
+export const hackathonPartnerPasses = pgTable(
+  "hackathon_partner_passes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => hackathonPartnerOrgs.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    seatIndex: integer("seat_index").notNull(),
+    /** reserved | active | revoked */
+    status: varchar("status", { length: 16 }).notNull().default("reserved"),
+    holderEmail: varchar("holder_email", { length: 255 }),
+    holderName: varchar("holder_name", { length: 160 }),
+    roleLabel: varchar("role_label", { length: 200 })
+      .notNull()
+      .default("Partenaire"),
+    /** partner | speaker | mentor | jury | sponsor */
+    badgeKind: varchar("badge_kind", { length: 24 })
+      .notNull()
+      .default("partner"),
+    ticketCode: varchar("ticket_code", { length: 32 }).unique(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    grantedByEmail: varchar("granted_by_email", { length: 255 }),
+    presenceStatus: varchar("presence_status", { length: 16 })
+      .notNull()
+      .default("absent"),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_partner_passes_org_seat_uidx").on(
+      t.orgId,
+      t.seatIndex,
+    ),
+    index("hackathon_partner_passes_edition_idx").on(t.editionId, t.status),
+  ],
+);
+
+/** Org preparation checklist / to-do (intervenants & partenaires). */
+export const hackathonPartnerTasks = pgTable(
+  "hackathon_partner_tasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => hackathonPartnerOrgs.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 240 }).notNull(),
+    notes: text("notes"),
+    /** todo | doing | done */
+    status: varchar("status", { length: 16 }).notNull().default("todo"),
+    /** atelier | mentorat | jury | logo | logistique | other */
+    kind: varchar("kind", { length: 32 }).notNull().default("other"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_partner_tasks_org_idx").on(
+      t.orgId,
+      t.status,
+      t.sortOrder,
+    ),
+  ],
+);
+
 /** Shared partner exchange chat room (one room per edition). */
 export const hackathonPartnerChatMessages = pgTable(
   "hackathon_partner_chat_messages",

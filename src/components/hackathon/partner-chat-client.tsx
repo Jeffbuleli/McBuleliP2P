@@ -28,6 +28,7 @@ import {
 } from "@/lib/hackathon/event-content";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
+import { PartnerPreparationPanel } from "@/components/hackathon/partner-preparation-panel";
 
 type Org = {
   id: string;
@@ -75,7 +76,7 @@ type Participant = {
   createdAt: string;
 };
 
-type Tab = "vue" | "membres" | "dialogue" | "participants";
+type Tab = "vue" | "membres" | "dialogue" | "preparation" | "participants";
 
 type Dashboard = {
   editionId: string | null;
@@ -752,6 +753,7 @@ export function PartnerChatClient() {
     { id: "vue", fr: "Vue", en: "Overview" },
     { id: "membres", fr: "Membres", en: "Members" },
     { id: "dialogue", fr: "Dialogue", en: "Dialogue" },
+    { id: "preparation", fr: "Préparation", en: "Prep" },
     { id: "participants", fr: "Participants", en: "Participants" },
   ];
 
@@ -1286,6 +1288,13 @@ export function PartnerChatClient() {
                 </div>
               </form>
             </section>
+          ) : null}
+
+          {tab === "preparation" ? (
+            <PartnerPreparationPanel
+              isFr={isFr}
+              orgId={dash.auth.orgId}
+            />
           ) : null}
 
           {tab === "participants" ? (

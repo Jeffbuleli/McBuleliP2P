@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getPassByCode, passPublicUrl } from "@/lib/hackathon/access";
+import {
+  canViewPass,
+  getPassByCode,
+  passPublicUrl,
+} from "@/lib/hackathon/access";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +17,13 @@ export async function GET(
     if (!data?.pass?.valid) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    const access = await canViewPass(data.pass);
+    if (!access.ok) {
+      return NextResponse.json(
+        { error: access.reason },
+        { status: access.reason === "login_required" ? 401 : 403 },
+      );
+    }
     const { pass, edition } = data;
     return NextResponse.json({
       subjectType: pass.subjectType,
@@ -20,6 +31,8 @@ export async function GET(
       passUrl: passPublicUrl(pass.ticketCode),
       displayName: pass.displayName,
       orgOrEmail: pass.orgOrEmail,
+      roleLabel: pass.roleLabel,
+      badgeKind: pass.badgeKind,
       presenceStatus: pass.presenceStatus,
       edition: edition
         ? {

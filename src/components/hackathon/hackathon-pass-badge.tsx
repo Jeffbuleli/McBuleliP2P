@@ -187,6 +187,7 @@ export function HackathonPassBadge({
   ticketCode,
   displayName,
   orgOrEmail,
+  roleLabel,
   venue,
   datesLabel,
   editionTitle,
@@ -197,6 +198,7 @@ export function HackathonPassBadge({
   ticketCode: string;
   displayName: string;
   orgOrEmail: string;
+  roleLabel?: string | null;
   venue: string;
   datesLabel: string;
   editionTitle: string;
@@ -212,8 +214,9 @@ export function HackathonPassBadge({
         ? `Badge ${meta.labelFr}`
         : `${meta.labelEn} badge`;
   const accessLabel = isFr ? "Accès 2 Jours" : "2-day access";
-  const statusLabel =
-    kind === "partner"
+  const statusLabel = roleLabel?.trim()
+    ? roleLabel.trim()
+    : kind === "partner"
       ? isFr
         ? "Partenaire confirmé"
         : "Confirmed partner"

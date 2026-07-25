@@ -4,14 +4,18 @@ import {
   getDb,
   hackathonAccessEvents,
   hackathonEditions,
+  hackathonPartnerPasses,
   hackathonPartners,
   hackathonRegistrations,
 } from "@/db";
 import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
+import { UserRole } from "@/lib/roles";
+import { getSessionUser } from "@/lib/session-user";
 
 export type PresenceStatus = "absent" | "inside" | "outside";
 export type AccessSubjectType = "participant" | "partner";
 export type AccessEventType = "in" | "out";
+export type PassSource = "registration" | "partner_form" | "partner_seat";
 
 export type ResolvedPass = {
   subjectType: AccessSubjectType;
@@ -24,6 +28,12 @@ export type ResolvedPass = {
   checkedInAt: Date | null;
   valid: boolean;
   invalidReason?: string;
+  /** Email allowed to view this badge (exclusive owner gate). */
+  ownerEmail: string | null;
+  ownerUserId: string | null;
+  roleLabel: string | null;
+  badgeKind: string | null;
+  passSource: PassSource;
 };
 
 export function generatePartnerTicketCode(): string {
@@ -107,6 +117,11 @@ export async function resolvePassByCode(
       checkedInAt: reg.checkedInAt,
       valid: paid,
       invalidReason: paid ? undefined : "unpaid",
+      ownerEmail: reg.email,
+      ownerUserId: reg.userId,
+      roleLabel: null,
+      badgeKind: "ticket",
+      passSource: "registration",
     };
   }
 
@@ -129,10 +144,63 @@ export async function resolvePassByCode(
       checkedInAt: partner.checkedInAt,
       valid: confirmed,
       invalidReason: confirmed ? undefined : "not_confirmed",
+      ownerEmail: partner.email,
+      ownerUserId: null,
+      roleLabel: "Partenaire",
+      badgeKind: "partner",
+      passSource: "partner_form",
+    };
+  }
+
+  const { findPassByTicketCode } = await import(
+    "@/lib/hackathon/partner-passes"
+  );
+  const seat = await findPassByTicketCode(normalized);
+  if (seat?.pass) {
+    const p = seat.pass;
+    const active = p.status === "active" && Boolean(p.ticketCode);
+    return {
+      subjectType: "partner",
+      subjectId: p.id,
+      editionId: p.editionId,
+      ticketCode: normalized,
+      displayName: p.holderName || seat.org.shortName,
+      orgOrEmail: seat.org.orgName,
+      presenceStatus: (p.presenceStatus as PresenceStatus) || "absent",
+      checkedInAt: p.checkedInAt,
+      valid: active,
+      invalidReason: active ? undefined : "not_assigned",
+      ownerEmail: p.holderEmail,
+      ownerUserId: p.ownerUserId,
+      roleLabel: p.roleLabel,
+      badgeKind: p.badgeKind,
+      passSource: "partner_seat",
     };
   }
 
   return null;
+}
+
+/** Exclusive badge view: owner email/user or staff only. */
+export async function canViewPass(
+  pass: ResolvedPass,
+): Promise<{ ok: true; staff: boolean } | { ok: false; reason: "login_required" | "forbidden" }> {
+  const session = await getSessionUser();
+  if (!session) return { ok: false, reason: "login_required" };
+
+  const staff =
+    session.role === UserRole.SUPER_ADMIN || session.role === UserRole.AGENT;
+  if (staff) return { ok: true, staff: true };
+
+  if (pass.ownerUserId && pass.ownerUserId === session.id) {
+    return { ok: true, staff: false };
+  }
+  const sessionEmail = session.email?.trim().toLowerCase() ?? "";
+  const ownerEmail = pass.ownerEmail?.trim().toLowerCase() ?? "";
+  if (sessionEmail && ownerEmail && sessionEmail === ownerEmail) {
+    return { ok: true, staff: false };
+  }
+  return { ok: false, reason: "forbidden" };
 }
 
 export async function getPassByCode(code: string) {
@@ -259,6 +327,15 @@ export async function recordAccessScan(args: {
         console.warn("[hackathon] markTeamBuilding on check-in skipped", e);
       }
     }
+  } else if (pass.passSource === "partner_seat") {
+    await db
+      .update(hackathonPartnerPasses)
+      .set({
+        presenceStatus: nextStatus,
+        checkedInAt: pass.checkedInAt ?? (args.mode === "in" ? now : null),
+        updatedAt: now,
+      })
+      .where(eq(hackathonPartnerPasses.id, pass.subjectId));
   } else {
     await db
       .update(hackathonPartners)

@@ -242,6 +242,16 @@ export async function ensurePartnerOrgsSeeded(
       sortOrder: org.sortOrder,
     });
   }
+
+  try {
+    const { ensureAllPartnerPasses } = await import(
+      "@/lib/hackathon/partner-passes"
+    );
+    await ensureAllPartnerPasses(eid);
+  } catch (e) {
+    console.warn("[hackathon] ensureAllPartnerPasses skipped", e);
+  }
+
   return eid;
 }
 

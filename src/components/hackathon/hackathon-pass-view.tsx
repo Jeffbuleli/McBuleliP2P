@@ -17,6 +17,7 @@ type Props = {
   ticketCode: string;
   displayName: string;
   orgOrEmail: string;
+  roleLabel?: string | null;
   venue: string;
   editionNameFr: string;
   editionNameEn: string;
@@ -29,6 +30,7 @@ export function HackathonPassView({
   ticketCode,
   displayName,
   orgOrEmail,
+  roleLabel,
   venue,
   editionNameFr,
   editionNameEn,
@@ -45,6 +47,7 @@ export function HackathonPassView({
         ticketCode={ticketCode}
         displayName={displayName}
         orgOrEmail={orgOrEmail}
+        roleLabel={roleLabel}
         venue={venue}
         datesLabel={isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN}
         editionTitle={isFr ? editionNameFr : editionNameEn}
