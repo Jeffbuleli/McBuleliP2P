@@ -61,7 +61,10 @@ type Tab =
   | "sponsors"
   | "people"
   | "promo"
-  | "chat_orgs";
+  | "chat_orgs"
+  | "teams"
+  | "announcements"
+  | "mentors";
 
 type Props = {
   /** admin = full ops; stats = read-only lists for agents */
@@ -108,6 +111,21 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       if (!res.ok) throw new Error("load_failed");
       const json = (await res.json()) as { chatOrgs: Record<string, unknown>[] };
       setRows(json.chatOrgs ?? []);
+      return;
+    }
+    if (tab === "teams" || tab === "announcements" || tab === "mentors") {
+      const res = await fetch(
+        `/api/admin/hackathon?tab=${tab}&editionId=${encodeURIComponent(editionId)}`,
+      );
+      if (!res.ok) throw new Error("load_failed");
+      const json = (await res.json()) as Record<string, unknown[]>;
+      const key =
+        tab === "teams"
+          ? "teams"
+          : tab === "announcements"
+            ? "announcements"
+            : "mentors";
+      setRows((json[key] as Record<string, unknown>[]) ?? []);
       return;
     }
     const res = await fetch(
@@ -355,6 +373,9 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
     ? [
         { id: "editions", label: "Éditions" },
         { id: "registrations", label: "Participants" },
+        { id: "teams", label: "Équipes" },
+        { id: "announcements", label: "Annonces" },
+        { id: "mentors", label: "Mentorat" },
         { id: "partners", label: "Partenaires" },
         { id: "chat_orgs", label: "Échange / Chat" },
         { id: "sponsors", label: "Sponsors" },
@@ -363,6 +384,9 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       ]
     : [
         { id: "registrations", label: "Participants" },
+        { id: "teams", label: "Équipes" },
+        { id: "announcements", label: "Annonces" },
+        { id: "mentors", label: "Mentorat" },
         { id: "partners", label: "Partenaires" },
         { id: "chat_orgs", label: "Échange / Chat" },
         { id: "sponsors", label: "Sponsors" },
@@ -394,6 +418,20 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
             className="font-semibold text-[color:var(--fd-primary)]"
           >
             Scanner porte
+          </a>
+          {" · "}
+          <a
+            href="/hackathon/live"
+            className="font-semibold text-[color:var(--fd-primary)]"
+          >
+            Live wall
+          </a>
+          {" · "}
+          <a
+            href="/hackathon/espace"
+            className="font-semibold text-[color:var(--fd-primary)]"
+          >
+            Espace participant
           </a>
           {!isAdmin ? " · lecture seule" : null}
         </p>
@@ -775,11 +813,228 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
               <p className="text-xs text-[color:var(--fd-muted)]">
                 {[r.title, r.company, r.expertise].filter(Boolean).join(" · ")}
               </p>
+              <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+                userId: {r.userId ? String(r.userId) : "non lié"}
+              </p>
+              {isAdmin ? (
+                <form
+                  className="mt-2 flex flex-wrap gap-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    const userId = String(fd.get("userId") || "").trim();
+                    setBusy(true);
+                    try {
+                      const res = await fetch("/api/admin/hackathon", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          kind: "person",
+                          id: r.id,
+                          userId: userId || null,
+                        }),
+                      });
+                      if (!res.ok) throw new Error("patch_failed");
+                      await loadTab();
+                    } catch {
+                      setErr("Lien userId échoué");
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  <input
+                    name="userId"
+                    placeholder="UUID user McBuleli"
+                    defaultValue={r.userId ? String(r.userId) : ""}
+                    className={adminCls.input}
+                  />
+                  <button type="submit" disabled={busy} className={adminCls.btnSecondary}>
+                    Lier compte
+                  </button>
+                </form>
+              ) : null}
             </li>
           ))}
           {!rows.length ? (
             <p className={adminCls.empty}>Aucun jury/mentor - seed ou ajoutez en DB.</p>
           ) : null}
+        </ul>
+      ) : null}
+
+      {tab === "teams" ? (
+        <ul className="space-y-2">
+          {rows.map((r) => (
+            <li key={String(r.id)} className={adminCls.card}>
+              <p className="font-bold">
+                {String(r.name)}{" "}
+                <span className="text-sm font-normal text-[color:var(--fd-muted)]">
+                  · {String(r.status)}
+                  {r.averageScore != null ? ` · score ${String(r.averageScore)}` : ""}
+                </span>
+              </p>
+              <p className="text-xs text-[color:var(--fd-muted)]">
+                Invite {String(r.inviteCode)} · livrable {String(r.submissionStatus ?? "-")}
+              </p>
+              {isAdmin ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={adminCls.btnSecondary}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        await fetch("/api/admin/hackathon", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            kind: "team",
+                            id: r.id,
+                            action: "presented",
+                          }),
+                        });
+                        await loadTab();
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Marquer présenté
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={adminCls.btnSecondary}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        await fetch("/api/admin/hackathon", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            kind: "team",
+                            id: r.id,
+                            action: "judged",
+                          }),
+                        });
+                        await loadTab();
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Marquer jugé
+                  </button>
+                </div>
+              ) : null}
+            </li>
+          ))}
+          {!rows.length ? <p className={adminCls.empty}>Aucune équipe.</p> : null}
+        </ul>
+      ) : null}
+
+      {tab === "announcements" ? (
+        <div className="space-y-4">
+          {isAdmin ? (
+            <form
+              className={`${adminCls.card} space-y-3`}
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                setBusy(true);
+                try {
+                  const res = await fetch("/api/admin/hackathon", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      kind: "announcement",
+                      editionId,
+                      title: String(fd.get("title") || ""),
+                      body: String(fd.get("body") || ""),
+                      pinned: fd.get("pinned") === "on",
+                    }),
+                  });
+                  if (!res.ok) throw new Error("create_failed");
+                  (e.target as HTMLFormElement).reset();
+                  await loadTab();
+                } catch {
+                  setErr("Création annonce échouée");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <h3 className={adminCls.h2}>Nouvelle annonce</h3>
+              <input name="title" required placeholder="Titre" className={adminCls.input} />
+              <textarea name="body" required placeholder="Message" className={adminCls.input} rows={3} />
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="pinned" /> Épingler
+              </label>
+              <button type="submit" disabled={busy || !editionId} className={adminCls.btnPrimary}>
+                Publier
+              </button>
+            </form>
+          ) : null}
+          <ul className="space-y-2">
+            {rows.map((r) => (
+              <li key={String(r.id)} className={adminCls.card}>
+                <p className="font-bold">
+                  {r.pinned ? "[Pin] " : ""}
+                  {String(r.title)}
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-[color:var(--fd-muted)]">
+                  {String(r.body)}
+                </p>
+              </li>
+            ))}
+            {!rows.length ? <p className={adminCls.empty}>Aucune annonce.</p> : null}
+          </ul>
+        </div>
+      ) : null}
+
+      {tab === "mentors" ? (
+        <ul className="space-y-2">
+          {rows.map((r) => (
+            <li key={String(r.id)} className={adminCls.card}>
+              <p className="font-bold">
+                {String(r.teamName)} · {String(r.topic)}
+              </p>
+              <p className="text-xs text-[color:var(--fd-muted)]">{String(r.status)}</p>
+              {isAdmin ? (
+                <div className="mt-2 flex gap-2">
+                  {(["accepted", "closed", "open"] as const).map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      disabled={busy}
+                      className={adminCls.btnSecondary}
+                      onClick={async () => {
+                        setBusy(true);
+                        try {
+                          await fetch("/api/admin/hackathon", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              kind: "mentor_request",
+                              id: r.id,
+                              status,
+                            }),
+                          });
+                          await loadTab();
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </li>
+          ))}
+          {!rows.length ? <p className={adminCls.empty}>Aucune demande mentor.</p> : null}
         </ul>
       ) : null}
 

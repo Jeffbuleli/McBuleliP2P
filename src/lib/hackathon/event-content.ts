@@ -325,12 +325,14 @@ export function hackathonFeaturedJury(): HackathonFeaturedJury[] {
 
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "register", labelFr: "Participer", labelEn: "Join" },
+  { id: "espace", labelFr: "Mon espace", labelEn: "My hub", href: "/hackathon/espace" },
   { id: "defis", labelFr: "Défis", labelEn: "Challenges" },
   { id: "prix", labelFr: "Prix", labelEn: "Prizes" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "partenaires", labelFr: "Écosystème", labelEn: "Ecosystem" },
   { id: "chat", labelFr: "Échange", labelEn: "Exchange", href: "/hackathon/chat" },
+  { id: "live", labelFr: "Live", labelEn: "Live", href: "/hackathon/live" },
   { id: "faq", labelFr: "FAQ", labelEn: "FAQ" },
   { id: "contact", labelFr: "Contact", labelEn: "Contact" },
 ];

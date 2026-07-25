@@ -3,13 +3,19 @@ import { asc, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
   getDb,
+  hackathonAnnouncements,
   hackathonEditions,
+  hackathonJuryScores,
+  hackathonMentorRequests,
   hackathonPeople,
   hackathonPartners,
   hackathonPartnerOrgs,
   hackathonPromoCodes,
   hackathonRegistrations,
   hackathonSponsors,
+  hackathonSubmissions,
+  hackathonTeamMembers,
+  hackathonTeams,
   users,
 } from "@/db";
 import { StaffAuthError, requireStaffScope, requireSuperAdmin } from "@/lib/session-user";
@@ -20,6 +26,9 @@ import {
 } from "@/lib/hackathon/constants";
 import { ensurePartnerOrgsSeeded } from "@/lib/hackathon/partner-chat";
 import type { PartnerOrgStatus } from "@/lib/hackathon/partner-chat";
+import { ensureChallengesSeeded } from "@/lib/hackathon/challenges";
+import { averageTeamScore } from "@/lib/hackathon/submissions";
+import { markTeamJudged, markTeamPresented } from "@/lib/hackathon/teams";
 
 export const dynamic = "force-dynamic";
 
@@ -188,6 +197,84 @@ export async function GET(req: Request) {
     });
   }
 
+  if (tab === "teams") {
+    await ensureChallengesSeeded(editionId);
+    const teams = await db
+      .select()
+      .from(hackathonTeams)
+      .where(eq(hackathonTeams.editionId, editionId))
+      .orderBy(desc(hackathonTeams.updatedAt));
+    const enriched = [];
+    for (const team of teams) {
+      const members = await db
+        .select({
+          registrationId: hackathonTeamMembers.registrationId,
+          role: hackathonTeamMembers.role,
+          firstName: hackathonRegistrations.firstName,
+          lastName: hackathonRegistrations.lastName,
+        })
+        .from(hackathonTeamMembers)
+        .innerJoin(
+          hackathonRegistrations,
+          eq(hackathonTeamMembers.registrationId, hackathonRegistrations.id),
+        )
+        .where(eq(hackathonTeamMembers.teamId, team.id));
+      const [sub] = await db
+        .select()
+        .from(hackathonSubmissions)
+        .where(eq(hackathonSubmissions.teamId, team.id))
+        .limit(1);
+      let average: number | null = null;
+      if (sub) {
+        const scores = await db
+          .select()
+          .from(hackathonJuryScores)
+          .where(eq(hackathonJuryScores.submissionId, sub.id));
+        average = averageTeamScore(scores);
+      }
+      enriched.push({
+        ...team,
+        members,
+        submissionStatus: sub?.status ?? null,
+        averageScore: average,
+      });
+    }
+    return NextResponse.json({ teams: enriched });
+  }
+
+  if (tab === "announcements") {
+    const rows = await db
+      .select()
+      .from(hackathonAnnouncements)
+      .where(eq(hackathonAnnouncements.editionId, editionId))
+      .orderBy(
+        desc(hackathonAnnouncements.pinned),
+        desc(hackathonAnnouncements.publishedAt),
+      );
+    return NextResponse.json({ announcements: rows });
+  }
+
+  if (tab === "mentors") {
+    const rows = await db
+      .select({
+        id: hackathonMentorRequests.id,
+        topic: hackathonMentorRequests.topic,
+        notes: hackathonMentorRequests.notes,
+        status: hackathonMentorRequests.status,
+        teamId: hackathonMentorRequests.teamId,
+        teamName: hackathonTeams.name,
+        createdAt: hackathonMentorRequests.createdAt,
+      })
+      .from(hackathonMentorRequests)
+      .innerJoin(
+        hackathonTeams,
+        eq(hackathonMentorRequests.teamId, hackathonTeams.id),
+      )
+      .where(eq(hackathonMentorRequests.editionId, editionId))
+      .orderBy(desc(hackathonMentorRequests.createdAt));
+    return NextResponse.json({ mentors: rows });
+  }
+
   return NextResponse.json({ error: "bad_tab" }, { status: 400 });
 }
 
@@ -267,6 +354,33 @@ const patchRegistrationZ = z.object({
   action: z.enum(["relink_user", "resend_verify"]),
 });
 
+const patchTeamZ = z.object({
+  kind: z.literal("team"),
+  id: z.string().uuid(),
+  action: z.enum(["presented", "judged"]),
+});
+
+const patchMentorZ = z.object({
+  kind: z.literal("mentor_request"),
+  id: z.string().uuid(),
+  status: z.enum(["accepted", "closed", "open"]),
+});
+
+const patchPersonLinkZ = z.object({
+  kind: z.literal("person"),
+  id: z.string().uuid(),
+  published: z.boolean().optional(),
+  userId: z.string().uuid().nullable().optional(),
+});
+
+const createAnnouncementZ = z.object({
+  kind: z.literal("announcement"),
+  editionId: z.string().uuid(),
+  title: z.string().trim().min(2).max(200),
+  body: z.string().trim().min(1).max(5000),
+  pinned: z.boolean().optional(),
+});
+
 export async function POST(req: Request) {
   try {
     await requireSuperAdmin();
@@ -274,6 +388,24 @@ export async function POST(req: Request) {
     return authError(e);
   }
   const json = await req.json().catch(() => null);
+
+  if (json && typeof json === "object" && (json as { kind?: string }).kind === "announcement") {
+    const parsed = createAnnouncementZ.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+    }
+    const db = getDb();
+    const [row] = await db
+      .insert(hackathonAnnouncements)
+      .values({
+        editionId: parsed.data.editionId,
+        title: parsed.data.title,
+        body: parsed.data.body,
+        pinned: parsed.data.pinned ?? false,
+      })
+      .returning();
+    return NextResponse.json({ announcement: row });
+  }
 
   if (json && typeof json === "object" && (json as { kind?: string }).kind === "promo") {
     const parsed = createPromoZ.safeParse(json);
@@ -317,6 +449,8 @@ export async function POST(req: Request) {
     })
     .returning();
 
+  await ensureChallengesSeeded(row.id);
+
   return NextResponse.json({ edition: row });
 }
 
@@ -346,6 +480,61 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: "not_found" }, { status: 404 });
       }
       return NextResponse.json({ org: row });
+    }
+
+    if ((json as { kind?: string }).kind === "team") {
+      const parsed = patchTeamZ.safeParse(json);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      if (parsed.data.action === "presented") {
+        await markTeamPresented(parsed.data.id);
+      } else {
+        await markTeamJudged(parsed.data.id);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    if ((json as { kind?: string }).kind === "mentor_request") {
+      const parsed = patchMentorZ.safeParse(json);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const db = getDb();
+      const now = new Date();
+      await db
+        .update(hackathonMentorRequests)
+        .set({
+          status: parsed.data.status,
+          acceptedAt: parsed.data.status === "accepted" ? now : undefined,
+          closedAt: parsed.data.status === "closed" ? now : undefined,
+          updatedAt: now,
+        })
+        .where(eq(hackathonMentorRequests.id, parsed.data.id));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (
+      (json as { kind?: string }).kind === "person" &&
+      "userId" in (json as object)
+    ) {
+      const parsed = patchPersonLinkZ.safeParse(json);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+      }
+      const db = getDb();
+      await db
+        .update(hackathonPeople)
+        .set({
+          ...(parsed.data.published !== undefined
+            ? { published: parsed.data.published }
+            : {}),
+          ...(parsed.data.userId !== undefined
+            ? { userId: parsed.data.userId }
+            : {}),
+        })
+        .where(eq(hackathonPeople.id, parsed.data.id));
+      return NextResponse.json({ ok: true });
     }
 
     if ((json as { kind?: string }).kind === "promo_claim") {

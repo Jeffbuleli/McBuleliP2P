@@ -743,6 +743,27 @@
       "when": 1788500000000,
       "tag": "0115_hackathon_promo_ambassador",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1788600000000,
+      "tag": "0116_hackathon_partner_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1788700000000,
+      "tag": "0117_hackathon_partner_chat_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1788800000000,
+      "tag": "0118_hackathon_experience",
+      "breakpoints": true
     }
   ]
 }

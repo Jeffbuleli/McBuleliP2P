@@ -163,6 +163,13 @@ export async function getFeaturedHackathon(): Promise<FeaturedHackathonPayload |
 
   if (!row) return null;
 
+  try {
+    const { ensureChallengesSeeded } = await import("@/lib/hackathon/challenges");
+    await ensureChallengesSeeded(row.id);
+  } catch (e) {
+    console.warn("[hackathon] challenge seed skipped", e);
+  }
+
   const [seatRow] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(hackathonRegistrations)

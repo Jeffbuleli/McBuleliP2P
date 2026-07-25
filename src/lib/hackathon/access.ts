@@ -240,6 +240,18 @@ export async function recordAccessScan(args: {
         updatedAt: now,
       })
       .where(eq(hackathonRegistrations.id, pass.subjectId));
+
+    if (args.mode === "in") {
+      try {
+        const { getMemberForRegistration, markTeamBuilding } = await import(
+          "@/lib/hackathon/teams"
+        );
+        const membership = await getMemberForRegistration(pass.subjectId);
+        if (membership) await markTeamBuilding(membership.team.id);
+      } catch (e) {
+        console.warn("[hackathon] markTeamBuilding on check-in skipped", e);
+      }
+    }
   } else {
     await db
       .update(hackathonPartners)

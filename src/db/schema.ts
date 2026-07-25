@@ -4050,6 +4050,12 @@ export const hackathonEditions = pgTable(
         sponsors: 0,
       }),
     coverImage: text("cover_image"),
+    /** After this instant, teams can no longer change challenge. */
+    challengeLockAt: timestamp("challenge_lock_at", { withTimezone: true }),
+    /** After this instant, submissions are read-only (except admin unlock). */
+    submissionDeadlineAt: timestamp("submission_deadline_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4077,6 +4083,10 @@ export const hackathonPeople = pgTable(
     title: varchar("title", { length: 160 }),
     expertise: varchar("expertise", { length: 200 }),
     photoUrl: text("photo_url"),
+    /** Linked McBuleli account for jury/mentor portal access. */
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     sortOrder: integer("sort_order").notNull().default(0),
     published: boolean("published").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -4089,6 +4099,213 @@ export const hackathonPeople = pgTable(
       t.role,
       t.sortOrder,
     ),
+    index("hackathon_people_user_idx").on(t.userId),
+  ],
+);
+
+/** Challenge catalogue per edition (seeded from landing categories). */
+export const hackathonChallenges = pgTable(
+  "hackathon_challenges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 64 }).notNull(),
+    labelFr: varchar("label_fr", { length: 160 }).notNull(),
+    labelEn: varchar("label_en", { length: 160 }).notNull(),
+    blurbFr: text("blurb_fr"),
+    blurbEn: text("blurb_en"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    published: boolean("published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_challenges_edition_slug_uidx").on(
+      t.editionId,
+      t.slug,
+    ),
+    index("hackathon_challenges_edition_idx").on(t.editionId, t.sortOrder),
+  ],
+);
+
+/**
+ * Team status: forming | ready | building | submitted | presented | judged
+ * Derived from actions; not a progress percentage.
+ */
+export const hackathonTeams = pgTable(
+  "hackathon_teams",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    slug: varchar("slug", { length: 140 }).notNull(),
+    inviteCode: varchar("invite_code", { length: 16 }).notNull().unique(),
+    challengeId: uuid("challenge_id").references(() => hackathonChallenges.id, {
+      onDelete: "set null",
+    }),
+    /** forming | ready | building | submitted | presented | judged */
+    status: varchar("status", { length: 24 }).notNull().default("forming"),
+    isSolo: boolean("is_solo").notNull().default(false),
+    rulesAcceptedAt: timestamp("rules_accepted_at", { withTimezone: true }),
+    rulesAcceptedByRegistrationId: uuid("rules_accepted_by_registration_id"),
+    createdByRegistrationId: uuid("created_by_registration_id").notNull(),
+    presentedAt: timestamp("presented_at", { withTimezone: true }),
+    judgedAt: timestamp("judged_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_teams_edition_slug_uidx").on(t.editionId, t.slug),
+    index("hackathon_teams_edition_status_idx").on(t.editionId, t.status),
+    index("hackathon_teams_invite_idx").on(t.inviteCode),
+  ],
+);
+
+export const hackathonAnnouncements = pgTable(
+  "hackathon_announcements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    pinned: boolean("pinned").notNull().default(false),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_announcements_edition_idx").on(
+      t.editionId,
+      t.pinned,
+      t.publishedAt,
+    ),
+  ],
+);
+
+/** draft | submitted */
+export const hackathonSubmissions = pgTable(
+  "hackathon_submissions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => hackathonTeams.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    /** draft | submitted */
+    status: varchar("status", { length: 16 }).notNull().default("draft"),
+    demoUrl: text("demo_url"),
+    githubUrl: text("github_url"),
+    figmaUrl: text("figma_url"),
+    pitchPdfUrl: text("pitch_pdf_url"),
+    readmeUrl: text("readme_url"),
+    notes: text("notes"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_submissions_team_uidx").on(t.teamId),
+    index("hackathon_submissions_edition_status_idx").on(
+      t.editionId,
+      t.status,
+    ),
+  ],
+);
+
+/** open | accepted | closed */
+export const hackathonMentorRequests = pgTable(
+  "hackathon_mentor_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => hackathonTeams.id, { onDelete: "cascade" }),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    topic: varchar("topic", { length: 200 }).notNull(),
+    notes: text("notes"),
+    /** open | accepted | closed */
+    status: varchar("status", { length: 16 }).notNull().default("open"),
+    mentorPersonId: uuid("mentor_person_id").references(
+      () => hackathonPeople.id,
+      { onDelete: "set null" },
+    ),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    createdByRegistrationId: uuid("created_by_registration_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_mentor_requests_edition_status_idx").on(
+      t.editionId,
+      t.status,
+    ),
+    index("hackathon_mentor_requests_team_idx").on(t.teamId),
+  ],
+);
+
+/**
+ * Jury scores: criterion = innovation | impact | technical | business | presentation
+ * score 0–10; weights applied in app (25/25/20/15/15).
+ */
+export const hackathonJuryScores = pgTable(
+  "hackathon_jury_scores",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => hackathonSubmissions.id, { onDelete: "cascade" }),
+    jurorUserId: uuid("juror_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** innovation | impact | technical | business | presentation */
+    criterion: varchar("criterion", { length: 32 }).notNull(),
+    score: integer("score").notNull(),
+    comment: text("comment"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_jury_scores_unique_uidx").on(
+      t.submissionId,
+      t.jurorUserId,
+      t.criterion,
+    ),
+    index("hackathon_jury_scores_submission_idx").on(t.submissionId),
   ],
 );
 
@@ -4295,6 +4512,35 @@ export const hackathonRegistrations = pgTable(
       t.editionId,
       t.email,
     ),
+  ],
+);
+
+export const hackathonTeamMembers = pgTable(
+  "hackathon_team_members",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => hackathonTeams.id, { onDelete: "cascade" }),
+    registrationId: uuid("registration_id")
+      .notNull()
+      .references(() => hackathonRegistrations.id, { onDelete: "cascade" }),
+    /** lead | dev | design | business | other */
+    role: varchar("role", { length: 24 }).notNull().default("other"),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_team_members_team_reg_uidx").on(
+      t.teamId,
+      t.registrationId,
+    ),
+    /** One team per registration (registration is already edition-scoped). */
+    uniqueIndex("hackathon_team_members_registration_uidx").on(
+      t.registrationId,
+    ),
+    index("hackathon_team_members_team_idx").on(t.teamId),
   ],
 );
 
