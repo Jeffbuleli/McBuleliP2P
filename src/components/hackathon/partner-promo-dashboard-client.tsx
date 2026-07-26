@@ -287,6 +287,9 @@ export function PartnerPromoDashboardClient({ token }: Props) {
       );
       const json = (await res.json().catch(() => null)) as {
         amountUsd?: number;
+        feeUsd?: number;
+        netUsd?: number;
+        feeRate?: number;
         error?: string;
       } | null;
       if (!res.ok) {
@@ -306,10 +309,14 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         setClaimMsg(map[json?.error ?? ""] ?? "Retrait impossible.");
         return;
       }
+      const feePct =
+        json?.feeRate != null ? Math.round(json.feeRate * 100) : 5;
       setClaimMsg(
-        json?.amountUsd != null
-          ? `Retrait de ${json.amountUsd} USD lancé vers votre Mobile Money.`
-          : "Retrait Mobile Money lancé.",
+        json?.netUsd != null && json?.amountUsd != null
+          ? `Retrait lancé : ${json.netUsd} USD nets vers Mobile Money (brut ${json.amountUsd} USD − frais ${feePct}%). Email de suivi envoyé.`
+          : json?.amountUsd != null
+            ? `Retrait de ${json.amountUsd} USD lancé vers votre Mobile Money.`
+            : "Retrait Mobile Money lancé.",
       );
       setWithdrawOpen(false);
       setWithdrawStep(0);
@@ -762,6 +769,40 @@ export function PartnerPromoDashboardClient({ token }: Props) {
                       </p>
                       <p className="mt-1 font-mono text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
                         {normalizeCodPhoneNumber(phoneNumber)}
+                      </p>
+                      <dl className="mt-3 space-y-1 border-t border-[color:var(--hk-border,var(--fd-border))] pt-2 text-xs">
+                        <div className="flex justify-between gap-3">
+                          <dt className="text-[color:var(--hk-muted,var(--fd-muted))]">
+                            Brut
+                          </dt>
+                          <dd className="font-semibold text-[color:var(--hk-text,var(--fd-text))]">
+                            {amountNum.toFixed(2)} USD
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <dt className="text-[color:var(--hk-muted,var(--fd-muted))]">
+                            Frais plateforme (5%)
+                          </dt>
+                          <dd className="font-semibold text-[color:var(--hk-text,var(--fd-text))]">
+                            {(Math.round(amountNum * 0.05 * 100) / 100).toFixed(2)}{" "}
+                            USD
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <dt className="text-[color:var(--hk-muted,var(--fd-muted))]">
+                            Net Mobile Money
+                          </dt>
+                          <dd className="font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
+                            {(
+                              Math.round(amountNum * 0.95 * 100) / 100
+                            ).toFixed(2)}{" "}
+                            USD
+                          </dd>
+                        </div>
+                      </dl>
+                      <p className="mt-2 text-[11px] text-[color:var(--hk-muted,var(--fd-muted))]">
+                        Même frais que les retraits wallet. Un email confirme le
+                        succès ou l&apos;échec.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">

@@ -203,11 +203,13 @@ export default function HackathonPaymentStatusPage() {
       title={isFr ? "En attente de paiement" : "Waiting for payment"}
       subtitle={
         isFr
-          ? "Validez le prompt sur votre téléphone (Orange / M-Pesa / Airtel). Le numéro doit commencer par 243. Cette page se met à jour automatiquement."
-          : "Confirm the prompt on your phone (Orange / M-Pesa / Airtel). The number must start with 243. This page updates automatically."
+          ? "Validez le prompt sur votre téléphone (Orange / M-Pesa / Airtel). Le numéro doit commencer par 243. Cette page interroge pawaPay et se met à jour automatiquement."
+          : "Confirm the prompt on your phone (Orange / M-Pesa / Airtel). The number must start with 243. This page checks pawaPay and updates automatically."
       }
+      showMomoRails
+      momoLabel={isFr ? "Mobile Money via pawaPay" : "Mobile Money via pawaPay"}
     >
-      <div className="rounded-xl bg-[color:var(--fd-mint)]/50 px-4 py-3">
+      <div className="rounded-2xl border border-[color:var(--fd-primary)]/15 bg-[color:var(--fd-mint)]/40 px-4 py-3">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--fd-muted)]">
           {isFr ? "Statut" : "Status"}
         </p>
@@ -218,10 +220,10 @@ export default function HackathonPaymentStatusPage() {
           {reference}
         </p>
       </div>
-      <p className="mt-4 text-xs text-[color:var(--fd-muted)]">
+      <p className="mt-4 text-center text-xs text-[color:var(--fd-muted)]">
         {isFr
-          ? "Ne fermez pas cette page tant que le paiement n'est pas confirmé."
-          : "Keep this page open until payment is confirmed."}
+          ? "Après validation MoMo, la confirmation peut prendre quelques secondes. Ne fermez pas cette page."
+          : "After MoMo approval, confirmation can take a few seconds. Keep this page open."}
       </p>
     </HackathonProcessCard>,
   );

@@ -43,6 +43,9 @@ export async function POST(
     ok: true,
     claimId: result.claimId,
     amountUsd: result.amountUsd,
+    feeUsd: result.feeUsd,
+    netUsd: result.netUsd,
+    feeRate: result.feeRate,
     payoutReference: result.payoutReference,
     payoutStatus: result.payoutStatus,
   });

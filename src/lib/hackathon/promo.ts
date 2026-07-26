@@ -215,6 +215,14 @@ export async function getPartnerDashboardStats(
   const nextSeatRemaining =
     nextSeatAt == null ? 0 : Math.max(0, nextSeatAt - confirmed);
 
+  try {
+    const { reconcileOpenPromoCashbackClaimsForPromo } = await import(
+      "@/lib/hackathon/reconcile-cashback-payout"
+    );
+    await reconcileOpenPromoCashbackClaimsForPromo(promo.id);
+  } catch (e) {
+    console.warn("[promo-dashboard] cashback reconcile skipped", e);
+  }
   const claimableUsd = await claimableCashbackUsd(promo.id);
   const claims = await listClaimsForPromo(promo.id);
   const session = await readPromoDashSession();

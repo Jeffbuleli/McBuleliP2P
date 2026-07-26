@@ -15,8 +15,14 @@ import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
 } from "@/lib/freshpay/normalize-phone";
+import {
+  buildCashbackFeeNote,
+  parseCashbackFeeNote,
+  sendHackathonCashbackPayoutEmail,
+} from "@/lib/email/messages/hackathon-cashback-payout";
 import { PROMO_CASHBACK_CLAIM_MIN_USD } from "@/lib/hackathon/promo-types";
 import { pawapayPayOut } from "@/lib/pawapay/provider";
+import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
 
 async function getPromoByToken(token: string) {
   const normalized = token.trim();
@@ -79,6 +85,54 @@ function roundUsd(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+export function quoteCashbackPayout(grossUsd: number): {
+  grossUsd: number;
+  feeUsd: number;
+  netUsd: number;
+  feeRate: number;
+} {
+  const gross = roundUsd(grossUsd);
+  const feeUsd = roundUsd(gross * FIAT_FEE_RATE);
+  const netUsd = roundUsd(gross - feeUsd);
+  return { grossUsd: gross, feeUsd, netUsd, feeRate: FIAT_FEE_RATE };
+}
+
+async function notifyCashbackPayout(args: {
+  promo: typeof hackathonPromoCodes.$inferSelect;
+  claim: typeof hackathonPromoCashbackClaims.$inferSelect;
+  outcome: "processing" | "completed" | "failed";
+  failureMessage?: string | null;
+}) {
+  const fees = parseCashbackFeeNote(args.claim.note);
+  const gross = Number(args.claim.amountUsd);
+  const feeUsd =
+    fees.feeUsd != null && Number.isFinite(fees.feeUsd)
+      ? fees.feeUsd
+      : roundUsd(gross * FIAT_FEE_RATE);
+  const netUsd =
+    fees.netUsd != null && Number.isFinite(fees.netUsd)
+      ? fees.netUsd
+      : roundUsd(gross - feeUsd);
+
+  await sendHackathonCashbackPayoutEmail({
+    to: args.promo.partnerEmail,
+    partnerName: args.promo.partnerName,
+    orgName: args.promo.orgName,
+    promoCode: args.promo.code,
+    grossUsd: gross,
+    feeUsd,
+    netUsd,
+    phoneNumber: args.claim.phoneNumber || "",
+    providerLabel: args.claim.providerLabel,
+    payoutReference: args.claim.payoutReference,
+    outcome: args.outcome,
+    failureMessage: args.failureMessage,
+    locale: "fr",
+  }).catch((e) => {
+    console.warn("[promo-cashback] payout email failed", e);
+  });
+}
+
 export async function requestCashbackClaim(args: {
   dashboardToken: string;
   partnerEmail: string;
@@ -91,6 +145,9 @@ export async function requestCashbackClaim(args: {
       ok: true;
       claimId: string;
       amountUsd: number;
+      feeUsd: number;
+      netUsd: number;
+      feeRate: number;
       payoutReference: string;
       payoutStatus: string;
     }
@@ -126,6 +183,11 @@ export async function requestCashbackClaim(args: {
     return { ok: false, error: "amount_exceeds_claimable", status: 400 };
   }
 
+  const quote = quoteCashbackPayout(amount);
+  if (quote.netUsd <= 0) {
+    return { ok: false, error: "invalid_amount", status: 400 };
+  }
+
   const db = getDb();
   const open = await db
     .select({ id: hackathonPromoCashbackClaims.id })
@@ -146,26 +208,33 @@ export async function requestCashbackClaim(args: {
   const providerLabel =
     args.providerLabel?.trim() || network.method || args.provider.trim();
   const payoutReference = randomUUID();
-  const amountStr = amount.toFixed(2);
+  const grossStr = quote.grossUsd.toFixed(2);
+  const netStr = quote.netUsd.toFixed(2);
+  const feeNote = buildCashbackFeeNote({
+    feeUsd: quote.feeUsd,
+    netUsd: quote.netUsd,
+    feeRate: quote.feeRate,
+  });
 
   const [row] = await db
     .insert(hackathonPromoCashbackClaims)
     .values({
       promoCodeId: promo.id,
-      amountUsd: amountStr,
+      amountUsd: grossStr,
       status: "requested",
       phoneNumber: phone,
       provider: providerId,
       providerLabel,
       payoutReference,
       payoutStatus: "PROCESSING",
+      note: feeNote,
     })
     .returning();
 
   try {
     const pr = await pawapayPayOut({
       payoutId: payoutReference,
-      amount: amountStr,
+      amount: netStr,
       currency: "USD",
       phoneNumber: phone,
       provider: providerId,
@@ -177,37 +246,74 @@ export async function requestCashbackClaim(args: {
         pr.response.failureReason?.failureMessage ??
         pr.response.failureReason?.failureCode ??
         "payout_rejected";
-      await db
+      const [failed] = await db
         .update(hackathonPromoCashbackClaims)
         .set({
           status: "failed",
           payoutStatus: "FAILED",
-          note: String(msg).slice(0, 500),
+          note: buildCashbackFeeNote({
+            feeUsd: quote.feeUsd,
+            netUsd: quote.netUsd,
+            feeRate: quote.feeRate,
+            extra: String(msg).slice(0, 400),
+          }),
           resolvedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(hackathonPromoCashbackClaims.id, row.id));
+        .where(eq(hackathonPromoCashbackClaims.id, row.id))
+        .returning();
+      if (failed) {
+        void notifyCashbackPayout({
+          promo,
+          claim: failed,
+          outcome: "failed",
+          failureMessage: String(msg),
+        });
+      }
       return { ok: false, error: "payout_rejected", status: 502 };
     }
   } catch (e) {
     console.warn("[promo-cashback] pawapayPayOut failed", e);
-    await db
+    const [failed] = await db
       .update(hackathonPromoCashbackClaims)
       .set({
         status: "failed",
         payoutStatus: "FAILED",
-        note: "payout_init_error",
+        note: buildCashbackFeeNote({
+          feeUsd: quote.feeUsd,
+          netUsd: quote.netUsd,
+          feeRate: quote.feeRate,
+          extra: "payout_init_error",
+        }),
         resolvedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(hackathonPromoCashbackClaims.id, row.id));
+      .where(eq(hackathonPromoCashbackClaims.id, row.id))
+      .returning();
+    if (failed) {
+      void notifyCashbackPayout({
+        promo,
+        claim: failed,
+        outcome: "failed",
+        failureMessage: "payout_init_error",
+      });
+    }
     return { ok: false, error: "payout_failed", status: 502 };
   }
+
+  void notifyCashbackPayout({
+    promo,
+    claim: row,
+    outcome: "processing",
+  });
 
   return {
     ok: true,
     claimId: row.id,
-    amountUsd: amount,
+    amountUsd: quote.grossUsd,
+    feeUsd: quote.feeUsd,
+    netUsd: quote.netUsd,
+    feeRate: quote.feeRate,
     payoutReference,
     payoutStatus: "PROCESSING",
   };
@@ -227,8 +333,15 @@ export async function applyPromoCashbackPayoutCallback(args: {
   if (!claim) return false;
   if (claim.status === "paid" || claim.status === "rejected") return true;
 
+  const [promo] = await db
+    .select()
+    .from(hackathonPromoCodes)
+    .where(eq(hackathonPromoCodes.id, claim.promoCodeId))
+    .limit(1);
+
   if (args.status === "COMPLETED") {
-    await db
+    const alreadyPaid = claim.status === "paid";
+    const [updated] = await db
       .update(hackathonPromoCashbackClaims)
       .set({
         status: "paid",
@@ -236,21 +349,47 @@ export async function applyPromoCashbackPayoutCallback(args: {
         resolvedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(hackathonPromoCashbackClaims.id, claim.id));
+      .where(eq(hackathonPromoCashbackClaims.id, claim.id))
+      .returning();
+    if (!alreadyPaid && updated && promo) {
+      void notifyCashbackPayout({
+        promo,
+        claim: updated,
+        outcome: "completed",
+      });
+    }
     return true;
   }
 
   if (args.status === "FAILED") {
-    await db
+    const alreadyFailed = claim.status === "failed";
+    const fees = parseCashbackFeeNote(claim.note);
+    const [updated] = await db
       .update(hackathonPromoCashbackClaims)
       .set({
         status: "failed",
         payoutStatus: "FAILED",
-        note: args.failureMessage?.slice(0, 500) || claim.note,
+        note: buildCashbackFeeNote({
+          feeUsd: fees.feeUsd ?? roundUsd(Number(claim.amountUsd) * FIAT_FEE_RATE),
+          netUsd:
+            fees.netUsd ??
+            roundUsd(Number(claim.amountUsd) * (1 - FIAT_FEE_RATE)),
+          feeRate: fees.feeRate ?? FIAT_FEE_RATE,
+          extra: args.failureMessage?.slice(0, 400) || undefined,
+        }),
         resolvedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(hackathonPromoCashbackClaims.id, claim.id));
+      .where(eq(hackathonPromoCashbackClaims.id, claim.id))
+      .returning();
+    if (!alreadyFailed && updated && promo) {
+      void notifyCashbackPayout({
+        promo,
+        claim: updated,
+        outcome: "failed",
+        failureMessage: args.failureMessage,
+      });
+    }
     return true;
   }
 

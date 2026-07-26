@@ -73,20 +73,58 @@ async function handleDepositCallback(
   const dedupKey = `deposit:${args.reference}:${args.status}`;
   const tx = await lookupTx(args.reference);
 
-  if (!allowedFiat(args.currency)) {
-    await insertWebhookEvent({
-      dedupKey,
-      kind: "deposit",
-      providerReference: args.reference,
-      status: args.status,
-      currency: args.currency,
-      amount: args.amount,
-      userId: tx?.userId ?? null,
-      effect: "skipped_currency",
-      rawBody: args.rawBody,
-    });
-    return { ok: true };
+  // Wallet fiat requires USD/CDF. Hackathon MoMo callbacks sometimes omit currency —
+  // fall back to the local payment row (always USD) so we never ACK-and-skip a paid seat.
+  let currency = args.currency;
+  if (!allowedFiat(currency)) {
+    if (tx) {
+      await insertWebhookEvent({
+        dedupKey,
+        kind: "deposit",
+        providerReference: args.reference,
+        status: args.status,
+        currency: args.currency,
+        amount: args.amount,
+        userId: tx.userId ?? null,
+        effect: "skipped_currency",
+        rawBody: args.rawBody,
+      });
+      return { ok: true };
+    }
+    try {
+      const { getDb, hackathonPayments } = await import("@/db");
+      const { eq } = await import("drizzle-orm");
+      const db = getDb();
+      const [pay] = await db
+        .select({ currency: hackathonPayments.currency })
+        .from(hackathonPayments)
+        .where(eq(hackathonPayments.reference, args.reference))
+        .limit(1);
+      if (pay?.currency && allowedFiat(pay.currency)) {
+        currency = pay.currency.toUpperCase();
+      } else {
+        currency = "USD";
+      }
+    } catch {
+      currency = "USD";
+    }
+    if (!allowedFiat(currency)) {
+      await insertWebhookEvent({
+        dedupKey,
+        kind: "deposit",
+        providerReference: args.reference,
+        status: args.status,
+        currency: args.currency,
+        amount: args.amount,
+        userId: null,
+        effect: "skipped_currency",
+        rawBody: args.rawBody,
+      });
+      return { ok: true };
+    }
   }
+
+  const payload: PawapayNormalizedCallback = { ...args, currency };
 
   try {
     const db = getDb();
@@ -94,44 +132,48 @@ async function handleDepositCallback(
       .update(fiatFreshpayTransactions)
       .set({
         status:
-          args.status === "COMPLETED"
+          payload.status === "COMPLETED"
             ? "COMPLETED"
-            : args.status === "FAILED"
+            : payload.status === "FAILED"
               ? "FAILED"
               : "PROCESSING",
-        providerTxId: args.providerTxId || undefined,
-        failureCode: args.status === "FAILED" ? args.failureCode : null,
-        failureMessage: args.status === "FAILED" ? args.failureMessage : null,
+        providerTxId: payload.providerTxId || undefined,
+        failureCode: payload.status === "FAILED" ? payload.failureCode : null,
+        failureMessage: payload.status === "FAILED" ? payload.failureMessage : null,
         updatedAt: new Date(),
-        completedAt: args.status === "COMPLETED" || args.status === "FAILED" ? new Date() : null,
+        completedAt:
+          payload.status === "COMPLETED" || payload.status === "FAILED"
+            ? new Date()
+            : null,
       })
-      .where(eq(fiatFreshpayTransactions.reference, args.reference));
+      .where(eq(fiatFreshpayTransactions.reference, payload.reference));
   } catch {
     // best-effort
   }
 
-  if (args.status !== "COMPLETED") {
+  if (payload.status !== "COMPLETED") {
     if (!tx) {
       const { completeHackathonPaymentByReference } = await import(
         "@/lib/hackathon/service"
       );
       const hackathon = await completeHackathonPaymentByReference({
-        reference: args.reference,
-        status: args.status === "FAILED" ? "FAILED" : "PROCESSING",
-        providerTxId: args.providerTxId || null,
-        failureMessage: args.failureMessage ?? null,
+        reference: payload.reference,
+        status: payload.status === "FAILED" ? "FAILED" : "PROCESSING",
+        providerTxId: payload.providerTxId || null,
+        failureMessage: payload.failureMessage ?? null,
       });
       if (hackathon.handled) {
         await insertWebhookEvent({
           dedupKey,
           kind: "deposit",
-          providerReference: args.reference,
-          status: args.status,
-          currency: args.currency,
-          amount: args.amount,
+          providerReference: payload.reference,
+          status: payload.status,
+          currency: payload.currency,
+          amount: payload.amount,
           userId: null,
-          effect: args.status === "FAILED" ? "hackathon_failed" : "hackathon_non_final",
-          rawBody: args.rawBody,
+          effect:
+            payload.status === "FAILED" ? "hackathon_failed" : "hackathon_non_final",
+          rawBody: payload.rawBody,
         });
         return { ok: true };
       }
@@ -139,13 +181,13 @@ async function handleDepositCallback(
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
-      providerReference: args.reference,
-      status: args.status,
-      currency: args.currency,
-      amount: args.amount,
+      providerReference: payload.reference,
+      status: payload.status,
+      currency: payload.currency,
+      amount: payload.amount,
       userId: tx?.userId ?? null,
       effect: "non_final",
-      rawBody: args.rawBody,
+      rawBody: payload.rawBody,
     });
     return { ok: true };
   }
@@ -157,9 +199,9 @@ async function handleDepositCallback(
         "@/lib/hackathon/service"
       );
       const hackathon = await completeHackathonPaymentByReference({
-        reference: args.reference,
+        reference: payload.reference,
         status: "COMPLETED",
-        providerTxId: args.providerTxId || null,
+        providerTxId: payload.providerTxId || null,
       });
       if (hackathon.handled) {
         if (hackathon.registrationId) {
@@ -173,13 +215,13 @@ async function handleDepositCallback(
         await insertWebhookEvent({
           dedupKey,
           kind: "deposit",
-          providerReference: args.reference,
-          status: args.status,
-          currency: args.currency,
-          amount: args.amount,
+          providerReference: payload.reference,
+          status: payload.status,
+          currency: payload.currency,
+          amount: payload.amount,
           userId: null,
           effect: "hackathon_paid",
-          rawBody: args.rawBody,
+          rawBody: payload.rawBody,
         });
         return { ok: true };
       }
@@ -187,19 +229,19 @@ async function handleDepositCallback(
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
-      providerReference: args.reference,
-      status: args.status,
-      currency: args.currency,
-      amount: args.amount,
+      providerReference: payload.reference,
+      status: payload.status,
+      currency: payload.currency,
+      amount: payload.amount,
       userId: tx?.userId ?? null,
       effect: tx?.kind !== "deposit" ? "wrong_kind" : "no_user",
-      rawBody: args.rawBody,
+      rawBody: payload.rawBody,
     });
     return { ok: true };
   }
 
   const initiatedGross = Number(tx.amount);
-  const callbackGross = Number(args.amount || tx.amount);
+  const callbackGross = Number(payload.amount || tx.amount);
   const gross = Math.min(
     Number.isFinite(initiatedGross) && initiatedGross > 0 ? initiatedGross : callbackGross,
     Number.isFinite(callbackGross) && callbackGross > 0 ? callbackGross : initiatedGross,
@@ -208,20 +250,20 @@ async function handleDepositCallback(
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
-      providerReference: args.reference,
-      status: args.status,
-      currency: args.currency,
-      amount: args.amount,
+      providerReference: payload.reference,
+      status: payload.status,
+      currency: payload.currency,
+      amount: payload.amount,
       userId: tx.userId,
       effect: "invalid_amount",
-      rawBody: args.rawBody,
+      rawBody: payload.rawBody,
     });
     return { ok: true };
   }
 
   const net = gross * (1 - FIAT_FEE_RATE);
   const fee = gross - net;
-  const pocket = args.currency === "USD" ? "USD" : "CDF";
+  const pocket = payload.currency === "USD" ? "USD" : "CDF";
   const netStr = fmtWalletAmount(net);
   const feeUsdEq =
     pocket === "USD" ? fmtWalletAmount(fee) : fmtWalletAmount(fee / cdfPerOneUsd());
@@ -234,13 +276,13 @@ async function handleDepositCallback(
         .values({
           dedupKey,
           kind: "deposit",
-          providerReference: args.reference,
-          status: args.status,
-          currency: args.currency,
-          amount: args.amount,
+          providerReference: payload.reference,
+          status: payload.status,
+          currency: payload.currency,
+          amount: payload.amount,
           userId: tx.userId,
           effect: "credited_fiat",
-          rawBody: args.rawBody,
+          rawBody: payload.rawBody,
         })
         .onConflictDoNothing()
         .returning({ id: freshpayWebhookEvents.id });
@@ -250,7 +292,7 @@ async function handleDepositCallback(
       const existing = await t
         .select({ id: walletLedgerEntries.id })
         .from(walletLedgerEntries)
-        .where(sql`(${walletLedgerEntries.meta} ->> 'fiatDepositRef') = ${args.reference}`)
+        .where(sql`(${walletLedgerEntries.meta} ->> 'fiatDepositRef') = ${payload.reference}`)
         .limit(1);
       if (existing.length > 0) return;
 
@@ -267,7 +309,7 @@ async function handleDepositCallback(
             gross: String(gross),
             feeRate: FIAT_FEE_RATE,
             fee: fmtWalletAmount(fee),
-            fiatDepositRef: args.reference,
+            fiatDepositRef: payload.reference,
             rail: "pawapay",
           },
         },
@@ -280,9 +322,9 @@ async function handleDepositCallback(
   await tryAwardReferralFromFiatDeposit({
     userId: tx.userId,
     grossAmount: gross,
-    currency: args.currency,
+    currency: payload.currency,
     feeUsdEquivalentStr: feeUsdEq,
-    fiatDepositRef: args.reference,
+    fiatDepositRef: payload.reference,
   });
 
   return { ok: true };

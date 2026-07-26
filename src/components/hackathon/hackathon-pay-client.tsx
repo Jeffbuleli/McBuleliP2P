@@ -9,7 +9,10 @@ import {
   hkSelect,
   hkSelectChevronStyle,
 } from "@/components/hackathon/hackathon-form-styles";
-import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
+import {
+  HackathonMomoRailLogos,
+  HackathonPoweredBy,
+} from "@/components/hackathon/hackathon-process-card";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import {
   isValidCodMsisdn,
@@ -130,28 +133,34 @@ export function HackathonPayClient({
     : null;
 
   return (
-    <div className="flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--hk-surface,var(--fd-card))] p-6 shadow-sm">
+    <div className="relative flex min-h-[70dvh] items-center justify-center overflow-hidden px-4 py-10">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(48,95,51,0.12),transparent_55%)]"
+      />
+      <div className="relative w-full max-w-md rounded-[1.75rem] border border-[color:var(--fd-border)] bg-[color:var(--hk-surface,var(--fd-card))] p-6 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.35)] ring-1 ring-[color:var(--fd-primary)]/15">
         <div className="flex flex-col items-center text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={BRAND_LOGO_256}
-            alt="McBuleli"
-            width={56}
-            height={56}
-            className="h-14 w-14 rounded-xl bg-white"
-          />
+          <span className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[color:var(--fd-primary)]/15">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BRAND_LOGO_256}
+              alt="McBuleli"
+              width={56}
+              height={56}
+              className="h-full w-full object-contain p-1"
+            />
+          </span>
           <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--fd-primary)]">
             McBuleli Hackathon
           </p>
         </div>
-        <h1 className="mt-4 text-center text-xl font-black text-[color:var(--fd-text)]">
+        <h1 className="mt-4 text-center text-xl font-black tracking-tight text-[color:var(--fd-text)]">
           {isFr ? `Finaliser, ${firstName}` : `Complete payment, ${firstName}`}
         </h1>
         <p className="mt-2 text-center text-sm text-[color:var(--fd-muted)]">
           {editionName}
         </p>
-        <dl className="mt-5 divide-y divide-[color:var(--fd-primary)]/10 overflow-hidden rounded-xl border border-[color:var(--fd-primary)]/15 bg-[color:var(--fd-mint)]/35 text-sm">
+        <dl className="mt-5 divide-y divide-[color:var(--fd-primary)]/10 overflow-hidden rounded-2xl border border-[color:var(--fd-primary)]/15 bg-[color:var(--fd-mint)]/35 text-sm">
           <div className="grid grid-cols-[7.5rem_1fr] items-baseline gap-3 px-4 py-3">
             <dt className="text-[color:var(--fd-muted)]">{isFr ? "Pack" : "Pack"}</dt>
             <dd className="text-right font-semibold text-[color:var(--fd-text)]">{packLabel}</dd>
@@ -171,6 +180,11 @@ export function HackathonPayClient({
             </div>
           ) : null}
         </dl>
+
+        <HackathonMomoRailLogos
+          className="mt-5"
+          label={isFr ? "Paiement Mobile Money" : "Mobile Money payment"}
+        />
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
