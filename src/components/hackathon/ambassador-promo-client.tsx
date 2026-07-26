@@ -206,6 +206,7 @@ export function AmbassadorPromoClient({
           {t.discountLine(AMBASSADOR_DISCOUNT_PERCENT, discounted)}
         </p>
         <p className="mt-1">{t.cashbackLine(AMBASSADOR_CASHBACK_USD)}</p>
+        <p className="mt-1">{t.seatsLine}</p>
         <p className="mt-2 break-all text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
           {t.account} : {initialEmail}
         </p>

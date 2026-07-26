@@ -190,7 +190,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Hackathon ambassador and partner promo",
     content:
-      "Ambassadors: create a personal promo code at https://mcbuleli.org/hackathon/ambassadeur (requires McBuleli login). Invites get about -10% on the hackathon fee; ambassador earns 10 USD cashback per confirmed paid signup, withdrawable via Mobile Money once the minimum claim threshold is reached (dashboard shows balance). Partners/organizations can get dedicated promo codes, complimentary seats by volume, and visibility - use Become a partner on /hackathon or contact hi@mcbuleli.org. Promo dashboards live at /hackathon/promo/dashboard/[token].",
+      "Ambassadors: create a personal promo code at https://mcbuleli.org/hackathon/ambassadeur (requires McBuleli login). Invites get about -10% on the hackathon fee; ambassador earns 10 USD cashback per confirmed paid signup, withdrawable via Mobile Money once the minimum claim threshold is reached (dashboard shows balance). Complimentary seats: 1 free seat after 3 paid confirmations, 2nd seat after 10+. Partners/organizations can get dedicated promo codes, the same complimentary seats by volume, and visibility - use Become a partner on /hackathon or contact hi@mcbuleli.org. Promo dashboards live at /hackathon/promo/dashboard/[token].",
     tags: [
       "hackathon",
       "ambassador",

@@ -34,6 +34,7 @@ export function PartnerPreparationPanel({
   const [error, setError] = useState<string | null>(null);
   const [passes, setPasses] = useState<PassRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [seatHolderOnly, setSeatHolderOnly] = useState(false);
   const [grantEmail, setGrantEmail] = useState("");
   const [grantName, setGrantName] = useState("");
   const [newTask, setNewTask] = useState("");
@@ -54,6 +55,7 @@ export function PartnerPreparationPanel({
       }
       setPasses(json.passes ?? []);
       setTasks(json.tasks ?? []);
+      setSeatHolderOnly(Boolean(json.seatHolderOnly));
     } finally {
       setBusy(false);
     }
@@ -158,7 +160,7 @@ export function PartnerPreparationPanel({
           ) : null}
         </ul>
 
-        {seat1 && seat2 && seat2.status !== "active" ? (
+        {seat1 && seat2 && seat2.status !== "active" && !seatHolderOnly ? (
           <div className="mt-4 space-y-2 border-t border-[color:var(--hk-border)] pt-4">
             <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
               {isFr ? "Octroyer la 2e place" : "Grant seat 2"}

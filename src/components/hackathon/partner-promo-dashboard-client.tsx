@@ -553,13 +553,12 @@ export function PartnerPromoDashboardClient({ token }: Props) {
           <Kpi label={ui.kpiCashback} value={`${totals.cashbackUsd} $`} accent />
         </section>
 
-        {/* Free seats - partners only */}
-        {!isAmbassador ? (
+        {/* Free seats - partners + ambassadors (1 @ 3 paid, 2 @ 10+) */}
         <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
-                {ui.seatsTitle}
+                {isAmbassador ? ui.seatsTitleAmb : ui.seatsTitlePartner}
               </p>
               <p className="mt-1 text-lg font-black tracking-tight text-[color:var(--hk-text,var(--fd-text))]">
                 {seatsEarned} / {rewards.seatsMax ?? 2}{" "}
@@ -624,7 +623,6 @@ export function PartnerPromoDashboardClient({ token }: Props) {
             </div>
           ) : null}
         </section>
-        ) : null}
 
         {/* Cashback */}
         {verified ? (

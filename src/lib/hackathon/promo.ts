@@ -204,10 +204,9 @@ export async function getPartnerDashboardStats(
   }, 0);
 
   const isAmbassador = (promo.kind ?? "partner") === "ambassador";
-  const seatsEarned = isAmbassador ? 0 : partnerFreeSeatsEarned(confirmed);
-  const nextSeatAt = isAmbassador
-    ? null
-    : seatsEarned < 1
+  const seatsEarned = partnerFreeSeatsEarned(confirmed);
+  const nextSeatAt =
+    seatsEarned < 1
       ? PARTNER_SEAT_1_AT
       : seatsEarned < PARTNER_FREE_SEATS_MAX
         ? PARTNER_SEAT_2_AT
@@ -262,15 +261,15 @@ export async function getPartnerDashboardStats(
       cashbackUsd,
     },
     rewards: {
-      seatsMax: isAmbassador ? 0 : PARTNER_FREE_SEATS_MAX,
+      seatsMax: PARTNER_FREE_SEATS_MAX,
       seatsEarned,
       seat1At: PARTNER_SEAT_1_AT,
       seat2At: PARTNER_SEAT_2_AT,
       nextSeatAt,
       nextSeatRemaining,
-      freeSeats: isAmbassador ? 0 : PARTNER_FREE_SEATS_MAX,
+      freeSeats: PARTNER_FREE_SEATS_MAX,
       freeSeatsThreshold: PARTNER_SEAT_2_AT,
-      freeSeatsUnlocked: !isAmbassador && seatsEarned >= PARTNER_FREE_SEATS_MAX,
+      freeSeatsUnlocked: seatsEarned >= PARTNER_FREE_SEATS_MAX,
       freeSeatsRemaining: nextSeatRemaining,
     },
     cashback: {

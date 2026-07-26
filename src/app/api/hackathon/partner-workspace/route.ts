@@ -68,9 +68,18 @@ export async function GET(req: Request) {
       ensureDefaultPartnerTasks(resolvedOrgId),
     ]);
 
+    const visiblePasses = ctx.session.seatHolderOnly
+      ? passes.filter(
+          (p) =>
+            p.status === "active" &&
+            (p.holderEmail?.trim().toLowerCase() ?? "") === ctx.session.email,
+        )
+      : passes;
+
     return NextResponse.json({
       orgId: resolvedOrgId,
-      passes: passes.map(passToPublic),
+      seatHolderOnly: ctx.session.seatHolderOnly,
+      passes: visiblePasses.map(passToPublic),
       tasks: tasks.map((t) => ({
         id: t.id,
         title: t.title,
@@ -126,6 +135,9 @@ export async function POST(req: Request) {
     }
 
     if (data.action === "grant_seat_2") {
+      if (ctx.session.seatHolderOnly) {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      }
       const row = await grantPartnerSeat2({
         orgId,
         granterEmail: ctx.session.email,

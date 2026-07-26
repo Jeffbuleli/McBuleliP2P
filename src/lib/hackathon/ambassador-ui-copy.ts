@@ -23,6 +23,9 @@ export function ambassadorPageCopy(locale: HackathonUiLocale) {
     ruleCashback: fr
       ? "pour toi à chaque paiement confirmé"
       : "for you on each confirmed payment",
+    ruleSeats: fr
+      ? "1 place offerte à 3 confirmés, 2e place à 10+"
+      : "1 free seat at 3 confirmed, 2nd at 10+",
     ruleMin: fr
       ? "pour retirer via Mobile Money"
       : "to withdraw via Mobile Money",
@@ -62,6 +65,9 @@ export function ambassadorFormCopy(locale: HackathonUiLocale) {
       fr
         ? `+${usd} USD cashback par paiement confirmé`
         : `+${usd} USD cashback per confirmed payment`,
+    seatsLine: fr
+      ? "1 place offerte à 3 confirmés, 2e place à 10+"
+      : "1 free seat at 3 confirmed, 2nd seat at 10+",
     account: fr ? "Compte" : "Account",
     submit: fr ? "Créer mon code" : "Create my code",
     creating: fr ? "Création…" : "Creating…",
@@ -112,7 +118,9 @@ export function promoDashCopy(locale: HackathonUiLocale) {
     kpiConfirmed: fr ? "Confirmés" : "Confirmed",
     kpiPending: fr ? "En attente" : "Pending",
     kpiCashback: "Cashback",
-    seatsTitle: fr ? "Places partenaires" : "Partner seats",
+    seatsTitle: fr ? "Places offertes" : "Complimentary seats",
+    seatsTitleAmb: fr ? "Places ambassadeur" : "Ambassador seats",
+    seatsTitlePartner: fr ? "Places partenaires" : "Partner seats",
     unlocked: (n: number) =>
       fr ? (n > 1 ? "débloquées" : "débloquée") : "unlocked",
     cashbackTitle: fr ? "Cashback à retirer" : "Cashback to withdraw",

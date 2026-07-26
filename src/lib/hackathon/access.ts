@@ -9,8 +9,18 @@ import {
   hackathonRegistrations,
 } from "@/db";
 import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
-import { UserRole } from "@/lib/roles";
 import { getSessionUser } from "@/lib/session-user";
+
+/** Only this McBuleli staff mailbox may open any badge (plus the pass owner). */
+export const HACKATHON_BADGE_STAFF_EMAIL = "ceo@mcbuleli.org";
+
+export function isHackathonBadgeStaffEmail(
+  email: string | null | undefined,
+): boolean {
+  return (
+    (email?.trim().toLowerCase() ?? "") === HACKATHON_BADGE_STAFF_EMAIL
+  );
+}
 
 export type PresenceStatus = "absent" | "inside" | "outside";
 export type AccessSubjectType = "participant" | "partner";
@@ -181,21 +191,21 @@ export async function resolvePassByCode(
   return null;
 }
 
-/** Exclusive badge view: owner email/user or staff only. */
+/** Exclusive badge view: pass owner or ceo@mcbuleli.org only (not every agent). */
 export async function canViewPass(
   pass: ResolvedPass,
 ): Promise<{ ok: true; staff: boolean } | { ok: false; reason: "login_required" | "forbidden" }> {
   const session = await getSessionUser();
   if (!session) return { ok: false, reason: "login_required" };
 
-  const staff =
-    session.role === UserRole.SUPER_ADMIN || session.role === UserRole.AGENT;
-  if (staff) return { ok: true, staff: true };
+  const sessionEmail = session.email?.trim().toLowerCase() ?? "";
+  if (isHackathonBadgeStaffEmail(sessionEmail)) {
+    return { ok: true, staff: true };
+  }
 
   if (pass.ownerUserId && pass.ownerUserId === session.id) {
     return { ok: true, staff: false };
   }
-  const sessionEmail = session.email?.trim().toLowerCase() ?? "";
   const ownerEmail = pass.ownerEmail?.trim().toLowerCase() ?? "";
   if (sessionEmail && ownerEmail && sessionEmail === ownerEmail) {
     return { ok: true, staff: false };

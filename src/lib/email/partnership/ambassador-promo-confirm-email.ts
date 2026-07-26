@@ -11,6 +11,8 @@ import {
 import {
   AMBASSADOR_CASHBACK_USD,
   AMBASSADOR_DISCOUNT_PERCENT,
+  PARTNER_SEAT_1_AT,
+  PARTNER_SEAT_2_AT,
   PROMO_CASHBACK_CLAIM_MIN_USD,
 } from "@/lib/hackathon/promo-types";
 
@@ -57,6 +59,7 @@ export function buildAmbassadorPromoConfirmEmail(
     "",
     `Tarif via ton code : ${args.priceUsd} USD (-${discount}%).`,
     `Cashback : ${cashback} USD par inscription payee via ton code.`,
+    `Places : 1 a ${PARTNER_SEAT_1_AT} confirmes, 2e a ${PARTNER_SEAT_2_AT}+.`,
     `Retrait Mobile Money des ${PROMO_CASHBACK_CLAIM_MIN_USD} USD cumulés.`,
     "",
     `Dashboard :`,
@@ -108,7 +111,8 @@ export function buildAmbassadorPromoConfirmEmail(
                     <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${EMAIL_BRAND.primary};">Code</p>
                     <p style="margin:6px 0 0;font-size:24px;font-weight:700;letter-spacing:0.04em;color:${EMAIL_BRAND.primary};font-family:ui-monospace,Menlo,monospace;">${esc(args.code)}</p>
                     <p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:${EMAIL_BRAND.muted};">
-                      -${discount}% (${esc(args.priceUsd)} USD) - cashback ${cashback} USD / payé
+                      -${discount}% (${esc(args.priceUsd)} USD) - cashback ${cashback} USD / payé<br />
+                      Places : 1 à ${PARTNER_SEAT_1_AT} confirmés, 2e à ${PARTNER_SEAT_2_AT}+
                     </p>
                   </td>
                 </tr>

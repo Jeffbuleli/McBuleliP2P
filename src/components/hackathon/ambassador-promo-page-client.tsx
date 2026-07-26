@@ -46,6 +46,12 @@ export function AmbassadorPromoPageClient({
         </li>
         <li className="flex gap-2">
           <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
+            3 / 10+
+          </span>
+          <span>{c.ruleSeats}</span>
+        </li>
+        <li className="flex gap-2">
+          <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
             {PROMO_CASHBACK_CLAIM_MIN_USD}+ USD
           </span>
           <span>{c.ruleMin}</span>
