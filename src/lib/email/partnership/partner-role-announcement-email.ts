@@ -136,6 +136,37 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     ],
   },
   {
+    id: "montana-pay",
+    orgSlug: "montana-pay",
+    hasBadges: true,
+    orgName: "MontanaPay",
+    shortName: "MontanaPay",
+    to: "montanadelly7@gmail.com",
+    status: "confirmed",
+    greeting: "Bonjour la Direction de MontanaPay,",
+    roleTitle: "Partenaire FinTech / Escrow - Talk - Mentorat",
+    entitlements: [
+      "2 badges porte (titulaire + 1 collègue) - ouverture exclusive au compte McBuleli du titulaire",
+      "Espace partenaires : Vue, Membres, Dialogue, Participants",
+      "Onglet Préparation : lien badge, to-do, attribution de la 2e place",
+      "Live événement (suivi jour J)",
+      "Site référence : https://montana-pay.com/",
+    ],
+    links: [
+      {
+        label: "Espace partenaires",
+        url: CHAT,
+        note: "Compte McBuleli avec montanadelly7@gmail.com - Préparation = badges",
+      },
+      { label: "Live événement", url: LIVE },
+      { label: "Page Hackathon", url: HACKATHON },
+      {
+        label: "MontanaPay",
+        url: "https://montana-pay.com/",
+      },
+    ],
+  },
+  {
     id: "kilelo",
     orgSlug: "kilelo",
     hasBadges: true,

@@ -71,6 +71,18 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
     badgeKind: "partner",
     defaultTasks: [],
   },
+  "montana-pay": {
+    seats: 2,
+    roleLabel: "FinTech / Escrow - Talk - Mentorat",
+    badgeKind: "partner",
+    defaultTasks: [
+      { title: "Envoyer logo officiel PNG/SVG", kind: "logo" },
+      { title: "Finaliser titre & créneau session escrow", kind: "atelier" },
+      { title: "Confirmer mentorat marketplace / wallet", kind: "mentorat" },
+      { title: "Décider jury FinTech oui/non", kind: "jury" },
+      { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
+    ],
+  },
   kilelo: {
     seats: 2,
     roleLabel: "Marketplace - Talk - Mentorat",

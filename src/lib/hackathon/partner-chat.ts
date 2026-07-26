@@ -118,6 +118,16 @@ const SEED_ORGS: SeedOrg[] = [
     sortOrder: 42,
   },
   {
+    slug: "montana-pay",
+    orgName: "MontanaPay",
+    shortName: "MontanaPay",
+    logoUrl: null,
+    contactEmail: "montanadelly7@gmail.com",
+    website: "https://montana-pay.com/",
+    status: "confirmed",
+    sortOrder: 44,
+  },
+  {
     slug: "rdpi",
     orgName: "RDPI Think Tank",
     shortName: "RDPI",

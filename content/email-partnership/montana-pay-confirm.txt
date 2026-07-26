@@ -1,0 +1,132 @@
+Objet : McBuleli Hackathon × MontanaPay - confirmation, calendrier & options de collaboration
+
+Bonjour la Direction de MontanaPay,
+
+Merci pour votre confirmation chaleureuse. Nous accueillons avec plaisir MontanaPay comme partenaire FinTech / Escrow du McBuleli Hackathon 2026.
+
+Vous avez demandé les conditions, le calendrier, les dates et les livrables : voici le dossier complet, ainsi que ce que le partenariat vous apporte. Nous proposons aussi, en option, un renforcement en sponsor financier ou partenaire principal si vous souhaitez une visibilité et une présence plus marquées.
+
+Page programme : https://mcbuleli.org/hackathon
+Votre produit : https://www.montana-pay.com/
+
+
+1) DATES EXACTES
+- Vendredi 28 août 2026 · 08h00-17h00
+- Samedi 29 août 2026 · 08h00-17h00
+- Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa
+- Format : ~12 équipes · Bootcamp IA + build + Demo Day
+
+
+2) CALENDRIER COMPLET (résumé)
+
+Jour 1 - Vendredi 28 août (Bootcamp & Build)
+08h00-08h45 Accueil, badges, networking
+08h45-09h00 Mot de bienvenue McBuleli
+09h00-09h25 Discours partenaire principal (créneau sponsor / partenaire lead)
+09h25-09h40 Présentation partenaires et sponsors
+09h40-10h15 Défis et règles
+10h15-10h30 Pause
+10h30-12h15 Bootcamp (Design Thinking + outils IA / APIs)
+12h15-12h35 Q&R
+12h35-13h30 Déjeuner & networking
+13h30-14h00 Formation des équipes et choix des défis
+14h00-16h30 Développement + mentorat (créneau idéal MontanaPay)
+16h30-17h00 Revue d'avancement
+
+Jour 2 - Samedi 29 août (Build & Demo Day)
+08h00-10h30 Build intensif
+10h45-12h15 Mentorat tech & business
+12h15-12h45 Préparation pitch
+12h45-13h45 Déjeuner
+13h45-15h40 Pitch + demo + questions jury
+15h55-16h20 Délibération
+16h20-17h00 Remise des prix, certificats, clôture
+
+Le détail live reste sur https://mcbuleli.org/hackathon
+
+
+3) CONDITIONS DU PARTENARIAT ORDINAIRE (FinTech / Escrow)
+Le partenariat ordinaire est d'abord un partenariat de valeur et de présence - sans contribution financière obligatoire.
+
+Rôle retenu pour MontanaPay :
+- Session courte (30-45 min) : « Escrow & confiance dans le e-commerce en RDC » - cas MontanaPay
+- Mentorat ciblé des équipes marketplace / livraison / P2P / wallet (1-2 créneaux)
+- Si possible : sandbox, crédits de test ou maquette d'intégration escrow (même simplifiée)
+- Option : 1 siège jury sur les projets FinTech / e-commerce (demi-journée pitch)
+- Logo + présence dans l'espace partenaires et sur les supports événement
+
+Ce que MontanaPay reçoit (partenariat ordinaire) :
+- Visibilité auprès des builders, startups et partenaires à Silikin
+- Builders qui découvrent et intègrent la logique escrow MontanaPay dans de vrais prototypes
+- Positionnement : référence paiement sécurisé / anti-arnaque en RDC
+- Pipeline de talents et de projets marketplace alignés à votre roadmap
+- Contenu (talk + démo) réutilisable sur vos réseaux
+- Accès à l'espace d'échange partenaires McBuleli
+- Badges porte pour vos représentants (jusqu'à 2 places)
+
+Ce n'est pas une facture : le partenariat ordinaire ne demande pas d'apport cash. Il repose sur votre expertise FinTech / Escrow et votre présence.
+
+
+4) ÉCHÉANCES & LIVRABLES ATTENDUS DE MONTANAPAY
+
+D'ici le 10 août 2026
+- Désignation des représentants (noms, emails, téléphones)
+- Logo officiel (PNG/SVG fond transparent de préférence)
+- Validation du créneau talk (Jour 1) et/ou mentorat
+- Confirmation ou non du siège jury Demo Day
+
+D'ici le 20 août 2026
+- Titre + résumé 5-8 lignes de la session
+- Bio courte des intervenants
+- Si sandbox : accès / doc minimale pour les équipes
+- Brief besoins stand / table (si présence physique)
+
+Sur site (28-29 août)
+- Présence aux créneaux convenus
+- Mentorat pendant le build
+- Jury si retenu
+
+
+5) OPTION : SPONSOR FINANCIER OU PARTENAIRE PRINCIPAL
+Si MontanaPay souhaite aller plus loin que le partenariat ordinaire (visibilité maximale, discours d'ouverture, naming, stand premium), nous pouvons ouvrir un volet sponsor financier ou partenaire principal.
+
+Pistes (montants à confirmer ensemble) :
+- Platine / Partenaire principal : logo XXL, stand premium, intervention officielle (créneau 09h00), siège jury, communication maximale
+- Or : logo large, stand, atelier ou talk prioritaire, mention presse, forte visibilité réseaux
+- Argent / Bronze : niveaux intermédiaires de présence marque
+
+Le partenariat ordinaire reste valable tel quel, sans apport financier. Le sponsoring est une proposition séparée pour amplifier la marque MontanaPay si la Direction le souhaite.
+
+Nous pouvons en discuter 20 minutes dès que vous avez choisi votre niveau d'ambition.
+
+
+6) VISIBILITÉ - QUE VOUS MANQUE-T-IL ?
+Pour maximiser votre présence, dites-nous ce qu'il vous faut encore de notre côté, par exemple :
+- Kit presse / visuels officiels McBuleli Hackathon
+- Bannière ou mention pour vos réseaux
+- Accès anticipé à la liste des défis / tracks
+- Brief pour vos équipes internes
+- Autre élément de visibilité prioritaire pour MontanaPay
+
+Répondez simplement à cet email avec vos besoins : nous les traitons en priorité.
+
+
+ESPACE D'ÉCHANGE PARTENAIRES
+https://mcbuleli.org/hackathon/chat
+
+1. Compte McBuleli avec montanadelly7@gmail.com
+2. Connexion
+3. Accès Vue, Membres, Dialogue et Participants
+
+NB : un collègue peut aussi rejoindre ; un code OTP sera envoyé sur cet email principal.
+
+
+Nous nous réjouissons de cette collaboration FinTech / Escrow et restons à disposition pour finaliser représentants, créneaux et - si vous le souhaitez - le volet sponsor.
+
+Cordialement,
+McBuleli Team
+Mme Patty B.
+hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1
+https://mcbuleli.org/hackathon
