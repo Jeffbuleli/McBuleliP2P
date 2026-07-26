@@ -116,7 +116,7 @@ async function notifyCashbackPayout(args: {
 
   await sendHackathonCashbackPayoutEmail({
     to: args.promo.partnerEmail,
-    partnerName: args.promo.partnerName,
+    partnerName: args.promo.partnerName ?? args.promo.orgName,
     orgName: args.promo.orgName,
     promoCode: args.promo.code,
     grossUsd: gross,
