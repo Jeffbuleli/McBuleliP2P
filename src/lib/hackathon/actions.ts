@@ -40,16 +40,20 @@ export const registerBodyZ = z
     lastName: z.string().trim().min(1).max(80),
     email: z.string().trim().email().max(255),
     phone: z.string().trim().min(6).max(40),
+    /** Optional legacy; WhatsApp = normalized phone when omitted. */
     whatsapp: z.string().trim().max(40).optional(),
     city: z.string().trim().max(120).optional(),
     profession: z.string().trim().max(120).optional(),
     company: z.string().trim().max(160).optional(),
-    level: z.enum(["beginner", "intermediate", "advanced"]),
+    level: z
+      .enum(["beginner", "intermediate", "advanced"])
+      .default("beginner"),
     projectName: z.string().trim().max(200).optional(),
     projectDescription: z.string().trim().max(4000).optional(),
     projectCategory: z.string().trim().max(64).optional(),
+    /** Deferred to hub team/challenge step — default solo at signup. */
     workMode: z.enum(["solo", "team"]).default("solo"),
-    ticketPack: z.enum(["day1", "full"]),
+    ticketPack: z.enum(["day1", "full"]).default("full"),
     /** Free seat hold (default) or immediate checkout */
     intent: z.enum(["reserve", "pay_now"]).default("reserve"),
     paymentMethod: paymentMethodZ.optional(),
@@ -83,7 +87,8 @@ export const partnerBodyZ = z.object({
   partnershipTypes: z
     .array(z.enum(HACKATHON_PARTNERSHIP_TYPES))
     .min(1)
-    .max(12),
+    .max(12)
+    .default(["autre"]),
   contribution: z.string().trim().max(4000).optional(),
   logoUrl: z
     .string()
@@ -102,7 +107,7 @@ export const sponsorBodyZ = z.object({
   email: z.string().trim().email().max(255),
   phone: z.string().trim().max(40).optional(),
   website: z.string().trim().max(255).optional(),
-  pack: z.enum(HACKATHON_SPONSOR_PACKS),
+  pack: z.enum(HACKATHON_SPONSOR_PACKS).default("gold"),
   budgetNote: z.string().trim().max(2000).optional(),
   comment: z.string().trim().max(4000).optional(),
   logoUrl: z
@@ -289,15 +294,17 @@ export async function registerParticipant(raw: unknown) {
     firstName: data.firstName,
     lastName: data.lastName,
     phone,
-    whatsapp: data.whatsapp ? normalizeCodPhoneNumber(data.whatsapp) || phone : phone,
+    // WhatsApp = MoMo phone (wa.me/243… built from this). No separate field.
+    whatsapp: phone,
     city: data.city || null,
     profession: data.profession || null,
     company: data.company || null,
-    level: data.level,
+    level: data.level ?? "beginner",
+    // Project / challenge / solo|team chosen later in /hackathon/espace
     projectName: data.projectName || null,
     projectDescription: data.projectDescription || null,
     projectCategory: data.projectCategory || null,
-    workMode: data.workMode,
+    workMode: data.workMode ?? "solo",
     ticketPack,
     priceUsd,
     locale: data.locale,
@@ -586,6 +593,9 @@ export async function submitPartner(raw: unknown) {
   }
 
   const db = getDb();
+  const phone = data.phone
+    ? normalizeCodPhoneNumber(data.phone) || data.phone
+    : null;
   const [row] = await db
     .insert(hackathonPartners)
     .values({
@@ -593,10 +603,12 @@ export async function submitPartner(raw: unknown) {
       orgName: data.orgName,
       contactName: data.contactName,
       email: data.email.toLowerCase(),
-      phone: data.phone || null,
+      phone,
       website: data.website || null,
       sector: data.sector || null,
-      partnershipTypes: data.partnershipTypes,
+      partnershipTypes: data.partnershipTypes?.length
+        ? data.partnershipTypes
+        : ["autre"],
       contribution: data.contribution || null,
       logoUrl: data.logoUrl || null,
       status: "lead",
@@ -625,6 +637,9 @@ export async function submitSponsor(raw: unknown) {
   }
 
   const db = getDb();
+  const phone = data.phone
+    ? normalizeCodPhoneNumber(data.phone) || data.phone
+    : null;
   const [row] = await db
     .insert(hackathonSponsors)
     .values({
@@ -632,7 +647,7 @@ export async function submitSponsor(raw: unknown) {
       companyName: data.companyName,
       contactName: data.contactName,
       email: data.email.toLowerCase(),
-      phone: data.phone || null,
+      phone,
       website: data.website || null,
       pack: data.pack,
       budgetNote: data.budgetNote || null,

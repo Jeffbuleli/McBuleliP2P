@@ -38,6 +38,7 @@ type SessionCtx = {
     firstName: string;
     lastName: string;
     phone: string;
+    partnerOrg?: string | null;
   } | null;
   registration: {
     id: string;
@@ -74,6 +75,7 @@ function HackathonParticipantFormInner({
   const [payUrl, setPayUrl] = useState<string | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionVerified, setSessionVerified] = useState(false);
+  const [partnerOrg, setPartnerOrg] = useState<string | null>(null);
   const [lockedPromo, setLockedPromo] = useState<LockedPromo | null>(null);
   const [prefill, setPrefill] = useState({
     firstName: "",
@@ -99,6 +101,7 @@ function HackathonParticipantFormInner({
         if (json.session) {
           setSessionEmail(json.session.email);
           setSessionVerified(json.session.emailVerified);
+          setPartnerOrg(json.session.partnerOrg ?? null);
           setPrefill({
             firstName: json.session.firstName,
             lastName: json.session.lastName,
@@ -180,15 +183,8 @@ function HackathonParticipantFormInner({
       lastName: String(fd.get("lastName") ?? ""),
       email: String(fd.get("email") ?? ""),
       phone,
-      whatsapp: String(fd.get("whatsapp") ?? "") || undefined,
-      city: String(fd.get("city") ?? "") || undefined,
-      profession: String(fd.get("profession") ?? "") || undefined,
-      company: String(fd.get("company") ?? "") || undefined,
-      level: String(fd.get("level") ?? "beginner"),
-      projectName: String(fd.get("projectName") ?? "") || undefined,
-      projectDescription: String(fd.get("projectDescription") ?? "") || undefined,
-      projectCategory: String(fd.get("projectCategory") ?? "") || undefined,
-      workMode: String(fd.get("workMode") ?? "solo"),
+      level: "beginner",
+      workMode: "solo",
       ticketPack: "full",
       intent,
       paymentMethod:
@@ -414,6 +410,14 @@ function HackathonParticipantFormInner({
 
       {existingReg?.paymentStatus === "paid" && existingReg.ticketCode ? null : (
       <>
+      {sessionEmail ? (
+        <p className="rounded-xl bg-[color:var(--fd-mint)]/45 px-4 py-2.5 text-xs text-[color:var(--fd-muted)]">
+          {isFr
+            ? `Connecté${partnerOrg ? ` · partenaire ${partnerOrg}` : ""} - profil prérempli. WhatsApp = votre numéro MoMo (wa.me/243…).`
+            : `Signed in${partnerOrg ? ` · partner ${partnerOrg}` : ""} - profile prefilled. WhatsApp = your MoMo number (wa.me/243…).`}
+        </p>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={hkLabel} htmlFor="hk-first">
@@ -423,6 +427,7 @@ function HackathonParticipantFormInner({
             id="hk-first"
             name="firstName"
             required
+            autoComplete="given-name"
             defaultValue={prefill.firstName}
             key={`fn-${prefill.firstName}`}
             className={hkField}
@@ -437,6 +442,7 @@ function HackathonParticipantFormInner({
             id="hk-last"
             name="lastName"
             required
+            autoComplete="family-name"
             defaultValue={prefill.lastName}
             key={`ln-${prefill.lastName}`}
             className={hkField}
@@ -445,165 +451,56 @@ function HackathonParticipantFormInner({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className={hkLabel} htmlFor="hk-email">
-            Email
-          </label>
-          <input
-            id="hk-email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            defaultValue={prefill.email}
-            key={`em-${prefill.email}`}
-            readOnly={Boolean(sessionEmail)}
-            className={`${hkField} ${sessionEmail ? "bg-[color:var(--fd-mint)]/40" : ""}`}
-            disabled={!registrationOpen}
-          />
-          {sessionEmail ? (
-            <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
-              {isFr
-                ? "E-mail du compte connecté (non modifiable)."
-                : "Signed-in account email (locked)."}
-            </p>
-          ) : null}
-        </div>
-        <div>
-          <label className={hkLabel} htmlFor="hk-phone">
-            {isFr ? "Téléphone (243…)" : "Phone (243…)"}
-          </label>
-          <input
-            id="hk-phone"
-            name="phone"
-            required
-            inputMode="tel"
-            autoComplete="tel"
-            defaultValue={prefill.phone}
-            key={`ph-${prefill.phone}`}
-            className={hkField}
-            placeholder="2438XXXXXXXX"
-            disabled={!registrationOpen}
-            onBlur={(e) => {
-              const n = normalizeCodPhoneNumber(e.target.value);
-              if (n) e.target.value = n;
-            }}
-          />
-          <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-            {isFr
-              ? "Le numéro doit commencer par 243."
-              : "The number must start with 243."}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className={hkLabel} htmlFor="hk-wa">
-            WhatsApp
-          </label>
-          <input id="hk-wa" name="whatsapp" className={hkField} disabled={!registrationOpen} />
-        </div>
-        <div>
-          <label className={hkLabel} htmlFor="hk-city">
-            {isFr ? "Ville" : "City"}
-          </label>
-          <input id="hk-city" name="city" className={hkField} disabled={!registrationOpen} />
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className={hkLabel} htmlFor="hk-job">
-            {isFr ? "Profession" : "Profession"}
-          </label>
-          <input id="hk-job" name="profession" className={hkField} disabled={!registrationOpen} />
-        </div>
-        <div>
-          <label className={hkLabel} htmlFor="hk-co">
-            {isFr ? "Entreprise (optionnel)" : "Company (optional)"}
-          </label>
-          <input id="hk-co" name="company" className={hkField} disabled={!registrationOpen} />
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className={hkLabel} htmlFor="hk-level">
-            {isFr ? "Niveau" : "Level"}
-          </label>
-          <select
-            id="hk-level"
-            name="level"
-            className={hkSelect}
-            style={hkSelectChevronStyle}
-            defaultValue="beginner"
-            disabled={!registrationOpen}
-          >
-            <option value="beginner">{isFr ? "Débutant" : "Beginner"}</option>
-            <option value="intermediate">{isFr ? "Intermédiaire" : "Intermediate"}</option>
-            <option value="advanced">{isFr ? "Avancé" : "Advanced"}</option>
-          </select>
-        </div>
-        <div>
-          <label className={hkLabel} htmlFor="hk-mode">
-            {isFr ? "Travail" : "Work mode"}
-          </label>
-          <select
-            id="hk-mode"
-            name="workMode"
-            className={hkSelect}
-            style={hkSelectChevronStyle}
-            defaultValue="solo"
-            disabled={!registrationOpen}
-          >
-            <option value="solo">{isFr ? "Individuel" : "Solo"}</option>
-            <option value="team">{isFr ? "Équipe" : "Team"}</option>
-          </select>
-        </div>
-      </div>
-
       <div>
-        <label className={hkLabel} htmlFor="hk-proj">
-          {isFr ? "Nom du projet" : "Project name"}
+        <label className={hkLabel} htmlFor="hk-email">
+          Email
         </label>
-        <input id="hk-proj" name="projectName" className={hkField} disabled={!registrationOpen} />
-      </div>
-      <div>
-        <label className={hkLabel} htmlFor="hk-desc">
-          {isFr ? "Description" : "Description"}
-        </label>
-        <textarea id="hk-desc" name="projectDescription" rows={3} className={hkField} disabled={!registrationOpen} />
-      </div>
-      <div>
-        <label className={hkLabel} htmlFor="hk-cat">
-          {isFr ? "Catégorie" : "Category"}
-        </label>
-        <select
-          id="hk-cat"
-          name="projectCategory"
-          className={hkSelect}
-          style={hkSelectChevronStyle}
-          defaultValue="ai"
+        <input
+          id="hk-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          defaultValue={prefill.email}
+          key={`em-${prefill.email}`}
+          readOnly={Boolean(sessionEmail)}
+          className={`${hkField} ${sessionEmail ? "bg-[color:var(--fd-mint)]/40" : ""}`}
           disabled={!registrationOpen}
-        >
-          {[
-            ["ai", isFr ? "Intelligence artificielle" : "Artificial intelligence"],
-            ["fintech", "FinTech"],
-            ["govtech", "GovTech"],
-            ["health", isFr ? "Santé" : "Health"],
-            ["agriculture", isFr ? "AgroTech" : "AgroTech"],
-            ["education", isFr ? "Éducation" : "Education"],
-            ["media", isFr ? "Médias" : "Media"],
-            ["cyber", isFr ? "Cybersécurité" : "Cybersecurity"],
-            ["other", isFr ? "Autre" : "Other"],
-          ].map(([value, optLabel]) => (
-            <option key={value} value={value}>
-              {optLabel}
-            </option>
-          ))}
-        </select>
+        />
+        {sessionEmail ? (
+          <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
+            {isFr
+              ? "E-mail du compte McBuleli (non modifiable)."
+              : "McBuleli account email (locked)."}
+          </p>
+        ) : null}
+      </div>
+
+      <div>
+        <label className={hkLabel} htmlFor="hk-phone">
+          {isFr ? "Téléphone Mobile Money" : "Mobile Money phone"}
+        </label>
+        <input
+          id="hk-phone"
+          name="phone"
+          required
+          inputMode="tel"
+          autoComplete="tel"
+          defaultValue={prefill.phone}
+          key={`ph-${prefill.phone}`}
+          className={hkField}
+          placeholder={isFr ? "0812… / +243… / 243…" : "0812… / +243… / 243…"}
+          disabled={!registrationOpen}
+          onBlur={(e) => {
+            const n = normalizeCodPhoneNumber(e.target.value);
+            if (n) e.target.value = n;
+          }}
+        />
+        <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
+          {isFr
+            ? "Accepte 0…, +243… ou 243…. Converti en 243… pour MoMo et WhatsApp."
+            : "Accepts 0…, +243… or 243…. Normalized to 243… for MoMo and WhatsApp."}
+        </p>
       </div>
 
       <div className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-4 py-3">
@@ -620,18 +517,23 @@ function HackathonParticipantFormInner({
             </span>
           ) : null}
         </p>
+        <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
+          {isFr
+            ? "Défi, équipe ou solo : vous choisirez dans votre espace après inscription."
+            : "Challenge, team or solo: you choose later in your participant hub."}
+        </p>
         <input type="hidden" name="ticketPack" value="full" />
       </div>
 
       <p className="rounded-xl bg-[color:var(--fd-mint)]/50 px-4 py-3 text-sm text-[color:var(--fd-muted)]">
         {isFr
-          ? "Pré-inscription gratuite : place réservée sans expiration, rappels toutes les 24 h pour confirmer. Ou payez tout de suite ci-dessous."
-          : "Free pre-registration: seat held with no expiry, reminders every 24 h to confirm. Or pay now below."}
+          ? "Pré-inscription gratuite : place réservée, rappels 24 h pour confirmer. Ou payez tout de suite."
+          : "Free pre-registration: seat held, 24h reminders to confirm. Or pay now."}
       </p>
 
       <div>
         <label className={hkLabel} htmlFor="hk-pay">
-          {isFr ? "Moyen de paiement (si vous payez maintenant)" : "Payment method (if paying now)"}
+          {isFr ? "Paiement (si vous payez maintenant)" : "Payment (if paying now)"}
         </label>
         <select
           id="hk-pay"
@@ -641,10 +543,10 @@ function HackathonParticipantFormInner({
           defaultValue="orange"
           disabled={!registrationOpen}
         >
-            <option value="orange">Orange Money</option>
-            <option value="mpesa">M-Pesa</option>
-            <option value="airtel">Airtel Money</option>
-            <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
+          <option value="orange">Orange Money</option>
+          <option value="mpesa">M-Pesa</option>
+          <option value="airtel">Airtel Money</option>
+          <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
         </select>
       </div>
 

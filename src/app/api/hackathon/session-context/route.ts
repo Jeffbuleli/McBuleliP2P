@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
-import { getDb, hackathonRegistrations, users } from "@/db";
+import { and, eq, sql } from "drizzle-orm";
+import {
+  getDb,
+  hackathonPartnerOrgs,
+  hackathonRegistrations,
+  users,
+} from "@/db";
+import { normalizeCodPhoneNumber } from "@/lib/freshpay/normalize-phone";
 import { payLaterPublicUrl } from "@/lib/hackathon/service";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Prefill + resume context for logged-in McBuleli users on /hackathon#register.
+ * Prefill + resume context for logged-in McBuleli users (and partner contacts)
+ * on /hackathon#register.
  */
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -37,19 +44,42 @@ export async function GET(req: Request) {
     return NextResponse.json({ session: null, registration: null });
   }
 
+  const email = u.email.trim().toLowerCase();
   const nameParts = (u.displayName ?? "").trim().split(/\s+/).filter(Boolean);
-  const firstName =
-    u.legalFirstName?.trim() || nameParts[0] || "";
-  const lastName =
+  let firstName = u.legalFirstName?.trim() || nameParts[0] || "";
+  let lastName =
     u.legalLastName?.trim() ||
     (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+  let phone = u.recoveryWaPhone?.trim() || "";
+  let partnerOrg: string | null = null;
+
+  // Partner contact on the same email → note org for UI (name/phone still from profile).
+  try {
+    const [org] = await db
+      .select({
+        shortName: hackathonPartnerOrgs.shortName,
+      })
+      .from(hackathonPartnerOrgs)
+      .where(sql`lower(${hackathonPartnerOrgs.contactEmail}) = ${email}`)
+      .limit(1);
+    if (org) {
+      partnerOrg = org.shortName;
+    }
+  } catch {
+    /* optional enrich */
+  }
+
+  if (phone) {
+    phone = normalizeCodPhoneNumber(phone) || phone;
+  }
 
   const session = {
     email: u.email,
     emailVerified: Boolean(u.emailVerifiedAt),
     firstName,
     lastName,
-    phone: u.recoveryWaPhone?.trim() || "",
+    phone,
+    partnerOrg,
   };
 
   if (!editionId) {
@@ -70,7 +100,7 @@ export async function GET(req: Request) {
     .where(
       and(
         eq(hackathonRegistrations.editionId, editionId),
-        eq(hackathonRegistrations.email, u.email.toLowerCase()),
+        eq(hackathonRegistrations.email, email),
       ),
     )
     .limit(1);
