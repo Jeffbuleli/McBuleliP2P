@@ -18,8 +18,9 @@ Une seule méthode suffit par transfert. L’API `POST /api/wallet/transfer` acc
 
 1. **Destinataire** : Profil → QR (payload `mcbuleli://pay/<userId>`).
 2. **Expéditeur** : Portefeuille → Envoyer → onglet **McBuleli Pay** → le scanner s’ouvre.
-3. Après scan : affichage du destinataire (ID tronqué), saisie **montant** + **mémo**, puis **Envoyer**.
-4. Le serveur vérifie le solde, exécute le transfert en base, écrit le ledger.
+3. Après scan : affichage du destinataire (ID tronqué), saisie **montant** + **mémo**, puis **Vérifier**.
+4. Écran de confirmation : identité résolue (nom + e-mail masqué), montant, step-up TOTP/passkey si activé, puis **Confirmer l’envoi**.
+5. Le serveur vérifie le solde, exécute le transfert en base, écrit le ledger.
 
 Pas de frais réseau on-chain : c’est un mouvement de ledger interne.
 

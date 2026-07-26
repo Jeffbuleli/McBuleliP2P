@@ -13,6 +13,9 @@ const bodyZ = z
     asset: z.enum(["USDT", "PI", "USD", "CDF"]),
     amount: z.string().min(1),
     memo: z.string().optional(),
+    totpCode: z.string().optional(),
+    passkeyChallengeId: z.string().optional(),
+    passkeyResponse: z.unknown().optional(),
   })
   .refine((d) => Boolean(d.recipientEmail || d.recipientUserId), {
     message: "wallet_transfer_recipient_required",
@@ -38,6 +41,25 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  const { assertStepUp } = await import("@/lib/auth/step-up");
+  const step = await assertStepUp({
+    userId,
+    totpCode: parsed.data.totpCode ?? null,
+    passkeyChallengeId: parsed.data.passkeyChallengeId ?? null,
+    passkeyResponse: parsed.data.passkeyResponse,
+  });
+  if (!step.ok) {
+    return NextResponse.json(
+      {
+        message: step.error,
+        error: step.error,
+        requiresStepUp: step.error === "step_up_required",
+      },
+      { status: 403 },
+    );
+  }
+
   const r = await executeInternalTransfer({
     fromUserId: userId,
     recipientEmail: parsed.data.recipientEmail,
@@ -59,8 +81,13 @@ export async function POST(req: Request) {
     amount: parsed.data.amount,
     meta: {
       recipientEmail: parsed.data.recipientEmail ?? null,
-      recipientUserId: parsed.data.recipientUserId ?? null,
+      recipientUserId: parsed.data.recipientUserId ?? r.recipient.userId,
+      recipientDisplayName: r.recipient.displayName,
     },
   });
-  return NextResponse.json({ ok: true, batchId: r.batchId });
+  return NextResponse.json({
+    ok: true,
+    batchId: r.batchId,
+    recipient: r.recipient,
+  });
 }

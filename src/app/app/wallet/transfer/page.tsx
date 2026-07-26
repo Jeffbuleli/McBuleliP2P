@@ -1,16 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
-import { WALLET_ASSETS, type WalletAsset } from "@/lib/wallet-types";
+import { type WalletAsset } from "@/lib/wallet-types";
 import { clientErrorText } from "@/lib/client-error-text";
+import { formatAuthClientError } from "@/lib/format-auth-client-error";
 import { parseWalletPayRecipient } from "@/lib/wallet-pay-uri";
 import { WalletQrScanner } from "@/components/wallet/wallet-qr-scanner";
 import { WalletAssetIcon } from "@/components/wallet/wallet-asset-icon";
 import { ProcessingSheet } from "@/components/wallet/processing-sheet";
+import { WalletStepUpField } from "@/components/wallet/wallet-step-up-field";
+import { WalletPasskeyStepUpButton } from "@/components/wallet/wallet-passkey-step-up-button";
 import { transferProgressSteps } from "@/lib/transaction-steps";
 import {
   FlowCard,
@@ -25,6 +27,13 @@ const TRANSFER_ASSETS = ["USDT", "PI", "USD", "CDF"] as const satisfies readonly
 type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 
 type RecipientMode = "email" | "pay";
+
+type RecipientPreview = {
+  userId: string;
+  displayName: string;
+  emailMasked: string;
+  email?: string;
+};
 
 function TransferForm() {
   const { t } = useI18n();
@@ -41,6 +50,13 @@ function TransferForm() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [processingOpen, setProcessingOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<RecipientPreview | null>(null);
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [passkeyCount, setPasskeyCount] = useState(0);
+  const [totpCode, setTotpCode] = useState("");
+  const [stepUpViaPasskey, setStepUpViaPasskey] = useState(false);
 
   const assetParam = sp.get("asset");
   const assetLocked =
@@ -68,6 +84,20 @@ function TransferForm() {
     }
   }, [mode, recipientId, done]);
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/auth/security");
+        if (!res.ok) return;
+        const data = await res.json();
+        setTotpEnabled(Boolean(data.totpEnabled));
+        setPasskeyCount(typeof data.passkeyCount === "number" ? data.passkeyCount : 0);
+      } catch {
+        /* optional */
+      }
+    })();
+  }, []);
+
   function onScanned(raw: string) {
     const id = parseWalletPayRecipient(raw);
     setScannerOpen(false);
@@ -82,6 +112,7 @@ function TransferForm() {
   function switchMode(next: RecipientMode) {
     setMode(next);
     setErr(null);
+    setPreview(null);
     if (next === "email") {
       setScannerOpen(false);
       setRecipientId(null);
@@ -92,17 +123,54 @@ function TransferForm() {
 
   const canSubmit =
     mode === "email"
-      ? email.trim().includes("@") && amount.trim()
-      : Boolean(recipientId) && amount.trim();
+      ? email.trim().includes("@") && amount.trim() && Number(amount) > 0
+      : Boolean(recipientId) && amount.trim() && Number(amount) > 0;
+
+  const needsStepUp = totpEnabled || passkeyCount > 0;
+  const stepUpReady =
+    stepUpViaPasskey || (totpEnabled && totpCode.trim().length >= 6);
+
+  async function openConfirm() {
+    setErr(null);
+    setConfirmError(null);
+    setTotpCode("");
+    setStepUpViaPasskey(false);
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams(
+        mode === "email"
+          ? { email: email.trim() }
+          : { userId: recipientId! },
+      );
+      const res = await fetch(`/api/wallet/transfer/resolve?${qs}`, {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(
+          typeof data.error === "string" ? data.error : "wallet_transfer_failed",
+        );
+        return;
+      }
+      setPreview(data.recipient as RecipientPreview);
+      setShowConfirm(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function submit() {
     setErr(null);
+    setConfirmError(null);
     setLoading(true);
     try {
-      const body =
+      const body: Record<string, unknown> =
         mode === "email"
           ? { recipientEmail: email.trim(), asset, amount, memo }
           : { recipientUserId: recipientId, asset, amount, memo };
+      if (totpEnabled && totpCode.trim()) {
+        body.totpCode = totpCode.trim();
+      }
       const res = await fetch("/api/wallet/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,13 +178,38 @@ function TransferForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(typeof data.error === "string" ? data.error : "wallet_transfer_failed");
+        const errCode =
+          typeof data === "object" && data && "error" in data
+            ? String((data as { error?: unknown }).error ?? "")
+            : "";
+        const msg = formatAuthClientError(data, t);
+        const keepModal =
+          errCode === "step_up_required" ||
+          errCode === "totp_required" ||
+          errCode === "totp_invalid" ||
+          errCode === "passkey_invalid" ||
+          errCode === "passkey_not_found" ||
+          errCode === "challenge_expired";
+        if (keepModal) {
+          setConfirmError(msg);
+        } else {
+          setErr(
+            typeof data.error === "string" ? data.error : "wallet_transfer_failed",
+          );
+          setShowConfirm(false);
+        }
         return;
       }
+      if (data.recipient) {
+        setPreview(data.recipient as RecipientPreview);
+      }
+      setShowConfirm(false);
+      setTotpCode("");
+      setStepUpViaPasskey(false);
       setDone(true);
       setProcessingOpen(true);
       window.setTimeout(() => {
-        router.push("/app/wallet");
+        router.push("/app/wallet/history");
         router.refresh();
       }, 1800);
     } finally {
@@ -126,6 +219,10 @@ function TransferForm() {
 
   const subtitle =
     mode === "pay" ? t("wallet_mcbuleli_pay") : t("wallet_action_send");
+
+  const recipientLabel = preview
+    ? preview.email ?? `${preview.displayName} · ${preview.emailMasked}`
+    : null;
 
   return (
     <>
@@ -171,8 +268,8 @@ function TransferForm() {
         {done ? (
           <StatusOutcomeBanner
             variant="success"
-            title={t("wallet_transfer_submit")}
-            detail={`${amount} ${asset}`}
+            title={t("wallet_transfer_success")}
+            detail={`${amount} ${asset}${recipientLabel ? ` → ${recipientLabel}` : ""}`}
           />
         ) : null}
 
@@ -292,8 +389,8 @@ function TransferForm() {
           </p>
         ) : null}
 
-        <FlowPrimaryBtn disabled={loading || !canSubmit} onClick={() => void submit()}>
-          {loading ? "…" : t("wallet_transfer_submit")}
+        <FlowPrimaryBtn disabled={loading || !canSubmit || done} onClick={() => void openConfirm()}>
+          {loading && !showConfirm ? "…" : t("wallet_transfer_review")}
         </FlowPrimaryBtn>
 
         <p className="mt-2 text-center text-[10px] text-[color:var(--fd-muted)]">
@@ -303,6 +400,90 @@ function TransferForm() {
         </p>
 
         <FlowHubLink label={t("wallet_title")} />
+
+        {showConfirm && preview ? (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+            <div className="w-full max-w-md rounded-2xl bg-[color:var(--fd-card)] p-5 shadow-xl">
+              <p className="text-lg font-bold text-[color:var(--fd-text)]">
+                {t("wallet_transfer_review")}
+              </p>
+              <div className="mt-4 space-y-2 text-sm text-[color:var(--fd-muted)]">
+                <p>
+                  <span className="text-[10px] font-bold uppercase tracking-wide">
+                    {t("wallet_transfer_to")}
+                  </span>
+                  <br />
+                  <strong className="text-[color:var(--fd-text)]">{preview.displayName}</strong>
+                  <br />
+                  <span className="break-all text-xs">
+                    {preview.email ?? preview.emailMasked}
+                  </span>
+                </p>
+                <p className="font-bold tabular-nums text-[color:var(--fd-text)]">
+                  {amount} {asset}
+                </p>
+                {memo.trim() ? (
+                  <p className="text-xs">
+                    {t("wallet_memo_motif")}: {memo.trim()}
+                  </p>
+                ) : null}
+                <p className="text-[10px] leading-relaxed">{t("wallet_transfer_confirm_hint")}</p>
+              </div>
+              {needsStepUp ? (
+                <div className="mt-3">
+                  {passkeyCount > 0 ? (
+                    <WalletPasskeyStepUpButton
+                      verified={stepUpViaPasskey}
+                      onVerified={() => {
+                        setStepUpViaPasskey(true);
+                        setConfirmError(null);
+                      }}
+                      onError={setConfirmError}
+                      disabled={loading}
+                    />
+                  ) : null}
+                  {totpEnabled ? (
+                    <>
+                      {passkeyCount > 0 ? (
+                        <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[color:var(--fd-muted)]">
+                          {t("withdraw_step_up_or")}
+                        </p>
+                      ) : null}
+                      <WalletStepUpField value={totpCode} onChange={setTotpCode} />
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+              {confirmError ? (
+                <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+                  {confirmError}
+                </p>
+              ) : null}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfirm(false);
+                    setConfirmError(null);
+                    setTotpCode("");
+                    setStepUpViaPasskey(false);
+                  }}
+                  className="min-h-[48px] rounded-xl border border-[color:var(--fd-border)] font-semibold"
+                >
+                  {t("back")}
+                </button>
+                <button
+                  type="button"
+                  disabled={loading || (needsStepUp && !stepUpReady)}
+                  onClick={() => void submit()}
+                  className="min-h-[48px] rounded-xl bg-[color:var(--fd-primary)] font-bold text-white disabled:opacity-50"
+                >
+                  {loading ? "…" : t("wallet_transfer_confirm")}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <ProcessingSheet
           open={processingOpen}
