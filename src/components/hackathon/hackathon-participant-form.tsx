@@ -38,7 +38,6 @@ type SessionCtx = {
     firstName: string;
     lastName: string;
     phone: string;
-    partnerOrg?: string | null;
   } | null;
   registration: {
     id: string;
@@ -75,7 +74,6 @@ function HackathonParticipantFormInner({
   const [payUrl, setPayUrl] = useState<string | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionVerified, setSessionVerified] = useState(false);
-  const [partnerOrg, setPartnerOrg] = useState<string | null>(null);
   const [lockedPromo, setLockedPromo] = useState<LockedPromo | null>(null);
   const [prefill, setPrefill] = useState({
     firstName: "",
@@ -101,7 +99,6 @@ function HackathonParticipantFormInner({
         if (json.session) {
           setSessionEmail(json.session.email);
           setSessionVerified(json.session.emailVerified);
-          setPartnerOrg(json.session.partnerOrg ?? null);
           setPrefill({
             firstName: json.session.firstName,
             lastName: json.session.lastName,
@@ -410,14 +407,6 @@ function HackathonParticipantFormInner({
 
       {existingReg?.paymentStatus === "paid" && existingReg.ticketCode ? null : (
       <>
-      {sessionEmail ? (
-        <p className="rounded-xl bg-[color:var(--fd-mint)]/45 px-4 py-2.5 text-xs text-[color:var(--fd-muted)]">
-          {isFr
-            ? `Connecté${partnerOrg ? ` · partenaire ${partnerOrg}` : ""} - profil prérempli. WhatsApp = votre numéro MoMo (wa.me/243…).`
-            : `Signed in${partnerOrg ? ` · partner ${partnerOrg}` : ""} - profile prefilled. WhatsApp = your MoMo number (wa.me/243…).`}
-        </p>
-      ) : null}
-
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={hkLabel} htmlFor="hk-first">
@@ -496,11 +485,6 @@ function HackathonParticipantFormInner({
             if (n) e.target.value = n;
           }}
         />
-        <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-          {isFr
-            ? "Accepte 0…, +243… ou 243…. Converti en 243… pour MoMo et WhatsApp."
-            : "Accepts 0…, +243… or 243…. Normalized to 243… for MoMo and WhatsApp."}
-        </p>
       </div>
 
       <div className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-4 py-3">
