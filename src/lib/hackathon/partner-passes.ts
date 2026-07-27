@@ -19,7 +19,8 @@ export type PartnerBadgeKind =
   | "speaker"
   | "mentor"
   | "jury"
-  | "sponsor";
+  | "sponsor"
+  | "media";
 
 type OrgBadgeProfile = {
   seats: 0 | 1 | 2;
@@ -81,6 +82,16 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
       { title: "Confirmer mentorat marketplace / wallet", kind: "mentorat" },
       { title: "Décider jury FinTech oui/non", kind: "jury" },
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
+    ],
+  },
+  "bienv-photography": {
+    seats: 1,
+    roleLabel: "Médias / Photography",
+    badgeKind: "media",
+    defaultTasks: [
+      { title: "Couverture photo & vidéo (28-29 août)", kind: "other" },
+      { title: "Interviews & moments forts", kind: "other" },
+      { title: "Livraison : 1 vidéo résumé + série photos", kind: "other" },
     ],
   },
   kilelo: {

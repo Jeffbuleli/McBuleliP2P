@@ -128,6 +128,16 @@ const SEED_ORGS: SeedOrg[] = [
     sortOrder: 44,
   },
   {
+    slug: "bienv-photography",
+    orgName: "Bienv Photography 243",
+    shortName: "Bienv Photo",
+    logoUrl: null,
+    contactEmail: "bienvngonda862@gmail.com",
+    website: null,
+    status: "confirmed",
+    sortOrder: 46,
+  },
+  {
     slug: "rdpi",
     orgName: "RDPI Think Tank",
     shortName: "RDPI",
