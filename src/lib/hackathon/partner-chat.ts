@@ -9,6 +9,7 @@ import {
 import {
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
+  KILELO_PARTNER,
   KIMIA_PARTNER,
   PAWAPAY_PARTNER,
   RDPI_PARTNER,
@@ -151,11 +152,11 @@ const SEED_ORGS: SeedOrg[] = [
   },
   {
     slug: "kilelo",
-    orgName: "Kilelo",
+    orgName: KILELO_PARTNER.name,
     shortName: "Kilelo",
-    logoUrl: null,
-    contactEmail: "support@kileloapp.com",
-    website: "https://kileloapp.com",
+    logoUrl: KILELO_PARTNER.logoUrl,
+    contactEmail: KILELO_PARTNER.email,
+    website: KILELO_PARTNER.website,
     status: "confirmed",
     sortOrder: 55,
   },

@@ -231,13 +231,32 @@ export const RDPI_PARTNER = {
   roleFr: "Partenaire Policy & Impact - Atelier - Jury",
   roleEn: "Policy & Impact Partner - Workshop - Jury",
   website: "https://rdpithinktank.org/",
-  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260728",
+  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260728b",
   contactName: "Mr Aristote MUGISHO",
   email: "info@rdpithinktank.org",
   blurbFr:
     "Think tank indépendant en RDC : recherche, analyses et recommandations pour éclairer les politiques publiques et la prospérité.",
   blurbEn:
     "Independent DRC think tank: research, analysis and recommendations to inform public policy and prosperity.",
+} as const;
+
+/** Confirmed local services marketplace partner (talk + mentoring). */
+export const KILELO_PARTNER = {
+  name: "Kilelo",
+  roleFr: "Partenaire Marketplace Services Locaux - Talk - Mentorat",
+  roleEn: "Local Services Marketplace Partner - Talk - Mentoring",
+  website: "https://kileloapp.com/",
+  logoUrl: "/partners/kilelo-logo.png?v=20260728c",
+  /** Circular mark for avatars / mentor cards. */
+  markUrl: "/partners/kilelo-logo-mark.png?v=20260728c",
+  contactName: "Jeancy Kabangu",
+  email: "support@kileloapp.com",
+  sloganFr: "Services & petits boulots",
+  sloganEn: "Services & small jobs",
+  blurbFr:
+    "Kilelo connecte les clients avec des travailleurs locaux qualifiés à Kinshasa. Consultez les profils, lisez les avis, et contactez directement le professionnel qu'il vous faut.",
+  blurbEn:
+    "Kilelo connects clients with qualified local workers in Kinshasa. Browse profiles, read reviews, and contact the professional you need directly.",
 } as const;
 
 /** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
@@ -257,6 +276,15 @@ export type HackathonFeaturedLogo = {
 };
 
 const FEATURED_PARTNER_LOGOS: HackathonFeaturedLogo[] = [
+  {
+    id: "kilelo",
+    name: KILELO_PARTNER.name,
+    logoUrl: KILELO_PARTNER.logoUrl,
+    href: KILELO_PARTNER.website,
+    tileBgClass: "bg-white",
+    fit: "contain",
+    shape: "wide",
+  },
   {
     id: "pawapay",
     name: PAWAPAY_PARTNER.name,
@@ -280,7 +308,7 @@ const FEATURED_PARTNER_LOGOS: HackathonFeaturedLogo[] = [
     name: RDPI_PARTNER.name,
     logoUrl: RDPI_PARTNER.logoUrl,
     href: RDPI_PARTNER.website,
-    tileBgClass: "bg-[#0c0a09]",
+    tileBgClass: "bg-white",
     fit: "contain",
     shape: "wide",
   },
@@ -325,6 +353,7 @@ const CHAT_PARTNER_LOGO_BY_SLUG: Record<string, string> = {
   kimia: "kimia",
   "sanja-service": "sanja",
   rdpi: "rdpi",
+  kilelo: "kilelo",
 };
 
 const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
@@ -334,6 +363,7 @@ const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
   binance: "binance",
   ilokwe: "ilokwe",
   sanja: "sanja",
+  kilelo: "kilelo",
 };
 
 /** Featured logo tile for partner chat (slug or shortName). */
@@ -448,6 +478,18 @@ export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
       photoUrl: KIMIA_PARTNER.logoUrl,
       photoFit: "cover",
       href: KIMIA_PARTNER.website,
+    },
+    {
+      id: "mentor-kilelo-jeancy",
+      name: KILELO_PARTNER.contactName,
+      company: KILELO_PARTNER.name,
+      titleFr: "Mentor - Marketplace services locaux",
+      titleEn: "Mentor - Local services marketplace",
+      expertiseFr: "Matching, avis, confiance & contact client-travailleur à Kinshasa",
+      expertiseEn: "Matching, reviews, trust & client-worker contact in Kinshasa",
+      photoUrl: KILELO_PARTNER.markUrl,
+      photoFit: "cover",
+      href: KILELO_PARTNER.website,
     },
   ];
 }

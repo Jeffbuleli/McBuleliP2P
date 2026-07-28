@@ -1,0 +1,35 @@
+Bonjour l'équipe Kilelo,
+
+Suite à votre demande et à la lettre d'autorisation jointe, nous avons réalisé le diagnostic de sécurité de kileloapp.com (27-28 juillet 2026).
+
+Aucune preuve d'exploitation ou de compromission n'a été observée. Voici le résumé structuré.
+
+Critique - à traiter en premier
+- Vérifier / activer le Row Level Security (RLS) sur toutes les tables Supabase
+- Confirmer qu'aucune clé service_role n'est dans le frontend
+- Restreindre les buckets de stockage publics
+
+Élevé
+- Ajouter une Content-Security-Policy (CSP) stricte
+- Masquer l'en-tête technique x-render-origin-server
+
+Moyen
+- Ajouter robots.txt et sitemap.xml
+- Mettre en place le rate-limiting sur le login
+- Renforcer la validation des entrées (profils, avis, messages)
+
+Pièces jointes
+- Lettre d'autorisation (PDF)
+- Résumé structuré du rapport (Markdown)
+- Rapport technique détaillé (DOCX + ODT)
+
+Nous restons disponibles pour un échange court sur le plan de remédiation.
+
+Cordialement,
+McBuleli Team
+Ir Jeff Buleli
+ceo@mcbuleli.org
++243 997 366 736 - +243 860 218 521
+https://mcbuleli.org
+
+Document confidentiel - usage exclusif Kilelo / représentants autorisés.

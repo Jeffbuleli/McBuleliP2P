@@ -4,10 +4,12 @@
 - **Contact** : support@kileloapp.com
 - **Référent** : Jeancy Kabangu - Founder & CEO
 - **Produit** : marketplace qui connecte clients et travailleurs locaux à Kinshasa
+- **Logo** : `/partners/kilelo-logo.png` (horizontal wordmark - principal) · mark `/partners/kilelo-logo-mark.png`
+- **Blurb (site)** : « Kilelo connecte les clients avec des travailleurs locaux qualifiés à Kinshasa… »
 
 ## Statut
 
-**Accepté** - intérêt confirmé + demande de visio 20-30 min (Jeancy).
+**Accepté** - partenaire confirmé (talk + mentorat) - logo sur landing Hackathon.
 
 ## Rôle
 

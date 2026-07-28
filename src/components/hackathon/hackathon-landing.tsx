@@ -26,6 +26,7 @@ import {
   SANJA_PARTNER,
   KIMIA_PARTNER,
   RDPI_PARTNER,
+  KILELO_PARTNER,
   hackathonFeaturedJury,
   hackathonFeaturedMentors,
   hackathonFeaturedPartners,
@@ -217,6 +218,9 @@ function enrichMentors(
       if (p.id === m.id) return true;
       if (/kimia|mulopo/i.test(m.name) || /kimia/i.test(m.company ?? "")) {
         return /kimia|mulopo/i.test(p.name) || /kimia/i.test(p.company ?? "");
+      }
+      if (/kilelo|jeancy|kabangu/i.test(m.name) || /kilelo/i.test(m.company ?? "")) {
+        return /kilelo|jeancy|kabangu/i.test(p.name) || /kilelo/i.test(p.company ?? "");
       }
       return false;
     });
@@ -1013,10 +1017,22 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="pawaPay · Binance · ILOKWE · SanJa · KIMIA · RDPI"
+            subtitle="Kilelo · pawaPay · Binance · ILOKWE · SanJa · KIMIA · RDPI"
           >
             <div className="space-y-4">
               {[
+                {
+                  href: KILELO_PARTNER.website,
+                  logo: KILELO_PARTNER.logoUrl,
+                  alt: KILELO_PARTNER.name,
+                  tile: "bg-white",
+                  role: isFr ? KILELO_PARTNER.roleFr : KILELO_PARTNER.roleEn,
+                  name: KILELO_PARTNER.name,
+                  body: isFr ? KILELO_PARTNER.blurbFr : KILELO_PARTNER.blurbEn,
+                  meta: "kileloapp.com · Kinshasa · services & petits boulots",
+                  cover: false,
+                  borderless: false,
+                },
                 {
                   href: PAWAPAY_PARTNER.website,
                   logo: PAWAPAY_PARTNER.logoUrl,
@@ -1081,13 +1097,13 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   href: RDPI_PARTNER.website,
                   logo: RDPI_PARTNER.logoUrl,
                   alt: RDPI_PARTNER.name,
-                  tile: "bg-[#0c0a09]",
+                  tile: "bg-white",
                   role: isFr ? RDPI_PARTNER.roleFr : RDPI_PARTNER.roleEn,
                   name: RDPI_PARTNER.name,
                   body: isFr ? RDPI_PARTNER.blurbFr : RDPI_PARTNER.blurbEn,
                   meta: "rdpithinktank.org",
                   cover: false,
-                  borderless: true,
+                  borderless: false,
                 },
               ].map((p) => (
                 <a
@@ -1102,7 +1118,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${p.tile} ${
                         /ilokwe|kimia/i.test(p.name)
                           ? "aspect-square h-auto w-[6.5rem] sm:w-28"
-                          : /sanja|rdpi/i.test(p.name)
+                          : /sanja|rdpi|kilelo/i.test(p.name)
                             ? "h-14 w-full max-w-[15rem] px-3 py-2 sm:h-16 sm:w-56"
                             : "h-16 w-full max-w-[11rem] sm:w-44"
                       } ${

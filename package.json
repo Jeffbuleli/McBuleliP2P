@@ -41,6 +41,7 @@
     "email:kilelo": "tsx scripts/send-kilelo-email.ts",
     "email:kilelo-fiche": "tsx scripts/send-kilelo-fiche-email.ts",
     "email:kilelo-meet-reply": "tsx scripts/send-kilelo-meet-reply-email.ts",
+    "email:kilelo-security-audit": "tsx scripts/send-kilelo-security-audit-email.ts",
     "seed:kilelo-meet": "tsx scripts/seed-kilelo-partner-meet.ts",
     "email:cesar-group-meet": "tsx scripts/send-cesar-group-meet-email.ts",
     "email:cesar-group-meet-reminder": "tsx scripts/send-cesar-group-meet-reminder-email.ts",

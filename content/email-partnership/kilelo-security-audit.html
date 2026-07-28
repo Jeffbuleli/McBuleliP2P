@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>McBuleli - Rapport d'audit de sécurité kileloapp.com</title>
+</head>
+<body style="margin:0;padding:0;background:#e8f3ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Audit de sécurité autorisé kileloapp.com - résumé et rapport détaillé en pièces jointes.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e8f3ee;padding:28px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #d6d3d1;overflow:hidden;">
+          <tr>
+            <td style="padding:22px 28px 8px;border-bottom:1px solid #d6d3d1;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:12px;">
+                    <img src="https://mcbuleli.org/brand/logo-256.png" width="44" height="44" alt="McBuleli" style="display:block;border:0;border-radius:50%;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0;font-size:17px;font-weight:800;color:#305f33;letter-spacing:-0.02em;">McBuleli</p>
+                    <p style="margin:2px 0 0;font-size:12px;color:#57534e;">Audit de sécurité - kileloapp.com</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px 8px;">
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#0c0a09;">Bonjour l'équipe Kilelo,</p>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#57534e;">
+                Suite à votre demande et à la lettre d'autorisation jointe, nous avons réalisé le
+                <strong style="color:#0c0a09;">diagnostic de sécurité</strong> de
+                <a href="https://kileloapp.com/" style="color:#305f33;text-decoration:none;">kileloapp.com</a>
+                (27-28 juillet 2026).
+              </p>
+              <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#57534e;">
+                Aucune preuve d'exploitation ou de compromission n'a été observée. Voici le résumé structuré.
+              </p>
+
+              <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#0c0a09;">Critique - à traiter en premier</p>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#57534e;">
+                - Vérifier / activer le Row Level Security (RLS) sur toutes les tables Supabase<br />
+                - Confirmer qu'aucune clé service_role n'est dans le frontend<br />
+                - Restreindre les buckets de stockage publics
+              </p>
+
+              <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#0c0a09;">Élevé</p>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#57534e;">
+                - Ajouter une Content-Security-Policy (CSP) stricte<br />
+                - Masquer l'en-tête technique x-render-origin-server
+              </p>
+
+              <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#0c0a09;">Moyen</p>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.55;color:#57534e;">
+                - Ajouter robots.txt et sitemap.xml<br />
+                - Mettre en place le rate-limiting sur le login<br />
+                - Renforcer la validation des entrées (profils, avis, messages)
+              </p>
+
+              <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#0c0a09;">Pièces jointes</p>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.55;color:#57534e;">
+                - Lettre d'autorisation (PDF)<br />
+                - Résumé structuré du rapport (Markdown)<br />
+                - Rapport technique détaillé (DOCX + ODT)
+              </p>
+
+              <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#57534e;">
+                Nous restons disponibles pour un échange court sur le plan de remédiation.
+              </p>
+
+              <p style="margin:0 0 6px;font-size:15px;line-height:1.55;color:#0c0a09;">Cordialement,</p>
+              <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#0c0a09;">
+                <strong>McBuleli Team</strong><br />
+                Ir Jeff Buleli<br />
+                <a href="mailto:ceo@mcbuleli.org" style="color:#305f33;text-decoration:none;">ceo@mcbuleli.org</a><br />
+                +243 997 366 736 - +243 860 218 521<br />
+                <a href="https://mcbuleli.org" style="color:#305f33;text-decoration:none;">mcbuleli.org</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 24px;border-top:1px solid #d6d3d1;text-align:center;">
+              <p style="margin:0;font-size:11px;color:#57534e;">
+                Document confidentiel - usage exclusif Kilelo / représentants autorisés<br />
+                © 2026 McBuleli - RCCM : CD/KNG/RCCM/26-A-00382
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
