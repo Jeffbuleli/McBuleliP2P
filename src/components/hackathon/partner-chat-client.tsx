@@ -110,16 +110,32 @@ function OrgLogo({
   size?: number;
 }) {
   if (org.logoUrl) {
+    const brand =
+      /kimia/i.test(org.shortName) || /kimia/i.test(org.orgName ?? "")
+        ? "kimia"
+        : /rdpi/i.test(org.shortName) || /rdpi/i.test(org.orgName ?? "")
+          ? "rdpi"
+          : null;
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={org.logoUrl}
-        alt=""
-        width={size}
-        height={size}
-        className="rounded-lg object-cover ring-1 ring-[color:var(--hk-border)]"
+      <span
+        className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${
+          brand ? "bg-[#0c0a09] ring-0" : "ring-1 ring-[color:var(--hk-border)]"
+        }`}
         style={{ width: size, height: size }}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={org.logoUrl}
+          alt=""
+          width={size}
+          height={size}
+          className={
+            brand === "rdpi"
+              ? "h-full w-full object-contain object-center p-0.5"
+              : "h-full w-full object-cover object-center"
+          }
+        />
+      </span>
     );
   }
   return (

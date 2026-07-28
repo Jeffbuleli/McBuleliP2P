@@ -3,7 +3,8 @@
 - **Contact** : kimiaservice896@gmail.com
 - **Facebook** : https://www.facebook.com/profile.php?id=61560600003901
 - **Rôle** : Partenaire Services & Talents
-- **Statut** : **Intérêt confirmé** - en attente logo + coordonnées du représentant avant suite
+- **Référent** : Mr Mike Mulopo
+- **Statut** : **Confirmé** - logo reçu
 
 ## Historique
 
@@ -23,10 +24,10 @@ Intérêt confirmé en tant que partenaire (sous réserve de finalisation de l'o
 - Mise en relation talents ↔ opportunités / entreprises partenaires
 - Diffusion auprès de leur réseau professionnel
 
-**À recevoir avant suite McBuleli :**
+**Reçu :**
 
-- [ ] Coordonnées du représentant
-- [ ] Logo officiel (format demandé)
+- [x] Coordonnées du représentant - Mr Mike Mulopo
+- [x] Logo officiel
 - [ ] Échange modalités pratiques (optionnel - Meet déjà proposé)
 
 ## RDV

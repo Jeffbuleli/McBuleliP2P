@@ -3,6 +3,10 @@
  * Edit this file to reuse the landing template for other editions.
  */
 import type { BenefitIconId, PrizeIconId } from "@/components/hackathon/event-icons";
+import {
+  sortFeaturedPartnersByShape,
+  type PartnerLogoShape,
+} from "@/lib/hackathon/partner-logo-display";
 
 export type EventNavItem = {
   id: string;
@@ -206,6 +210,36 @@ export const SANJA_PARTNER = {
     "Based in Kisangani, SanJa (Sanja Service) drives digital transformation in DRC: SaaS (Commerce, GPME), cloud, web & apps, networks and training. Confirmed partner for product/tech mentoring and SME outreach.",
 } as const;
 
+/** Confirmed services & talents partner (mentoring employability). */
+export const KIMIA_PARTNER = {
+  name: "KIMIA Service",
+  roleFr: "Partenaire Services & Talents - Mentorat",
+  roleEn: "Services & Talents Partner - Mentoring",
+  website: "https://facebook.com/p/KIMIA-61560600003901/",
+  logoUrl: "/partners/kimia-service-logo.png?v=20260728",
+  contactName: "Mr Mike Mulopo",
+  email: "kimiaservice896@gmail.com",
+  blurbFr:
+    "Services aux particuliers et entreprises : recrutement, mise en relation et accompagnement professionnel.",
+  blurbEn:
+    "Services for individuals and businesses: recruitment, matchmaking and professional support.",
+} as const;
+
+/** Confirmed policy & impact think tank (workshop + jury). */
+export const RDPI_PARTNER = {
+  name: "RDPI Think Tank",
+  roleFr: "Partenaire Policy & Impact - Atelier - Jury",
+  roleEn: "Policy & Impact Partner - Workshop - Jury",
+  website: "https://rdpithinktank.org/",
+  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260728",
+  contactName: "Mr Aristote MUGISHO",
+  email: "info@rdpithinktank.org",
+  blurbFr:
+    "Think tank indépendant en RDC : recherche, analyses et recommandations pour éclairer les politiques publiques et la prospérité.",
+  blurbEn:
+    "Independent DRC think tank: research, analysis and recommendations to inform public policy and prosperity.",
+} as const;
+
 /** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
 export type HackathonFeaturedLogo = {
   id: string;
@@ -216,45 +250,72 @@ export type HackathonFeaturedLogo = {
   tileBgClass: string;
   /** contain = letterbox in tile (pawaPay/Binance/ILOKWE); cover = full-bleed photo logos. */
   fit: "contain" | "cover";
+  /** wide = horizontal · wide-bleed = horizontal full-bleed (Binance) · square-bleed = full square · round = circle */
+  shape: PartnerLogoShape;
+  /** Optional Tailwind scale on the image (e.g. round logos). */
+  imageScaleClass?: string;
 };
 
+const FEATURED_PARTNER_LOGOS: HackathonFeaturedLogo[] = [
+  {
+    id: "pawapay",
+    name: PAWAPAY_PARTNER.name,
+    logoUrl: PAWAPAY_PARTNER.logoUrl,
+    href: PAWAPAY_PARTNER.website,
+    tileBgClass: "bg-[#F7F7F7]",
+    fit: "contain",
+    shape: "wide",
+  },
+  {
+    id: "sanja",
+    name: SANJA_PARTNER.name,
+    logoUrl: SANJA_PARTNER.logoUrl,
+    href: SANJA_PARTNER.website,
+    tileBgClass: "bg-[#F5F2EB]",
+    fit: "contain",
+    shape: "wide",
+  },
+  {
+    id: "rdpi",
+    name: RDPI_PARTNER.name,
+    logoUrl: RDPI_PARTNER.logoUrl,
+    href: RDPI_PARTNER.website,
+    tileBgClass: "bg-[#0c0a09]",
+    fit: "contain",
+    shape: "wide",
+  },
+  {
+    id: "binance",
+    name: BINANCE_PARTNER.name,
+    logoUrl: BINANCE_PARTNER.logoUrl,
+    href: BINANCE_PARTNER.demo,
+    tileBgClass: "bg-[#0B0E11]",
+    fit: "cover",
+    shape: "wide-bleed",
+  },
+  {
+    id: "ilokwe",
+    name: ILOKWE_PARTNER.name,
+    logoUrl: ILOKWE_PARTNER.logoUrl,
+    href: ILOKWE_PARTNER.facebook,
+    tileBgClass: "bg-[#2e5506]",
+    fit: "cover",
+    shape: "square-bleed",
+  },
+  {
+    id: "kimia",
+    name: KIMIA_PARTNER.name,
+    logoUrl: KIMIA_PARTNER.logoUrl,
+    href: KIMIA_PARTNER.website,
+    tileBgClass: "bg-[#0c0a09]",
+    fit: "contain",
+    shape: "round",
+    imageScaleClass: "scale-[1.28]",
+  },
+];
+
 export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
-  return [
-    {
-      id: "pawapay",
-      name: PAWAPAY_PARTNER.name,
-      logoUrl: PAWAPAY_PARTNER.logoUrl,
-      href: PAWAPAY_PARTNER.website,
-      tileBgClass: "bg-[#F7F7F7]",
-      fit: "contain",
-    },
-    {
-      id: "binance",
-      name: BINANCE_PARTNER.name,
-      logoUrl: BINANCE_PARTNER.logoUrl,
-      href: BINANCE_PARTNER.demo,
-      tileBgClass: "bg-[#0B0E11]",
-      fit: "cover",
-    },
-    {
-      id: "ilokwe",
-      name: ILOKWE_PARTNER.name,
-      logoUrl: ILOKWE_PARTNER.logoUrl,
-      href: ILOKWE_PARTNER.facebook,
-      // Mid-green near PNG edges (logo is not flat #0B3D2E).
-      tileBgClass: "bg-[#2e5506]",
-      // Square asset: cover in a square tile = edge-to-edge, no letterbox “frame”.
-      fit: "cover",
-    },
-    {
-      id: "sanja",
-      name: SANJA_PARTNER.name,
-      logoUrl: SANJA_PARTNER.logoUrl,
-      href: SANJA_PARTNER.website,
-      tileBgClass: "bg-[#F5F2EB]",
-      fit: "contain",
-    },
-  ];
+  return sortFeaturedPartnersByShape(FEATURED_PARTNER_LOGOS);
 }
 
 export type HackathonFeaturedSponsor = {
@@ -292,6 +353,22 @@ export type HackathonFeaturedJury = {
   expertiseEn: string;
   /** Portrait URL - set when provided; null shows initial. */
   photoUrl: string | null;
+  photoFit?: "cover" | "contain";
+  /** Circle avatar background when photoUrl is a brand logo. */
+  photoBgClass?: string;
+  href: string | null;
+};
+
+export type HackathonFeaturedMentor = {
+  id: string;
+  name: string;
+  company: string | null;
+  titleFr: string;
+  titleEn: string;
+  expertiseFr: string;
+  expertiseEn: string;
+  photoUrl: string | null;
+  photoFit?: "cover" | "contain";
   href: string | null;
 };
 
@@ -299,37 +376,47 @@ export type HackathonFeaturedJury = {
 export function hackathonFeaturedJury(): HackathonFeaturedJury[] {
   return [
     {
-      id: "jury-expert-innovation",
-      name: "Expert Innovation",
-      company: null,
-      titleFr: "Jury - À annoncer",
-      titleEn: "Jury - TBA",
-      expertiseFr: "Startups · Impact",
-      expertiseEn: "Startups · Impact",
-      photoUrl: null,
-      href: null,
-    },
-    {
       id: "jury-ilokwe-christian",
       name: ILOKWE_PARTNER.contactName,
       company: ILOKWE_PARTNER.name,
       titleFr: "Jury - Agriculture & AgriBusiness",
       titleEn: "Jury - Agriculture & AgriBusiness",
-      expertiseFr: "AgroTech - Prix ILOKWE",
-      expertiseEn: "AgroTech - ILOKWE Prize",
-      photoUrl: null,
+      expertiseFr: "AgroTech - chaîne de valeur & Prix ILOKWE",
+      expertiseEn: "AgroTech - value chain & ILOKWE Prize",
+      photoUrl: ILOKWE_PARTNER.logoUrl,
+      photoFit: "cover",
+      photoBgClass: "bg-[#2e5506]",
       href: ILOKWE_PARTNER.facebook,
     },
     {
       id: "jury-rdpi-aristote",
-      name: "Aristote MUGISHO",
-      company: "RDPI Think Tank",
+      name: RDPI_PARTNER.contactName,
+      company: RDPI_PARTNER.name,
       titleFr: "Jury - Policy & Impact",
       titleEn: "Jury - Policy & Impact",
-      expertiseFr: "Politiques publiques - Impact socio-économique",
-      expertiseEn: "Public policy - Socio-economic impact",
-      photoUrl: null,
-      href: "https://rdpithinktank.org/",
+      expertiseFr: "Politiques publiques, régulation & impact socio-économique",
+      expertiseEn: "Public policy, regulation & socio-economic impact",
+      photoUrl: RDPI_PARTNER.logoUrl,
+      photoFit: "contain",
+      href: RDPI_PARTNER.website,
+    },
+  ];
+}
+
+/** Featured mentors on the landing (merge with DB / demo rows). */
+export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
+  return [
+    {
+      id: "mentor-kimia-mike",
+      name: KIMIA_PARTNER.contactName,
+      company: KIMIA_PARTNER.name,
+      titleFr: "Mentor - Services & Talents",
+      titleEn: "Mentor - Services & Talents",
+      expertiseFr: "Employabilité, professionnalisation & mise en relation talents",
+      expertiseEn: "Employability, professionalization & talent matching",
+      photoUrl: KIMIA_PARTNER.logoUrl,
+      photoFit: "cover",
+      href: KIMIA_PARTNER.website,
     },
   ];
 }

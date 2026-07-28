@@ -12,6 +12,10 @@ import {
   hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
 import {
+  partnerLogoBadgeBox,
+  partnerLogoTileStyles,
+} from "@/lib/hackathon/partner-logo-display";
+import {
   SUPPORT_EMAIL,
   SUPPORT_WA_PATH,
   SUPPORT_X,
@@ -231,17 +235,17 @@ export function HackathonPassBadge({
   const venueShort = /silikin/i.test(venue) ? "Silikin Village" : venue;
   const hoursLabel = isFr ? HACKATHON_HOURS_COMPACT_FR : HACKATHON_HOURS_COMPACT_EN;
 
-  const logos = hackathonFeaturedPartners().map((p) => ({
-    id: p.id,
-    name: p.name,
-    src: p.logoUrl,
-    box:
-      /binance|ilokwe/i.test(p.name)
-        ? `border-0 shadow-none ring-0 ${p.tileBgClass}`
-        : `border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${p.tileBgClass}`,
-    fit: p.fit,
-    square: /ilokwe/i.test(p.name),
-  }));
+  const logos = hackathonFeaturedPartners().map((p) => {
+    const styles = partnerLogoTileStyles(p, "badge");
+    return {
+      id: p.id,
+      name: p.name,
+      src: p.logoUrl,
+      tileClass: styles.tile,
+      imgClass: styles.img,
+      box: partnerLogoBadgeBox(p),
+    };
+  });
 
   return (
     <motion.article
@@ -398,21 +402,11 @@ export function HackathonPassBadge({
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             {logos.map((logo) => (
               <div
-                key={logo.name}
-                className={`flex items-center justify-center overflow-hidden rounded-xl p-0 ${
-                  logo.square ? "aspect-square h-auto w-16" : "h-14 w-[7.5rem]"
-                } ${logo.box}`}
+                key={logo.id}
+                className={`flex items-center justify-center overflow-hidden rounded-xl p-0 ${logo.tileClass} ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logo.src}
-                  alt={logo.name}
-                  className={
-                    logo.fit === "cover" || logo.square
-                      ? "h-full w-full object-cover object-center"
-                      : "h-full w-full object-contain object-center"
-                  }
-                />
+                <img src={logo.src} alt={logo.name} className={logo.imgClass} />
               </div>
             ))}
           </div>

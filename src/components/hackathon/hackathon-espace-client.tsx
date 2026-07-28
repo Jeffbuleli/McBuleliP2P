@@ -352,8 +352,8 @@ export function HackathonEspaceClient({
               <div className="space-y-6">
                 <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
                   {isFr
-                    ? `${data.formation.teamCount}/${data.formation.softMaxTeams} équipes · cible ~${data.formation.targetTeamSize} membres · max ${TEAM_MAX_MEMBERS}. 3 défis · ~4 équipes par défi.`
-                    : `${data.formation.teamCount}/${data.formation.softMaxTeams} teams · target ~${data.formation.targetTeamSize} members · max ${TEAM_MAX_MEMBERS}. 3 challenges · ~4 teams each.`}
+                    ? `${data.formation.teamCount}/${data.formation.softMaxTeams} équipes · cible ~${data.formation.targetTeamSize} membres · max ${TEAM_MAX_MEMBERS}. 4 défis · ~3 équipes par défi.`
+                    : `${data.formation.teamCount}/${data.formation.softMaxTeams} teams · target ~${data.formation.targetTeamSize} members · max ${TEAM_MAX_MEMBERS}. 4 challenges · ~3 teams each.`}
                 </p>
                 <div className="grid gap-6 lg:grid-cols-2">
                   {unlocks.canFormTeam ? (

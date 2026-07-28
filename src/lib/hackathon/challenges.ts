@@ -3,7 +3,7 @@ import { getDb, hackathonChallenges, hackathonEditions, hackathonTeams } from "@
 import { CANONICAL_CHALLENGES } from "@/lib/hackathon/team-formation";
 
 /**
- * Sync edition to the 3 canonical tracks.
+ * Sync edition to the 4 canonical tracks.
  * - Upserts canonical rows (published)
  * - Unpublishes any other challenge slugs
  * - Remaps teams from absorbed legacy slugs onto the new track
@@ -123,7 +123,7 @@ export async function seedChallengesForFeaturedEdition(): Promise<string | null>
   return featured.id;
 }
 
-/** Prefer challenge with fewest teams (soft balance across 3 tracks). */
+/** Prefer challenge with fewest teams (soft balance across 4 tracks). */
 export async function suggestChallengeId(editionId: string): Promise<string | null> {
   const challenges = await listPublishedChallenges(editionId);
   if (!challenges.length) return null;

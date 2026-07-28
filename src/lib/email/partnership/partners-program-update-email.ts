@@ -11,7 +11,9 @@ import {
   HACKATHON_SCHEDULE_SUMMARY,
   HACKATHON_VENUE_SHORT,
   ILOKWE_PARTNER,
+  KIMIA_PARTNER,
   PAWAPAY_PARTNER,
+  RDPI_PARTNER,
   SANJA_PARTNER,
   hackathonFeaturedPartners,
 } from "@/lib/hackathon/event-content";
@@ -68,6 +70,16 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       href: SANJA_PARTNER.website,
       contentType: "image/png",
     },
+    kimia: {
+      roleFr: KIMIA_PARTNER.roleFr,
+      href: KIMIA_PARTNER.website,
+      contentType: "image/png",
+    },
+    rdpi: {
+      roleFr: RDPI_PARTNER.roleFr,
+      href: RDPI_PARTNER.website,
+      contentType: "image/png",
+    },
   };
 
   return featured.map((p) => {
@@ -88,7 +100,9 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
           ? "#000000"
           : p.id === "ilokwe"
             ? "#0B3D2E"
-            : "#F7F7F7",
+            : p.id === "kimia" || p.id === "rdpi"
+              ? "#0c0a09"
+              : "#F7F7F7",
       contentType: m.contentType,
     };
   });

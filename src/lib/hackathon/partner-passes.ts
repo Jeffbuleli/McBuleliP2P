@@ -59,9 +59,8 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
     roleLabel: "Services & Talents - Mentorat",
     badgeKind: "mentor",
     defaultTasks: [
-      { title: "Envoyer logo officiel PNG/SVG", kind: "logo" },
       { title: "Confirmer créneau mentorat employabilité", kind: "mentorat" },
-      { title: "Désigner le représentant présent à Silikin", kind: "logistique" },
+      { title: "Désigner le représentant présent à Silikin (Mr Mike Mulopo)", kind: "logistique" },
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
     ],
   },

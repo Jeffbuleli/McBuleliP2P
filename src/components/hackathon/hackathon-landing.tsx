@@ -24,12 +24,18 @@ import {
   BINANCE_PARTNER,
   ILOKWE_PARTNER,
   SANJA_PARTNER,
+  KIMIA_PARTNER,
+  RDPI_PARTNER,
+  hackathonFeaturedJury,
+  hackathonFeaturedMentors,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
-  hackathonFeaturedJury,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
+import {
+  partnerLogoTileStyles,
+} from "@/lib/hackathon/partner-logo-display";
 import {
   SUPPORT_EMAIL,
   SUPPORT_PHONE_DISPLAY,
@@ -168,24 +174,66 @@ function CtaSecondary({
 type PersonCard = FeaturedHackathonPayload["jury"][number] & {
   href?: string;
   photoFit?: "cover" | "contain";
+  /** Brand tile fill for logo avatars (avoids white letterbox + visible borders). */
+  photoBgClass?: string;
 };
 
-function enrichMentors(people: FeaturedHackathonPayload["mentors"]): PersonCard[] {
-  return people.map((p) => {
+function enrichMentors(
+  people: FeaturedHackathonPayload["mentors"],
+  isFr: boolean,
+): PersonCard[] {
+  const mapped: PersonCard[] = people.map((p) => {
     if (/vibe\s*coding/i.test(p.name) || /mentor vibe/i.test(p.name) || /jeff/i.test(p.name)) {
       return {
         ...p,
         name: "Jeff Buleli - CEO",
         title: "Full Stack Dev. & Entrepreneur",
         company: null,
-        expertise: "Cursor · Claude · Codex",
+        expertise: "Vibe Coding - Cursor · Claude · Codex",
         photoUrl: PORTRAIT_PATH,
         photoFit: "cover",
         href: "https://mcbuleli.org/@ceo",
       };
     }
+    if (/kimia|mulopo/i.test(p.name) || /kimia/i.test(p.company ?? "")) {
+      return {
+        ...p,
+        name: "Mr Mike Mulopo",
+        company: "KIMIA Service",
+        title: isFr ? "Mentor - Services & Talents" : "Mentor - Services & Talents",
+        expertise: isFr
+          ? "Employabilité, professionnalisation & mise en relation talents"
+          : "Employability, professionalization & talent matching",
+        photoUrl: KIMIA_PARTNER.logoUrl,
+        photoFit: "cover",
+        href: KIMIA_PARTNER.website,
+      };
+    }
     return p;
   });
+
+  for (const m of hackathonFeaturedMentors()) {
+    const already = mapped.some((p) => {
+      if (p.id === m.id) return true;
+      if (/kimia|mulopo/i.test(m.name) || /kimia/i.test(m.company ?? "")) {
+        return /kimia|mulopo/i.test(p.name) || /kimia/i.test(p.company ?? "");
+      }
+      return false;
+    });
+    if (already) continue;
+    mapped.push({
+      id: m.id,
+      name: m.name,
+      company: m.company,
+      title: isFr ? m.titleFr : m.titleEn,
+      expertise: isFr ? m.expertiseFr : m.expertiseEn,
+      photoUrl: m.photoUrl,
+      photoFit: m.photoFit ?? "cover",
+      href: m.href ?? undefined,
+    });
+  }
+
+  return mapped;
 }
 
 function enrichJury(
@@ -207,9 +255,36 @@ function enrichJury(
         name: "Expert Innovation",
         company: null,
         title: isFr ? "Jury - À annoncer" : "Jury - TBA",
-        expertise: "Startups · Impact",
+        expertise: "Startups - Impact",
         photoUrl: null,
         photoFit: "cover" as const,
+      };
+    }
+    if (/aristote|rdpi|mugisho/i.test(p.name) || /rdpi/i.test(p.company ?? "")) {
+      return {
+        ...p,
+        name: RDPI_PARTNER.contactName,
+        company: RDPI_PARTNER.name,
+        title: isFr ? "Jury - Policy & Impact" : "Jury - Policy & Impact",
+        expertise: isFr
+          ? "Politiques publiques, régulation & impact socio-économique"
+          : "Public policy, regulation & socio-economic impact",
+        photoUrl: RDPI_PARTNER.logoUrl,
+        photoFit: "contain" as const,
+        href: RDPI_PARTNER.website,
+      };
+    }
+    if (/ilokwe|ikwele|christian/i.test(p.name) || /ilokwe/i.test(p.company ?? "")) {
+      return {
+        ...p,
+        name: ILOKWE_PARTNER.contactName,
+        company: ILOKWE_PARTNER.name,
+        title: isFr ? "Jury - Agriculture & AgriBusiness" : "Jury - Agriculture & AgriBusiness",
+        expertise: isFr ? "AgroTech - chaîne de valeur & Prix ILOKWE" : "AgroTech - value chain & ILOKWE Prize",
+        photoUrl: ILOKWE_PARTNER.logoUrl,
+        photoFit: "cover" as const,
+        photoBgClass: "bg-[#2e5506]",
+        href: ILOKWE_PARTNER.facebook,
       };
     }
     return { ...p };
@@ -220,6 +295,9 @@ function enrichJury(
       if (p.id === j.id) return true;
       if (/ilokwe|ikwele/i.test(j.name) || /ilokwe/i.test(j.company ?? "")) {
         return /ilokwe|ikwele/i.test(p.name) || /ilokwe/i.test(p.company ?? "");
+      }
+      if (/aristote|rdpi|mugisho/i.test(j.name) || /rdpi/i.test(j.company ?? "")) {
+        return /aristote|rdpi|mugisho/i.test(p.name) || /rdpi/i.test(p.company ?? "");
       }
       if (/expert\s*innovation/i.test(j.name)) {
         return /expert\s*innovation/i.test(p.name);
@@ -234,7 +312,8 @@ function enrichJury(
       title: isFr ? j.titleFr : j.titleEn,
       expertise: isFr ? j.expertiseFr : j.expertiseEn,
       photoUrl: j.photoUrl,
-      photoFit: "cover",
+      photoFit: j.photoFit ?? "cover",
+      photoBgClass: j.photoBgClass,
       href: j.href ?? undefined,
     });
   }
@@ -259,9 +338,10 @@ function PersonGrid({
           <>
             <div
               className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-[color:var(--fd-primary)] ${
-                p.photoFit === "contain"
+                p.photoBgClass ??
+                (p.photoFit === "contain"
                   ? "bg-white ring-1 ring-[color:var(--fd-primary)]/15"
-                  : "bg-[color:var(--fd-mint)]"
+                  : "bg-[color:var(--fd-mint)]")
               }`}
             >
               {p.photoUrl ? (
@@ -272,7 +352,7 @@ function PersonGrid({
                   className={
                     p.photoFit === "contain"
                       ? "h-full w-full object-contain p-1"
-                      : "h-full w-full object-cover object-top"
+                      : "h-full w-full object-cover object-center"
                   }
                 />
               ) : (
@@ -654,7 +734,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             subtitle={isFr ? "Accompagnement tech & business" : "Tech & business support"}
           >
             <PersonGrid
-              people={enrichMentors(data.mentors)}
+              people={enrichMentors(data.mentors, isFr)}
               empty={isFr ? "Mentor à annoncer" : "Mentor TBA"}
               slots={3}
             />
@@ -782,7 +862,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           const existing = data.partnerLogos.filter(
             (p) =>
               !featuredIds.has(p.name.toLowerCase()) &&
-              !/pawapay|binance|ilokwe|silikin|rdpi/i.test(p.name) &&
+              !/pawapay|binance|ilokwe|silikin|kimia|rdpi/i.test(p.name) &&
               !/^mcbuleli$/i.test(p.name.trim()),
           );
           const logoSlots = Math.max(6, featuredPartners.length + existing.length);
@@ -795,6 +875,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               tileBgClass: p.tileBgClass,
               fit: p.fit,
               placeholder: false as boolean,
+              shape: p.shape,
+              imageScaleClass: p.imageScaleClass,
             })),
             ...existing.map((p) => ({
               id: p.id,
@@ -821,42 +903,23 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           return (
             <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
-                const cover = p.fit === "cover";
-                const isBinance = /binance/i.test(p.name);
-                const isIlokwe = /ilokwe/i.test(p.name);
-                const isSanja = /sanja/i.test(p.name);
-                const brandBleed = isBinance || isIlokwe;
+                const { tile, img } = partnerLogoTileStyles(
+                  {
+                    shape: p.shape ?? "wide",
+                    tileBgClass: p.tileBgClass,
+                    imageScaleClass: p.imageScaleClass,
+                  },
+                  "ecosystem",
+                );
                 const inner = p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.logoUrl}
-                    alt={p.name}
-                    className={
-                      brandBleed || cover
-                        ? "h-full w-full object-cover object-center"
-                        : isSanja
-                          ? "max-h-[3.75rem] w-full max-w-[9rem] scale-125 object-contain object-center"
-                          : "max-h-10 max-w-full object-contain object-center"
-                    }
-                  />
+                  <img src={p.logoUrl} alt={p.name} className={img} />
                 ) : (
                   <span className="text-center text-[11px] font-medium text-[color:var(--hk-muted)]">
                     {p.name}
                   </span>
                 );
-                const cls = `flex items-center justify-center overflow-hidden rounded-xl ${
-                  isIlokwe ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]" : "h-16"
-                } ${
-                  brandBleed || cover || p.placeholder
-                    ? "p-0"
-                    : isSanja
-                      ? "px-1"
-                      : "px-3"
-                } ${
-                  brandBleed
-                    ? "border-0 shadow-none ring-0"
-                    : "border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
-                } ${p.tileBgClass} ${p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""}`;
+                const cls = `flex items-center justify-center overflow-hidden rounded-xl ${tile} ${p.tileBgClass} ${p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""}`;
                 return (
                   <li key={p.id}>
                     {p.website ? (
@@ -946,7 +1009,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="pawaPay · Binance · ILOKWE · SanJa"
+            subtitle="pawaPay · Binance · ILOKWE · SanJa · KIMIA · RDPI"
           >
             <div className="space-y-4">
               {[
@@ -983,7 +1046,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   name: ILOKWE_PARTNER.name,
                   body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
                   meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
-                  cover: false,
+                  cover: true,
                   borderless: true,
                 },
                 {
@@ -998,6 +1061,30 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   cover: false,
                   borderless: false,
                 },
+                {
+                  href: KIMIA_PARTNER.website,
+                  logo: KIMIA_PARTNER.logoUrl,
+                  alt: KIMIA_PARTNER.name,
+                  tile: "bg-[#0c0a09]",
+                  role: isFr ? KIMIA_PARTNER.roleFr : KIMIA_PARTNER.roleEn,
+                  name: KIMIA_PARTNER.name,
+                  body: isFr ? KIMIA_PARTNER.blurbFr : KIMIA_PARTNER.blurbEn,
+                  meta: "Facebook",
+                  cover: false,
+                  borderless: true,
+                },
+                {
+                  href: RDPI_PARTNER.website,
+                  logo: RDPI_PARTNER.logoUrl,
+                  alt: RDPI_PARTNER.name,
+                  tile: "bg-[#0c0a09]",
+                  role: isFr ? RDPI_PARTNER.roleFr : RDPI_PARTNER.roleEn,
+                  name: RDPI_PARTNER.name,
+                  body: isFr ? RDPI_PARTNER.blurbFr : RDPI_PARTNER.blurbEn,
+                  meta: "rdpithinktank.org",
+                  cover: false,
+                  borderless: true,
+                },
               ].map((p) => (
                 <a
                   key={p.name}
@@ -1009,9 +1096,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <span
                       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${p.tile} ${
-                        /ilokwe/i.test(p.name)
+                        /ilokwe|kimia/i.test(p.name)
                           ? "aspect-square h-auto w-[6.5rem] sm:w-28"
-                          : /sanja/i.test(p.name)
+                          : /sanja|rdpi/i.test(p.name)
                             ? "h-14 w-full max-w-[15rem] px-3 py-2 sm:h-16 sm:w-56"
                             : "h-16 w-full max-w-[11rem] sm:w-44"
                       } ${

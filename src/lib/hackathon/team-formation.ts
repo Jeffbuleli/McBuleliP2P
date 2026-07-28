@@ -1,5 +1,5 @@
 /**
- * Canonical hackathon challenges (3 tracks) and team formation rules.
+ * Canonical hackathon challenges (4 tracks) and team formation rules.
  */
 
 export const TEAM_ROLE_IDS = [
@@ -68,8 +68,8 @@ export type CanonicalChallenge = {
 };
 
 /**
- * 8 marketing categories → 3 competition tracks.
- * ~4 teams per track when soft max = 12.
+ * 8 marketing categories → 4 competition tracks.
+ * ~3 teams per track when soft max = 12.
  */
 export const CANONICAL_CHALLENGES: CanonicalChallenge[] = [
   {
@@ -77,9 +77,9 @@ export const CANONICAL_CHALLENGES: CanonicalChallenge[] = [
     labelFr: "FinTech & inclusion",
     labelEn: "FinTech & inclusion",
     blurbFr:
-      "Paiements, mobile money, crypto et inclusion financière (ex-FinTech).",
+      "Paiements, mobile money, crypto et inclusion financière.",
     blurbEn:
-      "Payments, mobile money, crypto and financial inclusion (ex-FinTech).",
+      "Payments, mobile money, crypto and financial inclusion.",
     absorbs: ["fintech"],
   },
   {
@@ -87,20 +87,30 @@ export const CANONICAL_CHALLENGES: CanonicalChallenge[] = [
     labelFr: "AgroTech & économie réelle",
     labelEn: "AgroTech & real economy",
     blurbFr:
-      "Chaîne agricole et valorisation du terroir - référence ILOKWE (ex-AgroTech).",
+      "Chaîne agricole et valorisation du terroir — référence ILOKWE.",
     blurbEn:
-      "Agricultural chain and terroir value - ILOKWE reference (ex-AgroTech).",
+      "Agricultural chain and terroir value — ILOKWE reference.",
     absorbs: ["agriculture"],
   },
   {
-    slug: "ai-society",
-    labelFr: "IA pour services & société",
-    labelEn: "AI for services & society",
+    slug: "health-edu",
+    labelFr: "Santé & éducation",
+    labelEn: "Health & education",
     blurbFr:
-      "IA utile, GovTech, santé, éducation, médias et cybersécurité (ex-IA / Gov / Health / Edu / Media / Cyber).",
+      "Accès aux soins, prévention, formation et outils d'apprentissage.",
     blurbEn:
-      "Useful AI, GovTech, health, education, media and cyber (ex-AI / Gov / Health / Edu / Media / Cyber).",
-    absorbs: ["ai", "govtech", "health", "education", "media", "cyber"],
+      "Care access, prevention, training and learning tools.",
+    absorbs: ["health", "education"],
+  },
+  {
+    slug: "gov-cyber",
+    labelFr: "GovTech, médias & cybersécurité",
+    labelEn: "GovTech, media & cybersecurity",
+    blurbFr:
+      "Services publics, information fiable et confiance numérique (ex-IA / Gov / Médias / Cyber).",
+    blurbEn:
+      "Public services, trusted information and digital trust (ex-AI / Gov / Media / Cyber).",
+    absorbs: ["ai", "govtech", "media", "cyber", "ai-society"],
   },
 ];
 

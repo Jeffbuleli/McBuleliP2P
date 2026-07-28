@@ -2,7 +2,8 @@
 
 - **Site** : https://rdpithinktank.org/
 - **Contact** : info@rdpithinktank.org
-- **Référent** : Aristote MUGISHO (DG) · maristote@rdpithinktank.org
+- **Référent** : Mr Aristote MUGISHO (DG) · maristote@rdpithinktank.org
+- **Logo** : `public/partners/rdpi-thinktank-logo.png`
 - **Profil** : Policy & Think Tank · recherche appliquée · politiques publiques · impact socio-économique
 
 ## Rôle confirmé
