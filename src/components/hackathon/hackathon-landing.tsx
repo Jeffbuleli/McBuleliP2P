@@ -903,11 +903,15 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           return (
             <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {logos.map((p) => {
+                const shape =
+                  "shape" in p && p.shape ? p.shape : ("wide" as const);
+                const imageScaleClass =
+                  "imageScaleClass" in p ? p.imageScaleClass : undefined;
                 const { tile, img } = partnerLogoTileStyles(
                   {
-                    shape: p.shape ?? "wide",
+                    shape,
                     tileBgClass: p.tileBgClass,
-                    imageScaleClass: p.imageScaleClass,
+                    imageScaleClass,
                   },
                   "ecosystem",
                 );
