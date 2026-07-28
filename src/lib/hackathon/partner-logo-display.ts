@@ -89,3 +89,34 @@ export function partnerLogoBadgeBox(logo: PartnerLogoTileInput): string {
   }
   return `border border-[#E5E5E0] shadow-[0_10px_28px_-14px_rgba(34,34,34,0.35)] ${logo.tileBgClass}`;
 }
+
+/** Square avatar frame + image classes for partner chat roster. */
+export function partnerLogoChatStyles(logo: PartnerLogoTileInput): {
+  frame: string;
+  img: string;
+} {
+  const scale = logo.imageScaleClass ?? "";
+  const borderless =
+    partnerLogoBorderless(logo) ||
+    /bg-\[#0c0a09\]|bg-\[#0B0E11\]|bg-\[#2e5506\]/i.test(logo.tileBgClass);
+  const frame = borderless
+    ? `${logo.tileBgClass} ring-0`
+    : `${logo.tileBgClass} ring-1 ring-[color:var(--hk-border)]`;
+
+  if (logo.shape === "round") {
+    return {
+      frame,
+      img: `h-full w-full object-contain object-center ${scale || "scale-[1.15]"}`,
+    };
+  }
+  if (logo.shape === "square-bleed" || logo.shape === "wide-bleed") {
+    return {
+      frame,
+      img: "h-full w-full object-cover object-center",
+    };
+  }
+  return {
+    frame,
+    img: "h-full w-full object-contain object-center p-0.5",
+  };
+}

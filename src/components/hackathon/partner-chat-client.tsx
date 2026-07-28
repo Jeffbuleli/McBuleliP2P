@@ -29,6 +29,8 @@ import {
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { PartnerPreparationPanel } from "@/components/hackathon/partner-preparation-panel";
+import { featuredPartnerForChatOrg } from "@/lib/hackathon/event-content";
+import { partnerLogoChatStyles } from "@/lib/hackathon/partner-logo-display";
 
 type Org = {
   id: string;
@@ -47,6 +49,7 @@ type MatchedOrg = {
   orgName: string;
   status: PartnerOrgStatus;
   logoUrl: string | null;
+  slug?: string;
 };
 
 type Msg = {
@@ -106,20 +109,21 @@ function OrgLogo({
   org,
   size = 28,
 }: {
-  org: { orgName?: string; logoUrl: string | null; shortName: string };
+  org: {
+    slug?: string;
+    orgName?: string;
+    logoUrl: string | null;
+    shortName: string;
+  };
   size?: number;
 }) {
   if (org.logoUrl) {
-    const brand =
-      /kimia/i.test(org.shortName) || /kimia/i.test(org.orgName ?? "")
-        ? "kimia"
-        : /rdpi/i.test(org.shortName) || /rdpi/i.test(org.orgName ?? "")
-          ? "rdpi"
-          : null;
+    const featured = featuredPartnerForChatOrg(org);
+    const styles = featured ? partnerLogoChatStyles(featured) : null;
     return (
       <span
         className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${
-          brand ? "bg-[#0c0a09] ring-0" : "ring-1 ring-[color:var(--hk-border)]"
+          styles?.frame ?? "bg-white ring-1 ring-[color:var(--hk-border)]"
         }`}
         style={{ width: size, height: size }}
       >
@@ -130,9 +134,8 @@ function OrgLogo({
           width={size}
           height={size}
           className={
-            brand === "rdpi"
-              ? "h-full w-full object-contain object-center p-0.5"
-              : "h-full w-full object-cover object-center"
+            styles?.img ??
+            "h-full w-full object-contain object-center p-0.5"
           }
         />
       </span>

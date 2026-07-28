@@ -318,6 +318,37 @@ export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
   return sortFeaturedPartnersByShape(FEATURED_PARTNER_LOGOS);
 }
 
+const CHAT_PARTNER_LOGO_BY_SLUG: Record<string, string> = {
+  ilokwe: "ilokwe",
+  pawapay: "pawapay",
+  binance: "binance",
+  kimia: "kimia",
+  "sanja-service": "sanja",
+  rdpi: "rdpi",
+};
+
+const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
+  kimia: "kimia",
+  rdpi: "rdpi",
+  pawapay: "pawapay",
+  binance: "binance",
+  ilokwe: "ilokwe",
+  sanja: "sanja",
+};
+
+/** Featured logo tile for partner chat (slug or shortName). */
+export function featuredPartnerForChatOrg(org: {
+  slug?: string | null;
+  shortName?: string | null;
+}): HackathonFeaturedLogo | undefined {
+  const slug = (org.slug ?? "").toLowerCase();
+  const featuredId =
+    CHAT_PARTNER_LOGO_BY_SLUG[slug] ??
+    CHAT_PARTNER_LOGO_BY_SHORT[(org.shortName ?? "").toLowerCase().replace(/\s+/g, "")];
+  if (!featuredId) return undefined;
+  return FEATURED_PARTNER_LOGOS.find((p) => p.id === featuredId);
+}
+
 export type HackathonFeaturedSponsor = {
   id: string;
   name: string;
