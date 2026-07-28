@@ -49,7 +49,7 @@ function applyHtmlTheme(surface: HackathonSurface) {
 }
 
 export function HackathonThemeShell({ children }: { children: ReactNode }) {
-  // Always match SSR + first client paint (dark default) to avoid hydration mismatch.
+  // Always match SSR + first client paint (light default) to avoid hydration mismatch.
   const [surface, setSurface] = useState<HackathonSurface>(HACKATHON_THEME_DEFAULT);
 
   useEffect(() => {
