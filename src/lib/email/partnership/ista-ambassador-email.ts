@@ -37,7 +37,7 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function rowHtml(text: string, bg = EMAIL_BRAND.mint): string {
+function rowHtml(text: string, bg: string = EMAIL_BRAND.mint): string {
   return `<tr><td style="padding:8px 12px;background:${bg};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};">${text}</td></tr><tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
 }
 
