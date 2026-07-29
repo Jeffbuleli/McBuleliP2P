@@ -84,7 +84,7 @@ export function buildIsaacPartnerLogosEmail(): {
           <tr>
             <td style="padding:22px 28px 8px;border-bottom:1px solid ${EMAIL_BRAND.border};">
               <img src="${esc(logoUrl())}" alt="McBuleli" width="48" height="48" style="display:block;border-radius:12px;" />
-              <p style="margin:14px 0 0;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${EMAIL_BRAND.accent};">Isaac Picture · Affiches</p>
+              <p style="margin:14px 0 0;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${EMAIL_BRAND.primary};">Isaac Picture · Affiches</p>
               <h1 style="margin:8px 0 0;font-size:20px;line-height:1.3;color:${EMAIL_BRAND.text};">Logos partenaires pour les affiches</h1>
             </td>
           </tr>
@@ -104,7 +104,7 @@ export function buildIsaacPartnerLogosEmail(): {
               </p>
               <p style="margin:0;">
                 Page événement :
-                <a href="https://mcbuleli.org/hackathon" style="color:${EMAIL_BRAND.accent};">mcbuleli.org/hackathon</a>
+                <a href="https://mcbuleli.org/hackathon" style="color:${EMAIL_BRAND.primary};">mcbuleli.org/hackathon</a>
               </p>
             </td>
           </tr>
