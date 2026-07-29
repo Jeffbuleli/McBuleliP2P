@@ -275,6 +275,21 @@ export const IA_ACADEMIE_PARTNER = {
     "AI training centre in DRC since 2015. Certified programs: generative AI, LLMs, autonomous agents, prompting, data analysis and automation - talent pool for the McBuleli Hackathon.",
 } as const;
 
+/** Confirmed FinTech / escrow partner (talk + mentoring marketplace / wallet). */
+export const MONTANA_PAY_PARTNER = {
+  name: "MontanaPay",
+  roleFr: "Partenaire FinTech / Escrow - Talk - Mentorat",
+  roleEn: "FinTech / Escrow Partner - Talk - Mentoring",
+  website: "https://montana-pay.com/",
+  logoUrl: "/partners/montana-pay-logo.jpg?v=20260729b",
+  contactName: "Delly Montana",
+  email: "montanadelly7@gmail.com",
+  blurbFr:
+    "Wallet sécurisé et e-commerce avec protection Escrow anti-arnaque. Paiements protégés jusqu'à validation de livraison, transferts instantanés et retraits Mobile Money (Orange, Airtel, M-Pesa…). Référence FinTech pour les prototypes marketplace du McBuleli Hackathon.",
+  blurbEn:
+    "Secure wallet and e-commerce with anti-scam Escrow protection. Funds held until delivery validation, instant transfers and Mobile Money cash-out (Orange, Airtel, M-Pesa…). FinTech reference for marketplace prototypes at the McBuleli Hackathon.",
+} as const;
+
 /** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
 export type HackathonFeaturedLogo = {
   id: string;
@@ -327,6 +342,16 @@ const FEATURED_PARTNER_LOGOS: HackathonFeaturedLogo[] = [
     tileBgClass: "bg-white",
     fit: "contain",
     shape: "wide",
+  },
+  {
+    id: "montana-pay",
+    name: MONTANA_PAY_PARTNER.name,
+    logoUrl: MONTANA_PAY_PARTNER.logoUrl,
+    href: MONTANA_PAY_PARTNER.website,
+    tileBgClass: "bg-white",
+    fit: "contain",
+    shape: "square-bleed",
+    imageScaleClass: "scale-[1.2]",
   },
   {
     id: "binance",
@@ -422,6 +447,15 @@ export function hackathonPartnerDetails(): HackathonPartnerDetailRow[] {
       metaEn: "rdpithinktank.org",
     },
     {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "montana-pay")!,
+      roleFr: MONTANA_PAY_PARTNER.roleFr,
+      roleEn: MONTANA_PAY_PARTNER.roleEn,
+      blurbFr: MONTANA_PAY_PARTNER.blurbFr,
+      blurbEn: MONTANA_PAY_PARTNER.blurbEn,
+      metaFr: "montana-pay.com · Escrow · Mobile Money",
+      metaEn: "montana-pay.com · Escrow · Mobile Money",
+    },
+    {
       logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "binance")!,
       roleFr: BINANCE_PARTNER.roleFr,
       roleEn: BINANCE_PARTNER.roleEn,
@@ -472,6 +506,7 @@ const CHAT_PARTNER_LOGO_BY_SLUG: Record<string, string> = {
   rdpi: "rdpi",
   kilelo: "kilelo",
   "ia-academie-chk": "ia-academie",
+  "montana-pay": "montana-pay",
 };
 
 const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
@@ -484,6 +519,7 @@ const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
   kilelo: "kilelo",
   iaacadémie: "ia-academie",
   iaacademie: "ia-academie",
+  montanapay: "montana-pay",
 };
 
 /** Featured logo tile for partner chat (slug or shortName). */
@@ -626,8 +662,20 @@ export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
       photoUrl: IA_ACADEMIE_PARTNER.logoUrl,
       photoFit: "contain",
       photoBgClass: "bg-white ring-1 ring-[color:var(--fd-primary)]/15",
-      photoScaleClass: "scale-[1.35]",
       href: IA_ACADEMIE_PARTNER.website,
+    },
+    {
+      id: "mentor-montana-pay",
+      name: MONTANA_PAY_PARTNER.contactName,
+      company: MONTANA_PAY_PARTNER.name,
+      titleFr: "Mentor - FinTech / Escrow",
+      titleEn: "Mentor - FinTech / Escrow",
+      expertiseFr: "Escrow, marketplace, wallet & Mobile Money",
+      expertiseEn: "Escrow, marketplace, wallet & Mobile Money",
+      photoUrl: MONTANA_PAY_PARTNER.logoUrl,
+      photoFit: "contain",
+      photoBgClass: "bg-white ring-1 ring-[color:var(--fd-primary)]/15",
+      href: MONTANA_PAY_PARTNER.website,
     },
   ];
 }
@@ -653,8 +701,8 @@ export function defaultHeroStats(
 ): EventHeroStats {
   return {
     teamsExpected: 12,
-    mentorsLabelFr: "4+",
-    mentorsLabelEn: "4+",
+    mentorsLabelFr: "5+",
+    mentorsLabelEn: "5+",
     partnersLabelFr: partnersCount > 0 ? `${partnersCount}+` : "5+",
     partnersLabelEn: partnersCount > 0 ? `${partnersCount}+` : "5+",
     prizesCountFr: "5",

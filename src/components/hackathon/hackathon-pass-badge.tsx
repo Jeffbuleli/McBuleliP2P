@@ -399,11 +399,11 @@ export function HackathonPassBadge({
           <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#1F6B43]">
             {isFr ? "Nos partenaires" : "Our partners"}
           </p>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2.5">
             {logos.map((logo) => (
               <div
                 key={logo.id}
-                className={`flex items-center justify-center overflow-hidden rounded-xl p-0 ${logo.tileClass} ${logo.box}`}
+                className={`flex h-11 items-center justify-center overflow-hidden rounded-xl p-0 ${logo.tileClass} ${logo.box}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={logo.src} alt={logo.name} className={logo.imgClass} />

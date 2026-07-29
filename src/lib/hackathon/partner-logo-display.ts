@@ -33,14 +33,24 @@ export function partnerLogoBorderless(logo: PartnerLogoTileInput): boolean {
   );
 }
 
-function squareBleedImg(logo: PartnerLogoTileInput): string {
+function squareBleedImg(logo: PartnerLogoTileInput, surface: PartnerLogoSurface): string {
   const scale = logo.imageScaleClass ?? "";
   if (logo.fit === "contain") {
-    return `h-full w-full object-contain object-center ${scale || "scale-[1.12]"}`;
+    const fallback =
+      surface === "ecosystem"
+        ? "scale-[1.06]"
+        : surface === "badge"
+          ? "scale-[1.08]"
+          : "scale-[1.12]";
+    return `h-full w-full object-contain object-center ${scale || fallback}`;
   }
   return "h-full w-full object-cover object-center";
 }
 
+/**
+ * Uniform tile sizes per surface so ecosystem / tickets / badges stay visually ordered
+ * (wide strip → wide-bleed → square → round).
+ */
 export function partnerLogoTileStyles(
   logo: PartnerLogoTileInput,
   surface: PartnerLogoSurface,
@@ -52,14 +62,14 @@ export function partnerLogoTileStyles(
       surface === "detail"
         ? "aspect-square h-auto w-[8rem] shrink-0 sm:w-[9rem]"
         : surface === "ecosystem"
-          ? "aspect-square h-auto w-full max-w-[6.5rem] sm:max-w-[7.5rem]"
-          : "aspect-square h-auto w-[4.5rem]";
+          ? "aspect-square h-[5.5rem] w-[5.5rem] shrink-0 sm:h-[6.25rem] sm:w-[6.25rem]"
+          : "aspect-square h-11 w-11 shrink-0";
     const imgScale =
       surface === "detail"
         ? scale || "scale-[1.18]"
         : surface === "ecosystem"
-          ? "scale-[1.1]"
-          : scale || "scale-[1.26]";
+          ? scale || "scale-[1.1]"
+          : scale || "scale-[1.12]";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
       img: `h-full w-full object-contain object-center ${imgScale}`,
@@ -71,11 +81,11 @@ export function partnerLogoTileStyles(
       surface === "detail"
         ? "aspect-square h-auto w-[8rem] shrink-0 sm:w-[9rem]"
         : surface === "ecosystem"
-          ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]"
-          : "aspect-square h-auto w-16";
+          ? "aspect-square h-[5.5rem] w-[5.5rem] shrink-0 sm:h-[6.25rem] sm:w-[6.25rem]"
+          : "aspect-square h-11 w-11 shrink-0";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
-      img: squareBleedImg(logo),
+      img: squareBleedImg(logo, surface),
     };
   }
 
@@ -84,32 +94,32 @@ export function partnerLogoTileStyles(
       surface === "detail"
         ? "h-[4.25rem] w-full max-w-[15rem] shrink-0 sm:h-[4.75rem] sm:max-w-[17rem]"
         : surface === "ecosystem"
-          ? "h-16"
-          : "h-14 w-[7.5rem]";
+          ? "h-16 w-full"
+          : "h-11 w-[6.75rem] shrink-0";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
-      // Cover fills the tile so PNG edge borders don't show as a frame.
       img: "h-full w-full object-cover object-center",
     };
   }
 
+  // wide (wordmarks with padding + border)
   const tile =
     surface === "detail"
       ? "h-[4.25rem] w-full max-w-[15rem] shrink-0 sm:h-[4.75rem] sm:max-w-[17rem]"
       : surface === "ecosystem"
-        ? "h-16"
-        : "h-14 w-[7.5rem]";
+        ? "h-16 w-full"
+        : "h-11 w-[6.75rem] shrink-0";
   const pad =
-    surface === "detail" ? "px-3 py-2" : surface === "ecosystem" ? "px-3" : "px-2";
-  const bordered = surface === "detail";
+    surface === "detail" ? "px-3 py-2" : surface === "ecosystem" ? "px-2.5" : "px-1.5";
+  const bordered = surface === "detail" || surface === "ecosystem" || surface === "badge";
   return {
     tile: bordered
       ? `${tile} ${pad} border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)]`
-      : `${tile} ${pad} border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)]`,
+      : `${tile} ${pad}`,
     img:
       surface === "ecosystem"
-        ? `max-h-[3.75rem] w-full max-w-[9rem] object-contain object-center ${scale || "scale-[1.14]"}`
-        : `h-full w-full object-contain object-center ${scale || (surface === "detail" ? "scale-[1.08]" : "scale-110")}`,
+        ? `max-h-[3.25rem] w-full object-contain object-center ${scale || "scale-[1.06]"}`
+        : `h-full w-full object-contain object-center ${scale || (surface === "detail" ? "scale-[1.08]" : "scale-[1.05]")}`,
   };
 }
 
@@ -139,7 +149,16 @@ export function partnerLogoChatStyles(logo: PartnerLogoTileInput): {
       img: `h-full w-full object-contain object-center ${scale || "scale-[1.15]"}`,
     };
   }
-  if (logo.shape === "square-bleed" || logo.shape === "wide-bleed") {
+  if (logo.shape === "square-bleed") {
+    return {
+      frame,
+      img:
+        logo.fit === "contain"
+          ? `h-full w-full object-contain object-center ${scale || "scale-[1.1]"}`
+          : "h-full w-full object-cover object-center",
+    };
+  }
+  if (logo.shape === "wide-bleed") {
     return {
       frame,
       img: "h-full w-full object-cover object-center",

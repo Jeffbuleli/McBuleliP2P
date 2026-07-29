@@ -13,6 +13,7 @@ import {
   ILOKWE_PARTNER,
   IA_ACADEMIE_PARTNER,
   KILELO_PARTNER,
+  MONTANA_PAY_PARTNER,
   KIMIA_PARTNER,
   PAWAPAY_PARTNER,
   RDPI_PARTNER,
@@ -90,6 +91,11 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
     "ia-academie": {
       roleFr: IA_ACADEMIE_PARTNER.roleFr,
       href: IA_ACADEMIE_PARTNER.website,
+      contentType: "image/jpeg",
+    },
+    "montana-pay": {
+      roleFr: MONTANA_PAY_PARTNER.roleFr,
+      href: MONTANA_PAY_PARTNER.website,
       contentType: "image/jpeg",
     },
   };

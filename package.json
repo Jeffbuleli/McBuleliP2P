@@ -66,6 +66,7 @@
     "email:bienv-photography": "tsx scripts/send-bienv-photography-email.ts",
     "email:ista-ambassador": "tsx scripts/send-ista-ambassador-email.ts",
     "email:partner-campaign-reminder": "tsx scripts/send-partner-campaign-reminder-email.ts",
+    "email:isaac-partner-logos": "tsx scripts/send-isaac-partner-logos-email.ts",
     "seed:bienv-photography": "tsx scripts/seed-bienv-photography.ts",
     "email:sanja-service": "tsx scripts/send-sanja-service-email.ts",
     "email:kimia-service-reply": "tsx scripts/send-kimia-service-reply-email.ts",

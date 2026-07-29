@@ -234,6 +234,12 @@ function enrichMentors(
           /ia\s*acad/i.test(p.company ?? "")
         );
       }
+      if (
+        /montana/i.test(m.name) ||
+        /montana/i.test(m.company ?? "")
+      ) {
+        return /montana/i.test(p.name) || /montana/i.test(p.company ?? "");
+      }
       return false;
     });
     if (already) continue;
@@ -348,14 +354,19 @@ function PersonGrid({
   empty: string;
   slots?: number;
 }) {
-  const placeholders = Math.max(0, slots - people.length);
+  const list = people ?? [];
+  const placeholders = Math.max(0, slots - list.length);
   return (
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {people.map((p) => {
+      {list.map((p) => {
         const inner = (
           <>
             <div
-              className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-[color:var(--fd-primary)] ${
+              className={`mt-0.5 flex shrink-0 items-center justify-center overflow-hidden text-[color:var(--fd-primary)] ${
+                p.photoFit === "contain"
+                  ? "h-14 w-14 rounded-xl"
+                  : "h-12 w-12 rounded-full"
+              } ${
                 p.photoBgClass ??
                 (p.photoFit === "contain"
                   ? "bg-white ring-1 ring-[color:var(--fd-primary)]/15"
@@ -369,7 +380,7 @@ function PersonGrid({
                   alt=""
                   className={
                     p.photoFit === "contain"
-                      ? `h-full w-full object-contain object-center ${p.photoScaleClass ?? "p-0.5"}`
+                      ? `h-full w-full object-contain object-center p-1 ${p.photoScaleClass ?? ""}`
                       : `h-full w-full object-cover object-center ${p.photoScaleClass ?? ""}`
                   }
                 />
@@ -447,8 +458,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
   const featuredPartners = hackathonFeaturedPartners();
   const featuredSponsors = hackathonFeaturedSponsors();
   const stats = defaultHeroStats(
-    data.mentors.length,
-    data.partnerLogos.length + featuredPartners.length,
+    data.mentors?.length ?? 0,
+    (data.partnerLogos?.length ?? 0) + featuredPartners.length,
   );
 
   const confirmedPacks = new Set([
@@ -752,9 +763,9 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             subtitle={isFr ? "Accompagnement tech & business" : "Tech & business support"}
           >
             <PersonGrid
-              people={enrichMentors(data.mentors, isFr)}
+              people={enrichMentors(data.mentors ?? [], isFr)}
               empty={isFr ? "Mentor à annoncer" : "Mentor TBA"}
-              slots={3}
+              slots={5}
             />
           </AccordionItem>
           <AccordionItem
@@ -763,7 +774,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             subtitle={isFr ? "Évaluation Demo Day" : "Demo Day evaluation"}
           >
             <PersonGrid
-              people={enrichJury(data.jury, isFr)}
+              people={enrichJury(data.jury ?? [], isFr)}
               empty={isFr ? "Jury à annoncer" : "Jury TBA"}
               slots={3}
             />
@@ -880,7 +891,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           const existing = data.partnerLogos.filter(
             (p) =>
               !featuredIds.has(p.name.toLowerCase()) &&
-              !/pawapay|binance|ilokwe|silikin|kimia|rdpi/i.test(p.name) &&
+              !/pawapay|binance|ilokwe|silikin|kimia|rdpi|montana/i.test(p.name) &&
               !/^mcbuleli$/i.test(p.name.trim()),
           );
           const logoSlots = Math.max(6, featuredPartners.length + existing.length);
@@ -919,7 +930,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             ),
           ];
           return (
-            <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <ul className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {logos.map((p) => {
                 const shape =
                   "shape" in p && p.shape ? p.shape : ("wide" as const);
@@ -942,11 +953,27 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     {p.name}
                   </span>
                 );
-                const cls = `flex items-center justify-center overflow-hidden rounded-xl ${tile} ${p.tileBgClass} ${p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""}`;
+                const isCompact =
+                  shape === "square-bleed" || shape === "round";
+                const cls = `flex items-center justify-center overflow-hidden rounded-xl ${tile} ${p.tileBgClass} ${
+                  p.placeholder ? "border-dashed border-[color:var(--hk-border)]" : ""
+                }`;
                 return (
-                  <li key={p.id}>
+                  <li
+                    key={p.id}
+                    className={`flex items-center ${
+                      isCompact
+                        ? "h-[5.5rem] justify-center sm:h-[6.25rem]"
+                        : "h-16 justify-stretch"
+                    }`}
+                  >
                     {p.website ? (
-                      <a href={p.website} target="_blank" rel="noopener noreferrer" className={cls}>
+                      <a
+                        href={p.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cls}
+                      >
                         {inner}
                       </a>
                     ) : (
@@ -1024,7 +1051,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="Kilelo · pawaPay · SanJa · RDPI · Binance · ILOKWE · KIMIA · IA Académie"
+            subtitle="Kilelo · pawaPay · SanJa · RDPI · MontanaPay · Binance · ILOKWE · KIMIA · IA Académie"
           >
             <div className="space-y-4">
               {hackathonPartnerDetails().map((row) => {
