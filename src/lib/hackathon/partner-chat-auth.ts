@@ -11,6 +11,7 @@ import { UserRole } from "@/lib/roles";
 import { cookies } from "next/headers";
 import type { PartnerOrgStatus } from "@/lib/hackathon/partner-chat";
 import { isHackathonBadgeStaffEmail } from "@/lib/hackathon/access";
+import { emailMatchesOrgAffiliation } from "@/lib/hackathon/partner-affiliated-emails";
 
 const PREF_COOKIE = "mcbuleli_partner_chat_org";
 
@@ -77,6 +78,22 @@ export async function findPartnerOrgsForEmail(
     .orderBy(asc(hackathonPartnerOrgs.sortOrder));
 
   if (byContact.length) return { orgs: byContact, via: "contact" };
+
+  // Dual-contact orgs (e.g. IA Académie + CHK).
+  const activeOrgs = await db
+    .select()
+    .from(hackathonPartnerOrgs)
+    .where(
+      and(
+        eq(hackathonPartnerOrgs.editionId, editionId),
+        ne(hackathonPartnerOrgs.status, "rejected"),
+      ),
+    )
+    .orderBy(asc(hackathonPartnerOrgs.sortOrder));
+  const byAffiliated = activeOrgs.filter((o) =>
+    emailMatchesOrgAffiliation(o, normalized),
+  );
+  if (byAffiliated.length) return { orgs: byAffiliated, via: "contact" };
 
   // Fallback: active partner promo email for this edition → match org by name.
   const [promo] = await db

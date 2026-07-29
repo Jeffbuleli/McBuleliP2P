@@ -259,6 +259,22 @@ export const KILELO_PARTNER = {
     "Kilelo connects clients with qualified local workers in Kinshasa. Browse profiles, read reviews, and contact the professional you need directly.",
 } as const;
 
+/** Confirmed academic partner (IA training + CHK digital campus). */
+export const IA_ACADEMIE_PARTNER = {
+  name: "IA Académie RDC",
+  roleFr: "Partenaire académique - Vivier - Atelier / Mentorat",
+  roleEn: "Academic Partner - Talent pool - Workshop / Mentoring",
+  website: "https://ia-academie.cd/",
+  logoUrl: "/partners/ia-academie-logo.png?v=20260729",
+  contactName: "Rodrigue KASHARA DAVID",
+  email: "contact@ia-academie.cd",
+  phone: "+243 901 815 632",
+  blurbFr:
+    "Centre de formation en Intelligence Artificielle en RDC depuis 2015. Programmes certifiants : IA générative, LLMs, agents autonomes, prompting, analyse de données et automatisation - vivier de talents pour le McBuleli Hackathon.",
+  blurbEn:
+    "AI training centre in DRC since 2015. Certified programs: generative AI, LLMs, autonomous agents, prompting, data analysis and automation - talent pool for the McBuleli Hackathon.",
+} as const;
+
 /** Featured partner logos on landing + badges/tickets. Add here to auto-update all surfaces. */
 export type HackathonFeaturedLogo = {
   id: string;
@@ -338,12 +354,113 @@ const FEATURED_PARTNER_LOGOS: HackathonFeaturedLogo[] = [
     tileBgClass: "bg-[#0c0a09]",
     fit: "contain",
     shape: "round",
-    imageScaleClass: "scale-[1.28]",
+    imageScaleClass: "scale-[1.12]",
+  },
+  {
+    id: "ia-academie",
+    name: IA_ACADEMIE_PARTNER.name,
+    logoUrl: IA_ACADEMIE_PARTNER.logoUrl,
+    href: IA_ACADEMIE_PARTNER.website,
+    tileBgClass: "bg-white",
+    fit: "contain",
+    shape: "square-bleed",
+    imageScaleClass: "scale-[1.30]",
   },
 ];
 
 export function hackathonFeaturedPartners(): HackathonFeaturedLogo[] {
   return sortFeaturedPartnersByShape(FEATURED_PARTNER_LOGOS);
+}
+
+export type HackathonPartnerDetailRow = {
+  logo: HackathonFeaturedLogo;
+  roleFr: string;
+  roleEn: string;
+  blurbFr: string;
+  blurbEn: string;
+  metaFr: string;
+  metaEn: string;
+};
+
+/** Partner detail cards (same shape order as ecosystem grid). */
+export function hackathonPartnerDetails(): HackathonPartnerDetailRow[] {
+  const rows: HackathonPartnerDetailRow[] = [
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "kilelo")!,
+      roleFr: KILELO_PARTNER.roleFr,
+      roleEn: KILELO_PARTNER.roleEn,
+      blurbFr: KILELO_PARTNER.blurbFr,
+      blurbEn: KILELO_PARTNER.blurbEn,
+      metaFr: "kileloapp.com · Kinshasa · services & petits boulots",
+      metaEn: "kileloapp.com · Kinshasa · services & small jobs",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "pawapay")!,
+      roleFr: PAWAPAY_PARTNER.roleFr,
+      roleEn: PAWAPAY_PARTNER.roleEn,
+      blurbFr: PAWAPAY_PARTNER.blurbFr,
+      blurbEn: PAWAPAY_PARTNER.blurbEn,
+      metaFr: "pawapay.io · docs.pawapay.io",
+      metaEn: "pawapay.io · docs.pawapay.io",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "sanja")!,
+      roleFr: SANJA_PARTNER.roleFr,
+      roleEn: SANJA_PARTNER.roleEn,
+      blurbFr: SANJA_PARTNER.blurbFr,
+      blurbEn: SANJA_PARTNER.blurbEn,
+      metaFr: "sanjaservice.com · Kisangani · SaaS & digital",
+      metaEn: "sanjaservice.com · Kisangani · SaaS & digital",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "rdpi")!,
+      roleFr: RDPI_PARTNER.roleFr,
+      roleEn: RDPI_PARTNER.roleEn,
+      blurbFr: RDPI_PARTNER.blurbFr,
+      blurbEn: RDPI_PARTNER.blurbEn,
+      metaFr: "rdpithinktank.org",
+      metaEn: "rdpithinktank.org",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "binance")!,
+      roleFr: BINANCE_PARTNER.roleFr,
+      roleEn: BINANCE_PARTNER.roleEn,
+      blurbFr: BINANCE_PARTNER.blurbFr,
+      blurbEn: BINANCE_PARTNER.blurbEn,
+      metaFr: "demo.binance.com · developers.binance.com",
+      metaEn: "demo.binance.com · developers.binance.com",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "ilokwe")!,
+      roleFr: ILOKWE_PARTNER.roleFr,
+      roleEn: ILOKWE_PARTNER.roleEn,
+      blurbFr: ILOKWE_PARTNER.blurbFr,
+      blurbEn: ILOKWE_PARTNER.blurbEn,
+      metaFr: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
+      metaEn: "Facebook · ILOKWE Prize · Gold Sponsor · Jury",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "kimia")!,
+      roleFr: KIMIA_PARTNER.roleFr,
+      roleEn: KIMIA_PARTNER.roleEn,
+      blurbFr: KIMIA_PARTNER.blurbFr,
+      blurbEn: KIMIA_PARTNER.blurbEn,
+      metaFr: "Facebook · mentorat employabilité",
+      metaEn: "Facebook · employability mentoring",
+    },
+    {
+      logo: FEATURED_PARTNER_LOGOS.find((p) => p.id === "ia-academie")!,
+      roleFr: IA_ACADEMIE_PARTNER.roleFr,
+      roleEn: IA_ACADEMIE_PARTNER.roleEn,
+      blurbFr: IA_ACADEMIE_PARTNER.blurbFr,
+      blurbEn: IA_ACADEMIE_PARTNER.blurbEn,
+      metaFr: "ia-academie.cd · CHK · formations IA certifiantes",
+      metaEn: "ia-academie.cd · CHK · certified AI programs",
+    },
+  ];
+  return sortFeaturedPartnersByShape(rows.map((r) => r.logo)).map(
+    (logo) => rows.find((r) => r.logo.id === logo.id)!,
+  );
 }
 
 const CHAT_PARTNER_LOGO_BY_SLUG: Record<string, string> = {
@@ -354,6 +471,7 @@ const CHAT_PARTNER_LOGO_BY_SLUG: Record<string, string> = {
   "sanja-service": "sanja",
   rdpi: "rdpi",
   kilelo: "kilelo",
+  "ia-academie-chk": "ia-academie",
 };
 
 const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
@@ -364,6 +482,8 @@ const CHAT_PARTNER_LOGO_BY_SHORT: Record<string, string> = {
   ilokwe: "ilokwe",
   sanja: "sanja",
   kilelo: "kilelo",
+  iaacadémie: "ia-academie",
+  iaacademie: "ia-academie",
 };
 
 /** Featured logo tile for partner chat (slug or shortName). */
@@ -430,6 +550,10 @@ export type HackathonFeaturedMentor = {
   expertiseEn: string;
   photoUrl: string | null;
   photoFit?: "cover" | "contain";
+  /** Optional circle background (brand fill). */
+  photoBgClass?: string;
+  /** Optional Tailwind scale on the avatar image. */
+  photoScaleClass?: string;
   href: string | null;
 };
 
@@ -491,6 +615,20 @@ export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
       photoFit: "cover",
       href: KILELO_PARTNER.website,
     },
+    {
+      id: "mentor-ia-academie-rodrigue",
+      name: IA_ACADEMIE_PARTNER.contactName,
+      company: IA_ACADEMIE_PARTNER.name,
+      titleFr: "Mentor - IA & formation",
+      titleEn: "Mentor - AI & training",
+      expertiseFr: "IA générative, prompting, agents & automatisation",
+      expertiseEn: "Generative AI, prompting, agents & automation",
+      photoUrl: IA_ACADEMIE_PARTNER.logoUrl,
+      photoFit: "contain",
+      photoBgClass: "bg-white ring-1 ring-[color:var(--fd-primary)]/15",
+      photoScaleClass: "scale-[1.35]",
+      href: IA_ACADEMIE_PARTNER.website,
+    },
   ];
 }
 
@@ -515,8 +653,8 @@ export function defaultHeroStats(
 ): EventHeroStats {
   return {
     teamsExpected: 12,
-    mentorsLabelFr: "3+",
-    mentorsLabelEn: "3+",
+    mentorsLabelFr: "4+",
+    mentorsLabelEn: "4+",
     partnersLabelFr: partnersCount > 0 ? `${partnersCount}+` : "5+",
     partnersLabelEn: partnersCount > 0 ? `${partnersCount}+` : "5+",
     prizesCountFr: "5",

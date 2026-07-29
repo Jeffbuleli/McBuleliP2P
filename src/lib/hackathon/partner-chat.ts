@@ -8,6 +8,7 @@ import {
 } from "@/db";
 import {
   BINANCE_PARTNER,
+  IA_ACADEMIE_PARTNER,
   ILOKWE_PARTNER,
   KILELO_PARTNER,
   KIMIA_PARTNER,
@@ -194,9 +195,9 @@ const SEED_ORGS: SeedOrg[] = [
     slug: "ia-academie-chk",
     orgName: "IA Académie / CHK",
     shortName: "IA Académie",
-    logoUrl: null,
+    logoUrl: IA_ACADEMIE_PARTNER.logoUrl,
     contactEmail: "contact@ia-academie.cd",
-    website: "https://ia-academie.cd",
+    website: IA_ACADEMIE_PARTNER.website,
     status: "confirmed",
     sortOrder: 70,
   },

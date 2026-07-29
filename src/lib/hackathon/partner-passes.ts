@@ -214,20 +214,24 @@ export async function ensureOrgPartnerPasses(orgId: string) {
   for (let seat = 1; seat <= profile.seats; seat += 1) {
     const hit = bySeat.get(seat);
     if (hit) {
-      // Keep role labels fresh from profile.
-      if (
-        hit.roleLabel !== profile.roleLabel ||
-        hit.badgeKind !== profile.badgeKind
-      ) {
+      const contact = org.contactEmail.trim().toLowerCase();
+      const patch: {
+        roleLabel?: string;
+        badgeKind?: PartnerBadgeKind;
+        holderEmail?: string;
+        updatedAt: Date;
+      } = { updatedAt: new Date() };
+      if (hit.roleLabel !== profile.roleLabel) patch.roleLabel = profile.roleLabel;
+      if (hit.badgeKind !== profile.badgeKind) patch.badgeKind = profile.badgeKind;
+      if (seat === 1 && (hit.holderEmail ?? "").toLowerCase() !== contact) {
+        patch.holderEmail = contact;
+      }
+      if (Object.keys(patch).length > 1) {
         await db
           .update(hackathonPartnerPasses)
-          .set({
-            roleLabel: profile.roleLabel,
-            badgeKind: profile.badgeKind,
-            updatedAt: new Date(),
-          })
+          .set(patch)
           .where(eq(hackathonPartnerPasses.id, hit.id));
-        out.push({ ...hit, roleLabel: profile.roleLabel, badgeKind: profile.badgeKind });
+        out.push({ ...hit, ...patch });
       } else {
         out.push(hit);
       }

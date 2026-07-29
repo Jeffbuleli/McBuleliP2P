@@ -1,12 +1,13 @@
 /** Logo silhouette for consistent grid / badge ordering. */
 export type PartnerLogoShape = "wide" | "wide-bleed" | "square-bleed" | "round";
 
-export type PartnerLogoSurface = "ecosystem" | "badge";
+export type PartnerLogoSurface = "ecosystem" | "badge" | "detail";
 
 export type PartnerLogoTileInput = {
   shape: PartnerLogoShape;
   tileBgClass: string;
   imageScaleClass?: string;
+  fit?: "contain" | "cover";
 };
 
 const SHAPE_ORDER: Record<PartnerLogoShape, number> = {
@@ -32,6 +33,14 @@ export function partnerLogoBorderless(logo: PartnerLogoTileInput): boolean {
   );
 }
 
+function squareBleedImg(logo: PartnerLogoTileInput): string {
+  const scale = logo.imageScaleClass ?? "";
+  if (logo.fit === "contain") {
+    return `h-full w-full object-contain object-center ${scale || "scale-[1.12]"}`;
+  }
+  return "h-full w-full object-cover object-center";
+}
+
 export function partnerLogoTileStyles(
   logo: PartnerLogoTileInput,
   surface: PartnerLogoSurface,
@@ -40,13 +49,17 @@ export function partnerLogoTileStyles(
 
   if (logo.shape === "round") {
     const tile =
-      surface === "ecosystem"
-        ? "aspect-square h-auto w-full max-w-[6.5rem] sm:max-w-[7.5rem]"
-        : "aspect-square h-auto w-[4.5rem]";
+      surface === "detail"
+        ? "aspect-square h-auto w-[8rem] shrink-0 sm:w-[9rem]"
+        : surface === "ecosystem"
+          ? "aspect-square h-auto w-full max-w-[6.5rem] sm:max-w-[7.5rem]"
+          : "aspect-square h-auto w-[4.5rem]";
     const imgScale =
-      surface === "ecosystem"
-        ? "scale-[1.1]"
-        : scale || "scale-[1.26]";
+      surface === "detail"
+        ? scale || "scale-[1.18]"
+        : surface === "ecosystem"
+          ? "scale-[1.1]"
+          : scale || "scale-[1.26]";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
       img: `h-full w-full object-contain object-center ${imgScale}`,
@@ -55,31 +68,48 @@ export function partnerLogoTileStyles(
 
   if (logo.shape === "square-bleed") {
     const tile =
-      surface === "ecosystem"
-        ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]"
-        : "aspect-square h-auto w-16";
+      surface === "detail"
+        ? "aspect-square h-auto w-[8rem] shrink-0 sm:w-[9rem]"
+        : surface === "ecosystem"
+          ? "aspect-square h-auto w-full max-w-[5.5rem] sm:max-w-[6.5rem]"
+          : "aspect-square h-auto w-16";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
-      img: "h-full w-full object-cover object-center",
+      img: squareBleedImg(logo),
     };
   }
 
   if (logo.shape === "wide-bleed") {
-    const tile = surface === "ecosystem" ? "h-16" : "h-14 w-[7.5rem]";
+    const tile =
+      surface === "detail"
+        ? "h-[4.25rem] w-full max-w-[15rem] shrink-0 sm:h-[4.75rem] sm:max-w-[17rem]"
+        : surface === "ecosystem"
+          ? "h-16"
+          : "h-14 w-[7.5rem]";
     return {
       tile: `${tile} p-0 border-0 shadow-none ring-0`,
+      // Cover fills the tile so PNG edge borders don't show as a frame.
       img: "h-full w-full object-cover object-center",
     };
   }
 
-  const tile = surface === "ecosystem" ? "h-16" : "h-14 w-[7.5rem]";
-  const pad = surface === "ecosystem" ? "px-3" : "px-2";
+  const tile =
+    surface === "detail"
+      ? "h-[4.25rem] w-full max-w-[15rem] shrink-0 sm:h-[4.75rem] sm:max-w-[17rem]"
+      : surface === "ecosystem"
+        ? "h-16"
+        : "h-14 w-[7.5rem]";
+  const pad =
+    surface === "detail" ? "px-3 py-2" : surface === "ecosystem" ? "px-3" : "px-2";
+  const bordered = surface === "detail";
   return {
-    tile: `${tile} ${pad} border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)]`,
+    tile: bordered
+      ? `${tile} ${pad} border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)]`
+      : `${tile} ${pad} border border-[color:var(--hk-border)] shadow-[0_10px_28px_-14px_var(--hk-shadow)]`,
     img:
       surface === "ecosystem"
         ? `max-h-[3.75rem] w-full max-w-[9rem] object-contain object-center ${scale || "scale-[1.14]"}`
-        : `h-full w-full object-contain object-center ${scale || "scale-110"}`,
+        : `h-full w-full object-contain object-center ${scale || (surface === "detail" ? "scale-[1.08]" : "scale-110")}`,
   };
 }
 

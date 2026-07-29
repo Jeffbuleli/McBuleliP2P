@@ -11,6 +11,8 @@ import {
   HACKATHON_SCHEDULE_SUMMARY,
   HACKATHON_VENUE_SHORT,
   ILOKWE_PARTNER,
+  IA_ACADEMIE_PARTNER,
+  KILELO_PARTNER,
   KIMIA_PARTNER,
   PAWAPAY_PARTNER,
   RDPI_PARTNER,
@@ -80,6 +82,16 @@ export function featuredPartnersForEmail(): FeaturedPartnerEmailLogo[] {
       href: RDPI_PARTNER.website,
       contentType: "image/png",
     },
+    kilelo: {
+      roleFr: KILELO_PARTNER.roleFr,
+      href: KILELO_PARTNER.website,
+      contentType: "image/png",
+    },
+    "ia-academie": {
+      roleFr: IA_ACADEMIE_PARTNER.roleFr,
+      href: IA_ACADEMIE_PARTNER.website,
+      contentType: "image/jpeg",
+    },
   };
 
   return featured.map((p) => {
@@ -148,6 +160,11 @@ export const AMBASSADOR_PROGRAM_UPDATE_RECIPIENTS: {
     org: "Ambassadeur COORDHEC",
     email: "gdllks66@gmail.com",
     code: "COORDHEC",
+  },
+  {
+    org: "Ambassadeur ISTA Kinshasa",
+    email: "coordinationestudiantinedeista@gmail.com",
+    code: "ISTA-KIN",
   },
 ];
 

@@ -31,10 +31,12 @@ import {
   hackathonFeaturedMentors,
   hackathonFeaturedPartners,
   hackathonFeaturedSponsors,
+  hackathonPartnerDetails,
   podiumPrizes,
   sponsorTiers,
 } from "@/lib/hackathon/event-content";
 import {
+  partnerLogoBorderless,
   partnerLogoTileStyles,
 } from "@/lib/hackathon/partner-logo-display";
 import {
@@ -177,6 +179,7 @@ type PersonCard = FeaturedHackathonPayload["jury"][number] & {
   photoFit?: "cover" | "contain";
   /** Brand tile fill for logo avatars (avoids white letterbox + visible borders). */
   photoBgClass?: string;
+  photoScaleClass?: string;
 };
 
 function enrichMentors(
@@ -222,6 +225,15 @@ function enrichMentors(
       if (/kilelo|jeancy|kabangu/i.test(m.name) || /kilelo/i.test(m.company ?? "")) {
         return /kilelo|jeancy|kabangu/i.test(p.name) || /kilelo/i.test(p.company ?? "");
       }
+      if (
+        /ia\s*acad|kashara|rodrigue/i.test(m.name) ||
+        /ia\s*acad/i.test(m.company ?? "")
+      ) {
+        return (
+          /ia\s*acad|kashara|rodrigue/i.test(p.name) ||
+          /ia\s*acad/i.test(p.company ?? "")
+        );
+      }
       return false;
     });
     if (already) continue;
@@ -233,6 +245,8 @@ function enrichMentors(
       expertise: isFr ? m.expertiseFr : m.expertiseEn,
       photoUrl: m.photoUrl,
       photoFit: m.photoFit ?? "cover",
+      photoBgClass: m.photoBgClass,
+      photoScaleClass: m.photoScaleClass,
       href: m.href ?? undefined,
     });
   }
@@ -355,8 +369,8 @@ function PersonGrid({
                   alt=""
                   className={
                     p.photoFit === "contain"
-                      ? "h-full w-full object-contain p-1"
-                      : "h-full w-full object-cover object-center"
+                      ? `h-full w-full object-contain object-center ${p.photoScaleClass ?? "p-0.5"}`
+                      : `h-full w-full object-cover object-center ${p.photoScaleClass ?? ""}`
                   }
                 />
               ) : (
@@ -916,6 +930,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     shape,
                     tileBgClass: p.tileBgClass,
                     imageScaleClass,
+                    fit: "fit" in p ? p.fit : undefined,
                   },
                   "ecosystem",
                 );
@@ -955,31 +970,23 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                     href={s.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex min-h-[5.5rem] min-w-[11rem] max-w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl px-2 py-2 ${
-                      isIlokwe
-                        ? "border-0 bg-transparent shadow-none ring-0"
-                        : "border border-[color:var(--hk-border)] bg-white shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
-                    }`}
+                    className="flex min-h-[3.25rem] min-w-[11rem] max-w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] px-3 py-2.5 shadow-[0_10px_28px_-14px_var(--hk-shadow)]"
                   >
-                    {isIlokwe ? (
-                      <span className="aspect-square w-[5.75rem] overflow-hidden rounded-xl border-0 bg-[#2e5506] shadow-none ring-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={s.logoUrl}
-                          alt={s.name}
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </span>
-                    ) : (
+                    {/* ILOKWE logo already in ecosystem grid — keep sponsor chip text-only. */}
+                    {!isIlokwe ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={s.logoUrl}
                         alt={s.name}
                         className="h-9 w-auto max-w-[130px] rounded-md object-contain"
                       />
+                    ) : (
+                      <span className="text-center text-sm font-extrabold leading-snug text-[color:var(--hk-text)]">
+                        {s.name}
+                      </span>
                     )}
                     <span
-                      className={`max-w-[10rem] break-words rounded-full px-2 py-0.5 text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide hk-tier-chip ${v.badgeClass}`}
+                      className={`max-w-[12rem] break-words rounded-full px-2 py-0.5 text-center text-[10px] font-extrabold uppercase leading-snug tracking-wide hk-tier-chip ${v.badgeClass}`}
                     >
                       {isFr ? s.roleFr : s.roleEn}
                     </span>
@@ -1017,146 +1024,62 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           <AccordionItem
             id="partner-details"
             title={isFr ? "Détails partenaires" : "Partner details"}
-            subtitle="Kilelo · pawaPay · Binance · ILOKWE · SanJa · KIMIA · RDPI"
+            subtitle="Kilelo · pawaPay · SanJa · RDPI · Binance · ILOKWE · KIMIA · IA Académie"
           >
             <div className="space-y-4">
-              {[
-                {
-                  href: KILELO_PARTNER.website,
-                  logo: KILELO_PARTNER.logoUrl,
-                  alt: KILELO_PARTNER.name,
-                  tile: "bg-white",
-                  role: isFr ? KILELO_PARTNER.roleFr : KILELO_PARTNER.roleEn,
-                  name: KILELO_PARTNER.name,
-                  body: isFr ? KILELO_PARTNER.blurbFr : KILELO_PARTNER.blurbEn,
-                  meta: "kileloapp.com · Kinshasa · services & petits boulots",
-                  cover: false,
-                  borderless: false,
-                },
-                {
-                  href: PAWAPAY_PARTNER.website,
-                  logo: PAWAPAY_PARTNER.logoUrl,
-                  alt: PAWAPAY_PARTNER.name,
-                  tile: "bg-[#F7F7F7]",
-                  role: isFr ? PAWAPAY_PARTNER.roleFr : PAWAPAY_PARTNER.roleEn,
-                  name: PAWAPAY_PARTNER.name,
-                  body: isFr ? PAWAPAY_PARTNER.blurbFr : PAWAPAY_PARTNER.blurbEn,
-                  meta: "pawapay.io · docs.pawapay.io",
-                  cover: false,
-                  borderless: false,
-                },
-                {
-                  href: BINANCE_PARTNER.demo,
-                  logo: BINANCE_PARTNER.logoUrl,
-                  alt: BINANCE_PARTNER.name,
-                  tile: "bg-[#0B0E11]",
-                  role: isFr ? BINANCE_PARTNER.roleFr : BINANCE_PARTNER.roleEn,
-                  name: BINANCE_PARTNER.name,
-                  body: isFr ? BINANCE_PARTNER.blurbFr : BINANCE_PARTNER.blurbEn,
-                  meta: "demo.binance.com · developers.binance.com",
-                  cover: true,
-                  borderless: true,
-                },
-                {
-                  href: ILOKWE_PARTNER.facebook,
-                  logo: ILOKWE_PARTNER.logoUrl,
-                  alt: ILOKWE_PARTNER.name,
-                  tile: "bg-[#2e5506]",
-                  role: isFr ? ILOKWE_PARTNER.roleFr : ILOKWE_PARTNER.roleEn,
-                  name: ILOKWE_PARTNER.name,
-                  body: isFr ? ILOKWE_PARTNER.blurbFr : ILOKWE_PARTNER.blurbEn,
-                  meta: "Facebook · Prix ILOKWE · Sponsor Or · Jury",
-                  cover: true,
-                  borderless: true,
-                },
-                {
-                  href: SANJA_PARTNER.website,
-                  logo: SANJA_PARTNER.logoUrl,
-                  alt: SANJA_PARTNER.name,
-                  tile: "bg-[#F5F2EB]",
-                  role: isFr ? SANJA_PARTNER.roleFr : SANJA_PARTNER.roleEn,
-                  name: SANJA_PARTNER.name,
-                  body: isFr ? SANJA_PARTNER.blurbFr : SANJA_PARTNER.blurbEn,
-                  meta: "sanjaservice.com · Kisangani · SaaS & digital",
-                  cover: false,
-                  borderless: false,
-                },
-                {
-                  href: KIMIA_PARTNER.website,
-                  logo: KIMIA_PARTNER.logoUrl,
-                  alt: KIMIA_PARTNER.name,
-                  tile: "bg-[#0c0a09]",
-                  role: isFr ? KIMIA_PARTNER.roleFr : KIMIA_PARTNER.roleEn,
-                  name: KIMIA_PARTNER.name,
-                  body: isFr ? KIMIA_PARTNER.blurbFr : KIMIA_PARTNER.blurbEn,
-                  meta: "Facebook",
-                  cover: false,
-                  borderless: true,
-                },
-                {
-                  href: RDPI_PARTNER.website,
-                  logo: RDPI_PARTNER.logoUrl,
-                  alt: RDPI_PARTNER.name,
-                  tile: "bg-white",
-                  role: isFr ? RDPI_PARTNER.roleFr : RDPI_PARTNER.roleEn,
-                  name: RDPI_PARTNER.name,
-                  body: isFr ? RDPI_PARTNER.blurbFr : RDPI_PARTNER.blurbEn,
-                  meta: "rdpithinktank.org",
-                  cover: false,
-                  borderless: false,
-                },
-              ].map((p) => (
+              {hackathonPartnerDetails().map((row) => {
+                const p = row.logo;
+                const tileInput = {
+                  shape: p.shape,
+                  tileBgClass: p.tileBgClass,
+                  imageScaleClass: p.imageScaleClass,
+                  fit: p.fit,
+                };
+                const { tile, img } = partnerLogoTileStyles(tileInput, "detail");
+                const borderless = partnerLogoBorderless(tileInput);
+                return (
                 <a
-                  key={p.name}
+                  key={p.id}
                   href={p.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block rounded-[22px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 shadow-[0_14px_44px_-28px_var(--hk-shadow)] transition hover:border-[color:var(--hk-accent)]/35 sm:p-5"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <span
-                      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${p.tile} ${
-                        /ilokwe|kimia/i.test(p.name)
-                          ? "aspect-square h-auto w-[6.5rem] sm:w-28"
-                          : /sanja|rdpi|kilelo/i.test(p.name)
-                            ? "h-14 w-full max-w-[15rem] px-3 py-2 sm:h-16 sm:w-56"
-                            : "h-16 w-full max-w-[11rem] sm:w-44"
-                      } ${
-                        p.borderless
-                          ? "border-0 p-0 shadow-none ring-0"
-                          : `border border-[color:var(--hk-border)] shadow-[0_8px_22px_-12px_var(--hk-shadow)] ${
-                              p.cover ? "p-0" : /sanja/i.test(p.name) ? "" : "p-2"
-                            }`
+                    <div
+                      className={`flex shrink-0 items-center justify-center ${
+                        p.shape === "wide" || p.shape === "wide-bleed"
+                          ? "sm:w-[17rem]"
+                          : "sm:w-[9rem]"
                       }`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={p.logo}
-                        alt={p.alt}
-                        className={
-                          p.cover || /ilokwe/i.test(p.name)
-                            ? "h-full w-full object-cover object-center"
-                            : "h-full w-full object-contain object-center"
-                        }
-                      />
-                    </span>
+                      <span
+                        className={`inline-flex items-center justify-center overflow-hidden rounded-xl ${tile} ${p.tileBgClass}${
+                          borderless ? " border-0 shadow-none ring-0 outline-none" : ""
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.logoUrl} alt={p.name} className={img} />
+                      </span>
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--hk-accent)]">
-                        {p.role}
+                        {isFr ? row.roleFr : row.roleEn}
                       </p>
                       <p className="mt-1 break-words text-base font-extrabold text-[color:var(--hk-text)]">
                         {p.name}
                       </p>
                       <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--hk-muted)]">
-                        {p.body}
+                        {isFr ? row.blurbFr : row.blurbEn}
                       </p>
                       <p className="mt-2 break-words text-xs font-extrabold text-[color:var(--hk-accent)]">
-                        {p.meta}
+                        {isFr ? row.metaFr : row.metaEn}
                       </p>
                     </div>
                   </div>
                 </a>
-              ))}
+                );
+              })}
             </div>
           </AccordionItem>
           <AccordionItem
