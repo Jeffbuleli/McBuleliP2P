@@ -472,13 +472,42 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
   useEffect(() => {
     const applyHash = () => {
       const h = window.location.hash.replace(/^#/, "");
-      if (h === "register") setFormsOpen("participant");
-      else if (h === "partenaires-form") setFormsOpen("partner-form");
+      if (h === "partenaires-form") setFormsOpen("partner-form");
       else if (h === "sponsor-form" || h === "sponsors") setFormsOpen("sponsor-form");
+      else if (!h || h === "register") setFormsOpen("participant");
     };
     applyHash();
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+  useEffect(() => {
+    const h = window.location.hash.replace(/^#/, "");
+    const hasPromo = new URLSearchParams(window.location.search).has("promo");
+    const otherAnchor =
+      h &&
+      h !== "register" &&
+      h !== "partenaires-form" &&
+      h !== "sponsor-form" &&
+      h !== "sponsors";
+    // Promo links and bare /hackathon: privilege inscription (keep other deep-links intact).
+    if (otherAnchor && !hasPromo) return;
+
+    setFormsOpen("participant");
+    if (!h || hasPromo) {
+      const url = new URL(window.location.href);
+      url.hash = "register";
+      window.history.replaceState(null, "", `${url.pathname}${url.search}#register`);
+    }
+    const scrollToRegister = () => {
+      document.getElementById("register")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    };
+    // Wait for layout (accordion + sticky nav) before scrolling.
+    const t = window.setTimeout(scrollToRegister, 80);
+    return () => window.clearTimeout(t);
   }, []);
 
   const statItems = [
@@ -504,7 +533,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
     <div className="relative overflow-hidden bg-[color:var(--hk-page)] pb-24 text-[color:var(--hk-text)] sm:pb-10">
       <HackathonAtmosphere variant="page" />
       {/* Hero */}
-      <header className="relative z-10 min-h-[min(72vh,640px)] overflow-hidden border-b border-[color:var(--fd-border)]">
+      <header className="relative z-10 min-h-[min(48vh,420px)] overflow-hidden border-b border-[color:var(--fd-border)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/hackathon/kinshasa-skyline.jpg"
@@ -521,7 +550,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         <div className="absolute right-3 top-1.5 z-20 sm:right-6 sm:top-2">
           <HackathonCountdown isFr={isFr} onDark bare />
         </div>
-        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:min-h-[min(72vh,640px)] lg:justify-center">
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16 lg:min-h-[min(48vh,420px)] lg:justify-center">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-3 rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 backdrop-blur-sm">
               <HackathonLogo className="h-14 w-12 sm:h-16 sm:w-14" />
@@ -588,6 +617,86 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </div>
 
       <HackathonStickyNav items={HACKATHON_NAV} isFr={isFr} />
+
+      {/* Inscription en premier — priorité conversion (promo + page hackathon) */}
+      <Section
+        id="register"
+        className="bg-[color:var(--hk-surface)]"
+        eyebrow={isFr ? "Rejoindre" : "Join"}
+        title={isFr ? "Inscrivez-vous maintenant" : "Register now"}
+        subtitle={
+          isFr
+            ? `Programme complet ${HACKATHON_PRICE_USD} USD · pré-inscription gratuite, place réservée.`
+            : `Full program ${HACKATHON_PRICE_USD} USD · free pre-registration, seat held.`
+        }
+      >
+        <Accordion open={formsOpen} onOpenChange={setFormsOpen}>
+          <AccordionItem
+            id="participant"
+            title={isFr ? "Participer" : "Join as participant"}
+            subtitle={
+              isFr
+                ? `Formulaire participant · ${HACKATHON_PRICE_USD} USD`
+                : `Participant form · ${HACKATHON_PRICE_USD} USD`
+            }
+          >
+            <div className="mx-auto max-w-2xl">
+              <HackathonParticipantForm
+                editionId={e.id}
+                locale={locale}
+                priceUsd={HACKATHON_PRICE_USD}
+                registrationOpen={open}
+              />
+            </div>
+          </AccordionItem>
+          <AccordionItem
+            id="partner-form"
+            title={isFr ? "Devenir partenaire" : "Become a partner"}
+            subtitle={
+              isFr
+                ? "Collaboration sur mesure (atelier, mentorat, jury…)"
+                : "Tailored collaboration (workshop, mentoring, jury…)"
+            }
+          >
+            <div id="partenaires-form" className="scroll-mt-28">
+              <HackathonPartnerForm editionId={e.id} locale={locale} />
+            </div>
+          </AccordionItem>
+          <AccordionItem
+            id="sponsor-form"
+            title={isFr ? "Devenir sponsor" : "Become a sponsor"}
+            subtitle={
+              isFr
+                ? "Niveaux Bronze à Platine · visibilité événement"
+                : "Bronze to Platinum tiers · event visibility"
+            }
+          >
+            <div id="sponsor-form" className="scroll-mt-28">
+              <HackathonSponsorForm editionId={e.id} locale={locale} />
+            </div>
+          </AccordionItem>
+          <AccordionItem
+            id="ambassador"
+            title={isFr ? "Ambassadeur" : "Ambassador"}
+            subtitle={
+              isFr
+                ? "Code promo, -10% et cashback pour vos inscrits"
+                : "Promo code, -10% and cashback for your signups"
+            }
+          >
+            <p className="text-sm leading-relaxed text-[color:var(--hk-muted)]">
+              {isFr
+                ? "Crée ton code ambassadeur, partage ton lien et suis les inscriptions confirmées."
+                : "Create your ambassador code, share your link and track confirmed signups."}
+            </p>
+            <div className="mt-4">
+              <CtaPrimary href="/hackathon/ambassadeur">
+                {isFr ? "Espace ambassadeur" : "Ambassador space"}
+              </CtaPrimary>
+            </div>
+          </AccordionItem>
+        </Accordion>
+      </Section>
 
       {/* Défis */}
       <Section
@@ -778,85 +887,6 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               empty={isFr ? "Jury à annoncer" : "Jury TBA"}
               slots={3}
             />
-          </AccordionItem>
-        </Accordion>
-      </Section>
-
-      {/* Inscription - formulaires pliés */}
-      <Section
-        id="register"
-        eyebrow={isFr ? "Rejoindre" : "Join"}
-        title={isFr ? "Inscrivez-vous maintenant" : "Register now"}
-        subtitle={
-          isFr
-            ? `Programme complet ${HACKATHON_PRICE_USD} USD · pré-inscription gratuite, place réservée.`
-            : `Full program ${HACKATHON_PRICE_USD} USD · free pre-registration, seat held.`
-        }
-      >
-        <Accordion open={formsOpen} onOpenChange={setFormsOpen}>
-          <AccordionItem
-            id="participant"
-            title={isFr ? "Participer" : "Join as participant"}
-            subtitle={
-              isFr
-                ? `Formulaire participant · ${HACKATHON_PRICE_USD} USD`
-                : `Participant form · ${HACKATHON_PRICE_USD} USD`
-            }
-          >
-            <div className="mx-auto max-w-2xl">
-              <HackathonParticipantForm
-                editionId={e.id}
-                locale={locale}
-                priceUsd={HACKATHON_PRICE_USD}
-                registrationOpen={open}
-              />
-            </div>
-          </AccordionItem>
-          <AccordionItem
-            id="partner-form"
-            title={isFr ? "Devenir partenaire" : "Become a partner"}
-            subtitle={
-              isFr
-                ? "Collaboration sur mesure (atelier, mentorat, jury…)"
-                : "Tailored collaboration (workshop, mentoring, jury…)"
-            }
-          >
-            <div id="partenaires-form" className="scroll-mt-28">
-              <HackathonPartnerForm editionId={e.id} locale={locale} />
-            </div>
-          </AccordionItem>
-          <AccordionItem
-            id="sponsor-form"
-            title={isFr ? "Devenir sponsor" : "Become a sponsor"}
-            subtitle={
-              isFr
-                ? "Niveaux Bronze à Platine · visibilité événement"
-                : "Bronze to Platinum tiers · event visibility"
-            }
-          >
-            <div id="sponsor-form" className="scroll-mt-28">
-              <HackathonSponsorForm editionId={e.id} locale={locale} />
-            </div>
-          </AccordionItem>
-          <AccordionItem
-            id="ambassador"
-            title={isFr ? "Ambassadeur" : "Ambassador"}
-            subtitle={
-              isFr
-                ? "Code promo, -10% et cashback pour vos inscrits"
-                : "Promo code, -10% and cashback for your signups"
-            }
-          >
-            <p className="text-sm leading-relaxed text-[color:var(--hk-muted)]">
-              {isFr
-                ? "Crée ton code ambassadeur, partage ton lien et suis les inscriptions confirmées."
-                : "Create your ambassador code, share your link and track confirmed signups."}
-            </p>
-            <div className="mt-4">
-              <CtaPrimary href="/hackathon/ambassadeur">
-                {isFr ? "Espace ambassadeur" : "Ambassador space"}
-              </CtaPrimary>
-            </div>
           </AccordionItem>
         </Accordion>
       </Section>
