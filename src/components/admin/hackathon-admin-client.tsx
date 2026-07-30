@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminCls } from "@/components/admin/admin-ui";
 import { HackathonLeadsTab } from "@/components/admin/hackathon-leads-tab";
+import { HackathonCampaignsTab } from "@/components/admin/hackathon-campaigns-tab";
 
 type Edition = {
   id: string;
@@ -59,6 +60,7 @@ type Tab =
   | "editions"
   | "registrations"
   | "leads"
+  | "campaigns"
   | "partners"
   | "sponsors"
   | "people"
@@ -97,7 +99,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       return;
     }
     if (!editionId) return;
-    if (tab === "leads") return;
+    if (tab === "leads" || tab === "campaigns") return;
     if (tab === "promo") {
       const res = await fetch(
         `/api/admin/hackathon?tab=promo&editionId=${encodeURIComponent(editionId)}`,
@@ -377,6 +379,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
         { id: "editions", label: "Éditions" },
         { id: "registrations", label: "Participants" },
         { id: "leads", label: "Leads" },
+        { id: "campaigns", label: "Campagnes" },
         { id: "teams", label: "Équipes" },
         { id: "announcements", label: "Annonces" },
         { id: "mentors", label: "Mentorat" },
@@ -567,6 +570,10 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
 
       {tab === "leads" && editionId ? (
         <HackathonLeadsTab editionId={editionId} isAdmin={isAdmin} />
+      ) : null}
+
+      {tab === "campaigns" && editionId ? (
+        <HackathonCampaignsTab editionId={editionId} isAdmin={isAdmin} />
       ) : null}
 
       {tab === "registrations" ? (

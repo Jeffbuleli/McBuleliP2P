@@ -5,3 +5,5 @@ export * from "./parse-spreadsheet";
 export * from "./lead-score";
 export * from "./lead-segment";
 export * from "./lead-qualify";
+export * from "./lead-personalize";
+export * from "./campaign-service";

@@ -4987,6 +4987,8 @@ export const hackathonEmailCampaigns = pgTable(
     conversionCount: integer("conversion_count").notNull().default(0),
     /** When true, generate/queue only — never call Resend. */
     dryRun: boolean("dry_run").notNull().default(true),
+    /** Planned progressive send start (e.g. Africa/Kinshasa). */
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
     testSentAt: timestamp("test_sent_at", { withTimezone: true }),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {

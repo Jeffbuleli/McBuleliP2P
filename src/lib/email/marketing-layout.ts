@@ -119,6 +119,8 @@ export type RenderMarketingEmailArgs = {
   resendAudience?: boolean;
   /** When not using Resend audience placeholders (transactional 1:1) */
   recipientFirstName?: string;
+  /** Optional 1:1 unsubscribe URL (when not using Resend Broadcast placeholders). */
+  unsubscribeHref?: string;
   year?: number;
 };
 
@@ -132,6 +134,7 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
     locale,
     resendAudience = true,
     recipientFirstName,
+    unsubscribeHref,
     year = new Date().getFullYear(),
   } = args;
   const logoSrc = logoUrl();
@@ -158,7 +161,9 @@ export function renderMarketingBroadcastHtml(args: RenderMarketingEmailArgs): st
 
   const unsubscribe = resendAudience
     ? `<p style="margin:12px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${EMAIL_BRAND.muted};text-decoration:underline;">${locale === "fr" ? "Se désabonner" : "Unsubscribe"}</a></p>`
-    : "";
+    : unsubscribeHref
+      ? `<p style="margin:12px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};"><a href="${escHtml(unsubscribeHref)}" style="color:${EMAIL_BRAND.muted};text-decoration:underline;">${locale === "fr" ? "Ne plus recevoir ces communications" : "Stop receiving these emails"}</a></p>`
+      : "";
 
   const href = copy.ctaHref.includes("{{{") ? copy.ctaHref : escHtml(copy.ctaHref);
 
@@ -292,6 +297,13 @@ export function renderMarketingBroadcastText(args: RenderMarketingEmailArgs): st
   ];
   if (resendAudience) {
     lines.push("", locale === "fr" ? "Se désabonner: {{{RESEND_UNSUBSCRIBE_URL}}}" : "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
+  } else if (args.unsubscribeHref) {
+    lines.push(
+      "",
+      locale === "fr"
+        ? `Ne plus recevoir ces communications: ${args.unsubscribeHref}`
+        : `Stop receiving these emails: ${args.unsubscribeHref}`,
+    );
   }
   return lines.filter((l) => l !== undefined && l !== "").join("\n");
 }

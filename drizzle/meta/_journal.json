@@ -785,6 +785,13 @@
       "when": 1789100000000,
       "tag": "0121_hackathon_lead_gen",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1789200000000,
+      "tag": "0122_hackathon_campaign_schedule",
+      "breakpoints": true
     }
   ]
 }
