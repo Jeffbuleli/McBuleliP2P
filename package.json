@@ -67,6 +67,7 @@
     "email:ista-ambassador": "tsx scripts/send-ista-ambassador-email.ts",
     "email:partner-campaign-reminder": "tsx scripts/send-partner-campaign-reminder-email.ts",
     "email:isaac-partner-logos": "tsx scripts/send-isaac-partner-logos-email.ts",
+    "email:hackathon-affiche-diffusion": "tsx scripts/send-hackathon-affiche-diffusion-email.ts",
     "seed:bienv-photography": "tsx scripts/seed-bienv-photography.ts",
     "email:sanja-service": "tsx scripts/send-sanja-service-email.ts",
     "email:kimia-service-reply": "tsx scripts/send-kimia-service-reply-email.ts",
@@ -98,6 +99,7 @@
     "react-dom": "19.2.4",
     "react-qr-code": "^2.0.21",
     "technicalindicators": "^3.1.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.2"
   },
   "devDependencies": {

@@ -89,3 +89,5 @@ Godot.app/
 godot/
 *.zip
 Godot.app/
+
+.venv-poster/

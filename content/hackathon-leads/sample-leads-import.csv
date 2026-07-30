@@ -1,0 +1,5 @@
+firstName,lastName,email,phone,company,jobTitle,location,skills,experience,source,notes
+Jean,Mbala,jean.mbala@gmail.com,+243810000001,Startup Kin,Software Engineer,Kinshasa,"React, Node, AI",4,linkedin,Profil tech
+Aisha,Kalala,aisha.kalala@example.com,+243810000002,DataCo,Data Scientist,Kinshasa,"Python, GenAI",3,community,
+Marc,Ilunga,not-an-email,+243810000003,DesignLab,UI Designer,Lubumbashi,Figma,5,csv,Email volontairement invalide
+Jean,Mbala,jean.mbala+test@gmail.com,+243810000004,Other,Dev,Kinshasa,JS,2,csv,Doublon Gmail canonical

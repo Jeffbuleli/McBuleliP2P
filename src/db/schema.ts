@@ -4587,6 +4587,14 @@ export const hackathonRegistrations = pgTable(
     promoCode: varchar("promo_code", { length: 32 }),
     cashbackUsd: numeric("cashback_usd", { precision: 12, scale: 2 }),
     cashbackAwardedAt: timestamp("cashback_awarded_at", { withTimezone: true }),
+    /** Attribution from email / ads (lead-gen campaigns). */
+    utmSource: varchar("utm_source", { length: 64 }),
+    utmMedium: varchar("utm_medium", { length: 32 }),
+    utmCampaign: varchar("utm_campaign", { length: 64 }),
+    /** Often stores segment slug (developers, ai_data, …). */
+    utmContent: varchar("utm_content", { length: 64 }),
+    /** Linked outbound prospect when conversion is attributed. */
+    leadId: uuid("lead_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -4603,6 +4611,11 @@ export const hackathonRegistrations = pgTable(
     ),
     index("hackathon_registrations_hold_idx").on(t.holdExpiresAt),
     index("hackathon_registrations_promo_idx").on(t.promoCodeId),
+    index("hackathon_registrations_lead_idx").on(t.leadId),
+    index("hackathon_registrations_utm_campaign_idx").on(
+      t.editionId,
+      t.utmCampaign,
+    ),
     uniqueIndex("hackathon_registrations_edition_email_uidx").on(
       t.editionId,
       t.email,
@@ -4820,6 +4833,275 @@ export const hackathonAccessEvents = pgTable(
       t.subjectId,
       t.dayIndex,
     ),
+  ],
+);
+
+/** Score criterion row stored in hackathon_leads.score_breakdown. */
+export type HackathonLeadScoreCriterion = {
+  key: string;
+  label: string;
+  points: number;
+};
+
+export type HackathonLeadScoreBreakdown = {
+  total: number;
+  criteria: HackathonLeadScoreCriterion[];
+};
+
+/**
+ * Outbound prospects for Hackathon lead-gen (before registration).
+ * Distinct from hackathon_partners / sponsors (B2B intake).
+ */
+export const hackathonLeads = pgTable(
+  "hackathon_leads",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    firstName: varchar("first_name", { length: 80 }).notNull(),
+    lastName: varchar("last_name", { length: 80 }).notNull().default(""),
+    email: varchar("email", { length: 255 }).notNull(),
+    emailCanonical: varchar("email_canonical", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 40 }),
+    linkedinUrl: text("linkedin_url"),
+    company: varchar("company", { length: 160 }),
+    jobTitle: varchar("job_title", { length: 160 }),
+    location: varchar("location", { length: 160 }),
+    skills: jsonb("skills").$type<string[]>().notNull().default([]),
+    experienceYears: integer("experience_years"),
+    notes: text("notes"),
+    /** linkedin | university | community | company | ambassador | csv | other */
+    source: varchar("source", { length: 64 }).notNull().default("csv"),
+    consentAt: timestamp("consent_at", { withTimezone: true }),
+    consentSource: varchar("consent_source", { length: 64 }),
+    score: integer("score").notNull().default(0),
+    scoreBreakdown: jsonb("score_breakdown")
+      .$type<HackathonLeadScoreBreakdown>()
+      .notNull()
+      .default({ total: 0, criteria: [] }),
+    /** A_HOT | B_QUALIFIED | C_LOW | UNQUALIFIED */
+    category: varchar("category", { length: 24 })
+      .notNull()
+      .default("UNQUALIFIED"),
+    /** developers | ai_data | design_product | entrepreneurs | general */
+    segment: varchar("segment", { length: 32 }).notNull().default("general"),
+    qualificationReason: text("qualification_reason"),
+    recommendedProfile: varchar("recommended_profile", { length: 120 }),
+    /** hot | high | medium | low | none */
+    priority: varchar("priority", { length: 16 }).notNull().default("none"),
+    /**
+     * LEAD | QUALIFIED | CONTACTED | EMAIL_DELIVERED | OPENED | CLICKED |
+     * INTERESTED | REGISTERED | PAID | CONFIRMED
+     */
+    lifecycle: varchar("lifecycle", { length: 24 }).notNull().default("LEAD"),
+    emailValid: boolean("email_valid").notNull().default(true),
+    suppressed: boolean("suppressed").notNull().default(false),
+    alreadyRegistered: boolean("already_registered").notNull().default(false),
+    lastContactedAt: timestamp("last_contacted_at", { withTimezone: true }),
+    contactCount: integer("contact_count").notNull().default(0),
+    matchedRegistrationId: uuid("matched_registration_id").references(
+      () => hackathonRegistrations.id,
+      { onDelete: "set null" },
+    ),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_leads_edition_email_uidx").on(
+      t.editionId,
+      t.emailCanonical,
+    ),
+    index("hackathon_leads_edition_score_idx").on(t.editionId, t.score),
+    index("hackathon_leads_edition_category_idx").on(t.editionId, t.category),
+    index("hackathon_leads_edition_segment_idx").on(t.editionId, t.segment),
+    index("hackathon_leads_edition_lifecycle_idx").on(t.editionId, t.lifecycle),
+    index("hackathon_leads_source_idx").on(t.editionId, t.source),
+  ],
+);
+
+/** Global email suppression for hackathon outbound campaigns. */
+export const hackathonSuppressionList = pgTable(
+  "hackathon_suppression_list",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    emailCanonical: varchar("email_canonical", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    /** unsubscribe | bounce | manual | complaint */
+    reason: varchar("reason", { length: 32 }).notNull(),
+    source: varchar("source", { length: 64 }),
+    campaignId: uuid("campaign_id"),
+    leadId: uuid("lead_id").references(() => hackathonLeads.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_suppression_email_uidx").on(t.emailCanonical),
+    index("hackathon_suppression_created_idx").on(t.createdAt),
+  ],
+);
+
+/**
+ * Personalized 1:1 outbound email campaigns (not Resend Broadcast segments).
+ * Mass send requires APPROVED + explicit admin launch.
+ */
+export const hackathonEmailCampaigns = pgTable(
+  "hackathon_email_campaigns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 200 }).notNull(),
+    /** developers | ai_data | design_product | entrepreneurs | general | mixed */
+    segment: varchar("segment", { length: 32 }).notNull().default("mixed"),
+    /** Minimum lead category included: A_HOT | B_QUALIFIED | C_LOW | UNQUALIFIED */
+    minCategory: varchar("min_category", { length: 24 })
+      .notNull()
+      .default("B_QUALIFIED"),
+    subjectTemplate: text("subject_template").notNull(),
+    bodyTemplate: text("body_template").notNull(),
+    /**
+     * DRAFT | READY_FOR_REVIEW | APPROVED | SENDING | SENT |
+     * PAUSED | COMPLETED | FAILED
+     */
+    status: varchar("status", { length: 24 }).notNull().default("DRAFT"),
+    prospectCount: integer("prospect_count").notNull().default(0),
+    sentCount: integer("sent_count").notNull().default(0),
+    deliveredCount: integer("delivered_count").notNull().default(0),
+    openCount: integer("open_count").notNull().default(0),
+    clickCount: integer("click_count").notNull().default(0),
+    replyCount: integer("reply_count").notNull().default(0),
+    errorCount: integer("error_count").notNull().default(0),
+    unsubscribeCount: integer("unsubscribe_count").notNull().default(0),
+    conversionCount: integer("conversion_count").notNull().default(0),
+    /** When true, generate/queue only — never call Resend. */
+    dryRun: boolean("dry_run").notNull().default(true),
+    testSentAt: timestamp("test_sent_at", { withTimezone: true }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    sendStartedAt: timestamp("send_started_at", { withTimezone: true }),
+    sendCompletedAt: timestamp("send_completed_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_email_campaigns_edition_idx").on(t.editionId, t.createdAt),
+    index("hackathon_email_campaigns_status_idx").on(t.editionId, t.status),
+  ],
+);
+
+export const hackathonCampaignRecipients = pgTable(
+  "hackathon_campaign_recipients",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => hackathonEmailCampaigns.id, { onDelete: "cascade" }),
+    leadId: uuid("lead_id")
+      .notNull()
+      .references(() => hackathonLeads.id, { onDelete: "cascade" }),
+    personalizedSubject: text("personalized_subject").notNull(),
+    personalizedHtml: text("personalized_html").notNull(),
+    personalizedText: text("personalized_text"),
+    /** Verified facts used in copy — never invent beyond this. */
+    personalizationFacts: jsonb("personalization_facts")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default({}),
+    /**
+     * PENDING | QUEUED | SENT | DELIVERED | FAILED | SKIPPED | BOUNCED | UNSUBSCRIBED
+     */
+    status: varchar("status", { length: 24 }).notNull().default("PENDING"),
+    /** already_registered | suppressed | invalid_email | duplicate | no_consent */
+    skipReason: varchar("skip_reason", { length: 40 }),
+    resendMessageId: varchar("resend_message_id", { length: 128 }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    errorMessage: text("error_message"),
+    retryCount: integer("retry_count").notNull().default(0),
+    openCount: integer("open_count").notNull().default(0),
+    clickCount: integer("click_count").notNull().default(0),
+    lastClickedAt: timestamp("last_clicked_at", { withTimezone: true }),
+    convertedRegistrationId: uuid("converted_registration_id").references(
+      () => hackathonRegistrations.id,
+      { onDelete: "set null" },
+    ),
+    clickToken: varchar("click_token", { length: 48 }).notNull().unique(),
+    unsubscribeToken: varchar("unsubscribe_token", { length: 48 })
+      .notNull()
+      .unique(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("hackathon_campaign_recipients_campaign_lead_uidx").on(
+      t.campaignId,
+      t.leadId,
+    ),
+    index("hackathon_campaign_recipients_status_idx").on(
+      t.campaignId,
+      t.status,
+    ),
+    index("hackathon_campaign_recipients_lead_idx").on(t.leadId),
+  ],
+);
+
+export const hackathonCampaignEvents = pgTable(
+  "hackathon_campaign_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campaignId: uuid("campaign_id").references(
+      () => hackathonEmailCampaigns.id,
+      { onDelete: "cascade" },
+    ),
+    recipientId: uuid("recipient_id").references(
+      () => hackathonCampaignRecipients.id,
+      { onDelete: "cascade" },
+    ),
+    leadId: uuid("lead_id").references(() => hackathonLeads.id, {
+      onDelete: "cascade",
+    }),
+    /**
+     * IMPORTED | SCORED | SEGMENTED | EMAIL_GENERATED | TEST_SENT | APPROVED |
+     * QUEUED | SENT | DELIVERED | OPENED | CLICKED | UNSUBSCRIBED |
+     * REGISTERED | PAID | CONFIRMED | ERROR | PAUSED | RESUMED
+     */
+    type: varchar("type", { length: 32 }).notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_campaign_events_campaign_idx").on(
+      t.campaignId,
+      t.createdAt,
+    ),
+    index("hackathon_campaign_events_lead_idx").on(t.leadId, t.createdAt),
+    index("hackathon_campaign_events_type_idx").on(t.type, t.createdAt),
   ],
 );
 
