@@ -294,6 +294,7 @@ export type LeadImportCommitResult = {
   inserted: number;
   updated: number;
   skipped: number;
+  qualified: number;
   summary: LeadImportSummary;
   leadIds: string[];
 };
@@ -313,6 +314,7 @@ export async function commitLeadImportFromFile(
       inserted: 0,
       updated: 0,
       skipped: preview.rows.length,
+      qualified: 0,
       summary: preview.summary,
       leadIds: [],
     };
@@ -322,6 +324,7 @@ export async function commitLeadImportFromFile(
       inserted: 0,
       updated: 0,
       skipped: preview.rows.length,
+      qualified: 0,
       summary: preview.summary,
       leadIds: [],
     };
@@ -458,10 +461,22 @@ export async function commitLeadImportFromFile(
     });
   }
 
+  // Auto qualify newly touched leads (score + segment).
+  let qualified = 0;
+  if (leadIds.length > 0) {
+    const { qualifyHackathonLeads } = await import("./lead-qualify");
+    const q = await qualifyHackathonLeads({
+      editionId: args.editionId,
+      leadIds,
+    });
+    qualified = q.updated;
+  }
+
   return {
     inserted,
     updated,
     skipped,
+    qualified,
     summary: preview.summary,
     leadIds,
   };
@@ -502,6 +517,9 @@ export async function listHackathonLeads(args: {
       category: hackathonLeads.category,
       segment: hackathonLeads.segment,
       priority: hackathonLeads.priority,
+      qualificationReason: hackathonLeads.qualificationReason,
+      recommendedProfile: hackathonLeads.recommendedProfile,
+      scoreBreakdown: hackathonLeads.scoreBreakdown,
       lifecycle: hackathonLeads.lifecycle,
       emailValid: hackathonLeads.emailValid,
       suppressed: hackathonLeads.suppressed,

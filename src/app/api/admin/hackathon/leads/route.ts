@@ -6,6 +6,10 @@ import {
   listHackathonLeads,
   previewLeadImportFromFile,
 } from "@/lib/hackathon/leads/lead-import";
+import {
+  leadGenStats,
+  qualifyHackathonLeads,
+} from "@/lib/hackathon/leads/lead-qualify";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -30,6 +34,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "editionId_required" }, { status: 400 });
   }
 
+  if (url.searchParams.get("stats") === "1") {
+    const stats = await leadGenStats(editionId);
+    return NextResponse.json({ ok: true, ...stats });
+  }
+
   const result = await listHackathonLeads({
     editionId,
     limit: Number(url.searchParams.get("limit") || 100) || 100,
@@ -51,9 +60,38 @@ export async function POST(req: Request) {
   }
 
   const contentType = req.headers.get("content-type") ?? "";
+
+  // JSON actions: qualify / score batch
+  if (contentType.includes("application/json")) {
+    const body = (await req.json().catch(() => null)) as Record<
+      string,
+      unknown
+    > | null;
+    const parsed = z
+      .object({
+        action: z.enum(["qualify"]),
+        editionId: z.string().uuid(),
+        leadIds: z.array(z.string().uuid()).optional(),
+        onlyUnscored: z.boolean().optional(),
+      })
+      .safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+    }
+    if (parsed.data.action === "qualify") {
+      const result = await qualifyHackathonLeads({
+        editionId: parsed.data.editionId,
+        leadIds: parsed.data.leadIds,
+        onlyUnscored: parsed.data.onlyUnscored,
+      });
+      return NextResponse.json({ ok: true, action: "qualify", ...result });
+    }
+    return NextResponse.json({ error: "unknown_action" }, { status: 400 });
+  }
+
   if (!contentType.includes("multipart/form-data")) {
     return NextResponse.json(
-      { error: "multipart_required" },
+      { error: "multipart_or_json_required" },
       { status: 400 },
     );
   }
@@ -82,7 +120,8 @@ export async function POST(req: Request) {
   const updateExisting = String(form.get("updateExisting") || "") === "true";
   const includeAlreadyRegistered =
     String(form.get("includeAlreadyRegistered") || "") === "true";
-  const defaultSource = String(form.get("defaultSource") || "").trim() || undefined;
+  const defaultSource =
+    String(form.get("defaultSource") || "").trim() || undefined;
 
   if (action === "preview") {
     const preview = await previewLeadImportFromFile({
@@ -95,7 +134,6 @@ export async function POST(req: Request) {
       ok: true,
       action: "preview",
       summary: preview.summary,
-      /** Cap preview rows returned to keep payload small */
       rows: preview.rows.slice(0, 200),
       truncated: preview.rows.length > 200,
       totalClassified: preview.rows.length,
@@ -103,24 +141,13 @@ export async function POST(req: Request) {
   }
 
   if (action === "commit") {
-    const parsedFlags = z
-      .object({
-        updateExisting: z.boolean().optional(),
-        includeAlreadyRegistered: z.boolean().optional(),
-      })
-      .safeParse({ updateExisting, includeAlreadyRegistered });
-
     const result = await commitLeadImportFromFile({
       editionId,
       filename: name,
       buffer,
       createdByUserId: admin.id,
-      updateExisting: parsedFlags.success
-        ? parsedFlags.data.updateExisting
-        : false,
-      includeAlreadyRegistered: parsedFlags.success
-        ? parsedFlags.data.includeAlreadyRegistered
-        : false,
+      updateExisting,
+      includeAlreadyRegistered,
       defaultSource,
     });
 
@@ -130,6 +157,7 @@ export async function POST(req: Request) {
       inserted: result.inserted,
       updated: result.updated,
       skipped: result.skipped,
+      qualified: result.qualified,
       summary: result.summary,
       leadCount: result.leadIds.length,
     });

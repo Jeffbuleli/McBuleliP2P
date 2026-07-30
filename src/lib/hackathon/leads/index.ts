@@ -2,3 +2,6 @@ export * from "./types";
 export * from "./lead-normalize";
 export * from "./lead-import";
 export * from "./parse-spreadsheet";
+export * from "./lead-score";
+export * from "./lead-segment";
+export * from "./lead-qualify";

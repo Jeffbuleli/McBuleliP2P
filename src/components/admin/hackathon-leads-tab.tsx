@@ -17,6 +17,12 @@ type LeadRow = {
   category: string;
   segment: string;
   priority: string;
+  qualificationReason: string | null;
+  recommendedProfile: string | null;
+  scoreBreakdown: {
+    total: number;
+    criteria: { key: string; label: string; points: number }[];
+  } | null;
   lifecycle: string;
   emailValid: boolean;
   suppressed: boolean;
@@ -55,14 +61,109 @@ type PreviewRow = {
   issues: string[];
 };
 
+type Stats = {
+  totals: {
+    total: number;
+    hot: number;
+    qualified: number;
+    low: number;
+    unqualified: number;
+    contacted: number;
+    notContacted: number;
+    registered: number;
+  };
+  segments: { segment: string; count: number }[];
+};
+
 type Props = {
   editionId: string;
   isAdmin: boolean;
 };
 
+const CATEGORY_LABEL: Record<string, string> = {
+  A_HOT: "A — Hot",
+  B_QUALIFIED: "B — Qualified",
+  C_LOW: "C — Low",
+  UNQUALIFIED: "Unqualified",
+};
+
+const SEGMENT_LABEL: Record<string, string> = {
+  developers: "Developers",
+  ai_data: "IA / Data",
+  design_product: "Design / Product",
+  entrepreneurs: "Entrepreneurs",
+  general: "Général",
+};
+
+function LeadScoreRows({
+  lead: l,
+  expanded,
+  onToggle,
+}: {
+  lead: LeadRow;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <tr className="border-b border-[color:var(--fd-border)]/60">
+        <td className="py-2 pr-2 font-medium">
+          {l.firstName} {l.lastName}
+          {l.company ? (
+            <span className="block text-xs text-[color:var(--fd-muted)]">
+              {l.company}
+              {l.jobTitle ? ` · ${l.jobTitle}` : ""}
+            </span>
+          ) : null}
+        </td>
+        <td className="py-2 pr-2">{l.email}</td>
+        <td className="py-2 pr-2 font-black tabular-nums">{l.score}</td>
+        <td className="py-2 pr-2">
+          {CATEGORY_LABEL[l.category] ?? l.category}
+        </td>
+        <td className="py-2 pr-2">
+          {SEGMENT_LABEL[l.segment] ?? l.segment}
+        </td>
+        <td className="py-2 pr-2">{l.priority}</td>
+        <td className="py-2">
+          <button
+            type="button"
+            className="text-xs font-bold text-[color:var(--fd-primary)]"
+            onClick={onToggle}
+          >
+            {expanded ? "Masquer" : "Score"}
+          </button>
+        </td>
+      </tr>
+      {expanded ? (
+        <tr className="border-b border-[color:var(--fd-border)]/60 bg-[color:var(--fd-mint)]/20">
+          <td colSpan={7} className="px-3 py-3 text-xs">
+            <p className="font-semibold">
+              {l.recommendedProfile ?? "—"} · {l.lifecycle}
+            </p>
+            <p className="mt-1 text-[color:var(--fd-muted)]">
+              {l.qualificationReason ?? "Pas encore scorés."}
+            </p>
+            {l.scoreBreakdown?.criteria?.length ? (
+              <ul className="mt-2 list-disc pl-4">
+                {l.scoreBreakdown.criteria.map((c) => (
+                  <li key={c.key}>
+                    {c.label} <span className="font-bold">+{c.points}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </td>
+        </tr>
+      ) : null}
+    </>
+  );
+}
+
 export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -73,6 +174,19 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
   const [includeRegistered, setIncludeRegistered] = useState(false);
   const [commitMsg, setCommitMsg] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [category, setCategory] = useState("");
+  const [segment, setSegment] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const loadStats = useCallback(async () => {
+    if (!editionId) return;
+    const res = await fetch(
+      `/api/admin/hackathon/leads?editionId=${encodeURIComponent(editionId)}&stats=1`,
+      { credentials: "include", cache: "no-store" },
+    );
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) setStats(j as Stats);
+  }, [editionId]);
 
   const load = useCallback(async () => {
     if (!editionId) return;
@@ -82,6 +196,8 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
       limit: "100",
     });
     if (q.trim()) params.set("q", q.trim());
+    if (category) params.set("category", category);
+    if (segment) params.set("segment", segment);
     const res = await fetch(`/api/admin/hackathon/leads?${params}`, {
       credentials: "include",
       cache: "no-store",
@@ -94,7 +210,8 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
     }
     setLeads((j.leads as LeadRow[]) ?? []);
     setTotal(typeof j.total === "number" ? j.total : 0);
-  }, [editionId, q]);
+    await loadStats();
+  }, [editionId, q, category, segment, loadStats]);
 
   useEffect(() => {
     void load().catch(() => setErr("Chargement impossible"));
@@ -169,7 +286,7 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
         return;
       }
       setCommitMsg(
-        `Import OK — insertés: ${j.inserted}, mis à jour: ${j.updated}, ignorés: ${j.skipped}`,
+        `Import OK — insertés: ${j.inserted}, mis à jour: ${j.updated}, qualifiés: ${j.qualified ?? 0}, ignorés: ${j.skipped}`,
       );
       setSummary(null);
       setPreviewRows([]);
@@ -177,6 +294,33 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
       await load();
     } catch {
       setErr("Import impossible");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runQualify() {
+    if (!isAdmin || !editionId) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/hackathon/leads", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "qualify", editionId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(typeof j.error === "string" ? j.error : "Scoring impossible");
+        return;
+      }
+      setCommitMsg(
+        `Scoring OK — ${j.updated} leads. Hot: ${j.byCategory?.A_HOT ?? 0}, Qualified: ${j.byCategory?.B_QUALIFIED ?? 0}, Low: ${j.byCategory?.C_LOW ?? 0}, Unqualified: ${j.byCategory?.UNQUALIFIED ?? 0}`,
+      );
+      await load();
+    } catch {
+      setErr("Scoring impossible");
     } finally {
       setBusy(false);
     }
@@ -194,13 +338,36 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
 
   return (
     <div className="space-y-4">
+      {stats ? (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ["Total leads", stats.totals.total],
+            ["Hot (A)", stats.totals.hot],
+            ["Qualified (B)", stats.totals.qualified],
+            ["Unqualified", stats.totals.unqualified],
+            ["Contactés", stats.totals.contacted],
+            ["Non contactés", stats.totals.notContacted],
+            ["Déjà inscrits", stats.totals.registered],
+            ["Low (C)", stats.totals.low],
+          ].map(([label, value]) => (
+            <div
+              key={String(label)}
+              className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2"
+            >
+              <p className={adminCls.kpiLabel}>{label}</p>
+              <p className="text-xl font-black tabular-nums">{value}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div className={adminCls.card}>
         <p className="text-sm font-black text-[color:var(--fd-text)]">
-          Lead Generation — import prospects
+          Lead Generation — import + qualification
         </p>
         <p className={adminCls.muted}>
-          CSV ou XLSX · aperçu obligatoire avant insertion · aucun email envoyé
-          à cette étape. Total en base : {total}
+          CSV/XLSX · scoring déterministe 0–100 · segments A–E · aucun email
+          envoyé ici. Total : {total}
         </p>
 
         {isAdmin ? (
@@ -217,9 +384,9 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
               }}
             />
             <p className="text-xs text-[color:var(--fd-muted)]">
-              Colonnes reconnues : firstName, lastName (ou fullName), email,
-              phone, LinkedIn, company, jobTitle, location, skills, experience,
-              source, notes, consent
+              Colonnes : firstName, lastName (ou fullName), email, phone,
+              LinkedIn, company, jobTitle, location, skills, experience, source,
+              notes, consent
             </p>
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <label className="inline-flex items-center gap-2">
@@ -236,7 +403,7 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
                   checked={includeRegistered}
                   onChange={(e) => setIncludeRegistered(e.target.checked)}
                 />
-                Inclure les déjà inscrits (marqués, exclus des campagnes)
+                Inclure les déjà inscrits
               </label>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -255,6 +422,14 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
                 className={adminCls.btnPrimary}
               >
                 Confirmer l&apos;insertion
+              </button>
+              <button
+                type="button"
+                disabled={busy || total === 0}
+                onClick={() => void runQualify()}
+                className={adminCls.btnSecondary}
+              >
+                Recalculer scores + segments
               </button>
             </div>
           </div>
@@ -346,6 +521,30 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
       <div className={adminCls.card}>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <p className="text-sm font-black">Prospects ({total})</p>
+          <select
+            className={adminCls.select}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Toutes catégories</option>
+            {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+          <select
+            className={adminCls.select}
+            value={segment}
+            onChange={(e) => setSegment(e.target.value)}
+          >
+            <option value="">Tous segments</option>
+            {Object.entries(SEGMENT_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
           <input
             className={`${adminCls.input} ml-auto max-w-xs`}
             placeholder="Filtrer email / nom / société"
@@ -364,49 +563,28 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
           <p className={adminCls.empty}>Aucun prospect pour cette édition.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[860px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[color:var(--fd-border)] text-xs uppercase text-[color:var(--fd-muted)]">
                   <th className="py-2 pr-2">Nom</th>
                   <th className="py-2 pr-2">Email</th>
-                  <th className="py-2 pr-2">Source</th>
                   <th className="py-2 pr-2">Score</th>
                   <th className="py-2 pr-2">Cat.</th>
-                  <th className="py-2 pr-2">Cycle</th>
-                  <th className="py-2">Flags</th>
+                  <th className="py-2 pr-2">Segment</th>
+                  <th className="py-2 pr-2">Priorité</th>
+                  <th className="py-2">Détail</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((l) => (
-                  <tr
+                  <LeadScoreRows
                     key={l.id}
-                    className="border-b border-[color:var(--fd-border)]/60"
-                  >
-                    <td className="py-2 pr-2 font-medium">
-                      {l.firstName} {l.lastName}
-                      {l.company ? (
-                        <span className="block text-xs text-[color:var(--fd-muted)]">
-                          {l.company}
-                          {l.jobTitle ? ` · ${l.jobTitle}` : ""}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="py-2 pr-2">{l.email}</td>
-                    <td className="py-2 pr-2">{l.source}</td>
-                    <td className="py-2 pr-2 tabular-nums">{l.score}</td>
-                    <td className="py-2 pr-2">{l.category}</td>
-                    <td className="py-2 pr-2">{l.lifecycle}</td>
-                    <td className="py-2 text-xs text-[color:var(--fd-muted)]">
-                      {[
-                        l.alreadyRegistered ? "inscrit" : null,
-                        l.suppressed ? "suppressed" : null,
-                        !l.emailValid ? "email?" : null,
-                        l.contactCount > 0 ? `contact×${l.contactCount}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ") || "—"}
-                    </td>
-                  </tr>
+                    lead={l}
+                    expanded={expandedId === l.id}
+                    onToggle={() =>
+                      setExpandedId(expandedId === l.id ? null : l.id)
+                    }
+                  />
                 ))}
               </tbody>
             </table>
