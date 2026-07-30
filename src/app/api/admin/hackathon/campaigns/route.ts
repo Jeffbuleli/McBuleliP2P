@@ -165,7 +165,6 @@ export async function POST(req: Request) {
         markReady: true,
       });
       return NextResponse.json({
-        ok: true,
         action: "schedule",
         note: "Planifié — pas d'envoi masse tant que non APPROVED / quota Resend OK",
         ...result,
