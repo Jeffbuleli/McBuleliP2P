@@ -380,9 +380,7 @@ export async function commitLeadImportFromFile(
           notes: draft.notes,
           source: draft.source,
           emailValid: draft.emailValid,
-          alreadyRegistered:
-            status === "already_registered" ||
-            Boolean(row.matchedRegistrationId),
+          alreadyRegistered: Boolean(row.matchedRegistrationId),
           matchedRegistrationId: row.matchedRegistrationId ?? null,
           consentAt:
             draft.consent === true
