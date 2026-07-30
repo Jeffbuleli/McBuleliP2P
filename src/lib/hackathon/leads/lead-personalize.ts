@@ -189,7 +189,10 @@ export function personalizeLeadEmail(args: {
 }): PersonalizedEmail {
   const angle = segmentAngle(args.lead.segment);
   const bridge = verifiedBridge(args.lead);
-  const facts = { ...bridge.facts, segment: String(args.lead.segment) };
+  const facts: Record<string, string> = {
+    ...bridge.facts,
+    segment: String(args.lead.segment),
+  };
   if (args.lead.recommendedProfile) {
     facts.recommendedProfile = clean(args.lead.recommendedProfile, 120);
   }
