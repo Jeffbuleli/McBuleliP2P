@@ -253,7 +253,10 @@ export function scoreLead(input: LeadScoreInput): LeadScoreResult {
       ? "Aucun critère vérifié dans les données fournies — profil à enrichir."
       : `Score ${score}/100 : ${criteria.map((c) => `${c.label} (+${c.points})`).join(" ; ")}.`;
 
-  const recommendedProfile = recommendProfile(criteria.map((c) => c.key), text);
+  const recommendedProfile = recommendProfile(
+    criteria.map((c) => c.key as HackathonScoreCriterionKey),
+    text,
+  );
 
   return {
     score,
