@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { EventNavItem } from "@/lib/hackathon/event-content";
+import { usePartnerChatUnreadCount } from "@/hooks/use-partner-chat-unread-count";
+import { HackathonChatUnreadDot } from "@/components/hackathon/hackathon-chat-unread-dot";
 
 export function HackathonStickyNav({
   items,
@@ -11,6 +13,8 @@ export function HackathonStickyNav({
   isFr: boolean;
 }) {
   const [active, setActive] = useState(items[0]?.id ?? "");
+  const chatUnread = usePartnerChatUnreadCount();
+  const hasChatLink = items.some((i) => i.id === "chat" && i.href);
 
   useEffect(() => {
     const ids = items.filter((i) => !i.href).map((i) => i.id);
@@ -45,17 +49,29 @@ export function HackathonStickyNav({
         {items.map((item) => {
           const label = isFr ? item.labelFr : item.labelEn;
           const isActive = !item.href && active === item.id;
+          const isChat = item.id === "chat";
+          const unread = isChat && hasChatLink ? chatUnread : 0;
           return (
             <a
               key={item.id}
               href={item.href ?? `#${item.id}`}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition sm:text-sm ${
+              className={`relative shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition sm:text-sm ${
                 isActive
                   ? "bg-[color:var(--fd-primary)] text-white"
                   : "text-[color:var(--fd-muted)] hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)]"
               }`}
+              aria-label={
+                unread > 0
+                  ? isFr
+                    ? `${label} (${unread} non lu${unread > 1 ? "s" : ""})`
+                    : `${label} (${unread} unread)`
+                  : undefined
+              }
             >
               {label}
+              {unread > 0 ? (
+                <HackathonChatUnreadDot count={unread} className="ring-[color:var(--hk-page)]" />
+              ) : null}
             </a>
           );
         })}

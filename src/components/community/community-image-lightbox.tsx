@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function CommunityImageLightbox({
   images,
@@ -8,16 +8,20 @@ export function CommunityImageLightbox({
   onIndexChange,
   onClose,
   fr,
+  downloadHrefFor,
 }: {
   images: { id: string; src: string }[];
   index: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
   fr: boolean;
+  /** Optional HD download URL builder (e.g. authenticated proxy). */
+  downloadHrefFor?: (src: string) => string;
 }) {
   const current = images[index];
   const hasPrev = index > 0;
   const hasNext = index < images.length - 1;
+  const [downloading, setDownloading] = useState(false);
 
   const goPrev = useCallback(() => {
     if (hasPrev) onIndexChange(index - 1);
@@ -37,6 +41,38 @@ export function CommunityImageLightbox({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, goPrev, goNext]);
 
+  async function downloadHd() {
+    if (!current) return;
+    setDownloading(true);
+    try {
+      const href = downloadHrefFor?.(current.src) ?? current.src;
+      const res = await fetch(href, { cache: "no-store" });
+      if (!res.ok) {
+        window.open(current.src, "_blank", "noopener,noreferrer");
+        return;
+      }
+      const blob = await res.blob();
+      const path = (() => {
+        try {
+          return new URL(current.src).pathname.split("/").pop() || "image.jpg";
+        } catch {
+          return "image.jpg";
+        }
+      })();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = path.includes(".") ? path : `${path}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      window.open(current.src, "_blank", "noopener,noreferrer");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   if (!current) return null;
 
   return (
@@ -47,21 +83,40 @@ export function CommunityImageLightbox({
       aria-modal
       aria-label={fr ? "Galerie photos" : "Photo gallery"}
     >
-      <div className="flex items-center justify-between px-4 py-3 text-white">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 text-white">
         <span className="text-sm font-semibold tabular-nums">
           {index + 1} / {images.length}
         </span>
-        <button
-          type="button"
-          className="text-2xl leading-none"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          aria-label={fr ? "Fermer" : "Close"}
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={downloading}
+            onClick={(e) => {
+              e.stopPropagation();
+              void downloadHd();
+            }}
+            className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold tracking-wide hover:bg-white/25 disabled:opacity-60"
+          >
+            {downloading
+              ? fr
+                ? "…"
+                : "…"
+              : fr
+                ? "Télécharger HD"
+                : "Download HD"}
+          </button>
+          <button
+            type="button"
+            className="text-2xl leading-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label={fr ? "Fermer" : "Close"}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div

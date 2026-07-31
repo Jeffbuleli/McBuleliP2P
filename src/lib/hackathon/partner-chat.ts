@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
 import {
   getDb,
   hackathonEditions,
   hackathonPartnerChatMessages,
+  hackathonPartnerChatReads,
   hackathonPartnerOrgs,
   hackathonRegistrations,
 } from "@/db";
@@ -363,12 +364,35 @@ export async function getPartnerOrgById(orgId: string) {
   return row ?? null;
 }
 
-export async function listChatMessages(editionId: string, limit = 80) {
+export type PartnerChatMessageView = {
+  id: string;
+  orgId: string | null;
+  senderUserId: string | null;
+  senderLabel: string;
+  displayName: string;
+  orgStatus: PartnerOrgStatus | null;
+  orgLogoUrl: string | null;
+  body: string;
+  imageUrl: string | null;
+  messageType: string;
+  createdAt: string;
+  own: boolean;
+  seen: boolean;
+  unread: boolean;
+};
+
+export async function listChatMessages(
+  editionId: string,
+  opts?: { viewerUserId?: string | null; limit?: number },
+): Promise<PartnerChatMessageView[]> {
+  const limit = opts?.limit ?? 80;
+  const viewerUserId = opts?.viewerUserId ?? null;
   const db = getDb();
   const rows = await db
     .select({
       id: hackathonPartnerChatMessages.id,
       orgId: hackathonPartnerChatMessages.orgId,
+      senderUserId: hackathonPartnerChatMessages.senderUserId,
       senderLabel: hackathonPartnerChatMessages.senderLabel,
       body: hackathonPartnerChatMessages.body,
       imageUrl: hackathonPartnerChatMessages.imageUrl,
@@ -387,27 +411,58 @@ export async function listChatMessages(editionId: string, limit = 80) {
     .orderBy(desc(hackathonPartnerChatMessages.createdAt))
     .limit(limit);
 
+  const readRows = await db
+    .select({
+      userId: hackathonPartnerChatReads.userId,
+      lastReadAt: hackathonPartnerChatReads.lastReadAt,
+    })
+    .from(hackathonPartnerChatReads)
+    .where(eq(hackathonPartnerChatReads.editionId, editionId));
+
+  const viewerRead = viewerUserId
+    ? readRows.find((r) => r.userId === viewerUserId)?.lastReadAt ?? null
+    : null;
+
   return rows
-    .map((r) => ({
-      id: r.id,
-      orgId: r.orgId,
-      senderLabel: r.senderLabel,
-      displayName: r.orgShortName
-        ? `${r.senderLabel}/${r.orgShortName}`
-        : r.senderLabel,
-      orgStatus: r.orgStatus ? asStatus(r.orgStatus) : null,
-      orgLogoUrl: r.orgLogoUrl,
-      body: r.body,
-      imageUrl: r.imageUrl,
-      messageType: r.messageType,
-      createdAt: r.createdAt.toISOString(),
-    }))
+    .map((r) => {
+      const own = Boolean(
+        viewerUserId && r.senderUserId && r.senderUserId === viewerUserId,
+      );
+      // Seen by at least one other member (not the sender).
+      const seenByOther = readRows.some(
+        (rr) =>
+          rr.userId !== (r.senderUserId ?? "") && rr.lastReadAt >= r.createdAt,
+      );
+      const unread =
+        Boolean(viewerUserId) &&
+        !own &&
+        (!viewerRead || r.createdAt > viewerRead);
+      return {
+        id: r.id,
+        orgId: r.orgId,
+        senderUserId: r.senderUserId,
+        senderLabel: r.senderLabel,
+        displayName: r.orgShortName
+          ? `${r.senderLabel}/${r.orgShortName}`
+          : r.senderLabel,
+        orgStatus: r.orgStatus ? asStatus(r.orgStatus) : null,
+        orgLogoUrl: r.orgLogoUrl,
+        body: r.body,
+        imageUrl: r.imageUrl,
+        messageType: r.messageType,
+        createdAt: r.createdAt.toISOString(),
+        own,
+        seen: own ? seenByOther : false,
+        unread,
+      };
+    })
     .reverse();
 }
 
 export async function postChatMessage(args: {
   editionId: string;
   orgId: string | null;
+  senderUserId: string;
   senderLabel: string;
   body: string;
   imageUrl?: string | null;
@@ -422,6 +477,7 @@ export async function postChatMessage(args: {
     .values({
       editionId: args.editionId,
       orgId: args.orgId,
+      senderUserId: args.senderUserId,
       senderLabel: label,
       body: body || (imageUrl ? " " : ""),
       imageUrl,
@@ -429,6 +485,62 @@ export async function postChatMessage(args: {
     })
     .returning({ id: hackathonPartnerChatMessages.id });
   return row;
+}
+
+export async function markPartnerChatRead(editionId: string, userId: string) {
+  const db = getDb();
+  const now = new Date();
+  await db
+    .insert(hackathonPartnerChatReads)
+    .values({
+      editionId,
+      userId,
+      lastReadAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        hackathonPartnerChatReads.editionId,
+        hackathonPartnerChatReads.userId,
+      ],
+      set: { lastReadAt: now },
+    });
+  return now;
+}
+
+export async function countPartnerChatUnread(
+  editionId: string,
+  userId: string,
+): Promise<number> {
+  const db = getDb();
+  const [read] = await db
+    .select({ lastReadAt: hackathonPartnerChatReads.lastReadAt })
+    .from(hackathonPartnerChatReads)
+    .where(
+      and(
+        eq(hackathonPartnerChatReads.editionId, editionId),
+        eq(hackathonPartnerChatReads.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  const unreadCond = read?.lastReadAt
+    ? gt(hackathonPartnerChatMessages.createdAt, read.lastReadAt)
+    : sql`true`;
+
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(hackathonPartnerChatMessages)
+    .where(
+      and(
+        eq(hackathonPartnerChatMessages.editionId, editionId),
+        unreadCond,
+        or(
+          isNull(hackathonPartnerChatMessages.senderUserId),
+          ne(hackathonPartnerChatMessages.senderUserId, userId),
+        ),
+      ),
+    );
+  return Number(row?.n ?? 0);
 }
 
 export async function updatePartnerOrgStatus(

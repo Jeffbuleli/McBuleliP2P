@@ -4520,6 +4520,10 @@ export const hackathonPartnerChatMessages = pgTable(
     orgId: uuid("org_id").references(() => hackathonPartnerOrgs.id, {
       onDelete: "set null",
     }),
+    /** McBuleli account that posted (for unread + own detection). */
+    senderUserId: uuid("sender_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     senderLabel: varchar("sender_label", { length: 80 }).notNull(),
     body: text("body").notNull().default(""),
     /** Public R2 URL for optional image attachment. */
@@ -4535,6 +4539,30 @@ export const hackathonPartnerChatMessages = pgTable(
       t.editionId,
       t.createdAt,
     ),
+    index("hackathon_partner_chat_messages_sender_user_idx").on(
+      t.editionId,
+      t.senderUserId,
+    ),
+  ],
+);
+
+/** Per-user last-read cursor for the shared partner chat room. */
+export const hackathonPartnerChatReads = pgTable(
+  "hackathon_partner_chat_reads",
+  {
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.editionId, t.userId] }),
+    index("hackathon_partner_chat_reads_user_idx").on(t.userId),
   ],
 );
 

@@ -42,7 +42,9 @@ export async function GET() {
         { status: auth.status },
       );
     }
-    const messages = await listChatMessages(editionId);
+    const messages = await listChatMessages(editionId, {
+      viewerUserId: auth.session.userId,
+    });
     return NextResponse.json({ messages });
   } catch (e) {
     console.error("[hackathon/chat/messages GET]", e);
@@ -90,11 +92,14 @@ export async function POST(req: Request) {
     await postChatMessage({
       editionId,
       orgId: auth.session.orgId,
+      senderUserId: auth.session.userId,
       senderLabel: auth.session.displayName,
       body,
       imageUrl,
     });
-    const messages = await listChatMessages(editionId);
+    const messages = await listChatMessages(editionId, {
+      viewerUserId: auth.session.userId,
+    });
     return NextResponse.json({ ok: true, messages });
   } catch (e) {
     console.error("[hackathon/chat/messages POST]", e);

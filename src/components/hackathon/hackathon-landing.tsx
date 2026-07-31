@@ -54,6 +54,7 @@ import { HackathonParticipantForm } from "@/components/hackathon/hackathon-parti
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
 import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-form";
 import { HackathonStickyNav } from "@/components/hackathon/hackathon-sticky-nav";
+import { HackathonChatUnreadBadge } from "@/components/hackathon/hackathon-chat-unread-badge";
 import { HackathonLogo } from "@/components/hackathon/hackathon-logo";
 import { HackathonLandingJourney } from "@/components/hackathon/hackathon-phase-stepper";
 import {
@@ -155,21 +156,24 @@ function CtaSecondary({
   href,
   children,
   onDark,
+  badge,
 }: {
   href: string;
   children: React.ReactNode;
   onDark?: boolean;
+  badge?: React.ReactNode;
 }) {
   return (
     <a
       href={href}
       className={
         onDark
-          ? "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-          : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
+          ? "relative inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+          : "relative inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
       }
     >
       {children}
+      {badge}
     </a>
   );
 }
@@ -586,7 +590,11 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               <CtaPrimary href="#register" onDark>
                 {isFr ? `Participer · ${HACKATHON_PRICE_USD} USD` : `Join · ${HACKATHON_PRICE_USD} USD`}
               </CtaPrimary>
-              <CtaSecondary href="/hackathon/chat" onDark>
+              <CtaSecondary
+                href="/hackathon/chat"
+                onDark
+                badge={<HackathonChatUnreadBadge className="ring-[#1F6B43]" />}
+              >
                 Chat
               </CtaSecondary>
               <CtaSecondary href="#programme" onDark>
@@ -906,9 +914,10 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         <div className="mb-5">
           <a
             href="/hackathon/chat"
-            className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-fg)] shadow-[0_10px_28px_-18px_var(--hk-shadow)] transition hover:border-[color:var(--fd-primary)] hover:text-[color:var(--fd-primary)]"
+            className="relative inline-flex items-center gap-2 rounded-xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-fg)] shadow-[0_10px_28px_-18px_var(--hk-shadow)] transition hover:border-[color:var(--fd-primary)] hover:text-[color:var(--fd-primary)]"
           >
             {isFr ? "Échange partenaires →" : "Partner exchange →"}
+            <HackathonChatUnreadBadge />
           </a>
           <p className="mt-2 text-xs text-[color:var(--hk-muted)]">
             {isFr

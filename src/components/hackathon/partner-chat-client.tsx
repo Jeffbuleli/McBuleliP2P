@@ -29,8 +29,11 @@ import {
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { PartnerPreparationPanel } from "@/components/hackathon/partner-preparation-panel";
+import { CommunityImageLightbox } from "@/components/community/community-image-lightbox";
+import { HackathonChatUnreadDot } from "@/components/hackathon/hackathon-chat-unread-dot";
 import { featuredPartnerForChatOrg } from "@/lib/hackathon/event-content";
 import { partnerLogoChatStyles } from "@/lib/hackathon/partner-logo-display";
+import { usePartnerChatUnreadCount } from "@/hooks/use-partner-chat-unread-count";
 
 type Org = {
   id: string;
@@ -55,6 +58,7 @@ type MatchedOrg = {
 type Msg = {
   id: string;
   orgId: string | null;
+  senderUserId?: string | null;
   senderLabel: string;
   displayName: string;
   orgStatus: PartnerOrgStatus | null;
@@ -63,6 +67,9 @@ type Msg = {
   imageUrl?: string | null;
   messageType: string;
   createdAt: string;
+  own?: boolean;
+  seen?: boolean;
+  unread?: boolean;
 };
 
 type Participant = {
@@ -563,11 +570,16 @@ export function PartnerChatClient() {
   const [switchBusy, setSwitchBusy] = useState(false);
   const [pageSize, setPageSize] = useState<PageSize>(10);
   const [page, setPage] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [localUnread, setLocalUnread] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollBoxRef = useRef<HTMLDivElement>(null);
   const stickBottomRef = useRef(true);
   const composerFocusedRef = useRef(false);
+  const polledUnread = usePartnerChatUnreadCount(12_000);
+  const unreadCount =
+    tab === "dialogue" ? 0 : Math.max(localUnread, polledUnread);
 
   const loadDash = useCallback(async () => {
     setLoadErr(null);
@@ -613,14 +625,32 @@ export function PartnerChatClient() {
           (m, i) =>
             m.id === next[i]?.id &&
             m.body === next[i]?.body &&
-            m.imageUrl === next[i]?.imageUrl,
+            m.imageUrl === next[i]?.imageUrl &&
+            m.seen === next[i]?.seen &&
+            m.unread === next[i]?.unread,
         )
       ) {
         return prev;
       }
       return next;
     });
+    setLocalUnread(next.filter((m) => m.unread).length);
   }, [loadDash]);
+
+  const markRead = useCallback(async () => {
+    try {
+      const res = await fetch("/api/hackathon/chat/messages/read", {
+        method: "POST",
+      });
+      if (!res.ok) return;
+      setLocalUnread(0);
+      setMessages((prev) =>
+        prev.map((m) => (m.unread ? { ...m, unread: false } : m)),
+      );
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     void loadDash();
@@ -632,6 +662,12 @@ export function PartnerChatClient() {
     const t = setInterval(() => void loadMessages(), 5000);
     return () => clearInterval(t);
   }, [dash?.auth.verified, loadMessages]);
+
+  useEffect(() => {
+    if (!dash?.auth.verified) return;
+    if (tab !== "dialogue") return;
+    void markRead();
+  }, [dash?.auth.verified, tab, markRead, messages.length]);
 
   const scrollMessagesToBottom = useCallback((smooth = true) => {
     const el = scrollBoxRef.current;
@@ -768,6 +804,10 @@ export function PartnerChatClient() {
     : dash?.auth.displayName && dash.auth.orgShortName
       ? `${dash.auth.displayName}/${dash.auth.orgShortName}`
       : dash?.auth.displayName;
+
+  const galleryImages = messages
+    .filter((m) => Boolean(m.imageUrl))
+    .map((m) => ({ id: m.id, src: m.imageUrl as string }));
 
   const tabs: { id: Tab; fr: string; en: string }[] = [
     { id: "vue", fr: "Vue", en: "Overview" },
@@ -950,13 +990,19 @@ export function PartnerChatClient() {
                   key={t.id}
                   type="button"
                   onClick={() => setTab(t.id)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
+                  className={`relative rounded-md px-3 py-1.5 text-xs font-bold transition ${
                     tab === t.id
                       ? "bg-[color:var(--hk-accent)] text-white"
                       : "text-[color:var(--hk-muted)] hover:text-[color:var(--hk-text)]"
                   }`}
                 >
                   {isFr ? t.fr : t.en}
+                  {t.id === "dialogue" && unreadCount > 0 && tab !== "dialogue" ? (
+                    <HackathonChatUnreadDot
+                      count={unreadCount}
+                      className="ring-[color:var(--hk-page)]"
+                    />
+                  ) : null}
                 </button>
               ))}
             </nav>
@@ -1169,10 +1215,12 @@ export function PartnerChatClient() {
                 ) : (
                   messages.map((m) => {
                     const mine =
-                      m.senderLabel === dash.auth.displayName &&
-                      (dash.auth.staff
-                        ? !m.orgId
-                        : m.orgId === dash.auth.orgId);
+                      typeof m.own === "boolean"
+                        ? m.own
+                        : m.senderLabel === dash.auth.displayName &&
+                          (dash.auth.staff
+                            ? !m.orgId
+                            : m.orgId === dash.auth.orgId);
                     const bodyText = (m.body || "").trim();
                     return (
                       <div
@@ -1183,12 +1231,19 @@ export function PartnerChatClient() {
                           className={`max-w-[min(85%,28rem)] rounded-2xl px-3 py-2 ${
                             mine
                               ? "bg-[color:var(--hk-accent)] text-white"
-                              : "bg-[color:var(--hk-page)] text-[color:var(--hk-text)] ring-1 ring-[color:var(--hk-border)]"
+                              : m.unread
+                                ? "bg-[color:var(--hk-page)] text-[color:var(--hk-text)] ring-2 ring-[color:var(--hk-accent)]/35"
+                                : "bg-[color:var(--hk-page)] text-[color:var(--hk-text)] ring-1 ring-[color:var(--hk-border)]"
                           }`}
                         >
                           {!mine ? (
                             <p className="mb-0.5 flex items-center gap-1.5 text-[10px] font-bold opacity-80">
                               <span className="truncate">{m.displayName}</span>
+                              {m.unread ? (
+                                <span className="rounded-full bg-[#dc2626] px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-white">
+                                  {isFr ? "Nouveau" : "New"}
+                                </span>
+                              ) : null}
                               {m.orgStatus ? (
                                 <HackathonPartnerStatusBadge
                                   status={m.orgStatus}
@@ -1199,12 +1254,23 @@ export function PartnerChatClient() {
                             </p>
                           ) : null}
                           {m.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={m.imageUrl}
-                              alt=""
-                              className="mb-1.5 max-h-56 w-full rounded-xl object-cover"
-                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const idx = galleryImages.findIndex(
+                                  (g) => g.id === m.id,
+                                );
+                                setLightboxIndex(idx >= 0 ? idx : 0);
+                              }}
+                              className="mb-1.5 block w-full overflow-hidden rounded-xl text-left"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={m.imageUrl}
+                                alt=""
+                                className="max-h-56 w-full object-cover transition hover:opacity-95"
+                              />
+                            </button>
                           ) : null}
                           {bodyText ? (
                             <p className="whitespace-pre-wrap break-words text-sm leading-snug">
@@ -1212,21 +1278,41 @@ export function PartnerChatClient() {
                             </p>
                           ) : null}
                           <p
-                            className={`mt-1 text-[9px] ${
+                            className={`mt-1 flex items-center gap-1.5 text-[9px] ${
                               mine
-                                ? "text-white/70"
+                                ? "justify-end text-white/70"
                                 : "text-[color:var(--hk-muted)]"
                             }`}
                           >
-                            {new Date(m.createdAt).toLocaleString(
-                              isFr ? "fr-FR" : "en-GB",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
+                            <span>
+                              {new Date(m.createdAt).toLocaleString(
+                                isFr ? "fr-FR" : "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </span>
+                            {mine ? (
+                              <span
+                                title={
+                                  m.seen
+                                    ? isFr
+                                      ? "Vu"
+                                      : "Seen"
+                                    : isFr
+                                      ? "Envoyé"
+                                      : "Sent"
+                                }
+                                className={
+                                  m.seen ? "text-emerald-200" : "text-white/55"
+                                }
+                              >
+                                {m.seen ? "✓✓" : "✓"}
+                              </span>
+                            ) : null}
                           </p>
                         </div>
                       </div>
@@ -1341,6 +1427,19 @@ export function PartnerChatClient() {
             />
           ) : null}
         </>
+      ) : null}
+
+      {lightboxIndex !== null && galleryImages.length > 0 ? (
+        <CommunityImageLightbox
+          images={galleryImages}
+          index={Math.min(lightboxIndex, galleryImages.length - 1)}
+          onIndexChange={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          fr={isFr}
+          downloadHrefFor={(src) =>
+            `/api/hackathon/chat/download?url=${encodeURIComponent(src)}`
+          }
+        />
       ) : null}
 
       <PoweredByFooter />
