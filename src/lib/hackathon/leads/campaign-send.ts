@@ -13,6 +13,7 @@ import {
 } from "@/db";
 import { isValidLeadEmail } from "./lead-normalize";
 import { companyOutreachKey } from "./lead-outreach-exclude";
+import { canonicalEmailForDedup } from "@/lib/auth/email-normalize";
 import { sendEmail, canSendViaResendApi, resendSendBlockedReason } from "@/lib/email/send";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 
@@ -190,12 +191,15 @@ export async function sendDailyLeadCampaignBatch(args: {
       text: hackathonCampaignRecipients.personalizedText,
       leadId: hackathonLeads.id,
       email: hackathonLeads.email,
+      emailCanonical: hackathonLeads.emailCanonical,
       emailValid: hackathonLeads.emailValid,
       suppressed: hackathonLeads.suppressed,
       score: hackathonLeads.score,
       category: hackathonLeads.category,
       source: hackathonLeads.source,
       company: hackathonLeads.company,
+      contactCount: hackathonLeads.contactCount,
+      lastContactedAt: hackathonLeads.lastContactedAt,
     })
     .from(hackathonCampaignRecipients)
     .innerJoin(
@@ -218,7 +222,7 @@ export async function sendDailyLeadCampaignBatch(args: {
       desc(hackathonLeads.score),
       asc(hackathonCampaignRecipients.createdAt),
     )
-    .limit(Math.max(limit * 8, 200));
+    .limit(Math.max(limit * 12, 300));
 
   const ranked = rows.filter((row) => {
     if (args.corporateOnly !== false && !isCorporateEmail(row.email)) {
@@ -227,12 +231,36 @@ export async function sendDailyLeadCampaignBatch(args: {
     return true;
   });
 
-  // Companies already SENT on this edition launch
+  // Addresses / companies already SENT or leads already contacted on this edition
   const alreadySentKeys = new Set<string>();
+  const alreadySentEmails = new Set<string>();
+
+  const contactedLeads = await db
+    .select({
+      emailCanonical: hackathonLeads.emailCanonical,
+      company: hackathonLeads.company,
+      email: hackathonLeads.email,
+    })
+    .from(hackathonLeads)
+    .where(
+      and(
+        eq(hackathonLeads.editionId, args.editionId),
+        sql`(${hackathonLeads.contactCount} > 0 OR ${hackathonLeads.lastContactedAt} IS NOT NULL)`,
+      ),
+    );
+  for (const row of contactedLeads) {
+    if (row.emailCanonical) {
+      alreadySentEmails.add(row.emailCanonical.toLowerCase());
+    }
+    const key = companyOutreachKey(row.company, row.email);
+    if (key) alreadySentKeys.add(key);
+  }
+
   const sentRows = await db
     .select({
       company: hackathonLeads.company,
       email: hackathonLeads.email,
+      emailCanonical: hackathonLeads.emailCanonical,
     })
     .from(hackathonCampaignRecipients)
     .innerJoin(
@@ -248,6 +276,8 @@ export async function sendDailyLeadCampaignBatch(args: {
   for (const row of sentRows) {
     const key = companyOutreachKey(row.company, row.email);
     if (key) alreadySentKeys.add(key);
+    const emailKey = (row.emailCanonical || row.email).toLowerCase();
+    if (emailKey) alreadySentEmails.add(emailKey);
   }
 
   let sent = 0;
@@ -255,11 +285,35 @@ export async function sendDailyLeadCampaignBatch(args: {
   let skipped = 0;
   const samples: DailySendResult["samples"] = [];
   const batchClaimed = new Set<string>(alreadySentKeys);
+  const batchEmails = new Set<string>(alreadySentEmails);
 
   for (const row of ranked) {
     if (sent >= limit) break;
 
+    const emailKey = (
+      row.emailCanonical ||
+      canonicalEmailForDedup(row.email) ||
+      row.email
+    ).toLowerCase();
     const companyKey = companyOutreachKey(row.company, row.email);
+
+    if (
+      (row.contactCount ?? 0) > 0 ||
+      row.lastContactedAt != null ||
+      batchEmails.has(emailKey)
+    ) {
+      await db
+        .update(hackathonCampaignRecipients)
+        .set({
+          status: "SKIPPED",
+          skipReason: "already_contacted",
+          updatedAt: new Date(),
+        })
+        .where(eq(hackathonCampaignRecipients.id, row.recipientId));
+      skipped += 1;
+      continue;
+    }
+
     if (companyKey && batchClaimed.has(companyKey)) {
       await db
         .update(hackathonCampaignRecipients)
@@ -314,6 +368,20 @@ export async function sendDailyLeadCampaignBatch(args: {
         })
         .where(eq(hackathonLeads.id, row.leadId));
 
+      // Also mark sibling PENDING rows for the same email as skipped
+      await db.execute(sql`
+        UPDATE hackathon_campaign_recipients r
+        SET status = 'SKIPPED',
+            skip_reason = 'already_contacted',
+            updated_at = NOW()
+        FROM hackathon_leads l
+        WHERE r.lead_id = l.id
+          AND r.status = 'PENDING'
+          AND r.id <> ${row.recipientId}::uuid
+          AND l.edition_id = ${args.editionId}::uuid
+          AND lower(l.email_canonical) = ${emailKey}
+      `);
+
       await db
         .update(hackathonEmailCampaigns)
         .set({
@@ -331,6 +399,7 @@ export async function sendDailyLeadCampaignBatch(args: {
       });
 
       sent += 1;
+      batchEmails.add(emailKey);
       if (companyKey) batchClaimed.add(companyKey);
       if (samples.length < 8) {
         samples.push({

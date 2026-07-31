@@ -56,6 +56,8 @@ const SKIP_LABEL: Record<string, string> = {
   existing_partner: "Partenaire / sponsor",
   already_registered: "Déjà inscrit",
   duplicate_company: "Entreprise déjà contactée",
+  duplicate_email: "Email déjà en file",
+  already_contacted: "Email déjà envoyé",
 };
 
 const SEGMENT_LABEL: Record<string, string> = {

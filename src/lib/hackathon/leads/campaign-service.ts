@@ -91,6 +91,59 @@ export async function loadEditionClaimedCompanyKeys(
   return claimed;
 }
 
+/** Emails already PENDING/SENT (or lead already contacted) for this edition. */
+export async function loadEditionClaimedEmails(
+  editionId: string,
+  excludeCampaignId?: string,
+): Promise<Set<string>> {
+  const db = getDb();
+  const claimed = new Set<string>();
+
+  const contacted = await db
+    .select({
+      emailCanonical: hackathonLeads.emailCanonical,
+    })
+    .from(hackathonLeads)
+    .where(
+      and(
+        eq(hackathonLeads.editionId, editionId),
+        sql`(${hackathonLeads.contactCount} > 0 OR ${hackathonLeads.lastContactedAt} IS NOT NULL)`,
+      ),
+    );
+  for (const row of contacted) {
+    if (row.emailCanonical) claimed.add(row.emailCanonical.toLowerCase());
+  }
+
+  const campaigns = await db
+    .select({ id: hackathonEmailCampaigns.id })
+    .from(hackathonEmailCampaigns)
+    .where(eq(hackathonEmailCampaigns.editionId, editionId));
+  const ids = campaigns
+    .map((c) => c.id)
+    .filter((id) => id !== excludeCampaignId);
+  if (ids.length === 0) return claimed;
+
+  const rows = await db
+    .select({
+      emailCanonical: hackathonLeads.emailCanonical,
+    })
+    .from(hackathonCampaignRecipients)
+    .innerJoin(
+      hackathonLeads,
+      eq(hackathonLeads.id, hackathonCampaignRecipients.leadId),
+    )
+    .where(
+      and(
+        inArray(hackathonCampaignRecipients.campaignId, ids),
+        inArray(hackathonCampaignRecipients.status, ["PENDING", "SENT"]),
+      ),
+    );
+  for (const row of rows) {
+    if (row.emailCanonical) claimed.add(row.emailCanonical.toLowerCase());
+  }
+  return claimed;
+}
+
 export async function clearCampaignPendingRecipients(
   campaignId: string,
 ): Promise<number> {
@@ -194,6 +247,8 @@ export async function generateCampaignRecipients(args: {
    * Ensures one email per company across the whole launch.
    */
   claimedCompanyKeys?: Set<string>;
+  /** Shared edition-wide emails already queued or contacted (mutated). */
+  claimedEmails?: Set<string>;
 }): Promise<GenerateCampaignResult> {
   const db = getDb();
   const campaign = await getCampaign(args.campaignId);
@@ -226,6 +281,9 @@ export async function generateCampaignRecipients(args: {
   const claimed =
     args.claimedCompanyKeys ??
     (await loadEditionClaimedCompanyKeys(campaign.editionId, args.campaignId));
+  const claimedEmails =
+    args.claimedEmails ??
+    (await loadEditionClaimedEmails(campaign.editionId, args.campaignId));
 
   const base = partnershipPublicBaseUrl();
   let queued = 0;
@@ -255,6 +313,7 @@ export async function generateCampaignRecipients(args: {
     });
 
     const companyKey = companyOutreachKey(lead.company, lead.email);
+    const emailKey = (lead.emailCanonical || lead.email).toLowerCase();
 
     if (!lead.emailValid) {
       status = "SKIPPED";
@@ -272,6 +331,16 @@ export async function generateCampaignRecipients(args: {
     } else if (lead.alreadyRegistered) {
       status = "SKIPPED";
       skipReason = "already_registered";
+    } else if (
+      (lead.contactCount ?? 0) > 0 ||
+      lead.lastContactedAt != null ||
+      claimedEmails.has(emailKey)
+    ) {
+      status = "SKIPPED";
+      skipReason =
+        (lead.contactCount ?? 0) > 0 || lead.lastContactedAt != null
+          ? "already_contacted"
+          : "duplicate_email";
     } else if (companyKey && claimed.has(companyKey)) {
       status = "SKIPPED";
       skipReason = "duplicate_company";
@@ -323,6 +392,7 @@ export async function generateCampaignRecipients(args: {
 
     if (status === "PENDING") {
       if (companyKey) claimed.add(companyKey);
+      claimedEmails.add(emailKey);
       queued += 1;
       rateSum += personalized.personalizationRate;
       rateN += 1;
@@ -434,6 +504,7 @@ export async function prepareJul31CampaignPack(args: {
 
   const campaigns = [];
   const claimedCompanyKeys = new Set<string>();
+  const claimedEmails = new Set<string>();
   for (const s of segments) {
     const { id } = await createCampaign({
       editionId: args.editionId,
@@ -448,6 +519,7 @@ export async function prepareJul31CampaignPack(args: {
       campaignId: id,
       regenerate: true,
       claimedCompanyKeys,
+      claimedEmails,
     });
     await scheduleCampaign({
       campaignId: id,

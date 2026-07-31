@@ -10,6 +10,7 @@ import {
   listCampaignRecipients,
   listCampaigns,
   loadEditionClaimedCompanyKeys,
+  loadEditionClaimedEmails,
   prepareJul31CampaignPack,
   scheduleCampaign,
   defaultScheduleKinshasaJul31,
@@ -167,16 +168,18 @@ export async function POST(req: Request) {
       for (const c of eligible) {
         await clearCampaignPendingRecipients(c.id);
       }
-      // Keep SENT companies claimed so regenerate never re-queues them
+      // Keep SENT / already-contacted emails claimed so regenerate never re-queues them
       const claimedCompanyKeys = await loadEditionClaimedCompanyKeys(
         data.editionId,
       );
+      const claimedEmails = await loadEditionClaimedEmails(data.editionId);
       const out = [];
       for (const c of eligible) {
         const generate = await generateCampaignRecipients({
           campaignId: c.id,
           regenerate: false,
           claimedCompanyKeys,
+          claimedEmails,
         });
         out.push({
           id: c.id,
@@ -188,7 +191,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ok: true,
         action: "regenerate_all",
-        note: "Contenus régénérés (partenariat / 1 email par entreprise).",
+        note: "Contenus régénérés (partenariat / 1 email par adresse déjà contactée).",
         campaigns: out,
       });
     }
