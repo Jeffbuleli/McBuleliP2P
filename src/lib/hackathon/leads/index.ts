@@ -7,3 +7,5 @@ export * from "./lead-segment";
 export * from "./lead-qualify";
 export * from "./lead-personalize";
 export * from "./campaign-service";
+export * from "./campaign-send";
+export * from "./lead-outreach-exclude";

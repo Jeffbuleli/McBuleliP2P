@@ -25,15 +25,15 @@ export type LeadScoreInput = {
 };
 
 const CRITERION_LABELS: Record<HackathonScoreCriterionKey, string> = {
-  kinshasa: "Basé à Kinshasa",
-  developer: "Profil développeur / software engineer",
+  kinshasa: "Basé à Kinshasa (critère prioritaire)",
+  developer: "Équipe technique / logiciel / digital / télécom",
   ai_data: "IA / Data / GenAI",
   ai_tools: "Outils IA (Cursor, Claude, ChatGPT, Copilot…)",
   hackathon_exp: "Expérience hackathon / challenge tech",
   startup: "Startup / innovation / MVP / entrepreneuriat",
-  recent_activity: "Activité récente et pertinente",
-  experience_1_7: "Expérience pro 1–7 ans",
-  design_product: "Profil UI/UX / Product / business complémentaire",
+  recent_activity: "Source récente (annuaire, FEC, csv, community…)",
+  experience_1_7: "Ancienneté organisation (1–20 ans)",
+  design_product: "Entreprise / SI / métier (PME ou grande — pas forcément tech)",
 };
 
 function haystack(input: LeadScoreInput): string {
@@ -95,11 +95,28 @@ const DEVELOPER_RE = [
   /\bcoding\b/,
   /\bprogrammer\b/,
   /\bprogrammeur\b/,
+  // B2B / annuaire sectors (IT desks that can learn AI tooling)
+  /\binformatique\b/,
+  /\bntic\b/,
+  /\btic\b/,
+  /\bdigital\b/,
+  /\btelecom\b/,
+  /\btelecommunication\b/,
+  /\blogiciel\b/,
+  /\bsysteme\b/,
+  /\berp\b/,
+  /\bcloud\b/,
+  /\breseau\b/,
+  /\bcyber\b/,
+  /\bweb\b/,
+  /\bit\b/,
+  /\bfintech\b/,
+  /\bapi\b/,
+  /\bsaas\b/,
 ];
 
 const AI_DATA_RE = [
   /\bai\b/,
-  /\bia\b/,
   /\bgenai\b/,
   /\bgenerative\b/,
   /\bmachine[\s-]?learning\b/,
@@ -114,6 +131,7 @@ const AI_DATA_RE = [
   /\banalytics\b/,
   /\bautomatisation\b/,
   /\bautomation\b/,
+  /\bintelligence artificielle\b/,
 ];
 
 const AI_TOOLS_RE = [
@@ -170,6 +188,29 @@ const DESIGN_PRODUCT_RE = [
   /\bbusiness\b/,
   /\bmarketing\b/,
   /\bgrowth\b/,
+  /\bfinance\b/,
+  /\bfinances\b/,
+  /\bbanque\b/,
+  /\bbank\b/,
+  /\bassurance\b/,
+  /\bservices\b/,
+  /\bentreprise\b/,
+  // Non-tech orgs that run information systems
+  /\bpme\b/,
+  /\bsi\b/,
+  /\berp\b/,
+  /\bsap\b/,
+  /\bsysteme\b/,
+  /\binformation\b/,
+  /\bmetier\b/,
+  /\bindustrie\b/,
+  /\bcommerce\b/,
+  /\bmines\b/,
+  /\blogistique\b/,
+  /\btransport\b/,
+  /\benergie\b/,
+  /\bhotel\b/,
+  /\bong\b/,
 ];
 
 const RECENT_SOURCES = new Set([
@@ -178,6 +219,12 @@ const RECENT_SOURCES = new Set([
   "ambassador",
   "university",
   "company",
+  "annuaire",
+  "fec",
+  "directory",
+  "csv",
+  "xlsx",
+  "manual",
 ]);
 
 function matchCriterion(
@@ -207,8 +254,9 @@ function matchCriterion(
       return false;
     }
     case "experience_1_7": {
+      // Broader band for company registries (still capped for junior/mid desks).
       const y = input.experienceYears;
-      return typeof y === "number" && y >= 1 && y <= 7;
+      return typeof y === "number" && y >= 1 && y <= 20;
     }
     case "design_product":
       return includesAny(text, DESIGN_PRODUCT_RE);

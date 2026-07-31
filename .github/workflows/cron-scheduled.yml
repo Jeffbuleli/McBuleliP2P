@@ -13,6 +13,8 @@ on:
     # journey-nudge daily disabled — burns Resend free transactional quota (~1k/day).
     # Marketing blasts → Resend Broadcasts. Re-enable only with ACADEMY_JOURNEY_NUDGE_EMAIL=true on API.
     - cron: "0 1 * * 0"
+    # Hackathon lead partnership emails — 50/day at 09h00 Africa/Kinshasa (08:00 UTC)
+    - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       job:
@@ -28,6 +30,7 @@ on:
           - events-reminders
           - nudge
           - payout
+          - hackathon-lead-campaign
 
 concurrency:
   group: mcbuleli-cron-${{ github.event.schedule || inputs.job }}
@@ -131,3 +134,28 @@ jobs:
           fi
       - name: Top trader weekly payout
         run: node scripts/cron-top-trader-payout.mjs
+
+  # Daily partnership lead emails (Resend) — requires admin APPROVED + dryRun=false
+  hackathon-lead-campaign:
+    if: >
+      (github.event_name == 'schedule' && github.event.schedule == '0 8 * * *')
+      || (github.event_name == 'workflow_dispatch' && inputs.job == 'hackathon-lead-campaign')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check secrets
+        run: |
+          if [ -z "${CRON_SECRET}" ] || [ "${#CRON_SECRET}" -lt 12 ]; then
+            echo "::error::Missing CRON_SECRET (min 12 chars) in Actions secrets."
+            exit 1
+          fi
+          if [ -z "${MCBULELI_API_URL}" ]; then
+            echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
+            exit 1
+          fi
+      - name: Hackathon lead campaign daily batch (50)
+        run: node scripts/cron-hackathon-lead-campaign.mjs

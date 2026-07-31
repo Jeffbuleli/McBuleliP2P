@@ -49,6 +49,7 @@ Vérifier : `ls -lh backups/*.dump` doit montrer plusieurs Mo (pas 0).
 | `mcbuleli-academy-journey-nudge` | `0 9 * * *` | `cron-academy-journey-nudge.mjs` | **GitHub Actions** | Quotidien |
 | `mcbuleli-top-trader-payout` | `0 1 * * 0` | `cron-top-trader-payout.mjs` | **GitHub Actions** | Hebdo |
 | *(non listé Render mais script)* events reminders | `*/15` | `cron-events-reminders.mjs` | **GitHub Actions** | Emails events |
+| hackathon lead partnership (50/j) | `0 8 * * *` (09h Kinshasa) | `cron-hackathon-lead-campaign.mjs` | **GitHub Actions** | Email Resend quotidien |
 | Web `McBuleliP2P` | — | Next.js | **VPS** (Docker / Node) | |
 | Postgres `McBuleliP2P` | — | PostgreSQL | **VPS** (Docker `postgres:16`) | |
 

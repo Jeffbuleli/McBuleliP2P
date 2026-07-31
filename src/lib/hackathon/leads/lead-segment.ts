@@ -35,13 +35,14 @@ const RULES: SegmentRule[] = [
     weight: 40,
     patterns: [
       /\bai\b/,
-      /\bia\b/,
       /\bgenai\b/,
       /\bmachine[\s-]?learning\b/,
       /\bdata\b/,
       /\bllm\b/,
       /\bnlp\b/,
       /\banalytics\b/,
+      /\bintelligence artificielle\b/,
+      /\bformation ia\b/,
     ],
   },
   {
@@ -59,6 +60,11 @@ const RULES: SegmentRule[] = [
       /\bnode\b/,
       /\bcoding\b/,
       /\bdev\b/,
+      /\binformatique\b/,
+      /\btelecom\b/,
+      /\btelecommunication\b/,
+      /\bdigital\b/,
+      /\bntic\b/,
     ],
   },
   {
@@ -72,6 +78,9 @@ const RULES: SegmentRule[] = [
       /\bproduct\b/,
       /\bproduct[\s-]?manager\b/,
       /\bproduct[\s-]?owner\b/,
+      /\bfinance\b/,
+      /\bbanque\b/,
+      /\bmarketing\b/,
     ],
   },
   {
@@ -86,6 +95,7 @@ const RULES: SegmentRule[] = [
       /\bceo\b/,
       /\bmvp\b/,
       /\binnovation\b/,
+      /\bentreprise\b/,
     ],
   },
 ];

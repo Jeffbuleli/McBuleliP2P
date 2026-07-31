@@ -29,6 +29,10 @@
 .DS_Store
 *.pem
 
+# Large lead-source PDFs (keep derived CSV/txt only)
+content/hackathon-leads/sources/*.pdf
+content/hackathon-leads/sources/ANNUAIRE-FEC*
+
 # debug
 npm-debug.log*
 yarn-debug.log*

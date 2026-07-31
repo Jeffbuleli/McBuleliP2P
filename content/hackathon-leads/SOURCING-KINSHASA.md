@@ -48,6 +48,15 @@ Voir `prospects-template.csv` :
 4. Admin → **Campagnes** → **Préparer pack 31 juil. 09h (dry-run)**.
 5. Demain 31 juil. après reset quota Resend : Approuver + lancer (Phase 7–8).
 
+## Étape 2 (lot initial prod)
+
+- CSV vérifié : `etape2-verified-leads.csv` (emails publics entreprises / rôles nommés — **hors Silikin/TEXAF**)
+- Pending sans email : `etape2-pending-no-email.csv` (ne pas importer tant qu’il n’y a pas d’email public)
+- Copy B2B : emails pro → monter l’équipe IT en programmation IA, intégrer des assistants, débloquer des chantiers ; plusieurs techniciens possibles
+- Exclusion auto : domaines Silikin/TEXAF + partenaires/sponsors en base
+- Import + qualify + pack dry-run déjà faits sur VPS (édition `kinshasa-vibe-coding-2026`)
+- **Aucun envoi Resend** jusqu’à APPROVE admin + quota OK
+
 ## Important Resend
 
 Quota journalier atteint aujourd'hui → **aucun envoi masse**.  

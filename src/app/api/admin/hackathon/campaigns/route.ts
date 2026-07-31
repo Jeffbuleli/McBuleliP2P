@@ -77,6 +77,9 @@ export async function POST(req: Request) {
         "generate",
         "schedule",
         "prepare_jul31_pack",
+        "approve",
+        "send_daily_batch",
+        "regenerate_all",
       ]),
       editionId: z.string().uuid().optional(),
       campaignId: z.string().uuid().optional(),
@@ -86,6 +89,8 @@ export async function POST(req: Request) {
       scheduledAt: z.string().datetime().optional(),
       dryRun: z.boolean().optional(),
       regenerate: z.boolean().optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+      corporateOnly: z.boolean().optional(),
     })
     .safeParse(body);
 
@@ -96,6 +101,85 @@ export async function POST(req: Request) {
   const data = parsed.data;
 
   try {
+    if (data.action === "approve") {
+      if (!data.editionId) {
+        return NextResponse.json(
+          { error: "editionId_required" },
+          { status: 400 },
+        );
+      }
+      const { approveEditionCampaigns } = await import(
+        "@/lib/hackathon/leads/campaign-send"
+      );
+      const result = await approveEditionCampaigns({
+        editionId: data.editionId,
+        approvedByUserId: admin.id,
+        dryRun: data.dryRun === true,
+      });
+      return NextResponse.json({
+        ok: true,
+        action: "approve",
+        note:
+          data.dryRun === true
+            ? "Campagnes APPROVED mais dryRun=true (pas d'envoi Resend)."
+            : "Campagnes APPROVED - dryRun=false - lots quotidiens 50 emails à 09h Kinshasa.",
+        ...result,
+      });
+    }
+
+    if (data.action === "send_daily_batch") {
+      if (!data.editionId) {
+        return NextResponse.json(
+          { error: "editionId_required" },
+          { status: 400 },
+        );
+      }
+      const { sendDailyLeadCampaignBatch } = await import(
+        "@/lib/hackathon/leads/campaign-send"
+      );
+      const result = await sendDailyLeadCampaignBatch({
+        editionId: data.editionId,
+        limit: data.limit ?? 50,
+        corporateOnly: data.corporateOnly !== false,
+      });
+      return NextResponse.json({
+        action: "send_daily_batch",
+        ...result,
+      });
+    }
+
+    if (data.action === "regenerate_all") {
+      if (!data.editionId) {
+        return NextResponse.json(
+          { error: "editionId_required" },
+          { status: 400 },
+        );
+      }
+      const campaigns = await listCampaigns(data.editionId);
+      const out = [];
+      for (const c of campaigns) {
+        if (!["DRAFT", "READY_FOR_REVIEW", "APPROVED", "PAUSED", "SENDING"].includes(c.status)) {
+          continue;
+        }
+        const generate = await generateCampaignRecipients({
+          campaignId: c.id,
+          regenerate: true,
+        });
+        out.push({
+          id: c.id,
+          segment: c.segment,
+          queued: generate.queued,
+          skipped: generate.skipped,
+        });
+      }
+      return NextResponse.json({
+        ok: true,
+        action: "regenerate_all",
+        note: "Contenus régénérés (partenariat / footer Patty B.).",
+        campaigns: out,
+      });
+    }
+
     if (data.action === "prepare_jul31_pack") {
       if (!data.editionId) {
         return NextResponse.json(

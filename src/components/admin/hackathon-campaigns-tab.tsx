@@ -92,15 +92,12 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
     );
   }
 
-  async function prepareJul31() {
-    if (!isAdmin || !editionId) return;
-    if (
-      !window.confirm(
-        "Préparer 5 campagnes (1 par segment) pour le 31 juil. 2026 à 09h Kinshasa ?\nAucun email Resend ne sera envoyé (dryRun).",
-      )
-    ) {
-      return;
-    }
+  async function postAction(
+    body: Record<string, unknown>,
+    confirmMsg: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (!isAdmin || !editionId) return null;
+    if (!window.confirm(confirmMsg)) return null;
     setBusy(true);
     setErr(null);
     setMsg(null);
@@ -109,32 +106,88 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "prepare_jul31_pack",
-          editionId,
-          minCategory: "B_QUALIFIED",
-        }),
+        body: JSON.stringify({ ...body, editionId }),
       });
-      const j = await res.json().catch(() => ({}));
+      const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        setErr(typeof j.error === "string" ? j.error : "Préparation impossible");
-        return;
+        setErr(typeof j.error === "string" ? j.error : "Action impossible");
+        return null;
       }
-      const lines = (j.campaigns as Array<{ segment: string; generate: { queued: number; skipped: number; avgPersonalizationRate: number } }>)
-        ?.map(
-          (c) =>
-            `${c.segment}: ${c.generate.queued} prêts / ${c.generate.skipped} exclus (perso ~${c.generate.avgPersonalizationRate}%)`,
-        )
-        .join(" · ");
-      setMsg(
-        `Pack prêt pour ${j.scheduledAt} (09h Kinshasa). dryRun=true. ${lines ?? ""}`,
-      );
-      await load();
+      return j;
     } catch {
-      setErr("Préparation impossible");
+      setErr("Action impossible");
+      return null;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function prepareJul31() {
+    const j = await postAction(
+      { action: "prepare_jul31_pack", minCategory: "B_QUALIFIED" },
+      "Préparer 5 campagnes (1 par segment) ?\nAucun email Resend ne sera envoyé (dryRun).",
+    );
+    if (!j) return;
+    const lines = (
+      j.campaigns as Array<{
+        segment: string;
+        generate: {
+          queued: number;
+          skipped: number;
+          avgPersonalizationRate: number;
+        };
+      }>
+    )
+      ?.map(
+        (c) =>
+          `${c.segment}: ${c.generate.queued} prêts / ${c.generate.skipped} exclus (perso ~${c.generate.avgPersonalizationRate}%)`,
+      )
+      .join(" · ");
+    setMsg(
+      `Pack prêt pour ${String(j.scheduledAt ?? "")} (09h Kinshasa). dryRun=true. ${lines ?? ""}`,
+    );
+    await load();
+  }
+
+  async function regenerateAll() {
+    const j = await postAction(
+      { action: "regenerate_all" },
+      "Régénérer tous les contenus PENDING avec le ton partenariat (Patty B., WhatsApp, RCCM) ?",
+    );
+    if (!j) return;
+    const lines = (
+      j.campaigns as Array<{ segment: string; queued: number; skipped: number }>
+    )
+      ?.map((c) => `${c.segment}: ${c.queued} prêts / ${c.skipped} exclus`)
+      .join(" · ");
+    setMsg(`${String(j.note ?? "Régénéré.")} ${lines ?? ""}`);
+    await load();
+    if (selectedId) await loadCampaign(selectedId);
+  }
+
+  async function approveLive() {
+    const j = await postAction(
+      { action: "approve", dryRun: false },
+      "APPROUVER les campagnes pour envoi réel ?\n→ dryRun=false\n→ lots de 50/jour à 09h Kinshasa (emails entreprise d'abord)\nConfirmez seulement si le contenu a été revu.",
+    );
+    if (!j) return;
+    setMsg(
+      `${String(j.note ?? "Approuvé.")} (${Number(j.approved ?? 0)} campagne(s))`,
+    );
+    await load();
+  }
+
+  async function sendDailyBatch() {
+    const j = await postAction(
+      { action: "send_daily_batch", limit: 50, corporateOnly: true },
+      "Envoyer MAINTENANT le lot du jour (max 50 emails entreprise) via Resend ?\nLes campagnes doivent être APPROVED et dryRun=false.",
+    );
+    if (!j) return;
+    setMsg(
+      `Lot : envoyés ${Number(j.sent ?? 0)} · échecs ${Number(j.failed ?? 0)} · exclus ${Number(j.skipped ?? 0)}${j.blockedReason ? ` · bloqué: ${String(j.blockedReason)}` : ""}`,
+    );
+    await load();
+    if (selectedId) await loadCampaign(selectedId);
   }
 
   async function showHtml(recipientId: string) {
@@ -155,20 +208,44 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
       <div className={adminCls.card}>
         <p className="text-sm font-black">Campagnes email - Lead Gen</p>
         <p className={adminCls.muted}>
-          Emails personnalisés par segment · CTA /hackathon · désinscription
-          one-click. Limite Resend atteinte : préparation pour{" "}
-          <strong>31 juil. 2026 · 09h00 Kinshasa</strong> (dryRun, aucun envoi
-          aujourd&apos;hui).
+          Ton partenariat (SI / innovation RDC) · signature Mme Patty B. ·
+          WhatsApp · RCCM. Envoi progressif{" "}
+          <strong>50 emails / jour à 09h00 Kinshasa</strong> via GitHub Actions
+          (priorité boîtes entreprise - Resend 100/jour).
         </p>
         {isAdmin ? (
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               disabled={busy}
-              className={adminCls.btnPrimary}
+              className={adminCls.btnSecondary}
               onClick={() => void prepareJul31()}
             >
-              Préparer pack 31 juil. 09h (dry-run)
+              Préparer pack (dry-run)
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={adminCls.btnSecondary}
+              onClick={() => void regenerateAll()}
+            >
+              Régénérer contenus partenariat
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={adminCls.btnPrimary}
+              onClick={() => void approveLive()}
+            >
+              Approuver envoi réel
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={adminCls.btnPrimary}
+              onClick={() => void sendDailyBatch()}
+            >
+              Envoyer lot 50 maintenant
             </button>
             <button
               type="button"
@@ -191,8 +268,7 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
         <p className="mb-3 text-sm font-black">Campagnes ({campaigns.length})</p>
         {campaigns.length === 0 ? (
           <p className={adminCls.empty}>
-            Aucune campagne. Importez/scorer des leads puis lancez le pack 31
-            juil.
+            Aucune campagne. Importez / scorez des leads puis préparez un pack.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -203,6 +279,7 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
                   <th className="py-2 pr-2">Segment</th>
                   <th className="py-2 pr-2">Statut</th>
                   <th className="py-2 pr-2">Prospects</th>
+                  <th className="py-2 pr-2">Envoyés</th>
                   <th className="py-2 pr-2">Planifié</th>
                   <th className="py-2">Dry-run</th>
                 </tr>
@@ -218,6 +295,7 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
                     <td className="py-2 pr-2">{c.segment}</td>
                     <td className="py-2 pr-2">{c.status}</td>
                     <td className="py-2 pr-2 tabular-nums">{c.prospectCount}</td>
+                    <td className="py-2 pr-2 tabular-nums">{c.sentCount}</td>
                     <td className="py-2 pr-2 text-xs">
                       {c.scheduledAt
                         ? new Date(c.scheduledAt).toLocaleString("fr-FR", {

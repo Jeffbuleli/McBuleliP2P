@@ -61,6 +61,9 @@ export const HACKATHON_LEAD_SOURCES = [
   "csv",
   "xlsx",
   "manual",
+  "annuaire",
+  "fec",
+  "directory",
   "other",
 ] as const;
 
@@ -163,25 +166,30 @@ export const HACKATHON_SCORE_CRITERIA = [
 export type HackathonScoreCriterionKey =
   (typeof HACKATHON_SCORE_CRITERIA)[number];
 
+/**
+ * Kinshasa-first scoring for B2B SI desks (tech OR non-tech PME/grandes entreprises).
+ * Tech keywords remain a bonus; having a Kinshasa org with digital/SI footprint is enough for B.
+ */
 export const HACKATHON_SCORE_POINTS: Record<
   HackathonScoreCriterionKey,
   number
 > = {
-  kinshasa: 20,
+  kinshasa: 30,
   developer: 20,
   ai_data: 15,
   ai_tools: 10,
   hackathon_exp: 10,
   startup: 10,
-  recent_activity: 5,
+  recent_activity: 10,
   experience_1_7: 5,
-  design_product: 5,
+  design_product: 15,
 };
 
+/** Kinshasa + SI/entreprise footprint → B_QUALIFIED; tech stack pushes A_HOT. */
 export function categoryFromScore(score: number): HackathonLeadCategory {
-  if (score >= 80) return "A_HOT";
-  if (score >= 60) return "B_QUALIFIED";
-  if (score >= 40) return "C_LOW";
+  if (score >= 70) return "A_HOT";
+  if (score >= 35) return "B_QUALIFIED";
+  if (score >= 15) return "C_LOW";
   return "UNQUALIFIED";
 }
 

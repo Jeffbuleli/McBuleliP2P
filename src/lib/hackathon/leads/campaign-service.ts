@@ -19,6 +19,10 @@ import {
   HACKATHON_CAMPAIGN_SLUG,
   personalizeLeadEmail,
 } from "./lead-personalize";
+import {
+  loadOutreachExclusionSet,
+  outreachSkipReason,
+} from "./lead-outreach-exclude";
 import type { HackathonLeadCategory, HackathonLeadSegment } from "./types";
 
 const CATEGORY_RANK: Record<string, number> = {
@@ -161,6 +165,7 @@ export async function generateCampaignRecipients(args: {
     .select({ emailCanonical: hackathonSuppressionList.emailCanonical })
     .from(hackathonSuppressionList);
   const suppressedSet = new Set(suppressed.map((s) => s.emailCanonical));
+  const partnerExclusion = await loadOutreachExclusionSet(campaign.editionId);
 
   const base = partnershipPublicBaseUrl();
   let queued = 0;
@@ -182,12 +187,26 @@ export async function generateCampaignRecipients(args: {
     let status: "PENDING" | "SKIPPED" = "PENDING";
     let skipReason: string | null = null;
 
+    const partnerSkip = outreachSkipReason({
+      email: lead.email,
+      emailCanonical: lead.emailCanonical,
+      company: lead.company,
+      exclusion: partnerExclusion,
+    });
+
     if (!lead.emailValid) {
       status = "SKIPPED";
       skipReason = "invalid_email";
     } else if (lead.suppressed || suppressedSet.has(lead.emailCanonical)) {
       status = "SKIPPED";
       skipReason = "suppressed";
+    } else if (partnerSkip) {
+      status = "SKIPPED";
+      skipReason = partnerSkip.startsWith("partner") ||
+        partnerSkip.startsWith("sponsor") ||
+        partnerSkip.startsWith("partner_org")
+        ? "existing_partner"
+        : partnerSkip;
     } else if (lead.alreadyRegistered) {
       status = "SKIPPED";
       skipReason = "already_registered";
@@ -204,12 +223,14 @@ export async function generateCampaignRecipients(args: {
       lead: {
         firstName: lead.firstName,
         lastName: lead.lastName,
+        email: lead.email,
         jobTitle: lead.jobTitle,
         company: lead.company,
         location: lead.location,
         skills: lead.skills ?? [],
         segment: lead.segment as HackathonLeadSegment,
         recommendedProfile: lead.recommendedProfile,
+        notes: lead.notes,
       },
       unsubscribeUrl: unsubUrl,
       ctaUrl,
