@@ -338,12 +338,12 @@ function AffiliateSteps({
         ? [
             "Créez un compte McBuleli avec l'email principal de votre organisation.",
             "Connectez-vous.",
-            "Accédez à Vue, Membres, Dialogue et Participants.",
+            "Accédez à Vue, Membres et Dialogue.",
           ]
         : [
             "Create a McBuleli account with your organisation's primary email.",
             "Sign in.",
-            "Open Overview, Members, Dialogue and Participants.",
+            "Open Overview, Members and Dialogue.",
           ]
       : mode === "forbidden"
         ? isFr
@@ -361,12 +361,12 @@ function AffiliateSteps({
           ? [
               "Consultez Vue et Membres pour l'état des partenariats.",
               "Présentez votre organisation dans Dialogue (texte ou image).",
-              "Suivez les Participants inscrits et contactez-les si utile.",
+              "Coordonnez la préparation avec McBuleli avant l'événement.",
             ]
           : [
               "Check Overview and Members for partnership status.",
               "Introduce your organisation in Dialogue (text or image).",
-              "Follow registered Participants and reach out when useful.",
+              "Coordinate prep with McBuleli before the event.",
             ];
 
   return (
@@ -762,6 +762,7 @@ export function PartnerChatClient() {
   }
 
   const verified = Boolean(dash?.auth.verified);
+  const isStaff = Boolean(dash?.auth.staff);
   const youLabel = dash?.auth.staff
     ? "McBuleli"
     : dash?.auth.displayName && dash.auth.orgShortName
@@ -773,8 +774,14 @@ export function PartnerChatClient() {
     { id: "membres", fr: "Membres", en: "Members" },
     { id: "dialogue", fr: "Dialogue", en: "Dialogue" },
     { id: "preparation", fr: "Préparation", en: "Prep" },
-    { id: "participants", fr: "Participants", en: "Participants" },
+    ...(isStaff
+      ? ([{ id: "participants", fr: "Participants", en: "Participants" }] as const)
+      : []),
   ];
+
+  useEffect(() => {
+    if (!isStaff && tab === "participants") setTab("vue");
+  }, [isStaff, tab]);
 
   const dates = isFr ? HACKATHON_DATES_LABEL_FR : HACKATHON_DATES_LABEL_EN;
   const hours = isFr ? HACKATHON_HOURS_COMPACT_FR : HACKATHON_HOURS_COMPACT_EN;
@@ -990,7 +997,9 @@ export function PartnerChatClient() {
 
           {tab === "vue" ? (
             <section className="space-y-5">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div
+                className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${isStaff ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}
+              >
                 <Kpi
                   label={isFr ? "Organisations" : "Organisations"}
                   value={dash.stats.total}
@@ -1010,10 +1019,12 @@ export function PartnerChatClient() {
                   value={dash.stats.undetermined}
                   tone="muted"
                 />
-                <Kpi
-                  label={isFr ? "Participants" : "Participants"}
-                  value={(dash.participants ?? []).length}
-                />
+                {isStaff ? (
+                  <Kpi
+                    label={isFr ? "Participants" : "Participants"}
+                    value={(dash.participants ?? []).length}
+                  />
+                ) : null}
               </div>
               <StackedBreakdown
                 confirmed={dash.stats.confirmed}
@@ -1316,7 +1327,7 @@ export function PartnerChatClient() {
             />
           ) : null}
 
-          {tab === "participants" ? (
+          {tab === "participants" && isStaff ? (
             <ParticipantsTable
               participants={dash.participants ?? []}
               isFr={isFr}

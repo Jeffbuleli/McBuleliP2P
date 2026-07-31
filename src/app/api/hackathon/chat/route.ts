@@ -46,9 +46,9 @@ export async function GET() {
     const orgs = await listPartnerOrgsRoster(editionId, verified);
     const stats = partnerOrgStats(orgs);
     const messageCount = await countPartnerOrgMessages(editionId);
-    const participants = verified
-      ? await listEditionParticipants(editionId)
-      : [];
+    const isStaff = Boolean(session?.staff);
+    const participants =
+      verified && isStaff ? await listEditionParticipants(editionId) : [];
 
     return NextResponse.json({
       editionId,
@@ -60,7 +60,7 @@ export async function GET() {
         verified,
         needLogin: !access.ok && access.error === "login_required",
         forbidden: !access.ok && access.error === "forbidden",
-        staff: Boolean(session?.staff),
+        staff: isStaff,
         displayName: session?.displayName ?? null,
         orgId: session?.orgId ?? null,
         orgShortName: orgShort,
