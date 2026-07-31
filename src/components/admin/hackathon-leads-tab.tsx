@@ -107,16 +107,21 @@ function LeadScoreRows({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const breakdown =
+  const breakdownRaw =
     typeof l.scoreBreakdown === "string"
       ? (() => {
           try {
-            return JSON.parse(l.scoreBreakdown) as LeadRow["scoreBreakdown"];
+            return JSON.parse(l.scoreBreakdown) as {
+              total: number;
+              criteria: { key: string; label: string; points: number }[];
+            };
           } catch {
             return null;
           }
         })()
       : l.scoreBreakdown;
+  const breakdown =
+    breakdownRaw && typeof breakdownRaw === "object" ? breakdownRaw : null;
   const criteria = Array.isArray(breakdown?.criteria) ? breakdown.criteria : [];
   const reason =
     typeof l.qualificationReason === "string" &&
