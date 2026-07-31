@@ -22,6 +22,7 @@ import {
 import {
   loadOutreachExclusionSet,
   outreachSkipReason,
+  companyOutreachKey,
 } from "./lead-outreach-exclude";
 import type { HackathonLeadCategory, HackathonLeadSegment } from "./types";
 
@@ -48,6 +49,62 @@ function meetsMinCategory(
   minCategory: string,
 ): boolean {
   return (CATEGORY_RANK[leadCategory] ?? 0) >= (CATEGORY_RANK[minCategory] ?? 0);
+}
+
+/** Company keys already PENDING/SENT on this edition (optionally exclude one campaign). */
+export async function loadEditionClaimedCompanyKeys(
+  editionId: string,
+  excludeCampaignId?: string,
+): Promise<Set<string>> {
+  const db = getDb();
+  const campaigns = await db
+    .select({ id: hackathonEmailCampaigns.id })
+    .from(hackathonEmailCampaigns)
+    .where(eq(hackathonEmailCampaigns.editionId, editionId));
+  const ids = campaigns
+    .map((c) => c.id)
+    .filter((id) => id !== excludeCampaignId);
+  if (ids.length === 0) return new Set();
+
+  const rows = await db
+    .select({
+      company: hackathonLeads.company,
+      email: hackathonLeads.email,
+    })
+    .from(hackathonCampaignRecipients)
+    .innerJoin(
+      hackathonLeads,
+      eq(hackathonLeads.id, hackathonCampaignRecipients.leadId),
+    )
+    .where(
+      and(
+        inArray(hackathonCampaignRecipients.campaignId, ids),
+        inArray(hackathonCampaignRecipients.status, ["PENDING", "SENT"]),
+      ),
+    );
+
+  const claimed = new Set<string>();
+  for (const row of rows) {
+    const key = companyOutreachKey(row.company, row.email);
+    if (key) claimed.add(key);
+  }
+  return claimed;
+}
+
+export async function clearCampaignPendingRecipients(
+  campaignId: string,
+): Promise<number> {
+  const db = getDb();
+  const deleted = await db
+    .delete(hackathonCampaignRecipients)
+    .where(
+      and(
+        eq(hackathonCampaignRecipients.campaignId, campaignId),
+        inArray(hackathonCampaignRecipients.status, ["PENDING", "SKIPPED"]),
+      ),
+    )
+    .returning({ id: hackathonCampaignRecipients.id });
+  return deleted.length;
 }
 
 export async function listCampaigns(editionId: string) {
@@ -132,12 +189,17 @@ export async function generateCampaignRecipients(args: {
   campaignId: string;
   /** Replace existing PENDING recipients */
   regenerate?: boolean;
+  /**
+   * Shared edition-wide company claim set (mutated).
+   * Ensures one email per company across the whole launch.
+   */
+  claimedCompanyKeys?: Set<string>;
 }): Promise<GenerateCampaignResult> {
   const db = getDb();
   const campaign = await getCampaign(args.campaignId);
   if (!campaign) throw new Error("campaign_not_found");
   if (
-    !["DRAFT", "READY_FOR_REVIEW", "APPROVED", "PAUSED"].includes(
+    !["DRAFT", "READY_FOR_REVIEW", "APPROVED", "PAUSED", "SENDING"].includes(
       campaign.status,
     )
   ) {
@@ -145,20 +207,14 @@ export async function generateCampaignRecipients(args: {
   }
 
   if (args.regenerate) {
-    await db
-      .delete(hackathonCampaignRecipients)
-      .where(
-        and(
-          eq(hackathonCampaignRecipients.campaignId, args.campaignId),
-          inArray(hackathonCampaignRecipients.status, ["PENDING", "SKIPPED"]),
-        ),
-      );
+    await clearCampaignPendingRecipients(args.campaignId);
   }
 
   const leads = await db
     .select()
     .from(hackathonLeads)
     .where(eq(hackathonLeads.editionId, campaign.editionId))
+    .orderBy(desc(hackathonLeads.score))
     .limit(3000);
 
   const suppressed = await db
@@ -166,6 +222,10 @@ export async function generateCampaignRecipients(args: {
     .from(hackathonSuppressionList);
   const suppressedSet = new Set(suppressed.map((s) => s.emailCanonical));
   const partnerExclusion = await loadOutreachExclusionSet(campaign.editionId);
+
+  const claimed =
+    args.claimedCompanyKeys ??
+    (await loadEditionClaimedCompanyKeys(campaign.editionId, args.campaignId));
 
   const base = partnershipPublicBaseUrl();
   let queued = 0;
@@ -194,6 +254,8 @@ export async function generateCampaignRecipients(args: {
       exclusion: partnerExclusion,
     });
 
+    const companyKey = companyOutreachKey(lead.company, lead.email);
+
     if (!lead.emailValid) {
       status = "SKIPPED";
       skipReason = "invalid_email";
@@ -210,6 +272,9 @@ export async function generateCampaignRecipients(args: {
     } else if (lead.alreadyRegistered) {
       status = "SKIPPED";
       skipReason = "already_registered";
+    } else if (companyKey && claimed.has(companyKey)) {
+      status = "SKIPPED";
+      skipReason = "duplicate_company";
     }
 
     const unsubUrl = `${base}/api/hackathon/email/u/${unsubscribeToken}`;
@@ -257,6 +322,7 @@ export async function generateCampaignRecipients(args: {
     }
 
     if (status === "PENDING") {
+      if (companyKey) claimed.add(companyKey);
       queued += 1;
       rateSum += personalized.personalizationRate;
       rateN += 1;
@@ -367,6 +433,7 @@ export async function prepareJul31CampaignPack(args: {
   ];
 
   const campaigns = [];
+  const claimedCompanyKeys = new Set<string>();
   for (const s of segments) {
     const { id } = await createCampaign({
       editionId: args.editionId,
@@ -380,6 +447,7 @@ export async function prepareJul31CampaignPack(args: {
     const generate = await generateCampaignRecipients({
       campaignId: id,
       regenerate: true,
+      claimedCompanyKeys,
     });
     await scheduleCampaign({
       campaignId: id,
@@ -412,6 +480,7 @@ export async function listCampaignRecipients(args: {
       subject: hackathonCampaignRecipients.personalizedSubject,
       facts: hackathonCampaignRecipients.personalizationFacts,
       email: hackathonLeads.email,
+      company: hackathonLeads.company,
       firstName: hackathonLeads.firstName,
       lastName: hackathonLeads.lastName,
       segment: hackathonLeads.segment,

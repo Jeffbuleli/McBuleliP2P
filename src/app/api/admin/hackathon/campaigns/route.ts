@@ -3,11 +3,13 @@ import { z } from "zod";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 import {
   createCampaign,
+  clearCampaignPendingRecipients,
   generateCampaignRecipients,
   getCampaign,
   getRecipientPreviewHtml,
   listCampaignRecipients,
   listCampaigns,
+  loadEditionClaimedCompanyKeys,
   prepareJul31CampaignPack,
   scheduleCampaign,
   defaultScheduleKinshasaJul31,
@@ -156,14 +158,25 @@ export async function POST(req: Request) {
         );
       }
       const campaigns = await listCampaigns(data.editionId);
+      const eligible = campaigns.filter((c) =>
+        ["DRAFT", "READY_FOR_REVIEW", "APPROVED", "PAUSED", "SENDING"].includes(
+          c.status,
+        ),
+      );
+      // Clear all pending first so company dedupe is fair across segments
+      for (const c of eligible) {
+        await clearCampaignPendingRecipients(c.id);
+      }
+      // Keep SENT companies claimed so regenerate never re-queues them
+      const claimedCompanyKeys = await loadEditionClaimedCompanyKeys(
+        data.editionId,
+      );
       const out = [];
-      for (const c of campaigns) {
-        if (!["DRAFT", "READY_FOR_REVIEW", "APPROVED", "PAUSED", "SENDING"].includes(c.status)) {
-          continue;
-        }
+      for (const c of eligible) {
         const generate = await generateCampaignRecipients({
           campaignId: c.id,
-          regenerate: true,
+          regenerate: false,
+          claimedCompanyKeys,
         });
         out.push({
           id: c.id,
@@ -175,7 +188,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ok: true,
         action: "regenerate_all",
-        note: "Contenus régénérés (partenariat / footer Patty B.).",
+        note: "Contenus régénérés (partenariat / 1 email par entreprise).",
         campaigns: out,
       });
     }

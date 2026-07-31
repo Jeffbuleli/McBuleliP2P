@@ -39,6 +39,58 @@ const GENERIC_LOCAL = new Set([
   "sales",
 ]);
 
+const FREEMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "yahoo.fr",
+  "yahoo.com",
+  "hotmail.com",
+  "hotmail.fr",
+  "outlook.com",
+  "icloud.com",
+  "live.com",
+]);
+
+const WEAK_COMPANY_NAMES = new Set([
+  "n a",
+  "na",
+  "none",
+  "null",
+  "freelance",
+  "independant",
+  "indépendant",
+  "particulier",
+  "self",
+  "moi",
+]);
+
+/**
+ * One outreach key per company for this campaign launch.
+ * Prefer normalized company name; else corporate email domain.
+ * Freemail without usable company → null (person-level only).
+ */
+export function companyOutreachKey(
+  company: string | null | undefined,
+  email: string,
+): string | null {
+  const c = (company ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(sarl|sa|sas|sprl|asbl|ltd|llc|inc|co|congo|rdc)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (c.length >= 2 && !WEAK_COMPANY_NAMES.has(c)) {
+    return `co:${c}`;
+  }
+  const at = email.lastIndexOf("@");
+  if (at <= 0) return null;
+  const domain = email.slice(at + 1).toLowerCase();
+  if (!domain || FREEMAIL_DOMAINS.has(domain)) return null;
+  return `dom:${domain}`;
+}
+
 export function isCompanyStyleLead(args: {
   email: string;
   firstName?: string | null;

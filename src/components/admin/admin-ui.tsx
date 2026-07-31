@@ -149,3 +149,78 @@ export function AdminKpiCard({
   }
   return <div className={adminCls.card}>{inner}</div>;
 }
+
+/** In-app confirm (replaces window.confirm / "mcbuleli.org says…"). */
+export function AdminConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel = "Confirmer",
+  cancelLabel = "Annuler",
+  busy = false,
+  tone = "primary",
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  busy?: boolean;
+  tone?: "primary" | "danger";
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+  const lines = message.split("\n").filter(Boolean);
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4"
+      role="presentation"
+      onClick={busy ? undefined : onCancel}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-confirm-title"
+        className="w-full max-w-md rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p
+          id="admin-confirm-title"
+          className="text-base font-extrabold text-[color:var(--fd-text)]"
+        >
+          {title}
+        </p>
+        <div className="mt-2 space-y-1 text-sm text-[color:var(--fd-muted)]">
+          {lines.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            className={adminCls.btnSecondary}
+            disabled={busy}
+            onClick={onCancel}
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            className={
+              tone === "danger"
+                ? "inline-flex min-h-[44px] items-center justify-center rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-[0.99] disabled:opacity-50"
+                : adminCls.btnPrimary
+            }
+            disabled={busy}
+            onClick={onConfirm}
+          >
+            {busy ? "…" : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

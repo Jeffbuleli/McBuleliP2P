@@ -12,6 +12,7 @@ import {
   hackathonLeads,
 } from "@/db";
 import { isValidLeadEmail } from "./lead-normalize";
+import { companyOutreachKey } from "./lead-outreach-exclude";
 import { sendEmail, canSendViaResendApi, resendSendBlockedReason } from "@/lib/email/send";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 
@@ -226,13 +227,51 @@ export async function sendDailyLeadCampaignBatch(args: {
     return true;
   });
 
+  // Companies already SENT on this edition launch
+  const alreadySentKeys = new Set<string>();
+  const sentRows = await db
+    .select({
+      company: hackathonLeads.company,
+      email: hackathonLeads.email,
+    })
+    .from(hackathonCampaignRecipients)
+    .innerJoin(
+      hackathonLeads,
+      eq(hackathonCampaignRecipients.leadId, hackathonLeads.id),
+    )
+    .where(
+      and(
+        inArray(hackathonCampaignRecipients.campaignId, liveCampaignIds),
+        eq(hackathonCampaignRecipients.status, "SENT"),
+      ),
+    );
+  for (const row of sentRows) {
+    const key = companyOutreachKey(row.company, row.email);
+    if (key) alreadySentKeys.add(key);
+  }
+
   let sent = 0;
   let failed = 0;
   let skipped = 0;
   const samples: DailySendResult["samples"] = [];
+  const batchClaimed = new Set<string>(alreadySentKeys);
 
   for (const row of ranked) {
     if (sent >= limit) break;
+
+    const companyKey = companyOutreachKey(row.company, row.email);
+    if (companyKey && batchClaimed.has(companyKey)) {
+      await db
+        .update(hackathonCampaignRecipients)
+        .set({
+          status: "SKIPPED",
+          skipReason: "duplicate_company",
+          updatedAt: new Date(),
+        })
+        .where(eq(hackathonCampaignRecipients.id, row.recipientId));
+      skipped += 1;
+      continue;
+    }
 
     if (!isValidLeadEmail(row.email)) {
       await db
@@ -292,6 +331,7 @@ export async function sendDailyLeadCampaignBatch(args: {
       });
 
       sent += 1;
+      if (companyKey) batchClaimed.add(companyKey);
       if (samples.length < 8) {
         samples.push({
           email: row.email,

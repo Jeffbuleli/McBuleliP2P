@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { adminCls } from "@/components/admin/admin-ui";
+import { AdminConfirmDialog, adminCls } from "@/components/admin/admin-ui";
 
 type LeadRow = {
   id: string;
@@ -19,10 +19,13 @@ type LeadRow = {
   priority: string;
   qualificationReason: string | null;
   recommendedProfile: string | null;
-  scoreBreakdown: {
-    total: number;
-    criteria: { key: string; label: string; points: number }[];
-  } | null;
+  scoreBreakdown:
+    | {
+        total: number;
+        criteria: { key: string; label: string; points: number }[];
+      }
+    | string
+    | null;
   lifecycle: string;
   emailValid: boolean;
   suppressed: boolean;
@@ -104,6 +107,25 @@ function LeadScoreRows({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const breakdown =
+    typeof l.scoreBreakdown === "string"
+      ? (() => {
+          try {
+            return JSON.parse(l.scoreBreakdown) as LeadRow["scoreBreakdown"];
+          } catch {
+            return null;
+          }
+        })()
+      : l.scoreBreakdown;
+  const criteria = Array.isArray(breakdown?.criteria) ? breakdown.criteria : [];
+  const reason =
+    typeof l.qualificationReason === "string" &&
+    !l.qualificationReason.trim().startsWith("{")
+      ? l.qualificationReason
+      : criteria.length
+        ? `Score ${breakdown?.total ?? l.score}/100 : ${criteria.map((c) => `${c.label} (+${c.points})`).join(" ; ")}.`
+        : "Pas encore scorés.";
+
   return (
     <>
       <tr className="border-b border-[color:var(--fd-border)]/60">
@@ -131,7 +153,7 @@ function LeadScoreRows({
             className="text-xs font-bold text-[color:var(--fd-primary)]"
             onClick={onToggle}
           >
-            {expanded ? "Masquer" : "Score"}
+            {expanded ? "Masquer" : "Détail"}
           </button>
         </td>
       </tr>
@@ -141,12 +163,10 @@ function LeadScoreRows({
             <p className="font-semibold">
               {l.recommendedProfile ?? "—"} · {l.lifecycle}
             </p>
-            <p className="mt-1 text-[color:var(--fd-muted)]">
-              {l.qualificationReason ?? "Pas encore scorés."}
-            </p>
-            {l.scoreBreakdown?.criteria?.length ? (
+            <p className="mt-1 text-[color:var(--fd-muted)]">{reason}</p>
+            {criteria.length ? (
               <ul className="mt-2 list-disc pl-4">
-                {l.scoreBreakdown.criteria.map((c) => (
+                {criteria.map((c) => (
                   <li key={c.key}>
                     {c.label} <span className="font-bold">+{c.points}</span>
                   </li>
@@ -177,6 +197,7 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
   const [category, setCategory] = useState("");
   const [segment, setSegment] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [confirmImport, setConfirmImport] = useState(false);
 
   const loadStats = useCallback(async () => {
     if (!editionId) return;
@@ -251,17 +272,12 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
 
   async function runCommit() {
     if (!isAdmin || !file || !editionId || !summary) return;
-    if (
-      !window.confirm(
-        `Confirmer l'import ?\nNouveaux: ${summary.newProspects}\n` +
-          (updateExisting
-            ? `MàJ existants: ${summary.existingLeads + summary.alreadyContacted}\n`
-            : "") +
-          `Invalides/exclus seront ignorés.`,
-      )
-    ) {
-      return;
-    }
+    setConfirmImport(true);
+  }
+
+  async function doCommit() {
+    if (!isAdmin || !file || !editionId || !summary) return;
+    setConfirmImport(false);
     setBusy(true);
     setErr(null);
     setCommitMsg(null);
@@ -338,6 +354,29 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
 
   return (
     <div className="space-y-4">
+      <AdminConfirmDialog
+        open={confirmImport && Boolean(summary)}
+        title="Confirmer l'import"
+        message={
+          summary
+            ? [
+                `Nouveaux prospects : ${summary.newProspects}`,
+                updateExisting
+                  ? `Mise à jour des existants : ${summary.existingLeads + summary.alreadyContacted}`
+                  : null,
+                "Les lignes invalides / exclues seront ignorées.",
+              ]
+                .filter(Boolean)
+                .join("\n")
+            : ""
+        }
+        confirmLabel="Importer"
+        busy={busy}
+        onCancel={() => {
+          if (!busy) setConfirmImport(false);
+        }}
+        onConfirm={() => void doCommit()}
+      />
       {stats ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
