@@ -55,12 +55,20 @@ export async function POST(req: Request) {
     return { activated: false as const };
   });
 
+  let next = "/app";
+  if (hackathon.activated) {
+    next = hackathon.payUrl ?? "/hackathon#register";
+  } else if (
+    typeof consumed.meta?.returnPath === "string" &&
+    consumed.meta.returnPath.startsWith("/")
+  ) {
+    next = consumed.meta.returnPath;
+  }
+
   const jwt = await signSessionToken(consumed.userId, u?.sessionVersion ?? 0);
   const res = NextResponse.json({
     ok: true,
-    next: hackathon.activated
-      ? hackathon.payUrl ?? "/hackathon#register"
-      : "/app",
+    next,
     hackathonActivated: hackathon.activated,
   });
   res.cookies.set(

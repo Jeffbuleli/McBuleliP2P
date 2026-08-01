@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   hkField,
@@ -14,6 +14,10 @@ import {
   HackathonPoweredBy,
 } from "@/components/hackathon/hackathon-process-card";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
+import {
+  detectCodMobileMethodFromPhone,
+  freshpayMethodLabel,
+} from "@/lib/cod-mobile-providers";
 import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
@@ -48,6 +52,15 @@ export function HackathonPayClient({
   const [phoneValue, setPhoneValue] = useState(
     normalizeCodPhoneNumber(phone) || phone,
   );
+  const detectedMethod = useMemo(() => {
+    const n = normalizeCodPhoneNumber(phoneValue) || phoneValue;
+    return detectCodMobileMethodFromPhone(n);
+  }, [phoneValue]);
+  const [paymentMethod, setPaymentMethod] = useState(() => {
+    const n = normalizeCodPhoneNumber(phone) || phone;
+    const d = detectCodMobileMethodFromPhone(n);
+    return d === "airtel" || d === "mpesa" || d === "orange" ? d : "orange";
+  });
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,10 +76,24 @@ export function HackathonPayClient({
       setBusy(false);
       return;
     }
+    const network = detectCodMobileMethodFromPhone(normalized);
+    if (network === "africell") {
+      setErr(
+        isFr
+          ? "Ce numéro semble Africell. Utilisez un numéro Orange, M-Pesa ou Airtel pour payer."
+          : "This number looks like Africell. Use an Orange, M-Pesa or Airtel number to pay.",
+      );
+      setBusy(false);
+      return;
+    }
+    const method =
+      network === "airtel" || network === "mpesa" || network === "orange"
+        ? network
+        : paymentMethod;
     setPhoneValue(normalized);
-    const fd = new FormData(e.currentTarget);
+    setPaymentMethod(method);
     const body = {
-      paymentMethod: String(fd.get("paymentMethod") ?? "orange"),
+      paymentMethod: method,
       phone: normalized,
     };
     try {
@@ -198,7 +225,15 @@ export function HackathonPayClient({
               inputMode="tel"
               autoComplete="tel"
               value={phoneValue}
-              onChange={(e) => setPhoneValue(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setPhoneValue(v);
+                const n = normalizeCodPhoneNumber(v);
+                const d = detectCodMobileMethodFromPhone(n || v);
+                if (d === "airtel" || d === "mpesa" || d === "orange") {
+                  setPaymentMethod(d);
+                }
+              }}
               onBlur={() => {
                 const n = normalizeCodPhoneNumber(phoneValue);
                 if (n) setPhoneValue(n);
@@ -207,9 +242,13 @@ export function HackathonPayClient({
               placeholder="2438XXXXXXXX"
             />
             <p className="mt-1 text-xs text-[color:var(--fd-muted)]">
-              {isFr
-                ? "Le numéro doit commencer par 243."
-                : "The number must start with 243."}
+              {detectedMethod && detectedMethod !== "africell"
+                ? isFr
+                  ? `Opérateur détecté : ${freshpayMethodLabel(detectedMethod, "fr")} (appliqué automatiquement).`
+                  : `Detected network: ${freshpayMethodLabel(detectedMethod, "en")} (applied automatically).`
+                : isFr
+                  ? "Le numéro doit commencer par 243. L'opérateur est détecté automatiquement."
+                  : "The number must start with 243. Network is detected automatically."}
             </p>
           </div>
           <div>
@@ -221,7 +260,8 @@ export function HackathonPayClient({
               name="paymentMethod"
               className={hkSelect}
               style={hkSelectChevronStyle}
-              defaultValue="orange"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
             >
               <option value="orange">Orange Money</option>
               <option value="mpesa">M-Pesa</option>
@@ -229,7 +269,11 @@ export function HackathonPayClient({
               <option value="usdt">USDT ({isFr ? "bientôt" : "soon"})</option>
             </select>
           </div>
-          {err ? <p className="text-sm font-semibold text-[color:var(--hk-err,#b91c1c)]">{err}</p> : null}
+          {err ? (
+            <p className="text-sm font-semibold text-[color:var(--hk-err,#b91c1c)]">
+              {err}
+            </p>
+          ) : null}
           <button
             type="submit"
             disabled={busy}

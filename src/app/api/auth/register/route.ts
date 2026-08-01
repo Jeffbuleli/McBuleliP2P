@@ -53,7 +53,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, referralCode, countryCode, displayName } = parsed.data;
+    const { email, password, referralCode, countryCode, displayName, returnPath } =
+      parsed.data;
     const db = getDb();
 
     const emailCheck = await assertEmailAvailable({ rawEmail: email });
@@ -101,7 +102,24 @@ export async function POST(req: Request) {
       });
 
     const locale = await resolveEmailLocale(req);
-    void sendEmailVerification(created.id, created.email, locale).catch((err) => {
+    const { safeAppRedirectPath } = await import("@/lib/safe-app-path");
+    const verifyMeta: Record<string, unknown> = {};
+    if (returnPath?.trim()) {
+      const safe = safeAppRedirectPath(returnPath.trim());
+      if (safe.startsWith("/hackathon")) {
+        verifyMeta.returnPath = safe.includes("#")
+          ? safe
+          : `${safe}#register`;
+      } else {
+        verifyMeta.returnPath = safe;
+      }
+    }
+    void sendEmailVerification(
+      created.id,
+      created.email,
+      locale,
+      Object.keys(verifyMeta).length ? verifyMeta : undefined,
+    ).catch((err) => {
       console.warn("[auth/register] verification email failed", err);
     });
 

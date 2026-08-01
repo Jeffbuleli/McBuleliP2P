@@ -7,6 +7,10 @@ import {
   AuthMarketingShell,
   AuthPageFooter,
 } from "@/components/auth/auth-marketing-shell";
+import {
+  clearAuthReturnPath,
+  peekAuthReturnPath,
+} from "@/lib/auth-return-path";
 import { useI18n } from "@/components/i18n-provider";
 import { clientErrorText } from "@/lib/client-error-text";
 
@@ -37,10 +41,18 @@ function VerifyEmailInner() {
           return;
         }
         setStatus("ok");
-        const next =
+        let next =
           typeof data.next === "string" && data.next.startsWith("/")
             ? data.next
             : "/app";
+        // Resume hackathon inscription after account-only signup.
+        if (next === "/app") {
+          const stored = peekAuthReturnPath();
+          if (stored?.startsWith("/hackathon")) {
+            next = stored.includes("#") ? stored : `${stored}#register`;
+          }
+        }
+        clearAuthReturnPath();
         setTimeout(() => router.replace(next), 1200);
       })
       .catch(() => {

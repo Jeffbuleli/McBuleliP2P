@@ -247,6 +247,9 @@ function HackathonParticipantFormInner({
                 ? "Inscription impossible. Vérifiez vos infos et réessayez."
                 : "Registration failed. Check your details and try again."),
           );
+          if (json.payUrl) {
+            setPayUrl(json.payUrl);
+          }
         }
         return;
       }
@@ -334,39 +337,48 @@ function HackathonParticipantFormInner({
           <p className="mt-1 text-[color:var(--fd-muted)]">
             {sessionVerified
               ? isFr
-                ? `Compte vérifié · ${sessionEmail}. Vos infos sont préremplies - finalisez et payez en quelques clics.`
-                : `Verified account · ${sessionEmail}. Details are prefilled - finish and pay in a few taps.`
+                ? `Compte vérifié · ${sessionEmail}. Ce compte seul ne réserve pas de place : finalisez le formulaire ci-dessous et payez pour être sur la liste des inscrits.`
+                : `Verified account · ${sessionEmail}. An account alone does not reserve a seat: finish the form below and pay to appear on the participants list.`
               : isFr
-                ? `Session active · ${sessionEmail}. Confirmez votre e-mail McBuleli pour accélérer le paiement.`
-                : `Active session · ${sessionEmail}. Verify your McBuleli email to speed up payment.`}
+                ? `Session active · ${sessionEmail}. Confirmez votre e-mail McBuleli, puis finalisez le formulaire + paiement.`
+                : `Active session · ${sessionEmail}. Verify your McBuleli email, then finish the form + payment.`}
           </p>
         </div>
       ) : (
-        <p className="rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 py-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
-          {isFr ? (
-            <>
-              Déjà un compte McBuleli ?{" "}
-              <Link
-                href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
-                className="font-semibold text-[color:var(--fd-primary)]"
-              >
-                Connectez-vous
-              </Link>{" "}
-              pour préremplir le formulaire.
-            </>
-          ) : (
-            <>
-              Already have a McBuleli account?{" "}
-              <Link
-                href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
-                className="font-semibold text-[color:var(--fd-primary)]"
-              >
-                Sign in
-              </Link>{" "}
-              to prefill this form.
-            </>
-          )}
-        </p>
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-[color:var(--hk-warn-text,#92400e)]">
+          <p className="font-bold">
+            {isFr
+              ? "Important : créer un compte McBuleli ≠ inscription hackathon"
+              : "Important: creating a McBuleli account ≠ hackathon registration"}
+          </p>
+          <p className="mt-1">
+            {isFr ? (
+              <>
+                Remplissez ce formulaire puis payez (Mobile Money) pour être inscrit.
+                Déjà un compte ?{" "}
+                <Link
+                  href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                  className="font-semibold underline"
+                >
+                  Connectez-vous
+                </Link>{" "}
+                pour préremplir.
+              </>
+            ) : (
+              <>
+                Fill this form then pay (Mobile Money) to be registered.
+                Already have an account?{" "}
+                <Link
+                  href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                  className="font-semibold underline"
+                >
+                  Sign in
+                </Link>{" "}
+                to prefill.
+              </>
+            )}
+          </p>
+        </div>
       )}
 
       {existingReg?.paymentStatus === "paid" && existingReg.ticketCode ? (

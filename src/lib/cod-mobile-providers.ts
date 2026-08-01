@@ -26,6 +26,10 @@ export const COD_MOBILE_PREFIX_MAP: { prefix: string; method: string }[] = [
   { prefix: "97", method: "airtel" },
   { prefix: "98", method: "airtel" },
   { prefix: "99", method: "airtel" },
+  { prefix: "96", method: "airtel" },
+  // Africell (not on PawaPay rail — detected so we can show a clear error)
+  { prefix: "90", method: "africell" },
+  { prefix: "91", method: "africell" },
 ].sort((a, b) => b.prefix.length - a.prefix.length);
 
 const MTN_COD_RE = /^MTN/i;
@@ -89,6 +93,9 @@ export function resolveFreshpayMethod(
 ): { method: string; detected: string | null; matched: boolean } {
   const detected = detectCodMobileMethodFromPhone(phone);
   const selected = toFreshpayMethod(selectedProvider);
+  if (detected === "africell") {
+    return { method: "africell", detected, matched: false };
+  }
   if (detected) {
     return { method: detected, detected, matched: detected === selected };
   }

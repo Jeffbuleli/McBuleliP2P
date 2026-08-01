@@ -474,6 +474,7 @@ export async function registerParticipant(raw: unknown) {
   }
 
   const paymentMethod = data.paymentMethod!;
+  const retryToken = existing[0]?.paymentToken || generatePaymentToken();
   let registrationId = existing[0]?.id;
   if (registrationId) {
     await db
@@ -482,7 +483,7 @@ export async function registerParticipant(raw: unknown) {
         ...profile,
         paymentMethod,
         paymentStatus: "pending",
-        paymentToken: null,
+        paymentToken: retryToken,
         holdExpiresAt: null,
         updatedAt: new Date(),
       })
@@ -496,17 +497,35 @@ export async function registerParticipant(raw: unknown) {
         ...profile,
         paymentMethod,
         paymentStatus: "pending",
+        paymentToken: retryToken,
       })
       .returning({ id: hackathonRegistrations.id });
     registrationId = created.id;
   }
 
-  return startCheckout({
+  const checkout = await startCheckout({
     registrationId: registrationId!,
     priceUsd,
     phone,
     paymentMethod: paymentMethod as "orange" | "mpesa" | "airtel",
   });
+  if (!checkout.ok) {
+    // Keep reserved+token so the user can retry from /hackathon/pay/[token].
+    await db
+      .update(hackathonRegistrations)
+      .set({
+        paymentStatus: "failed",
+        paymentToken: retryToken,
+        updatedAt: new Date(),
+      })
+      .where(eq(hackathonRegistrations.id, registrationId!));
+    return {
+      ...checkout,
+      paymentToken: retryToken,
+      payUrl: payLaterPublicUrl(retryToken),
+    };
+  }
+  return checkout;
 }
 
 export async function payReservedRegistration(token: string, raw: unknown) {

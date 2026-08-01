@@ -46,6 +46,14 @@ export async function initiateHackathonMomoPayment(args: {
   const amount = formatPawapayAmount(amountNum);
   const reference = randomUUID();
   const network = resolvePawapayProvider(phone, momoNetworkFromMethod(args.paymentMethod));
+  if (network.method === "africell") {
+    return {
+      ok: false,
+      error: "payment_rejected",
+      message:
+        "Ce numéro semble Africell (Afrimoney). Le paiement hackathon accepte Orange Money, M-Pesa ou Airtel Money uniquement - utilisez un numéro de l'un de ces opérateurs.",
+    };
+  }
   const providerId = toPawapayProviderId(network.method);
 
   const db = getDb();
@@ -74,10 +82,18 @@ export async function initiateHackathonMomoPayment(args: {
   });
 
   if (!r.accepted) {
-    const msg =
+    let msg =
       r.response.failureReason?.failureMessage ??
       r.response.failureReason?.failureCode ??
       "payment_rejected";
+    const lower = String(msg).toLowerCase();
+    if (
+      lower.includes("does not have an account") ||
+      lower.includes("not active")
+    ) {
+      msg =
+        "Échec Mobile Money : le numéro n'est pas actif sur l'opérateur choisi (Orange / M-Pesa / Airtel). Vérifiez le préfixe (ex. 89 Orange, 81–83 M-Pesa, 97–99 Airtel) et réessayez.";
+    }
     await db
       .update(hackathonPayments)
       .set({

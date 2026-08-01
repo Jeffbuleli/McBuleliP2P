@@ -3,7 +3,6 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  clearAuthReturnPath,
   loginHrefFor,
   resolveAuthReturnPath,
   storeAuthReturnPath,
@@ -121,6 +120,7 @@ function RegisterForm() {
               ? { referralCode: referralCode.trim().toUpperCase() }
               : {}),
             ...(turnstileToken ? { turnstileToken } : {}),
+            ...(nextPath ? { returnPath: nextPath } : {}),
           }),
           credentials: "same-origin",
         },
@@ -150,7 +150,8 @@ function RegisterForm() {
         setLoading(false);
         return;
       }
-      clearAuthReturnPath();
+      // Keep return path through email verify so hackathon users land on #register / pay.
+      storeAuthReturnPath(nextPath);
       window.location.replace("/verify-email/pending");
     } catch (err) {
       const aborted =

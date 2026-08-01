@@ -32,6 +32,8 @@ export const registerSchema = loginSchema.extend({
     .refine((v) => v === "OTHER" || /^[A-Z]{2}$/.test(v), "Invalid country code")
     .optional(),
   referralCode: z.string().trim().min(4).max(16).optional(),
+  /** Safe in-app path to resume after email verify (e.g. /hackathon#register). */
+  returnPath: z.string().trim().max(500).optional(),
 });
 
 const networkEnum = z.enum(["TRC20", "ERC20", "BEP20"]);
