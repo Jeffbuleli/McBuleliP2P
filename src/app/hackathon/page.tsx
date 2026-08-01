@@ -126,7 +126,7 @@ export default async function HackathonPage() {
 
   return (
     <>
-      <LandingTopBar authReturnPath="/hackathon" />
+      <LandingTopBar authReturnPath="/hackathon#register" />
       {data ? (
         <>
           {usedDemo ? (
