@@ -35,9 +35,10 @@ export function getMetadataOrigin(): string {
 }
 
 export function getAppAbsoluteUrl(path: string): string {
-  const origin = getAppOrigin();
+  // Never emit path-only URLs — email clients resolve them as http:///path
+  const origin = getAppOrigin() || CANONICAL_PRODUCTION_ORIGIN;
   const p = path.startsWith("/") ? path : `/${path}`;
-  return origin ? `${origin}${p}` : p;
+  return `${origin}${p}`;
 }
 
 /** Client-safe canonical host for PWA install prompts. */

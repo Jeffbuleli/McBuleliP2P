@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { getAppAbsoluteUrl } from "@/lib/app-url";
 import { getDb, hackathonEditions, hackathonRegistrations } from "@/db";
 import { EMAIL_BRAND, logoUrl } from "@/lib/email/config";
 import { renderMcBuleliEmail } from "@/lib/email/layout";
@@ -9,6 +10,13 @@ import {
 } from "@/lib/hackathon/constants";
 import { passPublicUrl } from "@/lib/hackathon/access";
 import { payLaterPublicUrl } from "@/lib/hackathon/service";
+
+/** Always https absolute — never path-only (breaks mail clients as http:///…). */
+function absolutePayUrl(token: string): string {
+  const url = payLaterPublicUrl(token);
+  if (/^https?:\/\//i.test(url)) return url;
+  return getAppAbsoluteUrl(`/hackathon/pay/${encodeURIComponent(token)}`);
+}
 
 function venueLabel(edition: { venue: string | null; city: string } | null | undefined) {
   const venue = edition?.venue?.trim();
@@ -95,7 +103,7 @@ export async function sendHackathonReserveEmail(args: {
     .limit(1);
 
   const isFr = reg.locale !== "en";
-  const payUrl = payLaterPublicUrl(reg.paymentToken);
+  const payUrl = absolutePayUrl(reg.paymentToken);
   const editionName = isFr
     ? (edition?.nameFr ?? "McBuleli Hackathon")
     : (edition?.nameEn ?? "McBuleli Hackathon");
@@ -160,7 +168,7 @@ export async function sendHackathonHoldReminderEmail(args: {
     .limit(1);
 
   const isFr = reg.locale !== "en";
-  const payUrl = payLaterPublicUrl(reg.paymentToken);
+  const payUrl = absolutePayUrl(reg.paymentToken);
   const editionName = isFr
     ? (edition?.nameFr ?? "McBuleli Hackathon")
     : (edition?.nameEn ?? "McBuleli Hackathon");

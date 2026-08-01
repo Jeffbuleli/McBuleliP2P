@@ -11,6 +11,7 @@ import {
 } from "@/lib/email/email-inline-images";
 import type { EmailCopyBlock } from "@/lib/email/copy";
 import type { EmailDetailRow } from "@/lib/email/wallet-email-details";
+import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
 import { SUPPORT_X } from "@/lib/support-contact";
 
 function escHtml(value: string): string {
@@ -86,7 +87,14 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     useInlineImages = false,
     extraHtml,
   } = args;
-  const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(actionUrl);
+  // Guard: relative actionUrl becomes http:///… in many mail clients.
+  const absoluteActionUrl =
+    !resendVariables &&
+    actionUrl &&
+    !/^https?:\/\//i.test(actionUrl)
+      ? `${CANONICAL_PRODUCTION_ORIGIN}${actionUrl.startsWith("/") ? "" : "/"}${actionUrl}`
+      : actionUrl;
+  const href = resendVariables ? "{{{ACTION_URL}}}" : escHtml(absoluteActionUrl);
   const bodyHtml = resendVariables
     ? copy.body.replace(/\{\{\{NEW_EMAIL\}\}\}/g, "{{{NEW_EMAIL}}}")
     : escHtml(copy.body);
@@ -228,7 +236,7 @@ export function renderMcBuleliEmail(args: McBuleliEmailLayoutArgs): {
     copy.body,
     detailText,
     "",
-    `${copy.cta}: ${actionUrl}`,
+    `${copy.cta}: ${absoluteActionUrl}`,
     copy.expiry ?? "",
     "",
     `${copy.footerHelp} ${EMAIL_FOOTER.supportEmail}`,
