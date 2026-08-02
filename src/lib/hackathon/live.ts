@@ -11,6 +11,7 @@ import {
   hackathonProgramDays,
 } from "@/lib/hackathon/event-content";
 import { getFeaturedEditionRow } from "@/lib/hackathon/hub";
+import { getLivePresentationPayload } from "@/lib/hackathon/slides/session";
 import {
   TEAM_STATUS_LABELS_EN,
   TEAM_STATUS_LABELS_FR,
@@ -115,6 +116,13 @@ export async function buildLivePayload() {
 
   const announcement = pinned ?? latest ?? null;
 
+  let presentation = null;
+  try {
+    presentation = await getLivePresentationPayload();
+  } catch {
+    presentation = null;
+  }
+
   return {
     edition: {
       id: edition.id,
@@ -142,6 +150,7 @@ export async function buildLivePayload() {
       labelFr: TEAM_STATUS_LABELS_FR[t.status as TeamStatus] ?? t.status,
       labelEn: TEAM_STATUS_LABELS_EN[t.status as TeamStatus] ?? t.status,
     })),
+    presentation,
     serverTime: new Date().toISOString(),
   };
 }

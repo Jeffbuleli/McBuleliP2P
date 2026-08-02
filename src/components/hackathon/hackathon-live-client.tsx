@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   HkPage,
   HkSection,
@@ -8,6 +10,20 @@ import {
   HkStatusPill,
   useHkLocale,
 } from "@/components/hackathon/hk-ui";
+import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
+import type { HackathonSlide } from "@/lib/hackathon/slides/types";
+
+type LivePresentation = {
+  status: "live";
+  deckSlug: string;
+  deckTitleFr: string;
+  deckTitleEn: string;
+  slideIndex: number;
+  totalSlides: number;
+  speakerLabel: string | null;
+  slide: HackathonSlide;
+  updatedAt: string;
+};
 
 type LivePayload = {
   edition: {
@@ -41,6 +57,7 @@ type LivePayload = {
     labelFr: string;
     labelEn?: string;
   }>;
+  presentation?: LivePresentation | null;
   serverTime: string;
 };
 
@@ -54,17 +71,77 @@ function formatCountdown(deadlineIso: string | null, now: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function LiveProjector({
+  presentation,
+  isFr,
+}: {
+  presentation: LivePresentation;
+  isFr: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex flex-col bg-[color:var(--hk-page,#fafaf8)]">
+      <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+            McBuleli Live · On Air
+          </p>
+          <p className="truncate text-sm font-bold text-[color:var(--hk-text)]">
+            {isFr ? presentation.deckTitleFr : presentation.deckTitleEn}
+            {presentation.speakerLabel
+              ? ` · ${presentation.speakerLabel}`
+              : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-sm tabular-nums text-[color:var(--hk-muted)]">
+            {presentation.slideIndex + 1} / {presentation.totalSlides}
+          </span>
+          <Link
+            href="/hackathon/slides"
+            className="text-xs font-semibold text-[color:var(--hk-accent)] hover:underline"
+          >
+            Slides
+          </Link>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 px-3 pb-4 sm:px-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={presentation.slide.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="mx-auto h-full max-w-6xl"
+          >
+            <HackathonSlideFrame
+              slide={presentation.slide}
+              revealQuiz={false}
+              hideQuizHint
+              className="h-full"
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const isFr = useHkLocale();
   const [data, setData] = useState(initial);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(0);
+
+  const onAir = data.presentation?.status === "live";
 
   useEffect(() => {
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
+    const intervalMs = onAir ? 2000 : 15000;
     const poll = setInterval(async () => {
       try {
         const res = await fetch("/api/hackathon/live");
@@ -74,9 +151,9 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
       } catch {
         /* ignore */
       }
-    }, 15000);
+    }, intervalMs);
     return () => clearInterval(poll);
-  }, []);
+  }, [onAir]);
 
   const countdown = useMemo(
     () => formatCountdown(data.edition.submissionDeadlineAt, now),
@@ -91,6 +168,14 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
     return [...map.entries()];
   }, [data.teams]);
 
+  if (onAir && data.presentation) {
+    return (
+      <div className="min-h-dvh">
+        <LiveProjector presentation={data.presentation} isFr={isFr} />
+      </div>
+    );
+  }
+
   return (
     <HkShell authReturnPath="/hackathon/live">
       <HkPage
@@ -102,13 +187,21 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
             : "Display wall - refreshes every 15 seconds."
         }
         actions={
-          <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-3 text-right shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
-              {isFr ? "Clôture livrables" : "Submission deadline"}
-            </p>
-            <p className="mt-1 font-mono text-3xl font-black tabular-nums text-[color:var(--hk-accent,var(--fd-primary))] sm:text-4xl">
-              {countdown}
-            </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <Link
+              href="/hackathon/slides"
+              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+            >
+              Slides
+            </Link>
+            <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-3 text-right shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
+                {isFr ? "Clôture livrables" : "Submission deadline"}
+              </p>
+              <p className="mt-1 font-mono text-3xl font-black tabular-nums text-[color:var(--hk-accent,var(--fd-primary))] sm:text-4xl">
+                {countdown}
+              </p>
+            </div>
           </div>
         }
       >

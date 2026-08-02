@@ -5135,6 +5135,38 @@ export const hackathonCampaignEvents = pgTable(
   ],
 );
 
+/**
+ * Speaker slide session for /hackathon/slides → /hackathon/live projector mode.
+ * One row per edition (upsert). status: idle | live
+ */
+export const hackathonSlideSessions = pgTable(
+  "hackathon_slide_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" })
+      .unique(),
+    deckSlug: varchar("deck_slug", { length: 128 }),
+    slideIndex: integer("slide_index").notNull().default(0),
+    /** idle | live */
+    status: varchar("status", { length: 16 }).notNull().default("idle"),
+    speakerLabel: varchar("speaker_label", { length: 160 }),
+    updatedByUserId: uuid("updated_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("hackathon_slide_sessions_status_idx").on(t.status, t.updatedAt),
+  ],
+);
+
 /** Partnership RDV on McBuleli Meet (live.mcbuleli.org) - no Academy enrollment. */
 export const partnerMeets = pgTable(
   "partner_meets",
