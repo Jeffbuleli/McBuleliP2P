@@ -80,7 +80,7 @@ function LiveProjector({
 }) {
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[color:var(--hk-page,#fafaf8)]">
-      <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-4 py-3 backdrop-blur-sm sm:px-6">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
             McBuleli Live · On Air

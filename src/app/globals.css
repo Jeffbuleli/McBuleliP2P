@@ -797,6 +797,25 @@ html[data-hk-theme="dark"] .hackathon-theme {
   --fd-mint-deep: #243830;
   color-scheme: dark;
 }
+
+/* Hackathon slides — theme-aware soft fill (badge/ticket language) */
+.hk-slide-card {
+  --slide-soft: color-mix(in srgb, var(--slide-soft-raw, #eaf6ee) 82%, var(--hk-surface));
+  --slide-deep: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 42%, var(--hk-text));
+  --slide-glow: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 22%, transparent);
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-slide-card,
+html[data-hk-theme="dark"] .hackathon-theme .hk-slide-card {
+  --slide-soft: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 18%, var(--hk-surface));
+  --slide-deep: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 35%, #eef2ef);
+  --slide-glow: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 32%, transparent);
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-slide-card .hk-slide-illu,
+html[data-hk-theme="dark"] .hackathon-theme .hk-slide-card .hk-slide-illu {
+  /* Soft SVG panels stay readable on dark surfaces */
+  --slide-soft: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 22%, #1a2420);
+}
+
 .hackathon-theme[data-hk-theme="dark"] .fd-app-topbar,
 html[data-hk-theme="dark"] .hackathon-theme .fd-app-topbar {
   border-color: rgba(94, 201, 138, 0.18);
