@@ -126,8 +126,8 @@ export function PartnerMeetLanding({
           </div>
           {guestJoinExpired && !showHostLink ? (
             <p className={styles.closedHint}>
-              RDV terminé (plus d&apos;1 h). Seul l&apos;hôte ou un admin peut
-              relancer la salle.
+              Fenêtre de session terminée. Seul l&apos;hôte ou un admin peut
+              relancer la salle — ensuite les participants pourront rejoindre.
             </p>
           ) : null}
         </header>

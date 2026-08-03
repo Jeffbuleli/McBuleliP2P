@@ -478,13 +478,30 @@ export async function resolvePartnerMeetJoinUrl(args: {
     return { ok: false, code: "partner_meet_forbidden" };
   }
 
-  // After 1h past scheduled start: guests blocked; host / staff may relaunch.
+  // After guest window: only host / staff may enter; guests blocked.
+  // Window = durationMinutes + 30 min grace (formation sessions need > 1h).
   if (
     !wantsHost &&
     isPartnerMeetGuestJoinExpired(args.meet) &&
     !canHostPartnerMeet(args)
   ) {
     return { ok: false, code: "partner_meet_closed" };
+  }
+
+  // Host relaunch: bump scheduledAt so learners can rejoin during the new window.
+  if (wantsHost && isPartnerMeetGuestJoinExpired(args.meet)) {
+    const db = getDb();
+    const now = new Date();
+    await db
+      .update(partnerMeets)
+      .set({
+        scheduledAt: now,
+        status: "confirmed",
+        updatedAt: now,
+      })
+      .where(eq(partnerMeets.id, args.meet.id));
+    args.meet.scheduledAt = now;
+    args.meet.status = "confirmed";
   }
 
   const effectiveMode: LiveJoinMode = wantsHost

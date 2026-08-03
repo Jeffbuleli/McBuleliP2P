@@ -1,9 +1,13 @@
-/** Guest join window after scheduled start (host/admin may still relaunch after). */
+/** Fallback when duration is unknown (legacy partnership RDVs). */
 export const PARTNER_MEET_GUEST_JOIN_WINDOW_MS = 60 * 60 * 1000;
+
+/** Grace after scheduled end so late rejoins still work. */
+const PARTNER_MEET_GUEST_GRACE_MS = 30 * 60 * 1000;
 
 type MeetTimingInput = {
   scheduledAt?: Date | string | null;
   status?: string | null;
+  durationMinutes?: number | null;
 };
 
 export function partnerMeetScheduledMs(
@@ -14,7 +18,18 @@ export function partnerMeetScheduledMs(
   return Number.isFinite(t) ? t : null;
 }
 
-/** Past the 1h guest window after scheduled start. */
+/** Guest join window = session duration + 30 min grace (min 60 min). */
+export function partnerMeetGuestWindowMs(
+  meet: Pick<MeetTimingInput, "durationMinutes">,
+): number {
+  const mins = meet.durationMinutes;
+  if (typeof mins === "number" && Number.isFinite(mins) && mins > 0) {
+    return Math.max(60, mins) * 60 * 1000 + PARTNER_MEET_GUEST_GRACE_MS;
+  }
+  return PARTNER_MEET_GUEST_JOIN_WINDOW_MS;
+}
+
+/** Past the guest window after scheduled start. */
 export function isPartnerMeetGuestJoinExpired(
   meet: MeetTimingInput,
   nowMs: number = Date.now(),
@@ -22,7 +37,7 @@ export function isPartnerMeetGuestJoinExpired(
   if (meet.status === "done" || meet.status === "cancelled") return true;
   const start = partnerMeetScheduledMs(meet);
   if (start == null) return false;
-  return nowMs - start >= PARTNER_MEET_GUEST_JOIN_WINDOW_MS;
+  return nowMs - start >= partnerMeetGuestWindowMs(meet);
 }
 
 export function isPartnerMeetInProgress(
@@ -32,7 +47,7 @@ export function isPartnerMeetInProgress(
   if (meet.status === "cancelled" || meet.status === "done") return false;
   const start = partnerMeetScheduledMs(meet);
   if (start == null) return false;
-  return nowMs >= start && nowMs - start < PARTNER_MEET_GUEST_JOIN_WINDOW_MS;
+  return nowMs >= start && nowMs - start < partnerMeetGuestWindowMs(meet);
 }
 
 export function normalizeMeetDisplayText(s: string): string {
