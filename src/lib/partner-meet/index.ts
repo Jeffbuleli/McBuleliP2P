@@ -207,6 +207,54 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     notes:
       "Créneau à fixer : mardi (idéalement 28 juillet 2026) entre 10h00 et 15h00 Kinshasa - visio McBuleli Meet.",
   },
+  "fintech-medias-partenariat": {
+    slug: "fintech-medias-partenariat",
+    title: "McBuleli × Fintech Medias - RDV partenariat",
+    partnerName: "Fintech Medias",
+    partnerEmail: "contact@fintechmedias.cd",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 45,
+    status: "confirmed",
+    scheduledAt: new Date("2026-08-01T10:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "contact@fintechmedias.cd",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Rôle Fintech Medias : Partenaire Média FinTech (couverture & relais)",
+      "Modalités éditoriales : temps forts FinTech, interviews, diffusion",
+      "Calendrier hackathon 28–29 août 2026 · Silikin Village",
+      "Prochaines étapes (référent, logo, canaux de diffusion)",
+    ],
+    notes:
+      "RDV confirmé samedi 1er août 2026 10h00 Kinshasa - visio McBuleli Meet (report depuis Silikin Village - équipe McBuleli en autre programme).",
+  },
+  "damienne-formation": {
+    slug: "damienne-formation",
+    title: "McBuleli × Damienne - Formation Vibe Coding & Pi SDK",
+    partnerName: "Mme Elisabeth Adilelou",
+    partnerEmail: "elisabethadilehou571@gmail.com",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 90,
+    status: "confirmed",
+    scheduledAt: new Date("2026-08-03T19:00:00+01:00"),
+    timezone: "Africa/Porto-Novo",
+    allowlistEmails: [
+      "elisabethadilehou571@gmail.com",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Vibe Coding : intention → prompt → code → review",
+      "Outils : Cursor, Claude, Codex, GitHub",
+      "Développer une app avec l'IA",
+      "SDK Pi Network : auth, paiements, publication",
+    ],
+    notes:
+      "[private-allowlist] Formation privée 1 mois · 3×/semaine 19h Porto-Novo (GMT+1) · hub /hackathon/damienne",
+  },
 };
 
 const CATALOG_IDS: Record<string, string> = {
@@ -215,6 +263,8 @@ const CATALOG_IDS: Record<string, string> = {
   "e-com-sas-partenariat": "c3d4e5f6-a7b8-4c92-9d0e-1f2a3b4c5d6e",
   "rdpi-thinktank-partenariat": "d4e5f6a7-b8c9-4d03-0e1f-2a3b4c5d6e7f",
   "kimia-partenariat": "e5f6a7b8-c9d0-4e14-1f2a-3b4c5d6e7f80",
+  "fintech-medias-partenariat": "f6a7b8c9-d0e1-4f25-2a3b-4c5d6e7f8091",
+  "damienne-formation": "a7b8c9d0-e1f2-4036-3b4c-5d6e7f8091a2",
 };
 
 export function partnerMeetFromCatalog(
@@ -360,6 +410,12 @@ function isStaffRole(role: UserRoleType | null | undefined): boolean {
   return role === UserRole.AGENT || role === UserRole.SUPER_ADMIN;
 }
 
+export function isPrivatePartnerMeet(meet: {
+  notes?: string | null;
+}): boolean {
+  return (meet.notes ?? "").includes("[private-allowlist]");
+}
+
 export function canAccessPartnerMeet(args: {
   userEmail: string;
   appRole: UserRoleType | null | undefined;
@@ -372,7 +428,9 @@ export function canAccessPartnerMeet(args: {
   if (email === normEmail(args.meet.partnerEmail)) return true;
   const allow = args.meet.allowlistEmails ?? [];
   if (allow.some((e) => normEmail(e) === email)) return true;
-  // Same invite link: several colleagues can join once each has a McBuleli account.
+  // Private rooms (formation 1:1): allowlist only — no open colleague join.
+  if (isPrivatePartnerMeet(args.meet)) return false;
+  // Partnership RDVs: colleagues with a McBuleli account may join the invite link.
   return true;
 }
 
