@@ -1,5 +1,5 @@
 /**
- * Prévision budgétaire Hackathon Kinshasa — 28–29 août 2026.
+ * Prévision budgétaire Hackathon Kinshasa - 28-29 août 2026.
  * Base partenaires : 2 places / org, hors SanJa, Binance, Silikin, pawaPay.
  */
 
@@ -9,7 +9,7 @@ export const HACKATHON_BUDGET_DAYS = 2;
 export const SILIKIN_BOOKING_URL =
   "https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41";
 
-/** Salle 37 — OfficeRnD « Auditorium-Campus Salle 2 (Arrière) » — ~185,34–186 $/jour */
+/** Salle 37 - OfficeRnD « Auditorium-Campus Salle 2 (Arrière) » - ~185,34-186 $/jour */
 export const ROOM_37_USD_PER_DAY = 186;
 export const ROOM_37_OFFICIAL_NAME =
   "Auditorium-Campus Salle 2 (Arrière)";
@@ -24,7 +24,7 @@ export const ROOM_37_INCLUDED: readonly string[] = [
   "Extincteur",
 ];
 
-/** Salle 100 — OfficeRnD « Auditorium - Business Center » — ~560,34–561 $/jour */
+/** Salle 100 - OfficeRnD « Auditorium - Business Center » - ~560,34-561 $/jour */
 export const ROOM_100_USD_PER_DAY = 561;
 export const ROOM_100_OFFICIAL_NAME = "Auditorium - Business Center";
 export const ROOM_100_INCLUDED: readonly string[] = [
@@ -36,14 +36,14 @@ export const ROOM_100_INCLUDED: readonly string[] = [
   "Extincteur",
 ];
 
-/** Déjeuner — USD / personne / jour */
+/** Déjeuner - USD / personne / jour */
 export const LUNCH_USD_PER_PERSON_DAY = 20;
-/** Pause café × 2 — USD / personne / jour */
+/** Pause café × 2 - USD / personne / jour */
 export const PAUSE_USD_PER_PERSON_DAY = 2;
 
-/** Caméraman — forfait 2 jours */
+/** Caméraman - forfait 2 jours */
 export const CAMERAMAN_USD = 150;
-/** Marketing / diffusion — forfait */
+/** Marketing / diffusion - forfait */
 export const MARKETING_USD = 100;
 
 /** Ambassadeurs (codes promo actifs) + staff McBuleli */
@@ -51,7 +51,7 @@ export const AMBASSADOR_HEADCOUNT = 5;
 export const MCBULELI_STAFF_HEADCOUNT = 2;
 export const BUILDERS_TARGET_FULL = 100;
 
-/** Orgs avec 2 badges (budget) — hors SanJa, Binance, Silikin, pawaPay. */
+/** Orgs avec 2 badges (budget) - hors SanJa, Binance, Silikin, pawaPay. */
 export const BUDGET_PARTNER_ORGS: ReadonlyArray<{
   slug: string;
   name: string;
@@ -77,7 +77,7 @@ export const BUDGET_EXCLUDED_ORGS: ReadonlyArray<{
 }> = [
   { slug: "sanja-service", name: "SanJa", reason: "Partenaire sans intervention porte" },
   { slug: "binance", name: "Binance", reason: "Pas de badge sur site" },
-  { slug: "silikin", name: "Silikin Village", reason: "Lieu hôte — inclus location" },
+  { slug: "silikin", name: "Silikin Village", reason: "Lieu hôte - inclus location" },
   { slug: "pawapay", name: "pawaPay", reason: "Pas de badge sur site" },
 ];
 
@@ -121,7 +121,7 @@ export type BudgetSuggestion = {
   why: string;
 };
 
-/** Postes souvent oubliés — hors avantages déjà inclus dans la location Silikin. */
+/** Postes souvent oubliés - hors avantages déjà inclus dans la location Silikin. */
 export const BUDGET_SUGGESTIONS: readonly BudgetSuggestion[] = [
   {
     id: "prizes",
@@ -131,12 +131,12 @@ export const BUDGET_SUGGESTIONS: readonly BudgetSuggestion[] = [
   {
     id: "internet-backup",
     label: "Backup 4G / hotspot (complément)",
-    why: "Internet Silikin inclus — utile en secours si saturation Wi‑Fi",
+    why: "Internet Silikin inclus - utile en secours si saturation Wi-Fi",
   },
   {
     id: "power-strips",
     label: "Multiprises / rallonges",
-    why: "Électricité Silikin incluse — besoin de points de charge laptops",
+    why: "Électricité Silikin incluse - besoin de points de charge laptops",
   },
   {
     id: "badges",
@@ -155,7 +155,7 @@ export const BUDGET_SUGGESTIONS: readonly BudgetSuggestion[] = [
   },
   {
     id: "contingency",
-    label: "Imprévus (8–12 %)",
+    label: "Imprévus (8-12 %)",
     why: "Buffer logistique & last-minute",
   },
   {
@@ -229,8 +229,8 @@ export function buildBudgetScenario(args: {
     id: args.id,
     label: isFull ? "Scénario 100 builders" : "Scénario salle 37",
     lede: isFull
-      ? "Si l'édition atteint 100 builders confirmés — salle grande + restauration au complet."
-      : "Effectif actuel (builders tenus + partenaires × 2 + ambassadeurs + McBuleli) — salle 37.",
+      ? "Si l'édition atteint 100 builders confirmés - salle grande + restauration au complet."
+      : "Effectif actuel (builders tenus + partenaires × 2 + ambassadeurs + McBuleli) - salle 37.",
     roomCapacity,
     roomUsdPerDay,
     roomOfficialName,

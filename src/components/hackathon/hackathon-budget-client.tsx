@@ -1,7 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
+import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
 import { HkShell } from "@/components/hackathon/hk-ui";
 import {
   BUDGET_EXCLUDED_ORGS,
@@ -15,6 +18,59 @@ import {
   type BudgetScenarioId,
   type BudgetSnapshot,
 } from "@/lib/hackathon/budget";
+
+/** Nested panel - same language as badge chips / ticket meta cards. */
+function SoftCard({
+  children,
+  className = "",
+  highlight = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border px-3.5 py-3.5 shadow-[0_10px_28px_-18px_var(--hk-shadow)] backdrop-blur-sm ${
+        highlight
+          ? "border-[color:var(--hk-accent)] bg-[color:var(--hk-soft)]"
+          : "border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Outer ticket/badge shell. */
+function TicketCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <article
+      className={`hk-slide-card relative overflow-hidden rounded-[28px] border border-[color:var(--hk-border)] bg-[color:var(--hk-page)] shadow-[0_24px_64px_-30px_var(--hk-shadow)] ${className}`}
+    >
+      <HackathonAtmosphere decorated />
+      <div
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1.5 bg-[color:var(--hk-accent)]"
+      />
+      <div className="relative z-10 px-5 py-5 sm:px-6 sm:py-6">{children}</div>
+    </article>
+  );
+}
+
+function MetaChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-accent)] shadow-sm backdrop-blur-sm">
+      {label}
+    </span>
+  );
+}
 
 function HeadcountRow({
   label,
@@ -66,32 +122,34 @@ function CostRow({
 
 function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {snap.exceedsRoom ? (
-        <p
-          className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm leading-relaxed text-[color:var(--hk-warn-text,#92400e)] ring-1 ring-amber-500/25"
-          role="status"
-        >
-          Effectif prévu ({snap.headcount}) supérieur à la capacité salle (
-          {snap.roomCapacity}). À arbitrer : salle plus grande, ou plafonner les
-          présents.
-        </p>
+        <SoftCard highlight>
+          <p
+            className="text-sm leading-relaxed text-[color:var(--hk-warn-text,#92400e)]"
+            role="status"
+          >
+            Effectif prévu ({snap.headcount}) supérieur à la capacité salle (
+            {snap.roomCapacity}). À arbitrer : salle plus grande, ou plafonner
+            les présents.
+          </p>
+        </SoftCard>
       ) : null}
 
-      <section>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+      <SoftCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
           Inclus dans la location Silikin
-        </h2>
-        <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
-          {snap.roomOfficialName} · capacité {snap.roomCapacity}
         </p>
-        <ul className="mt-3 flex flex-wrap gap-2">
+        <p className="mt-1.5 text-sm font-semibold text-[color:var(--hk-text)]">
+          {snap.roomOfficialName}
+        </p>
+        <p className="mt-0.5 text-xs text-[color:var(--hk-muted)]">
+          Capacité {snap.roomCapacity} · {snap.roomUsdPerDay} $/jour
+        </p>
+        <ul className="mt-3 flex flex-wrap gap-1.5">
           {snap.roomIncluded.map((item) => (
-            <li
-              key={item}
-              className="rounded-full bg-[color:var(--hk-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--hk-text)]"
-            >
-              {item}
+            <li key={item}>
+              <MetaChip label={item} />
             </li>
           ))}
         </ul>
@@ -105,15 +163,16 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
           >
             calendrier OfficeRnD Silikin
           </a>
-          . Projecteur & internet déjà dans le forfait — pas à rebudgéter à part.
+          . Projecteur & internet déjà dans le forfait - pas à rebudgéter à
+          part.
         </p>
-      </section>
+      </SoftCard>
 
-      <section>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+      <SoftCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
           Effectifs
-        </h2>
-        <div className="mt-3">
+        </p>
+        <div className="mt-2">
           <HeadcountRow
             label="Builders"
             value={snap.builders}
@@ -139,13 +198,13 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
             </p>
           </div>
         </div>
-      </section>
+      </SoftCard>
 
-      <section>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+      <SoftCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
           Coûts · {HACKATHON_BUDGET_DAYS} jours
-        </h2>
-        <div className="mt-3">
+        </p>
+        <div className="mt-2">
           {snap.lines.map((line) => (
             <CostRow
               key={line.id}
@@ -155,9 +214,9 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
             />
           ))}
         </div>
-        <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-[color:var(--hk-border)] pt-5">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-soft)]/70 px-3.5 py-3.5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
               Total prévisionnel
             </p>
             <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
@@ -172,7 +231,7 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
           ≈ {formatUsd(snap.totalUsd / Math.max(1, snap.headcount))} / personne
           sur l&apos;événement
         </p>
-      </section>
+      </SoftCard>
     </div>
   );
 }
@@ -206,23 +265,19 @@ export function HackathonBudgetClient({
 
   return (
     <HkShell authReturnPath="/hackathon/budget">
-      <main className="relative overflow-hidden">
-        {/* Atmosphere */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-[28rem] bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_srgb,var(--hk-accent)_18%,transparent),transparent_55%),radial-gradient(ellipse_at_90%_10%,color-mix(in_srgb,var(--hk-soft)_80%,transparent),transparent_50%)]"
-        />
+      <div className="hackathon-theme relative min-h-dvh overflow-hidden">
+        <HackathonAtmosphere variant="page" />
 
-        <div className="relative mx-auto max-w-3xl px-4 pb-16 pt-10 sm:pt-14">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--hk-accent)]">
+        <main className="relative z-10 mx-auto max-w-3xl px-4 pb-16 pt-10 sm:pt-14">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[color:var(--hk-accent)]">
             McBuleli · Prévision budgétaire
           </p>
           <h1 className="mt-3 max-w-xl text-4xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-5xl">
             Hackathon Kinshasa
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-[color:var(--hk-muted)]">
-            28–29 août 2026 · Silikin Village. Deux hypothèses de salle selon
-            l&apos;atteinte de 100 builders — restauration et ops inclus.{" "}
+            28-29 août 2026 · Silikin Village. Deux hypothèses de salle selon
+            l&apos;atteinte de 100 builders - restauration et ops inclus.{" "}
             <a
               href={SILIKIN_BOOKING_URL}
               target="_blank"
@@ -233,9 +288,8 @@ export function HackathonBudgetClient({
             </a>
           </p>
 
-          {/* Scenario switch */}
           <div
-            className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-stretch"
+            className="mt-8 grid gap-2 sm:grid-cols-2"
             role="tablist"
             aria-label="Scénario budgétaire"
           >
@@ -261,10 +315,10 @@ export function HackathonBudgetClient({
                   role="tab"
                   aria-selected={on}
                   onClick={() => setScenario(opt.id)}
-                  className={`flex-1 rounded-2xl px-4 py-3.5 text-left transition ${
+                  className={`rounded-2xl border px-4 py-3.5 text-left shadow-[0_10px_28px_-18px_var(--hk-shadow)] transition ${
                     on
-                      ? "bg-[color:var(--hk-accent)] text-white shadow-md"
-                      : "bg-[color:var(--hk-surface)] text-[color:var(--hk-text)] ring-1 ring-[color:var(--hk-border)] hover:ring-[color:var(--hk-accent)]/40"
+                      ? "border-[color:var(--hk-accent)] bg-[color:var(--hk-accent)] text-white"
+                      : "border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] text-[color:var(--hk-text)] hover:border-[color:var(--hk-accent)]/50"
                   }`}
                 >
                   <span className="block text-sm font-black">{opt.title}</span>
@@ -291,36 +345,36 @@ export function HackathonBudgetClient({
             </button>
           </p>
 
-          <div className="mt-8 rounded-[1.75rem] bg-[color:var(--hk-surface)]/95 p-5 shadow-sm ring-1 ring-[color:var(--hk-border)] backdrop-blur-sm sm:p-8">
+          <TicketCard className="mt-8">
             <ScenarioPanel snap={snap} />
-          </div>
+          </TicketCard>
 
-          {/* Partner seats */}
-          <section className="mt-12">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+          <TicketCard className="mt-6">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
               Places partenaires (×2)
-            </h2>
+            </p>
             <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
               {BUDGET_PARTNER_ORGS.length} organisations ·{" "}
               {BUDGET_PARTNER_ORGS.length * 2} personnes prévues sur site.
             </p>
-            <ul className="mt-4 divide-y divide-[color:var(--hk-border)]/80">
+            <ul className="mt-4 space-y-2">
               {BUDGET_PARTNER_ORGS.map((org) => (
-                <li
-                  key={org.slug}
-                  className="flex items-baseline justify-between gap-3 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[color:var(--hk-text)]">
-                      {org.name}
-                    </p>
-                    <p className="text-xs text-[color:var(--hk-muted)]">
-                      {org.role}
-                    </p>
-                  </div>
-                  <span className="font-mono text-xs font-bold text-[color:var(--hk-muted)]">
-                    2
-                  </span>
+                <li key={org.slug}>
+                  <SoftCard className="!py-2.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[color:var(--hk-text)]">
+                          {org.name}
+                        </p>
+                        <p className="text-xs text-[color:var(--hk-muted)]">
+                          {org.role}
+                        </p>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-[color:var(--hk-accent)]">
+                        2
+                      </span>
+                    </div>
+                  </SoftCard>
                 </li>
               ))}
             </ul>
@@ -328,38 +382,33 @@ export function HackathonBudgetClient({
               Sans place badge :{" "}
               {BUDGET_EXCLUDED_ORGS.map((o) => o.name).join(", ")}.
             </p>
-          </section>
+          </TicketCard>
 
-          {/* Suggestions */}
-          <section className="mt-12">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+          <TicketCard className="mt-6">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
               À valider / à ajouter
-            </h2>
-            <p className="mt-2 max-w-lg text-sm leading-relaxed text-[color:var(--hk-muted)]">
-              Postes fréquents pour un hackathon de 2 jours — pas encore chiffrés
-              dans le total ci-dessus.
             </p>
-            <ul className="mt-5 space-y-3">
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+              Postes fréquents pour un hackathon de 2 jours - pas encore
+              chiffrés dans le total ci-dessus.
+            </p>
+            <ul className="mt-4 space-y-2">
               {BUDGET_SUGGESTIONS.map((s) => (
-                <li key={s.id} className="flex gap-3">
-                  <span
-                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--hk-accent)]"
-                    aria-hidden
-                  />
-                  <div>
+                <li key={s.id}>
+                  <SoftCard className="!py-2.5">
                     <p className="text-sm font-semibold text-[color:var(--hk-text)]">
                       {s.label}
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-[color:var(--hk-muted)]">
                       {s.why}
                     </p>
-                  </div>
+                  </SoftCard>
                 </li>
               ))}
             </ul>
-          </section>
+          </TicketCard>
 
-          <p className="mt-14 text-center text-xs text-[color:var(--hk-muted)]">
+          <p className="mt-10 text-center text-xs text-[color:var(--hk-muted)]">
             Document de travail · partage partenaires & collaborateurs ·{" "}
             <Link
               href="/hackathon"
@@ -368,8 +417,10 @@ export function HackathonBudgetClient({
               ← Hackathon
             </Link>
           </p>
-        </div>
-      </main>
+
+          <HackathonPoweredBy />
+        </main>
+      </div>
     </HkShell>
   );
 }
