@@ -5,11 +5,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
-import { HkShell } from "@/components/hackathon/hk-ui";
+import { HkShell, useHkLocale } from "@/components/hackathon/hk-ui";
 import {
   BUDGET_EXCLUDED_ORGS,
   BUDGET_PARTNER_ORGS,
   BUDGET_SUGGESTIONS,
+  BUDGET_TALK_ORGS,
   BUILDERS_TARGET_FULL,
   HACKATHON_BUDGET_DAYS,
   SILIKIN_BOOKING_URL,
@@ -31,7 +32,7 @@ function SoftCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border px-3.5 py-3.5 shadow-[0_10px_28px_-18px_var(--hk-shadow)] backdrop-blur-sm ${
+      className={`rounded-2xl border px-3.5 py-3.5 shadow-[0_10px_28px_-18px_var(--hk-shadow)] ${
         highlight
           ? "border-[color:var(--hk-accent)] bg-[color:var(--hk-soft)]"
           : "border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]"
@@ -42,7 +43,7 @@ function SoftCard({
   );
 }
 
-/** Outer ticket/badge shell. */
+/** Outer ticket/badge shell - no light SVG wash (breaks dark). */
 function TicketCard({
   children,
   className = "",
@@ -52,9 +53,17 @@ function TicketCard({
 }) {
   return (
     <article
-      className={`hk-slide-card relative overflow-hidden rounded-[28px] border border-[color:var(--hk-border)] bg-[color:var(--hk-page)] shadow-[0_24px_64px_-30px_var(--hk-shadow)] ${className}`}
+      className={`relative overflow-hidden rounded-[28px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] shadow-[0_24px_64px_-30px_var(--hk-shadow)] ${className}`}
     >
-      <HackathonAtmosphere decorated />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.55]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, var(--hk-dot) 1.2px, transparent 1.5px)",
+          backgroundSize: "16px 16px",
+        }}
+      />
       <div
         aria-hidden
         className="absolute inset-y-0 left-0 w-1.5 bg-[color:var(--hk-accent)]"
@@ -66,8 +75,16 @@ function TicketCard({
 
 function MetaChip({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-accent)] shadow-sm backdrop-blur-sm">
+    <span className="inline-flex items-center rounded-full border border-[color:var(--hk-border)] bg-[color:var(--hk-page)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--hk-accent)] shadow-sm">
       {label}
+    </span>
+  );
+}
+
+function TalkPill({ isFr }: { isFr: boolean }) {
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full bg-[color:var(--hk-accent)]/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[color:var(--hk-accent)]">
+      {isFr ? "Talk" : "Talk"}
     </span>
   );
 }
@@ -100,10 +117,12 @@ function CostRow({
   label,
   detail,
   amount,
+  locale,
 }: {
   label: string;
   detail: string;
   amount: number;
+  locale: "fr" | "en";
 }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[color:var(--hk-border)]/70 py-3 last:border-0">
@@ -114,63 +133,75 @@ function CostRow({
         </p>
       </div>
       <p className="shrink-0 font-mono text-sm font-bold tabular-nums text-[color:var(--hk-text)]">
-        {formatUsd(amount)}
+        {formatUsd(amount, locale)}
       </p>
     </div>
   );
 }
 
-function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
+function ScenarioPanel({
+  snap,
+  isFr,
+}: {
+  snap: BudgetSnapshot;
+  isFr: boolean;
+}) {
+  const locale = isFr ? "fr" : "en";
+  const included = isFr ? snap.roomIncludedFr : snap.roomIncludedEn;
+
   return (
     <div className="space-y-5">
       {snap.exceedsRoom ? (
         <SoftCard highlight>
           <p
-            className="text-sm leading-relaxed text-[color:var(--hk-warn-text,#92400e)]"
+            className="text-sm leading-relaxed text-[color:var(--hk-warn-text)]"
             role="status"
           >
-            Effectif prévu ({snap.headcount}) supérieur à la capacité salle (
-            {snap.roomCapacity}). À arbitrer : salle plus grande, ou plafonner
-            les présents.
+            {isFr
+              ? `Effectif prévu (${snap.headcount}) supérieur à la capacité salle (${snap.roomCapacity}). À arbitrer : salle plus grande, ou plafonner les présents.`
+              : `Planned headcount (${snap.headcount}) exceeds room capacity (${snap.roomCapacity}). Decide: larger room, or cap attendance.`}
           </p>
         </SoftCard>
       ) : null}
 
       <SoftCard>
         <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
-          Inclus dans la location Silikin
+          {isFr ? "Inclus dans la location Silikin" : "Included with Silikin rental"}
         </p>
         <p className="mt-1.5 text-sm font-semibold text-[color:var(--hk-text)]">
           {snap.roomOfficialName}
         </p>
         <p className="mt-0.5 text-xs text-[color:var(--hk-muted)]">
-          Capacité {snap.roomCapacity} · {snap.roomUsdPerDay} $/jour
+          {isFr
+            ? `Capacité ${snap.roomCapacity} · ${snap.roomUsdPerDay} $/jour`
+            : `Capacity ${snap.roomCapacity} · $${snap.roomUsdPerDay}/day`}
         </p>
         <ul className="mt-3 flex flex-wrap gap-1.5">
-          {snap.roomIncluded.map((item) => (
+          {included.map((item) => (
             <li key={item}>
               <MetaChip label={item} />
             </li>
           ))}
         </ul>
         <p className="mt-3 text-xs text-[color:var(--hk-muted)]">
-          Source :{" "}
+          {isFr ? "Source : " : "Source: "}
           <a
             href={SILIKIN_BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-[color:var(--hk-accent)] hover:underline"
           >
-            calendrier OfficeRnD Silikin
+            {isFr ? "calendrier OfficeRnD Silikin" : "Silikin OfficeRnD calendar"}
           </a>
-          . Projecteur & internet déjà dans le forfait - pas à rebudgéter à
-          part.
+          {isFr
+            ? ". Projecteur & internet déjà dans le forfait - pas à rebudgéter à part."
+            : ". Projector & internet already in the package - no separate line item."}
         </p>
       </SoftCard>
 
       <SoftCard>
         <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
-          Effectifs
+          {isFr ? "Effectifs" : "Headcount"}
         </p>
         <div className="mt-2">
           <HeadcountRow
@@ -178,20 +209,43 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
             value={snap.builders}
             hint={
               snap.id === "room100"
-                ? "Cible 100 inscriptions confirmées"
-                : "Places tenues (paid + reserved)"
+                ? isFr
+                  ? "Cible 100 inscriptions confirmées"
+                  : "Target: 100 confirmed registrations"
+                : isFr
+                  ? "Places tenues (paid + reserved)"
+                  : "Held seats (paid + reserved)"
             }
           />
           <HeadcountRow
-            label="Partenaires & intervenants"
+            label={isFr ? "Partenaires & intervenants" : "Partners & speakers"}
             value={snap.partners}
-            hint="2 places × 10 organisations"
+            hint={
+              isFr
+                ? "2 places × 10 organisations"
+                : "2 seats × 10 organizations"
+            }
           />
-          <HeadcountRow label="Ambassadeurs" value={snap.ambassadors} />
-          <HeadcountRow label="Équipe McBuleli" value={snap.staff} />
+          <HeadcountRow
+            label={isFr ? "Dont Talks scène" : "Incl. on-stage Talks"}
+            value={snap.talkCount}
+            hint={
+              isFr
+                ? "Intervenants qui pitchent leur business"
+                : "Partners pitching their business"
+            }
+          />
+          <HeadcountRow
+            label={isFr ? "Ambassadeurs" : "Ambassadors"}
+            value={snap.ambassadors}
+          />
+          <HeadcountRow
+            label={isFr ? "Équipe McBuleli" : "McBuleli team"}
+            value={snap.staff}
+          />
           <div className="flex items-baseline justify-between gap-4 pt-3">
             <p className="text-sm font-black text-[color:var(--hk-text)]">
-              Total personnes
+              {isFr ? "Total personnes" : "Total people"}
             </p>
             <p className="font-mono text-xl font-black tabular-nums text-[color:var(--hk-accent)]">
               {snap.headcount}
@@ -202,34 +256,39 @@ function ScenarioPanel({ snap }: { snap: BudgetSnapshot }) {
 
       <SoftCard>
         <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
-          Coûts · {HACKATHON_BUDGET_DAYS} jours
+          {isFr
+            ? `Coûts · ${HACKATHON_BUDGET_DAYS} jours`
+            : `Costs · ${HACKATHON_BUDGET_DAYS} days`}
         </p>
         <div className="mt-2">
           {snap.lines.map((line) => (
             <CostRow
               key={line.id}
-              label={line.label}
-              detail={line.detail}
+              label={isFr ? line.labelFr : line.labelEn}
+              detail={isFr ? line.detailFr : line.detailEn}
               amount={line.amountUsd}
+              locale={locale}
             />
           ))}
         </div>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-soft)]/70 px-3.5 py-3.5">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-soft)] px-3.5 py-3.5">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-muted)]">
-              Total prévisionnel
+              {isFr ? "Total prévisionnel" : "Projected total"}
             </p>
             <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
-              Hors postes « à valider » ci-dessous
+              {isFr
+                ? "Hors postes « à valider » ci-dessous"
+                : "Excludes “to confirm” items below"}
             </p>
           </div>
           <p className="font-mono text-3xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-4xl">
-            {formatUsd(snap.totalUsd)}
+            {formatUsd(snap.totalUsd, locale)}
           </p>
         </div>
         <p className="mt-2 text-right text-xs text-[color:var(--hk-muted)]">
-          ≈ {formatUsd(snap.totalUsd / Math.max(1, snap.headcount))} / personne
-          sur l&apos;événement
+          ≈ {formatUsd(snap.totalUsd / Math.max(1, snap.headcount), locale)}{" "}
+          {isFr ? "/ personne sur l'événement" : "/ person for the event"}
         </p>
       </SoftCard>
     </div>
@@ -241,6 +300,8 @@ export function HackathonBudgetClient({
 }: {
   buildersHeld: number;
 }) {
+  const isFr = useHkLocale();
+  const locale = isFr ? "fr" : "en";
   const [scenario, setScenario] = useState<BudgetScenarioId>("room37");
 
   const snap = useMemo(
@@ -265,45 +326,50 @@ export function HackathonBudgetClient({
 
   return (
     <HkShell authReturnPath="/hackathon/budget">
-      <div className="hackathon-theme relative min-h-dvh overflow-hidden">
+      <div className="relative min-h-dvh overflow-hidden">
         <HackathonAtmosphere variant="page" />
 
         <main className="relative z-10 mx-auto max-w-3xl px-4 pb-16 pt-10 sm:pt-14">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[color:var(--hk-accent)]">
-            McBuleli · Prévision budgétaire
+            {isFr
+              ? "McBuleli · Prévision budgétaire"
+              : "McBuleli · Budget forecast"}
           </p>
           <h1 className="mt-3 max-w-xl text-4xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-5xl">
             Hackathon Kinshasa
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-[color:var(--hk-muted)]">
-            28-29 août 2026 · Silikin Village. Deux hypothèses de salle selon
-            l&apos;atteinte de 100 builders - restauration et ops inclus.{" "}
+            {isFr
+              ? "28-29 août 2026 · Silikin Village. Deux hypothèses de salle selon l'atteinte de 100 builders - restauration et ops inclus. "
+              : "28-29 Aug 2026 · Silikin Village. Two room scenarios depending on whether we reach 100 builders - catering and ops included. "}
             <a
               href={SILIKIN_BOOKING_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[color:var(--hk-accent)] hover:underline"
             >
-              Voir la réservation Silikin
+              {isFr ? "Voir la réservation Silikin" : "View Silikin booking"}
             </a>
           </p>
 
           <div
             className="mt-8 grid gap-2 sm:grid-cols-2"
             role="tablist"
-            aria-label="Scénario budgétaire"
+            aria-label={isFr ? "Scénario budgétaire" : "Budget scenario"}
           >
             {(
               [
                 {
                   id: "room37" as const,
-                  title: "Salle 37",
-                  sub: `${buildersHeld} builders tenus`,
+                  title: isFr ? "Salle 37" : "37-seat room",
+                  sub: isFr
+                    ? `${buildersHeld} builders tenus`
+                    : `${buildersHeld} builders held`,
                 },
                 {
                   id: "room100" as const,
-                  title: "Salle 100",
-                  sub: "Si 100 builders",
+                  title: isFr ? "Salle 100" : "100-seat room",
+                  sub: isFr ? "Si 100 builders" : "If 100 builders",
                 },
               ] as const
             ).map((opt) => {
@@ -333,7 +399,8 @@ export function HackathonBudgetClient({
           </div>
 
           <p className="mt-3 text-xs text-[color:var(--hk-muted)]">
-            {snap.lede} Alternative :{" "}
+            {isFr ? snap.ledeFr : snap.ledeEn}{" "}
+            {isFr ? "Alternative :" : "Alternative:"}{" "}
             <button
               type="button"
               className="font-semibold text-[color:var(--hk-accent)] hover:underline"
@@ -341,33 +408,83 @@ export function HackathonBudgetClient({
                 setScenario(scenario === "room37" ? "room100" : "room37")
               }
             >
-              {other.label} → {formatUsd(other.totalUsd)}
+              {isFr ? other.labelFr : other.labelEn} →{" "}
+              {formatUsd(other.totalUsd, locale)}
             </button>
           </p>
 
           <TicketCard className="mt-8">
-            <ScenarioPanel snap={snap} />
+            <ScenarioPanel snap={snap} isFr={isFr} />
+          </TicketCard>
+
+          <TicketCard className="mt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
+                {isFr ? "Talks & speakers" : "Talks & speakers"}
+              </p>
+              <MetaChip
+                label={
+                  isFr
+                    ? `${BUDGET_TALK_ORGS.length} talks`
+                    : `${BUDGET_TALK_ORGS.length} talks`
+                }
+              />
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+              {isFr
+                ? "Ils montent sur scène pour présenter leur business / expertise - pas seulement un logo."
+                : "They take the stage to present their business / expertise - not logo-only presence."}
+            </p>
+            <ul className="mt-4 space-y-2">
+              {BUDGET_TALK_ORGS.map((org) => (
+                <li key={org.slug}>
+                  <SoftCard className="!py-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-[color:var(--hk-text)]">
+                            {org.name}
+                          </p>
+                          <TalkPill isFr={isFr} />
+                        </div>
+                        <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
+                          {isFr
+                            ? org.talkFr ?? org.roleFr
+                            : org.talkEn ?? org.roleEn}
+                        </p>
+                      </div>
+                    </div>
+                  </SoftCard>
+                </li>
+              ))}
+            </ul>
           </TicketCard>
 
           <TicketCard className="mt-6">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
-              Places partenaires (×2)
+              {isFr
+                ? "Places partenaires (×2)"
+                : "Partner seats (×2)"}
             </p>
             <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
-              {BUDGET_PARTNER_ORGS.length} organisations ·{" "}
-              {BUDGET_PARTNER_ORGS.length * 2} personnes prévues sur site.
+              {isFr
+                ? `${BUDGET_PARTNER_ORGS.length} organisations · ${BUDGET_PARTNER_ORGS.length * 2} personnes prévues sur site.`
+                : `${BUDGET_PARTNER_ORGS.length} organizations · ${BUDGET_PARTNER_ORGS.length * 2} people expected on site.`}
             </p>
             <ul className="mt-4 space-y-2">
               {BUDGET_PARTNER_ORGS.map((org) => (
                 <li key={org.slug}>
                   <SoftCard className="!py-2.5">
-                    <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[color:var(--hk-text)]">
-                          {org.name}
-                        </p>
-                        <p className="text-xs text-[color:var(--hk-muted)]">
-                          {org.role}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-[color:var(--hk-text)]">
+                            {org.name}
+                          </p>
+                          {org.talk ? <TalkPill isFr={isFr} /> : null}
+                        </div>
+                        <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
+                          {isFr ? org.roleFr : org.roleEn}
                         </p>
                       </div>
                       <span className="font-mono text-xs font-bold text-[color:var(--hk-accent)]">
@@ -379,28 +496,29 @@ export function HackathonBudgetClient({
               ))}
             </ul>
             <p className="mt-4 text-xs leading-relaxed text-[color:var(--hk-muted)]">
-              Sans place badge :{" "}
+              {isFr ? "Sans place badge : " : "No door badge: "}
               {BUDGET_EXCLUDED_ORGS.map((o) => o.name).join(", ")}.
             </p>
           </TicketCard>
 
           <TicketCard className="mt-6">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
-              À valider / à ajouter
+              {isFr ? "À valider / à ajouter" : "To confirm / add"}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
-              Postes fréquents pour un hackathon de 2 jours - pas encore
-              chiffrés dans le total ci-dessus.
+              {isFr
+                ? "Postes fréquents pour un hackathon de 2 jours - pas encore chiffrés dans le total ci-dessus."
+                : "Common line items for a 2-day hackathon - not yet priced in the total above."}
             </p>
             <ul className="mt-4 space-y-2">
               {BUDGET_SUGGESTIONS.map((s) => (
                 <li key={s.id}>
                   <SoftCard className="!py-2.5">
                     <p className="text-sm font-semibold text-[color:var(--hk-text)]">
-                      {s.label}
+                      {isFr ? s.labelFr : s.labelEn}
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-[color:var(--hk-muted)]">
-                      {s.why}
+                      {isFr ? s.whyFr : s.whyEn}
                     </p>
                   </SoftCard>
                 </li>
@@ -409,7 +527,9 @@ export function HackathonBudgetClient({
           </TicketCard>
 
           <p className="mt-10 text-center text-xs text-[color:var(--hk-muted)]">
-            Document de travail · partage partenaires & collaborateurs ·{" "}
+            {isFr
+              ? "Document de travail · partage partenaires & collaborateurs · "
+              : "Working document · for partners & collaborators · "}
             <Link
               href="/hackathon"
               className="font-semibold text-[color:var(--hk-accent)] hover:underline"

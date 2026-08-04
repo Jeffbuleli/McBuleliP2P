@@ -33,7 +33,7 @@ type OrgBadgeProfile = {
 export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   ilokwe: {
     seats: 2,
-    roleLabel: "Sponsor Or - Jury - Mentorat - Atelier",
+    roleLabel: "Sponsor Or - Jury - Talk - Mentorat - Atelier",
     badgeKind: "sponsor",
     defaultTasks: [
       { title: "Confirmer le créneau atelier rentabilité agricole", kind: "atelier" },
@@ -45,7 +45,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   rdpi: {
     seats: 2,
-    roleLabel: "Jury - Policy & Impact",
+    roleLabel: "Jury - Talk Policy & Impact",
     badgeKind: "jury",
     defaultTasks: [
       { title: "Finaliser titre & durée de l'atelier policy/impact", kind: "atelier" },
@@ -73,8 +73,8 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   "montana-pay": {
     seats: 2,
-    roleLabel: "FinTech / Escrow - Talk - Mentorat",
-    badgeKind: "partner",
+    roleLabel: "Talk FinTech / Escrow - Mentorat",
+    badgeKind: "speaker",
     defaultTasks: [
       { title: "Envoyer logo officiel PNG/SVG", kind: "logo" },
       { title: "Finaliser titre & créneau session escrow", kind: "atelier" },
@@ -95,7 +95,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   kilelo: {
     seats: 2,
-    roleLabel: "Marketplace - Talk - Mentorat",
+    roleLabel: "Talk Marketplace - Mentorat",
     badgeKind: "speaker",
     defaultTasks: [
       { title: "Préparer talk matching / confiance / avis", kind: "atelier" },
@@ -114,7 +114,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   "ia-academie-chk": {
     seats: 2,
-    roleLabel: "Partenaire académique - Vivier - Atelier",
+    roleLabel: "Talk académique - Vivier - Atelier",
     badgeKind: "speaker",
     defaultTasks: [
       { title: "Confirmer vivier apprenants / alumni", kind: "other" },
@@ -133,19 +133,20 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
   },
   "e-com-sas": {
     seats: 2,
-    roleLabel: "FinTech & e-Paiement (en discussion)",
-    badgeKind: "partner",
+    roleLabel: "Talk FinTech & e-Paiement",
+    badgeKind: "speaker",
     defaultTasks: [
+      { title: "Finaliser titre & créneau talk e-paiement", kind: "atelier" },
       { title: "Finaliser le niveau d'accréditation", kind: "other" },
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
     ],
   },
   "cesar-group": {
     seats: 2,
-    roleLabel: "Formation & Employabilité (en discussion)",
+    roleLabel: "Talk Formation & Employabilité",
     badgeKind: "speaker",
     defaultTasks: [
-      { title: "Finaliser atelier pitch / Office", kind: "atelier" },
+      { title: "Finaliser atelier / talk pitch / Office", kind: "atelier" },
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
     ],
   },
