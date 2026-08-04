@@ -4,17 +4,24 @@
 - **Space Officer** : Joelle Mika · j.mika@texaf-rdc.com · +243 834 432 322
 - **Site** : https://www.silikinvillage.com
 - **Adresse** : 63, Ave Colonel Mondjiba, Kinshasa
-- **Calendrier Auditorium** : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41&start=2026-07-20T17:00:00.000Z&end=2026-07-20T18:00:00.000Z
+- **Calendrier Auditorium** : https://silikinvillage.officernd.com/public/calendar/Auditorium?participants=1,41
 
-## Dates proposees
+## Salles retenues (OfficeRnD)
 
-- 12 août 2026 - Jour 1 Bootcamp (08h00-13h30)
-- 13 août 2026 - Jour 2 Build Day (08h00-13h30)
-- 14 août 2026 - Jour 3 Demo Day (08h00-13h30)
+| Scénario | Ressource | Capacité | Tarif jour (approx.) | Inclus |
+|----------|-----------|----------|----------------------|--------|
+| Compact | **Auditorium-Campus Salle 2 (Arrière)** | 37 | ~185–186 $ | Internet, électricité, clim, mobilier, **projecteur**, soundbar, webcam, extincteur |
+| Plein | **Auditorium - Business Center** | 100 | ~560–561 $ | Internet, clim, mobilier, **projecteur**, **installation sonore**, extincteur |
 
-~30 personnes · Auditorium / salle de reunion.
+Tarifs OfficeRnD observés : 185,34 $/j (Campus demi-salle) · 560,34 $/j (Business Center).
 
-CTA email : **Voir le programme du McBuleli Hackathon** → https://mcbuleli.org/hackathon
+## Dates
+
+- Hackathon : **28–29 août 2026** (08h00–17h00)
+- Ancienne hypothèse (email) : 12–14 août 2026 — obsolète
+
+Budget interne : https://mcbuleli.org/hackathon/budget  
+Programme : https://mcbuleli.org/hackathon
 
 ## Envoi
 

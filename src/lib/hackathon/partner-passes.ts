@@ -122,13 +122,13 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
     ],
   },
+  /** Lieu hôte — pas de badge partenaire (accueil inclus dans la location). */
   silikin: {
-    seats: 2,
-    roleLabel: "Lieu / hub d'innovation",
+    seats: 0,
+    roleLabel: "Lieu / hub d'innovation (sans badge)",
     badgeKind: "partner",
     defaultTasks: [
       { title: "Coordonner logistique accueil Silikin", kind: "logistique" },
-      { title: "Attribuer la 2e place badge (collègue site)", kind: "logistique" },
     ],
   },
   "e-com-sas": {
