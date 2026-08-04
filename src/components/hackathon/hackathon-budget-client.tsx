@@ -19,6 +19,12 @@ import {
   type BudgetScenarioId,
   type BudgetSnapshot,
 } from "@/lib/hackathon/budget";
+import {
+  PARTNER_ALREADY_HAVE,
+  PARTNER_BUILDER_APPROACH,
+  PARTNER_WHY_SUPPORT,
+  partnerComplimentaryValueLabel,
+} from "@/lib/hackathon/partner-pitch";
 
 /** Nested panel - same language as badge chips / ticket meta cards. */
 function SoftCard({
@@ -295,6 +301,99 @@ function ScenarioPanel({
   );
 }
 
+function PartnerPitch({ isFr }: { isFr: boolean }) {
+  const approach = PARTNER_BUILDER_APPROACH;
+  const why = PARTNER_WHY_SUPPORT;
+
+  return (
+    <div className="mt-8 space-y-6">
+      <TicketCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
+          {isFr ? "Pour nos partenaires" : "For our partners"}
+        </p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-3xl">
+          {isFr
+            ? "Vous êtes déjà acceptés - gratuitement"
+            : "You are already accepted - for free"}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+          {isFr
+            ? "Avant même un soutien financier : McBuleli vous a ouvert la porte. Au-delà d'un Talk, vous présentez votre business et vous formez au Vibe Coding pour améliorer vos services."
+            : "Before any financial support: McBuleli opened the door. Beyond a Talk, you present your business and train in Vibe Coding to improve your services."}
+        </p>
+        <p className="mt-3 inline-flex rounded-full bg-[color:var(--hk-soft)] px-3 py-1 text-xs font-bold text-[color:var(--hk-accent)]">
+          {partnerComplimentaryValueLabel(isFr)}
+        </p>
+
+        <ul className="mt-5 space-y-2">
+          {PARTNER_ALREADY_HAVE.map((item) => (
+            <li key={item.titleEn}>
+              <SoftCard className="!py-3">
+                <p className="text-sm font-semibold text-[color:var(--hk-text)]">
+                  {isFr ? item.titleFr : item.titleEn}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-[color:var(--hk-muted)]">
+                  {isFr ? item.bodyFr : item.bodyEn}
+                </p>
+              </SoftCard>
+            </li>
+          ))}
+        </ul>
+      </TicketCard>
+
+      <TicketCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
+          {isFr ? "Approche proposée" : "Proposed approach"}
+        </p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-[color:var(--hk-text)]">
+          {isFr ? approach.titleFr : approach.titleEn}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+          {isFr ? approach.ledeFr : approach.ledeEn}
+        </p>
+        <ol className="mt-5 space-y-2">
+          {(isFr ? approach.stepsFr : approach.stepsEn).map((step, i) => (
+            <li key={step}>
+              <SoftCard className="!py-3" highlight={i === 1}>
+                <div className="flex gap-3">
+                  <span className="font-mono text-sm font-black text-[color:var(--hk-accent)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <p className="text-sm leading-relaxed text-[color:var(--hk-text)]">
+                    {step}
+                  </p>
+                </div>
+              </SoftCard>
+            </li>
+          ))}
+        </ol>
+        <SoftCard className="mt-4" highlight>
+          <p className="text-sm font-semibold leading-relaxed text-[color:var(--hk-text)]">
+            {isFr ? approach.closeFr : approach.closeEn}
+          </p>
+        </SoftCard>
+      </TicketCard>
+
+      <TicketCard>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--hk-accent)]">
+          {isFr ? why.titleFr : why.titleEn}
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-[color:var(--hk-muted)]">
+          {isFr ? why.bodyFr : why.bodyEn}
+        </p>
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-[color:var(--hk-text)]">
+          {isFr ? why.askFr : why.askEn}
+        </p>
+        <p className="mt-4 text-xs text-[color:var(--hk-muted)]">
+          {isFr
+            ? "Le détail chiffré suit - transparence totale sur la salle, la restauration et les ops."
+            : "The numbered budget follows - full transparency on room, catering and ops."}
+        </p>
+      </TicketCard>
+    </div>
+  );
+}
+
 export function HackathonBudgetClient({
   buildersHeld,
 }: {
@@ -332,28 +431,36 @@ export function HackathonBudgetClient({
         <main className="relative z-10 mx-auto max-w-3xl px-4 pb-16 pt-10 sm:pt-14">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[color:var(--hk-accent)]">
             {isFr
-              ? "McBuleli · Prévision budgétaire"
-              : "McBuleli · Budget forecast"}
+              ? "McBuleli · Partenaires & budget"
+              : "McBuleli · Partners & budget"}
           </p>
           <h1 className="mt-3 max-w-xl text-4xl font-black tracking-tight text-[color:var(--hk-text)] sm:text-5xl">
-            Hackathon Kinshasa
+            {isFr
+              ? "Pourquoi nous soutenir"
+              : "Why support us"}
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-[color:var(--hk-muted)]">
             {isFr
-              ? "28-29 août 2026 · Silikin Village. Deux hypothèses de salle selon l'atteinte de 100 builders - restauration et ops inclus. "
-              : "28-29 Aug 2026 · Silikin Village. Two room scenarios depending on whether we reach 100 builders - catering and ops included. "}
+              ? "Hackathon Kinshasa · 28-29 août 2026 · Silikin Village. Vous gagnez scène, formation et réseau - nous partageons le coût réel de l'événement."
+              : "Hackathon Kinshasa · 28-29 Aug 2026 · Silikin Village. You gain stage, training and network - we share the real cost of the event."}{" "}
             <a
               href={SILIKIN_BOOKING_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[color:var(--hk-accent)] hover:underline"
             >
-              {isFr ? "Voir la réservation Silikin" : "View Silikin booking"}
+              {isFr ? "Réservation Silikin" : "Silikin booking"}
             </a>
           </p>
 
+          <PartnerPitch isFr={isFr} />
+
+          <p className="mt-10 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
+            {isFr ? "Budget prévisionnel" : "Budget forecast"}
+          </p>
+
           <div
-            className="mt-8 grid gap-2 sm:grid-cols-2"
+            className="mt-4 grid gap-2 sm:grid-cols-2"
             role="tablist"
             aria-label={isFr ? "Scénario budgétaire" : "Budget scenario"}
           >

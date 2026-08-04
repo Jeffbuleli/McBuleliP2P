@@ -4,9 +4,9 @@ import { getFeaturedHackathon } from "@/lib/hackathon/service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Budget prévisionnel · Hackathon Kinshasa | McBuleli",
+  title: "Partenaires & budget · Hackathon Kinshasa | McBuleli",
   description:
-    "Prévision budgétaire Hackathon Kinshasa 28–29 août 2026 — salles, restauration, ops.",
+    "Pourquoi soutenir le Hackathon Kinshasa : places gratuites, Talks business, formation Vibe Coding, parcours Partner-Builder et budget transparent.",
   robots: { index: false, follow: false },
 };
 
