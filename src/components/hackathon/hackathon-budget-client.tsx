@@ -95,6 +95,14 @@ function TalkPill({ isFr }: { isFr: boolean }) {
   );
 }
 
+function MentorPill({ isFr }: { isFr: boolean }) {
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full bg-[color:var(--hk-accent)]/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[color:var(--hk-accent)]">
+      {isFr ? "Mentor" : "Mentor"}
+    </span>
+  );
+}
+
 function HeadcountRow({
   label,
   value,
@@ -589,6 +597,9 @@ export function HackathonBudgetClient({
                             {org.name}
                           </p>
                           {org.talk ? <TalkPill isFr={isFr} /> : null}
+                          {org.kind === "mentor" ? (
+                            <MentorPill isFr={isFr} />
+                          ) : null}
                         </div>
                         <p className="mt-1 text-xs text-[color:var(--hk-muted)]">
                           {isFr ? org.roleFr : org.roleEn}

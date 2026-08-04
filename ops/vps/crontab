@@ -31,3 +31,6 @@ LOG_DIR=/var/log/mcbuleli
 
 # Daily DB backup (local retention handled by backup-db.sh)
 15 3 * * * /opt/mcbuleli/ops/vps/backup-db.sh >>$LOG_DIR/backup.log 2>&1
+
+# One-shot: partner budget pitch — 5 Aug 09h Africa/Kinshasa (= 08:00 UTC). Stamp file prevents re-send.
+0 8 5 8 * bash /opt/mcbuleli/ops/vps/send-partner-budget-pitch-once.sh >>$LOG_DIR/partner-budget-pitch.log 2>&1
