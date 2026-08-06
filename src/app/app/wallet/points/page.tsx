@@ -128,6 +128,7 @@ export default function WalletPointsPage() {
   const [claimBp, setClaimBp] = useState("");
   const [claimErr, setClaimErr] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
+  const [contractCopied, setContractCopied] = useState(false);
   const [ledgerRows, setLedgerRows] = useState<LedgerRow[]>([]);
   const [ledgerTotal, setLedgerTotal] = useState(0);
   const [ledgerPage, setLedgerPage] = useState(0);
@@ -615,11 +616,91 @@ export default function WalletPointsPage() {
                       bp: claimData.config.bpPerMcb,
                     })}
                   </p>
-                  <p className="mt-1 text-[11px] text-[color:var(--fd-muted)]">
-                    {claimData.config.tokenStandard} · {claimData.config.chainLabel}
-                    {claimData.config.contractAddress
-                      ? ` · ${claimData.config.contractAddress.slice(0, 8)}…${claimData.config.contractAddress.slice(-6)}`
-                      : ""}
+                  <p className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-[color:var(--fd-muted)]">
+                    <span>
+                      {claimData.config.tokenStandard} · {claimData.config.chainLabel}
+                    </span>
+                    {claimData.config.contractAddress ? (
+                      <>
+                        <span aria-hidden>·</span>
+                        <span className="font-mono tabular-nums">
+                          {claimData.config.contractAddress.slice(0, 8)}…
+                          {claimData.config.contractAddress.slice(-6)}
+                        </span>
+                        <button
+                          type="button"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[color:var(--fd-muted)] transition hover:bg-[color:var(--fd-mint)] hover:text-[color:var(--fd-primary)]"
+                          aria-label={
+                            contractCopied
+                              ? t("mcb_contract_copied")
+                              : t("mcb_contract_copy")
+                          }
+                          title={
+                            contractCopied
+                              ? t("mcb_contract_copied")
+                              : t("mcb_contract_copy")
+                          }
+                          onClick={() => {
+                            const addr = claimData.config.contractAddress;
+                            if (!addr) return;
+                            void navigator.clipboard.writeText(addr).then(
+                              () => {
+                                setContractCopied(true);
+                                window.setTimeout(
+                                  () => setContractCopied(false),
+                                  1600,
+                                );
+                              },
+                              () => {
+                                /* ignore */
+                              },
+                            );
+                          }}
+                        >
+                          {contractCopied ? (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden
+                            >
+                              <path
+                                d="M5 13l4 4L19 7"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden
+                            >
+                              <rect
+                                x="9"
+                                y="9"
+                                width="11"
+                                height="11"
+                                rx="2"
+                                stroke="currentColor"
+                                strokeWidth="1.75"
+                              />
+                              <path
+                                d="M5 15V5a2 2 0 0 1 2-2h10"
+                                stroke="currentColor"
+                                strokeWidth="1.75"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </>
+                    ) : null}
                   </p>
                   {claimData.config.explorerTokenUrl ? (
                     <a

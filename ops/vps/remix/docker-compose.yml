@@ -1,0 +1,20 @@
+# Remix IDE — instance privée McBuleli (ops only)
+#
+# Usage (sur le VPS) :
+#   cd /opt/mcbuleli/ops/vps/remix   # ou chemin clone repo
+#   docker compose up -d
+#
+# Bind localhost only — Nginx (HTTPS + Basic Auth) expose remix.mcbuleli.org
+# Doc : docs/mcb-remix-vps.md
+
+name: mcbuleli-remix
+
+services:
+  remix:
+    image: remixproject/remix-ide:remix_live
+    container_name: mcbuleli-remix
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"
+    # Note: 8080 often taken by Java on mcbuleli243 — use 8081.
+    # SSH tunnel may be blocked (AllowTcpForwarding) — use Nginx or remix.ethereum.org.

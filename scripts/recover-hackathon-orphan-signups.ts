@@ -218,8 +218,12 @@ async function main() {
       () => null,
     );
 
-    if (canSendViaResendApi()) {
+    if (!canSendViaResendApi()) {
+      console.warn(resendSendBlockedReason());
+    } else {
       const payUrl = payLaterPublicUrl(token);
+      // Resend allows ~10 req/s — keep headroom when also sending reserve emails.
+      await new Promise((r) => setTimeout(r, 250));
       await sendEmail({
         to: u.email,
         subject:
@@ -253,8 +257,7 @@ ${SUPPORT_EMAIL}
         from: `McBuleli Team <${SUPPORT_EMAIL}>`,
         replyTo: SUPPORT_EMAIL,
       });
-    } else {
-      console.warn(resendSendBlockedReason());
+      console.log(`✓ emailed ${u.email}`);
     }
   }
 

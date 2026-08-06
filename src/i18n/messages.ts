@@ -1393,6 +1393,8 @@ export const en = {
   mcb_claim_pending_title: "Claim in progress - McB will be sent to your wallet",
   mcb_claim_dex_link: "View McB on PancakeSwap",
   mcb_contract_bscscan: "View McB contract on BscScan (BEP-20)",
+  mcb_contract_copy: "Copy McB contract address",
+  mcb_contract_copied: "Copied",
   mcb_claim_pool_label: "Community claim stock (40%)",
   mcb_claim_pool_closed:
     "Community claim stock is exhausted. Keep earning BP for perks - buy McB on the DEX for Builders tiers and premium services.",
@@ -5900,6 +5902,8 @@ export const fr: Messages = {
   mcb_claim_pending_title: "Claim en cours - McB sera envoyé sur votre wallet",
   mcb_claim_dex_link: "Voir McB sur PancakeSwap",
   mcb_contract_bscscan: "Voir le contrat McB sur BscScan (BEP-20)",
+  mcb_contract_copy: "Copier l'adresse du contrat McB",
+  mcb_contract_copied: "Copié",
   mcb_claim_pool_label: "Stock claim communautaire (40 %)",
   mcb_claim_pool_closed:
     "Le stock claim communautaire est épuisé. Continuez à gagner des BP pour les perks - achetez des McB sur le DEX pour les paliers Builders et les services premium.",

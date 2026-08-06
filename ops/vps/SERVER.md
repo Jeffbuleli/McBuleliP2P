@@ -45,3 +45,16 @@ Détail app/cron : [docs/vps-migration.md](../../docs/vps-migration.md)
 | 3478/udp | TURN (si coturn) |
 
 Ne **pas** exposer Postgres `5432` publiquement (docker bind `127.0.0.1` seulement).
+
+## Remix IDE (ops, optionnel)
+
+Deploy McB / contrats Solidity en interne :
+
+| Élément | Valeur |
+|---------|--------|
+| Compose | `ops/vps/remix/docker-compose.yml` → `127.0.0.1:8080` |
+| Install | `sudo bash ops/vps/install-remix.sh` |
+| URL | `https://remix.mcbuleli.org` (Basic Auth + TLS) |
+| Doc | [docs/mcb-remix-vps.md](../../docs/mcb-remix-vps.md) |
+
+MetaMask se connecte **dans le navigateur** (Injected Provider), pas au serveur. Alternative sûre : tunnel SSH `ssh -L 8080:127.0.0.1:8080 root@162.35.181.98`.

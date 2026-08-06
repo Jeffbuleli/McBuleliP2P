@@ -2,7 +2,8 @@
 
 > Checklist ops pour le jeton utilitaire **McB** (BEP-20 BSC).  
 > **Règle :** aucune promesse de prix dans le Whitepaper, le marketing, ou l’UI claim.  
-> Liés : [mcb-bsc-deploy-checklist.md](./mcb-bsc-deploy-checklist.md) · [mcb-token-phase3.md](./mcb-token-phase3.md) · [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md)
+> Liés : [mcb-voie-a-runbook.md](./mcb-voie-a-runbook.md) · [mcb-bsc-deploy-checklist.md](./mcb-bsc-deploy-checklist.md) · [mcb-token-phase3.md](./mcb-token-phase3.md) · [mcbuleli-constitution-outline.md](./mcbuleli-constitution-outline.md)  
+> **Vérif config :** `npm run verify:mcb`
 
 ---
 

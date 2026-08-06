@@ -42,12 +42,16 @@ Plus metadata: `name`, `symbol`, `decimals` (18).
 
 ## Remix deploy steps
 
-1. [Remix](https://remix.ethereum.org) → compile `McBuleliToken.sol` (0.8.20).
-2. Deploy → **Injected Provider** → wallet on **BNB Smart Chain** (not Ethereum).
-3. Constructor: `initialSupply` in **wei** (e.g. `100000000000000000000000000` = 100M tokens).
-4. Copy **contract** address → set `MCB_TOKEN_CONTRACT` on Render.
-5. Verify on [BscScan](https://bscscan.com/verifyContract).
-6. Transfer treasury supply to multisig if needed.
+**Sans copier-coller** (recommandé) : upload le fichier depuis  
+[`contracts/remix-upload/`](./remix-upload/) — voir [`remix-upload/README.md`](./remix-upload/README.md).
+
+1. [Remix](https://remix.ethereum.org) → **Upload** `McBuleliToken.sol` (ne pas coller le code).
+2. Compile **0.8.20**.
+3. Deploy → **Injected Provider** ou **WalletConnect** (MetaMask téléphone) → réseau **BNB Smart Chain**.
+4. Constructor: `initialSupply` = `100000000000000000000000000` ; **VALUE = 0**.
+5. Copy **contract** address → set `MCB_TOKEN_CONTRACT` on Render.
+6. Verify on [BscScan](https://bscscan.com/verifyContract).
+7. Transfer treasury supply to multisig if needed.
 
 ## App integration
 
