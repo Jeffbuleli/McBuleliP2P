@@ -8,7 +8,7 @@ export const RDPI_SURVEY_SLUG = "fiscalite-numerique-rdc-2026";
 export const RDPI_BRAND = {
   name: "RDPI Think Tank",
   fullName: "Research for Development and Prosperity Institute",
-  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260807b",
+  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260807c",
   website: "https://rdpithinktank.org/",
   blue: "#1E5EFF",
   gold: "#E8B923",

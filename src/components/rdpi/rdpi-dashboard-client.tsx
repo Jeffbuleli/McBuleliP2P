@@ -7,6 +7,11 @@ import {
   AvecHorizontalBars,
 } from "@/components/groups/avec-charts";
 import { RdpiPoweredFooter } from "@/components/rdpi/rdpi-powered-footer";
+import {
+  RdpiIlluChart,
+  RdpiIlluShield,
+  RdpiIlluSunburst,
+} from "@/components/rdpi/rdpi-illustrations";
 
 type CountBucket = { label: string; value: number };
 type Stats = {
@@ -192,14 +197,16 @@ export function RdpiDashboardClient() {
     return (
       <div className="mx-auto max-w-[440px] px-4 py-12">
         <VisualCard className="overflow-hidden !p-0 text-center">
-          <div className="bg-black px-6 py-8 text-white">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+          <div className="relative overflow-hidden bg-black px-6 py-8 text-white">
+            <RdpiIlluSunburst className="pointer-events-none absolute -right-4 -top-2 h-28 w-28 opacity-25" />
+            <RdpiIlluShield className="relative mx-auto mb-4 h-16 w-16" />
+            <p className="relative text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
               Accès RDPI
             </p>
-            <h1 className="mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
+            <h1 className="relative mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
               Connexion requise
             </h1>
-            <p className="mt-3 text-sm text-white/75">
+            <p className="relative mt-3 text-sm text-white/75">
               Cet espace est réservé à l&apos;équipe RDPI Think Tank.
             </p>
           </div>
@@ -221,14 +228,16 @@ export function RdpiDashboardClient() {
     return (
       <div className="mx-auto max-w-[440px] px-4 py-12">
         <VisualCard className="overflow-hidden !p-0 text-center">
-          <div className="bg-black px-6 py-8 text-white">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+          <div className="relative overflow-hidden bg-black px-6 py-8 text-white">
+            <RdpiIlluSunburst className="pointer-events-none absolute -left-6 top-0 h-28 w-28 opacity-20" />
+            <RdpiIlluShield className="relative mx-auto mb-4 h-16 w-16" />
+            <p className="relative text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
               Accès restreint
             </p>
-            <h1 className="mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
+            <h1 className="relative mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
               Compte non autorisé
             </h1>
-            <p className="mt-3 text-sm text-white/75">
+            <p className="relative mt-3 text-sm text-white/75">
               Connectez-vous avec un email RDPI (
               <span className="text-[color:var(--rdpi-gold)]">
                 maristote@
@@ -270,8 +279,9 @@ export function RdpiDashboardClient() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
       <VisualCard className="mb-5 overflow-hidden !p-0">
-        <div className="flex flex-col gap-4 border-b border-[#E5E5E0] bg-black px-5 py-5 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
-          <div>
+        <div className="relative flex flex-col gap-4 overflow-hidden border-b border-[#E5E5E0] bg-black px-5 py-5 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
+          <RdpiIlluChart className="pointer-events-none absolute -right-2 top-2 h-28 w-36 opacity-25" />
+          <div className="relative">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
               Tableau de bord
             </p>

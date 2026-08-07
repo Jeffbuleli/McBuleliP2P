@@ -21,16 +21,34 @@ import {
   emptyRdpiAnswers,
   type RdpiSurveyAnswers,
 } from "@/lib/rdpi/survey-questions";
+import {
+  RdpiIlluCheck,
+  RdpiIlluDoc,
+  RdpiIlluSunburst,
+  RdpiSectionIllu,
+} from "@/components/rdpi/rdpi-illustrations";
 
 const TOTAL_STEPS = SECTION_META.length;
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function SectionTitle({
+  sectionId,
+  children,
+}: {
+  sectionId: (typeof SECTION_META)[number]["id"];
+  children: React.ReactNode;
+}) {
   return (
-    <label className="mb-2.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-[#78716c]">
-      {children}
-    </label>
+    <div className="mb-1 flex items-start gap-3">
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#E5E5E0] bg-white shadow-sm">
+        <RdpiSectionIllu sectionId={sectionId} className="h-10 w-10" />
+      </span>
+      <h2 className="pt-1 font-[family-name:var(--font-rdpi-display)] text-xl font-semibold leading-snug text-[#0c0a09]">
+        {children}
+      </h2>
+    </div>
   );
 }
+
 
 function VisualCard({
   children,
@@ -361,36 +379,32 @@ export function RdpiSurveyForm() {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-[440px] px-4 pb-6 pt-8">
+      <div className="mx-auto max-w-[440px] px-4 pb-6 pt-6">
         <VisualCard className="overflow-hidden !p-0">
-          <div className="bg-gradient-to-br from-[color:var(--rdpi-blue)] to-[#0B2F9F] px-6 pb-8 pt-10 text-center text-white">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M5 12.5l4.5 4.5L19 7.5"
-                  stroke="white"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+          <div className="relative bg-gradient-to-br from-[color:var(--rdpi-blue)] to-[#0B2F9F] px-6 pb-8 pt-10 text-center text-white">
+            <RdpiIlluSunburst className="pointer-events-none absolute -right-6 -top-4 h-36 w-36 opacity-20" />
+            <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
+              <RdpiIlluCheck className="h-20 w-20 drop-shadow-lg" />
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--rdpi-gold)]">
+            <p className="relative text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--rdpi-gold)]">
               Contribution enregistrée
             </p>
-            <h2 className="mt-2 font-[family-name:var(--font-rdpi-display)] text-[1.7rem] font-semibold leading-tight tracking-tight">
+            <h2 className="relative mt-2 font-[family-name:var(--font-rdpi-display)] text-[1.7rem] font-semibold leading-tight tracking-tight">
               Merci pour votre contribution
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/80">
+            <p className="relative mt-3 text-sm leading-relaxed text-white/80">
               Vos réponses ont bien été enregistrées. Elles restent
               confidentielles et serviront uniquement à l&apos;étude RDPI Think
               Tank.
             </p>
           </div>
           <div className="space-y-3 bg-[#FAFAF8] px-5 py-5">
-            <div className="rounded-2xl border border-[#E5E5E0] bg-white px-4 py-3 text-left text-sm text-[#57534e]">
-              Votre voix nourrit des recommandations fondées sur le terrain pour
-              un écosystème numérique plus compétitif en RDC.
+            <div className="flex items-start gap-3 rounded-2xl border border-[#E5E5E0] bg-white px-4 py-3 text-left text-sm text-[#57534e]">
+              <RdpiIlluDoc className="mt-0.5 h-12 w-10 shrink-0" />
+              <p>
+                Votre voix nourrit des recommandations fondées sur le terrain pour
+                un écosystème numérique plus compétitif en RDC.
+              </p>
             </div>
             <a
               href="https://rdpithinktank.org/"
@@ -425,10 +439,14 @@ export function RdpiSurveyForm() {
 
       {step === 0 ? (
         <VisualCard className="!p-0 overflow-hidden">
-          <div className="border-b border-[#E5E5E0] bg-black px-5 py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
-              Questionnaire d&apos;enquête - {SURVEY_INTRO.duration}
-            </p>
+          <div className="relative overflow-hidden border-b border-[#E5E5E0] bg-black px-5 py-5">
+            <RdpiIlluSunburst className="pointer-events-none absolute -right-4 -top-2 h-28 w-28 opacity-30" />
+            <div className="relative flex items-center gap-3">
+              <RdpiIlluDoc className="h-14 w-12 shrink-0" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+                Questionnaire d&apos;enquête - {SURVEY_INTRO.duration}
+              </p>
+            </div>
           </div>
           <div className="space-y-4 px-5 py-5">
             <h1 className="font-[family-name:var(--font-rdpi-display)] text-[1.55rem] font-semibold leading-tight tracking-tight text-[#0c0a09] sm:text-[1.75rem]">
@@ -463,9 +481,9 @@ export function RdpiSurveyForm() {
         <VisualCard>
           {step === 1 ? (
             <section className="space-y-5">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="profil">
                 Section I - Profil du répondant
-              </h2>
+              </SectionTitle>
               <TextInput
                 label="Nom complet"
                 value={answers.fullName}
@@ -554,9 +572,9 @@ export function RdpiSurveyForm() {
 
           {step === 2 ? (
             <section className="space-y-4">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="perception">
                 Section II - Perception des nouvelles taxes
-              </h2>
+              </SectionTitle>
               <p className="text-sm text-[#78716c]">
                 Niveau d&apos;accord (1 = pas du tout d&apos;accord - 5 = tout a
                 fait d&apos;accord).
@@ -585,9 +603,9 @@ export function RdpiSurveyForm() {
 
           {step === 3 ? (
             <section className="space-y-5">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="impact">
                 Section D - Impact économique attendu
-              </h2>
+              </SectionTitle>
               <div>
                 <FieldLabel>D1. Impact sur votre organisation</FieldLabel>
                 <ChoiceGrid
@@ -647,9 +665,9 @@ export function RdpiSurveyForm() {
 
           {step === 4 ? (
             <section className="space-y-4">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="climat">
                 Section E - Climat des affaires
-              </h2>
+              </SectionTitle>
               <p className="text-sm text-[#78716c]">
                 Intensité de chaque obstacle (1 = Aucun - 5 = Très élevé).
               </p>
@@ -671,9 +689,9 @@ export function RdpiSurveyForm() {
 
           {step === 5 ? (
             <section className="space-y-5">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="opportunites">
                 Section F - Opportunités
-              </h2>
+              </SectionTitle>
               <div>
                 <FieldLabel>
                   Ces taxes et redevances présentent-elles une opportunité pour
@@ -715,9 +733,9 @@ export function RdpiSurveyForm() {
 
           {step === 6 ? (
             <section className="space-y-4">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="reformes">
                 Section G - Priorités de réforme
-              </h2>
+              </SectionTitle>
               <p className="text-sm text-[#78716c]">
                 Classez de 1 (plus importante) à 7 (moins importante). Chaque
                 rang unique.
@@ -757,9 +775,9 @@ export function RdpiSurveyForm() {
 
           {step === 7 ? (
             <section className="space-y-5">
-              <h2 className="font-[family-name:var(--font-rdpi-display)] text-xl font-semibold text-[#0c0a09]">
+              <SectionTitle sectionId="ouvertes">
                 Section H - Questions ouvertes
-              </h2>
+              </SectionTitle>
               <TextArea
                 label="G1. Quelle disposition du nouvel arrêté vous préoccupe le plus ? Pourquoi ?"
                 value={answers.concernDisposition}

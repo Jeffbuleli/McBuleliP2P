@@ -1,23 +1,25 @@
 import { RDPI_BRAND } from "@/lib/rdpi/survey-questions";
 
-/** RDPI mark on black tile - logo has baked black bg; contain avoids "broken" crop. */
+/** RDPI mark on black tile - larger, centered-friendly. */
 export function RdpiLogoMark({
   className = "",
   size = "md",
 }: {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "hero";
 }) {
   const box =
     size === "sm"
-      ? "h-11 max-w-[160px] px-2.5 py-1.5"
+      ? "h-12 max-w-[180px] px-3 py-1.5"
       : size === "lg"
-        ? "h-[72px] max-w-[280px] px-4 py-2.5"
-        : "h-14 max-w-[220px] px-3 py-2";
+        ? "h-[88px] max-w-[340px] px-5 py-3"
+        : size === "hero"
+          ? "h-[104px] w-full max-w-[380px] px-5 py-3.5 sm:h-[120px] sm:max-w-[420px]"
+          : "h-16 max-w-[260px] px-4 py-2.5";
 
   return (
     <span
-      className={`inline-flex items-center justify-center overflow-hidden rounded-2xl bg-black shadow-[0_8px_28px_-12px_rgba(0,0,0,0.55)] ring-1 ring-black/40 ${box} ${className}`}
+      className={`inline-flex items-center justify-center overflow-hidden rounded-[22px] bg-black shadow-[0_16px_40px_-14px_rgba(0,0,0,0.65)] ring-1 ring-black/50 ${box} ${className}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Fraunces, DM_Sans } from "next/font/google";
 import { RdpiLogoMark } from "@/components/rdpi/rdpi-logo-mark";
 import { RdpiPoweredFooter } from "@/components/rdpi/rdpi-powered-footer";
+import { RdpiIlluSunburst } from "@/components/rdpi/rdpi-illustrations";
 import { RDPI_BRAND } from "@/lib/rdpi/survey-questions";
 
 const display = Fraunces({
@@ -45,21 +46,10 @@ export function RdpiShell({
         } as CSSProperties
       }
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[480px] overflow-hidden" aria-hidden>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden" aria-hidden>
+        <RdpiIlluSunburst className="absolute -right-10 top-4 h-[300px] w-[300px] opacity-[0.12] sm:h-[360px] sm:w-[360px]" />
         <svg
-          className="absolute -right-20 top-6 h-[380px] w-[380px] opacity-[0.08]"
-          viewBox="0 0 200 200"
-        >
-          <circle cx="100" cy="100" r="88" fill="none" stroke={RDPI_BRAND.blue} strokeWidth="2" />
-          <circle cx="100" cy="100" r="58" fill="none" stroke={RDPI_BRAND.gold} strokeWidth="1.5" />
-          <path
-            d="M100 22 L107 76 L162 76 L117 108 L134 162 L100 132 L66 162 L83 108 L38 76 L93 76 Z"
-            fill={RDPI_BRAND.gold}
-            opacity="0.45"
-          />
-        </svg>
-        <svg
-          className="absolute -left-16 top-24 h-[280px] w-[280px] opacity-[0.06]"
+          className="absolute -left-16 top-28 h-[260px] w-[260px] opacity-[0.07]"
           viewBox="0 0 200 200"
         >
           <rect x="24" y="24" width="152" height="152" rx="36" fill="none" stroke={RDPI_BRAND.ink} strokeWidth="2" />
@@ -68,13 +58,16 @@ export function RdpiShell({
       </div>
 
       <header
-        className={`relative z-10 mx-auto flex items-center px-4 pt-6 sm:pt-8 ${
+        className={`relative z-10 mx-auto flex flex-col items-center px-4 pt-7 text-center sm:pt-10 ${
           wide ? "max-w-5xl" : "max-w-[440px]"
         }`}
       >
-        <Link href="/rdpi" className="inline-flex" aria-label={RDPI_BRAND.name}>
-          <RdpiLogoMark size={wide ? "md" : "lg"} />
+        <Link href="/rdpi" className="inline-flex justify-center" aria-label={RDPI_BRAND.name}>
+          <RdpiLogoMark size="hero" />
         </Link>
+        <p className="mt-3 max-w-sm text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">
+          {RDPI_BRAND.fullName}
+        </p>
       </header>
 
       <main className="relative z-10">{children}</main>
