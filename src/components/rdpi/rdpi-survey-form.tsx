@@ -255,6 +255,39 @@ function FieldCard({
   );
 }
 
+function renderIntroParagraph(text: string): React.ReactNode {
+  const highlights = [
+    "n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096",
+    "Research for Development and Prosperity Institute (RDPI Think Tank)",
+  ];
+  const parts: React.ReactNode[] = [];
+  let rest = text;
+  let key = 0;
+  while (rest.length > 0) {
+    let earliest = -1;
+    let match = "";
+    for (const h of highlights) {
+      const i = rest.indexOf(h);
+      if (i >= 0 && (earliest < 0 || i < earliest)) {
+        earliest = i;
+        match = h;
+      }
+    }
+    if (earliest < 0 || !match) {
+      parts.push(rest);
+      break;
+    }
+    if (earliest > 0) parts.push(rest.slice(0, earliest));
+    parts.push(
+      <strong key={`b-${key++}`} className="font-bold text-[#0c0a09]">
+        {match}
+      </strong>,
+    );
+    rest = rest.slice(earliest + match.length);
+  }
+  return parts;
+}
+
 function TextInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { label: string },
 ) {
