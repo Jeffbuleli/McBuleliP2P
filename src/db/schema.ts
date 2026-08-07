@@ -5204,4 +5204,39 @@ export const partnerMeets = pgTable(
   (t) => [index("partner_meets_status_idx").on(t.status)],
 );
 
+/**
+ * RDPI Think Tank survey responses — fiscalité / secteur numérique RDC.
+ * Public submit at /rdpi; partner dashboard at /rdpi/dashboard.
+ */
+export const rdpiSurveyResponses = pgTable(
+  "rdpi_survey_responses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    surveySlug: varchar("survey_slug", { length: 64 })
+      .notNull()
+      .default("fiscalite-numerique-rdc-2026"),
+    answers: jsonb("answers")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    fullName: varchar("full_name", { length: 200 }),
+    province: varchar("province", { length: 120 }),
+    activity: varchar("activity", { length: 120 }),
+    locale: varchar("locale", { length: 8 }).notNull().default("fr"),
+    userAgent: varchar("user_agent", { length: 400 }),
+    ipHash: varchar("ip_hash", { length: 64 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("rdpi_survey_responses_slug_created_idx").on(
+      t.surveySlug,
+      t.createdAt,
+    ),
+    index("rdpi_survey_responses_province_idx").on(t.province),
+    index("rdpi_survey_responses_activity_idx").on(t.activity),
+  ],
+);
+
 export * from "./game-schema";

@@ -5,6 +5,8 @@
 export const PARTNER_AFFILIATED_EMAILS: Record<string, readonly string[]> = {
   /** IA Académie RDC + Computer's House of Kinshasa (CHK) */
   "ia-academie-chk": ["contact@ch-kin.com", "contact@ia-academie.cd"],
+  /** RDPI Think Tank — survey dashboard + partner workspace */
+  rdpi: ["maristote@rdpithinktank.org", "info@rdpithinktank.org"],
 };
 
 export function affiliatedEmailsForSlug(slug: string): string[] {
