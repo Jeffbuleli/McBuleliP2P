@@ -15,7 +15,10 @@ export const RDPI_SURVEY_URL = "https://mcbuleli.org/rdpi";
 
 const RDPI_BLUE = "#1E5EFF";
 const RDPI_GOLD = "#E8B923";
-const RDPI_LOGO = "https://mcbuleli.org/partners/rdpi-thinktank-logo.png";
+const RDPI_LOGO =
+  "https://mcbuleli.org/partners/rdpi-thinktank-logo.png?v=20260807c";
+const MCBULELI_MARK = "https://mcbuleli.org/brand/logo-mark-256.png";
+const MCBULELI_X = "https://x.com/McBuleli";
 
 export function buildRdpiSurveyBroadcastEmail() {
   const text = [
@@ -44,6 +47,7 @@ export function buildRdpiSurveyBroadcastEmail() {
     "https://rdpithinktank.org/",
     "",
     "Powered by McBuleli",
+    MCBULELI_X,
     "https://mcbuleli.org/",
   ].join("\n");
 
@@ -64,18 +68,16 @@ export function buildRdpiSurveyBroadcastEmail() {
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #d6d3d1;overflow:hidden;">
           <tr>
-            <td style="padding:22px 28px 16px;background:#0a0a0a;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <td style="padding:22px 28px 18px;background:#0a0a0a;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 12px;">
                 <tr>
-                  <td style="vertical-align:middle;width:56px;padding-right:14px;">
-                    <img src="${RDPI_LOGO}" width="48" height="48" alt="RDPI Think Tank" style="display:block;border:0;border-radius:10px;background:#ffffff;" />
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${RDPI_GOLD};">RDPI Think Tank</p>
-                    <p style="margin:4px 0 0;font-size:15px;font-weight:700;line-height:1.35;color:#ffffff;">Research for Development and Prosperity Institute</p>
+                  <td style="padding:10px 14px;background:#ffffff;border-radius:12px;">
+                    <img src="${RDPI_LOGO}" width="168" height="66" alt="RDPI Think Tank" style="display:block;border:0;width:168px;height:auto;max-width:100%;" />
                   </td>
                 </tr>
               </table>
+              <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${RDPI_GOLD};">RDPI Think Tank</p>
+              <p style="margin:6px 0 0;font-size:14px;font-weight:600;line-height:1.4;color:#ffffff;">Research for Development and Prosperity Institute</p>
             </td>
           </tr>
           <tr>
@@ -138,10 +140,17 @@ export function buildRdpiSurveyBroadcastEmail() {
           </tr>
           <tr>
             <td style="padding:18px 28px 22px;border-top:1px solid #e7e5e4;background:#fafaf8;" align="center">
-              <p style="margin:0;font-size:12px;line-height:1.5;color:#a8a29e;">
-                Powered by
-                <a href="https://mcbuleli.org/" style="color:#57534e;font-weight:700;text-decoration:none;">McBuleli</a>
-              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:8px;font-size:12px;color:#a8a29e;">Powered by</td>
+                  <td style="vertical-align:middle;padding-right:6px;">
+                    <img src="${MCBULELI_MARK}" width="22" height="22" alt="" style="display:block;border:0;border-radius:50%;background:#ffffff;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <a href="${MCBULELI_X}" style="font-size:13px;font-weight:800;color:#305f33;text-decoration:none;">McBuleli</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
